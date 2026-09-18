@@ -1,0 +1,53 @@
+name: OneuiXP Android APK build
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: android-actions/setup-android@v4
+      - name: Install pinned Android SDK
+        run: sdkmanager 'platforms;android-36' 'build-tools;36.0.0'
+      - name: Validate OneuiXP source
+        run: |
+          python3 ./verify_no_jni.py
+          python3 ./verify_migration.py
+      - name: Build OneuiXP debug APK
+        run: |
+          set -o pipefail
+          mkdir -p diagnostics
+          chmod +x gradlew
+          ./gradlew :app:assembleDebug -PKSU_PACKAGE_NAME=com.oneuixp.app -PKSU_NAME=OneuiXP --stacktrace --no-daemon 2>&1 | tee diagnostics/gradle-build.log
+      - name: Validate APK and prepare delivery
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          APK=$(find app/build/outputs/apk/debug -type f -name '*.apk' | head -1)
+          test -n "$APK"
+          cp "$APK" dist/OneuiXP_Debug.apk
+          unzip -t dist/OneuiXP_Debug.apk
+          (cd dist && sha256sum OneuiXP_Debug.apk > SHA256SUMS)
+      - name: Save Gradle diagnostics on failure
+        if: failure()
+        run: |
+          mkdir -p diagnostics
+          find . -path "*/build/reports/problems/*" -type f -exec cp --parents {} diagnostics/ \; || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: OneuiXP-Debug
+          path: dist/
+          if-no-files-found: warn
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: OneuiXP-Build-Diagnostics
+          path: diagnostics/
+          if-no-files-found: warn
