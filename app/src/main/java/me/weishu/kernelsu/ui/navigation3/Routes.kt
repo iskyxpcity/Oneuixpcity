@@ -15,6 +15,7 @@ import me.weishu.kernelsu.ui.viewmodel.TemplateViewModel
  * Type-safe navigation keys for Navigation3.
  * Each destination is a NavKey (data object/data class) and can be saved/restored in the back stack.
  */
+@Serializable
 sealed interface Route : NavKey, Parcelable {
     @Parcelize
     @Serializable
