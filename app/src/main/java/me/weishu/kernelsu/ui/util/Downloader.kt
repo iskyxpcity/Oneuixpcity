@@ -1,45 +1,10 @@
 package me.weishu.kernelsu.ui.util
 
-import android.net.Uri
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.onEach
 import me.weishu.kernelsu.ksuApp
 import me.weishu.kernelsu.ui.util.module.LatestVersionInfo
 import okhttp3.Request
 
-/**
- * @author weishu
- * @date 2023/6/22.
- */
-suspend fun download(
-    url: String,
-    fileName: String,
-    onDownloaded: (Uri) -> Unit = {},
-    onDownloading: () -> Unit = {},
-    onProgress: (Int) -> Unit = {}
-) {
-    onDownloading()
-
-    val downloadId = DownloadManager.enqueue(
-        context = ksuApp,
-        url = url,
-        fileName = fileName,
-        onCompleted = onDownloaded,
-    )
-
-    DownloadManager.downloads
-        .onEach { map -> map[downloadId]?.let { onProgress(it.progress) } }
-        .first { map ->
-            val status = map[downloadId]?.status
-            status == DownloadManager.Status.COMPLETED ||
-                status == DownloadManager.Status.FAILED
-        }
-}
-
-/**
- * The manager is OneuiXP, not KernelSU. Use this project's Releases only.
- * Release tags: v1.0.260923, v1.0.260924, ...
- */
+/** Only OneuiXP GitHub releases are checked. No KernelSU module downloader. */
 fun checkNewVersion(): LatestVersionInfo {
     if (!isNetworkAvailable(ksuApp)) return LatestVersionInfo()
     val endpoint = "https://api.github.com/repos/iSkyJIE/OneuiXP/releases/latest"
