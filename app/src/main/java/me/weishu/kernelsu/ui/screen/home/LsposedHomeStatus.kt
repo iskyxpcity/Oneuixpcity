@@ -17,43 +17,42 @@ data class LsposedHomeStatus(
     val scopeCount: Int,
 )
 
-private fun configuredScopeCount(context: Context): Int =
-    runCatching {
-        context.assets.open("xposed_scope").bufferedReader().useLines { lines ->
-            lines.map(String::trim)
-                .filter { it.isNotEmpty() && !it.startsWith("#") }
-                .count()
-        }
-    }.getOrDefault(0)
+private fun configuredScopeCount(context: Context): Int = runCatching {
+    context.assets.open("xposed_scope").bufferedReader().useLines { lines ->
+        lines.map(String::trim)
+            .filter { it.isNotEmpty() && !it.startsWith("#") }
+            .count()
+    }
+}.getOrDefault(0)
 
-private fun readLsposedHomeStatus(
-    context: Context,
-    scopeCount: Int,
-): LsposedHomeStatus {
+private fun readLsposedHomeStatus(context: Context, scopeCount: Int): LsposedHomeStatus {
+    // Distinguish the shipped scope declaration from a confirmed, effective
+    // injection. Checking the LSPosed switch cannot inject into an already
+    // running SystemUI process; only the trusted live bridge verifies this.
     val active = StatusBridge.recentlyLoaded(context)
     return LsposedHomeStatus(
         active = active,
-        injectionCount = if (active) 1 else 0,
-        scopeCount = scopeCount,
+        injectionCount = if (active) 1 else 0, // confirmed SystemUI process, not hook count
+        scopeCount = if (active) scopeCount else 0,
     )
 }
 
 /**
- * Poll the trusted SystemUI load bridge so the home card follows LSPosed/SystemUI
- * state without requiring a page change or app restart.
+ * Updates quickly once SystemUI actually sends its first trusted load report.
+ * Scope selection alone is deliberately NOT shown as successful injection.
  */
 @Composable
 fun rememberLsposedHomeStatus(): LsposedHomeStatus {
     val context = LocalContext.current.applicationContext
-    val scopeCount = remember(context) { configuredScopeCount(context) }
+    val configuredScopes = remember(context) { configuredScopeCount(context) }
     val status by produceState(
-        initialValue = readLsposedHomeStatus(context, scopeCount),
+        initialValue = readLsposedHomeStatus(context, configuredScopes),
         key1 = context,
-        key2 = scopeCount,
+        key2 = configuredScopes,
     ) {
         while (true) {
-            value = readLsposedHomeStatus(context, scopeCount)
-            delay(1_000L)
+            value = readLsposedHomeStatus(context, configuredScopes)
+            delay(250L)
         }
     }
     return status
