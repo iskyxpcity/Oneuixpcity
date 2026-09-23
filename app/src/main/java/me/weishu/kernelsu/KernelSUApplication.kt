@@ -10,6 +10,7 @@ import me.weishu.kernelsu.data.repository.SettingsRepositoryImpl
 import me.weishu.kernelsu.statusbar.LsposedFrameworkStatus
 import okhttp3.Cache
 import okhttp3.OkHttpClient
+import java.util.Locale
 import org.lsposed.hiddenapibypass.HiddenApiBypass
 
 lateinit var ksuApp: KernelSUApplication
