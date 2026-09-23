@@ -1,10 +1,10 @@
-package me.weishu.kernelsu.ui.component.rebootlistpopup
+package com.oneuixp.app.ui.component.rebootlistpopup
 
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
-import me.weishu.kernelsu.R
-import me.weishu.kernelsu.ui.LocalUiMode
-import me.weishu.kernelsu.ui.UiMode
+import com.oneuixp.app.R
+import com.oneuixp.app.ui.LocalUiMode
+import com.oneuixp.app.ui.UiMode
 
 data class RebootListOption(
     @param:StringRes val labelRes: Int,

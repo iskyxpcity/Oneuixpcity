@@ -1,4 +1,4 @@
-package me.weishu.kernelsu.ui.component.rebootlistpopup
+package com.oneuixp.app.ui.component.rebootlistpopup
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
@@ -6,8 +6,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import me.weishu.kernelsu.R
-import me.weishu.kernelsu.ui.component.ListPopupDefaults
+import com.oneuixp.app.R
+import com.oneuixp.app.ui.component.ListPopupDefaults
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.ListPopupColumn
@@ -70,7 +70,7 @@ fun RebootDropdownItem(
     index: Int,
     onReboot: (String) -> Unit,
 ) {
-    me.weishu.kernelsu.ui.component.miuix.DropdownItem(
+    com.oneuixp.app.ui.component.miuix.DropdownItem(
         text = if (option.reason == "statusbar_xp_systemui") "重启 SystemUI" else stringResource(option.labelRes),
         optionSize = optionSize,
         onSelectedIndexChange = {

@@ -1,4 +1,4 @@
-package me.weishu.kernelsu.ui.component.statustag
+package com.oneuixp.app.ui.component.statustag
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
