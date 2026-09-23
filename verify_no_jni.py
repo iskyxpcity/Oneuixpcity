@@ -28,3 +28,16 @@ workflow = (root / '.github/workflows/build.yml').read_text()
 assert 'restore_native_headers' not in workflow
 assert 'ndk;' not in workflow.lower()
 print('PASS: obsolete KernelSU C++ sources and header restoration removed; CI does not restore them')
+
+# Theme extraction guard: legacy KernelSU feature backend must stay disconnected.
+settings_impl = (root / 'app/src/main/java/me/weishu/kernelsu/data/repository/SettingsRepositoryImpl.kt').read_text()
+assert 'execKsud(' not in settings_impl
+assert 'getFeatureStatus(' not in settings_impl
+assert 'ShellUtils.fastCmd' not in settings_impl
+reboot_popup = (root / 'app/src/main/java/me/weishu/kernelsu/ui/component/rebootlistpopup/RebootListPopup.kt').read_text()
+assert 'reboot(reason)' not in reboot_popup
+assert '"recovery"' not in reboot_popup and '"bootloader"' not in reboot_popup and '"download"' not in reboot_popup
+assert 'statusbar_xp_systemui' in reboot_popup
+theme = (root / 'app/src/main/java/me/weishu/kernelsu/ui/theme/Theme.kt').read_text()
+assert 'fun OneuiXPTheme(' in theme
+print('PASS: KernelSU feature/reboot paths disconnected; OneuiXP dual-theme wrapper active')

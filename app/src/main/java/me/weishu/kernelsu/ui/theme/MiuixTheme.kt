@@ -20,7 +20,7 @@ import top.yukonga.miuix.kmp.theme.ThemeController
 import top.yukonga.miuix.kmp.theme.ThemePaletteStyle
 
 @Composable
-fun MiuixKernelSUTheme(
+fun MiuixOneuiXPTheme(
     appSettings: AppSettings,
     content: @Composable () -> Unit
 ) {
@@ -42,16 +42,14 @@ fun MiuixKernelSUTheme(
         ThemeColorSpec.Spec2021
     }
 
-    val resolvedKeyColor: Color? = when {
-        appSettings.keyColor != 0 -> Color(appSettings.keyColor)
-        appSettings.colorMode.isMonet -> {
-            val accentId = context.resources.getIdentifier("system_accent1_500", "color", "android")
-            if (accentId != 0) Color(context.getColor(accentId))
-            else if (darkTheme) dynamicDarkColorScheme(context).primary
-            else dynamicLightColorScheme(context).primary
-        }
-
-        else -> null
+    val resolvedKeyColor: Color = if (appSettings.keyColor != 0) {
+        Color(appSettings.keyColor)
+    } else {
+        // Match OneuiXP Material: the default accent is the Android system accent.
+        val accentId = context.resources.getIdentifier("system_accent1_500", "color", "android")
+        if (accentId != 0) Color(context.getColor(accentId))
+        else if (darkTheme) dynamicDarkColorScheme(context).primary
+        else dynamicLightColorScheme(context).primary
     }
 
     val controller = ThemeController(
