@@ -1,4 +1,4 @@
-package me.weishu.kernelsu.ui.component.material
+package com.oneuixp.app.ui.component.material
 
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarData

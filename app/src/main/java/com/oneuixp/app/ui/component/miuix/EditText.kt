@@ -1,4 +1,4 @@
-package me.weishu.kernelsu.ui.component.miuix
+package com.oneuixp.app.ui.component.miuix
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.FocusInteraction

@@ -1,4 +1,4 @@
-package me.weishu.kernelsu.ui.component.miuix
+package com.oneuixp.app.ui.component.miuix
 
 import android.content.Intent
 import android.net.Uri
@@ -19,9 +19,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
-import me.weishu.kernelsu.R
-import me.weishu.kernelsu.statusbar.StatusBridge
-import me.weishu.kernelsu.ui.component.dialog.LoadingDialogHandle
+import com.oneuixp.app.R
+import com.oneuixp.app.statusbar.StatusBridge
+import com.oneuixp.app.ui.component.dialog.LoadingDialogHandle
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextButton

@@ -1,4 +1,4 @@
-package me.weishu.kernelsu.ui.component.material
+package com.oneuixp.app.ui.component.material
 
 import android.content.Intent
 import android.net.Uri
@@ -30,8 +30,8 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
-import me.weishu.kernelsu.R
-import me.weishu.kernelsu.statusbar.StatusBridge
+import com.oneuixp.app.R
+import com.oneuixp.app.statusbar.StatusBridge
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
