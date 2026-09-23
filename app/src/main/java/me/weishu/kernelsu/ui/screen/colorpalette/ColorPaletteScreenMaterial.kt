@@ -402,33 +402,43 @@ private fun ThemePreviewCard(
                         }
                     }
 
-                    BoxWithConstraints(modifier = Modifier.weight(1f)) {
-                        val showInfoCard = maxHeight >= 72.dp
-                        Column(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(horizontal = 6.dp, vertical = 2.dp),
-                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                    // The miniature Material preview follows the same 3-card
+                    // geometry as the actual OneuiXP home page.
+                    Column(
+                        modifier = Modifier.weight(1f).fillMaxWidth()
+                            .padding(horizontal = 6.dp, vertical = 2.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth().height(62.dp),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
                         ) {
                             TonalCard(
                                 containerColor = colorScheme.secondaryContainer,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(40.dp),
+                                modifier = Modifier.weight(1f).fillMaxHeight(),
                                 shape = RoundedCornerShape(8.dp),
-                                content = { }
+                                content = { },
                             )
-                            if (showInfoCard) {
-                                TonalCard(
-                                    containerColor = colorScheme.surfaceBright,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .weight(1f),
-                                    shape = RoundedCornerShape(8.dp),
-                                    content = { }
-                                )
+                            Column(
+                                modifier = Modifier.weight(1f).fillMaxHeight(),
+                                verticalArrangement = Arrangement.spacedBy(6.dp),
+                            ) {
+                                repeat(2) {
+                                    TonalCard(
+                                        containerColor = colorScheme.surfaceBright,
+                                        modifier = Modifier.weight(1f).fillMaxWidth(),
+                                        shape = RoundedCornerShape(8.dp),
+                                        content = { },
+                                    )
+                                }
                             }
                         }
+                        TonalCard(
+                            containerColor = colorScheme.surfaceBright,
+                            modifier = Modifier.weight(1f).fillMaxWidth(),
+                            shape = RoundedCornerShape(8.dp),
+                            content = { },
+                        )
                     }
             }
 

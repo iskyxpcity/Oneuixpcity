@@ -508,45 +508,50 @@ private fun ThemePreviewCardMiuix(
                         )
                     }
 
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(45.dp)
-                            .padding(horizontal = 8.dp)
-                            .clip(RoundedCornerShape(6.dp))
-                            .background(accentCardColor)
-                    )
-
-                    BoxWithConstraints(modifier = Modifier.weight(1f)) {
-                        val smallCardHeight = 12.dp
-                        val smallCardCount = when {
-                            maxHeight >= 96.dp -> 2
-                            maxHeight >= 72.dp -> 1
-                            else -> 0
-                        }
-                        Column(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(horizontal = 8.dp, vertical = 6.dp),
-                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                    // Mirror the live OneuiXP dashboard: one tall left card and
+                    // two small right cards. The information card below stays intact.
+                    Column(
+                        modifier = Modifier.weight(1f).fillMaxWidth()
+                            .padding(horizontal = 8.dp, vertical = 6.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth().height(68.dp),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
                         ) {
                             Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .weight(1f)
+                                modifier = Modifier.weight(1f).fillMaxHeight()
                                     .clip(RoundedCornerShape(6.dp))
-                                    .background(cardColor)
+                                    .background(accentCardColor)
                             )
-                            repeat(smallCardCount) {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(smallCardHeight)
-                                        .clip(RoundedCornerShape(6.dp))
-                                        .background(cardColor)
-                                )
+                            Column(
+                                modifier = Modifier.weight(1f).fillMaxHeight(),
+                                verticalArrangement = Arrangement.spacedBy(6.dp),
+                            ) {
+                                repeat(2) {
+                                    Box(
+                                        modifier = Modifier.weight(1f).fillMaxWidth()
+                                            .clip(RoundedCornerShape(6.dp))
+                                            .background(cardColor)
+                                    )
+                                }
                             }
                         }
+                        Box(
+                            modifier = Modifier.weight(1f).fillMaxWidth()
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(cardColor)
+                        )
+                        Box(
+                            modifier = Modifier.height(12.dp).fillMaxWidth()
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(cardColor)
+                        )
+                        Box(
+                            modifier = Modifier.height(12.dp).fillMaxWidth()
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(cardColor)
+                        )
                     }
                 }
             }
