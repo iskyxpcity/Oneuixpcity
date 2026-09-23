@@ -12,9 +12,37 @@ import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XposedHelpers;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
-/** A lightweight liveness check for the SystemUI process, without modifying SystemUI views. */
+/**
+ * Safe liveness check reused by both API 82 legacy and modern API 101 entry.
+ * Neither entry installs UI mutations in the SystemUI process.
+ */
 public final class SystemUiHeartbeat implements IXposedHookLoadPackage {
     private static boolean started = false;
+
+    public static synchronized void start(Context context) {
+        if (started) return;
+        started = true;
+        final Context appContext = context.getApplicationContext() != null
+            ? context.getApplicationContext() : context;
+        ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor(runnable -> {
+            Thread thread = new Thread(runnable, "OneuiXP-SystemUI-heartbeat");
+            thread.setDaemon(true);
+            return thread;
+        });
+        executor.scheduleWithFixedDelay(() -> {
+            try {
+                Uri uri = Uri.parse("content://" + me.weishu.kernelsu.BuildConfig.APPLICATION_ID + ".statusbridge");
+                Bundle result = appContext.getContentResolver().call(uri, "heartbeat", null, null);
+                if (result == null || !result.getBoolean("accepted", false)) {
+                    Bundle retry = new Bundle();
+                    retry.putString("probe", "LOAD_RETRY: original probe unavailable");
+                    appContext.getContentResolver().call(uri, "loaded", null, retry);
+                }
+            } catch (Throwable ignored) {
+                // Keep SystemUI safe, even when the manager app is force-stopped.
+            }
+        }, 0L, 5L, TimeUnit.SECONDS);
+    }
 
     @Override public void handleLoadPackage(XC_LoadPackage.LoadPackageParam param) {
         if (!"com.android.systemui".equals(param.packageName)
@@ -22,34 +50,11 @@ public final class SystemUiHeartbeat implements IXposedHookLoadPackage {
         try {
             XposedHelpers.findAndHookMethod(Application.class, "attach", Context.class, new XC_MethodHook() {
                 @Override protected void afterHookedMethod(MethodHookParam hook) {
-                    final Context context = (Context) hook.args[0];
-                    synchronized (SystemUiHeartbeat.class) {
-                        if (started) return;
-                        started = true;
-                    }
-                    ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor(runnable -> {
-                        Thread thread = new Thread(runnable, "OneuiXP-SystemUI-heartbeat");
-                        thread.setDaemon(true);
-                        return thread;
-                    });
-                    executor.scheduleWithFixedDelay(() -> {
-                        try {
-                            Uri uri = Uri.parse("content://" + me.weishu.kernelsu.BuildConfig.APPLICATION_ID + ".statusbridge");
-                            Bundle result = context.getContentResolver().call(uri, "heartbeat", null, null);
-                            if (result == null || !result.getBoolean("accepted", false)) {
-                                // Recover if the one-time load callback ran before the provider was ready.
-                                Bundle retry = new Bundle();
-                                retry.putString("probe", "LOAD_RETRY: original probe unavailable");
-                                context.getContentResolver().call(uri, "loaded", null, retry);
-                            }
-                        } catch (Throwable ignored) {
-                            // Do not interrupt SystemUI or terminate the monitor on transient errors.
-                        }
-                    }, 0L, 5L, TimeUnit.SECONDS);
+                    if (hook.args[0] instanceof Context) start((Context) hook.args[0]);
                 }
             });
         } catch (Throwable ignored) {
-            // A ROM-specific failure must never prevent SystemUI from starting.
+            // Never interrupt SystemUI.
         }
     }
 }
