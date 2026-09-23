@@ -66,3 +66,14 @@ for locale in (root / 'app/src/main/res').glob('values*/strings.xml'):
             f'Unexpected obsolete KernelSU string {key} in {locale}'
         )
 print('PASS: all localized XML parsed, obsolete root/module translations absent')
+
+# The app does not expose KernelSU WebUI or local cleartext HTTP endpoints.
+for dead_key in ('profile_default', 'home_gki_warning', 'settings_sucompat', 'reboot_recovery'):
+    for locale in (root / 'app/src/main/res').glob('values*/strings.xml'):
+        assert not any(node.get('name') == dead_key for node in ElementTree.parse(locale).getroot().findall('string')), (
+            f'Unexpected obsolete {dead_key} in {locale}'
+        )
+assert 'networkSecurityConfig' not in (root / 'app/src/main/AndroidManifest.xml').read_text()
+assert not (root / 'app/src/main/res/xml/network_security_config.xml').exists()
+assert 'Theme.OneuiXP.WebUI' not in (root / 'app/src/main/res/values-night/themes.xml').read_text()
+print('PASS: no legacy KernelSU WebUI theme or local HTTP cleartext exemption')
