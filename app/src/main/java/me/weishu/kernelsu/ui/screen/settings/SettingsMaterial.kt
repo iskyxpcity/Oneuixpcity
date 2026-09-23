@@ -18,6 +18,9 @@ import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.ContactPage
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DeveloperMode
+import androidx.compose.material.icons.filled.DisplaySettings
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material.icons.filled.ElectricalServices
 import androidx.compose.material.icons.filled.Fence
 import androidx.compose.material.icons.filled.FolderDelete
@@ -99,7 +102,7 @@ fun SettingPagerMaterial(
                     content = listOf(
                         {
                             SegmentedSwitchItem(
-                                icon = Icons.Filled.Update,
+                                icon = Icons.Filled.SystemUpdate,
                                 title = stringResource(id = R.string.settings_check_update),
                                 summary = stringResource(id = R.string.settings_check_update_summary),
                                 checked = uiState.checkUpdate,
@@ -114,7 +117,7 @@ fun SettingPagerMaterial(
                 content = buildList {
                     add {
                         SegmentedDropdownItem(
-                            icon = Icons.Rounded.Dashboard,
+                            icon = Icons.Filled.DisplaySettings,
                             title = stringResource(id = R.string.settings_ui_mode),
                             summary = stringResource(id = R.string.settings_ui_mode_summary),
                             items = UiMode.entries.map { it.name },
@@ -347,7 +350,7 @@ fun SettingPagerMaterial(
                             headlineContent = { Text(stringResource(id = R.string.about)) },
                             leadingContent = {
                                 Icon(
-                                    Icons.Filled.ContactPage,
+                                    Icons.Filled.Info,
                                     stringResource(id = R.string.about)
                                 )
                             },
