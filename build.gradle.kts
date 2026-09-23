@@ -31,5 +31,6 @@ fun getVersionCode(): Int {
 }
 
 fun getVersionName(): String {
-    return getGitDescribe()
+    return (findProperty("oneuixpVersionName") as? String)?.takeIf { it.isNotBlank() }
+        ?: getGitDescribe()
 }
