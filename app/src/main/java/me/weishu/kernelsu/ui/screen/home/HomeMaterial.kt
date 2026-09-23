@@ -177,8 +177,9 @@ private fun StatusCard(
                             text = when {
                                 status.injected -> "工作中"
                                 status.scopeActive -> "已激活"
+                                status.frameworkConnected && !status.scopeKnown -> "正在读取作用域"
                                 status.frameworkConnected -> "作用域未激活"
-                                else -> "未激活"
+                                else -> "状态待确认"
                             },
                             style = MaterialTheme.typography.titleMedium,
                         )
@@ -196,8 +197,9 @@ private fun StatusCard(
                         text = when {
                             status.injected -> "SystemUI 已注入"
                             status.scopeActive -> "SystemUI 作用域已激活"
+                            status.frameworkConnected && !status.scopeKnown -> "LSPosed 已连接 · 正在读取实际作用域"
                             status.frameworkConnected -> "LSPosed 已连接 · 未勾选 SystemUI"
-                            else -> "LSPosed 服务未连接"
+                            else -> "尚未收到 LSPosed 服务，请核对模块类型与启用状态"
                         },
                         style = MaterialTheme.typography.bodyMedium,
                     )
