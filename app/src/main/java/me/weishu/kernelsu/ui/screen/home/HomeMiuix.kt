@@ -12,6 +12,8 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -150,45 +152,46 @@ private fun StatusCard() {
         }
     } else colorScheme.errorContainer
 
+    // Match the ROOT-active KernelSU v3.2.5 three-card dashboard:
+    // intrinsic-height row, left status card, right stacked counter cards.
     Row(
-        modifier = Modifier.fillMaxWidth().height(220.dp),
+        modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Card(
             modifier = Modifier.weight(1f).fillMaxHeight(),
             colors = CardDefaults.defaultColors(color = mainCardColor),
             pressFeedbackType = PressFeedbackType.Tilt,
         ) {
-            Box(Modifier.fillMaxSize()) {
-                // Full-sized emblem, intentionally clipped by the card like the
-                // reference screenshot. Use an opaque theme-primary tint rather
-                // than washing the checkmark out with a semi-transparent overlay.
-                Icon(
-                    imageVector = if (active) Icons.Rounded.CheckCircleOutline
-                    else Icons.Rounded.ErrorOutline,
-                    contentDescription = null,
-                    modifier = Modifier.align(Alignment.BottomEnd)
-                        .offset(x = 37.dp, y = 38.dp).size(165.dp),
-                    tint = if (active) {
-                        if (isDynamicColor) colorScheme.primary.copy(alpha = 0.8f)
-                        else Color(0xFF36D167)
-                    } else colorScheme.error.copy(alpha = 0.8f),
-                )
-                Column(modifier = Modifier.fillMaxSize().padding(16.dp, 14.dp)) {
-                    Text(
-                        text = if (active) "工作中" else "等待激活",
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.SemiBold,
+            Box(modifier = Modifier.fillMaxSize()) {
+                Box(
+                    modifier = Modifier.fillMaxSize().offset(38.dp, 45.dp),
+                    contentAlignment = Alignment.BottomEnd,
+                ) {
+                    Icon(
+                        modifier = Modifier.size(170.dp),
+                        imageVector = if (active) Icons.Rounded.CheckCircleOutline
+                            else Icons.Rounded.ErrorOutline,
+                        tint = if (active) {
+                            if (isDynamicColor) colorScheme.primary.copy(alpha = 0.8f)
+                            else Color(0xFF36D167)
+                        } else colorScheme.error.copy(alpha = 0.8f),
+                        contentDescription = null,
                     )
+                }
+                Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
                     Text(
-                        text = if (active) "＜已激活＞" else "＜未收到注入报告＞",
+                        modifier = Modifier.fillMaxWidth(),
+                        text = if (active) "工作中" else "等待激活",
                         fontSize = 20.sp,
                         fontWeight = FontWeight.SemiBold,
                     )
                     Spacer(Modifier.height(2.dp))
                     Text(
-                        text = if (active) "LSPosed / SystemUI" else "需等待 SystemUI 加载模块",
-                        fontSize = 15.sp,
+                        modifier = Modifier.fillMaxWidth(),
+                        text = if (active) "LSPosed / SystemUI" else "等待 SystemUI 模块加载",
+                        fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                     )
                 }
@@ -196,14 +199,16 @@ private fun StatusCard() {
         }
         Column(
             modifier = Modifier.weight(1f).fillMaxHeight(),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             DashboardSmallCardMiuix(
-                title = "模块注入数量", value = status.injectionCount.toString(),
+                title = "模块注入数量",
+                value = status.injectionCount.toString(),
                 modifier = Modifier.weight(1f),
             )
+            Spacer(Modifier.height(12.dp))
             DashboardSmallCardMiuix(
-                title = "作用域数量", value = status.scopeCount.toString(),
+                title = "作用域数量",
+                value = status.scopeCount.toString(),
                 modifier = Modifier.weight(1f),
             )
         }
@@ -212,17 +217,26 @@ private fun StatusCard() {
 
 @Composable
 private fun DashboardSmallCardMiuix(title: String, value: String, modifier: Modifier = Modifier) {
-    Card(modifier = modifier.fillMaxWidth(), pressFeedbackType = PressFeedbackType.Tilt) {
-        Column(
-            modifier = Modifier.fillMaxSize().padding(horizontal = 18.dp, vertical = 14.dp),
-            verticalArrangement = Arrangement.Center,
-        ) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        insideMargin = PaddingValues(16.dp),
+        pressFeedbackType = PressFeedbackType.Tilt,
+    ) {
+        Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.Start) {
             Text(
-                text = title, fontSize = 16.sp, fontWeight = FontWeight.Medium,
+                modifier = Modifier.fillMaxWidth(),
+                text = title,
+                fontWeight = FontWeight.Medium,
+                fontSize = 15.sp,
                 color = colorScheme.onSurfaceVariantSummary,
             )
-            Spacer(Modifier.height(2.dp))
-            Text(text = value, fontSize = 34.sp, fontWeight = FontWeight.Medium)
+            Text(
+                modifier = Modifier.fillMaxWidth(),
+                text = value,
+                fontSize = 26.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = colorScheme.onSurface,
+            )
         }
     }
 }
