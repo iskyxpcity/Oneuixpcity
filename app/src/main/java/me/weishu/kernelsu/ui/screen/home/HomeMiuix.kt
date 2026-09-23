@@ -181,14 +181,24 @@ private fun StatusCard() {
                 Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
                     Text(
                         modifier = Modifier.fillMaxWidth(),
-                        text = if (active) "工作中" else "等待激活",
+                        text = when {
+                            status.injected -> "工作中"
+                            status.scopeActive -> "已激活"
+                            status.frameworkConnected -> "作用域未激活"
+                            else -> "未激活"
+                        },
                         fontSize = 20.sp,
                         fontWeight = FontWeight.SemiBold,
                     )
                     Spacer(Modifier.height(2.dp))
                     Text(
                         modifier = Modifier.fillMaxWidth(),
-                        text = if (active) "LSPosed / SystemUI" else "等待 SystemUI 模块加载",
+                        text = when {
+                            status.injected -> "SystemUI 已注入"
+                            status.scopeActive -> "SystemUI 作用域已激活"
+                            status.frameworkConnected -> "LSPosed 已连接 · 未勾选 SystemUI"
+                            else -> "LSPosed 服务未连接"
+                        },
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                     )
