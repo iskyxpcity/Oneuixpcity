@@ -132,7 +132,8 @@ android {
 
 androidComponents {
     onVariants(selector().withBuildType("release")) {
-        it.packaging.resources.excludes.addAll(listOf("META-INF/**", "kotlin/**", "**.bin"))
+        // Modern modules require META-INF/xposed/{java_init.list,module.prop,scope.list} even in release.
+        it.packaging.resources.excludes.addAll(listOf("META-INF/*.kotlin_module", "kotlin/**", "**.bin"))
     }
 }
 
@@ -144,6 +145,7 @@ base {
 
 dependencies {
     compileOnly("de.robv.android.xposed:api:82")
+    compileOnly(libs.libxposed.api)
     implementation(libs.libxposed.service)
     implementation(libs.androidx.activity.compose)
 
