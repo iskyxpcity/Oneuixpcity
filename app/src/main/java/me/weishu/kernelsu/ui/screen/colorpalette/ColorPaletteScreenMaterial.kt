@@ -138,7 +138,7 @@ fun ColorPaletteScreenMaterial(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .nestedScroll(scrollBehavior.nestedScrollConnection),
-            verticalArrangement = Arrangement.spacedBy(13.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             item {
                 ThemePreviewCard(
