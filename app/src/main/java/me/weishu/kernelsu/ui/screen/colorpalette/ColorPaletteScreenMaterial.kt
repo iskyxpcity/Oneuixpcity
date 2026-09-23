@@ -36,6 +36,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -112,7 +113,6 @@ fun ColorPaletteScreenMaterial(
     val haptic = LocalHapticFeedback.current
 
     ExpressiveScaffold(
-        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             LargeFlexibleTopAppBar(
                 navigationIcon = {
@@ -129,13 +129,18 @@ fun ColorPaletteScreenMaterial(
         val navBars = WindowInsets.navigationBars.asPaddingValues()
         val captionBar = WindowInsets.captionBar.asPaddingValues()
 
-        Column(
+        LazyColumn(
             modifier = Modifier
+                .fillMaxSize()
                 .padding(paddingValues)
-                .verticalScroll(rememberScrollState()),
+                .nestedScroll(scrollBehavior.nestedScrollConnection),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            val isDark = currentColorMode.isDark || currentColorMode.isSystem && isSystemInDarkTheme()
+            item {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    val isDark = currentColorMode.isDark || currentColorMode.isSystem && isSystemInDarkTheme()
             val isAmoled = currentColorMode.isAmoled
             ThemePreviewCard(
                 keyColor = currentKeyColor,
@@ -343,7 +348,9 @@ fun ColorPaletteScreenMaterial(
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp + navBars.calculateBottomPadding() + captionBar.calculateBottomPadding()))
+                    Spacer(modifier = Modifier.height(16.dp + navBars.calculateBottomPadding() + captionBar.calculateBottomPadding()))
+                }
+            }
         }
     }
 }
