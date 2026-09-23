@@ -1,7 +1,7 @@
 package me.weishu.kernelsu.ui.navigation3
 
 import android.os.Parcelable
-import androidx.navigation3.runtime.NavKey
+import top.yukonga.miuix.kmp.nav.core.NavKey
 import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
 import me.weishu.kernelsu.ui.screen.flash.FlashIt
