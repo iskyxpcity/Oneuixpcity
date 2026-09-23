@@ -6,16 +6,21 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -142,33 +147,111 @@ private fun StatusCard(
     state: HomeUiState,
     actions: HomeActions,
 ) {
-    val context = androidx.compose.ui.platform.LocalContext.current
-    val loaded = me.weishu.kernelsu.statusbar.StatusBridge.recentlyLoaded(context)
-    val reportCount = me.weishu.kernelsu.statusbar.StatusBridge.loadReportCount(context)
-    val probe = me.weishu.kernelsu.statusbar.StatusBridge.diagnosticSummary(context)
-    Column(verticalArrangement = Arrangement.spacedBy(13.dp)) {
-        TonalCard {
-            Column(Modifier.fillMaxWidth().padding(16.dp)) {
-                Text("OneuiXP", style = MaterialTheme.typography.titleMedium)
-                Spacer(Modifier.height(8.dp))
-                Text(if (loaded) "本次开机已收到 SystemUI 模块加载报告（功能尚未验证）"
-                     else "未收到本次开机的 LSPosed / SystemUI 加载报告，当前未确认工作")
+    val status = rememberLsposedHomeStatus()
+    val active = status.active
+    val containerColor = if (active) {
+        MaterialTheme.colorScheme.secondaryContainer
+    } else {
+        MaterialTheme.colorScheme.errorContainer
+    }
+    val contentColor = MaterialTheme.colorScheme.contentColorFor(containerColor)
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(220.dp),
+        horizontalArrangement = Arrangement.spacedBy(13.dp),
+    ) {
+        Surface(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight(),
+            color = containerColor,
+            contentColor = contentColor,
+            shape = MaterialTheme.shapes.extraLarge,
+        ) {
+            Box(Modifier.fillMaxSize()) {
+                Icon(
+                    imageVector = if (active) Icons.Outlined.CheckCircle else Icons.Outlined.Block,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .offset(x = 30.dp, y = 30.dp)
+                        .size(138.dp),
+                    tint = contentColor.copy(alpha = 0.38f),
+                )
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(20.dp),
+                ) {
+                    Text(
+                        text = if (active) "工作中 ＜已激活＞" else "未激活 ＜LSPosed＞",
+                        style = MaterialTheme.typography.headlineSmall,
+                    )
+                    Spacer(Modifier.height(6.dp))
+                    Text(
+                        text = if (active) "LSPosed / SystemUI" else "等待 SystemUI 模块加载",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = contentColor.copy(alpha = 0.78f),
+                    )
+                    Spacer(Modifier.weight(1f))
+                    Text(
+                        text = "OneuiXP",
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                }
             }
         }
-        TonalCard {
-            Column(Modifier.fillMaxWidth().padding(16.dp)) {
-                Text("SystemUI 加载报告", style = MaterialTheme.typography.titleMedium)
-                Spacer(Modifier.height(8.dp))
-                Text("本次开机：${reportCount} 次；不等于实际注入次数")
-                Text("功能探测：${probe}")
-            }
+
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight(),
+            verticalArrangement = Arrangement.spacedBy(13.dp),
+        ) {
+            DashboardSmallCardMaterial(
+                title = "模块注入数量",
+                value = status.injectionCount.toString(),
+                modifier = Modifier.weight(1f),
+            )
+            DashboardSmallCardMaterial(
+                title = "作用域数量",
+                value = status.scopeCount.toString(),
+                modifier = Modifier.weight(1f),
+            )
         }
-        TonalCard {
-            Column(Modifier.fillMaxWidth().padding(16.dp)) {
-                Text("LSPosed 作用域与注入", style = MaterialTheme.typography.titleMedium)
-                Spacer(Modifier.height(8.dp))
-                Text("作用域数量：尚未接入；实际注入次数：尚未接入")
-            }
+    }
+}
+
+@Composable
+private fun DashboardSmallCardMaterial(
+    title: String,
+    value: String,
+    modifier: Modifier = Modifier,
+) {
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        contentColor = MaterialTheme.colorScheme.onSurface,
+        shape = MaterialTheme.shapes.extraLarge,
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 20.dp, vertical = 16.dp),
+            verticalArrangement = Arrangement.Center,
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = value,
+                style = MaterialTheme.typography.displaySmall,
+            )
         }
     }
 }

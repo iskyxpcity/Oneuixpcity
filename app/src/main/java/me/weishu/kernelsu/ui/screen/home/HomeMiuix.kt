@@ -195,30 +195,120 @@ private fun StatusCard(
     state: HomeUiState,
     actions: HomeActions,
 ) {
-    val context = LocalContext.current
-    val loaded = me.weishu.kernelsu.statusbar.StatusBridge.recentlyLoaded(context)
-    val reports = me.weishu.kernelsu.statusbar.StatusBridge.loadReportCount(context)
-    val probe = me.weishu.kernelsu.statusbar.StatusBridge.diagnosticSummary(context)
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Card(modifier = Modifier.fillMaxWidth()) {
-            Column(modifier = Modifier.padding(18.dp)) {
-                Text("OneuiXP")
-                Text(if (loaded) "本次开机已收到 SystemUI 模块加载报告（功能尚未验证）"
-                     else "未收到本次开机的 LSPosed / SystemUI 加载报告，当前未确认工作")
+    val status = rememberLsposedHomeStatus()
+    val active = status.active
+    val mainCardColor = if (active) {
+        when {
+            isDynamicColor -> colorScheme.secondaryContainer
+            isInDarkTheme() -> Color(0xFF1A3825)
+            else -> Color(0xFFDFFAE4)
+        }
+    } else {
+        colorScheme.errorContainer
+    }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(220.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Card(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight(),
+            colors = CardDefaults.defaultColors(color = mainCardColor),
+            pressFeedbackType = PressFeedbackType.Tilt,
+        ) {
+            Box(Modifier.fillMaxSize()) {
+                Icon(
+                    imageVector = if (active) Icons.Rounded.CheckCircleOutline else Icons.Rounded.ErrorOutline,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .offset(x = 30.dp, y = 30.dp)
+                        .size(138.dp),
+                    tint = if (active) {
+                        if (isDynamicColor) colorScheme.primary.copy(alpha = 0.58f)
+                        else Color(0xFF36D167).copy(alpha = 0.72f)
+                    } else {
+                        colorScheme.error.copy(alpha = 0.58f)
+                    },
+                )
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(18.dp),
+                ) {
+                    Text(
+                        text = if (active) "工作中 ＜已激活＞" else "未激活 ＜LSPosed＞",
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        text = if (active) "LSPosed / SystemUI" else "等待 SystemUI 模块加载",
+                        fontSize = 15.sp,
+                        color = colorScheme.onSurfaceVariantSummary,
+                    )
+                    Spacer(Modifier.weight(1f))
+                    Text(
+                        text = "OneuiXP",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium,
+                    )
+                }
             }
         }
-        Card(modifier = Modifier.fillMaxWidth()) {
-            Column(modifier = Modifier.padding(18.dp)) {
-                Text("SystemUI 加载报告")
-                Text("本次开机：${reports} 次；不等于实际注入次数")
-                Text("功能探测：${probe}")
-            }
+
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight(),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            DashboardSmallCardMiuix(
+                title = "模块注入数量",
+                value = status.injectionCount.toString(),
+                modifier = Modifier.weight(1f),
+            )
+            DashboardSmallCardMiuix(
+                title = "作用域数量",
+                value = status.scopeCount.toString(),
+                modifier = Modifier.weight(1f),
+            )
         }
-        Card(modifier = Modifier.fillMaxWidth()) {
-            Column(modifier = Modifier.padding(18.dp)) {
-                Text("LSPosed 作用域与注入")
-                Text("作用域数量：尚未接入；实际注入次数：尚未接入")
-            }
+    }
+}
+
+@Composable
+private fun DashboardSmallCardMiuix(
+    title: String,
+    value: String,
+    modifier: Modifier = Modifier,
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        pressFeedbackType = PressFeedbackType.Tilt,
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 18.dp, vertical = 14.dp),
+            verticalArrangement = Arrangement.Center,
+        ) {
+            Text(
+                text = title,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Medium,
+                color = colorScheme.onSurfaceVariantSummary,
+            )
+            Spacer(Modifier.height(2.dp))
+            Text(
+                text = value,
+                fontSize = 34.sp,
+                fontWeight = FontWeight.Medium,
+            )
         }
     }
 }
