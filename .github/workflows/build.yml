@@ -27,6 +27,9 @@ jobs:
           grep -q 'applicationId = managerPackageName' app/build.gradle.kts
           grep -q 'val defaultManagerPackageName = "com.oneuixp.app"' app/build.gradle.kts
           grep -q 'SystemUiHeartbeat' app/src/main/assets/xposed_init
+          grep -q '@Serializable' app/src/main/java/me/weishu/kernelsu/ui/navigation3/Routes.kt
+          grep -q 'sealed interface Route : NavKey, Parcelable' app/src/main/java/me/weishu/kernelsu/ui/navigation3/Routes.kt
+          echo "Root Route must remain serializable for miuix-nav"
       - name: Build OneuiXP debug APK
         run: |
           set -o pipefail
