@@ -47,3 +47,22 @@ for name in ('NavigationRailMiuix.kt', 'NavigationRailMaterial.kt'):
     assert not (root / 'app/src/main/java/com/oneuixp/app/ui/component/bottombar' / name).exists(), name
 assert 'fun SideRail(' not in (root / 'app/src/main/java/com/oneuixp/app/ui/component/bottombar/BottomBar.kt').read_text()
 print('PASS: no old intent dispatcher or inactive adaptive navigation rails')
+
+# Resource guard: the root/module backend has been removed across every locale.
+# Parse ALL localized XML files, not just the default translation.
+import re
+from xml.etree import ElementTree
+legacy_strings = re.compile(
+    r'^(?:sulog_|home_(?:not_installed|click_to_install|kernel|manager_version|learn_kernelsu|click_to_learn_kernelsu)|'
+    r'superuser$|module_|metamodule_|profile_umount|require_(?:manager|kernel)|'
+    r'settings_(?:umount|uninstall|kernel_umount|adb_root|module_)|'
+    r'(?:grant_root|su_not_allowed|jailbreak_|install_|flashing$|flash_|safe_mode_|'
+    r'direct_install|recently_installed|no_such_module|module_unavailable))'
+)
+for locale in (root / 'app/src/main/res').glob('values*/strings.xml'):
+    for resource in ElementTree.parse(locale).getroot().findall('string'):
+        key = resource.get('name', '')
+        assert not (legacy_strings.match(key) and key not in {'module_update', 'module_changelog'}), (
+            f'Unexpected obsolete KernelSU string {key} in {locale}'
+        )
+print('PASS: all localized XML parsed, obsolete root/module translations absent')
