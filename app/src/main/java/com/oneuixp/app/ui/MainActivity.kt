@@ -1,7 +1,6 @@
 package com.oneuixp.app.ui
 
 import android.annotation.SuppressLint
-import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
@@ -35,11 +34,9 @@ import androidx.navigation3.ui.NavDisplay
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
-import kotlinx.coroutines.channels.Channel
 import com.oneuixp.app.ui.component.bottombar.BottomBar
 import com.oneuixp.app.ui.component.bottombar.MainPagerState
 import com.oneuixp.app.ui.component.bottombar.rememberMainPagerState
-import com.oneuixp.app.ui.navigation3.IntentDispatcher
 import com.oneuixp.app.ui.navigation3.LocalNavigator
 import com.oneuixp.app.ui.navigation3.Navigator
 import com.oneuixp.app.ui.navigation3.Route
@@ -68,13 +65,9 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 class MainActivity : ComponentActivity() {
 
-    private val intentChannel = Channel<Intent>(capacity = Channel.BUFFERED)
-
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        if (savedInstanceState == null) intent?.let { intentChannel.trySend(it) }
 
         setContent {
             val viewModel = viewModel<MainActivityViewModel>()
@@ -118,8 +111,6 @@ class MainActivity : ComponentActivity() {
                 LocalUiMode provides uiMode,
             ) {
                 OneuiXPTheme(appSettings = appSettings, uiMode = uiMode) {
-                    IntentDispatcher(intentChannel = intentChannel)
-
                     val mainScreenEntry = @Composable {
                         MainScreen(
                             initialPage = selectedMainPage,
@@ -156,11 +147,6 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    override fun onNewIntent(intent: Intent) {
-        super.onNewIntent(intent)
-        setIntent(intent)
-        intentChannel.trySend(intent)
-    }
 }
 
 val LocalMainPagerState = staticCompositionLocalOf<MainPagerState> {

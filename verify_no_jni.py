@@ -40,3 +40,10 @@ assert 'statusbar_xp_systemui' in reboot_popup
 theme = (root / 'app/src/main/java/com/oneuixp/app/ui/theme/Theme.kt').read_text()
 assert 'fun OneuiXPTheme(' in theme
 print('PASS: KernelSU feature/reboot paths disconnected; OneuiXP dual-theme wrapper active')
+
+# Never bring back the abandoned KernelSU intent drain or unused adaptive side rails.
+assert not (root / 'app/src/main/java/com/oneuixp/app/ui/navigation3/IntentDispatcher.kt').exists()
+for name in ('NavigationRailMiuix.kt', 'NavigationRailMaterial.kt'):
+    assert not (root / 'app/src/main/java/com/oneuixp/app/ui/component/bottombar' / name).exists(), name
+assert 'fun SideRail(' not in (root / 'app/src/main/java/com/oneuixp/app/ui/component/bottombar/BottomBar.kt').read_text()
+print('PASS: no old intent dispatcher or inactive adaptive navigation rails')
