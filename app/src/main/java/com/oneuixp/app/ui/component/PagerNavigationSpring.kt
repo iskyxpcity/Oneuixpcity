@@ -1,4 +1,4 @@
-package me.weishu.kernelsu.ui.component
+package com.oneuixp.app.ui.component
 
 import androidx.compose.animation.core.SpringSpec
 import androidx.compose.animation.core.spring

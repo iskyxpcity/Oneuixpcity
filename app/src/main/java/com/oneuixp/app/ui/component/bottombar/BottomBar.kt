@@ -1,4 +1,4 @@
-package me.weishu.kernelsu.ui.component.bottombar
+package com.oneuixp.app.ui.component.bottombar
 
 import androidx.compose.animation.core.EaseInOut
 import androidx.compose.animation.core.tween
@@ -16,8 +16,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
-import me.weishu.kernelsu.ui.LocalUiMode
-import me.weishu.kernelsu.ui.UiMode
+import com.oneuixp.app.ui.LocalUiMode
+import com.oneuixp.app.ui.UiMode
 import top.yukonga.miuix.kmp.blur.Backdrop
 import top.yukonga.miuix.kmp.blur.LayerBackdrop
 import kotlin.math.abs
