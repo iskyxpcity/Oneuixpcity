@@ -1,4 +1,4 @@
-package me.weishu.kernelsu.ui.component.bottombar
+package com.oneuixp.app.ui.component.bottombar
 
 import androidx.annotation.StringRes
 import androidx.compose.foundation.clickable
@@ -22,13 +22,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import me.weishu.kernelsu.R
-import me.weishu.kernelsu.ui.LocalMainPagerState
-import me.weishu.kernelsu.ui.component.FloatingBottomBar
-import me.weishu.kernelsu.ui.component.FloatingBottomBarItem
-import me.weishu.kernelsu.ui.theme.LocalEnableFloatingBottomBar
-import me.weishu.kernelsu.ui.theme.LocalEnableFloatingBottomBarBlur
-import me.weishu.kernelsu.ui.util.BlurredBar
+import com.oneuixp.app.R
+import com.oneuixp.app.ui.LocalMainPagerState
+import com.oneuixp.app.ui.component.FloatingBottomBar
+import com.oneuixp.app.ui.component.FloatingBottomBarItem
+import com.oneuixp.app.ui.theme.LocalEnableFloatingBottomBar
+import com.oneuixp.app.ui.theme.LocalEnableFloatingBottomBarBlur
+import com.oneuixp.app.ui.util.BlurredBar
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.NavigationBar
 import top.yukonga.miuix.kmp.basic.NavigationBarItem

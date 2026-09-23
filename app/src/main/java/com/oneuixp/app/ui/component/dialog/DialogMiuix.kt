@@ -1,4 +1,4 @@
-package me.weishu.kernelsu.ui.component.dialog
+package com.oneuixp.app.ui.component.dialog
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -20,8 +20,8 @@ import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import me.weishu.kernelsu.R
-import me.weishu.kernelsu.ui.component.markdown.MarkdownContent
+import com.oneuixp.app.R
+import com.oneuixp.app.ui.component.markdown.MarkdownContent
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.InfiniteProgressIndicator
 import top.yukonga.miuix.kmp.basic.Text

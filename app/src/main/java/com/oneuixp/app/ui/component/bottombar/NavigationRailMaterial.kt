@@ -1,4 +1,4 @@
-package me.weishu.kernelsu.ui.component.bottombar
+package com.oneuixp.app.ui.component.bottombar
 
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -24,8 +24,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import me.weishu.kernelsu.R
-import me.weishu.kernelsu.ui.LocalMainPagerState
+import com.oneuixp.app.R
+import com.oneuixp.app.ui.LocalMainPagerState
 
 @Composable
 fun NavigationRailMaterial(

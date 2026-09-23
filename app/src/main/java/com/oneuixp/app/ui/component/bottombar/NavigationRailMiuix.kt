@@ -1,4 +1,4 @@
-package me.weishu.kernelsu.ui.component.bottombar
+package com.oneuixp.app.ui.component.bottombar
 
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -8,8 +8,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import me.weishu.kernelsu.ui.LocalMainPagerState
-import me.weishu.kernelsu.ui.util.BlurredBar
+import com.oneuixp.app.ui.LocalMainPagerState
+import com.oneuixp.app.ui.util.BlurredBar
 import top.yukonga.miuix.kmp.basic.NavigationRail
 import top.yukonga.miuix.kmp.basic.NavigationRailItem
 import top.yukonga.miuix.kmp.blur.LayerBackdrop

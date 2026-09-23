@@ -1,4 +1,4 @@
-package me.weishu.kernelsu.ui.component.dialog
+package com.oneuixp.app.ui.component.dialog
 
 import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
@@ -21,10 +21,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import me.weishu.kernelsu.R
-import me.weishu.kernelsu.ui.LocalUiMode
-import me.weishu.kernelsu.ui.UiMode
-import me.weishu.kernelsu.ui.component.material.ExpressiveDialog
+import com.oneuixp.app.R
+import com.oneuixp.app.ui.LocalUiMode
+import com.oneuixp.app.ui.UiMode
+import com.oneuixp.app.ui.component.material.ExpressiveDialog
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.TextField
 import top.yukonga.miuix.kmp.basic.TextButton
