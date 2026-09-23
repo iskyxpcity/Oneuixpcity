@@ -125,7 +125,7 @@ private fun UpdateCard(state: HomeUiState, actions: HomeActions) {
         exit = shrinkVertically() + fadeOut(),
     ) {
         WarningCard(
-            message = stringResource(R.string.new_version_available, version.versionCode),
+            message = stringResource(R.string.new_version_available, version.versionName),
             onClick = {
                 if (version.changelog.isEmpty()) actions.onOpenUrl(version.downloadUrl)
                 else dialog.showConfirm(
