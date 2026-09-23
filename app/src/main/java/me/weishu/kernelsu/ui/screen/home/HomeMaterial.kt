@@ -174,10 +174,15 @@ private fun StatusCard(
                 Column(Modifier.padding(start = 20.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
-                            text = if (active) "工作中" else "未激活",
+                            text = when {
+                                status.injected -> "工作中"
+                                status.scopeActive -> "已激活"
+                                status.frameworkConnected -> "作用域未激活"
+                                else -> "未激活"
+                            },
                             style = MaterialTheme.typography.titleMedium,
                         )
-                        if (active) {
+                        if (status.frameworkConnected || status.injected) {
                             Spacer(Modifier.width(8.dp))
                             StatusTag(
                                 label = "LSPosed",
@@ -188,7 +193,12 @@ private fun StatusCard(
                     }
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        text = if (active) "LSPosed / SystemUI" else "等待 SystemUI 模块加载",
+                        text = when {
+                            status.injected -> "SystemUI 已注入"
+                            status.scopeActive -> "SystemUI 作用域已激活"
+                            status.frameworkConnected -> "LSPosed 已连接 · 未勾选 SystemUI"
+                            else -> "LSPosed 服务未连接"
+                        },
                         style = MaterialTheme.typography.bodyMedium,
                     )
                 }
