@@ -21,6 +21,9 @@ import androidx.compose.material.icons.rounded.ContactPage
 import androidx.compose.material.icons.rounded.Dashboard
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.DeveloperMode
+import androidx.compose.material.icons.rounded.DisplaySettings
+import androidx.compose.material.icons.rounded.Info
+import androidx.compose.material.icons.rounded.SystemUpdate
 import androidx.compose.material.icons.rounded.ElectricalServices
 import androidx.compose.material.icons.rounded.Fence
 import androidx.compose.material.icons.rounded.FolderDelete
@@ -117,7 +120,7 @@ fun SettingPagerMiuix(
                             summary = stringResource(id = R.string.settings_check_update_summary),
                             startAction = {
                                 Icon(
-                                    Icons.Rounded.Update,
+                                    Icons.Rounded.SystemUpdate,
                                     modifier = Modifier.padding(end = 6.dp),
                                     contentDescription = stringResource(id = R.string.settings_check_update),
                                     tint = colorScheme.onBackground
@@ -140,7 +143,7 @@ fun SettingPagerMiuix(
                             items = UiMode.entries.map { it.name },
                             startAction = {
                                 Icon(
-                                    Icons.Rounded.Dashboard,
+                                    Icons.Rounded.DisplaySettings,
                                     modifier = Modifier.padding(end = 6.dp),
                                     contentDescription = stringResource(id = R.string.settings_ui_mode),
                                     tint = colorScheme.onBackground
@@ -448,7 +451,7 @@ fun SettingPagerMiuix(
                             title = about,
                             startAction = {
                                 Icon(
-                                    Icons.Rounded.ContactPage,
+                                    Icons.Rounded.Info,
                                     modifier = Modifier.padding(end = 6.dp),
                                     contentDescription = about,
                                     tint = colorScheme.onBackground
