@@ -1,4 +1,4 @@
-package me.weishu.kernelsu.ui.screen.colorpalette
+package com.oneuixp.app.ui.screen.colorpalette
 
 import android.annotation.SuppressLint
 import android.os.Build
@@ -89,13 +89,13 @@ import androidx.compose.ui.unit.dp
 import com.materialkolor.PaletteStyle
 import com.materialkolor.dynamiccolor.ColorSpec
 import com.materialkolor.rememberDynamicColorScheme
-import me.weishu.kernelsu.R
-import me.weishu.kernelsu.ui.component.material.SegmentedColumn
-import me.weishu.kernelsu.ui.component.material.SegmentedDropdownItem
-import me.weishu.kernelsu.ui.component.material.SegmentedSwitchItem
-import me.weishu.kernelsu.ui.component.material.TonalCard
-import me.weishu.kernelsu.ui.theme.ColorMode
-import me.weishu.kernelsu.ui.theme.keyColorOptions
+import com.oneuixp.app.R
+import com.oneuixp.app.ui.component.material.SegmentedColumn
+import com.oneuixp.app.ui.component.material.SegmentedDropdownItem
+import com.oneuixp.app.ui.component.material.SegmentedSwitchItem
+import com.oneuixp.app.ui.component.material.TonalCard
+import com.oneuixp.app.ui.theme.ColorMode
+import com.oneuixp.app.ui.theme.keyColorOptions
 
 @Composable
 fun ColorPaletteScreenMaterial(

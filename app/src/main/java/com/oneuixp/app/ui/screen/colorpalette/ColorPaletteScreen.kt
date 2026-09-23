@@ -1,4 +1,4 @@
-package me.weishu.kernelsu.ui.screen.colorpalette
+package com.oneuixp.app.ui.screen.colorpalette
 
 import androidx.activity.compose.LocalActivity
 import androidx.compose.runtime.Composable
@@ -9,12 +9,12 @@ import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.materialkolor.PaletteStyle
 import com.materialkolor.dynamiccolor.ColorSpec
-import me.weishu.kernelsu.KernelSUApplication
-import me.weishu.kernelsu.ui.LocalUiMode
-import me.weishu.kernelsu.ui.UiMode
-import me.weishu.kernelsu.ui.navigation3.LocalNavigator
-import me.weishu.kernelsu.ui.theme.ColorMode
-import me.weishu.kernelsu.ui.viewmodel.SettingsViewModel
+import com.oneuixp.app.OneuiXPApplication
+import com.oneuixp.app.ui.LocalUiMode
+import com.oneuixp.app.ui.UiMode
+import com.oneuixp.app.ui.navigation3.LocalNavigator
+import com.oneuixp.app.ui.theme.ColorMode
+import com.oneuixp.app.ui.viewmodel.SettingsViewModel
 
 @Composable
 fun ColorPaletteScreen() {
@@ -53,7 +53,7 @@ fun ColorPaletteScreen() {
         onSetEnableNavigationBadge = viewModel::setEnableNavigationBadge,
         onSetEnablePredictiveBack = {
             viewModel.setEnablePredictiveBack(it)
-            KernelSUApplication.setEnableOnBackInvokedCallback(context.applicationInfo, it)
+            OneuiXPApplication.setEnableOnBackInvokedCallback(context.applicationInfo, it)
             activity?.recreate()
         },
         onSetEnableSwipeDismiss = viewModel::setEnableSwipeDismiss,

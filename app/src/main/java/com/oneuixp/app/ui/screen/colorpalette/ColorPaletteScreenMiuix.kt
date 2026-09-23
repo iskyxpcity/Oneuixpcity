@@ -1,4 +1,4 @@
-package me.weishu.kernelsu.ui.screen.colorpalette
+package com.oneuixp.app.ui.screen.colorpalette
 
 import android.annotation.SuppressLint
 import android.os.Build
@@ -60,12 +60,12 @@ import androidx.compose.ui.unit.sp
 import com.materialkolor.PaletteStyle
 import com.materialkolor.dynamiccolor.ColorSpec
 import com.materialkolor.rememberDynamicColorScheme
-import me.weishu.kernelsu.R
-import me.weishu.kernelsu.ui.component.miuix.ScaleDialog
-import me.weishu.kernelsu.ui.theme.LocalEnableBlur
-import me.weishu.kernelsu.ui.theme.keyColorOptions
-import me.weishu.kernelsu.ui.util.BlurredBar
-import me.weishu.kernelsu.ui.util.rememberBlurBackdrop
+import com.oneuixp.app.R
+import com.oneuixp.app.ui.component.miuix.ScaleDialog
+import com.oneuixp.app.ui.theme.LocalEnableBlur
+import com.oneuixp.app.ui.theme.keyColorOptions
+import com.oneuixp.app.ui.util.BlurredBar
+import com.oneuixp.app.ui.util.rememberBlurBackdrop
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton

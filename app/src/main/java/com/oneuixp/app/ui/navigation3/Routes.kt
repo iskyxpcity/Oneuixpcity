@@ -1,4 +1,4 @@
-package me.weishu.kernelsu.ui.navigation3
+package com.oneuixp.app.ui.navigation3
 
 import android.os.Parcelable
 import androidx.navigation3.runtime.NavKey
