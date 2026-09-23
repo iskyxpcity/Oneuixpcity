@@ -33,7 +33,6 @@ import me.weishu.kernelsu.ui.LocalMainPagerState
 fun BottomBarMaterial(navigationBadge: NavigationBadgeState) {
     val mainPagerState = LocalMainPagerState.current
 
-
     val items = listOf(
         Triple(R.string.home, Icons.Filled.Home, Icons.Outlined.Home),
         Triple(R.string.oneuixp_tools, Icons.Filled.Shield, Icons.Outlined.Shield),
