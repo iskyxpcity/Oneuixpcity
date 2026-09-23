@@ -1,23 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="home_fingerprint">Pirštų atspaudas</string>
     <string name="about">Apie</string>
-    <string name="show_system_apps">Rodyti sistemos programas</string>
     <string name="send_log">Siųsti žurnalą</string>
     <string name="reboot">Paleisti iš naujo</string>
-    <string name="about_source_code">Peržiūrėkite šaltinio kodą %1$s<br/>Prisijunkite prie mūsų %2$s kanalo</string>
-    <string name="module_update">Atnaujinti</string>
+    <string name="app_update">Atnaujinti</string>
     <string name="new_version_available">Nauja versija: %s pasiekiama, spustelėkite norėdami atsinaujinti</string>
-    <string name="launch_app">Paleisti</string>
-    <string name="force_stop_app">Priversti sustoti</string>
-    <string name="restart_app">Perkrauti</string>
     <string name="home">Namai</string>
-    <string name="home_working">Veikia</string>
-    <string name="home_working_version">Versija: %s</string>
-    <string name="uninstall">Išdiegti</string>
-    <string name="install">Įdiegti</string>
     <string name="settings">Parametrai</string>
-    <string name="module_changelog">Keitimų žurnalas</string>
+    <string name="app_changelog">Keitimų žurnalas</string>
     <string name="save_log">Saglabāt Žurnālus</string>
     <string name="oneuixp_tools">Tools</string>
 </resources>

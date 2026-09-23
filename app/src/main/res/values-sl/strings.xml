@@ -1,22 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="home_working">V obdelavi</string>
-    <string name="home_working_version">Verzija: %s</string>
-    <string name="home_fingerprint">Prstni odtis</string>
-    <string name="uninstall">Odmesti</string>
-    <string name="install">Namesti</string>
     <string name="send_log">Prijavite dnevnik</string>
-    <string name="about_source_code">Glej odprto kodo na %1$s<br/>Pridružite se našem %2$s kanalu</string>
-    <string name="module_update">Posodobitev</string>
-    <string name="launch_app">Zaženi</string>
-    <string name="restart_app">Ponovni zagon</string>
-    <string name="module_changelog">Dnevnik sprememb</string>
+    <string name="app_update">Posodobitev</string>
+    <string name="app_changelog">Dnevnik sprememb</string>
     <string name="home">Domov</string>
     <string name="reboot">Znova zaženi</string>
     <string name="settings">Nastavitve</string>
     <string name="about">O nas</string>
-    <string name="show_system_apps">Prikaz sistemskih aplikacij</string>
-    <string name="force_stop_app">Prisilna ustavitev</string>
     <string name="new_version_available">Na voljo je nova verzija: %s, kliknite za nadgradnjo</string>
     <string name="save_log">Shrani Dnevnike</string>
     <string name="oneuixp_tools">Tools</string>

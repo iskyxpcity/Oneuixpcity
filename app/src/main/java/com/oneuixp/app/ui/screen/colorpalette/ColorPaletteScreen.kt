@@ -55,8 +55,6 @@ fun ColorPaletteScreen() {
             OneuiXPApplication.setEnableOnBackInvokedCallback(context.applicationInfo, it)
             activity?.recreate()
         },
-        onSetEnableSwipeDismiss = viewModel::setEnableSwipeDismiss,
-        onSetPagerInterceptionMode = viewModel::setPagerInterceptionMode,
         onSetPageScale = viewModel::setPageScale,
     )
 

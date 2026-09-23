@@ -1,35 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="home">الرئيسية</string>
-    <string name="home_working">يعمل</string>
-    <string name="home_working_version">الإصدار: %s</string>
-    <string name="home_fingerprint">البصمة</string>
-    <string name="uninstall">إلغاء التثبيت</string>
-    <string name="install">تثبيت</string>
     <string name="reboot">إعادة تشغيل</string>
     <string name="settings">الإعدادات</string>
     <string name="about">من نحن</string>
-    <string name="show_system_apps">إظهار تطبيقات النظام</string>
     <string name="send_log">إرسال السجلات</string>
-    <string name="about_source_code"><![CDATA[أنظر إلى مصدر البرمجة في %1$s<br/>إنضم إلى قناتنا في %2$s ]]></string>
-    <string name="module_update">تحديث</string>
+    <string name="app_update">تحديث</string>
     <string name="new_version_available">الإصدار الجديد: %s متاح ، انقر للتحديث.</string>
-    <string name="launch_app">تشغيل</string>
-    <string name="force_stop_app">ايقاف إجباري</string>
-    <string name="restart_app">إعادة تشغيل التطبيق</string>
-    <string name="module_changelog">سجل التغييرات</string>
-    <string name="open">فتح</string>
+    <string name="app_changelog">سجل التغييرات</string>
     <string name="settings_check_update_summary">التحقق تلقائيًا من وجود تحديثات عند فتح التطبيق</string>
     <string name="settings_check_update">التحقق من التحديث</string>
-    <string name="enable_web_debugging">تمكين تصحيح أخطاء WebView</string>
-    <string name="enable_web_debugging_summary">يمكن استخدامه لتصحيح أخطاء WebUI، يرجى تمكينه فقط عند الحاجة.</string>
-    <string name="select_file">اختيار ملف وتصحيحه</string>
-    <string name="download_file">تنزيل ملف وتصحيحه</string>
     <string name="download_dialog_title">أدخل رابط الملف</string>
     <string name="download_dialog_msg">ملف OTA كاملة أو ملف المصنع</string>
-    <string name="select_file_tip">يوصى باستخدام صورة القسم %1$s</string>
     <string name="save_log">حفظ السجلات</string>
-    <string name="action">إجراء</string>
     <string name="log_saved">السجلات محفوظة</string>
     <string name="confirm">تأكيد</string>
     <string name="oneuixp_tools">Tools</string>

@@ -98,8 +98,8 @@ private fun UpdateCard(
     actions: HomeActions,
 ) {
     val newVersion = state.latestVersionInfo
-    val title = stringResource(id = R.string.module_changelog)
-    val updateText = stringResource(id = R.string.module_update)
+    val title = stringResource(id = R.string.app_changelog)
+    val updateText = stringResource(id = R.string.app_update)
 
     AnimatedVisibility(
         visible = state.hasUpdate,
@@ -149,8 +149,7 @@ private fun StatusCard(
     val status = rememberLsposedHomeStatus()
     val active = status.active
 
-    // KernelSU v3.2.5 ROOT-active Material dashboard layout;
-    // substitute only OneuiXP's real SystemUI heartbeat/counter data.
+    // Retained upstream v3.2.5 dashboard geometry; content is OneuiXP SystemUI state.
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         TonalCard(
             containerColor = if (active) {

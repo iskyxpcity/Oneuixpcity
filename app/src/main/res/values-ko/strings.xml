@@ -1,31 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="home">홈</string>
-    <string name="home_working">작동 중</string>
-    <string name="home_working_version">버전: %s</string>
-    <string name="home_fingerprint">핑거프린트</string>
-    <string name="uninstall">제거</string>
-    <string name="install">설치</string>
     <string name="reboot">다시 시작</string>
     <string name="settings">설정</string>
     <string name="about">정보</string>
-    <string name="show_system_apps">시스템 앱 표시</string>
     <string name="send_log">로그 보내기</string>
-    <string name="about_source_code"><![CDATA[%1$s에서 소스 코드 보기<br/>%2$s 채널 참가하기]]></string>
-    <string name="restart_app">다시 시작</string>
     <string name="new_version_available">새 %s 버전을 사용할 수 있습니다, 여기를 눌러 업그레이드하세요!</string>
-    <string name="force_stop_app">강제 중지</string>
-    <string name="module_update">업데이트</string>
-    <string name="launch_app">실행</string>
+    <string name="app_update">업데이트</string>
     <string name="save_log">로그 저장</string>
-    <string name="module_changelog">업데이트 내역</string>
-    <string name="enable_web_debugging_summary">WebUI 디버깅에 사용 가능, 필요한 경우에만 활성화하세요.</string>
-    <string name="select_file_tip">%1$s 파티션 이미지가 권장됩니다</string>
-    <string name="enable_web_debugging">WebView 디버깅</string>
-    <string name="action">액션</string>
-    <string name="open">열기</string>
-    <string name="select_file">파일 선택 및 패치</string>
-    <string name="download_file">파일 다운로드 및 패치</string>
+    <string name="app_changelog">업데이트 내역</string>
     <string name="download_dialog_title">이미지 URL 입력</string>
     <string name="download_dialog_msg">전체 OTA 이미지 또는 팩토리 이미지</string>
     <string name="settings_check_update">업데이트 확인</string>
@@ -33,13 +16,6 @@
     <string name="log_saved">로그 저장됨</string>
     <string name="confirm">확인</string>
     <string name="processing">처리 중…</string>
-    <string name="refresh_pulling">당겨서 새로 고침</string>
-    <string name="refresh_release">놓아서 새로 고침</string>
-    <string name="refresh_refresh">새로 고침 중…</string>
-    <string name="refresh_complete">새로 고침 성공</string>
-    <string name="feature_status_unsupported_summary">커널이 이 기능을 지원하지 않습니다.</string>
-    <string name="feature_status_managed_summary">이 기능은 모듈에 의해 관리됩니다.</string>
-    <string name="undo">되돌리기</string>
     <string name="settings_theme">테마</string>
     <string name="settings_theme_summary">앱 테마 모드를 선택합니다.</string>
     <string name="settings_theme_mode_system">시스템 설정에 따름</string>
@@ -55,10 +31,5 @@
     <string name="color_teal">청록</string>
     <string name="color_pink">분홍</string>
     <string name="color_brown">갈색</string>
-    <string name="network_offline">네트워크에 연결되지 않음</string>
-    <string name="network_retry">재시도</string>
-    <string name="tab_readme">README</string>
-    <string name="tab_releases">릴리즈</string>
-    <string name="tab_info">정보</string>
     <string name="oneuixp_tools">Tools</string>
 </resources>

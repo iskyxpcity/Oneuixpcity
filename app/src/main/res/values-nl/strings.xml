@@ -1,43 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="home">Home</string>
-    <string name="home_working">Werkend</string>
-    <string name="home_working_version">Versie: %s</string>
-    <string name="home_fingerprint">Fingerprint</string>
-    <string name="uninstall">Verwijderen</string>
-    <string name="install">Installeren</string>
     <string name="reboot">Herstart</string>
     <string name="settings">Instellingen</string>
     <string name="about">Over</string>
-    <string name="show_system_apps">Toon systeem apps</string>
     <string name="send_log">Verzenden Logs</string>
-    <string name="about_source_code"><![CDATA[Bekijk source code op %1$s<br/>Vervoeg ons %2$s kanaal]]></string>
-    <string name="module_update">Update</string>
+    <string name="app_update">Update</string>
     <string name="new_version_available">Nieuwe versie %s is beschikbaar,klik om te upgraden!</string>
-    <string name="launch_app">Start</string>
-    <string name="force_stop_app">Forceer stop</string>
-    <string name="restart_app">Herstart</string>
-    <string name="module_changelog">wijzigings logboek</string>
+    <string name="app_changelog">wijzigings logboek</string>
     <string name="settings_check_update">Controleer for updates</string>
-    <string name="enable_web_debugging">WebView foutopsporing</string>
-    <string name="enable_web_debugging_summary">Kan worden gebruikt om WebUI te debuggen. Schakel dit alleen in als dat nodig is.</string>
-    <string name="open">Open</string>
     <string name="settings_check_update_summary">Controleer automatisch op updates bij het openen van de app.</string>
-    <string name="select_file">Kies en patch een bestand</string>
-    <string name="download_file">Download en patch een bestand</string>
     <string name="download_dialog_title">Afbeeldings-URL invoeren</string>
     <string name="download_dialog_msg">Volledige OTA-image of fabrieksimage</string>
-    <string name="select_file_tip">%1$s partitie-image wordt aanbevolen</string>
     <string name="save_log">Logboeken Opslaan</string>
-    <string name="action">Actie</string>
     <string name="log_saved">Logs opgeslagen</string>
     <string name="confirm">Bevestigen</string>
     <string name="processing">Verwerken…</string>
-    <string name="refresh_pulling">Trek omlaag om te vernieuwen</string>
-    <string name="refresh_release">Vrijgeven om te vernieuwen</string>
-    <string name="refresh_refresh">Verfrissend…</string>
-    <string name="refresh_complete">Succesvol vernieuwd</string>
-    <string name="feature_status_unsupported_summary">De kernel ondersteunt deze functie niet</string>
-    <string name="feature_status_managed_summary">Deze functie wordt beheerd door een module</string>
     <string name="oneuixp_tools">Tools</string>
 </resources>

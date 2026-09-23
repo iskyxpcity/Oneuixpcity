@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="home">Почетна</string>
-    <string name="home_working_version">Верзија: %s</string>
-    <string name="home_working">Ради</string>
     <string name="save_log">Сачувај Дневнике</string>
     <string name="oneuixp_tools">Tools</string>
 </resources>

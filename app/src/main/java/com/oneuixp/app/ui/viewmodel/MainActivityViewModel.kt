@@ -49,8 +49,6 @@ class MainActivityViewModel(
             enableBlur = settingRepo.enableBlur,
             enableFloatingBottomBar = settingRepo.enableFloatingBottomBar,
             enableFloatingBottomBarBlur = settingRepo.enableFloatingBottomBarBlur,
-            enableSwipeDismiss = settingRepo.enableSwipeDismiss,
-            pagerInterceptionMode = settingRepo.pagerInterceptionMode,
             uiMode = UiMode.fromValue(settingRepo.uiMode),
         )
     }
@@ -65,8 +63,6 @@ class MainActivityViewModel(
             "enable_blur",
             "enable_floating_bottom_bar",
             "enable_floating_bottom_bar_blur",
-            "enable_swipe_dismiss",
-            "pager_interception_mode",
             "ui_mode",
         )
     }

@@ -1,31 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="home">Home</string>
-    <string name="home_working">In esecuzione</string>
-    <string name="home_working_version">Versione: %s</string>
-    <string name="home_fingerprint">Impronta della build di Android</string>
-    <string name="uninstall">Disinstalla</string>
-    <string name="install">Installa</string>
     <string name="reboot">Riavvia</string>
     <string name="settings">Impostazioni</string>
     <string name="about">Informazioni</string>
-    <string name="show_system_apps">Mostra app di sistema</string>
     <string name="send_log">Invia log</string>
-    <string name="about_source_code"><![CDATA[Visualizza il codice sorgente su %1$s<br/>Unisciti al nostro canale %2$s]]></string>
-    <string name="module_update">Aggiorna</string>
-    <string name="launch_app">Apri</string>
+    <string name="app_update">Aggiorna</string>
     <string name="new_version_available">Nuova versione: %s disponibile, tocca per aggiornare</string>
-    <string name="force_stop_app">Arresto forzato</string>
-    <string name="restart_app">Riavvia</string>
-    <string name="module_changelog">Registro aggiornamenti</string>
-    <string name="open">Apri</string>
+    <string name="app_changelog">Registro aggiornamenti</string>
     <string name="settings_check_update">Controlla aggiornamenti</string>
     <string name="settings_check_update_summary">Controlla automaticamente la disponibilità di aggiornamenti all\'apertura dell\'applicazione</string>
-    <string name="enable_web_debugging">Abilita il debug di WebView</string>
-    <string name="enable_web_debugging_summary">Può essere usato per svolgere il debug di WebUI, è consigliato attivarlo solo quando necessario.</string>
-    <string name="select_file_tip">È consigliato usare immagine della partizione %1$s</string>
-    <string name="select_file">Seleziona un file e applica la patch</string>
-    <string name="download_file">Scarica un file e applica la patch</string>
     <string name="download_dialog_title">Inserisci l\'URL dell\'immagine</string>
     <string name="download_dialog_msg">Immagine OTA completa o immagine di fabbrica</string>
     <string name="save_log">Salva Registri</string>

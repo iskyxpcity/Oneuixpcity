@@ -1,22 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="home">होम</string>
-    <string name="home_working">कार्यरत</string>
-    <string name="home_working_version">आवृत्ती: %s</string>
-    <string name="home_fingerprint">फिंगरप्रिंट</string>
-    <string name="install">स्थापित करा</string>
     <string name="reboot">रीबूट करा</string>
-    <string name="uninstall">विस्थापित करा</string>
     <string name="settings">सेटिंग्ज</string>
     <string name="about">बद्दल</string>
-    <string name="show_system_apps">सिस्टम अॅप्स दाखवा</string>
     <string name="send_log">लॉग पाठवा</string>
-    <string name="about_source_code">%1$s वर स्रोत कोड पहा<br/>आमच्या %2$s चॅनेलमध्ये सामील व्हा</string>
-    <string name="module_update">अपडेट करा</string>
+    <string name="app_update">अपडेट करा</string>
     <string name="new_version_available">नवीन आवृत्ती: %s उपलब्ध आहे, डाउनलोड करण्यासाठी क्लिक करा</string>
-    <string name="force_stop_app">सक्तीने थांबा</string>
-    <string name="launch_app">लाँच करा</string>
-    <string name="restart_app">पुन्हा सुरू करा</string>
     <string name="save_log">लॉग जतन करा</string>
     <string name="oneuixp_tools">Tools</string>
 </resources>

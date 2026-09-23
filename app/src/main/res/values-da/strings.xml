@@ -1,41 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="home_working">Arbejder</string>
-    <string name="uninstall">Afinstaller</string>
-    <string name="install">Installer</string>
     <string name="reboot">Genstart</string>
     <string name="settings">Indstillinger</string>
     <string name="about">Om</string>
     <string name="send_log">Send logfiler</string>
-    <string name="about_source_code"><![CDATA[View source code at %1$s<br/>Join our %2$s channel]]></string>
-    <string name="module_update">Opdatering</string>
+    <string name="app_update">Opdatering</string>
     <string name="new_version_available">Ny version %s er tilgængelig, klik for at opgradere!</string>
-    <string name="launch_app">Start</string>
-    <string name="force_stop_app">Tving stop</string>
-    <string name="home_working_version">Version: %s</string>
     <string name="home">Hjem</string>
-    <string name="home_fingerprint">Fingeraftryk</string>
-    <string name="show_system_apps">Vis system-apps</string>
-    <string name="restart_app">Genstart</string>
     <string name="save_log">Gem logs</string>
     <string name="confirm">Bekræft</string>
-    <string name="module_changelog">Ændringslog</string>
+    <string name="app_changelog">Ændringslog</string>
     <string name="settings_check_update">Check for opdateringer</string>
     <string name="settings_check_update_summary">Søg automatisk efter opdateringer, når appen åbnes.</string>
-    <string name="action">Handling</string>
-    <string name="open">Åbn</string>
-    <string name="enable_web_debugging">WebView-fejlsøgning</string>
-    <string name="enable_web_debugging_summary">Kan bruges til at fejlfinde af WebUI. Aktiver kun når det er nødvendigt.</string>
-    <string name="select_file">Vælg en fil og patch</string>
-    <string name="download_file">Download en fil og patch</string>
     <string name="download_dialog_title">Indtast billed-URL</string>
     <string name="download_dialog_msg">Fuldt OTA-billede eller fabriksbillede</string>
-    <string name="select_file_tip">%1$s partitionsbillede anbefales</string>
     <string name="log_saved">Logs gemt</string>
     <string name="processing">Behandler…</string>
-    <string name="refresh_pulling">Træk ned for at opdatere</string>
-    <string name="refresh_release">Slip for at opdatere</string>
-    <string name="refresh_refresh">Opdaterer…</string>
-    <string name="refresh_complete">Opdateret</string>
     <string name="oneuixp_tools">Tools</string>
 </resources>

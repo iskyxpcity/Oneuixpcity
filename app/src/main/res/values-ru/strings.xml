@@ -1,51 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="home">Главная</string>
-    <string name="home_working">Работает</string>
-    <string name="home_working_version">Версия: %s</string>
     <!--Don't translate this string!-->
-    <string name="home_fingerprint">Подпись</string>
     <!--Don't translate this string!-->
-    <string name="uninstall">Удалить</string>
-    <string name="install">Установка</string>
     <string name="reboot">Перезагрузить</string>
     <string name="settings">Настройки</string>
     <string name="about">О приложении</string>
-    <string name="show_system_apps">Показать системные приложения</string>
     <string name="send_log">Отправить логи</string>
-    <string name="about_source_code"><![CDATA[Посмотреть исходный код на %1$s<br/>Присоединяйтесь к нашему %2$s каналу]]></string>
     <!--Don't translate this string!-->
-    <string name="module_update">Обновить</string>
+    <string name="app_update">Обновить</string>
     <string name="new_version_available">Новая версия: %s доступна, нажмите чтобы скачать!</string>
-    <string name="force_stop_app">Остановить принудительно</string>
-    <string name="launch_app">Запустить</string>
-    <string name="restart_app">Перезапустить</string>
-    <string name="module_changelog">Список изменений</string>
+    <string name="app_changelog">Список изменений</string>
     <string name="settings_check_update">Проверять наличие обновлений</string>
     <string name="settings_check_update_summary">Автоматическая проверка обновлений при открытии приложения.</string>
-    <string name="open">Открыть</string>
-    <string name="enable_web_debugging">Отладка WebView</string>
-    <string name="enable_web_debugging_summary">Используется для отладки WebUI. Пожалуйста, включайте только при необходимости.</string>
-    <string name="select_file">Выбрать файл и пропатчить</string>
-    <string name="download_file">Скачать файл и пропатчить</string>
     <string name="download_dialog_title">Введите URL образа</string>
     <string name="download_dialog_msg">Полный OTA-образ или заводской образ</string>
-    <string name="select_file_tip">%1$s образ раздела рекомендуется</string>
     <string name="save_log">Сохранить логи</string>
-    <string name="action">Действие</string>
     <string name="log_saved">Логи сохранены</string>
     <string name="confirm">Подтвердить</string>
-    <string name="refresh_complete">Обновлено успешно</string>
-    <string name="refresh_refresh">Обновление…</string>
-    <string name="refresh_release">Отпустите чтобы обновить</string>
-    <string name="refresh_pulling">Потяните вниз чтобы обновить</string>
     <string name="processing">Обработка…</string>
-    <string name="undo">Отменить</string>
     <string name="settings_theme">Тема</string>
     <string name="settings_theme_summary">Выберите режим темы приложения.</string>
     <string name="settings_theme_mode_system">Как в системе</string>
-    <string name="feature_status_managed_summary">Эта функция управляется модулем.</string>
-    <string name="feature_status_unsupported_summary">Ядро не поддерживает эту функцию.</string>
     <string name="settings_key_color">Ключевой цвет</string>
     <string name="settings_key_color_default">По умолчанию</string>
     <string name="color_blue">Синий</string>
@@ -58,11 +34,6 @@
     <string name="color_brown">Коричневый</string>
     <string name="settings_theme_mode_light">Светлая</string>
     <string name="settings_theme_mode_dark">Тёмная</string>
-    <string name="network_offline">Нет подключения к сети</string>
-    <string name="network_retry">Повторить</string>
-    <string name="tab_readme">README</string>
-    <string name="tab_releases">Релизы</string>
-    <string name="tab_info">Инфо</string>
     <string name="color_deep_purple">Тёмно-фиолетовый</string>
     <string name="color_indigo">Индиго</string>
     <string name="color_cyan">Циан</string>

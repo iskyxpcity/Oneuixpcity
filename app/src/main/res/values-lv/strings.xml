@@ -1,33 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="home">Sākums</string>
-    <string name="home_working">Darbojas</string>
-    <string name="home_working_version">Versija: %s</string>
-    <string name="home_fingerprint">Pirkstu nospiedums</string>
-    <string name="uninstall">Noņemt</string>
-    <string name="install">Uzstādīšana</string>
     <string name="reboot">Restartēt</string>
     <string name="settings">Iestatījumi</string>
     <string name="about">Par lietotni</string>
-    <string name="show_system_apps">Rādīt sistēmas lietotnes</string>
     <string name="send_log">Sūtīt žurnālus</string>
-    <string name="about_source_code">Skatiet avota kodu vietnē %1$s<br/> Pievienojies mūsu %2$s kanālam</string>
-    <string name="module_update">Atjaunināt</string>
+    <string name="app_update">Atjaunināt</string>
     <string name="new_version_available">Jaunā versija: %s ir pieejama, noklikšķiniet, lai atjauninātu</string>
-    <string name="launch_app">Palaist</string>
-    <string name="force_stop_app">Piespiedu apstāšana</string>
-    <string name="restart_app">Restartēt aplikāciju</string>
-    <string name="module_changelog">Izmaiņu žurnāls</string>
-    <string name="enable_web_debugging">Iespējot WebView atkļūdošanu</string>
-    <string name="select_file_tip">Ieteicams %1$s nodalījuma attēls</string>
-    <string name="select_file">Izvēlieties failu un ielāpiet to</string>
-    <string name="download_file">Lejupielādējiet failu un ielāpiet to</string>
+    <string name="app_changelog">Izmaiņu žurnāls</string>
     <string name="download_dialog_title">Ievadiet attēla URL</string>
     <string name="download_dialog_msg">Pilns OTA attēls vai rūpnīcas attēls</string>
-    <string name="open">Atvērt</string>
     <string name="settings_check_update">Pārbaudīt atjauninājumus</string>
     <string name="settings_check_update_summary">Automātiski pārbaudīt atjauninājumus atverot aplikāciju</string>
-    <string name="enable_web_debugging_summary">Var izmantot WebUI atkļūdošanai, lūdzu, izmantot tikai tad, kad tas ir nepieciešams.</string>
     <string name="save_log">Išsaugoti Žurnalus</string>
     <string name="confirm">Apstiprināt</string>
     <string name="oneuixp_tools">Tools</string>

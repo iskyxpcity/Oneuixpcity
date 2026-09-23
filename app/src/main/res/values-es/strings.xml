@@ -1,35 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="home">Inicio</string>
-    <string name="home_working">Funcionando</string>
-    <string name="home_working_version">Versión: %s</string>
-    <string name="home_fingerprint">Huella del dispositivo</string>
     <!-- It may be better to leave SELinux statuses untranslated -->
-    <string name="uninstall">Desinstalar</string>
-    <string name="install">Instalar</string>
     <string name="reboot">Reiniciar</string>
     <string name="settings">Ajustes</string>
     <string name="about">Acerca de</string>
-    <string name="show_system_apps">Mostrar aplicaciones del sistema</string>
     <string name="send_log">Enviar registros</string>
-    <string name="about_source_code">Ver código fuente en %1$s<br/>
-Únete a nuestro canal %2$s</string>
-    <string name="module_update">Actualizar</string>
+    <string name="app_update">Actualizar</string>
     <string name="new_version_available">La nueva versión %s está disponible, haga clic para actualizar.</string>
-    <string name="launch_app">Iniciar</string>
-    <string name="force_stop_app">Forzar detención</string>
-    <string name="restart_app">Reiniciar</string>
-    <string name="module_changelog">Registro de cambios</string>
+    <string name="app_changelog">Registro de cambios</string>
     <string name="save_log">Guardar registros</string>
-    <string name="enable_web_debugging">Activar la depuración de WebView</string>
-    <string name="select_file_tip">Se recomienda la imagen de partición %1$s</string>
-    <string name="open">Abrir</string>
-    <string name="select_file">Seleccionar y parchar un archivo</string>
-    <string name="download_file">Descargar y parchar un archivo</string>
     <string name="download_dialog_title">Introduzca la URL de la imagen</string>
     <string name="download_dialog_msg">Imagen OTA completa o imagen de fábrica</string>
     <string name="settings_check_update">Comprobar actualización</string>
     <string name="settings_check_update_summary">Comprobación automática de actualizaciones al abrir la aplicación</string>
-    <string name="enable_web_debugging_summary">Puede ser usado para depurar WebUI, por favor habilítalo sólo cuando sea necesario.</string>
     <string name="oneuixp_tools">Tools</string>
 </resources>

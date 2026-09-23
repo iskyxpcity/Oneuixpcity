@@ -1,11 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="force_stop_app">బలవంతంగా ఆపడం</string>
-    <string name="restart_app">పునఃప్రారంభించండి</string>
     <string name="about">గురించి</string>
     <string name="home">హోమ్</string>
-    <string name="home_working">పని చేస్తోంది</string>
-    <string name="home_working_version">వెర్షన్: %s</string>
     <string name="save_log">లాగ్‌లు సేవ్ చేయండి</string>
     <string name="oneuixp_tools">Tools</string>
 </resources>

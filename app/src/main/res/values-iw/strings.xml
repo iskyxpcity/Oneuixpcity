@@ -1,22 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="show_system_apps">הצג אפליקציות מערכת</string>
     <string name="send_log">שלח לוג</string>
-    <string name="module_changelog">יומן שינויים</string>
-    <string name="force_stop_app">עצירה בכח</string>
-    <string name="restart_app">איתחול</string>
-    <string name="home_fingerprint">טביעת אצבע</string>
-    <string name="launch_app">להשיק</string>
-    <string name="uninstall">הסרה</string>
+    <string name="app_changelog">יומן שינויים</string>
     <string name="about">אודות</string>
-    <string name="home_working_version">גרסה: %s</string>
     <string name="reboot">הפעלה מחדש</string>
     <string name="home">בית</string>
-    <string name="module_update">עדכון</string>
+    <string name="app_update">עדכון</string>
     <string name="settings">הגדרות</string>
-    <string name="home_working">עובד</string>
-    <string name="install">להתקין</string>
-    <string name="about_source_code">ראה את קוד המקור ב%1$s<br/>הצטרף אלינו %2$s בערוץ</string>
     <string name="new_version_available">גרסה חדשה עבור: %s זמינה, לחץ כדי לשדרג</string>
     <string name="save_log">שמור יומנים</string>
     <string name="oneuixp_tools">Tools</string>

@@ -1,25 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="home">Ana səhifə</string>
-    <string name="home_working">İşləyir</string>
-    <string name="home_working_version">Versiya: %s</string>
-    <string name="install">Yüklə</string>
-    <string name="home_fingerprint">Barmaq izi</string>
-    <string name="uninstall">Sil</string>
     <string name="reboot">Yenidən başlat</string>
     <string name="settings">Parametrlər</string>
-    <string name="show_system_apps">Sistem proqramlarını göstər</string>
     <string name="about">Haqqında</string>
     <string name="send_log">Log-u göndər</string>
-    <string name="about_source_code">Mənbə kodlarımıza baxın %1$s<br/>
-Kanalımıza %2$s qoşulun</string>
-    <string name="module_update">Güncəllə</string>
+    <string name="app_update">Güncəllə</string>
     <string name="new_version_available">Yeni versiya: %s əlçatandır, endirmək üçün toxunun</string>
-    <string name="launch_app">Aç</string>
-    <string name="force_stop_app">Məcburi dayandır</string>
-    <string name="restart_app">Təkrar başlat</string>
     <string name="save_log">Girişləri Saxla</string>
     <string name="confirm">Təsdiq edin</string>
-    <string name="module_changelog">Dəyişikliklər jurnalı</string>
+    <string name="app_changelog">Dəyişikliklər jurnalı</string>
     <string name="oneuixp_tools">Tools</string>
 </resources>

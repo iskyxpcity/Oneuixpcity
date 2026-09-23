@@ -1,36 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="home">Panimula</string>
-    <string name="home_working">Gumagana</string>
-    <string name="home_working_version">Bersyon: %s</string>
-    <string name="install">I-install</string>
     <string name="reboot">I-reboot</string>
     <string name="about">Tungkol</string>
-    <string name="show_system_apps">Ipakita ang mga application ng system</string>
     <string name="send_log">Ipadala ang mga log</string>
-    <string name="about_source_code"><![CDATA[Tignan ang source code sa %1$s<br/>Sumali sa aming %2$s channel]]></string>
     <string name="new_version_available">Bagong bersyon: Available ang %s, i-click para mag-upgrade.</string>
-    <string name="launch_app">Ilunsad</string>
-    <string name="force_stop_app">Sapilitang itigil</string>
-    <string name="restart_app">I-restart</string>
     <string name="settings">Mga setting</string>
-    <string name="uninstall">I-uninstall</string>
     <string name="save_log">I-save ang mga Log</string>
-    <string name="home_fingerprint">Fingerprint</string>
     <string name="confirm">Kumpirmahin</string>
-    <string name="module_update">I-update</string>
-    <string name="module_changelog">Mga pagbabago</string>
+    <string name="app_update">I-update</string>
+    <string name="app_changelog">Mga pagbabago</string>
     <string name="settings_check_update">Tumingin para sa mga update</string>
     <string name="settings_check_update_summary">Awtomatikong tumingin para sa mga update kapag binubuksan ang app</string>
-    <string name="action">Aksyon</string>
-    <string name="open">Buksan</string>
-    <string name="enable_web_debugging">I-enable ang pag-debug ng WebView</string>
-    <string name="enable_web_debugging_summary">Maaaring gamitin para i-debug ang WebUI. Mangyaring paganahin kung kinakailangan lang.</string>
-    <string name="select_file">Pumili ng file at i-patch</string>
-    <string name="download_file">I-download ang file at i-patch</string>
     <string name="download_dialog_title">Ilagay ang URL ng imahe</string>
     <string name="download_dialog_msg">Buong OTA na imahe o factory na imahe</string>
-    <string name="select_file_tip">Inirerekomenda ang %1$s partition image</string>
     <string name="log_saved">Nai-save ang mga log</string>
     <string name="oneuixp_tools">Tools</string>
 </resources>

@@ -1,21 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="module_update">Ažuriranje</string>
+    <string name="app_update">Ažuriranje</string>
     <string name="new_version_available">Nova verzija: %s je dostupna, kliknite da skinete</string>
-    <string name="launch_app">Pokrenite</string>
-    <string name="force_stop_app">Prisilno Zaustavite</string>
-    <string name="restart_app">Resetujte</string>
     <string name="home">Početna</string>
-    <string name="home_fingerprint">Otisak prsta</string>
-    <string name="install">Instalirajte</string>
     <string name="reboot">Ponovo pokrenite</string>
     <string name="settings">Podešavanja</string>
-    <string name="show_system_apps">Prikažite sistemske aplikacije</string>
     <string name="send_log">Pošaljite Izvještaj</string>
-    <string name="about_source_code">Pogledajte izvornu kodu na %1$s<br/>Pridružite nam se na %2$s kanalu</string>
-    <string name="home_working">Radi</string>
-    <string name="home_working_version">Verzija: %s</string>
-    <string name="uninstall">Deinstalirajte</string>
     <string name="about">O</string>
     <string name="save_log">Sačuvaj Dnevnike</string>
     <string name="confirm">Potvrdi</string>

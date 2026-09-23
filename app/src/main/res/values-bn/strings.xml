@@ -1,17 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="home">হোম</string>
-    <string name="home_working"> ওয়ার্কিং</string>
-    <string name="home_working_version">ওয়ার্কিং সংস্করণ: %s</string>
-    <string name="home_fingerprint">ফিঙ্গারপ্রিন্ট</string>
-    <string name="uninstall">আনইন্সটল</string>
-    <string name="install">ইনস্টল</string>
     <string name="reboot">রিবুট</string>
     <string name="settings">সেটিংস</string>
     <string name="about">এবাউট</string>
-    <string name="show_system_apps">শো সিস্টেম অ্যাপস</string>
     <string name="send_log">সেন্ড লগ</string>
-    <string name="about_source_code"><![CDATA[Bekijk source code op %1$s<br/>আমাদের %2$s চ্যানেল মার্জ করুন]]></string>
     <string name="save_log">লগ সংরক্ষণ করুন</string>
     <string name="confirm">নিশ্চিত</string>
     <string name="oneuixp_tools">Tools</string>

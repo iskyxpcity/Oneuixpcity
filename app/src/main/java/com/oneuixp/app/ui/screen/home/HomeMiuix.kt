@@ -116,8 +116,8 @@ fun HomePagerMiuix(state: HomeUiState, actions: HomeActions, bottomInnerPadding:
 @Composable
 private fun UpdateCard(state: HomeUiState, actions: HomeActions) {
     val version = state.latestVersionInfo
-    val title = stringResource(R.string.module_changelog)
-    val update = stringResource(R.string.module_update)
+    val title = stringResource(R.string.app_changelog)
+    val update = stringResource(R.string.app_update)
     val dialog = rememberConfirmDialog(onConfirm = { actions.onOpenUrl(version.downloadUrl) })
     AnimatedVisibility(
         visible = state.hasUpdate,
@@ -151,8 +151,7 @@ private fun StatusCard() {
         }
     } else colorScheme.errorContainer
 
-    // Match the ROOT-active KernelSU v3.2.5 three-card dashboard:
-    // intrinsic-height row, left status card, right stacked counter cards.
+    // Retained upstream v3.2.5 three-card dashboard geometry.
     Row(
         modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
         horizontalArrangement = Arrangement.spacedBy(12.dp),

@@ -1,35 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="home">Startseite</string>
-    <string name="home_working">Funktioniert</string>
-    <string name="home_working_version">Version: %s</string>
     <string name="about">Über KernelSU</string>
-    <string name="module_update">Aktualisieren</string>
-    <string name="launch_app">Starten</string>
+    <string name="app_update">Aktualisieren</string>
     <string name="new_version_available">Neue Version %s verfügbar, tippen zum Aktualisieren!</string>
-    <string name="force_stop_app">Stopp erzwingen</string>
-    <string name="restart_app">Neustarten</string>
-    <string name="uninstall">Deinstallieren</string>
-    <string name="install">Installieren</string>
     <string name="reboot">Neustarten</string>
     <string name="settings">Einstellungen</string>
-    <string name="show_system_apps">System-Apps anzeigen</string>
     <string name="send_log">Protokoll senden</string>
-    <string name="about_source_code"><![CDATA[Quellcode einsehen unter %1$s<br/>Unserem %2$s-Kanal beitreten]]></string>
-    <string name="home_fingerprint">Fingerabdruck</string>
-    <string name="module_changelog">Änderungsprotokoll</string>
-    <string name="enable_web_debugging">WebView-Debugging</string>
-    <string name="enable_web_debugging_summary">Kann zum Fehlerbeheben der WebUI verwendet werden. Bitte nur im Notfall aktivieren.</string>
-    <string name="select_file_tip">%1$s Partitionsabbild empfohlen</string>
-    <string name="select_file">Eine Datei auswählen und patchen</string>
-    <string name="download_file">Eine Datei herunterladen und patchen</string>
+    <string name="app_changelog">Änderungsprotokoll</string>
     <string name="download_dialog_title">Bild-URL eingeben</string>
     <string name="download_dialog_msg">Vollständiges OTA-Image oder Factory-Image</string>
-    <string name="open">Öffnen</string>
     <string name="settings_check_update">Auf Aktualisierungen prüfen</string>
     <string name="settings_check_update_summary">Prüfe automatisch auf Aktualisierungen, wenn die App geöffnet wird.</string>
     <string name="save_log">Protokolle Speichern</string>
-    <string name="action">Aktion</string>
     <string name="log_saved">Protokolle gespeichert</string>
     <string name="confirm">Bestätigen</string>
     <string name="oneuixp_tools">Tools</string>

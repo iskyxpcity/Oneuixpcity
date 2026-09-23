@@ -62,7 +62,7 @@ legacy_strings = re.compile(
 for locale in (root / 'app/src/main/res').glob('values*/strings.xml'):
     for resource in ElementTree.parse(locale).getroot().findall('string'):
         key = resource.get('name', '')
-        assert not (legacy_strings.match(key) and key not in {'module_update', 'module_changelog'}), (
+        assert not legacy_strings.match(key), (
             f'Unexpected obsolete KernelSU string {key} in {locale}'
         )
 print('PASS: all localized XML parsed, obsolete root/module translations absent')
@@ -92,3 +92,21 @@ for obsolete in ('moduleDescriptionMaxLines', 'navigationRailExpanded', 'enableN
 assert 'LocalModuleDescriptionMaxLines' not in theme_source
 assert 'LocalEnableNavigationBadge' not in theme_source
 print('PASS: legacy SuperUser/Module page names and dead manager-only preferences removed')
+
+# No manager-only pager gesture preferences or module-named update model may remain.
+for obsolete in ('enableSwipeDismiss', 'pagerInterceptionMode'):
+    assert obsolete not in (root / 'app/src/main/java/com/oneuixp/app/data/repository/SettingsRepository.kt').read_text(), obsolete
+assert not (root / 'app/src/main/java/com/oneuixp/app/ui/util/module').exists()
+assert (root / 'app/src/main/java/com/oneuixp/app/ui/util/update/LatestVersionInfo.kt').exists()
+print('PASS: dead manager pager preferences removed; update model uses OneuiXP naming')
+
+# Final naming/resource guard: only the libxposed-required module.prop filename may contain "module".
+default_strings = {
+    node.get('name', '') for node in ElementTree.parse(root / 'app/src/main/res/values/strings.xml').getroot().findall('string')
+}
+assert 'app_update' in default_strings and 'app_changelog' in default_strings
+assert not any(name.startswith('module_') for name in default_strings)
+for obsolete in ('settings_navigation_badge', 'nav_rail_expand', 'nav_rail_collapse',
+                 'settings_enable_swipe_dismiss', 'settings_pager_gesture_mode'):
+    assert obsolete not in default_strings, obsolete
+print('PASS: OneuiXP resource names contain no legacy manager/module UI keys')

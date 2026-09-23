@@ -1,10 +1,10 @@
 package com.oneuixp.app.ui.util
 
 import com.oneuixp.app.oneuiXPApp
-import com.oneuixp.app.ui.util.module.LatestVersionInfo
+import com.oneuixp.app.ui.util.update.LatestVersionInfo
 import okhttp3.Request
 
-/** Only OneuiXP GitHub releases are checked. No KernelSU module downloader. */
+/** Only OneuiXP GitHub releases are checked. */
 fun checkNewVersion(): LatestVersionInfo {
     if (!isNetworkAvailable(oneuiXPApp)) return LatestVersionInfo()
     val endpoint = "https://api.github.com/repos/iSkyJIE/OneuiXP/releases/latest"

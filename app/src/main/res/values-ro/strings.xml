@@ -1,31 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="home">Acasă</string>
-    <string name="home_working">Funcționează</string>
-    <string name="home_working_version">Versiune: %s</string>
-    <string name="home_fingerprint">Amprentă</string>
-    <string name="uninstall">Dezinstalează</string>
-    <string name="install">Instalează</string>
     <string name="reboot">Repornește</string>
     <string name="settings">Setări</string>
     <string name="about">Despre</string>
-    <string name="show_system_apps">Arată aplicațiile de sistem</string>
     <string name="send_log">Raportează jurnal</string>
-    <string name="about_source_code"><![CDATA[Vezi codul sursă la %1$s<br/>Alătură-te canalului nostru %2$s]]></string>
-    <string name="module_update">Actualizează</string>
+    <string name="app_update">Actualizează</string>
     <string name="new_version_available">Versiune nouă: %s este disponibilă, clic pentru a actualiza</string>
-    <string name="launch_app">Lansare</string>
-    <string name="force_stop_app">Oprire forțată</string>
-    <string name="restart_app">Repornește</string>
-    <string name="module_changelog">Jurnalul modificărilor</string>
+    <string name="app_changelog">Jurnalul modificărilor</string>
     <string name="settings_check_update">Verifică actualizarea</string>
     <string name="settings_check_update_summary">Se verifică automat actualizările când deschizi aplicația</string>
-    <string name="enable_web_debugging">Activează depanarea WebView</string>
-    <string name="enable_web_debugging_summary">Poate fi folosit pentru a depana WebUI, activează numai când este necesar.</string>
-    <string name="open">Deschide</string>
-    <string name="select_file_tip">Se recomandă imaginea partiției %1$s</string>
-    <string name="select_file">Selectează și patchuiește un fișier</string>
-    <string name="download_file">Descarcă și patchuiește un fișier</string>
     <string name="download_dialog_title">Introduceți URL-ul imaginii</string>
     <string name="download_dialog_msg">Imagine OTA completă sau imagine de fabrică</string>
     <string name="save_log">Salvează Jurnale</string>

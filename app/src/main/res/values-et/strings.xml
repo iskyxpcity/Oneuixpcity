@@ -1,33 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="home_working">Töötamine</string>
-    <string name="home_working_version">Versioon: %s</string>
-    <string name="home_fingerprint">Sõrmejälg</string>
     <string name="reboot">Taaskäivita</string>
     <string name="send_log">Saada logid</string>
     <string name="home">Kodu</string>
-    <string name="uninstall">Eemalda</string>
-    <string name="install">Paigalda</string>
     <string name="about">Teave</string>
     <string name="settings">Seaded</string>
-    <string name="show_system_apps">Kuva süsteemirakendused</string>
-    <string name="about_source_code">Vaata lähtekoodi %1$sis<br/>
-Liitu meie %2$si kanaliga</string>
-    <string name="launch_app">Käivita</string>
-    <string name="force_stop_app">Sundpeata</string>
-    <string name="module_update">Uuenda</string>
+    <string name="app_update">Uuenda</string>
     <string name="new_version_available">Uus versioon %s on saadaval, klõpsa täiendamiseks.</string>
-    <string name="restart_app">Taaskäivita</string>
-    <string name="module_changelog">Muudatuste logi</string>
-    <string name="enable_web_debugging_summary">Saab kasutada WebUI silumiseks, palun luba ainult vajadusel.</string>
+    <string name="app_changelog">Muudatuste logi</string>
     <string name="settings_check_update">Kontrolli uuendusi</string>
     <string name="settings_check_update_summary">Rakenduse avamisel kontrolli automaatselt uuendusi</string>
-    <string name="open">Ava</string>
-    <string name="enable_web_debugging">Luba WebView silumine</string>
     <string name="save_log">Salvesta Logid</string>
-    <string name="select_file_tip">%1$s partitsioonitõmmis on soovitatud</string>
-    <string name="select_file">Vali ja paika fail</string>
-    <string name="download_file">Laadi alla ja paika fail</string>
     <string name="download_dialog_title">Sisesta pildi URL</string>
     <string name="download_dialog_msg">Täielik OTA-pilt või tehasepilt</string>
     <string name="oneuixp_tools">Tools</string>

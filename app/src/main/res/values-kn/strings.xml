@@ -1,17 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="show_system_apps">ಸಿಸ್ಟಮ್ ಅಪ್ಲಿಕೇಶನ್‌ಗಳನ್ನು ತೋರಿಸಿ</string>
     <string name="send_log">ಲಾಗ್ ಕಳುಹಿಸಿ</string>
-    <string name="module_changelog">ಚೇಂಜ್ಲಾಗ್</string>
-    <string name="force_stop_app">ಫೋರ್ಸ್ ಸ್ಟಾಪ್</string>
-    <string name="launch_app">ಲಾಂಚ್</string>
-    <string name="uninstall">ಅನ್‌ಇನ್‌ಸ್ಟಾಲ್</string>
+    <string name="app_changelog">ಚೇಂಜ್ಲಾಗ್</string>
     <string name="about">ಬಗ್ಗೆ</string>
-    <string name="home_working_version">ವರ್ಷನ್: %s</string>
     <string name="reboot">ರೀಬೂಟ್</string>
     <string name="home">ಮನೆ</string>
-    <string name="home_working">ಕೆಲಸ ಮಾಡುತ್ತಿದೆ</string>
-    <string name="about_source_code">%1$s ನಲ್ಲಿ ಮೂಲ ಕೋಡ್ ಅನ್ನು ವೀಕ್ಷಿಸಿ<br/>ನಮ್ಮ %2$s ಚಾನಲ್‌ಗೆ ಸೇರಿ</string>
     <string name="new_version_available">ಹೊಸ ಆವೃತ್ತಿ: %s ಲಭ್ಯವಿದೆ, ಅಪ್‌ಗ್ರೇಡ್ ಮಾಡಲು ಕ್ಲಿಕ್ ಮಾಡಿ</string>
     <string name="save_log">ಲಾಗ್ಗಳನ್ನು ಉಳಿಸಿ</string>
     <string name="oneuixp_tools">Tools</string>

@@ -30,8 +30,6 @@ class SettingsViewModel(
             val miuixMonet = repo.miuixMonet
             val keyColor = repo.keyColor
             val enablePredictiveBack = repo.enablePredictiveBack
-            val enableSwipeDismiss = repo.enableSwipeDismiss
-            val pagerInterceptionMode = repo.pagerInterceptionMode
             val enableBlur = repo.enableBlur
             val enableFloatingBottomBar = repo.enableFloatingBottomBar
             val enableFloatingBottomBarBlur = repo.enableFloatingBottomBarBlur
@@ -48,8 +46,6 @@ class SettingsViewModel(
                     miuixMonet = miuixMonet,
                     keyColor = keyColor,
                     enablePredictiveBack = enablePredictiveBack,
-                    enableSwipeDismiss = enableSwipeDismiss,
-                    pagerInterceptionMode = pagerInterceptionMode,
                     enableBlur = enableBlur,
                     enableFloatingBottomBar = enableFloatingBottomBar,
                     enableFloatingBottomBarBlur = enableFloatingBottomBarBlur,
@@ -143,16 +139,6 @@ class SettingsViewModel(
     fun setEnablePredictiveBack(enabled: Boolean) {
         repo.enablePredictiveBack = enabled
         _uiState.update { it.copy(enablePredictiveBack = enabled) }
-    }
-
-    fun setEnableSwipeDismiss(enabled: Boolean) {
-        repo.enableSwipeDismiss = enabled
-        _uiState.update { it.copy(enableSwipeDismiss = enabled) }
-    }
-
-    fun setPagerInterceptionMode(mode: Int) {
-        repo.pagerInterceptionMode = mode
-        _uiState.update { it.copy(pagerInterceptionMode = mode.coerceIn(0, 2)) }
     }
 
     fun setEnableBlur(enabled: Boolean) {
