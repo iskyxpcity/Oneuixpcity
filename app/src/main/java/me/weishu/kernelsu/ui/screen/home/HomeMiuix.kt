@@ -98,12 +98,12 @@ fun HomePagerMiuix(state: HomeUiState, actions: HomeActions, bottomInnerPadding:
             ) {
                 item {
                     Column(
-                        modifier = Modifier.padding(top = 12.dp),
+                        modifier = Modifier.padding(vertical = 12.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
-                        if (state.checkUpdateEnabled) UpdateCard(state, actions)
                         StatusCard()
+                        if (state.checkUpdateEnabled) UpdateCard(state, actions)
                         InfoCard()
                         Spacer(Modifier.height(bottomInnerPadding))
                     }
