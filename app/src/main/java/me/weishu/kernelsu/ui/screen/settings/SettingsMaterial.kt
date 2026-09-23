@@ -55,14 +55,12 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import me.weishu.kernelsu.R
 import me.weishu.kernelsu.ui.UiMode
-import me.weishu.kernelsu.ui.component.KsuIsValid
 import me.weishu.kernelsu.ui.component.material.SegmentedColumn
 import me.weishu.kernelsu.ui.component.material.SegmentedDropdownItem
 import me.weishu.kernelsu.ui.component.material.SegmentedListItem
 import me.weishu.kernelsu.ui.component.material.SegmentedSwitchItem
 import me.weishu.kernelsu.ui.component.material.SendLogBottomSheet
 import me.weishu.kernelsu.ui.component.material.SnackBarHost
-import me.weishu.kernelsu.ui.component.uninstalldialog.UninstallDialog
 
 /**
  * @author weishu
@@ -76,13 +74,7 @@ fun SettingPagerMaterial(
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
     val snackBarHost = remember { SnackbarHostState() }
-    val showUninstallDialog = rememberSaveable { mutableStateOf(false) }
     var showBottomSheet by remember { mutableStateOf(false) }
-
-    UninstallDialog(
-        show = showUninstallDialog.value,
-        onDismissRequest = { showUninstallDialog.value = false }
-    )
 
     Scaffold(
         topBar = {
@@ -143,192 +135,6 @@ fun SettingPagerMaterial(
                 }
             )
 
-            val profileTemplate = stringResource(id = R.string.settings_profile_template)
-            KsuIsValid {
-                SegmentedColumn(
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                    content = listOf {
-                        SegmentedListItem(
-                            onClick = actions.onOpenProfileTemplate,
-                            headlineContent = { Text(profileTemplate) },
-                            supportingContent = { Text(stringResource(id = R.string.settings_profile_template_summary)) },
-                            leadingContent = { Icon(Icons.Filled.Fence, profileTemplate) },
-                            trailingContent = {
-                                Icon(
-                                    Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                                    null
-                                )
-                            }
-                        )
-                    }
-                )
-            }
-
-            KsuIsValid {
-                val suCompatModeItems = listOf(
-                    stringResource(id = R.string.settings_mode_enable_by_default),
-                    stringResource(id = R.string.settings_mode_disable_until_reboot),
-                    stringResource(id = R.string.settings_mode_disable_always),
-                )
-
-                SegmentedColumn(
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                    content = listOf(
-                        {
-                            val suSummary = when (uiState.suCompatStatus) {
-                                "unsupported" -> stringResource(id = R.string.feature_status_unsupported_summary)
-                                "managed" -> stringResource(id = R.string.feature_status_managed_summary)
-                                else -> stringResource(id = R.string.settings_sucompat_summary)
-                            }
-                            SegmentedDropdownItem(
-                                icon = Icons.Filled.RemoveModerator,
-                                title = stringResource(id = R.string.settings_sucompat),
-                                summary = suSummary,
-                                items = suCompatModeItems,
-                                enabled = uiState.suCompatStatus == "supported",
-                                selectedIndex = uiState.suCompatMode,
-                                onItemSelected = actions.onSetSuCompatMode
-                            )
-                        },
-                        {
-                            val umountSummary = when (uiState.kernelUmountStatus) {
-                                "unsupported" -> stringResource(id = R.string.feature_status_unsupported_summary)
-                                "managed" -> stringResource(id = R.string.feature_status_managed_summary)
-                                else -> stringResource(id = R.string.settings_kernel_umount_summary)
-                            }
-                            SegmentedSwitchItem(
-                                icon = Icons.Filled.RemoveCircle,
-                                title = stringResource(id = R.string.settings_kernel_umount),
-                                summary = umountSummary,
-                                enabled = uiState.kernelUmountStatus == "supported",
-                                checked = uiState.isKernelUmountEnabled,
-                                onCheckedChange = actions.onSetKernelUmountEnabled
-                            )
-                        },
-                        {
-                            val webViewUmountSummary = when (uiState.webViewZygoteUmountStatus) {
-                                "unsupported" -> stringResource(id = R.string.feature_status_unsupported_summary)
-                                "managed" -> stringResource(id = R.string.feature_status_managed_summary)
-                                else -> stringResource(id = R.string.settings_webview_zygote_umount_summary)
-                            }
-                            SegmentedSwitchItem(
-                                icon = Icons.Filled.Language,
-                                title = stringResource(id = R.string.settings_webview_zygote_umount),
-                                summary = webViewUmountSummary,
-                                enabled = uiState.webViewZygoteUmountStatus == "supported",
-                                checked = uiState.isWebViewZygoteUmountEnabled,
-                                onCheckedChange = actions.onSetWebViewZygoteUmountEnabled
-                            )
-                        },
-                        {
-                            val selinuxHideSummary = when (uiState.selinuxHideStatus) {
-                                "unsupported" -> stringResource(id = R.string.feature_status_unsupported_summary)
-                                "managed" -> stringResource(id = R.string.feature_status_managed_summary)
-                                else -> stringResource(id = R.string.settings_selinux_hide_summary)
-                            }
-                            SegmentedSwitchItem(
-                                icon = Icons.Filled.Policy,
-                                title = stringResource(id = R.string.settings_selinux_hide),
-                                summary = selinuxHideSummary,
-                                enabled = uiState.selinuxHideStatus == "supported",
-                                checked = uiState.isSelinuxHideEnabled,
-                                onCheckedChange = actions.onSetSelinuxHideEnabled
-                            )
-                        },
-                        {
-                            val sulogSummary = when (uiState.sulogStatus) {
-                                "unsupported" -> stringResource(id = R.string.feature_status_unsupported_summary)
-                                "managed" -> stringResource(id = R.string.feature_status_managed_summary)
-                                else -> stringResource(id = R.string.settings_sulog_summary)
-                            }
-                            SegmentedSwitchItem(
-                                icon = Icons.AutoMirrored.Filled.Article,
-                                title = stringResource(id = R.string.settings_sulog),
-                                summary = sulogSummary,
-                                enabled = uiState.sulogStatus == "supported",
-                                checked = uiState.isSulogEnabled,
-                                onCheckedChange = actions.onSetSulogEnabled
-                            )
-                        },
-                        {
-                            val adbRootSummary = when (uiState.adbRootStatus) {
-                                "unsupported" -> stringResource(id = R.string.feature_status_unsupported_summary)
-                                "managed" -> stringResource(id = R.string.feature_status_managed_summary)
-                                else -> stringResource(id = R.string.settings_adb_root_summary)
-                            }
-                            SegmentedSwitchItem(
-                                icon = Icons.Filled.Adb,
-                                title = stringResource(id = R.string.settings_adb_root),
-                                summary = adbRootSummary,
-                                enabled = uiState.adbRootStatus == "supported",
-                                checked = uiState.isAdbRootEnabled,
-                                onCheckedChange = actions.onSetAdbRootEnabled
-                            )
-                        },
-                        {
-                            SegmentedSwitchItem(
-                                icon = Icons.Filled.RestartAlt,
-                                title = stringResource(id = R.string.settings_soft_reboot),
-                                summary = stringResource(id = R.string.settings_soft_reboot_summary),
-                                enabled = !uiState.isLateLoadMode,
-                                checked = uiState.isLateLoadMode || uiState.useSoftReboot,
-                                onCheckedChange = actions.onSetUseSoftReboot
-                            )
-                        },
-                    )
-                )
-
-                SegmentedColumn(
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                    content = listOf(
-                        {
-                            SegmentedSwitchItem(
-                                icon = Icons.Filled.FolderDelete,
-                                title = stringResource(id = R.string.settings_umount_modules_default),
-                                summary = stringResource(id = R.string.settings_umount_modules_default_summary),
-                                checked = uiState.isDefaultUmountModules,
-                                onCheckedChange = actions.onSetDefaultUmountModules
-                            )
-                        },
-                        {
-                            SegmentedSwitchItem(
-                                icon = Icons.Filled.DeveloperMode,
-                                title = stringResource(id = R.string.enable_web_debugging),
-                                summary = stringResource(id = R.string.enable_web_debugging_summary),
-                                checked = uiState.enableWebDebugging,
-                                onCheckedChange = actions.onSetEnableWebDebugging
-                            )
-                        },
-                        {
-                            SegmentedSwitchItem(
-                                icon = Icons.Filled.ElectricalServices,
-                                title = stringResource(id = R.string.settings_auto_jailbreak),
-                                summary = stringResource(id = R.string.settings_auto_jailbreak_summary),
-                                enabled = uiState.isLateLoadMode,
-                                checked = uiState.autoJailbreak,
-                                onCheckedChange = actions.onSetAutoJailbreak
-                            )
-                        }
-                    )
-                )
-            }
-
-            if (uiState.isLkmMode) {
-                SegmentedColumn(
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                    content = listOf(
-                        {
-                            val uninstall = stringResource(id = R.string.settings_uninstall)
-                            SegmentedListItem(
-                                onClick = { showUninstallDialog.value = true },
-                                enabled = !uiState.isLateLoadMode,
-                                headlineContent = { Text(uninstall) },
-                                leadingContent = { Icon(Icons.Filled.Delete, uninstall) }
-                            )
-                        }
-                    )
-                )
-            }
 
             SegmentedColumn(
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
