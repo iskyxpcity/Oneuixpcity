@@ -2,8 +2,6 @@ package me.weishu.kernelsu.ui.theme
 
 import android.app.Activity
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -19,6 +17,9 @@ import top.yukonga.miuix.kmp.theme.ThemeColorSpec
 import top.yukonga.miuix.kmp.theme.ThemeController
 import top.yukonga.miuix.kmp.theme.ThemePaletteStyle
 
+/**
+ * OneuiXP Miuix theme follows KernelSU v3.2.5 color behavior.
+ */
 @Composable
 fun MiuixOneuiXPTheme(
     appSettings: AppSettings,
@@ -26,7 +27,8 @@ fun MiuixOneuiXPTheme(
 ) {
     val context = LocalContext.current
     val systemDarkTheme = isSystemInDarkTheme()
-    val darkTheme = appSettings.colorMode.isDark || (appSettings.colorMode.isSystem && systemDarkTheme)
+    val darkTheme = appSettings.colorMode.isDark ||
+        (appSettings.colorMode.isSystem && systemDarkTheme)
     val colorStyle = appSettings.paletteStyle
     val colorSpec = appSettings.colorSpec
 
@@ -36,20 +38,10 @@ fun MiuixOneuiXPTheme(
         ThemePaletteStyle.TonalSpot
     }
 
-    val miuixColorSpec = if (colorSpec.effectiveFor(colorStyle) == ColorSpec.SpecVersion.SPEC_2025) {
+    val miuixColorSpec = if (colorSpec == ColorSpec.SpecVersion.SPEC_2025) {
         ThemeColorSpec.Spec2025
     } else {
         ThemeColorSpec.Spec2021
-    }
-
-    // Original KernelSU 3.3.0 palette rules: no custom key color in normal
-    // Miuix mode; use the framework's dynamic primary only for Monet mode.
-    val resolvedKeyColor: Color? = when {
-        appSettings.keyColor != 0 -> Color(appSettings.keyColor)
-        appSettings.colorMode.isMonet ->
-            if (darkTheme) dynamicDarkColorScheme(context).primary
-            else dynamicLightColorScheme(context).primary
-        else -> null
     }
 
     val controller = ThemeController(
@@ -61,7 +53,7 @@ fun MiuixOneuiXPTheme(
             ColorMode.MONET_LIGHT -> ColorSchemeMode.MonetLight
             ColorMode.MONET_DARK, ColorMode.DARK_AMOLED -> ColorSchemeMode.MonetDark
         },
-        keyColor = resolvedKeyColor,
+        keyColor = if (appSettings.keyColor == 0) null else Color(appSettings.keyColor),
         isDark = darkTheme,
         paletteStyle = miuixPaletteStyle,
         colorSpec = miuixColorSpec,
@@ -83,6 +75,6 @@ fun MiuixOneuiXPTheme(
             ) {
                 content()
             }
-        }
+        },
     )
 }
