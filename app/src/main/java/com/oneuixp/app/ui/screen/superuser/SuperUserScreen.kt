@@ -1,4 +1,4 @@
-package me.weishu.kernelsu.ui.screen.superuser
+package com.oneuixp.app.ui.screen.superuser
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -27,13 +27,13 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import me.weishu.kernelsu.R
-import me.weishu.kernelsu.ui.LocalUiMode
-import me.weishu.kernelsu.ui.UiMode
-import me.weishu.kernelsu.ui.navigation3.Navigator
-import me.weishu.kernelsu.ui.theme.LocalEnableBlur
-import me.weishu.kernelsu.ui.util.BlurredBar
-import me.weishu.kernelsu.ui.util.rememberBlurBackdrop
+import com.oneuixp.app.R
+import com.oneuixp.app.ui.LocalUiMode
+import com.oneuixp.app.ui.UiMode
+import com.oneuixp.app.ui.navigation3.Navigator
+import com.oneuixp.app.ui.theme.LocalEnableBlur
+import com.oneuixp.app.ui.util.BlurredBar
+import com.oneuixp.app.ui.util.rememberBlurBackdrop
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.TopAppBar

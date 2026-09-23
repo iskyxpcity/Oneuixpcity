@@ -1,4 +1,4 @@
-package me.weishu.kernelsu.ui.theme
+package com.oneuixp.app.ui.theme
 
 import android.app.Activity
 import androidx.compose.foundation.isSystemInDarkTheme

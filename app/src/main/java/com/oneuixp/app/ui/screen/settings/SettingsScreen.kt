@@ -1,4 +1,4 @@
-package me.weishu.kernelsu.ui.screen.settings
+package com.oneuixp.app.ui.screen.settings
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -10,11 +10,11 @@ import androidx.compose.ui.unit.Dp
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import me.weishu.kernelsu.ui.LocalUiMode
-import me.weishu.kernelsu.ui.UiMode
-import me.weishu.kernelsu.ui.navigation3.Navigator
-import me.weishu.kernelsu.ui.navigation3.Route
-import me.weishu.kernelsu.ui.viewmodel.SettingsViewModel
+import com.oneuixp.app.ui.LocalUiMode
+import com.oneuixp.app.ui.UiMode
+import com.oneuixp.app.ui.navigation3.Navigator
+import com.oneuixp.app.ui.navigation3.Route
+import com.oneuixp.app.ui.viewmodel.SettingsViewModel
 
 @Composable
 fun SettingPager(

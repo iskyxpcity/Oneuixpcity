@@ -1,9 +1,9 @@
-package me.weishu.kernelsu.ui.screen.settings
+package com.oneuixp.app.ui.screen.settings
 
 import androidx.compose.runtime.Immutable
 import com.materialkolor.PaletteStyle
 import com.materialkolor.dynamiccolor.ColorSpec
-import me.weishu.kernelsu.ui.UiMode
+import com.oneuixp.app.ui.UiMode
 
 /** OneuiXP appearance and app preferences. No KernelSU Root settings. */
 @Immutable
