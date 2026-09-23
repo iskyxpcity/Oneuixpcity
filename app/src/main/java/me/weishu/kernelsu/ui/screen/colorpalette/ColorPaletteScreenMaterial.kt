@@ -459,123 +459,131 @@ private fun ThemePreviewCard(
     paletteStyle: PaletteStyle = PaletteStyle.TonalSpot,
     colorSpec: ColorSpec.SpecVersion = ColorSpec.SpecVersion.SPEC_2021,
 ) {
+    val context = LocalContext.current
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.toFloat()
     val screenHeight = configuration.screenHeightDp.toFloat()
     val screenRatio = screenWidth / screenHeight
-    val useRail = useNavigationRail(enableFloatingBottomBar = false)
+    val dynamicColor = keyColor == 0
 
-    val colorScheme = rememberKernelSUColorScheme(
-        seedColor = if (keyColor == 0) Color.Unspecified else Color(keyColor),
-        isDark = isDark,
-        isAmoled = isAmoled,
-        paletteStyle = paletteStyle,
-        colorSpec = colorSpec,
-    )
+    val colorScheme = if (dynamicColor) {
+        val baseScheme = if (isDark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+        rememberDynamicColorScheme(
+            seedColor = Color.Unspecified,
+            isDark = isDark,
+            isAmoled = isAmoled,
+            style = paletteStyle,
+            specVersion = colorSpec,
+            primary = baseScheme.primary,
+            secondary = baseScheme.secondary,
+            tertiary = baseScheme.tertiary,
+            neutral = baseScheme.surface,
+            neutralVariant = baseScheme.surfaceVariant,
+            error = baseScheme.error
+        )
+    } else {
+        rememberDynamicColorScheme(
+            seedColor = Color(keyColor),
+            isDark = isDark,
+            isAmoled = isAmoled,
+            style = paletteStyle,
+            specVersion = colorSpec,
+        )
+
+    }
 
     Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
         Surface(
             modifier = Modifier
                 .fillMaxWidth(0.4f)
                 .aspectRatio(screenRatio),
-            color = colorScheme.surfaceContainer,
+            color = colorScheme.background,
             shape = RoundedCornerShape(20.dp),
-            border = BorderStroke(1.dp, color = colorScheme.outlineVariant)
+            border = BorderStroke(1.dp, color = MaterialTheme.colorScheme.outlineVariant)
         ) {
-            val content: @Composable ColumnScope.() -> Unit = {
-                    // top bar
-                    Box(
+            Column {
+                // top bar
+                Box(
+                    modifier = Modifier
+                        .height(48.dp)
+                        .fillMaxWidth(),
+                    contentAlignment = Alignment.TopStart
+                ) {
+                    Row(
                         modifier = Modifier
-                            .height(if (useRail) 36.dp else 48.dp)
-                            .fillMaxWidth(),
-                        contentAlignment = Alignment.TopStart
+                            .fillMaxSize()
+                            .padding(start = 12.dp, top = 16.dp, bottom = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Row(
+                        Text(
+                            text = stringResource(id = R.string.app_name),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = colorScheme.onSurface
+                        )
+                    }
+                }
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    contentAlignment = Alignment.TopStart
+                ) {
+                    Column(
+                        modifier = Modifier.padding(horizontal = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        TonalCard(
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
                             modifier = Modifier
-                                .fillMaxSize()
-                                .padding(start = 12.dp, top = if (useRail) 8.dp else 16.dp, bottom = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                                .fillMaxWidth()
+                                .height(40.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            content = { }
+                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            Text(
-                                text = stringResource(id = R.string.app_name),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = colorScheme.onSurface
+                            TonalCard(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(32.dp),
+                                shape = RoundedCornerShape(12.dp),
+                                content = { }
+                            )
+                            TonalCard(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(32.dp),
+                                shape = RoundedCornerShape(12.dp),
+                                content = { }
                             )
                         }
-                    }
-
-                    // Material has its own KernelSU layout:
-                    // one wide status card, then two side-by-side counters.
-                    Column(
-                        modifier = Modifier.weight(1f).fillMaxWidth()
-                            .padding(horizontal = 6.dp, vertical = 2.dp),
-                        verticalArrangement = Arrangement.spacedBy(6.dp),
-                    ) {
                         TonalCard(
-                            containerColor = colorScheme.secondaryContainer,
-                            modifier = Modifier.fillMaxWidth().height(40.dp),
-                            shape = RoundedCornerShape(8.dp),
-                            content = { },
-                        )
-                        Row(
-                            modifier = Modifier.fillMaxWidth().height(30.dp),
-                            horizontalArrangement = Arrangement.spacedBy(6.dp),
-                        ) {
-                            repeat(2) {
-                                TonalCard(
-                                    containerColor = colorScheme.surfaceBright,
-                                    modifier = Modifier.weight(1f).fillMaxHeight(),
-                                    shape = RoundedCornerShape(8.dp),
-                                    content = { },
-                                )
-                            }
-                        }
-                        TonalCard(
-                            containerColor = colorScheme.surfaceBright,
-                            modifier = Modifier.weight(1f).fillMaxWidth(),
-                            shape = RoundedCornerShape(8.dp),
-                            content = { },
-                        )
-                    }
-            }
-
-            if (useRail) {
-                Row {
-                    Surface(
-                        color = colorScheme.surfaceContainer,
-                        modifier = Modifier.fillMaxHeight()
-                    ) {
-                        Column(
                             modifier = Modifier
-                                .fillMaxHeight()
-                                .width(36.dp),
-                            verticalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterVertically),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Icon(Icons.Filled.Home, null, tint = colorScheme.primary)
-                        }
-                    }
-                    Column(modifier = Modifier.weight(1f)) { content() }
-                }
-            } else {
-                Column {
-                    content()
-
-                    // bottom bar
-                    Surface(
-                        color = colorScheme.surfaceContainer,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .height(40.dp)
                                 .fillMaxWidth()
-                                .padding(horizontal = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-                                Icon(Icons.Filled.Home, null, tint = colorScheme.primary)
-                            }
+                                .height(96.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            content = { }
+                        )
+                    }
+                }
+
+                // bottom bar
+                Surface(
+                    color = colorScheme.surfaceContainer,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .height(40.dp)
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+                            Icon(Icons.Filled.Home, null, tint = colorScheme.primary)
                         }
                     }
                 }
