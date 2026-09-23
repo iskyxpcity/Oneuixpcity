@@ -1,4 +1,4 @@
-package me.weishu.kernelsu.statusbar
+package com.oneuixp.app.statusbar
 
 import android.util.Log
 import io.github.libxposed.service.XposedService

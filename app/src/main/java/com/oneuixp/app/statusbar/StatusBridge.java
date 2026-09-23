@@ -1,4 +1,4 @@
-package me.weishu.kernelsu.statusbar;
+package com.oneuixp.app.statusbar;
 
 import android.content.ContentProvider;
 import android.content.Context;

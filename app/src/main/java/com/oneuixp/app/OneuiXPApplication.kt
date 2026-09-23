@@ -1,4 +1,4 @@
-package me.weishu.kernelsu
+package com.oneuixp.app
 
 import android.app.Application
 import android.content.pm.ApplicationInfo
@@ -6,16 +6,16 @@ import android.os.Build
 import android.os.UserManager
 import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelStoreOwner
-import me.weishu.kernelsu.data.repository.SettingsRepositoryImpl
-import me.weishu.kernelsu.statusbar.LsposedFrameworkStatus
+import com.oneuixp.app.data.repository.SettingsRepositoryImpl
+import com.oneuixp.app.statusbar.LsposedFrameworkStatus
 import okhttp3.Cache
 import okhttp3.OkHttpClient
 import java.util.Locale
 import org.lsposed.hiddenapibypass.HiddenApiBypass
 
-lateinit var ksuApp: KernelSUApplication
+lateinit var oneuiXPApp: OneuiXPApplication
 
-class KernelSUApplication : Application(), ViewModelStoreOwner {
+class OneuiXPApplication : Application(), ViewModelStoreOwner {
 
     companion object {
         fun setEnableOnBackInvokedCallback(appInfo: ApplicationInfo, enable: Boolean) {
@@ -36,7 +36,7 @@ class KernelSUApplication : Application(), ViewModelStoreOwner {
 
     override fun onCreate() {
         super.onCreate()
-        ksuApp = this
+        oneuiXPApp = this
         LsposedFrameworkStatus.initialize()
 
         if (!isUserUnlocked()) {

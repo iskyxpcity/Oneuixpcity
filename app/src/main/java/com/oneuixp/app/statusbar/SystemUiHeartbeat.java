@@ -1,4 +1,4 @@
-package me.weishu.kernelsu.statusbar;
+package com.oneuixp.app.statusbar;
 
 import android.app.Application;
 import android.content.Context;
@@ -31,7 +31,7 @@ public final class SystemUiHeartbeat implements IXposedHookLoadPackage {
         });
         executor.scheduleWithFixedDelay(() -> {
             try {
-                Uri uri = Uri.parse("content://" + me.weishu.kernelsu.BuildConfig.APPLICATION_ID + ".statusbridge");
+                Uri uri = Uri.parse("content://" + com.oneuixp.app.BuildConfig.APPLICATION_ID + ".statusbridge");
                 Bundle result = appContext.getContentResolver().call(uri, "heartbeat", null, null);
                 if (result == null || !result.getBoolean("accepted", false)) {
                     Bundle retry = new Bundle();

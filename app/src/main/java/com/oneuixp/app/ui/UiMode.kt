@@ -1,4 +1,4 @@
-package me.weishu.kernelsu.ui
+package com.oneuixp.app.ui
 
 import androidx.compose.runtime.staticCompositionLocalOf
 

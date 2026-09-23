@@ -1,16 +1,16 @@
-package me.weishu.kernelsu.data.repository
+package com.oneuixp.app.data.repository
 
 import android.content.Context
 import androidx.core.content.edit
 import com.materialkolor.PaletteStyle
 import com.materialkolor.dynamiccolor.ColorSpec
-import me.weishu.kernelsu.ksuApp
-import me.weishu.kernelsu.ui.UiMode
+import com.oneuixp.app.oneuiXPApp
+import com.oneuixp.app.ui.UiMode
 
 /** Persist only the OneuiXP theme/navigation configuration. */
 class SettingsRepositoryImpl : SettingsRepository {
     private val prefs by lazy {
-        ksuApp.getSharedPreferences("settings", Context.MODE_PRIVATE)
+        oneuiXPApp.getSharedPreferences("settings", Context.MODE_PRIVATE)
     }
 
     override var uiMode: String

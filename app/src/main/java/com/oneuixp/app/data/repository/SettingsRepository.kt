@@ -1,4 +1,4 @@
-package me.weishu.kernelsu.data.repository
+package com.oneuixp.app.data.repository
 
 /** OneuiXP appearance/navigation and self-update preferences only. No root or module API. */
 interface SettingsRepository {
