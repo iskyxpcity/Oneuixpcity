@@ -35,4 +35,8 @@
 历史阶段报告已从代码仓库根目录清出，以保持主线简洁；原始逐字内容仍可在清理前的 Git 快照
 [`7d35d7d`](https://github.com/iSkyJIE/OneuiXP/tree/7d35d7d1e1fc8e092b9d094b95b1fc4809df285d)
 中查阅。持续接力记录另存于个人资料库 `/OneuiXP/OneuiXP_接力记录_2026-09-22.md`。
-此轮仅清理无运行/构建依赖的历史文档和误入库缓存；旧 KernelSU 兼容源码应在独立分支逐项验证后再移除。
+第二轮已在独立分支移除旧 Root、模块安装、刷写、WebUI、特权执行、protobuf 与原生构建实现；保留两套主题布局、状态栏诊断、现代与旧版 LSPosed 入口、更新检查及固定签名。代码与 APK 须经过 CI、真机验证后才能合并。
+
+## UI 来源与许可证
+
+OneuiXP 是独立的 LSPosed/SystemUI 应用，不连接或调用 KernelSU 的 Root/模块功能。部分 Miuix / Material UI 框架及视觉组件改编自 [KernelSU v3.2.5](https://github.com/tiann/KernelSU/tree/v3.2.5)，保留原始作者署名与 GPL-3.0 许可证文本（见 `LICENSE`）。功能独立不等于抹除保留代码的来源或许可证义务。

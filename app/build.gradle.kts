@@ -6,7 +6,6 @@ plugins {
     alias(libs.plugins.agp.app)
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.kotlin.serialization)
-    alias(libs.plugins.lsplugin.apksign)
     id("kotlin-parcelize")
 }
 
@@ -26,12 +25,6 @@ val defaultManagerName = "OneuiXP"
 val managerPackageName = project.findProperty("ONEUIXP_PACKAGE_NAME")?.toString() ?: defaultManagerPackageName
 val managerName = project.findProperty("ONEUIXP_NAME")?.toString() ?: defaultManagerName
 
-apksign {
-    storeFileProperty = "KEYSTORE_FILE"
-    storePasswordProperty = "KEYSTORE_PASSWORD"
-    keyAliasProperty = "KEY_ALIAS"
-    keyPasswordProperty = "KEY_PASSWORD"
-}
 
 android {
     namespace = "com.oneuixp.app"
