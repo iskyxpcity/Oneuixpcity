@@ -38,7 +38,6 @@ class SettingsViewModel(
             val enableNavigationBadge = repo.enableNavigationBadge
             val pageScale = repo.pageScale
             val moduleDescriptionMaxLines = repo.moduleDescriptionMaxLines
-            val enableWebDebugging = repo.enableWebDebugging
             val colorStyle = repo.colorStyle
             val colorSpec = repo.colorSpec
             val uiMode = repo.uiMode
@@ -59,7 +58,6 @@ class SettingsViewModel(
                     enableNavigationBadge = enableNavigationBadge,
                     pageScale = pageScale,
                     moduleDescriptionMaxLines = moduleDescriptionMaxLines,
-                    enableWebDebugging = enableWebDebugging,
                     colorStyle = colorStyle,
                     colorSpec = colorSpec,
                 )
@@ -191,9 +189,5 @@ class SettingsViewModel(
         _uiState.update { it.copy(moduleDescriptionMaxLines = lines) }
     }
 
-    fun setEnableWebDebugging(enabled: Boolean) {
-        repo.enableWebDebugging = enabled
-        _uiState.update { it.copy(enableWebDebugging = enabled) }
-    }
 
 }

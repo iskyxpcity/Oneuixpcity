@@ -9,7 +9,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.view.WindowInsetsControllerCompat
 import com.materialkolor.dynamiccolor.ColorSpec
-import me.weishu.kernelsu.ui.webui.MonetColorsProvider
 import top.yukonga.miuix.kmp.theme.ColorSchemeMode
 import top.yukonga.miuix.kmp.theme.LocalContentColor
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -69,7 +68,6 @@ fun MiuixOneuiXPTheme(
                     isAppearanceLightNavigationBars = !darkTheme
                 }
             }
-            MonetColorsProvider.UpdateCss()
             CompositionLocalProvider(
                 LocalContentColor provides MiuixTheme.colorScheme.onBackground,
             ) {

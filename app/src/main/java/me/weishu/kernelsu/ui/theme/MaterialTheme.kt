@@ -12,7 +12,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.view.WindowInsetsControllerCompat
 import com.materialkolor.rememberDynamicColorScheme
-import me.weishu.kernelsu.ui.webui.MonetColorsProvider
 
 /**
  * OneuiXP Material theme follows KernelSU v3.2.5 color behavior.
@@ -73,7 +72,6 @@ fun MaterialOneuiXPTheme(
         colorScheme = colorScheme,
         motionScheme = MotionScheme.expressive(),
         content = {
-            MonetColorsProvider.UpdateCss()
             content()
         },
     )

@@ -24,7 +24,6 @@ data class SettingsUiState(
     val enableNavigationBadge: Boolean = true,
     val pageScale: Float = 1.0f,
     val moduleDescriptionMaxLines: Int = 4,
-    val enableWebDebugging: Boolean = false,
 )
 
 @Immutable
