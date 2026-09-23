@@ -39,6 +39,12 @@ jobs:
           test -f app/src/main/resources/META-INF/xposed/scope.list
           echo "OneuiXP source and modern LSPosed entry validated"
 
+      - name: Compile OneuiXP before the owner-signing gate
+        run: |
+          set -euo pipefail
+          chmod +x gradlew
+          ./gradlew :app:compileDebugKotlin -PKSU_PACKAGE_NAME=com.oneuixp.app -PKSU_NAME=OneuiXP --stacktrace --no-daemon
+
       # GitHub does not sign Android packages automatically. Configure these FOUR
       # repository Actions secrets once, from the same stable owner keystore:
       # KEYSTORE_BASE64, KEYSTORE_PASSWORD, KEY_ALIAS, KEY_PASSWORD.
