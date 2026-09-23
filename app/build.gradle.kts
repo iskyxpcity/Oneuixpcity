@@ -1,6 +1,5 @@
 @file:Suppress("UnstableApiUsage")
 
-import com.google.protobuf.gradle.id
 import java.io.File
 
 plugins {
@@ -8,7 +7,6 @@ plugins {
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.lsplugin.apksign)
-    alias(libs.plugins.protobuf)
     id("kotlin-parcelize")
 }
 
@@ -33,24 +31,6 @@ apksign {
     storePasswordProperty = "KEYSTORE_PASSWORD"
     keyAliasProperty = "KEY_ALIAS"
     keyPasswordProperty = "KEY_PASSWORD"
-}
-
-protobuf {
-    protoc {
-        artifact = libs.protobuf.protoc.get().toString()
-    }
-    generateProtoTasks {
-        ofNonTest().forEach { task ->
-            task.builtins {
-                id("java") {
-                    option("lite")
-                }
-                id("kotlin") {
-                    option("lite")
-                }
-            }
-        }
-    }
 }
 
 android {
@@ -92,11 +72,9 @@ android {
     }
 
     buildFeatures {
-        aidl = true
         buildConfig = true
         resValues = true
         compose = true
-        prefab = true
     }
 
     packaging {
@@ -191,11 +169,7 @@ dependencies {
     implementation(libs.androidx.navigation3.runtime)
     implementation(libs.androidx.navigationevent.compose)
 
-    implementation(libs.com.github.topjohnwu.libsu.core)
-    implementation(libs.com.github.topjohnwu.libsu.service)
-    implementation(libs.com.github.topjohnwu.libsu.io)
 
-    implementation(libs.dev.rikka.rikkax.parcelablelist)
 
     implementation(libs.kotlinx.coroutines.core)
 
@@ -224,9 +198,6 @@ dependencies {
 
     implementation(libs.appiconloader)
 
-    implementation(libs.commons.compress)
-    implementation(libs.xz)
-    implementation(libs.protobuf.kotlin.lite)
 }
 
 kotlin {

@@ -1,7 +1,5 @@
 package me.weishu.kernelsu.ui.viewmodel
 
-import android.os.Build
-import android.system.Os
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
@@ -13,20 +11,16 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import me.weishu.kernelsu.data.repository.SettingsRepository
 import me.weishu.kernelsu.data.repository.SettingsRepositoryImpl
-import me.weishu.kernelsu.getKernelVersion
 import me.weishu.kernelsu.ksuApp
 import me.weishu.kernelsu.ui.screen.home.HomeUiState
-import me.weishu.kernelsu.ui.screen.home.SystemInfo
 import me.weishu.kernelsu.ui.screen.home.getManagerVersion
 import me.weishu.kernelsu.ui.util.checkNewVersion
-import me.weishu.kernelsu.ui.util.getSELinuxStatusRaw
 import me.weishu.kernelsu.ui.util.module.LatestVersionInfo
-import me.weishu.kernelsu.ui.util.resolveDeviceName
 
+/** Pure OneuiXP homepage state. No kernel, su or SELinux backend. */
 class HomeViewModel(
-    private val settingsRepo: SettingsRepository = SettingsRepositoryImpl()
+    private val settingsRepo: SettingsRepository = SettingsRepositoryImpl(),
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(buildState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
@@ -35,31 +29,18 @@ class HomeViewModel(
             val baseState = withContext(Dispatchers.IO) { buildState() }
             _uiState.update { baseState }
             if (baseState.checkUpdateEnabled) {
-                val latestVersionInfo = withContext(Dispatchers.IO) { checkNewVersion() }
-                _uiState.update { it.copy(latestVersionInfo = latestVersionInfo) }
+                val version = withContext(Dispatchers.IO) { checkNewVersion() }
+                _uiState.update { it.copy(latestVersionInfo = version) }
             }
         }
     }
 
     private fun buildState(): HomeUiState {
-        val kernelVersion = getKernelVersion()
         val managerVersion = getManagerVersion(ksuApp)
-
         return HomeUiState(
-            kernelVersion = kernelVersion,
             checkUpdateEnabled = settingsRepo.checkUpdate,
             latestVersionInfo = LatestVersionInfo(),
             currentManagerVersionCode = managerVersion.versionCode,
-            systemInfo = SystemInfo(
-                kernelVersion = Os.uname().release,
-                managerVersion = "${managerVersion.versionName} (${managerVersion.versionCode})",
-                deviceModel = resolveDeviceName(),
-                fingerprint = Build.FINGERPRINT,
-                selinuxStatus = getSELinuxStatusRaw(),
-                seccompStatus = runCatching {
-                    Os.prctl(21 /* PR_GET_SECCOMP */, 0, 0, 0, 0)
-                }.getOrDefault(-1),
-            ),
         )
     }
 }

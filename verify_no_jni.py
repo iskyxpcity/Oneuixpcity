@@ -4,6 +4,8 @@ from pathlib import Path
 root = Path(__file__).resolve().parent
 native_path = root / 'app/src/main/java/me/weishu/kernelsu/Natives.kt'
 assert not native_path.exists(), 'obsolete KernelSU native compatibility layer must remain absent'
+for dead in ('core/tasks', 'ui/webui', 'data/model', 'ui/screen/flash', 'ui/screen/modulerepo'):
+    assert not (root / 'app/src/main/java/me/weishu/kernelsu' / dead).exists(), dead
 gradle = (root / 'app/build.gradle.kts').read_text()
 assert 'externalNativeBuild' not in gradle
 assert (root / 'app/src/main/java/me/weishu/kernelsu/statusbar/SystemUiEntry.java').exists()
