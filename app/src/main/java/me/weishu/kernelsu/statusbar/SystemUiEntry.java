@@ -104,31 +104,40 @@ public final class SystemUiEntry implements IXposedHookLoadPackage {
         return out.length() > 12000 ? out.substring(0, 12000) + "\nTRUNCATED" : out.toString();
     }
 
+    /**
+     * Shared, read-only load report for modern API 101 and legacy API 82.
+     * A failed provider call remains retryable via SystemUiHeartbeat.
+     */
+    public static void reportFromModern(Context context, ClassLoader loader) {
+        synchronized (SystemUiEntry.class) {
+            if (reportedThisProcess) return;
+            try {
+                Uri uri = Uri.parse("content://" + me.weishu.kernelsu.BuildConfig.APPLICATION_ID + ".statusbridge");
+                android.os.Bundle report = new android.os.Bundle();
+                report.putString("probe", probeDetails(loader));
+                android.os.Bundle response = context.getContentResolver().call(uri, "loaded", null, report);
+                if (response != null && response.getBoolean("accepted", false)) {
+                    reportedThisProcess = true;
+                }
+            } catch (Throwable ignored) {
+                // The heartbeat retry handles a temporarily unavailable manager.
+            }
+        }
+    }
+
     @Override public void handleLoadPackage(XC_LoadPackage.LoadPackageParam param) {
         if (!"com.android.systemui".equals(param.packageName)
                 || !"com.android.systemui".equals(param.processName)) return;
         try {
             XposedHelpers.findAndHookMethod(Application.class, "attach", Context.class, new XC_MethodHook() {
                 @Override protected void afterHookedMethod(MethodHookParam hook) {
-                    try {
-                        synchronized (SystemUiEntry.class) {
-                        if (reportedThisProcess) return;
-                        Context context = (Context) hook.args[0];
-                        Uri uri = Uri.parse("content://" + me.weishu.kernelsu.BuildConfig.APPLICATION_ID + ".statusbridge");
-                        android.os.Bundle report = new android.os.Bundle();
-                        report.putString("probe", probeDetails(param.classLoader));
-                        android.os.Bundle response = context.getContentResolver().call(uri, "loaded", null, report);
-                        if (response != null && response.getBoolean("accepted", false)) {
-                            reportedThisProcess = true;
-                        }
-                        }
-                    } catch (Throwable ignored) {
-                        // Never interrupt SystemUI startup.
+                    if (hook.args[0] instanceof Context) {
+                        reportFromModern((Context) hook.args[0], param.classLoader);
                     }
                 }
             });
         } catch (Throwable ignored) {
-            // Fail open if framework internals differ.
+            // Never interrupt SystemUI.
         }
     }
 }
