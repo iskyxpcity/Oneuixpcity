@@ -279,7 +279,7 @@ fun MainScreen(
                         0 -> if (isCurrentPage || contentReady) HomePager(navController, bottomInnerPadding, isCurrentPage)
                         1 -> if (isCurrentPage || contentReady) SuperUserPager(navController, bottomInnerPadding, isCurrentPage)
                         2 -> if (isCurrentPage || contentReady) ModulePager(bottomInnerPadding, isCurrentPage)
-                        3 -> if (isCurrentPage || contentReady) SettingPager(navController, bottomInnerPadding)
+                        3 -> if (isCurrentPage || contentReady) SettingPager(navController, bottomInnerPadding, isCurrentPage)
                     }
                 }
             }
