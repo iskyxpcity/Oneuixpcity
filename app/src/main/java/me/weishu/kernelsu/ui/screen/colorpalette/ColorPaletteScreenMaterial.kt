@@ -86,7 +86,6 @@ import androidx.compose.ui.unit.dp
 import com.materialkolor.PaletteStyle
 import com.materialkolor.dynamiccolor.ColorSpec
 import me.weishu.kernelsu.R
-import me.weishu.kernelsu.ui.component.bottombar.useNavigationRail
 import me.weishu.kernelsu.ui.component.material.ExpressiveToggleButton
 import me.weishu.kernelsu.ui.component.material.SegmentedColumn
 import me.weishu.kernelsu.ui.component.material.SegmentedDropdownItem
@@ -95,7 +94,6 @@ import me.weishu.kernelsu.ui.component.material.TonalCard
 import me.weishu.kernelsu.ui.component.material.TopBarBackButton
 import me.weishu.kernelsu.ui.theme.ColorMode
 import me.weishu.kernelsu.ui.theme.keyColorOptions
-import me.weishu.kernelsu.ui.theme.rememberKernelSUColorScheme
 import kotlin.math.roundToInt
 
 @Composable
@@ -602,14 +600,32 @@ private fun ColorButtonMaterial(
     colorSpec: ColorSpec.SpecVersion = ColorSpec.SpecVersion.SPEC_2021,
     onClick: () -> Unit
 ) {
+    val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
-    val colorScheme = rememberKernelSUColorScheme(
-        seedColor = color,
-        isDark = isDark,
-        isAmoled = isAmoled,
-        paletteStyle = paletteStyle,
-        colorSpec = colorSpec,
-    )
+    val colorScheme = if (color == Color.Unspecified) {
+        val baseScheme = if (isDark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+        rememberDynamicColorScheme(
+            seedColor = Color.Unspecified,
+            isDark = isDark,
+            isAmoled = isAmoled,
+            style = paletteStyle,
+            specVersion = colorSpec,
+            primary = baseScheme.primary,
+            secondary = baseScheme.secondary,
+            tertiary = baseScheme.tertiary,
+            neutral = baseScheme.surface,
+            neutralVariant = baseScheme.surfaceVariant,
+            error = baseScheme.error,
+        )
+    } else {
+        rememberDynamicColorScheme(
+            seedColor = color,
+            isDark = isDark,
+            isAmoled = isAmoled,
+            style = paletteStyle,
+            specVersion = colorSpec,
+        )
+    }
 
     Surface(
         onClick = {
