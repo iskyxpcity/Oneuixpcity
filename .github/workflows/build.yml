@@ -59,7 +59,7 @@ jobs:
           set -euo pipefail
           for key in KEYSTORE_BASE64 KEYSTORE_PASSWORD KEY_ALIAS KEY_PASSWORD; do
             if [ -z "${!key}" ]; then
-              echo "::error::Missing OneuiXP repository Actions secret ${key}. Copy the SAME signing keystore secrets used for your existing owner-signed APK into this repository's Actions secrets. Cannot release a stable-signed APK without them."
+              echo "::error::Missing OneuiXP repository Actions secret ${key}. Configure the NEW independent permanent OneuiXP keystore generated on 2026-09-23 in this repository's Actions secrets. Cannot release a stable-signed APK without them."
               exit 1
             fi
           done
@@ -81,7 +81,7 @@ jobs:
 
       - name: Verify package, stable certificate and prepare APK
         env:
-          EXPECTED_CERT: 3cca67360758a4956796fcf6d8c726daf92b581532a1bb7e81211c8107bc7e09
+          EXPECTED_CERT: 93bf61a6493c6b336383832eb41301bd8fe061f43566e7e384e3fdd9fc1c26a1
         run: |
           set -euo pipefail
           mkdir -p dist
@@ -95,7 +95,7 @@ jobs:
           test -n "$CERT"
           EXPECTED=$(printf '%s' "$EXPECTED_CERT" | tr -d ': ' | tr '[:upper:]' '[:lower:]')
           if [ "$CERT" != "$EXPECTED" ]; then
-            echo '::error::OneuiXP certificate differs from the verified OneUIX-Mod signing certificate.'
+            echo '::error::OneuiXP certificate differs from the NEW permanent OneuiXP certificate.'
             exit 1
           fi
           printf '%s\n' "$CERT" > dist/SIGNING_CERT_SHA256.txt
