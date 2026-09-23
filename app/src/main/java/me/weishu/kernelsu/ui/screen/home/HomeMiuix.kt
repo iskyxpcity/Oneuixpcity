@@ -241,44 +241,35 @@ private fun DashboardSmallCardMiuix(title: String, value: String, modifier: Modi
 
 @Composable
 private fun InfoCard() {
-    val context = LocalContext.current
-    val metrics = context.resources.displayMetrics
-    val manager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
-    val memory = ActivityManager.MemoryInfo().also { manager.getMemoryInfo(it) }
-    val storage = StatFs(Environment.getDataDirectory().path)
-    fun gigabytes(value: Long) = String.format("%.1f GB", value / 1073741824.0)
-    val oneUi = runCatching {
-        val cls = Class.forName("android.os.SystemProperties")
-        val get = cls.getMethod("get", String::class.java, String::class.java)
-        (get.invoke(null, "ro.build.version.oneui", "") as String).ifBlank { "-" }
-    }.getOrDefault("-")
-    val chipset = if (Build.VERSION.SDK_INT >= 31)
-        Build.SOC_MODEL.ifBlank { Build.HARDWARE } else Build.HARDWARE
-    val architecture = System.getProperty("os.arch") ?: "-"
+    val info = rememberOneuiXPDeviceInfo()
 
     @Composable
     fun Item(title: String, content: String, bottom: Dp = 20.dp) {
         Text(
-            text = title, fontSize = MiuixTheme.textStyles.headline1.fontSize,
-            fontWeight = FontWeight.Medium, color = colorScheme.onSurface,
+            text = title,
+            fontSize = MiuixTheme.textStyles.headline1.fontSize,
+            fontWeight = FontWeight.Medium,
+            color = colorScheme.onSurface,
         )
         Text(
-            text = content, fontSize = MiuixTheme.textStyles.body2.fontSize,
+            text = content,
+            fontSize = MiuixTheme.textStyles.body2.fontSize,
             color = colorScheme.onSurfaceVariantSummary,
             modifier = Modifier.padding(top = 2.dp, bottom = bottom),
         )
     }
+
     Card {
         Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
-            Item("手机型号", "${Build.MANUFACTURER} ${Build.MODEL}")
-            Item("Android / API", "Android ${Build.VERSION.RELEASE} / API ${Build.VERSION.SDK_INT}")
-            Item("One UI", oneUi)
-            Item("RAM | ROM", "${gigabytes(memory.totalMem)} | ${gigabytes(storage.totalBytes)}")
-            Item("设备代号", Build.DEVICE)
-            Item("处理器", chipset)
-            Item("ABI / CPU 架构", "${Build.SUPPORTED_ABIS.firstOrNull() ?: "-"} / $architecture")
-            Item("分辨率 / DPI", "${metrics.widthPixels}×${metrics.heightPixels} / ${metrics.densityDpi}dpi")
-            Item("安全补丁", Build.VERSION.SECURITY_PATCH.ifBlank { "-" }, 0.dp)
+            Item("手机型号", info.model)
+            Item("Android / API", info.androidApi)
+            Item("One UI", info.oneUi)
+            Item("RAM | ROM", info.ramRom)
+            Item("设备代号", info.deviceCode)
+            Item("处理器", info.chipset)
+            Item("ABI / CPU 架构", info.abiArchitecture)
+            Item("分辨率 / DPI", info.resolutionDpi)
+            Item("安全补丁", info.securityPatch, 0.dp)
         }
     }
 }
