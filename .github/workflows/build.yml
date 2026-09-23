@@ -81,7 +81,7 @@ jobs:
 
       - name: Verify package, stable certificate and prepare APK
         env:
-          EXPECTED_CERT: ${{ vars.ONEUIXP_CERT_SHA256 }}
+          EXPECTED_CERT: 3cca67360758a4956796fcf6d8c726daf92b581532a1bb7e81211c8107bc7e09
         run: |
           set -euo pipefail
           mkdir -p dist
@@ -93,12 +93,10 @@ jobs:
           grep -Fq 'Verified using v2 scheme (APK Signature Scheme v2): true' dist/SIGNING_INFO.txt
           CERT=$(sed -n 's/^.*certificate SHA-256 digest: //p' dist/SIGNING_INFO.txt | head -1 | tr -d ': ' | tr '[:upper:]' '[:lower:]')
           test -n "$CERT"
-          if [ -n "$EXPECTED_CERT" ]; then
-            EXPECTED=$(printf '%s' "$EXPECTED_CERT" | tr -d ': ' | tr '[:upper:]' '[:lower:]')
-            if [ "$CERT" != "$EXPECTED" ]; then
-              echo '::error::Signed with the wrong certificate; this APK would not update the owner's existing app.'
-              exit 1
-            fi
+          EXPECTED=$(printf '%s' "$EXPECTED_CERT" | tr -d ': ' | tr '[:upper:]' '[:lower:]')
+          if [ "$CERT" != "$EXPECTED" ]; then
+            echo '::error::OneuiXP certificate differs from the verified OneUIX-Mod signing certificate.'
+            exit 1
           fi
           printf '%s\n' "$CERT" > dist/SIGNING_CERT_SHA256.txt
           "$AAPT" dump badging "$APK" | tee dist/APK_PACKAGE_INFO.txt
