@@ -15,9 +15,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -26,7 +24,6 @@ import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.captionBar
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -36,12 +33,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.MenuOpen
 import androidx.compose.material.icons.filled.Brightness1
 import androidx.compose.material.icons.filled.Brightness3
@@ -50,27 +49,28 @@ import androidx.compose.material.icons.filled.Brightness7
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.rounded.AspectRatio
 import androidx.compose.material.icons.rounded.Check
-import androidx.compose.material.icons.rounded.Description
 import androidx.compose.material.icons.rounded.DesignServices
-import androidx.compose.material.icons.rounded.Pin
 import androidx.compose.material.icons.rounded.Style
-import androidx.compose.material.icons.rounded.Swipe
-import androidx.compose.material.icons.rounded.ViewCarousel
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.ToggleButton
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberSliderState
-import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
+import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -90,15 +90,12 @@ import com.materialkolor.PaletteStyle
 import com.materialkolor.dynamiccolor.ColorSpec
 import com.materialkolor.rememberDynamicColorScheme
 import me.weishu.kernelsu.R
-import me.weishu.kernelsu.ui.component.material.ExpressiveToggleButton
 import me.weishu.kernelsu.ui.component.material.SegmentedColumn
 import me.weishu.kernelsu.ui.component.material.SegmentedDropdownItem
 import me.weishu.kernelsu.ui.component.material.SegmentedSwitchItem
 import me.weishu.kernelsu.ui.component.material.TonalCard
-import me.weishu.kernelsu.ui.component.material.TopBarBackButton
 import me.weishu.kernelsu.ui.theme.ColorMode
 import me.weishu.kernelsu.ui.theme.keyColorOptions
-import kotlin.math.roundToInt
 
 @Composable
 fun ColorPaletteScreenMaterial(
@@ -113,16 +110,22 @@ fun ColorPaletteScreenMaterial(
     val colorSpec = state.currentColorSpec
     val haptic = LocalHapticFeedback.current
 
+    LaunchedEffect(Unit) {
+        scrollBehavior.state.heightOffset = scrollBehavior.state.heightOffsetLimit
+    }
+
     Scaffold(
         topBar = {
             LargeFlexibleTopAppBar(
                 navigationIcon = {
-                    TopBarBackButton(onClick = actions.onBack)
+                    IconButton(
+                        onClick = actions.onBack
+                    ) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null) }
                 },
                 title = { Text(stringResource(R.string.settings_theme)) },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface,
-                    scrolledContainerColor = MaterialTheme.colorScheme.surface,
+                    scrolledContainerColor = MaterialTheme.colorScheme.surface
                 ),
                 windowInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
                 scrollBehavior = scrollBehavior
@@ -132,63 +135,62 @@ fun ColorPaletteScreenMaterial(
     ) { paddingValues ->
         val navBars = WindowInsets.navigationBars.asPaddingValues()
         val captionBar = WindowInsets.captionBar.asPaddingValues()
-        val isDark = currentColorMode.isDark || currentColorMode.isSystem && isSystemInDarkTheme()
-        val isAmoled = currentColorMode.isAmoled
 
-        LazyColumn(
+        Column(
             modifier = Modifier
-                .fillMaxSize()
                 .padding(paddingValues)
-                .nestedScroll(scrollBehavior.nestedScrollConnection),
+                .nestedScroll(scrollBehavior.nestedScrollConnection)
+                .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            item {
-                ThemePreviewCard(
-                    keyColor = currentKeyColor,
-                    isDark = isDark,
-                    isAmoled = isAmoled,
-                    paletteStyle = colorStyle,
-                    colorSpec = colorSpec,
-                )
-            }
+            val isDark = currentColorMode.isDark || currentColorMode.isSystem && isSystemInDarkTheme()
+            ThemePreviewCard(
+                keyColor = currentKeyColor,
+                isDark = isDark,
+                paletteStyle = colorStyle,
+                colorSpec = colorSpec,
+            )
 
-            item {
-                LazyRow(
-                    modifier = Modifier.fillMaxWidth(),
-                    contentPadding = PaddingValues(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                ) {
-                    item {
-                        ColorButtonMaterial(
-                            color = Color.Unspecified,
-                            isSelected = currentKeyColor == 0,
-                            isDark = isDark,
-                            isAmoled = isAmoled,
-                            paletteStyle = colorStyle,
-                            colorSpec = colorSpec,
-                            onClick = {
-                                actions.onSetKeyColor(0)
-                            }
-                        )
-                    }
+            Spacer(modifier = Modifier.height(8.dp))
 
-                    items(keyColorOptions) { color ->
-                        ColorButtonMaterial(
-                            color = Color(color),
-                            isSelected = currentKeyColor == color,
-                            isDark = isDark,
-                            isAmoled = isAmoled,
-                            paletteStyle = colorStyle,
-                            colorSpec = colorSpec,
-                            onClick = {
-                                actions.onSetKeyColor(color)
-                            }
-                        )
-                    }
+            LazyRow(
+                modifier = Modifier.fillMaxWidth(),
+                contentPadding = PaddingValues(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
+                item {
+                    ColorButtonMaterial(
+                        color = Color.Unspecified,
+                        isSelected = currentKeyColor == 0,
+                        isDark = isDark,
+                        paletteStyle = colorStyle,
+                        colorSpec = colorSpec,
+                        onClick = {
+                            actions.onSetKeyColor(0)
+                        }
+                    )
+                }
+
+                items(keyColorOptions) { color ->
+                    ColorButtonMaterial(
+                        color = Color(color),
+                        isSelected = currentKeyColor == color,
+                        isDark = isDark,
+                        paletteStyle = colorStyle,
+                        colorSpec = colorSpec,
+                        onClick = {
+                            actions.onSetKeyColor(color)
+                        }
+                    )
                 }
             }
 
-            item {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
                 val options = listOf(
                     listOf(ColorMode.SYSTEM) to stringResource(R.string.settings_theme_mode_system),
                     listOf(ColorMode.LIGHT) to stringResource(R.string.settings_theme_mode_light),
@@ -196,55 +198,46 @@ fun ColorPaletteScreenMaterial(
                     listOf(ColorMode.DARK_AMOLED) to stringResource(R.string.settings_theme_mode_dark)
                 )
 
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    options.chunked(4).forEach { rowOptions ->
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)
-                        ) {
-                            rowOptions.forEachIndexed { index, (modes, label) ->
-                                ExpressiveToggleButton(
-                                    checked = currentColorMode in modes,
-                                    onCheckedChange = {
-                                        if (it) {
-                                            haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
-                                            actions.onSetColorMode(modes.first())
-                                        }
+                options.chunked(4).forEach { rowOptions ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)
+                    ) {
+                        rowOptions.forEachIndexed { index, (modes, label) ->
+                            ToggleButton(
+                                checked = currentColorMode in modes,
+                                onCheckedChange = {
+                                    if (it) {
+                                        haptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
+                                        actions.onSetColorMode(modes.first())
+                                    }
+                                },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .semantics { role = Role.RadioButton },
+                                shapes = when (index) {
+                                    0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
+                                    rowOptions.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
+                                    else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
+                                },
+                            ) {
+                                Icon(
+                                    imageVector = when (modes.first()) {
+                                        ColorMode.SYSTEM -> Icons.Filled.Brightness4
+                                        ColorMode.LIGHT -> Icons.Filled.Brightness7
+                                        ColorMode.DARK -> Icons.Filled.Brightness3
+                                        ColorMode.DARK_AMOLED -> Icons.Filled.Brightness1
+                                        else -> Icons.Filled.Brightness4
                                     },
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .semantics { role = Role.RadioButton },
-                                    shapes = when (index) {
-                                        0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
-                                        rowOptions.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
-                                        else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
-                                    },
-                                ) {
-                                    Icon(
-                                        imageVector = when (modes.first()) {
-                                            ColorMode.SYSTEM -> Icons.Filled.Brightness4
-                                            ColorMode.LIGHT -> Icons.Filled.Brightness7
-                                            ColorMode.DARK -> Icons.Filled.Brightness3
-                                            ColorMode.DARK_AMOLED -> Icons.Filled.Brightness1
-                                            else -> Icons.Filled.Brightness4
-                                        },
-                                        contentDescription = label
-                                    )
-                                }
+                                    contentDescription = label
+                                )
                             }
                         }
                     }
                 }
-            }
 
-            item {
                 SegmentedColumn(
-                    modifier = Modifier.padding(horizontal = 16.dp),
+                    modifier = Modifier.padding(top = 4.dp),
                     content = listOf(
                         {
                             val styles = PaletteStyle.entries
@@ -272,29 +265,10 @@ fun ColorPaletteScreenMaterial(
                         }
                     )
                 )
-            }
 
-            item {
-                SegmentedColumn(
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                    content = listOf(
-                        {
-                            SegmentedSwitchItem(
-                                icon = Icons.Rounded.Pin,
-                                title = stringResource(id = R.string.settings_navigation_badge),
-                                summary = stringResource(id = R.string.settings_navigation_badge_summary),
-                                checked = uiState.enableNavigationBadge,
-                                onCheckedChange = actions.onSetEnableNavigationBadge
-                            )
-                        }
-                    )
-                )
-            }
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                item {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
                     SegmentedColumn(
-                        modifier = Modifier.padding(horizontal = 16.dp),
+                        modifier = Modifier.padding(top = 4.dp),
                         content = listOf(
                             {
                                 SegmentedSwitchItem(
@@ -308,44 +282,9 @@ fun ColorPaletteScreenMaterial(
                         )
                     )
                 }
-            }
 
-            item {
-                SegmentedColumn(
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                    content = listOf(
-                        {
-                            SegmentedSwitchItem(
-                                icon = Icons.Rounded.Swipe,
-                                title = stringResource(id = R.string.settings_enable_swipe_dismiss),
-                                summary = stringResource(id = R.string.settings_enable_swipe_dismiss_summary),
-                                checked = uiState.enableSwipeDismiss,
-                                onCheckedChange = actions.onSetEnableSwipeDismiss,
-                            )
-                        },
-                        {
-                            SegmentedDropdownItem(
-                                icon = Icons.Rounded.ViewCarousel,
-                                title = stringResource(id = R.string.settings_pager_gesture_mode),
-                                items = listOf(
-                                    stringResource(id = R.string.settings_pager_gesture_native),
-                                    stringResource(id = R.string.settings_pager_gesture_cross_axis),
-                                    stringResource(id = R.string.settings_pager_gesture_ios_like),
-                                ),
-                                selectedIndex = uiState.pagerInterceptionMode.coerceIn(0, 2),
-                                onItemSelected = actions.onSetPagerInterceptionMode,
-                            )
-                        },
-                    ),
-                )
-            }
-
-            item {
-                TonalCard(modifier = Modifier.padding(horizontal = 16.dp)) {
-                    val sliderState = rememberSliderState(
-                        value = uiState.pageScale,
-                        trackRange = 0.8f..1.1f
-                    )
+                TonalCard(modifier = Modifier.padding(top = 4.dp)) {
+                    var sliderValue by remember(uiState.pageScale) { mutableFloatStateOf(uiState.pageScale) }
 
                     Column(
                         modifier = Modifier.padding(16.dp),
@@ -372,82 +311,28 @@ fun ColorPaletteScreenMaterial(
                                 Text(
                                     text = stringResource(id = R.string.settings_page_scale_summary),
                                     style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    color = MaterialTheme.colorScheme.outline
                                 )
                             }
                             Text(
-                                text = "${(sliderState.value * 100).toInt()}%",
+                                text = "${(sliderValue * 100).toInt()}%",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
 
                         Slider(
-                            state = sliderState,
-                            onValueChangeFinished = { actions.onSetPageScale(sliderState.value) },
+                            value = sliderValue,
+                            onValueChange = { sliderValue = it },
+                            onValueChangeFinished = { actions.onSetPageScale(sliderValue) },
+                            valueRange = 0.8f..1.1f,
                             modifier = Modifier.fillMaxWidth()
                         )
                     }
                 }
             }
 
-            item {
-                TonalCard(modifier = Modifier.padding(horizontal = 16.dp)) {
-                    val sliderState = rememberSliderState(
-                        value = uiState.moduleDescriptionMaxLines.toFloat(),
-                        steps = 3,
-                        trackRange = 1f..5f
-                    )
-
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                Icons.Rounded.Description,
-                                contentDescription = stringResource(id = R.string.settings_module_description_max_lines),
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Column(
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.settings_module_description_max_lines),
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                                Text(
-                                    text = stringResource(id = R.string.settings_module_description_max_lines_summary),
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                            Text(
-                                text = "${sliderState.value.roundToInt()} " + stringResource(R.string.unit_lines),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-
-                        Slider(
-                            state = sliderState,
-                            onValueChangeFinished = {
-                                actions.onSetModuleDescriptionMaxLines(sliderState.value.roundToInt())
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
-                }
-            }
-
-            item {
-                Spacer(modifier = Modifier.height(16.dp + navBars.calculateBottomPadding() + captionBar.calculateBottomPadding()))
-            }
+            Spacer(modifier = Modifier.height(16.dp + navBars.calculateBottomPadding() + captionBar.calculateBottomPadding()))
         }
     }
 }
@@ -457,7 +342,6 @@ fun ColorPaletteScreenMaterial(
 private fun ThemePreviewCard(
     keyColor: Int,
     isDark: Boolean,
-    isAmoled: Boolean = false,
     paletteStyle: PaletteStyle = PaletteStyle.TonalSpot,
     colorSpec: ColorSpec.SpecVersion = ColorSpec.SpecVersion.SPEC_2021,
 ) {
@@ -473,7 +357,6 @@ private fun ThemePreviewCard(
         rememberDynamicColorScheme(
             seedColor = Color.Unspecified,
             isDark = isDark,
-            isAmoled = isAmoled,
             style = paletteStyle,
             specVersion = colorSpec,
             primary = baseScheme.primary,
@@ -487,7 +370,6 @@ private fun ThemePreviewCard(
         rememberDynamicColorScheme(
             seedColor = Color(keyColor),
             isDark = isDark,
-            isAmoled = isAmoled,
             style = paletteStyle,
             specVersion = colorSpec,
         )
@@ -599,7 +481,6 @@ private fun ColorButtonMaterial(
     color: Color,
     isSelected: Boolean,
     isDark: Boolean,
-    isAmoled: Boolean = false,
     paletteStyle: PaletteStyle = PaletteStyle.TonalSpot,
     colorSpec: ColorSpec.SpecVersion = ColorSpec.SpecVersion.SPEC_2021,
     onClick: () -> Unit
@@ -611,7 +492,6 @@ private fun ColorButtonMaterial(
         rememberDynamicColorScheme(
             seedColor = Color.Unspecified,
             isDark = isDark,
-            isAmoled = isAmoled,
             style = paletteStyle,
             specVersion = colorSpec,
             primary = baseScheme.primary,
@@ -619,13 +499,12 @@ private fun ColorButtonMaterial(
             tertiary = baseScheme.tertiary,
             neutral = baseScheme.surface,
             neutralVariant = baseScheme.surfaceVariant,
-            error = baseScheme.error,
+            error = baseScheme.error
         )
     } else {
         rememberDynamicColorScheme(
             seedColor = color,
             isDark = isDark,
-            isAmoled = isAmoled,
             style = paletteStyle,
             specVersion = colorSpec,
         )
