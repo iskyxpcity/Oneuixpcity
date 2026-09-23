@@ -1,6 +1,7 @@
 @file:Suppress("UnstableApiUsage")
 
 import com.google.protobuf.gradle.id
+import java.io.File
 
 plugins {
     alias(libs.plugins.agp.app)
@@ -55,10 +56,34 @@ protobuf {
 android {
     namespace = "me.weishu.kernelsu"
 
+    // The same owner keystore must sign EVERY distributable APK.
+    // CI supplies credentials via GitHub Actions secrets; never commit keys.
+    val ownerKeystore = System.getenv("ONEUIXP_KEYSTORE_PATH")?.takeIf { it.isNotBlank() }
+    val ownerStorePassword = System.getenv("ONEUIXP_KEYSTORE_PASSWORD")
+    val ownerKeyAlias = System.getenv("ONEUIXP_KEY_ALIAS")
+    val ownerKeyPassword = System.getenv("ONEUIXP_KEY_PASSWORD")
+    val ownerSigningReady = !ownerKeystore.isNullOrBlank() &&
+        !ownerStorePassword.isNullOrBlank() &&
+        !ownerKeyAlias.isNullOrBlank() &&
+        !ownerKeyPassword.isNullOrBlank()
+
+    signingConfigs {
+        if (ownerSigningReady) {
+            create("owner") {
+                storeFile = File(ownerKeystore!!)
+                storePassword = ownerStorePassword!!
+                keyAlias = ownerKeyAlias!!
+                keyPassword = ownerKeyPassword!!
+            }
+        }
+    }
+
     buildTypes {
         debug {
+            if (ownerSigningReady) signingConfig = signingConfigs.getByName("owner")
         }
         release {
+            if (ownerSigningReady) signingConfig = signingConfigs.getByName("owner")
             isMinifyEnabled = true
             isShrinkResources = true
             vcsInfo.include = false
