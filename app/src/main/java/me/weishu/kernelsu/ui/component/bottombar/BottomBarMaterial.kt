@@ -25,45 +25,44 @@ import androidx.compose.ui.text.style.TextOverflow
 import me.weishu.kernelsu.R
 import me.weishu.kernelsu.ui.LocalMainPagerState
 
-/**
- * KernelSU v3.2.5 Material bottom navigation geometry and typography.
- * OneuiXP keeps its own four destination labels.
- */
 @Composable
-fun BottomBarMaterial(navigationBadge: NavigationBadgeState) {
+fun BottomBarMaterial() {
     val mainPagerState = LocalMainPagerState.current
+
     val items = listOf(
         Triple(R.string.home, Icons.Filled.Home, Icons.Outlined.Home),
         Triple(R.string.oneuixp_tools, Icons.Filled.Shield, Icons.Outlined.Shield),
         Triple(R.string.oneuixp_status, Icons.Filled.Extension, Icons.Outlined.Extension),
-        Triple(R.string.settings, Icons.Filled.Settings, Icons.Outlined.Settings),
+        Triple(R.string.settings, Icons.Filled.Settings, Icons.Outlined.Settings)
     )
 
     FlexibleBottomAppBar(
         windowInsets = WindowInsets.systemBars.union(WindowInsets.displayCutout).only(
             WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom
-        ),
+        )
     ) {
         items.forEachIndexed { index, (label, selectedIcon, unselectedIcon) ->
             val selected = mainPagerState.selectedPage == index
             NavigationBarItem(
                 selected = selected,
                 onClick = {
-                    if (!selected) mainPagerState.animateToPage(index)
+                    if (!selected) {
+                        mainPagerState.animateToPage(index)
+                    }
                 },
                 icon = {
                     Icon(
                         if (selected) selectedIcon else unselectedIcon,
-                        stringResource(label),
+                        stringResource(label)
                     )
                 },
                 label = {
                     Text(
                         stringResource(label),
                         maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
+                        overflow = TextOverflow.Ellipsis
                     )
-                },
+                }
             )
         }
     }
