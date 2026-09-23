@@ -29,22 +29,22 @@ import me.weishu.kernelsu.ui.LocalMainPagerState
 
 @Composable
 fun NavigationRailMaterial(
-    navigationBadge: NavigationBadgeState,
     modifier: Modifier = Modifier,
 ) {
     val mainPagerState = LocalMainPagerState.current
+
     val items = listOf(
         Triple(R.string.home, Icons.Filled.Home, Icons.Outlined.Home),
         Triple(R.string.oneuixp_tools, Icons.Filled.Shield, Icons.Outlined.Shield),
         Triple(R.string.oneuixp_status, Icons.Filled.Extension, Icons.Outlined.Extension),
-        Triple(R.string.settings, Icons.Filled.Settings, Icons.Outlined.Settings),
+        Triple(R.string.settings, Icons.Filled.Settings, Icons.Outlined.Settings)
     )
 
     NavigationRail(
         modifier = modifier.fillMaxHeight(),
         windowInsets = WindowInsets.systemBars.union(WindowInsets.displayCutout).only(
             WindowInsetsSides.Start + WindowInsetsSides.Vertical
-        ),
+        )
     ) {
         Spacer(Modifier.weight(1f))
         items.forEachIndexed { index, (label, selectedIcon, unselectedIcon) ->
@@ -52,15 +52,17 @@ fun NavigationRailMaterial(
             NavigationRailItem(
                 selected = selected,
                 onClick = {
-                    if (!selected) mainPagerState.animateToPage(index)
+                    if (!selected) {
+                        mainPagerState.animateToPage(index)
+                    }
                 },
                 icon = {
                     Icon(
                         if (selected) selectedIcon else unselectedIcon,
-                        stringResource(label),
+                        stringResource(label)
                     )
                 },
-                label = { Text(stringResource(label)) },
+                label = { Text(stringResource(label)) }
             )
         }
         Spacer(Modifier.weight(1f))
