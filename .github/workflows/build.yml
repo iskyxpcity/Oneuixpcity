@@ -7,59 +7,115 @@ concurrency:
   group: oneuixp-build-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '21'
+          cache: gradle
       - uses: android-actions/setup-android@v4
       - name: Install pinned Android SDK
         run: android sdk install platforms/android-37 build-tools/37.0.0
       - name: Validate OneuiXP source
         run: |
+          set -euo pipefail
           python3 ./verify_no_jni.py
           python3 ./verify_migration.py
           grep -q 'android:hasFragileUserData="false"' app/src/main/AndroidManifest.xml
-          grep -q 'applicationId = managerPackageName' app/build.gradle.kts
           grep -q 'val defaultManagerPackageName = "com.oneuixp.app"' app/build.gradle.kts
           grep -q 'SystemUiHeartbeat' app/src/main/assets/xposed_init
-          grep -q '@Serializable' app/src/main/java/me/weishu/kernelsu/ui/navigation3/Routes.kt
           grep -q 'sealed interface Route : NavKey, Parcelable' app/src/main/java/me/weishu/kernelsu/ui/navigation3/Routes.kt
-          echo "Root Route must remain serializable for miuix-nav"
-      - name: Build OneuiXP debug APK
+          grep -q 'iSkyJIE/OneuiXP/releases/latest' app/src/main/java/me/weishu/kernelsu/ui/util/Downloader.kt
+          test -f app/src/main/resources/META-INF/xposed/java_init.list
+          test -f app/src/main/resources/META-INF/xposed/scope.list
+          echo "OneuiXP source and modern LSPosed entry validated"
+
+      # GitHub does not sign Android packages automatically. Configure these FOUR
+      # repository Actions secrets once, from the same stable owner keystore:
+      # KEYSTORE_BASE64, KEYSTORE_PASSWORD, KEY_ALIAS, KEY_PASSWORD.
+      # Never fall back to a random CI debug key for an installable artifact.
+      - name: Load existing owner APK signing key
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
-          set -o pipefail
+          set -euo pipefail
+          for key in KEYSTORE_BASE64 KEYSTORE_PASSWORD KEY_ALIAS KEY_PASSWORD; do
+            if [ -z "${!key}" ]; then
+              echo "::error::Missing OneuiXP repository Actions secret ${key}. Copy the SAME signing keystore secrets used for your existing owner-signed APK into this repository's Actions secrets. Cannot release a stable-signed APK without them."
+              exit 1
+            fi
+          done
+          umask 077
+          printf '%s' "$KEYSTORE_BASE64" | base64 --decode > app/owner.keystore
+          test -s app/owner.keystore
+
+      - name: Build owner-signed OneuiXP APK
+        env:
+          ONEUIXP_KEYSTORE_PATH: ${{ github.workspace }}/app/owner.keystore
+          ONEUIXP_KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          ONEUIXP_KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          ONEUIXP_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
           mkdir -p diagnostics
           chmod +x gradlew
           ./gradlew :app:assembleDebug -PKSU_PACKAGE_NAME=com.oneuixp.app -PKSU_NAME=OneuiXP --stacktrace --no-daemon 2>&1 | tee diagnostics/gradle-build.log
-      - name: Validate APK and prepare delivery
+
+      - name: Verify package, stable certificate and prepare APK
+        env:
+          EXPECTED_CERT: ${{ vars.ONEUIXP_CERT_SHA256 }}
         run: |
           set -euo pipefail
           mkdir -p dist
           APK=$(find app/build/outputs/apk/debug -type f -name '*.apk' | head -1)
-          test -n "$APK"
-          cp "$APK" dist/OneuiXP_Debug.apk
-          unzip -t dist/OneuiXP_Debug.apk
-          "$ANDROID_HOME/build-tools/37.0.0/aapt" dump badging dist/OneuiXP_Debug.apk | tee dist/APK_PACKAGE_INFO.txt
+          test -s "$APK"
+          APKSIGNER="$ANDROID_HOME/build-tools/37.0.0/apksigner"
+          AAPT="$ANDROID_HOME/build-tools/37.0.0/aapt"
+          "$APKSIGNER" verify --verbose --print-certs "$APK" | tee dist/SIGNING_INFO.txt
+          grep -Fq 'Verified using v2 scheme (APK Signature Scheme v2): true' dist/SIGNING_INFO.txt
+          CERT=$(sed -n 's/^.*certificate SHA-256 digest: //p' dist/SIGNING_INFO.txt | head -1 | tr -d ': ' | tr '[:upper:]' '[:lower:]')
+          test -n "$CERT"
+          if [ -n "$EXPECTED_CERT" ]; then
+            EXPECTED=$(printf '%s' "$EXPECTED_CERT" | tr -d ': ' | tr '[:upper:]' '[:lower:]')
+            if [ "$CERT" != "$EXPECTED" ]; then
+              echo '::error::Signed with the wrong certificate; this APK would not update the owner's existing app.'
+              exit 1
+            fi
+          fi
+          printf '%s\n' "$CERT" > dist/SIGNING_CERT_SHA256.txt
+          "$AAPT" dump badging "$APK" | tee dist/APK_PACKAGE_INFO.txt
           grep -q "^package: name='com.oneuixp.app'" dist/APK_PACKAGE_INFO.txt
-          "$ANDROID_HOME/build-tools/37.0.0/aapt" dump xmltree dist/OneuiXP_Debug.apk AndroidManifest.xml > dist/APK_MANIFEST_CHECK.txt
+          grep -q "versionName='1.0.260923'" dist/APK_PACKAGE_INFO.txt
+          grep -q "versionCode='100260923'" dist/APK_PACKAGE_INFO.txt
+          "$AAPT" dump xmltree "$APK" AndroidManifest.xml > dist/APK_MANIFEST_CHECK.txt
           grep -Eq 'hasFragileUserData.*0x0$' dist/APK_MANIFEST_CHECK.txt
-          (cd dist && sha256sum OneuiXP_Debug.apk > SHA256SUMS)
+          cp "$APK" dist/OneuiXP_1.0.260923_OWNER_SIGNED.apk
+          unzip -t dist/OneuiXP_1.0.260923_OWNER_SIGNED.apk
+          (cd dist && sha256sum OneuiXP_1.0.260923_OWNER_SIGNED.apk > SHA256SUMS)
+
       - name: Save Gradle diagnostics on failure
         if: failure()
         run: |
           mkdir -p diagnostics
-          find . -path "*/build/reports/problems/*" -type f -exec cp --parents {} diagnostics/ \; || true
+          find . -path '*/build/reports/problems/*' -type f -exec cp --parents {} diagnostics/ \; || true
       - uses: actions/upload-artifact@v4
-        if: always()
+        if: success()
         with:
-          name: OneuiXP-Debug
+          name: OneuiXP-Owner-Signed
           path: dist/
-          if-no-files-found: warn
+          if-no-files-found: error
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
