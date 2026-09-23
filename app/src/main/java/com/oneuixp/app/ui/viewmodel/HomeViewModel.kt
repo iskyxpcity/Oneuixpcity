@@ -1,4 +1,4 @@
-package me.weishu.kernelsu.ui.viewmodel
+package com.oneuixp.app.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -9,13 +9,13 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import me.weishu.kernelsu.data.repository.SettingsRepository
-import me.weishu.kernelsu.data.repository.SettingsRepositoryImpl
-import me.weishu.kernelsu.ksuApp
-import me.weishu.kernelsu.ui.screen.home.HomeUiState
-import me.weishu.kernelsu.ui.screen.home.getManagerVersion
-import me.weishu.kernelsu.ui.util.checkNewVersion
-import me.weishu.kernelsu.ui.util.module.LatestVersionInfo
+import com.oneuixp.app.data.repository.SettingsRepository
+import com.oneuixp.app.data.repository.SettingsRepositoryImpl
+import com.oneuixp.app.oneuiXPApp
+import com.oneuixp.app.ui.screen.home.HomeUiState
+import com.oneuixp.app.ui.screen.home.getManagerVersion
+import com.oneuixp.app.ui.util.checkNewVersion
+import com.oneuixp.app.ui.util.module.LatestVersionInfo
 
 /** Pure OneuiXP homepage state. No kernel, su or SELinux backend. */
 class HomeViewModel(
@@ -36,7 +36,7 @@ class HomeViewModel(
     }
 
     private fun buildState(): HomeUiState {
-        val managerVersion = getManagerVersion(ksuApp)
+        val managerVersion = getManagerVersion(oneuiXPApp)
         return HomeUiState(
             checkUpdateEnabled = settingsRepo.checkUpdate,
             latestVersionInfo = LatestVersionInfo(),

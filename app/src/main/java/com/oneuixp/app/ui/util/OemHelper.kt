@@ -1,4 +1,4 @@
-package me.weishu.kernelsu.ui.util
+package com.oneuixp.app.ui.util
 
 import android.annotation.SuppressLint
 

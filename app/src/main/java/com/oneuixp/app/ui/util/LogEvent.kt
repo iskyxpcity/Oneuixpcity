@@ -1,7 +1,7 @@
-package me.weishu.kernelsu.ui.util
+package com.oneuixp.app.ui.util
 
 import android.content.Context
-import me.weishu.kernelsu.statusbar.StatusBridge
+import com.oneuixp.app.statusbar.StatusBridge
 import java.io.File
 
 /** Non-root, application-only diagnostic export for legacy callers. */
