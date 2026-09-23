@@ -93,7 +93,7 @@ object ThemeController {
         val colorSpec = try {
             ColorSpec.SpecVersion.valueOf(colorSpecStr)
         } catch (_: Exception) {
-            ColorSpec.SpecVersion.SPEC_2025
+            ColorSpec.SpecVersion.Default
         }
 
         return AppSettings(colorMode, keyColor, paletteStyle, colorSpec)
