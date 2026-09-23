@@ -31,7 +31,7 @@ fun ColorPaletteScreen() {
     val currentColorSpec = try {
         ColorSpec.SpecVersion.valueOf(uiState.colorSpec)
     } catch (_: Exception) {
-        ColorSpec.SpecVersion.SPEC_2025
+        ColorSpec.SpecVersion.Default
     }
     val state = ColorPaletteUiState(
         uiState = uiState,
