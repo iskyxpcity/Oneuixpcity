@@ -90,6 +90,7 @@ internal fun InstallScreenMaterial(
             SelectInstallMethod(
                 state = uiState,
                 onSelected = actions.onSelectMethod,
+                onDownloadFile = actions.onDownloadFile,
                 onSelectBootImage = actions.onSelectBootImage,
             )
 
@@ -209,6 +210,7 @@ internal fun InstallScreenMaterial(
 private fun SelectInstallMethod(
     state: InstallUiState,
     onSelected: (InstallMethod) -> Unit,
+    onDownloadFile: () -> Unit,
     onSelectBootImage: () -> Unit,
 ) {
     val confirmDialog = rememberConfirmDialog(
@@ -223,6 +225,7 @@ private fun SelectInstallMethod(
     val onClick = { option: InstallMethod ->
         when (option) {
             is InstallMethod.SelectFile -> onSelectBootImage()
+            is InstallMethod.DownloadFile -> onDownloadFile()
             is InstallMethod.DirectInstall -> onSelected(option)
             is InstallMethod.DirectInstallToInactiveSlot -> confirmDialog.showConfirm(dialogTitle, dialogContent)
         }
