@@ -45,6 +45,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import me.weishu.kernelsu.BuildConfig
 import me.weishu.kernelsu.R
 import me.weishu.kernelsu.ui.component.dialog.rememberConfirmDialog
 import me.weishu.kernelsu.ui.component.miuix.WarningCard
@@ -194,13 +195,7 @@ private fun StatusCard() {
                     Spacer(Modifier.height(2.dp))
                     Text(
                         modifier = Modifier.fillMaxWidth(),
-                        text = when {
-                            status.injected -> "SystemUI 已注入"
-                            status.scopeActive -> "SystemUI 作用域已激活"
-                            status.frameworkConnected && !status.scopeKnown -> "LSPosed 已连接 · 正在读取实际作用域"
-                            status.frameworkConnected -> "LSPosed 已连接 · 未勾选 SystemUI"
-                            else -> "尚未收到 LSPosed 服务，请核对模块类型与启用状态"
-                        },
+                        text = "版本：${BuildConfig.VERSION_NAME}",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                     )
