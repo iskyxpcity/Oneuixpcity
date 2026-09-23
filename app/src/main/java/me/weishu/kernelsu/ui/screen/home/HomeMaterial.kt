@@ -90,7 +90,7 @@ fun HomePagerMaterial(
             if (state.checkUpdateEnabled) {
                 UpdateCard(state = state, actions = actions)
             }
-            InfoCard(systemInfo = state.systemInfo)
+            InfoCard()
             Spacer(Modifier.height(bottomInnerPadding))
         }
     }
@@ -315,7 +315,9 @@ private fun DonateCard(onOpenUrl: (String) -> Unit) {
 }
 
 @Composable
-private fun InfoCard(systemInfo: SystemInfo) {
+private fun InfoCard() {
+    val info = rememberOneuiXPDeviceInfo()
+
     TonalCard {
         Column(
             modifier = Modifier
@@ -323,39 +325,28 @@ private fun InfoCard(systemInfo: SystemInfo) {
                 .padding(start = 24.dp, top = 24.dp, end = 24.dp, bottom = 16.dp)
         ) {
             @Composable
-            fun InfoCardItem(label: String, content: String) {
-                Text(text = label, style = MaterialTheme.typography.bodyLarge)
+            fun Item(label: String, content: String, bottom: Dp = 16.dp) {
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.bodyLarge,
+                )
                 Text(
                     text = content,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.outline
+                    color = MaterialTheme.colorScheme.outline,
+                    modifier = Modifier.padding(bottom = bottom),
                 )
             }
 
-            InfoCardItem(stringResource(R.string.home_manager_version), systemInfo.managerVersion)
-            Spacer(Modifier.height(16.dp))
-            InfoCardItem(stringResource(R.string.home_kernel), systemInfo.kernelVersion)
-            Spacer(Modifier.height(16.dp))
-            InfoCardItem(stringResource(R.string.home_device_model), systemInfo.deviceModel)
-            Spacer(Modifier.height(16.dp))
-            InfoCardItem(stringResource(R.string.home_fingerprint), systemInfo.fingerprint)
-            Spacer(Modifier.height(16.dp))
-            val selinuxDisplay = when (systemInfo.selinuxStatus) {
-                "Enforcing" -> stringResource(R.string.selinux_status_enforcing)
-                "Permissive" -> stringResource(R.string.selinux_status_permissive)
-                "Disabled" -> stringResource(R.string.selinux_status_disabled)
-                else -> stringResource(R.string.selinux_status_unknown)
-            }
-            InfoCardItem(stringResource(R.string.home_selinux_status), selinuxDisplay)
-            Spacer(Modifier.height(16.dp))
-            val seccompDisplay = when (systemInfo.seccompStatus) {
-                -1 -> stringResource(R.string.seccomp_status_not_supported)
-                0 -> stringResource(R.string.seccomp_status_disabled)
-                1 -> stringResource(R.string.seccomp_status_strict)
-                2 -> stringResource(R.string.seccomp_status_filter)
-                else -> stringResource(R.string.seccomp_status_unknown)
-            }
-            InfoCardItem(stringResource(R.string.home_seccomp_status), seccompDisplay)
+            Item("手机型号", info.model)
+            Item("Android / API", info.androidApi)
+            Item("One UI", info.oneUi)
+            Item("RAM | ROM", info.ramRom)
+            Item("设备代号", info.deviceCode)
+            Item("处理器", info.chipset)
+            Item("ABI / CPU 架构", info.abiArchitecture)
+            Item("分辨率 / DPI", info.resolutionDpi)
+            Item("安全补丁", info.securityPatch, 0.dp)
         }
     }
 }
@@ -430,7 +421,7 @@ private fun HomeScreenPreviewContent(
                 ),
                 actions = actions
             )
-            InfoCard(previewSystemInfo.copy(selinuxStatus = selinuxStatus))
+            InfoCard()
             DonateCard(onOpenUrl = {})
             LearnMoreCard(onOpenUrl = {})
         }
