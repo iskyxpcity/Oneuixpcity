@@ -15,7 +15,7 @@ import com.oneuixp.app.oneuiXPApp
 import com.oneuixp.app.ui.screen.home.HomeUiState
 import com.oneuixp.app.ui.screen.home.getManagerVersion
 import com.oneuixp.app.ui.util.checkNewVersion
-import com.oneuixp.app.ui.util.module.LatestVersionInfo
+import com.oneuixp.app.ui.util.update.LatestVersionInfo
 
 /** Pure OneuiXP homepage state. No kernel, su or SELinux backend. */
 class HomeViewModel(

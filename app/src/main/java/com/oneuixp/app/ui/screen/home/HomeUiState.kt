@@ -1,7 +1,7 @@
 package com.oneuixp.app.ui.screen.home
 
 import androidx.compose.runtime.Immutable
-import com.oneuixp.app.ui.util.module.LatestVersionInfo
+import com.oneuixp.app.ui.util.update.LatestVersionInfo
 
 /** Only actual OneuiXP self-update information; device details are read by UI directly. */
 @Immutable
