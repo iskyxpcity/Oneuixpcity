@@ -1,4 +1,4 @@
-package me.weishu.kernelsu.ui.component.material
+package com.oneuixp.app.ui.component.material
 
 import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.MutableInteractionSource

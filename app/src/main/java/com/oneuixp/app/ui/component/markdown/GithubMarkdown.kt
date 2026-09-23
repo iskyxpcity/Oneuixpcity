@@ -1,4 +1,4 @@
-package me.weishu.kernelsu.ui.component.markdown
+package com.oneuixp.app.ui.component.markdown
 
 import android.annotation.SuppressLint
 import android.content.ActivityNotFoundException
@@ -28,14 +28,14 @@ import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.webkit.WebViewAssetLoader
-import me.weishu.kernelsu.ksuApp
-import me.weishu.kernelsu.ui.LocalUiMode
-import me.weishu.kernelsu.ui.UiMode
-import me.weishu.kernelsu.ui.theme.isInDarkTheme
-import me.weishu.kernelsu.ui.util.adjustLightnessArgb
-import me.weishu.kernelsu.ui.util.cssColorFromArgb
-import me.weishu.kernelsu.ui.util.ensureVisibleByMix
-import me.weishu.kernelsu.ui.util.relativeLuminance
+import com.oneuixp.app.oneuiXPApp
+import com.oneuixp.app.ui.LocalUiMode
+import com.oneuixp.app.ui.UiMode
+import com.oneuixp.app.ui.theme.isInDarkTheme
+import com.oneuixp.app.ui.util.adjustLightnessArgb
+import com.oneuixp.app.ui.util.cssColorFromArgb
+import com.oneuixp.app.ui.util.ensureVisibleByMix
+import com.oneuixp.app.ui.util.relativeLuminance
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -80,7 +80,7 @@ fun GithubMarkdown(
 
     val template = remember(isDark) {
         val name = if (isDark) "webview/template_dark.html" else "webview/template.html"
-        ksuApp.assets.open(name).bufferedReader(StandardCharsets.UTF_8).use { it.readText() }
+        oneuiXPApp.assets.open(name).bufferedReader(StandardCharsets.UTF_8).use { it.readText() }
     }
     val extensions = remember {
         listOf(
@@ -235,7 +235,7 @@ fun GithubMarkdown(
                             assetLoader.shouldInterceptRequest(request.url)?.let { return it }
                             val scheme = request.url.scheme ?: return null
                             if (!scheme.startsWith("http")) return null
-                            val client: OkHttpClient = ksuApp.okhttpClient
+                            val client: OkHttpClient = oneuiXPApp.okhttpClient
                             val call = client.newCall(
                                 Request.Builder()
                                     .url(request.url.toString())
