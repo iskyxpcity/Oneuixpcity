@@ -177,8 +177,8 @@ private fun StatusCard(
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
                         .offset(x = 30.dp, y = 30.dp)
-                        .size(138.dp),
-                    tint = contentColor.copy(alpha = 0.38f),
+                        .size(165.dp),
+                    tint = MaterialTheme.colorScheme.primary,
                 )
                 Column(
                     modifier = Modifier
@@ -196,10 +196,6 @@ private fun StatusCard(
                         color = contentColor.copy(alpha = 0.78f),
                     )
                     Spacer(Modifier.weight(1f))
-                    Text(
-                        text = "OneuiXP",
-                        style = MaterialTheme.typography.titleMedium,
-                    )
                 }
             }
         }

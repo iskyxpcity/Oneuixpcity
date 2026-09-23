@@ -170,10 +170,9 @@ private fun StatusCard() {
                     modifier = Modifier.align(Alignment.BottomEnd)
                         .offset(x = 37.dp, y = 38.dp).size(165.dp),
                     tint = if (active) {
-                        if (isDynamicColor) colorScheme.primary
-                        else if (isInDarkTheme()) Color(0xFF36D167)
-                        else Color(0xFF78542D)
-                    } else colorScheme.error,
+                        if (isDynamicColor) colorScheme.primary.copy(alpha = 0.8f)
+                        else Color(0xFF36D167)
+                    } else colorScheme.error.copy(alpha = 0.8f),
                 )
                 Column(modifier = Modifier.fillMaxSize().padding(16.dp, 14.dp)) {
                     Text(

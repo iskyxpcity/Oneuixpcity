@@ -42,14 +42,14 @@ fun MiuixOneuiXPTheme(
         ThemeColorSpec.Spec2021
     }
 
-    val resolvedKeyColor: Color = if (appSettings.keyColor != 0) {
-        Color(appSettings.keyColor)
-    } else {
-        // Match OneuiXP Material: the default accent is the Android system accent.
-        val accentId = context.resources.getIdentifier("system_accent1_500", "color", "android")
-        if (accentId != 0) Color(context.getColor(accentId))
-        else if (darkTheme) dynamicDarkColorScheme(context).primary
-        else dynamicLightColorScheme(context).primary
+    // Original KernelSU 3.3.0 palette rules: no custom key color in normal
+    // Miuix mode; use the framework's dynamic primary only for Monet mode.
+    val resolvedKeyColor: Color? = when {
+        appSettings.keyColor != 0 -> Color(appSettings.keyColor)
+        appSettings.colorMode.isMonet ->
+            if (darkTheme) dynamicDarkColorScheme(context).primary
+            else dynamicLightColorScheme(context).primary
+        else -> null
     }
 
     val controller = ThemeController(

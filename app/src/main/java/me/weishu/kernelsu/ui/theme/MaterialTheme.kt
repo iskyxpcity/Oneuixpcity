@@ -4,8 +4,6 @@ import android.app.Activity
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialExpressiveTheme
 import androidx.compose.material3.MotionScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.graphics.Color
@@ -22,23 +20,10 @@ fun MaterialOneuiXPTheme(
     val systemDarkTheme = isSystemInDarkTheme()
     val darkTheme = appSettings.colorMode.isDark || (appSettings.colorMode.isSystem && systemDarkTheme)
     val amoledMode = appSettings.colorMode.isAmoled
-    val seedColor = if (appSettings.keyColor != 0) {
-        Color(appSettings.keyColor)
-    } else {
-        // OneuiXP default accent follows Android's system accent resource.
-        // Do not derive a separate app accent from wallpaper inside the app.
-        val accentId = context.resources.getIdentifier("system_accent1_500", "color", "android")
-        if (accentId != 0) {
-            Color(context.getColor(accentId))
-        } else if (darkTheme) {
-            dynamicDarkColorScheme(context).primary
-        } else {
-            dynamicLightColorScheme(context).primary
-        }
-    }
+    val dynamicColor = appSettings.keyColor == 0
 
     val colorScheme = rememberKernelSUColorScheme(
-        seedColor = seedColor,
+        seedColor = if (dynamicColor) Color.Unspecified else Color(appSettings.keyColor),
         isDark = darkTheme,
         isAmoled = amoledMode,
         paletteStyle = appSettings.paletteStyle,
