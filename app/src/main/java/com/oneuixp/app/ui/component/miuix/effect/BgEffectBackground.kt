@@ -1,6 +1,6 @@
 // Mirrored from compose-miuix-ui example.
 
-package me.weishu.kernelsu.ui.component.miuix.effect
+package com.oneuixp.app.ui.component.miuix.effect
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.spring
@@ -17,7 +17,7 @@ import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
-import me.weishu.kernelsu.ui.theme.isInDarkTheme
+import com.oneuixp.app.ui.theme.isInDarkTheme
 import top.yukonga.miuix.kmp.blur.isRuntimeShaderSupported
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import kotlin.math.floor

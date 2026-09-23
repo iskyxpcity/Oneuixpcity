@@ -1,6 +1,6 @@
 // Mirrored from compose-miuix-ui example.
 
-package me.weishu.kernelsu.ui.component.miuix.effect
+package com.oneuixp.app.ui.component.miuix.effect
 
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier

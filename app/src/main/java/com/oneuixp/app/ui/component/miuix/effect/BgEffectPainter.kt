@@ -1,6 +1,6 @@
 // Mirrored from compose-miuix-ui example.
 
-package me.weishu.kernelsu.ui.component.miuix.effect
+package com.oneuixp.app.ui.component.miuix.effect
 
 import android.os.Build
 import androidx.annotation.RequiresApi
