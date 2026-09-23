@@ -46,7 +46,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import me.weishu.kernelsu.R
-import me.weishu.kernelsu.ui.component.WarningLevel
 import me.weishu.kernelsu.ui.component.dialog.rememberConfirmDialog
 import me.weishu.kernelsu.ui.component.miuix.WarningCard
 import me.weishu.kernelsu.ui.component.rebootlistpopup.RebootListPopupMiuix
@@ -126,7 +125,6 @@ private fun UpdateCard(state: HomeUiState, actions: HomeActions) {
     ) {
         WarningCard(
             message = stringResource(R.string.new_version_available, version.versionCode),
-            level = WarningLevel.Notice,
             onClick = {
                 if (version.changelog.isEmpty()) actions.onOpenUrl(version.downloadUrl)
                 else dialog.showConfirm(
