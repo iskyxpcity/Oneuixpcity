@@ -7,19 +7,24 @@ import android.os.Looper
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
+import me.weishu.kernelsu.statusbar.LsposedFrameworkStatus
 import me.weishu.kernelsu.statusbar.StatusBridge
 
 @Immutable
 data class LsposedHomeStatus(
     val active: Boolean,
+    val frameworkConnected: Boolean,
+    val scopeActive: Boolean,
+    val injected: Boolean,
     val injectionCount: Int,
     val scopeCount: Int,
 )
@@ -32,32 +37,24 @@ private fun configuredScopeCount(context: Context): Int = runCatching {
     }
 }.getOrDefault(0)
 
-private fun readLsposedHomeStatus(context: Context, scopeCount: Int): LsposedHomeStatus {
-    val active = StatusBridge.recentlyLoaded(context)
-    return LsposedHomeStatus(
-        active = active,
-        injectionCount = if (active) 1 else 0,
-        scopeCount = if (active) scopeCount else 0,
-    )
-}
-
 /**
- * React immediately when SystemUI reports module load/heartbeat.
- * A short polling loop remains only as a fallback and to detect heartbeat expiry.
+ * Shows two independent facts:
+ * 1) LSPosed module/service + the manager's actual configured scope (direct service API).
+ * 2) Whether SystemUI has really loaded this module in the running process (heartbeat bridge).
+ *
+ * This means the UI can show "scope activated" immediately, without waiting for SystemUI restart.
  */
 @Composable
 fun rememberLsposedHomeStatus(): LsposedHomeStatus {
     val context = LocalContext.current.applicationContext
     val configuredScopes = remember(context) { configuredScopeCount(context) }
-    var status by remember(context, configuredScopes) {
-        mutableStateOf(readLsposedHomeStatus(context, configuredScopes))
-    }
-    val revision = remember { mutableIntStateOf(0) }
+    val framework by LsposedFrameworkStatus.state.collectAsState()
+    val heartbeatRevision = remember { mutableIntStateOf(0) }
 
     DisposableEffect(context) {
         val observer = object : ContentObserver(Handler(Looper.getMainLooper())) {
             override fun onChange(selfChange: Boolean) {
-                revision.intValue++
+                heartbeatRevision.intValue++
             }
         }
         context.contentResolver.registerContentObserver(
@@ -72,17 +69,37 @@ fun rememberLsposedHomeStatus(): LsposedHomeStatus {
         }
     }
 
-    LaunchedEffect(context, configuredScopes, revision.intValue) {
-        status = readLsposedHomeStatus(context, configuredScopes)
-    }
-
-    LaunchedEffect(context, configuredScopes) {
+    // Read LSPosed's actual configured scope immediately and keep it live while this
+    // composable exists. The Binder call is done off the main thread.
+    LaunchedEffect(Unit) {
         while (true) {
+            withContext(Dispatchers.IO) {
+                LsposedFrameworkStatus.refresh()
+            }
             delay(250L)
-            val latest = readLsposedHomeStatus(context, configuredScopes)
-            if (latest != status) status = latest
         }
     }
 
-    return status
+    // Re-read heartbeat whenever SystemUI notifies us; the revision also makes the
+    // current heartbeat value participate in recomposition.
+    val injected = remember(heartbeatRevision.intValue) {
+        StatusBridge.recentlyLoaded(context)
+    }
+
+    val scopeActive = framework.systemUiScopeActive
+    val active = scopeActive || injected
+    val actualScopeCount = when {
+        framework.connected -> framework.scope.size
+        injected -> configuredScopes
+        else -> 0
+    }
+
+    return LsposedHomeStatus(
+        active = active,
+        frameworkConnected = framework.connected,
+        scopeActive = scopeActive,
+        injected = injected,
+        injectionCount = if (injected) 1 else 0,
+        scopeCount = actualScopeCount,
+    )
 }
