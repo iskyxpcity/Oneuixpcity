@@ -112,6 +112,7 @@ fun ColorPaletteScreenMaterial(
     val haptic = LocalHapticFeedback.current
 
     ExpressiveScaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             LargeFlexibleTopAppBar(
                 navigationIcon = {
@@ -131,7 +132,6 @@ fun ColorPaletteScreenMaterial(
         Column(
             modifier = Modifier
                 .padding(paddingValues)
-                .nestedScroll(scrollBehavior.nestedScrollConnection)
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
@@ -402,35 +402,30 @@ private fun ThemePreviewCard(
                         }
                     }
 
-                    // The miniature Material preview follows the same 3-card
-                    // geometry as the actual OneuiXP home page.
+                    // Material has its own KernelSU layout:
+                    // one wide status card, then two side-by-side counters.
                     Column(
                         modifier = Modifier.weight(1f).fillMaxWidth()
                             .padding(horizontal = 6.dp, vertical = 2.dp),
                         verticalArrangement = Arrangement.spacedBy(6.dp),
                     ) {
+                        TonalCard(
+                            containerColor = colorScheme.secondaryContainer,
+                            modifier = Modifier.fillMaxWidth().height(40.dp),
+                            shape = RoundedCornerShape(8.dp),
+                            content = { },
+                        )
                         Row(
-                            modifier = Modifier.fillMaxWidth().height(62.dp),
+                            modifier = Modifier.fillMaxWidth().height(30.dp),
                             horizontalArrangement = Arrangement.spacedBy(6.dp),
                         ) {
-                            TonalCard(
-                                containerColor = colorScheme.secondaryContainer,
-                                modifier = Modifier.weight(1f).fillMaxHeight(),
-                                shape = RoundedCornerShape(8.dp),
-                                content = { },
-                            )
-                            Column(
-                                modifier = Modifier.weight(1f).fillMaxHeight(),
-                                verticalArrangement = Arrangement.spacedBy(6.dp),
-                            ) {
-                                repeat(2) {
-                                    TonalCard(
-                                        containerColor = colorScheme.surfaceBright,
-                                        modifier = Modifier.weight(1f).fillMaxWidth(),
-                                        shape = RoundedCornerShape(8.dp),
-                                        content = { },
-                                    )
-                                }
+                            repeat(2) {
+                                TonalCard(
+                                    containerColor = colorScheme.surfaceBright,
+                                    modifier = Modifier.weight(1f).fillMaxHeight(),
+                                    shape = RoundedCornerShape(8.dp),
+                                    content = { },
+                                )
                             }
                         }
                         TonalCard(

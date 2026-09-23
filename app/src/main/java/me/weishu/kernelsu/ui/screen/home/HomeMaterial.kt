@@ -156,55 +156,72 @@ private fun StatusCard(
     }
     val contentColor = MaterialTheme.colorScheme.contentColorFor(containerColor)
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(220.dp),
-        horizontalArrangement = Arrangement.spacedBy(13.dp),
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(13.dp),
     ) {
         Surface(
             modifier = Modifier
-                .weight(1f)
-                .fillMaxHeight(),
+                .fillMaxWidth()
+                .height(116.dp),
             color = containerColor,
             contentColor = contentColor,
             shape = MaterialTheme.shapes.extraLarge,
         ) {
-            Box(Modifier.fillMaxSize()) {
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 22.dp, vertical = 18.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
                 Icon(
                     imageVector = if (active) Icons.Outlined.CheckCircle else Icons.Outlined.Block,
                     contentDescription = null,
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .offset(x = 30.dp, y = 30.dp)
-                        .size(165.dp),
-                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(40.dp),
+                    tint = contentColor,
                 )
+                Spacer(Modifier.width(18.dp))
                 Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(20.dp),
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.Center,
                 ) {
-                    Text(
-                        text = if (active) "工作中 ＜已激活＞" else "未激活 ＜LSPosed＞",
-                        style = MaterialTheme.typography.headlineSmall,
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        Text(
+                            text = if (active) "工作中" else "未激活",
+                            style = MaterialTheme.typography.headlineSmall,
+                        )
+                        Surface(
+                            color = if (active) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.error,
+                            contentColor = if (active) MaterialTheme.colorScheme.onPrimary
+                            else MaterialTheme.colorScheme.onError,
+                            shape = MaterialTheme.shapes.small,
+                        ) {
+                            Text(
+                                text = if (active) "已激活" else "LSPosed",
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                                style = MaterialTheme.typography.labelLarge,
+                            )
+                        }
+                    }
                     Spacer(Modifier.height(6.dp))
                     Text(
                         text = if (active) "LSPosed / SystemUI" else "等待 SystemUI 模块加载",
                         style = MaterialTheme.typography.bodyLarge,
                         color = contentColor.copy(alpha = 0.78f),
                     )
-                    Spacer(Modifier.weight(1f))
                 }
             }
         }
 
-        Column(
+        Row(
             modifier = Modifier
-                .weight(1f)
-                .fillMaxHeight(),
-            verticalArrangement = Arrangement.spacedBy(13.dp),
+                .fillMaxWidth()
+                .height(94.dp),
+            horizontalArrangement = Arrangement.spacedBy(13.dp),
         ) {
             DashboardSmallCardMaterial(
                 title = "模块注入数量",
