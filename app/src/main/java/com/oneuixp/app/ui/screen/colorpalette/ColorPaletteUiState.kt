@@ -1,10 +1,10 @@
-package me.weishu.kernelsu.ui.screen.colorpalette
+package com.oneuixp.app.ui.screen.colorpalette
 
 import androidx.compose.runtime.Immutable
 import com.materialkolor.PaletteStyle
 import com.materialkolor.dynamiccolor.ColorSpec
-import me.weishu.kernelsu.ui.screen.settings.SettingsUiState
-import me.weishu.kernelsu.ui.theme.ColorMode
+import com.oneuixp.app.ui.screen.settings.SettingsUiState
+import com.oneuixp.app.ui.theme.ColorMode
 
 @Immutable
 data class ColorPaletteUiState(

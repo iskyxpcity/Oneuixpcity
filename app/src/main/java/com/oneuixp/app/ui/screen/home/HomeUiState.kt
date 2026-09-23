@@ -1,7 +1,7 @@
-package me.weishu.kernelsu.ui.screen.home
+package com.oneuixp.app.ui.screen.home
 
 import androidx.compose.runtime.Immutable
-import me.weishu.kernelsu.ui.util.module.LatestVersionInfo
+import com.oneuixp.app.ui.util.module.LatestVersionInfo
 
 /** Only actual OneuiXP self-update information; device details are read by UI directly. */
 @Immutable

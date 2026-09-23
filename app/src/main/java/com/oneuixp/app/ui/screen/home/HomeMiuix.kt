@@ -1,4 +1,4 @@
-package me.weishu.kernelsu.ui.screen.home
+package com.oneuixp.app.ui.screen.home
 
 import android.app.ActivityManager
 import android.content.Context
@@ -45,15 +45,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import me.weishu.kernelsu.BuildConfig
-import me.weishu.kernelsu.R
-import me.weishu.kernelsu.ui.component.dialog.rememberConfirmDialog
-import me.weishu.kernelsu.ui.component.miuix.WarningCard
-import me.weishu.kernelsu.ui.component.rebootlistpopup.RebootListPopupMiuix
-import me.weishu.kernelsu.ui.theme.LocalEnableBlur
-import me.weishu.kernelsu.ui.theme.isInDarkTheme
-import me.weishu.kernelsu.ui.util.BlurredBar
-import me.weishu.kernelsu.ui.util.rememberBlurBackdrop
+import com.oneuixp.app.BuildConfig
+import com.oneuixp.app.R
+import com.oneuixp.app.ui.component.dialog.rememberConfirmDialog
+import com.oneuixp.app.ui.component.miuix.WarningCard
+import com.oneuixp.app.ui.component.rebootlistpopup.RebootListPopupMiuix
+import com.oneuixp.app.ui.theme.LocalEnableBlur
+import com.oneuixp.app.ui.theme.isInDarkTheme
+import com.oneuixp.app.ui.util.BlurredBar
+import com.oneuixp.app.ui.util.rememberBlurBackdrop
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.CardDefaults
 import top.yukonga.miuix.kmp.basic.Icon

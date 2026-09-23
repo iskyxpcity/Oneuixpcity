@@ -1,4 +1,4 @@
-package me.weishu.kernelsu.ui.screen.module
+package com.oneuixp.app.ui.screen.module
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -33,15 +33,15 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import me.weishu.kernelsu.R
-import me.weishu.kernelsu.statusbar.StatusBridge
-import me.weishu.kernelsu.ui.LocalUiMode
-import me.weishu.kernelsu.ui.UiMode
-import me.weishu.kernelsu.ui.component.material.ExpressiveScaffold
-import me.weishu.kernelsu.ui.component.material.expressiveTopAppBarColors
-import me.weishu.kernelsu.ui.theme.LocalEnableBlur
-import me.weishu.kernelsu.ui.util.BlurredBar
-import me.weishu.kernelsu.ui.util.rememberBlurBackdrop
+import com.oneuixp.app.R
+import com.oneuixp.app.statusbar.StatusBridge
+import com.oneuixp.app.ui.LocalUiMode
+import com.oneuixp.app.ui.UiMode
+import com.oneuixp.app.ui.component.material.ExpressiveScaffold
+import com.oneuixp.app.ui.component.material.expressiveTopAppBarColors
+import com.oneuixp.app.ui.theme.LocalEnableBlur
+import com.oneuixp.app.ui.util.BlurredBar
+import com.oneuixp.app.ui.util.rememberBlurBackdrop
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.TopAppBar

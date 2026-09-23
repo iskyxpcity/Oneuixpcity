@@ -1,4 +1,4 @@
-package me.weishu.kernelsu.ui.screen.home
+package com.oneuixp.app.ui.screen.home
 
 import android.content.Context
 import android.database.ContentObserver
@@ -16,8 +16,8 @@ import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
-import me.weishu.kernelsu.statusbar.LsposedFrameworkStatus
-import me.weishu.kernelsu.statusbar.StatusBridge
+import com.oneuixp.app.statusbar.LsposedFrameworkStatus
+import com.oneuixp.app.statusbar.StatusBridge
 
 @Immutable
 data class LsposedHomeStatus(

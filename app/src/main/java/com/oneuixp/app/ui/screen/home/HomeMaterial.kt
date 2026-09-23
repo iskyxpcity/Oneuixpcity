@@ -1,4 +1,4 @@
-package me.weishu.kernelsu.ui.screen.home
+package com.oneuixp.app.ui.screen.home
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
@@ -51,13 +51,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import me.weishu.kernelsu.BuildConfig
-import me.weishu.kernelsu.R
-import me.weishu.kernelsu.ui.component.WarningLevel
-import me.weishu.kernelsu.ui.component.dialog.rememberConfirmDialog
-import me.weishu.kernelsu.ui.component.material.TonalCard
-import me.weishu.kernelsu.ui.component.rebootlistpopup.RebootListPopup
-import me.weishu.kernelsu.ui.component.statustag.StatusTag
+import com.oneuixp.app.BuildConfig
+import com.oneuixp.app.R
+import com.oneuixp.app.ui.component.WarningLevel
+import com.oneuixp.app.ui.component.dialog.rememberConfirmDialog
+import com.oneuixp.app.ui.component.material.TonalCard
+import com.oneuixp.app.ui.component.rebootlistpopup.RebootListPopup
+import com.oneuixp.app.ui.component.statustag.StatusTag
 
 @Composable
 fun HomePagerMaterial(

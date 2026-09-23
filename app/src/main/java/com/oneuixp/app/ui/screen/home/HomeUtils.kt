@@ -1,4 +1,4 @@
-package me.weishu.kernelsu.ui.screen.home
+package com.oneuixp.app.ui.screen.home
 
 import android.content.Context
 import androidx.compose.runtime.Immutable
