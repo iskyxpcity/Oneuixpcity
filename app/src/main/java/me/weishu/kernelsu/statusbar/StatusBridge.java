@@ -16,6 +16,18 @@ public final class StatusBridge extends ContentProvider {
     private static final int MAX_PROBE_LENGTH = 12_000;
     private static final long HEARTBEAT_TIMEOUT_MS = 15_000L;
 
+    public static Uri statusUri(Context context) {
+        return Uri.parse("content://" + context.getPackageName() + ".statusbridge/status");
+    }
+
+    private static void notifyStatusChanged(Context context) {
+        try {
+            context.getContentResolver().notifyChange(statusUri(context), null);
+        } catch (Throwable ignored) {
+            // UI polling remains as a fallback.
+        }
+    }
+
     @Override public boolean onCreate() { return true; }
 
     @Override public synchronized Bundle call(String method, String arg, Bundle extras) {
@@ -49,6 +61,7 @@ public final class StatusBridge extends ContentProvider {
             if (accepted) {
                 // apply() updates in-process readers immediately without blocking SystemUI on disk I/O.
                 prefs.edit().putLong("heartbeat_elapsed", elapsed).apply();
+                notifyStatusChanged(context);
             }
             Bundle result = new Bundle();
             result.putBoolean("accepted", accepted);
@@ -66,6 +79,7 @@ public final class StatusBridge extends ContentProvider {
             .putInt("load_reports", count == Integer.MAX_VALUE ? count : count + 1)
             .putString("probe", probe)
             .commit();
+        if (persisted) notifyStatusChanged(context);
         Bundle result = new Bundle();
         result.putBoolean("accepted", persisted);
         return result;
