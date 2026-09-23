@@ -50,6 +50,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.UriHandler
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -149,79 +150,51 @@ private fun StatusCard(
 ) {
     val status = rememberLsposedHomeStatus()
     val active = status.active
-    val containerColor = if (active) {
-        MaterialTheme.colorScheme.secondaryContainer
-    } else {
-        MaterialTheme.colorScheme.errorContainer
-    }
-    val contentColor = MaterialTheme.colorScheme.contentColorFor(containerColor)
 
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(13.dp),
-    ) {
-        Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(116.dp),
-            color = containerColor,
-            contentColor = contentColor,
-            shape = MaterialTheme.shapes.extraLarge,
+    // KernelSU v3.2.5 ROOT-active Material dashboard layout;
+    // substitute only OneuiXP's real SystemUI heartbeat/counter data.
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        TonalCard(
+            containerColor = if (active) {
+                MaterialTheme.colorScheme.secondaryContainer
+            } else {
+                MaterialTheme.colorScheme.errorContainer
+            },
         ) {
             Row(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 22.dp, vertical = 18.dp),
+                modifier = Modifier.fillMaxWidth().padding(24.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(
                     imageVector = if (active) Icons.Outlined.CheckCircle else Icons.Outlined.Block,
                     contentDescription = null,
-                    modifier = Modifier.size(40.dp),
-                    tint = contentColor,
                 )
-                Spacer(Modifier.width(18.dp))
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.Center,
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    ) {
+                Column(Modifier.padding(start = 20.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
                             text = if (active) "工作中" else "未激活",
-                            style = MaterialTheme.typography.headlineSmall,
+                            style = MaterialTheme.typography.titleMedium,
                         )
-                        Surface(
-                            color = if (active) MaterialTheme.colorScheme.primary
-                            else MaterialTheme.colorScheme.error,
-                            contentColor = if (active) MaterialTheme.colorScheme.onPrimary
-                            else MaterialTheme.colorScheme.onError,
-                            shape = MaterialTheme.shapes.small,
-                        ) {
-                            Text(
-                                text = if (active) "已激活" else "LSPosed",
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                                style = MaterialTheme.typography.labelLarge,
+                        if (active) {
+                            Spacer(Modifier.width(8.dp))
+                            StatusTag(
+                                label = "LSPosed",
+                                contentColor = MaterialTheme.colorScheme.onPrimary,
+                                backgroundColor = MaterialTheme.colorScheme.primary,
                             )
                         }
                     }
-                    Spacer(Modifier.height(6.dp))
+                    Spacer(Modifier.height(4.dp))
                     Text(
                         text = if (active) "LSPosed / SystemUI" else "等待 SystemUI 模块加载",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = contentColor.copy(alpha = 0.78f),
+                        style = MaterialTheme.typography.bodyMedium,
                     )
                 }
             }
         }
-
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(94.dp),
-            horizontalArrangement = Arrangement.spacedBy(13.dp),
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             DashboardSmallCardMaterial(
                 title = "模块注入数量",
@@ -243,27 +216,22 @@ private fun DashboardSmallCardMaterial(
     value: String,
     modifier: Modifier = Modifier,
 ) {
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
-        contentColor = MaterialTheme.colorScheme.onSurface,
-        shape = MaterialTheme.shapes.extraLarge,
-    ) {
+    TonalCard(modifier = modifier) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 20.dp, vertical = 16.dp),
-            verticalArrangement = Arrangement.Center,
+            modifier = Modifier.fillMaxWidth()
+                .padding(horizontal = 24.dp, vertical = 16.dp),
         ) {
             Text(
                 text = title,
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.bodyLarge,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
             Spacer(Modifier.height(4.dp))
             Text(
                 text = value,
-                style = MaterialTheme.typography.displaySmall,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.outline,
             )
         }
     }
