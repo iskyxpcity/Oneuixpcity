@@ -6,7 +6,6 @@ native_path = root / 'app/src/main/java/me/weishu/kernelsu/Natives.kt'
 assert not native_path.exists(), 'obsolete KernelSU native compatibility layer must remain absent'
 gradle = (root / 'app/build.gradle.kts').read_text()
 assert 'externalNativeBuild' not in gradle
-assert 'fun setSuEnabled(enabled: Boolean): Boolean = false' in native
 assert (root / 'app/src/main/java/me/weishu/kernelsu/statusbar/SystemUiEntry.java').exists()
 print('PASS: no KernelSU Natives shim/JNI sources/build; SystemUI hook retained')
 
