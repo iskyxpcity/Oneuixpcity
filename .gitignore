@@ -8,3 +8,9 @@ captures
 .cxx
 local.properties
 key.jks
+
+# Local signing credentials: GitHub Actions reconstructs this from repository secrets.
+app/owner.keystore
+keystore.properties
+*.jks
+*.keystore
