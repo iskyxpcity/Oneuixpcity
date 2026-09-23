@@ -144,6 +144,7 @@ base {
 
 dependencies {
     compileOnly("de.robv.android.xposed:api:82")
+    implementation(libs.libxposed.service)
     implementation(libs.androidx.activity.compose)
 
     implementation(platform(libs.androidx.compose.bom))
