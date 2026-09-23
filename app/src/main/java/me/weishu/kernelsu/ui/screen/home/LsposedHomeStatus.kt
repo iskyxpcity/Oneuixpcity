@@ -50,6 +50,7 @@ fun rememberLsposedHomeStatus(): LsposedHomeStatus {
     val configuredScopes = remember(context) { configuredScopeCount(context) }
     val framework by LsposedFrameworkStatus.state.collectAsState()
     val heartbeatRevision = remember { mutableIntStateOf(0) }
+    val heartbeatTick = remember { mutableIntStateOf(0) }
 
     DisposableEffect(context) {
         val observer = object : ContentObserver(Handler(Looper.getMainLooper())) {
@@ -76,13 +77,14 @@ fun rememberLsposedHomeStatus(): LsposedHomeStatus {
             withContext(Dispatchers.IO) {
                 LsposedFrameworkStatus.refresh()
             }
+            heartbeatTick.intValue++
             delay(250L)
         }
     }
 
     // Re-read heartbeat whenever SystemUI notifies us; the revision also makes the
     // current heartbeat value participate in recomposition.
-    val injected = remember(heartbeatRevision.intValue) {
+    val injected = remember(heartbeatRevision.intValue, heartbeatTick.intValue) {
         StatusBridge.recentlyLoaded(context)
     }
 
