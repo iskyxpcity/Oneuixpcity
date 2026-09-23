@@ -535,7 +535,6 @@ private fun ThemePreviewCardMiuix(
     val screenWidth = configuration.screenWidthDp.toFloat()
     val screenHeight = configuration.screenHeightDp.toFloat()
     val screenRatio = screenWidth / screenHeight
-    val useRail = useNavigationRail(enableFloatingBottomBar)
 
     val seedColor = if (keyColor == 0) colorScheme.primary else Color(keyColor)
     val effectiveStyle = if (keyColor == 0) PaletteStyle.TonalSpot else paletteStyle
@@ -574,102 +573,90 @@ private fun ThemePreviewCardMiuix(
                 .background(bgColor)
                 .border(1.dp, colorScheme.outline, RoundedCornerShape(20.dp))
         ) {
-            val content = @Composable {
-                Column {
-                    Row(
-                        modifier = Modifier
-                            .height(if (useRail) 36.dp else 48.dp)
-                            .fillMaxWidth()
-                            .padding(start = 12.dp, top = if (useRail) 12.dp else 24.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = stringResource(id = R.string.app_name),
-                            fontSize = 12.sp,
-                            color = textColor
-                        )
-                    }
-
-                    // Mirror the live OneuiXP dashboard: one tall left card and
-                    // two small right cards. The information card below stays intact.
-                    Column(
-                        modifier = Modifier.weight(1f).fillMaxWidth()
-                            .padding(horizontal = 8.dp, vertical = 6.dp),
-                        verticalArrangement = Arrangement.spacedBy(6.dp),
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth().height(68.dp),
-                            horizontalArrangement = Arrangement.spacedBy(6.dp),
-                        ) {
-                            Box(
-                                modifier = Modifier.weight(1f).fillMaxHeight()
-                                    .clip(RoundedCornerShape(6.dp))
-                                    .background(accentCardColor)
-                            )
-                            Column(
-                                modifier = Modifier.weight(1f).fillMaxHeight(),
-                                verticalArrangement = Arrangement.spacedBy(6.dp),
-                            ) {
-                                repeat(2) {
-                                    Box(
-                                        modifier = Modifier.weight(1f).fillMaxWidth()
-                                            .clip(RoundedCornerShape(6.dp))
-                                            .background(cardColor)
-                                    )
-                                }
-                            }
-                        }
-                        Box(
-                            modifier = Modifier.weight(1f).fillMaxWidth()
-                                .clip(RoundedCornerShape(6.dp))
-                                .background(cardColor)
-                        )
-                        Box(
-                            modifier = Modifier.height(12.dp).fillMaxWidth()
-                                .clip(RoundedCornerShape(6.dp))
-                                .background(cardColor)
-                        )
-                        Box(
-                            modifier = Modifier.height(12.dp).fillMaxWidth()
-                                .clip(RoundedCornerShape(6.dp))
-                                .background(cardColor)
-                        )
-                    }
+            Column {
+                Row(
+                    modifier = Modifier
+                        .height(48.dp)
+                        .fillMaxWidth()
+                        .padding(start = 12.dp, top = 24.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = stringResource(id = R.string.app_name),
+                        fontSize = 12.sp,
+                        color = textColor
+                    )
                 }
-            }
 
-            if (useRail) {
-                Row {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxHeight()
-                            .width(30.dp)
-                            .background(navBarColor),
-                        verticalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterVertically),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        repeat(4) {
-                            Box(
-                                modifier = Modifier
-                                    .size(13.dp)
-                                    .clip(RoundedCornerShape(3.dp))
-                                    .background(if (it == 0) navSelectedColor else navUnselectedColor)
-                            )
-                        }
-                    }
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(65.dp)
+                        .padding(horizontal = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
                     Box(
                         modifier = Modifier
+                            .weight(1f)
                             .fillMaxHeight()
-                            .width(0.5.dp)
-                            .background(textColor.copy(alpha = 0.1f))
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(accentCardColor)
                     )
-                    Box(modifier = Modifier.weight(1f)) { content() }
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight(),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .weight(1f)
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(cardColor)
+                        )
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .weight(1f)
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(cardColor)
+                        )
+                    }
                 }
-            } else {
-                content()
+
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(horizontal = 8.dp, vertical = 6.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(0.8f)
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(cardColor)
+                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(.1f)
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(cardColor)
+                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(.1f)
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(cardColor)
+                    )
+                }
+
             }
 
-            if (!useRail && enableFloatingBottomBar) {
+            if (enableFloatingBottomBar) {
                 Box(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
@@ -698,7 +685,7 @@ private fun ThemePreviewCardMiuix(
                         }
                     }
                 }
-            } else if (!useRail) {
+            } else {
                 Column(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
