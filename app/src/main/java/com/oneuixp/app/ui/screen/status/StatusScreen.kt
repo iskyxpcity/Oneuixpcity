@@ -1,12 +1,15 @@
-package com.oneuixp.app.ui.screen.superuser
+package com.oneuixp.app.ui.screen.status
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.add
 import androidx.compose.foundation.layout.displayCutout
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
@@ -15,22 +18,27 @@ import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.LargeFlexibleTopAppBar
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.oneuixp.app.R
+import com.oneuixp.app.statusbar.StatusBridge
 import com.oneuixp.app.ui.LocalUiMode
 import com.oneuixp.app.ui.UiMode
-import com.oneuixp.app.ui.navigation3.Navigator
+import com.oneuixp.app.ui.component.material.ExpressiveScaffold
+import com.oneuixp.app.ui.component.material.expressiveTopAppBarColors
 import com.oneuixp.app.ui.theme.LocalEnableBlur
 import com.oneuixp.app.ui.util.BlurredBar
 import com.oneuixp.app.ui.util.rememberBlurBackdrop
@@ -40,14 +48,9 @@ import top.yukonga.miuix.kmp.basic.TopAppBar
 import top.yukonga.miuix.kmp.blur.layerBackdrop
 import top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme
 
-/** Empty OneuiXP tools tab. No KernelSU superuser interface or root access. */
+/** OneuiXP SystemUI status page using the retained dual-theme page shell. */
 @Composable
-fun SuperUserPager(
-    navigator: Navigator,
-    bottomInnerPadding: Dp,
-    isCurrentPage: Boolean = true,
-) {
-    val screenHeight = LocalConfiguration.current.screenHeightDp.dp
+fun StatusPager(bottomInnerPadding: Dp, isCurrentPage: Boolean = true) {
     when (LocalUiMode.current) {
         UiMode.Miuix -> {
             val scrollBehavior = MiuixScrollBehavior()
@@ -58,7 +61,7 @@ fun SuperUserPager(
                     BlurredBar(backdrop) {
                         TopAppBar(
                             color = barColor,
-                            title = stringResource(R.string.oneuixp_tools),
+                            title = stringResource(R.string.oneuixp_status),
                             scrollBehavior = scrollBehavior,
                         )
                     }
@@ -74,11 +77,10 @@ fun SuperUserPager(
                         modifier = Modifier.fillMaxSize()
                             .nestedScroll(scrollBehavior.nestedScrollConnection)
                             .verticalScroll(rememberScrollState())
-                            .padding(innerPadding),
+                            .padding(innerPadding)
+                            .padding(horizontal = 12.dp),
                     ) {
-                        // Keep the tools page intentionally empty while enabling
-                        // the upstream scroll/large-title collapse gesture.
-                        Spacer(Modifier.height(screenHeight))
+                        StatusPageContent(Modifier.fillMaxWidth())
                         Spacer(Modifier.height(bottomInnerPadding))
                     }
                 }
@@ -86,14 +88,11 @@ fun SuperUserPager(
         }
         UiMode.Material -> {
             val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
-            androidx.compose.material3.Scaffold(
+            ExpressiveScaffold(
                 topBar = {
                     LargeFlexibleTopAppBar(
-                        title = { Text(stringResource(R.string.oneuixp_tools)) },
-                        colors = TopAppBarDefaults.topAppBarColors(
-                            containerColor = MaterialTheme.colorScheme.surface,
-                            scrolledContainerColor = MaterialTheme.colorScheme.surface,
-                        ),
+                        title = { Text(stringResource(R.string.oneuixp_status)) },
+                        colors = expressiveTopAppBarColors(),
                         windowInsets = WindowInsets.safeDrawing.only(
                             WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
                         scrollBehavior = scrollBehavior,
@@ -108,10 +107,34 @@ fun SuperUserPager(
                         .verticalScroll(rememberScrollState())
                         .padding(innerPadding),
                 ) {
-                    Spacer(Modifier.height(screenHeight))
+                    StatusPageContent(Modifier.fillMaxWidth())
                     Spacer(Modifier.height(bottomInnerPadding))
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun StatusPageContent(modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    var refresh by remember { mutableIntStateOf(0) }
+    // A report confirms module load, not that a specific status bar hook works.
+    val loaded = remember(context, refresh) { StatusBridge.recentlyLoaded(context) }
+    val reports = remember(context, refresh) { StatusBridge.loadReportCount(context) }
+    val diagnostic = remember(context, refresh) { StatusBridge.diagnosticSummary(context) }
+    val ageSeconds = remember(context, refresh) { StatusBridge.lastReportAgeSeconds(context) }
+    Column(modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Text("OneuiXP · 状态栏")
+        Text(if (loaded) "本次开机已收到 SystemUI 模块加载报告（功能尚未验证）"
+             else "未收到本次开机的 LSPosed / SystemUI 加载报告，当前未确认工作")
+        Text("本次开机加载报告：${reports} 次（不等于实际注入次数）")
+        Text(if (ageSeconds >= 0) "最近一次报告：${ageSeconds} 秒前" else "最近一次报告：本次开机无记录")
+        Text("功能探测：${diagnostic}")
+        Text("LSPosed 作用域数量与实际注入次数：尚未接入独立检测")
+        androidx.compose.material3.Button(
+            onClick = { refresh++ },
+            modifier = Modifier.fillMaxWidth(),
+        ) { Text("刷新检测") }
     }
 }

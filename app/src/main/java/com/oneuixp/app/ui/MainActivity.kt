@@ -44,15 +44,13 @@ import com.oneuixp.app.ui.navigation3.rememberNavigator
 import com.oneuixp.app.ui.screen.about.AboutScreen
 import com.oneuixp.app.ui.screen.colorpalette.ColorPaletteScreen
 import com.oneuixp.app.ui.screen.home.HomePager
-import com.oneuixp.app.ui.screen.module.ModulePager
+import com.oneuixp.app.ui.screen.status.StatusPager
 import com.oneuixp.app.ui.screen.settings.SettingPager
-import com.oneuixp.app.ui.screen.superuser.SuperUserPager
+import com.oneuixp.app.ui.screen.tools.ToolsPager
 import com.oneuixp.app.ui.theme.LocalColorMode
 import com.oneuixp.app.ui.theme.LocalEnableBlur
 import com.oneuixp.app.ui.theme.LocalEnableFloatingBottomBar
 import com.oneuixp.app.ui.theme.LocalEnableFloatingBottomBarBlur
-import com.oneuixp.app.ui.theme.LocalEnableNavigationBadge
-import com.oneuixp.app.ui.theme.LocalModuleDescriptionMaxLines
 import com.oneuixp.app.ui.theme.OneuiXPTheme
 import com.oneuixp.app.ui.util.rememberBlurBackdrop
 import com.oneuixp.app.ui.util.rememberContentReady
@@ -106,8 +104,6 @@ class MainActivity : ComponentActivity() {
                 LocalEnableBlur provides uiState.enableBlur,
                 LocalEnableFloatingBottomBar provides uiState.enableFloatingBottomBar,
                 LocalEnableFloatingBottomBarBlur provides uiState.enableFloatingBottomBarBlur,
-                LocalEnableNavigationBadge provides uiState.enableNavigationBadge,
-                LocalModuleDescriptionMaxLines provides uiState.moduleDescriptionMaxLines,
                 LocalUiMode provides uiMode,
             ) {
                 OneuiXPTheme(appSettings = appSettings, uiMode = uiMode) {
@@ -131,8 +127,8 @@ class MainActivity : ComponentActivity() {
                                 entry<Route.About> { AboutScreen() }
                                 entry<Route.ColorPalette> { ColorPaletteScreen() }
                                 entry<Route.Home> { mainScreenEntry() }
-                                entry<Route.SuperUser> { mainScreenEntry() }
-                                entry<Route.Module> { mainScreenEntry() }
+                                entry<Route.Tools> { mainScreenEntry() }
+                                entry<Route.Status> { mainScreenEntry() }
                                 entry<Route.Settings> { mainScreenEntry() }
                             },
                         )
@@ -218,10 +214,10 @@ fun MainScreen(
                             HomePager(navController, bottomInnerPadding, isCurrentPage)
                         }
                         1 -> if (isCurrentPage || contentReady) {
-                            SuperUserPager(navController, bottomInnerPadding, isCurrentPage)
+                            ToolsPager(bottomInnerPadding, isCurrentPage)
                         }
                         2 -> if (isCurrentPage || contentReady) {
-                            ModulePager(bottomInnerPadding, isCurrentPage)
+                            StatusPager(bottomInnerPadding, isCurrentPage)
                         }
                         3 -> if (isCurrentPage || contentReady) {
                             SettingPager(navController, bottomInnerPadding, isCurrentPage)

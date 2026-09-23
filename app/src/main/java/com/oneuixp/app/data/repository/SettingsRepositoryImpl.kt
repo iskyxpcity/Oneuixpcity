@@ -65,21 +65,9 @@ class SettingsRepositoryImpl : SettingsRepository {
         get() = prefs.getBoolean("enable_floating_bottom_bar_blur", false)
         set(value) = prefs.edit { putBoolean("enable_floating_bottom_bar_blur", value) }
 
-    override var enableNavigationBadge: Boolean
-        get() = prefs.getBoolean("enable_navigation_badge", true)
-        set(value) = prefs.edit { putBoolean("enable_navigation_badge", value) }
-
-    override var navigationRailExpanded: Boolean
-        get() = prefs.getBoolean("nav_rail_expanded", false)
-        set(value) = prefs.edit { putBoolean("nav_rail_expanded", value) }
-
     override var pageScale: Float
         get() = prefs.getFloat("page_scale", 1.0f)
         set(value) = prefs.edit { putFloat("page_scale", value) }
-
-    override var moduleDescriptionMaxLines: Int
-        get() = prefs.getInt("module_description_max_lines", 4)
-        set(value) = prefs.edit { putInt("module_description_max_lines", value) }
 
 
 }

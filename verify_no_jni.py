@@ -77,3 +77,18 @@ assert 'networkSecurityConfig' not in (root / 'app/src/main/AndroidManifest.xml'
 assert not (root / 'app/src/main/res/xml/network_security_config.xml').exists()
 assert 'Theme.OneuiXP.WebUI' not in (root / 'app/src/main/res/values-night/themes.xml').read_text()
 print('PASS: no legacy KernelSU WebUI theme or local HTTP cleartext exemption')
+
+# OneuiXP page names and preferences must not retain KernelSU manager concepts.
+for dead in ('ui/screen/superuser', 'ui/screen/module'):
+    assert not (root / 'app/src/main/java/com/oneuixp/app' / dead).exists(), dead
+assert (root / 'app/src/main/java/com/oneuixp/app/ui/screen/tools/ToolsScreen.kt').exists()
+assert (root / 'app/src/main/java/com/oneuixp/app/ui/screen/status/StatusScreen.kt').exists()
+settings_contract = (root / 'app/src/main/java/com/oneuixp/app/data/repository/SettingsRepository.kt').read_text()
+main_activity = (root / 'app/src/main/java/com/oneuixp/app/ui/MainActivity.kt').read_text()
+theme_source = (root / 'app/src/main/java/com/oneuixp/app/ui/theme/Theme.kt').read_text()
+for obsolete in ('moduleDescriptionMaxLines', 'navigationRailExpanded', 'enableNavigationBadge'):
+    assert obsolete not in settings_contract, obsolete
+    assert obsolete not in main_activity, obsolete
+assert 'LocalModuleDescriptionMaxLines' not in theme_source
+assert 'LocalEnableNavigationBadge' not in theme_source
+print('PASS: legacy SuperUser/Module page names and dead manager-only preferences removed')

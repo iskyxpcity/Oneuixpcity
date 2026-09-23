@@ -49,10 +49,8 @@ class MainActivityViewModel(
             enableBlur = settingRepo.enableBlur,
             enableFloatingBottomBar = settingRepo.enableFloatingBottomBar,
             enableFloatingBottomBarBlur = settingRepo.enableFloatingBottomBarBlur,
-            enableNavigationBadge = settingRepo.enableNavigationBadge,
             enableSwipeDismiss = settingRepo.enableSwipeDismiss,
             pagerInterceptionMode = settingRepo.pagerInterceptionMode,
-            moduleDescriptionMaxLines = settingRepo.moduleDescriptionMaxLines,
             uiMode = UiMode.fromValue(settingRepo.uiMode),
         )
     }
@@ -64,11 +62,9 @@ class MainActivityViewModel(
             "color_style",
             "color_spec",
             "page_scale",
-            "module_description_max_lines",
             "enable_blur",
             "enable_floating_bottom_bar",
             "enable_floating_bottom_bar_blur",
-            "enable_navigation_badge",
             "enable_swipe_dismiss",
             "pager_interception_mode",
             "ui_mode",

@@ -15,8 +15,5 @@ interface SettingsRepository {
     var enableBlur: Boolean
     var enableFloatingBottomBar: Boolean
     var enableFloatingBottomBarBlur: Boolean
-    var enableNavigationBadge: Boolean
-    var navigationRailExpanded: Boolean
     var pageScale: Float
-    var moduleDescriptionMaxLines: Int
 }
