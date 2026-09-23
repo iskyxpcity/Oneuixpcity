@@ -82,7 +82,6 @@ fun SettingPagerMaterial(
     )
 
     ExpressiveScaffold(
-        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             TopBar(scrollBehavior = scrollBehavior)
         },
@@ -92,6 +91,7 @@ fun SettingPagerMaterial(
         Column(
             modifier = Modifier
                 .padding(paddingValues)
+                .nestedScroll(scrollBehavior.nestedScrollConnection)
                 .verticalScroll(rememberScrollState())
         ) {
             SegmentedColumn(
