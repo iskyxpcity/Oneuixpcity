@@ -15,8 +15,8 @@
 
 ## 主要目录
 
-- `app/src/main/java/me/weishu/kernelsu/statusbar/`：LSPosed/SystemUI 状态及只读诊断。
-- `app/src/main/java/me/weishu/kernelsu/ui/`：两套 UI 和四个底部页面。
+- `app/src/main/java/com/oneuixp/app/statusbar/`：LSPosed/SystemUI 状态及只读诊断。
+- `app/src/main/java/com/oneuixp/app/ui/`：两套 UI 和四个底部页面。
 - `app/src/main/resources/META-INF/xposed/`：现代模块必需的启动/作用域元数据。
 - `app/src/main/assets/xposed_init` 与 `xposed_scope`：旧版 Xposed 兼容入口。
 - `.github/workflows/build.yml`：GitHub Actions 检查、编译、签名与验证。
