@@ -1,1 +1,0 @@
-Removed KernelSU Magica service, disabled boot receiver, and Zygote preload. autoJailbreak is always false. LSPosed/SystemUI hook and status bridge are unchanged. Static checks only; Android build and device test remain pending.
