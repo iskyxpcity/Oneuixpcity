@@ -7,13 +7,9 @@ import android.util.Log
 import androidx.core.content.edit
 import com.materialkolor.PaletteStyle
 import com.materialkolor.dynamiccolor.ColorSpec
-import com.topjohnwu.superuser.ShellUtils
 import me.weishu.kernelsu.ksuApp
 import me.weishu.kernelsu.ui.UiMode
 import me.weishu.kernelsu.ui.screen.modulerepo.RepoSort
-import me.weishu.kernelsu.ui.util.execKsud
-import me.weishu.kernelsu.ui.util.getFeaturePersistValue
-import me.weishu.kernelsu.ui.util.getFeatureStatus
 import java.security.SecureRandom
 
 private const val SETTINGS_PREFS = "settings"
@@ -64,12 +60,20 @@ class SettingsRepositoryImpl : SettingsRepository {
         set(value) = prefs.edit { putString("color_style", value) }
 
     override var colorSpec: String
-        get() = prefs.getString("color_spec", ColorSpec.SpecVersion.SPEC_2025.name) ?: ColorSpec.SpecVersion.SPEC_2025.name
+        get() = prefs.getString("color_spec", ColorSpec.SpecVersion.Default.name) ?: ColorSpec.SpecVersion.Default.name
         set(value) = prefs.edit { putString("color_spec", value) }
 
     override var enablePredictiveBack: Boolean
         get() = prefs.getBoolean("enable_predictive_back", false)
         set(value) = prefs.edit { putBoolean("enable_predictive_back", value) }
+
+    override var enableSwipeDismiss: Boolean
+        get() = prefs.getBoolean("enable_swipe_dismiss", true)
+        set(value) = prefs.edit { putBoolean("enable_swipe_dismiss", value) }
+
+    override var pagerInterceptionMode: Int
+        get() = prefs.getInt("pager_interception_mode", 1)
+        set(value) = prefs.edit { putInt("pager_interception_mode", value.coerceIn(0, 2)) }
 
     override var enableBlur: Boolean
         get() = prefs.getBoolean("enable_blur", false)
@@ -87,9 +91,17 @@ class SettingsRepositoryImpl : SettingsRepository {
         get() = prefs.getBoolean("enable_navigation_badge", true)
         set(value) = prefs.edit { putBoolean("enable_navigation_badge", value) }
 
+    override var navigationRailExpanded: Boolean
+        get() = prefs.getBoolean("nav_rail_expanded", false)
+        set(value) = prefs.edit { putBoolean("nav_rail_expanded", value) }
+
     override var pageScale: Float
         get() = prefs.getFloat("page_scale", 1.0f)
         set(value) = prefs.edit { putFloat("page_scale", value) }
+
+    override var moduleDescriptionMaxLines: Int
+        get() = prefs.getInt("module_description_max_lines", 4)
+        set(value) = prefs.edit { putInt("module_description_max_lines", value) }
 
     override var enableWebDebugging: Boolean
         get() = prefs.getBoolean("enable_web_debugging", false)
@@ -142,9 +154,9 @@ class SettingsRepositoryImpl : SettingsRepository {
         return token
     }
 
-    override suspend fun getSuCompatStatus(): String = getFeatureStatus("su_compat")
+    override suspend fun getSuCompatStatus(): String = "unsupported"
 
-    override suspend fun getSuCompatPersistValue(): Long? = getFeaturePersistValue("su_compat")
+    override suspend fun getSuCompatPersistValue(): Long? = null
 
     override fun isSuEnabled(): Boolean = false
 
@@ -154,42 +166,36 @@ class SettingsRepositoryImpl : SettingsRepository {
 
     override fun getSuCompatModePref(): Int = prefs.getInt("su_compat_mode", 0)
 
-    override suspend fun getKernelUmountStatus(): String = getFeatureStatus("kernel_umount")
+    override suspend fun getKernelUmountStatus(): String = "unsupported"
 
     override fun isKernelUmountEnabled(): Boolean = false
 
     override fun setKernelUmountEnabled(enabled: Boolean): Boolean = false
 
-    override suspend fun getWebViewZygoteUmountStatus(): String = getFeatureStatus("webview_zygote_umount")
+    override suspend fun getWebViewZygoteUmountStatus(): String = "unsupported"
 
     override fun isWebViewZygoteUmountEnabled(): Boolean = false
 
     override fun setWebViewZygoteUmountEnabled(enabled: Boolean): Boolean =
         false
 
-    override suspend fun getSelinuxHideStatus(): String = getFeatureStatus("selinux_hide")
+    override suspend fun getSelinuxHideStatus(): String = "unsupported"
 
     override fun isSelinuxHideEnabled(): Boolean = false
 
     override fun setSelinuxHideEnabled(enabled: Boolean): Int = -1
 
-    override suspend fun getSulogStatus(): String = getFeatureStatus("sulog")
+    override suspend fun getSulogStatus(): String = "unsupported"
 
-    override suspend fun getSulogPersistValue(): Long? = getFeaturePersistValue("sulog")
+    override suspend fun getSulogPersistValue(): Long? = null
 
-    override fun setSulogEnabled(enabled: Boolean): Boolean = execKsud("feature set sulog ${if (enabled) 1 else 0}", true)
+    override fun setSulogEnabled(enabled: Boolean): Boolean = false
 
-    override suspend fun getAdbRootStatus(): String = getFeatureStatus("adb_root")
+    override suspend fun getAdbRootStatus(): String = "unsupported"
 
-    override suspend fun getAdbRootPersistValue(): Long? = getFeaturePersistValue("adb_root")
+    override suspend fun getAdbRootPersistValue(): Long? = null
 
-    override fun setAdbRootEnabled(enabled: Boolean): Boolean =
-        if (execKsud("feature set adb_root ${if (enabled) 1 else 0}", true)) {
-            ShellUtils.fastCmd("setprop ctl.restart adbd")
-            true
-        } else {
-            false
-        }
+    override fun setAdbRootEnabled(enabled: Boolean): Boolean = false
 
     override fun isDefaultUmountModules(): Boolean = false
 
@@ -198,6 +204,6 @@ class SettingsRepositoryImpl : SettingsRepository {
     override fun isLkmMode(): Boolean = false
 
     override fun execKsudFeatureSave() {
-        execKsud("feature save", true)
+        // OneuiXP intentionally has no KernelSU feature backend.
     }
 }

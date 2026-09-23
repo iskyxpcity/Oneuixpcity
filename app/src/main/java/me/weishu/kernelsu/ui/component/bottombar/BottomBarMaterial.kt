@@ -15,24 +15,19 @@ import androidx.compose.material.icons.outlined.Extension
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Shield
-import androidx.compose.material3.Badge
-import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.FlexibleBottomAppBar
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ShortNavigationBar
-import androidx.compose.material3.ShortNavigationBarItem
+import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import me.weishu.kernelsu.R
 import me.weishu.kernelsu.ui.LocalMainPagerState
 
 @Composable
-fun BottomBarMaterial(navigationBadge: NavigationBadgeState) {
+fun BottomBarMaterial() {
     val mainPagerState = LocalMainPagerState.current
-
 
     val items = listOf(
         Triple(R.string.home, Icons.Filled.Home, Icons.Outlined.Home),
@@ -41,15 +36,14 @@ fun BottomBarMaterial(navigationBadge: NavigationBadgeState) {
         Triple(R.string.settings, Icons.Filled.Settings, Icons.Outlined.Settings)
     )
 
-    ShortNavigationBar(
-        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+    FlexibleBottomAppBar(
         windowInsets = WindowInsets.systemBars.union(WindowInsets.displayCutout).only(
             WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom
         )
     ) {
         items.forEachIndexed { index, (label, selectedIcon, unselectedIcon) ->
             val selected = mainPagerState.selectedPage == index
-            ShortNavigationBarItem(
+            NavigationBarItem(
                 selected = selected,
                 onClick = {
                     if (!selected) {
@@ -57,10 +51,9 @@ fun BottomBarMaterial(navigationBadge: NavigationBadgeState) {
                     }
                 },
                 icon = {
-                    NavigationIconWithBadge(
-                        icon = if (selected) selectedIcon else unselectedIcon,
-                        contentDescription = stringResource(label),
-                        badge = badgeFor(index, navigationBadge),
+                    Icon(
+                        if (selected) selectedIcon else unselectedIcon,
+                        stringResource(label)
                     )
                 },
                 label = {
@@ -72,35 +65,5 @@ fun BottomBarMaterial(navigationBadge: NavigationBadgeState) {
                 }
             )
         }
-    }
-}
-
-@Composable
-internal fun NavigationIconWithBadge(
-    icon: ImageVector,
-    contentDescription: String?,
-    badge: NavBadge?,
-) {
-    if (badge != null) {
-        BadgedBox(
-            badge = {
-                when (badge.tone) {
-                    BadgeTone.Alert -> Badge {
-                        Text(badge.count.toString())
-                    }
-
-                    BadgeTone.Accent -> Badge(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary,
-                    ) {
-                        Text(badge.count.toString())
-                    }
-                }
-            }
-        ) {
-            Icon(icon, contentDescription)
-        }
-    } else {
-        Icon(icon, contentDescription)
     }
 }

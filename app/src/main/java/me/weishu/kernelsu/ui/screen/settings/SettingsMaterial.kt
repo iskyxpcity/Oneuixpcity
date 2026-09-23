@@ -18,6 +18,9 @@ import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.ContactPage
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DeveloperMode
+import androidx.compose.material.icons.filled.DisplaySettings
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material.icons.filled.ElectricalServices
 import androidx.compose.material.icons.filled.Fence
 import androidx.compose.material.icons.filled.FolderDelete
@@ -32,6 +35,8 @@ import androidx.compose.material.icons.rounded.Dashboard
 import androidx.compose.material.icons.rounded.UploadFile
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LargeFlexibleTopAppBar
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
@@ -51,14 +56,12 @@ import androidx.compose.ui.unit.dp
 import me.weishu.kernelsu.R
 import me.weishu.kernelsu.ui.UiMode
 import me.weishu.kernelsu.ui.component.KsuIsValid
-import me.weishu.kernelsu.ui.component.material.ExpressiveScaffold
 import me.weishu.kernelsu.ui.component.material.SegmentedColumn
 import me.weishu.kernelsu.ui.component.material.SegmentedDropdownItem
 import me.weishu.kernelsu.ui.component.material.SegmentedListItem
 import me.weishu.kernelsu.ui.component.material.SegmentedSwitchItem
 import me.weishu.kernelsu.ui.component.material.SendLogBottomSheet
 import me.weishu.kernelsu.ui.component.material.SnackBarHost
-import me.weishu.kernelsu.ui.component.material.expressiveTopAppBarColors
 import me.weishu.kernelsu.ui.component.uninstalldialog.UninstallDialog
 
 /**
@@ -81,7 +84,7 @@ fun SettingPagerMaterial(
         onDismissRequest = { showUninstallDialog.value = false }
     )
 
-    ExpressiveScaffold(
+    Scaffold(
         topBar = {
             TopBar(scrollBehavior = scrollBehavior)
         },
@@ -94,12 +97,13 @@ fun SettingPagerMaterial(
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
                 .verticalScroll(rememberScrollState())
         ) {
+            Spacer(modifier = Modifier.height(8.dp))
             SegmentedColumn(
-                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 13.dp),
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                     content = listOf(
                         {
                             SegmentedSwitchItem(
-                                icon = Icons.Filled.Update,
+                                icon = Icons.Filled.SystemUpdate,
                                 title = stringResource(id = R.string.settings_check_update),
                                 summary = stringResource(id = R.string.settings_check_update_summary),
                                 checked = uiState.checkUpdate,
@@ -110,11 +114,11 @@ fun SettingPagerMaterial(
                 )
 
             SegmentedColumn(
-                modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 13.dp),
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                 content = buildList {
                     add {
                         SegmentedDropdownItem(
-                            icon = Icons.Rounded.Dashboard,
+                            icon = Icons.Filled.DisplaySettings,
                             title = stringResource(id = R.string.settings_ui_mode),
                             summary = stringResource(id = R.string.settings_ui_mode_summary),
                             items = UiMode.entries.map { it.name },
@@ -142,7 +146,7 @@ fun SettingPagerMaterial(
             val profileTemplate = stringResource(id = R.string.settings_profile_template)
             KsuIsValid {
                 SegmentedColumn(
-                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 13.dp),
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                     content = listOf {
                         SegmentedListItem(
                             onClick = actions.onOpenProfileTemplate,
@@ -168,7 +172,7 @@ fun SettingPagerMaterial(
                 )
 
                 SegmentedColumn(
-                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 13.dp),
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                     content = listOf(
                         {
                             val suSummary = when (uiState.suCompatStatus) {
@@ -275,7 +279,7 @@ fun SettingPagerMaterial(
                 )
 
                 SegmentedColumn(
-                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 13.dp),
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                     content = listOf(
                         {
                             SegmentedSwitchItem(
@@ -311,7 +315,7 @@ fun SettingPagerMaterial(
 
             if (uiState.isLkmMode) {
                 SegmentedColumn(
-                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 13.dp),
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                     content = listOf(
                         {
                             val uninstall = stringResource(id = R.string.settings_uninstall)
@@ -327,7 +331,7 @@ fun SettingPagerMaterial(
             }
 
             SegmentedColumn(
-                modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 13.dp),
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                 content = listOf(
                     {
                         SegmentedListItem(
@@ -347,7 +351,7 @@ fun SettingPagerMaterial(
                             headlineContent = { Text(stringResource(id = R.string.about)) },
                             leadingContent = {
                                 Icon(
-                                    Icons.Filled.ContactPage,
+                                    Icons.Filled.Info,
                                     stringResource(id = R.string.about)
                                 )
                             },
@@ -375,7 +379,10 @@ private fun TopBar(
 ) {
     LargeFlexibleTopAppBar(
         title = { Text(stringResource(R.string.settings)) },
-        colors = expressiveTopAppBarColors(),
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = MaterialTheme.colorScheme.surface,
+            scrolledContainerColor = MaterialTheme.colorScheme.surface,
+        ),
         windowInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
         scrollBehavior = scrollBehavior
     )

@@ -308,4 +308,13 @@
     <string name="settings_navigation_badge_summary">Show granted app and enabled module counts on the navigation bar</string>
     <string name="oneuixp_tools">Tools</string>
     <string name="oneuixp_status">状态栏</string>
+    <string name="settings_enable_swipe_dismiss">Swipe back gesture</string>
+    <string name="settings_enable_swipe_dismiss_summary">Swipe from the edge to return to the previous page.</string>
+    <string name="settings_pager_gesture_mode">Pager gesture mode</string>
+    <string name="settings_pager_gesture_native">Default</string>
+    <string name="settings_pager_gesture_cross_axis">Cross-axis</string>
+    <string name="settings_pager_gesture_ios_like">iOS-like</string>
+    <string name="settings_module_description_max_lines">Module description max lines</string>
+    <string name="settings_module_description_max_lines_summary">Descriptions exceeding this line count will be folded automatically.</string>
+    <string name="unit_lines">Lines</string>
 </resources>

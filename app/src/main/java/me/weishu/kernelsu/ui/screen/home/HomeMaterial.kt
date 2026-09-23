@@ -6,16 +6,21 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -30,6 +35,7 @@ import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
@@ -45,16 +51,16 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.UriHandler
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import me.weishu.kernelsu.KernelVersion
+import me.weishu.kernelsu.BuildConfig
 import me.weishu.kernelsu.R
 import me.weishu.kernelsu.ui.component.WarningLevel
 import me.weishu.kernelsu.ui.component.dialog.rememberConfirmDialog
-import me.weishu.kernelsu.ui.component.material.ExpressiveScaffold
 import me.weishu.kernelsu.ui.component.material.TonalCard
-import me.weishu.kernelsu.ui.component.material.expressiveTopAppBarColors
 import me.weishu.kernelsu.ui.component.rebootlistpopup.RebootListPopup
 import me.weishu.kernelsu.ui.component.statustag.StatusTag
 
@@ -66,7 +72,7 @@ fun HomePagerMaterial(
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 
-    ExpressiveScaffold(
+    Scaffold(
         topBar = { TopBar(scrollBehavior = scrollBehavior) },
         contentWindowInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)
     ) { innerPadding ->
@@ -76,16 +82,16 @@ fun HomePagerMaterial(
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(13.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            if (state.checkUpdateEnabled) {
-                UpdateCard(state = state, actions = actions)
-            }
             StatusCard(
                 state = state,
                 actions = actions,
             )
-            InfoCard(systemInfo = state.systemInfo)
+            if (state.checkUpdateEnabled) {
+                UpdateCard(state = state, actions = actions)
+            }
+            InfoCard()
             Spacer(Modifier.height(bottomInnerPadding))
         }
     }
@@ -107,7 +113,7 @@ private fun UpdateCard(
     ) {
         val updateDialog = rememberConfirmDialog(onConfirm = { actions.onOpenUrl(newVersion.downloadUrl) })
         WarningCard(
-            message = stringResource(id = R.string.new_version_available, newVersion.versionCode),
+            message = stringResource(id = R.string.new_version_available, newVersion.versionName),
             level = WarningLevel.Notice
         ) {
             if (newVersion.changelog.isEmpty()) {
@@ -131,7 +137,10 @@ private fun TopBar(
     LargeFlexibleTopAppBar(
         title = { Text(stringResource(R.string.app_name)) },
         actions = { RebootListPopup() },
-        colors = expressiveTopAppBarColors(),
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = MaterialTheme.colorScheme.surface,
+            scrolledContainerColor = MaterialTheme.colorScheme.surface,
+        ),
         windowInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
         scrollBehavior = scrollBehavior
     )
@@ -142,33 +151,97 @@ private fun StatusCard(
     state: HomeUiState,
     actions: HomeActions,
 ) {
-    val context = androidx.compose.ui.platform.LocalContext.current
-    val loaded = me.weishu.kernelsu.statusbar.StatusBridge.recentlyLoaded(context)
-    val reportCount = me.weishu.kernelsu.statusbar.StatusBridge.loadReportCount(context)
-    val probe = me.weishu.kernelsu.statusbar.StatusBridge.diagnosticSummary(context)
-    Column(verticalArrangement = Arrangement.spacedBy(13.dp)) {
-        TonalCard {
-            Column(Modifier.fillMaxWidth().padding(16.dp)) {
-                Text("OneuiXP", style = MaterialTheme.typography.titleMedium)
-                Spacer(Modifier.height(8.dp))
-                Text(if (loaded) "本次开机已收到 SystemUI 模块加载报告（功能尚未验证）"
-                     else "未收到本次开机的 LSPosed / SystemUI 加载报告，当前未确认工作")
+    val status = rememberLsposedHomeStatus()
+    val active = status.active
+
+    // KernelSU v3.2.5 ROOT-active Material dashboard layout;
+    // substitute only OneuiXP's real SystemUI heartbeat/counter data.
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        TonalCard(
+            containerColor = if (active) {
+                MaterialTheme.colorScheme.secondaryContainer
+            } else {
+                MaterialTheme.colorScheme.errorContainer
+            },
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(24.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(
+                    imageVector = if (active) Icons.Outlined.CheckCircle else Icons.Outlined.Block,
+                    contentDescription = null,
+                )
+                Column(Modifier.padding(start = 20.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = when {
+                                status.injected -> "工作中"
+                                status.scopeActive -> "已激活"
+                                status.frameworkConnected && !status.scopeKnown -> "正在读取作用域"
+                                status.frameworkConnected -> "作用域未激活"
+                                else -> "状态待确认"
+                            },
+                            style = MaterialTheme.typography.titleMedium,
+                        )
+                        if (status.frameworkConnected || status.injected) {
+                            Spacer(Modifier.width(8.dp))
+                            StatusTag(
+                                label = "LSPosed",
+                                contentColor = MaterialTheme.colorScheme.onPrimary,
+                                backgroundColor = MaterialTheme.colorScheme.primary,
+                            )
+                        }
+                    }
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        text = "版本：${BuildConfig.VERSION_NAME}",
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                }
             }
         }
-        TonalCard {
-            Column(Modifier.fillMaxWidth().padding(16.dp)) {
-                Text("SystemUI 加载报告", style = MaterialTheme.typography.titleMedium)
-                Spacer(Modifier.height(8.dp))
-                Text("本次开机：${reportCount} 次；不等于实际注入次数")
-                Text("功能探测：${probe}")
-            }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            DashboardSmallCardMaterial(
+                title = "模块注入数量",
+                value = status.injectionCount.toString(),
+                modifier = Modifier.weight(1f),
+            )
+            DashboardSmallCardMaterial(
+                title = "作用域数量",
+                value = status.scopeCount.toString(),
+                modifier = Modifier.weight(1f),
+            )
         }
-        TonalCard {
-            Column(Modifier.fillMaxWidth().padding(16.dp)) {
-                Text("LSPosed 作用域与注入", style = MaterialTheme.typography.titleMedium)
-                Spacer(Modifier.height(8.dp))
-                Text("作用域数量：尚未接入；实际注入次数：尚未接入")
-            }
+    }
+}
+
+@Composable
+private fun DashboardSmallCardMaterial(
+    title: String,
+    value: String,
+    modifier: Modifier = Modifier,
+) {
+    TonalCard(modifier = modifier) {
+        Column(
+            modifier = Modifier.fillMaxWidth()
+                .padding(horizontal = 24.dp, vertical = 16.dp),
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyLarge,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = value,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.outline,
+            )
         }
     }
 }
@@ -219,7 +292,7 @@ private fun LearnMoreCard(onOpenUrl: (String) -> Unit) {
                 Text(
                     text = stringResource(R.string.home_click_to_learn_kernelsu),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.outline
                 )
             }
         }
@@ -241,7 +314,7 @@ private fun DonateCard(onOpenUrl: (String) -> Unit) {
                 Text(
                     text = stringResource(R.string.home_support_content),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.outline
                 )
             }
         }
@@ -249,47 +322,38 @@ private fun DonateCard(onOpenUrl: (String) -> Unit) {
 }
 
 @Composable
-private fun InfoCard(systemInfo: SystemInfo) {
+private fun InfoCard() {
+    val info = rememberOneuiXPDeviceInfo()
+
     TonalCard {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 16.dp, end = 16.dp, top = 14.dp, bottom = 12.dp)
+                .padding(start = 24.dp, top = 24.dp, end = 24.dp, bottom = 16.dp)
         ) {
             @Composable
-            fun InfoCardItem(label: String, content: String) {
-                Text(text = label, style = MaterialTheme.typography.bodyLarge)
+            fun Item(label: String, content: String, bottom: Dp = 16.dp) {
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.bodyLarge,
+                )
                 Text(
                     text = content,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.outline,
+                    modifier = Modifier.padding(bottom = bottom),
                 )
             }
 
-            InfoCardItem(stringResource(R.string.home_manager_version), systemInfo.managerVersion)
-            Spacer(Modifier.height(16.dp))
-            InfoCardItem(stringResource(R.string.home_kernel), systemInfo.kernelVersion)
-            Spacer(Modifier.height(16.dp))
-            InfoCardItem(stringResource(R.string.home_device_model), systemInfo.deviceModel)
-            Spacer(Modifier.height(16.dp))
-            InfoCardItem(stringResource(R.string.home_fingerprint), systemInfo.fingerprint)
-            Spacer(Modifier.height(16.dp))
-            val selinuxDisplay = when (systemInfo.selinuxStatus) {
-                "Enforcing" -> stringResource(R.string.selinux_status_enforcing)
-                "Permissive" -> stringResource(R.string.selinux_status_permissive)
-                "Disabled" -> stringResource(R.string.selinux_status_disabled)
-                else -> stringResource(R.string.selinux_status_unknown)
-            }
-            InfoCardItem(stringResource(R.string.home_selinux_status), selinuxDisplay)
-            Spacer(Modifier.height(16.dp))
-            val seccompDisplay = when (systemInfo.seccompStatus) {
-                -1 -> stringResource(R.string.seccomp_status_not_supported)
-                0 -> stringResource(R.string.seccomp_status_disabled)
-                1 -> stringResource(R.string.seccomp_status_strict)
-                2 -> stringResource(R.string.seccomp_status_filter)
-                else -> stringResource(R.string.seccomp_status_unknown)
-            }
-            InfoCardItem(stringResource(R.string.home_seccomp_status), seccompDisplay)
+            Item("手机型号", info.model)
+            Item("Android / API", info.androidApi)
+            Item("One UI", info.oneUi)
+            Item("RAM | ROM", info.ramRom)
+            Item("设备代号", info.deviceCode)
+            Item("处理器", info.chipset)
+            Item("ABI / CPU 架构", info.abiArchitecture)
+            Item("分辨率 / DPI", info.resolutionDpi)
+            Item("安全补丁", info.securityPatch, 0.dp)
         }
     }
 }
@@ -364,7 +428,7 @@ private fun HomeScreenPreviewContent(
                 ),
                 actions = actions
             )
-            InfoCard(previewSystemInfo.copy(selinuxStatus = selinuxStatus))
+            InfoCard()
             DonateCard(onOpenUrl = {})
             LearnMoreCard(onOpenUrl = {})
         }

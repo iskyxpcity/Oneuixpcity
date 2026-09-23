@@ -36,43 +36,54 @@ suspend fun download(
         }
 }
 
+/**
+ * The manager is OneuiXP, not KernelSU. Use this project's Releases only.
+ * Release tags: v1.0.260923, v1.0.260924, ...
+ */
 fun checkNewVersion(): LatestVersionInfo {
     if (!isNetworkAvailable(ksuApp)) return LatestVersionInfo()
-    val url = "https://api.github.com/repos/tiann/KernelSU/releases/latest"
-    // default null value if failed
-    val defaultValue = LatestVersionInfo()
-    runCatching {
-        ksuApp.okhttpClient.newCall(Request.Builder().url(url).build()).execute()
-            .use { response ->
-                if (!response.isSuccessful) {
-                    return defaultValue
-                }
-                val body = response.body.string()
-                val json = org.json.JSONObject(body)
-                val changelog = json.optString("body")
-
-                val assets = json.getJSONArray("assets")
-                for (i in 0 until assets.length()) {
-                    val asset = assets.getJSONObject(i)
-                    val name = asset.getString("name")
-                    if (!name.endsWith(".apk")) {
-                        continue
-                    }
-
-                    val regex = Regex("v(.+?)_(\\d+)-")
-                    val matchResult = regex.find(name) ?: continue
-                    matchResult.groupValues[1]
-                    val versionCode = matchResult.groupValues[2].toInt()
-                    val downloadUrl = asset.getString("browser_download_url")
-
-                    return LatestVersionInfo(
-                        versionCode,
-                        downloadUrl,
-                        changelog
-                    )
-                }
-
+    val endpoint = "https://api.github.com/repos/iSkyJIE/OneuiXP/releases/latest"
+    return runCatching {
+        ksuApp.okhttpClient.newCall(
+            Request.Builder().url(endpoint)
+                .header("Accept", "application/vnd.github+json")
+                .header("User-Agent", "OneuiXP-Android")
+                .build()
+        ).execute().use { response ->
+            if (!response.isSuccessful) return@use LatestVersionInfo()
+            val release = org.json.JSONObject(response.body.string())
+            val versionName = release.optString("tag_name").removePrefix("v")
+            val components = versionName.split(".").mapNotNull { it.toIntOrNull() }
+            if (components.size != 3) return@use LatestVersionInfo()
+            val (major, minor, date) = components
+            if (major !in 0..20 || minor !in 0..99 || date !in 0..999999) {
+                return@use LatestVersionInfo()
             }
-    }
-    return defaultValue
+            val versionCode = major * 100_000_000 + minor * 1_000_000 + date
+            if (versionCode <= me.weishu.kernelsu.BuildConfig.VERSION_CODE) {
+                return@use LatestVersionInfo()
+            }
+            val assets = release.optJSONArray("assets")
+            var downloadUrl = release.optString(
+                "html_url", "https://github.com/iSkyJIE/OneuiXP/releases"
+            )
+            if (assets != null) {
+                for (i in 0 until assets.length()) {
+                    val asset = assets.optJSONObject(i) ?: continue
+                    val name = asset.optString("name")
+                    if (name.endsWith(".apk", ignoreCase = true) &&
+                        name.contains("OneuiXP", ignoreCase = true)) {
+                        downloadUrl = asset.optString("browser_download_url", downloadUrl)
+                        break
+                    }
+                }
+            }
+            LatestVersionInfo(
+                versionCode = versionCode,
+                versionName = versionName,
+                downloadUrl = downloadUrl,
+                changelog = release.optString("body"),
+            )
+        }
+    }.getOrDefault(LatestVersionInfo())
 }

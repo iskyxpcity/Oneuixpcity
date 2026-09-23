@@ -93,7 +93,7 @@ object ThemeController {
         val colorSpec = try {
             ColorSpec.SpecVersion.valueOf(colorSpecStr)
         } catch (_: Exception) {
-            ColorSpec.SpecVersion.SPEC_2025
+            ColorSpec.SpecVersion.Default
         }
 
         return AppSettings(colorMode, keyColor, paletteStyle, colorSpec)
@@ -101,19 +101,19 @@ object ThemeController {
 }
 
 @Composable
-fun KernelSUTheme(
+fun OneuiXPTheme(
     appSettings: AppSettings = ThemeController.getAppSettings(),
     uiMode: UiMode = LocalUiMode.current,
     content: @Composable () -> Unit
 ) {
 
     when (uiMode) {
-        UiMode.Miuix -> MiuixKernelSUTheme(
+        UiMode.Miuix -> MiuixOneuiXPTheme(
             appSettings = appSettings,
             content = content
         )
 
-        UiMode.Material -> MaterialKernelSUTheme(
+        UiMode.Material -> MaterialOneuiXPTheme(
             appSettings = appSettings,
             content = content
         )
@@ -139,3 +139,5 @@ val LocalEnableFloatingBottomBar = staticCompositionLocalOf { false }
 val LocalEnableFloatingBottomBarBlur = staticCompositionLocalOf { false }
 
 val LocalEnableNavigationBadge = staticCompositionLocalOf { true }
+
+val LocalModuleDescriptionMaxLines = staticCompositionLocalOf { 4 }

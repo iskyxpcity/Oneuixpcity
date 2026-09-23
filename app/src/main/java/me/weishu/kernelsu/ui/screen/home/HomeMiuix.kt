@@ -5,8 +5,6 @@ import android.content.Context
 import android.os.Build
 import android.os.Environment
 import android.os.StatFs
-import androidx.compose.ui.platform.LocalContext
-
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -14,9 +12,9 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -37,45 +35,33 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.CheckCircleOutline
 import androidx.compose.material.icons.rounded.ErrorOutline
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalUriHandler
-import androidx.compose.ui.platform.UriHandler
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import me.weishu.kernelsu.KernelVersion
+import me.weishu.kernelsu.BuildConfig
 import me.weishu.kernelsu.R
-import me.weishu.kernelsu.ui.component.WarningLevel
 import me.weishu.kernelsu.ui.component.dialog.rememberConfirmDialog
 import me.weishu.kernelsu.ui.component.miuix.WarningCard
 import me.weishu.kernelsu.ui.component.rebootlistpopup.RebootListPopupMiuix
 import me.weishu.kernelsu.ui.theme.LocalEnableBlur
 import me.weishu.kernelsu.ui.theme.isInDarkTheme
 import me.weishu.kernelsu.ui.util.BlurredBar
-import me.weishu.kernelsu.ui.util.module.LatestVersionInfo
 import me.weishu.kernelsu.ui.util.rememberBlurBackdrop
-import top.yukonga.miuix.kmp.basic.BasicComponent
-import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.CardDefaults
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.basic.Scaffold
-import top.yukonga.miuix.kmp.basic.ScrollBehavior
 import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.basic.TopAppBar
-import top.yukonga.miuix.kmp.blur.LayerBackdrop
 import top.yukonga.miuix.kmp.blur.layerBackdrop
-import top.yukonga.miuix.kmp.icon.MiuixIcons
-import top.yukonga.miuix.kmp.icon.extended.Link
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme
 import top.yukonga.miuix.kmp.theme.MiuixTheme.isDynamicColor
@@ -84,52 +70,41 @@ import top.yukonga.miuix.kmp.utils.overScrollVertical
 import top.yukonga.miuix.kmp.utils.scrollEndHaptic
 
 @Composable
-fun HomePagerMiuix(
-    state: HomeUiState,
-    actions: HomeActions,
-    bottomInnerPadding: Dp,
-) {
+fun HomePagerMiuix(state: HomeUiState, actions: HomeActions, bottomInnerPadding: Dp) {
     val scrollBehavior = MiuixScrollBehavior()
-    val enableBlur = LocalEnableBlur.current
-    val backdrop = rememberBlurBackdrop(enableBlur)
-    val blurActive = backdrop != null
-    val barColor = if (blurActive) Color.Transparent else colorScheme.surface
+    val backdrop = rememberBlurBackdrop(LocalEnableBlur.current)
+    val barColor = if (backdrop != null) Color.Transparent else colorScheme.surface
     Scaffold(
         topBar = {
-            TopBar(
-                scrollBehavior = scrollBehavior,
-                backdrop = backdrop,
-                barColor = barColor,
-            )
+            BlurredBar(backdrop) {
+                TopAppBar(
+                    color = barColor,
+                    title = stringResource(R.string.app_name),
+                    actions = { RebootListPopupMiuix() },
+                    scrollBehavior = scrollBehavior,
+                )
+            }
         },
-        popupHost = { },
-        contentWindowInsets = WindowInsets.systemBars.add(WindowInsets.displayCutout).only(WindowInsetsSides.Horizontal)
+        popupHost = {},
+        contentWindowInsets = WindowInsets.systemBars.add(WindowInsets.displayCutout)
+            .only(WindowInsetsSides.Horizontal),
     ) { innerPadding ->
         Box(modifier = if (backdrop != null) Modifier.layerBackdrop(backdrop) else Modifier) {
             LazyColumn(
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .scrollEndHaptic()
-                    .overScrollVertical()
-                    .nestedScroll(scrollBehavior.nestedScrollConnection)
-                    .padding(horizontal = 12.dp),
+                modifier = Modifier.fillMaxHeight().scrollEndHaptic().overScrollVertical()
+                    .nestedScroll(scrollBehavior.nestedScrollConnection).padding(horizontal = 12.dp),
                 contentPadding = innerPadding,
                 overscrollEffect = null,
             ) {
                 item {
                     Column(
-                        modifier = Modifier.padding(top = 12.dp),
+                        modifier = Modifier.padding(vertical = 12.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
-                        if (state.checkUpdateEnabled) {
-                            UpdateCard(state = state, actions = actions)
-                        }
-                        StatusCard(
-                            state = state,
-                            actions = actions,
-                        )
-                        InfoCard(systemInfo = state.systemInfo)
+                        StatusCard()
+                        if (state.checkUpdateEnabled) UpdateCard(state, actions)
+                        InfoCard()
                         Spacer(Modifier.height(bottomInnerPadding))
                     }
                 }
@@ -139,277 +114,169 @@ fun HomePagerMiuix(
 }
 
 @Composable
-private fun UpdateCard(
-    state: HomeUiState,
-    actions: HomeActions,
-) {
-    val newVersion = state.latestVersionInfo
-    val title = stringResource(id = R.string.module_changelog)
-    val updateText = stringResource(id = R.string.module_update)
-    val updateDialog = rememberConfirmDialog(onConfirm = { actions.onOpenUrl(newVersion.downloadUrl) })
-
+private fun UpdateCard(state: HomeUiState, actions: HomeActions) {
+    val version = state.latestVersionInfo
+    val title = stringResource(R.string.module_changelog)
+    val update = stringResource(R.string.module_update)
+    val dialog = rememberConfirmDialog(onConfirm = { actions.onOpenUrl(version.downloadUrl) })
     AnimatedVisibility(
         visible = state.hasUpdate,
         enter = fadeIn() + expandVertically(),
-        exit = shrinkVertically() + fadeOut()
+        exit = shrinkVertically() + fadeOut(),
     ) {
         WarningCard(
-            message = stringResource(id = R.string.new_version_available, newVersion.versionCode),
-            level = WarningLevel.Notice,
+            message = stringResource(R.string.new_version_available, version.versionName),
             onClick = {
-                if (newVersion.changelog.isEmpty()) {
-                    actions.onOpenUrl(newVersion.downloadUrl)
-                } else {
-                    updateDialog.showConfirm(
-                        title = title,
-                        content = newVersion.changelog,
-                        markdown = true,
-                        confirm = updateText
+                if (version.changelog.isEmpty()) actions.onOpenUrl(version.downloadUrl)
+                else dialog.showConfirm(
+                    title = title,
+                    content = version.changelog,
+                    markdown = true,
+                    confirm = update,
+                )
+            },
+        )
+    }
+}
+
+@Composable
+private fun StatusCard() {
+    val status = rememberLsposedHomeStatus()
+    val active = status.active
+    val mainCardColor = if (active) {
+        when {
+            isDynamicColor -> colorScheme.secondaryContainer
+            isInDarkTheme() -> Color(0xFF1A3825)
+            else -> Color(0xFFDFFAE4)
+        }
+    } else colorScheme.errorContainer
+
+    // Match the ROOT-active KernelSU v3.2.5 three-card dashboard:
+    // intrinsic-height row, left status card, right stacked counter cards.
+    Row(
+        modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Card(
+            modifier = Modifier.weight(1f).fillMaxHeight(),
+            colors = CardDefaults.defaultColors(color = mainCardColor),
+            pressFeedbackType = PressFeedbackType.Tilt,
+        ) {
+            Box(modifier = Modifier.fillMaxSize()) {
+                Box(
+                    modifier = Modifier.fillMaxSize().offset(38.dp, 45.dp),
+                    contentAlignment = Alignment.BottomEnd,
+                ) {
+                    Icon(
+                        modifier = Modifier.size(170.dp),
+                        imageVector = if (active) Icons.Rounded.CheckCircleOutline
+                            else Icons.Rounded.ErrorOutline,
+                        tint = if (active) {
+                            if (isDynamicColor) colorScheme.primary.copy(alpha = 0.8f)
+                            else Color(0xFF36D167)
+                        } else colorScheme.error.copy(alpha = 0.8f),
+                        contentDescription = null,
+                    )
+                }
+                Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+                    Text(
+                        modifier = Modifier.fillMaxWidth(),
+                        text = when {
+                            status.injected -> "工作中"
+                            status.scopeActive -> "已激活"
+                            status.frameworkConnected && !status.scopeKnown -> "正在读取作用域"
+                            status.frameworkConnected -> "作用域未激活"
+                            else -> "状态待确认"
+                        },
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                    Spacer(Modifier.height(2.dp))
+                    Text(
+                        modifier = Modifier.fillMaxWidth(),
+                        text = "版本：${BuildConfig.VERSION_NAME}",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
                     )
                 }
             }
-        )
-    }
-}
-
-@Composable
-private fun TopBar(
-    scrollBehavior: ScrollBehavior,
-    backdrop: LayerBackdrop?,
-    barColor: Color,
-) {
-    BlurredBar(backdrop) {
-        TopAppBar(
-            color = barColor,
-            title = stringResource(R.string.app_name),
-            actions = {
-                RebootListPopupMiuix()
-            },
-            scrollBehavior = scrollBehavior
-        )
-    }
-}
-
-@Composable
-private fun StatusCard(
-    state: HomeUiState,
-    actions: HomeActions,
-) {
-    val context = LocalContext.current
-    val loaded = me.weishu.kernelsu.statusbar.StatusBridge.recentlyLoaded(context)
-    val reports = me.weishu.kernelsu.statusbar.StatusBridge.loadReportCount(context)
-    val probe = me.weishu.kernelsu.statusbar.StatusBridge.diagnosticSummary(context)
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Card(modifier = Modifier.fillMaxWidth()) {
-            Column(modifier = Modifier.padding(18.dp)) {
-                Text("OneuiXP")
-                Text(if (loaded) "本次开机已收到 SystemUI 模块加载报告（功能尚未验证）"
-                     else "未收到本次开机的 LSPosed / SystemUI 加载报告，当前未确认工作")
-            }
         }
-        Card(modifier = Modifier.fillMaxWidth()) {
-            Column(modifier = Modifier.padding(18.dp)) {
-                Text("SystemUI 加载报告")
-                Text("本次开机：${reports} 次；不等于实际注入次数")
-                Text("功能探测：${probe}")
-            }
-        }
-        Card(modifier = Modifier.fillMaxWidth()) {
-            Column(modifier = Modifier.padding(18.dp)) {
-                Text("LSPosed 作用域与注入")
-                Text("作用域数量：尚未接入；实际注入次数：尚未接入")
-            }
+        Column(
+            modifier = Modifier.weight(1f).fillMaxHeight(),
+        ) {
+            DashboardSmallCardMiuix(
+                title = "模块注入数量",
+                value = status.injectionCount.toString(),
+                modifier = Modifier.weight(1f),
+            )
+            Spacer(Modifier.height(12.dp))
+            DashboardSmallCardMiuix(
+                title = "作用域数量",
+                value = status.scopeCount.toString(),
+                modifier = Modifier.weight(1f),
+            )
         }
     }
 }
 
 @Composable
-private fun LearnMoreCard(
-    onOpenUrl: (String) -> Unit,
-) {
-    val url = stringResource(R.string.home_learn_kernelsu_url)
-    Card(modifier = Modifier.fillMaxWidth()) {
-        BasicComponent(
-            title = stringResource(R.string.home_learn_kernelsu),
-            summary = stringResource(R.string.home_click_to_learn_kernelsu),
-            endActions = {
-                Icon(
-                    imageVector = MiuixIcons.Link,
-                    tint = colorScheme.onSurface,
-                    contentDescription = null
-                )
-            },
-            onClick = { onOpenUrl(url) }
-        )
+private fun DashboardSmallCardMiuix(title: String, value: String, modifier: Modifier = Modifier) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        insideMargin = PaddingValues(16.dp),
+        pressFeedbackType = PressFeedbackType.Tilt,
+    ) {
+        Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.Start) {
+            Text(
+                modifier = Modifier.fillMaxWidth(),
+                text = title,
+                fontWeight = FontWeight.Medium,
+                fontSize = 15.sp,
+                color = colorScheme.onSurfaceVariantSummary,
+            )
+            Text(
+                modifier = Modifier.fillMaxWidth(),
+                text = value,
+                fontSize = 26.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = colorScheme.onSurface,
+            )
+        }
     }
 }
 
 @Composable
-private fun DonateCard(onOpenUrl: (String) -> Unit) {
-    Card(modifier = Modifier.fillMaxWidth()) {
-        BasicComponent(
-            title = stringResource(R.string.home_support_title),
-            summary = stringResource(R.string.home_support_content),
-            endActions = {
-                Icon(
-                    imageVector = MiuixIcons.Link,
-                    tint = colorScheme.onSurface,
-                    contentDescription = null
-                )
-            },
-            onClick = { onOpenUrl("https://patreon.com/weishu") },
-            insideMargin = PaddingValues(18.dp)
+private fun InfoCard() {
+    val info = rememberOneuiXPDeviceInfo()
+
+    @Composable
+    fun Item(title: String, content: String, bottom: Dp = 20.dp) {
+        Text(
+            text = title,
+            fontSize = MiuixTheme.textStyles.headline1.fontSize,
+            fontWeight = FontWeight.Medium,
+            color = colorScheme.onSurface,
+        )
+        Text(
+            text = content,
+            fontSize = MiuixTheme.textStyles.body2.fontSize,
+            color = colorScheme.onSurfaceVariantSummary,
+            modifier = Modifier.padding(top = 2.dp, bottom = bottom),
         )
     }
-}
 
-@Composable
-private fun InfoCard(systemInfo: SystemInfo) {
-    val context = LocalContext.current
-    val dm = context.resources.displayMetrics
-    val am = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
-    val mem = ActivityManager.MemoryInfo().also { am.getMemoryInfo(it) }
-    val stat = StatFs(Environment.getDataDirectory().path)
-    fun gb(v: Long) = String.format("%.1f GB", v / 1073741824.0)
-    val oneUi = runCatching {
-        val clazz = Class.forName("android.os.SystemProperties")
-        val get = clazz.getMethod("get", String::class.java, String::class.java)
-        val raw = get.invoke(null, "ro.build.version.oneui", "") as String
-        raw.ifBlank { "-" }
-    }.getOrDefault("-")
-    val soc = if (Build.VERSION.SDK_INT >= 31) Build.SOC_MODEL.ifBlank { Build.HARDWARE } else Build.HARDWARE
-    val arch = System.getProperty("os.arch") ?: "-"
-    @Composable fun InfoText(title: String, content: String, bottomPadding: Dp = 20.dp) {
-        Text(title, fontSize = MiuixTheme.textStyles.headline1.fontSize, fontWeight = FontWeight.Medium, color = colorScheme.onSurface)
-        Text(content, fontSize = MiuixTheme.textStyles.body2.fontSize, color = colorScheme.onSurfaceVariantSummary, modifier = Modifier.padding(top = 2.dp, bottom = bottomPadding))
-    }
     Card {
         Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
-            InfoText("手机型号", "${Build.MANUFACTURER} ${Build.MODEL}")
-            InfoText("Android / API", "Android ${Build.VERSION.RELEASE} / API ${Build.VERSION.SDK_INT}")
-            InfoText("One UI", oneUi)
-            InfoText("RAM | ROM", "${gb(mem.totalMem)} | ${gb(stat.totalBytes)}")
-            InfoText("设备代号", Build.DEVICE)
-            InfoText("处理器", soc)
-            InfoText("ABI / CPU 架构", "${Build.SUPPORTED_ABIS.firstOrNull() ?: "-"} / $arch")
-            InfoText("分辨率 / DPI", "${dm.widthPixels}×${dm.heightPixels} / ${dm.densityDpi}dpi")
-            InfoText("安全补丁", Build.VERSION.SECURITY_PATCH.ifBlank { "-" }, 0.dp)
+            Item("手机型号", info.model)
+            Item("Android / API", info.androidApi)
+            Item("One UI", info.oneUi)
+            Item("RAM | ROM", info.ramRom)
+            Item("设备代号", info.deviceCode)
+            Item("处理器", info.chipset)
+            Item("ABI / CPU 架构", info.abiArchitecture)
+            Item("分辨率 / DPI", info.resolutionDpi)
+            Item("安全补丁", info.securityPatch, 0.dp)
         }
     }
 }
-
-@Preview(name = "Activated")
-@Composable
-private fun StatusCardActivatedPreview() {
-    StatusCard(
-        state = previewHomeScreenState(ksuVersion = 12345, lkmMode = true),
-        actions = HomeActions({})
-    )
-}
-
-@Preview(name = "Not Activated")
-@Composable
-private fun StatusCardNotActivatedPreview() {
-    StatusCard(state = previewHomeScreenState(ksuVersion = null, lkmMode = null), actions = HomeActions({}))
-}
-
-@Preview(name = "Permissive")
-@Composable
-private fun StatusCardPermissivePreview() {
-    StatusCard(
-        state = previewHomeScreenState(ksuVersion = null, lkmMode = null, selinuxStatus = "Permissive"),
-        actions = HomeActions({})
-    )
-}
-
-@Preview(name = "Jailbreak")
-@Composable
-private fun StatusCardJailbreakPreview() {
-    StatusCard(
-        state = previewHomeScreenState(ksuVersion = 12345, lkmMode = true, isLateLoadMode = true),
-        actions = HomeActions({})
-    )
-}
-
-private val previewSystemInfo = SystemInfo(
-    kernelVersion = "6.12.23-android16-5-g123456789000-abogki123456789-4k",
-    managerVersion = "3.0.0 (30000)",
-    deviceModel = "Xiaomi 17 Pro Max",
-    fingerprint = "Xiaomi/popsicle/popsicle:16/BQ2A.250705.001-BP2A.250605.031.A3/OS3.0.313.0.WPBCNXM:user/release-keys",
-    selinuxStatus = "Enforcing",
-    seccompStatus = 2
-)
-
-private val previewUriHandler = object : UriHandler {
-    override fun openUri(uri: String) {}
-}
-
-@Composable
-private fun HomeScreenPreviewContent(
-    ksuVersion: Int?,
-    lkmMode: Boolean?,
-    isSafeMode: Boolean = false,
-    isLateLoadMode: Boolean = false,
-    selinuxStatus: String = "Enforcing",
-) {
-    CompositionLocalProvider(LocalUriHandler provides previewUriHandler) {
-        Column(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 12.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            val actions = HomeActions({})
-            StatusCard(
-                state = previewHomeScreenState(
-                    ksuVersion = ksuVersion,
-                    lkmMode = lkmMode,
-                    isSafeMode = isSafeMode,
-                    isLateLoadMode = isLateLoadMode,
-                    selinuxStatus = selinuxStatus,
-                ),
-                actions = actions
-            )
-            InfoCard(previewSystemInfo.copy(selinuxStatus = selinuxStatus))
-            DonateCard(onOpenUrl = {})
-            LearnMoreCard(onOpenUrl = {})
-        }
-    }
-}
-
-@Preview(name = "Home Activated", showBackground = true)
-@Composable
-private fun HomeScreenActivatedPreview() {
-    HomeScreenPreviewContent(ksuVersion = 12345, lkmMode = true)
-}
-
-@Preview(name = "Home Not Activated", showBackground = true)
-@Composable
-private fun HomeScreenNotActivatedPreview() {
-    HomeScreenPreviewContent(ksuVersion = null, lkmMode = null)
-}
-
-@Preview(name = "Home Permissive", showBackground = true)
-@Composable
-private fun HomeScreenPermissivePreview() {
-    HomeScreenPreviewContent(ksuVersion = null, lkmMode = null, selinuxStatus = "Permissive")
-}
-
-@Preview(name = "Home Jailbreak", showBackground = true)
-@Composable
-private fun HomeScreenJailbreakPreview() {
-    HomeScreenPreviewContent(ksuVersion = 12345, lkmMode = true, isLateLoadMode = true)
-}
-
-private fun previewHomeScreenState(
-    ksuVersion: Int?,
-    lkmMode: Boolean?,
-    isSafeMode: Boolean = false,
-    isLateLoadMode: Boolean = false,
-    selinuxStatus: String = "Enforcing",
-) = HomeUiState(
-    kernelVersion = KernelVersion(6, 1, 0),
-    checkUpdateEnabled = false,
-    latestVersionInfo = LatestVersionInfo(),
-    currentManagerVersionCode = 10000,
-    systemInfo = previewSystemInfo.copy(selinuxStatus = selinuxStatus),
-)

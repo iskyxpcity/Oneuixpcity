@@ -9,16 +9,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.WindowInsetsSides
-import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.consumeWindowInsets
-import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.only
-import androidx.compose.foundation.layout.systemBars
-import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.MaterialTheme
@@ -28,9 +19,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -49,10 +38,7 @@ import androidx.navigationevent.compose.rememberNavigationEventState
 import kotlinx.coroutines.channels.Channel
 import me.weishu.kernelsu.ui.component.bottombar.BottomBar
 import me.weishu.kernelsu.ui.component.bottombar.MainPagerState
-import me.weishu.kernelsu.ui.component.bottombar.NavigationBadgeState
-import me.weishu.kernelsu.ui.component.bottombar.SideRail
 import me.weishu.kernelsu.ui.component.bottombar.rememberMainPagerState
-import me.weishu.kernelsu.ui.component.bottombar.useNavigationRail
 import me.weishu.kernelsu.ui.navigation3.IntentDispatcher
 import me.weishu.kernelsu.ui.navigation3.LocalNavigator
 import me.weishu.kernelsu.ui.navigation3.Navigator
@@ -64,12 +50,13 @@ import me.weishu.kernelsu.ui.screen.home.HomePager
 import me.weishu.kernelsu.ui.screen.module.ModulePager
 import me.weishu.kernelsu.ui.screen.settings.SettingPager
 import me.weishu.kernelsu.ui.screen.superuser.SuperUserPager
-import me.weishu.kernelsu.ui.theme.KernelSUTheme
 import me.weishu.kernelsu.ui.theme.LocalColorMode
 import me.weishu.kernelsu.ui.theme.LocalEnableBlur
 import me.weishu.kernelsu.ui.theme.LocalEnableFloatingBottomBar
 import me.weishu.kernelsu.ui.theme.LocalEnableFloatingBottomBarBlur
 import me.weishu.kernelsu.ui.theme.LocalEnableNavigationBadge
+import me.weishu.kernelsu.ui.theme.LocalModuleDescriptionMaxLines
+import me.weishu.kernelsu.ui.theme.OneuiXPTheme
 import me.weishu.kernelsu.ui.util.rememberBlurBackdrop
 import me.weishu.kernelsu.ui.util.rememberContentReady
 import me.weishu.kernelsu.ui.viewmodel.MainActivityViewModel
@@ -87,8 +74,6 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // OneuiXP does not auto-install the KernelSU manager on launch.
-
         if (savedInstanceState == null) intent?.let { intentChannel.trySend(it) }
 
         setContent {
@@ -97,7 +82,8 @@ class MainActivity : ComponentActivity() {
             val selectedMainPage by viewModel.selectedMainPage.collectAsStateWithLifecycle()
             val appSettings = uiState.appSettings
             val uiMode = uiState.uiMode
-            val darkMode = appSettings.colorMode.isDark || (appSettings.colorMode.isSystem && isSystemInDarkTheme())
+            val darkMode = appSettings.colorMode.isDark ||
+                (appSettings.colorMode.isSystem && isSystemInDarkTheme())
 
             DisposableEffect(darkMode) {
                 enableEdgeToEdge(
@@ -128,10 +114,12 @@ class MainActivity : ComponentActivity() {
                 LocalEnableFloatingBottomBar provides uiState.enableFloatingBottomBar,
                 LocalEnableFloatingBottomBarBlur provides uiState.enableFloatingBottomBarBlur,
                 LocalEnableNavigationBadge provides uiState.enableNavigationBadge,
+                LocalModuleDescriptionMaxLines provides uiState.moduleDescriptionMaxLines,
                 LocalUiMode provides uiMode,
             ) {
-                KernelSUTheme(appSettings = appSettings, uiMode = uiMode) {
+                OneuiXPTheme(appSettings = appSettings, uiMode = uiMode) {
                     IntentDispatcher(intentChannel = intentChannel)
+
                     val mainScreenEntry = @Composable {
                         MainScreen(
                             initialPage = selectedMainPage,
@@ -144,7 +132,7 @@ class MainActivity : ComponentActivity() {
                             backStack = navigator.backStack,
                             entryDecorators = listOf(
                                 rememberSaveableStateHolderNavEntryDecorator(),
-                                rememberViewModelStoreNavEntryDecorator()
+                                rememberViewModelStoreNavEntryDecorator(),
                             ),
                             onBack = { navigator.pop() },
                             entryProvider = entryProvider {
@@ -155,15 +143,12 @@ class MainActivity : ComponentActivity() {
                                 entry<Route.SuperUser> { mainScreenEntry() }
                                 entry<Route.Module> { mainScreenEntry() }
                                 entry<Route.Settings> { mainScreenEntry() }
-                            }
+                            },
                         )
                     }
 
                     when (uiMode) {
-                        UiMode.Material -> androidx.compose.material3.Scaffold(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainer
-                        ) { navDisplay() }
-
+                        UiMode.Material -> androidx.compose.material3.Scaffold { navDisplay() }
                         UiMode.Miuix -> Scaffold { navDisplay() }
                     }
                 }
@@ -178,7 +163,9 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-val LocalMainPagerState = staticCompositionLocalOf<MainPagerState> { error("LocalMainPagerState not provided") }
+val LocalMainPagerState = staticCompositionLocalOf<MainPagerState> {
+    error("LocalMainPagerState not provided")
+}
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
@@ -188,17 +175,15 @@ fun MainScreen(
 ) {
     val navController = LocalNavigator.current
     val enableBlur = LocalEnableBlur.current
-    val enableFloatingBottomBar = LocalEnableFloatingBottomBar.current
     val enableFloatingBottomBarBlur = LocalEnableFloatingBottomBarBlur.current
-    val pagerState = rememberPagerState(initialPage = initialPage, pageCount = { MainPagerConfig.PAGE_COUNT })
+    val pagerState = rememberPagerState(
+        initialPage = initialPage,
+        pageCount = { MainPagerConfig.PAGE_COUNT },
+    )
     val mainPagerState = rememberMainPagerState(pagerState)
-    // OneuiXP does not query KernelSU or load its module/superuser data for navigation badges.
-    // Keep the original navigation components and their neutral badge state.
-    var userScrollEnabled by remember { mutableStateOf(true) }
-    val navigationBadge = NavigationBadgeState()
     val uiMode = LocalUiMode.current
     val surfaceColor = when (uiMode) {
-        UiMode.Material -> MaterialTheme.colorScheme.surface // Blur is not used in Material, this is just a placeholder
+        UiMode.Material -> MaterialTheme.colorScheme.surface
         UiMode.Miuix -> MiuixTheme.colorScheme.surface
     }
     val blurBackdrop = rememberBlurBackdrop(enableBlur)
@@ -220,97 +205,72 @@ fun MainScreen(
 
     MainScreenBackHandler(mainPagerState, navController)
 
-    val useNavigationRail = useNavigationRail(enableFloatingBottomBar)
-
-    CompositionLocalProvider(
-        LocalMainPagerState provides mainPagerState
-    ) {
+    CompositionLocalProvider(LocalMainPagerState provides mainPagerState) {
         val contentReady = rememberContentReady()
+
         val pagerContent = @Composable { bottomInnerPadding: Dp ->
-            Box(modifier = if (blurBackdrop != null) Modifier.layerBackdrop(blurBackdrop) else Modifier) {
+            Box(
+                modifier = if (blurBackdrop != null) {
+                    Modifier.layerBackdrop(blurBackdrop)
+                } else {
+                    Modifier
+                },
+            ) {
                 HorizontalPager(
-                    modifier = Modifier
-                        .then(if (enableFloatingBottomBar && enableFloatingBottomBarBlur) Modifier.layerBackdrop(backdrop) else Modifier),
+                    modifier = if (enableFloatingBottomBarBlur) {
+                        Modifier.layerBackdrop(backdrop)
+                    } else {
+                        Modifier
+                    },
                     state = mainPagerState.pagerState,
                     beyondViewportPageCount = if (contentReady) 3 else 0,
-                    overscrollEffect = null,
-                    userScrollEnabled = userScrollEnabled,
+                    userScrollEnabled = true,
                 ) { page ->
                     val isCurrentPage = page == settledPage
                     when (page) {
-                        0 -> if (isCurrentPage || contentReady) HomePager(navController, bottomInnerPadding, isCurrentPage)
-                        1 -> if (isCurrentPage || contentReady) SuperUserPager(navController, bottomInnerPadding, isCurrentPage)
-                        2 -> if (isCurrentPage || contentReady) ModulePager(bottomInnerPadding, isCurrentPage)
-                        3 -> if (isCurrentPage || contentReady) SettingPager(navController, bottomInnerPadding)
+                        0 -> if (isCurrentPage || contentReady) {
+                            HomePager(navController, bottomInnerPadding, isCurrentPage)
+                        }
+                        1 -> if (isCurrentPage || contentReady) {
+                            SuperUserPager(navController, bottomInnerPadding, isCurrentPage)
+                        }
+                        2 -> if (isCurrentPage || contentReady) {
+                            ModulePager(bottomInnerPadding, isCurrentPage)
+                        }
+                        3 -> if (isCurrentPage || contentReady) {
+                            SettingPager(navController, bottomInnerPadding, isCurrentPage)
+                        }
                     }
                 }
             }
         }
 
-        if (useNavigationRail) {
-            val startInsets = WindowInsets.systemBars.union(WindowInsets.displayCutout)
-                .only(WindowInsetsSides.Start)
-            val navBarBottomPadding = WindowInsets.systemBars.asPaddingValues().calculateBottomPadding()
-
-            when (uiMode) {
-                UiMode.Material -> androidx.compose.material3.Scaffold(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainer
-                ) {
-                    Row {
-                        SideRail(navigationBadge)
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .consumeWindowInsets(startInsets)
-                        ) {
-                            pagerContent(navBarBottomPadding)
-                        }
-                    }
-                }
-
-                UiMode.Miuix -> Scaffold { _ ->
-                    Row {
-                        SideRail(navigationBadge)
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .consumeWindowInsets(startInsets)
-                        ) {
-                            pagerContent(navBarBottomPadding)
-                        }
-                    }
-                }
+        val bottomBar = @Composable {
+            Box(modifier = Modifier.fillMaxWidth()) {
+                BottomBar(
+                    blurBackdrop = blurBackdrop,
+                    backdrop = backdrop,
+                    modifier = Modifier.align(Alignment.BottomCenter),
+                )
             }
-        } else {
-            val bottomBar = @Composable {
-                Box(
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    BottomBar(
-                        blurBackdrop = blurBackdrop,
-                        backdrop = backdrop,
-                        navigationBadge = navigationBadge,
-                        modifier = Modifier.align(Alignment.BottomCenter),
-                    )
-                }
+        }
+
+        // Match the user's KernelSU 3.2.5 phone behavior: bottom navigation only.
+        // Do not switch to the newer adaptive side rail.
+        when (uiMode) {
+            UiMode.Material -> androidx.compose.material3.Scaffold(
+                bottomBar = bottomBar,
+            ) { innerPadding ->
+                pagerContent(innerPadding.calculateBottomPadding())
             }
-
-            when (uiMode) {
-                UiMode.Material -> androidx.compose.material3.Scaffold(
-                    bottomBar = bottomBar,
-                    containerColor = MaterialTheme.colorScheme.surfaceContainer
-                ) { innerPadding ->
-                    pagerContent(innerPadding.calculateBottomPadding())
-                }
-
-                UiMode.Miuix -> Scaffold(bottomBar = bottomBar) { innerPadding ->
-                    pagerContent(innerPadding.calculateBottomPadding())
-                }
+            UiMode.Miuix -> Scaffold(
+                bottomBar = bottomBar,
+            ) { innerPadding ->
+                pagerContent(innerPadding.calculateBottomPadding())
             }
         }
     }
 }
-
 
 @Composable
 private fun MainScreenBackHandler(
@@ -319,7 +279,9 @@ private fun MainScreenBackHandler(
 ) {
     val isPagerBackHandlerEnabled by remember {
         derivedStateOf {
-            navController.current() is Route.Main && navController.backStackSize() == 1 && mainState.selectedPage != 0
+            navController.current() is Route.Main &&
+                navController.backStackSize() == 1 &&
+                mainState.selectedPage != 0
         }
     }
 
@@ -330,6 +292,6 @@ private fun MainScreenBackHandler(
         isBackEnabled = isPagerBackHandlerEnabled,
         onBackCompleted = {
             mainState.animateToPage(0)
-        }
+        },
     )
 }
