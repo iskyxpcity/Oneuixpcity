@@ -13,7 +13,6 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -58,10 +57,8 @@ import top.yukonga.miuix.kmp.basic.CardDefaults
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.basic.Scaffold
-import top.yukonga.miuix.kmp.basic.ScrollBehavior
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TopAppBar
-import top.yukonga.miuix.kmp.blur.LayerBackdrop
 import top.yukonga.miuix.kmp.blur.layerBackdrop
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme
@@ -163,22 +160,22 @@ private fun StatusCard() {
             pressFeedbackType = PressFeedbackType.Tilt,
         ) {
             Box(Modifier.fillMaxSize()) {
-                // Keep precisely the upstream KernelSU 110dp symbol, 27/31dp offset
-                // and 80% dynamic-primary tint instead of the previous 138dp/58% tint.
+                // Full-sized emblem, intentionally clipped by the card like the
+                // reference screenshot. Use an opaque theme-primary tint rather
+                // than washing the checkmark out with a semi-transparent overlay.
                 Icon(
                     imageVector = if (active) Icons.Rounded.CheckCircleOutline
                     else Icons.Rounded.ErrorOutline,
                     contentDescription = null,
                     modifier = Modifier.align(Alignment.BottomEnd)
-                        .offset(x = 27.dp, y = 31.dp).size(110.dp),
+                        .offset(x = 37.dp, y = 38.dp).size(165.dp),
                     tint = if (active) {
-                        if (isDynamicColor) colorScheme.primary.copy(alpha = 0.8f)
-                        else Color(0xFF36D167)
-                    } else colorScheme.error.copy(alpha = 0.8f),
+                        if (isDynamicColor) colorScheme.primary
+                        else if (isInDarkTheme()) Color(0xFF36D167)
+                        else Color(0xFF78542D)
+                    } else colorScheme.error,
                 )
                 Column(modifier = Modifier.fillMaxSize().padding(16.dp, 14.dp)) {
-                    // Upstream uses 22sp titles. Explicit lines prevent the extra
-                    // full-width angle bracket from wrapping alone at half width.
                     Text(
                         text = if (active) "工作中" else "等待激活",
                         fontSize = 22.sp,
@@ -193,12 +190,6 @@ private fun StatusCard() {
                     Text(
                         text = if (active) "LSPosed / SystemUI" else "需等待 SystemUI 加载模块",
                         fontSize = 15.sp,
-                        fontWeight = FontWeight.Medium,
-                    )
-                    Spacer(Modifier.weight(1f))
-                    Text(
-                        text = "OneuiXP",
-                        fontSize = 16.sp,
                         fontWeight = FontWeight.Medium,
                     )
                 }
