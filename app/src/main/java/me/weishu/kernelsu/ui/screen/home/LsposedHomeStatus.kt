@@ -23,6 +23,7 @@ import me.weishu.kernelsu.statusbar.StatusBridge
 data class LsposedHomeStatus(
     val active: Boolean,
     val frameworkConnected: Boolean,
+    val scopeKnown: Boolean,
     val scopeActive: Boolean,
     val injected: Boolean,
     val injectionCount: Int,
@@ -91,7 +92,7 @@ fun rememberLsposedHomeStatus(): LsposedHomeStatus {
     val scopeActive = framework.systemUiScopeActive
     val active = scopeActive || injected
     val actualScopeCount = when {
-        framework.connected -> framework.scope.size
+        framework.connected && framework.scopeKnown -> framework.scope.size
         injected -> configuredScopes
         else -> 0
     }
@@ -99,6 +100,7 @@ fun rememberLsposedHomeStatus(): LsposedHomeStatus {
     return LsposedHomeStatus(
         active = active,
         frameworkConnected = framework.connected,
+        scopeKnown = framework.scopeKnown,
         scopeActive = scopeActive,
         injected = injected,
         injectionCount = if (injected) 1 else 0,
