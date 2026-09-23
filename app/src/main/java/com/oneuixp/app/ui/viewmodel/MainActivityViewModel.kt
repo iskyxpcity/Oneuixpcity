@@ -1,4 +1,4 @@
-package me.weishu.kernelsu.ui.viewmodel
+package com.oneuixp.app.ui.viewmodel
 
 import android.content.Context
 import android.content.SharedPreferences
@@ -7,17 +7,17 @@ import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import me.weishu.kernelsu.data.repository.SettingsRepository
-import me.weishu.kernelsu.data.repository.SettingsRepositoryImpl
-import me.weishu.kernelsu.ksuApp
-import me.weishu.kernelsu.ui.UiMode
-import me.weishu.kernelsu.ui.theme.ThemeController
+import com.oneuixp.app.data.repository.SettingsRepository
+import com.oneuixp.app.data.repository.SettingsRepositoryImpl
+import com.oneuixp.app.oneuiXPApp
+import com.oneuixp.app.ui.UiMode
+import com.oneuixp.app.ui.theme.ThemeController
 
 class MainActivityViewModel(
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
-    private val prefs = ksuApp.getSharedPreferences("settings", Context.MODE_PRIVATE)
+    private val prefs = oneuiXPApp.getSharedPreferences("settings", Context.MODE_PRIVATE)
     private val settingRepo: SettingsRepository = SettingsRepositoryImpl()
     private val mainPageState = MainPageState(savedStateHandle)
     private val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
