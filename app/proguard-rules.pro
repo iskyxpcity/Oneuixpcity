@@ -1,5 +1,5 @@
 # API 101 entry and legacy fallback are named in META-INF/assets. Keep names stable.
--keep class me.weishu.kernelsu.statusbar.ModernSystemUiEntry { public <init>(); *; }
--keep class me.weishu.kernelsu.statusbar.SystemUiEntry { *; }
--keep class me.weishu.kernelsu.statusbar.SystemUiHeartbeat { *; }
+-keep class com.oneuixp.app.statusbar.ModernSystemUiEntry { public <init>(); *; }
+-keep class com.oneuixp.app.statusbar.SystemUiEntry { *; }
+-keep class com.oneuixp.app.statusbar.SystemUiHeartbeat { *; }
 -dontwarn io.github.libxposed.annotation.**

@@ -23,8 +23,8 @@ val managerVersionName = rootProject.extra["managerVersionName"] as String
 val isPrBuild = project.findProperty("IS_PR_BUILD")?.toString()?.toBoolean() ?: false
 val defaultManagerPackageName = "com.oneuixp.app"
 val defaultManagerName = "OneuiXP"
-val managerPackageName = project.findProperty("KSU_PACKAGE_NAME")?.toString() ?: defaultManagerPackageName
-val managerName = project.findProperty("KSU_NAME")?.toString() ?: defaultManagerName
+val managerPackageName = project.findProperty("ONEUIXP_PACKAGE_NAME")?.toString() ?: defaultManagerPackageName
+val managerName = project.findProperty("ONEUIXP_NAME")?.toString() ?: defaultManagerName
 
 apksign {
     storeFileProperty = "KEYSTORE_FILE"
@@ -34,7 +34,7 @@ apksign {
 }
 
 android {
-    namespace = "me.weishu.kernelsu"
+    namespace = "com.oneuixp.app"
 
     // The same owner keystore must sign EVERY distributable APK.
     // CI supplies credentials via GitHub Actions secrets; never commit keys.
