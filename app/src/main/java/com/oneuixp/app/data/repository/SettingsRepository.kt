@@ -1,6 +1,6 @@
 package com.oneuixp.app.data.repository
 
-/** OneuiXP appearance/navigation and self-update preferences only. No root or module API. */
+/** OneuiXP appearance, navigation and self-update preferences. */
 interface SettingsRepository {
     var uiMode: String
     var checkUpdate: Boolean

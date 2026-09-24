@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="home">Startseite</string>
-    <string name="about">Über KernelSU</string>
+    <string name="about">Über OneuiXP</string>
     <string name="app_update">Aktualisieren</string>
     <string name="new_version_available">Neue Version %s verfügbar, tippen zum Aktualisieren!</string>
     <string name="reboot">Neustarten</string>

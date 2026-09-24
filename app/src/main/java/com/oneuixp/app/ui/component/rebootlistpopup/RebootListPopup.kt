@@ -20,7 +20,7 @@ fun rememberRebootAction(): (String) -> Unit {
     return { reason ->
         if (reason == "statusbar_xp_systemui") {
             runCatching {
-                // OneuiXP utility action only; no KernelSU reboot/recovery/bootloader paths.
+                // OneuiXP utility action: restart SystemUI only.
                 ProcessBuilder("su", "-c", "pkill -TERM -f com.android.systemui").start()
             }
         }

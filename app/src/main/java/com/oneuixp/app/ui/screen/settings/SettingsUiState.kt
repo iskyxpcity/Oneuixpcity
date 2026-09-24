@@ -5,7 +5,7 @@ import com.materialkolor.PaletteStyle
 import com.materialkolor.dynamiccolor.ColorSpec
 import com.oneuixp.app.ui.UiMode
 
-/** OneuiXP appearance and app preferences. No KernelSU Root settings. */
+/** OneuiXP appearance and application preferences. */
 @Immutable
 data class SettingsUiState(
     val uiMode: String = UiMode.DEFAULT_VALUE,

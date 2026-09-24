@@ -14,8 +14,8 @@ import androidx.core.view.WindowInsetsControllerCompat
 import com.materialkolor.rememberDynamicColorScheme
 
 /**
- * OneuiXP Material theme follows KernelSU v3.2.5 color behavior.
- * Only the application name/business logic differs from upstream.
+ * OneuiXP Material theme implementation.
+ * Upstream UI attribution is documented in README and LICENSE.
  */
 @Composable
 fun MaterialOneuiXPTheme(

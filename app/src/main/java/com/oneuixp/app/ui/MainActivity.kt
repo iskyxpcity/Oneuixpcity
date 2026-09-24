@@ -237,7 +237,7 @@ fun MainScreen(
             }
         }
 
-        // Match the user's KernelSU 3.2.5 phone behavior: bottom navigation only.
+        // Keep the validated bottom-navigation layout; adaptive side rail stays disabled.
         // Do not switch to the newer adaptive side rail.
         when (uiMode) {
             UiMode.Material -> androidx.compose.material3.Scaffold(

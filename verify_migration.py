@@ -7,7 +7,7 @@ checks = {
  'Gradle wrapper': (root/'gradlew').is_file(),
  'Original Miuix home': (root/'app/src/main/java/com/oneuixp/app/ui/screen/home/HomeMiuix.kt').is_file(),
  'Original Miuix bottom bar': (root/'app/src/main/java/com/oneuixp/app/ui/component/bottombar/BottomBarMiuix.kt').is_file(),
- 'KernelSU CMake build disabled': 'externalNativeBuild' not in (root/'app/build.gradle.kts').read_text(),
+ 'Legacy native build disabled': 'externalNativeBuild' not in (root/'app/build.gradle.kts').read_text(),
  'Original LSPosed hook': (root/'app/src/main/java/com/oneuixp/app/statusbar/SystemUiEntry.java').is_file(),
  'OneuiXP bridge authority': 'BuildConfig.APPLICATION_ID + ".statusbridge"' in (root/'app/src/main/java/com/oneuixp/app/statusbar/SystemUiEntry.java').read_text() and '${applicationId}.statusbridge' in (root/'app/src/main/AndroidManifest.xml').read_text(),
  'OneuiXP application ID': 'com.oneuixp.app' in (root/'app/build.gradle.kts').read_text(),

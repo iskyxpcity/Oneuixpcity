@@ -17,7 +17,7 @@ import com.oneuixp.app.ui.screen.home.getManagerVersion
 import com.oneuixp.app.ui.util.checkNewVersion
 import com.oneuixp.app.ui.util.update.LatestVersionInfo
 
-/** Pure OneuiXP homepage state. No kernel, su or SELinux backend. */
+/** OneuiXP homepage state and self-update data. */
 class HomeViewModel(
     private val settingsRepo: SettingsRepository = SettingsRepositoryImpl(),
 ) : ViewModel() {

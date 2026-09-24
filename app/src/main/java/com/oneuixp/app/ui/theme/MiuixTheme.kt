@@ -17,7 +17,7 @@ import top.yukonga.miuix.kmp.theme.ThemeController
 import top.yukonga.miuix.kmp.theme.ThemePaletteStyle
 
 /**
- * OneuiXP Miuix theme follows KernelSU v3.2.5 color behavior.
+ * OneuiXP Miuix theme implementation; upstream attribution is documented in README.
  */
 @Composable
 fun MiuixOneuiXPTheme(
