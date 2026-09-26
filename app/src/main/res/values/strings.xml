@@ -56,4 +56,8 @@
     <string name="settings_enable_glass_summary">Enable liquid glass effect for floating bottom bar.</string>
     <string name="oneuixp_tools">Tools</string>
     <string name="oneuixp_status">状态栏</string>
+
+    <string name="oneuix_core_features">System features</string>
+    <string name="oneuix_app_features">Samsung app features</string>
+    <string name="oneuix_migration_notice">Migration preview · settings are saved, but OneUIX feature hooks are still disabled.</string>
 </resources>

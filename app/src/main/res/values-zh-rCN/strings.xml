@@ -55,4 +55,8 @@
     <string name="settings_enable_glass">液态玻璃</string>
     <string name="settings_enable_glass_summary">启用悬浮底栏的液态玻璃效果</string>
     <string name="oneuixp_tools">工具</string>
+
+    <string name="oneuix_core_features">系统功能</string>
+    <string name="oneuix_app_features">三星应用功能</string>
+    <string name="oneuix_migration_notice">迁移预览 · 设置会正常保存，但 OneUIX 功能 Hook 目前仍保持关闭。</string>
 </resources>
