@@ -102,7 +102,7 @@ jobs:
           "$AAPT" dump badging "$APK" | tee dist/APK_PACKAGE_INFO.txt
           grep -q "^package: name='com.oneuixp.app'" dist/APK_PACKAGE_INFO.txt
           grep -q "versionName='1.0.260923'" dist/APK_PACKAGE_INFO.txt
-          grep -q "versionCode='100260923'" dist/APK_PACKAGE_INFO.txt
+          grep -q "versionCode='100260936'" dist/APK_PACKAGE_INFO.txt
           "$AAPT" dump xmltree "$APK" AndroidManifest.xml > dist/APK_MANIFEST_CHECK.txt
           grep -Eq 'hasFragileUserData.*0x0$' dist/APK_MANIFEST_CHECK.txt
           cp "$APK" dist/OneuiXP_1.0.260923_OWNER_SIGNED.apk

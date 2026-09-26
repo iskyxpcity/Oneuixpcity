@@ -26,15 +26,19 @@
         <meta-data android:name="xposedscope" android:resource="@array/xposed_scope" />
         <provider android:name=".statusbar.StatusBridge" android:authorities="${applicationId}.statusbridge" android:exported="true" />
         <activity
-            android:name=".ui.MainActivity"
+            android:name=".ui.StartupActivity"
             android:exported="true"
-            android:theme="@style/Theme.OneuiXP"
-            android:windowSoftInputMode="adjustResize">
+            android:theme="@style/Theme.OneuiXP.Startup">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".ui.MainActivity"
+            android:exported="true"
+            android:theme="@style/Theme.OneuiXP"
+            android:windowSoftInputMode="adjustResize" />
 
     </application>
 

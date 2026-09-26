@@ -31,6 +31,9 @@ fun getGitDescribe(): String {
  * debug builds (30001) for Android's normal package upgrade path.
  */
 fun getVersionCode(): Int {
+    val explicit = (findProperty("oneuixpVersionCode") as? String)?.toIntOrNull()
+    if (explicit != null && explicit > 0) return explicit
+
     val parts = getVersionName().removePrefix("v").split(".").mapNotNull { it.toIntOrNull() }
     if (parts.size == 3) {
         val (major, minor, date) = parts
