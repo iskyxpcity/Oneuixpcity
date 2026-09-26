@@ -1,5 +1,6 @@
 package com.oneuixp.app.ui.screen.tools
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
@@ -27,11 +29,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -69,18 +70,16 @@ fun ToolsPager(
 }
 
 @Composable
-private fun categoryTitle(category: OneuiXCategory): String {
-    val context = LocalContext.current
-    return remember(category, context.resources.configuration.locales) {
-        if (category.packageName == "android") {
-            category.fallbackTitle
-        } else {
-            runCatching {
-                val info = context.packageManager.getApplicationInfo(category.packageName, 0)
-                info.loadLabel(context.packageManager).toString()
-            }.getOrDefault(category.fallbackTitle)
-        }
-    }
+private fun CategoryIcon(
+    category: OneuiXCategory,
+    size: Dp,
+) {
+    Image(
+        bitmap = rememberOneuiXCategoryIcon(category),
+        contentDescription = oneuiXCategoryTitle(category),
+        modifier = Modifier.size(size),
+        contentScale = ContentScale.Fit,
+    )
 }
 
 @Composable
@@ -118,29 +117,29 @@ private fun ToolsPagerMiuix(
                 contentPadding = innerPadding,
                 overscrollEffect = null,
             ) {
-                item {
-                    Spacer(Modifier.height(12.dp))
-                    Card(modifier = Modifier.fillMaxWidth()) {
-                        categories.take(5).forEach { category ->
+                item { Spacer(Modifier.height(12.dp)) }
+
+                categories.forEach { category ->
+                    item {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 10.dp),
+                        ) {
                             ArrowPreference(
-                                title = categoryTitle(category),
-                                summary = category.packageName,
-                                onClick = { navigator.push(Route.OneuiXCategory(category.name)) },
+                                title = oneuiXCategoryTitle(category),
+                                startAction = {
+                                    CategoryIcon(category = category, size = 42.dp)
+                                },
+                                onClick = {
+                                    navigator.push(Route.OneuiXCategory(category.name))
+                                },
                             )
                         }
                     }
-                    Spacer(Modifier.height(12.dp))
-                    Card(modifier = Modifier.fillMaxWidth()) {
-                        categories.drop(5).forEach { category ->
-                            ArrowPreference(
-                                title = categoryTitle(category),
-                                summary = category.packageName,
-                                onClick = { navigator.push(Route.OneuiXCategory(category.name)) },
-                            )
-                        }
-                    }
-                    Spacer(Modifier.height(bottomInnerPadding))
                 }
+
+                item { Spacer(Modifier.height(bottomInnerPadding)) }
             }
         }
     }
@@ -189,8 +188,12 @@ private fun ToolsPagerMaterial(
                             onClick = {
                                 navigator.push(Route.OneuiXCategory(category.name))
                             },
-                            headlineContent = { Text(categoryTitle(category)) },
-                            supportingContent = { Text(category.packageName) },
+                            headlineContent = {
+                                Text(oneuiXCategoryTitle(category))
+                            },
+                            leadingContent = {
+                                CategoryIcon(category = category, size = 44.dp)
+                            },
                             trailingContent = {
                                 Icon(
                                     Icons.AutoMirrored.Filled.KeyboardArrowRight,
@@ -201,6 +204,7 @@ private fun ToolsPagerMaterial(
                     }
                 },
             )
+
             SegmentedColumn(
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                 title = stringResource(R.string.oneuix_app_features),
@@ -210,8 +214,12 @@ private fun ToolsPagerMaterial(
                             onClick = {
                                 navigator.push(Route.OneuiXCategory(category.name))
                             },
-                            headlineContent = { Text(categoryTitle(category)) },
-                            supportingContent = { Text(category.packageName) },
+                            headlineContent = {
+                                Text(oneuiXCategoryTitle(category))
+                            },
+                            leadingContent = {
+                                CategoryIcon(category = category, size = 44.dp)
+                            },
                             trailingContent = {
                                 Icon(
                                     Icons.AutoMirrored.Filled.KeyboardArrowRight,
@@ -222,6 +230,7 @@ private fun ToolsPagerMaterial(
                     }
                 },
             )
+
             Spacer(Modifier.height(bottomInnerPadding))
         }
     }
