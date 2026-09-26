@@ -40,6 +40,21 @@ enum class OneuiXSettingType {
     PowerAction,
 }
 
+sealed interface OneuiXVisibility {
+    data object Always : OneuiXVisibility
+    data class Bool(val path: String, val expected: Boolean = true) : OneuiXVisibility
+    data class IntEquals(val path: String, val value: Int) : OneuiXVisibility
+    data class StringContains(val path: String, val token: String) : OneuiXVisibility
+    data class All(val rules: List<OneuiXVisibility>) : OneuiXVisibility
+    data class Not(val rule: OneuiXVisibility) : OneuiXVisibility
+    data class AndroidAtLeast(val sdk: Int) : OneuiXVisibility
+    data class AndroidAtMost(val sdk: Int) : OneuiXVisibility
+    data class AndroidEquals(val sdk: Int) : OneuiXVisibility
+    data class OneUiAtLeast(val version: Int) : OneuiXVisibility
+    data class OneUiBelow(val version: Int) : OneuiXVisibility
+    data class ModelPrefix(val prefix: String) : OneuiXVisibility
+}
+
 data class OneuiXChoice(
     val value: String,
     val label: String,
@@ -53,6 +68,7 @@ data class OneuiXSettingSpec(
     val summary: String? = null,
     val choices: List<OneuiXChoice> = emptyList(),
     val powerActionName: String? = null,
+    val visibility: OneuiXVisibility = OneuiXVisibility.Always,
 ) {
     val title: String
         get() = titleOverride ?: humanizeSettingName(path.substringAfterLast('.'))
@@ -381,6 +397,194 @@ object OneuiXFeatureCatalog {
         ),
     )
 
+    private val visibilityByPath: Map<String, OneuiXVisibility> = mapOf(
+        "android.maxNeverKilledAppNum" to OneuiXVisibility.Bool("android.modifyMaxNeverKilledAppNum"),
+
+        "systemUI.statusBar.statusBarLeftPaddingDp" to
+            OneuiXVisibility.Bool("systemUI.statusBar.modifyStatusBarLeftPadding"),
+        "systemUI.statusBar.statusBarRightPaddingDp" to
+            OneuiXVisibility.Bool("systemUI.statusBar.modifyStatusBarRightPadding"),
+        "systemUI.statusBar.batteryIconWidthScale" to
+            OneuiXVisibility.Bool("systemUI.statusBar.setBatteryIconWidthScale"),
+        "systemUI.statusBar.batteryIconHeightScale" to
+            OneuiXVisibility.Bool("systemUI.statusBar.setBatteryIconHeightScale"),
+        "systemUI.statusBar.hideBatteryPercentageSign" to
+            OneuiXVisibility.AndroidAtMost(34),
+        "systemUI.statusBar.addBatteryLevelText" to
+            OneuiXVisibility.OneUiAtLeast(70000),
+        "systemUI.statusBar.hideBatteryLevelTextPercentageSign" to
+            OneuiXVisibility.All(
+                listOf(
+                    OneuiXVisibility.OneUiAtLeast(70000),
+                    OneuiXVisibility.Bool("systemUI.statusBar.addBatteryLevelText"),
+                )
+            ),
+        "systemUI.statusBar.hideBatteryLevelTextChargingIcon" to
+            OneuiXVisibility.All(
+                listOf(
+                    OneuiXVisibility.OneUiAtLeast(70000),
+                    OneuiXVisibility.Bool("systemUI.statusBar.addBatteryLevelText"),
+                )
+            ),
+        "systemUI.statusBar.statusBarClockFormat" to
+            OneuiXVisibility.Bool("systemUI.statusBar.setStatusBarClockFormat"),
+        "systemUI.statusBar.statusBarDoubleLineClockSize" to
+            OneuiXVisibility.All(
+                listOf(
+                    OneuiXVisibility.Bool("systemUI.statusBar.setStatusBarClockFormat"),
+                    OneuiXVisibility.StringContains("systemUI.statusBar.statusBarClockFormat", "\n"),
+                    OneuiXVisibility.Not(OneuiXVisibility.ModelPrefix("SM-F966")),
+                )
+            ),
+        "systemUI.statusBar.useFold7CustomDoubleLineClockScale" to
+            OneuiXVisibility.All(
+                listOf(
+                    OneuiXVisibility.Bool("systemUI.statusBar.setStatusBarClockFormat"),
+                    OneuiXVisibility.StringContains("systemUI.statusBar.statusBarClockFormat", "\n"),
+                    OneuiXVisibility.ModelPrefix("SM-F966"),
+                )
+            ),
+        "systemUI.statusBar.fold7DoubleLineClockTimeScale" to
+            OneuiXVisibility.All(
+                listOf(
+                    OneuiXVisibility.Bool("systemUI.statusBar.setStatusBarClockFormat"),
+                    OneuiXVisibility.StringContains("systemUI.statusBar.statusBarClockFormat", "\n"),
+                    OneuiXVisibility.ModelPrefix("SM-F966"),
+                    OneuiXVisibility.Bool("systemUI.statusBar.useFold7CustomDoubleLineClockScale"),
+                )
+            ),
+        "systemUI.statusBar.fold7DoubleLineClockDateScale" to
+            OneuiXVisibility.All(
+                listOf(
+                    OneuiXVisibility.Bool("systemUI.statusBar.setStatusBarClockFormat"),
+                    OneuiXVisibility.StringContains("systemUI.statusBar.statusBarClockFormat", "\n"),
+                    OneuiXVisibility.ModelPrefix("SM-F966"),
+                    OneuiXVisibility.Bool("systemUI.statusBar.useFold7CustomDoubleLineClockScale"),
+                )
+            ),
+        "systemUI.statusBar.doubleLineClockGapDp" to
+            OneuiXVisibility.All(
+                listOf(
+                    OneuiXVisibility.Bool("systemUI.statusBar.setStatusBarClockFormat"),
+                    OneuiXVisibility.StringContains("systemUI.statusBar.statusBarClockFormat", "\n"),
+                )
+            ),
+        "systemUI.statusBar.setStatusBarClockTextScale" to
+            OneuiXVisibility.Not(
+                OneuiXVisibility.All(
+                    listOf(
+                        OneuiXVisibility.Bool("systemUI.statusBar.setStatusBarClockFormat"),
+                        OneuiXVisibility.StringContains("systemUI.statusBar.statusBarClockFormat", "\n"),
+                    )
+                )
+            ),
+        "systemUI.statusBar.statusBarClockTextScale" to
+            OneuiXVisibility.All(
+                listOf(
+                    OneuiXVisibility.Bool("systemUI.statusBar.setStatusBarClockTextScale"),
+                    OneuiXVisibility.Not(
+                        OneuiXVisibility.All(
+                            listOf(
+                                OneuiXVisibility.Bool("systemUI.statusBar.setStatusBarClockFormat"),
+                                OneuiXVisibility.StringContains(
+                                    "systemUI.statusBar.statusBarClockFormat",
+                                    "\n",
+                                ),
+                            )
+                        )
+                    ),
+                )
+            ),
+        "systemUI.statusBar.physicalEsimAdapterSimSlot" to
+            OneuiXVisibility.Bool("systemUI.statusBar.physicalEsimAdapterWorkaround"),
+        "systemUI.statusBar.statusBarMaxNotificationIcons" to
+            OneuiXVisibility.Bool("systemUI.statusBar.modifyStatusBarMaxNotificationIcons"),
+        "systemUI.statusBar.customCarrierName" to
+            OneuiXVisibility.Bool("systemUI.statusBar.setCustomCarrierName"),
+
+        "systemUI.qs.hideDeviceControlQsTile" to OneuiXVisibility.AndroidEquals(34),
+        "systemUI.qs.hideSmartViewQsTile" to OneuiXVisibility.AndroidEquals(34),
+        "systemUI.qs.turnOn5gQsTile" to OneuiXVisibility.AndroidEquals(34),
+        "systemUI.qs.hideQsBarMediaPlayer" to
+            OneuiXVisibility.All(
+                listOf(
+                    OneuiXVisibility.AndroidAtLeast(35),
+                    OneuiXVisibility.OneUiBelow(80500),
+                )
+            ),
+        "systemUI.qs.hideQsBarNearbyDevicesAndDeviceControl" to
+            OneuiXVisibility.All(
+                listOf(
+                    OneuiXVisibility.AndroidAtLeast(35),
+                    OneuiXVisibility.OneUiBelow(80500),
+                )
+            ),
+        "systemUI.qs.hideQsBarSecurityFooter" to OneuiXVisibility.AndroidAtLeast(35),
+        "systemUI.qs.hideQsBarDataUsage" to OneuiXVisibility.AndroidAtLeast(35),
+        "systemUI.qs.hideQsBarSmartViewAndModes" to
+            OneuiXVisibility.All(
+                listOf(
+                    OneuiXVisibility.AndroidAtLeast(35),
+                    OneuiXVisibility.OneUiBelow(80500),
+                )
+            ),
+        "systemUI.qs.alwaysExpandQsTileChunk" to
+            OneuiXVisibility.All(
+                listOf(
+                    OneuiXVisibility.AndroidAtLeast(35),
+                    OneuiXVisibility.OneUiBelow(80500),
+                )
+            ),
+        "systemUI.qs.alwaysShowTimeDateOnQs" to
+            OneuiXVisibility.All(
+                listOf(
+                    OneuiXVisibility.AndroidAtLeast(35),
+                    OneuiXVisibility.OneUiBelow(80500),
+                )
+            ),
+        "systemUI.qs.addBrightnessProgressToQsBar" to
+            OneuiXVisibility.All(
+                listOf(
+                    OneuiXVisibility.AndroidAtLeast(35),
+                    OneuiXVisibility.OneUiBelow(80500),
+                )
+            ),
+        "systemUI.qs.addVolumeProgressToQsBar" to
+            OneuiXVisibility.All(
+                listOf(
+                    OneuiXVisibility.AndroidAtLeast(35),
+                    OneuiXVisibility.OneUiBelow(80500),
+                )
+            ),
+        "systemUI.qs.showTraditionalChineseDateOnQS" to
+            OneuiXVisibility.AndroidAtLeast(35),
+        "systemUI.qs.modifyQSClockTextSize" to
+            OneuiXVisibility.AndroidAtLeast(35),
+        "systemUI.qs.qsClockTextSize" to
+            OneuiXVisibility.All(
+                listOf(
+                    OneuiXVisibility.AndroidAtLeast(35),
+                    OneuiXVisibility.Bool("systemUI.qs.modifyQSClockTextSize"),
+                )
+            ),
+        "systemUI.aod.hideAODStatusBar" to OneuiXVisibility.AndroidAtLeast(35),
+        "systemUI.aod.aodLockSupportLunar" to OneuiXVisibility.AndroidAtLeast(35),
+
+        "systemUI.notification.hideOngoingActivityMediaPackages" to
+            OneuiXVisibility.Bool("systemUI.notification.hideOngoingActivityMedia"),
+
+        "other.showMemoryUsageInRecents" to OneuiXVisibility.AndroidAtLeast(35),
+        "other.supplementChinaWearOsGms" to
+            OneuiXVisibility.IntEquals("other.watchPairingConnectionMode", 1),
+    )
+
     fun settings(category: OneuiXCategory): List<OneuiXSettingSpec> =
-        byCategory[category].orEmpty()
+        byCategory[category].orEmpty().map { spec ->
+            val rule = when {
+                spec.type == OneuiXSettingType.PowerAction ->
+                    OneuiXVisibility.Bool("systemUI.other.customPowerMenu")
+                else -> visibilityByPath[spec.path] ?: OneuiXVisibility.Always
+            }
+            spec.copy(visibility = rule)
+        }
 }
