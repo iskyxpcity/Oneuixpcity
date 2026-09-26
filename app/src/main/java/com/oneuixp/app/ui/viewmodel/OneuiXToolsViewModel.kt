@@ -1,0 +1,133 @@
+package com.oneuixp.app.ui.viewmodel
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.oneuixp.app.oneuiXPApp
+import com.oneuixp.app.oneuix.OneuiXSettingSpec
+import com.oneuixp.app.oneuix.OneuiXSettingType
+import com.oneuixp.app.oneuix.oneuiXDataStore
+import io.github.soclear.oneuix.common.IgnoreUnknownKeysJson
+import io.github.soclear.oneuix.common.PowerMenuAction
+import io.github.soclear.oneuix.common.Preference
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+
+class OneuiXToolsViewModel : ViewModel() {
+    private val dataStore = oneuiXPApp.oneuiXDataStore
+
+    val preference: StateFlow<Preference> = dataStore.data.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.Eagerly,
+        initialValue = Preference(),
+    )
+
+    fun checked(preference: Preference, spec: OneuiXSettingSpec): Boolean {
+        if (spec.type == OneuiXSettingType.PowerAction) {
+            val name = spec.powerActionName ?: return false
+            return PowerMenuAction.normalize(preference.systemUI.other.powerMenuActions)
+                .firstOrNull { it.name == name }
+                ?.visible
+                ?: false
+        }
+        return value(preference, spec).toBooleanStrictOrNull() ?: false
+    }
+
+    fun value(preference: Preference, spec: OneuiXSettingSpec): String {
+        if (spec.type == OneuiXSettingType.PowerAction) {
+            return checked(preference, spec).toString()
+        }
+        val root = IgnoreUnknownKeysJson.encodeToJsonElement(
+            Preference.serializer(),
+            preference,
+        )
+        var current: JsonElement = root
+        for (key in spec.path.split('.')) {
+            current = (current as? JsonObject)?.get(key) ?: return ""
+        }
+        return current.jsonPrimitive.content
+    }
+
+    fun setChecked(spec: OneuiXSettingSpec, checked: Boolean) {
+        viewModelScope.launch {
+            dataStore.updateData { current ->
+                if (spec.type == OneuiXSettingType.PowerAction) {
+                    val name = spec.powerActionName ?: return@updateData current
+                    val actions = PowerMenuAction.normalize(
+                        current.systemUI.other.powerMenuActions
+                    ).map { action ->
+                        if (action.name == name) action.copy(visible = checked) else action
+                    }
+                    current.copy(
+                        systemUI = current.systemUI.copy(
+                            other = current.systemUI.other.copy(
+                                powerMenuActions = actions,
+                            ),
+                        ),
+                    )
+                } else {
+                    current.withJsonValue(spec.path, JsonPrimitive(checked))
+                }
+            }
+        }
+    }
+
+    fun setRawValue(spec: OneuiXSettingSpec, raw: String) {
+        val next: JsonPrimitive = when (spec.type) {
+            OneuiXSettingType.IntValue,
+            OneuiXSettingType.ChoiceInt -> raw.toIntOrNull()?.let(::JsonPrimitive) ?: return
+
+            OneuiXSettingType.FloatValue ->
+                raw.toFloatOrNull()?.let(::JsonPrimitive) ?: return
+
+            OneuiXSettingType.TextValue,
+            OneuiXSettingType.ChoiceText -> JsonPrimitive(raw)
+
+            OneuiXSettingType.Toggle,
+            OneuiXSettingType.PowerAction -> return
+        }
+
+        viewModelScope.launch {
+            dataStore.updateData { current ->
+                current.withJsonValue(spec.path, next)
+            }
+        }
+    }
+
+    private fun Preference.withJsonValue(
+        path: String,
+        value: JsonElement,
+    ): Preference {
+        val root = IgnoreUnknownKeysJson.encodeToJsonElement(
+            Preference.serializer(),
+            this,
+        ).jsonObject
+        val patched = replaceNested(root, path.split('.'), value)
+        return IgnoreUnknownKeysJson.decodeFromJsonElement(
+            Preference.serializer(),
+            patched,
+        )
+    }
+
+    private fun replaceNested(
+        source: JsonObject,
+        keys: List<String>,
+        value: JsonElement,
+    ): JsonObject {
+        val key = keys.firstOrNull() ?: return source
+        val updated = source.toMutableMap()
+        if (keys.size == 1) {
+            updated[key] = value
+        } else {
+            val child = source[key] as? JsonObject ?: JsonObject(emptyMap())
+            updated[key] = replaceNested(child, keys.drop(1), value)
+        }
+        return JsonObject(updated)
+    }
+}
