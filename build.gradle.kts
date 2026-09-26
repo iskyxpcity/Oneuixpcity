@@ -1,7 +1,9 @@
 plugins {
     alias(libs.plugins.agp.app) apply false
+    alias(libs.plugins.android.library) apply false
     alias(libs.plugins.kotlin) apply false
     alias(libs.plugins.compose.compiler) apply false
+    alias(libs.plugins.kotlin.serialization) apply false
 }
 
 extra["androidMinSdkVersion"] = 31

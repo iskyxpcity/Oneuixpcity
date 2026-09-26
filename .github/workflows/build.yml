@@ -1,7 +1,7 @@
 name: OneuiXP Android APK build
 on:
   push:
-    branches: [main, 'test/**']
+    branches: [main, 'test/**', 'migration/**']
   workflow_dispatch:
 concurrency:
   group: oneuixp-build-${{ github.ref }}
@@ -37,13 +37,23 @@ jobs:
           grep -q 'iSkyJIE/OneuiXP/releases/latest' app/src/main/java/com/oneuixp/app/ui/util/Downloader.kt
           test -f app/src/main/resources/META-INF/xposed/java_init.list
           test -f app/src/main/resources/META-INF/xposed/scope.list
-          echo "OneuiXP source and modern LSPosed entry validated"
+          grep -Fq 'include(":common")' settings.gradle.kts
+          grep -Fq 'include(":hook")' settings.gradle.kts
+          grep -Fq 'include(":stub")' settings.gradle.kts
+          test -f common/src/main/java/io/github/soclear/oneuix/common/Preference.kt
+          test -f hook/src/main/java/io/github/soclear/oneuix/hook/Main.kt
+          test -f stub/src/main/java/android/os/SystemProperties.java
+          if grep -Fq 'project(":hook")' app/build.gradle.kts; then
+            echo "::error::Stage-1 migration must keep OneUIX hooks isolated from the OneuiXP app APK."
+            exit 1
+          fi
+          echo "OneuiXP source and isolated OneUIX migration modules validated"
 
       - name: Compile OneuiXP before the owner-signing gate
         run: |
           set -euo pipefail
           chmod +x gradlew
-          ./gradlew :app:compileDebugKotlin -PONEUIXP_PACKAGE_NAME=com.oneuixp.app -PONEUIXP_NAME=OneuiXP --stacktrace --no-daemon
+          ./gradlew :common:assembleDebug :stub:assembleDebug :hook:assembleDebug :app:compileDebugKotlin -PONEUIXP_PACKAGE_NAME=com.oneuixp.app -PONEUIXP_NAME=OneuiXP --stacktrace --no-daemon
 
       # GitHub does not sign Android packages automatically. Configure these FOUR
       # repository Actions secrets once, from the same stable owner keystore:
@@ -110,7 +120,7 @@ jobs:
           (cd dist && sha256sum OneuiXP_1.0.260923_OWNER_SIGNED.apk > SHA256SUMS)
 
       - name: Publish signed APK to GitHub prerelease
-        if: success()
+        if: success() && github.ref == 'refs/heads/main'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -140,7 +150,7 @@ jobs:
       - name: Optionally mirror signed APK to Actions Artifact
         uses: actions/upload-artifact@v4
         continue-on-error: true
-        if: success()
+        if: success() && github.ref == 'refs/heads/main'
         with:
           name: OneuiXP-Owner-Signed
           path: dist/

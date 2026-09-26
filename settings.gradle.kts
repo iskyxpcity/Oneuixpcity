@@ -21,3 +21,6 @@ dependencyResolutionManagement {
 
 rootProject.name = "OneuiXP"
 include(":app")
+include(":common")
+include(":hook")
+include(":stub")
