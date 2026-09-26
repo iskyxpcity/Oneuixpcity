@@ -8,7 +8,7 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -102,25 +102,52 @@ jobs:
           "$AAPT" dump badging "$APK" | tee dist/APK_PACKAGE_INFO.txt
           grep -q "^package: name='com.oneuixp.app'" dist/APK_PACKAGE_INFO.txt
           grep -q "versionName='1.0.260923'" dist/APK_PACKAGE_INFO.txt
-          grep -q "versionCode='100260936'" dist/APK_PACKAGE_INFO.txt
+          grep -q "versionCode='1'" dist/APK_PACKAGE_INFO.txt
           "$AAPT" dump xmltree "$APK" AndroidManifest.xml > dist/APK_MANIFEST_CHECK.txt
           grep -Eq 'hasFragileUserData.*0x0$' dist/APK_MANIFEST_CHECK.txt
           cp "$APK" dist/OneuiXP_1.0.260923_OWNER_SIGNED.apk
           unzip -t dist/OneuiXP_1.0.260923_OWNER_SIGNED.apk
           (cd dist && sha256sum OneuiXP_1.0.260923_OWNER_SIGNED.apk > SHA256SUMS)
 
+      - name: Publish signed APK to GitHub prerelease
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          SHORT_SHA="${GITHUB_SHA::7}"
+          TAG="main-build-${GITHUB_RUN_NUMBER}-${SHORT_SHA}"
+          TITLE="OneuiXP main build #${GITHUB_RUN_NUMBER}"
+          gh release view "$TAG" >/dev/null 2>&1 || \
+            gh release create "$TAG" \
+              --target "$GITHUB_SHA" \
+              --title "$TITLE" \
+              --notes "Automated signed main-branch test build. This is a prerelease, not a formal OneuiXP release." \
+              --prerelease
+          gh release upload "$TAG" \
+            dist/OneuiXP_1.0.260923_OWNER_SIGNED.apk \
+            dist/SHA256SUMS \
+            dist/SIGNING_INFO.txt \
+            dist/APK_PACKAGE_INFO.txt \
+            --clobber
+          echo "Published signed APK to prerelease tag: $TAG"
+
       - name: Save Gradle diagnostics on failure
         if: failure()
         run: |
           mkdir -p diagnostics
           find . -path '*/build/reports/problems/*' -type f -exec cp --parents {} diagnostics/ \; || true
-      - uses: actions/upload-artifact@v4
+      - name: Optionally mirror signed APK to Actions Artifact
+        uses: actions/upload-artifact@v4
+        continue-on-error: true
         if: success()
         with:
           name: OneuiXP-Owner-Signed
           path: dist/
           if-no-files-found: error
-      - uses: actions/upload-artifact@v4
+      - name: Optionally upload build diagnostics
+        uses: actions/upload-artifact@v4
+        continue-on-error: true
         if: failure()
         with:
           name: OneuiXP-Build-Diagnostics

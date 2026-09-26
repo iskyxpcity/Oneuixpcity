@@ -26,9 +26,9 @@ fun getGitDescribe(): String {
 }
 
 /**
- * Monotonic version codes for calendar releases:
- * 1.0.260923 -> 100260923. This must exceed old CI shallow-clone
- * debug builds (30001) for Android's normal package upgrade path.
+ * OneuiXP has not made a formal public release yet.
+ * Keep the explicit versionCode small and monotonic, starting at 1.
+ * Increment oneuixpVersionCode in gradle.properties for future releases.
  */
 fun getVersionCode(): Int {
     val explicit = (findProperty("oneuixpVersionCode") as? String)?.toIntOrNull()
