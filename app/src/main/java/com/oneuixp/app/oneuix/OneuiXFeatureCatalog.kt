@@ -1,0 +1,386 @@
+package com.oneuixp.app.oneuix
+
+import io.github.soclear.oneuix.common.Package
+import io.github.soclear.oneuix.common.PowerMenuAction
+
+enum class OneuiXCategory(
+    val packageName: String,
+    val fallbackTitle: String,
+) {
+    Android(Package.ANDROID, "Android"),
+    SystemUI(Package.SYSTEMUI, "System UI"),
+    Settings(Package.SETTINGS, "Settings"),
+    Call(Package.DIALER, "Phone"),
+    Camera(Package.CAMERA, "Camera"),
+    Browser(Package.BROWSER, "Samsung Internet"),
+    Calendar(Package.CALENDAR, "Calendar"),
+    DualApp(Package.DUAL_APP, "Dual Messenger"),
+    Gallery(Package.GALLERY, "Gallery"),
+    GalaxyStore(Package.STORE, "Galaxy Store"),
+    HealthMonitor(Package.HEALTH_MONITOR, "Samsung Health Monitor"),
+    Launcher(Package.LAUNCHER, "One UI Home"),
+    Messaging(Package.MESSAGING, "Messages"),
+    Notes(Package.NOTES, "Samsung Notes"),
+    PhotoRetouching(Package.PHOTO_RETOUCHING, "Photo Editor"),
+    SketchBook(Package.SKETCH_BOOK, "SketchBook"),
+    SPen(Package.TRANSLATION, "S Pen translation"),
+    ThemeCenter(Package.THEME_CENTER, "Galaxy Themes"),
+    Video(Package.VIDEO, "Samsung Video"),
+    WatchManager(Package.WATCH_MANAGER, "Galaxy Wearable"),
+    Weather(Package.WEATHER, "Weather"),
+}
+
+enum class OneuiXSettingType {
+    Toggle,
+    IntValue,
+    FloatValue,
+    TextValue,
+    ChoiceInt,
+    ChoiceText,
+    PowerAction,
+}
+
+data class OneuiXChoice(
+    val value: String,
+    val label: String,
+)
+
+data class OneuiXSettingSpec(
+    val path: String,
+    val type: OneuiXSettingType,
+    val section: String,
+    val titleOverride: String? = null,
+    val summary: String? = null,
+    val choices: List<OneuiXChoice> = emptyList(),
+    val powerActionName: String? = null,
+) {
+    val title: String
+        get() = titleOverride ?: humanizeSettingName(path.substringAfterLast('.'))
+}
+
+private fun humanizeSettingName(raw: String): String {
+    val spaced = raw
+        .replace(Regex("(?<=[a-z0-9])(?=[A-Z])"), " ")
+        .replace(Regex("(?<=[A-Z])(?=[A-Z][a-z])"), " ")
+        .replace("Qs", "QS")
+        .replace("Aod", "AOD")
+        .replace("Ui", "UI")
+        .replace("Wifi", "Wi-Fi")
+        .replace("Fcm", "FCM")
+        .replace("Esim", "eSIM")
+        .replace("Ai", "AI")
+    return spaced.replaceFirstChar {
+        if (it.isLowerCase()) it.titlecase() else it.toString()
+    }
+}
+
+private fun toggles(section: String, vararg paths: String) =
+    paths.map { OneuiXSettingSpec(it, OneuiXSettingType.Toggle, section) }
+
+private fun ints(section: String, vararg paths: String) =
+    paths.map { OneuiXSettingSpec(it, OneuiXSettingType.IntValue, section) }
+
+private fun floats(section: String, vararg paths: String) =
+    paths.map { OneuiXSettingSpec(it, OneuiXSettingType.FloatValue, section) }
+
+private fun texts(section: String, vararg paths: String) =
+    paths.map { OneuiXSettingSpec(it, OneuiXSettingType.TextValue, section) }
+
+private fun choiceInt(
+    section: String,
+    path: String,
+    title: String? = null,
+    vararg choices: Pair<Int, String>,
+) = OneuiXSettingSpec(
+    path = path,
+    type = OneuiXSettingType.ChoiceInt,
+    section = section,
+    titleOverride = title,
+    choices = choices.map { OneuiXChoice(it.first.toString(), it.second) },
+)
+
+private fun choiceText(
+    section: String,
+    path: String,
+    title: String? = null,
+    vararg choices: Pair<String, String>,
+) = OneuiXSettingSpec(
+    path = path,
+    type = OneuiXSettingType.ChoiceText,
+    section = section,
+    titleOverride = title,
+    choices = choices.map { OneuiXChoice(it.first, it.second) },
+)
+
+private fun powerAction(name: String, label: String) = OneuiXSettingSpec(
+    path = "systemUI.other.powerMenuActions.$name",
+    type = OneuiXSettingType.PowerAction,
+    section = "Power menu actions",
+    titleOverride = label,
+    powerActionName = name,
+)
+
+object OneuiXFeatureCatalog {
+    private val android =
+        toggles(
+            "Android",
+            "android.disablePinVerifyPer72h",
+            "android.modifyMaxNeverKilledAppNum",
+            "android.setBlockableNotificationChannel",
+            "android.supportAppJumpBlock",
+            "android.allowAllRotation",
+            "android.liftFcmNetworkLimit",
+            "android.disableScreenWakeOnPowerUnplugged",
+            "android.disableWritingToolkitGlobally",
+        ) + ints("Android", "android.maxNeverKilledAppNum")
+
+    private val systemUiStatusBar =
+        toggles(
+            "Status bar",
+            "systemUI.statusBar.modifyStatusBarLeftPadding",
+            "systemUI.statusBar.modifyStatusBarRightPadding",
+            "systemUI.statusBar.setBatteryIconWidthScale",
+            "systemUI.statusBar.setBatteryIconHeightScale",
+            "systemUI.statusBar.hideBatteryPercentageSign",
+            "systemUI.statusBar.hideBatteryIcon",
+            "systemUI.statusBar.addBatteryLevelText",
+            "systemUI.statusBar.hideBatteryLevelTextPercentageSign",
+            "systemUI.statusBar.hideBatteryLevelTextChargingIcon",
+            "systemUI.statusBar.supportRealTimeNetworkSpeed",
+            "systemUI.statusBar.showSeparateUpDownNetworkSpeeds",
+            "systemUI.statusBar.setStatusBarClockFormat",
+            "systemUI.statusBar.setStatusBarClockTextScale",
+            "systemUI.statusBar.useFold7CustomDoubleLineClockScale",
+            "systemUI.statusBar.updateStatusBarClockEverySecond",
+            "systemUI.statusBar.hideSecureFolderStatusBarIcon",
+            "systemUI.statusBar.physicalEsimAdapterWorkaround",
+            "systemUI.statusBar.doubleTapStatusBarToSleep",
+            "systemUI.statusBar.modifyStatusBarMaxNotificationIcons",
+            "systemUI.statusBar.setCustomCarrierName",
+            "systemUI.statusBar.hideLockscreenStatusBar",
+            "systemUI.statusBar.restoreBluetoothStatusBarIcon",
+        ) +
+            floats(
+                "Status bar values",
+                "systemUI.statusBar.statusBarLeftPaddingDp",
+                "systemUI.statusBar.statusBarRightPaddingDp",
+                "systemUI.statusBar.statusBarTopPaddingDp",
+                "systemUI.statusBar.statusBarBottomPaddingDp",
+                "systemUI.statusBar.batteryIconWidthScale",
+                "systemUI.statusBar.batteryIconHeightScale",
+                "systemUI.statusBar.statusBarClockTextScale",
+                "systemUI.statusBar.doubleLineClockGapDp",
+                "systemUI.statusBar.fold7DoubleLineClockTimeScale",
+                "systemUI.statusBar.fold7DoubleLineClockDateScale",
+            ) +
+            ints(
+                "Status bar values",
+                "systemUI.statusBar.networkSpeedThresholdKb",
+                "systemUI.statusBar.statusBarMaxNotificationIcons",
+            ) +
+            texts(
+                "Status bar values",
+                "systemUI.statusBar.statusBarClockFormat",
+                "systemUI.statusBar.customCarrierName",
+            ) +
+            listOf(
+                choiceText(
+                    "Status bar values",
+                    "systemUI.statusBar.statusBarDoubleLineClockSize",
+                    "Double-line clock size",
+                    "small" to "Small",
+                    "compact" to "Compact",
+                    "standard" to "Standard",
+                    "large" to "Large",
+                    "extra_large" to "Extra large",
+                ),
+                choiceInt(
+                    "Status bar values",
+                    "systemUI.statusBar.physicalEsimAdapterSimSlot",
+                    "Physical eSIM adapter SIM slot",
+                    0 to "SIM 1",
+                    1 to "SIM 2",
+                    2 to "Both",
+                ),
+            )
+
+    private val systemUiQs =
+        toggles(
+            "Quick settings",
+            "systemUI.qs.setQsClockMonospaced",
+            "systemUI.qs.hideDeviceControlQsTile",
+            "systemUI.qs.hideSmartViewQsTile",
+            "systemUI.qs.turnOn5gQsTile",
+            "systemUI.qs.hideQsBarMediaPlayer",
+            "systemUI.qs.hideQsBarNearbyDevicesAndDeviceControl",
+            "systemUI.qs.hideQsBarSecurityFooter",
+            "systemUI.qs.hideQsBarDataUsage",
+            "systemUI.qs.hideQsBarSmartViewAndModes",
+            "systemUI.qs.alwaysExpandQsTileChunk",
+            "systemUI.qs.alwaysShowTimeDateOnQs",
+            "systemUI.qs.addBrightnessProgressToQsBar",
+            "systemUI.qs.addVolumeProgressToQsBar",
+            "systemUI.qs.showTraditionalChineseDateOnQS",
+            "systemUI.qs.modifyQSClockTextSize",
+        ) + floats("Quick settings", "systemUI.qs.qsClockTextSize")
+
+    private val systemUiAod =
+        toggles(
+            "Always On Display",
+            "systemUI.aod.hideAODStatusBar",
+            "systemUI.aod.aodLockSupportLunar",
+        )
+
+    private val systemUiNotification =
+        toggles(
+            "Notifications",
+            "systemUI.notification.hideOngoingActivityMedia",
+            "systemUI.notification.disableNotificationGrouping",
+            "systemUI.notification.autoExpandNotifications",
+        ) + texts("Notifications", "systemUI.notification.hideOngoingActivityMediaPackages")
+
+    private val systemUiOther =
+        toggles(
+            "Other System UI",
+            "systemUI.other.disableScreenshotCaptureSound",
+            "systemUI.other.customPowerMenu",
+        ) +
+            listOf(
+                powerAction(PowerMenuAction.POWER, "Power off"),
+                powerAction(PowerMenuAction.DATA_MODE, "Mobile data"),
+                powerAction(PowerMenuAction.RESTART, "Restart"),
+                powerAction(PowerMenuAction.SAFE_MODE, "Safe mode"),
+                powerAction(PowerMenuAction.LOCK_DOWN_MODE, "Lockdown"),
+                powerAction(PowerMenuAction.EMERGENCY_CALL, "Emergency call"),
+                powerAction(PowerMenuAction.MEDICAL_INFO, "Medical info"),
+                powerAction(PowerMenuAction.SIDE_KEY_SETTINGS, "Side key settings"),
+                powerAction(PowerMenuAction.FORCE_RESTART_MESSAGE, "Force restart message"),
+                powerAction(PowerMenuAction.RESTART_SYSTEMUI, "Restart SystemUI"),
+                powerAction(PowerMenuAction.RESTART_RECOVERY, "Restart recovery"),
+                powerAction(PowerMenuAction.RESTART_DOWNLOAD, "Restart download"),
+            )
+
+    private val settings = toggles(
+        "Settings",
+        "settings.showForcePeakRefreshRatePreference",
+        "settings.supportOutdoorMode",
+        "settings.showMoreBatteryInfo",
+        "settings.showPackageInfo",
+        "settings.showWiFiLinkSpeed",
+        "settings.supportAnyFont",
+        "settings.supportAutoPowerOnOff",
+        "settings.spoofPhoneStatusAsOfficial",
+    )
+
+    private val call = toggles(
+        "Call",
+        "call.supportVoiceCallRecording",
+        "call.preferRecordingButton",
+        "call.showGeocodedLocationInRecentCall",
+        "call.isOpStyleCHN",
+        "call.supportCallAndTextOnOtherDevices",
+    )
+
+    private val camera = toggles(
+        "Camera",
+        "camera.supportAllCameraMenu",
+        "camera.disableCameraTemperatureCheck",
+    )
+
+    private val byCategory: Map<OneuiXCategory, List<OneuiXSettingSpec>> = mapOf(
+        OneuiXCategory.Android to android,
+        OneuiXCategory.SystemUI to (
+            systemUiStatusBar + systemUiQs + systemUiAod + systemUiNotification + systemUiOther
+        ),
+        OneuiXCategory.Settings to settings,
+        OneuiXCategory.Call to call,
+        OneuiXCategory.Camera to camera,
+        OneuiXCategory.Browser to toggles(
+            "Samsung Internet",
+            "other.showMorePlaybackSpeeds",
+            "other.redirectCustomTab",
+            "other.spoofBrowserCountryCodeToUS",
+        ),
+        OneuiXCategory.Calendar to toggles(
+            "Calendar",
+            "other.enableChineseHolidayDisplay",
+        ),
+        OneuiXCategory.DualApp to toggles(
+            "Dual Messenger",
+            "other.makeAllUserAppsAvailable",
+        ),
+        OneuiXCategory.Gallery to toggles(
+            "Gallery",
+            "other.supportAllGallerySettings",
+            "other.supportSharedAlbumsInHide",
+            "other.hideVideoEditorStudio",
+        ),
+        OneuiXCategory.GalaxyStore to toggles(
+            "Galaxy Store",
+            "other.blockGalaxyStoreAds",
+        ),
+        OneuiXCategory.HealthMonitor to toggles(
+            "Samsung Health Monitor",
+            "other.bypassHealthMonitorCountryCheck",
+        ),
+        OneuiXCategory.Launcher to toggles(
+            "One UI Home",
+            "other.showMemoryUsageInRecents",
+            "other.recentsGridThreeRows",
+            "other.hideRecentsCloseAllButton",
+            "other.hideAppsSearchBar",
+            "other.removeShortcutBadge",
+        ),
+        OneuiXCategory.Messaging to toggles(
+            "Messages",
+            "other.supportBlockMessage",
+        ),
+        OneuiXCategory.Notes to toggles(
+            "Samsung Notes",
+            "other.supportAllNotesFeatures",
+        ),
+        OneuiXCategory.PhotoRetouching to toggles(
+            "Photo Editor",
+            "other.noAIWatermark",
+        ),
+        OneuiXCategory.SketchBook to toggles(
+            "SketchBook",
+            "other.noAIWatermark",
+        ),
+        OneuiXCategory.SPen to toggles(
+            "S Pen",
+            "other.useSPenGoogleTranslate",
+        ),
+        OneuiXCategory.ThemeCenter to toggles(
+            "Galaxy Themes",
+            "other.setThemeTrialNeverExpired",
+        ),
+        OneuiXCategory.Video to toggles(
+            "Samsung Video",
+            "other.showMorePlaybackSpeeds",
+        ),
+        OneuiXCategory.WatchManager to (
+            toggles(
+                "Galaxy Wearable",
+                "other.bypassWatchPairingRegionCheck",
+                "other.supplementChinaWearOsGms",
+            ) + listOf(
+                choiceInt(
+                    "Galaxy Wearable",
+                    "other.watchPairingConnectionMode",
+                    "Watch pairing connection mode",
+                    0 to "Default",
+                    1 to "Wear OS China",
+                    2 to "Wear OS Global",
+                )
+            )
+        ),
+        OneuiXCategory.Weather to toggles(
+            "Weather",
+            "other.setWeatherProviderCN",
+        ),
+    )
+
+    fun settings(category: OneuiXCategory): List<OneuiXSettingSpec> =
+        byCategory[category].orEmpty()
+}
