@@ -10,7 +10,7 @@ android {
     }
 
     defaultConfig {
-        minSdk = 33
+        minSdk = 31
         consumerProguardFiles("consumer-rules.pro")
     }
 
@@ -26,7 +26,7 @@ dependencies {
     implementation(libs.dexkit)
     implementation(libs.kotlinx.serialization.json)
 
-    compileOnly(libs.libxposed.api102)
+    compileOnly(libs.libxposed.api)
     compileOnly(project(":stub"))
 
     testImplementation(libs.junit)

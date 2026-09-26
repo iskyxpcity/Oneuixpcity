@@ -140,6 +140,9 @@ base {
 }
 
 dependencies {
+    implementation(project(":common"))
+    implementation(project(":hook"))
+
     compileOnly("de.robv.android.xposed:api:82")
     compileOnly(libs.libxposed.api)
     implementation(libs.libxposed.service)
@@ -165,6 +168,8 @@ dependencies {
 
 
     implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.androidx.datastore)
+    implementation(libs.kotlinx.serialization.json)
 
     implementation(libs.commonmark)
     implementation(libs.commonmark.ext.gfm.tables)

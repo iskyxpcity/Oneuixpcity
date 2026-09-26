@@ -43,11 +43,143 @@ jobs:
           test -f common/src/main/java/io/github/soclear/oneuix/common/Preference.kt
           test -f hook/src/main/java/io/github/soclear/oneuix/hook/Main.kt
           test -f stub/src/main/java/android/os/SystemProperties.java
-          if grep -Fq 'project(":hook")' app/build.gradle.kts; then
-            echo "::error::Stage-1 migration must keep OneUIX hooks isolated from the OneuiXP app APK."
+          grep -Fq 'implementation(project(":hook"))' app/build.gradle.kts
+          grep -Fq 'implementation(project(":common"))' app/build.gradle.kts
+          grep -Fxq 'io.github.soclear.oneuix.hook.Main' app/src/main/resources/META-INF/xposed/java_init.list
+          grep -Fq 'minApiVersion=102' app/src/main/resources/META-INF/xposed/module.prop
+          grep -Fq 'targetApiVersion=102' app/src/main/resources/META-INF/xposed/module.prop
+          test "$(grep -cv '^[[:space:]]*
+
+      - name: Compile OneuiXP before the owner-signing gate
+        run: |
+          set -euo pipefail
+          chmod +x gradlew
+          ./gradlew :common:assembleDebug :stub:assembleDebug :hook:assembleDebug :app:compileDebugKotlin -PONEUIXP_PACKAGE_NAME=com.oneuixp.app -PONEUIXP_NAME=OneuiXP --stacktrace --no-daemon
+
+      # GitHub does not sign Android packages automatically. Configure these FOUR
+      # repository Actions secrets once, from the same stable owner keystore:
+      # KEYSTORE_BASE64, KEYSTORE_PASSWORD, KEY_ALIAS, KEY_PASSWORD.
+      # Never fall back to a random CI debug key for an installable artifact.
+      - name: Load existing owner APK signing key
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          for key in KEYSTORE_BASE64 KEYSTORE_PASSWORD KEY_ALIAS KEY_PASSWORD; do
+            if [ -z "${!key}" ]; then
+              echo "::error::Missing OneuiXP repository Actions secret ${key}. Configure the NEW independent permanent OneuiXP keystore generated on 2026-09-23 in this repository's Actions secrets. Cannot release a stable-signed APK without them."
+              exit 1
+            fi
+          done
+          umask 077
+          printf '%s' "$KEYSTORE_BASE64" | base64 --decode > app/owner.keystore
+          test -s app/owner.keystore
+
+      - name: Build owner-signed OneuiXP APK
+        env:
+          ONEUIXP_KEYSTORE_PATH: ${{ github.workspace }}/app/owner.keystore
+          ONEUIXP_KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          ONEUIXP_KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          ONEUIXP_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          mkdir -p diagnostics
+          chmod +x gradlew
+          ./gradlew :app:assembleDebug -PONEUIXP_PACKAGE_NAME=com.oneuixp.app -PONEUIXP_NAME=OneuiXP --stacktrace --no-daemon 2>&1 | tee diagnostics/gradle-build.log
+
+      - name: Verify package, stable certificate and prepare APK
+        env:
+          EXPECTED_CERT: 93bf61a6493c6b336383832eb41301bd8fe061f43566e7e384e3fdd9fc1c26a1
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          APK=$(find app/build/outputs/apk/debug -type f -name '*.apk' | head -1)
+          test -s "$APK"
+          APKSIGNER="$ANDROID_HOME/build-tools/37.0.0/apksigner"
+          AAPT="$ANDROID_HOME/build-tools/37.0.0/aapt"
+          "$APKSIGNER" verify --verbose --print-certs "$APK" | tee dist/SIGNING_INFO.txt
+          grep -Fq 'Verified using v2 scheme (APK Signature Scheme v2): true' dist/SIGNING_INFO.txt
+          CERT=$(sed -n 's/^.*certificate SHA-256 digest: //p' dist/SIGNING_INFO.txt | head -1 | tr -d ': ' | tr '[:upper:]' '[:lower:]')
+          test -n "$CERT"
+          EXPECTED=$(printf '%s' "$EXPECTED_CERT" | tr -d ': ' | tr '[:upper:]' '[:lower:]')
+          if [ "$CERT" != "$EXPECTED" ]; then
+            echo '::error::OneuiXP certificate differs from the NEW permanent OneuiXP certificate.'
             exit 1
           fi
-          echo "OneuiXP source and isolated OneUIX migration modules validated"
+          printf '%s\n' "$CERT" > dist/SIGNING_CERT_SHA256.txt
+          "$AAPT" dump badging "$APK" | tee dist/APK_PACKAGE_INFO.txt
+          grep -q "^package: name='com.oneuixp.app'" dist/APK_PACKAGE_INFO.txt
+          grep -q "versionName='1.0.260923'" dist/APK_PACKAGE_INFO.txt
+          grep -q "versionCode='1'" dist/APK_PACKAGE_INFO.txt
+          "$AAPT" dump xmltree "$APK" AndroidManifest.xml > dist/APK_MANIFEST_CHECK.txt
+          grep -Eq 'hasFragileUserData.*0x0$' dist/APK_MANIFEST_CHECK.txt
+          cp "$APK" dist/OneuiXP_1.0.260923_OWNER_SIGNED.apk
+          unzip -t dist/OneuiXP_1.0.260923_OWNER_SIGNED.apk
+          (cd dist && sha256sum OneuiXP_1.0.260923_OWNER_SIGNED.apk > SHA256SUMS)
+
+      - name: Publish signed APK to GitHub prerelease
+        if: success() && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/migration/'))
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          SHORT_SHA="${GITHUB_SHA::7}"
+          if [ "$GITHUB_REF" = "refs/heads/main" ]; then
+            TAG="main-build-${GITHUB_RUN_NUMBER}-${SHORT_SHA}"
+            TITLE="OneuiXP main build #${GITHUB_RUN_NUMBER}"
+            NOTES="Automated signed main-branch test build. This is a prerelease, not a formal OneuiXP release."
+          else
+            TAG="migration-build-${GITHUB_RUN_NUMBER}-${SHORT_SHA}"
+            TITLE="OneuiXP migration build #${GITHUB_RUN_NUMBER}"
+            NOTES="Signed OneUIX migration test build. Imported functional hooks are still gated off unless explicitly stated otherwise."
+          fi
+          gh release view "$TAG" >/dev/null 2>&1 || \
+            gh release create "$TAG" \
+              --target "$GITHUB_SHA" \
+              --title "$TITLE" \
+              --notes "$NOTES" \
+              --prerelease
+          gh release upload "$TAG" \
+            dist/OneuiXP_1.0.260923_OWNER_SIGNED.apk \
+            dist/SHA256SUMS \
+            dist/SIGNING_INFO.txt \
+            dist/APK_PACKAGE_INFO.txt \
+            --clobber
+          echo "Published signed APK to prerelease tag: $TAG"
+
+      - name: Save Gradle diagnostics on failure
+        if: failure()
+        run: |
+          mkdir -p diagnostics
+          find . -path '*/build/reports/problems/*' -type f -exec cp --parents {} diagnostics/ \; || true
+      - name: Optionally mirror signed APK to Actions Artifact
+        uses: actions/upload-artifact@v4
+        continue-on-error: true
+        if: success() && github.ref == 'refs/heads/main'
+        with:
+          name: OneuiXP-Owner-Signed
+          path: dist/
+          if-no-files-found: error
+      - name: Optionally upload build diagnostics
+        uses: actions/upload-artifact@v4
+        continue-on-error: true
+        if: failure()
+        with:
+          name: OneuiXP-Build-Diagnostics
+          path: diagnostics/
+          if-no-files-found: warn
+ app/src/main/resources/META-INF/xposed/scope.list)" -eq 1
+          grep -Fxq 'com.android.systemui' app/src/main/resources/META-INF/xposed/scope.list
+          grep -Fq 'ENABLE_ONEUIX_FUNCTIONS = false' hook/src/main/java/io/github/soclear/oneuix/hook/Main.kt
+          test -f hook/src/main/java/io/github/soclear/oneuix/hook/util/OneuiXPStatusReporter.kt
+          test -f app/src/main/java/com/oneuixp/app/oneuix/OneuiXPreferenceBridge.kt
+          test ! -e hook/src/main/resources/META-INF/xposed/java_init.list
+          test ! -e hook/src/main/resources/META-INF/xposed/module.prop
+          test ! -e hook/src/main/resources/META-INF/xposed/scope.list
+          echo "OneuiXP API102 single-entry migration infrastructure validated; functional OneUIX hooks remain gated off"
 
       - name: Compile OneuiXP before the owner-signing gate
         run: |

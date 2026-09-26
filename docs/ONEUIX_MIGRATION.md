@@ -26,3 +26,21 @@ Only after Stage 1 compiles green:
 4. expand Xposed scope only when the corresponding hook groups are ready for Samsung phone testing.
 
 Do not merge this migration branch into `main` merely because CI is green.
+
+
+## Stage 2 — API102 single modern entry (in progress)
+
+Stage 1 compiled successfully in GitHub Actions Run #273.
+
+Stage 2 rules:
+- The app now packages `common` + `hook`.
+- Modern Xposed metadata is owned only by the app and points to `io.github.soclear.oneuix.hook.Main`.
+- The imported hook module's duplicate `META-INF/xposed/*` files are removed.
+- Modern metadata is API 102, but legacy API82 `assets/xposed_init` reporting fallback remains for now.
+- `OneuiXPStatusReporter` moves SystemUI load reporting + heartbeat into the single modern hook entry.
+- `OneuiXPreferenceBridge` introduces DataStore + libxposed remote-file synchronization.
+- **All imported OneUIX feature hooks remain blocked by `ENABLE_ONEUIX_FUNCTIONS = false`.**
+- Xposed scope remains exactly one package: `com.android.systemui`.
+- Miuix/Material UI and existing OneuiXP pages remain unchanged.
+
+Phone validation for this stage is about API102 activation, live LSPosed state, StatusBridge heartbeat, startup/UI regressions, and install stability — not OneUIX features yet.

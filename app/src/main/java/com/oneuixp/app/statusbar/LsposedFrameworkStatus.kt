@@ -18,8 +18,8 @@ data class LsposedFrameworkSnapshot(
 }
 
 /**
- * API 101 modern module service: configuration/scope state, not injection state.
- * The modern META-INF module entry is essential for the framework to bind.
+ * API 102 modern module service: configuration/scope state, not injection state.
+ * The API102 META-INF module entry is essential for the framework to bind.
  */
 object LsposedFrameworkStatus {
     private const val TAG = "OneuiXP-LSPosed"

@@ -12,10 +12,16 @@ import io.github.soclear.oneuix.hook.systemui.QS
 import io.github.soclear.oneuix.hook.systemui.StatusBar
 import io.github.soclear.oneuix.hook.systemui.OfficialMainStatusBarMod
 import io.github.soclear.oneuix.hook.systemui.powermenu.PowerMenu
+import io.github.soclear.oneuix.hook.util.OneuiXPStatusReporter
 import io.github.soclear.oneuix.hook.util.PreferenceProvider
 import io.github.soclear.oneuix.hook.util.addAssetPath
 
 class Main : XposedModule() {
+    private companion object {
+        // Stage 2 migration gate: infrastructure is live, imported feature hooks are not.
+        const val ENABLE_ONEUIX_FUNCTIONS = false
+    }
+
     private var processName = ""
 
     override fun onModuleLoaded(param: XposedModuleInterface.ModuleLoadedParam) {
@@ -23,6 +29,9 @@ class Main : XposedModule() {
     }
 
     override fun onPackageReady(param: XposedModuleInterface.PackageReadyParam) = with(param) {
+        OneuiXPStatusReporter.installIfSystemUi(this@Main, param, processName)
+        if (!ENABLE_ONEUIX_FUNCTIONS) return@with
+
         val preference = PreferenceProvider.loadPreference() ?: return@with
 
         when (packageName) {
@@ -480,6 +489,8 @@ class Main : XposedModule() {
     }
 
     override fun onSystemServerStarting(param: XposedModuleInterface.SystemServerStartingParam) = with(param) {
+        if (!ENABLE_ONEUIX_FUNCTIONS) return@with
+
         val preference = PreferenceProvider.loadPreference() ?: return@with
 
         if (preference.android.disableWritingToolkitGlobally) {
