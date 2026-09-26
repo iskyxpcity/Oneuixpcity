@@ -54,6 +54,12 @@ jobs:
           grep -Fq 'ENABLE_ONEUIX_FUNCTIONS = false' hook/src/main/java/io/github/soclear/oneuix/hook/Main.kt
           test -f hook/src/main/java/io/github/soclear/oneuix/hook/util/OneuiXPStatusReporter.kt
           test -f app/src/main/java/com/oneuixp/app/oneuix/OneuiXPreferenceBridge.kt
+          test -f app/src/main/java/com/oneuixp/app/oneuix/OneuiXFeatureCatalog.kt
+          test -f app/src/main/java/com/oneuixp/app/ui/viewmodel/OneuiXToolsViewModel.kt
+          test -f app/src/main/java/com/oneuixp/app/ui/screen/tools/OneuiXCategoryScreen.kt
+          grep -Fq 'data class OneuiXCategory' app/src/main/java/com/oneuixp/app/ui/navigation3/Routes.kt
+          grep -Fq 'OneuiXCategory.entries' app/src/main/java/com/oneuixp/app/ui/screen/tools/ToolsScreen.kt
+          grep -Fq 'ENABLE_ONEUIX_FUNCTIONS = false' hook/src/main/java/io/github/soclear/oneuix/hook/Main.kt
           test ! -e hook/src/main/resources/META-INF/xposed/java_init.list
           test ! -e hook/src/main/resources/META-INF/xposed/module.prop
           test ! -e hook/src/main/resources/META-INF/xposed/scope.list

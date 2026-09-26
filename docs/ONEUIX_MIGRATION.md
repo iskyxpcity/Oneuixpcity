@@ -44,3 +44,19 @@ Stage 2 rules:
 - Miuix/Material UI and existing OneuiXP pages remain unchanged.
 
 Phone validation for this stage is about API102 activation, live LSPosed state, StatusBridge heartbeat, startup/UI regressions, and install stability — not OneUIX features yet.
+
+
+## Stage 3 — OneuiXP dual-theme feature catalog (in progress)
+
+User phone validation confirmed all Stage 2 checks on the Samsung device:
+- startup, Miuix/Material UI, About and branding remained correct;
+- LSPosed recognized the API102 module;
+- scope remained SystemUI-only;
+- live activation and StatusBridge heartbeat remained correct;
+- no imported OneUIX feature effects were active.
+
+Stage 3 begins from validated commit \`4170851943a0d3c74a178a2e2bc80ad5312025ad\`.
+
+This stage adds all 21 upstream OneUIX categories to OneuiXP's existing Tools page and binds the complete scalar Preference model plus the 12 power-menu visibility actions to the remote-synchronized DataStore. Miuix and Material both render from one shared feature catalog so the business model cannot drift between themes.
+
+The functional hook gate remains \`ENABLE_ONEUIX_FUNCTIONS = false\` and Xposed scope remains exactly \`com.android.systemui\`. Stage 3 is UI/configuration infrastructure only: values must persist, but no imported OneUIX feature hook is allowed to execute yet.
