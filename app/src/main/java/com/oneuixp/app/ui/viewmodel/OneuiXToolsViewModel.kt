@@ -1,12 +1,15 @@
 package com.oneuixp.app.ui.viewmodel
 
+import android.os.Build
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.oneuixp.app.oneuiXPApp
 import com.oneuixp.app.oneuix.OneuiXSettingSpec
 import com.oneuixp.app.oneuix.OneuiXSettingType
+import com.oneuixp.app.oneuix.OneuiXVisibility
 import com.oneuixp.app.oneuix.oneuiXDataStore
 import io.github.soclear.oneuix.common.IgnoreUnknownKeysJson
+import io.github.soclear.oneuix.common.ONE_UI_VERSION
 import io.github.soclear.oneuix.common.PowerMenuAction
 import io.github.soclear.oneuix.common.Preference
 import kotlinx.coroutines.flow.SharingStarted
@@ -43,12 +46,48 @@ class OneuiXToolsViewModel : ViewModel() {
         if (spec.type == OneuiXSettingType.PowerAction) {
             return checked(preference, spec).toString()
         }
+        return valueAt(preference, spec.path)
+    }
+
+    fun isVisible(
+        preference: Preference,
+        spec: OneuiXSettingSpec,
+    ): Boolean = evaluateVisibility(preference, spec.visibility)
+
+    private fun evaluateVisibility(
+        preference: Preference,
+        rule: OneuiXVisibility,
+    ): Boolean = when (rule) {
+        OneuiXVisibility.Always -> true
+        is OneuiXVisibility.Bool ->
+            (valueAt(preference, rule.path).toBooleanStrictOrNull() ?: false) == rule.expected
+        is OneuiXVisibility.IntEquals ->
+            valueAt(preference, rule.path).toIntOrNull() == rule.value
+        is OneuiXVisibility.StringContains ->
+            valueAt(preference, rule.path).contains(rule.token)
+        is OneuiXVisibility.All ->
+            rule.rules.all { evaluateVisibility(preference, it) }
+        is OneuiXVisibility.Not ->
+            !evaluateVisibility(preference, rule.rule)
+        is OneuiXVisibility.AndroidAtLeast -> Build.VERSION.SDK_INT >= rule.sdk
+        is OneuiXVisibility.AndroidAtMost -> Build.VERSION.SDK_INT <= rule.sdk
+        is OneuiXVisibility.AndroidEquals -> Build.VERSION.SDK_INT == rule.sdk
+        is OneuiXVisibility.OneUiAtLeast -> ONE_UI_VERSION >= rule.version
+        is OneuiXVisibility.OneUiBelow -> ONE_UI_VERSION < rule.version
+        is OneuiXVisibility.ModelPrefix ->
+            Build.MODEL.startsWith(rule.prefix, ignoreCase = true)
+    }
+
+    private fun valueAt(
+        preference: Preference,
+        path: String,
+    ): String {
         val root = IgnoreUnknownKeysJson.encodeToJsonElement(
             Preference.serializer(),
             preference,
         )
         var current: JsonElement = root
-        for (key in spec.path.split('.')) {
+        for (key in path.split('.')) {
             current = (current as? JsonObject)?.get(key) ?: return ""
         }
         return current.jsonPrimitive.content
@@ -95,7 +134,17 @@ class OneuiXToolsViewModel : ViewModel() {
 
         viewModelScope.launch {
             dataStore.updateData { current ->
-                current.withJsonValue(spec.path, next)
+                var updated = current.withJsonValue(spec.path, next)
+                if (
+                    spec.path == "other.watchPairingConnectionMode" &&
+                    raw.toIntOrNull() != 1
+                ) {
+                    updated = updated.withJsonValue(
+                        "other.supplementChinaWearOsGms",
+                        JsonPrimitive(false),
+                    )
+                }
+                updated
             }
         }
     }
