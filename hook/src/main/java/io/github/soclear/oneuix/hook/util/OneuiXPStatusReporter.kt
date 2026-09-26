@@ -3,6 +3,7 @@ package io.github.soclear.oneuix.hook.util
 import android.app.Application
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import android.os.Bundle
 import io.github.libxposed.api.XposedModule
 import io.github.libxposed.api.XposedModuleInterface
@@ -39,12 +40,12 @@ object OneuiXPStatusReporter {
                         startHeartbeat(context)
                     }
                 } catch (t: Throwable) {
-                    module.log(t)
+                    module.log(Log.ERROR, null, "OneuiXP status reporter", t)
                 }
                 result
             }
         } catch (t: Throwable) {
-            module.log(t)
+            module.log(Log.ERROR, null, "OneuiXP status reporter", t)
         }
     }
 
