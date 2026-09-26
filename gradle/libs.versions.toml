@@ -18,6 +18,7 @@ hiddenapibypass = "6.1"
 appiconloader = "1.5.0"
 libxposed-api = "101.0.0"
 libxposed-service = "102.0.0"
+libxposed-api102 = "102.0.0"
 core-ktx = "1.19.0"
 dexkit = "2.2.0"
 kotlinx-serialization-json = "1.11.0"
@@ -34,7 +35,7 @@ kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", versi
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "core-ktx" }
-dexkit = { group = "org.luckypray", name = "DexKit", version.ref = "dexkit" }
+dexkit = { group = "org.luckypray", name = "dexkit", version.ref = "dexkit" }
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinx-serialization-json" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 
@@ -86,4 +87,5 @@ material-kolor = { group = "com.materialkolor", name = "material-kolor", version
 appiconloader = { module = "me.zhanghai.android.appiconloader:appiconloader", version.ref = "appiconloader" }
 
 libxposed-api = { module = "io.github.libxposed:api", version.ref = "libxposed-api" }
+libxposed-api102 = { module = "io.github.libxposed:api", version.ref = "libxposed-api102" }
 libxposed-service = { module = "io.github.libxposed:service", version.ref = "libxposed-service" }
