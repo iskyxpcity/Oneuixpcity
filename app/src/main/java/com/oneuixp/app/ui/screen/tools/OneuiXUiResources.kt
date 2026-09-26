@@ -152,6 +152,10 @@ internal fun rememberOneuiXCategoryIcon(category: OneuiXCategory): ImageBitmap {
 
 private fun settingSourceKey(path: String, raw: String): String = when (path) {
     "android.maxNeverKilledAppNum" -> "modifyMaxNeverKilledAppNum"
+    "systemUI.statusBar.modifyStatusBarLeftPadding" -> "statusBarLeftPaddingDp"
+    "systemUI.statusBar.modifyStatusBarRightPadding" -> "statusBarRightPaddingDp"
+    "systemUI.statusBar.useFold7CustomDoubleLineClockScale" -> "fold7CustomDoubleLineClockScale"
+    "systemUI.statusBar.modifyStatusBarMaxNotificationIcons" -> "setStatusBarMaxNotificationIcons"
     "systemUI.statusBar.batteryIconWidthScale" -> "setBatteryIconWidthScale"
     "systemUI.statusBar.batteryIconHeightScale" -> "setBatteryIconHeightScale"
     "systemUI.statusBar.statusBarClockFormat" -> "setStatusBarClockFormat"
