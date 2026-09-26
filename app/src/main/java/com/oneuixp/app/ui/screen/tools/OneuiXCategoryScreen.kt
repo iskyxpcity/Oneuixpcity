@@ -84,11 +84,12 @@ fun OneuiXCategoryScreen(categoryName: String) {
     val toolsViewModel = viewModel<OneuiXToolsViewModel>()
     val preference by toolsViewModel.preference.collectAsStateWithLifecycle()
     val settings = remember(category) { OneuiXFeatureCatalog.settings(category) }
+    val visibleSettings = settings.filter { toolsViewModel.isVisible(preference, it) }
 
     when (LocalUiMode.current) {
         UiMode.Miuix -> OneuiXCategoryMiuix(
             category = category,
-            settings = settings,
+            settings = visibleSettings,
             preference = preference,
             toolsViewModel = toolsViewModel,
             onBack = navigator::pop,
@@ -96,7 +97,7 @@ fun OneuiXCategoryScreen(categoryName: String) {
 
         UiMode.Material -> OneuiXCategoryMaterial(
             category = category,
-            settings = settings,
+            settings = visibleSettings,
             preference = preference,
             toolsViewModel = toolsViewModel,
             onBack = navigator::pop,
@@ -126,7 +127,7 @@ private fun OneuiXCategoryMaterial(
                         )
                     }
                 },
-                title = { Text(category.fallbackTitle) },
+                title = { Text(oneuiXCategoryTitle(category)) },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface,
                     scrolledContainerColor = MaterialTheme.colorScheme.surface,
@@ -155,20 +156,23 @@ private fun OneuiXCategoryMaterial(
             )
 
             settings.groupBy { it.section }.forEach { (section, sectionSettings) ->
-                SegmentedColumn(
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                    title = section,
-                    content = sectionSettings.map { spec ->
-                        {
-                            MaterialSettingRow(
-                                spec = spec,
-                                preference = preference,
-                                toolsViewModel = toolsViewModel,
-                            )
-                        }
-                    },
-                )
+                if (sectionSettings.isNotEmpty()) {
+                    SegmentedColumn(
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                        title = oneuiXSectionTitle(section),
+                        content = sectionSettings.map { spec ->
+                            {
+                                MaterialSettingRow(
+                                    spec = spec,
+                                    preference = preference,
+                                    toolsViewModel = toolsViewModel,
+                                )
+                            }
+                        },
+                    )
+                }
             }
+
             Spacer(Modifier.height(24.dp))
         }
     }
@@ -180,12 +184,15 @@ private fun MaterialSettingRow(
     preference: Preference,
     toolsViewModel: OneuiXToolsViewModel,
 ) {
+    val title = oneuiXSettingTitle(spec)
+    val summary = oneuiXSettingSummary(spec)
+
     when (spec.type) {
         OneuiXSettingType.Toggle,
         OneuiXSettingType.PowerAction -> {
             SegmentedSwitchItem(
-                title = spec.title,
-                summary = spec.summary,
+                title = title,
+                summary = summary,
                 checked = toolsViewModel.checked(preference, spec),
                 onCheckedChange = { toolsViewModel.setChecked(spec, it) },
             )
@@ -194,12 +201,14 @@ private fun MaterialSettingRow(
         OneuiXSettingType.ChoiceInt,
         OneuiXSettingType.ChoiceText -> {
             val current = toolsViewModel.value(preference, spec)
+            val labels = oneuiXChoiceLabels(spec)
             val index = spec.choices.indexOfFirst { it.value == current }
                 .coerceAtLeast(0)
+
             SegmentedDropdownItem(
-                title = spec.title,
-                summary = spec.summary,
-                items = spec.choices.map { it.label },
+                title = title,
+                summary = summary,
+                items = labels,
                 selectedIndex = index,
                 onItemSelected = { selected ->
                     spec.choices.getOrNull(selected)?.let {
@@ -212,7 +221,13 @@ private fun MaterialSettingRow(
         OneuiXSettingType.IntValue,
         OneuiXSettingType.FloatValue,
         OneuiXSettingType.TextValue -> {
-            EditableMaterialValue(spec, preference, toolsViewModel)
+            EditableMaterialValue(
+                spec = spec,
+                title = title,
+                summary = summary,
+                preference = preference,
+                toolsViewModel = toolsViewModel,
+            )
         }
     }
 }
@@ -220,6 +235,8 @@ private fun MaterialSettingRow(
 @Composable
 private fun EditableMaterialValue(
     spec: OneuiXSettingSpec,
+    title: String,
+    summary: String?,
     preference: Preference,
     toolsViewModel: OneuiXToolsViewModel,
 ) {
@@ -227,7 +244,7 @@ private fun EditableMaterialValue(
     var edit by remember(spec.path, current) { mutableStateOf(current) }
 
     SegmentedTextField(
-        label = spec.title,
+        label = title,
         value = edit,
         onValueChange = {
             edit = it
@@ -243,8 +260,8 @@ private fun EditableMaterialValue(
             },
         ),
         singleLine = spec.path != "systemUI.statusBar.statusBarClockFormat",
-        supportingContent = spec.summary?.let { summary ->
-            { Text(summary) }
+        supportingContent = summary?.let { text ->
+            { Text(text) }
         },
     )
 }
@@ -266,7 +283,7 @@ private fun OneuiXCategoryMiuix(
             BlurredBar(backdrop) {
                 TopAppBar(
                     color = barColor,
-                    title = category.fallbackTitle,
+                    title = oneuiXCategoryTitle(category),
                     navigationIcon = {
                         MiuixIconButton(onClick = onBack) {
                             val layoutDirection = LocalLayoutDirection.current
@@ -310,23 +327,25 @@ private fun OneuiXCategoryMiuix(
                 }
 
                 settings.groupBy { it.section }.forEach { (section, sectionSettings) ->
-                    item {
-                        top.yukonga.miuix.kmp.basic.Text(
-                            text = section,
-                            color = colorScheme.primary,
-                            modifier = Modifier.padding(
-                                start = 16.dp,
-                                top = 16.dp,
-                                bottom = 8.dp,
-                            ),
-                        )
-                        Card(modifier = Modifier.fillMaxWidth()) {
-                            sectionSettings.forEach { spec ->
-                                MiuixSettingRow(
-                                    spec = spec,
-                                    preference = preference,
-                                    toolsViewModel = toolsViewModel,
-                                )
+                    if (sectionSettings.isNotEmpty()) {
+                        item {
+                            top.yukonga.miuix.kmp.basic.Text(
+                                text = oneuiXSectionTitle(section),
+                                color = colorScheme.primary,
+                                modifier = Modifier.padding(
+                                    start = 16.dp,
+                                    top = 16.dp,
+                                    bottom = 8.dp,
+                                ),
+                            )
+                            Card(modifier = Modifier.fillMaxWidth()) {
+                                sectionSettings.forEach { spec ->
+                                    MiuixSettingRow(
+                                        spec = spec,
+                                        preference = preference,
+                                        toolsViewModel = toolsViewModel,
+                                    )
+                                }
                             }
                         }
                     }
@@ -344,12 +363,15 @@ private fun MiuixSettingRow(
     preference: Preference,
     toolsViewModel: OneuiXToolsViewModel,
 ) {
+    val title = oneuiXSettingTitle(spec)
+    val summary = oneuiXSettingSummary(spec)
+
     when (spec.type) {
         OneuiXSettingType.Toggle,
         OneuiXSettingType.PowerAction -> {
             SwitchPreference(
-                title = spec.title,
-                summary = spec.summary ?: "",
+                title = title,
+                summary = summary ?: "",
                 checked = toolsViewModel.checked(preference, spec),
                 onCheckedChange = { toolsViewModel.setChecked(spec, it) },
             )
@@ -358,12 +380,14 @@ private fun MiuixSettingRow(
         OneuiXSettingType.ChoiceInt,
         OneuiXSettingType.ChoiceText -> {
             val current = toolsViewModel.value(preference, spec)
+            val labels = oneuiXChoiceLabels(spec)
             val index = spec.choices.indexOfFirst { it.value == current }
                 .coerceAtLeast(0)
+
             OverlayDropdownPreference(
-                title = spec.title,
-                summary = spec.summary ?: "",
-                items = spec.choices.map { it.label },
+                title = title,
+                summary = summary ?: "",
+                items = labels,
                 selectedIndex = index,
                 onSelectedIndexChange = { selected ->
                     spec.choices.getOrNull(selected)?.let {
@@ -380,8 +404,8 @@ private fun MiuixSettingRow(
             var edit by remember(spec.path, current) { mutableStateOf(current) }
 
             EditText(
-                title = spec.title,
-                summary = spec.summary,
+                title = title,
+                summary = summary,
                 value = edit,
                 onValueChange = {
                     edit = it
