@@ -15,7 +15,7 @@ import com.oneuixp.app.oneuix.OneuiXSettingType
 @Composable
 internal fun oneuiXCategoryTitle(category: OneuiXCategory): String {
     val context = LocalContext.current
-    val key = "oneuix_category_\${category.name.lowercase()}"
+    val key = "oneuix_category_${category.name.lowercase()}"
     return remember(category, context.resources.configuration.locales) {
         resolveString(context, listOf(key)) ?: category.fallbackTitle
     }
@@ -73,9 +73,9 @@ internal fun oneuiXSettingTitle(spec: OneuiXSettingSpec): String {
             resolveString(
                 context,
                 listOf(
-                    "oneuix_\${sourceKey}_title",
-                    "oneuix_\${raw}_title",
-                    "oneuix_\${snake}_title",
+                    "oneuix_${sourceKey}_title",
+                    "oneuix_${raw}_title",
+                    "oneuix_${snake}_title",
                 ),
             ) ?: spec.title
         }
@@ -93,9 +93,9 @@ internal fun oneuiXSettingSummary(spec: OneuiXSettingSpec): String? {
         resolveString(
             context,
             listOf(
-                "oneuix_\${sourceKey}_summary",
-                "oneuix_\${raw}_summary",
-                "oneuix_\${snake}_summary",
+                "oneuix_${sourceKey}_summary",
+                "oneuix_${raw}_summary",
+                "oneuix_${snake}_summary",
             ),
         )?.takeUnless { it.contains('%') }
     }
