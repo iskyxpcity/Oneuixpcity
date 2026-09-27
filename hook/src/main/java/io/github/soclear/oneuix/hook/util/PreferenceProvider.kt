@@ -36,6 +36,8 @@ object PreferenceProvider {
                     "leftDp=${preference.systemUI.statusBar.statusBarLeftPaddingDp}, " +
                     "clockEnabled=${preference.systemUI.statusBar.setStatusBarClockFormat}, " +
                     "clockFormat=${preference.systemUI.statusBar.statusBarClockFormat.replace("\n", "\\n")}, " +
+                    "maxIconsEnabled=${preference.systemUI.statusBar.modifyStatusBarMaxNotificationIcons}, " +
+                    "maxIcons=${preference.systemUI.statusBar.statusBarMaxNotificationIcons}, " +
                     "launcherMemory=${preference.other.showMemoryUsageInRecents}; " +
                     "remoteFiles=$remoteFiles",
                 priority = Log.INFO,
