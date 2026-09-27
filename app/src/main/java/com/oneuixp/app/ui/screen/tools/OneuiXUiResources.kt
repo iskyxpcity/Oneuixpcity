@@ -3,8 +3,10 @@ package com.oneuixp.app.ui.screen.tools
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.vectorResource
 import androidx.core.graphics.drawable.toBitmap
 import com.oneuixp.app.R
 import com.oneuixp.app.oneuix.OneuiXCategory
@@ -144,6 +146,123 @@ internal fun oneuiXChoiceLabels(spec: OneuiXSettingSpec): List<String> {
             key?.let { resolveString(context, listOf(it)) } ?: choice.label
         }
     }
+}
+
+
+@Composable
+internal fun oneuiXSettingIcon(spec: OneuiXSettingSpec): ImageVector? {
+    val resId = when (spec.path) {
+        "android.disablePinVerifyPer72h" -> R.drawable.lock_clock
+        "android.modifyMaxNeverKilledAppNum" -> R.drawable.apps
+        "android.setBlockableNotificationChannel" -> R.drawable.notifications
+        "android.supportAppJumpBlock" -> R.drawable.block
+        "android.allowAllRotation" -> R.drawable.expand
+        "android.liftFcmNetworkLimit" -> R.drawable.google_play
+        "android.disableScreenWakeOnPowerUnplugged" -> R.drawable.mobile_screensaver
+        "android.disableWritingToolkitGlobally" -> R.drawable.format_letter_spacing
+
+        "systemUI.statusBar.modifyStatusBarLeftPadding",
+        "systemUI.statusBar.modifyStatusBarRightPadding",
+        "systemUI.statusBar.statusBarTopPaddingDp",
+        "systemUI.statusBar.statusBarBottomPaddingDp" -> R.drawable.padding
+
+        "systemUI.statusBar.setBatteryIconWidthScale",
+        "systemUI.statusBar.setBatteryIconHeightScale",
+        "systemUI.statusBar.hideBatteryPercentageSign",
+        "systemUI.statusBar.hideBatteryIcon",
+        "systemUI.statusBar.addBatteryLevelText",
+        "systemUI.statusBar.hideBatteryLevelTextPercentageSign",
+        "systemUI.statusBar.hideBatteryLevelTextChargingIcon",
+        "systemUI.aod.hideAODStatusBar" -> R.drawable.battery
+
+        "systemUI.statusBar.supportRealTimeNetworkSpeed",
+        "systemUI.statusBar.showSeparateUpDownNetworkSpeeds",
+        "systemUI.statusBar.networkSpeedThresholdKb" -> R.drawable.net_speed
+
+        "systemUI.statusBar.setStatusBarClockFormat",
+        "systemUI.statusBar.updateStatusBarClockEverySecond",
+        "systemUI.qs.alwaysShowTimeDateOnQs" -> R.drawable.nest_clock_farsight_digital
+
+        "systemUI.statusBar.useFold7CustomDoubleLineClockScale",
+        "systemUI.statusBar.statusBarDoubleLineClockSize",
+        "systemUI.statusBar.setStatusBarClockTextScale",
+        "systemUI.qs.modifyQSClockTextSize" -> R.drawable.format_size
+
+        "systemUI.statusBar.hideSecureFolderStatusBarIcon" -> R.drawable.folder_managed
+        "systemUI.statusBar.restoreBluetoothStatusBarIcon" -> R.drawable.bluetooth
+        "systemUI.statusBar.physicalEsimAdapterWorkaround",
+        "systemUI.statusBar.physicalEsimAdapterSimSlot",
+        "systemUI.statusBar.setCustomCarrierName" -> R.drawable.sim_card
+        "systemUI.statusBar.doubleTapStatusBarToSleep",
+        "systemUI.statusBar.hideLockscreenStatusBar" -> R.drawable.mobile_screensaver
+        "systemUI.statusBar.modifyStatusBarMaxNotificationIcons" -> R.drawable.notifications
+
+        "systemUI.qs.setQsClockMonospaced" -> R.drawable.format_letter_spacing
+        "systemUI.qs.hideDeviceControlQsTile",
+        "systemUI.qs.hideSmartViewQsTile",
+        "systemUI.qs.hideQsBarMediaPlayer",
+        "systemUI.qs.hideQsBarNearbyDevicesAndDeviceControl",
+        "systemUI.qs.hideQsBarSecurityFooter",
+        "systemUI.qs.hideQsBarDataUsage",
+        "systemUI.qs.hideQsBarSmartViewAndModes" -> R.drawable.tile_medium
+        "systemUI.qs.turnOn5gQsTile" -> R.drawable.five_g
+        "systemUI.qs.alwaysExpandQsTileChunk" -> R.drawable.expand
+        "systemUI.qs.addBrightnessProgressToQsBar" -> R.drawable.light_mode
+        "systemUI.qs.addVolumeProgressToQsBar" -> R.drawable.music_note
+        "systemUI.qs.showTraditionalChineseDateOnQS",
+        "systemUI.aod.aodLockSupportLunar" -> R.drawable.today
+
+        "systemUI.notification.hideOngoingActivityMedia" -> R.drawable.music_note
+        "systemUI.notification.disableNotificationGrouping",
+        "systemUI.notification.autoExpandNotifications" -> R.drawable.notifications
+        "systemUI.other.customPowerMenu" -> R.drawable.power_settings_new
+        "systemUI.other.disableScreenshotCaptureSound" -> R.drawable.screenshot
+
+        "settings.showForcePeakRefreshRatePreference" -> R.drawable.logo_dev
+        "settings.supportOutdoorMode" -> R.drawable.light_mode
+        "settings.showMoreBatteryInfo" -> R.drawable.battery
+        "settings.showPackageInfo" -> R.drawable.apk_document
+        "settings.showWiFiLinkSpeed" -> R.drawable.wifi_link_speed
+        "settings.supportAnyFont" -> R.drawable.font
+        "settings.supportAutoPowerOnOff" -> R.drawable.power_settings_new
+        "settings.spoofPhoneStatusAsOfficial" -> R.drawable.mobile_screensaver
+
+        "call.supportVoiceCallRecording",
+        "call.preferRecordingButton" -> R.drawable.call_recording
+        "call.showGeocodedLocationInRecentCall" -> R.drawable.person_pin_circle
+        "call.isOpStyleCHN" -> R.drawable.call_log
+        "call.supportCallAndTextOnOtherDevices" -> R.drawable.phone_forwarded
+
+        "camera.supportAllCameraMenu",
+        "camera.disableCameraTemperatureCheck" -> R.drawable.camera
+
+        "other.showMorePlaybackSpeeds" -> R.drawable.fast_forward
+        "other.redirectCustomTab" -> R.drawable.tab_move
+        "other.spoofBrowserCountryCodeToUS" -> R.drawable.language_us
+        "other.enableChineseHolidayDisplay" -> R.drawable.today
+        "other.makeAllUserAppsAvailable" -> R.drawable.apk_document
+        "other.supportAllGallerySettings",
+        "other.supportSharedAlbumsInHide",
+        "other.hideVideoEditorStudio" -> R.drawable.photo_library
+        "other.blockGalaxyStoreAds" -> R.drawable.ad_off
+        "other.bypassHealthMonitorCountryCheck" -> R.drawable.health_metrics
+        "other.showMemoryUsageInRecents" -> R.drawable.memory
+        "other.recentsGridThreeRows" -> R.drawable.tile_medium
+        "other.hideRecentsCloseAllButton" -> R.drawable.block
+        "other.hideAppsSearchBar" -> R.drawable.apps
+        "other.removeShortcutBadge" -> R.drawable.position_bottom_right
+        "other.supportBlockMessage" -> R.drawable.sms
+        "other.supportAllNotesFeatures" -> R.drawable.notes
+        "other.noAIWatermark" -> R.drawable.branding_watermark
+        "other.useSPenGoogleTranslate" -> R.drawable.spen
+        "other.setThemeTrialNeverExpired" -> R.drawable.format_paint
+        "other.watchPairingConnectionMode" -> R.drawable.watch_pairing
+        "other.bypassWatchPairingRegionCheck" -> R.drawable.lock_open
+        "other.supplementChinaWearOsGms" -> R.drawable.google_play
+        "other.setWeatherProviderCN" -> R.drawable.partly_cloudy_day
+        else -> null
+    }
+    return resId?.let { ImageVector.vectorResource(it) }
 }
 
 @Composable
