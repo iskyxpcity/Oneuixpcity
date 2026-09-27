@@ -1,5 +1,6 @@
 package com.oneuixp.app.ui.screen.tools
 
+import android.os.Build
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -433,17 +434,41 @@ private fun OneuiXCategoryMaterial(
                     SegmentedColumn(
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                         title = oneuiXSectionTitle(section),
-                        content = sectionGroups.flatMap { group ->
-                            group.items.mapIndexed { index, spec ->
-                                {
-                                    MaterialSettingRow(
-                                        spec = spec,
-                                        preference = preference,
-                                        toolsViewModel = toolsViewModel,
-                                        hasChildren = OneuiXLayoutRules.hasChildren(spec.path) ||
-                                            (index == 0 && group.items.size > 1),
-                                        isChild = index > 0,
-                                    )
+                        content = buildList {
+                            sectionGroups.forEach { group ->
+                                group.items.forEachIndexed { index, spec ->
+                                    add {
+                                        MaterialSettingRow(
+                                            spec = spec,
+                                            preference = preference,
+                                            toolsViewModel = toolsViewModel,
+                                            hasChildren = OneuiXLayoutRules.hasChildren(spec.path) ||
+                                                (index == 0 && group.items.size > 1),
+                                            isChild = index > 0,
+                                        )
+                                    }
+
+                                    if (
+                                        category == OneuiXCategory.SystemUI &&
+                                        section == "Quick settings" &&
+                                        spec.path == "systemUI.qs.setQsClockMonospaced" &&
+                                        Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM
+                                    ) {
+                                        add {
+                                            MaterialOneuiXInfoRow(
+                                                title = stringResource(R.string.oneuix_turnOn5gQsTile_title),
+                                                summary = stringResource(R.string.oneuix_root5gQsTile_summary),
+                                                icon = ImageVector.vectorResource(R.drawable.five_g),
+                                            )
+                                        }
+                                        add {
+                                            MaterialOneuiXInfoRow(
+                                                title = stringResource(R.string.oneuix_immersiveModeQsTile_title),
+                                                summary = stringResource(R.string.oneuix_rootImmersiveModeQsTile_summary),
+                                                icon = ImageVector.vectorResource(R.drawable.immersive_mode),
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         },
@@ -453,6 +478,24 @@ private fun OneuiXCategoryMaterial(
             Spacer(Modifier.height(24.dp))
         }
     }
+}
+
+@Composable
+private fun MaterialOneuiXInfoRow(
+    title: String,
+    summary: String,
+    icon: ImageVector,
+) {
+    SegmentedListItem(
+        headlineContent = { Text(title) },
+        supportingContent = { Text(summary) },
+        leadingContent = {
+            Icon(
+                imageVector = icon,
+                contentDescription = title,
+            )
+        },
+    )
 }
 
 @Composable
