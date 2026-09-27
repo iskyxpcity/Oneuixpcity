@@ -13,6 +13,7 @@ import com.oneuixp.app.R
 import io.github.soclear.oneuix.common.Preference
 import com.oneuixp.app.ui.viewmodel.OneuiXToolsViewModel
 import io.github.soclear.oneuix.ui.component.SwitchItem
+import io.github.soclear.oneuix.ui.component.OneuiXDetailGroup
 
 @Composable
 fun DetailPaneSettings(
@@ -25,6 +26,7 @@ fun DetailPaneSettings(
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
     ) {
+        OneuiXDetailGroup {
         SwitchItem(
             title = stringResource(id = R.string.oneuix_showForcePeakRefreshRatePreference_title),
             summary = stringResource(id = R.string.oneuix_showForcePeakRefreshRatePreference_summary),
@@ -79,7 +81,8 @@ fun DetailPaneSettings(
             checked = uiState.spoofPhoneStatusAsOfficial,
             onCheckedChange = { onEvent(SettingsEvent.SpoofPhoneStatusAsOfficial(it)) }
         )
-    }
+    
+        }}
 }
 
 sealed interface SettingsEvent {
