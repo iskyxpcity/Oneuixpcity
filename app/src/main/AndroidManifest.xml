@@ -42,7 +42,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.OneuiXP">
         <meta-data android:name="xposedmodule" android:value="true" />
-        <meta-data android:name="xposeddescription" android:value="OneuiXP · SystemUI only" />
+        <meta-data android:name="xposeddescription" android:value="OneuiXP · OneUIX full migration" />
         <meta-data android:name="xposedminversion" android:value="82" />
         <meta-data android:name="xposedscope" android:resource="@array/xposed_scope" />
         <provider android:name=".statusbar.StatusBridge" android:authorities="${applicationId}.statusbridge" android:exported="true" />
