@@ -384,6 +384,7 @@ fun DetailPaneSystemUI(
                     Spacer(modifier = Modifier.width(8.dp))
                     OneuiXActionButton(
                         text = stringResource(id = R.string.oneuix_confirm),
+                        primary = true,
                         onClick = {
                             onEvent(SystemUIEvent.StatusBar.NetworkSpeedThreshold(threshold))
                         },
@@ -433,6 +434,7 @@ fun DetailPaneSystemUI(
                     Spacer(modifier = Modifier.width(8.dp))
                     OneuiXActionButton(
                         text = stringResource(id = R.string.oneuix_confirm),
+                        primary = true,
                         onClick = {
                             var right = true
                             label = try {
@@ -779,6 +781,7 @@ fun DetailPaneSystemUI(
                     Spacer(modifier = Modifier.width(8.dp))
                     OneuiXActionButton(
                         text = stringResource(id = R.string.oneuix_confirm),
+                        primary = true,
                         onClick = {
                             onEvent(
                                 SystemUIEvent.StatusBar.CustomCarrierName(
@@ -1039,6 +1042,7 @@ fun DetailPaneSystemUI(
                     Spacer(modifier = Modifier.width(8.dp))
                     OneuiXActionButton(
                         text = stringResource(id = R.string.oneuix_confirm),
+                        primary = true,
                         onClick = {
                             onEvent(SystemUIEvent.Notification.HideOngoingActivityMediaPackages(tempPackages))
                         },

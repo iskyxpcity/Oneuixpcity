@@ -69,6 +69,7 @@ fun OneuiXActionButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    primary: Boolean = false,
 ) {
     when (LocalUiMode.current) {
         UiMode.Material -> MaterialButton(
@@ -83,7 +84,11 @@ fun OneuiXActionButton(
             onClick = onClick,
             modifier = modifier,
             enabled = enabled,
-            colors = MiuixButtonDefaults.buttonColorsPrimary(),
+            colors = if (primary) {
+                MiuixButtonDefaults.buttonColorsPrimary()
+            } else {
+                MiuixButtonDefaults.buttonColors()
+            },
         ) {
             MiuixText(text)
         }
