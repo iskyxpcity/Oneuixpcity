@@ -187,8 +187,6 @@ object OneuiXLayoutRules {
             "systemUI.statusBar.addBatteryLevelText",
         "systemUI.statusBar.hideBatteryLevelTextChargingIcon" to
             "systemUI.statusBar.addBatteryLevelText",
-        "systemUI.statusBar.networkSpeedThresholdKb" to
-            "systemUI.statusBar.supportRealTimeNetworkSpeed",
         "systemUI.statusBar.statusBarClockFormat" to
             "systemUI.statusBar.setStatusBarClockFormat",
         "systemUI.statusBar.useFold7CustomDoubleLineClockScale" to

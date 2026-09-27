@@ -427,8 +427,6 @@ object OneuiXFeatureCatalog {
                     OneuiXVisibility.Bool("systemUI.statusBar.addBatteryLevelText"),
                 )
             ),
-        "systemUI.statusBar.networkSpeedThresholdKb" to
-            OneuiXVisibility.Bool("systemUI.statusBar.supportRealTimeNetworkSpeed"),
         "systemUI.statusBar.statusBarClockFormat" to
             OneuiXVisibility.Bool("systemUI.statusBar.setStatusBarClockFormat"),
         "systemUI.statusBar.statusBarDoubleLineClockSize" to

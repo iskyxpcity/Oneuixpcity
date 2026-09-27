@@ -466,6 +466,17 @@ private fun MaterialSettingRow(
     val summary = oneuiXSettingSummary(spec)
     val icon = oneuiXSettingIcon(spec)
 
+    if (spec.path == "systemUI.statusBar.networkSpeedThresholdKb") {
+        NetworkSpeedThresholdMaterial(
+            spec = spec,
+            title = title,
+            summary = summary,
+            preference = preference,
+            toolsViewModel = toolsViewModel,
+        )
+        return
+    }
+
     materialSliderConfig(spec.path)?.let { config ->
         MaterialSliderValue(
             spec = spec,
@@ -859,6 +870,62 @@ private fun List<PowerMenuAction>.movePowerAction(
     }
     val moved = removeAt(fromIndex)
     add(toIndex, moved)
+}
+
+@Composable
+private fun NetworkSpeedThresholdMaterial(
+    spec: OneuiXSettingSpec,
+    title: String,
+    summary: String?,
+    preference: Preference,
+    toolsViewModel: OneuiXToolsViewModel,
+) {
+    val current = toolsViewModel.value(preference, spec).toIntOrNull() ?: 0
+
+    Column {
+        SegmentedSwitchItem(
+            icon = oneuiXSettingIcon(spec),
+            title = title,
+            summary = if (current > 0) "$current KB/s" else summary,
+            checked = current > 0,
+            showChildIndicator = true,
+            onCheckedChange = { enabled ->
+                toolsViewModel.onSystemUIEvent(
+                    SystemUIEvent.StatusBar.NetworkSpeedThreshold(
+                        if (enabled) current.coerceAtLeast(1) else 0
+                    )
+                )
+            },
+        )
+
+        if (current > 0) {
+            val childSpec = spec
+            val childCurrent = toolsViewModel.value(preference, childSpec)
+            var edit by remember(childSpec.path, childCurrent) {
+                mutableStateOf(childCurrent)
+            }
+            SegmentedTextField(
+                label = stringResource(R.string.oneuix_networkSpeedThreshold_label),
+                value = edit,
+                onValueChange = { edit = it },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                singleLine = true,
+                trailingContent = {
+                    TextButton(
+                        onClick = {
+                            val value = edit.toIntOrNull()?.coerceAtLeast(1)
+                                ?: return@TextButton
+                            toolsViewModel.onSystemUIEvent(
+                                SystemUIEvent.StatusBar.NetworkSpeedThreshold(value)
+                            )
+                        },
+                    ) {
+                        Text(stringResource(R.string.oneuix_confirm))
+                    }
+                },
+            )
+        }
+    }
 }
 
 @Composable
