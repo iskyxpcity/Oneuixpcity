@@ -25,6 +25,7 @@ import com.oneuixp.app.ui.component.material.SegmentedListItem
 import com.oneuixp.app.ui.component.material.oneuiXSegmentedColors
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.Button as MiuixButton
+import top.yukonga.miuix.kmp.basic.ButtonDefaults as MiuixButtonDefaults
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
 import top.yukonga.miuix.kmp.basic.Switch as MiuixSwitch
@@ -82,6 +83,7 @@ fun OneuiXActionButton(
             onClick = onClick,
             modifier = modifier,
             enabled = enabled,
+            colors = MiuixButtonDefaults.buttonColorsPrimary(),
         ) {
             MiuixText(text)
         }

@@ -23,6 +23,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -133,15 +134,16 @@ fun OneuiXCategoryScreen(categoryName: String) {
     val toolsViewModel = viewModel<OneuiXToolsViewModel>()
     val preference by toolsViewModel.preference.collectAsStateWithLifecycle()
 
-    OneuiXOriginalCategoryScreen(
-        category = category,
-        preference = preference,
-        toolsViewModel = toolsViewModel,
-        onBack = navigator::pop,
-    )
-    return
+    if (LocalUiMode.current == UiMode.Miuix) {
+        OneuiXOriginalCategoryScreen(
+            category = category,
+            preference = preference,
+            toolsViewModel = toolsViewModel,
+            onBack = navigator::pop,
+        )
+        return
+    }
 
-    @Suppress("UNREACHABLE_CODE")
     val allSettings = remember(category) {
         OneuiXFeatureCatalog.settings(category)
     }
@@ -165,23 +167,13 @@ fun OneuiXCategoryScreen(categoryName: String) {
         }
     }
 
-    when (LocalUiMode.current) {
-        UiMode.Miuix -> OneuiXCategoryMiuix(
-            category = category,
-            groups = groups,
-            preference = preference,
-            toolsViewModel = toolsViewModel,
-            onBack = navigator::pop,
-        )
-
-        UiMode.Material -> OneuiXCategoryMaterial(
-            category = category,
-            groups = groups,
-            preference = preference,
-            toolsViewModel = toolsViewModel,
-            onBack = navigator::pop,
-        )
-    }
+    OneuiXCategoryMaterial(
+        category = category,
+        groups = groups,
+        preference = preference,
+        toolsViewModel = toolsViewModel,
+        onBack = navigator::pop,
+    )
 }
 
 @Composable
@@ -504,12 +496,19 @@ private fun EditableMaterialValue(
     val current = toolsViewModel.value(preference, spec)
     var edit by remember(spec.path, current) { mutableStateOf(current) }
 
+    val requiresConfirm = spec.path in setOf(
+        "systemUI.statusBar.networkSpeedThresholdKb",
+        "systemUI.statusBar.statusBarClockFormat",
+        "systemUI.statusBar.customCarrierName",
+        "systemUI.notification.hideOngoingActivityMediaPackages",
+    )
+
     SegmentedTextField(
         label = title,
         value = edit,
         onValueChange = {
             edit = it
-            if (spec.type == OneuiXSettingType.TextValue || validNumber(spec, it)) {
+            if (!requiresConfirm && (spec.type == OneuiXSettingType.TextValue || validNumber(spec, it))) {
                 toolsViewModel.setRawValue(spec, it)
             }
         },
@@ -524,6 +523,21 @@ private fun EditableMaterialValue(
         leadingContent = if (showIcon) {
             oneuiXSettingIcon(spec)?.let { imageVector ->
                 { Icon(imageVector = imageVector, contentDescription = null) }
+            }
+        } else {
+            null
+        },
+        trailingContent = if (requiresConfirm) {
+            {
+                TextButton(
+                    onClick = {
+                        if (spec.type == OneuiXSettingType.TextValue || validNumber(spec, edit)) {
+                            toolsViewModel.setRawValue(spec, edit)
+                        }
+                    },
+                ) {
+                    Text(stringResource(R.string.oneuix_confirm))
+                }
             }
         } else {
             null
