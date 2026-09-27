@@ -95,8 +95,8 @@ fun addAssetPath(modulePath: String) {
                 val resourcesLoader = ResourcesLoader()
                 resourcesLoader.addProvider(resourcesProvider)
                 context.resources.addLoaders(resourcesLoader)
-            } catch (t: Throwable) {
-                xposedModule.log(Log.ERROR, "Util", "addAssetPath", t)
+            } catch (_: Throwable) {
+                // OneuiXP does not continuously emit LSPosed module logs.
             }
         }
         result
@@ -114,66 +114,7 @@ context(xposedModule: XposedModule)
 fun xlog(
     message: Any?,
     throwable: Throwable? = null,
-    priority: Int = Log.ERROR
+    priority: Int = Log.ERROR,
 ) {
-    val moduleTag = "[OneUIX]"
-    val topBorder = "┌────────────────────────────────────────────────────────"
-    val linePrefix = "│ "
-    val bottomBorder = "└────────────────────────────────────────────────────────"
-
-    // 过滤掉 UtilKt 自身的调用帧（包含默认参数生成的 synthetic $default 方法），定位到真正的调用方
-    val caller = Throwable().stackTrace.firstOrNull { frame ->
-        val name = frame.className
-        name != "io.github.soclear.oneuix.hook.util.UtilKt" && !name.startsWith("io.github.soclear.oneuix.hook.util.UtilKt$")
-    }?.let {
-        "[${it.fileName}:${it.lineNumber}] "
-    }.orEmpty()
-
-    // 巧妙兼容：如果第一个参数传的是 Throwable，且没额外传第二个 throwable 参数，自动归位
-    val actualThrowable = when {
-        throwable != null -> throwable
-        message is Throwable -> message
-        else -> null
-    }
-
-    val sb = StringBuilder().apply {
-        append("\n").append(moduleTag).append(" ").append(topBorder).append("\n")
-
-        if (message is Throwable && throwable == null) {
-            // 当只传了一个 Throwable 时：第一行展示代码位置以及异常信息
-            val exceptionSummary = "${message.javaClass.name}${message.message?.let { ": $it" }.orEmpty()}"
-            append(moduleTag).append(" ").append(linePrefix).append(caller).append(exceptionSummary).append("\n")
-        } else {
-            // 传普通内容（或 message + throwable）时：逐行展示文本
-            val lines = (message?.toString() ?: "null").lines()
-            append(moduleTag).append(" ").append(linePrefix).append(caller).append(lines.firstOrNull().orEmpty())
-                .append("\n")
-            for (i in 1 until lines.size) {
-                append(moduleTag).append(" ").append(linePrefix).append(lines[i]).append("\n")
-            }
-            if (actualThrowable != null) {
-                append(moduleTag).append(" ").append(linePrefix).append("Exception: ")
-                    .append(actualThrowable.javaClass.name).append(": ").append(actualThrowable.message).append("\n")
-            }
-        }
-
-        // 打印堆栈
-        if (actualThrowable != null) {
-            actualThrowable.stackTrace.take(15).forEach { frame ->
-                append(moduleTag).append(" ").append(linePrefix).append("    at ").append(frame).append("\n")
-            }
-            if (actualThrowable.stackTrace.size > 15) {
-                append(moduleTag).append(" ").append(linePrefix)
-                    .append("    ... and ${actualThrowable.stackTrace.size - 15} more frames\n")
-            }
-        }
-        append(moduleTag).append(" ").append(bottomBorder)
-    }
-
-    // tag 必须为 null，确保 Vector/LSPosed 守护进程的白名单能正常收集到 modules 日志
-    if (actualThrowable != null) {
-        xposedModule.log(priority, null, sb.toString(), actualThrowable)
-    } else {
-        xposedModule.log(priority, null, sb.toString())
-    }
+    // Intentionally silent. OneuiXP diagnostics are generated on demand from Settings.
 }

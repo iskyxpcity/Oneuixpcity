@@ -20,7 +20,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import com.oneuixp.app.R
-import com.oneuixp.app.statusbar.StatusBridge
+import com.oneuixp.app.ui.util.createOneuiXPDiagnosticShareIntent
+import com.oneuixp.app.ui.util.oneuiXPDiagnosticFileName
+import com.oneuixp.app.ui.util.writeOneuiXPDiagnosticReport
 import com.oneuixp.app.ui.component.dialog.LoadingDialogHandle
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.Text
@@ -29,14 +31,6 @@ import top.yukonga.miuix.kmp.overlay.OverlayDialog
 import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
-
-private fun diagnosticText(context: android.content.Context): String =
-    "OneuiXP diagnostic\n" +
-    "SystemUI loaded this boot: ${StatusBridge.recentlyLoaded(context)}\n" +
-    "Accepted load reports this boot (not injections): ${StatusBridge.loadReportCount(context)}\n\n" +
-    StatusBridge.diagnosticSummary(context) + "\n"
 
 @Composable
 fun SendLogDialog(
@@ -52,9 +46,7 @@ fun SendLogDialog(
     ) { uri: Uri? ->
         if (uri != null) {
             try {
-                context.contentResolver.openOutputStream(uri)?.use { output ->
-                    output.write(diagnosticText(context).toByteArray(Charsets.UTF_8))
-                } ?: throw java.io.IOException("Cannot open destination")
+                writeOneuiXPDiagnosticReport(context, uri)
                 Toast.makeText(context, savedText, Toast.LENGTH_SHORT).show()
             } catch (error: Exception) {
                 Toast.makeText(context, "诊断日志保存失败：${error.javaClass.simpleName}", Toast.LENGTH_LONG).show()
@@ -81,8 +73,7 @@ fun SendLogDialog(
                         modifier = Modifier.padding(end = 16.dp), tint = colorScheme.onSurface)
                 },
                 onClick = {
-                    val stamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm"))
-                    saveLauncher.launch("OneuiXP_diagnostic_${stamp}.txt")
+                    saveLauncher.launch(oneuiXPDiagnosticFileName())
                     onDismissRequest()
                 },
                 insideMargin = PaddingValues(horizontal = 24.dp, vertical = 12.dp)
@@ -94,12 +85,12 @@ fun SendLogDialog(
                         modifier = Modifier.padding(end = 16.dp), tint = colorScheme.onSurface)
                 },
                 onClick = {
-                    val intent = Intent(Intent.ACTION_SEND).apply {
-                        type = "text/plain"
-                        putExtra(Intent.EXTRA_SUBJECT, "OneuiXP diagnostic")
-                        putExtra(Intent.EXTRA_TEXT, diagnosticText(context))
-                    }
-                    context.startActivity(Intent.createChooser(intent, shareTitle))
+                    context.startActivity(
+                        Intent.createChooser(
+                            createOneuiXPDiagnosticShareIntent(context),
+                            shareTitle,
+                        )
+                    )
                     onDismissRequest()
                 },
                 insideMargin = PaddingValues(horizontal = 24.dp, vertical = 12.dp)

@@ -31,16 +31,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import com.oneuixp.app.R
-import com.oneuixp.app.statusbar.StatusBridge
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
-
-private fun oneuiXPDiagnostic(context: android.content.Context): String =
-    "OneuiXP diagnostic\n" +
-    "SystemUI loaded this boot: ${StatusBridge.recentlyLoaded(context)}\n" +
-    "Accepted load reports this boot (not injections): ${StatusBridge.loadReportCount(context)}\n" +
-    "Most recent report age (seconds): ${StatusBridge.lastReportAgeSeconds(context)}\n\n" +
-    StatusBridge.diagnosticSummary(context) + "\n"
+import com.oneuixp.app.ui.util.createOneuiXPDiagnosticShareIntent
+import com.oneuixp.app.ui.util.oneuiXPDiagnosticFileName
+import com.oneuixp.app.ui.util.writeOneuiXPDiagnosticReport
 
 @Composable
 fun SendLogBottomSheet(onDismiss: () -> Unit, snackbarHostState: SnackbarHostState) {
@@ -56,9 +49,7 @@ fun SendLogBottomSheet(onDismiss: () -> Unit, snackbarHostState: SnackbarHostSta
         if (uri != null) {
             scope.launch {
                 val success = runCatching {
-                    context.contentResolver.openOutputStream(uri)?.use { stream ->
-                        stream.write(oneuiXPDiagnostic(context).toByteArray(Charsets.UTF_8))
-                    } ?: error("Could not open diagnostic output")
+                    writeOneuiXPDiagnosticReport(context, uri)
                 }.isSuccess
                 snackbarHostState.showSnackbar(if (success) savedText else "OneuiXP log export failed")
             }
@@ -78,9 +69,7 @@ fun SendLogBottomSheet(onDismiss: () -> Unit, snackbarHostState: SnackbarHostSta
                     modifier = Modifier.size(64.dp),
                     onClick = {
                         haptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
-                        val stamp = LocalDateTime.now()
-                            .format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm"))
-                        saveLauncher.launch("OneuiXP_diagnostic_${stamp}.txt")
+                        saveLauncher.launch(oneuiXPDiagnosticFileName())
                     },
                 ) { Icon(Icons.Filled.Save, contentDescription = saveTitle) }
                 Spacer(Modifier.height(8.dp))
@@ -92,14 +81,12 @@ fun SendLogBottomSheet(onDismiss: () -> Unit, snackbarHostState: SnackbarHostSta
                     modifier = Modifier.size(64.dp),
                     onClick = {
                         haptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
-                        context.startActivity(Intent.createChooser(
-                            Intent(Intent.ACTION_SEND).apply {
-                                type = "text/plain"
-                                putExtra(Intent.EXTRA_SUBJECT, "OneuiXP diagnostic")
-                                putExtra(Intent.EXTRA_TEXT, oneuiXPDiagnostic(context))
-                            },
-                            shareTitle,
-                        ))
+                        context.startActivity(
+                            Intent.createChooser(
+                                createOneuiXPDiagnosticShareIntent(context),
+                                shareTitle,
+                            )
+                        )
                         onDismiss()
                     },
                 ) { Icon(Icons.Filled.Share, contentDescription = shareTitle) }
