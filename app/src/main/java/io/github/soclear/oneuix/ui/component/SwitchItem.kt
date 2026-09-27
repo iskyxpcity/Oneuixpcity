@@ -1,5 +1,6 @@
 package io.github.soclear.oneuix.ui.component
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItemDefaults
@@ -65,15 +66,18 @@ fun SwitchItem(
                     },
                 )
             } else {
-                SegmentedSwitchItem(
+                Box(
                     modifier = if (grouped) modifier else modifier.padding(horizontal = 16.dp, vertical = 4.dp),
-                    icon = icon,
-                    colors = if (grouped) materialColors else ListItemDefaults.segmentedColors(),
-                    title = title,
-                    summary = summary,
-                    checked = checked,
-                    onCheckedChange = onCheckedChange,
-                )
+                ) {
+                    SegmentedSwitchItem(
+                        icon = icon,
+                        colors = if (grouped) materialColors else ListItemDefaults.segmentedColors(),
+                        title = title,
+                        summary = summary,
+                        checked = checked,
+                        onCheckedChange = onCheckedChange,
+                    )
+                }
             }
         }
 
