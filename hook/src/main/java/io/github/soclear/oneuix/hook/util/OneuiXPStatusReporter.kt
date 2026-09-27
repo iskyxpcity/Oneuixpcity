@@ -54,7 +54,10 @@ object OneuiXPStatusReporter {
 
     private fun reportLoaded(context: Context, loader: ClassLoader) {
         runCatching {
-            val extras = Bundle().apply { putString("probe", probeDetails(loader)) }
+            val extras = Bundle().apply {
+                putString("probe", probeDetails(loader))
+                putInt("hook_count", HookInstallTracker.successfulCount())
+            }
             context.contentResolver.call(bridgeUri(), "loaded", null, extras)
         }
     }
@@ -67,15 +70,19 @@ object OneuiXPStatusReporter {
         }
         executor.scheduleWithFixedDelay({
             runCatching {
+                val heartbeat = Bundle().apply {
+                    putInt("hook_count", HookInstallTracker.successfulCount())
+                }
                 val response = appContext.contentResolver.call(
                     bridgeUri(),
                     "heartbeat",
                     null,
-                    null,
+                    heartbeat,
                 )
                 if (response == null || !response.getBoolean("accepted", false)) {
                     val retry = Bundle().apply {
                         putString("probe", "LOAD_RETRY: original probe unavailable")
+                        putInt("hook_count", HookInstallTracker.successfulCount())
                     }
                     appContext.contentResolver.call(bridgeUri(), "loaded", null, retry)
                 }
