@@ -55,7 +55,7 @@
     <string name="settings_enable_glass">液态玻璃</string>
     <string name="settings_enable_glass_summary">启用悬浮底栏的液态玻璃效果</string>
     <string name="oneuixp_tools">功能</string>
-    <string name="oneuixp_successful_hook_count">成功 Hook 数量</string>
+    <string name="oneuixp_feature_injection_count">功能注入数量</string>
 
     <string name="oneuix_core_features">系统功能</string>
     <string name="oneuix_app_features">三星应用功能</string>
