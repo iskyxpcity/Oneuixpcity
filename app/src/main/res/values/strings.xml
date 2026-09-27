@@ -61,4 +61,13 @@
     <string name="oneuix_core_features">System features</string>
     <string name="oneuix_app_features">Samsung app features</string>
     <string name="oneuix_migration_notice">Migration preview · settings are saved, but OneUIX feature hooks are still disabled.</string>
+    <string name="status_category_time">Status bar time</string>
+    <string name="status_category_notification">Status bar notifications</string>
+    <string name="status_category_network_speed">Status bar network speed</string>
+    <string name="status_category_power">Status bar power</string>
+    <string name="status_category_signal">Status bar signal</string>
+    <string name="status_category_wifi">Status bar Wi-Fi</string>
+    <string name="status_category_lockscreen">Lock screen</string>
+    <string name="status_category_notification_center">Notification center</string>
+    <string name="status_category_control_center">Control center</string>
 </resources>
