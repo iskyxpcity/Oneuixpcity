@@ -4,6 +4,7 @@ import android.os.Build
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.oneuixp.app.oneuiXPApp
+import com.oneuixp.app.oneuix.OneuiXPreferenceBridge
 import com.oneuixp.app.oneuix.OneuiXSettingSpec
 import com.oneuixp.app.oneuix.OneuiXSettingType
 import com.oneuixp.app.oneuix.OneuiXVisibility
@@ -34,6 +35,7 @@ class OneuiXToolsViewModel : ViewModel() {
     fun updateData(nextPreference: (Preference) -> Preference) {
         viewModelScope.launch {
             dataStore.updateData(nextPreference)
+            OneuiXPreferenceBridge.ensureSynchronized(oneuiXPApp)
         }
     }
 
@@ -121,6 +123,7 @@ class OneuiXToolsViewModel : ViewModel() {
                     current.withJsonValue(spec.path, JsonPrimitive(checked))
                 }
             }
+            OneuiXPreferenceBridge.ensureSynchronized(oneuiXPApp)
         }
     }
 
@@ -153,6 +156,7 @@ class OneuiXToolsViewModel : ViewModel() {
                 }
                 updated
             }
+            OneuiXPreferenceBridge.ensureSynchronized(oneuiXPApp)
         }
     }
 
