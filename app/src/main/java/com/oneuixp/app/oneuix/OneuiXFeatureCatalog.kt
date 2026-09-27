@@ -155,6 +155,8 @@ object OneuiXFeatureCatalog {
             "Status bar",
             "systemUI.statusBar.modifyStatusBarLeftPadding",
             "systemUI.statusBar.modifyStatusBarRightPadding",
+            "systemUI.statusBar.modifyStatusBarTopPadding",
+            "systemUI.statusBar.modifyStatusBarBottomPadding",
             "systemUI.statusBar.setBatteryIconWidthScale",
             "systemUI.statusBar.setBatteryIconHeightScale",
             "systemUI.statusBar.hideBatteryPercentageSign",
@@ -165,6 +167,7 @@ object OneuiXFeatureCatalog {
             "systemUI.statusBar.supportRealTimeNetworkSpeed",
             "systemUI.statusBar.showSeparateUpDownNetworkSpeeds",
             "systemUI.statusBar.setStatusBarClockFormat",
+            "systemUI.statusBar.modifyDoubleLineClockGap",
             "systemUI.statusBar.setStatusBarClockTextScale",
             "systemUI.statusBar.useFold7CustomDoubleLineClockScale",
             "systemUI.statusBar.updateStatusBarClockEverySecond",
@@ -405,6 +408,10 @@ object OneuiXFeatureCatalog {
             OneuiXVisibility.Bool("systemUI.statusBar.modifyStatusBarLeftPadding"),
         "systemUI.statusBar.statusBarRightPaddingDp" to
             OneuiXVisibility.Bool("systemUI.statusBar.modifyStatusBarRightPadding"),
+        "systemUI.statusBar.statusBarTopPaddingDp" to
+            OneuiXVisibility.Bool("systemUI.statusBar.modifyStatusBarTopPadding"),
+        "systemUI.statusBar.statusBarBottomPaddingDp" to
+            OneuiXVisibility.Bool("systemUI.statusBar.modifyStatusBarBottomPadding"),
         "systemUI.statusBar.batteryIconWidthScale" to
             OneuiXVisibility.Bool("systemUI.statusBar.setBatteryIconWidthScale"),
         "systemUI.statusBar.batteryIconHeightScale" to
@@ -463,11 +470,19 @@ object OneuiXFeatureCatalog {
                     OneuiXVisibility.Bool("systemUI.statusBar.useFold7CustomDoubleLineClockScale"),
                 )
             ),
+        "systemUI.statusBar.modifyDoubleLineClockGap" to
+            OneuiXVisibility.All(
+                listOf(
+                    OneuiXVisibility.Bool("systemUI.statusBar.setStatusBarClockFormat"),
+                    OneuiXVisibility.StringContains("systemUI.statusBar.statusBarClockFormat", "\n"),
+                )
+            ),
         "systemUI.statusBar.doubleLineClockGapDp" to
             OneuiXVisibility.All(
                 listOf(
                     OneuiXVisibility.Bool("systemUI.statusBar.setStatusBarClockFormat"),
                     OneuiXVisibility.StringContains("systemUI.statusBar.statusBarClockFormat", "\n"),
+                    OneuiXVisibility.Bool("systemUI.statusBar.modifyDoubleLineClockGap"),
                 )
             ),
         "systemUI.statusBar.setStatusBarClockTextScale" to
