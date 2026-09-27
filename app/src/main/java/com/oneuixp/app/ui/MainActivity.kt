@@ -46,6 +46,7 @@ import com.oneuixp.app.ui.screen.about.AboutScreen
 import com.oneuixp.app.ui.screen.colorpalette.ColorPaletteScreen
 import com.oneuixp.app.ui.screen.home.HomePager
 import com.oneuixp.app.ui.screen.status.StatusPager
+import com.oneuixp.app.ui.screen.status.StatusCategoryScreen
 import com.oneuixp.app.ui.screen.settings.SettingPager
 import com.oneuixp.app.ui.screen.tools.ToolsPager
 import com.oneuixp.app.ui.screen.tools.OneuiXCategoryScreen
@@ -130,6 +131,7 @@ class MainActivity : ComponentActivity() {
                                 entry<Route.About> { AboutScreen() }
                                 entry<Route.ColorPalette> { ColorPaletteScreen() }
                                 entry<Route.OneuiXCategory> { key -> OneuiXCategoryScreen(key.category) }
+                                entry<Route.StatusCategory> { key -> StatusCategoryScreen(key.category) }
                                 entry<Route.Home> { mainScreenEntry() }
                                 entry<Route.Tools> { mainScreenEntry() }
                                 entry<Route.Status> { mainScreenEntry() }
@@ -225,7 +227,7 @@ fun MainScreen(
                             ToolsPager(navController, bottomInnerPadding, isCurrentPage)
                         }
                         2 -> if (isCurrentPage || contentReady) {
-                            StatusPager(bottomInnerPadding, isCurrentPage)
+                            StatusPager(navController, bottomInnerPadding, isCurrentPage)
                         }
                         3 -> if (isCurrentPage || contentReady) {
                             SettingPager(navController, bottomInnerPadding, isCurrentPage)
