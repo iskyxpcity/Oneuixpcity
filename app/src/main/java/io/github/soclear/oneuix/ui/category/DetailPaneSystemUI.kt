@@ -42,6 +42,7 @@ import io.github.soclear.oneuix.ui.component.SwitchItem
 import io.github.soclear.oneuix.ui.component.OneuiXSlider
 import io.github.soclear.oneuix.ui.component.OneuiXPreferenceGroup
 import io.github.soclear.oneuix.ui.component.OneuiXDetailGroup
+import io.github.soclear.oneuix.ui.component.OneuiXChildVisibility
 import io.github.soclear.oneuix.ui.component.OneuiXActionButton
 import io.github.soclear.oneuix.ui.component.OneuiXInfoItem
 import io.github.soclear.oneuix.ui.component.OneuiXInlineTextField
@@ -151,7 +152,7 @@ fun DetailPaneSystemUI(
                     onEvent(SystemUIEvent.StatusBar.ModifyStatusBarLeftPadding(it))
                 }
             )
-            AnimatedVisibility(expanded && uiState.statusBar.modifyStatusBarLeftPadding) {
+            OneuiXChildVisibility(expanded && uiState.statusBar.modifyStatusBarLeftPadding) {
                 OneuiXSlider(
                     value = padding,
                     onValueChange = { padding = it },
@@ -188,7 +189,7 @@ fun DetailPaneSystemUI(
                     onEvent(SystemUIEvent.StatusBar.ModifyStatusBarRightPadding(it))
                 }
             )
-            AnimatedVisibility(expanded && uiState.statusBar.modifyStatusBarRightPadding) {
+            OneuiXChildVisibility(expanded && uiState.statusBar.modifyStatusBarRightPadding) {
                 OneuiXSlider(
                     value = padding,
                     onValueChange = { padding = it },
@@ -241,7 +242,7 @@ fun DetailPaneSystemUI(
                     onEvent(SystemUIEvent.StatusBar.SetBatteryIconWidthScale(it))
                 }
             )
-            AnimatedVisibility(expanded && uiState.statusBar.setBatteryIconWidthScale) {
+            OneuiXChildVisibility(expanded && uiState.statusBar.setBatteryIconWidthScale) {
                 OneuiXSlider(
                     value = widthScale,
                     onValueChange = { widthScale = it },
@@ -278,7 +279,7 @@ fun DetailPaneSystemUI(
                     onEvent(SystemUIEvent.StatusBar.SetBatteryIconHeightScale(it))
                 }
             )
-            AnimatedVisibility(expanded && uiState.statusBar.setBatteryIconHeightScale) {
+            OneuiXChildVisibility(expanded && uiState.statusBar.setBatteryIconHeightScale) {
                 OneuiXSlider(
                     value = heightScale,
                     onValueChange = { heightScale = it },
@@ -322,7 +323,7 @@ fun DetailPaneSystemUI(
                     onEvent(SystemUIEvent.StatusBar.AddBatteryLevelText(it))
                 }
             )
-            AnimatedVisibility(uiState.statusBar.addBatteryLevelText) {
+            OneuiXChildVisibility(uiState.statusBar.addBatteryLevelText) {
                 Column {
                     SwitchItem(
                         icon = ImageVector.vectorResource(id = R.drawable.battery),
@@ -383,7 +384,7 @@ fun DetailPaneSystemUI(
                     onEvent(SystemUIEvent.StatusBar.NetworkSpeedThreshold(threshold))
                 }
             )
-            AnimatedVisibility(expanded && uiState.statusBar.networkSpeedThresholdKb > 0) {
+            OneuiXChildVisibility(expanded && uiState.statusBar.networkSpeedThresholdKb > 0) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.padding(horizontal = 16.dp),
@@ -430,7 +431,7 @@ fun DetailPaneSystemUI(
                 }
             )
 
-            AnimatedVisibility(expanded && uiState.statusBar.setStatusBarClockFormat) {
+            OneuiXChildVisibility(expanded && uiState.statusBar.setStatusBarClockFormat) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.padding(horizontal = 16.dp),
@@ -497,7 +498,7 @@ fun DetailPaneSystemUI(
                             )
                         }
                     )
-                    AnimatedVisibility(uiState.statusBar.useFold7CustomDoubleLineClockScale) {
+                    OneuiXChildVisibility(uiState.statusBar.useFold7CustomDoubleLineClockScale) {
                         Column {
                             var timeScale by remember(
                                 uiState.statusBar.fold7DoubleLineClockTimeScale
@@ -648,7 +649,7 @@ fun DetailPaneSystemUI(
                         onEvent(SystemUIEvent.StatusBar.SetStatusBarClockTextScale(it))
                     }
                 )
-                AnimatedVisibility(expanded && uiState.statusBar.setStatusBarClockTextScale) {
+                OneuiXChildVisibility(expanded && uiState.statusBar.setStatusBarClockTextScale) {
                     OneuiXSlider(
                         value = scale,
                         onValueChange = { scale = it },
@@ -698,7 +699,7 @@ fun DetailPaneSystemUI(
                 onEvent(SystemUIEvent.StatusBar.PhysicalEsimAdapterWorkaround(it))
             }
         )
-        AnimatedVisibility(uiState.statusBar.physicalEsimAdapterWorkaround) {
+        OneuiXChildVisibility(uiState.statusBar.physicalEsimAdapterWorkaround) {
             SelectItem(
                 icon = ImageVector.vectorResource(id = R.drawable.sim_card),
                 title = stringResource(id = R.string.oneuix_physicalEsimAdapterSimSlot_title),
@@ -748,7 +749,7 @@ fun DetailPaneSystemUI(
                     onEvent(SystemUIEvent.StatusBar.ModifyStatusBarMaxNotificationIcons(it))
                 }
             )
-            AnimatedVisibility(expanded && uiState.statusBar.modifyStatusBarMaxNotificationIcons) {
+            OneuiXChildVisibility(expanded && uiState.statusBar.modifyStatusBarMaxNotificationIcons) {
                 OneuiXSlider(
                     value = max.toFloat(),
                     onValueChange = { max = it.roundToInt() },
@@ -784,7 +785,7 @@ fun DetailPaneSystemUI(
                 }
             )
 
-            AnimatedVisibility(expanded && uiState.statusBar.setCustomCarrierName) {
+            OneuiXChildVisibility(expanded && uiState.statusBar.setCustomCarrierName) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.padding(horizontal = 16.dp),
@@ -991,7 +992,7 @@ fun DetailPaneSystemUI(
                     }
                 )
 
-                AnimatedVisibility(expanded && uiState.qs.modifyQSClockTextSize) {
+                OneuiXChildVisibility(expanded && uiState.qs.modifyQSClockTextSize) {
                     OneuiXSlider(
                         value = textSize,
                         onValueChange = { textSize = it },
@@ -1052,7 +1053,7 @@ fun DetailPaneSystemUI(
                     onEvent(SystemUIEvent.Notification.HideOngoingActivityMedia(it))
                 }
             )
-            AnimatedVisibility(expanded && uiState.notification.hideOngoingActivityMedia) {
+            OneuiXChildVisibility(expanded && uiState.notification.hideOngoingActivityMedia) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
