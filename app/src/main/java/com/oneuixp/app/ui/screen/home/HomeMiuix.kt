@@ -205,7 +205,7 @@ private fun StatusCard() {
             modifier = Modifier.weight(1f).fillMaxHeight(),
         ) {
             DashboardSmallCardMiuix(
-                title = stringResource(R.string.oneuixp_successful_hook_count),
+                title = stringResource(R.string.oneuixp_feature_injection_count),
                 value = status.injectionCount.toString(),
                 modifier = Modifier.weight(1f),
             )
