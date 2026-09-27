@@ -1008,6 +1008,10 @@ private fun NetworkSpeedThresholdMaterial(
     toolsViewModel: OneuiXToolsViewModel,
 ) {
     val current = toolsViewModel.value(preference, spec).toIntOrNull() ?: 0
+    var expanded by remember(spec.path) { mutableStateOf(false) }
+    var thresholdText by remember(spec.path, current) {
+        mutableStateOf(current.coerceAtLeast(1).toString())
+    }
 
     Column {
         SegmentedSwitchItem(
@@ -1016,32 +1020,39 @@ private fun NetworkSpeedThresholdMaterial(
             summary = if (current > 0) "$current KB/s" else summary,
             checked = current > 0,
             showChildIndicator = true,
+            onRowClick = { expanded = !expanded },
             onCheckedChange = { enabled ->
-                toolsViewModel.onSystemUIEvent(
-                    SystemUIEvent.StatusBar.NetworkSpeedThreshold(
-                        if (enabled) current.coerceAtLeast(1) else 0
+                if (enabled) {
+                    val next = thresholdText.toIntOrNull()?.coerceAtLeast(1) ?: 1
+                    thresholdText = next.toString()
+                    expanded = true
+                    toolsViewModel.onSystemUIEvent(
+                        SystemUIEvent.StatusBar.NetworkSpeedThreshold(next)
                     )
-                )
+                } else {
+                    expanded = false
+                    toolsViewModel.onSystemUIEvent(
+                        SystemUIEvent.StatusBar.NetworkSpeedThreshold(0)
+                    )
+                }
             },
         )
 
-        if (current > 0) {
-            val childSpec = spec
-            val childCurrent = toolsViewModel.value(preference, childSpec)
-            var edit by remember(childSpec.path, childCurrent) {
-                mutableStateOf(childCurrent)
-            }
+        if (expanded && current > 0) {
             SegmentedTextField(
                 label = stringResource(R.string.oneuix_networkSpeedThreshold_label),
-                value = edit,
-                onValueChange = { edit = it },
+                value = thresholdText,
+                onValueChange = { raw ->
+                    thresholdText = raw.filter(Char::isDigit)
+                },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 singleLine = true,
                 trailingContent = {
                     TextButton(
                         onClick = {
-                            val value = edit.toIntOrNull()?.coerceAtLeast(1)
+                            val value = thresholdText.toIntOrNull()?.coerceAtLeast(1)
                                 ?: return@TextButton
+                            thresholdText = value.toString()
                             toolsViewModel.onSystemUIEvent(
                                 SystemUIEvent.StatusBar.NetworkSpeedThreshold(value)
                             )
@@ -1073,7 +1084,9 @@ private fun MaterialClockFormatEditor(
     }
 
     SegmentedTextField(
-        label = title,
+        // OneUIX shows the formatted preview above the raw format text.
+        // The parent switch already carries the setting title.
+        label = preview.ifBlank { current },
         value = edit,
         onValueChange = {
             edit = it
@@ -1082,9 +1095,7 @@ private fun MaterialClockFormatEditor(
             }.getOrElse { "error" }
         },
         singleLine = false,
-        leadingContent = oneuiXSettingIcon(spec)?.let { imageVector ->
-            { Icon(imageVector = imageVector, contentDescription = null) }
-        },
+        leadingContent = null,
         trailingContent = {
             TextButton(
                 onClick = {
@@ -1104,9 +1115,7 @@ private fun MaterialClockFormatEditor(
                 Text(stringResource(R.string.oneuix_confirm))
             }
         },
-        supportingContent = {
-            Text(preview.ifBlank { current })
-        },
+        supportingContent = null,
     )
 }
 
