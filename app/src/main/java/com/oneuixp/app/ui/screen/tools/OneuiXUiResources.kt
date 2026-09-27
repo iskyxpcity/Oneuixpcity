@@ -278,7 +278,7 @@ internal fun rememberOneuiXCategoryIcon(category: OneuiXCategory): ImageBitmap {
         val drawable = applicationInfo
             ?.loadIcon(packageManager)
             ?: requireNotNull(
-                context.getDrawable(R.mipmap.oneuix_mod_category_fallback)
+                context.getDrawable(R.mipmap.ic_launcher)
             )
 
         // Match OneUIX-Mod exactly: preserve the drawable's intrinsic/adaptive
