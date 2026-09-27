@@ -704,7 +704,7 @@ fun DetailPaneSystemUI(
             }
         )
         OneuiXPreferenceGroup {
-            var max by remember {
+            var max by remember(uiState.statusBar.statusBarMaxNotificationIcons) {
                 mutableIntStateOf(uiState.statusBar.statusBarMaxNotificationIcons)
             }
             var expanded by rememberSaveable { mutableStateOf(false) }
@@ -729,16 +729,13 @@ fun DetailPaneSystemUI(
             OneuiXChildVisibility(expanded && uiState.statusBar.modifyStatusBarMaxNotificationIcons) {
                 OneuiXSlider(
                     value = max.toFloat(),
-                    onValueChange = {
-                        val next = it.roundToInt()
-                        if (next != max) {
-                            max = next
-                            onEvent(SystemUIEvent.StatusBar.StatusBarMaxNotificationIcons(next))
-                        }
-                    },
+                    onValueChange = { max = it.roundToInt() },
                     modifier = Modifier.padding(horizontal = 16.dp),
                     valueRange = 4f..20f,
                     steps = 15,
+                    onValueChangeFinished = {
+                        onEvent(SystemUIEvent.StatusBar.StatusBarMaxNotificationIcons(max))
+                    }
                 )
             }
         }
