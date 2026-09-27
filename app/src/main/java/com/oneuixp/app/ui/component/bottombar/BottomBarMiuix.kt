@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Cottage
 import androidx.compose.material.icons.rounded.Extension
-import androidx.compose.material.icons.rounded.Security
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -19,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -48,10 +48,11 @@ fun BottomBarMiuix(
     val enableFloatingBottomBar = LocalEnableFloatingBottomBar.current
     val enableFloatingBottomBarBlur = LocalEnableFloatingBottomBarBlur.current
 
+    val featuresIcon = ImageVector.vectorResource(id = R.drawable.apps)
     val items = BottomBarDestination.entries.map { destination ->
         NavigationItem(
             label = stringResource(destination.label),
-            icon = destination.icon,
+            icon = if (destination == BottomBarDestination.Tools) featuresIcon else destination.icon,
         )
     }
     if (!enableFloatingBottomBar) {
@@ -121,7 +122,7 @@ enum class BottomBarDestination(
     val icon: ImageVector,
 ) {
     Home(R.string.home, Icons.Rounded.Cottage),
-    Tools(R.string.oneuixp_tools, Icons.Rounded.Security),
+    Tools(R.string.oneuixp_tools, Icons.Rounded.Extension),
     Status(R.string.oneuixp_status, Icons.Rounded.Extension),
     Setting(R.string.settings, Icons.Rounded.Settings)
 }
