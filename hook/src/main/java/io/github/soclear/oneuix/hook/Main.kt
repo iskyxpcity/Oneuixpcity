@@ -260,9 +260,17 @@ class Main : XposedModule() {
                             preference.systemUI.statusBar.statusBarRightPaddingDp
                         } else null
                     StatusBar.setStatusBarPaddingDp(leftPaddingDp, rightPaddingDp)
+                    val topPaddingDp =
+                        if (preference.systemUI.statusBar.modifyStatusBarTopPadding) {
+                            preference.systemUI.statusBar.statusBarTopPaddingDp
+                        } else 0f
+                    val bottomPaddingDp =
+                        if (preference.systemUI.statusBar.modifyStatusBarBottomPadding) {
+                            preference.systemUI.statusBar.statusBarBottomPaddingDp
+                        } else 0f
                     OfficialMainStatusBarMod.installVerticalPadding(
-                        preference.systemUI.statusBar.statusBarTopPaddingDp,
-                        preference.systemUI.statusBar.statusBarBottomPaddingDp,
+                        topPaddingDp,
+                        bottomPaddingDp,
                     )
                 }
 
@@ -309,7 +317,7 @@ class Main : XposedModule() {
                     OfficialMainStatusBarMod.configureClock(
                         bar.statusBarDoubleLineClockSize,
                         bar.statusBarClockTextScale,
-                        bar.doubleLineClockGapDp,
+                        if (bar.modifyDoubleLineClockGap) bar.doubleLineClockGapDp else 1f,
                         bar.useFold7CustomDoubleLineClockScale,
                         bar.fold7DoubleLineClockTimeScale,
                         bar.fold7DoubleLineClockDateScale,
