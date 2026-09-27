@@ -230,13 +230,20 @@ fun OneuiXInlineTextField(
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 12.dp),
                 ) {
+                    if (!labelText.isNullOrBlank()) {
+                        MiuixText(
+                            text = labelText,
+                            fontSize = MiuixTheme.textStyles.body2.fontSize,
+                            color = colorScheme.onSurfaceVariantSummary,
+                            modifier = Modifier.padding(bottom = 6.dp),
+                        )
+                    }
                     MiuixTextField(
                         value = value,
                         onValueChange = onValueChange,
                         modifier = Modifier.fillMaxWidth(),
                         insideMargin = DpSize(12.dp, 10.dp),
                         cornerRadius = 12.dp,
-                        label = labelText.orEmpty(),
                         enabled = true,
                         singleLine = singleLine,
                         maxLines = if (singleLine) 1 else Int.MAX_VALUE,
