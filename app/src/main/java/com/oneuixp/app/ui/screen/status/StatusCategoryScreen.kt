@@ -1,6 +1,7 @@
 package com.oneuixp.app.ui.screen.status
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.add
@@ -10,6 +11,8 @@ import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Icon
@@ -20,6 +23,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
@@ -28,11 +33,14 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.LayoutDirection
 import com.oneuixp.app.ui.LocalUiMode
+import com.oneuixp.app.ui.component.rebootlistpopup.RebootListPopup
 import com.oneuixp.app.ui.UiMode
 import com.oneuixp.app.ui.navigation3.LocalNavigator
 import com.oneuixp.app.ui.theme.LocalEnableBlur
 import com.oneuixp.app.ui.util.BlurredBar
 import com.oneuixp.app.ui.util.rememberBlurBackdrop
+import com.oneuixp.app.ui.viewmodel.OneuiXToolsViewModel
+import io.github.soclear.oneuix.ui.category.StatusBarTimeControls
 import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
 import top.yukonga.miuix.kmp.basic.IconButton as MiuixIconButton
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
@@ -61,6 +69,30 @@ fun StatusCategoryScreen(categoryName: String) {
 }
 
 @Composable
+private fun StatusCategoryContent(
+    category: StatusCategory,
+    modifier: Modifier = Modifier,
+) {
+    when (category) {
+        StatusCategory.Time -> {
+            val toolsViewModel = viewModel<OneuiXToolsViewModel>()
+            val preference = toolsViewModel.preference.collectAsStateWithLifecycle().value
+            Column(
+                modifier = modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState()),
+            ) {
+                StatusBarTimeControls(
+                    uiState = preference.systemUI.statusBar,
+                    onEvent = toolsViewModel::onSystemUIEvent,
+                )
+            }
+        }
+        else -> Box(modifier = modifier.fillMaxSize())
+    }
+}
+
+@Composable
 private fun StatusCategoryMaterial(
     category: StatusCategory,
     onBack: () -> Unit,
@@ -80,6 +112,7 @@ private fun StatusCategoryMaterial(
                     }
                 },
                 title = { Text(stringResource(category.titleRes)) },
+                actions = { RebootListPopup() },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface,
                     scrolledContainerColor = MaterialTheme.colorScheme.surface,
@@ -99,7 +132,12 @@ private fun StatusCategoryMaterial(
                 .fillMaxSize()
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
                 .padding(innerPadding),
-        )
+        ) {
+            StatusCategoryContent(
+                category = category,
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
     }
 }
 
@@ -118,6 +156,7 @@ private fun StatusCategoryMiuix(
                 TopAppBar(
                     color = barColor,
                     title = stringResource(category.titleRes),
+                    actions = { RebootListPopup() },
                     navigationIcon = {
                         MiuixIconButton(onClick = onBack) {
                             val layoutDirection = LocalLayoutDirection.current
@@ -149,6 +188,11 @@ private fun StatusCategoryMiuix(
                 .fillMaxSize()
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
                 .padding(innerPadding),
-        )
+        ) {
+            StatusCategoryContent(
+                category = category,
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
     }
 }
