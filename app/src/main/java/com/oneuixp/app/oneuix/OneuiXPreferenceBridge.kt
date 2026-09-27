@@ -33,6 +33,8 @@ private fun Preference.probeSummary(): String =
         "leftDp=${systemUI.statusBar.statusBarLeftPaddingDp}, " +
         "clockEnabled=${systemUI.statusBar.setStatusBarClockFormat}, " +
         "clockFormat=${systemUI.statusBar.statusBarClockFormat.replace("\n", "\\n")}, " +
+        "maxIconsEnabled=${systemUI.statusBar.modifyStatusBarMaxNotificationIcons}, " +
+        "maxIcons=${systemUI.statusBar.statusBarMaxNotificationIcons}, " +
         "launcherMemory=${other.showMemoryUsageInRecents}"
 
 private object OneuiXXposedService {
@@ -84,7 +86,10 @@ private object OneuiXXposedService {
             application.getSystemService(UserManager::class.java)?.isUserUnlocked == true
         if (!unlocked) return false
         return runCatching {
-            val current = application.oneuiXDataStore.data.first()
+            // updateData is serialized by DataStore. An identity transaction here waits
+            // behind every slider/switch mutation already queued by the UI, so a reboot
+            // can never flush an older snapshot just because the last UI write is pending.
+            val current = application.oneuiXDataStore.updateData { it }
             Log.i(TAG, "CHAIN_PROBE synchronous local DataStore " + current.probeSummary())
             OneuiXPreferenceSerializer.synchronizeRemote(current)
         }.onFailure {
