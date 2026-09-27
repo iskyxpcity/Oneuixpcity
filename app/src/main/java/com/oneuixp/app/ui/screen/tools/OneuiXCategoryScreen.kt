@@ -37,13 +37,16 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
@@ -66,6 +69,8 @@ import com.oneuixp.app.ui.LocalUiMode
 import com.oneuixp.app.ui.UiMode
 import com.oneuixp.app.ui.component.material.SegmentedColumn
 import com.oneuixp.app.ui.component.material.SegmentedDropdownItem
+import com.oneuixp.app.ui.component.material.SegmentedListItem
+import com.oneuixp.app.ui.component.material.ExpressiveSwitch
 import com.oneuixp.app.ui.component.material.SegmentedSwitchItem
 import com.oneuixp.app.ui.component.material.SegmentedSliderItem
 import com.oneuixp.app.ui.component.material.SegmentedTextField
@@ -76,6 +81,7 @@ import com.oneuixp.app.ui.util.BlurredBar
 import com.oneuixp.app.ui.util.rememberBlurBackdrop
 import com.oneuixp.app.ui.viewmodel.OneuiXToolsViewModel
 import io.github.soclear.oneuix.common.Preference
+import io.github.soclear.oneuix.common.PowerMenuAction
 import io.github.soclear.oneuix.hook.util.StatusBarClockFormatter
 import io.github.soclear.oneuix.ui.category.DetailPaneAndroid
 import io.github.soclear.oneuix.ui.category.AndroidEvent
@@ -119,6 +125,7 @@ import io.github.soclear.oneuix.ui.category.onSketchBookEvent
 import io.github.soclear.oneuix.ui.category.onSystemUIEvent
 import io.github.soclear.oneuix.ui.category.onThemeCenterEvent
 import io.github.soclear.oneuix.ui.category.onVideoEvent
+import io.github.soclear.oneuix.ui.category.WatchManagerEvent
 import io.github.soclear.oneuix.ui.category.onWatchManagerEvent
 import io.github.soclear.oneuix.ui.category.onWeatherEvent
 import top.yukonga.miuix.kmp.basic.Card
@@ -167,14 +174,28 @@ fun OneuiXCategoryScreen(categoryName: String) {
         .ordered(category, allSettings)
         .filter { toolsViewModel.isVisible(preference, it) }
 
-    val groups = remember(category, orderedVisibleSettings) {
+    val groups = remember(
+        category,
+        orderedVisibleSettings,
+        preference.systemUI.other.powerMenuActions,
+    ) {
         val orderedGroups = linkedMapOf<String, MutableList<OneuiXSettingSpec>>()
         orderedVisibleSettings.forEach { spec ->
             orderedGroups
                 .getOrPut(OneuiXLayoutRules.groupKey(spec)) { mutableListOf() }
                 .add(spec)
         }
-        orderedGroups.values.map { items ->
+
+        val powerOrder = PowerMenuAction.normalize(preference.systemUI.other.powerMenuActions)
+            .withIndex()
+            .associate { it.value.name to it.index }
+
+        orderedGroups.values.map { rawItems ->
+            val parentItems = rawItems.filter { it.type != OneuiXSettingType.PowerAction }
+            val powerItems = rawItems
+                .filter { it.type == OneuiXSettingType.PowerAction }
+                .sortedBy { powerOrder[it.powerActionName] ?: Int.MAX_VALUE }
+            val items = parentItems + powerItems
             OneuiXSettingGroup(
                 section = OneuiXLayoutRules.section(category, items.first()),
                 items = items,
@@ -458,8 +479,7 @@ private fun MaterialSettingRow(
     }
 
     when (spec.type) {
-        OneuiXSettingType.Toggle,
-        OneuiXSettingType.PowerAction -> {
+        OneuiXSettingType.Toggle -> {
             SegmentedSwitchItem(
                 icon = icon,
                 title = title,
@@ -467,6 +487,14 @@ private fun MaterialSettingRow(
                 checked = toolsViewModel.checked(preference, spec),
                 showChildIndicator = hasChildren,
                 onCheckedChange = { toolsViewModel.setChecked(spec, it) },
+            )
+        }
+
+        OneuiXSettingType.PowerAction -> {
+            MaterialPowerActionRow(
+                spec = spec,
+                preference = preference,
+                toolsViewModel = toolsViewModel,
             )
         }
 
@@ -484,8 +512,31 @@ private fun MaterialSettingRow(
                 items = labels,
                 selectedIndex = index,
                 onItemSelected = { selected ->
-                    spec.choices.getOrNull(selected)?.let {
-                        toolsViewModel.setRawValue(spec, it.value)
+                    spec.choices.getOrNull(selected)?.let { choice ->
+                        when (spec.path) {
+                            "systemUI.statusBar.physicalEsimAdapterSimSlot" ->
+                                toolsViewModel.onSystemUIEvent(
+                                    SystemUIEvent.StatusBar.PhysicalEsimAdapterSimSlot(
+                                        choice.value.toIntOrNull() ?: 0
+                                    )
+                                )
+
+                            "systemUI.statusBar.statusBarDoubleLineClockSize" ->
+                                toolsViewModel.onSystemUIEvent(
+                                    SystemUIEvent.StatusBar.StatusBarDoubleLineClockSize(
+                                        choice.value
+                                    )
+                                )
+
+                            "other.watchPairingConnectionMode" ->
+                                toolsViewModel.onWatchManagerEvent(
+                                    WatchManagerEvent.WatchPairingConnectionMode(
+                                        choice.value.toIntOrNull() ?: 0
+                                    )
+                                )
+
+                            else -> toolsViewModel.setRawValue(spec, choice.value)
+                        }
                     }
                 },
             )
@@ -721,6 +772,96 @@ private fun MaterialSliderValue(
 }
 
 @Composable
+private fun MaterialPowerActionRow(
+    spec: OneuiXSettingSpec,
+    preference: Preference,
+    toolsViewModel: OneuiXToolsViewModel,
+) {
+    val name = spec.powerActionName ?: return
+    val actions = PowerMenuAction.normalize(preference.systemUI.other.powerMenuActions)
+    val index = actions.indexOfFirst { it.name == name }
+    val action = actions.getOrNull(index) ?: return
+    val visiblePosition = actions.take(index + 1).count { it.visible }
+
+    SegmentedListItem(
+        headlineContent = { Text(oneuiXSettingTitle(spec)) },
+        supportingContent = {
+            Text(
+                if (action.visible) {
+                    stringResource(
+                        R.string.oneuix_powerMenuActionVisible_summary,
+                        visiblePosition,
+                    )
+                } else {
+                    stringResource(R.string.oneuix_powerMenuActionHidden_summary)
+                }
+            )
+        },
+        trailingContent = {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                TextButton(
+                    enabled = index > 0,
+                    onClick = {
+                        toolsViewModel.onSystemUIEvent(
+                            SystemUIEvent.Other.PowerMenuActions(
+                                actions.movePowerAction(index, index - 1)
+                            )
+                        )
+                    },
+                ) {
+                    Text(stringResource(R.string.oneuix_moveUp))
+                }
+                TextButton(
+                    enabled = index in 0 until actions.lastIndex,
+                    onClick = {
+                        toolsViewModel.onSystemUIEvent(
+                            SystemUIEvent.Other.PowerMenuActions(
+                                actions.movePowerAction(index, index + 1)
+                            )
+                        )
+                    },
+                ) {
+                    Text(stringResource(R.string.oneuix_moveDown))
+                }
+                ExpressiveSwitch(
+                    checked = action.visible,
+                    onCheckedChange = { visible ->
+                        toolsViewModel.onSystemUIEvent(
+                            SystemUIEvent.Other.PowerMenuActions(
+                                actions.mapIndexed { actionIndex, item ->
+                                    if (actionIndex == index) {
+                                        item.copy(visible = visible)
+                                    } else {
+                                        item
+                                    }
+                                }
+                            )
+                        )
+                    },
+                )
+            }
+        },
+    )
+}
+
+private fun List<PowerMenuAction>.movePowerAction(
+    fromIndex: Int,
+    toIndex: Int,
+): List<PowerMenuAction> = toMutableList().apply {
+    if (
+        fromIndex !in indices ||
+        toIndex !in indices ||
+        fromIndex == toIndex
+    ) {
+        return@apply
+    }
+    val moved = removeAt(fromIndex)
+    add(toIndex, moved)
+}
+
+@Composable
 private fun MaterialClockFormatEditor(
     spec: OneuiXSettingSpec,
     title: String,
@@ -740,7 +881,12 @@ private fun MaterialClockFormatEditor(
     SegmentedTextField(
         label = title,
         value = edit,
-        onValueChange = { edit = it },
+        onValueChange = {
+            edit = it
+            preview = runCatching {
+                StatusBarClockFormatter.format(it, LocalDateTime.now())
+            }.getOrElse { "error" }
+        },
         singleLine = false,
         leadingContent = oneuiXSettingIcon(spec)?.let { imageVector ->
             { Icon(imageVector = imageVector, contentDescription = null) }
