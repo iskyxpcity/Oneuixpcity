@@ -53,6 +53,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
+import java.time.LocalDateTime
 import kotlin.math.roundToInt
 import android.widget.Toast
 import com.oneuixp.app.R
@@ -75,7 +76,9 @@ import com.oneuixp.app.ui.util.BlurredBar
 import com.oneuixp.app.ui.util.rememberBlurBackdrop
 import com.oneuixp.app.ui.viewmodel.OneuiXToolsViewModel
 import io.github.soclear.oneuix.common.Preference
+import io.github.soclear.oneuix.hook.util.StatusBarClockFormatter
 import io.github.soclear.oneuix.ui.category.DetailPaneAndroid
+import io.github.soclear.oneuix.ui.category.AndroidEvent
 import io.github.soclear.oneuix.ui.category.DetailPaneBrowser
 import io.github.soclear.oneuix.ui.category.DetailPaneCalendar
 import io.github.soclear.oneuix.ui.category.DetailPaneCall
@@ -92,6 +95,7 @@ import io.github.soclear.oneuix.ui.category.DetailPaneSPen
 import io.github.soclear.oneuix.ui.category.DetailPaneSettings
 import io.github.soclear.oneuix.ui.category.DetailPaneSketchBook
 import io.github.soclear.oneuix.ui.category.DetailPaneSystemUI
+import io.github.soclear.oneuix.ui.category.SystemUIEvent
 import io.github.soclear.oneuix.ui.category.DetailPaneThemeCenter
 import io.github.soclear.oneuix.ui.category.DetailPaneVideo
 import io.github.soclear.oneuix.ui.category.DetailPaneWatchManager
@@ -501,13 +505,22 @@ private fun MaterialSettingRow(
         OneuiXSettingType.IntValue,
         OneuiXSettingType.FloatValue,
         OneuiXSettingType.TextValue -> {
-            EditableMaterialValue(
-                spec = spec,
-                title = title,
-                summary = summary,
-                preference = preference,
-                toolsViewModel = toolsViewModel,
-            )
+            if (spec.path == "systemUI.statusBar.statusBarClockFormat") {
+                MaterialClockFormatEditor(
+                    spec = spec,
+                    title = title,
+                    preference = preference,
+                    toolsViewModel = toolsViewModel,
+                )
+            } else {
+                EditableMaterialValue(
+                    spec = spec,
+                    title = title,
+                    summary = summary,
+                    preference = preference,
+                    toolsViewModel = toolsViewModel,
+                )
+            }
         }
     }
 }
@@ -598,6 +611,93 @@ private fun sliderStorageValue(
     else -> value.toString()
 }
 
+private fun commitMaterialSliderValue(
+    spec: OneuiXSettingSpec,
+    value: Float,
+    config: MaterialSliderConfig,
+    toolsViewModel: OneuiXToolsViewModel,
+) {
+    when (spec.path) {
+        "android.maxNeverKilledAppNum" ->
+            toolsViewModel.onAndroidEvent(
+                AndroidEvent.MaxNeverKilledAppNum(value.roundToInt())
+            )
+
+        "systemUI.statusBar.statusBarLeftPaddingDp" ->
+            toolsViewModel.onSystemUIEvent(
+                SystemUIEvent.StatusBar.StatusBarLeftPaddingDp(value)
+            )
+
+        "systemUI.statusBar.statusBarRightPaddingDp" ->
+            toolsViewModel.onSystemUIEvent(
+                SystemUIEvent.StatusBar.StatusBarRightPaddingDp(value)
+            )
+
+        "systemUI.statusBar.statusBarTopPaddingDp" ->
+            toolsViewModel.onSystemUIEvent(
+                SystemUIEvent.StatusBar.StatusBarTopPaddingDp(
+                    (value * 10f).roundToInt() / 10f
+                )
+            )
+
+        "systemUI.statusBar.statusBarBottomPaddingDp" ->
+            toolsViewModel.onSystemUIEvent(
+                SystemUIEvent.StatusBar.StatusBarBottomPaddingDp(
+                    (value * 10f).roundToInt() / 10f
+                )
+            )
+
+        "systemUI.statusBar.batteryIconWidthScale" ->
+            toolsViewModel.onSystemUIEvent(
+                SystemUIEvent.StatusBar.BatteryIconWidthScale(value)
+            )
+
+        "systemUI.statusBar.batteryIconHeightScale" ->
+            toolsViewModel.onSystemUIEvent(
+                SystemUIEvent.StatusBar.BatteryIconHeightScale(value)
+            )
+
+        "systemUI.statusBar.fold7DoubleLineClockTimeScale" ->
+            toolsViewModel.onSystemUIEvent(
+                SystemUIEvent.StatusBar.Fold7DoubleLineClockTimeScale(
+                    (value * 100f).roundToInt() / 100f
+                )
+            )
+
+        "systemUI.statusBar.fold7DoubleLineClockDateScale" ->
+            toolsViewModel.onSystemUIEvent(
+                SystemUIEvent.StatusBar.Fold7DoubleLineClockDateScale(
+                    (value * 100f).roundToInt() / 100f
+                )
+            )
+
+        "systemUI.statusBar.doubleLineClockGapDp" ->
+            toolsViewModel.onSystemUIEvent(
+                SystemUIEvent.StatusBar.DoubleLineClockGapDp(
+                    (value * 10f).roundToInt() / 10f
+                )
+            )
+
+        "systemUI.statusBar.statusBarClockTextScale" ->
+            toolsViewModel.onSystemUIEvent(
+                SystemUIEvent.StatusBar.StatusBarClockTextScale(value)
+            )
+
+        "systemUI.statusBar.statusBarMaxNotificationIcons" ->
+            toolsViewModel.onSystemUIEvent(
+                SystemUIEvent.StatusBar.StatusBarMaxNotificationIcons(value.roundToInt())
+            )
+
+        "systemUI.qs.qsClockTextSize" ->
+            toolsViewModel.onSystemUIEvent(
+                SystemUIEvent.QS.QSClockTextSize(value)
+            )
+
+        else ->
+            toolsViewModel.setRawValue(spec, sliderStorageValue(value, config))
+    }
+}
+
 @Composable
 private fun MaterialSliderValue(
     spec: OneuiXSettingSpec,
@@ -621,7 +721,12 @@ private fun MaterialSliderValue(
         valueRange = config.min..config.max,
         steps = config.steps,
         onValueChangeFinished = {
-            toolsViewModel.setRawValue(spec, sliderStorageValue(value, config))
+            commitMaterialSliderValue(
+                spec = spec,
+                value = value,
+                config = config,
+                toolsViewModel = toolsViewModel,
+            )
         },
     )
 }
@@ -657,6 +762,56 @@ private fun NetworkSpeedThresholdMaterial(
             showIcon = false,
         )
     }
+}
+
+@Composable
+private fun MaterialClockFormatEditor(
+    spec: OneuiXSettingSpec,
+    title: String,
+    preference: Preference,
+    toolsViewModel: OneuiXToolsViewModel,
+) {
+    val current = toolsViewModel.value(preference, spec)
+    var edit by remember(spec.path, current) { mutableStateOf(current) }
+    var preview by remember(spec.path, current) {
+        mutableStateOf(
+            runCatching {
+                StatusBarClockFormatter.format(current, LocalDateTime.now())
+            }.getOrDefault("")
+        )
+    }
+
+    SegmentedTextField(
+        label = title,
+        value = edit,
+        onValueChange = { edit = it },
+        singleLine = false,
+        leadingContent = oneuiXSettingIcon(spec)?.let { imageVector ->
+            { Icon(imageVector = imageVector, contentDescription = null) }
+        },
+        trailingContent = {
+            TextButton(
+                onClick = {
+                    val formatted = runCatching {
+                        StatusBarClockFormatter.format(edit, LocalDateTime.now())
+                    }
+                    if (formatted.isSuccess) {
+                        preview = formatted.getOrThrow()
+                        toolsViewModel.onSystemUIEvent(
+                            SystemUIEvent.StatusBar.StatusBarClockFormat(edit)
+                        )
+                    } else {
+                        preview = "error"
+                    }
+                },
+            ) {
+                Text(stringResource(R.string.oneuix_confirm))
+            }
+        },
+        supportingContent = {
+            Text(preview.ifBlank { current })
+        },
+    )
 }
 
 @Composable
