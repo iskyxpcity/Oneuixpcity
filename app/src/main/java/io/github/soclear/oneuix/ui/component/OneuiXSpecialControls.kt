@@ -46,29 +46,40 @@ fun OneuiXPreferenceGroup(
 ) {
     when (LocalUiMode.current) {
         UiMode.Material -> {
-            val baseShapes = ListItemDefaults.segmentedShapes(0, 1)
-            val flatShapes = baseShapes.copy(
-                shape = RectangleShape,
-                selectedShape = RectangleShape,
-                pressedShape = RectangleShape,
-                focusedShape = RectangleShape,
-                hoveredShape = RectangleShape,
-                draggedShape = RectangleShape,
-            )
-            Column(
-                modifier = modifier
-                    .padding(horizontal = 16.dp, vertical = 4.dp)
-                    .clip(MaterialTheme.shapes.large),
-                verticalArrangement = Arrangement.spacedBy(2.dp),
-            ) {
-                CompositionLocalProvider(
-                    LocalOneuiXGroupedPreference provides true,
-                    LocalListItemShapes provides flatShapes,
+            if (LocalOneuiXGroupedPreference.current) {
+                // A nested functional subgroup inside an already segmented
+                // detail card should keep its behavior but not draw another
+                // card inside the parent card.
+                Column(
+                    modifier = modifier,
+                    verticalArrangement = Arrangement.spacedBy(2.dp),
+                    content = content,
+                )
+            } else {
+                val baseShapes = ListItemDefaults.segmentedShapes(0, 1)
+                val flatShapes = baseShapes.copy(
+                    shape = RectangleShape,
+                    selectedShape = RectangleShape,
+                    pressedShape = RectangleShape,
+                    focusedShape = RectangleShape,
+                    hoveredShape = RectangleShape,
+                    draggedShape = RectangleShape,
+                )
+                Column(
+                    modifier = modifier
+                        .padding(horizontal = 16.dp, vertical = 4.dp)
+                        .clip(MaterialTheme.shapes.large),
+                    verticalArrangement = Arrangement.spacedBy(2.dp),
                 ) {
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(2.dp),
-                        content = content,
-                    )
+                    CompositionLocalProvider(
+                        LocalOneuiXGroupedPreference provides true,
+                        LocalListItemShapes provides flatShapes,
+                    ) {
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(2.dp),
+                            content = content,
+                        )
+                    }
                 }
             }
         }
