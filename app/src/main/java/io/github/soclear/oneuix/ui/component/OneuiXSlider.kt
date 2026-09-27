@@ -1,7 +1,9 @@
 package io.github.soclear.oneuix.ui.component
 
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.oneuixp.app.ui.LocalUiMode
 import com.oneuixp.app.ui.UiMode
 import androidx.compose.material3.Slider as MaterialSlider
@@ -30,7 +32,7 @@ fun OneuiXSlider(
         UiMode.Miuix -> MiuixSlider(
             value = value,
             onValueChange = onValueChange,
-            modifier = modifier,
+            modifier = modifier.padding(bottom = 10.dp),
             valueRange = valueRange,
             steps = steps,
             onValueChangeFinished = onValueChangeFinished,
