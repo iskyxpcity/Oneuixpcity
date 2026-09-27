@@ -729,13 +729,16 @@ fun DetailPaneSystemUI(
             OneuiXChildVisibility(expanded && uiState.statusBar.modifyStatusBarMaxNotificationIcons) {
                 OneuiXSlider(
                     value = max.toFloat(),
-                    onValueChange = { max = it.roundToInt() },
+                    onValueChange = {
+                        val next = it.roundToInt()
+                        if (next != max) {
+                            max = next
+                            onEvent(SystemUIEvent.StatusBar.StatusBarMaxNotificationIcons(next))
+                        }
+                    },
                     modifier = Modifier.padding(horizontal = 16.dp),
                     valueRange = 4f..20f,
                     steps = 15,
-                    onValueChangeFinished = {
-                        onEvent(SystemUIEvent.StatusBar.StatusBarMaxNotificationIcons(max))
-                    }
                 )
             }
         }
