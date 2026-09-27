@@ -1,5 +1,6 @@
 package io.github.soclear.oneuix.ui.component
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -128,6 +129,19 @@ fun OneuiXChildOptionSurface(
         }
 
         UiMode.Miuix -> Box(modifier = modifier) {
+            content()
+        }
+    }
+}
+
+
+@Composable
+fun OneuiXChildVisibility(
+    visible: Boolean,
+    content: @Composable () -> Unit,
+) {
+    AnimatedVisibility(visible = visible) {
+        OneuiXChildOptionSurface {
             content()
         }
     }
