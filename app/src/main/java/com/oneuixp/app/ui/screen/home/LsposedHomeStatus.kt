@@ -16,8 +16,11 @@ import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
+import com.oneuixp.app.oneuix.OneuiXFeatureCatalog
+import com.oneuixp.app.oneuix.oneuiXDataStore
 import com.oneuixp.app.statusbar.LsposedFrameworkStatus
 import com.oneuixp.app.statusbar.StatusBridge
+import io.github.soclear.oneuix.common.Preference
 
 @Immutable
 data class LsposedHomeStatus(
@@ -50,6 +53,7 @@ fun rememberLsposedHomeStatus(): LsposedHomeStatus {
     val context = LocalContext.current.applicationContext
     val configuredScopes = remember(context) { configuredScopeCount(context) }
     val framework by LsposedFrameworkStatus.state.collectAsState()
+    val preference by context.oneuiXDataStore.data.collectAsState(initial = Preference())
     val heartbeatRevision = remember { mutableIntStateOf(0) }
     val heartbeatTick = remember { mutableIntStateOf(0) }
 
@@ -91,6 +95,9 @@ fun rememberLsposedHomeStatus(): LsposedHomeStatus {
 
     val scopeActive = framework.systemUiScopeActive
     val active = scopeActive || injected
+    val featureInjectionCount = remember(preference) {
+        OneuiXFeatureCatalog.enabledInjectionCount(preference)
+    }
     val actualScopeCount = when {
         framework.connected && framework.scopeKnown -> framework.scope.size
         injected -> configuredScopes
@@ -103,7 +110,7 @@ fun rememberLsposedHomeStatus(): LsposedHomeStatus {
         scopeKnown = framework.scopeKnown,
         scopeActive = scopeActive,
         injected = injected,
-        injectionCount = if (injected) StatusBridge.successfulHookCount(context) else 0,
+        injectionCount = featureInjectionCount,
         scopeCount = actualScopeCount,
     )
 }
