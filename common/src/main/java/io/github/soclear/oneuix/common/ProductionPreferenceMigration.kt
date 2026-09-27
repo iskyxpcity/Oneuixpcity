@@ -19,8 +19,7 @@ object ProductionPreferenceMigration {
             ?: return IgnoreUnknownKeysJson.decodeFromString<Preference>(raw)
         val systemUI = root["systemUI"] as? JsonObject
             ?: return IgnoreUnknownKeysJson.decodeFromString<Preference>(raw)
-        val oldOther = systemUI["other"] as? JsonObject
-            ?: return IgnoreUnknownKeysJson.decodeFromString<Preference>(raw)
+        val oldOther = systemUI["other"] as? JsonObject ?: JsonObject(emptyMap())
         val existingNotification = systemUI["notification"] as? JsonObject ?: JsonObject(emptyMap())
         val updatedNotification = existingNotification.toMutableMap()
         notificationKeys.forEach { key ->
