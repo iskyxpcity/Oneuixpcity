@@ -54,5 +54,5 @@
     <string name="settings_floating_bottom_bar_summary">使用 Apple 風格懸浮底部欄</string>
     <string name="settings_enable_glass">液態玻璃</string>
     <string name="settings_enable_glass_summary">為懸浮底部欄啟用液態玻璃效果</string>
-    <string name="oneuixp_tools">工具</string>
+    <string name="oneuixp_tools">功能</string>
 </resources>
