@@ -59,13 +59,23 @@ fun afterAttach(action: Context.() -> Unit) {
 
 context(xposedModule: XposedModule)
 fun afterAttachTry(canRunAction: Boolean = true, action: Context.() -> Unit) {
-    if (canRunAction) {
-        afterAttach {
-            try {
-                action()
-            } catch (t: Throwable) {
-                xlog(t)
-            }
+    if (!canRunAction) return
+
+    val caller = Throwable().stackTrace.firstOrNull { frame ->
+        val name = frame.className
+        name != "io.github.soclear.oneuix.hook.util.UtilKt" &&
+            !name.startsWith("io.github.soclear.oneuix.hook.util.UtilKt$")
+    }
+    val installKey = caller?.let {
+        "${it.className}#${it.methodName}:${it.lineNumber}"
+    } ?: "unknown-hook-installer"
+
+    afterAttach {
+        try {
+            action()
+            HookInstallTracker.markSuccessful(installKey)
+        } catch (t: Throwable) {
+            xlog(t)
         }
     }
 }
