@@ -75,7 +75,7 @@ internal fun oneuiXSettingTitle(spec: OneuiXSettingSpec): String {
     val context = LocalContext.current
     return remember(spec.path, spec.powerActionName, context.resources.configuration.locales) {
         if (spec.type == OneuiXSettingType.PowerAction) {
-            val powerKey = spec.powerActionName?.let { "oneuix_power_\$it" }
+            val powerKey = spec.powerActionName?.let { "oneuix_power_$it" }
             powerKey?.let { resolveString(context, listOf(it)) } ?: spec.title
         } else {
             val raw = spec.path.substringAfterLast('.')
