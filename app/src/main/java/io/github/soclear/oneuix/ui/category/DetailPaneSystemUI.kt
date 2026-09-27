@@ -43,7 +43,6 @@ import io.github.soclear.oneuix.ui.component.OneuiXSlider
 import io.github.soclear.oneuix.ui.component.OneuiXPreferenceGroup
 import io.github.soclear.oneuix.ui.component.OneuiXDetailGroup
 import io.github.soclear.oneuix.ui.component.OneuiXChildVisibility
-import io.github.soclear.oneuix.ui.component.OneuiXChildOptionSurface
 import io.github.soclear.oneuix.ui.component.OneuiXActionButton
 import io.github.soclear.oneuix.ui.component.OneuiXInfoItem
 import io.github.soclear.oneuix.ui.component.OneuiXInlineTextField
