@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
@@ -488,6 +489,7 @@ private fun MiuixSettingRow(
                         MiuixIcon(
                             imageVector = imageVector,
                             contentDescription = null,
+                            modifier = Modifier.size(24.dp),
                             tint = colorScheme.onSurface,
                         )
                     }
@@ -512,6 +514,7 @@ private fun MiuixSettingRow(
                         MiuixIcon(
                             imageVector = imageVector,
                             contentDescription = null,
+                            modifier = Modifier.size(24.dp),
                             tint = colorScheme.onSurface,
                         )
                     }
@@ -557,6 +560,7 @@ private fun NetworkSpeedThresholdMiuix(
                 MiuixIcon(
                     imageVector = imageVector,
                     contentDescription = null,
+                    modifier = Modifier.size(24.dp),
                     tint = colorScheme.onSurface,
                 )
             }
