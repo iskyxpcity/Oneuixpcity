@@ -129,7 +129,7 @@ private fun ToolsPagerMiuix(
                             ArrowPreference(
                                 title = oneuiXCategoryTitle(category),
                                 startAction = {
-                                    CategoryIcon(category = category, size = 60.dp)
+                                    CategoryIcon(category = category, size = 48.dp)
                                 },
                                 onClick = {
                                     navigator.push(Route.OneuiXCategory(category.name))
@@ -192,7 +192,7 @@ private fun ToolsPagerMaterial(
                                 Text(oneuiXCategoryTitle(category))
                             },
                             leadingContent = {
-                                CategoryIcon(category = category, size = 60.dp)
+                                CategoryIcon(category = category, size = 48.dp)
                             },
                             trailingContent = {
                                 Icon(
@@ -218,7 +218,7 @@ private fun ToolsPagerMaterial(
                                 Text(oneuiXCategoryTitle(category))
                             },
                             leadingContent = {
-                                CategoryIcon(category = category, size = 60.dp)
+                                CategoryIcon(category = category, size = 48.dp)
                             },
                             trailingContent = {
                                 Icon(
