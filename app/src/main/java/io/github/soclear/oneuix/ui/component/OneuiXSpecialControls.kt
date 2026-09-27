@@ -2,6 +2,7 @@ package io.github.soclear.oneuix.ui.component
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -242,7 +243,16 @@ fun OneuiXInlineTextField(
                         value = value,
                         onValueChange = onValueChange,
                         singleLine = singleLine,
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(colorScheme.onSurface.copy(alpha = 0.045f))
+                            .border(
+                                width = 1.dp,
+                                color = colorScheme.onSurface.copy(alpha = 0.14f),
+                                shape = RoundedCornerShape(10.dp),
+                            )
+                            .padding(horizontal = 12.dp, vertical = 10.dp),
                         textStyle = MiuixTheme.textStyles.main.copy(
                             color = colorScheme.onSurface,
                         ),
