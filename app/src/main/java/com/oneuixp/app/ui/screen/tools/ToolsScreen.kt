@@ -3,6 +3,8 @@ package com.oneuixp.app.ui.screen.tools
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
@@ -29,12 +31,17 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.oneuixp.app.R
 import com.oneuixp.app.oneuix.OneuiXCategory
@@ -48,11 +55,14 @@ import com.oneuixp.app.ui.theme.LocalEnableBlur
 import com.oneuixp.app.ui.util.BlurredBar
 import com.oneuixp.app.ui.util.rememberBlurBackdrop
 import top.yukonga.miuix.kmp.basic.Card
+import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
+import top.yukonga.miuix.kmp.basic.Text as MiuixText
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.TopAppBar
 import top.yukonga.miuix.kmp.blur.layerBackdrop
-import top.yukonga.miuix.kmp.preference.ArrowPreference
+import top.yukonga.miuix.kmp.icon.MiuixIcons
+import top.yukonga.miuix.kmp.icon.basic.ArrowRight
 import top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme
 import top.yukonga.miuix.kmp.utils.overScrollVertical
 import top.yukonga.miuix.kmp.utils.scrollEndHaptic
@@ -124,17 +134,44 @@ private fun ToolsPagerMiuix(
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(bottom = 10.dp),
+                                .padding(bottom = 12.dp),
+                            onClick = {
+                                navigator.push(Route.OneuiXCategory(category.name))
+                            },
+                            showIndication = true,
+                            insideMargin = PaddingValues(
+                                start = 10.dp,
+                                end = 16.dp,
+                                top = 8.dp,
+                                bottom = 8.dp,
+                            ),
                         ) {
-                            ArrowPreference(
-                                title = oneuiXCategoryTitle(category),
-                                startAction = {
-                                    CategoryIcon(category = category, size = 48.dp)
-                                },
-                                onClick = {
-                                    navigator.push(Route.OneuiXCategory(category.name))
-                                },
-                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                CategoryIcon(category = category, size = 48.dp)
+                                MiuixText(
+                                    text = oneuiXCategoryTitle(category),
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .padding(start = 10.dp),
+                                    fontWeight = FontWeight(550),
+                                    color = colorScheme.onSurface,
+                                    maxLines = 1,
+                                )
+                                val layoutDirection = LocalLayoutDirection.current
+                                MiuixIcon(
+                                    modifier = Modifier
+                                        .graphicsLayer {
+                                            if (layoutDirection == LayoutDirection.Rtl) scaleX = -1f
+                                        }
+                                        .padding(start = 8.dp)
+                                        .size(width = 10.dp, height = 16.dp),
+                                    imageVector = MiuixIcons.Basic.ArrowRight,
+                                    contentDescription = null,
+                                    tint = colorScheme.onSurfaceVariantActions,
+                                )
+                            }
                         }
                     }
                 }
