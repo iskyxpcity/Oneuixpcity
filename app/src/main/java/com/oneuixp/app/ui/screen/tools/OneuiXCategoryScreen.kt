@@ -288,7 +288,6 @@ private fun NetworkSpeedThresholdMaterial(
     summary: String?,
     preference: Preference,
     toolsViewModel: OneuiXToolsViewModel,
-    showIcon: Boolean = true,
 ) {
     val current = toolsViewModel.value(preference, spec).toIntOrNull() ?: 0
     SegmentedSwitchItem(
@@ -322,6 +321,7 @@ private fun EditableMaterialValue(
     summary: String?,
     preference: Preference,
     toolsViewModel: OneuiXToolsViewModel,
+    showIcon: Boolean = true,
 ) {
     val current = toolsViewModel.value(preference, spec)
     var edit by remember(spec.path, current) { mutableStateOf(current) }
