@@ -1,8 +1,6 @@
 package io.github.soclear.oneuix.ui.component
 
 import androidx.compose.runtime.Composable
-import androidx.compose.material3.ListItemDefaults
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
@@ -11,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import com.oneuixp.app.ui.LocalUiMode
 import com.oneuixp.app.ui.UiMode
 import com.oneuixp.app.ui.component.material.SegmentedDropdownItem
+import com.oneuixp.app.ui.component.material.oneuiXSegmentedColors
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
 import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
@@ -29,10 +28,6 @@ fun SelectItem(
 ) {
     val safeIndex = if (entries.isEmpty()) 0 else selectedIndex.coerceIn(0, entries.lastIndex)
     val grouped = LocalOneuiXGroupedPreference.current
-    val materialColors = ListItemDefaults.segmentedColors().copy(
-        containerColor = Color.Transparent,
-        disabledContainerColor = Color.Transparent,
-    )
 
     when (LocalUiMode.current) {
         UiMode.Material -> {
@@ -41,7 +36,7 @@ fun SelectItem(
             ) {
                 SegmentedDropdownItem(
                     icon = icon,
-                    colors = if (grouped) materialColors else ListItemDefaults.segmentedColors(),
+                    colors = oneuiXSegmentedColors(),
                     title = title,
                     summary = summary,
                     items = entries,

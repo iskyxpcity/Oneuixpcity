@@ -1,11 +1,16 @@
 package io.github.soclear.oneuix.ui.component
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
-import androidx.compose.material3.ListItemDefaults
+import androidx.compose.material3.VerticalDivider as MaterialVerticalDivider
 import androidx.compose.material3.Text
-import androidx.compose.ui.graphics.Color
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -17,10 +22,12 @@ import com.oneuixp.app.ui.UiMode
 import com.oneuixp.app.ui.component.material.ExpressiveSwitch
 import com.oneuixp.app.ui.component.material.SegmentedListItem
 import com.oneuixp.app.ui.component.material.SegmentedSwitchItem
+import com.oneuixp.app.ui.component.material.oneuiXSegmentedColors
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
 import top.yukonga.miuix.kmp.basic.Switch as MiuixSwitch
+import top.yukonga.miuix.kmp.basic.VerticalDivider as MiuixVerticalDivider
 import top.yukonga.miuix.kmp.preference.SwitchPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme
 
@@ -41,10 +48,6 @@ fun SwitchItem(
     onCheckedChange: (Boolean) -> Unit
 ) {
     val grouped = LocalOneuiXGroupedPreference.current
-    val materialColors = ListItemDefaults.segmentedColors().copy(
-        containerColor = Color.Transparent,
-        disabledContainerColor = Color.Transparent,
-    )
 
     when (LocalUiMode.current) {
         UiMode.Material -> {
@@ -52,17 +55,27 @@ fun SwitchItem(
                 SegmentedListItem(
                     modifier = if (grouped) modifier else modifier.padding(horizontal = 16.dp, vertical = 4.dp),
                     onClick = onClick,
-                    colors = if (grouped) materialColors else ListItemDefaults.segmentedColors(),
+                    colors = oneuiXSegmentedColors(),
                     headlineContent = { Text(title) },
                     supportingContent = summary?.let { { Text(it) } },
                     leadingContent = icon?.let { imageVector ->
                         { Icon(imageVector, contentDescription = title) }
                     },
                     trailingContent = {
-                        ExpressiveSwitch(
-                            checked = checked,
-                            onCheckedChange = onCheckedChange,
-                        )
+                        Row(
+                            modifier = Modifier.height(IntrinsicSize.Min),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            MaterialVerticalDivider(
+                                modifier = Modifier
+                                    .fillMaxHeight()
+                                    .padding(top = 8.dp, bottom = 8.dp, end = 15.dp),
+                            )
+                            ExpressiveSwitch(
+                                checked = checked,
+                                onCheckedChange = onCheckedChange,
+                            )
+                        }
                     },
                 )
             } else {
@@ -71,7 +84,7 @@ fun SwitchItem(
                 ) {
                     SegmentedSwitchItem(
                         icon = icon,
-                        colors = if (grouped) materialColors else ListItemDefaults.segmentedColors(),
+                        colors = oneuiXSegmentedColors(),
                         title = title,
                         summary = summary,
                         checked = checked,
@@ -98,6 +111,11 @@ fun SwitchItem(
                             }
                         },
                         endActions = {
+                            MiuixVerticalDivider(
+                                modifier = Modifier
+                                    .height(32.dp)
+                                    .padding(end = 12.dp),
+                            )
                             MiuixSwitch(
                                 modifier = Modifier.align(Alignment.CenterVertically),
                                 checked = checked,

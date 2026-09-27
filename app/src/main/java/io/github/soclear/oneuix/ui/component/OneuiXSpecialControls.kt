@@ -1,15 +1,12 @@
 package io.github.soclear.oneuix.ui.component
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.Button as MaterialButton
-import androidx.compose.material3.Card as MaterialCard
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ListItemDefaults
-import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -18,7 +15,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
@@ -26,6 +22,7 @@ import com.oneuixp.app.ui.LocalUiMode
 import com.oneuixp.app.ui.UiMode
 import com.oneuixp.app.ui.component.material.ExpressiveSwitch
 import com.oneuixp.app.ui.component.material.SegmentedListItem
+import com.oneuixp.app.ui.component.material.oneuiXSegmentedColors
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.Button as MiuixButton
 import top.yukonga.miuix.kmp.basic.Card
@@ -43,14 +40,15 @@ fun OneuiXPreferenceGroup(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     when (LocalUiMode.current) {
-        UiMode.Material -> MaterialCard(
+        UiMode.Material -> Column(
             modifier = modifier.padding(horizontal = 16.dp, vertical = 4.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp),
-            ),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
         ) {
             CompositionLocalProvider(LocalOneuiXGroupedPreference provides true) {
-                Column(content = content)
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(2.dp),
+                    content = content,
+                )
             }
         }
 
@@ -134,9 +132,9 @@ fun OneuiXInlineTextField(
 
         UiMode.Miuix -> {
             @Composable
-            fun Content() {
+            fun Content(contentModifier: Modifier = Modifier) {
                 Column(
-                    modifier = Modifier
+                    modifier = contentModifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 12.dp),
                 ) {
@@ -162,7 +160,7 @@ fun OneuiXInlineTextField(
             }
 
             if (grouped) {
-                Content()
+                Content(modifier)
             } else {
                 Card(modifier = modifier) {
                     Content()
@@ -181,14 +179,10 @@ fun OneuiXInfoItem(
     trailingContent: (@Composable () -> Unit)? = null,
 ) {
     val grouped = LocalOneuiXGroupedPreference.current
-    val materialColors = ListItemDefaults.segmentedColors().copy(
-        containerColor = Color.Transparent,
-        disabledContainerColor = Color.Transparent,
-    )
     when (LocalUiMode.current) {
         UiMode.Material -> SegmentedListItem(
             modifier = if (grouped) modifier else modifier.padding(horizontal = 16.dp, vertical = 4.dp),
-            colors = if (grouped) materialColors else ListItemDefaults.segmentedColors(),
+            colors = oneuiXSegmentedColors(),
             headlineContent = { MaterialText(title) },
             supportingContent = summary?.let { { MaterialText(it) } },
             leadingContent = icon?.let { imageVector ->
