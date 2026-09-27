@@ -10,17 +10,17 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Extension
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.outlined.Extension
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material.icons.outlined.Shield
 import androidx.compose.material3.FlexibleBottomAppBar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextOverflow
 import com.oneuixp.app.R
 import com.oneuixp.app.ui.LocalMainPagerState
@@ -29,9 +29,10 @@ import com.oneuixp.app.ui.LocalMainPagerState
 fun BottomBarMaterial() {
     val mainPagerState = LocalMainPagerState.current
 
+    val featuresIcon = ImageVector.vectorResource(id = R.drawable.apps)
     val items = listOf(
         Triple(R.string.home, Icons.Filled.Home, Icons.Outlined.Home),
-        Triple(R.string.oneuixp_tools, Icons.Filled.Shield, Icons.Outlined.Shield),
+        Triple(R.string.oneuixp_tools, featuresIcon, featuresIcon),
         Triple(R.string.oneuixp_status, Icons.Filled.Extension, Icons.Outlined.Extension),
         Triple(R.string.settings, Icons.Filled.Settings, Icons.Outlined.Settings)
     )
