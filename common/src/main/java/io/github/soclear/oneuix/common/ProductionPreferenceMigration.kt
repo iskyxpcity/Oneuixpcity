@@ -28,11 +28,13 @@ object ProductionPreferenceMigration {
                 oldOther[key]?.let { updatedNotification[key] = it }
             }
         }
-        if (updatedNotification == existingNotification) {
-            return IgnoreUnknownKeysJson.decodeFromString<Preference>(raw)
-        }
+
         val updatedSystemUI = systemUI.toMutableMap()
-        updatedSystemUI["notification"] = JsonObject(updatedNotification)
+        var changed = false
+        if (updatedNotification != existingNotification) {
+            updatedSystemUI["notification"] = JsonObject(updatedNotification)
+            changed = true
+        }
 
         val statusBar = systemUI["statusBar"] as? JsonObject
         if (statusBar != null) {
@@ -49,9 +51,15 @@ object ProductionPreferenceMigration {
                 val oldGap = statusBar["doubleLineClockGapDp"]?.toString()?.toFloatOrNull() ?: 1f
                 updatedStatusBar["modifyDoubleLineClockGap"] = JsonPrimitive(oldGap != 1f)
             }
-            updatedSystemUI["statusBar"] = JsonObject(updatedStatusBar)
+            if (updatedStatusBar != statusBar) {
+                updatedSystemUI["statusBar"] = JsonObject(updatedStatusBar)
+                changed = true
+            }
         }
 
+        if (!changed) {
+            return IgnoreUnknownKeysJson.decodeFromString<Preference>(raw)
+        }
         val updatedRoot = root.toMutableMap()
         updatedRoot["systemUI"] = JsonObject(updatedSystemUI)
         return IgnoreUnknownKeysJson.decodeFromString<Preference>(JsonObject(updatedRoot).toString())
