@@ -4,6 +4,9 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -31,6 +34,7 @@ import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.SegmentedListItem
 import androidx.compose.material3.Text
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -227,6 +231,7 @@ fun SegmentedSwitchItem(
     colors: ListItemColors = oneuiXSegmentedColors(),
     checked: Boolean,
     enabled: Boolean = true,
+    showChildIndicator: Boolean = false,
     onCheckedChange: (Boolean) -> Unit,
 ) {
     val haptic = LocalHapticFeedback.current
@@ -243,12 +248,24 @@ fun SegmentedSwitchItem(
         headlineContent = { Text(title) },
         leadingContent = icon?.let { { Icon(it, title) } },
         trailingContent = {
-            ExpressiveSwitch(
-                checked = checked,
-                enabled = enabled,
-                onCheckedChange = null,
-                interactionSource = interactionSource,
-            )
+            Row(
+                modifier = Modifier.height(IntrinsicSize.Min),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                if (showChildIndicator) {
+                    VerticalDivider(
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .padding(top = 8.dp, bottom = 8.dp, end = 15.dp),
+                    )
+                }
+                ExpressiveSwitch(
+                    checked = checked,
+                    enabled = enabled,
+                    onCheckedChange = null,
+                    interactionSource = interactionSource,
+                )
+            }
         },
         supportingContent = summary?.let { { Text(it) } }
     )

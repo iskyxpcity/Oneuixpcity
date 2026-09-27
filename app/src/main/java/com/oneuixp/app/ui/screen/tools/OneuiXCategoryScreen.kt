@@ -413,12 +413,13 @@ private fun OneuiXCategoryMaterial(
                     } else {
                         ""
                     },
-                    content = group.items.map { spec ->
+                    content = group.items.mapIndexed { index, spec ->
                         {
                             MaterialSettingRow(
                                 spec = spec,
                                 preference = preference,
                                 toolsViewModel = toolsViewModel,
+                                hasChildren = index == 0 && group.items.size > 1,
                             )
                         }
                     },
@@ -436,6 +437,7 @@ private fun MaterialSettingRow(
     spec: OneuiXSettingSpec,
     preference: Preference,
     toolsViewModel: OneuiXToolsViewModel,
+    hasChildren: Boolean = false,
 ) {
     val title = oneuiXSettingTitle(spec)
     val summary = oneuiXSettingSummary(spec)
@@ -460,6 +462,7 @@ private fun MaterialSettingRow(
                 title = title,
                 summary = summary,
                 checked = toolsViewModel.checked(preference, spec),
+                showChildIndicator = hasChildren,
                 onCheckedChange = { toolsViewModel.setChecked(spec, it) },
             )
         }
