@@ -53,6 +53,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
+import kotlin.math.roundToInt
 import android.widget.Toast
 import com.oneuixp.app.R
 import com.oneuixp.app.oneuix.OneuiXCategory
@@ -65,6 +66,7 @@ import com.oneuixp.app.ui.UiMode
 import com.oneuixp.app.ui.component.material.SegmentedColumn
 import com.oneuixp.app.ui.component.material.SegmentedDropdownItem
 import com.oneuixp.app.ui.component.material.SegmentedSwitchItem
+import com.oneuixp.app.ui.component.material.SegmentedSliderItem
 import com.oneuixp.app.ui.component.material.SegmentedTextField
 import com.oneuixp.app.ui.component.miuix.EditText
 import com.oneuixp.app.ui.navigation3.LocalNavigator
@@ -400,32 +402,27 @@ private fun OneuiXCategoryMaterial(
                 }
             }
 
-            var previousSection: String? = null
-            groups.forEach { group ->
-                val showSection = previousSection != group.section
-                SegmentedColumn(
-                    modifier = Modifier.padding(
-                        horizontal = 16.dp,
-                        vertical = if (showSection) 8.dp else 4.dp,
-                    ),
-                    title = if (showSection) {
-                        oneuiXSectionTitle(group.section)
-                    } else {
-                        ""
-                    },
-                    content = group.items.mapIndexed { index, spec ->
-                        {
-                            MaterialSettingRow(
-                                spec = spec,
-                                preference = preference,
-                                toolsViewModel = toolsViewModel,
-                                hasChildren = index == 0 && group.items.size > 1,
-                            )
-                        }
-                    },
-                )
-                previousSection = group.section
-            }
+            groups
+                .groupBy { it.section }
+                .forEach { (section, sectionGroups) ->
+                    SegmentedColumn(
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                        title = oneuiXSectionTitle(section),
+                        content = sectionGroups.flatMap { group ->
+                            group.items.mapIndexed { index, spec ->
+                                {
+                                    MaterialSettingRow(
+                                        spec = spec,
+                                        preference = preference,
+                                        toolsViewModel = toolsViewModel,
+                                        hasChildren = index == 0 && group.items.size > 1,
+                                        isChild = index > 0,
+                                    )
+                                }
+                            }
+                        },
+                    )
+                }
 
             Spacer(Modifier.height(24.dp))
         }
@@ -438,6 +435,7 @@ private fun MaterialSettingRow(
     preference: Preference,
     toolsViewModel: OneuiXToolsViewModel,
     hasChildren: Boolean = false,
+    isChild: Boolean = false,
 ) {
     val title = oneuiXSettingTitle(spec)
     val summary = oneuiXSettingSummary(spec)
@@ -450,6 +448,18 @@ private fun MaterialSettingRow(
             summary = summary,
             preference = preference,
             toolsViewModel = toolsViewModel,
+        )
+        return
+    }
+
+    materialSliderConfig(spec.path)?.let { config ->
+        MaterialSliderValue(
+            spec = spec,
+            title = title,
+            preference = preference,
+            toolsViewModel = toolsViewModel,
+            config = config,
+            isChild = isChild,
         )
         return
     }
@@ -500,6 +510,120 @@ private fun MaterialSettingRow(
             )
         }
     }
+}
+
+private data class MaterialSliderConfig(
+    val min: Float,
+    val max: Float,
+    val steps: Int = 0,
+    val storageDecimals: Int? = null,
+)
+
+private fun materialSliderConfig(path: String): MaterialSliderConfig? = when (path) {
+    "android.maxNeverKilledAppNum" ->
+        MaterialSliderConfig(5f, 30f, steps = 24, storageDecimals = 0)
+
+    "systemUI.statusBar.statusBarLeftPaddingDp",
+    "systemUI.statusBar.statusBarRightPaddingDp" ->
+        MaterialSliderConfig(0f, 100f)
+
+    "systemUI.statusBar.statusBarTopPaddingDp",
+    "systemUI.statusBar.statusBarBottomPaddingDp" ->
+        MaterialSliderConfig(0f, 8f, steps = 79, storageDecimals = 1)
+
+    "systemUI.statusBar.batteryIconWidthScale",
+    "systemUI.statusBar.batteryIconHeightScale" ->
+        MaterialSliderConfig(0.5f, 2f)
+
+    "systemUI.statusBar.fold7DoubleLineClockTimeScale",
+    "systemUI.statusBar.fold7DoubleLineClockDateScale" ->
+        MaterialSliderConfig(0.5f, 1.1f, steps = 39, storageDecimals = 2)
+
+    "systemUI.statusBar.doubleLineClockGapDp" ->
+        MaterialSliderConfig(0f, 2f, steps = 19, storageDecimals = 1)
+
+    "systemUI.statusBar.statusBarClockTextScale" ->
+        MaterialSliderConfig(0.5f, 2.5f)
+
+    "systemUI.statusBar.statusBarMaxNotificationIcons" ->
+        MaterialSliderConfig(4f, 20f, steps = 15, storageDecimals = 0)
+
+    "systemUI.qs.qsClockTextSize" ->
+        MaterialSliderConfig(15f, 70f)
+
+    else -> null
+}
+
+@Composable
+private fun materialSliderValueLabel(
+    path: String,
+    value: Float,
+): String = when (path) {
+    "android.maxNeverKilledAppNum" -> value.roundToInt().toString()
+
+    "systemUI.statusBar.statusBarLeftPaddingDp",
+    "systemUI.statusBar.statusBarRightPaddingDp" -> "%.1f dp".format(value)
+
+    "systemUI.statusBar.statusBarTopPaddingDp" ->
+        stringResource(R.string.oneuix_statusBarTopPaddingDp_summary, value)
+
+    "systemUI.statusBar.statusBarBottomPaddingDp" ->
+        stringResource(R.string.oneuix_statusBarBottomPaddingDp_summary, value)
+
+    "systemUI.statusBar.batteryIconWidthScale",
+    "systemUI.statusBar.batteryIconHeightScale" -> "%.2f".format(value)
+
+    "systemUI.statusBar.fold7DoubleLineClockTimeScale" ->
+        stringResource(R.string.oneuix_fold7DoubleLineClockTimeScale_summary, value)
+
+    "systemUI.statusBar.fold7DoubleLineClockDateScale" ->
+        stringResource(R.string.oneuix_fold7DoubleLineClockDateScale_summary, value)
+
+    "systemUI.statusBar.doubleLineClockGapDp" ->
+        stringResource(R.string.oneuix_statusBarDoubleLineClockGap_summary, value)
+
+    "systemUI.statusBar.statusBarClockTextScale" -> "%.2fx".format(value)
+    "systemUI.statusBar.statusBarMaxNotificationIcons" -> value.roundToInt().toString()
+    "systemUI.qs.qsClockTextSize" -> "%.1fsp".format(value)
+    else -> value.toString()
+}
+
+private fun sliderStorageValue(
+    value: Float,
+    config: MaterialSliderConfig,
+): String = when (config.storageDecimals) {
+    0 -> value.roundToInt().toString()
+    1 -> ((value * 10f).roundToInt() / 10f).toString()
+    2 -> ((value * 100f).roundToInt() / 100f).toString()
+    else -> value.toString()
+}
+
+@Composable
+private fun MaterialSliderValue(
+    spec: OneuiXSettingSpec,
+    title: String,
+    preference: Preference,
+    toolsViewModel: OneuiXToolsViewModel,
+    config: MaterialSliderConfig,
+    isChild: Boolean,
+) {
+    val current = toolsViewModel.value(preference, spec).toFloatOrNull() ?: config.min
+    var value by remember(spec.path, current) {
+        mutableStateOf(current.coerceIn(config.min, config.max))
+    }
+
+    SegmentedSliderItem(
+        icon = if (isChild) null else oneuiXSettingIcon(spec),
+        title = if (isChild) null else title,
+        valueLabel = materialSliderValueLabel(spec.path, value),
+        value = value,
+        onValueChange = { value = it },
+        valueRange = config.min..config.max,
+        steps = config.steps,
+        onValueChangeFinished = {
+            toolsViewModel.setRawValue(spec, sliderStorageValue(value, config))
+        },
+    )
 }
 
 @Composable
