@@ -18,8 +18,8 @@ import io.github.soclear.oneuix.hook.util.addAssetPath
 
 class Main : XposedModule() {
     private companion object {
-        // Stage 2 migration gate: infrastructure is live, imported feature hooks are not.
-        const val ENABLE_ONEUIX_FUNCTIONS = false
+        // Full OneUIX migration: imported feature hooks are active.
+        const val ENABLE_ONEUIX_FUNCTIONS = true
     }
 
     private var processName = ""
