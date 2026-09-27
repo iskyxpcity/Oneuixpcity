@@ -63,8 +63,48 @@ import com.oneuixp.app.ui.util.BlurredBar
 import com.oneuixp.app.ui.util.rememberBlurBackdrop
 import com.oneuixp.app.ui.viewmodel.OneuiXToolsViewModel
 import io.github.soclear.oneuix.common.Preference
+import io.github.soclear.oneuix.ui.category.DetailPaneAndroid
+import io.github.soclear.oneuix.ui.category.DetailPaneBrowser
+import io.github.soclear.oneuix.ui.category.DetailPaneCalendar
+import io.github.soclear.oneuix.ui.category.DetailPaneCall
+import io.github.soclear.oneuix.ui.category.DetailPaneCamera
+import io.github.soclear.oneuix.ui.category.DetailPaneDualApp
+import io.github.soclear.oneuix.ui.category.DetailPaneGalaxyStore
+import io.github.soclear.oneuix.ui.category.DetailPaneGallery
+import io.github.soclear.oneuix.ui.category.DetailPaneHealthMonitor
+import io.github.soclear.oneuix.ui.category.DetailPaneLauncher
+import io.github.soclear.oneuix.ui.category.DetailPaneMessaging
+import io.github.soclear.oneuix.ui.category.DetailPaneNotes
+import io.github.soclear.oneuix.ui.category.DetailPanePhotoRetouching
+import io.github.soclear.oneuix.ui.category.DetailPaneSPen
+import io.github.soclear.oneuix.ui.category.DetailPaneSettings
+import io.github.soclear.oneuix.ui.category.DetailPaneSketchBook
 import io.github.soclear.oneuix.ui.category.DetailPaneSystemUI
+import io.github.soclear.oneuix.ui.category.DetailPaneThemeCenter
+import io.github.soclear.oneuix.ui.category.DetailPaneVideo
+import io.github.soclear.oneuix.ui.category.DetailPaneWatchManager
+import io.github.soclear.oneuix.ui.category.DetailPaneWeather
+import io.github.soclear.oneuix.ui.category.onAndroidEvent
+import io.github.soclear.oneuix.ui.category.onBrowserEvent
+import io.github.soclear.oneuix.ui.category.onCalendarEvent
+import io.github.soclear.oneuix.ui.category.onCallEvent
+import io.github.soclear.oneuix.ui.category.onCameraEvent
+import io.github.soclear.oneuix.ui.category.onDualAppEvent
+import io.github.soclear.oneuix.ui.category.onGalaxyStoreEvent
+import io.github.soclear.oneuix.ui.category.onGalleryEvent
+import io.github.soclear.oneuix.ui.category.onHealthMonitorEvent
+import io.github.soclear.oneuix.ui.category.onLauncherEvent
+import io.github.soclear.oneuix.ui.category.onMessagingEvent
+import io.github.soclear.oneuix.ui.category.onNotesEvent
+import io.github.soclear.oneuix.ui.category.onPhotoRetouchingEvent
+import io.github.soclear.oneuix.ui.category.onSPenEvent
+import io.github.soclear.oneuix.ui.category.onSettingsEvent
+import io.github.soclear.oneuix.ui.category.onSketchBookEvent
 import io.github.soclear.oneuix.ui.category.onSystemUIEvent
+import io.github.soclear.oneuix.ui.category.onThemeCenterEvent
+import io.github.soclear.oneuix.ui.category.onVideoEvent
+import io.github.soclear.oneuix.ui.category.onWatchManagerEvent
+import io.github.soclear.oneuix.ui.category.onWeatherEvent
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
 import top.yukonga.miuix.kmp.basic.IconButton as MiuixIconButton
@@ -93,15 +133,15 @@ fun OneuiXCategoryScreen(categoryName: String) {
     val toolsViewModel = viewModel<OneuiXToolsViewModel>()
     val preference by toolsViewModel.preference.collectAsStateWithLifecycle()
 
-    if (category == OneuiXCategory.SystemUI) {
-        OneuiXOriginalSystemUiScreen(
-            preference = preference,
-            toolsViewModel = toolsViewModel,
-            onBack = navigator::pop,
-        )
-        return
-    }
+    OneuiXOriginalCategoryScreen(
+        category = category,
+        preference = preference,
+        toolsViewModel = toolsViewModel,
+        onBack = navigator::pop,
+    )
+    return
 
+    @Suppress("UNREACHABLE_CODE")
     val allSettings = remember(category) {
         OneuiXFeatureCatalog.settings(category)
     }
@@ -145,11 +185,59 @@ fun OneuiXCategoryScreen(categoryName: String) {
 }
 
 @Composable
-private fun OneuiXOriginalSystemUiScreen(
+private fun OneuiXOriginalCategoryScreen(
+    category: OneuiXCategory,
     preference: Preference,
     toolsViewModel: OneuiXToolsViewModel,
     onBack: () -> Unit,
 ) {
+    @Composable
+    fun OriginalContent(modifier: Modifier) {
+        when (category) {
+            OneuiXCategory.Android -> DetailPaneAndroid(
+                uiState = preference.android,
+                onEvent = toolsViewModel::onAndroidEvent,
+                modifier = modifier,
+            )
+            OneuiXCategory.SystemUI -> DetailPaneSystemUI(
+                uiState = preference.systemUI,
+                onEvent = toolsViewModel::onSystemUIEvent,
+                modifier = modifier,
+            )
+            OneuiXCategory.Settings -> DetailPaneSettings(
+                uiState = preference.settings,
+                onEvent = toolsViewModel::onSettingsEvent,
+                modifier = modifier,
+            )
+            OneuiXCategory.Call -> DetailPaneCall(
+                uiState = preference.call,
+                onEvent = toolsViewModel::onCallEvent,
+                modifier = modifier,
+            )
+            OneuiXCategory.Camera -> DetailPaneCamera(
+                uiState = preference.camera,
+                onEvent = toolsViewModel::onCameraEvent,
+                modifier = modifier,
+            )
+            OneuiXCategory.Browser -> DetailPaneBrowser(preference.other, toolsViewModel::onBrowserEvent, modifier)
+            OneuiXCategory.Calendar -> DetailPaneCalendar(preference.other, toolsViewModel::onCalendarEvent, modifier)
+            OneuiXCategory.DualApp -> DetailPaneDualApp(preference.other, toolsViewModel::onDualAppEvent, modifier)
+            OneuiXCategory.Gallery -> DetailPaneGallery(preference.other, toolsViewModel::onGalleryEvent, modifier)
+            OneuiXCategory.GalaxyStore -> DetailPaneGalaxyStore(preference.other, toolsViewModel::onGalaxyStoreEvent, modifier)
+            OneuiXCategory.HealthMonitor -> DetailPaneHealthMonitor(preference.other, toolsViewModel::onHealthMonitorEvent, modifier)
+            OneuiXCategory.Launcher -> DetailPaneLauncher(preference.other, toolsViewModel::onLauncherEvent, modifier)
+            OneuiXCategory.Messaging -> DetailPaneMessaging(preference.other, toolsViewModel::onMessagingEvent, modifier)
+            OneuiXCategory.Notes -> DetailPaneNotes(preference.other, toolsViewModel::onNotesEvent, modifier)
+            OneuiXCategory.PhotoRetouching -> DetailPanePhotoRetouching(preference.other, toolsViewModel::onPhotoRetouchingEvent, modifier)
+            OneuiXCategory.SketchBook -> DetailPaneSketchBook(preference.other, toolsViewModel::onSketchBookEvent, modifier)
+            OneuiXCategory.SPen -> DetailPaneSPen(preference.other, toolsViewModel::onSPenEvent, modifier)
+            OneuiXCategory.ThemeCenter -> DetailPaneThemeCenter(preference.other, toolsViewModel::onThemeCenterEvent, modifier)
+            OneuiXCategory.Video -> DetailPaneVideo(preference.other, toolsViewModel::onVideoEvent, modifier)
+            OneuiXCategory.WatchManager -> DetailPaneWatchManager(preference.other, toolsViewModel::onWatchManagerEvent, modifier)
+            OneuiXCategory.Weather -> DetailPaneWeather(preference.other, toolsViewModel::onWeatherEvent, modifier)
+        }
+    }
+
     when (LocalUiMode.current) {
         UiMode.Material -> {
             val scrollBehavior =
@@ -162,7 +250,7 @@ private fun OneuiXOriginalSystemUiScreen(
                                 Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
                             }
                         },
-                        title = { Text(oneuiXCategoryTitle(OneuiXCategory.SystemUI)) },
+                        title = { Text(oneuiXCategoryTitle(category)) },
                         colors = TopAppBarDefaults.topAppBarColors(
                             containerColor = MaterialTheme.colorScheme.surface,
                             scrolledContainerColor = MaterialTheme.colorScheme.surface,
@@ -177,12 +265,10 @@ private fun OneuiXOriginalSystemUiScreen(
                     WindowInsetsSides.Top + WindowInsetsSides.Horizontal
                 ),
             ) { innerPadding ->
-                DetailPaneSystemUI(
-                    uiState = preference.systemUI,
-                    onEvent = toolsViewModel::onSystemUIEvent,
-                    modifier = Modifier
+                OriginalContent(
+                    Modifier
                         .padding(innerPadding)
-                        .nestedScroll(scrollBehavior.nestedScrollConnection),
+                        .nestedScroll(scrollBehavior.nestedScrollConnection)
                 )
             }
         }
@@ -196,7 +282,7 @@ private fun OneuiXOriginalSystemUiScreen(
                     BlurredBar(backdrop) {
                         TopAppBar(
                             color = barColor,
-                            title = oneuiXCategoryTitle(OneuiXCategory.SystemUI),
+                            title = oneuiXCategoryTitle(category),
                             navigationIcon = {
                                 MiuixIconButton(onClick = onBack) {
                                     val layoutDirection = LocalLayoutDirection.current
@@ -220,12 +306,10 @@ private fun OneuiXOriginalSystemUiScreen(
                     .only(WindowInsetsSides.Horizontal),
             ) { innerPadding ->
                 Box(modifier = if (backdrop != null) Modifier.layerBackdrop(backdrop) else Modifier) {
-                    DetailPaneSystemUI(
-                        uiState = preference.systemUI,
-                        onEvent = toolsViewModel::onSystemUIEvent,
-                        modifier = Modifier
+                    OriginalContent(
+                        Modifier
                             .padding(innerPadding)
-                            .nestedScroll(scrollBehavior.nestedScrollConnection),
+                            .nestedScroll(scrollBehavior.nestedScrollConnection)
                     )
                 }
             }
