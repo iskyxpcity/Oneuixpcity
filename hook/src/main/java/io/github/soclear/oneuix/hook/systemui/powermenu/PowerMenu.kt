@@ -9,6 +9,7 @@ import io.github.libxposed.api.XposedModuleInterface
 import io.github.soclear.oneuix.common.Package
 import io.github.soclear.oneuix.common.PowerMenuAction
 import io.github.soclear.oneuix.hook.util.reflect
+import io.github.soclear.oneuix.hook.util.HookInstallTracker
 import io.github.soclear.oneuix.hook.util.xlog
 
 object PowerMenu {
@@ -63,6 +64,7 @@ object PowerMenu {
                 result
             }
             installed = true
+            HookInstallTracker.markSuccessful("systemui.power-menu")
         } catch (t: Throwable) {
             xlog(t)
         }
