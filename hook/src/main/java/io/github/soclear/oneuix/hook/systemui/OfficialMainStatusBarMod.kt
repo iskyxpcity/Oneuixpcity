@@ -18,6 +18,7 @@ import io.github.soclear.oneuix.common.Package
 import io.github.soclear.oneuix.common.Preference
 import io.github.soclear.oneuix.hook.util.PreferenceProvider
 import io.github.soclear.oneuix.hook.util.afterAttach
+import io.github.soclear.oneuix.hook.util.HookInstallTracker
 import io.github.soclear.oneuix.hook.util.xlog
 import java.util.WeakHashMap
 import kotlin.math.roundToInt
@@ -280,6 +281,7 @@ object OfficialMainStatusBarMod {
                     }
                 }
                 watchPreference(xposedModule)
+                HookInstallTracker.markSuccessful("systemui.statusbar.vertical-runtime")
             } catch (t: Throwable) {
                 xlog(t)
             }
