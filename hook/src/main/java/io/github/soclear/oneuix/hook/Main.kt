@@ -1,5 +1,6 @@
 package io.github.soclear.oneuix.hook
 
+import android.util.Log
 import io.github.libxposed.api.XposedModule
 import io.github.libxposed.api.XposedModuleInterface
 import io.github.soclear.oneuix.common.Package
@@ -15,6 +16,7 @@ import io.github.soclear.oneuix.hook.systemui.powermenu.PowerMenu
 import io.github.soclear.oneuix.hook.util.OneuiXPStatusReporter
 import io.github.soclear.oneuix.hook.util.PreferenceProvider
 import io.github.soclear.oneuix.hook.util.addAssetPath
+import io.github.soclear.oneuix.hook.util.xlog
 
 class Main : XposedModule() {
     private companion object {
@@ -33,6 +35,23 @@ class Main : XposedModule() {
         if (!ENABLE_ONEUIX_FUNCTIONS) return@with
 
         val preference = PreferenceProvider.loadPreference() ?: return@with
+
+        if (packageName == Package.SYSTEMUI && processName == Package.SYSTEMUI) {
+            xlog(
+                "CHAIN_PROBE SystemUI dispatch " +
+                    "leftEnabled=${preference.systemUI.statusBar.modifyStatusBarLeftPadding}, " +
+                    "leftDp=${preference.systemUI.statusBar.statusBarLeftPaddingDp}, " +
+                    "clockEnabled=${preference.systemUI.statusBar.setStatusBarClockFormat}, " +
+                    "clockFormat=${preference.systemUI.statusBar.statusBarClockFormat.replace("\n", "\\n")}",
+                priority = Log.INFO,
+            )
+        } else if (packageName == Package.LAUNCHER) {
+            xlog(
+                "CHAIN_PROBE Launcher dispatch " +
+                    "showMemoryUsageInRecents=${preference.other.showMemoryUsageInRecents}",
+                priority = Log.INFO,
+            )
+        }
 
         when (packageName) {
             Package.BROWSER -> {
