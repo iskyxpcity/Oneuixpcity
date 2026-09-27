@@ -1,23 +1,19 @@
 package io.github.soclear.oneuix.ui.component
 
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.Icon
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.padding
+import com.oneuixp.app.ui.LocalUiMode
+import com.oneuixp.app.ui.UiMode
+import com.oneuixp.app.ui.component.material.SegmentedDropdownItem
+import top.yukonga.miuix.kmp.basic.Card
+import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
+import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
+import top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme
 
+/** OneUIX selection semantics rendered with the active OneuiXP theme. */
 @Composable
 fun SelectItem(
     title: String,
@@ -28,32 +24,40 @@ fun SelectItem(
     selectedIndex: Int,
     onSelectedIndexChange: (Int) -> Unit
 ) {
-    var expanded by remember { mutableStateOf(false) }
+    val safeIndex = if (entries.isEmpty()) 0 else selectedIndex.coerceIn(0, entries.lastIndex)
 
-    Box(modifier = modifier) {
-        ListItem(
-            headlineContent = { Text(title) },
-            supportingContent = {
-                Text(entries.getOrElse(selectedIndex) { summary ?: "" })
-            },
-            leadingContent = icon?.let { { Icon(it, title) } },
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { expanded = true }
-        )
+    when (LocalUiMode.current) {
+        UiMode.Material -> {
+            SegmentedDropdownItem(
+                modifier = modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                icon = icon,
+                title = title,
+                summary = summary,
+                items = entries,
+                selectedIndex = safeIndex,
+                onItemSelected = onSelectedIndexChange,
+            )
+        }
 
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false },
-            modifier = Modifier.widthIn(min = 200.dp, max = 320.dp)
-        ) {
-            entries.forEachIndexed { index, label ->
-                DropdownMenuItem(
-                    text = { Text(label) },
-                    onClick = {
-                        onSelectedIndexChange(index)
-                        expanded = false
-                    }
+        UiMode.Miuix -> {
+            Card(
+                modifier = modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+            ) {
+                OverlayDropdownPreference(
+                    title = title,
+                    summary = summary,
+                    items = entries,
+                    selectedIndex = safeIndex,
+                    startAction = icon?.let { imageVector ->
+                        {
+                            MiuixIcon(
+                                imageVector = imageVector,
+                                contentDescription = title,
+                                tint = colorScheme.onSurface,
+                            )
+                        }
+                    },
+                    onSelectedIndexChange = onSelectedIndexChange,
                 )
             }
         }

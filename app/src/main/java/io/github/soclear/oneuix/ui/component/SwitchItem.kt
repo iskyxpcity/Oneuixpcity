@@ -1,29 +1,31 @@
 package io.github.soclear.oneuix.ui.component
 
-import androidx.compose.foundation.LocalIndication
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.IntrinsicSize
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material3.Icon
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
+import com.oneuixp.app.ui.LocalUiMode
+import com.oneuixp.app.ui.UiMode
+import com.oneuixp.app.ui.component.material.ExpressiveSwitch
+import com.oneuixp.app.ui.component.material.SegmentedListItem
+import com.oneuixp.app.ui.component.material.SegmentedSwitchItem
+import top.yukonga.miuix.kmp.basic.BasicComponent
+import top.yukonga.miuix.kmp.basic.Card
+import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
+import top.yukonga.miuix.kmp.basic.Switch as MiuixSwitch
+import top.yukonga.miuix.kmp.preference.SwitchPreference
+import top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme
 
+/**
+ * Canonical OneUIX switch semantics rendered by the active OneuiXP theme.
+ * The source DetailPane keeps ownership of ordering, strings, state and events;
+ * this adapter only decides how the row is drawn.
+ */
 @Composable
 fun SwitchItem(
     title: String,
@@ -35,49 +37,81 @@ fun SwitchItem(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit
 ) {
-    val interactionSource = remember { MutableInteractionSource() }
-
-    val listItemModifier = if (clickable) {
-        modifier.clickable(
-            onClick = onClick,
-            role = Role.Button
-        )
-    } else {
-        modifier.toggleable(
-            value = checked,
-            onValueChange = onCheckedChange,
-            role = Role.Switch,
-            interactionSource = interactionSource,
-            indication = LocalIndication.current
-        )
-    }
-
-    ListItem(
-        headlineContent = { Text(title) },
-        modifier = listItemModifier,
-        supportingContent = summary?.let { { Text(it) } },
-        leadingContent = icon?.let { { Icon(it, title) } },
-        trailingContent = {
-            Row(
-                modifier = Modifier.height(IntrinsicSize.Min),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                if (clickable) {
-                    VerticalDivider(
-                        modifier = Modifier
-                            .fillMaxHeight()
-                            .padding(start = 0.dp, top = 8.dp, end = 15.dp, bottom = 8.dp)
-                    )
-                } else {
-                    Spacer(modifier = Modifier.width(16.dp))
-                }
-
-                Switch(
+    when (LocalUiMode.current) {
+        UiMode.Material -> {
+            if (clickable) {
+                SegmentedListItem(
+                    modifier = modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                    onClick = onClick,
+                    headlineContent = { Text(title) },
+                    supportingContent = summary?.let { { Text(it) } },
+                    leadingContent = icon?.let { imageVector ->
+                        { Icon(imageVector, contentDescription = title) }
+                    },
+                    trailingContent = {
+                        ExpressiveSwitch(
+                            checked = checked,
+                            onCheckedChange = onCheckedChange,
+                        )
+                    },
+                )
+            } else {
+                SegmentedSwitchItem(
+                    modifier = modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                    icon = icon,
+                    title = title,
+                    summary = summary,
                     checked = checked,
                     onCheckedChange = onCheckedChange,
-                    interactionSource = if (clickable) null else interactionSource
                 )
             }
         }
-    )
+
+        UiMode.Miuix -> {
+            Card(
+                modifier = modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+            ) {
+                if (clickable) {
+                    BasicComponent(
+                        title = title,
+                        summary = summary,
+                        startAction = icon?.let { imageVector ->
+                            {
+                                MiuixIcon(
+                                    imageVector = imageVector,
+                                    contentDescription = title,
+                                    tint = colorScheme.onSurface,
+                                )
+                            }
+                        },
+                        endActions = {
+                            MiuixSwitch(
+                                modifier = Modifier.align(Alignment.CenterVertically),
+                                checked = checked,
+                                onCheckedChange = onCheckedChange,
+                            )
+                        },
+                        onClick = onClick,
+                        role = Role.Button,
+                    )
+                } else {
+                    SwitchPreference(
+                        title = title,
+                        summary = summary,
+                        checked = checked,
+                        onCheckedChange = onCheckedChange,
+                        startAction = icon?.let { imageVector ->
+                            {
+                                MiuixIcon(
+                                    imageVector = imageVector,
+                                    contentDescription = title,
+                                    tint = colorScheme.onSurface,
+                                )
+                            }
+                        },
+                    )
+                }
+            }
+        }
+    }
 }
