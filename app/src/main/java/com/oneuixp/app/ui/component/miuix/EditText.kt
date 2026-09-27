@@ -6,6 +6,8 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -44,6 +46,7 @@ fun EditText(
     textHint: String = "",
     enabled: Boolean = true,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    startAction: @Composable (() -> Unit)? = null,
     titleColor: BasicComponentColors = EditTextDefaults.titleColor(),
     summaryColor: BasicComponentColors = EditTextDefaults.summaryColor(),
     rightActionColor: BasicComponentColors = EditTextDefaults.rightActionColors(),
@@ -69,8 +72,18 @@ fun EditText(
             .fillMaxWidth()
             .padding(EditTextDefaults.InsideMargin),
     ) {
-        Layout(
-            content = {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            if (startAction != null) {
+                Box(modifier = Modifier.padding(end = 12.dp)) {
+                    startAction()
+                }
+            }
+            Layout(
+                modifier = Modifier.weight(1f),
+                content = {
                 Text(
                     text = title,
                     fontSize = MiuixTheme.textStyles.headline1.fontSize,
@@ -142,6 +155,7 @@ fun EditText(
                 titleText.placeRelative(0, titleY)
                 summaryText?.placeRelative(0, titleY + titleText.height)
                 inputField.placeRelative(constraints.maxWidth - inputField.width, (totalHeight - inputField.height) / 2)
+            }
             }
         }
     }
