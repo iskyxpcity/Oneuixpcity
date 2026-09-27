@@ -176,13 +176,6 @@ private fun OneuiXCategoryMaterial(
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
                 .verticalScroll(rememberScrollState()),
         ) {
-            Text(
-                text = stringResource(R.string.oneuix_migration_notice),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp),
-            )
-
             var previousSection: String? = null
             groups.forEach { group ->
                 val showSection = previousSection != group.section
@@ -409,14 +402,6 @@ private fun OneuiXCategoryMiuix(
                 contentPadding = innerPadding,
                 overscrollEffect = null,
             ) {
-                item {
-                    top.yukonga.miuix.kmp.basic.Text(
-                        text = stringResource(R.string.oneuix_migration_notice),
-                        color = colorScheme.onSurfaceVariantSummary,
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-                    )
-                }
-
                 var previousSection: String? = null
                 groups.forEach { group ->
                     if (previousSection != group.section) {
