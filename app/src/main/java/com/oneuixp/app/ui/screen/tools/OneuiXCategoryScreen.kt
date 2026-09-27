@@ -46,6 +46,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.oneuixp.app.R
 import com.oneuixp.app.oneuix.OneuiXCategory
 import com.oneuixp.app.oneuix.OneuiXFeatureCatalog
+import com.oneuixp.app.oneuix.OneuiXLayoutRules
 import com.oneuixp.app.oneuix.OneuiXSettingSpec
 import com.oneuixp.app.oneuix.OneuiXSettingType
 import com.oneuixp.app.ui.LocalUiMode
@@ -76,6 +77,11 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme
 import top.yukonga.miuix.kmp.utils.overScrollVertical
 import top.yukonga.miuix.kmp.utils.scrollEndHaptic
 
+private data class OneuiXSettingGroup(
+    val section: String,
+    val items: List<OneuiXSettingSpec>,
+)
+
 @Composable
 fun OneuiXCategoryScreen(categoryName: String) {
     val navigator = LocalNavigator.current
@@ -83,13 +89,34 @@ fun OneuiXCategoryScreen(categoryName: String) {
         ?: return
     val toolsViewModel = viewModel<OneuiXToolsViewModel>()
     val preference by toolsViewModel.preference.collectAsStateWithLifecycle()
-    val settings = remember(category) { OneuiXFeatureCatalog.settings(category) }
-    val visibleSettings = settings.filter { toolsViewModel.isVisible(preference, it) }
+
+    val allSettings = remember(category) {
+        OneuiXFeatureCatalog.settings(category)
+    }
+
+    val orderedVisibleSettings = OneuiXLayoutRules
+        .ordered(category, allSettings)
+        .filter { toolsViewModel.isVisible(preference, it) }
+
+    val groups = remember(category, orderedVisibleSettings) {
+        val orderedGroups = linkedMapOf<String, MutableList<OneuiXSettingSpec>>()
+        orderedVisibleSettings.forEach { spec ->
+            orderedGroups
+                .getOrPut(OneuiXLayoutRules.groupKey(spec)) { mutableListOf() }
+                .add(spec)
+        }
+        orderedGroups.values.map { items ->
+            OneuiXSettingGroup(
+                section = OneuiXLayoutRules.section(category, items.first()),
+                items = items,
+            )
+        }
+    }
 
     when (LocalUiMode.current) {
         UiMode.Miuix -> OneuiXCategoryMiuix(
             category = category,
-            settings = visibleSettings,
+            groups = groups,
             preference = preference,
             toolsViewModel = toolsViewModel,
             onBack = navigator::pop,
@@ -97,7 +124,7 @@ fun OneuiXCategoryScreen(categoryName: String) {
 
         UiMode.Material -> OneuiXCategoryMaterial(
             category = category,
-            settings = visibleSettings,
+            groups = groups,
             preference = preference,
             toolsViewModel = toolsViewModel,
             onBack = navigator::pop,
@@ -108,7 +135,7 @@ fun OneuiXCategoryScreen(categoryName: String) {
 @Composable
 private fun OneuiXCategoryMaterial(
     category: OneuiXCategory,
-    settings: List<OneuiXSettingSpec>,
+    groups: List<OneuiXSettingGroup>,
     preference: Preference,
     toolsViewModel: OneuiXToolsViewModel,
     onBack: () -> Unit,
@@ -155,22 +182,30 @@ private fun OneuiXCategoryMaterial(
                 modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp),
             )
 
-            settings.groupBy { it.section }.forEach { (section, sectionSettings) ->
-                if (sectionSettings.isNotEmpty()) {
-                    SegmentedColumn(
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                        title = oneuiXSectionTitle(section),
-                        content = sectionSettings.map { spec ->
-                            {
-                                MaterialSettingRow(
-                                    spec = spec,
-                                    preference = preference,
-                                    toolsViewModel = toolsViewModel,
-                                )
-                            }
-                        },
-                    )
-                }
+            var previousSection: String? = null
+            groups.forEach { group ->
+                val showSection = previousSection != group.section
+                SegmentedColumn(
+                    modifier = Modifier.padding(
+                        horizontal = 16.dp,
+                        vertical = if (showSection) 8.dp else 4.dp,
+                    ),
+                    title = if (showSection) {
+                        oneuiXSectionTitle(group.section)
+                    } else {
+                        ""
+                    },
+                    content = group.items.map { spec ->
+                        {
+                            MaterialSettingRow(
+                                spec = spec,
+                                preference = preference,
+                                toolsViewModel = toolsViewModel,
+                            )
+                        }
+                    },
+                )
+                previousSection = group.section
             }
 
             Spacer(Modifier.height(24.dp))
@@ -186,6 +221,17 @@ private fun MaterialSettingRow(
 ) {
     val title = oneuiXSettingTitle(spec)
     val summary = oneuiXSettingSummary(spec)
+
+    if (spec.path == "systemUI.statusBar.networkSpeedThresholdKb") {
+        NetworkSpeedThresholdMaterial(
+            spec = spec,
+            title = title,
+            summary = summary,
+            preference = preference,
+            toolsViewModel = toolsViewModel,
+        )
+        return
+    }
 
     when (spec.type) {
         OneuiXSettingType.Toggle,
@@ -233,6 +279,37 @@ private fun MaterialSettingRow(
 }
 
 @Composable
+private fun NetworkSpeedThresholdMaterial(
+    spec: OneuiXSettingSpec,
+    title: String,
+    summary: String?,
+    preference: Preference,
+    toolsViewModel: OneuiXToolsViewModel,
+) {
+    val current = toolsViewModel.value(preference, spec).toIntOrNull() ?: 0
+    SegmentedSwitchItem(
+        title = title,
+        summary = if (current > 0) "$current KB/s" else summary,
+        checked = current > 0,
+        onCheckedChange = { enabled ->
+            toolsViewModel.setRawValue(
+                spec,
+                if (enabled) current.coerceAtLeast(1).toString() else "0",
+            )
+        },
+    )
+    if (current > 0) {
+        EditableMaterialValue(
+            spec = spec,
+            title = title,
+            summary = summary,
+            preference = preference,
+            toolsViewModel = toolsViewModel,
+        )
+    }
+}
+
+@Composable
 private fun EditableMaterialValue(
     spec: OneuiXSettingSpec,
     title: String,
@@ -269,7 +346,7 @@ private fun EditableMaterialValue(
 @Composable
 private fun OneuiXCategoryMiuix(
     category: OneuiXCategory,
-    settings: List<OneuiXSettingSpec>,
+    groups: List<OneuiXSettingGroup>,
     preference: Preference,
     toolsViewModel: OneuiXToolsViewModel,
     onBack: () -> Unit,
@@ -326,11 +403,12 @@ private fun OneuiXCategoryMiuix(
                     )
                 }
 
-                settings.groupBy { it.section }.forEach { (section, sectionSettings) ->
-                    if (sectionSettings.isNotEmpty()) {
+                var previousSection: String? = null
+                groups.forEach { group ->
+                    if (previousSection != group.section) {
                         item {
                             top.yukonga.miuix.kmp.basic.Text(
-                                text = oneuiXSectionTitle(section),
+                                text = oneuiXSectionTitle(group.section),
                                 color = colorScheme.primary,
                                 modifier = Modifier.padding(
                                     start = 16.dp,
@@ -338,17 +416,25 @@ private fun OneuiXCategoryMiuix(
                                     bottom = 8.dp,
                                 ),
                             )
-                            Card(modifier = Modifier.fillMaxWidth()) {
-                                sectionSettings.forEach { spec ->
-                                    MiuixSettingRow(
-                                        spec = spec,
-                                        preference = preference,
-                                        toolsViewModel = toolsViewModel,
-                                    )
-                                }
+                        }
+                    }
+
+                    item {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 10.dp),
+                        ) {
+                            group.items.forEach { spec ->
+                                MiuixSettingRow(
+                                    spec = spec,
+                                    preference = preference,
+                                    toolsViewModel = toolsViewModel,
+                                )
                             }
                         }
                     }
+                    previousSection = group.section
                 }
 
                 item { Spacer(Modifier.height(24.dp)) }
@@ -365,6 +451,17 @@ private fun MiuixSettingRow(
 ) {
     val title = oneuiXSettingTitle(spec)
     val summary = oneuiXSettingSummary(spec)
+
+    if (spec.path == "systemUI.statusBar.networkSpeedThresholdKb") {
+        NetworkSpeedThresholdMiuix(
+            spec = spec,
+            title = title,
+            summary = summary,
+            preference = preference,
+            toolsViewModel = toolsViewModel,
+        )
+        return
+    }
 
     when (spec.type) {
         OneuiXSettingType.Toggle,
@@ -400,29 +497,77 @@ private fun MiuixSettingRow(
         OneuiXSettingType.IntValue,
         OneuiXSettingType.FloatValue,
         OneuiXSettingType.TextValue -> {
-            val current = toolsViewModel.value(preference, spec)
-            var edit by remember(spec.path, current) { mutableStateOf(current) }
-
-            EditText(
+            EditableMiuixValue(
+                spec = spec,
                 title = title,
                 summary = summary,
-                value = edit,
-                onValueChange = {
-                    edit = it
-                    if (spec.type == OneuiXSettingType.TextValue || validNumber(spec, it)) {
-                        toolsViewModel.setRawValue(spec, it)
-                    }
-                },
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = when (spec.type) {
-                        OneuiXSettingType.IntValue -> KeyboardType.Number
-                        OneuiXSettingType.FloatValue -> KeyboardType.Decimal
-                        else -> KeyboardType.Text
-                    },
-                ),
+                preference = preference,
+                toolsViewModel = toolsViewModel,
             )
         }
     }
+}
+
+@Composable
+private fun NetworkSpeedThresholdMiuix(
+    spec: OneuiXSettingSpec,
+    title: String,
+    summary: String?,
+    preference: Preference,
+    toolsViewModel: OneuiXToolsViewModel,
+) {
+    val current = toolsViewModel.value(preference, spec).toIntOrNull() ?: 0
+    SwitchPreference(
+        title = title,
+        summary = if (current > 0) "$current KB/s" else summary ?: "",
+        checked = current > 0,
+        onCheckedChange = { enabled ->
+            toolsViewModel.setRawValue(
+                spec,
+                if (enabled) current.coerceAtLeast(1).toString() else "0",
+            )
+        },
+    )
+    if (current > 0) {
+        EditableMiuixValue(
+            spec = spec,
+            title = title,
+            summary = summary,
+            preference = preference,
+            toolsViewModel = toolsViewModel,
+        )
+    }
+}
+
+@Composable
+private fun EditableMiuixValue(
+    spec: OneuiXSettingSpec,
+    title: String,
+    summary: String?,
+    preference: Preference,
+    toolsViewModel: OneuiXToolsViewModel,
+) {
+    val current = toolsViewModel.value(preference, spec)
+    var edit by remember(spec.path, current) { mutableStateOf(current) }
+
+    EditText(
+        title = title,
+        summary = summary,
+        value = edit,
+        onValueChange = {
+            edit = it
+            if (spec.type == OneuiXSettingType.TextValue || validNumber(spec, it)) {
+                toolsViewModel.setRawValue(spec, it)
+            }
+        },
+        keyboardOptions = KeyboardOptions(
+            keyboardType = when (spec.type) {
+                OneuiXSettingType.IntValue -> KeyboardType.Number
+                OneuiXSettingType.FloatValue -> KeyboardType.Decimal
+                else -> KeyboardType.Text
+            },
+        ),
+    )
 }
 
 private fun validNumber(
