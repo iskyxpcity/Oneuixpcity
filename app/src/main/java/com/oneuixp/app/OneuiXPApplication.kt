@@ -39,12 +39,13 @@ class OneuiXPApplication : Application(), ViewModelStoreOwner {
         super.onCreate()
         oneuiXPApp = this
         LsposedFrameworkStatus.initialize()
+        OneuiXPreferenceBridge.initialize(this)
 
         if (!isUserUnlocked()) {
             return
         }
 
-        OneuiXPreferenceBridge.initialize(this)
+        OneuiXPreferenceBridge.ensureSynchronized(this)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             val enable = SettingsRepositoryImpl().enablePredictiveBack

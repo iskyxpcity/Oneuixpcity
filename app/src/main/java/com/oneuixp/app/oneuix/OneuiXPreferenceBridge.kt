@@ -3,6 +3,7 @@ package com.oneuixp.app.oneuix
 import android.app.Application
 import android.content.Context
 import android.os.ParcelFileDescriptor
+import android.os.UserManager
 import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.datastore.core.Serializer
@@ -19,6 +20,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.first
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -40,21 +42,30 @@ private object OneuiXXposedService {
         XposedServiceHelper.registerListener(object : XposedServiceHelper.OnServiceListener {
             override fun onServiceBind(boundService: XposedService) {
                 service = boundService
-                // Force a no-op DataStore write so the authoritative local/default
-                // state is synchronized into libxposed's remote preference file.
-                scope.launch {
-                    runCatching {
-                        application.oneuiXDataStore.updateData { it }
-                    }.onFailure {
-                        Log.w(TAG, "Initial remote preference synchronization failed", it)
-                    }
-                }
+                synchronize(application)
             }
 
             override fun onServiceDied(deadService: XposedService) {
                 if (service === deadService) service = null
             }
         })
+    }
+
+    fun synchronize(application: Application) {
+        scope.launch {
+            val unlocked =
+                application.getSystemService(UserManager::class.java)?.isUserUnlocked == true
+            if (!unlocked) return@launch
+
+            runCatching {
+                val current = application.oneuiXDataStore.data.first()
+                if (!OneuiXPreferenceSerializer.synchronizeRemote(current)) {
+                    error("libxposed remote preference service unavailable")
+                }
+            }.onFailure {
+                Log.w(TAG, "Remote preference synchronization retry failed", it)
+            }
+        }
     }
 }
 
@@ -93,6 +104,8 @@ object OneuiXPreferenceSerializer : Serializer<Preference> {
         Log.w(TAG, "Remote preference synchronization failed", t)
         false
     }
+
+    fun synchronizeRemote(value: Preference): Boolean = writeRemote(value)
 
     override suspend fun readFrom(input: InputStream): Preference {
         val localBytes = runCatching { input.readBytes() }.getOrNull()
@@ -142,5 +155,10 @@ val Context.oneuiXDataStore: DataStore<Preference> by dataStore(
 object OneuiXPreferenceBridge {
     fun initialize(application: Application) {
         OneuiXXposedService.initialize(application)
+    }
+
+    fun ensureSynchronized(application: Application) {
+        OneuiXXposedService.initialize(application)
+        OneuiXXposedService.synchronize(application)
     }
 }

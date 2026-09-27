@@ -34,6 +34,7 @@ import androidx.navigation3.ui.NavDisplay
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
+import com.oneuixp.app.oneuix.OneuiXPreferenceBridge
 import com.oneuixp.app.ui.component.bottombar.BottomBar
 import com.oneuixp.app.ui.component.bottombar.MainPagerState
 import com.oneuixp.app.ui.component.bottombar.rememberMainPagerState
@@ -67,6 +68,7 @@ class MainActivity : ComponentActivity() {
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        OneuiXPreferenceBridge.ensureSynchronized(application)
 
         setContent {
             val viewModel = viewModel<MainActivityViewModel>()
@@ -145,6 +147,10 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        OneuiXPreferenceBridge.ensureSynchronized(application)
+    }
 }
 
 val LocalMainPagerState = staticCompositionLocalOf<MainPagerState> {
