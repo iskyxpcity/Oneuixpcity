@@ -84,6 +84,7 @@ import com.oneuixp.app.ui.util.BlurredBar
 import com.oneuixp.app.ui.util.rememberBlurBackdrop
 import com.oneuixp.app.ui.viewmodel.OneuiXToolsViewModel
 import io.github.soclear.oneuix.common.Preference
+import io.github.soclear.oneuix.common.ONE_UI_VERSION
 import io.github.soclear.oneuix.common.PowerMenuAction
 import io.github.soclear.oneuix.hook.util.StatusBarClockFormatter
 import io.github.soclear.oneuix.ui.category.DetailPaneAndroid
@@ -176,6 +177,7 @@ fun OneuiXCategoryScreen(categoryName: String) {
     val orderedVisibleSettings = OneuiXLayoutRules
         .ordered(category, allSettings)
         .filter { toolsViewModel.isVisible(preference, it) }
+        .filter { oneuiXMaterialPlatformVisible(preference, it) }
 
     val groups = remember(
         category,
@@ -213,6 +215,70 @@ fun OneuiXCategoryScreen(categoryName: String) {
         toolsViewModel = toolsViewModel,
         onBack = navigator::pop,
     )
+}
+
+private fun oneuiXMaterialPlatformVisible(
+    preference: Preference,
+    spec: OneuiXSettingSpec,
+): Boolean {
+    val sdk = Build.VERSION.SDK_INT
+    val statusBar = preference.systemUI.statusBar
+
+    return when (spec.path) {
+        "android.supportAppJumpBlock" ->
+            sdk >= Build.VERSION_CODES.VANILLA_ICE_CREAM
+
+        "systemUI.statusBar.hideBatteryPercentageSign" ->
+            sdk <= Build.VERSION_CODES.UPSIDE_DOWN_CAKE
+
+        "systemUI.statusBar.addBatteryLevelText",
+        "systemUI.statusBar.hideBatteryLevelTextPercentageSign",
+        "systemUI.statusBar.hideBatteryLevelTextChargingIcon" ->
+            ONE_UI_VERSION >= 70000
+
+        "systemUI.statusBar.statusBarDoubleLineClockSize",
+        "systemUI.statusBar.doubleLineClockGapDp" ->
+            statusBar.setStatusBarClockFormat &&
+                statusBar.statusBarClockFormat.contains('\n')
+
+        "systemUI.statusBar.useFold7CustomDoubleLineClockScale" ->
+            statusBar.setStatusBarClockFormat &&
+                statusBar.statusBarClockFormat.contains('\n') &&
+                Build.MODEL.startsWith("SM-F966", ignoreCase = true)
+
+        "systemUI.statusBar.fold7DoubleLineClockTimeScale",
+        "systemUI.statusBar.fold7DoubleLineClockDateScale" ->
+            statusBar.setStatusBarClockFormat &&
+                statusBar.statusBarClockFormat.contains('\n') &&
+                Build.MODEL.startsWith("SM-F966", ignoreCase = true) &&
+                statusBar.useFold7CustomDoubleLineClockScale
+
+        "systemUI.qs.hideDeviceControlQsTile",
+        "systemUI.qs.hideSmartViewQsTile",
+        "systemUI.qs.turnOn5gQsTile" ->
+            sdk == Build.VERSION_CODES.UPSIDE_DOWN_CAKE
+
+        "systemUI.qs.hideQsBarMediaPlayer",
+        "systemUI.qs.hideQsBarNearbyDevicesAndDeviceControl",
+        "systemUI.qs.hideQsBarSmartViewAndModes",
+        "systemUI.qs.alwaysExpandQsTileChunk",
+        "systemUI.qs.alwaysShowTimeDateOnQs",
+        "systemUI.qs.addBrightnessProgressToQsBar",
+        "systemUI.qs.addVolumeProgressToQsBar" ->
+            sdk >= Build.VERSION_CODES.VANILLA_ICE_CREAM &&
+                ONE_UI_VERSION < 80500
+
+        "systemUI.qs.hideQsBarSecurityFooter",
+        "systemUI.qs.hideQsBarDataUsage",
+        "systemUI.qs.showTraditionalChineseDateOnQS",
+        "systemUI.qs.modifyQSClockTextSize",
+        "systemUI.qs.qsClockTextSize",
+        "systemUI.aod.hideAODStatusBar",
+        "systemUI.aod.aodLockSupportLunar" ->
+            sdk >= Build.VERSION_CODES.VANILLA_ICE_CREAM
+
+        else -> true
+    }
 }
 
 @Composable
