@@ -28,7 +28,7 @@ fun SelectItem(
 ) {
     val safeIndex = if (entries.isEmpty()) 0 else selectedIndex.coerceIn(0, entries.lastIndex)
     val grouped = LocalOneuiXGroupedPreference.current
-    val materialColors = ListItemDefaults.colors().copy(
+    val materialColors = ListItemDefaults.segmentedColors().copy(
         containerColor = Color.Transparent,
         disabledContainerColor = Color.Transparent,
     )
@@ -38,7 +38,7 @@ fun SelectItem(
             SegmentedDropdownItem(
                 modifier = if (grouped) modifier else modifier.padding(horizontal = 16.dp, vertical = 4.dp),
                 icon = icon,
-                colors = if (grouped) materialColors else ListItemDefaults.colors(),
+                colors = if (grouped) materialColors else ListItemDefaults.segmentedColors(),
                 title = title,
                 summary = summary,
                 items = entries,
