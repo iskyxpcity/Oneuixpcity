@@ -6,21 +6,25 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.shape.RectangleShape
 import androidx.compose.material3.Button as MaterialButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text as MaterialText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import com.oneuixp.app.ui.LocalUiMode
 import com.oneuixp.app.ui.UiMode
 import com.oneuixp.app.ui.component.material.ExpressiveSwitch
+import com.oneuixp.app.ui.component.material.LocalListItemShapes
 import com.oneuixp.app.ui.component.material.SegmentedListItem
 import com.oneuixp.app.ui.component.material.oneuiXSegmentedColors
 import top.yukonga.miuix.kmp.basic.BasicComponent
@@ -41,15 +45,31 @@ fun OneuiXPreferenceGroup(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     when (LocalUiMode.current) {
-        UiMode.Material -> Column(
-            modifier = modifier.padding(horizontal = 16.dp, vertical = 4.dp),
-            verticalArrangement = Arrangement.spacedBy(2.dp),
-        ) {
-            CompositionLocalProvider(LocalOneuiXGroupedPreference provides true) {
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(2.dp),
-                    content = content,
-                )
+        UiMode.Material -> {
+            val baseShapes = ListItemDefaults.segmentedShapes(0, 1)
+            val flatShapes = baseShapes.copy(
+                shape = RectangleShape,
+                selectedShape = RectangleShape,
+                pressedShape = RectangleShape,
+                focusedShape = RectangleShape,
+                hoveredShape = RectangleShape,
+                draggedShape = RectangleShape,
+            )
+            Column(
+                modifier = modifier
+                    .padding(horizontal = 16.dp, vertical = 4.dp)
+                    .clip(MaterialTheme.shapes.large),
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+            ) {
+                CompositionLocalProvider(
+                    LocalOneuiXGroupedPreference provides true,
+                    LocalListItemShapes provides flatShapes,
+                ) {
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(2.dp),
+                        content = content,
+                    )
+                }
             }
         }
 
@@ -60,6 +80,21 @@ fun OneuiXPreferenceGroup(
                 Column(content = content)
             }
         }
+    }
+}
+
+/**
+ * Group ordinary detail-page rows with the same segmented-card language used
+ * by the four main option pages. Miuix keeps its existing layout unchanged.
+ */
+@Composable
+fun OneuiXDetailGroup(
+    modifier: Modifier = Modifier,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    when (LocalUiMode.current) {
+        UiMode.Material -> OneuiXPreferenceGroup(modifier = modifier, content = content)
+        UiMode.Miuix -> Column(modifier = modifier, content = content)
     }
 }
 
