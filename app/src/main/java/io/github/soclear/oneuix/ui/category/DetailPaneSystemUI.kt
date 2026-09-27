@@ -41,6 +41,7 @@ import io.github.soclear.oneuix.ui.component.SelectItem
 import io.github.soclear.oneuix.ui.component.SwitchItem
 import io.github.soclear.oneuix.ui.component.OneuiXSlider
 import io.github.soclear.oneuix.ui.component.OneuiXPreferenceGroup
+import io.github.soclear.oneuix.ui.component.OneuiXDetailGroup
 import io.github.soclear.oneuix.ui.component.OneuiXActionButton
 import io.github.soclear.oneuix.ui.component.OneuiXInfoItem
 import io.github.soclear.oneuix.ui.component.OneuiXInlineTextField
@@ -124,6 +125,7 @@ fun DetailPaneSystemUI(
             }
         )
         DividerText(R.string.oneuix_status_bar)
+        OneuiXDetailGroup {
         OneuiXPreferenceGroup {
             var padding by remember {
                 mutableFloatStateOf(uiState.statusBar.statusBarLeftPaddingDp)
@@ -821,7 +823,9 @@ fun DetailPaneSystemUI(
             }
         )
 
+        }
         DividerText(R.string.oneuix_qs)
+        OneuiXDetailGroup {
         SwitchItem(
             icon = ImageVector.vectorResource(id = R.drawable.format_letter_spacing),
             title = stringResource(id = R.string.oneuix_setQsClockMonospaced_title),
@@ -999,9 +1003,12 @@ fun DetailPaneSystemUI(
                     )
                 }
             }
+        }
+        }
 
-
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
             DividerText(R.string.oneuix_aod)
+            OneuiXDetailGroup {
             SwitchItem(
                 icon = ImageVector.vectorResource(id = R.drawable.battery),
                 title = stringResource(id = R.string.oneuix_hideAODStatusBar_title),
@@ -1018,9 +1025,11 @@ fun DetailPaneSystemUI(
                     onEvent(SystemUIEvent.AOD.AODLockSupportLunar(it))
                 }
             )
+            }
         }
 
         DividerText(R.string.oneuix_notification)
+        OneuiXDetailGroup {
         OneuiXPreferenceGroup {
             var expanded by rememberSaveable { mutableStateOf(false) }
             SwitchItem(
@@ -1087,7 +1096,9 @@ fun DetailPaneSystemUI(
             }
         )
 
+        }
         DividerText(R.string.oneuix_other)
+        OneuiXDetailGroup {
         OneuiXPreferenceGroup {
             var expanded by rememberSaveable { mutableStateOf(false) }
             SwitchItem(
@@ -1118,6 +1129,7 @@ fun DetailPaneSystemUI(
                 onEvent(SystemUIEvent.Other.DisableScreenshotCaptureSound(it))
             }
         )
+        }
     }
 }
 
