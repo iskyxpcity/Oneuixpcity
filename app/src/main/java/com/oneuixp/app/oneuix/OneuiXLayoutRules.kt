@@ -211,9 +211,6 @@ object OneuiXLayoutRules {
             "systemUI.qs.modifyQSClockTextSize",
         "systemUI.notification.hideOngoingActivityMediaPackages" to
             "systemUI.notification.hideOngoingActivityMedia",
-
-        "other.supplementChinaWearOsGms" to
-            "other.watchPairingConnectionMode",
     )
 
     fun ordered(
