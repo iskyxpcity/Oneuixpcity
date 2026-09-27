@@ -22,4 +22,5 @@
     <string name="settings_theme_mode_dark">深色</string>
     <string name="settings_theme_summary">選擇應用的主題模式。</string>
     <string name="oneuixp_tools">功能</string>
+    <string name="oneuixp_successful_hook_count">成功 Hook 數量</string>
 </resources>
