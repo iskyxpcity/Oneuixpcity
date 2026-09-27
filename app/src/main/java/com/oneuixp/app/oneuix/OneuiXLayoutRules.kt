@@ -78,6 +78,99 @@ object OneuiXLayoutRules {
     private val systemUiOrderIndex =
         systemUiOrder.withIndex().associate { it.value to it.index }
 
+    private val categoryOrder: Map<OneuiXCategory, List<String>> = mapOf(
+        OneuiXCategory.Android to listOf(
+            "android.disablePinVerifyPer72h",
+            "android.modifyMaxNeverKilledAppNum",
+            "android.maxNeverKilledAppNum",
+            "android.setBlockableNotificationChannel",
+            "android.supportAppJumpBlock",
+            "android.allowAllRotation",
+            "android.liftFcmNetworkLimit",
+            "android.disableScreenWakeOnPowerUnplugged",
+            "android.disableWritingToolkitGlobally",
+        ),
+        OneuiXCategory.Settings to listOf(
+            "settings.showForcePeakRefreshRatePreference",
+            "settings.supportOutdoorMode",
+            "settings.showMoreBatteryInfo",
+            "settings.showPackageInfo",
+            "settings.showWiFiLinkSpeed",
+            "settings.supportAnyFont",
+            "settings.supportAutoPowerOnOff",
+            "settings.spoofPhoneStatusAsOfficial",
+        ),
+        OneuiXCategory.Call to listOf(
+            "call.supportVoiceCallRecording",
+            "call.preferRecordingButton",
+            "call.showGeocodedLocationInRecentCall",
+            "call.isOpStyleCHN",
+            "call.supportCallAndTextOnOtherDevices",
+        ),
+        OneuiXCategory.Camera to listOf(
+            "camera.supportAllCameraMenu",
+            "camera.disableCameraTemperatureCheck",
+        ),
+        OneuiXCategory.Browser to listOf(
+            "other.showMorePlaybackSpeeds",
+            "other.redirectCustomTab",
+            "other.spoofBrowserCountryCodeToUS",
+        ),
+        OneuiXCategory.Calendar to listOf(
+            "other.enableChineseHolidayDisplay",
+        ),
+        OneuiXCategory.DualApp to listOf(
+            "other.makeAllUserAppsAvailable",
+        ),
+        OneuiXCategory.Gallery to listOf(
+            "other.supportAllGallerySettings",
+            "other.supportSharedAlbumsInHide",
+            "other.hideVideoEditorStudio",
+        ),
+        OneuiXCategory.GalaxyStore to listOf(
+            "other.blockGalaxyStoreAds",
+        ),
+        OneuiXCategory.HealthMonitor to listOf(
+            "other.bypassHealthMonitorCountryCheck",
+        ),
+        OneuiXCategory.Launcher to listOf(
+            "other.showMemoryUsageInRecents",
+            "other.recentsGridThreeRows",
+            "other.hideRecentsCloseAllButton",
+            "other.hideAppsSearchBar",
+            "other.removeShortcutBadge",
+        ),
+        OneuiXCategory.Messaging to listOf(
+            "other.supportBlockMessage",
+        ),
+        OneuiXCategory.Notes to listOf(
+            "other.supportAllNotesFeatures",
+        ),
+        OneuiXCategory.PhotoRetouching to listOf(
+            "other.noAIWatermark",
+        ),
+        OneuiXCategory.SketchBook to listOf(
+            "other.noAIWatermark",
+        ),
+        OneuiXCategory.SPen to listOf(
+            "other.useSPenGoogleTranslate",
+        ),
+        OneuiXCategory.ThemeCenter to listOf(
+            "other.setThemeTrialNeverExpired",
+        ),
+        OneuiXCategory.Video to listOf(
+            "other.showMorePlaybackSpeeds",
+        ),
+        OneuiXCategory.WatchManager to listOf(
+            "other.watchPairingConnectionMode",
+            "other.bypassWatchPairingRegionCheck",
+            "other.supplementChinaWearOsGms",
+        ),
+        OneuiXCategory.Weather to listOf(
+            "other.setWeatherProviderCN",
+        ),
+    )
+
     private val parentByPath = mapOf(
         "android.maxNeverKilledAppNum" to
             "android.modifyMaxNeverKilledAppNum",
@@ -127,22 +220,27 @@ object OneuiXLayoutRules {
         category: OneuiXCategory,
         settings: List<OneuiXSettingSpec>,
     ): List<OneuiXSettingSpec> {
-        if (category != OneuiXCategory.SystemUI) return settings
-        return settings.sortedWith(
-            compareBy<OneuiXSettingSpec> {
-                when {
-                    it.type == OneuiXSettingType.PowerAction ->
-                        systemUiOrderIndex["systemUI.other.customPowerMenu"] ?: Int.MAX_VALUE
-                    else -> systemUiOrderIndex[it.path] ?: Int.MAX_VALUE
+        if (category == OneuiXCategory.SystemUI) {
+            return settings.sortedWith(
+                compareBy<OneuiXSettingSpec> {
+                    when {
+                        it.type == OneuiXSettingType.PowerAction ->
+                            systemUiOrderIndex["systemUI.other.customPowerMenu"] ?: Int.MAX_VALUE
+                        else -> systemUiOrderIndex[it.path] ?: Int.MAX_VALUE
+                    }
+                }.thenBy {
+                    if (it.type == OneuiXSettingType.PowerAction) {
+                        1 + powerActionOrder(it.powerActionName)
+                    } else {
+                        0
+                    }
                 }
-            }.thenBy {
-                if (it.type == OneuiXSettingType.PowerAction) {
-                    1 + powerActionOrder(it.powerActionName)
-                } else {
-                    0
-                }
-            }
-        )
+            )
+        }
+
+        val order = categoryOrder[category] ?: return settings
+        val index = order.withIndex().associate { it.value to it.index }
+        return settings.sortedBy { index[it.path] ?: Int.MAX_VALUE }
     }
 
     fun groupKey(spec: OneuiXSettingSpec): String =
