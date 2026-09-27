@@ -1,7 +1,10 @@
 package com.oneuixp.app.ui.screen.status
 
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
@@ -14,127 +17,228 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material3.Icon
 import androidx.compose.material3.LargeFlexibleTopAppBar
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.oneuixp.app.R
-import com.oneuixp.app.statusbar.StatusBridge
 import com.oneuixp.app.ui.LocalUiMode
 import com.oneuixp.app.ui.UiMode
-import com.oneuixp.app.ui.component.material.ExpressiveScaffold
-import com.oneuixp.app.ui.component.material.expressiveTopAppBarColors
+import com.oneuixp.app.ui.component.material.SegmentedColumn
+import com.oneuixp.app.ui.component.material.SegmentedListItem
+import com.oneuixp.app.ui.navigation3.Navigator
+import com.oneuixp.app.ui.navigation3.Route
 import com.oneuixp.app.ui.theme.LocalEnableBlur
 import com.oneuixp.app.ui.util.BlurredBar
 import com.oneuixp.app.ui.util.rememberBlurBackdrop
+import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.basic.Scaffold
+import top.yukonga.miuix.kmp.basic.Text as MiuixText
 import top.yukonga.miuix.kmp.basic.TopAppBar
 import top.yukonga.miuix.kmp.blur.layerBackdrop
 import top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme
+import top.yukonga.miuix.kmp.utils.overScrollVertical
+import top.yukonga.miuix.kmp.utils.scrollEndHaptic
 
-/** OneuiXP SystemUI status page using the retained dual-theme page shell. */
 @Composable
-fun StatusPager(bottomInnerPadding: Dp, isCurrentPage: Boolean = true) {
+fun StatusPager(
+    navigator: Navigator,
+    bottomInnerPadding: Dp,
+    isCurrentPage: Boolean = true,
+) {
     when (LocalUiMode.current) {
-        UiMode.Miuix -> {
-            val scrollBehavior = MiuixScrollBehavior()
-            val backdrop = rememberBlurBackdrop(LocalEnableBlur.current)
-            val barColor = if (backdrop != null) Color.Transparent else colorScheme.surface
-            Scaffold(
-                topBar = {
-                    BlurredBar(backdrop) {
-                        TopAppBar(
-                            color = barColor,
-                            title = stringResource(R.string.oneuixp_status),
-                            scrollBehavior = scrollBehavior,
-                        )
-                    }
-                },
-                popupHost = {},
-                contentWindowInsets = WindowInsets.systemBars.add(WindowInsets.displayCutout)
-                    .only(WindowInsetsSides.Horizontal),
-            ) { innerPadding ->
-                androidx.compose.foundation.layout.Box(
-                    modifier = if (backdrop != null) Modifier.layerBackdrop(backdrop) else Modifier,
-                ) {
-                    Column(
-                        modifier = Modifier.fillMaxSize()
-                            .nestedScroll(scrollBehavior.nestedScrollConnection)
-                            .verticalScroll(rememberScrollState())
-                            .padding(innerPadding)
-                            .padding(horizontal = 12.dp),
-                    ) {
-                        StatusPageContent(Modifier.fillMaxWidth())
-                        Spacer(Modifier.height(bottomInnerPadding))
-                    }
-                }
+        UiMode.Miuix -> StatusPagerMiuix(navigator, bottomInnerPadding)
+        UiMode.Material -> StatusPagerMaterial(navigator, bottomInnerPadding)
+    }
+}
+
+@Composable
+private fun StatusCategoryIcon(
+    category: StatusCategory,
+    size: Dp = 56.dp,
+) {
+    Box(
+        modifier = Modifier
+            .size(size)
+            .clip(RoundedCornerShape(16.dp))
+            .background(Color(category.backgroundArgb)),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            imageVector = ImageVector.vectorResource(category.iconRes),
+            contentDescription = stringResource(category.titleRes),
+            tint = Color.White,
+            modifier = Modifier.size(30.dp),
+        )
+    }
+}
+
+@Composable
+private fun StatusPagerMiuix(
+    navigator: Navigator,
+    bottomInnerPadding: Dp,
+) {
+    val scrollBehavior = MiuixScrollBehavior()
+    val backdrop = rememberBlurBackdrop(LocalEnableBlur.current)
+    val barColor = if (backdrop != null) Color.Transparent else colorScheme.surface
+
+    Scaffold(
+        topBar = {
+            BlurredBar(backdrop) {
+                TopAppBar(
+                    color = barColor,
+                    title = stringResource(R.string.oneuixp_status),
+                    scrollBehavior = scrollBehavior,
+                )
             }
-        }
-        UiMode.Material -> {
-            val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
-            ExpressiveScaffold(
-                topBar = {
-                    LargeFlexibleTopAppBar(
-                        title = { Text(stringResource(R.string.oneuixp_status)) },
-                        colors = expressiveTopAppBarColors(),
-                        windowInsets = WindowInsets.safeDrawing.only(
-                            WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
-                        scrollBehavior = scrollBehavior,
-                    )
-                },
-                contentWindowInsets = WindowInsets.safeDrawing.only(
-                    WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
-            ) { innerPadding ->
-                Column(
-                    modifier = Modifier.fillMaxSize()
-                        .nestedScroll(scrollBehavior.nestedScrollConnection)
-                        .verticalScroll(rememberScrollState())
-                        .padding(innerPadding),
-                ) {
-                    StatusPageContent(Modifier.fillMaxWidth())
-                    Spacer(Modifier.height(bottomInnerPadding))
+        },
+        popupHost = {},
+        contentWindowInsets = WindowInsets.systemBars
+            .add(WindowInsets.displayCutout)
+            .only(WindowInsetsSides.Horizontal),
+    ) { innerPadding ->
+        Box(
+            modifier = if (backdrop != null) {
+                Modifier.layerBackdrop(backdrop)
+            } else {
+                Modifier
+            },
+        ) {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .scrollEndHaptic()
+                    .overScrollVertical()
+                    .nestedScroll(scrollBehavior.nestedScrollConnection)
+                    .padding(horizontal = 12.dp),
+                contentPadding = innerPadding,
+                overscrollEffect = null,
+            ) {
+                item { Spacer(Modifier.height(12.dp)) }
+
+                StatusCategory.entries.forEach { category ->
+                    item {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 12.dp),
+                            onClick = {
+                                navigator.push(Route.StatusCategory(category.name))
+                            },
+                            showIndication = true,
+                            insideMargin = PaddingValues(
+                                start = 12.dp,
+                                end = 16.dp,
+                                top = 10.dp,
+                                bottom = 10.dp,
+                            ),
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                StatusCategoryIcon(category)
+                                MiuixText(
+                                    text = stringResource(category.titleRes),
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .padding(start = 14.dp),
+                                    fontWeight = FontWeight(550),
+                                    color = colorScheme.onSurface,
+                                    maxLines = 1,
+                                )
+                            }
+                        }
+                    }
                 }
+
+                item { Spacer(Modifier.height(bottomInnerPadding)) }
             }
         }
     }
 }
 
 @Composable
-private fun StatusPageContent(modifier: Modifier = Modifier) {
-    val context = LocalContext.current
-    var refresh by remember { mutableIntStateOf(0) }
-    // A report confirms module load, not that a specific status bar hook works.
-    val loaded = remember(context, refresh) { StatusBridge.recentlyLoaded(context) }
-    val reports = remember(context, refresh) { StatusBridge.loadReportCount(context) }
-    val diagnostic = remember(context, refresh) { StatusBridge.diagnosticSummary(context) }
-    val ageSeconds = remember(context, refresh) { StatusBridge.lastReportAgeSeconds(context) }
-    Column(modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        Text("OneuiXP · 状态栏")
-        Text(if (loaded) "本次开机已收到 SystemUI 模块加载报告（功能尚未验证）"
-             else "未收到本次开机的 LSPosed / SystemUI 加载报告，当前未确认工作")
-        Text("本次开机加载报告：${reports} 次（不等于实际注入次数）")
-        Text(if (ageSeconds >= 0) "最近一次报告：${ageSeconds} 秒前" else "最近一次报告：本次开机无记录")
-        Text("功能探测：${diagnostic}")
-        Text("LSPosed 作用域数量与实际注入次数：尚未接入独立检测")
-        androidx.compose.material3.Button(
-            onClick = { refresh++ },
-            modifier = Modifier.fillMaxWidth(),
-        ) { Text("刷新检测") }
+private fun StatusPagerMaterial(
+    navigator: Navigator,
+    bottomInnerPadding: Dp,
+) {
+    val scrollBehavior =
+        TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
+
+    androidx.compose.material3.Scaffold(
+        topBar = {
+            LargeFlexibleTopAppBar(
+                title = { Text(stringResource(R.string.oneuixp_status)) },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    scrolledContainerColor = MaterialTheme.colorScheme.surface,
+                ),
+                windowInsets = WindowInsets.safeDrawing.only(
+                    WindowInsetsSides.Top + WindowInsetsSides.Horizontal
+                ),
+                scrollBehavior = scrollBehavior,
+            )
+        },
+        contentWindowInsets = WindowInsets.safeDrawing.only(
+            WindowInsetsSides.Top + WindowInsetsSides.Horizontal
+        ),
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .nestedScroll(scrollBehavior.nestedScrollConnection)
+                .verticalScroll(rememberScrollState())
+                .padding(innerPadding),
+        ) {
+            SegmentedColumn(
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                content = StatusCategory.entries.map { category ->
+                    {
+                        SegmentedListItem(
+                            onClick = {
+                                navigator.push(Route.StatusCategory(category.name))
+                            },
+                            headlineContent = {
+                                Text(stringResource(category.titleRes))
+                            },
+                            leadingContent = {
+                                StatusCategoryIcon(category)
+                            },
+                            trailingContent = {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                    contentDescription = null,
+                                )
+                            },
+                        )
+                    }
+                },
+            )
+
+            Spacer(Modifier.height(bottomInnerPadding))
+        }
     }
 }
