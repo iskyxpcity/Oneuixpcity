@@ -6,6 +6,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import com.oneuixp.app.ui.LocalUiMode
 import com.oneuixp.app.ui.UiMode
@@ -35,16 +36,19 @@ fun SelectItem(
 
     when (LocalUiMode.current) {
         UiMode.Material -> {
-            SegmentedDropdownItem(
+            Box(
                 modifier = if (grouped) modifier else modifier.padding(horizontal = 16.dp, vertical = 4.dp),
-                icon = icon,
-                colors = if (grouped) materialColors else ListItemDefaults.segmentedColors(),
-                title = title,
-                summary = summary,
-                items = entries,
-                selectedIndex = safeIndex,
-                onItemSelected = onSelectedIndexChange,
-            )
+            ) {
+                SegmentedDropdownItem(
+                    icon = icon,
+                    colors = if (grouped) materialColors else ListItemDefaults.segmentedColors(),
+                    title = title,
+                    summary = summary,
+                    items = entries,
+                    selectedIndex = safeIndex,
+                    onItemSelected = onSelectedIndexChange,
+                )
+            }
         }
 
         UiMode.Miuix -> {
