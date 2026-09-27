@@ -16,7 +16,17 @@ internal fun oneuiXCategoryTitle(category: OneuiXCategory): String {
     val context = LocalContext.current
     val key = "oneuix_category_${category.name.lowercase()}"
     return remember(category, context.resources.configuration.locales) {
-        resolveString(context, listOf(key)) ?: category.fallbackTitle
+        val packageManager = context.packageManager
+        val installedLabel = runCatching {
+            packageManager.getApplicationInfo(category.packageName, 0)
+                .loadLabel(packageManager)
+                .toString()
+                .takeIf { it.isNotBlank() }
+        }.getOrNull()
+
+        // OneUIX-Mod uses the installed Samsung app label as the category name.
+        // Keep our localized text only as a fallback when the package is absent.
+        installedLabel ?: resolveString(context, listOf(key)) ?: category.fallbackTitle
     }
 }
 
