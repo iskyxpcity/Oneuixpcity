@@ -445,17 +445,6 @@ private fun MaterialSettingRow(
     val summary = oneuiXSettingSummary(spec)
     val icon = oneuiXSettingIcon(spec)
 
-    if (spec.path == "systemUI.statusBar.networkSpeedThresholdKb") {
-        NetworkSpeedThresholdMaterial(
-            spec = spec,
-            title = title,
-            summary = summary,
-            preference = preference,
-            toolsViewModel = toolsViewModel,
-        )
-        return
-    }
-
     materialSliderConfig(spec.path)?.let { config ->
         MaterialSliderValue(
             spec = spec,
@@ -729,39 +718,6 @@ private fun MaterialSliderValue(
             )
         },
     )
-}
-
-@Composable
-private fun NetworkSpeedThresholdMaterial(
-    spec: OneuiXSettingSpec,
-    title: String,
-    summary: String?,
-    preference: Preference,
-    toolsViewModel: OneuiXToolsViewModel,
-) {
-    val current = toolsViewModel.value(preference, spec).toIntOrNull() ?: 0
-    SegmentedSwitchItem(
-        icon = oneuiXSettingIcon(spec),
-        title = title,
-        summary = if (current > 0) "$current KB/s" else summary,
-        checked = current > 0,
-        onCheckedChange = { enabled ->
-            toolsViewModel.setRawValue(
-                spec,
-                if (enabled) current.coerceAtLeast(1).toString() else "0",
-            )
-        },
-    )
-    if (current > 0) {
-        EditableMaterialValue(
-            spec = spec,
-            title = title,
-            summary = summary,
-            preference = preference,
-            toolsViewModel = toolsViewModel,
-            showIcon = false,
-        )
-    }
 }
 
 @Composable
