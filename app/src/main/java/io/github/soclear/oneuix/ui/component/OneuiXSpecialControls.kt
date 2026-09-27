@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.shape.RectangleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button as MaterialButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -58,12 +58,12 @@ fun OneuiXPreferenceGroup(
             } else {
                 val baseShapes = ListItemDefaults.segmentedShapes(0, 1)
                 val flatShapes = baseShapes.copy(
-                    shape = RectangleShape,
-                    selectedShape = RectangleShape,
-                    pressedShape = RectangleShape,
-                    focusedShape = RectangleShape,
-                    hoveredShape = RectangleShape,
-                    draggedShape = RectangleShape,
+                    shape = RoundedCornerShape(0.dp),
+                    selectedShape = RoundedCornerShape(0.dp),
+                    pressedShape = RoundedCornerShape(0.dp),
+                    focusedShape = RoundedCornerShape(0.dp),
+                    hoveredShape = RoundedCornerShape(0.dp),
+                    draggedShape = RoundedCornerShape(0.dp),
                 )
                 Column(
                     modifier = modifier
