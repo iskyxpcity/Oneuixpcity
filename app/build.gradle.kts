@@ -89,6 +89,14 @@ android {
 
     androidResources {
         generateLocaleConfig = true
+
+        // Hook resources are loaded into SystemUI / Samsung host processes.
+        // Keep OneUIX's non-default resource package ID to avoid 0x7f collisions.
+        additionalParameters += listOf(
+            "--allow-reserved-package-id",
+            "--package-id",
+            "0x55",
+        )
     }
     compileSdk {
         version =
