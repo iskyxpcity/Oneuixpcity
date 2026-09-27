@@ -1,7 +1,15 @@
 package com.oneuixp.app.oneuix
 
+import android.os.Build
+import io.github.soclear.oneuix.common.ONE_UI_VERSION
 import io.github.soclear.oneuix.common.Package
 import io.github.soclear.oneuix.common.PowerMenuAction
+import io.github.soclear.oneuix.common.Preference
+import io.github.soclear.oneuix.common.IgnoreUnknownKeysJson
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.encodeToJsonElement
+import kotlinx.serialization.json.jsonPrimitive
 
 enum class OneuiXCategory(
     val packageName: String,
@@ -593,6 +601,66 @@ object OneuiXFeatureCatalog {
         "other.supplementChinaWearOsGms" to
             OneuiXVisibility.IntEquals("other.watchPairingConnectionMode", 1),
     )
+
+    private fun preferenceValue(preference: Preference, path: String): String {
+        var current: JsonElement = IgnoreUnknownKeysJson.encodeToJsonElement(
+            Preference.serializer(),
+            preference,
+        )
+        for (key in path.split('.')) {
+            current = (current as? JsonObject)?.get(key) ?: return ""
+        }
+        return current.jsonPrimitive.content
+    }
+
+    private fun visibilityMatches(
+        rule: OneuiXVisibility,
+        preference: Preference,
+    ): Boolean = when (rule) {
+        OneuiXVisibility.Always -> true
+        is OneuiXVisibility.Bool ->
+            preferenceValue(preference, rule.path).toBooleanStrictOrNull() == rule.expected
+        is OneuiXVisibility.IntEquals ->
+            preferenceValue(preference, rule.path).toIntOrNull() == rule.value
+        is OneuiXVisibility.StringContains ->
+            preferenceValue(preference, rule.path).contains(rule.token)
+        is OneuiXVisibility.All ->
+            rule.rules.all { visibilityMatches(it, preference) }
+        is OneuiXVisibility.Not ->
+            !visibilityMatches(rule.rule, preference)
+        is OneuiXVisibility.AndroidAtLeast -> Build.VERSION.SDK_INT >= rule.sdk
+        is OneuiXVisibility.AndroidAtMost -> Build.VERSION.SDK_INT <= rule.sdk
+        is OneuiXVisibility.AndroidEquals -> Build.VERSION.SDK_INT == rule.sdk
+        is OneuiXVisibility.OneUiAtLeast -> ONE_UI_VERSION >= rule.version
+        is OneuiXVisibility.OneUiBelow -> ONE_UI_VERSION < rule.version
+        is OneuiXVisibility.ModelPrefix ->
+            Build.MODEL.startsWith(rule.prefix, ignoreCase = true)
+    }
+
+    /**
+     * Number of enabled OneuiXP feature injections represented by the feature catalog.
+     *
+     * Count category entries rather than unique preference paths: a shared feature that
+     * injects into two target apps is two actual injection targets. Child value fields and
+     * power-menu action rows are not counted separately.
+     */
+    fun enabledInjectionCount(preference: Preference): Int =
+        OneuiXCategory.entries.sumOf { category ->
+            settings(category).count { spec ->
+                if (!visibilityMatches(spec.visibility, preference)) {
+                    false
+                } else {
+                    when (spec.type) {
+                        OneuiXSettingType.Toggle ->
+                            preferenceValue(preference, spec.path).toBooleanStrictOrNull() == true
+                        OneuiXSettingType.ChoiceInt ->
+                            spec.path == "other.watchPairingConnectionMode" &&
+                                preferenceValue(preference, spec.path).toIntOrNull() != 0
+                        else -> false
+                    }
+                }
+            }
+        }
 
     fun settings(category: OneuiXCategory): List<OneuiXSettingSpec> =
         byCategory[category].orEmpty().map { spec ->
