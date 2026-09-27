@@ -205,7 +205,11 @@ fun DetailPaneSystemUI(
         StatusBarVerticalPaddingControl(
             title = stringResource(id = R.string.oneuix_statusBarTopPaddingDp_title),
             summaryRes = R.string.oneuix_statusBarTopPaddingDp_summary,
+            enabled = uiState.statusBar.modifyStatusBarTopPadding,
             currentValue = uiState.statusBar.statusBarTopPaddingDp,
+            onEnabledChange = {
+                onEvent(SystemUIEvent.StatusBar.ModifyStatusBarTopPadding(it))
+            },
             onValueChangeFinished = {
                 onEvent(SystemUIEvent.StatusBar.StatusBarTopPaddingDp(it))
             }
@@ -213,7 +217,11 @@ fun DetailPaneSystemUI(
         StatusBarVerticalPaddingControl(
             title = stringResource(id = R.string.oneuix_statusBarBottomPaddingDp_title),
             summaryRes = R.string.oneuix_statusBarBottomPaddingDp_summary,
+            enabled = uiState.statusBar.modifyStatusBarBottomPadding,
             currentValue = uiState.statusBar.statusBarBottomPaddingDp,
+            onEnabledChange = {
+                onEvent(SystemUIEvent.StatusBar.ModifyStatusBarBottomPadding(it))
+            },
             onValueChangeFinished = {
                 onEvent(SystemUIEvent.StatusBar.StatusBarBottomPaddingDp(it))
             }
@@ -595,29 +603,43 @@ fun DetailPaneSystemUI(
                 var lineGapDp by remember(uiState.statusBar.doubleLineClockGapDp) {
                     mutableFloatStateOf(uiState.statusBar.doubleLineClockGapDp)
                 }
-                OneuiXInfoItem(
-                    title = stringResource(id = R.string.oneuix_statusBarDoubleLineClockGap_title),
-                    summary = stringResource(
-                        id = R.string.oneuix_statusBarDoubleLineClockGap_summary,
-                        lineGapDp
-                    ),
-                    icon = ImageVector.vectorResource(id = R.drawable.format_letter_spacing),
-                )
-                OneuiXChildOptionSurface {
-                    OneuiXSlider(
-                        value = lineGapDp,
-                        onValueChange = { lineGapDp = it },
-                        modifier = Modifier.padding(horizontal = 16.dp),
-                        valueRange = 0f..2f,
-                        steps = 19,
-                        onValueChangeFinished = {
-                            onEvent(
-                                SystemUIEvent.StatusBar.DoubleLineClockGapDp(
-                                    (lineGapDp * 10f).roundToInt() / 10f
-                                )
+                var gapExpanded by rememberSaveable { mutableStateOf(false) }
+                OneuiXPreferenceGroup {
+                    SwitchItem(
+                        title = stringResource(id = R.string.oneuix_statusBarDoubleLineClockGap_title),
+                        summary = if (uiState.statusBar.modifyDoubleLineClockGap) {
+                            stringResource(
+                                id = R.string.oneuix_statusBarDoubleLineClockGap_summary,
+                                lineGapDp
                             )
+                        } else null,
+                        icon = ImageVector.vectorResource(id = R.drawable.format_letter_spacing),
+                        clickable = true,
+                        onClick = { gapExpanded = !gapExpanded },
+                        checked = uiState.statusBar.modifyDoubleLineClockGap,
+                        onCheckedChange = {
+                            gapExpanded = it
+                            onEvent(SystemUIEvent.StatusBar.ModifyDoubleLineClockGap(it))
                         }
                     )
+                    OneuiXChildVisibility(
+                        gapExpanded && uiState.statusBar.modifyDoubleLineClockGap
+                    ) {
+                        OneuiXSlider(
+                            value = lineGapDp,
+                            onValueChange = { lineGapDp = it },
+                            modifier = Modifier.padding(horizontal = 16.dp),
+                            valueRange = 0f..2f,
+                            steps = 19,
+                            onValueChangeFinished = {
+                                onEvent(
+                                    SystemUIEvent.StatusBar.DoubleLineClockGapDp(
+                                        (lineGapDp * 10f).roundToInt() / 10f
+                                    )
+                                )
+                            }
+                        )
+                    }
                 }
                 if (!isFold7) {
                     OneuiXSupportingText(
@@ -1201,31 +1223,42 @@ private fun PowerMenuActionEditor(
 private fun StatusBarVerticalPaddingControl(
     title: String,
     @StringRes summaryRes: Int,
+    enabled: Boolean,
     currentValue: Float,
+    onEnabledChange: (Boolean) -> Unit,
     onValueChangeFinished: (Float) -> Unit,
 ) {
     var value by remember(currentValue) { mutableFloatStateOf(currentValue) }
+    var expanded by rememberSaveable { mutableStateOf(false) }
+
     OneuiXPreferenceGroup {
-    OneuiXInfoItem(
-        title = title,
-        summary = stringResource(
-            id = summaryRes,
-            value
-        ),
-        icon = ImageVector.vectorResource(id = R.drawable.padding),
-    )
-    OneuiXChildOptionSurface {
-        OneuiXSlider(
-            value = value,
-            onValueChange = { value = it },
-            modifier = Modifier.padding(horizontal = 16.dp),
-            valueRange = 0f..8f,
-            steps = 79,
-            onValueChangeFinished = {
-                onValueChangeFinished((value * 10f).roundToInt() / 10f)
-            }
+        SwitchItem(
+            title = title,
+            summary = if (enabled) {
+                stringResource(id = summaryRes, value)
+            } else null,
+            icon = ImageVector.vectorResource(id = R.drawable.padding),
+            modifier = Modifier.animateContentSize(),
+            clickable = true,
+            onClick = { expanded = !expanded },
+            checked = enabled,
+            onCheckedChange = {
+                expanded = it
+                onEnabledChange(it)
+            },
         )
-    }
+        OneuiXChildVisibility(expanded && enabled) {
+            OneuiXSlider(
+                value = value,
+                onValueChange = { value = it },
+                modifier = Modifier.padding(horizontal = 16.dp),
+                valueRange = 0f..8f,
+                steps = 79,
+                onValueChangeFinished = {
+                    onValueChangeFinished((value * 10f).roundToInt() / 10f)
+                }
+            )
+        }
     }
 }
 
@@ -1266,7 +1299,13 @@ sealed interface SystemUIEvent {
         value class StatusBarRightPaddingDp(val value: Float) : StatusBar
 
         @JvmInline
+        value class ModifyStatusBarTopPadding(val value: Boolean) : StatusBar
+
+        @JvmInline
         value class StatusBarTopPaddingDp(val value: Float) : StatusBar
+
+        @JvmInline
+        value class ModifyStatusBarBottomPadding(val value: Boolean) : StatusBar
 
         @JvmInline
         value class StatusBarBottomPaddingDp(val value: Float) : StatusBar
@@ -1315,6 +1354,9 @@ sealed interface SystemUIEvent {
 
         @JvmInline
         value class StatusBarDoubleLineClockSize(val value: String) : StatusBar
+
+        @JvmInline
+        value class ModifyDoubleLineClockGap(val value: Boolean) : StatusBar
 
         @JvmInline
         value class DoubleLineClockGapDp(val value: Float) : StatusBar
@@ -1505,11 +1547,31 @@ private fun OneuiXToolsViewModel.onStatusBarEvent(event: SystemUIEvent.StatusBar
                 )
             }
 
+            is SystemUIEvent.StatusBar.ModifyStatusBarTopPadding -> {
+                preference.copy(
+                    systemUI = preference.systemUI.copy(
+                        statusBar = preference.systemUI.statusBar.copy(
+                            modifyStatusBarTopPadding = event.value
+                        )
+                    )
+                )
+            }
+
             is SystemUIEvent.StatusBar.StatusBarTopPaddingDp -> {
                 preference.copy(
                     systemUI = preference.systemUI.copy(
                         statusBar = preference.systemUI.statusBar.copy(
                             statusBarTopPaddingDp = event.value
+                        )
+                    )
+                )
+            }
+
+            is SystemUIEvent.StatusBar.ModifyStatusBarBottomPadding -> {
+                preference.copy(
+                    systemUI = preference.systemUI.copy(
+                        statusBar = preference.systemUI.statusBar.copy(
+                            modifyStatusBarBottomPadding = event.value
                         )
                     )
                 )
@@ -1681,6 +1743,16 @@ private fun OneuiXToolsViewModel.onStatusBarEvent(event: SystemUIEvent.StatusBar
                     systemUI = preference.systemUI.copy(
                         statusBar = preference.systemUI.statusBar.copy(
                             statusBarDoubleLineClockSize = event.value
+                        )
+                    )
+                )
+            }
+
+            is SystemUIEvent.StatusBar.ModifyDoubleLineClockGap -> {
+                preference.copy(
+                    systemUI = preference.systemUI.copy(
+                        statusBar = preference.systemUI.statusBar.copy(
+                            modifyDoubleLineClockGap = event.value
                         )
                     )
                 )
