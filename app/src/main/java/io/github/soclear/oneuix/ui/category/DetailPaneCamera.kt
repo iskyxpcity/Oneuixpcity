@@ -13,6 +13,7 @@ import com.oneuixp.app.R
 import io.github.soclear.oneuix.common.Preference
 import com.oneuixp.app.ui.viewmodel.OneuiXToolsViewModel
 import io.github.soclear.oneuix.ui.component.SwitchItem
+import io.github.soclear.oneuix.ui.component.OneuiXDetailGroup
 
 @Composable
 fun DetailPaneCamera(
@@ -25,6 +26,7 @@ fun DetailPaneCamera(
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
     ) {
+        OneuiXDetailGroup {
         SwitchItem(
             icon = ImageVector.vectorResource(id = R.drawable.camera),
             title = stringResource(id = R.string.oneuix_supportAllCameraMenu_title),
@@ -38,7 +40,8 @@ fun DetailPaneCamera(
             checked = uiState.disableCameraTemperatureCheck,
             onCheckedChange = { onEvent(CameraEvent.DisableCameraTemperatureCheck(it)) }
         )
-    }
+    
+        }}
 }
 
 sealed interface CameraEvent {
