@@ -187,6 +187,7 @@ internal fun oneuiXSettingIcon(spec: OneuiXSettingSpec): ImageVector? {
         "systemUI.statusBar.statusBarDoubleLineClockSize",
         "systemUI.statusBar.setStatusBarClockTextScale",
         "systemUI.qs.modifyQSClockTextSize" -> R.drawable.format_size
+        "systemUI.statusBar.doubleLineClockGapDp" -> R.drawable.format_letter_spacing
 
         "systemUI.statusBar.hideSecureFolderStatusBarIcon" -> R.drawable.folder_managed
         "systemUI.statusBar.restoreBluetoothStatusBarIcon" -> R.drawable.bluetooth
