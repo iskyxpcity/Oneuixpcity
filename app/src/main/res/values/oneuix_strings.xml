@@ -250,4 +250,5 @@
     <string name="oneuix_power_restart_systemui">Restart SystemUI</string>
     <string name="oneuix_power_restart_recovery">Restart recovery</string>
     <string name="oneuix_power_restart_download">Restart download</string>
+    <string name="oneuix_preferenceSync_failed">Settings sync failed. SystemUI was not restarted.</string>
 </resources>

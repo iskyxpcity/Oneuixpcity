@@ -250,4 +250,5 @@
     <string name="oneuix_power_restart_systemui">重启 SystemUI</string>
     <string name="oneuix_power_restart_recovery">重启到恢复模式</string>
     <string name="oneuix_power_restart_download">重启到下载模式</string>
+    <string name="oneuix_preferenceSync_failed">设置同步失败，未重启 SystemUI。</string>
 </resources>

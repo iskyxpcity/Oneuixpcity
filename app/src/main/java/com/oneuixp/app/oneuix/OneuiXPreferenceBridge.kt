@@ -67,6 +67,18 @@ private object OneuiXXposedService {
             }
         }
     }
+
+    suspend fun synchronizeNow(application: Application): Boolean {
+        val unlocked =
+            application.getSystemService(UserManager::class.java)?.isUserUnlocked == true
+        if (!unlocked) return false
+        return runCatching {
+            val current = application.oneuiXDataStore.data.first()
+            OneuiXPreferenceSerializer.synchronizeRemote(current)
+        }.onFailure {
+            Log.w(TAG, "Synchronous remote preference flush failed", it)
+        }.getOrDefault(false)
+    }
 }
 
 object OneuiXPreferenceSerializer : Serializer<Preference> {
@@ -160,5 +172,10 @@ object OneuiXPreferenceBridge {
     fun ensureSynchronized(application: Application) {
         OneuiXXposedService.initialize(application)
         OneuiXXposedService.synchronize(application)
+    }
+
+    suspend fun synchronizeNow(application: Application): Boolean {
+        OneuiXXposedService.initialize(application)
+        return OneuiXXposedService.synchronizeNow(application)
     }
 }

@@ -31,6 +31,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import com.oneuixp.app.R
+import com.oneuixp.app.oneuiXPApp
+import com.oneuixp.app.oneuix.OneuiXPreferenceBridge
 import io.github.soclear.oneuix.common.ONE_UI_VERSION
 import io.github.soclear.oneuix.common.PowerMenuAction
 import io.github.soclear.oneuix.common.Preference
@@ -91,6 +93,15 @@ fun DetailPaneSystemUI(
             modifier = Modifier.align(Alignment.CenterHorizontally),
             onClick = {
                 coroutineScope.launch {
+                    val synchronized = OneuiXPreferenceBridge.synchronizeNow(oneuiXPApp)
+                    if (!synchronized) {
+                        Toast.makeText(
+                            context,
+                            R.string.oneuix_preferenceSync_failed,
+                            Toast.LENGTH_SHORT,
+                        ).show()
+                        return@launch
+                    }
                     val restarted = withContext(Dispatchers.IO) {
                         runCatching {
                             val process = ProcessBuilder(

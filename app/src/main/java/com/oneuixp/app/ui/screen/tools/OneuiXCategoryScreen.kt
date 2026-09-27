@@ -61,6 +61,8 @@ import java.time.LocalDateTime
 import kotlin.math.roundToInt
 import android.widget.Toast
 import com.oneuixp.app.R
+import com.oneuixp.app.oneuiXPApp
+import com.oneuixp.app.oneuix.OneuiXPreferenceBridge
 import com.oneuixp.app.oneuix.OneuiXCategory
 import com.oneuixp.app.oneuix.OneuiXFeatureCatalog
 import com.oneuixp.app.oneuix.OneuiXLayoutRules
@@ -400,6 +402,16 @@ private fun OneuiXCategoryMaterial(
                     Button(
                         onClick = {
                             coroutineScope.launch {
+                                val synchronized =
+                                    OneuiXPreferenceBridge.synchronizeNow(oneuiXPApp)
+                                if (!synchronized) {
+                                    Toast.makeText(
+                                        context,
+                                        R.string.oneuix_preferenceSync_failed,
+                                        Toast.LENGTH_SHORT,
+                                    ).show()
+                                    return@launch
+                                }
                                 val restarted = withContext(Dispatchers.IO) {
                                     runCatching {
                                         val process = ProcessBuilder(
