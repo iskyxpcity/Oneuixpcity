@@ -103,7 +103,7 @@ fun rememberLsposedHomeStatus(): LsposedHomeStatus {
         scopeKnown = framework.scopeKnown,
         scopeActive = scopeActive,
         injected = injected,
-        injectionCount = if (injected) 1 else 0,
+        injectionCount = if (injected) StatusBridge.successfulHookCount(context) else 0,
         scopeCount = actualScopeCount,
     )
 }
