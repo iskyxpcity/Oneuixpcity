@@ -399,6 +399,7 @@ object OneuiXFeatureCatalog {
 
     private val visibilityByPath: Map<String, OneuiXVisibility> = mapOf(
         "android.maxNeverKilledAppNum" to OneuiXVisibility.Bool("android.modifyMaxNeverKilledAppNum"),
+        "android.supportAppJumpBlock" to OneuiXVisibility.AndroidAtLeast(35),
 
         "systemUI.statusBar.statusBarLeftPaddingDp" to
             OneuiXVisibility.Bool("systemUI.statusBar.modifyStatusBarLeftPadding"),
