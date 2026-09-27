@@ -36,12 +36,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.oneuixp.app.R
 import com.oneuixp.app.ui.LocalUiMode
@@ -54,11 +57,14 @@ import com.oneuixp.app.ui.theme.LocalEnableBlur
 import com.oneuixp.app.ui.util.BlurredBar
 import com.oneuixp.app.ui.util.rememberBlurBackdrop
 import top.yukonga.miuix.kmp.basic.Card
+import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
 import top.yukonga.miuix.kmp.basic.TopAppBar
 import top.yukonga.miuix.kmp.blur.layerBackdrop
+import top.yukonga.miuix.kmp.icon.MiuixIcons
+import top.yukonga.miuix.kmp.icon.basic.ArrowRight
 import top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme
 import top.yukonga.miuix.kmp.utils.overScrollVertical
 import top.yukonga.miuix.kmp.utils.scrollEndHaptic
@@ -78,12 +84,12 @@ fun StatusPager(
 @Composable
 private fun StatusCategoryIcon(
     category: StatusCategory,
-    size: Dp = 56.dp,
+    size: Dp = 48.dp,
 ) {
     Box(
         modifier = Modifier
             .size(size)
-            .clip(RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(14.dp))
             .background(Color(category.backgroundArgb)),
         contentAlignment = Alignment.Center,
     ) {
@@ -91,7 +97,7 @@ private fun StatusCategoryIcon(
             imageVector = ImageVector.vectorResource(category.iconRes),
             contentDescription = stringResource(category.titleRes),
             tint = Color.White,
-            modifier = Modifier.size(30.dp),
+            modifier = Modifier.size(26.dp),
         )
     }
 }
@@ -150,10 +156,10 @@ private fun StatusPagerMiuix(
                             },
                             showIndication = true,
                             insideMargin = PaddingValues(
-                                start = 12.dp,
+                                start = 10.dp,
                                 end = 16.dp,
-                                top = 10.dp,
-                                bottom = 10.dp,
+                                top = 8.dp,
+                                bottom = 8.dp,
                             ),
                         ) {
                             Row(
@@ -164,10 +170,22 @@ private fun StatusPagerMiuix(
                                     text = stringResource(category.titleRes),
                                     modifier = Modifier
                                         .weight(1f)
-                                        .padding(start = 14.dp),
+                                        .padding(start = 10.dp),
                                     fontWeight = FontWeight(550),
                                     color = colorScheme.onSurface,
                                     maxLines = 1,
+                                )
+                                val layoutDirection = LocalLayoutDirection.current
+                                MiuixIcon(
+                                    modifier = Modifier
+                                        .graphicsLayer {
+                                            if (layoutDirection == LayoutDirection.Rtl) scaleX = -1f
+                                        }
+                                        .padding(start = 8.dp)
+                                        .size(width = 10.dp, height = 16.dp),
+                                    imageVector = MiuixIcons.Basic.ArrowRight,
+                                    contentDescription = null,
+                                    tint = colorScheme.onSurfaceVariantActions,
                                 )
                             }
                         }
