@@ -1,7 +1,6 @@
 package io.github.soclear.oneuix.ui.category
 
 import android.os.Build
-import android.widget.Toast
 import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
@@ -20,19 +19,15 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import com.oneuixp.app.R
-import com.oneuixp.app.oneuiXPApp
-import com.oneuixp.app.oneuix.OneuiXPreferenceBridge
 import io.github.soclear.oneuix.common.ONE_UI_VERSION
 import io.github.soclear.oneuix.common.PowerMenuAction
 import io.github.soclear.oneuix.common.Preference
@@ -50,12 +45,8 @@ import io.github.soclear.oneuix.ui.component.OneuiXSectionLabel
 import io.github.soclear.oneuix.ui.component.OneuiXSupportingText
 import io.github.soclear.oneuix.ui.component.OneuiXSwitch
 import io.github.soclear.oneuix.hook.util.StatusBarClockFormatter
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import java.util.concurrent.TimeUnit
 import kotlin.math.roundToInt
 import io.github.soclear.oneuix.common.R as CommonR
 
@@ -82,49 +73,11 @@ fun DetailPaneSystemUI(
     onEvent: (SystemUIEvent) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
-    val coroutineScope = rememberCoroutineScope()
     Column(
         modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
     ) {
-        Spacer(modifier = Modifier.height(30.dp))
-        OneuiXActionButton(
-            text = stringResource(CommonR.string.restartSystemUI),
-            modifier = Modifier.align(Alignment.CenterHorizontally),
-            onClick = {
-                coroutineScope.launch {
-                    val synchronized = OneuiXPreferenceBridge.synchronizeNow(oneuiXPApp)
-                    if (!synchronized) {
-                        Toast.makeText(
-                            context,
-                            R.string.oneuix_preferenceSync_failed,
-                            Toast.LENGTH_SHORT,
-                        ).show()
-                        return@launch
-                    }
-                    val restarted = withContext(Dispatchers.IO) {
-                        runCatching {
-                            val process = ProcessBuilder(
-                                "su",
-                                "-c",
-                                "pid=\$(pidof com.android.systemui); " +
-                                    "if [ -n \"\$pid\" ]; then kill \$pid; " +
-                                    "else killall com.android.systemui || " +
-                                    "am force-stop com.android.systemui; fi"
-                            ).start()
-                            process.waitFor(5, TimeUnit.SECONDS) && process.exitValue() == 0
-                        }.getOrDefault(false)
-                    }
-                    Toast.makeText(
-                        context,
-                        if (restarted) R.string.oneuix_restartSystemUI_success else R.string.oneuix_restartSystemUI_failed,
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-            }
-        )
         DividerText(R.string.oneuix_status_bar)
         OneuiXDetailGroup {
         OneuiXPreferenceGroup {
