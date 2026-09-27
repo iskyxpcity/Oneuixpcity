@@ -2,14 +2,12 @@ package io.github.soclear.oneuix.ui.component
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button as MaterialButton
 import androidx.compose.material3.Icon
@@ -23,8 +21,8 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import com.oneuixp.app.ui.LocalUiMode
 import com.oneuixp.app.ui.UiMode
@@ -39,6 +37,7 @@ import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
 import top.yukonga.miuix.kmp.basic.Switch as MiuixSwitch
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
+import top.yukonga.miuix.kmp.basic.TextField as MiuixTextField
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme
 
@@ -231,32 +230,16 @@ fun OneuiXInlineTextField(
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 12.dp),
                 ) {
-                    if (!labelText.isNullOrEmpty()) {
-                        MiuixText(
-                            text = labelText,
-                            fontSize = MiuixTheme.textStyles.body2.fontSize,
-                            color = colorScheme.onSurfaceVariantSummary,
-                            modifier = Modifier.padding(bottom = 4.dp),
-                        )
-                    }
-                    BasicTextField(
+                    MiuixTextField(
                         value = value,
                         onValueChange = onValueChange,
+                        modifier = Modifier.fillMaxWidth(),
+                        insideMargin = DpSize(12.dp, 10.dp),
+                        cornerRadius = 12.dp,
+                        label = labelText.orEmpty(),
+                        enabled = true,
                         singleLine = singleLine,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(colorScheme.onSurface.copy(alpha = 0.045f))
-                            .border(
-                                width = 1.dp,
-                                color = colorScheme.onSurface.copy(alpha = 0.14f),
-                                shape = RoundedCornerShape(10.dp),
-                            )
-                            .padding(horizontal = 12.dp, vertical = 10.dp),
-                        textStyle = MiuixTheme.textStyles.main.copy(
-                            color = colorScheme.onSurface,
-                        ),
-                        cursorBrush = SolidColor(colorScheme.primary),
+                        maxLines = if (singleLine) 1 else Int.MAX_VALUE,
                     )
                 }
             }
