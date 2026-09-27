@@ -9,7 +9,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.core.Serializer
 import androidx.datastore.dataStore
 import io.github.libxposed.service.XposedService
-import io.github.libxposed.service.XposedServiceHelper
+import com.oneuixp.app.statusbar.LsposedFrameworkStatus
 import io.github.soclear.oneuix.common.IgnoreUnknownKeysJson
 import io.github.soclear.oneuix.common.Preference
 import io.github.soclear.oneuix.common.ProductionPreferenceMigration
@@ -28,6 +28,13 @@ import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.encodeToStream
 import kotlinx.serialization.json.jsonPrimitive
 
+private fun Preference.probeSummary(): String =
+    "leftEnabled=${systemUI.statusBar.modifyStatusBarLeftPadding}, " +
+        "leftDp=${systemUI.statusBar.statusBarLeftPaddingDp}, " +
+        "clockEnabled=${systemUI.statusBar.setStatusBarClockFormat}, " +
+        "clockFormat=${systemUI.statusBar.statusBarClockFormat.replace("\n", "\\n")}, " +
+        "launcherMemory=${other.showMemoryUsageInRecents}"
+
 private object OneuiXXposedService {
     private const val TAG = "OneuiXP-OneUIXBridge"
     private val initialized = AtomicBoolean(false)
@@ -39,16 +46,19 @@ private object OneuiXXposedService {
 
     fun initialize(application: Application) {
         if (!initialized.compareAndSet(false, true)) return
-        XposedServiceHelper.registerListener(object : XposedServiceHelper.OnServiceListener {
-            override fun onServiceBind(boundService: XposedService) {
-                service = boundService
-                synchronize(application)
-            }
 
-            override fun onServiceDied(deadService: XposedService) {
-                if (service === deadService) service = null
+        // libxposed-service has one global service-listener slot. Register it
+        // only in LsposedFrameworkStatus and observe that shared Binder here.
+        LsposedFrameworkStatus.initialize()
+        LsposedFrameworkStatus.observeService { boundService ->
+            service = boundService
+            if (boundService != null) {
+                Log.i(TAG, "CHAIN_PROBE shared XposedService received; scheduling preference sync")
+                synchronize(application)
+            } else {
+                Log.w(TAG, "CHAIN_PROBE shared XposedService unavailable")
             }
-        })
+        }
     }
 
     fun synchronize(application: Application) {
@@ -59,6 +69,7 @@ private object OneuiXXposedService {
 
             runCatching {
                 val current = application.oneuiXDataStore.data.first()
+                Log.i(TAG, "CHAIN_PROBE local DataStore " + current.probeSummary())
                 if (!OneuiXPreferenceSerializer.synchronizeRemote(current)) {
                     error("libxposed remote preference service unavailable")
                 }
@@ -74,6 +85,7 @@ private object OneuiXXposedService {
         if (!unlocked) return false
         return runCatching {
             val current = application.oneuiXDataStore.data.first()
+            Log.i(TAG, "CHAIN_PROBE synchronous local DataStore " + current.probeSummary())
             OneuiXPreferenceSerializer.synchronizeRemote(current)
         }.onFailure {
             Log.w(TAG, "Synchronous remote preference flush failed", it)
@@ -111,9 +123,10 @@ object OneuiXPreferenceSerializer : Serializer<Preference> {
             IgnoreUnknownKeysJson.encodeToStream(Preference.serializer(), value, destination)
             destination.channel.force(true)
         }
+        Log.i(TAG, "CHAIN_PROBE remote preference.json write OK " + value.probeSummary())
         true
     } catch (t: Throwable) {
-        Log.w(TAG, "Remote preference synchronization failed", t)
+        Log.w(TAG, "CHAIN_PROBE remote preference.json write FAILED", t)
         false
     }
 
