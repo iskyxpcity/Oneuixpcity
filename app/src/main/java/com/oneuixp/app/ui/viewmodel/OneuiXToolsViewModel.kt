@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -25,6 +26,17 @@ import kotlinx.serialization.json.jsonPrimitive
 
 class OneuiXToolsViewModel : ViewModel() {
     private val dataStore = oneuiXPApp.oneuiXDataStore
+
+    /**
+     * Material pages read generic settings by serialized property path. The
+     * default Json encoder omits values equal to their schema defaults, which
+     * made those fields look missing and forced sliders to their minimum.
+     * Keep a path-reader encoder that always includes defaults.
+     */
+    private val pathValueJson = Json {
+        ignoreUnknownKeys = true
+        encodeDefaults = true
+    }
 
     val preference: StateFlow<Preference> = dataStore.data.stateIn(
         scope = viewModelScope,
@@ -91,7 +103,7 @@ class OneuiXToolsViewModel : ViewModel() {
         preference: Preference,
         path: String,
     ): String {
-        val root = IgnoreUnknownKeysJson.encodeToJsonElement(
+        val root = pathValueJson.encodeToJsonElement(
             Preference.serializer(),
             preference,
         )
