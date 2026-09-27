@@ -233,15 +233,21 @@ fun SegmentedSwitchItem(
     checked: Boolean,
     enabled: Boolean = true,
     showChildIndicator: Boolean = false,
+    onRowClick: (() -> Unit)? = null,
     onCheckedChange: (Boolean) -> Unit,
 ) {
     val haptic = LocalHapticFeedback.current
     val interactionSource = remember { MutableInteractionSource() }
+    val switchInteractionSource = remember { MutableInteractionSource() }
 
     SegmentedListItem(
         onClick = {
             haptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
-            onCheckedChange(!checked)
+            if (onRowClick != null) {
+                onRowClick()
+            } else {
+                onCheckedChange(!checked)
+            }
         },
         enabled = enabled,
         interactionSource = interactionSource,
@@ -263,8 +269,15 @@ fun SegmentedSwitchItem(
                 ExpressiveSwitch(
                     checked = checked,
                     enabled = enabled,
-                    onCheckedChange = null,
-                    interactionSource = interactionSource,
+                    onCheckedChange = if (onRowClick != null) {
+                        { value ->
+                            haptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
+                            onCheckedChange(value)
+                        }
+                    } else {
+                        null
+                    },
+                    interactionSource = switchInteractionSource,
                 )
             }
         },
