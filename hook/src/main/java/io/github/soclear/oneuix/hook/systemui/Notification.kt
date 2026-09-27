@@ -23,72 +23,91 @@ object Notification {
             Build.VERSION.SDK_INT < Build.VERSION_CODES.VANILLA_ICE_CREAM
         ) return@afterAttach
 
-        if (ONE_UI_VERSION >= 80500) {
-            try {
-                val notificationIconContainerClass = param.classLoader
-                    .loadClass("com.android.systemui.statusbar.phone.NotificationIconContainer")
-                xposedModule.hook(
-                    notificationIconContainerClass.getDeclaredMethod(
-                        "shouldForceOverflow",
-                        Int::class.javaPrimitiveType,
-                        Float::class.javaPrimitiveType,
-                        Int::class.javaPrimitiveType
-                    )
-                ).intercept { chain ->
-                    val newArgs = chain.args.toTypedArray()
-                    newArgs[2] = max
-                    chain.proceed(newArgs)
-                }
-                HookInstallTracker.markSuccessful("systemui.notification.max-icons")
-            } catch (t: Throwable) {
-                xlog(t)
+        val notificationIconContainerClass = runCatching {
+            param.classLoader.loadClass(
+                "com.android.systemui.statusbar.phone.NotificationIconContainer"
+            )
+        }.getOrElse {
+            xlog(it)
+            return@afterAttach
+        }
+
+        /*
+         * Foldables can use two different status-bar icon pipelines depending on
+         * the active display/configuration. Keep the configured limit at every
+         * layer instead of only replacing one shouldForceOverflow signature.
+         */
+        fun applyContainerLimit(instance: Any?) {
+            if (instance == null) return
+            runCatching { instance.reflect["mMaxStaticIcons"] = max }
+            runCatching { instance.reflect["mMaxIcons"] = max }
+        }
+
+        // Samsung/AOSP variants have changed this private method signature.
+        // The last int parameter is the max-visible-icons argument in all known
+        // shouldForceOverflow variants, so hook every overload defensively.
+        notificationIconContainerClass.declaredMethods
+            .filter { it.name == "shouldForceOverflow" }
+            .forEach { method ->
+                runCatching {
+                    val maxArgIndex = method.parameterTypes.indexOfLast {
+                        it == Int::class.javaPrimitiveType
+                    }
+                    if (maxArgIndex >= 0) {
+                        xposedModule.hook(method).intercept { chain ->
+                            val newArgs = chain.args.toTypedArray()
+                            newArgs[maxArgIndex] = max
+                            chain.proceed(newArgs)
+                        }
+                    }
+                }.onFailure { xlog(it) }
             }
 
-            try {
+        // The container resource cap is 4 by default. Cover-display status bars
+        // can still consult this field even when the main-display ViewModel path
+        // is already overridden. Re-apply it after resource/config refreshes.
+        notificationIconContainerClass.declaredMethods
+            .filter { it.name == "initResources" && it.parameterCount == 0 }
+            .forEach { method ->
+                runCatching {
+                    xposedModule.hook(method).intercept { chain ->
+                        val result = chain.proceed()
+                        applyContainerLimit(chain.thisObject)
+                        result
+                    }
+                }.onFailure { xlog(it) }
+            }
+
+        // Also cover builds where initResources is inlined/renamed.
+        notificationIconContainerClass.declaredConstructors.forEach { constructor ->
+            runCatching {
+                xposedModule.hook(constructor).intercept { chain ->
+                    val result = chain.proceed()
+                    applyContainerLimit(chain.thisObject)
+                    result
+                }
+            }.onFailure { xlog(it) }
+        }
+
+        if (ONE_UI_VERSION >= 80500) {
+            // New pipeline: ViewModel owns another copy of the static icon limit.
+            runCatching {
                 param.classLoader
-                    .loadClass("com.android.systemui.statusbar.notification.icon.ui.viewmodel.NotificationIconContainerStatusBarViewModel")
+                    .loadClass(
+                        "com.android.systemui.statusbar.notification.icon.ui.viewmodel.NotificationIconContainerStatusBarViewModel"
+                    )
                     .declaredConstructors
-                    .forEach {
-                        xposedModule.hook(it).intercept { chain ->
+                    .forEach { constructor ->
+                        xposedModule.hook(constructor).intercept { chain ->
                             val result = chain.proceed()
-                            chain.thisObject.reflect["maxIcons"] = Int.MAX_VALUE
+                            runCatching { chain.thisObject.reflect["maxIcons"] = max }
                             result
                         }
                     }
-                HookInstallTracker.markSuccessful("systemui.notification.max-icons")
-            } catch (t: Throwable) {
-                xlog(t)
-            }
-            return@afterAttach
+            }.onFailure { xlog(it) }
         }
-        try {
-            val notificationIconContainerClass = param.classLoader
-                .loadClass("com.android.systemui.statusbar.phone.NotificationIconContainer")
-            xposedModule.hook(
-                notificationIconContainerClass.getDeclaredMethod(
-                    "shouldForceOverflow",
-                    Int::class.javaPrimitiveType,
-                    Int::class.javaPrimitiveType,
-                    Float::class.javaPrimitiveType,
-                    Int::class.javaPrimitiveType
-                )
-            ).intercept { chain ->
-                val newArgs = chain.args.toTypedArray()
-                newArgs[3] = max
-                chain.proceed(newArgs)
-            }
 
-            xposedModule.hook(
-                notificationIconContainerClass.getDeclaredMethod("initResources")
-            ).intercept { chain ->
-                val result = chain.proceed()
-                chain.thisObject.reflect["mMaxStaticIcons"] = Int.MAX_VALUE
-                result
-            }
-            HookInstallTracker.markSuccessful("systemui.notification.max-icons")
-        } catch (t: Throwable) {
-            xlog(t)
-        }
+        HookInstallTracker.markSuccessful("systemui.notification.max-icons")
     }
 
     context(xposedModule: XposedModule)
