@@ -181,14 +181,14 @@ fun OneuiXInfoItem(
     trailingContent: (@Composable () -> Unit)? = null,
 ) {
     val grouped = LocalOneuiXGroupedPreference.current
-    val materialColors = ListItemDefaults.colors().copy(
+    val materialColors = ListItemDefaults.segmentedColors().copy(
         containerColor = Color.Transparent,
         disabledContainerColor = Color.Transparent,
     )
     when (LocalUiMode.current) {
         UiMode.Material -> SegmentedListItem(
             modifier = if (grouped) modifier else modifier.padding(horizontal = 16.dp, vertical = 4.dp),
-            colors = if (grouped) materialColors else ListItemDefaults.colors(),
+            colors = if (grouped) materialColors else ListItemDefaults.segmentedColors(),
             headlineContent = { MaterialText(title) },
             supportingContent = summary?.let { { MaterialText(it) } },
             leadingContent = icon?.let { imageVector ->
