@@ -14,13 +14,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.Icon
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Switch
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -45,6 +38,12 @@ import com.oneuixp.app.ui.viewmodel.OneuiXToolsViewModel
 import io.github.soclear.oneuix.ui.component.SelectItem
 import io.github.soclear.oneuix.ui.component.SwitchItem
 import io.github.soclear.oneuix.ui.component.OneuiXSlider
+import io.github.soclear.oneuix.ui.component.OneuiXActionButton
+import io.github.soclear.oneuix.ui.component.OneuiXInfoItem
+import io.github.soclear.oneuix.ui.component.OneuiXInlineTextField
+import io.github.soclear.oneuix.ui.component.OneuiXSectionLabel
+import io.github.soclear.oneuix.ui.component.OneuiXSupportingText
+import io.github.soclear.oneuix.ui.component.OneuiXSwitch
 import io.github.soclear.oneuix.hook.util.StatusBarClockFormatter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -86,7 +85,8 @@ fun DetailPaneSystemUI(
             .verticalScroll(rememberScrollState())
     ) {
         Spacer(modifier = Modifier.height(30.dp))
-        Button(
+        OneuiXActionButton(
+            text = stringResource(CommonR.string.restartSystemUI),
             modifier = Modifier.align(Alignment.CenterHorizontally),
             onClick = {
                 coroutineScope.launch {
@@ -110,9 +110,7 @@ fun DetailPaneSystemUI(
                     ).show()
                 }
             }
-        ) {
-            Text(text = stringResource(CommonR.string.restartSystemUI))
-        }
+        )
         DividerText(R.string.oneuix_status_bar)
         Column {
             var padding by remember {
@@ -373,18 +371,20 @@ fun DetailPaneSystemUI(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.padding(horizontal = 16.dp),
                 ) {
-                    OutlinedTextField(
+                    OneuiXInlineTextField(
                         value = threshold.toString(),
                         onValueChange = { threshold = it.toIntOrNull()?.coerceAtLeast(1) ?: 1 },
                         modifier = Modifier.weight(1f),
-                        label = { Text(stringResource(id = R.string.oneuix_networkSpeedThreshold_label)) }
+                        labelText = stringResource(id = R.string.oneuix_networkSpeedThreshold_label),
+                        singleLine = true,
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Button(onClick = {
-                        onEvent(SystemUIEvent.StatusBar.NetworkSpeedThreshold(threshold))
-                    }) {
-                        Text(text = stringResource(id = R.string.oneuix_confirm))
-                    }
+                    OneuiXActionButton(
+                        text = stringResource(id = R.string.oneuix_confirm),
+                        onClick = {
+                            onEvent(SystemUIEvent.StatusBar.NetworkSpeedThreshold(threshold))
+                        },
+                    )
                 }
             }
         }
@@ -420,14 +420,15 @@ fun DetailPaneSystemUI(
                         mutableStateOf(uiState.statusBar.statusBarClockFormat)
                     }
                     var label by remember { mutableStateOf("") }
-                    OutlinedTextField(
+                    OneuiXInlineTextField(
                         value = tempDataTimeFormat,
                         onValueChange = { tempDataTimeFormat = it },
                         modifier = Modifier.weight(1f),
-                        label = { Text(text = label) }
+                        labelText = label.takeIf { it.isNotBlank() },
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Button(
+                    OneuiXActionButton(
+                        text = stringResource(id = R.string.oneuix_confirm),
                         onClick = {
                             var right = true
                             label = try {
@@ -446,10 +447,8 @@ fun DetailPaneSystemUI(
                                     )
                                 )
                             }
-                        }
-                    ) {
-                        Text(text = stringResource(id = R.string.oneuix_confirm))
-                    }
+                        },
+                    )
                 }
             }
         }
@@ -481,22 +480,14 @@ fun DetailPaneSystemUI(
                                     uiState.statusBar.fold7DoubleLineClockTimeScale
                                 )
                             }
-                            ListItem(
-                                headlineContent = {
-                                    Text(
-                                        text = stringResource(
-                                            id = R.string.oneuix_fold7DoubleLineClockTimeScale_title
-                                        )
-                                    )
-                                },
-                                supportingContent = {
-                                    Text(
-                                        text = stringResource(
-                                            id = R.string.oneuix_fold7DoubleLineClockTimeScale_summary,
-                                            timeScale,
-                                        )
-                                    )
-                                }
+                            OneuiXInfoItem(
+                                title = stringResource(
+                                    id = R.string.oneuix_fold7DoubleLineClockTimeScale_title
+                                ),
+                                summary = stringResource(
+                                    id = R.string.oneuix_fold7DoubleLineClockTimeScale_summary,
+                                    timeScale,
+                                ),
                             )
                             OneuiXSlider(
                                 value = timeScale,
@@ -519,22 +510,14 @@ fun DetailPaneSystemUI(
                                     uiState.statusBar.fold7DoubleLineClockDateScale
                                 )
                             }
-                            ListItem(
-                                headlineContent = {
-                                    Text(
-                                        text = stringResource(
-                                            id = R.string.oneuix_fold7DoubleLineClockDateScale_title
-                                        )
-                                    )
-                                },
-                                supportingContent = {
-                                    Text(
-                                        text = stringResource(
-                                            id = R.string.oneuix_fold7DoubleLineClockDateScale_summary,
-                                            dateScale,
-                                        )
-                                    )
-                                }
+                            OneuiXInfoItem(
+                                title = stringResource(
+                                    id = R.string.oneuix_fold7DoubleLineClockDateScale_title
+                                ),
+                                summary = stringResource(
+                                    id = R.string.oneuix_fold7DoubleLineClockDateScale_summary,
+                                    dateScale,
+                                ),
                             )
                             OneuiXSlider(
                                 value = dateScale,
@@ -584,24 +567,13 @@ fun DetailPaneSystemUI(
                 var lineGapDp by remember(uiState.statusBar.doubleLineClockGapDp) {
                     mutableFloatStateOf(uiState.statusBar.doubleLineClockGapDp)
                 }
-                ListItem(
-                    headlineContent = {
-                        Text(text = stringResource(id = R.string.oneuix_statusBarDoubleLineClockGap_title))
-                    },
-                    supportingContent = {
-                        Text(
-                            text = stringResource(
-                                id = R.string.oneuix_statusBarDoubleLineClockGap_summary,
-                                lineGapDp
-                            )
-                        )
-                    },
-                    leadingContent = {
-                        Icon(
-                            imageVector = ImageVector.vectorResource(id = R.drawable.format_letter_spacing),
-                            contentDescription = null
-                        )
-                    }
+                OneuiXInfoItem(
+                    title = stringResource(id = R.string.oneuix_statusBarDoubleLineClockGap_title),
+                    summary = stringResource(
+                        id = R.string.oneuix_statusBarDoubleLineClockGap_summary,
+                        lineGapDp
+                    ),
+                    icon = ImageVector.vectorResource(id = R.drawable.format_letter_spacing),
                 )
                 OneuiXSlider(
                     value = lineGapDp,
@@ -618,9 +590,8 @@ fun DetailPaneSystemUI(
                     }
                 )
                 if (!isFold7) {
-                    Text(
+                    OneuiXSupportingText(
                         text = stringResource(id = R.string.oneuix_statusBarDoubleLineClockSize_summary),
-                        style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.padding(horizontal = 16.dp)
                     )
                 }
@@ -792,23 +763,23 @@ fun DetailPaneSystemUI(
                         mutableStateOf(uiState.statusBar.customCarrierName)
                     }
 
-                    OutlinedTextField(
+                    OneuiXInlineTextField(
                         value = tempCustomCarrierName,
                         onValueChange = { tempCustomCarrierName = it },
                         modifier = Modifier.weight(1f),
+                        singleLine = true,
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Button(
+                    OneuiXActionButton(
+                        text = stringResource(id = R.string.oneuix_confirm),
                         onClick = {
                             onEvent(
                                 SystemUIEvent.StatusBar.CustomCarrierName(
                                     tempCustomCarrierName
                                 )
                             )
-                        }
-                    ) {
-                        Text(text = stringResource(id = R.string.oneuix_confirm))
-                    }
+                        },
+                    )
                 }
             }
         }
@@ -858,25 +829,15 @@ fun DetailPaneSystemUI(
             )
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
-            ListItem(
-                headlineContent = { Text(stringResource(id = R.string.oneuix_turnOn5gQsTile_title)) },
-                leadingContent = {
-                    Icon(
-                        ImageVector.vectorResource(id = R.drawable.five_g),
-                        stringResource(id = R.string.oneuix_turnOn5gQsTile_title)
-                    )
-                },
-                supportingContent = { Text(stringResource(id = R.string.oneuix_root5gQsTile_summary)) }
+            OneuiXInfoItem(
+                title = stringResource(id = R.string.oneuix_turnOn5gQsTile_title),
+                summary = stringResource(id = R.string.oneuix_root5gQsTile_summary),
+                icon = ImageVector.vectorResource(id = R.drawable.five_g),
             )
-            ListItem(
-                headlineContent = { Text(stringResource(id = R.string.oneuix_immersiveModeQsTile_title)) },
-                leadingContent = {
-                    Icon(
-                        ImageVector.vectorResource(id = R.drawable.immersive_mode),
-                        stringResource(id = R.string.oneuix_immersiveModeQsTile_title)
-                    )
-                },
-                supportingContent = { Text(stringResource(id = R.string.oneuix_rootImmersiveModeQsTile_summary)) }
+            OneuiXInfoItem(
+                title = stringResource(id = R.string.oneuix_immersiveModeQsTile_title),
+                summary = stringResource(id = R.string.oneuix_rootImmersiveModeQsTile_summary),
+                icon = ImageVector.vectorResource(id = R.drawable.immersive_mode),
             )
             if (ONE_UI_VERSION < 80500) {
                 SwitchItem(
@@ -1061,21 +1022,20 @@ fun DetailPaneSystemUI(
                     var tempPackages by remember {
                         mutableStateOf(uiState.notification.hideOngoingActivityMediaPackages)
                     }
-                    OutlinedTextField(
+                    OneuiXInlineTextField(
                         value = tempPackages,
                         onValueChange = { tempPackages = it },
                         modifier = Modifier.weight(1f),
-                        label = { Text(text = stringResource(id = R.string.oneuix_hideOngoingActivityMedia_packages_hint)) },
+                        labelText = stringResource(id = R.string.oneuix_hideOngoingActivityMedia_packages_hint),
                         singleLine = true,
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Button(
+                    OneuiXActionButton(
+                        text = stringResource(id = R.string.oneuix_confirm),
                         onClick = {
                             onEvent(SystemUIEvent.Notification.HideOngoingActivityMediaPackages(tempPackages))
-                        }
-                    ) {
-                        Text(text = stringResource(id = R.string.oneuix_confirm))
-                    }
+                        },
+                    )
                 }
             }
         }
@@ -1132,10 +1092,9 @@ fun DetailPaneSystemUI(
 }
 
 @Composable
-private fun DividerText(@StringRes id: Int) = Text(
+private fun DividerText(@StringRes id: Int) = OneuiXSectionLabel(
     text = stringResource(id),
     modifier = Modifier.padding(start = 16.dp, top = 32.dp, end = 16.dp),
-    color = MaterialTheme.colorScheme.primary,
 )
 
 @Composable
@@ -1147,43 +1106,35 @@ private fun PowerMenuActionEditor(
     Column {
         normalizedActions.forEachIndexed { index, action ->
             val visiblePosition = normalizedActions.take(index + 1).count { it.visible }
-            ListItem(
-                headlineContent = {
-                    Text(text = stringResource(id = powerMenuActionTitle(action.name)))
-                },
-                supportingContent = {
-                    Text(
-                        text = if (action.visible) {
-                            stringResource(
-                                id = R.string.oneuix_powerMenuActionVisible_summary,
-                                visiblePosition
-                            )
-                        } else {
-                            stringResource(id = R.string.oneuix_powerMenuActionHidden_summary)
-                        }
+            OneuiXInfoItem(
+                title = stringResource(id = powerMenuActionTitle(action.name)),
+                summary = if (action.visible) {
+                    stringResource(
+                        id = R.string.oneuix_powerMenuActionVisible_summary,
+                        visiblePosition
                     )
+                } else {
+                    stringResource(id = R.string.oneuix_powerMenuActionHidden_summary)
                 },
                 trailingContent = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Button(
+                        OneuiXActionButton(
+                            text = stringResource(id = R.string.oneuix_moveUp),
                             enabled = index > 0,
                             onClick = {
                                 onActionsChange(normalizedActions.move(index, index - 1))
-                            }
-                        ) {
-                            Text(text = stringResource(id = R.string.oneuix_moveUp))
-                        }
+                            },
+                        )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Button(
+                        OneuiXActionButton(
+                            text = stringResource(id = R.string.oneuix_moveDown),
                             enabled = index < normalizedActions.lastIndex,
                             onClick = {
                                 onActionsChange(normalizedActions.move(index, index + 1))
-                            }
-                        ) {
-                            Text(text = stringResource(id = R.string.oneuix_moveDown))
-                        }
+                            },
+                        )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Switch(
+                        OneuiXSwitch(
                             checked = action.visible,
                             onCheckedChange = { visible ->
                                 onActionsChange(
@@ -1191,10 +1142,10 @@ private fun PowerMenuActionEditor(
                                         if (actionIndex == index) item.copy(visible = visible) else item
                                     }
                                 )
-                            }
+                            },
                         )
                     }
-                }
+                },
             )
         }
     }
@@ -1208,22 +1159,13 @@ private fun StatusBarVerticalPaddingControl(
     onValueChangeFinished: (Float) -> Unit,
 ) {
     var value by remember(currentValue) { mutableFloatStateOf(currentValue) }
-    ListItem(
-        headlineContent = { Text(text = title) },
-        supportingContent = {
-            Text(
-                text = stringResource(
-                    id = summaryRes,
-                    value
-                )
-            )
-        },
-        leadingContent = {
-            Icon(
-                imageVector = ImageVector.vectorResource(id = R.drawable.padding),
-                contentDescription = null
-            )
-        }
+    OneuiXInfoItem(
+        title = title,
+        summary = stringResource(
+            id = summaryRes,
+            value
+        ),
+        icon = ImageVector.vectorResource(id = R.drawable.padding),
     )
     OneuiXSlider(
         value = value,
