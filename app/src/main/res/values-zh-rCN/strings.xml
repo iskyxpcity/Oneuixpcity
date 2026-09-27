@@ -60,4 +60,13 @@
     <string name="oneuix_core_features">系统功能</string>
     <string name="oneuix_app_features">三星应用功能</string>
     <string name="oneuix_migration_notice">迁移预览 · 设置会正常保存，但 OneUIX 功能 Hook 目前仍保持关闭。</string>
+    <string name="status_category_time">状态栏时间</string>
+    <string name="status_category_notification">状态栏通知</string>
+    <string name="status_category_network_speed">状态栏网速</string>
+    <string name="status_category_power">状态栏功耗</string>
+    <string name="status_category_signal">状态栏信号</string>
+    <string name="status_category_wifi">状态栏WIFI</string>
+    <string name="status_category_lockscreen">锁屏</string>
+    <string name="status_category_notification_center">通知中心</string>
+    <string name="status_category_control_center">控制中心</string>
 </resources>
