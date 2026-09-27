@@ -1,5 +1,7 @@
 package com.oneuixp.app.ui.component.miuix
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.FocusInteraction
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -10,6 +12,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
@@ -19,6 +22,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
@@ -102,6 +106,15 @@ fun EditText(
                         onValueChange(it)
                     },
                     modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(colorScheme.onSurface.copy(alpha = 0.045f))
+                        .border(
+                            width = 1.dp,
+                            color = colorScheme.onSurface.copy(alpha = 0.14f),
+                            shape = RoundedCornerShape(10.dp),
+                        )
+                        .padding(horizontal = 12.dp, vertical = 10.dp)
                         .focusRequester(focusRequester)
                         .semantics {
                             onClick {
