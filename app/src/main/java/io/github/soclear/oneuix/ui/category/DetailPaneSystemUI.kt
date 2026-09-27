@@ -38,6 +38,7 @@ import com.oneuixp.app.ui.viewmodel.OneuiXToolsViewModel
 import io.github.soclear.oneuix.ui.component.SelectItem
 import io.github.soclear.oneuix.ui.component.SwitchItem
 import io.github.soclear.oneuix.ui.component.OneuiXSlider
+import io.github.soclear.oneuix.ui.component.OneuiXPreferenceGroup
 import io.github.soclear.oneuix.ui.component.OneuiXActionButton
 import io.github.soclear.oneuix.ui.component.OneuiXInfoItem
 import io.github.soclear.oneuix.ui.component.OneuiXInlineTextField
@@ -112,7 +113,7 @@ fun DetailPaneSystemUI(
             }
         )
         DividerText(R.string.oneuix_status_bar)
-        Column {
+        OneuiXPreferenceGroup {
             var padding by remember {
                 mutableFloatStateOf(uiState.statusBar.statusBarLeftPaddingDp)
             }
@@ -149,7 +150,7 @@ fun DetailPaneSystemUI(
                 )
             }
         }
-        Column {
+        OneuiXPreferenceGroup {
             var padding by remember {
                 mutableFloatStateOf(uiState.statusBar.statusBarRightPaddingDp)
             }
@@ -202,7 +203,7 @@ fun DetailPaneSystemUI(
                 onEvent(SystemUIEvent.StatusBar.StatusBarBottomPaddingDp(it))
             }
         )
-        Column {
+        OneuiXPreferenceGroup {
             var widthScale by remember {
                 mutableFloatStateOf(uiState.statusBar.batteryIconWidthScale)
             }
@@ -239,7 +240,7 @@ fun DetailPaneSystemUI(
                 )
             }
         }
-        Column {
+        OneuiXPreferenceGroup {
             var heightScale by remember {
                 mutableFloatStateOf(uiState.statusBar.batteryIconHeightScale)
             }
@@ -297,6 +298,7 @@ fun DetailPaneSystemUI(
             }
         )
         if (ONE_UI_VERSION >= 70000) {
+            OneuiXPreferenceGroup {
             SwitchItem(
                 icon = ImageVector.vectorResource(id = R.drawable.battery),
                 title = stringResource(id = R.string.oneuix_addBatteryLevelText_title),
@@ -326,6 +328,7 @@ fun DetailPaneSystemUI(
                     )
                 }
             }
+            }
         }
         SwitchItem(
             icon = ImageVector.vectorResource(id = R.drawable.net_speed),
@@ -345,7 +348,7 @@ fun DetailPaneSystemUI(
                 onEvent(SystemUIEvent.StatusBar.ShowSeparateUpDownNetworkSpeeds(it))
             }
         )
-        Column {
+        OneuiXPreferenceGroup {
             var expanded by rememberSaveable { mutableStateOf(false) }
             var threshold by remember {
                 mutableIntStateOf(uiState.statusBar.networkSpeedThresholdKb)
@@ -388,6 +391,7 @@ fun DetailPaneSystemUI(
                 }
             }
         }
+        OneuiXPreferenceGroup {
         Column {
             var expanded by rememberSaveable { mutableStateOf(false) }
 
@@ -635,6 +639,7 @@ fun DetailPaneSystemUI(
                 }
             }
         }
+        }
         SwitchItem(
             title = stringResource(id = R.string.oneuix_updateStatusBarClockEverySecond_title),
             summary = stringResource(id = R.string.oneuix_updateStatusBarClockEverySecond_summary),
@@ -660,6 +665,7 @@ fun DetailPaneSystemUI(
                 onEvent(SystemUIEvent.StatusBar.RestoreBluetoothStatusBarIcon(it))
             }
         )
+        OneuiXPreferenceGroup {
         SwitchItem(
             icon = ImageVector.vectorResource(id = R.drawable.sim_card),
             title = stringResource(id = R.string.oneuix_physicalEsimAdapterWorkaround_title),
@@ -687,6 +693,7 @@ fun DetailPaneSystemUI(
                 }
             )
         }
+        }
         SwitchItem(
             icon = ImageVector.vectorResource(id = R.drawable.mobile_screensaver),
             title = stringResource(id = R.string.oneuix_doubleTapStatusBarToSleep_title),
@@ -695,7 +702,7 @@ fun DetailPaneSystemUI(
                 onEvent(SystemUIEvent.StatusBar.DoubleTapStatusBarToSleep(it))
             }
         )
-        Column {
+        OneuiXPreferenceGroup {
             var max by remember {
                 mutableIntStateOf(uiState.statusBar.statusBarMaxNotificationIcons)
             }
@@ -731,7 +738,7 @@ fun DetailPaneSystemUI(
                 )
             }
         }
-        Column {
+        OneuiXPreferenceGroup {
             var expanded by rememberSaveable { mutableStateOf(false) }
 
             SwitchItem(
@@ -934,7 +941,7 @@ fun DetailPaneSystemUI(
                     onEvent(SystemUIEvent.QS.ShowTraditionalChineseDateOnQS(it))
                 }
             )
-            Column {
+            OneuiXPreferenceGroup {
                 var textSize by remember { mutableFloatStateOf(uiState.qs.qsClockTextSize) }
                 var expanded by rememberSaveable { mutableStateOf(false) }
 
@@ -992,7 +999,7 @@ fun DetailPaneSystemUI(
         }
 
         DividerText(R.string.oneuix_notification)
-        Column {
+        OneuiXPreferenceGroup {
             var expanded by rememberSaveable { mutableStateOf(false) }
             SwitchItem(
                 icon = ImageVector.vectorResource(id = R.drawable.music_note),
@@ -1058,7 +1065,7 @@ fun DetailPaneSystemUI(
         )
 
         DividerText(R.string.oneuix_other)
-        Column {
+        OneuiXPreferenceGroup {
             var expanded by rememberSaveable { mutableStateOf(false) }
             SwitchItem(
                 icon = ImageVector.vectorResource(id = R.drawable.power_settings_new),
@@ -1159,6 +1166,7 @@ private fun StatusBarVerticalPaddingControl(
     onValueChangeFinished: (Float) -> Unit,
 ) {
     var value by remember(currentValue) { mutableFloatStateOf(currentValue) }
+    OneuiXPreferenceGroup {
     OneuiXInfoItem(
         title = title,
         summary = stringResource(
@@ -1177,6 +1185,7 @@ private fun StatusBarVerticalPaddingControl(
             onValueChangeFinished((value * 10f).roundToInt() / 10f)
         }
     )
+    }
 }
 
 private fun List<PowerMenuAction>.move(fromIndex: Int, toIndex: Int): List<PowerMenuAction> =
