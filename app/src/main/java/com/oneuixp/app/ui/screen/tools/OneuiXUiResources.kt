@@ -5,7 +5,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
-import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toBitmap
 import com.oneuixp.app.R
 import com.oneuixp.app.oneuix.OneuiXCategory
@@ -141,12 +140,20 @@ internal fun oneuiXChoiceLabels(spec: OneuiXSettingSpec): List<String> {
 internal fun rememberOneuiXCategoryIcon(category: OneuiXCategory): ImageBitmap {
     val context = LocalContext.current
     return remember(category) {
-        val drawable = runCatching {
-            context.packageManager.getApplicationIcon(category.packageName)
-        }.getOrElse {
-            requireNotNull(ContextCompat.getDrawable(context, R.mipmap.ic_launcher))
-        }
-        drawable.toBitmap(width = 128, height = 128).asImageBitmap()
+        val packageManager = context.packageManager
+        val applicationInfo = runCatching {
+            packageManager.getApplicationInfo(category.packageName, 0)
+        }.getOrNull()
+
+        val drawable = applicationInfo
+            ?.loadIcon(packageManager)
+            ?: requireNotNull(
+                context.getDrawable(R.mipmap.oneuix_mod_category_fallback)
+            )
+
+        // Match OneUIX-Mod exactly: preserve the drawable's intrinsic/adaptive
+        // icon rendering instead of forcing it into a 128x128 bitmap first.
+        drawable.toBitmap().asImageBitmap()
     }
 }
 
