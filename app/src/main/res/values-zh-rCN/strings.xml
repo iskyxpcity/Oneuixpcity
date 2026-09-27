@@ -54,7 +54,7 @@
     <string name="settings_floating_bottom_bar_summary">使用 Apple 风格的悬浮底栏</string>
     <string name="settings_enable_glass">液态玻璃</string>
     <string name="settings_enable_glass_summary">启用悬浮底栏的液态玻璃效果</string>
-    <string name="oneuixp_tools">工具</string>
+    <string name="oneuixp_tools">功能</string>
 
     <string name="oneuix_core_features">系统功能</string>
     <string name="oneuix_app_features">三星应用功能</string>
