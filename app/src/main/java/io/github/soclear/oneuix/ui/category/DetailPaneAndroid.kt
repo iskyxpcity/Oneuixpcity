@@ -26,6 +26,7 @@ import com.oneuixp.app.ui.viewmodel.OneuiXToolsViewModel
 import io.github.soclear.oneuix.ui.component.SwitchItem
 import io.github.soclear.oneuix.ui.component.OneuiXSlider
 import io.github.soclear.oneuix.ui.component.OneuiXPreferenceGroup
+import io.github.soclear.oneuix.ui.component.OneuiXDetailGroup
 import kotlin.math.roundToInt
 
 @Composable
@@ -39,6 +40,7 @@ fun DetailPaneAndroid(
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
     ) {
+        OneuiXDetailGroup {
         SwitchItem(
             icon = ImageVector.vectorResource(id = R.drawable.lock_clock),
             title = stringResource(id = R.string.oneuix_disablePinVerifyPer72h_title),
@@ -121,7 +123,8 @@ fun DetailPaneAndroid(
             checked = uiState.disableWritingToolkitGlobally,
             onCheckedChange = { onEvent(AndroidEvent.DisableWritingToolkitGlobally(it)) }
         )
-    }
+    
+        }}
 }
 
 sealed interface AndroidEvent {
