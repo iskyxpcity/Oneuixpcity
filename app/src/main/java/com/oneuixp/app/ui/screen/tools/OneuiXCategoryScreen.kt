@@ -221,6 +221,7 @@ private fun MaterialSettingRow(
 ) {
     val title = oneuiXSettingTitle(spec)
     val summary = oneuiXSettingSummary(spec)
+    val icon = oneuiXSettingIcon(spec)
 
     if (spec.path == "systemUI.statusBar.networkSpeedThresholdKb") {
         NetworkSpeedThresholdMaterial(
@@ -237,6 +238,7 @@ private fun MaterialSettingRow(
         OneuiXSettingType.Toggle,
         OneuiXSettingType.PowerAction -> {
             SegmentedSwitchItem(
+                icon = icon,
                 title = title,
                 summary = summary,
                 checked = toolsViewModel.checked(preference, spec),
@@ -252,6 +254,7 @@ private fun MaterialSettingRow(
                 .coerceAtLeast(0)
 
             SegmentedDropdownItem(
+                icon = icon,
                 title = title,
                 summary = summary,
                 items = labels,
@@ -285,9 +288,11 @@ private fun NetworkSpeedThresholdMaterial(
     summary: String?,
     preference: Preference,
     toolsViewModel: OneuiXToolsViewModel,
+    showIcon: Boolean = true,
 ) {
     val current = toolsViewModel.value(preference, spec).toIntOrNull() ?: 0
     SegmentedSwitchItem(
+        icon = oneuiXSettingIcon(spec),
         title = title,
         summary = if (current > 0) "$current KB/s" else summary,
         checked = current > 0,
@@ -305,6 +310,7 @@ private fun NetworkSpeedThresholdMaterial(
             summary = summary,
             preference = preference,
             toolsViewModel = toolsViewModel,
+            showIcon = false,
         )
     }
 }
@@ -337,6 +343,13 @@ private fun EditableMaterialValue(
             },
         ),
         singleLine = spec.path != "systemUI.statusBar.statusBarClockFormat",
+        leadingContent = if (showIcon) {
+            oneuiXSettingIcon(spec)?.let { imageVector ->
+                { Icon(imageVector = imageVector, contentDescription = null) }
+            }
+        } else {
+            null
+        },
         supportingContent = summary?.let { text ->
             { Text(text) }
         },
@@ -451,6 +464,7 @@ private fun MiuixSettingRow(
 ) {
     val title = oneuiXSettingTitle(spec)
     val summary = oneuiXSettingSummary(spec)
+    val icon = oneuiXSettingIcon(spec)
 
     if (spec.path == "systemUI.statusBar.networkSpeedThresholdKb") {
         NetworkSpeedThresholdMiuix(
@@ -469,6 +483,15 @@ private fun MiuixSettingRow(
             SwitchPreference(
                 title = title,
                 summary = summary ?: "",
+                startAction = icon?.let { imageVector ->
+                    {
+                        MiuixIcon(
+                            imageVector = imageVector,
+                            contentDescription = null,
+                            tint = colorScheme.onSurface,
+                        )
+                    }
+                },
                 checked = toolsViewModel.checked(preference, spec),
                 onCheckedChange = { toolsViewModel.setChecked(spec, it) },
             )
@@ -484,6 +507,15 @@ private fun MiuixSettingRow(
             OverlayDropdownPreference(
                 title = title,
                 summary = summary ?: "",
+                startAction = icon?.let { imageVector ->
+                    {
+                        MiuixIcon(
+                            imageVector = imageVector,
+                            contentDescription = null,
+                            tint = colorScheme.onSurface,
+                        )
+                    }
+                },
                 items = labels,
                 selectedIndex = index,
                 onSelectedIndexChange = { selected ->
@@ -520,6 +552,15 @@ private fun NetworkSpeedThresholdMiuix(
     SwitchPreference(
         title = title,
         summary = if (current > 0) "$current KB/s" else summary ?: "",
+        startAction = oneuiXSettingIcon(spec)?.let { imageVector ->
+            {
+                MiuixIcon(
+                    imageVector = imageVector,
+                    contentDescription = null,
+                    tint = colorScheme.onSurface,
+                )
+            }
+        },
         checked = current > 0,
         onCheckedChange = { enabled ->
             toolsViewModel.setRawValue(
@@ -535,6 +576,7 @@ private fun NetworkSpeedThresholdMiuix(
             summary = summary,
             preference = preference,
             toolsViewModel = toolsViewModel,
+            showIcon = false,
         )
     }
 }
@@ -546,6 +588,7 @@ private fun EditableMiuixValue(
     summary: String?,
     preference: Preference,
     toolsViewModel: OneuiXToolsViewModel,
+    showIcon: Boolean = true,
 ) {
     val current = toolsViewModel.value(preference, spec)
     var edit by remember(spec.path, current) { mutableStateOf(current) }
@@ -553,6 +596,19 @@ private fun EditableMiuixValue(
     EditText(
         title = title,
         summary = summary,
+        startAction = if (showIcon) {
+            oneuiXSettingIcon(spec)?.let { imageVector ->
+                {
+                    MiuixIcon(
+                        imageVector = imageVector,
+                        contentDescription = null,
+                        tint = colorScheme.onSurface,
+                    )
+                }
+            }
+        } else {
+            null
+        },
         value = edit,
         onValueChange = {
             edit = it
