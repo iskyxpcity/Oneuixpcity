@@ -7,6 +7,7 @@ import android.os.Handler
 import android.os.Looper
 import android.os.PowerManager
 import android.os.SystemClock
+import android.util.Log
 import android.util.TypedValue
 import android.view.Gravity
 import android.view.MotionEvent
@@ -24,28 +25,59 @@ import io.github.soclear.oneuix.hook.util.reflect
 import io.github.soclear.oneuix.hook.util.xlog
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.roundToInt
 
 @SuppressLint("PrivateApi")
 object StatusBar {
     context(xposedModule: XposedModule)
     fun setStatusBarPaddingDp(left: Float?, right: Float?) = afterAttachTry(left != null || right != null) {
-        val clazz =
-            classLoader.loadClass("com.android.systemui.statusbar.phone.IndicatorGardenAlgorithmCenterCutout")
+        val className = "com.android.systemui.statusbar.phone.IndicatorGardenAlgorithmCenterCutout"
+        val clazz = classLoader.loadClass(className)
+        xlog(
+            "CHAIN_PROBE status-bar padding class found=$className leftDp=$left rightDp=$right",
+            priority = Log.INFO,
+        )
+
         if (left != null) {
             val method = clazz.getDeclaredMethod("calculateLeftPadding")
+            val callbackLogged = AtomicBoolean(false)
+            xlog(
+                "CHAIN_PROBE installing left-padding hook method=${clazz.name}#${method.name}",
+                priority = Log.INFO,
+            )
             xposedModule.hook(method).intercept { chain ->
                 val inputProperties = chain.thisObject.reflect["inputProperties"]
                 val density = inputProperties?.reflect?.get("density") as? Float ?: 1f
-                (left * density).roundToInt()
+                val result = (left * density).roundToInt()
+                if (callbackLogged.compareAndSet(false, true)) {
+                    xlog(
+                        "CHAIN_PROBE left-padding callback hit dp=$left density=$density px=$result",
+                        priority = Log.INFO,
+                    )
+                }
+                result
             }
         }
+
         if (right != null) {
             val method = clazz.getDeclaredMethod("calculateRightPadding")
+            val callbackLogged = AtomicBoolean(false)
+            xlog(
+                "CHAIN_PROBE installing right-padding hook method=${clazz.name}#${method.name}",
+                priority = Log.INFO,
+            )
             xposedModule.hook(method).intercept { chain ->
                 val inputProperties = chain.thisObject.reflect["inputProperties"]
                 val density = inputProperties?.reflect?.get("density") as? Float ?: 1f
-                (right * density).roundToInt()
+                val result = (right * density).roundToInt()
+                if (callbackLogged.compareAndSet(false, true)) {
+                    xlog(
+                        "CHAIN_PROBE right-padding callback hit dp=$right density=$density px=$result",
+                        priority = Log.INFO,
+                    )
+                }
+                result
             }
         }
     }
@@ -184,16 +216,26 @@ object StatusBar {
 
     context(xposedModule: XposedModule)
     private fun setStatusBarClockText(block: () -> String) = afterAttachTry {
-        val clockClass = classLoader.loadClass(
-            "com.android.systemui.statusbar.policy.QSClockIndicatorView"
-        )
-        val qsClockBellSoundClass = classLoader.loadClass(
-            "com.android.systemui.statusbar.policy.QSClockBellSound"
-        )
+        val clockClassName = "com.android.systemui.statusbar.policy.QSClockIndicatorView"
+        val bellClassName = "com.android.systemui.statusbar.policy.QSClockBellSound"
+        val clockClass = classLoader.loadClass(clockClassName)
+        val qsClockBellSoundClass = classLoader.loadClass(bellClassName)
         val method = clockClass.getDeclaredMethod("notifyTimeChanged", qsClockBellSoundClass)
+        val callbackLogged = AtomicBoolean(false)
+        xlog(
+            "CHAIN_PROBE installing clock-format hook " +
+                "class=$clockClassName bell=$bellClassName method=${method.name}",
+            priority = Log.INFO,
+        )
         xposedModule.hook(method).intercept { chain ->
             val clockTextView = chain.thisObject as? TextView
             val dateTime = block()
+            if (callbackLogged.compareAndSet(false, true)) {
+                xlog(
+                    "CHAIN_PROBE clock-format callback hit value=${dateTime.replace("\n", "\\n")}",
+                    priority = Log.INFO,
+                )
+            }
             if (clockTextView != null) {
                 if (dateTime.contains('\n')) {
                     OfficialMainStatusBarMod.applyDoubleLineClockText(clockTextView, dateTime)
