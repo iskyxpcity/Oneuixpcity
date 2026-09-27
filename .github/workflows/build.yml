@@ -49,9 +49,11 @@ jobs:
           grep -Fq 'minApiVersion=102' app/src/main/resources/META-INF/xposed/module.prop
           grep -Fq 'targetApiVersion=102' app/src/main/resources/META-INF/xposed/module.prop
           SCOPE_COUNT=$(grep -cve '^[[:space:]]*$' app/src/main/resources/META-INF/xposed/scope.list)
-          test "$SCOPE_COUNT" -eq 1
-          grep -Fxq 'com.android.systemui' app/src/main/resources/META-INF/xposed/scope.list
-          grep -Fq 'ENABLE_ONEUIX_FUNCTIONS = false' hook/src/main/java/io/github/soclear/oneuix/hook/Main.kt
+          test "$SCOPE_COUNT" -eq 25
+          diff -u hook/src/main/resources/META-INF/xposed/scope.list app/src/main/resources/META-INF/xposed/scope.list 2>/dev/null || {
+            printf '%s\n'               system               com.android.settings               com.android.systemui               com.samsung.android.app.notes               com.samsung.android.app.sketchbook               com.samsung.android.app.telephonyui               com.samsung.android.calendar               com.samsung.android.da.daagent               com.samsung.android.dialer               com.samsung.android.incallui               com.samsung.android.mdecservice               com.samsung.android.messaging               com.samsung.android.service.airviewdictionary               com.samsung.android.shealthmonitor               com.samsung.android.sm_cn               com.samsung.android.themecenter               com.samsung.android.video               com.samsung.android.app.watchmanager               com.sec.android.app.camera               com.sec.android.app.launcher               com.sec.android.app.samsungapps               com.sec.android.app.sbrowser               com.sec.android.daemonapp               com.sec.android.gallery3d               com.sec.android.mimage.photoretouching               | diff -u - app/src/main/resources/META-INF/xposed/scope.list
+          }
+          grep -Fq 'ENABLE_ONEUIX_FUNCTIONS = true' hook/src/main/java/io/github/soclear/oneuix/hook/Main.kt
           test -f hook/src/main/java/io/github/soclear/oneuix/hook/util/OneuiXPStatusReporter.kt
           test -f app/src/main/java/com/oneuixp/app/oneuix/OneuiXPreferenceBridge.kt
           test -f app/src/main/java/com/oneuixp/app/oneuix/OneuiXFeatureCatalog.kt
@@ -59,11 +61,11 @@ jobs:
           test -f app/src/main/java/com/oneuixp/app/ui/screen/tools/OneuiXCategoryScreen.kt
           grep -Fq 'data class OneuiXCategory' app/src/main/java/com/oneuixp/app/ui/navigation3/Routes.kt
           grep -Fq 'OneuiXCategory.entries' app/src/main/java/com/oneuixp/app/ui/screen/tools/ToolsScreen.kt
-          grep -Fq 'ENABLE_ONEUIX_FUNCTIONS = false' hook/src/main/java/io/github/soclear/oneuix/hook/Main.kt
+          grep -Fq 'ENABLE_ONEUIX_FUNCTIONS = true' hook/src/main/java/io/github/soclear/oneuix/hook/Main.kt
           test ! -e hook/src/main/resources/META-INF/xposed/java_init.list
           test ! -e hook/src/main/resources/META-INF/xposed/module.prop
           test ! -e hook/src/main/resources/META-INF/xposed/scope.list
-          echo "OneuiXP API102 single-entry migration infrastructure validated; functional OneUIX hooks remain gated off"
+          echo "OneuiXP API102 single-entry migration validated; full OneUIX functional hooks enabled"
 
       - name: Compile OneuiXP before the owner-signing gate
         run: |
@@ -152,7 +154,7 @@ jobs:
           else
             TAG="migration-build-${GITHUB_RUN_NUMBER}-${SHORT_SHA}"
             TITLE="OneuiXP migration build #${GITHUB_RUN_NUMBER}"
-            NOTES="Signed OneUIX migration test build. Imported functional hooks are still gated off unless explicitly stated otherwise."
+            NOTES="Signed OneUIX full-migration test build. Imported OneUIX functional hooks are enabled; validate on Samsung hardware before merging to main."
           fi
           gh release view "$TAG" >/dev/null 2>&1 || \
             gh release create "$TAG" \
