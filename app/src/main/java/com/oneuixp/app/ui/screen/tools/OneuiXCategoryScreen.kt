@@ -468,7 +468,7 @@ private fun MiuixSettingRow(
         OneuiXSettingType.PowerAction -> {
             SwitchPreference(
                 title = title,
-                summary = summary ?: "",
+                summary = summary,
                 startAction = icon?.let { imageVector ->
                     {
                         MiuixIcon(
@@ -493,7 +493,7 @@ private fun MiuixSettingRow(
 
             OverlayDropdownPreference(
                 title = title,
-                summary = summary ?: "",
+                summary = summary,
                 startAction = icon?.let { imageVector ->
                     {
                         MiuixIcon(
@@ -539,7 +539,7 @@ private fun NetworkSpeedThresholdMiuix(
     val current = toolsViewModel.value(preference, spec).toIntOrNull() ?: 0
     SwitchPreference(
         title = title,
-        summary = if (current > 0) "$current KB/s" else summary ?: "",
+        summary = if (current > 0) "$current KB/s" else summary,
         startAction = oneuiXSettingIcon(spec)?.let { imageVector ->
             {
                 MiuixIcon(
