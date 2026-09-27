@@ -56,11 +56,14 @@ public final class StatusBridge extends ContentProvider {
             && Math.abs(bootEpoch - previousBoot) < 120_000L
             && elapsed >= prefs.getLong("elapsed", -1L);
 
+        int hookCount = extras == null ? -1 : extras.getInt("hook_count", -1);
         if ("heartbeat".equals(method)) {
             boolean accepted = sameBoot && prefs.getLong("elapsed", -1L) >= 0;
             if (accepted) {
                 // apply() updates in-process readers immediately without blocking SystemUI on disk I/O.
-                prefs.edit().putLong("heartbeat_elapsed", elapsed).apply();
+                SharedPreferences.Editor editor = prefs.edit().putLong("heartbeat_elapsed", elapsed);
+                if (hookCount >= 0) editor.putInt("hook_count", hookCount);
+                editor.apply();
                 notifyStatusChanged(context);
             }
             Bundle result = new Bundle();
@@ -72,13 +75,15 @@ public final class StatusBridge extends ContentProvider {
         if (probe == null) probe = "NOT_RUN";
         if (probe.length() > MAX_PROBE_LENGTH) probe = probe.substring(0, MAX_PROBE_LENGTH);
         int count = sameBoot ? prefs.getInt("load_reports", 0) : 0;
-        boolean persisted = prefs.edit()
+        SharedPreferences.Editor editor = prefs.edit()
             .putLong("boot_epoch", bootEpoch)
             .putLong("elapsed", elapsed)
             .putLong("heartbeat_elapsed", elapsed)
             .putInt("load_reports", count == Integer.MAX_VALUE ? count : count + 1)
-            .putString("probe", probe)
-            .commit();
+            .putString("probe", probe);
+        if (!sameBoot) editor.putInt("hook_count", 0);
+        if (hookCount >= 0) editor.putInt("hook_count", hookCount);
+        boolean persisted = editor.commit();
         if (persisted) notifyStatusChanged(context);
         Bundle result = new Bundle();
         result.putBoolean("accepted", persisted);
@@ -97,6 +102,12 @@ public final class StatusBridge extends ContentProvider {
             && now - heartbeat <= HEARTBEAT_TIMEOUT_MS
             && previousBoot != Long.MIN_VALUE
             && Math.abs(currentBoot - previousBoot) < 120_000L;
+    }
+
+    /** Number of distinct hook installer groups that completed successfully in live SystemUI. */
+    public static int successfulHookCount(Context context) {
+        if (!recentlyLoaded(context)) return 0;
+        return Math.max(0, context.getSharedPreferences(PREF, 0).getInt("hook_count", 0));
     }
 
     /** Counts accepted load reports this boot, not distinct injections or LSPosed scopes. */
