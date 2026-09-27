@@ -160,57 +160,20 @@ fun OneuiXCategoryScreen(categoryName: String) {
     val toolsViewModel = viewModel<OneuiXToolsViewModel>()
     val preference by toolsViewModel.preference.collectAsStateWithLifecycle()
 
-    if (LocalUiMode.current == UiMode.Miuix) {
-        OneuiXOriginalCategoryScreen(
-            category = category,
-            preference = preference,
-            toolsViewModel = toolsViewModel,
-            onBack = navigator::pop,
-        )
-        return
-    }
-
-    val allSettings = remember(category) {
-        OneuiXFeatureCatalog.settings(category)
-    }
-
-    val orderedVisibleSettings = OneuiXLayoutRules
-        .ordered(category, allSettings)
-        .filter { toolsViewModel.isVisible(preference, it) }
-        .filter { oneuiXMaterialPlatformVisible(preference, it) }
-
-    val groups = remember(
-        category,
-        orderedVisibleSettings,
-        preference.systemUI.other.powerMenuActions,
-    ) {
-        val orderedGroups = linkedMapOf<String, MutableList<OneuiXSettingSpec>>()
-        orderedVisibleSettings.forEach { spec ->
-            orderedGroups
-                .getOrPut(OneuiXLayoutRules.groupKey(spec)) { mutableListOf() }
-                .add(spec)
-        }
-
-        val powerOrder = PowerMenuAction.normalize(preference.systemUI.other.powerMenuActions)
-            .withIndex()
-            .associate { it.value.name to it.index }
-
-        orderedGroups.values.map { rawItems ->
-            val parentItems = rawItems.filter { it.type != OneuiXSettingType.PowerAction }
-            val powerItems = rawItems
-                .filter { it.type == OneuiXSettingType.PowerAction }
-                .sortedBy { powerOrder[it.powerActionName] ?: Int.MAX_VALUE }
-            val items = parentItems + powerItems
-            OneuiXSettingGroup(
-                section = OneuiXLayoutRules.section(category, items.first()),
-                items = items,
-            )
-        }
-    }
-
-    OneuiXCategoryMaterial(
+    /*
+     * One functional tree, two skins.
+     *
+     * Every category now uses the canonical OneUIX DetailPane implementation
+     * for ordering, strings, parent/child visibility, state, validation and
+     * events. SwitchItem / SelectItem / OneuiXSlider / OneuiX special controls
+     * choose only the Miuix or Material rendering.
+     *
+     * Do not rebuild Material behavior from FeatureCatalog paths again: that
+     * duplicated the application logic and caused missing controls, misplaced
+     * previews and incorrect default-value restoration.
+     */
+    OneuiXOriginalCategoryScreen(
         category = category,
-        groups = groups,
         preference = preference,
         toolsViewModel = toolsViewModel,
         onBack = navigator::pop,
