@@ -200,7 +200,7 @@ private fun StatusCard(
             horizontalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             DashboardSmallCardMaterial(
-                title = stringResource(R.string.oneuixp_successful_hook_count),
+                title = stringResource(R.string.oneuixp_feature_injection_count),
                 value = status.injectionCount.toString(),
                 modifier = Modifier.weight(1f),
             )
