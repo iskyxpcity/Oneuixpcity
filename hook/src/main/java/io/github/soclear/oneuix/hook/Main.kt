@@ -42,7 +42,9 @@ class Main : XposedModule() {
                     "leftEnabled=${preference.systemUI.statusBar.modifyStatusBarLeftPadding}, " +
                     "leftDp=${preference.systemUI.statusBar.statusBarLeftPaddingDp}, " +
                     "clockEnabled=${preference.systemUI.statusBar.setStatusBarClockFormat}, " +
-                    "clockFormat=${preference.systemUI.statusBar.statusBarClockFormat.replace("\n", "\\n")}",
+                    "clockFormat=${preference.systemUI.statusBar.statusBarClockFormat.replace("\n", "\\n")}, " +
+                    "maxIconsEnabled=${preference.systemUI.statusBar.modifyStatusBarMaxNotificationIcons}, " +
+                    "maxIcons=${preference.systemUI.statusBar.statusBarMaxNotificationIcons}",
                 priority = Log.INFO,
             )
         } else if (packageName == Package.LAUNCHER) {
