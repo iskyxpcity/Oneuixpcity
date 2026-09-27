@@ -3,6 +3,7 @@ package com.oneuixp.app.statusbar
 import android.util.Log
 import io.github.libxposed.service.XposedService
 import io.github.libxposed.service.XposedServiceHelper
+import java.util.concurrent.CopyOnWriteArraySet
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -26,6 +27,7 @@ object LsposedFrameworkStatus {
     private val initialized = AtomicBoolean(false)
 
     @Volatile private var service: XposedService? = null
+    private val serviceObservers = CopyOnWriteArraySet<(XposedService?) -> Unit>()
     private val _state = MutableStateFlow(LsposedFrameworkSnapshot())
     val state: StateFlow<LsposedFrameworkSnapshot> = _state.asStateFlow()
 
@@ -37,6 +39,7 @@ object LsposedFrameworkStatus {
                 Log.i(TAG, "Modern Xposed service binder received")
                 service = boundService
                 _state.value = LsposedFrameworkSnapshot(connected = true)
+                notifyServiceObservers(boundService)
                 Thread({ refresh() }, "OneuiXP-LSPosed-initial-scope").apply {
                     isDaemon = true
                     start()
@@ -48,9 +51,27 @@ object LsposedFrameworkStatus {
                     service = null
                     Log.w(TAG, "Modern Xposed service binder died")
                     _state.value = LsposedFrameworkSnapshot()
+                    notifyServiceObservers(null)
                 }
             }
         })
+    }
+
+    /**
+     * libxposed-service exposes a single XposedServiceHelper listener slot.
+     * Keep framework status as the only registrar, then fan the same Binder out
+     * to preference sync and any future in-app consumers.
+     */
+    fun observeService(observer: (XposedService?) -> Unit) {
+        serviceObservers.add(observer)
+        observer(service)
+    }
+
+    private fun notifyServiceObservers(value: XposedService?) {
+        serviceObservers.forEach { observer ->
+            runCatching { observer(value) }
+                .onFailure { Log.w(TAG, "Xposed service observer failed", it) }
+        }
     }
 
     /** Must not run on the main thread: getScope makes a Binder round-trip. */
