@@ -77,6 +77,7 @@ import com.oneuixp.app.ui.component.material.ExpressiveSwitch
 import com.oneuixp.app.ui.component.material.SegmentedSwitchItem
 import com.oneuixp.app.ui.component.material.SegmentedSliderItem
 import com.oneuixp.app.ui.component.material.SegmentedTextField
+import com.oneuixp.app.ui.component.rebootlistpopup.RebootListPopup
 import com.oneuixp.app.ui.component.miuix.EditText
 import com.oneuixp.app.ui.navigation3.LocalNavigator
 import com.oneuixp.app.ui.theme.LocalEnableBlur
@@ -311,6 +312,11 @@ private fun OneuiXOriginalCategoryScreen(
                             }
                         },
                         title = { Text(oneuiXCategoryTitle(category)) },
+                        actions = {
+                            if (category == OneuiXCategory.SystemUI) {
+                                RebootListPopup()
+                            }
+                        },
                         colors = TopAppBarDefaults.topAppBarColors(
                             containerColor = MaterialTheme.colorScheme.surface,
                             scrolledContainerColor = MaterialTheme.colorScheme.surface,
@@ -354,6 +360,11 @@ private fun OneuiXOriginalCategoryScreen(
                                         contentDescription = null,
                                         tint = colorScheme.onBackground,
                                     )
+                                }
+                            },
+                            actions = {
+                                if (category == OneuiXCategory.SystemUI) {
+                                    RebootListPopup()
                                 }
                             },
                             scrollBehavior = scrollBehavior,
