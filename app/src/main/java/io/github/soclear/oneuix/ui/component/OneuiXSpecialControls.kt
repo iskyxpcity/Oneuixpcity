@@ -1,5 +1,6 @@
 package io.github.soclear.oneuix.ui.component
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -13,6 +14,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text as MaterialText
+import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
@@ -106,6 +108,28 @@ fun OneuiXDetailGroup(
     when (LocalUiMode.current) {
         UiMode.Material -> OneuiXPreferenceGroup(modifier = modifier, content = content)
         UiMode.Miuix -> Column(modifier = modifier, content = content)
+    }
+}
+
+
+@Composable
+fun OneuiXChildOptionSurface(
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit,
+) {
+    when (LocalUiMode.current) {
+        UiMode.Material -> Box(
+            modifier = modifier
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp))
+                .padding(vertical = 8.dp),
+        ) {
+            content()
+        }
+
+        UiMode.Miuix -> Box(modifier = modifier) {
+            content()
+        }
     }
 }
 
