@@ -63,6 +63,8 @@ import com.oneuixp.app.ui.util.BlurredBar
 import com.oneuixp.app.ui.util.rememberBlurBackdrop
 import com.oneuixp.app.ui.viewmodel.OneuiXToolsViewModel
 import io.github.soclear.oneuix.common.Preference
+import io.github.soclear.oneuix.ui.category.DetailPaneSystemUI
+import io.github.soclear.oneuix.ui.category.onSystemUIEvent
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
 import top.yukonga.miuix.kmp.basic.IconButton as MiuixIconButton
@@ -90,6 +92,15 @@ fun OneuiXCategoryScreen(categoryName: String) {
         ?: return
     val toolsViewModel = viewModel<OneuiXToolsViewModel>()
     val preference by toolsViewModel.preference.collectAsStateWithLifecycle()
+
+    if (category == OneuiXCategory.SystemUI) {
+        OneuiXOriginalSystemUiScreen(
+            preference = preference,
+            toolsViewModel = toolsViewModel,
+            onBack = navigator::pop,
+        )
+        return
+    }
 
     val allSettings = remember(category) {
         OneuiXFeatureCatalog.settings(category)
@@ -130,6 +141,95 @@ fun OneuiXCategoryScreen(categoryName: String) {
             toolsViewModel = toolsViewModel,
             onBack = navigator::pop,
         )
+    }
+}
+
+@Composable
+private fun OneuiXOriginalSystemUiScreen(
+    preference: Preference,
+    toolsViewModel: OneuiXToolsViewModel,
+    onBack: () -> Unit,
+) {
+    when (LocalUiMode.current) {
+        UiMode.Material -> {
+            val scrollBehavior =
+                TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
+            androidx.compose.material3.Scaffold(
+                topBar = {
+                    LargeFlexibleTopAppBar(
+                        navigationIcon = {
+                            IconButton(onClick = onBack) {
+                                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
+                            }
+                        },
+                        title = { Text(oneuiXCategoryTitle(OneuiXCategory.SystemUI)) },
+                        colors = TopAppBarDefaults.topAppBarColors(
+                            containerColor = MaterialTheme.colorScheme.surface,
+                            scrolledContainerColor = MaterialTheme.colorScheme.surface,
+                        ),
+                        windowInsets = WindowInsets.safeDrawing.only(
+                            WindowInsetsSides.Top + WindowInsetsSides.Horizontal
+                        ),
+                        scrollBehavior = scrollBehavior,
+                    )
+                },
+                contentWindowInsets = WindowInsets.safeDrawing.only(
+                    WindowInsetsSides.Top + WindowInsetsSides.Horizontal
+                ),
+            ) { innerPadding ->
+                DetailPaneSystemUI(
+                    uiState = preference.systemUI,
+                    onEvent = toolsViewModel::onSystemUIEvent,
+                    modifier = Modifier
+                        .padding(innerPadding)
+                        .nestedScroll(scrollBehavior.nestedScrollConnection),
+                )
+            }
+        }
+
+        UiMode.Miuix -> {
+            val scrollBehavior = MiuixScrollBehavior()
+            val backdrop = rememberBlurBackdrop(LocalEnableBlur.current)
+            val barColor = if (backdrop != null) Color.Transparent else colorScheme.surface
+            Scaffold(
+                topBar = {
+                    BlurredBar(backdrop) {
+                        TopAppBar(
+                            color = barColor,
+                            title = oneuiXCategoryTitle(OneuiXCategory.SystemUI),
+                            navigationIcon = {
+                                MiuixIconButton(onClick = onBack) {
+                                    val layoutDirection = LocalLayoutDirection.current
+                                    MiuixIcon(
+                                        modifier = Modifier.graphicsLayer {
+                                            if (layoutDirection == LayoutDirection.Rtl) scaleX = -1f
+                                        },
+                                        imageVector = MiuixIcons.Back,
+                                        contentDescription = null,
+                                        tint = colorScheme.onBackground,
+                                    )
+                                }
+                            },
+                            scrollBehavior = scrollBehavior,
+                        )
+                    }
+                },
+                popupHost = {},
+                contentWindowInsets = WindowInsets.systemBars
+                    .add(WindowInsets.displayCutout)
+                    .only(WindowInsetsSides.Horizontal),
+            ) { innerPadding ->
+                Box(modifier = if (backdrop != null) Modifier.layerBackdrop(backdrop) else Modifier) {
+                    DetailPaneSystemUI(
+                        uiState = preference.systemUI,
+                        onEvent = toolsViewModel::onSystemUIEvent,
+                        modifier = Modifier
+                            .padding(innerPadding)
+                            .nestedScroll(scrollBehavior.nestedScrollConnection),
+                    )
+                }
+            }
+        }
     }
 }
 

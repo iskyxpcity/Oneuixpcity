@@ -31,6 +31,13 @@ class OneuiXToolsViewModel : ViewModel() {
         initialValue = Preference(),
     )
 
+    fun updateData(nextPreference: (Preference) -> Preference) {
+        viewModelScope.launch {
+            dataStore.updateData(nextPreference)
+        }
+    }
+
+
     fun checked(preference: Preference, spec: OneuiXSettingSpec): Boolean {
         if (spec.type == OneuiXSettingType.PowerAction) {
             val name = spec.powerActionName ?: return false
