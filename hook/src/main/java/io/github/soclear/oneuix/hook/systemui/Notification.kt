@@ -8,6 +8,7 @@ import io.github.libxposed.api.XposedModule
 import io.github.libxposed.api.XposedModuleInterface
 import io.github.soclear.oneuix.common.ONE_UI_VERSION
 import io.github.soclear.oneuix.common.Package
+import io.github.soclear.oneuix.hook.util.HookInstallTracker
 import io.github.soclear.oneuix.hook.util.afterAttach
 import io.github.soclear.oneuix.hook.util.afterAttachTry
 import io.github.soclear.oneuix.hook.util.reflect
@@ -38,6 +39,7 @@ object Notification {
                     newArgs[2] = max
                     chain.proceed(newArgs)
                 }
+                HookInstallTracker.markSuccessful("systemui.notification.max-icons")
             } catch (t: Throwable) {
                 xlog(t)
             }
@@ -53,6 +55,7 @@ object Notification {
                             result
                         }
                     }
+                HookInstallTracker.markSuccessful("systemui.notification.max-icons")
             } catch (t: Throwable) {
                 xlog(t)
             }
@@ -82,6 +85,7 @@ object Notification {
                 chain.thisObject.reflect["mMaxStaticIcons"] = Int.MAX_VALUE
                 result
             }
+            HookInstallTracker.markSuccessful("systemui.notification.max-icons")
         } catch (t: Throwable) {
             xlog(t)
         }
