@@ -40,7 +40,7 @@ fun SwitchItem(
     onCheckedChange: (Boolean) -> Unit
 ) {
     val grouped = LocalOneuiXGroupedPreference.current
-    val materialColors = ListItemDefaults.colors().copy(
+    val materialColors = ListItemDefaults.segmentedColors().copy(
         containerColor = Color.Transparent,
         disabledContainerColor = Color.Transparent,
     )
@@ -51,7 +51,7 @@ fun SwitchItem(
                 SegmentedListItem(
                     modifier = if (grouped) modifier else modifier.padding(horizontal = 16.dp, vertical = 4.dp),
                     onClick = onClick,
-                    colors = if (grouped) materialColors else ListItemDefaults.colors(),
+                    colors = if (grouped) materialColors else ListItemDefaults.segmentedColors(),
                     headlineContent = { Text(title) },
                     supportingContent = summary?.let { { Text(it) } },
                     leadingContent = icon?.let { imageVector ->
@@ -68,7 +68,7 @@ fun SwitchItem(
                 SegmentedSwitchItem(
                     modifier = if (grouped) modifier else modifier.padding(horizontal = 16.dp, vertical = 4.dp),
                     icon = icon,
-                    colors = if (grouped) materialColors else ListItemDefaults.colors(),
+                    colors = if (grouped) materialColors else ListItemDefaults.segmentedColors(),
                     title = title,
                     summary = summary,
                     checked = checked,
