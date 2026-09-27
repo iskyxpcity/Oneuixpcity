@@ -169,11 +169,7 @@ fun OneuiXActionButton(
             onClick = onClick,
             modifier = modifier,
             enabled = enabled,
-            colors = if (primary) {
-                MiuixButtonDefaults.buttonColorsPrimary()
-            } else {
-                MiuixButtonDefaults.buttonColors()
-            },
+            colors = MiuixButtonDefaults.buttonColorsPrimary(),
         ) {
             MiuixText(text)
         }
