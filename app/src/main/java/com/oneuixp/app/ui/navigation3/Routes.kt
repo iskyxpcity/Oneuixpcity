@@ -15,4 +15,5 @@ sealed interface Route : NavKey, Parcelable {
     @Parcelize @Serializable data object About : Route
     @Parcelize @Serializable data object ColorPalette : Route
     @Parcelize @Serializable data class OneuiXCategory(val category: String) : Route
+    @Parcelize @Serializable data class StatusCategory(val category: String) : Route
 }
