@@ -1,6 +1,7 @@
 package io.github.soclear.oneuix.common
 
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 
 /** Upstream 1.8 moved four production MOD values from systemUI.other to notification.
  * Keep the old keys and their actual values; only fill fields not already set in the new schema.
@@ -32,6 +33,25 @@ object ProductionPreferenceMigration {
         }
         val updatedSystemUI = systemUI.toMutableMap()
         updatedSystemUI["notification"] = JsonObject(updatedNotification)
+
+        val statusBar = systemUI["statusBar"] as? JsonObject
+        if (statusBar != null) {
+            val updatedStatusBar = statusBar.toMutableMap()
+            if ("modifyStatusBarTopPadding" !in updatedStatusBar) {
+                val oldTop = statusBar["statusBarTopPaddingDp"]?.toString()?.toFloatOrNull() ?: 0f
+                updatedStatusBar["modifyStatusBarTopPadding"] = JsonPrimitive(oldTop != 0f)
+            }
+            if ("modifyStatusBarBottomPadding" !in updatedStatusBar) {
+                val oldBottom = statusBar["statusBarBottomPaddingDp"]?.toString()?.toFloatOrNull() ?: 0f
+                updatedStatusBar["modifyStatusBarBottomPadding"] = JsonPrimitive(oldBottom != 0f)
+            }
+            if ("modifyDoubleLineClockGap" !in updatedStatusBar) {
+                val oldGap = statusBar["doubleLineClockGapDp"]?.toString()?.toFloatOrNull() ?: 1f
+                updatedStatusBar["modifyDoubleLineClockGap"] = JsonPrimitive(oldGap != 1f)
+            }
+            updatedSystemUI["statusBar"] = JsonObject(updatedStatusBar)
+        }
+
         val updatedRoot = root.toMutableMap()
         updatedRoot["systemUI"] = JsonObject(updatedSystemUI)
         return IgnoreUnknownKeysJson.decodeFromString<Preference>(JsonObject(updatedRoot).toString())
