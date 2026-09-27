@@ -55,5 +55,5 @@
     <string name="settings_enable_glass">液態玻璃</string>
     <string name="settings_enable_glass_summary">為懸浮底部欄啟用液態玻璃效果</string>
     <string name="oneuixp_tools">功能</string>
-    <string name="oneuixp_successful_hook_count">成功 Hook 數量</string>
+    <string name="oneuixp_feature_injection_count">功能注入數量</string>
 </resources>
