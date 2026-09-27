@@ -1,6 +1,8 @@
 package io.github.soclear.oneuix.ui.component
 
 import androidx.compose.runtime.Composable
+import androidx.compose.material3.ListItemDefaults
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
@@ -25,12 +27,18 @@ fun SelectItem(
     onSelectedIndexChange: (Int) -> Unit
 ) {
     val safeIndex = if (entries.isEmpty()) 0 else selectedIndex.coerceIn(0, entries.lastIndex)
+    val grouped = LocalOneuiXGroupedPreference.current
+    val materialColors = ListItemDefaults.colors().copy(
+        containerColor = Color.Transparent,
+        disabledContainerColor = Color.Transparent,
+    )
 
     when (LocalUiMode.current) {
         UiMode.Material -> {
             SegmentedDropdownItem(
-                modifier = modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                modifier = if (grouped) modifier else modifier.padding(horizontal = 16.dp, vertical = 4.dp),
                 icon = icon,
+                colors = if (grouped) materialColors else ListItemDefaults.colors(),
                 title = title,
                 summary = summary,
                 items = entries,
@@ -40,9 +48,8 @@ fun SelectItem(
         }
 
         UiMode.Miuix -> {
-            Card(
-                modifier = modifier.padding(horizontal = 12.dp, vertical = 4.dp),
-            ) {
+            @Composable
+            fun Content() {
                 OverlayDropdownPreference(
                     title = title,
                     summary = summary,
@@ -59,6 +66,16 @@ fun SelectItem(
                     },
                     onSelectedIndexChange = onSelectedIndexChange,
                 )
+            }
+
+            if (grouped) {
+                Content()
+            } else {
+                Card(
+                    modifier = modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                ) {
+                    Content()
+                }
             }
         }
     }

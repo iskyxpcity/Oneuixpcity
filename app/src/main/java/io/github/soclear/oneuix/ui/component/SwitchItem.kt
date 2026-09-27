@@ -2,7 +2,9 @@ package io.github.soclear.oneuix.ui.component
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.Text
+import androidx.compose.ui.graphics.Color
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,12 +39,19 @@ fun SwitchItem(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit
 ) {
+    val grouped = LocalOneuiXGroupedPreference.current
+    val materialColors = ListItemDefaults.colors().copy(
+        containerColor = Color.Transparent,
+        disabledContainerColor = Color.Transparent,
+    )
+
     when (LocalUiMode.current) {
         UiMode.Material -> {
             if (clickable) {
                 SegmentedListItem(
-                    modifier = modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                    modifier = if (grouped) modifier else modifier.padding(horizontal = 16.dp, vertical = 4.dp),
                     onClick = onClick,
+                    colors = if (grouped) materialColors else ListItemDefaults.colors(),
                     headlineContent = { Text(title) },
                     supportingContent = summary?.let { { Text(it) } },
                     leadingContent = icon?.let { imageVector ->
@@ -57,8 +66,9 @@ fun SwitchItem(
                 )
             } else {
                 SegmentedSwitchItem(
-                    modifier = modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                    modifier = if (grouped) modifier else modifier.padding(horizontal = 16.dp, vertical = 4.dp),
                     icon = icon,
+                    colors = if (grouped) materialColors else ListItemDefaults.colors(),
                     title = title,
                     summary = summary,
                     checked = checked,
@@ -68,9 +78,8 @@ fun SwitchItem(
         }
 
         UiMode.Miuix -> {
-            Card(
-                modifier = modifier.padding(horizontal = 12.dp, vertical = 4.dp),
-            ) {
+            @Composable
+            fun Content() {
                 if (clickable) {
                     BasicComponent(
                         title = title,
@@ -110,6 +119,16 @@ fun SwitchItem(
                             }
                         },
                     )
+                }
+            }
+
+            if (grouped) {
+                Content()
+            } else {
+                Card(
+                    modifier = modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                ) {
+                    Content()
                 }
             }
         }
