@@ -19,7 +19,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -45,6 +44,7 @@ import io.github.soclear.oneuix.common.Preference
 import com.oneuixp.app.ui.viewmodel.OneuiXToolsViewModel
 import io.github.soclear.oneuix.ui.component.SelectItem
 import io.github.soclear.oneuix.ui.component.SwitchItem
+import io.github.soclear.oneuix.ui.component.OneuiXSlider
 import io.github.soclear.oneuix.hook.util.StatusBarClockFormatter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -140,7 +140,7 @@ fun DetailPaneSystemUI(
                 }
             )
             AnimatedVisibility(expanded && uiState.statusBar.modifyStatusBarLeftPadding) {
-                Slider(
+                OneuiXSlider(
                     value = padding,
                     onValueChange = { padding = it },
                     modifier = Modifier.padding(horizontal = 16.dp),
@@ -177,7 +177,7 @@ fun DetailPaneSystemUI(
                 }
             )
             AnimatedVisibility(expanded && uiState.statusBar.modifyStatusBarRightPadding) {
-                Slider(
+                OneuiXSlider(
                     value = padding,
                     onValueChange = { padding = it },
                     modifier = Modifier.padding(horizontal = 16.dp),
@@ -230,7 +230,7 @@ fun DetailPaneSystemUI(
                 }
             )
             AnimatedVisibility(expanded && uiState.statusBar.setBatteryIconWidthScale) {
-                Slider(
+                OneuiXSlider(
                     value = widthScale,
                     onValueChange = { widthScale = it },
                     modifier = Modifier.padding(horizontal = 16.dp),
@@ -267,7 +267,7 @@ fun DetailPaneSystemUI(
                 }
             )
             AnimatedVisibility(expanded && uiState.statusBar.setBatteryIconHeightScale) {
-                Slider(
+                OneuiXSlider(
                     value = heightScale,
                     onValueChange = { heightScale = it },
                     modifier = Modifier.padding(horizontal = 16.dp),
@@ -498,7 +498,7 @@ fun DetailPaneSystemUI(
                                     )
                                 }
                             )
-                            Slider(
+                            OneuiXSlider(
                                 value = timeScale,
                                 onValueChange = { timeScale = it },
                                 modifier = Modifier.padding(horizontal = 16.dp),
@@ -536,7 +536,7 @@ fun DetailPaneSystemUI(
                                     )
                                 }
                             )
-                            Slider(
+                            OneuiXSlider(
                                 value = dateScale,
                                 onValueChange = { dateScale = it },
                                 modifier = Modifier.padding(horizontal = 16.dp),
@@ -603,7 +603,7 @@ fun DetailPaneSystemUI(
                         )
                     }
                 )
-                Slider(
+                OneuiXSlider(
                     value = lineGapDp,
                     onValueChange = { lineGapDp = it },
                     modifier = Modifier.padding(horizontal = 16.dp),
@@ -652,7 +652,7 @@ fun DetailPaneSystemUI(
                     }
                 )
                 AnimatedVisibility(expanded && uiState.statusBar.setStatusBarClockTextScale) {
-                    Slider(
+                    OneuiXSlider(
                         value = scale,
                         onValueChange = { scale = it },
                         modifier = Modifier.padding(horizontal = 16.dp),
@@ -748,7 +748,7 @@ fun DetailPaneSystemUI(
                 }
             )
             AnimatedVisibility(expanded && uiState.statusBar.modifyStatusBarMaxNotificationIcons) {
-                Slider(
+                OneuiXSlider(
                     value = max.toFloat(),
                     onValueChange = { max = it.roundToInt() },
                     modifier = Modifier.padding(horizontal = 16.dp),
@@ -998,7 +998,7 @@ fun DetailPaneSystemUI(
                 )
 
                 AnimatedVisibility(expanded && uiState.qs.modifyQSClockTextSize) {
-                    Slider(
+                    OneuiXSlider(
                         value = textSize,
                         onValueChange = { textSize = it },
                         modifier = Modifier.padding(horizontal = 16.dp),
@@ -1225,7 +1225,7 @@ private fun StatusBarVerticalPaddingControl(
             )
         }
     )
-    Slider(
+    OneuiXSlider(
         value = value,
         onValueChange = { value = it },
         modifier = Modifier.padding(horizontal = 16.dp),

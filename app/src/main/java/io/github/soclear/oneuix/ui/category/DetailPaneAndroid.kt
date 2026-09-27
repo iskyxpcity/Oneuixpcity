@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Slider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -25,6 +24,7 @@ import com.oneuixp.app.R
 import io.github.soclear.oneuix.common.Preference
 import com.oneuixp.app.ui.viewmodel.OneuiXToolsViewModel
 import io.github.soclear.oneuix.ui.component.SwitchItem
+import io.github.soclear.oneuix.ui.component.OneuiXSlider
 import kotlin.math.roundToInt
 
 @Composable
@@ -67,7 +67,7 @@ fun DetailPaneAndroid(
             )
 
             AnimatedVisibility(expanded && uiState.modifyMaxNeverKilledAppNum) {
-                Slider(
+                OneuiXSlider(
                     value = max.toFloat(),
                     onValueChange = { max = it.roundToInt() },
                     modifier = Modifier.padding(horizontal = 16.dp),
