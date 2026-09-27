@@ -303,6 +303,7 @@ fun DetailPaneSystemUI(
                 icon = ImageVector.vectorResource(id = R.drawable.battery),
                 title = stringResource(id = R.string.oneuix_addBatteryLevelText_title),
                 summary = stringResource(id = R.string.oneuix_addBatteryLevelText_summary),
+                showChildIndicator = true,
                 checked = uiState.statusBar.addBatteryLevelText,
                 onCheckedChange = {
                     onEvent(SystemUIEvent.StatusBar.AddBatteryLevelText(it))
@@ -470,7 +471,8 @@ fun DetailPaneSystemUI(
                         title = stringResource(
                             id = R.string.oneuix_fold7CustomDoubleLineClockScale_title
                         ),
-                        checked = uiState.statusBar.useFold7CustomDoubleLineClockScale,
+                        showChildIndicator = true,
+                checked = uiState.statusBar.useFold7CustomDoubleLineClockScale,
                         onCheckedChange = {
                             onEvent(
                                 SystemUIEvent.StatusBar.SetFold7CustomDoubleLineClockScale(it)
@@ -672,7 +674,8 @@ fun DetailPaneSystemUI(
             icon = ImageVector.vectorResource(id = R.drawable.sim_card),
             title = stringResource(id = R.string.oneuix_physicalEsimAdapterWorkaround_title),
             summary = stringResource(id = R.string.oneuix_physicalEsimAdapterWorkaround_summary),
-            checked = uiState.statusBar.physicalEsimAdapterWorkaround,
+            showChildIndicator = true,
+                checked = uiState.statusBar.physicalEsimAdapterWorkaround,
             onCheckedChange = {
                 onEvent(SystemUIEvent.StatusBar.PhysicalEsimAdapterWorkaround(it))
             }

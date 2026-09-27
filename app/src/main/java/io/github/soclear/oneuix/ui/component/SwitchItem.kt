@@ -43,6 +43,7 @@ fun SwitchItem(
     summary: String? = null,
     icon: ImageVector? = null,
     clickable: Boolean = false,
+    showChildIndicator: Boolean = clickable,
     onClick: () -> Unit = {},
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit
@@ -66,11 +67,13 @@ fun SwitchItem(
                             modifier = Modifier.height(IntrinsicSize.Min),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            MaterialVerticalDivider(
-                                modifier = Modifier
-                                    .fillMaxHeight()
-                                    .padding(top = 8.dp, bottom = 8.dp, end = 15.dp),
-                            )
+                            if (showChildIndicator) {
+                                MaterialVerticalDivider(
+                                    modifier = Modifier
+                                        .fillMaxHeight()
+                                        .padding(top = 8.dp, bottom = 8.dp, end = 15.dp),
+                                )
+                            }
                             ExpressiveSwitch(
                                 checked = checked,
                                 onCheckedChange = onCheckedChange,
@@ -111,6 +114,36 @@ fun SwitchItem(
                             }
                         },
                         endActions = {
+                            if (showChildIndicator) {
+                                MiuixVerticalDivider(
+                                    modifier = Modifier
+                                        .height(32.dp)
+                                        .padding(end = 12.dp),
+                                )
+                            }
+                            MiuixSwitch(
+                                modifier = Modifier.align(Alignment.CenterVertically),
+                                checked = checked,
+                                onCheckedChange = onCheckedChange,
+                            )
+                        },
+                        onClick = onClick,
+                        role = Role.Button,
+                    )
+                } else if (showChildIndicator) {
+                    BasicComponent(
+                        title = title,
+                        summary = summary,
+                        startAction = icon?.let { imageVector ->
+                            {
+                                MiuixIcon(
+                                    imageVector = imageVector,
+                                    contentDescription = title,
+                                    tint = colorScheme.onSurface,
+                                )
+                            }
+                        },
+                        endActions = {
                             MiuixVerticalDivider(
                                 modifier = Modifier
                                     .height(32.dp)
@@ -122,8 +155,8 @@ fun SwitchItem(
                                 onCheckedChange = onCheckedChange,
                             )
                         },
-                        onClick = onClick,
-                        role = Role.Button,
+                        onClick = { onCheckedChange(!checked) },
+                        role = Role.Switch,
                     )
                 } else {
                     SwitchPreference(

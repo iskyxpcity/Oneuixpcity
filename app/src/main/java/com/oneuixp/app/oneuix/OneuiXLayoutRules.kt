@@ -213,6 +213,38 @@ object OneuiXLayoutRules {
             "systemUI.notification.hideOngoingActivityMedia",
     )
 
+    private val directChildrenByParent: Map<String, Set<String>> = mapOf(
+        "android.modifyMaxNeverKilledAppNum" to setOf("android.maxNeverKilledAppNum"),
+        "systemUI.statusBar.modifyStatusBarLeftPadding" to setOf("systemUI.statusBar.statusBarLeftPaddingDp"),
+        "systemUI.statusBar.modifyStatusBarRightPadding" to setOf("systemUI.statusBar.statusBarRightPaddingDp"),
+        "systemUI.statusBar.setBatteryIconWidthScale" to setOf("systemUI.statusBar.batteryIconWidthScale"),
+        "systemUI.statusBar.setBatteryIconHeightScale" to setOf("systemUI.statusBar.batteryIconHeightScale"),
+        "systemUI.statusBar.addBatteryLevelText" to setOf(
+            "systemUI.statusBar.hideBatteryLevelTextPercentageSign",
+            "systemUI.statusBar.hideBatteryLevelTextChargingIcon",
+        ),
+        "systemUI.statusBar.setStatusBarClockFormat" to setOf(
+            "systemUI.statusBar.statusBarClockFormat",
+            "systemUI.statusBar.statusBarDoubleLineClockSize",
+            "systemUI.statusBar.useFold7CustomDoubleLineClockScale",
+            "systemUI.statusBar.doubleLineClockGapDp",
+        ),
+        "systemUI.statusBar.useFold7CustomDoubleLineClockScale" to setOf(
+            "systemUI.statusBar.fold7DoubleLineClockTimeScale",
+            "systemUI.statusBar.fold7DoubleLineClockDateScale",
+        ),
+        "systemUI.statusBar.setStatusBarClockTextScale" to setOf("systemUI.statusBar.statusBarClockTextScale"),
+        "systemUI.statusBar.physicalEsimAdapterWorkaround" to setOf("systemUI.statusBar.physicalEsimAdapterSimSlot"),
+        "systemUI.statusBar.modifyStatusBarMaxNotificationIcons" to setOf("systemUI.statusBar.statusBarMaxNotificationIcons"),
+        "systemUI.statusBar.setCustomCarrierName" to setOf("systemUI.statusBar.customCarrierName"),
+        "systemUI.qs.modifyQSClockTextSize" to setOf("systemUI.qs.qsClockTextSize"),
+        "systemUI.notification.hideOngoingActivityMedia" to setOf("systemUI.notification.hideOngoingActivityMediaPackages"),
+        "systemUI.other.customPowerMenu" to setOf("powerMenuActions"),
+    )
+
+    fun hasChildren(path: String): Boolean =
+        directChildrenByParent[path]?.isNotEmpty() == true
+
     fun ordered(
         category: OneuiXCategory,
         settings: List<OneuiXSettingSpec>,

@@ -440,7 +440,8 @@ private fun OneuiXCategoryMaterial(
                                         spec = spec,
                                         preference = preference,
                                         toolsViewModel = toolsViewModel,
-                                        hasChildren = index == 0 && group.items.size > 1,
+                                        hasChildren = OneuiXLayoutRules.hasChildren(spec.path) ||
+                                            (index == 0 && group.items.size > 1),
                                         isChild = index > 0,
                                     )
                                 }
@@ -765,7 +766,12 @@ private fun MaterialSliderValue(
 
     SegmentedSliderItem(
         icon = if (isChild) null else oneuiXSettingIcon(spec),
-        title = if (isChild) null else title,
+        title = if (
+            !isChild ||
+            spec.path == "systemUI.statusBar.fold7DoubleLineClockTimeScale" ||
+            spec.path == "systemUI.statusBar.fold7DoubleLineClockDateScale" ||
+            spec.path == "systemUI.statusBar.doubleLineClockGapDp"
+        ) title else null,
         valueLabel = materialSliderValueLabel(spec.path, value),
         value = value,
         onValueChange = { value = it },
