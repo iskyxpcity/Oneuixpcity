@@ -23,4 +23,13 @@
     <string name="settings_theme_summary">選擇應用的主題模式。</string>
     <string name="oneuixp_tools">功能</string>
     <string name="oneuixp_feature_injection_count">功能注入數量</string>
+    <string name="status_category_time">狀態列時間</string>
+    <string name="status_category_notification">狀態列通知</string>
+    <string name="status_category_network_speed">狀態列網速</string>
+    <string name="status_category_power">狀態列功耗</string>
+    <string name="status_category_signal">狀態列訊號</string>
+    <string name="status_category_wifi">狀態列WIFI</string>
+    <string name="status_category_lockscreen">鎖定畫面</string>
+    <string name="status_category_notification_center">通知中心</string>
+    <string name="status_category_control_center">控制中心</string>
 </resources>
