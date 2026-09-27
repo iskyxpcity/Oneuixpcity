@@ -13,6 +13,7 @@ import com.oneuixp.app.R
 import io.github.soclear.oneuix.common.Preference
 import com.oneuixp.app.ui.viewmodel.OneuiXToolsViewModel
 import io.github.soclear.oneuix.ui.component.SwitchItem
+import io.github.soclear.oneuix.ui.component.OneuiXDetailGroup
 
 @Composable
 fun DetailPaneCall(
@@ -25,6 +26,7 @@ fun DetailPaneCall(
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
     ) {
+        OneuiXDetailGroup {
         SwitchItem(
             icon = ImageVector.vectorResource(id = R.drawable.call_recording),
             title = stringResource(id = R.string.oneuix_supportVoiceCallRecording_title),
@@ -56,7 +58,8 @@ fun DetailPaneCall(
             checked = uiState.supportCallAndTextOnOtherDevices,
             onCheckedChange = { onEvent(CallEvent.SupportCallAndTextOnOtherDevices(it)) }
         )
-    }
+    
+        }}
 }
 
 
