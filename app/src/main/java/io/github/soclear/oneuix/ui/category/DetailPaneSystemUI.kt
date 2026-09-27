@@ -43,6 +43,7 @@ import io.github.soclear.oneuix.ui.component.OneuiXSlider
 import io.github.soclear.oneuix.ui.component.OneuiXPreferenceGroup
 import io.github.soclear.oneuix.ui.component.OneuiXDetailGroup
 import io.github.soclear.oneuix.ui.component.OneuiXChildVisibility
+import io.github.soclear.oneuix.ui.component.OneuiXChildOptionSurface
 import io.github.soclear.oneuix.ui.component.OneuiXActionButton
 import io.github.soclear.oneuix.ui.component.OneuiXInfoItem
 import io.github.soclear.oneuix.ui.component.OneuiXInlineTextField
@@ -602,20 +603,22 @@ fun DetailPaneSystemUI(
                     ),
                     icon = ImageVector.vectorResource(id = R.drawable.format_letter_spacing),
                 )
-                OneuiXSlider(
-                    value = lineGapDp,
-                    onValueChange = { lineGapDp = it },
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                    valueRange = 0f..2f,
-                    steps = 19,
-                    onValueChangeFinished = {
-                        onEvent(
-                            SystemUIEvent.StatusBar.DoubleLineClockGapDp(
-                                (lineGapDp * 10f).roundToInt() / 10f
+                OneuiXChildOptionSurface {
+                    OneuiXSlider(
+                        value = lineGapDp,
+                        onValueChange = { lineGapDp = it },
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        valueRange = 0f..2f,
+                        steps = 19,
+                        onValueChangeFinished = {
+                            onEvent(
+                                SystemUIEvent.StatusBar.DoubleLineClockGapDp(
+                                    (lineGapDp * 10f).roundToInt() / 10f
+                                )
                             )
-                        )
-                    }
-                )
+                        }
+                    )
+                }
                 if (!isFold7) {
                     OneuiXSupportingText(
                         text = stringResource(id = R.string.oneuix_statusBarDoubleLineClockSize_summary),
@@ -1211,16 +1214,18 @@ private fun StatusBarVerticalPaddingControl(
         ),
         icon = ImageVector.vectorResource(id = R.drawable.padding),
     )
-    OneuiXSlider(
-        value = value,
-        onValueChange = { value = it },
-        modifier = Modifier.padding(horizontal = 16.dp),
-        valueRange = 0f..8f,
-        steps = 79,
-        onValueChangeFinished = {
-            onValueChangeFinished((value * 10f).roundToInt() / 10f)
-        }
-    )
+    OneuiXChildOptionSurface {
+        OneuiXSlider(
+            value = value,
+            onValueChange = { value = it },
+            modifier = Modifier.padding(horizontal = 16.dp),
+            valueRange = 0f..8f,
+            steps = 79,
+            onValueChangeFinished = {
+                onValueChangeFinished((value * 10f).roundToInt() / 10f)
+            }
+        )
+    }
     }
 }
 
