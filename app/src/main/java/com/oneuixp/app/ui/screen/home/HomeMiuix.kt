@@ -205,7 +205,7 @@ private fun StatusCard() {
             modifier = Modifier.weight(1f).fillMaxHeight(),
         ) {
             DashboardSmallCardMiuix(
-                title = "模块注入数量",
+                title = stringResource(R.string.oneuixp_successful_hook_count),
                 value = status.injectionCount.toString(),
                 modifier = Modifier.weight(1f),
             )
