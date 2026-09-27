@@ -7,6 +7,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import io.github.soclear.oneuix.ui.component.OneuiXDetailGroup
 
 @Composable
 internal fun PackagePane(
@@ -17,6 +18,9 @@ internal fun PackagePane(
         modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState()),
-        content = content
-    )
+    ) {
+        OneuiXDetailGroup {
+            content()
+        }
+    }
 }
