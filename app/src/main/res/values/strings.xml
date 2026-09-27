@@ -54,7 +54,7 @@
     <string name="settings_floating_bottom_bar_summary">Use Apple style floating bottom bar.</string>
     <string name="settings_enable_glass">Liquid glass</string>
     <string name="settings_enable_glass_summary">Enable liquid glass effect for floating bottom bar.</string>
-    <string name="oneuixp_tools">Tools</string>
+    <string name="oneuixp_tools">Features</string>
     <string name="oneuixp_status">状态栏</string>
 
     <string name="oneuix_core_features">System features</string>
