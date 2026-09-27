@@ -232,14 +232,21 @@ object OfficialMainStatusBarMod {
                         previous = current
                         main.post {
                             updateStatusBarVerticalOffset(
-                                current.statusBarTopPaddingDp, current.statusBarBottomPaddingDp
+                                if (current.modifyStatusBarTopPadding) {
+                                    current.statusBarTopPaddingDp
+                                } else 0f,
+                                if (current.modifyStatusBarBottomPadding) {
+                                    current.statusBarBottomPaddingDp
+                                } else 0f,
                             )
                             if (current.setStatusBarClockFormat &&
                                 current.statusBarClockFormat.contains('\n')) {
                                 updateDoubleLineClockRuntimeConfig(
                                     current.statusBarDoubleLineClockSize,
                                     current.statusBarClockTextScale,
-                                    current.doubleLineClockGapDp,
+                                    if (current.modifyDoubleLineClockGap) {
+                                        current.doubleLineClockGapDp
+                                    } else 1f,
                                     current.useFold7CustomDoubleLineClockScale,
                                     current.fold7DoubleLineClockTimeScale,
                                     current.fold7DoubleLineClockDateScale,
