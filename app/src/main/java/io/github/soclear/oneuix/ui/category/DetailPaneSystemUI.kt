@@ -428,7 +428,12 @@ fun DetailPaneSystemUI(
                     var label by remember { mutableStateOf("") }
                     OneuiXInlineTextField(
                         value = tempDataTimeFormat,
-                        onValueChange = { tempDataTimeFormat = it },
+                        onValueChange = {
+                            tempDataTimeFormat = it
+                            label = runCatching {
+                                StatusBarClockFormatter.format(it, LocalDateTime.now())
+                            }.getOrElse { "error" }
+                        },
                         modifier = Modifier.weight(1f),
                         labelText = label.takeIf { it.isNotBlank() },
                     )
