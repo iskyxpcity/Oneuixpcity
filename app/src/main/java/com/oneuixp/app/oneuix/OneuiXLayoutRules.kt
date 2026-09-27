@@ -132,12 +132,12 @@ object OneuiXLayoutRules {
             compareBy<OneuiXSettingSpec> {
                 when {
                     it.type == OneuiXSettingType.PowerAction ->
-                        systemUiOrderIndex["systemUI.other.customPowerMenu"]?.plus(1) ?: Int.MAX_VALUE
+                        systemUiOrderIndex["systemUI.other.customPowerMenu"] ?: Int.MAX_VALUE
                     else -> systemUiOrderIndex[it.path] ?: Int.MAX_VALUE
                 }
             }.thenBy {
                 if (it.type == OneuiXSettingType.PowerAction) {
-                    powerActionOrder(it.powerActionName)
+                    1 + powerActionOrder(it.powerActionName)
                 } else {
                     0
                 }
