@@ -121,7 +121,7 @@ fun StatusPaddingCategoryControls(
                 SwitchItem(
                     title = stringResource(id = R.string.oneuix_statusBarTopPaddingDp_title),
                     summary = if (uiState.modifyStatusBarTopPadding) {
-                        stringResource(id = R.string.oneuix_statusBarTopPaddingDp_summary, top)
+                        stringResource(id = R.string.status_padding_top_summary, top)
                     } else null,
                     icon = ImageVector.vectorResource(id = R.drawable.padding),
                     modifier = Modifier.animateContentSize(),
@@ -159,7 +159,7 @@ fun StatusPaddingCategoryControls(
                 SwitchItem(
                     title = stringResource(id = R.string.oneuix_statusBarBottomPaddingDp_title),
                     summary = if (uiState.modifyStatusBarBottomPadding) {
-                        stringResource(id = R.string.oneuix_statusBarBottomPaddingDp_summary, bottom)
+                        stringResource(id = R.string.status_padding_bottom_summary, bottom)
                     } else null,
                     icon = ImageVector.vectorResource(id = R.drawable.padding),
                     modifier = Modifier.animateContentSize(),

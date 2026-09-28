@@ -26,7 +26,7 @@ enum class StatusCategory(
     ),
     NetworkSpeed(
         R.string.status_category_network_speed,
-        R.drawable.flux_status_network_speed,
+        R.drawable.net_speed,
         0xFF2BB7A8.toInt(),
     ),
     Power(

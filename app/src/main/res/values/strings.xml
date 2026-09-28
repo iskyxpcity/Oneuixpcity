@@ -75,4 +75,7 @@
 
     <string name="status_wifi_no_migrated_feature_title">No status bar Wi-Fi option to migrate</string>
     <string name="status_wifi_no_migrated_feature_summary">The current upstream Function page does not provide a status bar Wi-Fi feature. This category is reserved for OneuiXP Wi-Fi icon features added later.</string>
+
+    <string name="status_padding_top_summary">Moves the status bar down: %1$.1f dp</string>
+    <string name="status_padding_bottom_summary">Moves the status bar up: %1$.1f dp</string>
 </resources>
