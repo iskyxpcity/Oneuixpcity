@@ -1,6 +1,7 @@
 package com.oneuixp.app.ui.screen.status
 
 import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -17,30 +18,23 @@ import androidx.compose.ui.unit.dp
 import com.oneuixp.app.R
 import io.github.soclear.oneuix.common.Preference
 import io.github.soclear.oneuix.ui.category.SystemUIEvent
-import io.github.soclear.oneuix.ui.component.OneuiXChildVisibility
 import io.github.soclear.oneuix.ui.component.OneuiXSlider
 import io.github.soclear.oneuix.ui.component.SwitchItem
 import kotlin.math.roundToInt
 
-/**
- * OneuiXP-owned third-tab "状态栏通知" controls.
- *
- * This UI tree is intentionally independent from the upstream-mirrored Function
- * page. Preference values and SystemUIEvent/Hook behavior remain shared.
- */
 @Composable
 fun StatusNotificationCategoryControls(
     uiState: Preference.SystemUI.StatusBar,
     onEvent: (SystemUIEvent) -> Unit,
 ) {
-    StatusThemeGroup(
-        items = listOf(
-            {
-                var max by remember(uiState.statusBarMaxNotificationIcons) {
-                    mutableIntStateOf(uiState.statusBarMaxNotificationIcons)
-                }
-                var expanded by rememberSaveable { mutableStateOf(false) }
+    var max by remember(uiState.statusBarMaxNotificationIcons) {
+        mutableIntStateOf(uiState.statusBarMaxNotificationIcons)
+    }
+    var expanded by rememberSaveable { mutableStateOf(false) }
 
+    StatusThemeGroup(
+        items = buildList {
+            add {
                 SwitchItem(
                     title = stringResource(id = R.string.oneuix_setStatusBarMaxNotificationIcons_title),
                     modifier = Modifier.animateContentSize(),
@@ -58,19 +52,25 @@ fun StatusNotificationCategoryControls(
                         onEvent(SystemUIEvent.StatusBar.ModifyStatusBarMaxNotificationIcons(it))
                     },
                 )
-                OneuiXChildVisibility(expanded && uiState.modifyStatusBarMaxNotificationIcons) {
-                    OneuiXSlider(
-                        value = max.toFloat(),
-                        onValueChange = { max = it.roundToInt() },
-                        modifier = Modifier.padding(horizontal = 16.dp),
-                        valueRange = 4f..20f,
-                        steps = 15,
-                        onValueChangeFinished = {
-                            onEvent(SystemUIEvent.StatusBar.StatusBarMaxNotificationIcons(max))
-                        },
-                    )
+            }
+            if (expanded && uiState.modifyStatusBarMaxNotificationIcons) {
+                add {
+                    StatusThemeChildItem {
+                        OneuiXSlider(
+                            value = max.toFloat(),
+                            onValueChange = { max = it.roundToInt() },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 8.dp),
+                            valueRange = 4f..20f,
+                            steps = 15,
+                            onValueChangeFinished = {
+                                onEvent(SystemUIEvent.StatusBar.StatusBarMaxNotificationIcons(max))
+                            },
+                        )
+                    }
                 }
-            },
-        ),
+            }
+        },
     )
 }

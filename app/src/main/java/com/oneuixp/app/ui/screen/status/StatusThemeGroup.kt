@@ -1,6 +1,8 @@
 package com.oneuixp.app.ui.screen.status
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -9,6 +11,8 @@ import androidx.compose.ui.unit.dp
 import com.oneuixp.app.ui.LocalUiMode
 import com.oneuixp.app.ui.UiMode
 import com.oneuixp.app.ui.component.material.SegmentedColumn
+import com.oneuixp.app.ui.component.material.SegmentedListItem
+import com.oneuixp.app.ui.component.material.oneuiXSegmentedColors
 import io.github.soclear.oneuix.ui.component.LocalOneuiXGroupedPreference
 import top.yukonga.miuix.kmp.basic.Card
 
@@ -54,6 +58,44 @@ fun StatusThemeGroup(
                         items.forEach { item -> item() }
                     }
                 }
+            }
+        }
+    }
+}
+
+
+/**
+ * Expanded child content that stays inside the active native group.
+ * Material renders it as a real SegmentedListItem so it participates in
+ * first/middle/last shapes. Miuix keeps it inside the surrounding Card.
+ */
+@Composable
+fun StatusThemeChildItem(
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit,
+) {
+    when (LocalUiMode.current) {
+        UiMode.Material -> {
+            SegmentedListItem(
+                modifier = modifier,
+                colors = oneuiXSegmentedColors(),
+                headlineContent = {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
+                    ) {
+                        content()
+                    }
+                },
+            )
+        }
+
+        UiMode.Miuix -> {
+            Box(
+                modifier = modifier.fillMaxWidth(),
+            ) {
+                content()
             }
         }
     }

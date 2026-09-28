@@ -5,6 +5,7 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
@@ -25,7 +26,6 @@ import io.github.soclear.oneuix.common.Preference
 import io.github.soclear.oneuix.hook.util.StatusBarClockFormatter
 import io.github.soclear.oneuix.ui.category.SystemUIEvent
 import io.github.soclear.oneuix.ui.component.OneuiXActionButton
-import io.github.soclear.oneuix.ui.component.OneuiXChildVisibility
 import io.github.soclear.oneuix.ui.component.OneuiXInfoItem
 import io.github.soclear.oneuix.ui.component.OneuiXInlineTextField
 import io.github.soclear.oneuix.ui.component.OneuiXSlider
@@ -51,13 +51,6 @@ private fun statusCategoryTimeLegacyDoubleLineClockSize(scale: Float): String = 
     else -> "extra_large"
 }
 
-/**
- * OneuiXP-owned third-tab "状态栏时间" controls.
- *
- * This UI tree is intentionally independent from the upstream-mirrored Function
- * page. It shares only Preference values and SystemUIEvent/Hook behavior, so
- * future upstream UI updates cannot change the Status tab structure.
- */
 @Composable
 fun StatusTimeCategoryControls(
     uiState: Preference.SystemUI.StatusBar,
@@ -68,12 +61,33 @@ fun StatusTimeCategoryControls(
         uiState.setStatusBarClockFormat && uiState.statusBarClockFormat.contains('\n')
     val isFold7 = Build.MODEL.startsWith("SM-F966", ignoreCase = true)
 
+    var formatExpanded by rememberSaveable { mutableStateOf(false) }
+    var tempDataTimeFormat by remember(uiState.statusBarClockFormat) {
+        mutableStateOf(uiState.statusBarClockFormat)
+    }
+    var formatLabel by remember { mutableStateOf("") }
+
+    var timeScale by remember(uiState.fold7DoubleLineClockTimeScale) {
+        mutableFloatStateOf(uiState.fold7DoubleLineClockTimeScale)
+    }
+    var dateScale by remember(uiState.fold7DoubleLineClockDateScale) {
+        mutableFloatStateOf(uiState.fold7DoubleLineClockDateScale)
+    }
+
+    var lineGapDp by remember(uiState.doubleLineClockGapDp) {
+        mutableFloatStateOf(uiState.doubleLineClockGapDp)
+    }
+    var gapExpanded by rememberSaveable { mutableStateOf(false) }
+
+    var singleLineScale by remember(uiState.statusBarClockTextScale) {
+        mutableFloatStateOf(uiState.statusBarClockTextScale)
+    }
+    var singleLineScaleExpanded by rememberSaveable { mutableStateOf(false) }
+
     StatusThemeGroup(
         modifier = modifier,
         items = buildList {
             add {
-                var expanded by rememberSaveable { mutableStateOf(false) }
-
                 SwitchItem(
                     title = stringResource(id = R.string.oneuix_setStatusBarClockFormat_title),
                     modifier = Modifier.animateContentSize(),
@@ -82,62 +96,63 @@ fun StatusTimeCategoryControls(
                     } else null,
                     icon = ImageVector.vectorResource(id = R.drawable.nest_clock_farsight_digital),
                     clickable = true,
-                    onClick = { expanded = !expanded },
+                    onClick = { formatExpanded = !formatExpanded },
                     checked = uiState.setStatusBarClockFormat,
                     onCheckedChange = {
                         if (it && uiState.statusBarClockFormat == "HH:mm") {
-                            expanded = true
+                            formatExpanded = true
                         } else if (!it) {
-                            expanded = false
+                            formatExpanded = false
                         }
                         onEvent(SystemUIEvent.StatusBar.SetStatusBarClockFormat(it))
                     },
                 )
-
-                OneuiXChildVisibility(expanded && uiState.setStatusBarClockFormat) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(horizontal = 16.dp),
-                    ) {
-                        var tempDataTimeFormat by remember {
-                            mutableStateOf(uiState.statusBarClockFormat)
-                        }
-                        var label by remember { mutableStateOf("") }
-                        OneuiXInlineTextField(
-                            value = tempDataTimeFormat,
-                            onValueChange = {
-                                tempDataTimeFormat = it
-                                label = runCatching {
-                                    StatusBarClockFormatter.format(it, LocalDateTime.now())
-                                }.getOrElse { "error" }
-                            },
-                            modifier = Modifier.weight(1f),
-                            labelText = label.takeIf { it.isNotBlank() },
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        OneuiXActionButton(
-                            text = stringResource(id = R.string.oneuix_confirm),
-                            primary = true,
-                            onClick = {
-                                var right = true
-                                label = try {
-                                    StatusBarClockFormatter.format(
-                                        tempDataTimeFormat,
-                                        LocalDateTime.now(),
-                                    )
-                                } catch (_: Throwable) {
-                                    right = false
-                                    "error"
-                                }
-                                if (right) {
-                                    onEvent(
-                                        SystemUIEvent.StatusBar.StatusBarClockFormat(
-                                            tempDataTimeFormat
+            }
+            if (formatExpanded && uiState.setStatusBarClockFormat) {
+                add {
+                    StatusThemeChildItem {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 8.dp),
+                        ) {
+                            OneuiXInlineTextField(
+                                value = tempDataTimeFormat,
+                                onValueChange = {
+                                    tempDataTimeFormat = it
+                                    formatLabel = runCatching {
+                                        StatusBarClockFormatter.format(it, LocalDateTime.now())
+                                    }.getOrElse { "error" }
+                                },
+                                modifier = Modifier.weight(1f),
+                                labelText = formatLabel.takeIf { it.isNotBlank() },
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            OneuiXActionButton(
+                                text = stringResource(id = R.string.oneuix_confirm),
+                                primary = true,
+                                onClick = {
+                                    var right = true
+                                    formatLabel = try {
+                                        StatusBarClockFormatter.format(
+                                            tempDataTimeFormat,
+                                            LocalDateTime.now(),
                                         )
-                                    )
-                                }
-                            },
-                        )
+                                    } catch (_: Throwable) {
+                                        right = false
+                                        "error"
+                                    }
+                                    if (right) {
+                                        onEvent(
+                                            SystemUIEvent.StatusBar.StatusBarClockFormat(
+                                                tempDataTimeFormat
+                                            )
+                                        )
+                                    }
+                                },
+                            )
+                        }
                     }
                 }
             }
@@ -158,65 +173,64 @@ fun StatusTimeCategoryControls(
                                 )
                             },
                         )
-                        OneuiXChildVisibility(uiState.useFold7CustomDoubleLineClockScale) {
-                            Column {
-                                var timeScale by remember(
-                                    uiState.fold7DoubleLineClockTimeScale
+                    }
+                    if (uiState.useFold7CustomDoubleLineClockScale) {
+                        add {
+                            StatusThemeChildItem {
+                                Column(
+                                    modifier = Modifier.fillMaxWidth(),
                                 ) {
-                                    mutableFloatStateOf(uiState.fold7DoubleLineClockTimeScale)
-                                }
-                                OneuiXInfoItem(
-                                    title = stringResource(
-                                        id = R.string.oneuix_fold7DoubleLineClockTimeScale_title
-                                    ),
-                                    summary = stringResource(
-                                        id = R.string.oneuix_fold7DoubleLineClockTimeScale_summary,
-                                        timeScale,
-                                    ),
-                                )
-                                OneuiXSlider(
-                                    value = timeScale,
-                                    onValueChange = { timeScale = it },
-                                    modifier = Modifier.padding(horizontal = 16.dp),
-                                    valueRange = 0.50f..1.10f,
-                                    steps = 39,
-                                    onValueChangeFinished = {
-                                        onEvent(
-                                            SystemUIEvent.StatusBar.Fold7DoubleLineClockTimeScale(
-                                                (timeScale * 100f).roundToInt() / 100f
+                                    OneuiXInfoItem(
+                                        title = stringResource(
+                                            id = R.string.oneuix_fold7DoubleLineClockTimeScale_title
+                                        ),
+                                        summary = stringResource(
+                                            id = R.string.oneuix_fold7DoubleLineClockTimeScale_summary,
+                                            timeScale,
+                                        ),
+                                    )
+                                    OneuiXSlider(
+                                        value = timeScale,
+                                        onValueChange = { timeScale = it },
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 8.dp),
+                                        valueRange = 0.50f..1.10f,
+                                        steps = 39,
+                                        onValueChangeFinished = {
+                                            onEvent(
+                                                SystemUIEvent.StatusBar.Fold7DoubleLineClockTimeScale(
+                                                    (timeScale * 100f).roundToInt() / 100f
+                                                )
                                             )
-                                        )
-                                    },
-                                )
-
-                                var dateScale by remember(
-                                    uiState.fold7DoubleLineClockDateScale
-                                ) {
-                                    mutableFloatStateOf(uiState.fold7DoubleLineClockDateScale)
-                                }
-                                OneuiXInfoItem(
-                                    title = stringResource(
-                                        id = R.string.oneuix_fold7DoubleLineClockDateScale_title
-                                    ),
-                                    summary = stringResource(
-                                        id = R.string.oneuix_fold7DoubleLineClockDateScale_summary,
-                                        dateScale,
-                                    ),
-                                )
-                                OneuiXSlider(
-                                    value = dateScale,
-                                    onValueChange = { dateScale = it },
-                                    modifier = Modifier.padding(horizontal = 16.dp),
-                                    valueRange = 0.50f..1.10f,
-                                    steps = 39,
-                                    onValueChangeFinished = {
-                                        onEvent(
-                                            SystemUIEvent.StatusBar.Fold7DoubleLineClockDateScale(
-                                                (dateScale * 100f).roundToInt() / 100f
+                                        },
+                                    )
+                                    OneuiXInfoItem(
+                                        title = stringResource(
+                                            id = R.string.oneuix_fold7DoubleLineClockDateScale_title
+                                        ),
+                                        summary = stringResource(
+                                            id = R.string.oneuix_fold7DoubleLineClockDateScale_summary,
+                                            dateScale,
+                                        ),
+                                    )
+                                    OneuiXSlider(
+                                        value = dateScale,
+                                        onValueChange = { dateScale = it },
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 8.dp),
+                                        valueRange = 0.50f..1.10f,
+                                        steps = 39,
+                                        onValueChangeFinished = {
+                                            onEvent(
+                                                SystemUIEvent.StatusBar.Fold7DoubleLineClockDateScale(
+                                                    (dateScale * 100f).roundToInt() / 100f
+                                                )
                                             )
-                                        )
-                                    },
-                                )
+                                        },
+                                    )
+                                }
                             }
                         }
                     }
@@ -255,11 +269,6 @@ fun StatusTimeCategoryControls(
                 }
 
                 add {
-                    var lineGapDp by remember(uiState.doubleLineClockGapDp) {
-                        mutableFloatStateOf(uiState.doubleLineClockGapDp)
-                    }
-                    var gapExpanded by rememberSaveable { mutableStateOf(false) }
-
                     SwitchItem(
                         title = stringResource(id = R.string.oneuix_statusBarDoubleLineClockGap_title),
                         summary = if (uiState.modifyDoubleLineClockGap) {
@@ -277,61 +286,70 @@ fun StatusTimeCategoryControls(
                             onEvent(SystemUIEvent.StatusBar.ModifyDoubleLineClockGap(it))
                         },
                     )
-                    OneuiXChildVisibility(
-                        gapExpanded && uiState.modifyDoubleLineClockGap
-                    ) {
-                        OneuiXSlider(
-                            value = lineGapDp,
-                            onValueChange = { lineGapDp = it },
-                            modifier = Modifier.padding(horizontal = 16.dp),
-                            valueRange = 0f..2f,
-                            steps = 19,
-                            onValueChangeFinished = {
-                                onEvent(
-                                    SystemUIEvent.StatusBar.DoubleLineClockGapDp(
-                                        (lineGapDp * 10f).roundToInt() / 10f
+                }
+                if (gapExpanded && uiState.modifyDoubleLineClockGap) {
+                    add {
+                        StatusThemeChildItem {
+                            OneuiXSlider(
+                                value = lineGapDp,
+                                onValueChange = { lineGapDp = it },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 8.dp),
+                                valueRange = 0f..2f,
+                                steps = 19,
+                                onValueChangeFinished = {
+                                    onEvent(
+                                        SystemUIEvent.StatusBar.DoubleLineClockGapDp(
+                                            (lineGapDp * 10f).roundToInt() / 10f
+                                        )
                                     )
-                                )
-                            },
-                        )
+                                },
+                            )
+                        }
                     }
                 }
             } else {
                 add {
-                    var scale by remember(uiState.statusBarClockTextScale) {
-                        mutableFloatStateOf(uiState.statusBarClockTextScale)
-                    }
-                    var expanded by rememberSaveable { mutableStateOf(false) }
-
                     SwitchItem(
                         title = stringResource(id = R.string.oneuix_setStatusBarClockTextScale_title),
                         modifier = Modifier.animateContentSize(),
                         summary = if (uiState.setStatusBarClockTextScale) {
-                            "%.2fx".format(scale)
+                            "%.2fx".format(singleLineScale)
                         } else null,
                         icon = ImageVector.vectorResource(id = R.drawable.format_size),
                         clickable = true,
-                        onClick = { expanded = !expanded },
+                        onClick = { singleLineScaleExpanded = !singleLineScaleExpanded },
                         checked = uiState.setStatusBarClockTextScale,
                         onCheckedChange = {
-                            if (it && scale == 1f) {
-                                expanded = true
+                            if (it && singleLineScale == 1f) {
+                                singleLineScaleExpanded = true
                             } else if (!it) {
-                                expanded = false
+                                singleLineScaleExpanded = false
                             }
                             onEvent(SystemUIEvent.StatusBar.SetStatusBarClockTextScale(it))
                         },
                     )
-                    OneuiXChildVisibility(expanded && uiState.setStatusBarClockTextScale) {
-                        OneuiXSlider(
-                            value = scale,
-                            onValueChange = { scale = it },
-                            modifier = Modifier.padding(horizontal = 16.dp),
-                            valueRange = 0.5f..2.5f,
-                            onValueChangeFinished = {
-                                onEvent(SystemUIEvent.StatusBar.StatusBarClockTextScale(scale))
-                            },
-                        )
+                }
+                if (singleLineScaleExpanded && uiState.setStatusBarClockTextScale) {
+                    add {
+                        StatusThemeChildItem {
+                            OneuiXSlider(
+                                value = singleLineScale,
+                                onValueChange = { singleLineScale = it },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 8.dp),
+                                valueRange = 0.5f..2.5f,
+                                onValueChangeFinished = {
+                                    onEvent(
+                                        SystemUIEvent.StatusBar.StatusBarClockTextScale(
+                                            singleLineScale
+                                        )
+                                    )
+                                },
+                            )
+                        }
                     }
                 }
             }

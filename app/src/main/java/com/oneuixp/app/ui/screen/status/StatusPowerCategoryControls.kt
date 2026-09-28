@@ -2,10 +2,12 @@ package com.oneuixp.app.ui.screen.status
 
 import android.os.Build
 import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -18,29 +20,27 @@ import com.oneuixp.app.R
 import io.github.soclear.oneuix.common.ONE_UI_VERSION
 import io.github.soclear.oneuix.common.Preference
 import io.github.soclear.oneuix.ui.category.SystemUIEvent
-import io.github.soclear.oneuix.ui.component.OneuiXChildVisibility
 import io.github.soclear.oneuix.ui.component.OneuiXSlider
 import io.github.soclear.oneuix.ui.component.SwitchItem
 
-/**
- * OneuiXP-owned third-tab "状态栏功耗" controls.
- *
- * The UI tree is independent from the upstream-mirrored Function page.
- * Preference values and SystemUIEvent/Hook behavior remain shared.
- */
 @Composable
 fun StatusPowerCategoryControls(
     uiState: Preference.SystemUI.StatusBar,
     onEvent: (SystemUIEvent) -> Unit,
 ) {
+    var widthScale by remember(uiState.batteryIconWidthScale) {
+        mutableFloatStateOf(uiState.batteryIconWidthScale)
+    }
+    var widthExpanded by rememberSaveable { mutableStateOf(false) }
+
+    var heightScale by remember(uiState.batteryIconHeightScale) {
+        mutableFloatStateOf(uiState.batteryIconHeightScale)
+    }
+    var heightExpanded by rememberSaveable { mutableStateOf(false) }
+
     StatusThemeGroup(
         items = buildList {
             add {
-                var widthScale by remember(uiState.batteryIconWidthScale) {
-                    mutableFloatStateOf(uiState.batteryIconWidthScale)
-                }
-                var expanded by rememberSaveable { androidx.compose.runtime.mutableStateOf(false) }
-
                 SwitchItem(
                     title = stringResource(id = R.string.oneuix_setBatteryIconWidthScale_title),
                     modifier = Modifier.animateContentSize(),
@@ -49,36 +49,39 @@ fun StatusPowerCategoryControls(
                     } else null,
                     icon = ImageVector.vectorResource(id = R.drawable.battery),
                     clickable = true,
-                    onClick = { expanded = !expanded },
+                    onClick = { widthExpanded = !widthExpanded },
                     checked = uiState.setBatteryIconWidthScale,
                     onCheckedChange = {
                         if (it && widthScale == 0f) {
-                            expanded = true
+                            widthExpanded = true
                         } else if (!it) {
-                            expanded = false
+                            widthExpanded = false
                         }
                         onEvent(SystemUIEvent.StatusBar.SetBatteryIconWidthScale(it))
                     },
                 )
-                OneuiXChildVisibility(expanded && uiState.setBatteryIconWidthScale) {
-                    OneuiXSlider(
-                        value = widthScale,
-                        onValueChange = { widthScale = it },
-                        modifier = Modifier.padding(horizontal = 16.dp),
-                        valueRange = 0.5f..2f,
-                        onValueChangeFinished = {
-                            onEvent(SystemUIEvent.StatusBar.BatteryIconWidthScale(widthScale))
-                        },
-                    )
+            }
+            if (widthExpanded && uiState.setBatteryIconWidthScale) {
+                add {
+                    StatusThemeChildItem {
+                        OneuiXSlider(
+                            value = widthScale,
+                            onValueChange = { widthScale = it },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 8.dp),
+                            valueRange = 0.5f..2f,
+                            onValueChangeFinished = {
+                                onEvent(
+                                    SystemUIEvent.StatusBar.BatteryIconWidthScale(widthScale)
+                                )
+                            },
+                        )
+                    }
                 }
             }
 
             add {
-                var heightScale by remember(uiState.batteryIconHeightScale) {
-                    mutableFloatStateOf(uiState.batteryIconHeightScale)
-                }
-                var expanded by rememberSaveable { androidx.compose.runtime.mutableStateOf(false) }
-
                 SwitchItem(
                     title = stringResource(id = R.string.oneuix_setBatteryIconHeightScale_title),
                     modifier = Modifier.animateContentSize(),
@@ -87,27 +90,35 @@ fun StatusPowerCategoryControls(
                     } else null,
                     icon = ImageVector.vectorResource(id = R.drawable.battery),
                     clickable = true,
-                    onClick = { expanded = !expanded },
+                    onClick = { heightExpanded = !heightExpanded },
                     checked = uiState.setBatteryIconHeightScale,
                     onCheckedChange = {
                         if (it && heightScale == 0f) {
-                            expanded = true
+                            heightExpanded = true
                         } else if (!it) {
-                            expanded = false
+                            heightExpanded = false
                         }
                         onEvent(SystemUIEvent.StatusBar.SetBatteryIconHeightScale(it))
                     },
                 )
-                OneuiXChildVisibility(expanded && uiState.setBatteryIconHeightScale) {
-                    OneuiXSlider(
-                        value = heightScale,
-                        onValueChange = { heightScale = it },
-                        modifier = Modifier.padding(horizontal = 16.dp),
-                        valueRange = 0.5f..2f,
-                        onValueChangeFinished = {
-                            onEvent(SystemUIEvent.StatusBar.BatteryIconHeightScale(heightScale))
-                        },
-                    )
+            }
+            if (heightExpanded && uiState.setBatteryIconHeightScale) {
+                add {
+                    StatusThemeChildItem {
+                        OneuiXSlider(
+                            value = heightScale,
+                            onValueChange = { heightScale = it },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 8.dp),
+                            valueRange = 0.5f..2f,
+                            onValueChangeFinished = {
+                                onEvent(
+                                    SystemUIEvent.StatusBar.BatteryIconHeightScale(heightScale)
+                                )
+                            },
+                        )
+                    }
                 }
             }
 
