@@ -6,6 +6,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.oneuixp.app.ui.LocalUiMode
 import com.oneuixp.app.ui.UiMode
+import androidx.compose.material3.SliderDefaults
+import androidx.compose.ui.graphics.Color
 import androidx.compose.material3.Slider as MaterialSlider
 import top.yukonga.miuix.kmp.basic.Slider as MiuixSlider
 
@@ -25,10 +27,16 @@ fun OneuiXSlider(
             onValueChange = onValueChange,
             modifier = modifier,
             valueRange = valueRange,
-            // Keep OneuiXP Material sliders visually consistent: use a smooth
-            // continuous track without Material's discrete tick marks.
-            // Callers still normalize/round values in onValueChangeFinished.
+            // OneuiXP Material slider style: keep the track visually smooth.
+            // Explicitly hide Material3 tick marks as well as using a continuous
+            // visual track, while callers keep their own value normalization.
             steps = 0,
+            colors = SliderDefaults.colors(
+                activeTickColor = Color.Transparent,
+                inactiveTickColor = Color.Transparent,
+                disabledActiveTickColor = Color.Transparent,
+                disabledInactiveTickColor = Color.Transparent,
+            ),
             onValueChangeFinished = onValueChangeFinished,
         )
 
