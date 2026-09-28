@@ -306,68 +306,10 @@ fun DetailPaneSystemUI(
             }
             }
         }
-        SwitchItem(
-            icon = ImageVector.vectorResource(id = R.drawable.net_speed),
-            title = stringResource(id = R.string.oneuix_supportRealTimeNetworkSpeed_title),
-            summary = stringResource(id = R.string.oneuix_supportRealTimeNetworkSpeed_summary),
-            checked = uiState.statusBar.supportRealTimeNetworkSpeed,
-            onCheckedChange = {
-                onEvent(SystemUIEvent.StatusBar.SupportRealTimeNetworkSpeed(it))
-            }
+        StatusBarNetworkSpeedControls(
+            uiState = uiState.statusBar,
+            onEvent = onEvent,
         )
-        SwitchItem(
-            icon = ImageVector.vectorResource(id = R.drawable.net_speed),
-            title = stringResource(id = R.string.oneuix_showSeparateUpDownNetworkSpeeds_title),
-            summary = stringResource(id = R.string.oneuix_showSeparateUpDownNetworkSpeeds_summary),
-            checked = uiState.statusBar.showSeparateUpDownNetworkSpeeds,
-            onCheckedChange = {
-                onEvent(SystemUIEvent.StatusBar.ShowSeparateUpDownNetworkSpeeds(it))
-            }
-        )
-        OneuiXPreferenceGroup {
-            var expanded by rememberSaveable { mutableStateOf(false) }
-            var threshold by remember {
-                mutableIntStateOf(uiState.statusBar.networkSpeedThresholdKb)
-            }
-            SwitchItem(
-                icon = ImageVector.vectorResource(id = R.drawable.net_speed),
-                title = stringResource(id = R.string.oneuix_networkSpeedThreshold_title),
-                summary = if (uiState.statusBar.networkSpeedThresholdKb > 0) {
-                    "${uiState.statusBar.networkSpeedThresholdKb} KB/s"
-                } else null,
-                modifier = Modifier.animateContentSize(),
-                clickable = true,
-                onClick = { expanded = !expanded },
-                checked = uiState.statusBar.networkSpeedThresholdKb > 0,
-                onCheckedChange = {
-                    if (it && threshold == 0) threshold = 1
-                    if (!it) threshold = 0
-                    onEvent(SystemUIEvent.StatusBar.NetworkSpeedThreshold(threshold))
-                }
-            )
-            OneuiXChildVisibility(expanded && uiState.statusBar.networkSpeedThresholdKb > 0) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                ) {
-                    OneuiXInlineTextField(
-                        value = threshold.toString(),
-                        onValueChange = { threshold = it.toIntOrNull()?.coerceAtLeast(1) ?: 1 },
-                        modifier = Modifier.weight(1f),
-                        labelText = stringResource(id = R.string.oneuix_networkSpeedThreshold_label),
-                        singleLine = true,
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    OneuiXActionButton(
-                        text = stringResource(id = R.string.oneuix_confirm),
-                        primary = true,
-                        onClick = {
-                            onEvent(SystemUIEvent.StatusBar.NetworkSpeedThreshold(threshold))
-                        },
-                    )
-                }
-            }
-        }
         StatusBarTimeControls(
             uiState = uiState.statusBar,
             onEvent = onEvent,
