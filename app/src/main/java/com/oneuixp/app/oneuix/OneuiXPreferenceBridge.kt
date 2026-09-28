@@ -2,6 +2,7 @@ package com.oneuixp.app.oneuix
 
 import android.app.Application
 import android.content.Context
+import android.net.Uri
 import android.os.ParcelFileDescriptor
 import android.os.UserManager
 import android.util.Log
@@ -39,14 +40,19 @@ private fun Preference.probeSummary(): String =
 
 private object OneuiXXposedService {
     private const val TAG = "OneuiXP-OneUIXBridge"
+    private const val PREFERENCE_CHANGED_PATH = "preferences"
     private val initialized = AtomicBoolean(false)
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    @Volatile
+    private var application: Application? = null
 
     @Volatile
     var service: XposedService? = null
         private set
 
     fun initialize(application: Application) {
+        this.application = application
         if (!initialized.compareAndSet(false, true)) return
 
         // libxposed-service has one global service-listener slot. Register it
@@ -78,6 +84,16 @@ private object OneuiXXposedService {
             }.onFailure {
                 Log.w(TAG, "Remote preference synchronization retry failed", it)
             }
+        }
+    }
+
+    fun notifyPreferenceChanged() {
+        val app = application ?: return
+        runCatching {
+            app.contentResolver.notifyChange(
+                Uri.parse("content://${app.packageName}.statusbridge/$PREFERENCE_CHANGED_PATH"),
+                null,
+            )
         }
     }
 
@@ -129,6 +145,7 @@ object OneuiXPreferenceSerializer : Serializer<Preference> {
             destination.channel.force(true)
         }
         Log.i(TAG, "CHAIN_PROBE remote preference.json write OK " + value.probeSummary())
+        OneuiXXposedService.notifyPreferenceChanged()
         true
     } catch (t: Throwable) {
         Log.w(TAG, "CHAIN_PROBE remote preference.json write FAILED", t)

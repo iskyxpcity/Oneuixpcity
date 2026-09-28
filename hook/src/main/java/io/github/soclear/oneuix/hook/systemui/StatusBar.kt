@@ -25,11 +25,48 @@ import io.github.soclear.oneuix.hook.util.reflect
 import io.github.soclear.oneuix.hook.util.xlog
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.util.Collections
+import java.util.WeakHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.roundToInt
 
 @SuppressLint("PrivateApi")
 object StatusBar {
+    @Volatile
+    private var statusBarClockSecondRuntimeEnabled = false
+    private val statusBarClockSecondHelpers: MutableSet<Any> =
+        Collections.synchronizedSet(
+            Collections.newSetFromMap(WeakHashMap<Any, Boolean>())
+        )
+
+    private fun applyStatusBarClockSecondState(helper: Any, enabled: Boolean) {
+        runCatching {
+            val secondTick = helper.reflect["mSecondTick"] as? Runnable ?: return
+            val currentHandler = helper.reflect["mSecondsHandler"] as? Handler
+            if (enabled) {
+                if (currentHandler == null) {
+                    val handler = Handler(Looper.getMainLooper())
+                    helper.reflect["mSecondsHandler"] = handler
+                    handler.post(secondTick)
+                }
+            } else {
+                currentHandler?.removeCallbacks(secondTick)
+                helper.reflect["mSecondsHandler"] = null
+            }
+        }
+    }
+
+    fun setStatusBarClockSecondRuntimeEnabled(enabled: Boolean) {
+        if (statusBarClockSecondRuntimeEnabled == enabled) return
+        statusBarClockSecondRuntimeEnabled = enabled
+        val helpers = synchronized(statusBarClockSecondHelpers) {
+            statusBarClockSecondHelpers.toList()
+        }
+        helpers.forEach { helper ->
+            applyStatusBarClockSecondState(helper, enabled)
+        }
+    }
+
     context(xposedModule: XposedModule)
     fun setStatusBarPaddingDp(left: Float?, right: Float?) = afterAttachTry(left != null || right != null) {
         val className = "com.android.systemui.statusbar.phone.IndicatorGardenAlgorithmCenterCutout"
@@ -133,38 +170,40 @@ object StatusBar {
     }
 
     context(xposedModule: XposedModule)
-    fun updateStatusBarClockEverySecond() = afterAttachTry {
-        // 每秒更新
+    fun installStatusBarClockSecondControl(initialEnabled: Boolean) = afterAttachTry {
+        statusBarClockSecondRuntimeEnabled = initialEnabled
+
         try {
             val helperClass = classLoader.loadClass(
                 "com.android.systemui.statusbar.policy.QSClockQuickStarHelper"
             )
+            helperClass.declaredConstructors.forEach { constructor ->
+                xposedModule.hook(constructor).intercept { chain ->
+                    val result = chain.proceed()
+                    statusBarClockSecondHelpers.add(chain.thisObject)
+                    applyStatusBarClockSecondState(
+                        chain.thisObject,
+                        statusBarClockSecondRuntimeEnabled,
+                    )
+                    result
+                }
+            }
+
             val method = helperClass.getDeclaredMethod("updateSecondsClockHandler")
             xposedModule.hook(method).intercept { chain ->
                 val result = chain.proceed()
-                try {
-                    val mSecondsHandler = chain.thisObject.reflect["mSecondsHandler"]
-                    if (mSecondsHandler == null) {
-                        val looper = Looper.myLooper()
-                        if (looper != null) {
-                            val handler = Handler(looper)
-                            chain.thisObject.reflect["mSecondsHandler"] = handler
-                            val mSecondTick = chain.thisObject.reflect["mSecondTick"] as? Runnable
-                            if (mSecondTick != null) {
-                                handler.post(mSecondTick)
-                            }
-                        }
-                    }
-                } catch (t: Throwable) {
-                    xlog(t)
-                }
+                statusBarClockSecondHelpers.add(chain.thisObject)
+                applyStatusBarClockSecondState(
+                    chain.thisObject,
+                    statusBarClockSecondRuntimeEnabled,
+                )
                 result
             }
         } catch (t: Throwable) {
             xlog(t)
         }
 
-        // 数字字体等宽
+        // Keep Samsung's clock digits tabular only while second-level updates are enabled.
         try {
             val controllerClass = classLoader.loadClass(
                 "com.android.systemui.statusbar.policy.QSClockIndicatorViewController"
@@ -172,11 +211,13 @@ object StatusBar {
             val onViewAttachedMethod = controllerClass.getDeclaredMethod("onViewAttached")
             xposedModule.hook(onViewAttachedMethod).intercept { chain ->
                 val result = chain.proceed()
-                try {
-                    val clockTextView = chain.thisObject.reflect["view"] as? TextView
-                    clockTextView?.fontFeatureSettings = "tnum"
-                } catch (t: Throwable) {
-                    xlog(t)
+                if (statusBarClockSecondRuntimeEnabled) {
+                    try {
+                        val clockTextView = chain.thisObject.reflect["view"] as? TextView
+                        clockTextView?.fontFeatureSettings = "tnum"
+                    } catch (t: Throwable) {
+                        xlog(t)
+                    }
                 }
                 result
             }

@@ -1,6 +1,9 @@
 package io.github.soclear.oneuix.hook.systemui
 
 import android.annotation.SuppressLint
+import android.content.Context
+import android.database.ContentObserver
+import android.net.Uri
 import android.os.Build
 import android.os.Handler
 import android.os.HandlerThread
@@ -215,53 +218,76 @@ object OfficialMainStatusBarMod {
         }
     }
 
-    /** Read framework-shared preferences without relying on a soon-closed /proc fd. */
+    /** Event-driven preference refresh. No permanent timer runs while settings are idle. */
+    private const val PREFERENCE_CHANGED_URI =
+        "content://com.oneuixp.app.statusbridge/preferences"
     private var refreshStarted = false
-    private fun watchPreference(module: XposedModule) {
+    private var preferenceObserver: ContentObserver? = null
+
+    private fun applyRuntimeStatusBarPreference(current: Preference.SystemUI.StatusBar) {
+        updateStatusBarVerticalOffset(
+            if (current.modifyStatusBarTopPadding) current.statusBarTopPaddingDp else 0f,
+            if (current.modifyStatusBarBottomPadding) current.statusBarBottomPaddingDp else 0f,
+        )
+        if (current.setStatusBarClockFormat && current.statusBarClockFormat.contains('\n')) {
+            updateDoubleLineClockRuntimeConfig(
+                current.statusBarDoubleLineClockSize,
+                current.statusBarClockTextScale,
+                if (current.modifyDoubleLineClockGap) current.doubleLineClockGapDp else 1f,
+                current.useFold7CustomDoubleLineClockScale,
+                current.fold7DoubleLineClockTimeScale,
+                current.fold7DoubleLineClockDateScale,
+            )
+        }
+        StatusBar.setStatusBarClockSecondRuntimeEnabled(
+            current.updateStatusBarClockEverySecond
+        )
+    }
+
+    private fun watchPreference(module: XposedModule, context: Context) {
         if (refreshStarted) return
         refreshStarted = true
+
         val worker = HandlerThread("OneUIXModStatusBarPrefs").apply { start() }
         val background = Handler(worker.looper)
         val main = Handler(Looper.getMainLooper())
-        background.post(object : Runnable {
-            private var previous: Preference.SystemUI.StatusBar? = null
-            override fun run() {
-                try {
-                    val current = with(module) { PreferenceProvider.loadPreference() }
+        var previous: Preference.SystemUI.StatusBar? = null
+
+        fun refreshOnce() {
+            background.post {
+                val current = runCatching {
+                    with(module) { PreferenceProvider.loadPreference() }
                         ?.systemUI?.statusBar
-                    if (current != null && current != previous) {
-                        previous = current
-                        main.post {
-                            updateStatusBarVerticalOffset(
-                                if (current.modifyStatusBarTopPadding) {
-                                    current.statusBarTopPaddingDp
-                                } else 0f,
-                                if (current.modifyStatusBarBottomPadding) {
-                                    current.statusBarBottomPaddingDp
-                                } else 0f,
-                            )
-                            if (current.setStatusBarClockFormat &&
-                                current.statusBarClockFormat.contains('\n')) {
-                                updateDoubleLineClockRuntimeConfig(
-                                    current.statusBarDoubleLineClockSize,
-                                    current.statusBarClockTextScale,
-                                    if (current.modifyDoubleLineClockGap) {
-                                        current.doubleLineClockGapDp
-                                    } else 1f,
-                                    current.useFold7CustomDoubleLineClockScale,
-                                    current.fold7DoubleLineClockTimeScale,
-                                    current.fold7DoubleLineClockDateScale,
-                                )
-                            }
-                        }
-                    }
-                } catch (t: Throwable) {
-                    with(module) { xlog(t) }
-                } finally {
-                    background.postDelayed(this, 750L)
-                }
+                }.getOrNull() ?: return@post
+
+                if (current == previous) return@post
+                previous = current
+                main.post { applyRuntimeStatusBarPreference(current) }
             }
-        })
+        }
+
+        val observer = object : ContentObserver(background) {
+            override fun onChange(selfChange: Boolean) {
+                refreshOnce()
+            }
+
+            override fun onChange(selfChange: Boolean, uri: Uri?) {
+                refreshOnce()
+            }
+        }
+        preferenceObserver = observer
+        runCatching {
+            context.contentResolver.registerContentObserver(
+                Uri.parse(PREFERENCE_CHANGED_URI),
+                false,
+                observer,
+            )
+        }.onFailure {
+            with(module) { xlog(it) }
+        }
+
+        // Apply the current persisted state once when the observer is installed.
+        refreshOnce()
     }
 
     context(xposedModule: XposedModule, param: XposedModuleInterface.PackageReadyParam)
@@ -276,11 +302,13 @@ object OfficialMainStatusBarMod {
                 clazz.declaredConstructors.forEach { constructor ->
                     xposedModule.hook(constructor).intercept { chain ->
                         val result = chain.proceed()
-                        (chain.thisObject as? View)?.let { registerStatusBarView(it) }
+                        (chain.thisObject as? View)?.let { statusBarView ->
+                            registerStatusBarView(statusBarView)
+                            watchPreference(xposedModule, statusBarView.context)
+                        }
                         result
                     }
                 }
-                watchPreference(xposedModule)
                 HookInstallTracker.markSuccessful("systemui.statusbar.vertical-runtime")
             } catch (t: Throwable) {
                 xlog(t)

@@ -333,9 +333,9 @@ class Main : XposedModule() {
                     StatusBar.setStatusBarClockTextScale(scale)
                 }
 
-                if (preference.systemUI.statusBar.updateStatusBarClockEverySecond) {
-                    StatusBar.updateStatusBarClockEverySecond()
-                }
+                StatusBar.installStatusBarClockSecondControl(
+                    preference.systemUI.statusBar.updateStatusBarClockEverySecond
+                )
 
                 if (preference.systemUI.statusBar.hideSecureFolderStatusBarIcon) {
                     StatusBar.hideSecureFolderStatusBarIcon()
