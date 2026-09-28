@@ -34,10 +34,16 @@ import kotlin.math.roundToInt
 object StatusBar {
     @Volatile
     private var statusBarClockSecondRuntimeEnabled = false
+
+    @Volatile
+    private var statusBarClockMonospacedRuntimeEnabled = false
+
     private val statusBarClockSecondHelpers: MutableSet<Any> =
         Collections.synchronizedSet(
             Collections.newSetFromMap(WeakHashMap<Any, Boolean>())
         )
+    private val statusBarClockViews: MutableMap<TextView, String?> =
+        Collections.synchronizedMap(WeakHashMap())
 
     private fun applyStatusBarClockSecondState(helper: Any, enabled: Boolean) {
         runCatching {
@@ -64,6 +70,30 @@ object StatusBar {
         }
         helpers.forEach { helper ->
             applyStatusBarClockSecondState(helper, enabled)
+        }
+    }
+
+    private fun applyStatusBarClockMonospacedState(clockView: TextView, enabled: Boolean) {
+        val original = synchronized(statusBarClockViews) {
+            if (!statusBarClockViews.containsKey(clockView)) {
+                statusBarClockViews[clockView] = clockView.fontFeatureSettings
+            }
+            statusBarClockViews[clockView]
+        }
+        clockView.fontFeatureSettings = if (enabled) "tnum" else original
+        clockView.invalidate()
+    }
+
+    fun setStatusBarClockMonospacedRuntimeEnabled(enabled: Boolean) {
+        if (statusBarClockMonospacedRuntimeEnabled == enabled) return
+        statusBarClockMonospacedRuntimeEnabled = enabled
+        val views = synchronized(statusBarClockViews) {
+            statusBarClockViews.keys.toList()
+        }
+        views.forEach { clockView ->
+            clockView.post {
+                applyStatusBarClockMonospacedState(clockView, enabled)
+            }
         }
     }
 
@@ -170,8 +200,12 @@ object StatusBar {
     }
 
     context(xposedModule: XposedModule)
-    fun installStatusBarClockSecondControl(initialEnabled: Boolean) = afterAttachTry {
-        statusBarClockSecondRuntimeEnabled = initialEnabled
+    fun installStatusBarClockRuntimeControl(
+        initialSecondEnabled: Boolean,
+        initialMonospacedEnabled: Boolean,
+    ) = afterAttachTry {
+        statusBarClockSecondRuntimeEnabled = initialSecondEnabled
+        statusBarClockMonospacedRuntimeEnabled = initialMonospacedEnabled
 
         try {
             val helperClass = classLoader.loadClass(
@@ -203,7 +237,8 @@ object StatusBar {
             xlog(t)
         }
 
-        // Keep Samsung's clock digits tabular only while second-level updates are enabled.
+        // Track active clock views so tabular digits can be toggled immediately,
+        // independently from the one-second refresh handler.
         try {
             val controllerClass = classLoader.loadClass(
                 "com.android.systemui.statusbar.policy.QSClockIndicatorViewController"
@@ -211,13 +246,16 @@ object StatusBar {
             val onViewAttachedMethod = controllerClass.getDeclaredMethod("onViewAttached")
             xposedModule.hook(onViewAttachedMethod).intercept { chain ->
                 val result = chain.proceed()
-                if (statusBarClockSecondRuntimeEnabled) {
-                    try {
-                        val clockTextView = chain.thisObject.reflect["view"] as? TextView
-                        clockTextView?.fontFeatureSettings = "tnum"
-                    } catch (t: Throwable) {
-                        xlog(t)
+                try {
+                    val clockTextView = chain.thisObject.reflect["view"] as? TextView
+                    if (clockTextView != null) {
+                        applyStatusBarClockMonospacedState(
+                            clockTextView,
+                            statusBarClockMonospacedRuntimeEnabled,
+                        )
                     }
+                } catch (t: Throwable) {
+                    xlog(t)
                 }
                 result
             }

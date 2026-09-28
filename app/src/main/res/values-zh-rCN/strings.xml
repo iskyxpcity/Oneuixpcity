@@ -69,4 +69,9 @@
     <string name="status_category_lockscreen">锁屏</string>
     <string name="status_category_notification_center">通知中心</string>
     <string name="status_category_control_center">控制中心</string>
+
+    <string name="status_time_update_every_second_title">每秒更新时间</string>
+    <string name="status_time_update_every_second_summary">每秒刷新一次状态栏时间，适用于包含秒数的自定义时间格式。</string>
+    <string name="status_time_monospaced_digits_title">等宽数字</string>
+    <string name="status_time_monospaced_digits_summary">让 0–9 使用相同宽度，减少时间变化时的左右跳动。</string>
 </resources>

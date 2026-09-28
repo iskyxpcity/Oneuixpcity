@@ -242,6 +242,13 @@ object OfficialMainStatusBarMod {
         StatusBar.setStatusBarClockSecondRuntimeEnabled(
             current.updateStatusBarClockEverySecond
         )
+        StatusBar.setStatusBarClockMonospacedRuntimeEnabled(
+            if (current.useIndependentStatusBarClockRuntimeControls) {
+                current.statusBarClockMonospacedDigits
+            } else {
+                current.updateStatusBarClockEverySecond
+            }
+        )
     }
 
     private fun watchPreference(module: XposedModule, context: Context) {

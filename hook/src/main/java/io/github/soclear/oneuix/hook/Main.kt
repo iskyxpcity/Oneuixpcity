@@ -333,9 +333,19 @@ class Main : XposedModule() {
                     StatusBar.setStatusBarClockTextScale(scale)
                 }
 
-                StatusBar.installStatusBarClockSecondControl(
-                    preference.systemUI.statusBar.updateStatusBarClockEverySecond
-                )
+                run {
+                    val bar = preference.systemUI.statusBar
+                    StatusBar.installStatusBarClockRuntimeControl(
+                        initialSecondEnabled = bar.updateStatusBarClockEverySecond,
+                        initialMonospacedEnabled = if (
+                            bar.useIndependentStatusBarClockRuntimeControls
+                        ) {
+                            bar.statusBarClockMonospacedDigits
+                        } else {
+                            bar.updateStatusBarClockEverySecond
+                        },
+                    )
+                }
 
                 if (preference.systemUI.statusBar.hideSecureFolderStatusBarIcon) {
                     StatusBar.hideSecureFolderStatusBarIcon()

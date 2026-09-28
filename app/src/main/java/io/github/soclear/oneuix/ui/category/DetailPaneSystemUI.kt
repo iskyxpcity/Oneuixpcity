@@ -840,6 +840,14 @@ sealed interface SystemUIEvent {
         @JvmInline
         value class UpdateStatusBarClockEverySecond(val value: Boolean) : StatusBar
 
+        // OneuiXP-owned Status tab events. The upstream Function page keeps using
+        // UpdateStatusBarClockEverySecond and therefore keeps its combined behavior.
+        @JvmInline
+        value class StatusTimeUpdateEverySecond(val value: Boolean) : StatusBar
+
+        @JvmInline
+        value class StatusTimeMonospacedDigits(val value: Boolean) : StatusBar
+
         @JvmInline
         value class HideSecureFolderStatusBarIcon(val value: Boolean) : StatusBar
 
@@ -1280,10 +1288,45 @@ private fun OneuiXToolsViewModel.onStatusBarEvent(event: SystemUIEvent.StatusBar
             }
 
             is SystemUIEvent.StatusBar.UpdateStatusBarClockEverySecond -> {
+                // Preserve the upstream Function-page contract: its single switch controls
+                // both per-second refresh and tabular digits.
                 preference.copy(
                     systemUI = preference.systemUI.copy(
                         statusBar = preference.systemUI.statusBar.copy(
-                            updateStatusBarClockEverySecond = event.value
+                            updateStatusBarClockEverySecond = event.value,
+                            statusBarClockMonospacedDigits = event.value,
+                            useIndependentStatusBarClockRuntimeControls = false,
+                        )
+                    )
+                )
+            }
+
+            is SystemUIEvent.StatusBar.StatusTimeUpdateEverySecond -> {
+                val statusBar = preference.systemUI.statusBar
+                val currentMonospaced = if (
+                    statusBar.useIndependentStatusBarClockRuntimeControls
+                ) {
+                    statusBar.statusBarClockMonospacedDigits
+                } else {
+                    statusBar.updateStatusBarClockEverySecond
+                }
+                preference.copy(
+                    systemUI = preference.systemUI.copy(
+                        statusBar = statusBar.copy(
+                            updateStatusBarClockEverySecond = event.value,
+                            statusBarClockMonospacedDigits = currentMonospaced,
+                            useIndependentStatusBarClockRuntimeControls = true,
+                        )
+                    )
+                )
+            }
+
+            is SystemUIEvent.StatusBar.StatusTimeMonospacedDigits -> {
+                preference.copy(
+                    systemUI = preference.systemUI.copy(
+                        statusBar = preference.systemUI.statusBar.copy(
+                            statusBarClockMonospacedDigits = event.value,
+                            useIndependentStatusBarClockRuntimeControls = true,
                         )
                     )
                 )
