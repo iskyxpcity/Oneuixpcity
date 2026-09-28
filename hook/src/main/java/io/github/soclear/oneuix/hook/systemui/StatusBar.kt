@@ -80,7 +80,8 @@ object StatusBar {
             }
             statusBarClockViews[clockView]
         }
-        clockView.fontFeatureSettings = if (enabled) "tnum" else original
+        clockView.fontFeatureSettings =
+            if (enabled) "'tnum' 1, 'pnum' 0" else original
         clockView.invalidate()
     }
 
