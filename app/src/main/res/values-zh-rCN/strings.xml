@@ -69,4 +69,7 @@
     <string name="status_category_lockscreen">锁屏</string>
     <string name="status_category_notification_center">通知中心</string>
     <string name="status_category_control_center">控制中心</string>
+
+    <string name="status_wifi_no_migrated_feature_title">暂无可迁移的状态栏 Wi-Fi 功能</string>
+    <string name="status_wifi_no_migrated_feature_summary">当前上游“功能”页没有独立的状态栏 Wi-Fi 设置。此分类保留给 OneuiXP 后续新增的 Wi-Fi 图标功能。</string>
 </resources>

@@ -130,7 +130,72 @@ private fun StatusCategoryContent(
                 )
             }
         }
-        else -> Box(modifier = modifier.fillMaxSize())
+        StatusCategory.Signal -> {
+            val toolsViewModel = viewModel<OneuiXToolsViewModel>()
+            val preference = toolsViewModel.preference.collectAsStateWithLifecycle().value
+            Column(
+                modifier = modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState()),
+            ) {
+                StatusSignalCategoryControls(
+                    uiState = preference.systemUI.statusBar,
+                    onEvent = toolsViewModel::onSystemUIEvent,
+                )
+            }
+        }
+        StatusCategory.Wifi -> {
+            Column(
+                modifier = modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState()),
+            ) {
+                StatusWifiCategoryControls()
+            }
+        }
+        StatusCategory.Lockscreen -> {
+            val toolsViewModel = viewModel<OneuiXToolsViewModel>()
+            val preference = toolsViewModel.preference.collectAsStateWithLifecycle().value
+            Column(
+                modifier = modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState()),
+            ) {
+                StatusLockscreenCategoryControls(
+                    statusBar = preference.systemUI.statusBar,
+                    aod = preference.systemUI.aod,
+                    onEvent = toolsViewModel::onSystemUIEvent,
+                )
+            }
+        }
+        StatusCategory.NotificationCenter -> {
+            val toolsViewModel = viewModel<OneuiXToolsViewModel>()
+            val preference = toolsViewModel.preference.collectAsStateWithLifecycle().value
+            Column(
+                modifier = modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState()),
+            ) {
+                StatusNotificationCenterCategoryControls(
+                    uiState = preference.systemUI.notification,
+                    onEvent = toolsViewModel::onSystemUIEvent,
+                )
+            }
+        }
+        StatusCategory.ControlCenter -> {
+            val toolsViewModel = viewModel<OneuiXToolsViewModel>()
+            val preference = toolsViewModel.preference.collectAsStateWithLifecycle().value
+            Column(
+                modifier = modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState()),
+            ) {
+                StatusControlCenterCategoryControls(
+                    uiState = preference.systemUI.qs,
+                    onEvent = toolsViewModel::onSystemUIEvent,
+                )
+            }
+        }
     }
 }
 
