@@ -426,42 +426,10 @@ fun DetailPaneSystemUI(
                 onEvent(SystemUIEvent.StatusBar.DoubleTapStatusBarToSleep(it))
             }
         )
-        OneuiXPreferenceGroup {
-            var max by remember(uiState.statusBar.statusBarMaxNotificationIcons) {
-                mutableIntStateOf(uiState.statusBar.statusBarMaxNotificationIcons)
-            }
-            var expanded by rememberSaveable { mutableStateOf(false) }
-
-            SwitchItem(
-                title = stringResource(id = R.string.oneuix_setStatusBarMaxNotificationIcons_title),
-                modifier = Modifier.animateContentSize(),
-                summary = if (uiState.statusBar.modifyStatusBarMaxNotificationIcons) " $max" else null,
-                icon = ImageVector.vectorResource(id = R.drawable.notifications),
-                clickable = true,
-                onClick = { expanded = !expanded },
-                checked = uiState.statusBar.modifyStatusBarMaxNotificationIcons,
-                onCheckedChange = {
-                    if (it && max == 4) {
-                        expanded = true
-                    } else if (!it) {
-                        expanded = false
-                    }
-                    onEvent(SystemUIEvent.StatusBar.ModifyStatusBarMaxNotificationIcons(it))
-                }
-            )
-            OneuiXChildVisibility(expanded && uiState.statusBar.modifyStatusBarMaxNotificationIcons) {
-                OneuiXSlider(
-                    value = max.toFloat(),
-                    onValueChange = { max = it.roundToInt() },
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                    valueRange = 4f..20f,
-                    steps = 15,
-                    onValueChangeFinished = {
-                        onEvent(SystemUIEvent.StatusBar.StatusBarMaxNotificationIcons(max))
-                    }
-                )
-            }
-        }
+        StatusBarNotificationControls(
+            uiState = uiState.statusBar,
+            onEvent = onEvent,
+        )
         OneuiXPreferenceGroup {
             var expanded by rememberSaveable { mutableStateOf(false) }
 

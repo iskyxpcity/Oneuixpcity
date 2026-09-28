@@ -41,6 +41,7 @@ import com.oneuixp.app.ui.util.BlurredBar
 import com.oneuixp.app.ui.util.rememberBlurBackdrop
 import com.oneuixp.app.ui.viewmodel.OneuiXToolsViewModel
 import io.github.soclear.oneuix.ui.category.StatusBarTimeControls
+import io.github.soclear.oneuix.ui.category.StatusBarNotificationControls
 import io.github.soclear.oneuix.ui.category.onSystemUIEvent
 import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
 import top.yukonga.miuix.kmp.basic.IconButton as MiuixIconButton
@@ -84,6 +85,20 @@ private fun StatusCategoryContent(
                     .verticalScroll(rememberScrollState()),
             ) {
                 StatusBarTimeControls(
+                    uiState = preference.systemUI.statusBar,
+                    onEvent = toolsViewModel::onSystemUIEvent,
+                )
+            }
+        }
+        StatusCategory.Notification -> {
+            val toolsViewModel = viewModel<OneuiXToolsViewModel>()
+            val preference = toolsViewModel.preference.collectAsStateWithLifecycle().value
+            Column(
+                modifier = modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState()),
+            ) {
+                StatusBarNotificationControls(
                     uiState = preference.systemUI.statusBar,
                     onEvent = toolsViewModel::onSystemUIEvent,
                 )
