@@ -38,25 +38,26 @@ fun StatusNetworkSpeedCategoryControls(
     uiState: Preference.SystemUI.StatusBar,
     onEvent: (SystemUIEvent) -> Unit,
 ) {
-    SwitchItem(
-        icon = ImageVector.vectorResource(id = R.drawable.net_speed),
-        title = stringResource(id = R.string.oneuix_supportRealTimeNetworkSpeed_title),
-        summary = stringResource(id = R.string.oneuix_supportRealTimeNetworkSpeed_summary),
-        checked = uiState.supportRealTimeNetworkSpeed,
-        onCheckedChange = {
-            onEvent(SystemUIEvent.StatusBar.SupportRealTimeNetworkSpeed(it))
-        },
-    )
-    SwitchItem(
-        icon = ImageVector.vectorResource(id = R.drawable.net_speed),
-        title = stringResource(id = R.string.oneuix_showSeparateUpDownNetworkSpeeds_title),
-        summary = stringResource(id = R.string.oneuix_showSeparateUpDownNetworkSpeeds_summary),
-        checked = uiState.showSeparateUpDownNetworkSpeeds,
-        onCheckedChange = {
-            onEvent(SystemUIEvent.StatusBar.ShowSeparateUpDownNetworkSpeeds(it))
-        },
-    )
     OneuiXPreferenceGroup {
+        SwitchItem(
+            icon = ImageVector.vectorResource(id = R.drawable.net_speed),
+            title = stringResource(id = R.string.oneuix_supportRealTimeNetworkSpeed_title),
+            summary = stringResource(id = R.string.oneuix_supportRealTimeNetworkSpeed_summary),
+            checked = uiState.supportRealTimeNetworkSpeed,
+            onCheckedChange = {
+                onEvent(SystemUIEvent.StatusBar.SupportRealTimeNetworkSpeed(it))
+            },
+        )
+        SwitchItem(
+            icon = ImageVector.vectorResource(id = R.drawable.net_speed),
+            title = stringResource(id = R.string.oneuix_showSeparateUpDownNetworkSpeeds_title),
+            summary = stringResource(id = R.string.oneuix_showSeparateUpDownNetworkSpeeds_summary),
+            checked = uiState.showSeparateUpDownNetworkSpeeds,
+            onCheckedChange = {
+                onEvent(SystemUIEvent.StatusBar.ShowSeparateUpDownNetworkSpeeds(it))
+            },
+        )
+
         var expanded by rememberSaveable { mutableStateOf(false) }
         var threshold by remember(uiState.networkSpeedThresholdKb) {
             mutableIntStateOf(uiState.networkSpeedThresholdKb)
