@@ -3,3 +3,6 @@
 -keep class com.oneuixp.app.statusbar.SystemUiEntry { *; }
 -keep class com.oneuixp.app.statusbar.SystemUiHeartbeat { *; }
 -dontwarn io.github.libxposed.annotation.**
+
+# Flux-style self-process activation probe: reflected from the Xposed entry.
+-keep class com.oneuixp.app.statusbar.ModuleStatus { public static boolean isActive(); }

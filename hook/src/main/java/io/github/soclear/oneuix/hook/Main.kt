@@ -31,6 +31,16 @@ class Main : XposedModule() {
     }
 
     override fun onPackageReady(param: XposedModuleInterface.PackageReadyParam) = with(param) {
+        if (packageName == "com.oneuixp.app" && processName == "com.oneuixp.app") {
+            runCatching {
+                val method = classLoader
+                    .loadClass("com.oneuixp.app.statusbar.ModuleStatus")
+                    .getDeclaredMethod("isActive")
+                this@Main.hook(method).intercept { true }
+            }
+            return@with
+        }
+
         OneuiXPStatusReporter.installIfSystemUi(this@Main, param, processName)
         if (!ENABLE_ONEUIX_FUNCTIONS) return@with
 

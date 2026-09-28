@@ -141,7 +141,7 @@ private fun UpdateCard(state: HomeUiState, actions: HomeActions) {
 
 @Composable
 private fun StatusCard() {
-    val status = rememberLsposedHomeStatus()
+    val status = LocalLsposedHomeStatus.current
     val active = status.active
     val mainCardColor = if (active) {
         when {

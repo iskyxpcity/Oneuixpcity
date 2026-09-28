@@ -45,6 +45,8 @@ import com.oneuixp.app.ui.navigation3.rememberNavigator
 import com.oneuixp.app.ui.screen.about.AboutScreen
 import com.oneuixp.app.ui.screen.colorpalette.ColorPaletteScreen
 import com.oneuixp.app.ui.screen.home.HomePager
+import com.oneuixp.app.ui.screen.home.LocalLsposedHomeStatus
+import com.oneuixp.app.ui.screen.home.rememberLsposedHomeStatus
 import com.oneuixp.app.ui.screen.status.StatusPager
 import com.oneuixp.app.ui.screen.status.StatusCategoryScreen
 import com.oneuixp.app.ui.screen.settings.SettingPager
@@ -77,6 +79,7 @@ class MainActivity : ComponentActivity() {
             val selectedMainPage by viewModel.selectedMainPage.collectAsStateWithLifecycle()
             val appSettings = uiState.appSettings
             val uiMode = uiState.uiMode
+            val lsposedStatus = rememberLsposedHomeStatus()
             val darkMode = appSettings.colorMode.isDark ||
                 (appSettings.colorMode.isSystem && isSystemInDarkTheme())
 
@@ -109,6 +112,7 @@ class MainActivity : ComponentActivity() {
                 LocalEnableFloatingBottomBar provides uiState.enableFloatingBottomBar,
                 LocalEnableFloatingBottomBarBlur provides uiState.enableFloatingBottomBarBlur,
                 LocalUiMode provides uiMode,
+                LocalLsposedHomeStatus provides lsposedStatus,
             ) {
                 OneuiXPTheme(appSettings = appSettings, uiMode = uiMode) {
                     val mainScreenEntry = @Composable {

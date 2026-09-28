@@ -1,7 +1,12 @@
 package io.github.soclear.oneuix.hook.util
 
+import android.app.Activity
 import android.app.Application
+import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.os.Build
 import android.net.Uri
 import android.os.Bundle
 import io.github.libxposed.api.XposedModule
@@ -17,8 +22,10 @@ import java.util.concurrent.atomic.AtomicBoolean
  * This code reports only; it does not mutate SystemUI views or enable OneUIX features.
  */
 object OneuiXPStatusReporter {
+    private const val ACTION_PING = "com.oneuixp.app.PING"
     private val attachInstalled = AtomicBoolean(false)
     private val heartbeatStarted = AtomicBoolean(false)
+    private val pingReceiverRegistered = AtomicBoolean(false)
 
     fun installIfSystemUi(
         module: XposedModule,
@@ -36,6 +43,7 @@ object OneuiXPStatusReporter {
                     val context = chain.args.firstOrNull() as? Context
                     if (context != null) {
                         reportLoaded(context, param.classLoader)
+                        registerPingReceiver(context)
                         startHeartbeat(context)
                     }
                 } catch (_: Throwable) {
@@ -45,6 +53,25 @@ object OneuiXPStatusReporter {
             }
         } catch (_: Throwable) {
             // Keep SystemUI safe without writing LSPosed module logs.
+        }
+    }
+
+    @Suppress("DEPRECATION")
+    private fun registerPingReceiver(context: Context) {
+        if (!pingReceiverRegistered.compareAndSet(false, true)) return
+        val appContext = context.applicationContext ?: context
+        val receiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent?) {
+                if (intent?.action == ACTION_PING && isOrderedBroadcast) {
+                    resultCode = Activity.RESULT_OK
+                }
+            }
+        }
+        val filter = IntentFilter(ACTION_PING)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            appContext.registerReceiver(receiver, filter, Context.RECEIVER_EXPORTED)
+        } else {
+            appContext.registerReceiver(receiver, filter)
         }
     }
 

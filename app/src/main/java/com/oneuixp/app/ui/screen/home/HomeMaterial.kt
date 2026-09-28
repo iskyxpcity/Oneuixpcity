@@ -146,7 +146,7 @@ private fun StatusCard(
     state: HomeUiState,
     actions: HomeActions,
 ) {
-    val status = rememberLsposedHomeStatus()
+    val status = LocalLsposedHomeStatus.current
     val active = status.active
 
     // Retained upstream v3.2.5 dashboard geometry; content is OneuiXP SystemUI state.

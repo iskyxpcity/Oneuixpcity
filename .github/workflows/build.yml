@@ -49,9 +49,9 @@ jobs:
           grep -Fq 'minApiVersion=102' app/src/main/resources/META-INF/xposed/module.prop
           grep -Fq 'targetApiVersion=102' app/src/main/resources/META-INF/xposed/module.prop
           SCOPE_COUNT=$(grep -cve '^[[:space:]]*$' app/src/main/resources/META-INF/xposed/scope.list)
-          test "$SCOPE_COUNT" -eq 25
+          test "$SCOPE_COUNT" -eq 26
           diff -u hook/src/main/resources/META-INF/xposed/scope.list app/src/main/resources/META-INF/xposed/scope.list 2>/dev/null || {
-            printf '%s\n'               system               com.android.settings               com.android.systemui               com.samsung.android.app.notes               com.samsung.android.app.sketchbook               com.samsung.android.app.telephonyui               com.samsung.android.calendar               com.samsung.android.da.daagent               com.samsung.android.dialer               com.samsung.android.incallui               com.samsung.android.mdecservice               com.samsung.android.messaging               com.samsung.android.service.airviewdictionary               com.samsung.android.shealthmonitor               com.samsung.android.sm_cn               com.samsung.android.themecenter               com.samsung.android.video               com.samsung.android.app.watchmanager               com.sec.android.app.camera               com.sec.android.app.launcher               com.sec.android.app.samsungapps               com.sec.android.app.sbrowser               com.sec.android.daemonapp               com.sec.android.gallery3d               com.sec.android.mimage.photoretouching               | diff -u - app/src/main/resources/META-INF/xposed/scope.list
+            printf '%s\n'               com.oneuixp.app               system               com.android.settings               com.android.systemui               com.samsung.android.app.notes               com.samsung.android.app.sketchbook               com.samsung.android.app.telephonyui               com.samsung.android.calendar               com.samsung.android.da.daagent               com.samsung.android.dialer               com.samsung.android.incallui               com.samsung.android.mdecservice               com.samsung.android.messaging               com.samsung.android.service.airviewdictionary               com.samsung.android.shealthmonitor               com.samsung.android.sm_cn               com.samsung.android.themecenter               com.samsung.android.video               com.samsung.android.app.watchmanager               com.sec.android.app.camera               com.sec.android.app.launcher               com.sec.android.app.samsungapps               com.sec.android.app.sbrowser               com.sec.android.daemonapp               com.sec.android.gallery3d               com.sec.android.mimage.photoretouching               | diff -u - app/src/main/resources/META-INF/xposed/scope.list
           }
           grep -Fq 'ENABLE_ONEUIX_FUNCTIONS = true' hook/src/main/java/io/github/soclear/oneuix/hook/Main.kt
           test -f hook/src/main/java/io/github/soclear/oneuix/hook/util/OneuiXPStatusReporter.kt
@@ -137,6 +137,7 @@ jobs:
           unzip -t dist/OneuiXP_1.0.260923_OWNER_SIGNED.apk
           unzip -p "$APK" META-INF/xposed/java_init.list | grep -Fxq 'io.github.soclear.oneuix.hook.Main'
           unzip -p "$APK" META-INF/xposed/module.prop | grep -Fq 'targetApiVersion=102'
+          unzip -p "$APK" META-INF/xposed/scope.list | grep -Fxq 'com.oneuixp.app'
           unzip -p "$APK" META-INF/xposed/scope.list | grep -Fxq 'com.android.systemui'
           (cd dist && sha256sum OneuiXP_1.0.260923_OWNER_SIGNED.apk > SHA256SUMS)
 
