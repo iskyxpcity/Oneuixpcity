@@ -6,6 +6,7 @@ import io.github.soclear.oneuix.common.Package
 import io.github.soclear.oneuix.common.PowerMenuAction
 import io.github.soclear.oneuix.common.Preference
 import io.github.soclear.oneuix.common.IgnoreUnknownKeysJson
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.encodeToJsonElement
@@ -145,6 +146,14 @@ private fun powerAction(name: String, label: String) = OneuiXSettingSpec(
 )
 
 object OneuiXFeatureCatalog {
+    // Keep the feature counter on the exact same preference semantics as the
+    // Features UI. Defaults must be encoded, otherwise default-enabled switches
+    // disappear from JSON and are incorrectly treated as disabled.
+    private val preferenceValueJson = Json {
+        ignoreUnknownKeys = true
+        encodeDefaults = true
+    }
+
     private val android =
         toggles(
             "Android",
@@ -603,7 +612,7 @@ object OneuiXFeatureCatalog {
     )
 
     private fun preferenceValue(preference: Preference, path: String): String {
-        var current: JsonElement = IgnoreUnknownKeysJson.encodeToJsonElement(
+        var current: JsonElement = preferenceValueJson.encodeToJsonElement(
             Preference.serializer(),
             preference,
         )
