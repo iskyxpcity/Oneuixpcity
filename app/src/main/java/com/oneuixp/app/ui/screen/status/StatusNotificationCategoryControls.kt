@@ -63,7 +63,6 @@ fun StatusNotificationCategoryControls(
                                 .fillMaxWidth()
                                 .padding(horizontal = 8.dp),
                             valueRange = 4f..20f,
-                            steps = 15,
                             onValueChangeFinished = {
                                 onEvent(SystemUIEvent.StatusBar.StatusBarMaxNotificationIcons(max))
                             },
