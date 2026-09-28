@@ -63,7 +63,6 @@ fun StatusBarTimeControls(
     uiState: Preference.SystemUI.StatusBar,
     onEvent: (SystemUIEvent) -> Unit,
     modifier: Modifier = Modifier,
-    showLegacyRuntimeToggle: Boolean = true,
 ) {
     Column(modifier = modifier) {
         OneuiXPreferenceGroup {
@@ -338,63 +337,14 @@ fun StatusBarTimeControls(
             }
         }
         }
-        if (showLegacyRuntimeToggle) {
-            SwitchItem(
-                title = stringResource(id = R.string.oneuix_updateStatusBarClockEverySecond_title),
-                summary = stringResource(id = R.string.oneuix_updateStatusBarClockEverySecond_summary),
-                icon = ImageVector.vectorResource(id = R.drawable.nest_clock_farsight_digital),
-                checked = uiState.updateStatusBarClockEverySecond,
-                onCheckedChange = {
-                    onEvent(SystemUIEvent.StatusBar.UpdateStatusBarClockEverySecond(it))
-                }
-            )
-        }
-    }
-}
-
-/**
- * OneuiXP-owned Status-tab clock controls.
- *
- * The upstream Function page keeps StatusBarTimeControls() with its original
- * combined runtime switch. Only the Status tab exposes per-second refresh and
- * tabular digits as two independent settings.
- */
-@Composable
-fun StatusBarTimeCategoryControls(
-    uiState: Preference.SystemUI.StatusBar,
-    onEvent: (SystemUIEvent) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Column(modifier = modifier) {
-        StatusBarTimeControls(
-            uiState = uiState,
-            onEvent = onEvent,
-            showLegacyRuntimeToggle = false,
-        )
-
         SwitchItem(
-            title = stringResource(id = R.string.status_time_update_every_second_title),
-            summary = stringResource(id = R.string.status_time_update_every_second_summary),
+            title = stringResource(id = R.string.oneuix_updateStatusBarClockEverySecond_title),
+            summary = stringResource(id = R.string.oneuix_updateStatusBarClockEverySecond_summary),
             icon = ImageVector.vectorResource(id = R.drawable.nest_clock_farsight_digital),
             checked = uiState.updateStatusBarClockEverySecond,
             onCheckedChange = {
-                onEvent(SystemUIEvent.StatusBar.StatusTimeUpdateEverySecond(it))
-            },
-        )
-
-        val monospacedDigits = if (uiState.useIndependentStatusBarClockRuntimeControls) {
-            uiState.statusBarClockMonospacedDigits
-        } else {
-            uiState.updateStatusBarClockEverySecond
-        }
-        SwitchItem(
-            title = stringResource(id = R.string.status_time_monospaced_digits_title),
-            summary = stringResource(id = R.string.status_time_monospaced_digits_summary),
-            icon = ImageVector.vectorResource(id = R.drawable.format_letter_spacing),
-            checked = monospacedDigits,
-            onCheckedChange = {
-                onEvent(SystemUIEvent.StatusBar.StatusTimeMonospacedDigits(it))
-            },
+                onEvent(SystemUIEvent.StatusBar.UpdateStatusBarClockEverySecond(it))
+            }
         )
     }
 }

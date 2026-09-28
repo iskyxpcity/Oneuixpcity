@@ -67,10 +67,6 @@ data class Preference(
             val fold7DoubleLineClockTimeScale: Float = 1f,
             val fold7DoubleLineClockDateScale: Float = 1f,
             val updateStatusBarClockEverySecond: Boolean = false,
-            // OneuiXP Status tab can split the upstream combined runtime-clock option.
-            // False preserves the upstream behavior: per-second refresh also enables tnum.
-            val useIndependentStatusBarClockRuntimeControls: Boolean = false,
-            val statusBarClockMonospacedDigits: Boolean = false,
             val hideSecureFolderStatusBarIcon: Boolean = false,
             val physicalEsimAdapterWorkaround: Boolean = false,
             val physicalEsimAdapterSimSlot: Int = 1,

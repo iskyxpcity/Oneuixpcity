@@ -70,9 +70,4 @@
     <string name="status_category_lockscreen">Lock screen</string>
     <string name="status_category_notification_center">Notification center</string>
     <string name="status_category_control_center">Control center</string>
-
-    <string name="status_time_update_every_second_title">Update time every second</string>
-    <string name="status_time_update_every_second_summary">Refresh the status bar clock once per second. Useful when the custom time format includes seconds.</string>
-    <string name="status_time_monospaced_digits_title">Tabular digits</string>
-    <string name="status_time_monospaced_digits_summary">Use equal-width digits to reduce horizontal shifting as the time changes.</string>
 </resources>
