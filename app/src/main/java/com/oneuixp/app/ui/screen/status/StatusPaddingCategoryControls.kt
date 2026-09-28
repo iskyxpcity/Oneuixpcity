@@ -142,7 +142,6 @@ fun StatusPaddingCategoryControls(
                             onValueChange = { top = it },
                             modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
                             valueRange = 0f..8f,
-                            steps = 79,
                             onValueChangeFinished = {
                                 onEvent(
                                     SystemUIEvent.StatusBar.StatusBarTopPaddingDp(
@@ -180,7 +179,6 @@ fun StatusPaddingCategoryControls(
                             onValueChange = { bottom = it },
                             modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
                             valueRange = 0f..8f,
-                            steps = 79,
                             onValueChangeFinished = {
                                 onEvent(
                                     SystemUIEvent.StatusBar.StatusBarBottomPaddingDp(
