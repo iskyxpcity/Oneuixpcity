@@ -40,7 +40,6 @@ import com.oneuixp.app.ui.theme.LocalEnableBlur
 import com.oneuixp.app.ui.util.BlurredBar
 import com.oneuixp.app.ui.util.rememberBlurBackdrop
 import com.oneuixp.app.ui.viewmodel.OneuiXToolsViewModel
-import io.github.soclear.oneuix.ui.category.StatusBarNetworkSpeedControls
 import io.github.soclear.oneuix.ui.category.StatusBarPowerControls
 import io.github.soclear.oneuix.ui.category.onSystemUIEvent
 import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
@@ -112,7 +111,7 @@ private fun StatusCategoryContent(
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState()),
             ) {
-                StatusBarNetworkSpeedControls(
+                StatusNetworkSpeedCategoryControls(
                     uiState = preference.systemUI.statusBar,
                     onEvent = toolsViewModel::onSystemUIEvent,
                 )
