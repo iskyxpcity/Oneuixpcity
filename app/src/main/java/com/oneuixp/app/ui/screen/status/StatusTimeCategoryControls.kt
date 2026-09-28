@@ -196,7 +196,6 @@ fun StatusTimeCategoryControls(
                                             .fillMaxWidth()
                                             .padding(horizontal = 8.dp),
                                         valueRange = 0.50f..1.10f,
-                                        steps = 39,
                                         onValueChangeFinished = {
                                             onEvent(
                                                 SystemUIEvent.StatusBar.Fold7DoubleLineClockTimeScale(
@@ -221,7 +220,6 @@ fun StatusTimeCategoryControls(
                                             .fillMaxWidth()
                                             .padding(horizontal = 8.dp),
                                         valueRange = 0.50f..1.10f,
-                                        steps = 39,
                                         onValueChangeFinished = {
                                             onEvent(
                                                 SystemUIEvent.StatusBar.Fold7DoubleLineClockDateScale(
@@ -297,7 +295,6 @@ fun StatusTimeCategoryControls(
                                     .fillMaxWidth()
                                     .padding(horizontal = 8.dp),
                                 valueRange = 0f..2f,
-                                steps = 19,
                                 onValueChangeFinished = {
                                     onEvent(
                                         SystemUIEvent.StatusBar.DoubleLineClockGapDp(
