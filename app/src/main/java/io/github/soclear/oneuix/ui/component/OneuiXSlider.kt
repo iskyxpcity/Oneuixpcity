@@ -25,7 +25,10 @@ fun OneuiXSlider(
             onValueChange = onValueChange,
             modifier = modifier,
             valueRange = valueRange,
-            steps = steps,
+            // Keep OneuiXP Material sliders visually consistent: use a smooth
+            // continuous track without Material's discrete tick marks.
+            // Callers still normalize/round values in onValueChangeFinished.
+            steps = 0,
             onValueChangeFinished = onValueChangeFinished,
         )
 
