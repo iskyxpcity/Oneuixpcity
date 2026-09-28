@@ -28,7 +28,6 @@ import io.github.soclear.oneuix.ui.component.OneuiXActionButton
 import io.github.soclear.oneuix.ui.component.OneuiXChildVisibility
 import io.github.soclear.oneuix.ui.component.OneuiXInfoItem
 import io.github.soclear.oneuix.ui.component.OneuiXInlineTextField
-import io.github.soclear.oneuix.ui.component.OneuiXPreferenceGroup
 import io.github.soclear.oneuix.ui.component.OneuiXSlider
 import io.github.soclear.oneuix.ui.component.OneuiXSupportingText
 import io.github.soclear.oneuix.ui.component.SelectItem
@@ -65,202 +64,208 @@ fun StatusTimeCategoryControls(
     onEvent: (SystemUIEvent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(modifier = modifier) {
-        OneuiXPreferenceGroup {
-        Column {
-            var expanded by rememberSaveable { mutableStateOf(false) }
+    val isDoubleLine =
+        uiState.setStatusBarClockFormat && uiState.statusBarClockFormat.contains('\n')
+    val isFold7 = Build.MODEL.startsWith("SM-F966", ignoreCase = true)
 
-            SwitchItem(
-                title = stringResource(id = R.string.oneuix_setStatusBarClockFormat_title),
-                modifier = Modifier.animateContentSize(),
-                summary = if (uiState.setStatusBarClockFormat) {
-                    uiState.statusBarClockFormat
-                } else null,
-                icon = ImageVector.vectorResource(id = R.drawable.nest_clock_farsight_digital),
-                clickable = true,
-                onClick = { expanded = !expanded },
-                checked = uiState.setStatusBarClockFormat,
-                onCheckedChange = {
-                    if (it && uiState.statusBarClockFormat == "HH:mm") {
-                        expanded = true
-                    } else if (!it) {
-                        expanded = false
-                    }
-                    onEvent(SystemUIEvent.StatusBar.SetStatusBarClockFormat(it))
-                }
-            )
+    StatusThemeGroup(
+        modifier = modifier,
+        items = buildList {
+            add {
+                var expanded by rememberSaveable { mutableStateOf(false) }
 
-            OneuiXChildVisibility(expanded && uiState.setStatusBarClockFormat) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                ) {
-                    var tempDataTimeFormat by remember {
-                        mutableStateOf(uiState.statusBarClockFormat)
-                    }
-                    var label by remember { mutableStateOf("") }
-                    OneuiXInlineTextField(
-                        value = tempDataTimeFormat,
-                        onValueChange = {
-                            tempDataTimeFormat = it
-                            label = runCatching {
-                                StatusBarClockFormatter.format(it, LocalDateTime.now())
-                            }.getOrElse { "error" }
-                        },
-                        modifier = Modifier.weight(1f),
-                        labelText = label.takeIf { it.isNotBlank() },
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    OneuiXActionButton(
-                        text = stringResource(id = R.string.oneuix_confirm),
-                        primary = true,
-                        onClick = {
-                            var right = true
-                            label = try {
-                                StatusBarClockFormatter.format(
-                                    tempDataTimeFormat,
-                                    LocalDateTime.now()
-                                )
-                            } catch (_: Throwable) {
-                                right = false
-                                "error"
-                            }
-                            if (right) {
-                                onEvent(
-                                    SystemUIEvent.StatusBar.StatusBarClockFormat(
-                                        tempDataTimeFormat
+                SwitchItem(
+                    title = stringResource(id = R.string.oneuix_setStatusBarClockFormat_title),
+                    modifier = Modifier.animateContentSize(),
+                    summary = if (uiState.setStatusBarClockFormat) {
+                        uiState.statusBarClockFormat
+                    } else null,
+                    icon = ImageVector.vectorResource(id = R.drawable.nest_clock_farsight_digital),
+                    clickable = true,
+                    onClick = { expanded = !expanded },
+                    checked = uiState.setStatusBarClockFormat,
+                    onCheckedChange = {
+                        if (it && uiState.statusBarClockFormat == "HH:mm") {
+                            expanded = true
+                        } else if (!it) {
+                            expanded = false
+                        }
+                        onEvent(SystemUIEvent.StatusBar.SetStatusBarClockFormat(it))
+                    },
+                )
+
+                OneuiXChildVisibility(expanded && uiState.setStatusBarClockFormat) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                    ) {
+                        var tempDataTimeFormat by remember {
+                            mutableStateOf(uiState.statusBarClockFormat)
+                        }
+                        var label by remember { mutableStateOf("") }
+                        OneuiXInlineTextField(
+                            value = tempDataTimeFormat,
+                            onValueChange = {
+                                tempDataTimeFormat = it
+                                label = runCatching {
+                                    StatusBarClockFormatter.format(it, LocalDateTime.now())
+                                }.getOrElse { "error" }
+                            },
+                            modifier = Modifier.weight(1f),
+                            labelText = label.takeIf { it.isNotBlank() },
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        OneuiXActionButton(
+                            text = stringResource(id = R.string.oneuix_confirm),
+                            primary = true,
+                            onClick = {
+                                var right = true
+                                label = try {
+                                    StatusBarClockFormatter.format(
+                                        tempDataTimeFormat,
+                                        LocalDateTime.now(),
                                     )
-                                )
-                            }
-                        },
-                    )
+                                } catch (_: Throwable) {
+                                    right = false
+                                    "error"
+                                }
+                                if (right) {
+                                    onEvent(
+                                        SystemUIEvent.StatusBar.StatusBarClockFormat(
+                                            tempDataTimeFormat
+                                        )
+                                    )
+                                }
+                            },
+                        )
+                    }
                 }
             }
-        }
-        if (
-            uiState.setStatusBarClockFormat &&
-                uiState.statusBarClockFormat.contains('\n')
-        ) {
-            Column {
-                val isFold7 = Build.MODEL.startsWith("SM-F966", ignoreCase = true)
+
+            if (isDoubleLine) {
                 if (isFold7) {
-                    SwitchItem(
-                        icon = ImageVector.vectorResource(id = R.drawable.format_size),
-                        title = stringResource(
-                            id = R.string.oneuix_fold7CustomDoubleLineClockScale_title
-                        ),
-                        showChildIndicator = true,
-                checked = uiState.useFold7CustomDoubleLineClockScale,
-                        onCheckedChange = {
-                            onEvent(
-                                SystemUIEvent.StatusBar.SetFold7CustomDoubleLineClockScale(it)
-                            )
-                        }
-                    )
-                    OneuiXChildVisibility(uiState.useFold7CustomDoubleLineClockScale) {
-                        Column {
-                            var timeScale by remember(
-                                uiState.fold7DoubleLineClockTimeScale
-                            ) {
-                                mutableFloatStateOf(
+                    add {
+                        SwitchItem(
+                            icon = ImageVector.vectorResource(id = R.drawable.format_size),
+                            title = stringResource(
+                                id = R.string.oneuix_fold7CustomDoubleLineClockScale_title
+                            ),
+                            showChildIndicator = true,
+                            checked = uiState.useFold7CustomDoubleLineClockScale,
+                            onCheckedChange = {
+                                onEvent(
+                                    SystemUIEvent.StatusBar.SetFold7CustomDoubleLineClockScale(it)
+                                )
+                            },
+                        )
+                        OneuiXChildVisibility(uiState.useFold7CustomDoubleLineClockScale) {
+                            Column {
+                                var timeScale by remember(
                                     uiState.fold7DoubleLineClockTimeScale
-                                )
-                            }
-                            OneuiXInfoItem(
-                                title = stringResource(
-                                    id = R.string.oneuix_fold7DoubleLineClockTimeScale_title
-                                ),
-                                summary = stringResource(
-                                    id = R.string.oneuix_fold7DoubleLineClockTimeScale_summary,
-                                    timeScale,
-                                ),
-                            )
-                            OneuiXSlider(
-                                value = timeScale,
-                                onValueChange = { timeScale = it },
-                                modifier = Modifier.padding(horizontal = 16.dp),
-                                valueRange = 0.50f..1.10f,
-                                steps = 39,
-                                onValueChangeFinished = {
-                                    onEvent(
-                                        SystemUIEvent.StatusBar.Fold7DoubleLineClockTimeScale(
-                                            (timeScale * 100f).roundToInt() / 100f
-                                        )
-                                    )
+                                ) {
+                                    mutableFloatStateOf(uiState.fold7DoubleLineClockTimeScale)
                                 }
-                            )
-                            var dateScale by remember(
-                                uiState.fold7DoubleLineClockDateScale
-                            ) {
-                                mutableFloatStateOf(
+                                OneuiXInfoItem(
+                                    title = stringResource(
+                                        id = R.string.oneuix_fold7DoubleLineClockTimeScale_title
+                                    ),
+                                    summary = stringResource(
+                                        id = R.string.oneuix_fold7DoubleLineClockTimeScale_summary,
+                                        timeScale,
+                                    ),
+                                )
+                                OneuiXSlider(
+                                    value = timeScale,
+                                    onValueChange = { timeScale = it },
+                                    modifier = Modifier.padding(horizontal = 16.dp),
+                                    valueRange = 0.50f..1.10f,
+                                    steps = 39,
+                                    onValueChangeFinished = {
+                                        onEvent(
+                                            SystemUIEvent.StatusBar.Fold7DoubleLineClockTimeScale(
+                                                (timeScale * 100f).roundToInt() / 100f
+                                            )
+                                        )
+                                    },
+                                )
+
+                                var dateScale by remember(
                                     uiState.fold7DoubleLineClockDateScale
+                                ) {
+                                    mutableFloatStateOf(uiState.fold7DoubleLineClockDateScale)
+                                }
+                                OneuiXInfoItem(
+                                    title = stringResource(
+                                        id = R.string.oneuix_fold7DoubleLineClockDateScale_title
+                                    ),
+                                    summary = stringResource(
+                                        id = R.string.oneuix_fold7DoubleLineClockDateScale_summary,
+                                        dateScale,
+                                    ),
+                                )
+                                OneuiXSlider(
+                                    value = dateScale,
+                                    onValueChange = { dateScale = it },
+                                    modifier = Modifier.padding(horizontal = 16.dp),
+                                    valueRange = 0.50f..1.10f,
+                                    steps = 39,
+                                    onValueChangeFinished = {
+                                        onEvent(
+                                            SystemUIEvent.StatusBar.Fold7DoubleLineClockDateScale(
+                                                (dateScale * 100f).roundToInt() / 100f
+                                            )
+                                        )
+                                    },
                                 )
                             }
-                            OneuiXInfoItem(
-                                title = stringResource(
-                                    id = R.string.oneuix_fold7DoubleLineClockDateScale_title
-                                ),
-                                summary = stringResource(
-                                    id = R.string.oneuix_fold7DoubleLineClockDateScale_summary,
-                                    dateScale,
-                                ),
-                            )
-                            OneuiXSlider(
-                                value = dateScale,
-                                onValueChange = { dateScale = it },
-                                modifier = Modifier.padding(horizontal = 16.dp),
-                                valueRange = 0.50f..1.10f,
-                                steps = 39,
-                                onValueChangeFinished = {
-                                    onEvent(
-                                        SystemUIEvent.StatusBar.Fold7DoubleLineClockDateScale(
-                                            (dateScale * 100f).roundToInt() / 100f
-                                        )
+                        }
+                    }
+                } else {
+                    add {
+                        val sizeLabels = listOf(
+                            stringResource(id = R.string.oneuix_statusBarDoubleLineClockSize_small),
+                            stringResource(id = R.string.oneuix_statusBarDoubleLineClockSize_compact),
+                            stringResource(id = R.string.oneuix_statusBarDoubleLineClockSize_standard),
+                            stringResource(id = R.string.oneuix_statusBarDoubleLineClockSize_large),
+                            stringResource(id = R.string.oneuix_statusBarDoubleLineClockSize_extraLarge),
+                        )
+                        val selectedSize = uiState.statusBarDoubleLineClockSize.ifBlank {
+                            statusCategoryTimeLegacyDoubleLineClockSize(uiState.statusBarClockTextScale)
+                        }
+                        val selectedIndex =
+                            STATUS_CATEGORY_TIME_DOUBLE_LINE_CLOCK_SIZE_VALUES.indexOf(
+                                selectedSize
+                            ).coerceAtLeast(0)
+                        SelectItem(
+                            icon = ImageVector.vectorResource(id = R.drawable.format_size),
+                            title = stringResource(
+                                id = R.string.oneuix_statusBarDoubleLineClockSize_title
+                            ),
+                            entries = sizeLabels,
+                            selectedIndex = selectedIndex,
+                            onSelectedIndexChange = {
+                                onEvent(
+                                    SystemUIEvent.StatusBar.StatusBarDoubleLineClockSize(
+                                        STATUS_CATEGORY_TIME_DOUBLE_LINE_CLOCK_SIZE_VALUES[it]
                                     )
-                                }
-                            )
-                        }
-                    }
-                }
-                if (!isFold7) {
-                    val sizeLabels = listOf(
-                        stringResource(id = R.string.oneuix_statusBarDoubleLineClockSize_small),
-                        stringResource(id = R.string.oneuix_statusBarDoubleLineClockSize_compact),
-                        stringResource(id = R.string.oneuix_statusBarDoubleLineClockSize_standard),
-                        stringResource(id = R.string.oneuix_statusBarDoubleLineClockSize_large),
-                        stringResource(id = R.string.oneuix_statusBarDoubleLineClockSize_extraLarge),
-                    )
-                    val selectedSize = uiState.statusBarDoubleLineClockSize.ifBlank {
-                        statusCategoryTimeLegacyDoubleLineClockSize(uiState.statusBarClockTextScale)
-                    }
-                    val selectedIndex = STATUS_CATEGORY_TIME_DOUBLE_LINE_CLOCK_SIZE_VALUES.indexOf(
-                        selectedSize
-                    ).coerceAtLeast(0)
-                    SelectItem(
-                        icon = ImageVector.vectorResource(id = R.drawable.format_size),
-                        title = stringResource(id = R.string.oneuix_statusBarDoubleLineClockSize_title),
-                        entries = sizeLabels,
-                        selectedIndex = selectedIndex,
-                        onSelectedIndexChange = {
-                            onEvent(
-                                SystemUIEvent.StatusBar.StatusBarDoubleLineClockSize(
-                                    STATUS_CATEGORY_TIME_DOUBLE_LINE_CLOCK_SIZE_VALUES[it]
                                 )
-                            )
-                        }
-                    )
+                            },
+                        )
+                    }
                 }
-                var lineGapDp by remember(uiState.doubleLineClockGapDp) {
-                    mutableFloatStateOf(uiState.doubleLineClockGapDp)
-                }
-                var gapExpanded by rememberSaveable { mutableStateOf(false) }
-                OneuiXPreferenceGroup {
+
+                add {
+                    var lineGapDp by remember(uiState.doubleLineClockGapDp) {
+                        mutableFloatStateOf(uiState.doubleLineClockGapDp)
+                    }
+                    var gapExpanded by rememberSaveable { mutableStateOf(false) }
+
                     SwitchItem(
                         title = stringResource(id = R.string.oneuix_statusBarDoubleLineClockGap_title),
                         summary = if (uiState.modifyDoubleLineClockGap) {
                             stringResource(
                                 id = R.string.oneuix_statusBarDoubleLineClockGap_summary,
-                                lineGapDp
+                                lineGapDp,
                             )
                         } else null,
                         icon = ImageVector.vectorResource(id = R.drawable.format_letter_spacing),
@@ -270,7 +275,7 @@ fun StatusTimeCategoryControls(
                         onCheckedChange = {
                             gapExpanded = it
                             onEvent(SystemUIEvent.StatusBar.ModifyDoubleLineClockGap(it))
-                        }
+                        },
                     )
                     OneuiXChildVisibility(
                         gapExpanded && uiState.modifyDoubleLineClockGap
@@ -287,65 +292,74 @@ fun StatusTimeCategoryControls(
                                         (lineGapDp * 10f).roundToInt() / 10f
                                     )
                                 )
-                            }
+                            },
                         )
                     }
                 }
-                if (!isFold7) {
-                    OneuiXSupportingText(
-                        text = stringResource(id = R.string.oneuix_statusBarDoubleLineClockSize_summary),
-                        modifier = Modifier.padding(horizontal = 16.dp)
-                    )
-                }
-            }
-        } else {
-            Column {
-                var scale by remember {
-                    mutableFloatStateOf(uiState.statusBarClockTextScale)
-                }
-                var expanded by rememberSaveable { mutableStateOf(false) }
-
-                SwitchItem(
-                    title = stringResource(id = R.string.oneuix_setStatusBarClockTextScale_title),
-                    modifier = Modifier.animateContentSize(),
-                    summary = if (uiState.setStatusBarClockTextScale) {
-                        "%.2fx".format(scale)
-                    } else null,
-                    icon = ImageVector.vectorResource(id = R.drawable.format_size),
-                    clickable = true,
-                    onClick = { expanded = !expanded },
-                    checked = uiState.setStatusBarClockTextScale,
-                    onCheckedChange = {
-                        if (it && scale == 1f) {
-                            expanded = true
-                        } else if (!it) {
-                            expanded = false
-                        }
-                        onEvent(SystemUIEvent.StatusBar.SetStatusBarClockTextScale(it))
+            } else {
+                add {
+                    var scale by remember(uiState.statusBarClockTextScale) {
+                        mutableFloatStateOf(uiState.statusBarClockTextScale)
                     }
-                )
-                OneuiXChildVisibility(expanded && uiState.setStatusBarClockTextScale) {
-                    OneuiXSlider(
-                        value = scale,
-                        onValueChange = { scale = it },
-                        modifier = Modifier.padding(horizontal = 16.dp),
-                        valueRange = 0.5f..2.5f,
-                        onValueChangeFinished = {
-                            onEvent(SystemUIEvent.StatusBar.StatusBarClockTextScale(scale))
-                        }
+                    var expanded by rememberSaveable { mutableStateOf(false) }
+
+                    SwitchItem(
+                        title = stringResource(id = R.string.oneuix_setStatusBarClockTextScale_title),
+                        modifier = Modifier.animateContentSize(),
+                        summary = if (uiState.setStatusBarClockTextScale) {
+                            "%.2fx".format(scale)
+                        } else null,
+                        icon = ImageVector.vectorResource(id = R.drawable.format_size),
+                        clickable = true,
+                        onClick = { expanded = !expanded },
+                        checked = uiState.setStatusBarClockTextScale,
+                        onCheckedChange = {
+                            if (it && scale == 1f) {
+                                expanded = true
+                            } else if (!it) {
+                                expanded = false
+                            }
+                            onEvent(SystemUIEvent.StatusBar.SetStatusBarClockTextScale(it))
+                        },
                     )
+                    OneuiXChildVisibility(expanded && uiState.setStatusBarClockTextScale) {
+                        OneuiXSlider(
+                            value = scale,
+                            onValueChange = { scale = it },
+                            modifier = Modifier.padding(horizontal = 16.dp),
+                            valueRange = 0.5f..2.5f,
+                            onValueChangeFinished = {
+                                onEvent(SystemUIEvent.StatusBar.StatusBarClockTextScale(scale))
+                            },
+                        )
+                    }
                 }
             }
-        }
-        }
-        SwitchItem(
-            title = stringResource(id = R.string.oneuix_updateStatusBarClockEverySecond_title),
-            summary = stringResource(id = R.string.oneuix_updateStatusBarClockEverySecond_summary),
-            icon = ImageVector.vectorResource(id = R.drawable.nest_clock_farsight_digital),
-            checked = uiState.updateStatusBarClockEverySecond,
-            onCheckedChange = {
-                onEvent(SystemUIEvent.StatusBar.UpdateStatusBarClockEverySecond(it))
+
+            add {
+                SwitchItem(
+                    title = stringResource(
+                        id = R.string.oneuix_updateStatusBarClockEverySecond_title
+                    ),
+                    summary = stringResource(
+                        id = R.string.oneuix_updateStatusBarClockEverySecond_summary
+                    ),
+                    icon = ImageVector.vectorResource(
+                        id = R.drawable.nest_clock_farsight_digital
+                    ),
+                    checked = uiState.updateStatusBarClockEverySecond,
+                    onCheckedChange = {
+                        onEvent(SystemUIEvent.StatusBar.UpdateStatusBarClockEverySecond(it))
+                    },
+                )
             }
+        },
+    )
+
+    if (isDoubleLine && !isFold7) {
+        OneuiXSupportingText(
+            text = stringResource(id = R.string.oneuix_statusBarDoubleLineClockSize_summary),
+            modifier = Modifier.padding(horizontal = 16.dp),
         )
     }
 }
