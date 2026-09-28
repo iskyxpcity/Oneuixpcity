@@ -74,6 +74,20 @@ private fun StatusCategoryContent(
     modifier: Modifier = Modifier,
 ) {
     when (category) {
+        StatusCategory.Padding -> {
+            val toolsViewModel = viewModel<OneuiXToolsViewModel>()
+            val preference = toolsViewModel.preference.collectAsStateWithLifecycle().value
+            Column(
+                modifier = modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState()),
+            ) {
+                StatusPaddingCategoryControls(
+                    uiState = preference.systemUI.statusBar,
+                    onEvent = toolsViewModel::onSystemUIEvent,
+                )
+            }
+        }
         StatusCategory.Time -> {
             val toolsViewModel = viewModel<OneuiXToolsViewModel>()
             val preference = toolsViewModel.preference.collectAsStateWithLifecycle().value
@@ -151,6 +165,20 @@ private fun StatusCategoryContent(
                     .verticalScroll(rememberScrollState()),
             ) {
                 StatusWifiCategoryControls()
+            }
+        }
+        StatusCategory.Bluetooth -> {
+            val toolsViewModel = viewModel<OneuiXToolsViewModel>()
+            val preference = toolsViewModel.preference.collectAsStateWithLifecycle().value
+            Column(
+                modifier = modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState()),
+            ) {
+                StatusBluetoothCategoryControls(
+                    uiState = preference.systemUI.statusBar,
+                    onEvent = toolsViewModel::onSystemUIEvent,
+                )
             }
         }
         StatusCategory.Lockscreen -> {

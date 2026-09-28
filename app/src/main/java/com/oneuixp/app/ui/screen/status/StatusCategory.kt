@@ -9,6 +9,11 @@ enum class StatusCategory(
     @get:DrawableRes val iconRes: Int,
     val backgroundArgb: Int,
 ) {
+    Padding(
+        R.string.status_category_padding,
+        R.drawable.padding,
+        0xFF607D8B.toInt(),
+    ),
     Time(
         R.string.status_category_time,
         R.drawable.flux_status_time,
@@ -38,6 +43,11 @@ enum class StatusCategory(
         R.string.status_category_wifi,
         R.drawable.flux_status_wifi,
         0xFF4C8DFF.toInt(),
+    ),
+    Bluetooth(
+        R.string.status_category_bluetooth,
+        R.drawable.bluetooth,
+        0xFF536DFE.toInt(),
     ),
     Lockscreen(
         R.string.status_category_lockscreen,
