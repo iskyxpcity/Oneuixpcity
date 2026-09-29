@@ -59,9 +59,10 @@ fun StatusBarNetworkSpeedControls(
         },
     )
 
-    OneuiXPreferenceGroup {
-        var expanded by rememberSaveable { mutableStateOf(false) }
-        var lineGapDp by remember(uiState.networkSpeedLineGapDp) {
+    if (uiState.showSeparateUpDownNetworkSpeeds) {
+        OneuiXPreferenceGroup {
+            var expanded by rememberSaveable { mutableStateOf(false) }
+            var lineGapDp by remember(uiState.networkSpeedLineGapDp) {
             mutableFloatStateOf(uiState.networkSpeedLineGapDp)
         }
         SwitchItem(
@@ -162,6 +163,8 @@ fun StatusBarNetworkSpeedControls(
                 },
             )
         }
+    }
+
     }
 
     OneuiXPreferenceGroup {
