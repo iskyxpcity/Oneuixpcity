@@ -29,7 +29,8 @@ import io.github.soclear.oneuix.common.R as CommonR
  * Independent Status > Other controls extracted from the legacy System UI page.
  *
  * UI ownership is third-page-only; Preference, SystemUIEvent and hook logic stay
- * shared with the legacy implementation.
+ * shared with the legacy implementation. The legacy System UI category stays
+ * in source and is hidden only from the second-page category list.
  */
 @Composable
 fun StatusOtherCategoryControls(
