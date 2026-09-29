@@ -55,6 +55,10 @@ data class Preference(
             val supportRealTimeNetworkSpeed: Boolean = true,
             val showSeparateUpDownNetworkSpeeds: Boolean = false,
             val networkSpeedThresholdKb: Int = 0,
+            val modifyNetworkSpeedLineGap: Boolean = false,
+            val networkSpeedLineGapDp: Float = 0f,
+            val setNetworkSpeedTextScale: Boolean = false,
+            val networkSpeedTextScale: Float = 1f,
             val setStatusBarClockFormat: Boolean = false,
             val statusBarClockFormat: String = "HH:mm",
             // Empty means this is a pre-V11 preference. The runtime maps its old float preset.
