@@ -13,14 +13,19 @@ data class LsposedFrameworkSnapshot(
     val connected: Boolean = false,
     val scopeKnown: Boolean = false,
     val scope: Set<String> = emptySet(),
+    val pingAlive: Boolean = false,
+    val active: Boolean = false,
 ) {
     val systemUiScopeActive: Boolean
         get() = scopeKnown && "com.android.systemui" in scope
 }
 
 /**
- * API 102 modern module service: configuration/scope state, not injection state.
- * The API102 META-INF module entry is essential for the framework to bind.
+ * Flux 3.8.0 style connection state:
+ * - register one modern Xposed service listener
+ * - when a service is available, getScope() is authoritative
+ * - if service/getScope is unavailable, fall back to the latest directed PING
+ * - no periodic polling loop
  */
 object LsposedFrameworkStatus {
     private const val TAG = "OneuiXP-LSPosed"
@@ -33,14 +38,15 @@ object LsposedFrameworkStatus {
 
     fun initialize() {
         if (!initialized.compareAndSet(false, true)) return
-        Log.i(TAG, "Registering modern Xposed service listener")
+        Log.i(TAG, "Registering Flux-style modern Xposed service listener")
         XposedServiceHelper.registerListener(object : XposedServiceHelper.OnServiceListener {
             override fun onServiceBind(boundService: XposedService) {
-                Log.i(TAG, "Modern Xposed service binder received")
                 service = boundService
-                _state.value = LsposedFrameworkSnapshot(connected = true)
                 notifyServiceObservers(boundService)
-                Thread({ refresh() }, "OneuiXP-LSPosed-initial-scope").apply {
+                Thread(
+                    { refreshScope() },
+                    "OneuiXP-LSPosed-bind",
+                ).apply {
                     isDaemon = true
                     start()
                 }
@@ -49,19 +55,13 @@ object LsposedFrameworkStatus {
             override fun onServiceDied(deadService: XposedService) {
                 if (service === deadService) {
                     service = null
-                    Log.w(TAG, "Modern Xposed service binder died")
-                    _state.value = LsposedFrameworkSnapshot()
                     notifyServiceObservers(null)
+                    publishWithoutService()
                 }
             }
         })
     }
 
-    /**
-     * libxposed-service exposes a single XposedServiceHelper listener slot.
-     * Keep framework status as the only registrar, then fan the same Binder out
-     * to preference sync and any future in-app consumers.
-     */
     fun observeService(observer: (XposedService?) -> Unit) {
         serviceObservers.add(observer)
         observer(service)
@@ -74,11 +74,14 @@ object LsposedFrameworkStatus {
         }
     }
 
-    /** Must not run on the main thread: getScope makes a Binder round-trip. */
-    fun refresh() {
+    /**
+     * Flux getActivated(): service/getScope first; if unavailable, use hookAlive.
+     * Binder work must not run on the main thread.
+     */
+    fun refreshScope() {
         val current = service
         if (current == null) {
-            if (_state.value.connected) _state.value = LsposedFrameworkSnapshot()
+            publishWithoutService()
             return
         }
 
@@ -89,23 +92,59 @@ object LsposedFrameworkStatus {
                 .filter(String::isNotEmpty)
                 .toSet()
         }
+
         val previous = _state.value
         if (result.isSuccess) {
+            val scope = result.getOrThrow()
             val next = LsposedFrameworkSnapshot(
                 connected = true,
                 scopeKnown = true,
-                scope = result.getOrThrow(),
+                scope = scope,
+                pingAlive = previous.pingAlive,
+                active = "com.android.systemui" in scope,
             )
             if (next != previous) {
-                Log.i(TAG, "Live manager scope count=" + next.scope.size +
-                    ", SystemUI scope=" + next.systemUiScopeActive)
+                Log.i(
+                    TAG,
+                    "Flux-style scope count=${scope.size}, SystemUI=${next.active}",
+                )
                 _state.value = next
             }
         } else {
-            if (previous.scopeKnown || !previous.connected) {
-                Log.w(TAG, "Connected to LSPosed but getScope failed", result.exceptionOrNull())
-                _state.value = LsposedFrameworkSnapshot(connected = true)
-            }
+            Log.w(TAG, "getScope failed; falling back to PING", result.exceptionOrNull())
+            _state.value = LsposedFrameworkSnapshot(
+                connected = true,
+                scopeKnown = false,
+                scope = emptySet(),
+                pingAlive = previous.pingAlive,
+                active = previous.pingAlive,
+            )
         }
+    }
+
+    fun updatePingAlive(alive: Boolean) {
+        val previous = _state.value
+        val active = if (previous.connected && previous.scopeKnown) {
+            previous.systemUiScopeActive
+        } else {
+            alive
+        }
+        val next = previous.copy(
+            pingAlive = alive,
+            active = active,
+        )
+        if (next != previous) _state.value = next
+    }
+
+    private fun publishWithoutService() {
+        val previous = _state.value
+        val next = LsposedFrameworkSnapshot(
+            connected = false,
+            scopeKnown = false,
+            scope = emptySet(),
+            pingAlive = previous.pingAlive,
+            active = previous.pingAlive,
+        )
+        if (next != previous) _state.value = next
     }
 }
