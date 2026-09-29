@@ -217,18 +217,37 @@ object Network {
                                 lineSpacingMultiplier,
                             )
                         }
-
-                        if (textScale != null) {
-                            setTextSize(
-                                TypedValue.COMPLEX_UNIT_PX,
-                                textSize * textScale.coerceIn(0.5f, 2f),
-                            )
-                        }
                     }
                 } catch (t: Throwable) {
                     xlog(t)
                 }
                 result
+            }
+
+            // Samsung's controller calls NetspeedView.scaleView() after inflation and
+            // again on density/font-scale changes. scaleView() resets mContentView's
+            // text size from status_bar_netspeed_size, so applying our scale only in
+            // onFinishInflate() is overwritten. Apply the user multiplier after each
+            // Samsung scaleView() call, while leaving Samsung's own end padding intact.
+            if (textScale != null) {
+                val scaleViewMethod = netspeedViewClass.getDeclaredMethod(
+                    "scaleView",
+                    Float::class.javaPrimitiveType,
+                )
+                xposedModule.hook(scaleViewMethod).intercept { chain ->
+                    val result = chain.proceed()
+                    try {
+                        (chain.thisObject.reflect["mContentView"] as? TextView)?.apply {
+                            setTextSize(
+                                TypedValue.COMPLEX_UNIT_PX,
+                                textSize * textScale.coerceIn(0.5f, 2f),
+                            )
+                        }
+                    } catch (t: Throwable) {
+                        xlog(t)
+                    }
+                    result
+                }
             }
         } catch (t: Throwable) {
             xlog(t)
