@@ -15,14 +15,20 @@ import io.github.soclear.oneuix.common.PowerMenuAction
 import io.github.soclear.oneuix.common.Preference
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import io.github.soclear.oneuix.common.ProductionPreferenceMigration
+import java.io.InputStream
+import java.io.OutputStream
 
 class OneuiXToolsViewModel : ViewModel() {
     private val dataStore = oneuiXPApp.oneuiXDataStore
@@ -49,6 +55,32 @@ class OneuiXToolsViewModel : ViewModel() {
             dataStore.updateData(nextPreference)
             OneuiXPreferenceBridge.ensureSynchronized(oneuiXPApp)
         }
+    }
+
+    /**
+     * OneUIX-Mod compatible full preference backup.
+     * The exported JSON deliberately contains only the Preference payload, not
+     * OneuiXP's local synchronization marker.
+     */
+    suspend fun backupTo(output: OutputStream) = withContext(Dispatchers.IO) {
+        output.write(
+            IgnoreUnknownKeysJson.encodeToString(
+                Preference.serializer(),
+                dataStore.data.first(),
+            ).encodeToByteArray()
+        )
+    }
+
+    /**
+     * Restore through the same production migration decoder used by OneUIX-Mod
+     * so backups from older schemas remain importable.
+     */
+    suspend fun restoreFrom(input: InputStream) = withContext(Dispatchers.IO) {
+        val restored = ProductionPreferenceMigration.decode(
+            input.readBytes().decodeToString()
+        )
+        dataStore.updateData { restored }
+        OneuiXPreferenceBridge.ensureSynchronized(oneuiXPApp)
     }
 
 
