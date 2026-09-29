@@ -1,7 +1,7 @@
 package com.oneuixp.app.ui.component.configtransfer
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Cloud
+import androidx.compose.material.icons.automirrored.outlined.Article
 import androidx.compose.material3.DropdownMenuGroup
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.DropdownMenuPopup
@@ -26,7 +26,7 @@ fun ConfigTransferPopupMaterial(
 
     IconButton(onClick = { expanded = true }) {
         Icon(
-            imageVector = Icons.Outlined.Cloud,
+            imageVector = Icons.AutoMirrored.Outlined.Article,
             contentDescription = stringResource(R.string.oneuix_backup_config),
         )
     }
