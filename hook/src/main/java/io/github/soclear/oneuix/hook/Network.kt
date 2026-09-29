@@ -8,7 +8,9 @@ import android.os.Build
 import android.os.Handler
 import android.os.Message
 import android.os.SystemClock
-import android.util.TypedValue
+import android.text.SpannableString
+import android.text.Spanned
+import android.text.style.RelativeSizeSpan
 import android.view.Gravity
 import android.view.View
 import android.widget.TextView
@@ -56,7 +58,8 @@ object Network {
         intervalMillisecond: Long = 3000L,
         thresholdKb: Int = 0,
         lineGapDp: Float? = null,
-        textScale: Float? = null,
+        uploadTextScale: Float? = null,
+        downloadTextScale: Float? = null,
     ) = afterAttach {
         if (param.packageName != Package.SYSTEMUI || intervalMillisecond <= 0L) {
             return@afterAttach
@@ -224,24 +227,47 @@ object Network {
                 result
             }
 
-            // Samsung's controller calls NetspeedView.scaleView() after inflation and
-            // again on density/font-scale changes. scaleView() resets mContentView's
-            // text size from status_bar_netspeed_size, so applying our scale only in
-            // onFinishInflate() is overwritten. Apply the user multiplier after each
-            // Samsung scaleView() call, while leaving Samsung's own end padding intact.
-            if (textScale != null) {
-                val scaleViewMethod = netspeedViewClass.getDeclaredMethod(
-                    "scaleView",
-                    Float::class.javaPrimitiveType,
+            // Upload/download share one Samsung TextView. Keep Samsung's final
+            // NetspeedView.scaleView() base size untouched, then style each line
+            // independently after NetspeedView.update() writes "upload\ndownload".
+            // This hook exists only when separate upload/download mode is enabled,
+            // so the stock single-line real-time network speed is never modified.
+            if (uploadTextScale != null || downloadTextScale != null) {
+                val updateMethod = netspeedViewClass.getDeclaredMethod(
+                    "update",
+                    java.util.Observable::class.java,
+                    Any::class.java,
                 )
-                xposedModule.hook(scaleViewMethod).intercept { chain ->
+                xposedModule.hook(updateMethod).intercept { chain ->
                     val result = chain.proceed()
                     try {
-                        (chain.thisObject.reflect["mContentView"] as? TextView)?.apply {
-                            setTextSize(
-                                TypedValue.COMPLEX_UNIT_PX,
-                                textSize * textScale.coerceIn(0.5f, 2f),
-                            )
+                        val contentView =
+                            chain.thisObject.reflect["mContentView"] as? TextView
+                        val raw = contentView?.text?.toString().orEmpty()
+                        val lineBreak = raw.indexOf('\n')
+                        if (contentView != null && lineBreak >= 0) {
+                            contentView.text = SpannableString(raw).apply {
+                                uploadTextScale?.let { scale ->
+                                    if (lineBreak > 0) {
+                                        setSpan(
+                                            RelativeSizeSpan(scale.coerceIn(0.5f, 2f)),
+                                            0,
+                                            lineBreak,
+                                            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE,
+                                        )
+                                    }
+                                }
+                                downloadTextScale?.let { scale ->
+                                    if (lineBreak + 1 < length) {
+                                        setSpan(
+                                            RelativeSizeSpan(scale.coerceIn(0.5f, 2f)),
+                                            lineBreak + 1,
+                                            length,
+                                            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE,
+                                        )
+                                    }
+                                }
+                            }
                         }
                     } catch (t: Throwable) {
                         xlog(t)
