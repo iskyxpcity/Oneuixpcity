@@ -18,11 +18,11 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
- * OneuiXP's existing SystemUI liveness bridge, moved into the single API102 entry.
+ * OneuiXP's existing SystemUI liveness bridge, moved into the single modern entry.
  * This code reports only; it does not mutate SystemUI views or enable OneUIX features.
  */
 object OneuiXPStatusReporter {
-    private const val ACTION_PING = "com.oneuixp.app.PING"
+    private const val ACTION_PING = "com.oneuixp.app.PING.V2"\n    private const val EXTRA_PROTOCOL = "com.oneuixp.app.PING_PROTOCOL"\n    private const val PROTOCOL = "oneuixp-flux-v2"
     private val attachInstalled = AtomicBoolean(false)
     private val heartbeatStarted = AtomicBoolean(false)
     private val pingReceiverRegistered = AtomicBoolean(false)
@@ -64,6 +64,9 @@ object OneuiXPStatusReporter {
             override fun onReceive(context: Context?, intent: Intent?) {
                 if (intent?.action == ACTION_PING && isOrderedBroadcast) {
                     resultCode = Activity.RESULT_OK
+                    val extras = resultExtras ?: Bundle()
+                    extras.putString(EXTRA_PROTOCOL, PROTOCOL)
+                    resultExtras = extras
                 }
             }
         }
@@ -124,7 +127,7 @@ object OneuiXPStatusReporter {
             "com.android.systemui.statusbar.pipeline.wifi.ui.view.ModernStatusBarWifiView",
             "com.android.systemui.statusbar.pipeline.mobile.ui.view.ModernStatusBarMobileView",
         )
-        val out = StringBuilder("API102 READ_ONLY\n")
+        val out = StringBuilder("API101 READ_ONLY\n")
         names.forEach { name ->
             out.append("\n").append(name).append("\n")
             try {
