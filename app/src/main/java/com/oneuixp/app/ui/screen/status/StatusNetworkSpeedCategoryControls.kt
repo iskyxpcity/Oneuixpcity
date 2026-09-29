@@ -79,9 +79,10 @@ fun StatusNetworkSpeedCategoryControls(
                 )
             }
 
-            add {
-                SwitchItem(
-                    icon = ImageVector.vectorResource(id = R.drawable.format_letter_spacing),
+            if (uiState.showSeparateUpDownNetworkSpeeds) {
+                add {
+                    SwitchItem(
+                        icon = ImageVector.vectorResource(id = R.drawable.format_letter_spacing),
                     title = stringResource(id = R.string.oneuix_networkSpeedLineGap_title),
                     summary = if (uiState.modifyNetworkSpeedLineGap) {
                         stringResource(
@@ -209,6 +210,8 @@ fun StatusNetworkSpeedCategoryControls(
                         )
                     }
                 }
+            }
+
             }
 
             add {
