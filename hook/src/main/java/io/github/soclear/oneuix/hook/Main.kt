@@ -324,8 +324,13 @@ class Main : XposedModule() {
                         } else {
                             null
                         },
-                        textScale = if (bar.setNetworkSpeedTextScale) {
-                            bar.networkSpeedTextScale
+                        uploadTextScale = if (bar.setNetworkSpeedUploadTextScale) {
+                            bar.networkSpeedUploadTextScale
+                        } else {
+                            null
+                        },
+                        downloadTextScale = if (bar.setNetworkSpeedDownloadTextScale) {
+                            bar.networkSpeedDownloadTextScale
                         } else {
                             null
                         },
