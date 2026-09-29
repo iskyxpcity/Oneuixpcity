@@ -52,6 +52,111 @@ object Network {
     }
 
     @SuppressLint("PrivateApi")
+    context(xposedModule: XposedModule, param: XposedModuleInterface.PackageReadyParam)
+    fun customizeRealTimeNetworkSpeed(
+        thresholdKb: Int = 0,
+        lineGapDp: Float? = null,
+        upperTextScale: Float? = null,
+        lowerTextScale: Float? = null,
+    ) = afterAttach {
+        if (param.packageName != Package.SYSTEMUI) {
+            return@afterAttach
+        }
+
+        fun parseSamsungSpeedKb(raw: String): Float? {
+            val lines = raw.trim().lines()
+            if (lines.size < 2) return null
+            val value = lines[0].trim().toFloatOrNull() ?: return null
+            return when {
+                lines[1].trim().startsWith("M", ignoreCase = true) -> value * 1024f
+                lines[1].trim().startsWith("K", ignoreCase = true) -> value
+                else -> null
+            }
+        }
+
+        try {
+            val netspeedViewClass =
+                param.classLoader.loadClass("${Package.SYSTEMUI}.statusbar.policy.NetspeedView")
+
+            if (lineGapDp != null) {
+                val onFinishInflateMethod = netspeedViewClass.getDeclaredMethod("onFinishInflate")
+                xposedModule.hook(onFinishInflateMethod).intercept { chain ->
+                    val result = chain.proceed()
+                    try {
+                        (chain.thisObject.reflect["mContentView"] as? TextView)?.apply {
+                            val density = resources.displayMetrics.density
+                            val extraGapPx = lineGapDp.coerceIn(-4f, 4f) * density
+                            setLineSpacing(
+                                lineSpacingExtra + extraGapPx,
+                                lineSpacingMultiplier,
+                            )
+                        }
+                    } catch (t: Throwable) {
+                        xlog(t)
+                    }
+                    result
+                }
+            }
+
+            if (thresholdKb > 0 || upperTextScale != null || lowerTextScale != null) {
+                val updateMethod = netspeedViewClass.getDeclaredMethod(
+                    "update",
+                    java.util.Observable::class.java,
+                    Any::class.java,
+                )
+                xposedModule.hook(updateMethod).intercept { chain ->
+                    val result = chain.proceed()
+                    try {
+                        val contentView =
+                            chain.thisObject.reflect["mContentView"] as? TextView
+                        val raw = contentView?.text?.toString().orEmpty()
+
+                        if (contentView != null) {
+                            val speedKb = parseSamsungSpeedKb(raw)
+                            if (thresholdKb > 0 && speedKb != null && speedKb <= thresholdKb) {
+                                contentView.text = ""
+                            } else {
+                                val lineBreak = raw.indexOf('\n')
+                                if (lineBreak >= 0 &&
+                                    (upperTextScale != null || lowerTextScale != null)
+                                ) {
+                                    contentView.text = SpannableString(raw).apply {
+                                        upperTextScale?.let { scale ->
+                                            if (lineBreak > 0) {
+                                                setSpan(
+                                                    RelativeSizeSpan(scale.coerceIn(0.5f, 2f)),
+                                                    0,
+                                                    lineBreak,
+                                                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE,
+                                                )
+                                            }
+                                        }
+                                        lowerTextScale?.let { scale ->
+                                            if (lineBreak + 1 < length) {
+                                                setSpan(
+                                                    RelativeSizeSpan(scale.coerceIn(0.5f, 2f)),
+                                                    lineBreak + 1,
+                                                    length,
+                                                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE,
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    } catch (t: Throwable) {
+                        xlog(t)
+                    }
+                    result
+                }
+            }
+        } catch (t: Throwable) {
+            xlog(t)
+        }
+    }
+
+    @SuppressLint("PrivateApi")
     @Suppress("DEPRECATION")
     context(xposedModule: XposedModule, param: XposedModuleInterface.PackageReadyParam)
     fun showSeparateUpDownNetworkSpeeds(
