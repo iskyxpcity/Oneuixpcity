@@ -224,6 +224,20 @@ private fun StatusCategoryContent(
                 )
             }
         }
+        StatusCategory.Other -> {
+            val toolsViewModel = viewModel<OneuiXToolsViewModel>()
+            val preference = toolsViewModel.preference.collectAsStateWithLifecycle().value
+            Column(
+                modifier = modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState()),
+            ) {
+                StatusOtherCategoryControls(
+                    uiState = preference.systemUI.other,
+                    onEvent = toolsViewModel::onSystemUIEvent,
+                )
+            }
+        }
     }
 }
 
