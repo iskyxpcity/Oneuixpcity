@@ -31,7 +31,7 @@ object SystemUiPingProbe {
                 val finalReceiver = object : BroadcastReceiver() {
                     override fun onReceive(context: Context?, intent: Intent?) {
                         if (!continuation.isActive) return
-                        val protocol = resultExtras?.getString(EXTRA_PROTOCOL)
+                        val protocol = getResultExtras(false)?.getString(EXTRA_PROTOCOL)
                         continuation.resume(
                             resultCode == Activity.RESULT_OK && protocol == PROTOCOL
                         )
