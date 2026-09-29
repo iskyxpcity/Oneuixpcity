@@ -59,7 +59,7 @@ fun StatusBarNetworkSpeedControls(
         },
     )
 
-    if (uiState.showSeparateUpDownNetworkSpeeds) {
+    if (uiState.supportRealTimeNetworkSpeed || uiState.showSeparateUpDownNetworkSpeeds) {
         OneuiXPreferenceGroup {
             var expanded by rememberSaveable { mutableStateOf(false) }
             var lineGapDp by remember(uiState.networkSpeedLineGapDp) {
@@ -179,7 +179,7 @@ fun StatusBarNetworkSpeedControls(
             summary = if (uiState.networkSpeedThresholdKb > 0) {
                 "${uiState.networkSpeedThresholdKb} KB/s"
             } else {
-                null
+                stringResource(id = R.string.oneuix_networkSpeedThreshold_scope_summary)
             },
             modifier = Modifier.animateContentSize(),
             clickable = true,
