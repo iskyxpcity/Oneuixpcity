@@ -79,7 +79,7 @@ fun StatusNetworkSpeedCategoryControls(
                 )
             }
 
-            if (uiState.showSeparateUpDownNetworkSpeeds) {
+            if (uiState.supportRealTimeNetworkSpeed || uiState.showSeparateUpDownNetworkSpeeds) {
                 add {
                     SwitchItem(
                         icon = ImageVector.vectorResource(id = R.drawable.format_letter_spacing),
@@ -220,7 +220,9 @@ fun StatusNetworkSpeedCategoryControls(
                     title = stringResource(id = R.string.oneuix_networkSpeedThreshold_title),
                     summary = if (uiState.networkSpeedThresholdKb > 0) {
                         "${uiState.networkSpeedThresholdKb} KB/s"
-                    } else null,
+                    } else {
+                        stringResource(id = R.string.oneuix_networkSpeedThreshold_scope_summary)
+                    },
                     modifier = Modifier.animateContentSize(),
                     clickable = true,
                     onClick = { thresholdExpanded = !thresholdExpanded },
