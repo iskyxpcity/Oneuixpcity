@@ -70,8 +70,9 @@ jobs:
       - name: Compile OneuiXP before the owner-signing gate
         run: |
           set -euo pipefail
+          mkdir -p diagnostics
           chmod +x gradlew
-          ./gradlew :common:assembleDebug :stub:assembleDebug :hook:assembleDebug :app:compileDebugKotlin -PONEUIXP_PACKAGE_NAME=com.oneuixp.app -PONEUIXP_NAME=OneuiXP --stacktrace --no-daemon
+          ./gradlew :common:assembleDebug :stub:assembleDebug :hook:assembleDebug :app:compileDebugKotlin -PONEUIXP_PACKAGE_NAME=com.oneuixp.app -PONEUIXP_NAME=OneuiXP --stacktrace --no-daemon 2>&1 | tee diagnostics/preflight-compile.log
 
       # GitHub does not sign Android packages automatically. Configure these FOUR
       # repository Actions secrets once, from the same stable owner keystore:
