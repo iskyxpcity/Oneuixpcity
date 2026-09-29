@@ -57,8 +57,13 @@ data class Preference(
             val networkSpeedThresholdKb: Int = 0,
             val modifyNetworkSpeedLineGap: Boolean = false,
             val networkSpeedLineGapDp: Float = 0f,
+            // Legacy #556/#557 whole-text fields are retained for preference compatibility.
             val setNetworkSpeedTextScale: Boolean = false,
             val networkSpeedTextScale: Float = 1f,
+            val setNetworkSpeedUploadTextScale: Boolean = false,
+            val networkSpeedUploadTextScale: Float = 1f,
+            val setNetworkSpeedDownloadTextScale: Boolean = false,
+            val networkSpeedDownloadTextScale: Float = 1f,
             val setStatusBarClockFormat: Boolean = false,
             val statusBarClockFormat: String = "HH:mm",
             // Empty means this is a pre-V11 preference. The runtime maps its old float preset.
