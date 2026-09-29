@@ -8,6 +8,7 @@ import android.os.Build
 import android.os.Handler
 import android.os.Message
 import android.os.SystemClock
+import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
 import android.widget.TextView
@@ -53,7 +54,9 @@ object Network {
     context(xposedModule: XposedModule, param: XposedModuleInterface.PackageReadyParam)
     fun showSeparateUpDownNetworkSpeeds(
         intervalMillisecond: Long = 3000L,
-        thresholdKb: Int = 0
+        thresholdKb: Int = 0,
+        lineGapDp: Float? = null,
+        textScale: Float? = null,
     ) = afterAttach {
         if (param.packageName != Package.SYSTEMUI || intervalMillisecond <= 0L) {
             return@afterAttach
@@ -145,7 +148,7 @@ object Network {
             if (!shouldDisplayNetworkSpeed(txBytesPerSecond, rxBytesPerSecond, thresholdKb)) {
                 return ""
             }
-            return "${formatSpeed(txBytesPerSecond)}\u00A0\n${formatSpeed(rxBytesPerSecond)}\u00A0"
+            return "${formatSpeed(txBytesPerSecond)}\n${formatSpeed(rxBytesPerSecond)}"
         }
 
         try {
@@ -205,6 +208,22 @@ object Network {
                         gravity = Gravity.END
                         textAlignment = View.TEXT_ALIGNMENT_VIEW_END
                         setTypeface(Typeface.MONOSPACE, Typeface.BOLD)
+
+                        if (lineGapDp != null) {
+                            val density = resources.displayMetrics.density
+                            val extraGapPx = lineGapDp.coerceIn(-4f, 4f) * density
+                            setLineSpacing(
+                                lineSpacingExtra + extraGapPx,
+                                lineSpacingMultiplier,
+                            )
+                        }
+
+                        if (textScale != null) {
+                            setTextSize(
+                                TypedValue.COMPLEX_UNIT_PX,
+                                textSize * textScale.coerceIn(0.5f, 2f),
+                            )
+                        }
                     }
                 } catch (t: Throwable) {
                     xlog(t)
