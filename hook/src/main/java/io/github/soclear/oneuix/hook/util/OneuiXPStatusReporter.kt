@@ -22,7 +22,9 @@ import java.util.concurrent.atomic.AtomicBoolean
  * This code reports only; it does not mutate SystemUI views or enable OneUIX features.
  */
 object OneuiXPStatusReporter {
-    private const val ACTION_PING = "com.oneuixp.app.PING.V2"\n    private const val EXTRA_PROTOCOL = "com.oneuixp.app.PING_PROTOCOL"\n    private const val PROTOCOL = "oneuixp-flux-v2"
+    private const val ACTION_PING = "com.oneuixp.app.PING.V2"
+    private const val EXTRA_PROTOCOL = "com.oneuixp.app.PING_PROTOCOL"
+    private const val PROTOCOL = "oneuixp-flux-v2"
     private val attachInstalled = AtomicBoolean(false)
     private val heartbeatStarted = AtomicBoolean(false)
     private val pingReceiverRegistered = AtomicBoolean(false)
@@ -64,9 +66,9 @@ object OneuiXPStatusReporter {
             override fun onReceive(context: Context?, intent: Intent?) {
                 if (intent?.action == ACTION_PING && isOrderedBroadcast) {
                     resultCode = Activity.RESULT_OK
-                    val extras = resultExtras ?: Bundle()
+                    val extras = getResultExtras(true) ?: Bundle()
                     extras.putString(EXTRA_PROTOCOL, PROTOCOL)
-                    resultExtras = extras
+                    setResultExtras(extras)
                 }
             }
         }
