@@ -134,13 +134,14 @@ jobs:
           grep -q "versionCode='1'" dist/APK_PACKAGE_INFO.txt
           "$AAPT" dump xmltree "$APK" AndroidManifest.xml > dist/APK_MANIFEST_CHECK.txt
           grep -Eq 'hasFragileUserData.*0x0$' dist/APK_MANIFEST_CHECK.txt
-          cp "$APK" dist/OneuiXP_1.0.260923_OWNER_SIGNED.apk
-          unzip -t dist/OneuiXP_1.0.260923_OWNER_SIGNED.apk
+          OUTPUT_APK="OneuiXP_1.0.260923_BUILD_${GITHUB_RUN_NUMBER}_OWNER_SIGNED.apk"
+          cp "$APK" "dist/$OUTPUT_APK"
+          unzip -t "dist/$OUTPUT_APK"
           unzip -p "$APK" META-INF/xposed/java_init.list | grep -Fxq 'io.github.soclear.oneuix.hook.Main'
           unzip -p "$APK" META-INF/xposed/module.prop | grep -Fq 'targetApiVersion=101'
           unzip -p "$APK" META-INF/xposed/scope.list | grep -Fxq 'com.oneuixp.app'
           unzip -p "$APK" META-INF/xposed/scope.list | grep -Fxq 'com.android.systemui'
-          (cd dist && sha256sum OneuiXP_1.0.260923_OWNER_SIGNED.apk > SHA256SUMS)
+          (cd dist && sha256sum "$OUTPUT_APK" > SHA256SUMS)
 
       - name: Publish signed APK to GitHub prerelease
         if: success() && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/migration/'))
@@ -164,8 +165,9 @@ jobs:
               --title "$TITLE" \
               --notes "$NOTES" \
               --prerelease
+          OUTPUT_APK="OneuiXP_1.0.260923_BUILD_${GITHUB_RUN_NUMBER}_OWNER_SIGNED.apk"
           gh release upload "$TAG" \
-            dist/OneuiXP_1.0.260923_OWNER_SIGNED.apk \
+            "dist/$OUTPUT_APK" \
             dist/SHA256SUMS \
             dist/SIGNING_INFO.txt \
             dist/APK_PACKAGE_INFO.txt \
