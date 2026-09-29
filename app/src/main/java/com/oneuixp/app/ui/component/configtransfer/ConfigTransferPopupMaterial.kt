@@ -1,0 +1,59 @@
+package com.oneuixp.app.ui.component.configtransfer
+
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Cloud
+import androidx.compose.material3.DropdownMenuGroup
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.DropdownMenuPopup
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MenuDefaults
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.res.stringResource
+import com.oneuixp.app.R
+
+@Composable
+fun ConfigTransferPopupMaterial(
+    onBackup: () -> Unit,
+    onRestore: () -> Unit,
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    IconButton(onClick = { expanded = true }) {
+        Icon(
+            imageVector = Icons.Outlined.Cloud,
+            contentDescription = stringResource(R.string.oneuix_backup_config),
+        )
+    }
+
+    DropdownMenuPopup(
+        expanded = expanded,
+        onDismissRequest = { expanded = false },
+    ) {
+        DropdownMenuGroup(shapes = MenuDefaults.groupShapes()) {
+            DropdownMenuItem(
+                selected = false,
+                onClick = {
+                    expanded = false
+                    onBackup()
+                },
+                text = { Text(stringResource(R.string.oneuix_backup_config)) },
+                shapes = MenuDefaults.itemShape(index = 0, count = 2),
+            )
+            DropdownMenuItem(
+                selected = false,
+                onClick = {
+                    expanded = false
+                    onRestore()
+                },
+                text = { Text(stringResource(R.string.oneuix_restore_config)) },
+                shapes = MenuDefaults.itemShape(index = 1, count = 2),
+            )
+        }
+    }
+}
