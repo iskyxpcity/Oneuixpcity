@@ -174,7 +174,7 @@ private fun StatusCard(
                                 status.scopeActive -> "已激活"
                                 status.frameworkConnected && !status.scopeKnown -> "正在读取作用域"
                                 status.frameworkConnected -> "作用域未激活"
-                                else -> "状态待确认"
+                                else -> "未激活"
                             },
                             style = MaterialTheme.typography.titleMedium,
                         )
