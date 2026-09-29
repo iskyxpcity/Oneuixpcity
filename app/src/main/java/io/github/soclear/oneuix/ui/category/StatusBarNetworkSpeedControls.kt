@@ -64,16 +64,14 @@ fun StatusBarNetworkSpeedControls(
         var lineGapDp by remember(uiState.networkSpeedLineGapDp) {
             mutableFloatStateOf(uiState.networkSpeedLineGapDp)
         }
-
         SwitchItem(
             icon = ImageVector.vectorResource(id = R.drawable.format_letter_spacing),
             title = stringResource(id = R.string.oneuix_networkSpeedLineGap_title),
             summary = if (uiState.modifyNetworkSpeedLineGap) {
-                stringResource(
-                    id = R.string.oneuix_networkSpeedLineGap_summary,
-                    lineGapDp,
-                )
-            } else null,
+                stringResource(id = R.string.oneuix_networkSpeedLineGap_summary, lineGapDp)
+            } else {
+                stringResource(id = R.string.oneuix_networkSpeedDoubleLineOnly_summary)
+            },
             modifier = Modifier.animateContentSize(),
             clickable = true,
             onClick = { expanded = !expanded },
@@ -86,12 +84,8 @@ fun StatusBarNetworkSpeedControls(
         OneuiXChildVisibility(expanded && uiState.modifyNetworkSpeedLineGap) {
             OneuiXSlider(
                 value = lineGapDp,
-                onValueChange = {
-                    lineGapDp = (it * 10f).roundToInt() / 10f
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
+                onValueChange = { lineGapDp = (it * 10f).roundToInt() / 10f },
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                 valueRange = -4f..4f,
                 onValueChangeFinished = {
                     onEvent(SystemUIEvent.StatusBar.NetworkSpeedLineGapDp(lineGapDp))
@@ -102,40 +96,69 @@ fun StatusBarNetworkSpeedControls(
 
     OneuiXPreferenceGroup {
         var expanded by rememberSaveable { mutableStateOf(false) }
-        var textScale by remember(uiState.networkSpeedTextScale) {
-            mutableFloatStateOf(uiState.networkSpeedTextScale)
+        var uploadScale by remember(uiState.networkSpeedUploadTextScale) {
+            mutableFloatStateOf(uiState.networkSpeedUploadTextScale)
         }
-
         SwitchItem(
             icon = ImageVector.vectorResource(id = R.drawable.format_size),
-            title = stringResource(id = R.string.oneuix_networkSpeedTextScale_title),
-            summary = if (uiState.setNetworkSpeedTextScale) {
-                stringResource(
-                    id = R.string.oneuix_networkSpeedTextScale_summary,
-                    textScale,
-                )
-            } else null,
+            title = stringResource(id = R.string.oneuix_networkSpeedUploadTextScale_title),
+            summary = if (uiState.setNetworkSpeedUploadTextScale) {
+                stringResource(id = R.string.oneuix_networkSpeedUploadTextScale_summary, uploadScale)
+            } else {
+                stringResource(id = R.string.oneuix_networkSpeedDoubleLineOnly_summary)
+            },
             modifier = Modifier.animateContentSize(),
             clickable = true,
             onClick = { expanded = !expanded },
-            checked = uiState.setNetworkSpeedTextScale,
+            checked = uiState.setNetworkSpeedUploadTextScale,
             onCheckedChange = {
                 expanded = it
-                onEvent(SystemUIEvent.StatusBar.SetNetworkSpeedTextScale(it))
+                onEvent(SystemUIEvent.StatusBar.SetNetworkSpeedUploadTextScale(it))
             },
         )
-        OneuiXChildVisibility(expanded && uiState.setNetworkSpeedTextScale) {
+        OneuiXChildVisibility(expanded && uiState.setNetworkSpeedUploadTextScale) {
             OneuiXSlider(
-                value = textScale,
-                onValueChange = {
-                    textScale = (it * 100f).roundToInt() / 100f
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
+                value = uploadScale,
+                onValueChange = { uploadScale = (it * 100f).roundToInt() / 100f },
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                 valueRange = 0.5f..2f,
                 onValueChangeFinished = {
-                    onEvent(SystemUIEvent.StatusBar.NetworkSpeedTextScale(textScale))
+                    onEvent(SystemUIEvent.StatusBar.NetworkSpeedUploadTextScale(uploadScale))
+                },
+            )
+        }
+    }
+
+    OneuiXPreferenceGroup {
+        var expanded by rememberSaveable { mutableStateOf(false) }
+        var downloadScale by remember(uiState.networkSpeedDownloadTextScale) {
+            mutableFloatStateOf(uiState.networkSpeedDownloadTextScale)
+        }
+        SwitchItem(
+            icon = ImageVector.vectorResource(id = R.drawable.format_size),
+            title = stringResource(id = R.string.oneuix_networkSpeedDownloadTextScale_title),
+            summary = if (uiState.setNetworkSpeedDownloadTextScale) {
+                stringResource(id = R.string.oneuix_networkSpeedDownloadTextScale_summary, downloadScale)
+            } else {
+                stringResource(id = R.string.oneuix_networkSpeedDoubleLineOnly_summary)
+            },
+            modifier = Modifier.animateContentSize(),
+            clickable = true,
+            onClick = { expanded = !expanded },
+            checked = uiState.setNetworkSpeedDownloadTextScale,
+            onCheckedChange = {
+                expanded = it
+                onEvent(SystemUIEvent.StatusBar.SetNetworkSpeedDownloadTextScale(it))
+            },
+        )
+        OneuiXChildVisibility(expanded && uiState.setNetworkSpeedDownloadTextScale) {
+            OneuiXSlider(
+                value = downloadScale,
+                onValueChange = { downloadScale = (it * 100f).roundToInt() / 100f },
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                valueRange = 0.5f..2f,
+                onValueChangeFinished = {
+                    onEvent(SystemUIEvent.StatusBar.NetworkSpeedDownloadTextScale(downloadScale))
                 },
             )
         }
