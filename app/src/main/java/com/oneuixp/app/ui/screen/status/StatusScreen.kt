@@ -49,6 +49,8 @@ import androidx.compose.ui.unit.dp
 import com.oneuixp.app.R
 import com.oneuixp.app.ui.LocalUiMode
 import com.oneuixp.app.ui.UiMode
+import com.oneuixp.app.ui.component.configtransfer.ConfigTransferPopup
+import com.oneuixp.app.ui.component.rebootlistpopup.RebootListPopup
 import com.oneuixp.app.ui.component.material.SegmentedColumn
 import com.oneuixp.app.ui.component.material.SegmentedListItem
 import com.oneuixp.app.ui.navigation3.Navigator
@@ -117,6 +119,8 @@ private fun StatusPagerMiuix(
                 TopAppBar(
                     color = barColor,
                     title = stringResource(R.string.oneuixp_status),
+                    navigationIcon = { ConfigTransferPopup() },
+                    actions = { RebootListPopup() },
                     scrollBehavior = scrollBehavior,
                 )
             }
@@ -210,6 +214,8 @@ private fun StatusPagerMaterial(
         topBar = {
             LargeFlexibleTopAppBar(
                 title = { Text(stringResource(R.string.oneuixp_status)) },
+                navigationIcon = { ConfigTransferPopup() },
+                actions = { RebootListPopup() },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface,
                     scrolledContainerColor = MaterialTheme.colorScheme.surface,
