@@ -820,6 +820,18 @@ sealed interface SystemUIEvent {
         value class NetworkSpeedTextScale(val value: Float) : StatusBar
 
         @JvmInline
+        value class SetNetworkSpeedUploadTextScale(val value: Boolean) : StatusBar
+
+        @JvmInline
+        value class NetworkSpeedUploadTextScale(val value: Float) : StatusBar
+
+        @JvmInline
+        value class SetNetworkSpeedDownloadTextScale(val value: Boolean) : StatusBar
+
+        @JvmInline
+        value class NetworkSpeedDownloadTextScale(val value: Float) : StatusBar
+
+        @JvmInline
         value class SetStatusBarClockFormat(val value: Boolean) : StatusBar
 
         @JvmInline
@@ -1226,6 +1238,46 @@ private fun OneuiXToolsViewModel.onStatusBarEvent(event: SystemUIEvent.StatusBar
                     systemUI = preference.systemUI.copy(
                         statusBar = preference.systemUI.statusBar.copy(
                             networkSpeedTextScale = event.value
+                        )
+                    )
+                )
+            }
+
+            is SystemUIEvent.StatusBar.SetNetworkSpeedUploadTextScale -> {
+                preference.copy(
+                    systemUI = preference.systemUI.copy(
+                        statusBar = preference.systemUI.statusBar.copy(
+                            setNetworkSpeedUploadTextScale = event.value
+                        )
+                    )
+                )
+            }
+
+            is SystemUIEvent.StatusBar.NetworkSpeedUploadTextScale -> {
+                preference.copy(
+                    systemUI = preference.systemUI.copy(
+                        statusBar = preference.systemUI.statusBar.copy(
+                            networkSpeedUploadTextScale = event.value
+                        )
+                    )
+                )
+            }
+
+            is SystemUIEvent.StatusBar.SetNetworkSpeedDownloadTextScale -> {
+                preference.copy(
+                    systemUI = preference.systemUI.copy(
+                        statusBar = preference.systemUI.statusBar.copy(
+                            setNetworkSpeedDownloadTextScale = event.value
+                        )
+                    )
+                )
+            }
+
+            is SystemUIEvent.StatusBar.NetworkSpeedDownloadTextScale -> {
+                preference.copy(
+                    systemUI = preference.systemUI.copy(
+                        statusBar = preference.systemUI.statusBar.copy(
+                            networkSpeedDownloadTextScale = event.value
                         )
                     )
                 )
