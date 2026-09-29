@@ -311,26 +311,45 @@ class Main : XposedModule() {
                     )
                 }
 
-                if (preference.systemUI.statusBar.supportRealTimeNetworkSpeed) {
+                val networkBar = preference.systemUI.statusBar
+                if (networkBar.supportRealTimeNetworkSpeed) {
                     Network.supportRealTimeNetworkSpeed()
                 }
 
-                if (preference.systemUI.statusBar.showSeparateUpDownNetworkSpeeds) {
-                    val bar = preference.systemUI.statusBar
+                if (networkBar.showSeparateUpDownNetworkSpeeds) {
                     Network.showSeparateUpDownNetworkSpeeds(
-                        thresholdKb = bar.networkSpeedThresholdKb,
-                        lineGapDp = if (bar.modifyNetworkSpeedLineGap) {
-                            bar.networkSpeedLineGapDp
+                        thresholdKb = networkBar.networkSpeedThresholdKb,
+                        lineGapDp = if (networkBar.modifyNetworkSpeedLineGap) {
+                            networkBar.networkSpeedLineGapDp
                         } else {
                             null
                         },
-                        uploadTextScale = if (bar.setNetworkSpeedUploadTextScale) {
-                            bar.networkSpeedUploadTextScale
+                        uploadTextScale = if (networkBar.setNetworkSpeedUploadTextScale) {
+                            networkBar.networkSpeedUploadTextScale
                         } else {
                             null
                         },
-                        downloadTextScale = if (bar.setNetworkSpeedDownloadTextScale) {
-                            bar.networkSpeedDownloadTextScale
+                        downloadTextScale = if (networkBar.setNetworkSpeedDownloadTextScale) {
+                            networkBar.networkSpeedDownloadTextScale
+                        } else {
+                            null
+                        },
+                    )
+                } else if (networkBar.supportRealTimeNetworkSpeed) {
+                    Network.customizeRealTimeNetworkSpeed(
+                        thresholdKb = networkBar.networkSpeedThresholdKb,
+                        lineGapDp = if (networkBar.modifyNetworkSpeedLineGap) {
+                            networkBar.networkSpeedLineGapDp
+                        } else {
+                            null
+                        },
+                        upperTextScale = if (networkBar.setNetworkSpeedUploadTextScale) {
+                            networkBar.networkSpeedUploadTextScale
+                        } else {
+                            null
+                        },
+                        lowerTextScale = if (networkBar.setNetworkSpeedDownloadTextScale) {
+                            networkBar.networkSpeedDownloadTextScale
                         } else {
                             null
                         },
