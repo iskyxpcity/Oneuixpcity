@@ -24,7 +24,9 @@ data class LsposedFrameworkSnapshot(
  * Flux 3.8.0 style connection state:
  * - register one modern Xposed service listener
  * - when a service is available, getScope() is authoritative
- * - if service/getScope is unavailable, fall back to the latest directed PING
+ * - service presence is the module-enabled gate
+ * - getScope describes configured scope only
+ * - PING describes live SystemUI hook only and never enables the module by itself
  * - no periodic polling loop
  */
 object LsposedFrameworkStatus {
@@ -75,8 +77,8 @@ object LsposedFrameworkStatus {
     }
 
     /**
-     * Flux getActivated(): service/getScope first; if unavailable, use hookAlive.
      * Binder work must not run on the main thread.
+     * A scope result is meaningful only while the module service is connected.
      */
     fun refreshScope() {
         val current = service
@@ -117,18 +119,16 @@ object LsposedFrameworkStatus {
                 scopeKnown = false,
                 scope = emptySet(),
                 pingAlive = previous.pingAlive,
-                active = previous.pingAlive,
+                active = false,
             )
         }
     }
 
     fun updatePingAlive(alive: Boolean) {
         val previous = _state.value
-        val active = if (previous.connected && previous.scopeKnown) {
+        val active = previous.connected &&
+            previous.scopeKnown &&
             previous.systemUiScopeActive
-        } else {
-            alive
-        }
         val next = previous.copy(
             pingAlive = alive,
             active = active,
@@ -143,7 +143,7 @@ object LsposedFrameworkStatus {
             scopeKnown = false,
             scope = emptySet(),
             pingAlive = previous.pingAlive,
-            active = previous.pingAlive,
+            active = false,
         )
         if (next != previous) _state.value = next
     }
