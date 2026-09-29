@@ -5,6 +5,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -12,24 +13,28 @@ import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.coroutines.resume
 
 /**
- * Flux-style live SystemUI probe.
+ * Flux-style on-demand SystemUI probe.
  *
- * This is an on-demand ordered broadcast to the running SystemUI hook. A stale
- * persisted heartbeat cannot satisfy it; only the live injected receiver can
- * return RESULT_OK.
+ * V2 intentionally uses a new action/protocol so an old receiver left inside an
+ * already-running SystemUI process cannot make a newly installed manager build
+ * look active after the LSPosed module has been disabled.
  */
 object SystemUiPingProbe {
-    private const val ACTION_PING = "com.oneuixp.app.PING"
+    const val ACTION_PING = "com.oneuixp.app.PING.V2"
+    const val EXTRA_PROTOCOL = "com.oneuixp.app.PING_PROTOCOL"
+    const val PROTOCOL = "oneuixp-flux-v2"
     private const val SYSTEM_UI = "com.android.systemui"
 
     suspend fun probe(context: Context): Boolean =
-        withTimeoutOrNull(150L) {
+        withTimeoutOrNull(250L) {
             suspendCancellableCoroutine { continuation ->
                 val finalReceiver = object : BroadcastReceiver() {
                     override fun onReceive(context: Context?, intent: Intent?) {
-                        if (continuation.isActive) {
-                            continuation.resume(resultCode == Activity.RESULT_OK)
-                        }
+                        if (!continuation.isActive) return
+                        val protocol = resultExtras?.getString(EXTRA_PROTOCOL)
+                        continuation.resume(
+                            resultCode == Activity.RESULT_OK && protocol == PROTOCOL
+                        )
                     }
                 }
 
@@ -50,7 +55,7 @@ object SystemUiPingProbe {
                         Handler(Looper.getMainLooper()),
                         Activity.RESULT_CANCELED,
                         null,
-                        null,
+                        Bundle(),
                     )
                 }.onFailure {
                     if (continuation.isActive) continuation.resume(false)
