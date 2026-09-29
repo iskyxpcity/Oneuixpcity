@@ -34,6 +34,11 @@
     <string name="oneuix_networkSpeedLineGap_summary">Relative to Samsung default: %1$.1f dp</string>
     <string name="oneuix_networkSpeedTextScale_title">Network speed font size</string>
     <string name="oneuix_networkSpeedTextScale_summary">Scale: %1$.2fx</string>
+    <string name="oneuix_networkSpeedDoubleLineOnly_summary">Only applies when separate upload/download network speed is enabled</string>
+    <string name="oneuix_networkSpeedUploadTextScale_title">Upload speed font size</string>
+    <string name="oneuix_networkSpeedUploadTextScale_summary">Upload scale: %1$.2fx</string>
+    <string name="oneuix_networkSpeedDownloadTextScale_title">Download speed font size</string>
+    <string name="oneuix_networkSpeedDownloadTextScale_summary">Download scale: %1$.2fx</string>
     <string name="oneuix_turnOn5gQsTile_title">Enable 5G Quick Settings tile</string>
     <string name="oneuix_turnOn5gQsTile_summary">Requires checking System UI and Call Settings</string>
     <string name="oneuix_root5gQsTile_summary">Please grant root access to this app, then manually add the 5G tile</string>
