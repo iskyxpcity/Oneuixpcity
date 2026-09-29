@@ -316,8 +316,19 @@ class Main : XposedModule() {
                 }
 
                 if (preference.systemUI.statusBar.showSeparateUpDownNetworkSpeeds) {
+                    val bar = preference.systemUI.statusBar
                     Network.showSeparateUpDownNetworkSpeeds(
-                        thresholdKb = preference.systemUI.statusBar.networkSpeedThresholdKb
+                        thresholdKb = bar.networkSpeedThresholdKb,
+                        lineGapDp = if (bar.modifyNetworkSpeedLineGap) {
+                            bar.networkSpeedLineGapDp
+                        } else {
+                            null
+                        },
+                        textScale = if (bar.setNetworkSpeedTextScale) {
+                            bar.networkSpeedTextScale
+                        } else {
+                            null
+                        },
                     )
                 }
 
