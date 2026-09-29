@@ -80,7 +80,7 @@ class OneuiXToolsViewModel : ViewModel() {
             input.readBytes().decodeToString()
         )
         dataStore.updateData { restored }
-        OneuiXPreferenceBridge.ensureSynchronized(oneuiXPApp)
+        OneuiXPreferenceBridge.synchronizeNow(oneuiXPApp)
     }
 
 
