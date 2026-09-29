@@ -98,58 +98,78 @@ object Network {
                 }
             }
 
-            if (thresholdKb > 0 || upperTextScale != null || lowerTextScale != null) {
-                val updateMethod = netspeedViewClass.getDeclaredMethod(
-                    "update",
-                    java.util.Observable::class.java,
-                    Any::class.java,
-                )
-                xposedModule.hook(updateMethod).intercept { chain ->
-                    val result = chain.proceed()
-                    try {
-                        val contentView =
-                            chain.thisObject.reflect["mContentView"] as? TextView
-                        val raw = contentView?.text?.toString().orEmpty()
+            val updateMethod = netspeedViewClass.getDeclaredMethod(
+                "update",
+                java.util.Observable::class.java,
+                Any::class.java,
+            )
+            xposedModule.hook(updateMethod).intercept { chain ->
+                val result = chain.proceed()
+                try {
+                    val contentView =
+                        chain.thisObject.reflect["mContentView"] as? TextView
+                    val raw = contentView?.text?.toString().orEmpty()
 
-                        if (contentView != null) {
-                            val speedKb = parseSamsungSpeedKb(raw)
-                            if (thresholdKb > 0 && speedKb != null && speedKb <= thresholdKb) {
-                                contentView.text = ""
+                    if (contentView != null) {
+                        val speedKb = parseSamsungSpeedKb(raw)
+                        if (thresholdKb > 0 && speedKb != null && speedKb <= thresholdKb) {
+                            contentView.text = ""
+                        } else {
+                            val lines = raw.split('\n')
+                            val normalized = if (lines.size >= 2) {
+                                val unit = when (lines[1].trim()) {
+                                    "K/s" -> "KB/s"
+                                    "M/s" -> "MB/s"
+                                    else -> lines[1]
+                                }
+                                buildString {
+                                    append(lines[0])
+                                    append('\n')
+                                    append(unit)
+                                    if (lines.size > 2) {
+                                        append('\n')
+                                        append(lines.drop(2).joinToString("\n"))
+                                    }
+                                }
                             } else {
-                                val lineBreak = raw.indexOf('\n')
-                                if (lineBreak >= 0 &&
-                                    (upperTextScale != null || lowerTextScale != null)
-                                ) {
-                                    contentView.text = SpannableString(raw).apply {
-                                        upperTextScale?.let { scale ->
-                                            if (lineBreak > 0) {
-                                                setSpan(
-                                                    RelativeSizeSpan(scale.coerceIn(0.5f, 2f)),
-                                                    0,
-                                                    lineBreak,
-                                                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE,
-                                                )
-                                            }
+                                raw
+                            }
+
+                            val lineBreak = normalized.indexOf('\n')
+                            if (lineBreak >= 0 &&
+                                (upperTextScale != null || lowerTextScale != null)
+                            ) {
+                                contentView.text = SpannableString(normalized).apply {
+                                    upperTextScale?.let { scale ->
+                                        if (lineBreak > 0) {
+                                            setSpan(
+                                                RelativeSizeSpan(scale.coerceIn(0.5f, 2f)),
+                                                0,
+                                                lineBreak,
+                                                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE,
+                                            )
                                         }
-                                        lowerTextScale?.let { scale ->
-                                            if (lineBreak + 1 < length) {
-                                                setSpan(
-                                                    RelativeSizeSpan(scale.coerceIn(0.5f, 2f)),
-                                                    lineBreak + 1,
-                                                    length,
-                                                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE,
-                                                )
-                                            }
+                                    }
+                                    lowerTextScale?.let { scale ->
+                                        if (lineBreak + 1 < length) {
+                                            setSpan(
+                                                RelativeSizeSpan(scale.coerceIn(0.5f, 2f)),
+                                                lineBreak + 1,
+                                                length,
+                                                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE,
+                                            )
                                         }
                                     }
                                 }
+                            } else {
+                                contentView.text = normalized
                             }
                         }
-                    } catch (t: Throwable) {
-                        xlog(t)
                     }
-                    result
+                } catch (t: Throwable) {
+                    xlog(t)
                 }
+                result
             }
         } catch (t: Throwable) {
             xlog(t)
@@ -216,23 +236,23 @@ object Network {
         fun formatSpeed(bytesPerSecond: Float): String {
             // 0 或负数显示为 "0B"
             if (bytesPerSecond <= 0f) {
-                return "0B"
+                return "0B/s"
             }
             if (bytesPerSecond < 1024f) {
-                return "${bytesPerSecond.roundToInt()}B"
+                return "${bytesPerSecond.roundToInt()}B/s"
             }
             val kiBytesPerSecond = bytesPerSecond / 1024f
             if (kiBytesPerSecond < 100f) {
-                return "%.2fK".format(kiBytesPerSecond)
+                return "%.2fKB/s".format(kiBytesPerSecond)
             }
             if (kiBytesPerSecond < 1000f) {
-                return "%.1fK".format(kiBytesPerSecond)
+                return "%.1fKB/s".format(kiBytesPerSecond)
             }
             val miBytesPerSecond = kiBytesPerSecond / 1024f
             if (miBytesPerSecond < 100f) {
-                return "%.2fM".format(miBytesPerSecond)
+                return "%.2fMB/s".format(miBytesPerSecond)
             }
-            return "%.1fM".format(miBytesPerSecond)
+            return "%.1fMB/s".format(miBytesPerSecond)
         }
 
         fun shouldDisplayNetworkSpeed(
