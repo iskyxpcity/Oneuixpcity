@@ -100,10 +100,8 @@ private fun ToolsPagerMiuix(
     val scrollBehavior = MiuixScrollBehavior()
     val backdrop = rememberBlurBackdrop(LocalEnableBlur.current)
     val barColor = if (backdrop != null) Color.Transparent else colorScheme.surface
-    val coreCategories = OneuiXCategory.entries
-        .take(5)
+    val categories = OneuiXCategory.entries
         .filterNot { it == OneuiXCategory.SystemUI }
-    val appCategories = OneuiXCategory.entries.drop(5).filterNot { it == OneuiXCategory.SystemUI }
 
     Scaffold(
         topBar = {
@@ -192,7 +190,10 @@ private fun ToolsPagerMaterial(
 ) {
     val scrollBehavior =
         TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
-    val categories = OneuiXCategory.entries
+    val coreCategories = OneuiXCategory.entries
+        .take(5)
+        .filterNot { it == OneuiXCategory.SystemUI }
+    val appCategories = OneuiXCategory.entries.drop(5)
 
     androidx.compose.material3.Scaffold(
         topBar = {
