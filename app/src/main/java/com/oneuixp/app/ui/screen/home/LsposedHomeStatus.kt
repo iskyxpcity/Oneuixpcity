@@ -53,9 +53,11 @@ private fun configuredScopeCount(context: Context): Int = runCatching {
 }.getOrDefault(0)
 
 /**
- * Flux 3.8.0 style home activation:
+ * Home activation:
  * refresh once whenever the UI enters RESUMED, then rely on service bind/death
- * callbacks. No 250 ms scope polling and no 500 ms PING polling.
+ * callbacks. The LSPosed service is the enabled-state gate; PING only tells us
+ * whether the already-enabled module is live inside SystemUI.
+ * No 250 ms scope polling and no 500 ms PING polling.
  */
 @Composable
 fun rememberLsposedHomeStatus(): LsposedHomeStatus {
@@ -83,7 +85,6 @@ fun rememberLsposedHomeStatus(): LsposedHomeStatus {
 
     val actualScopeCount = when {
         framework.connected && framework.scopeKnown -> framework.scope.size
-        framework.pingAlive -> configuredScopes
         else -> 0
     }
 
@@ -92,7 +93,7 @@ fun rememberLsposedHomeStatus(): LsposedHomeStatus {
         frameworkConnected = framework.connected,
         scopeKnown = framework.scopeKnown,
         scopeActive = framework.systemUiScopeActive,
-        injected = framework.pingAlive,
+        injected = framework.connected && framework.pingAlive,
         injectionCount = featureInjectionCount,
         scopeCount = actualScopeCount,
     )
