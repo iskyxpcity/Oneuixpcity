@@ -32,7 +32,7 @@ jobs:
           python3 ./verify_migration.py
           grep -q 'android:hasFragileUserData="false"' app/src/main/AndroidManifest.xml
           grep -q 'val defaultManagerPackageName = "com.oneuixp.app"' app/build.gradle.kts
-          grep -q 'SystemUiHeartbeat' app/src/main/assets/xposed_init
+          test ! -e app/src/main/assets/xposed_init
           grep -q 'sealed interface Route : NavKey, Parcelable' app/src/main/java/com/oneuixp/app/ui/navigation3/Routes.kt
           grep -q 'iSkyJIE/OneuiXP/releases/latest' app/src/main/java/com/oneuixp/app/ui/util/Downloader.kt
           test -f app/src/main/resources/META-INF/xposed/java_init.list
@@ -46,8 +46,8 @@ jobs:
           grep -Fq 'implementation(project(":hook"))' app/build.gradle.kts
           grep -Fq 'implementation(project(":common"))' app/build.gradle.kts
           grep -Fxq 'io.github.soclear.oneuix.hook.Main' app/src/main/resources/META-INF/xposed/java_init.list
-          grep -Fq 'minApiVersion=102' app/src/main/resources/META-INF/xposed/module.prop
-          grep -Fq 'targetApiVersion=102' app/src/main/resources/META-INF/xposed/module.prop
+          grep -Fq 'minApiVersion=101' app/src/main/resources/META-INF/xposed/module.prop
+          grep -Fq 'targetApiVersion=101' app/src/main/resources/META-INF/xposed/module.prop
           SCOPE_COUNT=$(grep -cve '^[[:space:]]*$' app/src/main/resources/META-INF/xposed/scope.list)
           test "$SCOPE_COUNT" -eq 26
           diff -u hook/src/main/resources/META-INF/xposed/scope.list app/src/main/resources/META-INF/xposed/scope.list 2>/dev/null || {
@@ -65,7 +65,7 @@ jobs:
           test ! -e hook/src/main/resources/META-INF/xposed/java_init.list
           test ! -e hook/src/main/resources/META-INF/xposed/module.prop
           test ! -e hook/src/main/resources/META-INF/xposed/scope.list
-          echo "OneuiXP API102 single-entry migration validated; full OneUIX functional hooks enabled"
+          echo "OneuiXP API101 Flux-style single-entry migration validated; full OneUIX functional hooks enabled"
 
       - name: Compile OneuiXP before the owner-signing gate
         run: |
@@ -136,7 +136,7 @@ jobs:
           cp "$APK" dist/OneuiXP_1.0.260923_OWNER_SIGNED.apk
           unzip -t dist/OneuiXP_1.0.260923_OWNER_SIGNED.apk
           unzip -p "$APK" META-INF/xposed/java_init.list | grep -Fxq 'io.github.soclear.oneuix.hook.Main'
-          unzip -p "$APK" META-INF/xposed/module.prop | grep -Fq 'targetApiVersion=102'
+          unzip -p "$APK" META-INF/xposed/module.prop | grep -Fq 'targetApiVersion=101'
           unzip -p "$APK" META-INF/xposed/scope.list | grep -Fxq 'com.oneuixp.app'
           unzip -p "$APK" META-INF/xposed/scope.list | grep -Fxq 'com.android.systemui'
           (cd dist && sha256sum OneuiXP_1.0.260923_OWNER_SIGNED.apk > SHA256SUMS)
