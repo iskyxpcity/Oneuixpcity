@@ -12,7 +12,6 @@ import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.ListPopupColumn
 import top.yukonga.miuix.kmp.basic.PopupPositionProvider
 import top.yukonga.miuix.kmp.icon.MiuixIcons
-import top.yukonga.miuix.kmp.icon.extended.Download
 import top.yukonga.miuix.kmp.overlay.OverlayListPopup
 import top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme
 
@@ -28,7 +27,7 @@ fun ConfigTransferPopupMiuix(
         holdDownState = showPopup.value,
     ) {
         Icon(
-            imageVector = MiuixIcons.Download,
+            imageVector = MiuixIcons.Notes,
             contentDescription = stringResource(R.string.oneuix_backup_config),
             tint = colorScheme.onSurface,
         )
