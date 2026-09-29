@@ -100,7 +100,10 @@ private fun ToolsPagerMiuix(
     val scrollBehavior = MiuixScrollBehavior()
     val backdrop = rememberBlurBackdrop(LocalEnableBlur.current)
     val barColor = if (backdrop != null) Color.Transparent else colorScheme.surface
-    val categories = OneuiXCategory.entries
+    val coreCategories = OneuiXCategory.entries
+        .take(5)
+        .filterNot { it == OneuiXCategory.SystemUI }
+    val appCategories = OneuiXCategory.entries.drop(5).filterNot { it == OneuiXCategory.SystemUI }
 
     Scaffold(
         topBar = {
@@ -219,7 +222,7 @@ private fun ToolsPagerMaterial(
             SegmentedColumn(
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                 title = stringResource(R.string.oneuix_core_features),
-                content = categories.take(5).map { category ->
+                content = coreCategories.map { category ->
                     {
                         SegmentedListItem(
                             onClick = {
@@ -245,7 +248,7 @@ private fun ToolsPagerMaterial(
             SegmentedColumn(
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                 title = stringResource(R.string.oneuix_app_features),
-                content = categories.drop(5).map { category ->
+                content = appCategories.map { category ->
                     {
                         SegmentedListItem(
                             onClick = {
