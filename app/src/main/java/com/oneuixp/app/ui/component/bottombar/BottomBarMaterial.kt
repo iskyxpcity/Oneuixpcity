@@ -29,10 +29,11 @@ import com.oneuixp.app.ui.LocalMainPagerState
 fun BottomBarMaterial() {
     val mainPagerState = LocalMainPagerState.current
 
-    val featuresIcon = ImageVector.vectorResource(id = R.drawable.apps)
+    val featuresFilledIcon = ImageVector.vectorResource(id = R.drawable.apps)
+    val featuresOutlinedIcon = ImageVector.vectorResource(id = R.drawable.apps_outlined)
     val items = listOf(
         Triple(R.string.home, Icons.Filled.Home, Icons.Outlined.Home),
-        Triple(R.string.oneuixp_tools, featuresIcon, featuresIcon),
+        Triple(R.string.oneuixp_tools, featuresFilledIcon, featuresOutlinedIcon),
         Triple(R.string.oneuixp_status, Icons.Filled.Extension, Icons.Outlined.Extension),
         Triple(R.string.settings, Icons.Filled.Settings, Icons.Outlined.Settings)
     )
