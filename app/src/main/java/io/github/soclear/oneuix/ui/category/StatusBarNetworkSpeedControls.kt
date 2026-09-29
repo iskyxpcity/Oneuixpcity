@@ -3,10 +3,12 @@ package io.github.soclear.oneuix.ui.category
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -24,7 +26,9 @@ import io.github.soclear.oneuix.ui.component.OneuiXActionButton
 import io.github.soclear.oneuix.ui.component.OneuiXChildVisibility
 import io.github.soclear.oneuix.ui.component.OneuiXInlineTextField
 import io.github.soclear.oneuix.ui.component.OneuiXPreferenceGroup
+import io.github.soclear.oneuix.ui.component.OneuiXSlider
 import io.github.soclear.oneuix.ui.component.SwitchItem
+import kotlin.math.roundToInt
 
 /**
  * Canonical status-bar network-speed controls shared by the legacy SystemUI
@@ -54,6 +58,89 @@ fun StatusBarNetworkSpeedControls(
             onEvent(SystemUIEvent.StatusBar.ShowSeparateUpDownNetworkSpeeds(it))
         },
     )
+
+    OneuiXPreferenceGroup {
+        var expanded by rememberSaveable { mutableStateOf(false) }
+        var lineGapDp by remember(uiState.networkSpeedLineGapDp) {
+            mutableFloatStateOf(uiState.networkSpeedLineGapDp)
+        }
+
+        SwitchItem(
+            icon = ImageVector.vectorResource(id = R.drawable.format_letter_spacing),
+            title = stringResource(id = R.string.oneuix_networkSpeedLineGap_title),
+            summary = if (uiState.modifyNetworkSpeedLineGap) {
+                stringResource(
+                    id = R.string.oneuix_networkSpeedLineGap_summary,
+                    lineGapDp,
+                )
+            } else null,
+            modifier = Modifier.animateContentSize(),
+            clickable = true,
+            onClick = { expanded = !expanded },
+            checked = uiState.modifyNetworkSpeedLineGap,
+            onCheckedChange = {
+                expanded = it
+                onEvent(SystemUIEvent.StatusBar.ModifyNetworkSpeedLineGap(it))
+            },
+        )
+        OneuiXChildVisibility(expanded && uiState.modifyNetworkSpeedLineGap) {
+            OneuiXSlider(
+                value = lineGapDp,
+                onValueChange = {
+                    lineGapDp = (it * 10f).roundToInt() / 10f
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                valueRange = -4f..4f,
+                onValueChangeFinished = {
+                    onEvent(SystemUIEvent.StatusBar.NetworkSpeedLineGapDp(lineGapDp))
+                },
+            )
+        }
+    }
+
+    OneuiXPreferenceGroup {
+        var expanded by rememberSaveable { mutableStateOf(false) }
+        var textScale by remember(uiState.networkSpeedTextScale) {
+            mutableFloatStateOf(uiState.networkSpeedTextScale)
+        }
+
+        SwitchItem(
+            icon = ImageVector.vectorResource(id = R.drawable.format_size),
+            title = stringResource(id = R.string.oneuix_networkSpeedTextScale_title),
+            summary = if (uiState.setNetworkSpeedTextScale) {
+                stringResource(
+                    id = R.string.oneuix_networkSpeedTextScale_summary,
+                    textScale,
+                )
+            } else null,
+            modifier = Modifier.animateContentSize(),
+            clickable = true,
+            onClick = { expanded = !expanded },
+            checked = uiState.setNetworkSpeedTextScale,
+            onCheckedChange = {
+                expanded = it
+                onEvent(SystemUIEvent.StatusBar.SetNetworkSpeedTextScale(it))
+            },
+        )
+        OneuiXChildVisibility(expanded && uiState.setNetworkSpeedTextScale) {
+            OneuiXSlider(
+                value = textScale,
+                onValueChange = {
+                    textScale = (it * 100f).roundToInt() / 100f
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                valueRange = 0.5f..2f,
+                onValueChangeFinished = {
+                    onEvent(SystemUIEvent.StatusBar.NetworkSpeedTextScale(textScale))
+                },
+            )
+        }
+    }
+
     OneuiXPreferenceGroup {
         var expanded by rememberSaveable { mutableStateOf(false) }
         var threshold by remember(uiState.networkSpeedThresholdKb) {
@@ -74,7 +161,12 @@ fun StatusBarNetworkSpeedControls(
             checked = uiState.networkSpeedThresholdKb > 0,
             onCheckedChange = {
                 if (it && threshold == 0) threshold = 1
-                if (!it) threshold = 0
+                if (!it) {
+                    threshold = 0
+                    expanded = false
+                } else {
+                    expanded = true
+                }
                 onEvent(SystemUIEvent.StatusBar.NetworkSpeedThreshold(threshold))
             },
         )
