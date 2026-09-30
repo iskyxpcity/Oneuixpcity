@@ -34,6 +34,29 @@ data class Preference(
         val other: Other = Other(),
     ) {
         @Serializable
+        data class StatusBarClockBlockStyle(
+            val blockIndex: Int = 0,
+            val source: String = "",
+            val enabled: Boolean = false,
+            val overrideTextSize: Boolean = false,
+            val textSizeSp: Float = 12f,
+            val overrideFontWeight: Boolean = false,
+            val fontWeight: Int = 400,
+            val overrideTextColor: Boolean = false,
+            val textColorArgb: Int = 0xFFFFFFFF.toInt(),
+            val backgroundEnabled: Boolean = false,
+            val backgroundColorArgb: Int = 0xFF000000.toInt(),
+            val backgroundAlpha: Float = 0.25f,
+            val backgroundBorderEnabled: Boolean = false,
+            val backgroundBorderColorArgb: Int = 0xFFFFFFFF.toInt(),
+            val backgroundBorderWidthDp: Float = 1f,
+            val cornerRadiusDp: Float = 4f,
+            val horizontalPaddingDp: Float = 2f,
+            val verticalPaddingDp: Float = 0f,
+            val verticalAlignment: String = "middle",
+        )
+
+        @Serializable
         data class StatusBar(
             val modifyStatusBarLeftPadding: Boolean = false,
             val statusBarLeftPaddingDp: Float = 0f,
@@ -66,6 +89,8 @@ data class Preference(
             val networkSpeedDownloadTextScale: Float = 1f,
             val setStatusBarClockFormat: Boolean = false,
             val statusBarClockFormat: String = "HH:mm",
+            val enableStatusBarClockRichStyle: Boolean = false,
+            val statusBarClockBlockStyles: List<StatusBarClockBlockStyle> = emptyList(),
             // Empty means this is a pre-V11 preference. The runtime maps its old float preset.
             val statusBarDoubleLineClockSize: String = "",
             val setStatusBarClockTextScale: Boolean = false,

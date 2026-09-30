@@ -176,14 +176,23 @@ fun StatusBarTimeControls(
                             )
                             OneuiXSlider(
                                 value = timeScale,
-                                onValueChange = { timeScale = it },
+                                onValueChange = { raw ->
+                                    val value = (raw * 100f).roundToInt() / 100f
+                                    timeScale = value
+                                    onEvent(
+                                        SystemUIEvent.StatusBarPreview(
+                                            SystemUIEvent.StatusBar.Fold7DoubleLineClockTimeScale(
+                                                value
+                                            )
+                                        )
+                                    )
+                                },
                                 modifier = Modifier.padding(horizontal = 16.dp),
                                 valueRange = 0.50f..1.10f,
-                                steps = 39,
                                 onValueChangeFinished = {
                                     onEvent(
                                         SystemUIEvent.StatusBar.Fold7DoubleLineClockTimeScale(
-                                            (timeScale * 100f).roundToInt() / 100f
+                                            timeScale
                                         )
                                     )
                                 }
@@ -206,14 +215,23 @@ fun StatusBarTimeControls(
                             )
                             OneuiXSlider(
                                 value = dateScale,
-                                onValueChange = { dateScale = it },
+                                onValueChange = { raw ->
+                                    val value = (raw * 100f).roundToInt() / 100f
+                                    dateScale = value
+                                    onEvent(
+                                        SystemUIEvent.StatusBarPreview(
+                                            SystemUIEvent.StatusBar.Fold7DoubleLineClockDateScale(
+                                                value
+                                            )
+                                        )
+                                    )
+                                },
                                 modifier = Modifier.padding(horizontal = 16.dp),
                                 valueRange = 0.50f..1.10f,
-                                steps = 39,
                                 onValueChangeFinished = {
                                     onEvent(
                                         SystemUIEvent.StatusBar.Fold7DoubleLineClockDateScale(
-                                            (dateScale * 100f).roundToInt() / 100f
+                                            dateScale
                                         )
                                     )
                                 }
@@ -276,14 +294,23 @@ fun StatusBarTimeControls(
                     ) {
                         OneuiXSlider(
                             value = lineGapDp,
-                            onValueChange = { lineGapDp = it },
+                            onValueChange = { raw ->
+                                val value = (raw * 10f).roundToInt() / 10f
+                                lineGapDp = value
+                                onEvent(
+                                    SystemUIEvent.StatusBarPreview(
+                                        SystemUIEvent.StatusBar.DoubleLineClockGapDp(
+                                            value
+                                        )
+                                    )
+                                )
+                            },
                             modifier = Modifier.padding(horizontal = 16.dp),
                             valueRange = 0f..2f,
-                            steps = 19,
                             onValueChangeFinished = {
                                 onEvent(
                                     SystemUIEvent.StatusBar.DoubleLineClockGapDp(
-                                        (lineGapDp * 10f).roundToInt() / 10f
+                                        lineGapDp
                                     )
                                 )
                             }
@@ -326,7 +353,15 @@ fun StatusBarTimeControls(
                 OneuiXChildVisibility(expanded && uiState.setStatusBarClockTextScale) {
                     OneuiXSlider(
                         value = scale,
-                        onValueChange = { scale = it },
+                        onValueChange = { raw ->
+                            val value = (raw * 100f).roundToInt() / 100f
+                            scale = value
+                            onEvent(
+                                SystemUIEvent.StatusBarPreview(
+                                    SystemUIEvent.StatusBar.StatusBarClockTextScale(value)
+                                )
+                            )
+                        },
                         modifier = Modifier.padding(horizontal = 16.dp),
                         valueRange = 0.5f..2.5f,
                         onValueChangeFinished = {

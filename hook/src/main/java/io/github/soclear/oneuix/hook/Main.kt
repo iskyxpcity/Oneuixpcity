@@ -356,27 +356,21 @@ class Main : XposedModule() {
                     )
                 }
 
-                val usesDoubleLineClock =
-                    preference.systemUI.statusBar.setStatusBarClockFormat &&
-                    preference.systemUI.statusBar.statusBarClockFormat.contains('\n')
-                if (preference.systemUI.statusBar.setStatusBarClockFormat) {
-                    val bar = preference.systemUI.statusBar
-                    OfficialMainStatusBarMod.configureClock(
-                        bar.statusBarDoubleLineClockSize,
-                        bar.statusBarClockTextScale,
-                        if (bar.modifyDoubleLineClockGap) bar.doubleLineClockGapDp else 1f,
-                        bar.useFold7CustomDoubleLineClockScale,
-                        bar.fold7DoubleLineClockTimeScale,
-                        bar.fold7DoubleLineClockDateScale,
-                    )
-                    StatusBar.setStatusBarClockFormat(bar.statusBarClockFormat)
-                }
+                val bar = preference.systemUI.statusBar
+                StatusBar.updateStatusBarClockRuntime(bar)
+                OfficialMainStatusBarMod.configureClock(
+                    bar.statusBarDoubleLineClockSize,
+                    bar.statusBarClockTextScale,
+                    if (bar.modifyDoubleLineClockGap) bar.doubleLineClockGapDp else 1f,
+                    bar.useFold7CustomDoubleLineClockScale,
+                    bar.fold7DoubleLineClockTimeScale,
+                    bar.fold7DoubleLineClockDateScale,
+                )
+                // Always install the Samsung clock hook. Runtime preferences decide
+                // whether to override the clock or pass through to Samsung unchanged.
+                StatusBar.setStatusBarClockFormat(bar.statusBarClockFormat)
 
-                if (preference.systemUI.statusBar.setStatusBarClockTextScale &&
-                    !usesDoubleLineClock) {
-                    val scale = preference.systemUI.statusBar.statusBarClockTextScale
-                    StatusBar.setStatusBarClockTextScale(scale)
-                }
+                StatusBar.installStatusBarClockTextScaleRuntime()
 
                 StatusBar.installStatusBarClockSecondControl(
                     preference.systemUI.statusBar.updateStatusBarClockEverySecond

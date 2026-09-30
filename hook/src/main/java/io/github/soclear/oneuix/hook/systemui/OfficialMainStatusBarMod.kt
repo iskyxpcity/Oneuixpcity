@@ -1,7 +1,10 @@
 package io.github.soclear.oneuix.hook.systemui
 
 import android.annotation.SuppressLint
+import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.database.ContentObserver
 import android.net.Uri
 import android.os.Build
@@ -17,8 +20,10 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import io.github.libxposed.api.XposedModule
 import io.github.libxposed.api.XposedModuleInterface
+import io.github.soclear.oneuix.common.IgnoreUnknownKeysJson
 import io.github.soclear.oneuix.common.Package
 import io.github.soclear.oneuix.common.Preference
+import io.github.soclear.oneuix.common.StatusBarRuntimeBridge
 import io.github.soclear.oneuix.hook.util.PreferenceProvider
 import io.github.soclear.oneuix.hook.util.afterAttach
 import io.github.soclear.oneuix.hook.util.HookInstallTracker
@@ -204,9 +209,9 @@ object OfficialMainStatusBarMod {
         }
         activeClockViews.forEach { clockTextView ->
             clockTextView.post {
-                val dateTime = clockTextView.text?.toString() ?: return@post
-                if (dateTime.contains('\n')) {
-                    applyDoubleLineClockText(clockTextView, dateTime, runtimeConfig)
+                val clockText = clockTextView.text ?: return@post
+                if (clockText.contains('\n')) {
+                    applyDoubleLineClockText(clockTextView, clockText, runtimeConfig)
                 }
             }
         }
@@ -223,6 +228,7 @@ object OfficialMainStatusBarMod {
         "content://com.oneuixp.app.statusbridge/preferences"
     private var refreshStarted = false
     private var preferenceObserver: ContentObserver? = null
+    private var runtimeReceiver: BroadcastReceiver? = null
 
     private fun applyRuntimeStatusBarPreference(current: Preference.SystemUI.StatusBar) {
         updateStatusBarVerticalOffset(
@@ -239,12 +245,13 @@ object OfficialMainStatusBarMod {
                 current.fold7DoubleLineClockDateScale,
             )
         }
+        StatusBar.updateStatusBarClockRuntime(current)
         StatusBar.setStatusBarClockSecondRuntimeEnabled(
             current.updateStatusBarClockEverySecond
         )
     }
 
-    private fun watchPreference(module: XposedModule, context: Context) {
+    fun ensurePreferenceWatcher(module: XposedModule, context: Context) {
         if (refreshStarted) return
         refreshStarted = true
 
@@ -286,7 +293,41 @@ object OfficialMainStatusBarMod {
             with(module) { xlog(it) }
         }
 
-        // Apply the current persisted state once when the observer is installed.
+        // High-frequency previews use an in-memory broadcast payload instead of
+        // rewriting preference.json for every slider/eyedropper movement.
+        val receiver = object : BroadcastReceiver() {
+            override fun onReceive(receiverContext: Context?, intent: Intent?) {
+                if (intent?.action != StatusBarRuntimeBridge.ACTION) return
+                val payload =
+                    intent.getStringExtra(StatusBarRuntimeBridge.EXTRA_STATUS_BAR_JSON)
+                        ?: return
+                background.post {
+                    val current = runCatching {
+                        IgnoreUnknownKeysJson.decodeFromString(
+                            Preference.SystemUI.StatusBar.serializer(),
+                            payload,
+                        )
+                    }.getOrNull() ?: return@post
+
+                    previous = current
+                    main.post { applyRuntimeStatusBarPreference(current) }
+                }
+            }
+        }
+        runtimeReceiver = receiver
+        runCatching {
+            val filter = IntentFilter(StatusBarRuntimeBridge.ACTION)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                context.registerReceiver(receiver, filter, Context.RECEIVER_EXPORTED)
+            } else {
+                @Suppress("DEPRECATION")
+                context.registerReceiver(receiver, filter)
+            }
+        }.onFailure {
+            with(module) { xlog(it) }
+        }
+
+        // Apply the current persisted state once when the watcher is installed.
         refreshOnce()
     }
 
@@ -304,7 +345,7 @@ object OfficialMainStatusBarMod {
                         val result = chain.proceed()
                         (chain.thisObject as? View)?.let { statusBarView ->
                             registerStatusBarView(statusBarView)
-                            watchPreference(xposedModule, statusBarView.context)
+                            ensurePreferenceWatcher(xposedModule, statusBarView.context)
                         }
                         result
                     }
@@ -331,10 +372,11 @@ object OfficialMainStatusBarMod {
 
     private fun applyDoubleLineClockText(
         clockTextView: TextView,
-        dateTime: String,
+        dateTime: CharSequence,
         runtimeConfig: DoubleLineClockRuntimeConfig,
     ) {
-        val firstLineEnd = dateTime.indexOf('\n')
+        val plainText = dateTime.toString()
+        val firstLineEnd = plainText.indexOf('\n')
         if (firstLineEnd < 0) return
         val doubleLineClockStyle = runtimeConfig.style
         singleLineClockLayouts.getOrPut(clockTextView) {
@@ -390,19 +432,19 @@ object OfficialMainStatusBarMod {
                 )
             }
         }
-        clockTextView.contentDescription = dateTime.replace('\n', ' ')
+        clockTextView.contentDescription = plainText.replace('\n', ' ')
         clockTextView.requestLayout()
         clockTextView.invalidate()
     }
 
-    fun applyDoubleLineClockText(clockTextView: TextView, dateTime: String) {
+    fun applyDoubleLineClockText(clockTextView: TextView, dateTime: CharSequence) {
         registerDoubleLineClockView(clockTextView)
         val config = doubleLineClockRuntimeConfig ?: return
         applyDoubleLineClockText(clockTextView, dateTime, config)
     }
 
     /** Exactly restore the production main's stored one-line layout state. */
-    fun restoreSingleLineClock(clockTextView: TextView, dateTime: String) {
+    fun restoreSingleLineClock(clockTextView: TextView, dateTime: CharSequence) {
         synchronized(doubleLineClockViews) { doubleLineClockViews.remove(clockTextView) }
         singleLineClockLayouts.remove(clockTextView)?.let { original ->
             clockTextView.layoutParams?.let { params ->
@@ -428,6 +470,6 @@ object OfficialMainStatusBarMod {
         clockTextView.setHorizontallyScrolling(false)
         clockTextView.translationY = 0f
         clockTextView.text = dateTime
-        clockTextView.contentDescription = dateTime.replace('\n', ' ')
+        clockTextView.contentDescription = dateTime.toString().replace('\n', ' ')
     }
 }

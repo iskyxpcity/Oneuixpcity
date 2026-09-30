@@ -17,6 +17,15 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - name: Read OneuiXP version
+        run: |
+          set -euo pipefail
+          VERSION_NAME=$(sed -n 's/^oneuixpVersionName=//p' gradle.properties)
+          VERSION_CODE=$(sed -n 's/^oneuixpVersionCode=//p' gradle.properties)
+          test -n "$VERSION_NAME"
+          test -n "$VERSION_CODE"
+          echo "VERSION_NAME=$VERSION_NAME" >> "$GITHUB_ENV"
+          echo "VERSION_CODE=$VERSION_CODE" >> "$GITHUB_ENV"
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -130,11 +139,11 @@ jobs:
           printf '%s\n' "$CERT" > dist/SIGNING_CERT_SHA256.txt
           "$AAPT" dump badging "$APK" | tee dist/APK_PACKAGE_INFO.txt
           grep -q "^package: name='com.oneuixp.app'" dist/APK_PACKAGE_INFO.txt
-          grep -q "versionName='1.0.260923'" dist/APK_PACKAGE_INFO.txt
-          grep -q "versionCode='1'" dist/APK_PACKAGE_INFO.txt
+          grep -q "versionName='$VERSION_NAME'" dist/APK_PACKAGE_INFO.txt
+          grep -q "versionCode='$VERSION_CODE'" dist/APK_PACKAGE_INFO.txt
           "$AAPT" dump xmltree "$APK" AndroidManifest.xml > dist/APK_MANIFEST_CHECK.txt
           grep -Eq 'hasFragileUserData.*0x0$' dist/APK_MANIFEST_CHECK.txt
-          OUTPUT_APK="OneuiXP_1.0.260923_BUILD_${GITHUB_RUN_NUMBER}_OWNER_SIGNED.apk"
+          OUTPUT_APK="OneuiXP_${VERSION_NAME}_BUILD_${GITHUB_RUN_NUMBER}_OWNER_SIGNED.apk"
           cp "$APK" "dist/$OUTPUT_APK"
           unzip -t "dist/$OUTPUT_APK"
           unzip -p "$APK" META-INF/xposed/java_init.list | grep -Fxq 'io.github.soclear.oneuix.hook.Main'
@@ -143,14 +152,21 @@ jobs:
           unzip -p "$APK" META-INF/xposed/scope.list | grep -Fxq 'com.android.systemui'
           (cd dist && sha256sum "$OUTPUT_APK" > SHA256SUMS)
 
-      - name: Publish signed APK to GitHub prerelease
+      - name: Publish signed APK to GitHub release
         if: success() && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/migration/'))
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           SHORT_SHA="${GITHUB_SHA::7}"
-          if [ "$GITHUB_REF" = "refs/heads/main" ]; then
+          COMMIT_SUBJECT=$(git log -1 --pretty=%s)
+          FORMAL_RELEASE=false
+          if [ "$GITHUB_REF" = "refs/heads/main" ] && [[ "$COMMIT_SUBJECT" == release:* ]]; then
+            FORMAL_RELEASE=true
+            TAG="v${VERSION_NAME}"
+            TITLE="OneuiXP ${VERSION_NAME}"
+            NOTES="OneuiXP ${VERSION_NAME} 正式版。首个正式发布版本；包含已在 Samsung 真机验证的状态栏时间分类、字符串独立样式、即时预览、颜色取色器与格式快捷预设。"
+          elif [ "$GITHUB_REF" = "refs/heads/main" ]; then
             TAG="main-build-${GITHUB_RUN_NUMBER}-${SHORT_SHA}"
             TITLE="OneuiXP main build #${GITHUB_RUN_NUMBER}"
             NOTES="Automated signed main-branch test build. This is a prerelease, not a formal OneuiXP release."
@@ -159,13 +175,23 @@ jobs:
             TITLE="OneuiXP migration build #${GITHUB_RUN_NUMBER}"
             NOTES="Signed OneUIX full-migration test build. Imported OneUIX functional hooks are enabled; validate on Samsung hardware before merging to main."
           fi
-          gh release view "$TAG" >/dev/null 2>&1 || \
-            gh release create "$TAG" \
-              --target "$GITHUB_SHA" \
-              --title "$TITLE" \
-              --notes "$NOTES" \
-              --prerelease
-          OUTPUT_APK="OneuiXP_1.0.260923_BUILD_${GITHUB_RUN_NUMBER}_OWNER_SIGNED.apk"
+
+          if ! gh release view "$TAG" >/dev/null 2>&1; then
+            if [ "$FORMAL_RELEASE" = true ]; then
+              gh release create "$TAG" \
+                --target "$GITHUB_SHA" \
+                --title "$TITLE" \
+                --notes "$NOTES" \
+                --latest
+            else
+              gh release create "$TAG" \
+                --target "$GITHUB_SHA" \
+                --title "$TITLE" \
+                --notes "$NOTES" \
+                --prerelease
+            fi
+          fi
+          OUTPUT_APK="OneuiXP_${VERSION_NAME}_BUILD_${GITHUB_RUN_NUMBER}_OWNER_SIGNED.apk"
           gh release upload "$TAG" \
             "dist/$OUTPUT_APK" \
             dist/SHA256SUMS \

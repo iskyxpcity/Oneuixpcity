@@ -52,9 +52,23 @@ class OneuiXToolsViewModel : ViewModel() {
 
     fun updateData(nextPreference: (Preference) -> Preference) {
         viewModelScope.launch {
+            // Serializer.writeTo already performs the remote LSPosed write and
+            // publishes the runtime status-bar state. Do not immediately queue a
+            // second full remote-file synchronization for the same user action.
             dataStore.updateData(nextPreference)
-            OneuiXPreferenceBridge.ensureSynchronized(oneuiXPApp)
         }
+    }
+
+    /**
+     * Runtime-only preview for high-frequency controls such as sliders.
+     * This deliberately bypasses DataStore so dragging never queues disk writes.
+     * The final value is persisted by the normal event on drag release.
+     */
+    fun previewData(nextPreference: (Preference) -> Preference) {
+        OneuiXPreferenceBridge.preview(
+            oneuiXPApp,
+            nextPreference(preference.value),
+        )
     }
 
     /**

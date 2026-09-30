@@ -19,8 +19,10 @@ import android.widget.TextView
 import io.github.libxposed.api.XposedModule
 import io.github.soclear.oneuix.common.ONE_UI_VERSION
 import io.github.soclear.oneuix.common.Package
+import io.github.soclear.oneuix.common.Preference
 import io.github.soclear.oneuix.hook.util.afterAttachTry
 import io.github.soclear.oneuix.hook.util.StatusBarClockFormatter
+import io.github.soclear.oneuix.hook.util.StatusBarClockRichFormatter
 import io.github.soclear.oneuix.hook.util.reflect
 import io.github.soclear.oneuix.hook.util.xlog
 import java.time.LocalDateTime
@@ -34,6 +36,97 @@ import kotlin.math.roundToInt
 object StatusBar {
     @Volatile
     private var statusBarClockSecondRuntimeEnabled = false
+
+    @Volatile
+    private var statusBarClockRuntime: Preference.SystemUI.StatusBar? = null
+
+    private val statusBarClockViews = WeakHashMap<TextView, Unit>()
+    private val statusBarClockBaseTextSizes = WeakHashMap<TextView, Float>()
+
+    private fun rememberClockBaseTextSize(clockTextView: TextView): Float =
+        synchronized(statusBarClockBaseTextSizes) {
+            statusBarClockBaseTextSizes.getOrPut(clockTextView) {
+                clockTextView.textSize
+            }
+        }
+
+    private fun updateClockBaseTextSize(clockTextView: TextView, baseSizePx: Float) {
+        synchronized(statusBarClockBaseTextSizes) {
+            statusBarClockBaseTextSizes[clockTextView] = baseSizePx
+        }
+    }
+
+    private fun applySingleLineClockScale(
+        clockTextView: TextView,
+        current: Preference.SystemUI.StatusBar,
+    ) {
+        val baseSize = rememberClockBaseTextSize(clockTextView)
+        val isDoubleLine =
+            current.setStatusBarClockFormat && current.statusBarClockFormat.contains('\n')
+        val targetSize = if (current.setStatusBarClockTextScale && !isDoubleLine) {
+            baseSize * current.statusBarClockTextScale.coerceIn(0.5f, 2.5f)
+        } else {
+            baseSize
+        }
+        if (kotlin.math.abs(clockTextView.textSize - targetSize) > 0.1f) {
+            clockTextView.setTextSize(TypedValue.COMPLEX_UNIT_PX, targetSize)
+        }
+    }
+
+    private fun renderStatusBarClock(
+        clockTextView: TextView,
+        current: Preference.SystemUI.StatusBar,
+    ): CharSequence {
+        val now = LocalDateTime.now()
+        return if (current.enableStatusBarClockRichStyle) {
+            runCatching {
+                StatusBarClockRichFormatter.format(
+                    pattern = current.statusBarClockFormat,
+                    dateTime = now,
+                    resources = clockTextView.resources,
+                    styles = current.statusBarClockBlockStyles,
+                )
+            }.getOrElse {
+                StatusBarClockFormatter.format(current.statusBarClockFormat, now)
+            }
+        } else {
+            runCatching {
+                StatusBarClockFormatter.format(current.statusBarClockFormat, now)
+            }.getOrElse {
+                DateTimeFormatter.ofPattern("HH:mm").format(now)
+            }
+        }
+    }
+
+    private fun applyStatusBarClockRuntime(
+        clockTextView: TextView,
+        current: Preference.SystemUI.StatusBar,
+    ) {
+        if (!current.setStatusBarClockFormat) {
+            applySingleLineClockScale(clockTextView, current)
+            return
+        }
+        val dateTime = renderStatusBarClock(clockTextView, current)
+        if (dateTime.contains('\n')) {
+            applySingleLineClockScale(clockTextView, current)
+            OfficialMainStatusBarMod.applyDoubleLineClockText(clockTextView, dateTime)
+        } else {
+            OfficialMainStatusBarMod.restoreSingleLineClock(clockTextView, dateTime)
+            applySingleLineClockScale(clockTextView, current)
+        }
+    }
+
+    fun updateStatusBarClockRuntime(current: Preference.SystemUI.StatusBar) {
+        statusBarClockRuntime = current
+        val activeViews = synchronized(statusBarClockViews) {
+            statusBarClockViews.keys.toList()
+        }
+        activeViews.forEach { clockTextView ->
+            clockTextView.post {
+                applyStatusBarClockRuntime(clockTextView, current)
+            }
+        }
+    }
     private val statusBarClockSecondHelpers: MutableSet<Any> =
         Collections.synchronizedSet(
             Collections.newSetFromMap(WeakHashMap<Any, Boolean>())
@@ -227,7 +320,7 @@ object StatusBar {
     }
 
     context(xposedModule: XposedModule)
-    fun setStatusBarClockTextScale(scale: Float) = afterAttachTry {
+    fun installStatusBarClockTextScaleRuntime() = afterAttachTry {
         val controllerClass = classLoader.loadClass(
             "com.android.systemui.statusbar.policy.QSClockIndicatorViewController"
         )
@@ -236,7 +329,12 @@ object StatusBar {
             val result = chain.proceed()
             try {
                 val clockView = chain.thisObject.reflect["view"] as? TextView
-                clockView?.setTextSize(TypedValue.COMPLEX_UNIT_PX, clockView.textSize * scale)
+                if (clockView != null) {
+                    updateClockBaseTextSize(clockView, clockView.textSize)
+                    statusBarClockRuntime?.let { current ->
+                        applySingleLineClockScale(clockView, current)
+                    }
+                }
             } catch (t: Throwable) {
                 xlog(t)
             }
@@ -245,18 +343,12 @@ object StatusBar {
     }
 
     context(xposedModule: XposedModule)
-    fun setStatusBarClockFormat(format: String) {
-        setStatusBarClockText {
-            runCatching {
-                StatusBarClockFormatter.format(format, LocalDateTime.now())
-            }.getOrElse {
-                DateTimeFormatter.ofPattern("HH:mm").format(LocalDateTime.now())
-            }
-        }
+    fun setStatusBarClockFormat(initialFormat: String) {
+        setStatusBarClockText(initialFormat)
     }
 
     context(xposedModule: XposedModule)
-    private fun setStatusBarClockText(block: () -> String) = afterAttachTry {
+    private fun setStatusBarClockText(initialFormat: String) = afterAttachTry {
         val clockClassName = "com.android.systemui.statusbar.policy.QSClockIndicatorView"
         val bellClassName = "com.android.systemui.statusbar.policy.QSClockBellSound"
         val clockClass = classLoader.loadClass(clockClassName)
@@ -269,20 +361,45 @@ object StatusBar {
             priority = Log.INFO,
         )
         xposedModule.hook(method).intercept { chain ->
-            val clockTextView = chain.thisObject as? TextView
-            val dateTime = block()
+            val clockTextView = chain.thisObject as? TextView ?: return@intercept chain.proceed()
+            OfficialMainStatusBarMod.ensurePreferenceWatcher(
+                xposedModule,
+                clockTextView.context,
+            )
+            synchronized(statusBarClockViews) {
+                statusBarClockViews[clockTextView] = Unit
+            }
+
+            val current = statusBarClockRuntime
+            if (current != null && !current.setStatusBarClockFormat) {
+                val result = chain.proceed()
+                rememberClockBaseTextSize(clockTextView)
+                applySingleLineClockScale(clockTextView, current)
+                return@intercept result
+            }
+
+            val effective = current ?: Preference.SystemUI.StatusBar(
+                setStatusBarClockFormat = true,
+                statusBarClockFormat = initialFormat,
+            )
+            val dateTime = renderStatusBarClock(clockTextView, effective)
+
             if (callbackLogged.compareAndSet(false, true)) {
                 xlog(
-                    "CHAIN_PROBE clock-format callback hit value=${dateTime.replace("\n", "\\n")}",
+                    "CHAIN_PROBE clock-format callback hit value=${
+                        dateTime.toString().replace("\n", "\\n")
+                    } rich=${effective.enableStatusBarClockRichStyle}",
                     priority = Log.INFO,
                 )
             }
-            if (clockTextView != null) {
-                if (dateTime.contains('\n')) {
-                    OfficialMainStatusBarMod.applyDoubleLineClockText(clockTextView, dateTime)
-                } else {
-                    OfficialMainStatusBarMod.restoreSingleLineClock(clockTextView, dateTime)
-                }
+
+            rememberClockBaseTextSize(clockTextView)
+            if (dateTime.contains('\n')) {
+                applySingleLineClockScale(clockTextView, effective)
+                OfficialMainStatusBarMod.applyDoubleLineClockText(clockTextView, dateTime)
+            } else {
+                OfficialMainStatusBarMod.restoreSingleLineClock(clockTextView, dateTime)
+                applySingleLineClockScale(clockTextView, effective)
             }
             null
         }

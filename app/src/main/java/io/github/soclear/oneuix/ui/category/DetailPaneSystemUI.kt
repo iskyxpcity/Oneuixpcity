@@ -838,6 +838,13 @@ sealed interface SystemUIEvent {
         value class StatusBarClockFormat(val value: String) : StatusBar
 
         @JvmInline
+        value class SetStatusBarClockRichStyle(val value: Boolean) : StatusBar
+
+        data class UpdateStatusBarClockBlockStyle(
+            val value: Preference.SystemUI.StatusBarClockBlockStyle,
+        ) : StatusBar
+
+        @JvmInline
         value class StatusBarDoubleLineClockSize(val value: String) : StatusBar
 
         @JvmInline
@@ -894,6 +901,8 @@ sealed interface SystemUIEvent {
         @JvmInline
         value class HideLockscreenStatusBar(val value: Boolean) : StatusBar
     }
+
+    data class StatusBarPreview(val value: StatusBar) : SystemUIEvent
 
     sealed interface QS : SystemUIEvent {
         @JvmInline
@@ -982,10 +991,51 @@ sealed interface SystemUIEvent {
 fun OneuiXToolsViewModel.onSystemUIEvent(event: SystemUIEvent) {
     when (event) {
         is SystemUIEvent.StatusBar -> onStatusBarEvent(event)
+        is SystemUIEvent.StatusBarPreview -> previewStatusBarEvent(event.value)
         is SystemUIEvent.QS -> onQSEvent(event)
         is SystemUIEvent.AOD -> onAODEvent(event)
         is SystemUIEvent.Notification -> onNotification(event)
         is SystemUIEvent.Other -> onOtherEvent(event)
+    }
+}
+
+private fun OneuiXToolsViewModel.previewStatusBarEvent(event: SystemUIEvent.StatusBar) {
+    previewData { preference ->
+        val statusBar = preference.systemUI.statusBar
+        val preview = when (event) {
+            is SystemUIEvent.StatusBar.UpdateStatusBarClockBlockStyle -> {
+                val updated = statusBar.statusBarClockBlockStyles
+                    .filterNot {
+                        it.blockIndex == event.value.blockIndex &&
+                            it.source == event.value.source
+                    }
+                    .plus(event.value)
+                    .sortedBy { it.blockIndex }
+                statusBar.copy(statusBarClockBlockStyles = updated)
+            }
+
+            is SystemUIEvent.StatusBar.DoubleLineClockGapDp ->
+                statusBar.copy(doubleLineClockGapDp = event.value)
+
+            is SystemUIEvent.StatusBar.Fold7DoubleLineClockTimeScale ->
+                statusBar.copy(fold7DoubleLineClockTimeScale = event.value)
+
+            is SystemUIEvent.StatusBar.Fold7DoubleLineClockDateScale ->
+                statusBar.copy(fold7DoubleLineClockDateScale = event.value)
+
+            is SystemUIEvent.StatusBar.StatusBarClockTextScale ->
+                statusBar.copy(statusBarClockTextScale = event.value)
+
+            else -> statusBar
+        }
+
+        if (preview == statusBar) {
+            preference
+        } else {
+            preference.copy(
+                systemUI = preference.systemUI.copy(statusBar = preview)
+            )
+        }
     }
 }
 
@@ -1297,7 +1347,35 @@ private fun OneuiXToolsViewModel.onStatusBarEvent(event: SystemUIEvent.StatusBar
                 preference.copy(
                     systemUI = preference.systemUI.copy(
                         statusBar = preference.systemUI.statusBar.copy(
-                            statusBarClockFormat = event.value
+                            statusBarClockFormat = event.value,
+                        )
+                    )
+                )
+            }
+
+            is SystemUIEvent.StatusBar.SetStatusBarClockRichStyle -> {
+                preference.copy(
+                    systemUI = preference.systemUI.copy(
+                        statusBar = preference.systemUI.statusBar.copy(
+                            enableStatusBarClockRichStyle = event.value
+                        )
+                    )
+                )
+            }
+
+            is SystemUIEvent.StatusBar.UpdateStatusBarClockBlockStyle -> {
+                val statusBar = preference.systemUI.statusBar
+                val updated = statusBar.statusBarClockBlockStyles
+                    .filterNot {
+                        it.blockIndex == event.value.blockIndex &&
+                            it.source == event.value.source
+                    }
+                    .plus(event.value)
+                    .sortedBy { it.blockIndex }
+                preference.copy(
+                    systemUI = preference.systemUI.copy(
+                        statusBar = statusBar.copy(
+                            statusBarClockBlockStyles = updated
                         )
                     )
                 )

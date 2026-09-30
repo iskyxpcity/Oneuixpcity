@@ -2,6 +2,7 @@ package com.oneuixp.app.oneuix
 
 import android.app.Application
 import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import android.os.ParcelFileDescriptor
 import android.os.UserManager
@@ -12,14 +13,18 @@ import androidx.datastore.dataStore
 import io.github.libxposed.service.XposedService
 import com.oneuixp.app.statusbar.LsposedFrameworkStatus
 import io.github.soclear.oneuix.common.IgnoreUnknownKeysJson
+import io.github.soclear.oneuix.common.Package
 import io.github.soclear.oneuix.common.Preference
+import io.github.soclear.oneuix.common.StatusBarRuntimeBridge
 import io.github.soclear.oneuix.common.ProductionPreferenceMigration
 import java.io.InputStream
 import java.io.OutputStream
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.first
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -43,7 +48,10 @@ private object OneuiXXposedService {
     private const val PREFERENCE_CHANGED_PATH = "preferences"
     private val initialized = AtomicBoolean(false)
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-
+    private const val RUNTIME_PREVIEW_INTERVAL_MS = 32L
+    private val runtimePreviewLock = Any()
+    private var pendingRuntimeStatusBar: Preference.SystemUI.StatusBar? = null
+    private var runtimePreviewJob: Job? = null
     @Volatile
     private var application: Application? = null
 
@@ -67,6 +75,74 @@ private object OneuiXXposedService {
                 Log.w(TAG, "CHAIN_PROBE shared XposedService unavailable")
             }
         }
+    }
+
+    private fun sendRuntimeStatusBar(current: Preference.SystemUI.StatusBar) {
+        val app = application ?: return
+        val payload = runCatching {
+            IgnoreUnknownKeysJson.encodeToString(
+                Preference.SystemUI.StatusBar.serializer(),
+                current,
+            )
+        }.getOrElse {
+            Log.w(TAG, "Runtime status-bar encode failed", it)
+            return
+        }
+
+        runCatching {
+            app.sendBroadcast(
+                Intent(StatusBarRuntimeBridge.ACTION)
+                    .setPackage(Package.SYSTEMUI)
+                    .addFlags(Intent.FLAG_RECEIVER_FOREGROUND)
+                    .putExtra(StatusBarRuntimeBridge.EXTRA_STATUS_BAR_JSON, payload)
+            )
+        }.onFailure {
+            Log.w(TAG, "Runtime status-bar broadcast failed", it)
+        }
+    }
+
+    fun scheduleRuntimeStatusBar(current: Preference.SystemUI.StatusBar) {
+        synchronized(runtimePreviewLock) {
+            pendingRuntimeStatusBar = current
+            if (runtimePreviewJob?.isActive == true) return
+
+            runtimePreviewJob = scope.launch {
+                while (true) {
+                    delay(RUNTIME_PREVIEW_INTERVAL_MS)
+                    val next = synchronized(runtimePreviewLock) {
+                        pendingRuntimeStatusBar.also {
+                            pendingRuntimeStatusBar = null
+                        }
+                    }
+                    if (next == null) {
+                        synchronized(runtimePreviewLock) {
+                            runtimePreviewJob = null
+                        }
+                        return@launch
+                    }
+                    sendRuntimeStatusBar(next)
+
+                    val finished = synchronized(runtimePreviewLock) {
+                        if (pendingRuntimeStatusBar == null) {
+                            runtimePreviewJob = null
+                            true
+                        } else {
+                            false
+                        }
+                    }
+                    if (finished) return@launch
+                }
+            }
+        }
+    }
+
+    fun publishPersistedRuntimeStatusBar(current: Preference.SystemUI.StatusBar) {
+        synchronized(runtimePreviewLock) {
+            pendingRuntimeStatusBar = null
+            runtimePreviewJob?.cancel()
+            runtimePreviewJob = null
+        }
+        sendRuntimeStatusBar(current)
     }
 
     fun synchronize(application: Application) {
@@ -187,6 +263,7 @@ object OneuiXPreferenceSerializer : Serializer<Preference> {
 
     override suspend fun writeTo(t: Preference, output: OutputStream) {
         val synchronized = writeRemote(t)
+        OneuiXXposedService.publishPersistedRuntimeStatusBar(t.systemUI.statusBar)
         val encoded = IgnoreUnknownKeysJson.encodeToString(Preference.serializer(), t)
         val root = IgnoreUnknownKeysJson.parseToJsonElement(encoded) as JsonObject
         val local = JsonObject(root + (SYNC_MARKER to JsonPrimitive(synchronized)))
@@ -207,6 +284,11 @@ object OneuiXPreferenceBridge {
     fun ensureSynchronized(application: Application) {
         OneuiXXposedService.initialize(application)
         OneuiXXposedService.synchronize(application)
+    }
+
+    fun preview(application: Application, preference: Preference) {
+        OneuiXXposedService.initialize(application)
+        OneuiXXposedService.scheduleRuntimeStatusBar(preference.systemUI.statusBar)
     }
 
     suspend fun synchronizeNow(application: Application): Boolean {
