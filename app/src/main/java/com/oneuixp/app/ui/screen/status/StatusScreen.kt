@@ -55,6 +55,7 @@ import com.oneuixp.app.ui.component.material.SegmentedColumn
 import com.oneuixp.app.ui.component.material.SegmentedListItem
 import com.oneuixp.app.ui.navigation3.Navigator
 import com.oneuixp.app.ui.navigation3.Route
+import com.oneuixp.app.ui.screen.home.LocalLsposedHomeStatus
 import com.oneuixp.app.ui.theme.LocalEnableBlur
 import com.oneuixp.app.ui.util.BlurredBar
 import com.oneuixp.app.ui.util.rememberBlurBackdrop
@@ -77,9 +78,10 @@ fun StatusPager(
     bottomInnerPadding: Dp,
     isCurrentPage: Boolean = true,
 ) {
+    val lsposedActive = LocalLsposedHomeStatus.current.active
     when (LocalUiMode.current) {
-        UiMode.Miuix -> StatusPagerMiuix(navigator, bottomInnerPadding)
-        UiMode.Material -> StatusPagerMaterial(navigator, bottomInnerPadding)
+        UiMode.Miuix -> StatusPagerMiuix(navigator, bottomInnerPadding, lsposedActive)
+        UiMode.Material -> StatusPagerMaterial(navigator, bottomInnerPadding, lsposedActive)
     }
 }
 
@@ -108,6 +110,7 @@ private fun StatusCategoryIcon(
 private fun StatusPagerMiuix(
     navigator: Navigator,
     bottomInnerPadding: Dp,
+    lsposedActive: Boolean,
 ) {
     val scrollBehavior = MiuixScrollBehavior()
     val backdrop = rememberBlurBackdrop(LocalEnableBlur.current)
@@ -154,11 +157,16 @@ private fun StatusPagerMiuix(
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(bottom = 12.dp),
+                                .padding(bottom = 12.dp)
+                                .graphicsLayer {
+                                    alpha = if (lsposedActive) 1f else 0.38f
+                                },
                             onClick = {
-                                navigator.push(Route.StatusCategory(category.name))
+                                if (lsposedActive) {
+                                    navigator.push(Route.StatusCategory(category.name))
+                                }
                             },
-                            showIndication = true,
+                            showIndication = lsposedActive,
                             insideMargin = PaddingValues(
                                 start = 10.dp,
                                 end = 16.dp,
@@ -206,6 +214,7 @@ private fun StatusPagerMiuix(
 private fun StatusPagerMaterial(
     navigator: Navigator,
     bottomInnerPadding: Dp,
+    lsposedActive: Boolean,
 ) {
     val scrollBehavior =
         TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
@@ -238,12 +247,19 @@ private fun StatusPagerMaterial(
                 .padding(innerPadding),
         ) {
             SegmentedColumn(
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                modifier = Modifier
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .graphicsLayer {
+                        alpha = if (lsposedActive) 1f else 0.38f
+                    },
                 content = StatusCategory.entries.map { category ->
                     {
                         SegmentedListItem(
+                            enabled = lsposedActive,
                             onClick = {
-                                navigator.push(Route.StatusCategory(category.name))
+                                if (lsposedActive) {
+                                    navigator.push(Route.StatusCategory(category.name))
+                                }
                             },
                             headlineContent = {
                                 Text(stringResource(category.titleRes))
