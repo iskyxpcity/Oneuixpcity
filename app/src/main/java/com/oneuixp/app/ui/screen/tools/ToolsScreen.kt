@@ -53,6 +53,7 @@ import com.oneuixp.app.ui.component.material.SegmentedColumn
 import com.oneuixp.app.ui.component.material.SegmentedListItem
 import com.oneuixp.app.ui.navigation3.Navigator
 import com.oneuixp.app.ui.navigation3.Route
+import com.oneuixp.app.ui.screen.home.LocalLsposedHomeStatus
 import com.oneuixp.app.ui.theme.LocalEnableBlur
 import com.oneuixp.app.ui.util.BlurredBar
 import com.oneuixp.app.ui.util.rememberBlurBackdrop
@@ -75,9 +76,10 @@ fun ToolsPager(
     bottomInnerPadding: Dp,
     isCurrentPage: Boolean = true,
 ) {
+    val lsposedActive = LocalLsposedHomeStatus.current.active
     when (LocalUiMode.current) {
-        UiMode.Miuix -> ToolsPagerMiuix(navigator, bottomInnerPadding)
-        UiMode.Material -> ToolsPagerMaterial(navigator, bottomInnerPadding)
+        UiMode.Miuix -> ToolsPagerMiuix(navigator, bottomInnerPadding, lsposedActive)
+        UiMode.Material -> ToolsPagerMaterial(navigator, bottomInnerPadding, lsposedActive)
     }
 }
 
@@ -98,6 +100,7 @@ private fun CategoryIcon(
 private fun ToolsPagerMiuix(
     navigator: Navigator,
     bottomInnerPadding: Dp,
+    lsposedActive: Boolean,
 ) {
     val scrollBehavior = MiuixScrollBehavior()
     val backdrop = rememberBlurBackdrop(LocalEnableBlur.current)
@@ -139,11 +142,16 @@ private fun ToolsPagerMiuix(
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(bottom = 12.dp),
+                                .padding(bottom = 12.dp)
+                                .graphicsLayer {
+                                    alpha = if (lsposedActive) 1f else 0.38f
+                                },
                             onClick = {
-                                navigator.push(Route.OneuiXCategory(category.name))
+                                if (lsposedActive) {
+                                    navigator.push(Route.OneuiXCategory(category.name))
+                                }
                             },
-                            showIndication = true,
+                            showIndication = lsposedActive,
                             insideMargin = PaddingValues(
                                 start = 10.dp,
                                 end = 16.dp,
@@ -191,6 +199,7 @@ private fun ToolsPagerMiuix(
 private fun ToolsPagerMaterial(
     navigator: Navigator,
     bottomInnerPadding: Dp,
+    lsposedActive: Boolean,
 ) {
     val scrollBehavior =
         TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
@@ -227,13 +236,20 @@ private fun ToolsPagerMaterial(
                 .padding(innerPadding),
         ) {
             SegmentedColumn(
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                modifier = Modifier
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .graphicsLayer {
+                        alpha = if (lsposedActive) 1f else 0.38f
+                    },
                 title = stringResource(R.string.oneuix_core_features),
                 content = coreCategories.map { category ->
                     {
                         SegmentedListItem(
+                            enabled = lsposedActive,
                             onClick = {
-                                navigator.push(Route.OneuiXCategory(category.name))
+                                if (lsposedActive) {
+                                    navigator.push(Route.OneuiXCategory(category.name))
+                                }
                             },
                             headlineContent = {
                                 Text(oneuiXCategoryTitle(category))
@@ -253,13 +269,20 @@ private fun ToolsPagerMaterial(
             )
 
             SegmentedColumn(
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                modifier = Modifier
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .graphicsLayer {
+                        alpha = if (lsposedActive) 1f else 0.38f
+                    },
                 title = stringResource(R.string.oneuix_app_features),
                 content = appCategories.map { category ->
                     {
                         SegmentedListItem(
+                            enabled = lsposedActive,
                             onClick = {
-                                navigator.push(Route.OneuiXCategory(category.name))
+                                if (lsposedActive) {
+                                    navigator.push(Route.OneuiXCategory(category.name))
+                                }
                             },
                             headlineContent = {
                                 Text(oneuiXCategoryTitle(category))
