@@ -276,7 +276,7 @@ object Network {
             if (!shouldDisplayNetworkSpeed(txBytesPerSecond, rxBytesPerSecond, thresholdKb)) {
                 return ""
             }
-            return "${formatSpeed(txBytesPerSecond)}↑\n${formatSpeed(rxBytesPerSecond)}↓"
+            return "${formatSpeed(txBytesPerSecond)}\n${formatSpeed(rxBytesPerSecond)}"
         }
 
         try {
@@ -336,6 +336,12 @@ object Network {
                         gravity = Gravity.END
                         textAlignment = View.TEXT_ALIGNMENT_VIEW_END
                         setTypeface(Typeface.MONOSPACE, Typeface.BOLD)
+                        setPaddingRelative(
+                            paddingStart,
+                            paddingTop,
+                            0,
+                            paddingBottom,
+                        )
 
                         if (lineGapDp != null) {
                             val density = resources.displayMetrics.density
@@ -345,6 +351,33 @@ object Network {
                                 lineSpacingMultiplier,
                             )
                         }
+                    }
+                } catch (t: Throwable) {
+                    xlog(t)
+                }
+                result
+            }
+
+            // Samsung scaleView() reapplies network_speed_padding_end after inflation.
+            // Split upload/download mode does not need that extra right-side blank, so
+            // clear only the content end padding after every Samsung scale pass.
+            val scaleViewMethod = netspeedViewClass.getDeclaredMethod(
+                "scaleView",
+                Float::class.javaPrimitiveType,
+            )
+            xposedModule.hook(scaleViewMethod).intercept { chain ->
+                val result = chain.proceed()
+                try {
+                    (chain.thisObject.reflect["mContentView"] as? TextView)?.apply {
+                        setPaddingRelative(
+                            paddingStart,
+                            paddingTop,
+                            0,
+                            paddingBottom,
+                        )
+                    }
+                    runCatching {
+                        chain.thisObject.reflect["mStableWidthHelper"].reflect.call("reset")
                     }
                 } catch (t: Throwable) {
                     xlog(t)
