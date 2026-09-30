@@ -236,23 +236,23 @@ object Network {
         fun formatSpeed(bytesPerSecond: Float): String {
             // 0 或负数显示为 "0B"
             if (bytesPerSecond <= 0f) {
-                return "0B/s"
+                return "0B"
             }
             if (bytesPerSecond < 1024f) {
-                return "${bytesPerSecond.roundToInt()}B/s"
+                return "${bytesPerSecond.roundToInt()}B"
             }
             val kiBytesPerSecond = bytesPerSecond / 1024f
             if (kiBytesPerSecond < 100f) {
-                return "%.2fKB/s".format(kiBytesPerSecond)
+                return "%.2fKB".format(kiBytesPerSecond)
             }
             if (kiBytesPerSecond < 1000f) {
-                return "%.1fKB/s".format(kiBytesPerSecond)
+                return "%.1fKB".format(kiBytesPerSecond)
             }
             val miBytesPerSecond = kiBytesPerSecond / 1024f
             if (miBytesPerSecond < 100f) {
-                return "%.2fMB/s".format(miBytesPerSecond)
+                return "%.2fMB".format(miBytesPerSecond)
             }
-            return "%.1fMB/s".format(miBytesPerSecond)
+            return "%.1fMB".format(miBytesPerSecond)
         }
 
         fun shouldDisplayNetworkSpeed(
@@ -276,7 +276,7 @@ object Network {
             if (!shouldDisplayNetworkSpeed(txBytesPerSecond, rxBytesPerSecond, thresholdKb)) {
                 return ""
             }
-            return "${formatSpeed(txBytesPerSecond)}\n${formatSpeed(rxBytesPerSecond)}"
+            return "↑${formatSpeed(txBytesPerSecond)}\n↓${formatSpeed(rxBytesPerSecond)}"
         }
 
         try {
