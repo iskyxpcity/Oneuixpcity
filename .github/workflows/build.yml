@@ -209,7 +209,7 @@ jobs:
           (cd dist && sha256sum "$OUTPUT_APK" > SHA256SUMS)
 
       - name: Publish signed APK to GitHub release
-        if: success() && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/migration/'))
+        if: success() && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/migration/') || startsWith(github.ref, 'refs/heads/test/'))
         env:
           SOURCE_REPO_TOKEN: ${{ github.token }}
           PUBLIC_RELEASE_TOKEN: ${{ secrets.RELEASE_REPO_TOKEN }}
@@ -256,9 +256,15 @@ jobs:
               TITLE="OneuiXP main build #${GITHUB_RUN_NUMBER}"
               NOTES="Automated signed main-branch test build. This is a prerelease, not a formal OneuiXP release."
             else
-              TAG="migration-build-${GITHUB_RUN_NUMBER}-${SHORT_SHA}"
-              TITLE="OneuiXP migration build #${GITHUB_RUN_NUMBER}"
-              NOTES="Signed migration test build. Validate on Samsung hardware before merging to main."
+              if [[ "$GITHUB_REF" == refs/heads/test/* ]]; then
+                TAG="test-build-${GITHUB_RUN_NUMBER}-${SHORT_SHA}"
+                TITLE="OneuiXP test build #${GITHUB_RUN_NUMBER}"
+                NOTES="Signed test build. Validate on Samsung hardware before merging to main."
+              else
+                TAG="migration-build-${GITHUB_RUN_NUMBER}-${SHORT_SHA}"
+                TITLE="OneuiXP migration build #${GITHUB_RUN_NUMBER}"
+                NOTES="Signed migration test build. Validate on Samsung hardware before merging to main."
+              fi
             fi
 
             if ! gh release view "$TAG" --repo "$RELEASE_REPO" >/dev/null 2>&1; then

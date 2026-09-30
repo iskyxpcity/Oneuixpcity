@@ -54,7 +54,6 @@ import androidx.compose.ui.unit.dp
 import com.oneuixp.app.BuildConfig
 import com.oneuixp.app.R
 import com.oneuixp.app.ui.component.WarningLevel
-import com.oneuixp.app.ui.component.dialog.rememberConfirmDialog
 import com.oneuixp.app.ui.component.material.TonalCard
 import com.oneuixp.app.ui.component.rebootlistpopup.RebootListPopup
 import com.oneuixp.app.ui.component.statustag.StatusTag
@@ -98,30 +97,17 @@ private fun UpdateCard(
     actions: HomeActions,
 ) {
     val newVersion = state.latestVersionInfo
-    val title = stringResource(id = R.string.app_changelog)
-    val updateText = stringResource(id = R.string.app_update)
 
     AnimatedVisibility(
         visible = state.hasUpdate,
         enter = fadeIn() + expandVertically(),
         exit = shrinkVertically() + fadeOut()
     ) {
-        val updateDialog = rememberConfirmDialog(onConfirm = { actions.onOpenUrl(newVersion.downloadUrl) })
         WarningCard(
             message = stringResource(id = R.string.new_version_available, newVersion.versionName),
-            level = WarningLevel.Notice
-        ) {
-            if (newVersion.changelog.isEmpty()) {
-                actions.onOpenUrl(newVersion.downloadUrl)
-            } else {
-                updateDialog.showConfirm(
-                    title = title,
-                    content = newVersion.changelog,
-                    markdown = true,
-                    confirm = updateText
-                )
-            }
-        }
+            level = WarningLevel.Notice,
+            onClick = { actions.onInstallUpdate(newVersion) },
+        )
     }
 }
 

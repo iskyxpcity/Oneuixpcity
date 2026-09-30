@@ -5,6 +5,7 @@ data class LatestVersionInfo(
     val downloadUrl: String = "",
     val changelog: String = "",
     val versionName: String = "",
+    val sha256: String = "",
 )
 
 private fun parseOneuiXPVersion(value: String): List<Int>? {

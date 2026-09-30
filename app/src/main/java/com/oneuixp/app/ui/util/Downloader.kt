@@ -33,18 +33,27 @@ fun checkNewVersion(): LatestVersionInfo {
                 return@use LatestVersionInfo()
             }
 
+            val expectedApkName = "OneuiXP_${versionName}.apk"
+            val assets = release.optJSONArray("assets") ?: return@use LatestVersionInfo()
+            val apkAsset = (0 until assets.length())
+                .map { assets.getJSONObject(it) }
+                .firstOrNull { asset ->
+                    asset.optString("name") == expectedApkName &&
+                        asset.optString("browser_download_url").isNotBlank()
+                } ?: return@use LatestVersionInfo()
+
+            val digest = apkAsset.optString("digest")
+                .removePrefix("sha256:")
+                .lowercase()
+            if (digest.length != 64) return@use LatestVersionInfo()
+
             val comparableCode = major * 100_000_000 + minor * 1_000_000 + date
-            val releasePageUrl = release.optString(
-                "html_url",
-                "https://github.com/$PUBLIC_RELEASE_REPO/releases/tag/v$versionName",
-            )
             LatestVersionInfo(
                 versionCode = comparableCode,
                 versionName = versionName,
-                // Open the public release page. Direct APK URLs are not Android
-                // package-install intents and previously caused an Activity exit.
-                downloadUrl = releasePageUrl,
+                downloadUrl = apkAsset.optString("browser_download_url"),
                 changelog = release.optString("body"),
+                sha256 = digest,
             )
         }
     }.getOrDefault(LatestVersionInfo())

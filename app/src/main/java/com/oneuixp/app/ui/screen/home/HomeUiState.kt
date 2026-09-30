@@ -20,4 +20,4 @@ data class HomeUiState(
 }
 
 @Immutable
-data class HomeActions(val onOpenUrl: (String) -> Unit)
+data class HomeActions(val onInstallUpdate: (LatestVersionInfo) -> Unit)

@@ -47,7 +47,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.oneuixp.app.BuildConfig
 import com.oneuixp.app.R
-import com.oneuixp.app.ui.component.dialog.rememberConfirmDialog
 import com.oneuixp.app.ui.component.miuix.WarningCard
 import com.oneuixp.app.ui.component.rebootlistpopup.RebootListPopupMiuix
 import com.oneuixp.app.ui.theme.LocalEnableBlur
@@ -116,9 +115,6 @@ fun HomePagerMiuix(state: HomeUiState, actions: HomeActions, bottomInnerPadding:
 @Composable
 private fun UpdateCard(state: HomeUiState, actions: HomeActions) {
     val version = state.latestVersionInfo
-    val title = stringResource(R.string.app_changelog)
-    val update = stringResource(R.string.app_update)
-    val dialog = rememberConfirmDialog(onConfirm = { actions.onOpenUrl(version.downloadUrl) })
     AnimatedVisibility(
         visible = state.hasUpdate,
         enter = fadeIn() + expandVertically(),
@@ -126,15 +122,7 @@ private fun UpdateCard(state: HomeUiState, actions: HomeActions) {
     ) {
         WarningCard(
             message = stringResource(R.string.new_version_available, version.versionName),
-            onClick = {
-                if (version.changelog.isEmpty()) actions.onOpenUrl(version.downloadUrl)
-                else dialog.showConfirm(
-                    title = title,
-                    content = version.changelog,
-                    markdown = true,
-                    confirm = update,
-                )
-            },
+            onClick = { actions.onInstallUpdate(version) },
         )
     }
 }
