@@ -94,7 +94,7 @@ fun rememberLsposedHomeStatus(): LsposedHomeStatus {
         scopeKnown = framework.scopeKnown,
         scopeActive = framework.systemUiScopeActive,
         injected = framework.connected && framework.pingAlive,
-        injectionCount = featureInjectionCount,
+        injectionCount = if (framework.active) featureInjectionCount else 0,
         scopeCount = actualScopeCount,
     )
 }
