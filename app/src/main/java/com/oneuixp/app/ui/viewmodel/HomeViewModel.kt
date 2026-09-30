@@ -40,7 +40,7 @@ class HomeViewModel(
         return HomeUiState(
             checkUpdateEnabled = settingsRepo.checkUpdate,
             latestVersionInfo = LatestVersionInfo(),
-            currentManagerVersionCode = managerVersion.versionCode,
+            currentManagerVersionName = managerVersion.versionName,
         )
     }
 }

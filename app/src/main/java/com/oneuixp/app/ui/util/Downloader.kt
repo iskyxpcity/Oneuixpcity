@@ -1,13 +1,17 @@
 package com.oneuixp.app.ui.util
 
+import com.oneuixp.app.BuildConfig
 import com.oneuixp.app.oneuiXPApp
 import com.oneuixp.app.ui.util.update.LatestVersionInfo
+import com.oneuixp.app.ui.util.update.compareOneuiXPVersions
 import okhttp3.Request
 
-/** Only OneuiXP GitHub releases are checked. */
+private const val PUBLIC_RELEASE_REPO = "iSkyJIE/OneuiXP-Releases"
+
+/** Only the public binary-release repository is checked. */
 fun checkNewVersion(): LatestVersionInfo {
     if (!isNetworkAvailable(oneuiXPApp)) return LatestVersionInfo()
-    val endpoint = "https://api.github.com/repos/iSkyJIE/OneuiXP/releases/latest"
+    val endpoint = "https://api.github.com/repos/$PUBLIC_RELEASE_REPO/releases/latest"
     return runCatching {
         oneuiXPApp.okhttpClient.newCall(
             Request.Builder().url(endpoint)
@@ -24,29 +28,22 @@ fun checkNewVersion(): LatestVersionInfo {
             if (major !in 0..20 || minor !in 0..99 || date !in 0..999999) {
                 return@use LatestVersionInfo()
             }
-            val versionCode = major * 100_000_000 + minor * 1_000_000 + date
-            if (versionCode <= com.oneuixp.app.BuildConfig.VERSION_CODE) {
+
+            if (compareOneuiXPVersions(versionName, BuildConfig.VERSION_NAME) <= 0) {
                 return@use LatestVersionInfo()
             }
-            val assets = release.optJSONArray("assets")
-            var downloadUrl = release.optString(
-                "html_url", "https://github.com/iSkyJIE/OneuiXP/releases"
+
+            val comparableCode = major * 100_000_000 + minor * 1_000_000 + date
+            val releasePageUrl = release.optString(
+                "html_url",
+                "https://github.com/$PUBLIC_RELEASE_REPO/releases/tag/v$versionName",
             )
-            if (assets != null) {
-                for (i in 0 until assets.length()) {
-                    val asset = assets.optJSONObject(i) ?: continue
-                    val name = asset.optString("name")
-                    if (name.endsWith(".apk", ignoreCase = true) &&
-                        name.contains("OneuiXP", ignoreCase = true)) {
-                        downloadUrl = asset.optString("browser_download_url", downloadUrl)
-                        break
-                    }
-                }
-            }
             LatestVersionInfo(
-                versionCode = versionCode,
+                versionCode = comparableCode,
                 versionName = versionName,
-                downloadUrl = downloadUrl,
+                // Open the public release page. Direct APK URLs are not Android
+                // package-install intents and previously caused an Activity exit.
+                downloadUrl = releasePageUrl,
                 changelog = release.optString("body"),
             )
         }

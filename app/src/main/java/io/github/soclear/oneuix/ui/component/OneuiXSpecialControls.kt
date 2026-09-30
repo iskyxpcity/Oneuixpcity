@@ -22,6 +22,7 @@ import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import com.oneuixp.app.ui.LocalUiMode
@@ -257,6 +258,65 @@ fun OneuiXInlineTextField(
         }
     }
 }
+
+@Composable
+fun OneuiXInlineTextField(
+    value: TextFieldValue,
+    onValueChange: (TextFieldValue) -> Unit,
+    modifier: Modifier = Modifier,
+    labelText: String? = null,
+    singleLine: Boolean = false,
+) {
+    val grouped = LocalOneuiXGroupedPreference.current
+    when (LocalUiMode.current) {
+        UiMode.Material -> OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            modifier = modifier,
+            label = labelText?.let { label -> { MaterialText(label) } },
+            singleLine = singleLine,
+        )
+
+        UiMode.Miuix -> {
+            @Composable
+            fun Content(contentModifier: Modifier = Modifier) {
+                Column(
+                    modifier = contentModifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                ) {
+                    if (!labelText.isNullOrBlank()) {
+                        MiuixText(
+                            text = labelText,
+                            fontSize = MiuixTheme.textStyles.body2.fontSize,
+                            color = colorScheme.onSurfaceVariantSummary,
+                            modifier = Modifier.padding(bottom = 6.dp),
+                        )
+                    }
+                    MiuixTextField(
+                        value = value,
+                        onValueChange = onValueChange,
+                        modifier = Modifier.fillMaxWidth(),
+                        insideMargin = DpSize(12.dp, 10.dp),
+                        cornerRadius = 12.dp,
+                        enabled = true,
+                        singleLine = singleLine,
+                        maxLines = if (singleLine) 1 else Int.MAX_VALUE,
+                    )
+                }
+            }
+
+            if (grouped) {
+                Content(modifier)
+            } else {
+                Card(modifier = modifier) {
+                    Content()
+                }
+            }
+        }
+    }
+}
+
 
 @Composable
 fun OneuiXInfoItem(

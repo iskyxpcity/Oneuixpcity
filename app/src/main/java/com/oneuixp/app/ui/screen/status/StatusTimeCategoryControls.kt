@@ -22,6 +22,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import com.oneuixp.app.R
 import io.github.soclear.oneuix.common.Preference
@@ -100,7 +102,12 @@ fun StatusTimeCategoryControls(
 
     var formatExpanded by rememberSaveable { mutableStateOf(false) }
     var tempDataTimeFormat by remember(uiState.statusBarClockFormat) {
-        mutableStateOf(uiState.statusBarClockFormat)
+        mutableStateOf(
+            TextFieldValue(
+                text = uiState.statusBarClockFormat,
+                selection = TextRange(uiState.statusBarClockFormat.length),
+            )
+        )
     }
     var formatLabel by remember { mutableStateOf("") }
     var showFormatHelp by rememberSaveable { mutableStateOf(false) }
@@ -166,7 +173,7 @@ fun StatusTimeCategoryControls(
                                         tempDataTimeFormat = it
                                         formatLabel = runCatching {
                                             StatusBarClockFormatter.format(
-                                                it,
+                                                it.text,
                                                 LocalDateTime.now(),
                                             )
                                         }.getOrElse { "error" }
@@ -182,7 +189,7 @@ fun StatusTimeCategoryControls(
                                         var right = true
                                         formatLabel = try {
                                             StatusBarClockFormatter.format(
-                                                tempDataTimeFormat,
+                                                tempDataTimeFormat.text,
                                                 LocalDateTime.now(),
                                             )
                                         } catch (_: Throwable) {
@@ -192,7 +199,7 @@ fun StatusTimeCategoryControls(
                                         if (right) {
                                             onEvent(
                                                 SystemUIEvent.StatusBar.StatusBarClockFormat(
-                                                    tempDataTimeFormat
+                                                    tempDataTimeFormat.text
                                                 )
                                             )
                                         }
@@ -226,10 +233,29 @@ fun StatusTimeCategoryControls(
                                     OneuiXActionButton(
                                         text = stringResource(id = preset.labelRes),
                                         onClick = {
-                                            tempDataTimeFormat += preset.token
+                                            val selection = tempDataTimeFormat.selection
+                                            val start = selection.min.coerceIn(
+                                                0,
+                                                tempDataTimeFormat.text.length,
+                                            )
+                                            val end = selection.max.coerceIn(
+                                                start,
+                                                tempDataTimeFormat.text.length,
+                                            )
+                                            val updatedText =
+                                                tempDataTimeFormat.text.replaceRange(
+                                                    start,
+                                                    end,
+                                                    preset.token,
+                                                )
+                                            val cursor = start + preset.token.length
+                                            tempDataTimeFormat = TextFieldValue(
+                                                text = updatedText,
+                                                selection = TextRange(cursor),
+                                            )
                                             formatLabel = runCatching {
                                                 StatusBarClockFormatter.format(
-                                                    tempDataTimeFormat,
+                                                    updatedText,
                                                     LocalDateTime.now(),
                                                 )
                                             }.getOrElse { "error" }

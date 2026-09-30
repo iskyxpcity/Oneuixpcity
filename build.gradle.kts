@@ -28,9 +28,8 @@ fun getGitDescribe(): String {
 }
 
 /**
- * OneuiXP has not made a formal public release yet.
- * Keep the explicit versionCode small and monotonic, starting at 1.
- * Increment oneuixpVersionCode in gradle.properties for future releases.
+ * OneuiXP uses an explicit small monotonic Android versionCode.
+ * Increment oneuixpVersionCode in gradle.properties for every formal release.
  */
 fun getVersionCode(): Int {
     val explicit = (findProperty("oneuixpVersionCode") as? String)?.toIntOrNull()

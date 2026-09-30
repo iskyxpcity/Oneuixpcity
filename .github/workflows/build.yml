@@ -26,6 +26,21 @@ jobs:
           test -n "$VERSION_CODE"
           echo "VERSION_NAME=$VERSION_NAME" >> "$GITHUB_ENV"
           echo "VERSION_CODE=$VERSION_CODE" >> "$GITHUB_ENV"
+      - name: Select debug or optimized release build
+        run: |
+          set -euo pipefail
+          COMMIT_SUBJECT=$(git log -1 --pretty=%s)
+          if [ "$GITHUB_REF" = "refs/heads/main" ] && [[ "$COMMIT_SUBJECT" == release:* ]]; then
+            echo "BUILD_VARIANT=release" >> "$GITHUB_ENV"
+            echo "APP_ASSEMBLE_TASK=:app:assembleRelease" >> "$GITHUB_ENV"
+            echo "APK_OUTPUT_DIR=release" >> "$GITHUB_ENV"
+            echo "FORMAL_RELEASE_BUILD=true" >> "$GITHUB_ENV"
+          else
+            echo "BUILD_VARIANT=debug" >> "$GITHUB_ENV"
+            echo "APP_ASSEMBLE_TASK=:app:assembleDebug" >> "$GITHUB_ENV"
+            echo "APK_OUTPUT_DIR=debug" >> "$GITHUB_ENV"
+            echo "FORMAL_RELEASE_BUILD=false" >> "$GITHUB_ENV"
+          fi
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -43,7 +58,7 @@ jobs:
           grep -q 'val defaultManagerPackageName = "com.oneuixp.app"' app/build.gradle.kts
           test ! -e app/src/main/assets/xposed_init
           grep -q 'sealed interface Route : NavKey, Parcelable' app/src/main/java/com/oneuixp/app/ui/navigation3/Routes.kt
-          grep -q 'iSkyJIE/OneuiXP/releases/latest' app/src/main/java/com/oneuixp/app/ui/util/Downloader.kt
+          grep -q 'iSkyJIE/OneuiXP-Releases' app/src/main/java/com/oneuixp/app/ui/util/Downloader.kt
           test -f app/src/main/resources/META-INF/xposed/java_init.list
           test -f app/src/main/resources/META-INF/xposed/scope.list
           grep -Fq 'include(":common")' settings.gradle.kts
@@ -115,7 +130,42 @@ jobs:
           set -euo pipefail
           mkdir -p diagnostics
           chmod +x gradlew
-          ./gradlew :app:assembleDebug -PONEUIXP_PACKAGE_NAME=com.oneuixp.app -PONEUIXP_NAME=OneuiXP --stacktrace --no-daemon 2>&1 | tee diagnostics/gradle-build.log
+          ./gradlew "$APP_ASSEMBLE_TASK" -PONEUIXP_PACKAGE_NAME=com.oneuixp.app -PONEUIXP_NAME=OneuiXP --stacktrace --no-daemon 2>&1 | tee diagnostics/gradle-build.log
+
+      - name: Validate optimized release candidate
+        if: success() && github.ref == 'refs/heads/migration/public-release-repo-20260930'
+        env:
+          ONEUIXP_KEYSTORE_PATH: ${{ github.workspace }}/app/owner.keystore
+          ONEUIXP_KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          ONEUIXP_KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          ONEUIXP_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          EXPECTED_CERT: 93bf61a6493c6b336383832eb41301bd8fe061f43566e7e384e3fdd9fc1c26a1
+        run: |
+          set -euo pipefail
+          mkdir -p diagnostics/release-validation
+          ./gradlew :app:assembleRelease -PONEUIXP_PACKAGE_NAME=com.oneuixp.app -PONEUIXP_NAME=OneuiXP --stacktrace --no-daemon 2>&1 | tee diagnostics/release-validation/assemble-release.log
+
+          RELEASE_APK=$(find app/build/outputs/apk/release -type f -name '*.apk' | head -1)
+          test -s "$RELEASE_APK"
+          APKSIGNER="$ANDROID_HOME/build-tools/37.0.0/apksigner"
+          AAPT="$ANDROID_HOME/build-tools/37.0.0/aapt"
+
+          "$APKSIGNER" verify --verbose --print-certs "$RELEASE_APK" | tee diagnostics/release-validation/SIGNING_INFO.txt
+          CERT=$(sed -n 's/^.*certificate SHA-256 digest: //p' diagnostics/release-validation/SIGNING_INFO.txt | head -1 | tr -d ': ' | tr '[:upper:]' '[:lower:]')
+          EXPECTED=$(printf '%s' "$EXPECTED_CERT" | tr -d ': ' | tr '[:upper:]' '[:lower:]')
+          test "$CERT" = "$EXPECTED"
+
+          "$AAPT" dump badging "$RELEASE_APK" | tee diagnostics/release-validation/APK_PACKAGE_INFO.txt
+          grep -q "^package: name='com.oneuixp.app'" diagnostics/release-validation/APK_PACKAGE_INFO.txt
+          grep -q "versionName='$VERSION_NAME'" diagnostics/release-validation/APK_PACKAGE_INFO.txt
+          grep -q "versionCode='$VERSION_CODE'" diagnostics/release-validation/APK_PACKAGE_INFO.txt
+
+          unzip -p "$RELEASE_APK" META-INF/xposed/java_init.list | grep -Fxq 'io.github.soclear.oneuix.hook.Main'
+          unzip -p "$RELEASE_APK" META-INF/xposed/module.prop | grep -Fq 'targetApiVersion=101'
+          unzip -p "$RELEASE_APK" META-INF/xposed/scope.list | grep -Fxq 'com.android.systemui'
+
+          RELEASE_SIZE=$(stat -c%s "$RELEASE_APK")
+          printf 'Optimized release APK bytes: %s\n' "$RELEASE_SIZE" | tee diagnostics/release-validation/APK_SIZE.txt
 
       - name: Verify package, stable certificate and prepare APK
         env:
@@ -123,7 +173,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p dist
-          APK=$(find app/build/outputs/apk/debug -type f -name '*.apk' | head -1)
+          APK=$(find "app/build/outputs/apk/$APK_OUTPUT_DIR" -type f -name '*.apk' | head -1)
           test -s "$APK"
           APKSIGNER="$ANDROID_HOME/build-tools/37.0.0/apksigner"
           AAPT="$ANDROID_HOME/build-tools/37.0.0/aapt"
@@ -143,7 +193,13 @@ jobs:
           grep -q "versionCode='$VERSION_CODE'" dist/APK_PACKAGE_INFO.txt
           "$AAPT" dump xmltree "$APK" AndroidManifest.xml > dist/APK_MANIFEST_CHECK.txt
           grep -Eq 'hasFragileUserData.*0x0$' dist/APK_MANIFEST_CHECK.txt
-          OUTPUT_APK="OneuiXP_${VERSION_NAME}_BUILD_${GITHUB_RUN_NUMBER}_OWNER_SIGNED.apk"
+          COMMIT_SUBJECT=$(git log -1 --pretty=%s)
+          if [ "$GITHUB_REF" = "refs/heads/main" ] && [[ "$COMMIT_SUBJECT" == release:* ]]; then
+            OUTPUT_APK="OneuiXP_${VERSION_NAME}.apk"
+          else
+            OUTPUT_APK="OneuiXP_${VERSION_NAME}_BUILD_${GITHUB_RUN_NUMBER}.apk"
+          fi
+          echo "OUTPUT_APK=$OUTPUT_APK" >> "$GITHUB_ENV"
           cp "$APK" "dist/$OUTPUT_APK"
           unzip -t "dist/$OUTPUT_APK"
           unzip -p "$APK" META-INF/xposed/java_init.list | grep -Fxq 'io.github.soclear.oneuix.hook.Main'
@@ -155,50 +211,83 @@ jobs:
       - name: Publish signed APK to GitHub release
         if: success() && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/migration/'))
         env:
-          GH_TOKEN: ${{ github.token }}
+          SOURCE_REPO_TOKEN: ${{ github.token }}
+          PUBLIC_RELEASE_TOKEN: ${{ secrets.RELEASE_REPO_TOKEN }}
+          PUBLIC_RELEASE_REPO: iSkyJIE/OneuiXP-Releases
         run: |
           set -euo pipefail
           SHORT_SHA="${GITHUB_SHA::7}"
           COMMIT_SUBJECT=$(git log -1 --pretty=%s)
           FORMAL_RELEASE=false
+
           if [ "$GITHUB_REF" = "refs/heads/main" ] && [[ "$COMMIT_SUBJECT" == release:* ]]; then
             FORMAL_RELEASE=true
+            RELEASE_REPO="$PUBLIC_RELEASE_REPO"
+            GH_TOKEN="$PUBLIC_RELEASE_TOKEN"
+            export GH_TOKEN
+
+            if [ -z "$GH_TOKEN" ]; then
+              echo "::error::Missing Actions secret RELEASE_REPO_TOKEN. It must be a fine-grained token with Contents: Read and write access to $PUBLIC_RELEASE_REPO."
+              exit 1
+            fi
+
             TAG="v${VERSION_NAME}"
             TITLE="OneuiXP ${VERSION_NAME}"
-            NOTES="OneuiXP ${VERSION_NAME} 正式版。首个正式发布版本；包含已在 Samsung 真机验证的状态栏时间分类、字符串独立样式、即时预览、颜色取色器与格式快捷预设。"
-          elif [ "$GITHUB_REF" = "refs/heads/main" ]; then
-            TAG="main-build-${GITHUB_RUN_NUMBER}-${SHORT_SHA}"
-            TITLE="OneuiXP main build #${GITHUB_RUN_NUMBER}"
-            NOTES="Automated signed main-branch test build. This is a prerelease, not a formal OneuiXP release."
-          else
-            TAG="migration-build-${GITHUB_RUN_NUMBER}-${SHORT_SHA}"
-            TITLE="OneuiXP migration build #${GITHUB_RUN_NUMBER}"
-            NOTES="Signed OneUIX full-migration test build. Imported OneUIX functional hooks are enabled; validate on Samsung hardware before merging to main."
-          fi
+            NOTES="OneuiXP ${VERSION_NAME} 正式版。源码仓库为私有仓库；本公开仓库仅提供正式版 APK 下载和更新说明。"
 
-          if ! gh release view "$TAG" >/dev/null 2>&1; then
-            if [ "$FORMAL_RELEASE" = true ]; then
+            if ! gh release view "$TAG" --repo "$RELEASE_REPO" >/dev/null 2>&1; then
+              # The public binary repository owns its own Git history. Do not
+              # target the private source commit SHA here.
               gh release create "$TAG" \
-                --target "$GITHUB_SHA" \
+                --repo "$RELEASE_REPO" \
                 --title "$TITLE" \
                 --notes "$NOTES" \
                 --latest
+            fi
+          else
+            # Migration/test builds stay with the source repository. Once the
+            # source repository is private, these builds are private as well.
+            RELEASE_REPO="$GITHUB_REPOSITORY"
+            GH_TOKEN="$SOURCE_REPO_TOKEN"
+            export GH_TOKEN
+
+            if [ "$GITHUB_REF" = "refs/heads/main" ]; then
+              TAG="main-build-${GITHUB_RUN_NUMBER}-${SHORT_SHA}"
+              TITLE="OneuiXP main build #${GITHUB_RUN_NUMBER}"
+              NOTES="Automated signed main-branch test build. This is a prerelease, not a formal OneuiXP release."
             else
+              TAG="migration-build-${GITHUB_RUN_NUMBER}-${SHORT_SHA}"
+              TITLE="OneuiXP migration build #${GITHUB_RUN_NUMBER}"
+              NOTES="Signed migration test build. Validate on Samsung hardware before merging to main."
+            fi
+
+            if ! gh release view "$TAG" --repo "$RELEASE_REPO" >/dev/null 2>&1; then
               gh release create "$TAG" \
+                --repo "$RELEASE_REPO" \
                 --target "$GITHUB_SHA" \
                 --title "$TITLE" \
                 --notes "$NOTES" \
                 --prerelease
             fi
           fi
-          OUTPUT_APK="OneuiXP_${VERSION_NAME}_BUILD_${GITHUB_RUN_NUMBER}_OWNER_SIGNED.apk"
-          gh release upload "$TAG" \
-            "dist/$OUTPUT_APK" \
-            dist/SHA256SUMS \
-            dist/SIGNING_INFO.txt \
-            dist/APK_PACKAGE_INFO.txt \
-            --clobber
-          echo "Published signed APK to prerelease tag: $TAG"
+
+          test -n "$OUTPUT_APK"
+          if [ "$FORMAL_RELEASE" = true ]; then
+            gh release upload "$TAG" \
+              --repo "$RELEASE_REPO" \
+              "dist/$OUTPUT_APK" \
+              --clobber
+            echo "Published formal signed APK only to public release repo: $RELEASE_REPO / $TAG"
+          else
+            gh release upload "$TAG" \
+              --repo "$RELEASE_REPO" \
+              "dist/$OUTPUT_APK" \
+              dist/SHA256SUMS \
+              dist/SIGNING_INFO.txt \
+              dist/APK_PACKAGE_INFO.txt \
+              --clobber
+            echo "Published signed test APK to source repo prerelease: $RELEASE_REPO / $TAG"
+          fi
 
       - name: Save Gradle diagnostics on failure
         if: failure()
