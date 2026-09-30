@@ -377,7 +377,9 @@ object Network {
                         )
                     }
                     runCatching {
-                        chain.thisObject.reflect["mStableWidthHelper"].reflect.call("reset")
+                        chain.thisObject.reflect["mStableWidthHelper"]?.let { stableWidthHelper ->
+                            stableWidthHelper.reflect.call("reset")
+                        }
                     }
                 } catch (t: Throwable) {
                     xlog(t)
