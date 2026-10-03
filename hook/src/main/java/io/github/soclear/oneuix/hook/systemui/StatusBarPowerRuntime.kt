@@ -5,6 +5,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.res.Configuration
 import android.database.ContentObserver
 import android.graphics.Color
 import android.graphics.Typeface
@@ -52,6 +53,8 @@ internal object StatusBarPowerRuntime {
         var overlayAnchorUsesRightEdge: Boolean = true,
         var overlayHostWidth: Int = 0,
         var overlayHostHeight: Int = 0,
+        var overlayOrientation: Int = Configuration.ORIENTATION_UNDEFINED,
+        var lastLayoutKey: String = "",
     )
 
     private data class Sample(
@@ -65,6 +68,7 @@ internal object StatusBarPowerRuntime {
 
     private val installed = AtomicBoolean(false)
     private val watcherStarted = AtomicBoolean(false)
+    private val configurationReceiverStarted = AtomicBoolean(false)
     private val holders = WeakHashMap<View, Holder>()
     private val mainHandler = Handler(Looper.getMainLooper())
 
@@ -77,6 +81,25 @@ internal object StatusBarPowerRuntime {
     private var thermalCandidates: List<File>? = null
     private var preferenceObserver: ContentObserver? = null
     private var runtimeReceiver: BroadcastReceiver? = null
+    private var configurationReceiver: BroadcastReceiver? = null
+
+    private val configurationReanchorRunnable = Runnable {
+        val active = synchronized(holders) { holders.values.toList() }
+        active.forEach { holder ->
+            if (!holder.overlayMode) return@forEach
+            val host = holder.statusBarView
+            if (host.width <= 0 || host.height <= 0) return@forEach
+            val orientation = host.resources.configuration.orientation
+            val geometryChanged = orientation != holder.overlayOrientation ||
+                host.width != holder.overlayHostWidth ||
+                host.height != holder.overlayHostHeight
+            if (!geometryChanged) return@forEach
+
+            refreshOverlayAnchor(holder, config, force = true)
+            holder.overlayOrientation = orientation
+            positionTrueOverlay(holder, config)
+        }
+    }
 
     private val sampleRunnable = object : Runnable {
         override fun run() {
@@ -114,6 +137,7 @@ internal object StatusBarPowerRuntime {
                         statusBarView.post {
                             registerStatusBarView(statusBarView)
                             ensurePreferenceWatcher(module, statusBarView.context)
+                            ensureConfigurationReceiver(statusBarView.context)
                         }
                     }
                     result
@@ -185,6 +209,27 @@ internal object StatusBarPowerRuntime {
         }
 
         refreshOnce()
+    }
+
+    private fun ensureConfigurationReceiver(context: Context) {
+        if (!configurationReceiverStarted.compareAndSet(false, true)) return
+        val receiver = object : BroadcastReceiver() {
+            override fun onReceive(receiverContext: Context?, intent: Intent?) {
+                if (intent?.action != Intent.ACTION_CONFIGURATION_CHANGED) return
+                mainHandler.removeCallbacks(configurationReanchorRunnable)
+                mainHandler.postDelayed(configurationReanchorRunnable, 300L)
+            }
+        }
+        configurationReceiver = receiver
+        val filter = IntentFilter(Intent.ACTION_CONFIGURATION_CHANGED)
+        runCatching {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                context.registerReceiver(receiver, filter, Context.RECEIVER_EXPORTED)
+            } else {
+                @Suppress("DEPRECATION")
+                context.registerReceiver(receiver, filter)
+            }
+        }
     }
 
     private fun registerStatusBarView(statusBarView: View) {
@@ -299,21 +344,12 @@ internal object StatusBarPowerRuntime {
             row2 = row2,
             slots = slots,
             mountedSide = initialSide,
+            overlayOrientation = host.resources.configuration.orientation,
         )
         addInlineAtEdge(holder)
         inlineParent.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
             if (!holder.overlayMode && holder.root.parent === holder.inlineParent) {
                 holder.root.post { addInlineAtEdge(holder) }
-            }
-        }
-        host.addOnLayoutChangeListener { _, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom ->
-            val sizeChanged =
-                right - left != oldRight - oldLeft || bottom - top != oldBottom - oldTop
-            if (holder.overlayMode && sizeChanged) {
-                holder.root.post {
-                    refreshOverlayAnchor(holder, config, force = true)
-                    positionTrueOverlay(holder, config)
-                }
             }
         }
         return holder
@@ -505,6 +541,7 @@ internal object StatusBarPowerRuntime {
         }
         holder.overlayHostWidth = holder.statusBarView.width
         holder.overlayHostHeight = holder.statusBarView.height
+        holder.overlayOrientation = holder.statusBarView.resources.configuration.orientation
     }
 
     private fun refreshOverlayAnchor(
@@ -546,6 +583,7 @@ internal object StatusBarPowerRuntime {
 
         holder.overlayHostWidth = host.width
         holder.overlayHostHeight = host.height
+        holder.overlayOrientation = host.resources.configuration.orientation
     }
 
     private fun ensureMountMode(
@@ -564,7 +602,6 @@ internal object StatusBarPowerRuntime {
                 captureInlineOverlayAnchor(holder, current)
                 holder.statusBarView.overlay.add(holder.root)
                 holder.overlayMode = true
-                refreshOverlayAnchor(holder, current, force = true)
             }
             positionTrueOverlay(holder, current)
         } else {
@@ -614,7 +651,12 @@ internal object StatusBarPowerRuntime {
 
         holder.root.translationX = 0f
         holder.root.translationY = 0f
-        holder.root.layout(left, top, right, top + height)
+        if (
+            holder.root.left != left || holder.root.top != top ||
+            holder.root.right != right || holder.root.bottom != top + height
+        ) {
+            holder.root.layout(left, top, right, top + height)
+        }
     }
 
     private fun applyConfig(
@@ -672,6 +714,16 @@ internal object StatusBarPowerRuntime {
         holder: Holder,
         current: Preference.SystemUI.StatusBarPowerRuntime,
     ) {
+        val layoutKey = listOf(
+            current.doubleLine.toString(),
+            current.slot1,
+            current.slot2,
+            current.slot3,
+            current.slot4,
+        ).joinToString("|")
+        if (holder.lastLayoutKey == layoutKey) return
+        holder.lastLayoutKey = layoutKey
+
         holder.row1.removeAllViews()
         holder.row2.removeAllViews()
         if (current.doubleLine) {
@@ -703,32 +755,64 @@ internal object StatusBarPowerRuntime {
         return Handler(thread.looper).also { workerHandler = it }
     }
 
+    private fun readBatteryPowerSupplyValue(name: String): Double? {
+        val file = File("/sys/class/power_supply/battery/$name")
+        if (!file.canRead()) return null
+        return runCatching { file.readText().trim().toDouble() }
+            .getOrNull()
+            ?.takeIf { it.isFinite() }
+    }
+
+    private fun firstUsableCurrentUa(vararg values: Double?): Double? {
+        val available = values.filterNotNull().filter { it.isFinite() }
+        return available.firstOrNull { abs(it) >= 1.0 } ?: available.firstOrNull()
+    }
+
     private fun readSample(
         context: Context,
         current: Preference.SystemUI.StatusBarPowerRuntime,
     ): Sample {
         val batteryManager = context.getSystemService(BatteryManager::class.java)
-        val currentUa = batteryManager
+        val managerCurrentUa = batteryManager
             ?.getIntProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW)
             ?.takeUnless { it == Int.MIN_VALUE }
+            ?.toDouble()
+
+        val sysCurrentNowUa = readBatteryPowerSupplyValue("current_now")
+        val sysCurrentAvgUa = readBatteryPowerSupplyValue("current_avg")
+        val currentUa = firstUsableCurrentUa(
+            sysCurrentNowUa,
+            managerCurrentUa,
+            sysCurrentAvgUa,
+        )
+
         val batteryIntent = runCatching {
             context.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
         }.getOrNull()
 
-        val voltageMv = batteryIntent
+        val intentVoltageMv = batteryIntent
             ?.getIntExtra(BatteryManager.EXTRA_VOLTAGE, 0)
             ?.takeIf { it > 0 }
+        val sysVoltageUv = readBatteryPowerSupplyValue("voltage_now")
+            ?.takeIf { it > 0.0 }
+            ?: readBatteryPowerSupplyValue("voltage_avg")?.takeIf { it > 0.0 }
+        val voltageV = sysVoltageUv?.div(1_000_000.0)
+            ?: intentVoltageMv?.toDouble()?.div(1000.0)
+
+        val sysPowerUw = readBatteryPowerSupplyValue("power_now")
+            ?.takeIf { abs(it) >= 1.0 }
         val tempTenths = batteryIntent
             ?.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, Int.MIN_VALUE)
             ?.takeUnless { it == Int.MIN_VALUE }
         val level = batteryIntent?.getIntExtra(BatteryManager.EXTRA_LEVEL, -1) ?: -1
         val scale = batteryIntent?.getIntExtra(BatteryManager.EXTRA_SCALE, 100) ?: 100
 
-        val signedCurrentMa = currentUa?.toDouble()?.div(1000.0)
+        val signedCurrentMa = currentUa?.div(1000.0)
         val currentMa = signedCurrentMa?.let { if (current.absoluteValue) abs(it) else it }
-        val signedPowerW = if (currentUa != null && voltageMv != null) {
-            currentUa.toDouble() / 1_000_000.0 * voltageMv.toDouble() / 1000.0
+        val calculatedPowerW = if (currentUa != null && voltageV != null) {
+            currentUa / 1_000_000.0 * voltageV
         } else null
+        val signedPowerW = sysPowerUw?.div(1_000_000.0) ?: calculatedPowerW
         val powerW = signedPowerW?.let { if (current.absoluteValue) abs(it) else it }
 
         return Sample(
@@ -736,7 +820,7 @@ internal object StatusBarPowerRuntime {
             currentMa = currentMa,
             batteryTempC = tempTenths?.toDouble()?.div(10.0),
             cpuTempC = readCpuTemperature(),
-            voltageV = voltageMv?.toDouble()?.div(1000.0),
+            voltageV = voltageV,
             batteryLevel = if (level >= 0 && scale > 0) level * 100.0 / scale else null,
         )
     }
@@ -774,9 +858,13 @@ internal object StatusBarPowerRuntime {
     ) {
         val active = synchronized(holders) { holders.values.toList() }
         active.forEach { holder ->
-            if (holder.root.visibility != View.VISIBLE) {
-                applyConfig(holder, current)
+            val desiredVisibility = if (
+                current.enabled && !shouldHideForLockscreen(holder.root.context, current)
+            ) View.VISIBLE else View.GONE
+            if (holder.root.visibility != desiredVisibility) {
+                holder.root.visibility = desiredVisibility
             }
+
             val keys = listOf(current.slot1, current.slot2, current.slot3, current.slot4)
             val decimals = listOf(
                 current.slot1Decimals,
@@ -785,12 +873,21 @@ internal object StatusBarPowerRuntime {
                 current.slot4Decimals,
             )
             holder.slots.forEachIndexed { index, textView ->
-                textView.text = renderValue(
+                val nextText = renderValue(
                     keys[index], decimals[index], sample, current.hideUnit
                 )
-                textView.visibility = if (keys[index] == "none") View.GONE else View.VISIBLE
+                if (textView.text.toString() != nextText) {
+                    textView.text = nextText
+                }
+                val nextVisibility = if (keys[index] == "none") View.GONE else View.VISIBLE
+                if (textView.visibility != nextVisibility) {
+                    textView.visibility = nextVisibility
+                }
             }
-            applyConfig(holder, current)
+
+            if (desiredVisibility == View.VISIBLE && holder.overlayMode) {
+                positionTrueOverlay(holder, current)
+            }
         }
     }
 
