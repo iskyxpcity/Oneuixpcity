@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="status_wifi_runtime_enable">修改状态栏 Wi‑Fi</string>
+    <string name="status_wifi_runtime_enable_summary">启用参考 Flux Decor 功能语义实现的三星状态栏 Wi‑Fi 图标设置。</string>
+    <string name="status_wifi_editor_enable">自定义 Wi‑Fi 图标编辑器</string>
+    <string name="status_wifi_editor_enable_summary">使用 OneuiXP 可编辑弧线图标替换原生 Wi‑Fi 图形。</string>
+    <string name="status_wifi_hide_activity">隐藏 Wi‑Fi 活动箭头</string>
+    <string name="status_wifi_hide_standard_badge">隐藏 Wi‑Fi 标准标记</string>
+    <string name="status_wifi_hide_standard_badge_summary">隐藏三星提供的 Wi‑Fi 6 / 标准文字或标记。</string>
+    <string name="status_wifi_extend_standard_badge">扩展 Wi‑Fi 标准标记</string>
+    <string name="status_wifi_extend_standard_badge_summary">标准标记存在时放大并扩展显示。</string>
+    <string name="status_wifi_overall_size">整体图标大小</string>
+    <string name="status_wifi_black_depth">图标深度</string>
+    <string name="status_wifi_vertical_offset">上下位置</string>
+    <string name="status_wifi_start_margin">左侧边距</string>
+    <string name="status_wifi_end_margin">右侧边距</string>
+    <string name="status_wifi_arc_count">Wi‑Fi 弧线数量</string>
+    <string name="status_wifi_preset">弧线预设</string>
+    <string name="status_wifi_preset_default">默认</string>
+    <string name="status_wifi_preset_compact">紧凑</string>
+    <string name="status_wifi_preset_wide">宽版</string>
+    <string name="status_wifi_advanced_arc_editor">高级弧线编辑器</string>
+    <string name="status_wifi_advanced_arc_editor_summary">分别调节每一段 Wi‑Fi 弧线。</string>
+    <string name="status_wifi_arc_title">第 %1$d 段弧线</string>
+    <string name="status_wifi_arc_title_summary">独立调整这一段弧线的形状。</string>
+    <string name="status_wifi_arc_length">弧线长度</string>
+    <string name="status_wifi_arc_width">弧线粗细</string>
+    <string name="status_wifi_arc_left_radius">左侧半径</string>
+    <string name="status_wifi_arc_right_radius">右侧半径</string>
+    <string name="status_wifi_arc_left_tilt">左侧倾斜</string>
+    <string name="status_wifi_arc_right_tilt">右侧倾斜</string>
+    <string name="status_wifi_arc_bend">弯曲程度</string>
+    <string name="status_wifi_arc_y_offset">弧线上下位置</string>
+    <string name="status_wifi_dp_summary">%1$.1f dp</string>
+    <string name="status_wifi_percent_summary">%1$.0f%%</string>
+    <string name="status_wifi_degree_summary">%1$.1f°</string>
+    <string name="status_wifi_signed_summary">%1$.2f</string>
+</resources>

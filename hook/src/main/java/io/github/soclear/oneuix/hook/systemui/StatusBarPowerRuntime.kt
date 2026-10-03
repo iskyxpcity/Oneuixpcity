@@ -48,8 +48,10 @@ internal object StatusBarPowerRuntime {
         val slots: List<TextView>,
         var mountedSide: String = "right",
         var overlayMode: Boolean = false,
-        var overlayAnchorX: Float = 0f,
-        var overlayAnchorUsesRightEdge: Boolean = true,
+        var overlayParent: android.view.ViewParent? = null,
+        var lastLayoutKey: String = "",
+        var awaitingOverlayLayout: Boolean = false,
+        var overlayMountRetries: Int = 0,
     )
 
     private data class Sample(
@@ -64,10 +66,14 @@ internal object StatusBarPowerRuntime {
     private val installed = AtomicBoolean(false)
     private val watcherStarted = AtomicBoolean(false)
     private val holders = WeakHashMap<View, Holder>()
+    private val registrationAttempts = WeakHashMap<View, Int>()
     private val mainHandler = Handler(Looper.getMainLooper())
 
     @Volatile
     private var config = Preference.SystemUI.StatusBarPowerRuntime()
+
+    @Volatile
+    private var lastSample: Sample? = null
 
     private var workerThread: HandlerThread? = null
     private var workerHandler: Handler? = null
@@ -82,10 +88,13 @@ internal object StatusBarPowerRuntime {
             if (!currentConfig.enabled) return
 
             val context = synchronized(holders) {
-                holders.values.firstOrNull()?.statusBarView?.context
+                holders.values.firstOrNull { it.statusBarView.isAttachedToWindow }
+                    ?.statusBarView?.context
+                    ?: holders.values.firstOrNull()?.statusBarView?.context
             } ?: return
 
             val sample = readSample(context, currentConfig)
+            lastSample = sample
             mainHandler.post { renderSample(sample, currentConfig) }
             workerHandler?.postDelayed(
                 this,
@@ -118,6 +127,26 @@ internal object StatusBarPowerRuntime {
                 }
             }
         }
+
+        // Follow Samsung's real dark/light icon transition instead of keeping the
+        // color captured when the power view was first configured.
+        runCatching {
+            val clockClass = param.classLoader.loadClass(
+                "com.android.systemui.statusbar.policy.QSClockIndicatorView"
+            )
+            clockClass.declaredMethods
+                .filter { it.name == "onDarkChanged" }
+                .forEach { method ->
+                    module.hook(method).intercept { chain ->
+                        val result = chain.proceed()
+                        (chain.thisObject as? TextView)?.let { clock ->
+                            val color = clock.currentTextColor
+                            mainHandler.post { applyIndicatorTextColor(color) }
+                        }
+                        result
+                    }
+                }
+        }
     }
 
     private fun ensurePreferenceWatcher(module: XposedModule, context: Context) {
@@ -125,7 +154,7 @@ internal object StatusBarPowerRuntime {
         val worker = HandlerThread("OneuiXPStatusPowerPrefs").apply { start() }
         preferenceThread = worker
         val background = Handler(worker.looper)
-        var previous: Preference.SystemUI.StatusBarPowerRuntime? = null
+        var previousPersisted: Preference.SystemUI.StatusBarPowerRuntime? = null
 
         fun refreshOnce() {
             background.post {
@@ -133,9 +162,9 @@ internal object StatusBarPowerRuntime {
                     with(module) { PreferenceProvider.loadPreference() }
                         ?.systemUI?.statusBar?.powerRuntime
                 }.getOrNull() ?: return@post
-                if (current == previous) return@post
-                previous = current
-                mainHandler.post { updateRuntime(current) }
+                if (current == previousPersisted) return@post
+                previousPersisted = current
+                mainHandler.post { updateRuntime(current, preserveOverlay = false) }
             }
         }
 
@@ -154,26 +183,42 @@ internal object StatusBarPowerRuntime {
 
         val receiver = object : BroadcastReceiver() {
             override fun onReceive(receiverContext: Context?, intent: Intent?) {
-                if (intent?.action != StatusBarRuntimeBridge.ACTION) return
-                val payload = intent.getStringExtra(
-                    StatusBarRuntimeBridge.EXTRA_STATUS_BAR_JSON
-                ) ?: return
-                background.post {
-                    val statusBar = runCatching {
-                        IgnoreUnknownKeysJson.decodeFromString(
-                            Preference.SystemUI.StatusBar.serializer(),
-                            payload,
+                when (intent?.action) {
+                    StatusBarRuntimeBridge.ACTION_POWER_OVERLAY -> {
+                        val enabled = intent.getBooleanExtra(
+                            StatusBarRuntimeBridge.EXTRA_POWER_OVERLAY_ON_TOP,
+                            config.overlayOnTop,
                         )
-                    }.getOrNull() ?: return@post
-                    val current = statusBar.powerRuntime
-                    previous = current
-                    mainHandler.post { updateRuntime(current) }
+                        mainHandler.post { updateOverlayOnTop(enabled) }
+                    }
+                    StatusBarRuntimeBridge.ACTION -> {
+                        val payload = intent.getStringExtra(
+                            StatusBarRuntimeBridge.EXTRA_STATUS_BAR_JSON
+                        ) ?: return
+                        background.post {
+                            val statusBar = runCatching {
+                                IgnoreUnknownKeysJson.decodeFromString(
+                                    Preference.SystemUI.StatusBar.serializer(),
+                                    payload,
+                                )
+                            }.getOrNull() ?: return@post
+                            // Generic preview payloads can be stale. They may update visual
+                            // values, but never the mount layer. The overlay switch has its
+                            // own explicit command above.
+                            mainHandler.post {
+                                updateRuntime(statusBar.powerRuntime, preserveOverlay = true)
+                            }
+                        }
+                    }
                 }
             }
         }
         runtimeReceiver = receiver
         runCatching {
-            val filter = IntentFilter(StatusBarRuntimeBridge.ACTION)
+            val filter = IntentFilter().apply {
+                addAction(StatusBarRuntimeBridge.ACTION)
+                addAction(StatusBarRuntimeBridge.ACTION_POWER_OVERLAY)
+            }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 context.registerReceiver(receiver, filter, Context.RECEIVER_EXPORTED)
             } else {
@@ -211,15 +256,57 @@ internal object StatusBarPowerRuntime {
             holders[statusBarView] ?: createHolder(statusBarView)?.also {
                 holders[statusBarView] = it
             }
-        } ?: return
+        }
+        if (holder == null) {
+            scheduleRegistrationRetry(statusBarView)
+            return
+        }
+
+        synchronized(registrationAttempts) { registrationAttempts.remove(statusBarView) }
         applyConfig(holder, config)
+        lastSample?.let { renderSample(it, config) }
         refreshSampling()
     }
 
-    private fun updateRuntime(newConfig: Preference.SystemUI.StatusBarPowerRuntime) {
-        config = sanitize(newConfig)
-        val active = synchronized(holders) { holders.values.toList() }
+    private fun scheduleRegistrationRetry(statusBarView: View) {
+        val attempt = synchronized(registrationAttempts) {
+            val next = (registrationAttempts[statusBarView] ?: 0) + 1
+            registrationAttempts[statusBarView] = next
+            next
+        }
+        if (attempt > 10) return
+        val delay = (attempt * 24L).coerceAtMost(180L)
+        statusBarView.postDelayed({ registerStatusBarView(statusBarView) }, delay)
+    }
+
+    private fun updateRuntime(
+        newConfig: Preference.SystemUI.StatusBarPowerRuntime,
+        preserveOverlay: Boolean,
+    ) {
+        val sanitized = sanitize(newConfig)
+        config = if (preserveOverlay) {
+            sanitized.copy(overlayOnTop = config.overlayOnTop)
+        } else {
+            sanitized
+        }
+        applyCurrentConfig()
+    }
+
+    private fun updateOverlayOnTop(enabled: Boolean) {
+        if (config.overlayOnTop == enabled) {
+            applyCurrentConfig()
+            return
+        }
+        config = config.copy(overlayOnTop = enabled)
+        applyCurrentConfig()
+    }
+
+    private fun applyCurrentConfig() {
+        val active = synchronized(holders) {
+            holders.values.filter { it.statusBarView.isAttachedToWindow }
+        }
         active.forEach { holder -> holder.root.post { applyConfig(holder, config) } }
+        lastSample?.let { renderSample(it, config) }
         refreshSampling()
     }
 
@@ -236,8 +323,12 @@ internal object StatusBarPowerRuntime {
         fontWeight = source.fontWeight.coerceIn(100, 900),
         columnGapDp = source.columnGapDp.coerceIn(0f, 12f),
         rowGapDp = source.rowGapDp.coerceIn(-4f, 8f),
-        horizontalOffsetDp = source.horizontalOffsetDp.coerceIn(-300f, 300f),
-        verticalOffsetDp = source.verticalOffsetDp.coerceIn(-60f, 60f),
+        horizontalOffsetDp = if (source.placementSide == "left") {
+            source.horizontalOffsetDp.coerceIn(0f, 180f)
+        } else {
+            source.horizontalOffsetDp.coerceIn(-180f, 0f)
+        },
+        verticalOffsetDp = source.verticalOffsetDp.coerceIn(-30f, 30f),
         startPaddingDp = source.startPaddingDp.coerceIn(0f, 12f),
         endPaddingDp = source.endPaddingDp.coerceIn(0f, 12f),
     )
@@ -283,14 +374,13 @@ internal object StatusBarPowerRuntime {
 
         inlineParent.addView(
             root,
-            if (initialSide == "left") 0 else inlineParent.childCount,
             ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 ViewGroup.LayoutParams.MATCH_PARENT,
             ),
         )
 
-        return Holder(
+        val holder = Holder(
             statusBarView = host,
             inlineParent = inlineParent,
             root = root,
@@ -299,6 +389,23 @@ internal object StatusBarPowerRuntime {
             slots = slots,
             mountedSide = initialSide,
         )
+        addInlineAtEdge(holder)
+        inlineParent.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
+            if (!holder.overlayMode && holder.root.parent === holder.inlineParent) {
+                holder.root.post { addInlineAtEdge(holder) }
+            }
+        }
+        host.addOnLayoutChangeListener { _, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom ->
+            if (!holder.overlayMode) return@addOnLayoutChangeListener
+            val sizeChanged = right - left != oldRight - oldLeft || bottom - top != oldBottom - oldTop
+            if (!sizeChanged) return@addOnLayoutChangeListener
+            host.postOnAnimation {
+                if (holder.overlayMode && host.isAttachedToWindow) {
+                    positionTrueOverlay(holder, config)
+                }
+            }
+        }
+        return holder
     }
 
     private fun findRightIndicatorArea(statusBarView: View): ViewGroup? {
@@ -359,8 +466,75 @@ internal object StatusBarPowerRuntime {
         return null
     }
 
+    /**
+     * Find the direct child in [parent] that owns Samsung's Wi-Fi/Bluetooth icon.
+     * Power is inserted immediately before this child, giving the visual order:
+     * network speed/location -> power -> Wi-Fi/Bluetooth -> remaining right icons.
+     */
+    private fun findRightInlineAnchor(
+        statusBarView: ViewGroup,
+        parent: ViewGroup,
+    ): View? {
+        val resources = statusBarView.resources
+        val names = listOf(
+            "wifi_group",
+            "wifi_combo",
+            "status_bar_wifi",
+            "status_bar_wifi_group",
+            "wifi_container",
+            "modern_status_bar_wifi",
+            "bluetooth",
+            "bluetooth_icon",
+            "status_bar_bluetooth",
+        )
+        names.forEach { name ->
+            val id = resources.getIdentifier(name, "id", Package.SYSTEMUI)
+            if (id == 0) return@forEach
+            val found = statusBarView.findViewById<View>(id) ?: return@forEach
+            var direct: View = found
+            var owner = direct.parent as? ViewGroup
+            while (owner != null && owner !== parent) {
+                direct = owner
+                owner = direct.parent as? ViewGroup
+            }
+            if (owner === parent && direct !== parent && direct !== statusBarView) {
+                return direct
+            }
+        }
+        return null
+    }
+
     private fun addInlineAtEdge(holder: Holder) {
         val parent = holder.inlineParent
+        if (holder.mountedSide == "right") {
+            val anchor = findRightInlineAnchor(holder.statusBarView, parent)
+            if (anchor != null) {
+                val rootIndex = parent.indexOfChild(holder.root)
+                val anchorIndex = parent.indexOfChild(anchor)
+                if (rootIndex >= 0 && anchorIndex >= 0 && rootIndex == anchorIndex - 1) return
+
+                if (holder.root.parent === parent) {
+                    parent.removeView(holder.root)
+                } else {
+                    (holder.root.parent as? ViewGroup)?.removeView(holder.root)
+                }
+                val refreshedAnchor = findRightInlineAnchor(holder.statusBarView, parent)
+                val targetIndex = refreshedAnchor
+                    ?.let(parent::indexOfChild)
+                    ?.takeIf { it >= 0 }
+                    ?: parent.childCount
+                parent.addView(
+                    holder.root,
+                    targetIndex,
+                    ViewGroup.LayoutParams(
+                        ViewGroup.LayoutParams.WRAP_CONTENT,
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                    ),
+                )
+                return
+            }
+        }
+
         if (holder.root.parent === parent) {
             val targetIndex = if (holder.mountedSide == "left") 0 else parent.childCount - 1
             if (parent.indexOfChild(holder.root) == targetIndex) return
@@ -390,6 +564,7 @@ internal object StatusBarPowerRuntime {
         if (holder.overlayMode) {
             holder.statusBarView.overlay.remove(holder.root)
             holder.overlayMode = false
+            holder.overlayParent = null
         }
         (holder.root.parent as? ViewGroup)?.removeView(holder.root)
         holder.inlineParent = desiredParent
@@ -401,47 +576,76 @@ internal object StatusBarPowerRuntime {
         return false
     }
 
+    private fun scheduleOverlayMountRetry(holder: Holder) {
+        if (holder.awaitingOverlayLayout || holder.overlayMode) return
+        if (!config.enabled || !config.overlayOnTop) {
+            holder.overlayMountRetries = 0
+            return
+        }
+        if (holder.overlayMountRetries >= 12) return
+        holder.awaitingOverlayLayout = true
+        holder.overlayMountRetries += 1
+        val delay = (holder.overlayMountRetries * 16L).coerceAtMost(120L)
+        holder.root.postDelayed({
+            holder.awaitingOverlayLayout = false
+            if (!holder.statusBarView.isAttachedToWindow) return@postDelayed
+            if (!config.enabled || !config.overlayOnTop || holder.overlayMode) {
+                holder.overlayMountRetries = 0
+                return@postDelayed
+            }
+            applyConfig(holder, config)
+        }, delay)
+    }
+
     private fun ensureMountMode(
         holder: Holder,
         current: Preference.SystemUI.StatusBarPowerRuntime,
     ): Boolean {
-        if (!ensureInlineAnchor(holder, current)) return false
         val density = holder.root.resources.displayMetrics.density
         if (current.overlayOnTop) {
-            if (!holder.overlayMode) {
-                if (holder.root.width <= 0 || holder.statusBarView.width <= 0) {
-                    holder.root.post { applyConfig(holder, config) }
+            // Samsung may rebuild/reparent status-bar children while the keyguard is coming
+            // up. Never trust overlayMode alone: verify that the power root is still attached
+            // to the exact overlay parent captured after ViewGroupOverlay.add().
+            val actuallyInOverlay = holder.overlayMode &&
+                holder.overlayParent != null &&
+                holder.root.parent === holder.overlayParent
+            if (!actuallyInOverlay) {
+                if (holder.statusBarView.width <= 0 || holder.statusBarView.height <= 0) {
+                    scheduleOverlayMountRetry(holder)
                     return false
                 }
-
-                val hostLocation = IntArray(2)
-                val rootLocation = IntArray(2)
-                holder.statusBarView.getLocationOnScreen(hostLocation)
-                holder.root.getLocationOnScreen(rootLocation)
-                holder.overlayAnchorUsesRightEdge = holder.mountedSide != "left"
-                holder.overlayAnchorX = if (holder.overlayAnchorUsesRightEdge) {
-                    rootLocation[0] - hostLocation[0] + holder.root.width -
-                        current.horizontalOffsetDp * density
-                } else {
-                    rootLocation[0] - hostLocation[0] -
-                        current.horizontalOffsetDp * density
+                (holder.root.parent as? ViewGroup)?.removeView(holder.root)
+                val mounted = runCatching {
+                    holder.statusBarView.overlay.add(holder.root)
+                    holder.overlayParent = holder.root.parent
+                    holder.overlayParent != null
+                }.getOrDefault(false)
+                if (!mounted) {
+                    holder.overlayMode = false
+                    holder.overlayParent = null
+                    scheduleOverlayMountRetry(holder)
+                    return false
                 }
-
-                holder.statusBarView.overlay.add(holder.root)
                 holder.overlayMode = true
+                holder.awaitingOverlayLayout = false
+                holder.overlayMountRetries = 0
             }
             positionTrueOverlay(holder, current)
-        } else {
-            if (holder.overlayMode) {
-                holder.statusBarView.overlay.remove(holder.root)
-                holder.overlayMode = false
-                addInlineAtEdge(holder)
-            } else {
-                addInlineAtEdge(holder)
-            }
-            holder.root.translationX = current.horizontalOffsetDp * density
-            holder.root.translationY = current.verticalOffsetDp * density
+            return true
         }
+
+        holder.overlayMountRetries = 0
+        if (!ensureInlineAnchor(holder, current)) return false
+        if (holder.overlayMode || holder.overlayParent != null) {
+            holder.statusBarView.overlay.remove(holder.root)
+            holder.overlayMode = false
+            holder.overlayParent = null
+            addInlineAtEdge(holder)
+        } else {
+            addInlineAtEdge(holder)
+        }
+        holder.root.translationX = current.horizontalOffsetDp * density
+        holder.root.translationY = current.verticalOffsetDp * density
         return true
     }
 
@@ -460,23 +664,26 @@ internal object StatusBarPowerRuntime {
 
         val width = holder.root.measuredWidth.coerceAtLeast(1)
         val height = holder.root.measuredHeight.coerceAtLeast(1)
-        val anchor = holder.overlayAnchorX + current.horizontalOffsetDp * density
-        val left: Int
-        val right: Int
-        if (holder.overlayAnchorUsesRightEdge) {
-            right = anchor.roundToInt()
-            left = right - width
+        val xOffset = (current.horizontalOffsetDp * density).roundToInt()
+        val left = if (current.placementSide == "left") {
+            xOffset
         } else {
-            left = anchor.roundToInt()
-            right = left + width
+            host.width - width + xOffset
         }
         val top = (
             (host.height - height) / 2f + current.verticalOffsetDp * density
         ).roundToInt()
+        val right = left + width
+        val bottom = top + height
 
         holder.root.translationX = 0f
         holder.root.translationY = 0f
-        holder.root.layout(left, top, right, top + height)
+        if (
+            holder.root.left != left || holder.root.top != top ||
+            holder.root.right != right || holder.root.bottom != bottom
+        ) {
+            holder.root.layout(left, top, right, bottom)
+        }
     }
 
     private fun applyConfig(
@@ -488,8 +695,10 @@ internal object StatusBarPowerRuntime {
         ) View.VISIBLE else View.GONE
         if (!current.enabled) return
 
-        if (!ensureMountMode(holder, current)) return
-
+        // Build and style the inline content before attempting to move it into
+        // ViewGroupOverlay. On a fresh SystemUI process the root initially has
+        // zero width; mounting first would permanently defer the overlay until
+        // the user toggled the setting manually.
         rebuildRows(holder, current)
         val density = holder.root.resources.displayMetrics.density
         holder.root.setPaddingRelative(
@@ -525,6 +734,7 @@ internal object StatusBarPowerRuntime {
             )
         }
 
+        if (!ensureMountMode(holder, current)) return
         if (holder.overlayMode) {
             holder.root.post { positionTrueOverlay(holder, current) }
         }
@@ -534,6 +744,16 @@ internal object StatusBarPowerRuntime {
         holder: Holder,
         current: Preference.SystemUI.StatusBarPowerRuntime,
     ) {
+        val layoutKey = listOf(
+            current.doubleLine.toString(),
+            current.slot1,
+            current.slot2,
+            current.slot3,
+            current.slot4,
+        ).joinToString("|")
+        if (holder.lastLayoutKey == layoutKey) return
+        holder.lastLayoutKey = layoutKey
+
         holder.row1.removeAllViews()
         holder.row2.removeAllViews()
         if (current.doubleLine) {
@@ -634,11 +854,24 @@ internal object StatusBarPowerRuntime {
         sample: Sample,
         current: Preference.SystemUI.StatusBarPowerRuntime,
     ) {
-        val active = synchronized(holders) { holders.values.toList() }
+        val active = synchronized(holders) {
+            holders.values.filter { it.statusBarView.isAttachedToWindow }
+        }
         active.forEach { holder ->
-            if (holder.root.visibility != View.VISIBLE) {
-                applyConfig(holder, current)
+            // Fallback color sync for transitions that do not dispatch onDarkChanged.
+            val currentColor = resolveIndicatorTextColor(holder.statusBarView)
+            holder.slots.forEach { textView ->
+                if (textView.currentTextColor != currentColor) {
+                    textView.setTextColor(currentColor)
+                }
             }
+            val desiredVisibility = if (
+                current.enabled && !shouldHideForLockscreen(holder.root.context, current)
+            ) View.VISIBLE else View.GONE
+            if (holder.root.visibility != desiredVisibility) {
+                holder.root.visibility = desiredVisibility
+            }
+
             val keys = listOf(current.slot1, current.slot2, current.slot3, current.slot4)
             val decimals = listOf(
                 current.slot1Decimals,
@@ -647,12 +880,33 @@ internal object StatusBarPowerRuntime {
                 current.slot4Decimals,
             )
             holder.slots.forEachIndexed { index, textView ->
-                textView.text = renderValue(
+                val nextText = renderValue(
                     keys[index], decimals[index], sample, current.hideUnit
                 )
-                textView.visibility = if (keys[index] == "none") View.GONE else View.VISIBLE
+                if (textView.text.toString() != nextText) {
+                    textView.text = nextText
+                }
+                val nextVisibility = if (keys[index] == "none") View.GONE else View.VISIBLE
+                if (textView.visibility != nextVisibility) {
+                    textView.visibility = nextVisibility
+                }
             }
-            applyConfig(holder, current)
+
+            if (desiredVisibility == View.VISIBLE) {
+                if (current.overlayOnTop) {
+                    val actuallyInOverlay = holder.overlayMode &&
+                        holder.overlayParent != null &&
+                        holder.root.parent === holder.overlayParent
+                    if (actuallyInOverlay) {
+                        positionTrueOverlay(holder, current)
+                    } else {
+                        // Keyguard/status-bar transitions can silently reparent overlay
+                        // children. Repair the real mount state without requiring a manual
+                        // off/on toggle from the user.
+                        holder.root.post { applyConfig(holder, config) }
+                    }
+                }
+            }
         }
     }
 
@@ -685,6 +939,19 @@ internal object StatusBarPowerRuntime {
     ): Boolean {
         if (!current.hideOnLockscreen) return false
         return context.getSystemService(KeyguardManager::class.java)?.isKeyguardLocked == true
+    }
+
+    private fun applyIndicatorTextColor(color: Int) {
+        val active = synchronized(holders) {
+            holders.values.filter { it.statusBarView.isAttachedToWindow }
+        }
+        active.forEach { holder ->
+            holder.slots.forEach { textView ->
+                if (textView.currentTextColor != color) {
+                    textView.setTextColor(color)
+                }
+            }
+        }
     }
 
     private fun resolveIndicatorTextColor(statusBarView: View): Int {

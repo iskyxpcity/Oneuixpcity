@@ -1,5 +1,7 @@
 package com.oneuixp.app.ui.screen.status
 
+import android.content.Intent
+import android.view.HapticFeedbackConstants
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -11,11 +13,14 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import com.oneuixp.app.R
 import io.github.soclear.oneuix.common.Preference
+import io.github.soclear.oneuix.common.StatusBarRuntimeBridge
 import io.github.soclear.oneuix.ui.component.OneuiXInfoItem
 import io.github.soclear.oneuix.ui.component.OneuiXSlider
 import io.github.soclear.oneuix.ui.component.SelectItem
@@ -41,6 +46,14 @@ internal fun StatusPowerRuntimeControls(
     onChange: (Preference.SystemUI.StatusBarPowerRuntime) -> Unit,
 ) {
     val powerIcon = ImageVector.vectorResource(id = R.drawable.battery)
+    val hapticView = LocalView.current
+    val context = LocalContext.current
+
+    fun tickIfChanged(previous: Float, next: Float) {
+        if (previous != next) {
+            hapticView.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+        }
+    }
     val slotEntries = listOf(
         stringResource(id = R.string.status_power_slot_power),
         stringResource(id = R.string.status_power_slot_current),
@@ -70,11 +83,17 @@ internal fun StatusPowerRuntimeControls(
     var rowGap by remember(powerRuntime.rowGapDp) {
         mutableFloatStateOf(powerRuntime.rowGapDp)
     }
-    var horizontalOffset by remember(powerRuntime.horizontalOffsetDp) {
-        mutableFloatStateOf(powerRuntime.horizontalOffsetDp)
+    var horizontalOffset by remember(powerRuntime.horizontalOffsetDp, powerRuntime.placementSide) {
+        mutableFloatStateOf(
+            if (powerRuntime.placementSide == "left") {
+                powerRuntime.horizontalOffsetDp.coerceIn(0f, 180f)
+            } else {
+                powerRuntime.horizontalOffsetDp.coerceIn(-180f, 0f)
+            }
+        )
     }
     var verticalOffset by remember(powerRuntime.verticalOffsetDp) {
-        mutableFloatStateOf(powerRuntime.verticalOffsetDp)
+        mutableFloatStateOf(powerRuntime.verticalOffsetDp.coerceIn(-30f, 30f))
     }
     var startPadding by remember(powerRuntime.startPaddingDp) {
         mutableFloatStateOf(powerRuntime.startPaddingDp)
@@ -118,7 +137,12 @@ internal fun StatusPowerRuntimeControls(
                         entries = placementEntries,
                         selectedIndex = placementIndex(powerRuntime.placementSide),
                         onSelectedIndexChange = {
-                            onChange(powerRuntime.copy(placementSide = placementKey(it)))
+                            onChange(
+                                powerRuntime.copy(
+                                    placementSide = placementKey(it),
+                                    horizontalOffsetDp = 0f,
+                                )
+                            )
                         },
                     )
                 }
@@ -129,8 +153,17 @@ internal fun StatusPowerRuntimeControls(
                         title = stringResource(id = R.string.status_power_overlay_on_top),
                         summary = stringResource(id = R.string.status_power_overlay_on_top_summary),
                         checked = powerRuntime.overlayOnTop,
-                        onCheckedChange = {
-                            onChange(powerRuntime.copy(overlayOnTop = it))
+                        onCheckedChange = { enabled ->
+                            context.sendBroadcast(
+                                Intent(StatusBarRuntimeBridge.ACTION_POWER_OVERLAY).apply {
+                                    setPackage("com.android.systemui")
+                                    putExtra(
+                                        StatusBarRuntimeBridge.EXTRA_POWER_OVERLAY_ON_TOP,
+                                        enabled,
+                                    )
+                                }
+                            )
+                            onChange(powerRuntime.copy(overlayOnTop = enabled))
                         },
                     )
                 }
@@ -295,7 +328,9 @@ internal fun StatusPowerRuntimeControls(
                         OneuiXSlider(
                             value = powerTextSize,
                             onValueChange = {
-                                powerTextSize = (it * 10f).roundToInt() / 10f
+                                val next = roundPowerHalfStep(it)
+                                tickIfChanged(powerTextSize, next)
+                                powerTextSize = next
                                 onPreview(powerRuntime.copy(textSizeSp = powerTextSize))
                             },
                             modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
@@ -322,7 +357,9 @@ internal fun StatusPowerRuntimeControls(
                         OneuiXSlider(
                             value = refreshInterval,
                             onValueChange = {
-                                refreshInterval = (it / 100f).roundToInt() * 100f
+                                val next = (it / 500f).roundToInt() * 500f
+                                tickIfChanged(refreshInterval, next)
+                                refreshInterval = next
                                 onPreview(
                                     powerRuntime.copy(refreshIntervalMs = refreshInterval.roundToInt())
                                 )
@@ -350,7 +387,9 @@ internal fun StatusPowerRuntimeControls(
                         OneuiXSlider(
                             value = columnGap,
                             onValueChange = {
-                                columnGap = (it * 10f).roundToInt() / 10f
+                                val next = roundPowerHalfStep(it)
+                                tickIfChanged(columnGap, next)
+                                columnGap = next
                                 onPreview(powerRuntime.copy(columnGapDp = columnGap))
                             },
                             modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
@@ -375,7 +414,9 @@ internal fun StatusPowerRuntimeControls(
                             OneuiXSlider(
                                 value = rowGap,
                                 onValueChange = {
-                                    rowGap = (it * 10f).roundToInt() / 10f
+                                    val next = roundPowerHalfStep(it)
+                                    tickIfChanged(rowGap, next)
+                                    rowGap = next
                                     onPreview(powerRuntime.copy(rowGapDp = rowGap))
                                 },
                                 modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
@@ -400,11 +441,17 @@ internal fun StatusPowerRuntimeControls(
                         OneuiXSlider(
                             value = horizontalOffset,
                             onValueChange = {
-                                horizontalOffset = (it * 10f).roundToInt() / 10f
+                                val next = roundPowerHalfStep(it)
+                                tickIfChanged(horizontalOffset, next)
+                                horizontalOffset = next
                                 onPreview(powerRuntime.copy(horizontalOffsetDp = horizontalOffset))
                             },
                             modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
-                            valueRange = -300f..300f,
+                            valueRange = if (powerRuntime.placementSide == "left") {
+                                0f..180f
+                            } else {
+                                -180f..0f
+                            },
                             onValueChangeFinished = {
                                 onChange(powerRuntime.copy(horizontalOffsetDp = horizontalOffset))
                             },
@@ -424,11 +471,13 @@ internal fun StatusPowerRuntimeControls(
                         OneuiXSlider(
                             value = verticalOffset,
                             onValueChange = {
-                                verticalOffset = (it * 10f).roundToInt() / 10f
+                                val next = roundPowerHalfStep(it)
+                                tickIfChanged(verticalOffset, next)
+                                verticalOffset = next
                                 onPreview(powerRuntime.copy(verticalOffsetDp = verticalOffset))
                             },
                             modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
-                            valueRange = -60f..60f,
+                            valueRange = -30f..30f,
                             onValueChangeFinished = {
                                 onChange(powerRuntime.copy(verticalOffsetDp = verticalOffset))
                             },
@@ -448,7 +497,9 @@ internal fun StatusPowerRuntimeControls(
                         OneuiXSlider(
                             value = startPadding,
                             onValueChange = {
-                                startPadding = (it * 10f).roundToInt() / 10f
+                                val next = roundPowerHalfStep(it)
+                                tickIfChanged(startPadding, next)
+                                startPadding = next
                                 onPreview(powerRuntime.copy(startPaddingDp = startPadding))
                             },
                             modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
@@ -472,7 +523,9 @@ internal fun StatusPowerRuntimeControls(
                         OneuiXSlider(
                             value = endPadding,
                             onValueChange = {
-                                endPadding = (it * 10f).roundToInt() / 10f
+                                val next = roundPowerHalfStep(it)
+                                tickIfChanged(endPadding, next)
+                                endPadding = next
                                 onPreview(powerRuntime.copy(endPaddingDp = endPadding))
                             },
                             modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
@@ -487,3 +540,6 @@ internal fun StatusPowerRuntimeControls(
         },
     )
 }
+
+private fun roundPowerHalfStep(value: Float): Float =
+    (value * 2f).roundToInt() / 2f

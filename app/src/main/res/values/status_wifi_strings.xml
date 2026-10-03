@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="status_wifi_runtime_enable">Modify status bar Wi-Fi</string>
+    <string name="status_wifi_runtime_enable_summary">Enable Samsung SystemUI Wi-Fi icon controls inspired by Flux Decor.</string>
+    <string name="status_wifi_editor_enable">Custom Wi-Fi icon editor</string>
+    <string name="status_wifi_editor_enable_summary">Replace the native Wi-Fi glyph with the editable OneuiXP arc renderer.</string>
+    <string name="status_wifi_hide_activity">Hide Wi-Fi activity arrows</string>
+    <string name="status_wifi_hide_standard_badge">Hide Wi-Fi standard badge</string>
+    <string name="status_wifi_hide_standard_badge_summary">Hide Wi-Fi 6 / standard text or badge when Samsung exposes it.</string>
+    <string name="status_wifi_extend_standard_badge">Extend Wi-Fi standard badge</string>
+    <string name="status_wifi_extend_standard_badge_summary">Enlarge and expand the standard label when available.</string>
+    <string name="status_wifi_overall_size">Overall icon size</string>
+    <string name="status_wifi_black_depth">Icon depth</string>
+    <string name="status_wifi_vertical_offset">Vertical position</string>
+    <string name="status_wifi_start_margin">Start margin</string>
+    <string name="status_wifi_end_margin">End margin</string>
+    <string name="status_wifi_arc_count">Wi-Fi arc count</string>
+    <string name="status_wifi_preset">Arc preset</string>
+    <string name="status_wifi_preset_default">Default</string>
+    <string name="status_wifi_preset_compact">Compact</string>
+    <string name="status_wifi_preset_wide">Wide</string>
+    <string name="status_wifi_advanced_arc_editor">Advanced arc editor</string>
+    <string name="status_wifi_advanced_arc_editor_summary">Adjust each Wi-Fi arc independently.</string>
+    <string name="status_wifi_arc_title">Arc %1$d</string>
+    <string name="status_wifi_arc_title_summary">Independent shape controls for this arc.</string>
+    <string name="status_wifi_arc_length">Arc length</string>
+    <string name="status_wifi_arc_width">Arc stroke width</string>
+    <string name="status_wifi_arc_left_radius">Left radius</string>
+    <string name="status_wifi_arc_right_radius">Right radius</string>
+    <string name="status_wifi_arc_left_tilt">Left tilt</string>
+    <string name="status_wifi_arc_right_tilt">Right tilt</string>
+    <string name="status_wifi_arc_bend">Bend</string>
+    <string name="status_wifi_arc_y_offset">Arc vertical offset</string>
+    <string name="status_wifi_dp_summary">%1$.1f dp</string>
+    <string name="status_wifi_percent_summary">%1$.0f%%</string>
+    <string name="status_wifi_degree_summary">%1$.1f°</string>
+    <string name="status_wifi_signed_summary">%1$.2f</string>
+</resources>
