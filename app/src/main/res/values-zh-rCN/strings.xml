@@ -72,6 +72,40 @@
     <string name="status_category_notification_center">通知中心</string>
     <string name="status_category_control_center">控制中心</string>
 
+    <string name="status_power_runtime_enable">显示实时状态栏功耗</string>
+    <string name="status_power_runtime_enable_summary">在三星状态栏中显示功耗、电流、温度与电池数据</string>
+    <string name="status_power_slot_1">1号显示位</string>
+    <string name="status_power_slot_2">2号显示位</string>
+    <string name="status_power_slot_3">3号显示位</string>
+    <string name="status_power_slot_4">4号显示位</string>
+    <string name="status_power_slot_1_decimals">1号显示位小数位</string>
+    <string name="status_power_slot_2_decimals">2号显示位小数位</string>
+    <string name="status_power_slot_3_decimals">3号显示位小数位</string>
+    <string name="status_power_slot_4_decimals">4号显示位小数位</string>
+    <string name="status_power_slot_power">功耗</string>
+    <string name="status_power_slot_current">电流</string>
+    <string name="status_power_slot_battery_temp">电池温度</string>
+    <string name="status_power_slot_cpu_temp">CPU 温度</string>
+    <string name="status_power_slot_voltage">电压</string>
+    <string name="status_power_slot_battery_level">电量</string>
+    <string name="status_power_slot_none">不显示</string>
+    <string name="status_power_double_line">双排两列</string>
+    <string name="status_power_double_line_summary">开启后每排显示两个数据；关闭为单排四位</string>
+    <string name="status_power_absolute_value">仅显示电流/功耗绝对值</string>
+    <string name="status_power_hide_unit">隐藏单位</string>
+    <string name="status_power_hide_lockscreen">锁屏隐藏</string>
+    <string name="status_power_font_weight">字体粗细</string>
+    <string name="status_power_text_size">字体大小</string>
+    <string name="status_power_text_size_summary">%1$.1f sp</string>
+    <string name="status_power_refresh_interval">刷新间隔</string>
+    <string name="status_power_refresh_interval_summary">%1$d 毫秒</string>
+    <string name="status_power_column_gap">列间距</string>
+    <string name="status_power_horizontal_offset">左右位置</string>
+    <string name="status_power_vertical_offset">上下位置</string>
+    <string name="status_power_start_padding">左侧间距</string>
+    <string name="status_power_end_padding">右侧间距</string>
+    <string name="status_power_dp_summary">%1$.1f dp</string>
+
     <string name="status_wifi_no_migrated_feature_title">暂无可迁移的状态栏 Wi-Fi 功能</string>
     <string name="status_wifi_no_migrated_feature_summary">当前上游“功能”页没有独立的状态栏 Wi-Fi 设置。此分类保留给 OneuiXP 后续新增的 Wi-Fi 图标功能。</string>
 
