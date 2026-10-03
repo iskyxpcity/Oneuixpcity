@@ -18,7 +18,6 @@ import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
-import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.TextView
 import io.github.libxposed.api.XposedModule
@@ -35,30 +34,20 @@ import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
-/**
- * Samsung SystemUI runtime for Flux-style status-bar power/thermal information.
- *
- * The power view is drawn as a top-level PhoneStatusBarView overlay with a fixed
- * right-side anchor. It therefore does not participate in the layout of network
- * speed, location or other transient status icons, so those icons cannot push
- * the power values left/right when they appear or disappear.
- *
- * Sampling only runs while the feature is enabled. Preference changes use the
- * same event-driven content URI / in-memory preview broadcast as the clock
- * runtime, but this object owns its watcher so the locked clock code remains
- * untouched.
- */
+/** Samsung SystemUI runtime for Flux-style status-bar power/thermal information. */
 internal object StatusBarPowerRuntime {
     private const val PREFERENCE_CHANGED_URI =
         "content://com.oneuixp.app.statusbridge/preferences"
 
     private data class Holder(
-        val statusBarView: View,
+        val statusBarView: ViewGroup,
+        val inlineParent: ViewGroup,
         val root: LinearLayout,
         val row1: LinearLayout,
         val row2: LinearLayout,
         val slots: List<TextView>,
-        val anchorRightX: Float,
+        var overlayMode: Boolean = false,
+        var overlayAnchorRightX: Float = 0f,
     )
 
     private data class Sample(
@@ -251,8 +240,8 @@ internal object StatusBarPowerRuntime {
     )
 
     private fun createHolder(statusBarView: View): Holder? {
-        val indicatorArea = findRightIndicatorArea(statusBarView) ?: return null
-        val overlayParent = statusBarView as? FrameLayout ?: return null
+        val inlineParent = findRightIndicatorArea(statusBarView) ?: return null
+        val host = statusBarView as? ViewGroup ?: return null
         val context = statusBarView.context
 
         fun row() = LinearLayout(context).apply {
@@ -273,8 +262,6 @@ internal object StatusBarPowerRuntime {
             clipToPadding = false
             isClickable = false
             isFocusable = false
-            elevation = 1000f
-            translationZ = 1000f
             addView(row1)
             addView(row2)
         }
@@ -289,38 +276,23 @@ internal object StatusBarPowerRuntime {
             }
         }
 
-        val barLocation = IntArray(2)
-        val indicatorLocation = IntArray(2)
-        statusBarView.getLocationOnScreen(barLocation)
-        indicatorArea.getLocationOnScreen(indicatorLocation)
-        val anchorRightX = (indicatorLocation[0] - barLocation[0]).toFloat()
-
-        overlayParent.addView(
+        inlineParent.addView(
             root,
-            FrameLayout.LayoutParams(
+            0,
+            ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 ViewGroup.LayoutParams.MATCH_PARENT,
-                Gravity.START or Gravity.CENTER_VERTICAL,
             ),
         )
-        root.bringToFront()
 
-        val holder = Holder(
-            statusBarView = statusBarView,
+        return Holder(
+            statusBarView = host,
+            inlineParent = inlineParent,
             root = root,
             row1 = row1,
             row2 = row2,
             slots = slots,
-            anchorRightX = anchorRightX,
         )
-
-        root.addOnLayoutChangeListener { _, left, _, right, _, oldLeft, _, oldRight, _ ->
-            if (right - left != oldRight - oldLeft) {
-                positionOverlay(holder, config)
-            }
-        }
-        root.post { positionOverlay(holder, config) }
-        return holder
     }
 
     private fun findRightIndicatorArea(statusBarView: View): ViewGroup? {
@@ -340,16 +312,78 @@ internal object StatusBarPowerRuntime {
         return null
     }
 
-    private fun positionOverlay(
+    private fun ensureMountMode(
+        holder: Holder,
+        current: Preference.SystemUI.StatusBarPowerRuntime,
+    ): Boolean {
+        val density = holder.root.resources.displayMetrics.density
+        if (current.overlayOnTop) {
+            if (!holder.overlayMode) {
+                if (holder.root.width <= 0 || holder.statusBarView.width <= 0) {
+                    holder.root.post { applyConfig(holder, config) }
+                    return false
+                }
+
+                val hostLocation = IntArray(2)
+                val rootLocation = IntArray(2)
+                holder.statusBarView.getLocationOnScreen(hostLocation)
+                holder.root.getLocationOnScreen(rootLocation)
+                holder.overlayAnchorRightX =
+                    rootLocation[0] - hostLocation[0] + holder.root.width -
+                        current.horizontalOffsetDp * density
+
+                // ViewGroupOverlay is outside normal child measurement/layout and is
+                // always drawn above the host's regular children. Adding an already
+                // attached view reparents it while preserving its visual coordinates.
+                holder.statusBarView.overlay.add(holder.root)
+                holder.overlayMode = true
+            }
+            positionTrueOverlay(holder, current)
+        } else {
+            if (holder.overlayMode) {
+                holder.statusBarView.overlay.remove(holder.root)
+                holder.inlineParent.addView(
+                    holder.root,
+                    0,
+                    ViewGroup.LayoutParams(
+                        ViewGroup.LayoutParams.WRAP_CONTENT,
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                    ),
+                )
+                holder.overlayMode = false
+            }
+            holder.root.translationX = current.horizontalOffsetDp * density
+            holder.root.translationY = current.verticalOffsetDp * density
+        }
+        return true
+    }
+
+    private fun positionTrueOverlay(
         holder: Holder,
         current: Preference.SystemUI.StatusBarPowerRuntime,
     ) {
+        if (!holder.overlayMode) return
+        val host = holder.statusBarView
+        if (host.width <= 0 || host.height <= 0) return
+
         val density = holder.root.resources.displayMetrics.density
-        val width = holder.root.measuredWidth.takeIf { it > 0 } ?: holder.root.width
-        holder.root.translationX =
-            holder.anchorRightX - width + current.horizontalOffsetDp * density
-        holder.root.translationY = current.verticalOffsetDp * density
-        holder.root.bringToFront()
+        val widthSpec = View.MeasureSpec.makeMeasureSpec(host.width, View.MeasureSpec.AT_MOST)
+        val heightSpec = View.MeasureSpec.makeMeasureSpec(host.height, View.MeasureSpec.AT_MOST)
+        holder.root.measure(widthSpec, heightSpec)
+
+        val width = holder.root.measuredWidth.coerceAtLeast(1)
+        val height = holder.root.measuredHeight.coerceAtLeast(1)
+        val right = (
+            holder.overlayAnchorRightX + current.horizontalOffsetDp * density
+        ).roundToInt()
+        val left = right - width
+        val top = (
+            (host.height - height) / 2f + current.verticalOffsetDp * density
+        ).roundToInt()
+
+        holder.root.translationX = 0f
+        holder.root.translationY = 0f
+        holder.root.layout(left, top, right, top + height)
     }
 
     private fun applyConfig(
@@ -361,9 +395,10 @@ internal object StatusBarPowerRuntime {
         ) View.VISIBLE else View.GONE
         if (!current.enabled) return
 
+        if (!ensureMountMode(holder, current)) return
+
         rebuildRows(holder, current)
         val density = holder.root.resources.displayMetrics.density
-        positionOverlay(holder, current)
         holder.root.setPaddingRelative(
             (current.startPaddingDp * density).roundToInt(),
             0,
@@ -396,7 +431,10 @@ internal object StatusBarPowerRuntime {
                 0,
             )
         }
-        holder.root.post { positionOverlay(holder, current) }
+
+        if (holder.overlayMode) {
+            holder.root.post { positionTrueOverlay(holder, current) }
+        }
     }
 
     private fun rebuildRows(
