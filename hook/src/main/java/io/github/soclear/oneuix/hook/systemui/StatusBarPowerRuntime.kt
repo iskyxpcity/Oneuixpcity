@@ -50,6 +50,8 @@ internal object StatusBarPowerRuntime {
         var overlayMode: Boolean = false,
         var overlayAnchorX: Float = 0f,
         var overlayAnchorUsesRightEdge: Boolean = true,
+        var overlayHostWidth: Int = 0,
+        var overlayHostHeight: Int = 0,
     )
 
     private data class Sample(
@@ -304,6 +306,16 @@ internal object StatusBarPowerRuntime {
                 holder.root.post { addInlineAtEdge(holder) }
             }
         }
+        host.addOnLayoutChangeListener { _, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom ->
+            val sizeChanged =
+                right - left != oldRight - oldLeft || bottom - top != oldBottom - oldTop
+            if (holder.overlayMode && sizeChanged) {
+                holder.root.post {
+                    refreshOverlayAnchor(holder, config, force = true)
+                    positionTrueOverlay(holder, config)
+                }
+            }
+        }
         return holder
     }
 
@@ -474,6 +486,68 @@ internal object StatusBarPowerRuntime {
         return false
     }
 
+    private fun captureInlineOverlayAnchor(
+        holder: Holder,
+        current: Preference.SystemUI.StatusBarPowerRuntime,
+    ) {
+        val hostLocation = IntArray(2)
+        val rootLocation = IntArray(2)
+        holder.statusBarView.getLocationOnScreen(hostLocation)
+        holder.root.getLocationOnScreen(rootLocation)
+        val density = holder.root.resources.displayMetrics.density
+        holder.overlayAnchorUsesRightEdge = holder.mountedSide != "left"
+        holder.overlayAnchorX = if (holder.overlayAnchorUsesRightEdge) {
+            rootLocation[0] - hostLocation[0] + holder.root.width -
+                current.horizontalOffsetDp * density
+        } else {
+            rootLocation[0] - hostLocation[0] -
+                current.horizontalOffsetDp * density
+        }
+        holder.overlayHostWidth = holder.statusBarView.width
+        holder.overlayHostHeight = holder.statusBarView.height
+    }
+
+    private fun refreshOverlayAnchor(
+        holder: Holder,
+        current: Preference.SystemUI.StatusBarPowerRuntime,
+        force: Boolean = false,
+    ) {
+        val host = holder.statusBarView
+        if (host.width <= 0 || host.height <= 0) return
+        if (
+            !force && host.width == holder.overlayHostWidth &&
+            host.height == holder.overlayHostHeight
+        ) return
+
+        val hostLocation = IntArray(2)
+        host.getLocationOnScreen(hostLocation)
+        var anchored = false
+
+        if (holder.mountedSide == "right") {
+            val iconAnchor = findRightInlineAnchor(host, holder.inlineParent)
+            if (iconAnchor != null && iconAnchor.isLaidOut) {
+                val anchorLocation = IntArray(2)
+                iconAnchor.getLocationOnScreen(anchorLocation)
+                holder.overlayAnchorUsesRightEdge = true
+                holder.overlayAnchorX = (anchorLocation[0] - hostLocation[0]).toFloat()
+                anchored = true
+            }
+        } else if (holder.inlineParent.isLaidOut) {
+            val parentLocation = IntArray(2)
+            holder.inlineParent.getLocationOnScreen(parentLocation)
+            holder.overlayAnchorUsesRightEdge = false
+            holder.overlayAnchorX = (parentLocation[0] - hostLocation[0]).toFloat()
+            anchored = true
+        }
+
+        if (!anchored && holder.overlayHostWidth > 0 && holder.overlayAnchorUsesRightEdge) {
+            holder.overlayAnchorX += host.width - holder.overlayHostWidth
+        }
+
+        holder.overlayHostWidth = host.width
+        holder.overlayHostHeight = host.height
+    }
+
     private fun ensureMountMode(
         holder: Holder,
         current: Preference.SystemUI.StatusBarPowerRuntime,
@@ -487,27 +561,18 @@ internal object StatusBarPowerRuntime {
                     return false
                 }
 
-                val hostLocation = IntArray(2)
-                val rootLocation = IntArray(2)
-                holder.statusBarView.getLocationOnScreen(hostLocation)
-                holder.root.getLocationOnScreen(rootLocation)
-                holder.overlayAnchorUsesRightEdge = holder.mountedSide != "left"
-                holder.overlayAnchorX = if (holder.overlayAnchorUsesRightEdge) {
-                    rootLocation[0] - hostLocation[0] + holder.root.width -
-                        current.horizontalOffsetDp * density
-                } else {
-                    rootLocation[0] - hostLocation[0] -
-                        current.horizontalOffsetDp * density
-                }
-
+                captureInlineOverlayAnchor(holder, current)
                 holder.statusBarView.overlay.add(holder.root)
                 holder.overlayMode = true
+                refreshOverlayAnchor(holder, current, force = true)
             }
             positionTrueOverlay(holder, current)
         } else {
             if (holder.overlayMode) {
                 holder.statusBarView.overlay.remove(holder.root)
                 holder.overlayMode = false
+                holder.overlayHostWidth = 0
+                holder.overlayHostHeight = 0
                 addInlineAtEdge(holder)
             } else {
                 addInlineAtEdge(holder)
