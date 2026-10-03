@@ -322,7 +322,7 @@ internal fun StatusPowerRuntimeControls(
                         OneuiXSlider(
                             value = refreshInterval,
                             onValueChange = {
-                                refreshInterval = (it / 100f).roundToInt() * 100f
+                                refreshInterval = (it / 500f).roundToInt() * 500f
                                 onPreview(
                                     powerRuntime.copy(refreshIntervalMs = refreshInterval.roundToInt())
                                 )
