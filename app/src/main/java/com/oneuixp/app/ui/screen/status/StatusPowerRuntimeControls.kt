@@ -295,7 +295,7 @@ internal fun StatusPowerRuntimeControls(
                         OneuiXSlider(
                             value = powerTextSize,
                             onValueChange = {
-                                powerTextSize = (it * 10f).roundToInt() / 10f
+                                powerTextSize = roundPowerHalfStep(it)
                                 onPreview(powerRuntime.copy(textSizeSp = powerTextSize))
                             },
                             modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
@@ -350,7 +350,7 @@ internal fun StatusPowerRuntimeControls(
                         OneuiXSlider(
                             value = columnGap,
                             onValueChange = {
-                                columnGap = (it * 10f).roundToInt() / 10f
+                                columnGap = roundPowerHalfStep(it)
                                 onPreview(powerRuntime.copy(columnGapDp = columnGap))
                             },
                             modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
@@ -375,7 +375,7 @@ internal fun StatusPowerRuntimeControls(
                             OneuiXSlider(
                                 value = rowGap,
                                 onValueChange = {
-                                    rowGap = (it * 10f).roundToInt() / 10f
+                                    rowGap = roundPowerHalfStep(it)
                                     onPreview(powerRuntime.copy(rowGapDp = rowGap))
                                 },
                                 modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
@@ -400,7 +400,7 @@ internal fun StatusPowerRuntimeControls(
                         OneuiXSlider(
                             value = horizontalOffset,
                             onValueChange = {
-                                horizontalOffset = (it * 10f).roundToInt() / 10f
+                                horizontalOffset = roundPowerHalfStep(it)
                                 onPreview(powerRuntime.copy(horizontalOffsetDp = horizontalOffset))
                             },
                             modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
@@ -424,7 +424,7 @@ internal fun StatusPowerRuntimeControls(
                         OneuiXSlider(
                             value = verticalOffset,
                             onValueChange = {
-                                verticalOffset = (it * 10f).roundToInt() / 10f
+                                verticalOffset = roundPowerHalfStep(it)
                                 onPreview(powerRuntime.copy(verticalOffsetDp = verticalOffset))
                             },
                             modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
@@ -448,7 +448,7 @@ internal fun StatusPowerRuntimeControls(
                         OneuiXSlider(
                             value = startPadding,
                             onValueChange = {
-                                startPadding = (it * 10f).roundToInt() / 10f
+                                startPadding = roundPowerHalfStep(it)
                                 onPreview(powerRuntime.copy(startPaddingDp = startPadding))
                             },
                             modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
@@ -472,7 +472,7 @@ internal fun StatusPowerRuntimeControls(
                         OneuiXSlider(
                             value = endPadding,
                             onValueChange = {
-                                endPadding = (it * 10f).roundToInt() / 10f
+                                endPadding = roundPowerHalfStep(it)
                                 onPreview(powerRuntime.copy(endPaddingDp = endPadding))
                             },
                             modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
@@ -487,3 +487,6 @@ internal fun StatusPowerRuntimeControls(
         },
     )
 }
+
+private fun roundPowerHalfStep(value: Float): Float =
+    (value * 2f).roundToInt() / 2f
