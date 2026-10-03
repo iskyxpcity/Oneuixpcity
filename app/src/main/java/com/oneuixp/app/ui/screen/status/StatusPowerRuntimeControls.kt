@@ -49,6 +49,7 @@ internal fun StatusPowerRuntimeControls(
         stringResource(id = R.string.status_power_slot_none),
     )
     val decimalEntries = listOf("0", "1", "2")
+    val fontWeights = listOf(300, 400, 500, 600, 700, 800, 900)
 
     var expanded by rememberSaveable { mutableStateOf(powerRuntime.enabled) }
     var powerTextSize by remember(powerRuntime.textSizeSp) {
@@ -246,12 +247,12 @@ internal fun StatusPowerRuntimeControls(
                     SelectItem(
                         icon = powerIcon,
                         title = stringResource(id = R.string.status_power_font_weight),
-                        entries = listOf("300", "400", "500", "600", "700"),
-                        selectedIndex = listOf(300, 400, 500, 600, 700)
+                        entries = fontWeights.map(Int::toString),
+                        selectedIndex = fontWeights
                             .indexOf(powerRuntime.fontWeight)
                             .coerceAtLeast(1),
                         onSelectedIndexChange = {
-                            val weight = listOf(300, 400, 500, 600, 700)[it.coerceIn(0, 4)]
+                            val weight = fontWeights[it.coerceIn(0, fontWeights.lastIndex)]
                             onChange(powerRuntime.copy(fontWeight = weight))
                         },
                     )
