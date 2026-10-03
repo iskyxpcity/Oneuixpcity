@@ -5,7 +5,6 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.content.res.Configuration
 import android.database.ContentObserver
 import android.graphics.Color
 import android.graphics.Typeface
@@ -49,11 +48,6 @@ internal object StatusBarPowerRuntime {
         val slots: List<TextView>,
         var mountedSide: String = "right",
         var overlayMode: Boolean = false,
-        var overlayAnchorX: Float = 0f,
-        var overlayAnchorUsesRightEdge: Boolean = true,
-        var overlayHostWidth: Int = 0,
-        var overlayHostHeight: Int = 0,
-        var overlayOrientation: Int = Configuration.ORIENTATION_UNDEFINED,
         var lastLayoutKey: String = "",
         var awaitingOverlayLayout: Boolean = false,
     )
@@ -331,7 +325,6 @@ internal object StatusBarPowerRuntime {
             row2 = row2,
             slots = slots,
             mountedSide = initialSide,
-            overlayOrientation = host.resources.configuration.orientation,
         )
         addInlineAtEdge(holder)
         inlineParent.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
@@ -339,15 +332,14 @@ internal object StatusBarPowerRuntime {
                 holder.root.post { addInlineAtEdge(holder) }
             }
         }
-        host.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
+        host.addOnLayoutChangeListener { _, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom ->
             if (!holder.overlayMode) return@addOnLayoutChangeListener
-            val orientation = host.resources.configuration.orientation
-            if (orientation == holder.overlayOrientation) return@addOnLayoutChangeListener
-            holder.overlayOrientation = orientation
+            val sizeChanged = right - left != oldRight - oldLeft || bottom - top != oldBottom - oldTop
+            if (!sizeChanged) return@addOnLayoutChangeListener
             host.postOnAnimation {
-                if (!holder.overlayMode || !host.isAttachedToWindow) return@postOnAnimation
-                refreshOverlayAnchor(holder, config, force = true)
-                positionTrueOverlay(holder, config)
+                if (holder.overlayMode && host.isAttachedToWindow) {
+                    positionTrueOverlay(holder, config)
+                }
             }
         }
         return holder
@@ -520,70 +512,6 @@ internal object StatusBarPowerRuntime {
         return false
     }
 
-    private fun captureInlineOverlayAnchor(
-        holder: Holder,
-        current: Preference.SystemUI.StatusBarPowerRuntime,
-    ) {
-        val hostLocation = IntArray(2)
-        val rootLocation = IntArray(2)
-        holder.statusBarView.getLocationOnScreen(hostLocation)
-        holder.root.getLocationOnScreen(rootLocation)
-        val density = holder.root.resources.displayMetrics.density
-        holder.overlayAnchorUsesRightEdge = holder.mountedSide != "left"
-        holder.overlayAnchorX = if (holder.overlayAnchorUsesRightEdge) {
-            rootLocation[0] - hostLocation[0] + holder.root.width -
-                current.horizontalOffsetDp * density
-        } else {
-            rootLocation[0] - hostLocation[0] -
-                current.horizontalOffsetDp * density
-        }
-        holder.overlayHostWidth = holder.statusBarView.width
-        holder.overlayHostHeight = holder.statusBarView.height
-        holder.overlayOrientation = holder.statusBarView.resources.configuration.orientation
-    }
-
-    private fun refreshOverlayAnchor(
-        holder: Holder,
-        current: Preference.SystemUI.StatusBarPowerRuntime,
-        force: Boolean = false,
-    ) {
-        val host = holder.statusBarView
-        if (host.width <= 0 || host.height <= 0) return
-        if (
-            !force && host.width == holder.overlayHostWidth &&
-            host.height == holder.overlayHostHeight
-        ) return
-
-        val hostLocation = IntArray(2)
-        host.getLocationOnScreen(hostLocation)
-        var anchored = false
-
-        if (holder.mountedSide == "right") {
-            val iconAnchor = findRightInlineAnchor(host, holder.inlineParent)
-            if (iconAnchor != null && iconAnchor.isLaidOut) {
-                val anchorLocation = IntArray(2)
-                iconAnchor.getLocationOnScreen(anchorLocation)
-                holder.overlayAnchorUsesRightEdge = true
-                holder.overlayAnchorX = (anchorLocation[0] - hostLocation[0]).toFloat()
-                anchored = true
-            }
-        } else if (holder.inlineParent.isLaidOut) {
-            val parentLocation = IntArray(2)
-            holder.inlineParent.getLocationOnScreen(parentLocation)
-            holder.overlayAnchorUsesRightEdge = false
-            holder.overlayAnchorX = (parentLocation[0] - hostLocation[0]).toFloat()
-            anchored = true
-        }
-
-        if (!anchored && holder.overlayHostWidth > 0 && holder.overlayAnchorUsesRightEdge) {
-            holder.overlayAnchorX += host.width - holder.overlayHostWidth
-        }
-
-        holder.overlayHostWidth = host.width
-        holder.overlayHostHeight = host.height
-        holder.overlayOrientation = host.resources.configuration.orientation
-    }
-
     private fun waitForOverlayInlineLayout(holder: Holder) {
         if (holder.awaitingOverlayLayout) return
         holder.awaitingOverlayLayout = true
@@ -613,9 +541,10 @@ internal object StatusBarPowerRuntime {
         holder: Holder,
         current: Preference.SystemUI.StatusBarPowerRuntime,
     ): Boolean {
-        if (!ensureInlineAnchor(holder, current)) return false
         val density = holder.root.resources.displayMetrics.density
         if (current.overlayOnTop) {
+            // True overlay uses only fixed host-edge coordinates plus the user X/Y values.
+            // Do not resolve or query Wi-Fi/Bluetooth/location/network-speed views here.
             if (!holder.overlayMode) {
                 if (
                     holder.root.width <= 0 || holder.root.height <= 0 ||
@@ -624,26 +553,24 @@ internal object StatusBarPowerRuntime {
                     waitForOverlayInlineLayout(holder)
                     return false
                 }
-
-                captureInlineOverlayAnchor(holder, current)
                 holder.statusBarView.overlay.add(holder.root)
                 holder.overlayMode = true
                 holder.awaitingOverlayLayout = false
             }
             positionTrueOverlay(holder, current)
-        } else {
-            if (holder.overlayMode) {
-                holder.statusBarView.overlay.remove(holder.root)
-                holder.overlayMode = false
-                holder.overlayHostWidth = 0
-                holder.overlayHostHeight = 0
-                addInlineAtEdge(holder)
-            } else {
-                addInlineAtEdge(holder)
-            }
-            holder.root.translationX = current.horizontalOffsetDp * density
-            holder.root.translationY = current.verticalOffsetDp * density
+            return true
         }
+
+        if (!ensureInlineAnchor(holder, current)) return false
+        if (holder.overlayMode) {
+            holder.statusBarView.overlay.remove(holder.root)
+            holder.overlayMode = false
+            addInlineAtEdge(holder)
+        } else {
+            addInlineAtEdge(holder)
+        }
+        holder.root.translationX = current.horizontalOffsetDp * density
+        holder.root.translationY = current.verticalOffsetDp * density
         return true
     }
 
@@ -662,27 +589,25 @@ internal object StatusBarPowerRuntime {
 
         val width = holder.root.measuredWidth.coerceAtLeast(1)
         val height = holder.root.measuredHeight.coerceAtLeast(1)
-        val anchor = holder.overlayAnchorX + current.horizontalOffsetDp * density
-        val left: Int
-        val right: Int
-        if (holder.overlayAnchorUsesRightEdge) {
-            right = anchor.roundToInt()
-            left = right - width
+        val xOffset = (current.horizontalOffsetDp * density).roundToInt()
+        val left = if (current.placementSide == "left") {
+            xOffset
         } else {
-            left = anchor.roundToInt()
-            right = left + width
+            host.width - width + xOffset
         }
         val top = (
             (host.height - height) / 2f + current.verticalOffsetDp * density
         ).roundToInt()
+        val right = left + width
+        val bottom = top + height
 
         holder.root.translationX = 0f
         holder.root.translationY = 0f
         if (
             holder.root.left != left || holder.root.top != top ||
-            holder.root.right != right || holder.root.bottom != top + height
+            holder.root.right != right || holder.root.bottom != bottom
         ) {
-            holder.root.layout(left, top, right, top + height)
+            holder.root.layout(left, top, right, bottom)
         }
     }
 
