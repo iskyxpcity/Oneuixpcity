@@ -277,7 +277,7 @@ internal fun StatusPowerRuntimeControls(
                                 onPreview(powerRuntime.copy(textSizeSp = powerTextSize))
                             },
                             modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
-                            valueRange = 6f..14f,
+                            valueRange = 6f..18f,
                             onValueChangeFinished = {
                                 onChange(powerRuntime.copy(textSizeSp = powerTextSize))
                             },
