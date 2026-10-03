@@ -181,12 +181,38 @@ private fun StatusCategoryContent(
             }
         }
         StatusCategory.Wifi -> {
+            val toolsViewModel = viewModel<OneuiXToolsViewModel>()
+            val preference = toolsViewModel.preference.collectAsStateWithLifecycle().value
             Column(
                 modifier = modifier
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState()),
             ) {
-                StatusWifiCategoryControls()
+                StatusWifiCategoryControls(
+                    wifiRuntime = preference.systemUI.statusBar.wifiRuntime,
+                    onPreview = { runtime ->
+                        toolsViewModel.previewData { current ->
+                            current.copy(
+                                systemUI = current.systemUI.copy(
+                                    statusBar = current.systemUI.statusBar.copy(
+                                        wifiRuntime = runtime,
+                                    ),
+                                ),
+                            )
+                        }
+                    },
+                    onChange = { runtime ->
+                        toolsViewModel.updateData { current ->
+                            current.copy(
+                                systemUI = current.systemUI.copy(
+                                    statusBar = current.systemUI.statusBar.copy(
+                                        wifiRuntime = runtime,
+                                    ),
+                                ),
+                            )
+                        }
+                    },
+                )
             }
         }
         StatusCategory.Bluetooth -> {
