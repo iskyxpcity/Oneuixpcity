@@ -229,7 +229,7 @@ internal object StatusBarPowerRuntime {
         slot3Decimals = source.slot3Decimals.coerceIn(0, 2),
         slot4Decimals = source.slot4Decimals.coerceIn(0, 2),
         refreshIntervalMs = source.refreshIntervalMs.coerceIn(500, 5000),
-        textSizeSp = source.textSizeSp.coerceIn(6f, 14f),
+        textSizeSp = source.textSizeSp.coerceIn(6f, 18f),
         fontWeight = source.fontWeight.coerceIn(100, 900),
         columnGapDp = source.columnGapDp.coerceIn(0f, 12f),
         rowGapDp = source.rowGapDp.coerceIn(-4f, 8f),
