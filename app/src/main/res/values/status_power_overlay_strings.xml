@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="status_power_overlay_on_top">Show above status bar items</string>
+    <string name="status_power_overlay_on_top_summary">Draw power as an independent top overlay so network speed, location and other transient icons cannot move it.</string>
+</resources>
