@@ -1,11 +1,16 @@
 package io.github.soclear.oneuix.hook.systemui
 
 import android.app.KeyguardManager
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.database.ContentObserver
 import android.graphics.Color
+import android.graphics.Typeface
+import android.net.Uri
 import android.os.BatteryManager
+import android.os.Build
 import android.os.Handler
 import android.os.HandlerThread
 import android.os.Looper
@@ -13,26 +18,34 @@ import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
-import android.graphics.Typeface
 import android.widget.LinearLayout
 import android.widget.TextView
+import io.github.libxposed.api.XposedModule
+import io.github.libxposed.api.XposedModuleInterface
+import io.github.soclear.oneuix.common.IgnoreUnknownKeysJson
 import io.github.soclear.oneuix.common.Package
 import io.github.soclear.oneuix.common.Preference
+import io.github.soclear.oneuix.common.StatusBarRuntimeBridge
+import io.github.soclear.oneuix.hook.util.PreferenceProvider
 import java.io.File
 import java.util.Locale
 import java.util.WeakHashMap
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
 /**
  * Samsung SystemUI runtime for Flux-style status-bar power/thermal information.
  *
- * The view is injected into Samsung's right-side indicator container, while the
- * data collector only runs when the feature is enabled. Preference changes are
- * delivered by the existing status-bar runtime bridge, so slider previews do not
- * write preference.json repeatedly.
+ * The view is injected into Samsung's right-side indicator container. Sampling
+ * only runs while the feature is enabled. Preference changes use the same
+ * event-driven content URI / in-memory preview broadcast as the clock runtime,
+ * but this object owns its watcher so the locked clock code remains untouched.
  */
 internal object StatusBarPowerRuntime {
+    private const val PREFERENCE_CHANGED_URI =
+        "content://com.oneuixp.app.statusbridge/preferences"
+
     private data class Holder(
         val statusBarView: View,
         val root: LinearLayout,
@@ -50,6 +63,8 @@ internal object StatusBarPowerRuntime {
         val batteryLevel: Double?,
     )
 
+    private val installed = AtomicBoolean(false)
+    private val watcherStarted = AtomicBoolean(false)
     private val holders = WeakHashMap<View, Holder>()
     private val mainHandler = Handler(Looper.getMainLooper())
 
@@ -58,7 +73,10 @@ internal object StatusBarPowerRuntime {
 
     private var workerThread: HandlerThread? = null
     private var workerHandler: Handler? = null
+    private var preferenceThread: HandlerThread? = null
     private var thermalCandidates: List<File>? = null
+    private var preferenceObserver: ContentObserver? = null
+    private var runtimeReceiver: BroadcastReceiver? = null
 
     private val sampleRunnable = object : Runnable {
         override fun run() {
@@ -70,10 +88,7 @@ internal object StatusBarPowerRuntime {
             } ?: return
 
             val sample = readSample(context, currentConfig)
-            mainHandler.post {
-                renderSample(sample, currentConfig)
-            }
-
+            mainHandler.post { renderSample(sample, currentConfig) }
             workerHandler?.postDelayed(
                 this,
                 currentConfig.refreshIntervalMs.coerceIn(500, 5000).toLong(),
@@ -81,24 +96,111 @@ internal object StatusBarPowerRuntime {
         }
     }
 
-    fun registerStatusBarView(statusBarView: View) {
-        statusBarView.post {
-            val holder = synchronized(holders) {
-                holders[statusBarView] ?: createHolder(statusBarView)?.also {
-                    holders[statusBarView] = it
+    fun install(
+        module: XposedModule,
+        param: XposedModuleInterface.PackageReadyParam,
+    ) {
+        if (param.packageName != Package.SYSTEMUI) return
+        if (!installed.compareAndSet(false, true)) return
+
+        runCatching {
+            val clazz = param.classLoader.loadClass(
+                "com.android.systemui.statusbar.phone.PhoneStatusBarView"
+            )
+            clazz.declaredConstructors.forEach { constructor ->
+                module.hook(constructor).intercept { chain ->
+                    val result = chain.proceed()
+                    (chain.thisObject as? View)?.let { statusBarView ->
+                        statusBarView.post {
+                            registerStatusBarView(statusBarView)
+                            ensurePreferenceWatcher(module, statusBarView.context)
+                        }
+                    }
+                    result
                 }
-            } ?: return@post
-            applyConfig(holder, config)
-            refreshSampling()
+            }
         }
     }
 
-    fun updateRuntime(newConfig: Preference.SystemUI.StatusBarPowerRuntime) {
+    private fun ensurePreferenceWatcher(module: XposedModule, context: Context) {
+        if (!watcherStarted.compareAndSet(false, true)) return
+        val worker = HandlerThread("OneuiXPStatusPowerPrefs").apply { start() }
+        preferenceThread = worker
+        val background = Handler(worker.looper)
+        var previous: Preference.SystemUI.StatusBarPowerRuntime? = null
+
+        fun refreshOnce() {
+            background.post {
+                val current = runCatching {
+                    with(module) { PreferenceProvider.loadPreference() }
+                        ?.systemUI?.statusBar?.powerRuntime
+                }.getOrNull() ?: return@post
+                if (current == previous) return@post
+                previous = current
+                mainHandler.post { updateRuntime(current) }
+            }
+        }
+
+        val observer = object : ContentObserver(background) {
+            override fun onChange(selfChange: Boolean) = refreshOnce()
+            override fun onChange(selfChange: Boolean, uri: Uri?) = refreshOnce()
+        }
+        preferenceObserver = observer
+        runCatching {
+            context.contentResolver.registerContentObserver(
+                Uri.parse(PREFERENCE_CHANGED_URI),
+                false,
+                observer,
+            )
+        }
+
+        val receiver = object : BroadcastReceiver() {
+            override fun onReceive(receiverContext: Context?, intent: Intent?) {
+                if (intent?.action != StatusBarRuntimeBridge.ACTION) return
+                val payload = intent.getStringExtra(
+                    StatusBarRuntimeBridge.EXTRA_STATUS_BAR_JSON
+                ) ?: return
+                background.post {
+                    val statusBar = runCatching {
+                        IgnoreUnknownKeysJson.decodeFromString(
+                            Preference.SystemUI.StatusBar.serializer(),
+                            payload,
+                        )
+                    }.getOrNull() ?: return@post
+                    val current = statusBar.powerRuntime
+                    previous = current
+                    mainHandler.post { updateRuntime(current) }
+                }
+            }
+        }
+        runtimeReceiver = receiver
+        runCatching {
+            val filter = IntentFilter(StatusBarRuntimeBridge.ACTION)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                context.registerReceiver(receiver, filter, Context.RECEIVER_EXPORTED)
+            } else {
+                @Suppress("DEPRECATION")
+                context.registerReceiver(receiver, filter)
+            }
+        }
+
+        refreshOnce()
+    }
+
+    private fun registerStatusBarView(statusBarView: View) {
+        val holder = synchronized(holders) {
+            holders[statusBarView] ?: createHolder(statusBarView)?.also {
+                holders[statusBarView] = it
+            }
+        } ?: return
+        applyConfig(holder, config)
+        refreshSampling()
+    }
+
+    private fun updateRuntime(newConfig: Preference.SystemUI.StatusBarPowerRuntime) {
         config = sanitize(newConfig)
         val active = synchronized(holders) { holders.values.toList() }
-        active.forEach { holder ->
-            holder.root.post { applyConfig(holder, config) }
-        }
+        active.forEach { holder -> holder.root.post { applyConfig(holder, config) } }
         refreshSampling()
     }
 
@@ -139,14 +241,9 @@ internal object StatusBarPowerRuntime {
             gravity = Gravity.CENTER
             clipChildren = false
             clipToPadding = false
-            layoutParams = LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-                ViewGroup.LayoutParams.MATCH_PARENT,
-            )
             addView(row1)
             addView(row2)
         }
-
         val slots = List(4) {
             TextView(context).apply {
                 includeFontPadding = false
@@ -156,20 +253,26 @@ internal object StatusBarPowerRuntime {
             }
         }
 
-        parent.addView(root, 0)
+        parent.addView(
+            root,
+            0,
+            ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.MATCH_PARENT,
+            ),
+        )
         return Holder(statusBarView, root, row1, row2, slots)
     }
 
     private fun findRightIndicatorArea(statusBarView: View): ViewGroup? {
         val resources = statusBarView.resources
-        val names = listOf(
+        listOf(
             "system_icon_area",
             "status_bar_right_side",
             "status_bar_end_side_content",
             "status_icon_area",
             "status_bar_end_side",
-        )
-        names.forEach { name ->
+        ).forEach { name ->
             val id = resources.getIdentifier(name, "id", Package.SYSTEMUI)
             if (id != 0) {
                 (statusBarView.findViewById<View>(id) as? ViewGroup)?.let { return it }
@@ -184,11 +287,7 @@ internal object StatusBarPowerRuntime {
     ) {
         holder.root.visibility = if (
             current.enabled && !shouldHideForLockscreen(holder.root.context, current)
-        ) {
-            View.VISIBLE
-        } else {
-            View.GONE
-        }
+        ) View.VISIBLE else View.GONE
         if (!current.enabled) return
 
         rebuildRows(holder, current)
@@ -230,19 +329,19 @@ internal object StatusBarPowerRuntime {
             holder.row2.addView(holder.slots[3])
             holder.row2.visibility = View.VISIBLE
         } else {
-            holder.slots.forEach(holder.row1::addView)
+            holder.slots.forEach { holder.row1.addView(it) }
             holder.row2.visibility = View.GONE
         }
     }
 
     private fun refreshSampling() {
-        val current = config
-        if (!current.enabled) {
+        if (!config.enabled) {
             workerHandler?.removeCallbacks(sampleRunnable)
             return
         }
-        ensureWorker().removeCallbacks(sampleRunnable)
-        ensureWorker().post(sampleRunnable)
+        val handler = ensureWorker()
+        handler.removeCallbacks(sampleRunnable)
+        handler.post(sampleRunnable)
     }
 
     private fun ensureWorker(): Handler {
@@ -277,9 +376,7 @@ internal object StatusBarPowerRuntime {
         val currentMa = signedCurrentMa?.let { if (current.absoluteValue) abs(it) else it }
         val signedPowerW = if (currentUa != null && voltageMv != null) {
             currentUa.toDouble() / 1_000_000.0 * voltageMv.toDouble() / 1000.0
-        } else {
-            null
-        }
+        } else null
         val powerW = signedPowerW?.let { if (current.absoluteValue) abs(it) else it }
 
         return Sample(
@@ -300,17 +397,15 @@ internal object StatusBarPowerRuntime {
     }
 
     private fun discoverCpuThermalFiles(): List<File> {
-        val thermalRoot = File("/sys/class/thermal")
-        val zones = thermalRoot.listFiles()
+        val zones = File("/sys/class/thermal").listFiles()
             ?.filter { it.name.startsWith("thermal_zone") && it.isDirectory }
             .orEmpty()
-
         val preferred = zones.filter { zone ->
-            val type = runCatching { File(zone, "type").readText().trim().lowercase() }
-                .getOrDefault("")
+            val type = runCatching {
+                File(zone, "type").readText().trim().lowercase()
+            }.getOrDefault("")
             listOf("cpu", "soc", "ap", "cluster", "big", "little").any(type::contains)
         }.map { File(it, "temp") }.filter(File::canRead)
-
         if (preferred.isNotEmpty()) return preferred
         return zones.map { File(it, "temp") }.filter(File::canRead)
     }
@@ -337,8 +432,9 @@ internal object StatusBarPowerRuntime {
                 current.slot4Decimals,
             )
             holder.slots.forEachIndexed { index, textView ->
-                val rendered = renderValue(keys[index], decimals[index], sample, current.hideUnit)
-                textView.text = rendered
+                textView.text = renderValue(
+                    keys[index], decimals[index], sample, current.hideUnit
+                )
                 textView.visibility = if (keys[index] == "none") View.GONE else View.VISIBLE
             }
         }
@@ -354,34 +450,16 @@ internal object StatusBarPowerRuntime {
         val value: Double?
         val unit: String
         when (key) {
-            "current" -> {
-                value = sample.currentMa
-                unit = "mA"
-            }
-            "battery_temp" -> {
-                value = sample.batteryTempC
-                unit = "°C"
-            }
-            "cpu_temp" -> {
-                value = sample.cpuTempC
-                unit = "°C"
-            }
-            "voltage" -> {
-                value = sample.voltageV
-                unit = "V"
-            }
-            "battery_level" -> {
-                value = sample.batteryLevel
-                unit = "%"
-            }
+            "current" -> { value = sample.currentMa; unit = "mA" }
+            "battery_temp" -> { value = sample.batteryTempC; unit = "°C" }
+            "cpu_temp" -> { value = sample.cpuTempC; unit = "°C" }
+            "voltage" -> { value = sample.voltageV; unit = "V" }
+            "battery_level" -> { value = sample.batteryLevel; unit = "%" }
             "none" -> return ""
-            else -> {
-                value = sample.powerW
-                unit = "W"
-            }
+            else -> { value = sample.powerW; unit = "W" }
         }
         if (value == null) return "--"
-        val number = String.format(Locale.US, ".${safeDecimals}f", value)
+        val number = String.format(Locale.US, "%.${safeDecimals}f", value)
         return if (hideUnit) number else number + unit
     }
 
