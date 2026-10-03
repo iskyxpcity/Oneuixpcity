@@ -55,6 +55,7 @@ internal object StatusBarPowerRuntime {
         var overlayHostHeight: Int = 0,
         var overlayOrientation: Int = Configuration.ORIENTATION_UNDEFINED,
         var lastLayoutKey: String = "",
+        var awaitingOverlayLayout: Boolean = false,
     )
 
     private data class Sample(
@@ -68,12 +69,15 @@ internal object StatusBarPowerRuntime {
 
     private val installed = AtomicBoolean(false)
     private val watcherStarted = AtomicBoolean(false)
-    private val configurationReceiverStarted = AtomicBoolean(false)
     private val holders = WeakHashMap<View, Holder>()
+    private val registrationAttempts = WeakHashMap<View, Int>()
     private val mainHandler = Handler(Looper.getMainLooper())
 
     @Volatile
     private var config = Preference.SystemUI.StatusBarPowerRuntime()
+
+    @Volatile
+    private var lastSample: Sample? = null
 
     private var workerThread: HandlerThread? = null
     private var workerHandler: Handler? = null
@@ -81,25 +85,6 @@ internal object StatusBarPowerRuntime {
     private var thermalCandidates: List<File>? = null
     private var preferenceObserver: ContentObserver? = null
     private var runtimeReceiver: BroadcastReceiver? = null
-    private var configurationReceiver: BroadcastReceiver? = null
-
-    private val configurationReanchorRunnable = Runnable {
-        val active = synchronized(holders) { holders.values.toList() }
-        active.forEach { holder ->
-            if (!holder.overlayMode) return@forEach
-            val host = holder.statusBarView
-            if (host.width <= 0 || host.height <= 0) return@forEach
-            val orientation = host.resources.configuration.orientation
-            val geometryChanged = orientation != holder.overlayOrientation ||
-                host.width != holder.overlayHostWidth ||
-                host.height != holder.overlayHostHeight
-            if (!geometryChanged) return@forEach
-
-            refreshOverlayAnchor(holder, config, force = true)
-            holder.overlayOrientation = orientation
-            positionTrueOverlay(holder, config)
-        }
-    }
 
     private val sampleRunnable = object : Runnable {
         override fun run() {
@@ -107,10 +92,13 @@ internal object StatusBarPowerRuntime {
             if (!currentConfig.enabled) return
 
             val context = synchronized(holders) {
-                holders.values.firstOrNull()?.statusBarView?.context
+                holders.values.firstOrNull { it.statusBarView.isAttachedToWindow }
+                    ?.statusBarView?.context
+                    ?: holders.values.firstOrNull()?.statusBarView?.context
             } ?: return
 
             val sample = readSample(context, currentConfig)
+            lastSample = sample
             mainHandler.post { renderSample(sample, currentConfig) }
             workerHandler?.postDelayed(
                 this,
@@ -137,7 +125,6 @@ internal object StatusBarPowerRuntime {
                         statusBarView.post {
                             registerStatusBarView(statusBarView)
                             ensurePreferenceWatcher(module, statusBarView.context)
-                            ensureConfigurationReceiver(statusBarView.context)
                         }
                     }
                     result
@@ -211,27 +198,6 @@ internal object StatusBarPowerRuntime {
         refreshOnce()
     }
 
-    private fun ensureConfigurationReceiver(context: Context) {
-        if (!configurationReceiverStarted.compareAndSet(false, true)) return
-        val receiver = object : BroadcastReceiver() {
-            override fun onReceive(receiverContext: Context?, intent: Intent?) {
-                if (intent?.action != Intent.ACTION_CONFIGURATION_CHANGED) return
-                mainHandler.removeCallbacks(configurationReanchorRunnable)
-                mainHandler.postDelayed(configurationReanchorRunnable, 300L)
-            }
-        }
-        configurationReceiver = receiver
-        val filter = IntentFilter(Intent.ACTION_CONFIGURATION_CHANGED)
-        runCatching {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                context.registerReceiver(receiver, filter, Context.RECEIVER_EXPORTED)
-            } else {
-                @Suppress("DEPRECATION")
-                context.registerReceiver(receiver, filter)
-            }
-        }
-    }
-
     private fun registerStatusBarView(statusBarView: View) {
         if (!statusBarView.isLaidOut) {
             statusBarView.addOnLayoutChangeListener(object : View.OnLayoutChangeListener {
@@ -258,15 +224,36 @@ internal object StatusBarPowerRuntime {
             holders[statusBarView] ?: createHolder(statusBarView)?.also {
                 holders[statusBarView] = it
             }
-        } ?: return
+        }
+        if (holder == null) {
+            scheduleRegistrationRetry(statusBarView)
+            return
+        }
+
+        synchronized(registrationAttempts) { registrationAttempts.remove(statusBarView) }
         applyConfig(holder, config)
+        lastSample?.let { renderSample(it, config) }
         refreshSampling()
+    }
+
+    private fun scheduleRegistrationRetry(statusBarView: View) {
+        val attempt = synchronized(registrationAttempts) {
+            val next = (registrationAttempts[statusBarView] ?: 0) + 1
+            registrationAttempts[statusBarView] = next
+            next
+        }
+        if (attempt > 10) return
+        val delay = (attempt * 24L).coerceAtMost(180L)
+        statusBarView.postDelayed({ registerStatusBarView(statusBarView) }, delay)
     }
 
     private fun updateRuntime(newConfig: Preference.SystemUI.StatusBarPowerRuntime) {
         config = sanitize(newConfig)
-        val active = synchronized(holders) { holders.values.toList() }
+        val active = synchronized(holders) {
+            holders.values.filter { it.statusBarView.isAttachedToWindow }
+        }
         active.forEach { holder -> holder.root.post { applyConfig(holder, config) } }
+        lastSample?.let { renderSample(it, config) }
         refreshSampling()
     }
 
@@ -350,6 +337,17 @@ internal object StatusBarPowerRuntime {
         inlineParent.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
             if (!holder.overlayMode && holder.root.parent === holder.inlineParent) {
                 holder.root.post { addInlineAtEdge(holder) }
+            }
+        }
+        host.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
+            if (!holder.overlayMode) return@addOnLayoutChangeListener
+            val orientation = host.resources.configuration.orientation
+            if (orientation == holder.overlayOrientation) return@addOnLayoutChangeListener
+            holder.overlayOrientation = orientation
+            host.postOnAnimation {
+                if (!holder.overlayMode || !host.isAttachedToWindow) return@postOnAnimation
+                refreshOverlayAnchor(holder, config, force = true)
+                positionTrueOverlay(holder, config)
             }
         }
         return holder
@@ -586,6 +584,31 @@ internal object StatusBarPowerRuntime {
         holder.overlayOrientation = host.resources.configuration.orientation
     }
 
+    private fun waitForOverlayInlineLayout(holder: Holder) {
+        if (holder.awaitingOverlayLayout) return
+        holder.awaitingOverlayLayout = true
+        holder.root.addOnLayoutChangeListener(object : View.OnLayoutChangeListener {
+            override fun onLayoutChange(
+                v: View,
+                left: Int,
+                top: Int,
+                right: Int,
+                bottom: Int,
+                oldLeft: Int,
+                oldTop: Int,
+                oldRight: Int,
+                oldBottom: Int,
+            ) {
+                if (right - left <= 0 || bottom - top <= 0) return
+                v.removeOnLayoutChangeListener(this)
+                holder.awaitingOverlayLayout = false
+                v.post { applyConfig(holder, config) }
+            }
+        })
+        holder.root.requestLayout()
+        holder.inlineParent.requestLayout()
+    }
+
     private fun ensureMountMode(
         holder: Holder,
         current: Preference.SystemUI.StatusBarPowerRuntime,
@@ -594,14 +617,18 @@ internal object StatusBarPowerRuntime {
         val density = holder.root.resources.displayMetrics.density
         if (current.overlayOnTop) {
             if (!holder.overlayMode) {
-                if (holder.root.width <= 0 || holder.statusBarView.width <= 0) {
-                    holder.root.post { applyConfig(holder, config) }
+                if (
+                    holder.root.width <= 0 || holder.root.height <= 0 ||
+                    holder.statusBarView.width <= 0 || holder.statusBarView.height <= 0
+                ) {
+                    waitForOverlayInlineLayout(holder)
                     return false
                 }
 
                 captureInlineOverlayAnchor(holder, current)
                 holder.statusBarView.overlay.add(holder.root)
                 holder.overlayMode = true
+                holder.awaitingOverlayLayout = false
             }
             positionTrueOverlay(holder, current)
         } else {
@@ -668,8 +695,10 @@ internal object StatusBarPowerRuntime {
         ) View.VISIBLE else View.GONE
         if (!current.enabled) return
 
-        if (!ensureMountMode(holder, current)) return
-
+        // Build and style the inline content before attempting to move it into
+        // ViewGroupOverlay. On a fresh SystemUI process the root initially has
+        // zero width; mounting first would permanently defer the overlay until
+        // the user toggled the setting manually.
         rebuildRows(holder, current)
         val density = holder.root.resources.displayMetrics.density
         holder.root.setPaddingRelative(
@@ -705,6 +734,7 @@ internal object StatusBarPowerRuntime {
             )
         }
 
+        if (!ensureMountMode(holder, current)) return
         if (holder.overlayMode) {
             holder.root.post { positionTrueOverlay(holder, current) }
         }
@@ -824,7 +854,9 @@ internal object StatusBarPowerRuntime {
         sample: Sample,
         current: Preference.SystemUI.StatusBarPowerRuntime,
     ) {
-        val active = synchronized(holders) { holders.values.toList() }
+        val active = synchronized(holders) {
+            holders.values.filter { it.statusBarView.isAttachedToWindow }
+        }
         active.forEach { holder ->
             val desiredVisibility = if (
                 current.enabled && !shouldHideForLockscreen(holder.root.context, current)
@@ -853,8 +885,12 @@ internal object StatusBarPowerRuntime {
                 }
             }
 
-            if (desiredVisibility == View.VISIBLE && holder.overlayMode) {
-                positionTrueOverlay(holder, current)
+            if (desiredVisibility == View.VISIBLE) {
+                if (holder.overlayMode) {
+                    positionTrueOverlay(holder, current)
+                } else if (current.overlayOnTop) {
+                    holder.root.post { applyConfig(holder, current) }
+                }
             }
         }
     }
