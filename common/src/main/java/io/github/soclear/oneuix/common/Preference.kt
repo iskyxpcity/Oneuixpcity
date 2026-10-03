@@ -221,7 +221,6 @@ data class Preference(
         data class QS(
             val setQsClockMonospaced: Boolean = false,
             val hideDeviceControlQsTile: Boolean = false,
-            val hideSmartViewQsTile: Boolean = false,
             val turnOn5gQsTile: Boolean = false,
             val hideQsBarMediaPlayer: Boolean = false,
             val hideQsBarNearbyDevicesAndDeviceControl: Boolean = false,
@@ -274,7 +273,7 @@ data class Preference(
     @Serializable
     data class Call(
         val supportVoiceCallRecording: Boolean = true,
-        val preferRecordingButton: Boolean = false,
+        val preferRecordingButton: Boolean = true,
         val showGeocodedLocationInRecentCall: Boolean = false,
         val isOpStyleCHN: Boolean = false,
         val supportCallAndTextOnOtherDevices: Boolean = false,
