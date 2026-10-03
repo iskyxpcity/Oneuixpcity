@@ -1,5 +1,6 @@
 from pathlib import Path
 
+# One-shot source patch for restart-safe power overlay and reduced position ranges.
 runtime_path = Path('hook/src/main/java/io/github/soclear/oneuix/hook/systemui/StatusBarPowerRuntime.kt')
 ui_path = Path('app/src/main/java/com/oneuixp/app/ui/screen/status/StatusPowerRuntimeControls.kt')
 
