@@ -127,6 +127,26 @@ internal object StatusBarPowerRuntime {
                 }
             }
         }
+
+        // Follow Samsung's real dark/light icon transition instead of keeping the
+        // color captured when the power view was first configured.
+        runCatching {
+            val clockClass = param.classLoader.loadClass(
+                "com.android.systemui.statusbar.policy.QSClockIndicatorView"
+            )
+            clockClass.declaredMethods
+                .filter { it.name == "onDarkChanged" }
+                .forEach { method ->
+                    module.hook(method).intercept { chain ->
+                        val result = chain.proceed()
+                        (chain.thisObject as? TextView)?.let { clock ->
+                            val color = clock.currentTextColor
+                            mainHandler.post { applyIndicatorTextColor(color) }
+                        }
+                        result
+                    }
+                }
+        }
     }
 
     private fun ensurePreferenceWatcher(module: XposedModule, context: Context) {
@@ -838,6 +858,13 @@ internal object StatusBarPowerRuntime {
             holders.values.filter { it.statusBarView.isAttachedToWindow }
         }
         active.forEach { holder ->
+            // Fallback color sync for transitions that do not dispatch onDarkChanged.
+            val currentColor = resolveIndicatorTextColor(holder.statusBarView)
+            holder.slots.forEach { textView ->
+                if (textView.currentTextColor != currentColor) {
+                    textView.setTextColor(currentColor)
+                }
+            }
             val desiredVisibility = if (
                 current.enabled && !shouldHideForLockscreen(holder.root.context, current)
             ) View.VISIBLE else View.GONE
@@ -912,6 +939,19 @@ internal object StatusBarPowerRuntime {
     ): Boolean {
         if (!current.hideOnLockscreen) return false
         return context.getSystemService(KeyguardManager::class.java)?.isKeyguardLocked == true
+    }
+
+    private fun applyIndicatorTextColor(color: Int) {
+        val active = synchronized(holders) {
+            holders.values.filter { it.statusBarView.isAttachedToWindow }
+        }
+        active.forEach { holder ->
+            holder.slots.forEach { textView ->
+                if (textView.currentTextColor != color) {
+                    textView.setTextColor(color)
+                }
+            }
+        }
     }
 
     private fun resolveIndicatorTextColor(statusBarView: View): Int {
