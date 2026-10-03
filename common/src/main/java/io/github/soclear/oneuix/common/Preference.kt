@@ -145,6 +145,19 @@ data class Preference(
         )
 
         @Serializable
+        data class StatusBarBluetoothRuntime(
+            val enabled: Boolean = false,
+            val showLeftSide: Boolean = false,
+            val customIconEnabled: Boolean = false,
+            val portraitSizeDp: Float = 14f,
+            val landscapeSizeDp: Float = 14f,
+            val horizontalOffsetDp: Float = 0f,
+            val verticalOffsetDp: Float = 0f,
+            val startMarginDp: Float = 0f,
+            val endMarginDp: Float = 0f,
+        )
+
+        @Serializable
         data class StatusBar(
             val modifyStatusBarLeftPadding: Boolean = false,
             val statusBarLeftPaddingDp: Float = 0f,
@@ -165,6 +178,7 @@ data class Preference(
             val hideBatteryLevelTextChargingIcon: Boolean = false,
             val powerRuntime: StatusBarPowerRuntime = StatusBarPowerRuntime(),
             val wifiRuntime: StatusBarWifiRuntime = StatusBarWifiRuntime(),
+            val bluetoothRuntime: StatusBarBluetoothRuntime = StatusBarBluetoothRuntime(),
             val supportRealTimeNetworkSpeed: Boolean = true,
             val showSeparateUpDownNetworkSpeeds: Boolean = false,
             val networkSpeedThresholdKb: Int = 0,
@@ -260,7 +274,7 @@ data class Preference(
     @Serializable
     data class Call(
         val supportVoiceCallRecording: Boolean = true,
-        val preferRecordingButton: Boolean = true,
+        val preferRecordingButton: Boolean = false,
         val showGeocodedLocationInRecentCall: Boolean = false,
         val isOpStyleCHN: Boolean = false,
         val supportCallAndTextOnOtherDevices: Boolean = false,
