@@ -1,0 +1,446 @@
+package com.oneuixp.app.ui.screen.status
+
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.unit.dp
+import com.oneuixp.app.R
+import io.github.soclear.oneuix.common.Preference
+import io.github.soclear.oneuix.ui.component.OneuiXInfoItem
+import io.github.soclear.oneuix.ui.component.OneuiXSlider
+import io.github.soclear.oneuix.ui.component.SelectItem
+import io.github.soclear.oneuix.ui.component.SwitchItem
+import kotlin.math.roundToInt
+
+private val POWER_SLOT_KEYS = listOf(
+    "power",
+    "current",
+    "battery_temp",
+    "cpu_temp",
+    "voltage",
+    "battery_level",
+    "none",
+)
+
+@Composable
+internal fun StatusPowerRuntimeControls(
+    powerRuntime: Preference.SystemUI.StatusBarPowerRuntime,
+    onPreview: (Preference.SystemUI.StatusBarPowerRuntime) -> Unit,
+    onChange: (Preference.SystemUI.StatusBarPowerRuntime) -> Unit,
+) {
+    val powerIcon = ImageVector.vectorResource(id = R.drawable.battery)
+    val slotEntries = listOf(
+        stringResource(id = R.string.status_power_slot_power),
+        stringResource(id = R.string.status_power_slot_current),
+        stringResource(id = R.string.status_power_slot_battery_temp),
+        stringResource(id = R.string.status_power_slot_cpu_temp),
+        stringResource(id = R.string.status_power_slot_voltage),
+        stringResource(id = R.string.status_power_slot_battery_level),
+        stringResource(id = R.string.status_power_slot_none),
+    )
+    val decimalEntries = listOf("0", "1", "2")
+
+    var powerTextSize by remember(powerRuntime.textSizeSp) {
+        mutableFloatStateOf(powerRuntime.textSizeSp)
+    }
+    var refreshInterval by remember(powerRuntime.refreshIntervalMs) {
+        mutableFloatStateOf(powerRuntime.refreshIntervalMs.toFloat())
+    }
+    var columnGap by remember(powerRuntime.columnGapDp) {
+        mutableFloatStateOf(powerRuntime.columnGapDp)
+    }
+    var rowGap by remember(powerRuntime.rowGapDp) {
+        mutableFloatStateOf(powerRuntime.rowGapDp)
+    }
+    var horizontalOffset by remember(powerRuntime.horizontalOffsetDp) {
+        mutableFloatStateOf(powerRuntime.horizontalOffsetDp)
+    }
+    var verticalOffset by remember(powerRuntime.verticalOffsetDp) {
+        mutableFloatStateOf(powerRuntime.verticalOffsetDp)
+    }
+    var startPadding by remember(powerRuntime.startPaddingDp) {
+        mutableFloatStateOf(powerRuntime.startPaddingDp)
+    }
+    var endPadding by remember(powerRuntime.endPaddingDp) {
+        mutableFloatStateOf(powerRuntime.endPaddingDp)
+    }
+
+    fun slotIndex(key: String): Int = POWER_SLOT_KEYS.indexOf(key).coerceAtLeast(0)
+    fun slotKey(index: Int): String = POWER_SLOT_KEYS[index.coerceIn(0, POWER_SLOT_KEYS.lastIndex)]
+
+    StatusThemeGroup(
+        items = buildList {
+            add {
+                SwitchItem(
+                    icon = powerIcon,
+                    title = stringResource(id = R.string.status_power_runtime_enable),
+                    summary = stringResource(id = R.string.status_power_runtime_enable_summary),
+                    showChildIndicator = true,
+                    checked = powerRuntime.enabled,
+                    onCheckedChange = {
+                        onChange(powerRuntime.copy(enabled = it))
+                    },
+                )
+            }
+
+            if (powerRuntime.enabled) {
+                add {
+                    SelectItem(
+                        icon = powerIcon,
+                        title = stringResource(id = R.string.status_power_slot_1),
+                        entries = slotEntries,
+                        selectedIndex = slotIndex(powerRuntime.slot1),
+                        onSelectedIndexChange = {
+                            onChange(powerRuntime.copy(slot1 = slotKey(it)))
+                        },
+                    )
+                }
+                add {
+                    SelectItem(
+                        icon = powerIcon,
+                        title = stringResource(id = R.string.status_power_slot_1_decimals),
+                        entries = decimalEntries,
+                        selectedIndex = powerRuntime.slot1Decimals.coerceIn(0, 2),
+                        onSelectedIndexChange = {
+                            onChange(powerRuntime.copy(slot1Decimals = it.coerceIn(0, 2)))
+                        },
+                    )
+                }
+                add {
+                    SelectItem(
+                        icon = powerIcon,
+                        title = stringResource(id = R.string.status_power_slot_2),
+                        entries = slotEntries,
+                        selectedIndex = slotIndex(powerRuntime.slot2),
+                        onSelectedIndexChange = {
+                            onChange(powerRuntime.copy(slot2 = slotKey(it)))
+                        },
+                    )
+                }
+                add {
+                    SelectItem(
+                        icon = powerIcon,
+                        title = stringResource(id = R.string.status_power_slot_2_decimals),
+                        entries = decimalEntries,
+                        selectedIndex = powerRuntime.slot2Decimals.coerceIn(0, 2),
+                        onSelectedIndexChange = {
+                            onChange(powerRuntime.copy(slot2Decimals = it.coerceIn(0, 2)))
+                        },
+                    )
+                }
+                add {
+                    SelectItem(
+                        icon = powerIcon,
+                        title = stringResource(id = R.string.status_power_slot_3),
+                        entries = slotEntries,
+                        selectedIndex = slotIndex(powerRuntime.slot3),
+                        onSelectedIndexChange = {
+                            onChange(powerRuntime.copy(slot3 = slotKey(it)))
+                        },
+                    )
+                }
+                add {
+                    SelectItem(
+                        icon = powerIcon,
+                        title = stringResource(id = R.string.status_power_slot_3_decimals),
+                        entries = decimalEntries,
+                        selectedIndex = powerRuntime.slot3Decimals.coerceIn(0, 2),
+                        onSelectedIndexChange = {
+                            onChange(powerRuntime.copy(slot3Decimals = it.coerceIn(0, 2)))
+                        },
+                    )
+                }
+                add {
+                    SelectItem(
+                        icon = powerIcon,
+                        title = stringResource(id = R.string.status_power_slot_4),
+                        entries = slotEntries,
+                        selectedIndex = slotIndex(powerRuntime.slot4),
+                        onSelectedIndexChange = {
+                            onChange(powerRuntime.copy(slot4 = slotKey(it)))
+                        },
+                    )
+                }
+                add {
+                    SelectItem(
+                        icon = powerIcon,
+                        title = stringResource(id = R.string.status_power_slot_4_decimals),
+                        entries = decimalEntries,
+                        selectedIndex = powerRuntime.slot4Decimals.coerceIn(0, 2),
+                        onSelectedIndexChange = {
+                            onChange(powerRuntime.copy(slot4Decimals = it.coerceIn(0, 2)))
+                        },
+                    )
+                }
+
+                add {
+                    SwitchItem(
+                        icon = powerIcon,
+                        title = stringResource(id = R.string.status_power_double_line),
+                        summary = stringResource(id = R.string.status_power_double_line_summary),
+                        checked = powerRuntime.doubleLine,
+                        onCheckedChange = {
+                            onChange(powerRuntime.copy(doubleLine = it))
+                        },
+                    )
+                }
+                add {
+                    SwitchItem(
+                        icon = powerIcon,
+                        title = stringResource(id = R.string.status_power_absolute_value),
+                        checked = powerRuntime.absoluteValue,
+                        onCheckedChange = {
+                            onChange(powerRuntime.copy(absoluteValue = it))
+                        },
+                    )
+                }
+                add {
+                    SwitchItem(
+                        icon = powerIcon,
+                        title = stringResource(id = R.string.status_power_hide_unit),
+                        checked = powerRuntime.hideUnit,
+                        onCheckedChange = {
+                            onChange(powerRuntime.copy(hideUnit = it))
+                        },
+                    )
+                }
+                add {
+                    SwitchItem(
+                        icon = powerIcon,
+                        title = stringResource(id = R.string.status_power_hide_lockscreen),
+                        checked = powerRuntime.hideOnLockscreen,
+                        onCheckedChange = {
+                            onChange(powerRuntime.copy(hideOnLockscreen = it))
+                        },
+                    )
+                }
+                add {
+                    SelectItem(
+                        icon = powerIcon,
+                        title = stringResource(id = R.string.status_power_font_weight),
+                        entries = listOf("300", "400", "500", "600", "700"),
+                        selectedIndex = listOf(300, 400, 500, 600, 700)
+                            .indexOf(powerRuntime.fontWeight)
+                            .coerceAtLeast(1),
+                        onSelectedIndexChange = {
+                            val weight = listOf(300, 400, 500, 600, 700)[it.coerceIn(0, 4)]
+                            onChange(powerRuntime.copy(fontWeight = weight))
+                        },
+                    )
+                }
+
+                add {
+                    OneuiXInfoItem(
+                        icon = powerIcon,
+                        title = stringResource(id = R.string.status_power_text_size),
+                        summary = stringResource(
+                            id = R.string.status_power_text_size_summary,
+                            powerTextSize,
+                        ),
+                    )
+                }
+                add {
+                    StatusThemeChildItem {
+                        OneuiXSlider(
+                            value = powerTextSize,
+                            onValueChange = {
+                                powerTextSize = (it * 10f).roundToInt() / 10f
+                                onPreview(powerRuntime.copy(textSizeSp = powerTextSize))
+                            },
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                            valueRange = 6f..14f,
+                            onValueChangeFinished = {
+                                onChange(powerRuntime.copy(textSizeSp = powerTextSize))
+                            },
+                        )
+                    }
+                }
+
+                add {
+                    OneuiXInfoItem(
+                        icon = powerIcon,
+                        title = stringResource(id = R.string.status_power_refresh_interval),
+                        summary = stringResource(
+                            id = R.string.status_power_refresh_interval_summary,
+                            refreshInterval.roundToInt(),
+                        ),
+                    )
+                }
+                add {
+                    StatusThemeChildItem {
+                        OneuiXSlider(
+                            value = refreshInterval,
+                            onValueChange = {
+                                refreshInterval = (it / 100f).roundToInt() * 100f
+                                onPreview(
+                                    powerRuntime.copy(refreshIntervalMs = refreshInterval.roundToInt())
+                                )
+                            },
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                            valueRange = 500f..5000f,
+                            onValueChangeFinished = {
+                                onChange(
+                                    powerRuntime.copy(refreshIntervalMs = refreshInterval.roundToInt())
+                                )
+                            },
+                        )
+                    }
+                }
+
+                add {
+                    OneuiXInfoItem(
+                        icon = powerIcon,
+                        title = stringResource(id = R.string.status_power_column_gap),
+                        summary = stringResource(id = R.string.status_power_dp_summary, columnGap),
+                    )
+                }
+                add {
+                    StatusThemeChildItem {
+                        OneuiXSlider(
+                            value = columnGap,
+                            onValueChange = {
+                                columnGap = (it * 10f).roundToInt() / 10f
+                                onPreview(powerRuntime.copy(columnGapDp = columnGap))
+                            },
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                            valueRange = 0f..12f,
+                            onValueChangeFinished = {
+                                onChange(powerRuntime.copy(columnGapDp = columnGap))
+                            },
+                        )
+                    }
+                }
+
+                if (powerRuntime.doubleLine) {
+                    add {
+                        OneuiXInfoItem(
+                            icon = powerIcon,
+                            title = stringResource(id = R.string.status_power_row_gap),
+                            summary = stringResource(id = R.string.status_power_dp_summary, rowGap),
+                        )
+                    }
+                    add {
+                        StatusThemeChildItem {
+                            OneuiXSlider(
+                                value = rowGap,
+                                onValueChange = {
+                                    rowGap = (it * 10f).roundToInt() / 10f
+                                    onPreview(powerRuntime.copy(rowGapDp = rowGap))
+                                },
+                                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                                valueRange = -4f..8f,
+                                onValueChangeFinished = {
+                                    onChange(powerRuntime.copy(rowGapDp = rowGap))
+                                },
+                            )
+                        }
+                    }
+                }
+
+                add {
+                    OneuiXInfoItem(
+                        icon = powerIcon,
+                        title = stringResource(id = R.string.status_power_horizontal_offset),
+                        summary = stringResource(id = R.string.status_power_dp_summary, horizontalOffset),
+                    )
+                }
+                add {
+                    StatusThemeChildItem {
+                        OneuiXSlider(
+                            value = horizontalOffset,
+                            onValueChange = {
+                                horizontalOffset = (it * 10f).roundToInt() / 10f
+                                onPreview(powerRuntime.copy(horizontalOffsetDp = horizontalOffset))
+                            },
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                            valueRange = -30f..30f,
+                            onValueChangeFinished = {
+                                onChange(powerRuntime.copy(horizontalOffsetDp = horizontalOffset))
+                            },
+                        )
+                    }
+                }
+
+                add {
+                    OneuiXInfoItem(
+                        icon = powerIcon,
+                        title = stringResource(id = R.string.status_power_vertical_offset),
+                        summary = stringResource(id = R.string.status_power_dp_summary, verticalOffset),
+                    )
+                }
+                add {
+                    StatusThemeChildItem {
+                        OneuiXSlider(
+                            value = verticalOffset,
+                            onValueChange = {
+                                verticalOffset = (it * 10f).roundToInt() / 10f
+                                onPreview(powerRuntime.copy(verticalOffsetDp = verticalOffset))
+                            },
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                            valueRange = -12f..12f,
+                            onValueChangeFinished = {
+                                onChange(powerRuntime.copy(verticalOffsetDp = verticalOffset))
+                            },
+                        )
+                    }
+                }
+
+                add {
+                    OneuiXInfoItem(
+                        icon = powerIcon,
+                        title = stringResource(id = R.string.status_power_start_padding),
+                        summary = stringResource(id = R.string.status_power_dp_summary, startPadding),
+                    )
+                }
+                add {
+                    StatusThemeChildItem {
+                        OneuiXSlider(
+                            value = startPadding,
+                            onValueChange = {
+                                startPadding = (it * 10f).roundToInt() / 10f
+                                onPreview(powerRuntime.copy(startPaddingDp = startPadding))
+                            },
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                            valueRange = 0f..12f,
+                            onValueChangeFinished = {
+                                onChange(powerRuntime.copy(startPaddingDp = startPadding))
+                            },
+                        )
+                    }
+                }
+
+                add {
+                    OneuiXInfoItem(
+                        icon = powerIcon,
+                        title = stringResource(id = R.string.status_power_end_padding),
+                        summary = stringResource(id = R.string.status_power_dp_summary, endPadding),
+                    )
+                }
+                add {
+                    StatusThemeChildItem {
+                        OneuiXSlider(
+                            value = endPadding,
+                            onValueChange = {
+                                endPadding = (it * 10f).roundToInt() / 10f
+                                onPreview(powerRuntime.copy(endPaddingDp = endPadding))
+                            },
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                            valueRange = 0f..12f,
+                            onValueChangeFinished = {
+                                onChange(powerRuntime.copy(endPaddingDp = endPadding))
+                            },
+                        )
+                    }
+                }
+            }
+        },
+    )
+}
