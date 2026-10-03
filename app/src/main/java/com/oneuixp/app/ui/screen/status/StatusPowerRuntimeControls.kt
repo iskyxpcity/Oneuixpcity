@@ -5,7 +5,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -48,6 +50,7 @@ internal fun StatusPowerRuntimeControls(
     )
     val decimalEntries = listOf("0", "1", "2")
 
+    var expanded by rememberSaveable { mutableStateOf(powerRuntime.enabled) }
     var powerTextSize by remember(powerRuntime.textSizeSp) {
         mutableFloatStateOf(powerRuntime.textSizeSp)
     }
@@ -83,15 +86,32 @@ internal fun StatusPowerRuntimeControls(
                     icon = powerIcon,
                     title = stringResource(id = R.string.status_power_runtime_enable),
                     summary = stringResource(id = R.string.status_power_runtime_enable_summary),
+                    clickable = true,
                     showChildIndicator = true,
+                    onClick = {
+                        if (powerRuntime.enabled) expanded = !expanded
+                    },
                     checked = powerRuntime.enabled,
-                    onCheckedChange = {
-                        onChange(powerRuntime.copy(enabled = it))
+                    onCheckedChange = { enabled ->
+                        expanded = enabled
+                        onChange(powerRuntime.copy(enabled = enabled))
                     },
                 )
             }
 
-            if (powerRuntime.enabled) {
+            if (powerRuntime.enabled && expanded) {
+                add {
+                    SwitchItem(
+                        icon = powerIcon,
+                        title = stringResource(id = R.string.status_power_overlay_on_top),
+                        summary = stringResource(id = R.string.status_power_overlay_on_top_summary),
+                        checked = powerRuntime.overlayOnTop,
+                        onCheckedChange = {
+                            onChange(powerRuntime.copy(overlayOnTop = it))
+                        },
+                    )
+                }
+
                 add {
                     SelectItem(
                         icon = powerIcon,
