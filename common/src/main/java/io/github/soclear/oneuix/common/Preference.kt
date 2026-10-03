@@ -85,6 +85,66 @@ data class Preference(
         )
 
         @Serializable
+        data class StatusBarWifiArcStyle(
+            val length: Float = 1f,
+            val strokeWidthDp: Float = 1.4f,
+            val leftRadius: Float = 1f,
+            val rightRadius: Float = 1f,
+            val leftTiltDeg: Float = 0f,
+            val rightTiltDeg: Float = 0f,
+            val bend: Float = 0f,
+            val yOffsetDp: Float = 0f,
+        )
+
+        @Serializable
+        data class StatusBarWifiRuntime(
+            val enabled: Boolean = false,
+            val editorEnabled: Boolean = false,
+            val hideActivity: Boolean = false,
+            val hideStandardBadge: Boolean = false,
+            val extendStandardBadge: Boolean = false,
+            val arcCount: Int = 3,
+            val overallSizeDp: Float = 16f,
+            val blackDepth: Float = 1f,
+            val verticalOffsetDp: Float = 0f,
+            val startMarginDp: Float = 0f,
+            val endMarginDp: Float = 0f,
+            val preset: String = "default",
+            val arc1: StatusBarWifiArcStyle = StatusBarWifiArcStyle(
+                length = 1f,
+                strokeWidthDp = 1.5f,
+                leftRadius = 1f,
+                rightRadius = 1f,
+                bend = 0.08f,
+                yOffsetDp = -0.6f,
+            ),
+            val arc2: StatusBarWifiArcStyle = StatusBarWifiArcStyle(
+                length = 0.84f,
+                strokeWidthDp = 1.45f,
+                leftRadius = 0.84f,
+                rightRadius = 0.84f,
+                bend = 0.06f,
+                yOffsetDp = -0.1f,
+            ),
+            val arc3: StatusBarWifiArcStyle = StatusBarWifiArcStyle(
+                length = 0.66f,
+                strokeWidthDp = 1.4f,
+                leftRadius = 0.66f,
+                rightRadius = 0.66f,
+                bend = 0.04f,
+                yOffsetDp = 0.45f,
+            ),
+            val arc4: StatusBarWifiArcStyle = StatusBarWifiArcStyle(
+                length = 0.48f,
+                strokeWidthDp = 1.35f,
+                leftRadius = 0.48f,
+                rightRadius = 0.48f,
+                bend = 0.02f,
+                yOffsetDp = 0.9f,
+            ),
+        )
+
+        @Serializable
         data class StatusBar(
             val modifyStatusBarLeftPadding: Boolean = false,
             val statusBarLeftPaddingDp: Float = 0f,
@@ -104,6 +164,7 @@ data class Preference(
             val hideBatteryLevelTextPercentageSign: Boolean = false,
             val hideBatteryLevelTextChargingIcon: Boolean = false,
             val powerRuntime: StatusBarPowerRuntime = StatusBarPowerRuntime(),
+            val wifiRuntime: StatusBarWifiRuntime = StatusBarWifiRuntime(),
             val supportRealTimeNetworkSpeed: Boolean = true,
             val showSeparateUpDownNetworkSpeeds: Boolean = false,
             val networkSpeedThresholdKb: Int = 0,
