@@ -18,6 +18,7 @@ import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
+import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.TextView
 import io.github.libxposed.api.XposedModule
@@ -37,10 +38,15 @@ import kotlin.math.roundToInt
 /**
  * Samsung SystemUI runtime for Flux-style status-bar power/thermal information.
  *
- * The view is injected into Samsung's right-side indicator container. Sampling
- * only runs while the feature is enabled. Preference changes use the same
- * event-driven content URI / in-memory preview broadcast as the clock runtime,
- * but this object owns its watcher so the locked clock code remains untouched.
+ * The power view is drawn as a top-level PhoneStatusBarView overlay with a fixed
+ * right-side anchor. It therefore does not participate in the layout of network
+ * speed, location or other transient status icons, so those icons cannot push
+ * the power values left/right when they appear or disappear.
+ *
+ * Sampling only runs while the feature is enabled. Preference changes use the
+ * same event-driven content URI / in-memory preview broadcast as the clock
+ * runtime, but this object owns its watcher so the locked clock code remains
+ * untouched.
  */
 internal object StatusBarPowerRuntime {
     private const val PREFERENCE_CHANGED_URI =
@@ -52,6 +58,7 @@ internal object StatusBarPowerRuntime {
         val row1: LinearLayout,
         val row2: LinearLayout,
         val slots: List<TextView>,
+        val anchorRightX: Float,
     )
 
     private data class Sample(
@@ -188,6 +195,27 @@ internal object StatusBarPowerRuntime {
     }
 
     private fun registerStatusBarView(statusBarView: View) {
+        if (!statusBarView.isLaidOut) {
+            statusBarView.addOnLayoutChangeListener(object : View.OnLayoutChangeListener {
+                override fun onLayoutChange(
+                    v: View,
+                    left: Int,
+                    top: Int,
+                    right: Int,
+                    bottom: Int,
+                    oldLeft: Int,
+                    oldTop: Int,
+                    oldRight: Int,
+                    oldBottom: Int,
+                ) {
+                    if (!v.isLaidOut) return
+                    v.removeOnLayoutChangeListener(this)
+                    registerStatusBarView(v)
+                }
+            })
+            return
+        }
+
         val holder = synchronized(holders) {
             holders[statusBarView] ?: createHolder(statusBarView)?.also {
                 holders[statusBarView] = it
@@ -223,7 +251,8 @@ internal object StatusBarPowerRuntime {
     )
 
     private fun createHolder(statusBarView: View): Holder? {
-        val parent = findRightIndicatorArea(statusBarView) ?: return null
+        val indicatorArea = findRightIndicatorArea(statusBarView) ?: return null
+        val overlayParent = statusBarView as? FrameLayout ?: return null
         val context = statusBarView.context
 
         fun row() = LinearLayout(context).apply {
@@ -242,6 +271,10 @@ internal object StatusBarPowerRuntime {
             gravity = Gravity.CENTER
             clipChildren = false
             clipToPadding = false
+            isClickable = false
+            isFocusable = false
+            elevation = 1000f
+            translationZ = 1000f
             addView(row1)
             addView(row2)
         }
@@ -251,18 +284,43 @@ internal object StatusBarPowerRuntime {
                 gravity = Gravity.CENTER
                 setSingleLine(true)
                 maxLines = 1
+                isClickable = false
+                isFocusable = false
             }
         }
 
-        parent.addView(
+        val barLocation = IntArray(2)
+        val indicatorLocation = IntArray(2)
+        statusBarView.getLocationOnScreen(barLocation)
+        indicatorArea.getLocationOnScreen(indicatorLocation)
+        val anchorRightX = (indicatorLocation[0] - barLocation[0]).toFloat()
+
+        overlayParent.addView(
             root,
-            0,
-            ViewGroup.LayoutParams(
+            FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 ViewGroup.LayoutParams.MATCH_PARENT,
+                Gravity.START or Gravity.CENTER_VERTICAL,
             ),
         )
-        return Holder(statusBarView, root, row1, row2, slots)
+        root.bringToFront()
+
+        val holder = Holder(
+            statusBarView = statusBarView,
+            root = root,
+            row1 = row1,
+            row2 = row2,
+            slots = slots,
+            anchorRightX = anchorRightX,
+        )
+
+        root.addOnLayoutChangeListener { _, left, _, right, _, oldLeft, _, oldRight, _ ->
+            if (right - left != oldRight - oldLeft) {
+                positionOverlay(holder, config)
+            }
+        }
+        root.post { positionOverlay(holder, config) }
+        return holder
     }
 
     private fun findRightIndicatorArea(statusBarView: View): ViewGroup? {
@@ -282,6 +340,18 @@ internal object StatusBarPowerRuntime {
         return null
     }
 
+    private fun positionOverlay(
+        holder: Holder,
+        current: Preference.SystemUI.StatusBarPowerRuntime,
+    ) {
+        val density = holder.root.resources.displayMetrics.density
+        val width = holder.root.measuredWidth.takeIf { it > 0 } ?: holder.root.width
+        holder.root.translationX =
+            holder.anchorRightX - width + current.horizontalOffsetDp * density
+        holder.root.translationY = current.verticalOffsetDp * density
+        holder.root.bringToFront()
+    }
+
     private fun applyConfig(
         holder: Holder,
         current: Preference.SystemUI.StatusBarPowerRuntime,
@@ -293,8 +363,7 @@ internal object StatusBarPowerRuntime {
 
         rebuildRows(holder, current)
         val density = holder.root.resources.displayMetrics.density
-        holder.root.translationX = current.horizontalOffsetDp * density
-        holder.root.translationY = current.verticalOffsetDp * density
+        positionOverlay(holder, current)
         holder.root.setPaddingRelative(
             (current.startPaddingDp * density).roundToInt(),
             0,
@@ -327,6 +396,7 @@ internal object StatusBarPowerRuntime {
                 0,
             )
         }
+        holder.root.post { positionOverlay(holder, current) }
     }
 
     private fun rebuildRows(
@@ -435,8 +505,9 @@ internal object StatusBarPowerRuntime {
     ) {
         val active = synchronized(holders) { holders.values.toList() }
         active.forEach { holder ->
-            applyConfig(holder, current)
-            if (holder.root.visibility != View.VISIBLE) return@forEach
+            if (holder.root.visibility != View.VISIBLE) {
+                applyConfig(holder, current)
+            }
             val keys = listOf(current.slot1, current.slot2, current.slot3, current.slot4)
             val decimals = listOf(
                 current.slot1Decimals,
@@ -450,6 +521,7 @@ internal object StatusBarPowerRuntime {
                 )
                 textView.visibility = if (keys[index] == "none") View.GONE else View.VISIBLE
             }
+            applyConfig(holder, current)
         }
     }
 
