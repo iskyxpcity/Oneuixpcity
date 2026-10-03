@@ -1,0 +1,31 @@
+name: Patch power dynamic tint
+
+on:
+  push:
+    branches:
+      - test/status-bluetooth-flux-20261002
+    paths:
+      - tools/patch_power_dynamic_tint.py
+      - .github/workflows/patch_power_dynamic_tint.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: test/status-bluetooth-flux-20261002
+          fetch-depth: 0
+      - name: Apply dynamic tint patch
+        run: python3 tools/patch_power_dynamic_tint.py
+      - name: Commit patched source
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add hook/src/main/java/io/github/soclear/oneuix/hook/systemui/StatusBarPowerRuntime.kt
+          git diff --cached --check
+          git commit -m "fix: follow status bar dark light tint for power text" || exit 0
+          git push origin HEAD:test/status-bluetooth-flux-20261002
