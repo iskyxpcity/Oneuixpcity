@@ -41,13 +41,15 @@ internal object StatusBarPowerRuntime {
 
     private data class Holder(
         val statusBarView: ViewGroup,
-        val inlineParent: ViewGroup,
+        var inlineParent: ViewGroup,
         val root: LinearLayout,
         val row1: LinearLayout,
         val row2: LinearLayout,
         val slots: List<TextView>,
+        var mountedSide: String = "right",
         var overlayMode: Boolean = false,
-        var overlayAnchorRightX: Float = 0f,
+        var overlayAnchorX: Float = 0f,
+        var overlayAnchorUsesRightEdge: Boolean = true,
     )
 
     private data class Sample(
@@ -224,6 +226,7 @@ internal object StatusBarPowerRuntime {
     private fun sanitize(
         source: Preference.SystemUI.StatusBarPowerRuntime,
     ): Preference.SystemUI.StatusBarPowerRuntime = source.copy(
+        placementSide = if (source.placementSide == "left") "left" else "right",
         slot1Decimals = source.slot1Decimals.coerceIn(0, 2),
         slot2Decimals = source.slot2Decimals.coerceIn(0, 2),
         slot3Decimals = source.slot3Decimals.coerceIn(0, 2),
@@ -233,15 +236,17 @@ internal object StatusBarPowerRuntime {
         fontWeight = source.fontWeight.coerceIn(100, 900),
         columnGapDp = source.columnGapDp.coerceIn(0f, 12f),
         rowGapDp = source.rowGapDp.coerceIn(-4f, 8f),
-        horizontalOffsetDp = source.horizontalOffsetDp.coerceIn(-30f, 30f),
-        verticalOffsetDp = source.verticalOffsetDp.coerceIn(-12f, 12f),
+        horizontalOffsetDp = source.horizontalOffsetDp.coerceIn(-300f, 300f),
+        verticalOffsetDp = source.verticalOffsetDp.coerceIn(-60f, 60f),
         startPaddingDp = source.startPaddingDp.coerceIn(0f, 12f),
         endPaddingDp = source.endPaddingDp.coerceIn(0f, 12f),
     )
 
     private fun createHolder(statusBarView: View): Holder? {
-        val inlineParent = findRightIndicatorArea(statusBarView) ?: return null
         val host = statusBarView as? ViewGroup ?: return null
+        val resolved = resolveInlineParent(statusBarView, config.placementSide) ?: return null
+        val initialSide = resolved.first
+        val inlineParent = resolved.second
         val context = statusBarView.context
 
         fun row() = LinearLayout(context).apply {
@@ -278,7 +283,7 @@ internal object StatusBarPowerRuntime {
 
         inlineParent.addView(
             root,
-            inlineParent.childCount,
+            if (initialSide == "left") 0 else inlineParent.childCount,
             ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 ViewGroup.LayoutParams.MATCH_PARENT,
@@ -292,6 +297,7 @@ internal object StatusBarPowerRuntime {
             row1 = row1,
             row2 = row2,
             slots = slots,
+            mountedSide = initialSide,
         )
     }
 
@@ -312,10 +318,94 @@ internal object StatusBarPowerRuntime {
         return null
     }
 
+    private fun findLeftIndicatorArea(statusBarView: View): ViewGroup? {
+        val resources = statusBarView.resources
+        listOf(
+            "status_bar_left_side",
+            "status_bar_start_side",
+            "status_bar_start_side_content",
+            "status_bar_start_side_except_heads_up",
+            "notification_icon_area",
+            "notification_icon_area_inner",
+            "left_clock_container",
+        ).forEach { name ->
+            val id = resources.getIdentifier(name, "id", Package.SYSTEMUI)
+            if (id != 0) {
+                (statusBarView.findViewById<View>(id) as? ViewGroup)?.let { return it }
+            }
+        }
+
+        listOf("clock", "status_bar_clock").forEach { name ->
+            val id = resources.getIdentifier(name, "id", Package.SYSTEMUI)
+            if (id != 0) {
+                val clock = statusBarView.findViewById<View>(id)
+                (clock?.parent as? ViewGroup)?.let { return it }
+            }
+        }
+        return null
+    }
+
+    private fun resolveInlineParent(
+        statusBarView: View,
+        requestedSide: String,
+    ): Pair<String, ViewGroup>? {
+        if (requestedSide == "left") {
+            findLeftIndicatorArea(statusBarView)?.let { return "left" to it }
+            findRightIndicatorArea(statusBarView)?.let { return "right" to it }
+        } else {
+            findRightIndicatorArea(statusBarView)?.let { return "right" to it }
+            findLeftIndicatorArea(statusBarView)?.let { return "left" to it }
+        }
+        return null
+    }
+
+    private fun addInlineAtEdge(holder: Holder) {
+        val parent = holder.inlineParent
+        if (holder.root.parent === parent) {
+            val targetIndex = if (holder.mountedSide == "left") 0 else parent.childCount - 1
+            if (parent.indexOfChild(holder.root) == targetIndex) return
+            parent.removeView(holder.root)
+        } else {
+            (holder.root.parent as? ViewGroup)?.removeView(holder.root)
+        }
+        parent.addView(
+            holder.root,
+            if (holder.mountedSide == "left") 0 else parent.childCount,
+            ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.MATCH_PARENT,
+            ),
+        )
+    }
+
+    private fun ensureInlineAnchor(
+        holder: Holder,
+        current: Preference.SystemUI.StatusBarPowerRuntime,
+    ): Boolean {
+        val resolved = resolveInlineParent(holder.statusBarView, current.placementSide) ?: return false
+        val desiredSide = resolved.first
+        val desiredParent = resolved.second
+        if (holder.inlineParent === desiredParent && holder.mountedSide == desiredSide) return true
+
+        if (holder.overlayMode) {
+            holder.statusBarView.overlay.remove(holder.root)
+            holder.overlayMode = false
+        }
+        (holder.root.parent as? ViewGroup)?.removeView(holder.root)
+        holder.inlineParent = desiredParent
+        holder.mountedSide = desiredSide
+        holder.root.translationX = 0f
+        holder.root.translationY = 0f
+        addInlineAtEdge(holder)
+        holder.root.post { applyConfig(holder, config) }
+        return false
+    }
+
     private fun ensureMountMode(
         holder: Holder,
         current: Preference.SystemUI.StatusBarPowerRuntime,
     ): Boolean {
+        if (!ensureInlineAnchor(holder, current)) return false
         val density = holder.root.resources.displayMetrics.density
         if (current.overlayOnTop) {
             if (!holder.overlayMode) {
@@ -328,13 +418,15 @@ internal object StatusBarPowerRuntime {
                 val rootLocation = IntArray(2)
                 holder.statusBarView.getLocationOnScreen(hostLocation)
                 holder.root.getLocationOnScreen(rootLocation)
-                holder.overlayAnchorRightX =
+                holder.overlayAnchorUsesRightEdge = holder.mountedSide != "left"
+                holder.overlayAnchorX = if (holder.overlayAnchorUsesRightEdge) {
                     rootLocation[0] - hostLocation[0] + holder.root.width -
                         current.horizontalOffsetDp * density
+                } else {
+                    rootLocation[0] - hostLocation[0] -
+                        current.horizontalOffsetDp * density
+                }
 
-                // ViewGroupOverlay is outside normal child measurement/layout and is
-                // always drawn above the host's regular children. Adding an already
-                // attached view reparents it while preserving its visual coordinates.
                 holder.statusBarView.overlay.add(holder.root)
                 holder.overlayMode = true
             }
@@ -342,21 +434,10 @@ internal object StatusBarPowerRuntime {
         } else {
             if (holder.overlayMode) {
                 holder.statusBarView.overlay.remove(holder.root)
-                holder.inlineParent.addView(
-                    holder.root,
-                    holder.inlineParent.childCount,
-                    ViewGroup.LayoutParams(
-                        ViewGroup.LayoutParams.WRAP_CONTENT,
-                        ViewGroup.LayoutParams.MATCH_PARENT,
-                    ),
-                )
                 holder.overlayMode = false
-            }
-            if (
-                holder.root.parent === holder.inlineParent &&
-                holder.inlineParent.indexOfChild(holder.root) != holder.inlineParent.childCount - 1
-            ) {
-                holder.inlineParent.bringChildToFront(holder.root)
+                addInlineAtEdge(holder)
+            } else {
+                addInlineAtEdge(holder)
             }
             holder.root.translationX = current.horizontalOffsetDp * density
             holder.root.translationY = current.verticalOffsetDp * density
@@ -379,10 +460,16 @@ internal object StatusBarPowerRuntime {
 
         val width = holder.root.measuredWidth.coerceAtLeast(1)
         val height = holder.root.measuredHeight.coerceAtLeast(1)
-        val right = (
-            holder.overlayAnchorRightX + current.horizontalOffsetDp * density
-        ).roundToInt()
-        val left = right - width
+        val anchor = holder.overlayAnchorX + current.horizontalOffsetDp * density
+        val left: Int
+        val right: Int
+        if (holder.overlayAnchorUsesRightEdge) {
+            right = anchor.roundToInt()
+            left = right - width
+        } else {
+            left = anchor.roundToInt()
+            right = left + width
+        }
         val top = (
             (host.height - height) / 2f + current.verticalOffsetDp * density
         ).roundToInt()

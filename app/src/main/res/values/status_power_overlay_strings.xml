@@ -2,4 +2,7 @@
 <resources>
     <string name="status_power_overlay_on_top">Show above status bar items</string>
     <string name="status_power_overlay_on_top_summary">Draw power as an independent top overlay so network speed, location and other transient icons cannot move it.</string>
+    <string name="status_power_placement_side">Status bar side</string>
+    <string name="status_power_placement_right">Right</string>
+    <string name="status_power_placement_left">Left</string>
 </resources>

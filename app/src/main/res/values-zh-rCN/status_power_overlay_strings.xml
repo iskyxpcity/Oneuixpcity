@@ -2,4 +2,7 @@
 <resources>
     <string name="status_power_overlay_on_top">显示在最上层</string>
     <string name="status_power_overlay_on_top_summary">使用独立顶层 Overlay 显示功耗，网速、定位等临时图标出现或消失时不再挤动功耗位置。</string>
+    <string name="status_power_placement_side">状态栏位置</string>
+    <string name="status_power_placement_right">右侧</string>
+    <string name="status_power_placement_left">左侧</string>
 </resources>

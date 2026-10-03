@@ -32,6 +32,8 @@ private val POWER_SLOT_KEYS = listOf(
     "none",
 )
 
+private val POWER_PLACEMENT_KEYS = listOf("right", "left")
+
 @Composable
 internal fun StatusPowerRuntimeControls(
     powerRuntime: Preference.SystemUI.StatusBarPowerRuntime,
@@ -47,6 +49,10 @@ internal fun StatusPowerRuntimeControls(
         stringResource(id = R.string.status_power_slot_voltage),
         stringResource(id = R.string.status_power_slot_battery_level),
         stringResource(id = R.string.status_power_slot_none),
+    )
+    val placementEntries = listOf(
+        stringResource(id = R.string.status_power_placement_right),
+        stringResource(id = R.string.status_power_placement_left),
     )
     val decimalEntries = listOf("0", "1", "2")
     val fontWeights = listOf(300, 400, 500, 600, 700, 800, 900)
@@ -79,6 +85,10 @@ internal fun StatusPowerRuntimeControls(
 
     fun slotIndex(key: String): Int = POWER_SLOT_KEYS.indexOf(key).coerceAtLeast(0)
     fun slotKey(index: Int): String = POWER_SLOT_KEYS[index.coerceIn(0, POWER_SLOT_KEYS.lastIndex)]
+    fun placementIndex(key: String): Int =
+        POWER_PLACEMENT_KEYS.indexOf(key).takeIf { it >= 0 } ?: 0
+    fun placementKey(index: Int): String =
+        POWER_PLACEMENT_KEYS[index.coerceIn(0, POWER_PLACEMENT_KEYS.lastIndex)]
 
     StatusThemeGroup(
         items = buildList {
@@ -101,6 +111,18 @@ internal fun StatusPowerRuntimeControls(
             }
 
             if (powerRuntime.enabled && expanded) {
+                add {
+                    SelectItem(
+                        icon = powerIcon,
+                        title = stringResource(id = R.string.status_power_placement_side),
+                        entries = placementEntries,
+                        selectedIndex = placementIndex(powerRuntime.placementSide),
+                        onSelectedIndexChange = {
+                            onChange(powerRuntime.copy(placementSide = placementKey(it)))
+                        },
+                    )
+                }
+
                 add {
                     SwitchItem(
                         icon = powerIcon,
@@ -382,7 +404,7 @@ internal fun StatusPowerRuntimeControls(
                                 onPreview(powerRuntime.copy(horizontalOffsetDp = horizontalOffset))
                             },
                             modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
-                            valueRange = -30f..30f,
+                            valueRange = -300f..300f,
                             onValueChangeFinished = {
                                 onChange(powerRuntime.copy(horizontalOffsetDp = horizontalOffset))
                             },
@@ -406,7 +428,7 @@ internal fun StatusPowerRuntimeControls(
                                 onPreview(powerRuntime.copy(verticalOffsetDp = verticalOffset))
                             },
                             modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
-                            valueRange = -12f..12f,
+                            valueRange = -60f..60f,
                             onValueChangeFinished = {
                                 onChange(powerRuntime.copy(verticalOffsetDp = verticalOffset))
                             },
