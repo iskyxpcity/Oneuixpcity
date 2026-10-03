@@ -278,7 +278,7 @@ internal object StatusBarPowerRuntime {
 
         inlineParent.addView(
             root,
-            0,
+            inlineParent.childCount,
             ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 ViewGroup.LayoutParams.MATCH_PARENT,
@@ -344,13 +344,19 @@ internal object StatusBarPowerRuntime {
                 holder.statusBarView.overlay.remove(holder.root)
                 holder.inlineParent.addView(
                     holder.root,
-                    0,
+                    holder.inlineParent.childCount,
                     ViewGroup.LayoutParams(
                         ViewGroup.LayoutParams.WRAP_CONTENT,
                         ViewGroup.LayoutParams.MATCH_PARENT,
                     ),
                 )
                 holder.overlayMode = false
+            }
+            if (
+                holder.root.parent === holder.inlineParent &&
+                holder.inlineParent.indexOfChild(holder.root) != holder.inlineParent.childCount - 1
+            ) {
+                holder.inlineParent.bringChildToFront(holder.root)
             }
             holder.root.translationX = current.horizontalOffsetDp * density
             holder.root.translationY = current.verticalOffsetDp * density
