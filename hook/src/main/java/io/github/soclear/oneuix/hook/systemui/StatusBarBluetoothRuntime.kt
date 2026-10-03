@@ -50,13 +50,14 @@ internal object StatusBarBluetoothRuntime {
     private data class Holder(
         val statusBarView: ViewGroup,
         val overlay: BluetoothGlyphView,
+        var nativeView: View? = null,
+        var nativeState: NativeState? = null,
     )
 
     private val installed = AtomicBoolean(false)
     private val watcherStarted = AtomicBoolean(false)
     private val bluetoothReceiverStarted = AtomicBoolean(false)
     private val holders = WeakHashMap<View, Holder>()
-    private val nativeStates = WeakHashMap<View, NativeState>()
     private val mainHandler = Handler(Looper.getMainLooper())
 
     @Volatile
@@ -211,7 +212,9 @@ internal object StatusBarBluetoothRuntime {
             ).also { newHolder ->
                 holders[statusBarView] = newHolder
                 host.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
-                    applyConfig(newHolder, config)
+                    // Shade/QS expansion can generate many layout passes. Never rescan
+                    // or rewrite native layout params here; only move our overlay.
+                    repositionOverlayOnLayout(newHolder)
                 }
             }
         }
@@ -241,25 +244,75 @@ internal object StatusBarBluetoothRuntime {
         endMarginDp = source.endMarginDp.coerceIn(-24f, 48f),
     )
 
+    private fun resolveNative(holder: Holder): View? {
+        holder.nativeView?.takeIf { it.parent != null }?.let { return it }
+        val found = findBluetoothView(holder.statusBarView) ?: return null
+        holder.nativeView = found
+        holder.nativeState = captureNativeState(found)
+        return found
+    }
+
+    private fun captureNativeState(view: View): NativeState {
+        val params = view.layoutParams as? ViewGroup.MarginLayoutParams
+        return NativeState(
+            alpha = view.alpha,
+            visibility = view.visibility,
+            scaleX = view.scaleX,
+            scaleY = view.scaleY,
+            translationX = view.translationX,
+            translationY = view.translationY,
+            marginStart = params?.marginStart,
+            marginEnd = params?.marginEnd,
+        )
+    }
+
+    private fun restoreNative(holder: Holder) {
+        val view = holder.nativeView ?: return
+        val state = holder.nativeState ?: return
+        if (view.parent == null) return
+        view.alpha = state.alpha
+        view.visibility = state.visibility
+        view.scaleX = state.scaleX
+        view.scaleY = state.scaleY
+        view.translationX = state.translationX
+        view.translationY = state.translationY
+        val params = view.layoutParams as? ViewGroup.MarginLayoutParams
+        if (params != null) {
+            state.marginStart?.let { params.marginStart = it }
+            state.marginEnd?.let { params.marginEnd = it }
+            view.layoutParams = params
+        }
+    }
+
+    private fun currentSizePx(
+        holder: Holder,
+        current: Preference.SystemUI.StatusBarBluetoothRuntime,
+    ): Int {
+        val density = holder.statusBarView.resources.displayMetrics.density
+        val sizeDp = if (
+            holder.statusBarView.resources.configuration.orientation ==
+            Configuration.ORIENTATION_LANDSCAPE
+        ) current.landscapeSizeDp else current.portraitSizeDp
+        return max(1, (sizeDp * density).toInt())
+    }
+
     private fun applyConfig(
         holder: Holder,
         current: Preference.SystemUI.StatusBarBluetoothRuntime,
     ) {
-        val native = findBluetoothView(holder.statusBarView)
-        restoreTrackedNativeViews()
+        val native = resolveNative(holder)
+        restoreNative(holder)
 
         if (!current.enabled || native == null) {
             holder.overlay.visibility = View.GONE
             return
         }
 
-        val state = rememberNativeState(native)
+        val state = holder.nativeState ?: captureNativeState(native).also {
+            holder.nativeState = it
+        }
         val density = holder.statusBarView.resources.displayMetrics.density
-        val sizeDp = if (
-            holder.statusBarView.resources.configuration.orientation ==
-            Configuration.ORIENTATION_LANDSCAPE
-        ) current.landscapeSizeDp else current.portraitSizeDp
-        val sizePx = max(1, (sizeDp * density).toInt())
+        val sizePx = currentSizePx(holder, current)
 
         if (current.showLeftSide || current.customIconEnabled) {
             configureOverlaySource(holder.overlay, native, current.customIconEnabled)
@@ -280,40 +333,11 @@ internal object StatusBarBluetoothRuntime {
         }
     }
 
-    private fun rememberNativeState(view: View): NativeState = synchronized(nativeStates) {
-        nativeStates[view] ?: run {
-            val params = view.layoutParams as? ViewGroup.MarginLayoutParams
-            NativeState(
-                alpha = view.alpha,
-                visibility = view.visibility,
-                scaleX = view.scaleX,
-                scaleY = view.scaleY,
-                translationX = view.translationX,
-                translationY = view.translationY,
-                marginStart = params?.marginStart,
-                marginEnd = params?.marginEnd,
-            ).also { nativeStates[view] = it }
-        }
-    }
-
-    private fun restoreTrackedNativeViews() {
-        synchronized(nativeStates) {
-            nativeStates.forEach { (view, state) ->
-                if (view.parent == null) return@forEach
-                view.alpha = state.alpha
-                view.visibility = state.visibility
-                view.scaleX = state.scaleX
-                view.scaleY = state.scaleY
-                view.translationX = state.translationX
-                view.translationY = state.translationY
-                val params = view.layoutParams as? ViewGroup.MarginLayoutParams
-                if (params != null) {
-                    state.marginStart?.let { params.marginStart = it }
-                    state.marginEnd?.let { params.marginEnd = it }
-                    view.layoutParams = params
-                }
-            }
-        }
+    private fun repositionOverlayOnLayout(holder: Holder) {
+        val current = config
+        if (!current.enabled || (!current.showLeftSide && !current.customIconEnabled)) return
+        val native = holder.nativeView?.takeIf { it.parent != null } ?: return
+        positionOverlay(holder, native, current, currentSizePx(holder, current))
     }
 
     private fun applyNativeMargins(
@@ -325,9 +349,13 @@ internal object StatusBarBluetoothRuntime {
         val params = view.layoutParams as? ViewGroup.MarginLayoutParams ?: return
         val baseStart = state.marginStart ?: params.marginStart
         val baseEnd = state.marginEnd ?: params.marginEnd
-        params.marginStart = baseStart + (current.startMarginDp * density).toInt()
-        params.marginEnd = baseEnd + (current.endMarginDp * density).toInt()
-        view.layoutParams = params
+        val targetStart = baseStart + (current.startMarginDp * density).toInt()
+        val targetEnd = baseEnd + (current.endMarginDp * density).toInt()
+        if (params.marginStart != targetStart || params.marginEnd != targetEnd) {
+            params.marginStart = targetStart
+            params.marginEnd = targetEnd
+            view.layoutParams = params
+        }
     }
 
     private fun configureOverlaySource(
@@ -352,6 +380,7 @@ internal object StatusBarBluetoothRuntime {
         current: Preference.SystemUI.StatusBarBluetoothRuntime,
         sizePx: Int,
     ) {
+        if (holder.statusBarView.width <= 0 || holder.statusBarView.height <= 0) return
         val density = holder.statusBarView.resources.displayMetrics.density
         val barLocation = IntArray(2)
         holder.statusBarView.getLocationOnScreen(barLocation)
@@ -359,6 +388,7 @@ internal object StatusBarBluetoothRuntime {
         val baseLeft = if (current.showLeftSide) {
             resolveLeftAnchorX(holder.statusBarView, barLocation)
         } else {
+            if (native.width <= 0) return
             val nativeLocation = IntArray(2)
             native.getLocationOnScreen(nativeLocation)
             nativeLocation[0] - barLocation[0] + native.width / 2 - sizePx / 2
