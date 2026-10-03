@@ -80,10 +80,10 @@ internal fun StatusPowerRuntimeControls(
         mutableFloatStateOf(powerRuntime.rowGapDp)
     }
     var horizontalOffset by remember(powerRuntime.horizontalOffsetDp) {
-        mutableFloatStateOf(powerRuntime.horizontalOffsetDp)
+        mutableFloatStateOf(powerRuntime.horizontalOffsetDp.coerceIn(-150f, 150f))
     }
     var verticalOffset by remember(powerRuntime.verticalOffsetDp) {
-        mutableFloatStateOf(powerRuntime.verticalOffsetDp)
+        mutableFloatStateOf(powerRuntime.verticalOffsetDp.coerceIn(-30f, 30f))
     }
     var startPadding by remember(powerRuntime.startPaddingDp) {
         mutableFloatStateOf(powerRuntime.startPaddingDp)
@@ -423,7 +423,7 @@ internal fun StatusPowerRuntimeControls(
                                 onPreview(powerRuntime.copy(horizontalOffsetDp = horizontalOffset))
                             },
                             modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
-                            valueRange = -300f..300f,
+                            valueRange = -150f..150f,
                             onValueChangeFinished = {
                                 onChange(powerRuntime.copy(horizontalOffsetDp = horizontalOffset))
                             },
@@ -449,7 +449,7 @@ internal fun StatusPowerRuntimeControls(
                                 onPreview(powerRuntime.copy(verticalOffsetDp = verticalOffset))
                             },
                             modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
-                            valueRange = -60f..60f,
+                            valueRange = -30f..30f,
                             onValueChangeFinished = {
                                 onChange(powerRuntime.copy(verticalOffsetDp = verticalOffset))
                             },

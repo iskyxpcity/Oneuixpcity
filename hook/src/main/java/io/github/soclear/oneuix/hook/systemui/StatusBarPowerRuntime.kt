@@ -50,6 +50,7 @@ internal object StatusBarPowerRuntime {
         var overlayMode: Boolean = false,
         var lastLayoutKey: String = "",
         var awaitingOverlayLayout: Boolean = false,
+        var overlayMountRetries: Int = 0,
     )
 
     private data class Sample(
@@ -264,8 +265,8 @@ internal object StatusBarPowerRuntime {
         fontWeight = source.fontWeight.coerceIn(100, 900),
         columnGapDp = source.columnGapDp.coerceIn(0f, 12f),
         rowGapDp = source.rowGapDp.coerceIn(-4f, 8f),
-        horizontalOffsetDp = source.horizontalOffsetDp.coerceIn(-300f, 300f),
-        verticalOffsetDp = source.verticalOffsetDp.coerceIn(-60f, 60f),
+        horizontalOffsetDp = source.horizontalOffsetDp.coerceIn(-150f, 150f),
+        verticalOffsetDp = source.verticalOffsetDp.coerceIn(-30f, 30f),
         startPaddingDp = source.startPaddingDp.coerceIn(0f, 12f),
         endPaddingDp = source.endPaddingDp.coerceIn(0f, 12f),
     )
@@ -512,29 +513,25 @@ internal object StatusBarPowerRuntime {
         return false
     }
 
-    private fun waitForOverlayInlineLayout(holder: Holder) {
-        if (holder.awaitingOverlayLayout) return
+    private fun scheduleOverlayMountRetry(holder: Holder) {
+        if (holder.awaitingOverlayLayout || holder.overlayMode) return
+        if (!config.enabled || !config.overlayOnTop) {
+            holder.overlayMountRetries = 0
+            return
+        }
+        if (holder.overlayMountRetries >= 12) return
         holder.awaitingOverlayLayout = true
-        holder.root.addOnLayoutChangeListener(object : View.OnLayoutChangeListener {
-            override fun onLayoutChange(
-                v: View,
-                left: Int,
-                top: Int,
-                right: Int,
-                bottom: Int,
-                oldLeft: Int,
-                oldTop: Int,
-                oldRight: Int,
-                oldBottom: Int,
-            ) {
-                if (right - left <= 0 || bottom - top <= 0) return
-                v.removeOnLayoutChangeListener(this)
-                holder.awaitingOverlayLayout = false
-                v.post { applyConfig(holder, config) }
+        holder.overlayMountRetries += 1
+        val delay = (holder.overlayMountRetries * 16L).coerceAtMost(120L)
+        holder.root.postDelayed({
+            holder.awaitingOverlayLayout = false
+            if (!holder.statusBarView.isAttachedToWindow) return@postDelayed
+            if (!config.enabled || !config.overlayOnTop || holder.overlayMode) {
+                holder.overlayMountRetries = 0
+                return@postDelayed
             }
-        })
-        holder.root.requestLayout()
-        holder.inlineParent.requestLayout()
+            applyConfig(holder, config)
+        }, delay)
     }
 
     private fun ensureMountMode(
@@ -543,24 +540,24 @@ internal object StatusBarPowerRuntime {
     ): Boolean {
         val density = holder.root.resources.displayMetrics.density
         if (current.overlayOnTop) {
-            // True overlay uses only fixed host-edge coordinates plus the user X/Y values.
-            // Do not resolve or query Wi-Fi/Bluetooth/location/network-speed views here.
+            // Restore overlay immediately after SystemUI restart. The power text may still
+            // be empty at this point, so never wait for root.width/root.height. The first
+            // sample will re-measure and lay out the fixed X/Y position again.
             if (!holder.overlayMode) {
-                if (
-                    holder.root.width <= 0 || holder.root.height <= 0 ||
-                    holder.statusBarView.width <= 0 || holder.statusBarView.height <= 0
-                ) {
-                    waitForOverlayInlineLayout(holder)
+                if (holder.statusBarView.width <= 0 || holder.statusBarView.height <= 0) {
+                    scheduleOverlayMountRetry(holder)
                     return false
                 }
                 holder.statusBarView.overlay.add(holder.root)
                 holder.overlayMode = true
                 holder.awaitingOverlayLayout = false
+                holder.overlayMountRetries = 0
             }
             positionTrueOverlay(holder, current)
             return true
         }
 
+        holder.overlayMountRetries = 0
         if (!ensureInlineAnchor(holder, current)) return false
         if (holder.overlayMode) {
             holder.statusBarView.overlay.remove(holder.root)
