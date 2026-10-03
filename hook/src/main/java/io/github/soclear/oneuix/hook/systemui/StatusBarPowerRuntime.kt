@@ -215,6 +215,7 @@ internal object StatusBarPowerRuntime {
         textSizeSp = source.textSizeSp.coerceIn(6f, 14f),
         fontWeight = source.fontWeight.coerceIn(100, 900),
         columnGapDp = source.columnGapDp.coerceIn(0f, 12f),
+        rowGapDp = source.rowGapDp.coerceIn(-4f, 8f),
         horizontalOffsetDp = source.horizontalOffsetDp.coerceIn(-30f, 30f),
         verticalOffsetDp = source.verticalOffsetDp.coerceIn(-12f, 12f),
         startPaddingDp = source.startPaddingDp.coerceIn(0f, 12f),
@@ -300,6 +301,18 @@ internal object StatusBarPowerRuntime {
             (current.endPaddingDp * density).roundToInt(),
             0,
         )
+
+        val rowGapPx = if (current.doubleLine) {
+            (current.rowGapDp * density).roundToInt()
+        } else {
+            0
+        }
+        (holder.row2.layoutParams as? LinearLayout.LayoutParams)?.let { params ->
+            if (params.topMargin != rowGapPx) {
+                params.topMargin = rowGapPx
+                holder.row2.layoutParams = params
+            }
+        }
 
         val color = resolveIndicatorTextColor(holder.statusBarView)
         val gapPx = (current.columnGapDp * density).roundToInt()
