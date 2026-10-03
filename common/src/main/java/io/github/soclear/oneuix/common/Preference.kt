@@ -59,6 +59,7 @@ data class Preference(
         @Serializable
         data class StatusBarPowerRuntime(
             val enabled: Boolean = false,
+            val overlayOnTop: Boolean = false,
             val slot1: String = "power",
             val slot2: String = "battery_temp",
             val slot3: String = "cpu_temp",
