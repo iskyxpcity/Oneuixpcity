@@ -283,14 +283,13 @@ internal object StatusBarPowerRuntime {
 
         inlineParent.addView(
             root,
-            if (initialSide == "left") 0 else inlineParent.childCount,
             ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 ViewGroup.LayoutParams.MATCH_PARENT,
             ),
         )
 
-        return Holder(
+        val holder = Holder(
             statusBarView = host,
             inlineParent = inlineParent,
             root = root,
@@ -299,6 +298,13 @@ internal object StatusBarPowerRuntime {
             slots = slots,
             mountedSide = initialSide,
         )
+        addInlineAtEdge(holder)
+        inlineParent.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
+            if (!holder.overlayMode && holder.root.parent === holder.inlineParent) {
+                holder.root.post { addInlineAtEdge(holder) }
+            }
+        }
+        return holder
     }
 
     private fun findRightIndicatorArea(statusBarView: View): ViewGroup? {
@@ -359,8 +365,75 @@ internal object StatusBarPowerRuntime {
         return null
     }
 
+    /**
+     * Find the direct child in [parent] that owns Samsung's Wi-Fi/Bluetooth icon.
+     * Power is inserted immediately before this child, giving the visual order:
+     * network speed/location -> power -> Wi-Fi/Bluetooth -> remaining right icons.
+     */
+    private fun findRightInlineAnchor(
+        statusBarView: ViewGroup,
+        parent: ViewGroup,
+    ): View? {
+        val resources = statusBarView.resources
+        val names = listOf(
+            "wifi_group",
+            "wifi_combo",
+            "status_bar_wifi",
+            "status_bar_wifi_group",
+            "wifi_container",
+            "modern_status_bar_wifi",
+            "bluetooth",
+            "bluetooth_icon",
+            "status_bar_bluetooth",
+        )
+        names.forEach { name ->
+            val id = resources.getIdentifier(name, "id", Package.SYSTEMUI)
+            if (id == 0) return@forEach
+            val found = statusBarView.findViewById<View>(id) ?: return@forEach
+            var direct: View = found
+            var owner = direct.parent as? ViewGroup
+            while (owner != null && owner !== parent) {
+                direct = owner
+                owner = direct.parent as? ViewGroup
+            }
+            if (owner === parent && direct !== parent && direct !== statusBarView) {
+                return direct
+            }
+        }
+        return null
+    }
+
     private fun addInlineAtEdge(holder: Holder) {
         val parent = holder.inlineParent
+        if (holder.mountedSide == "right") {
+            val anchor = findRightInlineAnchor(holder.statusBarView, parent)
+            if (anchor != null) {
+                val rootIndex = parent.indexOfChild(holder.root)
+                val anchorIndex = parent.indexOfChild(anchor)
+                if (rootIndex >= 0 && anchorIndex >= 0 && rootIndex == anchorIndex - 1) return
+
+                if (holder.root.parent === parent) {
+                    parent.removeView(holder.root)
+                } else {
+                    (holder.root.parent as? ViewGroup)?.removeView(holder.root)
+                }
+                val refreshedAnchor = findRightInlineAnchor(holder.statusBarView, parent)
+                val targetIndex = refreshedAnchor
+                    ?.let(parent::indexOfChild)
+                    ?.takeIf { it >= 0 }
+                    ?: parent.childCount
+                parent.addView(
+                    holder.root,
+                    targetIndex,
+                    ViewGroup.LayoutParams(
+                        ViewGroup.LayoutParams.WRAP_CONTENT,
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                    ),
+                )
+                return
+            }
+        }
+
         if (holder.root.parent === parent) {
             val targetIndex = if (holder.mountedSide == "left") 0 else parent.childCount - 1
             if (parent.indexOfChild(holder.root) == targetIndex) return
