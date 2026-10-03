@@ -165,6 +165,16 @@ internal object StatusBarBluetoothRuntime {
         if (!bluetoothReceiverStarted.compareAndSet(false, true)) return
         val receiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context?, intent: Intent?) {
+                if (intent?.action == Intent.ACTION_CONFIGURATION_CHANGED) {
+                    synchronized(holders) {
+                        holders.values.forEach { holder ->
+                            if (holder.nativeView?.parent == null) {
+                                holder.nativeView = null
+                                holder.nativeState = null
+                            }
+                        }
+                    }
+                }
                 reapplyAll()
             }
         }
@@ -172,6 +182,7 @@ internal object StatusBarBluetoothRuntime {
         val filter = IntentFilter().apply {
             addAction(BluetoothAdapter.ACTION_STATE_CHANGED)
             addAction(BluetoothAdapter.ACTION_CONNECTION_STATE_CHANGED)
+            addAction(Intent.ACTION_CONFIGURATION_CHANGED)
         }
         runCatching {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -211,11 +222,6 @@ internal object StatusBarBluetoothRuntime {
                 overlay = BluetoothGlyphView(host.context).also { host.overlay.add(it) },
             ).also { newHolder ->
                 holders[statusBarView] = newHolder
-                host.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
-                    // Shade/QS expansion can generate many layout passes. Never rescan
-                    // or rewrite native layout params here; only move our overlay.
-                    repositionOverlayOnLayout(newHolder)
-                }
             }
         }
         applyConfig(holder, config)
@@ -331,13 +337,6 @@ internal object StatusBarBluetoothRuntime {
             native.translationY = state.translationY + current.verticalOffsetDp * density
             applyNativeMargins(native, state, current, density)
         }
-    }
-
-    private fun repositionOverlayOnLayout(holder: Holder) {
-        val current = config
-        if (!current.enabled || (!current.showLeftSide && !current.customIconEnabled)) return
-        val native = holder.nativeView?.takeIf { it.parent != null } ?: return
-        positionOverlay(holder, native, current, currentSizePx(holder, current))
     }
 
     private fun applyNativeMargins(
