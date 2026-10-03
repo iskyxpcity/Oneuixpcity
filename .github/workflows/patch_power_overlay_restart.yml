@@ -6,6 +6,7 @@ on:
       - test/status-bluetooth-flux-20261002
     paths:
       - tools/patch_power_overlay_restart.py
+      - .github/workflows/patch_power_overlay_restart.yml
 
 permissions:
   contents: write
