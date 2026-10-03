@@ -141,6 +141,28 @@ private fun StatusCategoryContent(
                 StatusPowerCategoryControls(
                     uiState = preference.systemUI.statusBar,
                     onEvent = toolsViewModel::onSystemUIEvent,
+                    onPowerRuntimePreview = { runtime ->
+                        toolsViewModel.previewData { current ->
+                            current.copy(
+                                systemUI = current.systemUI.copy(
+                                    statusBar = current.systemUI.statusBar.copy(
+                                        powerRuntime = runtime,
+                                    ),
+                                ),
+                            )
+                        }
+                    },
+                    onPowerRuntimeChange = { runtime ->
+                        toolsViewModel.updateData { current ->
+                            current.copy(
+                                systemUI = current.systemUI.copy(
+                                    statusBar = current.systemUI.statusBar.copy(
+                                        powerRuntime = runtime,
+                                    ),
+                                ),
+                            )
+                        }
+                    },
                 )
             }
         }
