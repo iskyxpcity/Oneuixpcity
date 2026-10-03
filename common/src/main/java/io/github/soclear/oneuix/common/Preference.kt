@@ -74,6 +74,7 @@ data class Preference(
             val textSizeSp: Float = 8.5f,
             val fontWeight: Int = 400,
             val columnGapDp: Float = 2f,
+            val rowGapDp: Float = 0f,
             val horizontalOffsetDp: Float = 0f,
             val verticalOffsetDp: Float = 0f,
             val startPaddingDp: Float = 1f,
