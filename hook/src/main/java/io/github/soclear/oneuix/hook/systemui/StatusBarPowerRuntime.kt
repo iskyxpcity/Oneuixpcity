@@ -755,64 +755,32 @@ internal object StatusBarPowerRuntime {
         return Handler(thread.looper).also { workerHandler = it }
     }
 
-    private fun readBatteryPowerSupplyValue(name: String): Double? {
-        val file = File("/sys/class/power_supply/battery/$name")
-        if (!file.canRead()) return null
-        return runCatching { file.readText().trim().toDouble() }
-            .getOrNull()
-            ?.takeIf { it.isFinite() }
-    }
-
-    private fun firstUsableCurrentUa(vararg values: Double?): Double? {
-        val available = values.filterNotNull().filter { it.isFinite() }
-        return available.firstOrNull { abs(it) >= 1.0 } ?: available.firstOrNull()
-    }
-
     private fun readSample(
         context: Context,
         current: Preference.SystemUI.StatusBarPowerRuntime,
     ): Sample {
         val batteryManager = context.getSystemService(BatteryManager::class.java)
-        val managerCurrentUa = batteryManager
+        val currentUa = batteryManager
             ?.getIntProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW)
             ?.takeUnless { it == Int.MIN_VALUE }
-            ?.toDouble()
-
-        val sysCurrentNowUa = readBatteryPowerSupplyValue("current_now")
-        val sysCurrentAvgUa = readBatteryPowerSupplyValue("current_avg")
-        val currentUa = firstUsableCurrentUa(
-            sysCurrentNowUa,
-            managerCurrentUa,
-            sysCurrentAvgUa,
-        )
-
         val batteryIntent = runCatching {
             context.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
         }.getOrNull()
 
-        val intentVoltageMv = batteryIntent
+        val voltageMv = batteryIntent
             ?.getIntExtra(BatteryManager.EXTRA_VOLTAGE, 0)
             ?.takeIf { it > 0 }
-        val sysVoltageUv = readBatteryPowerSupplyValue("voltage_now")
-            ?.takeIf { it > 0.0 }
-            ?: readBatteryPowerSupplyValue("voltage_avg")?.takeIf { it > 0.0 }
-        val voltageV = sysVoltageUv?.div(1_000_000.0)
-            ?: intentVoltageMv?.toDouble()?.div(1000.0)
-
-        val sysPowerUw = readBatteryPowerSupplyValue("power_now")
-            ?.takeIf { abs(it) >= 1.0 }
         val tempTenths = batteryIntent
             ?.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, Int.MIN_VALUE)
             ?.takeUnless { it == Int.MIN_VALUE }
         val level = batteryIntent?.getIntExtra(BatteryManager.EXTRA_LEVEL, -1) ?: -1
         val scale = batteryIntent?.getIntExtra(BatteryManager.EXTRA_SCALE, 100) ?: 100
 
-        val signedCurrentMa = currentUa?.div(1000.0)
+        val signedCurrentMa = currentUa?.toDouble()?.div(1000.0)
         val currentMa = signedCurrentMa?.let { if (current.absoluteValue) abs(it) else it }
-        val calculatedPowerW = if (currentUa != null && voltageV != null) {
-            currentUa / 1_000_000.0 * voltageV
+        val signedPowerW = if (currentUa != null && voltageMv != null) {
+            currentUa.toDouble() / 1_000_000.0 * voltageMv.toDouble() / 1000.0
         } else null
-        val signedPowerW = sysPowerUw?.div(1_000_000.0) ?: calculatedPowerW
         val powerW = signedPowerW?.let { if (current.absoluteValue) abs(it) else it }
 
         return Sample(
@@ -820,7 +788,7 @@ internal object StatusBarPowerRuntime {
             currentMa = currentMa,
             batteryTempC = tempTenths?.toDouble()?.div(10.0),
             cpuTempC = readCpuTemperature(),
-            voltageV = voltageV,
+            voltageV = voltageMv?.toDouble()?.div(1000.0),
             batteryLevel = if (level >= 0 && scale > 0) level * 100.0 / scale else null,
         )
     }
