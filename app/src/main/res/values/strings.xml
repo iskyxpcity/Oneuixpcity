@@ -73,6 +73,40 @@
     <string name="status_category_notification_center">Notification center</string>
     <string name="status_category_control_center">Control center</string>
 
+    <string name="status_power_runtime_enable">Real-time status bar power</string>
+    <string name="status_power_runtime_enable_summary">Show power, current, temperature and battery data inside Samsung SystemUI.</string>
+    <string name="status_power_slot_1">Display slot 1</string>
+    <string name="status_power_slot_2">Display slot 2</string>
+    <string name="status_power_slot_3">Display slot 3</string>
+    <string name="status_power_slot_4">Display slot 4</string>
+    <string name="status_power_slot_1_decimals">Slot 1 decimals</string>
+    <string name="status_power_slot_2_decimals">Slot 2 decimals</string>
+    <string name="status_power_slot_3_decimals">Slot 3 decimals</string>
+    <string name="status_power_slot_4_decimals">Slot 4 decimals</string>
+    <string name="status_power_slot_power">Power</string>
+    <string name="status_power_slot_current">Current</string>
+    <string name="status_power_slot_battery_temp">Battery temperature</string>
+    <string name="status_power_slot_cpu_temp">CPU temperature</string>
+    <string name="status_power_slot_voltage">Voltage</string>
+    <string name="status_power_slot_battery_level">Battery level</string>
+    <string name="status_power_slot_none">None</string>
+    <string name="status_power_double_line">Two-row layout</string>
+    <string name="status_power_double_line_summary">Two values per row; disable for a single four-value row.</string>
+    <string name="status_power_absolute_value">Use absolute current / power</string>
+    <string name="status_power_hide_unit">Hide units</string>
+    <string name="status_power_hide_lockscreen">Hide on lock screen</string>
+    <string name="status_power_font_weight">Font weight</string>
+    <string name="status_power_text_size">Text size</string>
+    <string name="status_power_text_size_summary">%1$.1f sp</string>
+    <string name="status_power_refresh_interval">Refresh interval</string>
+    <string name="status_power_refresh_interval_summary">%1$d ms</string>
+    <string name="status_power_column_gap">Column gap</string>
+    <string name="status_power_horizontal_offset">Horizontal position</string>
+    <string name="status_power_vertical_offset">Vertical position</string>
+    <string name="status_power_start_padding">Start spacing</string>
+    <string name="status_power_end_padding">End spacing</string>
+    <string name="status_power_dp_summary">%1$.1f dp</string>
+
     <string name="status_wifi_no_migrated_feature_title">No status bar Wi-Fi option to migrate</string>
     <string name="status_wifi_no_migrated_feature_summary">The current upstream Function page does not provide a status bar Wi-Fi feature. This category is reserved for OneuiXP Wi-Fi icon features added later.</string>
 
