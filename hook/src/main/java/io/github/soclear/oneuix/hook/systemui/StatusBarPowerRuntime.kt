@@ -133,7 +133,7 @@ internal object StatusBarPowerRuntime {
         val worker = HandlerThread("OneuiXPStatusPowerPrefs").apply { start() }
         preferenceThread = worker
         val background = Handler(worker.looper)
-        var previous: Preference.SystemUI.StatusBarPowerRuntime? = null
+        var previousPersisted: Preference.SystemUI.StatusBarPowerRuntime? = null
 
         fun refreshOnce() {
             background.post {
@@ -141,9 +141,9 @@ internal object StatusBarPowerRuntime {
                     with(module) { PreferenceProvider.loadPreference() }
                         ?.systemUI?.statusBar?.powerRuntime
                 }.getOrNull() ?: return@post
-                if (current == previous) return@post
-                previous = current
-                mainHandler.post { updateRuntime(current) }
+                if (current == previousPersisted) return@post
+                previousPersisted = current
+                mainHandler.post { updateRuntime(current, preserveOverlay = false) }
             }
         }
 
@@ -162,26 +162,42 @@ internal object StatusBarPowerRuntime {
 
         val receiver = object : BroadcastReceiver() {
             override fun onReceive(receiverContext: Context?, intent: Intent?) {
-                if (intent?.action != StatusBarRuntimeBridge.ACTION) return
-                val payload = intent.getStringExtra(
-                    StatusBarRuntimeBridge.EXTRA_STATUS_BAR_JSON
-                ) ?: return
-                background.post {
-                    val statusBar = runCatching {
-                        IgnoreUnknownKeysJson.decodeFromString(
-                            Preference.SystemUI.StatusBar.serializer(),
-                            payload,
+                when (intent?.action) {
+                    StatusBarRuntimeBridge.ACTION_POWER_OVERLAY -> {
+                        val enabled = intent.getBooleanExtra(
+                            StatusBarRuntimeBridge.EXTRA_POWER_OVERLAY_ON_TOP,
+                            config.overlayOnTop,
                         )
-                    }.getOrNull() ?: return@post
-                    val current = statusBar.powerRuntime
-                    previous = current
-                    mainHandler.post { updateRuntime(current) }
+                        mainHandler.post { updateOverlayOnTop(enabled) }
+                    }
+                    StatusBarRuntimeBridge.ACTION -> {
+                        val payload = intent.getStringExtra(
+                            StatusBarRuntimeBridge.EXTRA_STATUS_BAR_JSON
+                        ) ?: return
+                        background.post {
+                            val statusBar = runCatching {
+                                IgnoreUnknownKeysJson.decodeFromString(
+                                    Preference.SystemUI.StatusBar.serializer(),
+                                    payload,
+                                )
+                            }.getOrNull() ?: return@post
+                            // Generic preview payloads can be stale. They may update visual
+                            // values, but never the mount layer. The overlay switch has its
+                            // own explicit command above.
+                            mainHandler.post {
+                                updateRuntime(statusBar.powerRuntime, preserveOverlay = true)
+                            }
+                        }
+                    }
                 }
             }
         }
         runtimeReceiver = receiver
         runCatching {
-            val filter = IntentFilter(StatusBarRuntimeBridge.ACTION)
+            val filter = IntentFilter().apply {
+                addAction(StatusBarRuntimeBridge.ACTION)
+                addAction(StatusBarRuntimeBridge.ACTION_POWER_OVERLAY)
+            }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 context.registerReceiver(receiver, filter, Context.RECEIVER_EXPORTED)
             } else {
@@ -242,8 +258,29 @@ internal object StatusBarPowerRuntime {
         statusBarView.postDelayed({ registerStatusBarView(statusBarView) }, delay)
     }
 
-    private fun updateRuntime(newConfig: Preference.SystemUI.StatusBarPowerRuntime) {
-        config = sanitize(newConfig)
+    private fun updateRuntime(
+        newConfig: Preference.SystemUI.StatusBarPowerRuntime,
+        preserveOverlay: Boolean,
+    ) {
+        val sanitized = sanitize(newConfig)
+        config = if (preserveOverlay) {
+            sanitized.copy(overlayOnTop = config.overlayOnTop)
+        } else {
+            sanitized
+        }
+        applyCurrentConfig()
+    }
+
+    private fun updateOverlayOnTop(enabled: Boolean) {
+        if (config.overlayOnTop == enabled) {
+            applyCurrentConfig()
+            return
+        }
+        config = config.copy(overlayOnTop = enabled)
+        applyCurrentConfig()
+    }
+
+    private fun applyCurrentConfig() {
         val active = synchronized(holders) {
             holders.values.filter { it.statusBarView.isAttachedToWindow }
         }
@@ -265,7 +302,11 @@ internal object StatusBarPowerRuntime {
         fontWeight = source.fontWeight.coerceIn(100, 900),
         columnGapDp = source.columnGapDp.coerceIn(0f, 12f),
         rowGapDp = source.rowGapDp.coerceIn(-4f, 8f),
-        horizontalOffsetDp = source.horizontalOffsetDp.coerceIn(-150f, 150f),
+        horizontalOffsetDp = if (source.placementSide == "left") {
+            source.horizontalOffsetDp.coerceIn(0f, 180f)
+        } else {
+            source.horizontalOffsetDp.coerceIn(-180f, 0f)
+        },
         verticalOffsetDp = source.verticalOffsetDp.coerceIn(-30f, 30f),
         startPaddingDp = source.startPaddingDp.coerceIn(0f, 12f),
         endPaddingDp = source.endPaddingDp.coerceIn(0f, 12f),
