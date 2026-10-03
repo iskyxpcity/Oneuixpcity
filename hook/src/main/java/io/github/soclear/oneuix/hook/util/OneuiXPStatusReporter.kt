@@ -11,6 +11,7 @@ import android.os.Bundle
 import io.github.libxposed.api.XposedModule
 import io.github.libxposed.api.XposedModuleInterface
 import io.github.soclear.oneuix.common.Package
+import io.github.soclear.oneuix.hook.systemui.StatusBarPowerRuntime
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
@@ -35,6 +36,11 @@ object OneuiXPStatusReporter {
         processName: String,
     ) {
         if (param.packageName != Package.SYSTEMUI || processName != Package.SYSTEMUI) return
+
+        // Independent status-bar runtime. It owns its own event-driven preference
+        // watcher so it does not change the locked LSPosed liveness or clock paths.
+        StatusBarPowerRuntime.install(module, param)
+
         if (!attachInstalled.compareAndSet(false, true)) return
 
         try {
