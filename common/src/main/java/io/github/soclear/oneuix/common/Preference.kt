@@ -57,6 +57,31 @@ data class Preference(
         )
 
         @Serializable
+        data class StatusBarPowerRuntime(
+            val enabled: Boolean = false,
+            val slot1: String = "power",
+            val slot2: String = "battery_temp",
+            val slot3: String = "cpu_temp",
+            val slot4: String = "current",
+            val slot1Decimals: Int = 1,
+            val slot2Decimals: Int = 1,
+            val slot3Decimals: Int = 1,
+            val slot4Decimals: Int = 0,
+            val doubleLine: Boolean = true,
+            val absoluteValue: Boolean = true,
+            val hideUnit: Boolean = false,
+            val refreshIntervalMs: Int = 1000,
+            val textSizeSp: Float = 8.5f,
+            val fontWeight: Int = 400,
+            val columnGapDp: Float = 2f,
+            val horizontalOffsetDp: Float = 0f,
+            val verticalOffsetDp: Float = 0f,
+            val startPaddingDp: Float = 1f,
+            val endPaddingDp: Float = 1f,
+            val hideOnLockscreen: Boolean = false,
+        )
+
+        @Serializable
         data class StatusBar(
             val modifyStatusBarLeftPadding: Boolean = false,
             val statusBarLeftPaddingDp: Float = 0f,
@@ -75,6 +100,7 @@ data class Preference(
             val addBatteryLevelText: Boolean = false,
             val hideBatteryLevelTextPercentageSign: Boolean = false,
             val hideBatteryLevelTextChargingIcon: Boolean = false,
+            val powerRuntime: StatusBarPowerRuntime = StatusBarPowerRuntime(),
             val supportRealTimeNetworkSpeed: Boolean = true,
             val showSeparateUpDownNetworkSpeeds: Boolean = false,
             val networkSpeedThresholdKb: Int = 0,
