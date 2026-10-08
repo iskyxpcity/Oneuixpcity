@@ -247,6 +247,7 @@ object OfficialMainStatusBarMod {
         clockTextView: TextView,
         config: StatusBarClockPositionRuntimeConfig =
             statusBarClockPositionRuntimeConfig,
+        forceAlignmentRefresh: Boolean = false,
     ) {
         relaxStatusBarClockPositionClipping(clockTextView, config.enabled)
 
@@ -347,9 +348,9 @@ object OfficialMainStatusBarMod {
                 }
             }
         }
-        if (alignmentChanged) {
-            // TextView alignment can change while the native clock width stays fixed;
-            // explicitly schedule a layout so each menu choice is visible immediately.
+        if (alignmentChanged || forceAlignmentRefresh) {
+            // Force a fresh layout when the selected alignment changes, even if Samsung's
+            // current native alignment already maps to the requested TextView value.
             clockTextView.requestLayout()
             clockTextView.invalidate()
         }
@@ -372,16 +373,20 @@ object OfficialMainStatusBarMod {
         alignment: String = "native",
         fixedContentWidthDp: Float = 0f,
     ) {
-        statusBarClockPositionRuntimeConfig =
-            StatusBarClockPositionRuntimeConfig(
-                enabled = enabled,
-                offsetXDp = offsetXDp,
-                offsetYDp = offsetYDp,
-                leftMarginDp = leftMarginDp,
-                rightMarginDp = rightMarginDp,
-                alignment = alignment,
-                fixedContentWidthDp = fixedContentWidthDp,
-            )
+        val previousConfig = statusBarClockPositionRuntimeConfig
+        val nextConfig = StatusBarClockPositionRuntimeConfig(
+            enabled = enabled,
+            offsetXDp = offsetXDp,
+            offsetYDp = offsetYDp,
+            leftMarginDp = leftMarginDp,
+            rightMarginDp = rightMarginDp,
+            alignment = alignment,
+            fixedContentWidthDp = fixedContentWidthDp,
+        )
+        val forceAlignmentRefresh =
+            previousConfig.enabled != nextConfig.enabled ||
+                previousConfig.alignment != nextConfig.alignment
+        statusBarClockPositionRuntimeConfig = nextConfig
         val activeClockViews = synchronized(statusBarClockPositionViews) {
             statusBarClockPositionViews.keys.toList()
         }
@@ -389,7 +394,8 @@ object OfficialMainStatusBarMod {
             val apply = {
                 applyStatusBarClockPosition(
                     clockTextView,
-                    statusBarClockPositionRuntimeConfig,
+                    nextConfig,
+                    forceAlignmentRefresh,
                 )
             }
             if (Looper.myLooper() == Looper.getMainLooper()) {

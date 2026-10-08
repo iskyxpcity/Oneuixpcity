@@ -35,6 +35,7 @@ import io.github.soclear.oneuix.ui.component.OneuiXActionButton
 import io.github.soclear.oneuix.ui.component.OneuiXInfoItem
 import io.github.soclear.oneuix.ui.component.OneuiXInlineTextField
 import io.github.soclear.oneuix.ui.component.OneuiXSlider
+import io.github.soclear.oneuix.ui.component.OneuiXSectionLabel
 import io.github.soclear.oneuix.ui.component.OneuiXSupportingText
 import io.github.soclear.oneuix.ui.component.SelectItem
 import io.github.soclear.oneuix.ui.component.SwitchItem
@@ -437,14 +438,18 @@ fun StatusTimeCategoryControls(
                                 .padding(horizontal = 8.dp),
                             verticalArrangement = Arrangement.spacedBy(4.dp),
                         ) {
-                            OneuiXInfoItem(
-                                title = stringResource(
+                            OneuiXSectionLabel(
+                                text = stringResource(
                                     id = R.string.oneuix_statusBarClockOffsetX_title
                                 ),
-                                summary = stringResource(
+                                modifier = Modifier.padding(horizontal = 12.dp),
+                            )
+                            OneuiXSupportingText(
+                                text = stringResource(
                                     id = R.string.oneuix_statusBarClockOffset_summary,
                                     clockOffsetX,
                                 ),
+                                modifier = Modifier.padding(horizontal = 12.dp),
                             )
                             OneuiXSlider(
                                 value = clockOffsetX,
@@ -466,14 +471,18 @@ fun StatusTimeCategoryControls(
                                     )
                                 },
                             )
-                            OneuiXInfoItem(
-                                title = stringResource(
+                            OneuiXSectionLabel(
+                                text = stringResource(
                                     id = R.string.oneuix_statusBarClockOffsetY_title
                                 ),
-                                summary = stringResource(
+                                modifier = Modifier.padding(horizontal = 12.dp),
+                            )
+                            OneuiXSupportingText(
+                                text = stringResource(
                                     id = R.string.oneuix_statusBarClockOffset_summary,
                                     clockOffsetY,
                                 ),
+                                modifier = Modifier.padding(horizontal = 12.dp),
                             )
                             OneuiXSlider(
                                 value = clockOffsetY,
@@ -544,14 +553,18 @@ fun StatusTimeCategoryControls(
                                 .padding(horizontal = 8.dp),
                             verticalArrangement = Arrangement.spacedBy(4.dp),
                         ) {
-                            OneuiXInfoItem(
-                                title = stringResource(
+                            OneuiXSectionLabel(
+                                text = stringResource(
                                     id = R.string.oneuix_statusBarClockFixedContentWidth_title
                                 ),
-                                summary = stringResource(
+                                modifier = Modifier.padding(horizontal = 12.dp),
+                            )
+                            OneuiXSupportingText(
+                                text = stringResource(
                                     id = R.string.oneuix_statusBarClockFixedContentWidth_summary,
                                     clockFixedContentWidth,
                                 ),
+                                modifier = Modifier.padding(horizontal = 12.dp),
                             )
                             OneuiXSlider(
                                 value = clockFixedContentWidth,
@@ -586,14 +599,18 @@ fun StatusTimeCategoryControls(
                                 .padding(horizontal = 8.dp),
                             verticalArrangement = Arrangement.spacedBy(4.dp),
                         ) {
-                            OneuiXInfoItem(
-                                title = stringResource(
+                            OneuiXSectionLabel(
+                                text = stringResource(
                                     id = R.string.oneuix_statusBarClockLeftMargin_title
                                 ),
-                                summary = stringResource(
+                                modifier = Modifier.padding(horizontal = 12.dp),
+                            )
+                            OneuiXSupportingText(
+                                text = stringResource(
                                     id = R.string.oneuix_statusBarClockMargin_summary,
                                     clockLeftMargin,
                                 ),
+                                modifier = Modifier.padding(horizontal = 12.dp),
                             )
                             OneuiXSlider(
                                 value = clockLeftMargin,
@@ -617,14 +634,18 @@ fun StatusTimeCategoryControls(
                                     )
                                 },
                             )
-                            OneuiXInfoItem(
-                                title = stringResource(
+                            OneuiXSectionLabel(
+                                text = stringResource(
                                     id = R.string.oneuix_statusBarClockRightMargin_title
                                 ),
-                                summary = stringResource(
+                                modifier = Modifier.padding(horizontal = 12.dp),
+                            )
+                            OneuiXSupportingText(
+                                text = stringResource(
                                     id = R.string.oneuix_statusBarClockMargin_summary,
                                     clockRightMargin,
                                 ),
+                                modifier = Modifier.padding(horizontal = 12.dp),
                             )
                             OneuiXSlider(
                                 value = clockRightMargin,
