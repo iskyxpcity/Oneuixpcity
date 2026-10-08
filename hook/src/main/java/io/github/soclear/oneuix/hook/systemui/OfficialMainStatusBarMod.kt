@@ -70,6 +70,37 @@ object OfficialMainStatusBarMod {
     private val statusBarOriginalTranslations = WeakHashMap<View, Float>()
     private val statusBarViews = WeakHashMap<View, Unit>()
 
+    private data class StatusBarClockPositionRuntimeConfig(
+        val enabled: Boolean,
+        val offsetXDp: Float,
+        val offsetYDp: Float,
+        val leftMarginDp: Float,
+        val rightMarginDp: Float,
+        val alignment: String,
+        val fixedContentWidthDp: Float,
+    )
+
+    @Volatile
+    private var statusBarClockPositionRuntimeConfig =
+        StatusBarClockPositionRuntimeConfig(false, 0f, 0f, 0f, 0f, "native", 0f)
+
+    private val statusBarClockOriginalTranslations =
+        WeakHashMap<TextView, Pair<Float, Float>>()
+    private val statusBarClockAppliedMargins =
+        WeakHashMap<TextView, Pair<Int, Int>>()
+    private val statusBarClockOriginalAlignments =
+        WeakHashMap<TextView, Int>()
+    private val statusBarClockOriginalWidths =
+        WeakHashMap<TextView, Int>()
+    private val statusBarClockOriginalClipChildren =
+        WeakHashMap<ViewGroup, Boolean>()
+    private val statusBarClockOriginalClipToPadding =
+        WeakHashMap<ViewGroup, Boolean>()
+    private val statusBarClockPositionViews =
+        WeakHashMap<TextView, Unit>()
+    private val statusBarClockPositionListeners =
+        WeakHashMap<TextView, Unit>()
+
     private data class StatusBarVerticalOffset(
         val topDp: Float,
         val bottomDp: Float,
@@ -150,6 +181,225 @@ object OfficialMainStatusBarMod {
         }
     }
 
+    private fun rememberStatusBarClockPositionView(clockTextView: TextView) {
+        synchronized(statusBarClockPositionViews) {
+            statusBarClockPositionViews[clockTextView] = Unit
+        }
+        val installListener = synchronized(statusBarClockPositionListeners) {
+            statusBarClockPositionListeners.put(clockTextView, Unit) == null
+        }
+        if (installListener) {
+            clockTextView.addOnLayoutChangeListener(
+                View.OnLayoutChangeListener { view, _, _, _, _, _, _, _, _ ->
+                    if (view is TextView) {
+                        applyStatusBarClockPosition(view)
+                    }
+                }
+            )
+        }
+    }
+
+    private fun relaxStatusBarClockPositionClipping(
+        clockTextView: TextView,
+        enabled: Boolean,
+    ) {
+        var parent = clockTextView.parent as? ViewGroup
+        while (parent != null) {
+            synchronized(statusBarClockOriginalClipChildren) {
+                statusBarClockOriginalClipChildren.getOrPut(parent) {
+                    parent.clipChildren
+                }
+            }
+            synchronized(statusBarClockOriginalClipToPadding) {
+                statusBarClockOriginalClipToPadding.getOrPut(parent) {
+                    parent.clipToPadding
+                }
+            }
+
+            if (enabled) {
+                parent.clipChildren = false
+                parent.clipToPadding = false
+            } else {
+                val originalChildren = synchronized(statusBarClockOriginalClipChildren) {
+                    statusBarClockOriginalClipChildren[parent]
+                }
+                val originalPadding = synchronized(statusBarClockOriginalClipToPadding) {
+                    statusBarClockOriginalClipToPadding[parent]
+                }
+                if (originalChildren != null) {
+                    parent.clipChildren = originalChildren
+                }
+                if (originalPadding != null) {
+                    parent.clipToPadding = originalPadding
+                }
+            }
+
+            if (parent.javaClass.name ==
+                "com.android.systemui.statusbar.phone.PhoneStatusBarView"
+            ) {
+                break
+            }
+            parent = parent.parent as? ViewGroup
+        }
+    }
+
+    private fun applyStatusBarClockPosition(
+        clockTextView: TextView,
+        config: StatusBarClockPositionRuntimeConfig =
+            statusBarClockPositionRuntimeConfig,
+    ) {
+        relaxStatusBarClockPositionClipping(clockTextView, config.enabled)
+
+        val originalTranslation = synchronized(statusBarClockOriginalTranslations) {
+            statusBarClockOriginalTranslations.getOrPut(clockTextView) {
+                clockTextView.translationX to clockTextView.translationY
+            }
+        }
+
+        val density = clockTextView.resources.displayMetrics.density
+        val nextX = if (config.enabled) {
+            config.offsetXDp.coerceIn(-20f, 20f) * density
+        } else 0f
+        val nextY = if (config.enabled) {
+            config.offsetYDp.coerceIn(-20f, 20f) * density
+        } else 0f
+
+        // Always apply the offset from the original Samsung translation. Reconstructing
+        // the base from the current translation loses the offset if Samsung resets
+        // translation during a native layout pass, causing the clock to jump back.
+        val desiredTranslationX = originalTranslation.first + nextX
+        val desiredTranslationY = originalTranslation.second + nextY
+        if (kotlin.math.abs(clockTextView.translationX - desiredTranslationX) > 0.01f) {
+            clockTextView.translationX = desiredTranslationX
+        }
+        if (kotlin.math.abs(clockTextView.translationY - desiredTranslationY) > 0.01f) {
+            clockTextView.translationY = desiredTranslationY
+        }
+
+        val originalAlignment = synchronized(statusBarClockOriginalAlignments) {
+            statusBarClockOriginalAlignments.getOrPut(clockTextView) {
+                clockTextView.textAlignment
+            }
+        }
+        val desiredAlignment = if (!config.enabled) {
+            originalAlignment
+        } else {
+            when (config.alignment) {
+                "start" -> View.TEXT_ALIGNMENT_TEXT_START
+                "center" -> View.TEXT_ALIGNMENT_CENTER
+                "end" -> View.TEXT_ALIGNMENT_TEXT_END
+                else -> originalAlignment
+            }
+        }
+        var alignmentChanged = false
+        if (clockTextView.textAlignment != desiredAlignment) {
+            clockTextView.textAlignment = desiredAlignment
+            alignmentChanged = true
+        }
+        val params = clockTextView.layoutParams
+        if (params != null) {
+            val originalWidth = synchronized(statusBarClockOriginalWidths) {
+                statusBarClockOriginalWidths.getOrPut(clockTextView) {
+                    params.width
+                }
+            }
+            val requestedWidth = if (config.enabled && config.fixedContentWidthDp > 0f) {
+                (config.fixedContentWidthDp.coerceIn(1f, 200f) * density).roundToInt()
+            } else {
+                originalWidth
+            }
+            if (params.width != requestedWidth) {
+                params.width = requestedWidth
+                clockTextView.layoutParams = params
+            }
+        }
+        if (params is ViewGroup.MarginLayoutParams) {
+            val previousMargins = synchronized(statusBarClockAppliedMargins) {
+                statusBarClockAppliedMargins[clockTextView] ?: (0 to 0)
+            }
+            val baseLeft = params.leftMargin - previousMargins.first
+            val baseRight = params.rightMargin - previousMargins.second
+            val nextLeft = if (config.enabled) {
+                (config.leftMarginDp.coerceIn(0f, 40f) * density).roundToInt()
+            } else 0
+            val nextRight = if (config.enabled) {
+                (config.rightMarginDp.coerceIn(0f, 40f) * density).roundToInt()
+            } else 0
+            val desiredLeft = baseLeft + nextLeft
+            val desiredRight = baseRight + nextRight
+            var changed = false
+            if (params.leftMargin != desiredLeft) {
+                params.leftMargin = desiredLeft
+                changed = true
+            }
+            if (params.rightMargin != desiredRight) {
+                params.rightMargin = desiredRight
+                changed = true
+            }
+            if (changed) {
+                clockTextView.layoutParams = params
+            }
+            synchronized(statusBarClockAppliedMargins) {
+                if (config.enabled) {
+                    statusBarClockAppliedMargins[clockTextView] = nextLeft to nextRight
+                } else {
+                    statusBarClockAppliedMargins.remove(clockTextView)
+                }
+            }
+        }
+        if (alignmentChanged) {
+            // TextView alignment can change while the native clock width stays fixed;
+            // explicitly schedule a layout so each menu choice is visible immediately.
+            clockTextView.requestLayout()
+            clockTextView.invalidate()
+        }
+    }
+
+    fun applyStatusBarClockPosition(clockTextView: TextView) {
+        rememberStatusBarClockPositionView(clockTextView)
+        applyStatusBarClockPosition(
+            clockTextView,
+            statusBarClockPositionRuntimeConfig,
+        )
+    }
+
+    fun updateStatusBarClockPositionRuntime(
+        enabled: Boolean,
+        offsetXDp: Float,
+        offsetYDp: Float,
+        leftMarginDp: Float = 0f,
+        rightMarginDp: Float = 0f,
+        alignment: String = "native",
+        fixedContentWidthDp: Float = 0f,
+    ) {
+        statusBarClockPositionRuntimeConfig =
+            StatusBarClockPositionRuntimeConfig(
+                enabled = enabled,
+                offsetXDp = offsetXDp,
+                offsetYDp = offsetYDp,
+                leftMarginDp = leftMarginDp,
+                rightMarginDp = rightMarginDp,
+                alignment = alignment,
+                fixedContentWidthDp = fixedContentWidthDp,
+            )
+        val activeClockViews = synchronized(statusBarClockPositionViews) {
+            statusBarClockPositionViews.keys.toList()
+        }
+        activeClockViews.forEach { clockTextView ->
+            val apply = {
+                applyStatusBarClockPosition(
+                    clockTextView,
+                    statusBarClockPositionRuntimeConfig,
+                )
+            }
+            if (Looper.myLooper() == Looper.getMainLooper()) {
+                apply()
+            } else {
+                Handler(Looper.getMainLooper()).post { apply() }
+            }
+        }
+    }
+
     private fun doubleLineClockStyle(
         persistedSize: String,
         legacyPresetScale: Float,
@@ -209,6 +459,10 @@ object OfficialMainStatusBarMod {
             ),
             extraLineGapDp = extraLineGapDp.coerceIn(-3f, 3f),
         )
+        // Position previews arrive much more frequently than typography changes.
+        // A position-only update must not replace the clock text or request another
+        // layout, otherwise the Samsung clock visibly blinks while the slider moves.
+        if (doubleLineClockRuntimeConfig == runtimeConfig) return
         doubleLineClockRuntimeConfig = runtimeConfig
         val activeClockViews = synchronized(doubleLineClockViews) {
             doubleLineClockViews.keys.toList()
@@ -369,39 +623,83 @@ object OfficialMainStatusBarMod {
                 }
             }
             host.layoutParams?.let { params ->
-                params.height = ViewGroup.LayoutParams.MATCH_PARENT
-                when (params) {
-                    is LinearLayout.LayoutParams ->
-                        params.gravity = params.gravity and Gravity.HORIZONTAL_GRAVITY_MASK
-                    is FrameLayout.LayoutParams ->
-                        params.gravity = params.gravity and Gravity.HORIZONTAL_GRAVITY_MASK
+                var changed = false
+                if (params.height != ViewGroup.LayoutParams.MATCH_PARENT) {
+                    params.height = ViewGroup.LayoutParams.MATCH_PARENT
+                    changed = true
                 }
-                host.layoutParams = params
+                when (params) {
+                    is LinearLayout.LayoutParams -> {
+                        val desiredGravity = params.gravity and Gravity.HORIZONTAL_GRAVITY_MASK
+                        if (params.gravity != desiredGravity) {
+                            params.gravity = desiredGravity
+                            changed = true
+                        }
+                    }
+                    is FrameLayout.LayoutParams -> {
+                        val desiredGravity = params.gravity and Gravity.HORIZONTAL_GRAVITY_MASK
+                        if (params.gravity != desiredGravity) {
+                            params.gravity = desiredGravity
+                            changed = true
+                        }
+                    }
+                }
+                if (changed) host.layoutParams = params
             }
             host.clipChildren = false
             host.clipToPadding = false
         }
 
         slot.layoutParams?.let { params ->
-            params.height = ViewGroup.LayoutParams.MATCH_PARENT
-            when (params) {
-                is LinearLayout.LayoutParams ->
-                    params.gravity = params.gravity and Gravity.HORIZONTAL_GRAVITY_MASK
-                is FrameLayout.LayoutParams ->
-                    params.gravity = params.gravity and Gravity.HORIZONTAL_GRAVITY_MASK
+            var changed = false
+            if (params.height != ViewGroup.LayoutParams.MATCH_PARENT) {
+                params.height = ViewGroup.LayoutParams.MATCH_PARENT
+                changed = true
             }
-            slot.layoutParams = params
+            when (params) {
+                is LinearLayout.LayoutParams -> {
+                    val desiredGravity = params.gravity and Gravity.HORIZONTAL_GRAVITY_MASK
+                    if (params.gravity != desiredGravity) {
+                        params.gravity = desiredGravity
+                        changed = true
+                    }
+                }
+                is FrameLayout.LayoutParams -> {
+                    val desiredGravity = params.gravity and Gravity.HORIZONTAL_GRAVITY_MASK
+                    if (params.gravity != desiredGravity) {
+                        params.gravity = desiredGravity
+                        changed = true
+                    }
+                }
+            }
+            if (changed) slot.layoutParams = params
         }
 
         clockTextView.layoutParams?.let { params ->
-            params.height = ViewGroup.LayoutParams.MATCH_PARENT
-            params.width = ViewGroup.LayoutParams.WRAP_CONTENT
-            clockTextView.layoutParams = params
+            val positionConfig = statusBarClockPositionRuntimeConfig
+            val desiredWidth = if (
+                positionConfig.enabled && positionConfig.fixedContentWidthDp > 0f
+            ) {
+                (positionConfig.fixedContentWidthDp.coerceIn(1f, 200f) *
+                    clockTextView.resources.displayMetrics.density).roundToInt()
+            } else {
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            }
+            var changed = false
+            if (params.height != ViewGroup.LayoutParams.MATCH_PARENT) {
+                params.height = ViewGroup.LayoutParams.MATCH_PARENT
+                changed = true
+            }
+            if (params.width != desiredWidth) {
+                params.width = desiredWidth
+                changed = true
+            }
+            if (changed) clockTextView.layoutParams = params
         }
 
         // Keep Samsung's native vertical gravity unchanged. The full-height slot
         // lets the native TextView lay out the two lines naturally.
-        clockTextView.translationY = 0f
+        applyStatusBarClockPosition(clockTextView)
 
         slot.requestLayout()
         statusBarView.requestLayout()
@@ -514,6 +812,7 @@ object OfficialMainStatusBarMod {
         synchronized(doubleLineClockViews) {
             doubleLineClockViews[clockTextView] = Unit
         }
+        rememberStatusBarClockPositionView(clockTextView)
         val installListener = synchronized(doubleLineClockAlignmentListeners) {
             doubleLineClockAlignmentListeners.put(clockTextView, Unit) == null
         }
@@ -544,6 +843,15 @@ object OfficialMainStatusBarMod {
         updateStatusBarVerticalOffset(
             if (current.modifyStatusBarTopPadding) current.statusBarTopPaddingDp else 0f,
             if (current.modifyStatusBarBottomPadding) current.statusBarBottomPaddingDp else 0f,
+        )
+        updateStatusBarClockPositionRuntime(
+            current.modifyStatusBarClockPosition,
+            current.statusBarClockOffsetXDp,
+            current.statusBarClockOffsetYDp,
+            current.statusBarClockLeftMarginDp,
+            current.statusBarClockRightMarginDp,
+            current.statusBarClockAlignment,
+            current.statusBarClockFixedContentWidthDp,
         )
         if (current.setStatusBarClockFormat && current.statusBarClockFormat.contains('\n')) {
             updateDoubleLineClockRuntimeConfig(
@@ -848,7 +1156,8 @@ object OfficialMainStatusBarMod {
         clockTextView.minLines = 1
         clockTextView.setLineSpacing(0f, 1f)
         clockTextView.setHorizontallyScrolling(false)
-        clockTextView.translationY = 0f
+        rememberStatusBarClockPositionView(clockTextView)
+        applyStatusBarClockPosition(clockTextView)
         clockTextView.text = dateTime
         clockTextView.contentDescription = dateTime.toString().replace('\n', ' ')
     }

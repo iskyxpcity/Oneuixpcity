@@ -3,6 +3,7 @@ package com.oneuixp.app.ui.screen.status
 import android.os.Build
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -130,6 +131,24 @@ fun StatusTimeCategoryControls(
         mutableFloatStateOf(uiState.statusBarClockTextScale)
     }
     var singleLineScaleExpanded by rememberSaveable { mutableStateOf(false) }
+    var clockOffsetX by remember(uiState.statusBarClockOffsetXDp) {
+        mutableFloatStateOf(uiState.statusBarClockOffsetXDp.coerceIn(-20f, 20f))
+    }
+    var clockOffsetY by remember(uiState.statusBarClockOffsetYDp) {
+        mutableFloatStateOf(uiState.statusBarClockOffsetYDp.coerceIn(-20f, 20f))
+    }
+    var clockLeftMargin by remember(uiState.statusBarClockLeftMarginDp) {
+        mutableFloatStateOf(uiState.statusBarClockLeftMarginDp.coerceIn(0f, 40f))
+    }
+    var clockRightMargin by remember(uiState.statusBarClockRightMarginDp) {
+        mutableFloatStateOf(uiState.statusBarClockRightMarginDp.coerceIn(0f, 40f))
+    }
+    var clockFixedContentWidth by remember(uiState.statusBarClockFixedContentWidthDp) {
+        mutableFloatStateOf(uiState.statusBarClockFixedContentWidthDp.coerceIn(0f, 200f))
+    }
+    var clockAlignment by remember(uiState.statusBarClockAlignment) {
+        mutableStateOf(uiState.statusBarClockAlignment)
+    }
     var selectedRichBlockPosition by rememberSaveable { mutableStateOf(0) }
     var expandedRichBlock by rememberSaveable { mutableStateOf(-1) }
 
@@ -378,6 +397,257 @@ fun StatusTimeCategoryControls(
                                     )
                                 }
                             }
+                        }
+                    }
+                }
+            }
+
+            add {
+                SwitchItem(
+                    icon = ImageVector.vectorResource(id = R.drawable.padding),
+                    title = stringResource(
+                        id = R.string.oneuix_statusBarClockPosition_title
+                    ),
+                    summary = if (uiState.modifyStatusBarClockPosition) {
+                        stringResource(
+                            id = R.string.oneuix_statusBarClockPosition_summary,
+                            clockOffsetX,
+                            clockOffsetY,
+                        )
+                    } else {
+                        null
+                    },
+                    showChildIndicator = true,
+                    checked = uiState.modifyStatusBarClockPosition,
+                    onCheckedChange = {
+                        onEvent(
+                            SystemUIEvent.StatusBar.ModifyStatusBarClockPosition(it)
+                        )
+                    },
+                )
+            }
+            if (uiState.modifyStatusBarClockPosition) {
+                add {
+                    StatusThemeChildItem {
+                        // StatusThemeChildItem uses a Box; stack multiple controls explicitly
+                        // so the X and Y labels/sliders cannot overlap each other.
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 8.dp),
+                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                        ) {
+                            OneuiXInfoItem(
+                                title = stringResource(
+                                    id = R.string.oneuix_statusBarClockOffsetX_title
+                                ),
+                                summary = stringResource(
+                                    id = R.string.oneuix_statusBarClockOffset_summary,
+                                    clockOffsetX,
+                                ),
+                            )
+                            OneuiXSlider(
+                                value = clockOffsetX,
+                                stepSize = 1f,
+                                onValueChange = { raw ->
+                                    val value = raw.roundToInt().coerceIn(-20, 20).toFloat()
+                                    clockOffsetX = value
+                                    onEvent(
+                                        SystemUIEvent.StatusBarPreview(
+                                            SystemUIEvent.StatusBar.StatusBarClockOffsetXDp(value)
+                                        )
+                                    )
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                valueRange = -20f..20f,
+                                onValueChangeFinished = {
+                                    onEvent(
+                                        SystemUIEvent.StatusBar.StatusBarClockOffsetXDp(clockOffsetX)
+                                    )
+                                },
+                            )
+                            OneuiXInfoItem(
+                                title = stringResource(
+                                    id = R.string.oneuix_statusBarClockOffsetY_title
+                                ),
+                                summary = stringResource(
+                                    id = R.string.oneuix_statusBarClockOffset_summary,
+                                    clockOffsetY,
+                                ),
+                            )
+                            OneuiXSlider(
+                                value = clockOffsetY,
+                                stepSize = 1f,
+                                onValueChange = { raw ->
+                                    val value = raw.roundToInt().coerceIn(-20, 20).toFloat()
+                                    clockOffsetY = value
+                                    onEvent(
+                                        SystemUIEvent.StatusBarPreview(
+                                            SystemUIEvent.StatusBar.StatusBarClockOffsetYDp(value)
+                                        )
+                                    )
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                valueRange = -20f..20f,
+                                onValueChangeFinished = {
+                                    onEvent(
+                                        SystemUIEvent.StatusBar.StatusBarClockOffsetYDp(clockOffsetY)
+                                    )
+                                },
+                            )
+                        }
+                    }
+                }
+            }
+
+            if (uiState.modifyStatusBarClockPosition) {
+                add {
+                    StatusThemeChildItem {
+                        SelectItem(
+                            icon = ImageVector.vectorResource(id = R.drawable.format_size),
+                            title = stringResource(
+                                id = R.string.oneuix_statusBarClockAlignment_title
+                            ),
+                            entries = listOf(
+                                stringResource(id = R.string.oneuix_statusBarClockAlignment_native),
+                                stringResource(id = R.string.oneuix_statusBarClockAlignment_start),
+                                stringResource(id = R.string.oneuix_statusBarClockAlignment_center),
+                                stringResource(id = R.string.oneuix_statusBarClockAlignment_end),
+                            ),
+                            selectedIndex = listOf("native", "start", "center", "end")
+                                .indexOf(clockAlignment)
+                                .coerceAtLeast(0),
+                            onSelectedIndexChange = { selected ->
+                                val value = listOf("native", "start", "center", "end")
+                                    .getOrElse(selected) { "native" }
+                                // Update the selection and SystemUI preview immediately;
+                                // persistence is kept as the normal follow-up event.
+                                clockAlignment = value
+                                onEvent(
+                                    SystemUIEvent.StatusBarPreview(
+                                        SystemUIEvent.StatusBar.StatusBarClockAlignment(value)
+                                    )
+                                )
+                                onEvent(
+                                    SystemUIEvent.StatusBar.StatusBarClockAlignment(value)
+                                )
+                            },
+                        )
+                    }
+                }
+                add {
+                    StatusThemeChildItem {
+                        // Keep the title/value immediately above its own slider.
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 8.dp),
+                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                        ) {
+                            OneuiXInfoItem(
+                                title = stringResource(
+                                    id = R.string.oneuix_statusBarClockFixedContentWidth_title
+                                ),
+                                summary = stringResource(
+                                    id = R.string.oneuix_statusBarClockFixedContentWidth_summary,
+                                    clockFixedContentWidth,
+                                ),
+                            )
+                            OneuiXSlider(
+                                value = clockFixedContentWidth,
+                                stepSize = 1f,
+                                onValueChange = { raw ->
+                                    val value = raw.roundToInt().coerceIn(0, 200).toFloat()
+                                    clockFixedContentWidth = value
+                                    onEvent(
+                                        SystemUIEvent.StatusBarPreview(
+                                            SystemUIEvent.StatusBar.StatusBarClockFixedContentWidthDp(value)
+                                        )
+                                    )
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                valueRange = 0f..200f,
+                                onValueChangeFinished = {
+                                    onEvent(
+                                        SystemUIEvent.StatusBar.StatusBarClockFixedContentWidthDp(
+                                            clockFixedContentWidth
+                                        )
+                                    )
+                                },
+                            )
+                        }
+                    }
+                }
+                add {
+                    StatusThemeChildItem {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 8.dp),
+                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                        ) {
+                            OneuiXInfoItem(
+                                title = stringResource(
+                                    id = R.string.oneuix_statusBarClockLeftMargin_title
+                                ),
+                                summary = stringResource(
+                                    id = R.string.oneuix_statusBarClockMargin_summary,
+                                    clockLeftMargin,
+                                ),
+                            )
+                            OneuiXSlider(
+                                value = clockLeftMargin,
+                                stepSize = 1f,
+                                onValueChange = { raw ->
+                                    val value = raw.roundToInt().coerceIn(0, 40).toFloat()
+                                    clockLeftMargin = value
+                                    onEvent(
+                                        SystemUIEvent.StatusBarPreview(
+                                            SystemUIEvent.StatusBar.StatusBarClockLeftMarginDp(value)
+                                        )
+                                    )
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                valueRange = 0f..40f,
+                                onValueChangeFinished = {
+                                    onEvent(
+                                        SystemUIEvent.StatusBar.StatusBarClockLeftMarginDp(
+                                            clockLeftMargin
+                                        )
+                                    )
+                                },
+                            )
+                            OneuiXInfoItem(
+                                title = stringResource(
+                                    id = R.string.oneuix_statusBarClockRightMargin_title
+                                ),
+                                summary = stringResource(
+                                    id = R.string.oneuix_statusBarClockMargin_summary,
+                                    clockRightMargin,
+                                ),
+                            )
+                            OneuiXSlider(
+                                value = clockRightMargin,
+                                stepSize = 1f,
+                                onValueChange = { raw ->
+                                    val value = raw.roundToInt().coerceIn(0, 40).toFloat()
+                                    clockRightMargin = value
+                                    onEvent(
+                                        SystemUIEvent.StatusBarPreview(
+                                            SystemUIEvent.StatusBar.StatusBarClockRightMarginDp(value)
+                                        )
+                                    )
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                valueRange = 0f..40f,
+                                onValueChangeFinished = {
+                                    onEvent(
+                                        SystemUIEvent.StatusBar.StatusBarClockRightMarginDp(
+                                            clockRightMargin
+                                        )
+                                    )
+                                },
+                            )
                         }
                     }
                 }

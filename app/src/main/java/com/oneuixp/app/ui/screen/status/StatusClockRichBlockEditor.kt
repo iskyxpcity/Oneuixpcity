@@ -88,6 +88,60 @@ fun StatusClockRichBlockEditor(
             )
         }
 
+        var horizontalOffset by remember(style.horizontalOffsetDp) {
+            mutableFloatStateOf(style.horizontalOffsetDp.coerceIn(-20f, 20f))
+        }
+        OneuiXInfoItem(
+            title = stringResource(id = R.string.oneuix_clockRichHorizontalOffset_title),
+            summary = stringResource(
+                id = R.string.oneuix_clockRichOffset_summary,
+                horizontalOffset,
+            ),
+        )
+        OneuiXSlider(
+            value = horizontalOffset,
+            stepSize = 1f,
+            onValueChange = { raw ->
+                val value = raw.roundToInt().coerceIn(-20, 20).toFloat()
+                horizontalOffset = value
+                onStylePreview(style.copy(horizontalOffsetDp = value))
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp),
+            valueRange = -20f..20f,
+            onValueChangeFinished = {
+                onStyleChange(style.copy(horizontalOffsetDp = horizontalOffset))
+            },
+        )
+
+        var verticalOffset by remember(style.verticalOffsetDp) {
+            mutableFloatStateOf(style.verticalOffsetDp.coerceIn(-20f, 20f))
+        }
+        OneuiXInfoItem(
+            title = stringResource(id = R.string.oneuix_clockRichVerticalOffset_title),
+            summary = stringResource(
+                id = R.string.oneuix_clockRichOffset_summary,
+                verticalOffset,
+            ),
+        )
+        OneuiXSlider(
+            value = verticalOffset,
+            stepSize = 1f,
+            onValueChange = { raw ->
+                val value = raw.roundToInt().coerceIn(-20, 20).toFloat()
+                verticalOffset = value
+                onStylePreview(style.copy(verticalOffsetDp = value))
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp),
+            valueRange = -20f..20f,
+            onValueChangeFinished = {
+                onStyleChange(style.copy(verticalOffsetDp = verticalOffset))
+            },
+        )
+
         val weights = listOf(0, 300, 400, 500, 600, 700, 800, 900)
         val weightLabels = listOf(
             "跟随系统",

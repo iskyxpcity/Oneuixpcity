@@ -105,6 +105,7 @@ object StatusBar {
     ) {
         if (!current.setStatusBarClockFormat) {
             applySingleLineClockScale(clockTextView, current)
+            OfficialMainStatusBarMod.applyStatusBarClockPosition(clockTextView)
             return
         }
         val dateTime = renderStatusBarClock(clockTextView, current)
@@ -115,10 +116,37 @@ object StatusBar {
             OfficialMainStatusBarMod.restoreSingleLineClock(clockTextView, dateTime)
             applySingleLineClockScale(clockTextView, current)
         }
+        OfficialMainStatusBarMod.applyStatusBarClockPosition(clockTextView)
+    }
+
+    private fun clockContentSettingsChanged(
+        previous: Preference.SystemUI.StatusBar?,
+        current: Preference.SystemUI.StatusBar,
+    ): Boolean {
+        if (previous == null) return true
+        return previous.setStatusBarClockFormat != current.setStatusBarClockFormat ||
+            previous.statusBarClockFormat != current.statusBarClockFormat ||
+            previous.enableStatusBarClockRichStyle != current.enableStatusBarClockRichStyle ||
+            previous.statusBarClockBlockStyles != current.statusBarClockBlockStyles ||
+            previous.setStatusBarClockTextScale != current.setStatusBarClockTextScale ||
+            previous.statusBarClockTextScale != current.statusBarClockTextScale ||
+            previous.statusBarDoubleLineClockSize != current.statusBarDoubleLineClockSize ||
+            previous.modifyDoubleLineClockGap != current.modifyDoubleLineClockGap ||
+            previous.doubleLineClockGapDp != current.doubleLineClockGapDp ||
+            previous.useFold7CustomDoubleLineClockScale != current.useFold7CustomDoubleLineClockScale ||
+            previous.fold7DoubleLineClockTimeScale != current.fold7DoubleLineClockTimeScale ||
+            previous.fold7DoubleLineClockDateScale != current.fold7DoubleLineClockDateScale
     }
 
     fun updateStatusBarClockRuntime(current: Preference.SystemUI.StatusBar) {
+        val previous = statusBarClockRuntime
         statusBarClockRuntime = current
+
+        // Position, alignment, fixed width and margin sliders should only move the
+        // native TextView. Replacing its Spannable text on each preview frame makes
+        // Samsung's clock blink and forces a layout that can undo the translation.
+        if (!clockContentSettingsChanged(previous, current)) return
+
         val activeViews = synchronized(statusBarClockViews) {
             statusBarClockViews.keys.toList()
         }
@@ -335,6 +363,7 @@ object StatusBar {
                     statusBarClockRuntime?.let { current ->
                         applySingleLineClockScale(clockView, current)
                     }
+                    OfficialMainStatusBarMod.applyStatusBarClockPosition(clockView)
                 }
             } catch (t: Throwable) {
                 xlog(t)
@@ -612,6 +641,7 @@ object StatusBar {
                 OfficialMainStatusBarMod.restoreSingleLineClock(clockTextView, dateTime)
                 applySingleLineClockScale(clockTextView, effective)
             }
+            OfficialMainStatusBarMod.applyStatusBarClockPosition(clockTextView)
             result
         }
     }

@@ -64,6 +64,12 @@ private class StatusBarClockBlockSpan(
     private val density = resources.displayMetrics.density
     private val scaledDensity = resources.displayMetrics.scaledDensity
 
+    private val horizontalOffsetPx: Float
+        get() = style.horizontalOffsetDp.coerceIn(-20f, 20f) * density
+
+    private val verticalOffsetPx: Float
+        get() = style.verticalOffsetDp.coerceIn(-20f, 20f) * density
+
     private fun styledPaint(base: Paint): Paint {
         StatusBarClockDrawPaintBridge.capture(base)
         val config = style
@@ -160,7 +166,10 @@ private class StatusBarClockBlockSpan(
         val verticalPadding = verticalPaddingPx
         val baseline = y + baselineOffset(paint, styled)
 
-        if (style.backgroundEnabled) {
+        canvas.save()
+        canvas.translate(horizontalOffsetPx, verticalOffsetPx)
+        try {
+            if (style.backgroundEnabled) {
             val value = text.subSequence(start, end).toString()
             val glyphBounds = Rect()
             styled.getTextBounds(value, 0, value.length, glyphBounds)
@@ -216,13 +225,16 @@ private class StatusBarClockBlockSpan(
             }
         }
 
-        canvas.drawText(
-            text,
-            start,
-            end,
-            x + horizontalPadding,
-            baseline,
-            styled,
-        )
+            canvas.drawText(
+                text,
+                start,
+                end,
+                x + horizontalPadding,
+                baseline,
+                styled,
+            )
+        } finally {
+            canvas.restore()
+        }
     }
 }
