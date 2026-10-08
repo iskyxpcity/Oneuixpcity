@@ -112,4 +112,15 @@
 
     <string name="status_padding_top_summary">Moves the status bar down: %1$.1f dp</string>
     <string name="status_padding_bottom_summary">Moves the status bar up: %1$.1f dp</string>
+
+    <string name="status_signal_runtime_enable">Independent status bar signal</string>
+    <string name="status_signal_runtime_enable_summary">Hide Samsung signal presentation and let OneuiXP draw signal bars from Android mobile-network state.</string>
+    <string name="status_signal_show_sim1">Show SIM 1</string>
+    <string name="status_signal_show_sim2">Show SIM 2</string>
+    <string name="status_signal_portrait_size">Portrait size</string>
+    <string name="status_signal_landscape_size">Landscape size</string>
+    <string name="status_signal_vertical_offset">Vertical position</string>
+    <string name="status_signal_start_margin">Horizontal spacing</string>
+    <string name="status_signal_dp_summary">%1$.1f dp</string>
+
 </resources>

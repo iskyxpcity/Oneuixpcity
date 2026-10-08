@@ -54,6 +54,10 @@
     <string name="oneuix_statusBarDoubleLineClockSize_standard">Standard (recommended)</string>
     <string name="oneuix_statusBarDoubleLineClockSize_large">Large</string>
     <string name="oneuix_statusBarDoubleLineClockSize_extraLarge">Extra large</string>
+    <string name="oneuix_statusBarDoubleLineClockPosition_title">Double-line clock position</string>
+    <string name="oneuix_statusBarDoubleLineClockPosition_top">Top</string>
+    <string name="oneuix_statusBarDoubleLineClockPosition_middle">Center</string>
+    <string name="oneuix_statusBarDoubleLineClockPosition_bottom">Bottom</string>
     <string name="oneuix_statusBarDoubleLineClockGap_title">Double-line clock line gap</string>
     <string name="oneuix_statusBarDoubleLineClockGap_summary">Current gap: %1$.1f dp; applies immediately.</string>
     <string name="oneuix_fold7CustomDoubleLineClockScale_title">Use custom double-line text size</string>

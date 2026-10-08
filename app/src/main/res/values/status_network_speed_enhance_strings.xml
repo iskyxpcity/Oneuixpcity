@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="status_network_speed_runtime_enable">Network speed display</string>
+    <string name="status_network_speed_runtime_enable_summary">Adjust status bar network speed text, position and display options</string>
+    <string name="status_network_speed_font_size">Font size</string>
+    <string name="status_network_speed_font_weight">Font weight</string>
+    <string name="status_network_speed_horizontal_offset">Horizontal position</string>
+    <string name="status_network_speed_vertical_offset">Vertical position</string>
+    <string name="status_network_speed_hide_unit">Hide unit</string>
+    <string name="status_network_speed_hide_unit_summary">Show the numeric speed without KB, MB or other unit text</string>
+    <string name="status_network_speed_hide_bs">Hide B/s</string>
+    <string name="status_network_speed_hide_bs_summary">Remove B/s while keeping the K, M or G prefix when present</string>
+    <string name="status_network_speed_align_right">Align right</string>
+    <string name="status_network_speed_align_right_summary">Right-align the network speed text inside its native area</string>
+    <string name="status_network_speed_hide_on_lockscreen">Hide on lock screen</string>
+    <string name="status_network_speed_hide_on_lockscreen_summary">Hide network speed while the device is locked</string>
+    <string name="status_network_speed_dp_summary">%1$.1f dp</string>
+    <string name="status_network_speed_sp_summary">%1$.1f sp</string>
+</resources>

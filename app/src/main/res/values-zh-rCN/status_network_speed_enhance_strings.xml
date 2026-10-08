@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="status_network_speed_runtime_enable">网速显示修改</string>
+    <string name="status_network_speed_runtime_enable_summary">调整状态栏网速的字体、位置和显示方式</string>
+    <string name="status_network_speed_font_size">字体大小</string>
+    <string name="status_network_speed_font_weight">字体粗细</string>
+    <string name="status_network_speed_horizontal_offset">水平位置</string>
+    <string name="status_network_speed_vertical_offset">垂直位置</string>
+    <string name="status_network_speed_hide_unit">隐藏单位</string>
+    <string name="status_network_speed_hide_unit_summary">只保留网速数值，不显示 KB、MB 等单位文字</string>
+    <string name="status_network_speed_hide_bs">隐藏 B/s</string>
+    <string name="status_network_speed_hide_bs_summary">去掉 B/s，保留 K、M、G 等倍率前缀</string>
+    <string name="status_network_speed_align_right">右对齐</string>
+    <string name="status_network_speed_align_right_summary">让网速文字在三星原生网速区域内靠右对齐</string>
+    <string name="status_network_speed_hide_on_lockscreen">锁屏时隐藏</string>
+    <string name="status_network_speed_hide_on_lockscreen_summary">设备锁屏时隐藏状态栏网速</string>
+    <string name="status_network_speed_dp_summary">%1$.1f dp</string>
+    <string name="status_network_speed_sp_summary">%1$.1f sp</string>
+</resources>

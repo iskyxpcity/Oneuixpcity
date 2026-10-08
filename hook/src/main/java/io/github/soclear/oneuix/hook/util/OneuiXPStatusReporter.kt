@@ -12,6 +12,7 @@ import io.github.libxposed.api.XposedModule
 import io.github.libxposed.api.XposedModuleInterface
 import io.github.soclear.oneuix.common.Package
 import io.github.soclear.oneuix.hook.systemui.StatusBarBluetoothRuntime
+import io.github.soclear.oneuix.hook.systemui.StatusBarNetworkSpeedRuntime
 import io.github.soclear.oneuix.hook.systemui.StatusBarPowerRuntime
 import io.github.soclear.oneuix.hook.systemui.StatusBarWifiRuntime
 import java.util.concurrent.atomic.AtomicBoolean
@@ -44,6 +45,7 @@ object OneuiXPStatusReporter {
         StatusBarPowerRuntime.install(module, param)
         StatusBarWifiRuntime.install(module, param)
         StatusBarBluetoothRuntime.install(module, param)
+        StatusBarNetworkSpeedRuntime.install(module, param)
 
         if (!attachInstalled.compareAndSet(false, true)) return
 

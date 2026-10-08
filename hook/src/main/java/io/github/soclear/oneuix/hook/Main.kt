@@ -11,6 +11,8 @@ import io.github.soclear.oneuix.hook.systemui.Notification
 import io.github.soclear.oneuix.hook.systemui.Other
 import io.github.soclear.oneuix.hook.systemui.QS
 import io.github.soclear.oneuix.hook.systemui.StatusBar
+import io.github.soclear.oneuix.hook.systemui.StatusBarComboRuntime
+import io.github.soclear.oneuix.hook.systemui.StatusBarSignalIndependentRuntime
 import io.github.soclear.oneuix.hook.systemui.OfficialMainStatusBarMod
 import io.github.soclear.oneuix.hook.systemui.powermenu.PowerMenu
 import io.github.soclear.oneuix.hook.util.OneuiXPStatusReporter
@@ -254,6 +256,9 @@ class Main : XposedModule() {
             }
 
             Package.SYSTEMUI if (processName == Package.SYSTEMUI) -> {
+                StatusBarComboRuntime.install(this@Main, param)
+                StatusBarSignalIndependentRuntime.install(this@Main, param)
+
                 if (preference.android.setBlockableNotificationChannel) {
                     Android.setBlockableNotificationChannel()
                 }
@@ -316,52 +321,18 @@ class Main : XposedModule() {
                     Network.supportRealTimeNetworkSpeed()
                 }
 
-                if (networkBar.showSeparateUpDownNetworkSpeeds) {
-                    Network.showSeparateUpDownNetworkSpeeds(
-                        thresholdKb = networkBar.networkSpeedThresholdKb,
-                        lineGapDp = if (networkBar.modifyNetworkSpeedLineGap) {
-                            networkBar.networkSpeedLineGapDp
-                        } else {
-                            null
-                        },
-                        uploadTextScale = if (networkBar.setNetworkSpeedUploadTextScale) {
-                            networkBar.networkSpeedUploadTextScale
-                        } else {
-                            null
-                        },
-                        downloadTextScale = if (networkBar.setNetworkSpeedDownloadTextScale) {
-                            networkBar.networkSpeedDownloadTextScale
-                        } else {
-                            null
-                        },
-                    )
-                } else if (networkBar.supportRealTimeNetworkSpeed) {
-                    Network.customizeRealTimeNetworkSpeed(
-                        thresholdKb = networkBar.networkSpeedThresholdKb,
-                        lineGapDp = if (networkBar.modifyNetworkSpeedLineGap) {
-                            networkBar.networkSpeedLineGapDp
-                        } else {
-                            null
-                        },
-                        upperTextScale = if (networkBar.setNetworkSpeedUploadTextScale) {
-                            networkBar.networkSpeedUploadTextScale
-                        } else {
-                            null
-                        },
-                        lowerTextScale = if (networkBar.setNetworkSpeedDownloadTextScale) {
-                            networkBar.networkSpeedDownloadTextScale
-                        } else {
-                            null
-                        },
-                    )
-                }
+                // StatusBarNetworkSpeedRuntime is the single SystemUI presentation owner.
+                // Keep OneUIX Network.kt intact for upstream sync, but do not install its
+                // legacy NetspeedView display hooks here. The dedicated runtime consumes
+                // these preferences and owns threshold, line gap, per-line scale, styling,
+                // and the separate upload/download data source.
 
                 val bar = preference.systemUI.statusBar
                 StatusBar.updateStatusBarClockRuntime(bar)
                 OfficialMainStatusBarMod.configureClock(
                     bar.statusBarDoubleLineClockSize,
                     bar.statusBarClockTextScale,
-                    if (bar.modifyDoubleLineClockGap) bar.doubleLineClockGapDp else 1f,
+                    if (bar.modifyDoubleLineClockGap) bar.doubleLineClockGapDp else 0f,
                     bar.useFold7CustomDoubleLineClockScale,
                     bar.fold7DoubleLineClockTimeScale,
                     bar.fold7DoubleLineClockDateScale,

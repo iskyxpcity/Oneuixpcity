@@ -2,6 +2,7 @@ package io.github.soclear.oneuix.hook.systemui
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.graphics.Rect
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
@@ -353,6 +354,214 @@ object StatusBar {
         val bellClassName = "com.android.systemui.statusbar.policy.QSClockBellSound"
         val clockClass = classLoader.loadClass(clockClassName)
         val qsClockBellSoundClass = classLoader.loadClass(bellClassName)
+        // Samsung's QSClockIndicatorView can impose a one-line measure constraint.
+        // In double-line mode give it the full PhoneStatusBarView height as the
+        // exact native clock-space constraint before Samsung's own onMeasure runs.
+        runCatching {
+            generateSequence(clockClass as Class<*>?) { it.superclass }
+                .mapNotNull {
+                    runCatching {
+                        it.getDeclaredMethod(
+                            "onMeasure",
+                            Int::class.javaPrimitiveType,
+                            Int::class.javaPrimitiveType,
+                        )
+                    }.getOrNull()
+                }
+                .first()
+                .let { onMeasureMethod ->
+                    xposedModule.hook(onMeasureMethod).intercept { measureChain ->
+                        val view = measureChain.thisObject as? TextView
+                            ?: return@intercept measureChain.proceed()
+
+                        if (
+                            view.text?.contains('\n') == true &&
+                            view.maxLines == 2
+                        ) {
+                            val originalHeightSpec = measureChain.args[1] as? Int
+                            if (originalHeightSpec != null) {
+                                measureChain.args[1] =
+                                    OfficialMainStatusBarMod.expandDoubleLineClockHeightMeasureSpec(
+                                        view,
+                                        originalHeightSpec,
+                                    )
+                            }
+                        }
+
+                        val result = measureChain.proceed()
+
+                        if (
+                            view.text?.contains('\n') == true &&
+                            view.maxLines == 2
+                        ) {
+                            // Samsung's QSClockIndicatorView receives the relaxed
+                            // full-status-bar ceiling above. Do not call private
+                            // setMeasuredDimension() or invoke TextView.onMeasure()
+                            // reflectively a second time; that path is unsafe on
+                            // Samsung SystemUI and can trigger LSPosed safe mode.
+                            runCatching {
+                                val availableHeight =
+                                    OfficialMainStatusBarMod.doubleLineClockSlotHeight(view)
+                                if (availableHeight > 0) {
+                                    measureChain.args[1] = View.MeasureSpec.makeMeasureSpec(
+                                        availableHeight,
+                                        View.MeasureSpec.AT_MOST,
+                                    )
+                                }
+                            }.onFailure { xlog(it) }
+
+                        }
+                        result
+                    }
+                }
+        }.onFailure {
+            xlog(it)
+        }
+
+        // Samsung's actual clock slot is the correct native spatial container.
+        // Expanding the first ancestor under PhoneStatusBarView also expands the
+        // surrounding status-bar row, so the clock never truly receives the full
+        // status-bar coordinate space. Hook only the slot that owns the Samsung
+        // clock hierarchy and give that slot the real status-bar height.
+        val doubleLineClockSlotHooks = Collections.synchronizedSet(
+            Collections.newSetFromMap(WeakHashMap<Class<*>, Boolean>())
+        )
+        val doubleLineClockSlotInstances = Collections.synchronizedSet(
+            Collections.newSetFromMap(WeakHashMap<ViewGroup, Boolean>())
+        )
+        val doubleLineClockHostHooks = Collections.synchronizedSet(
+            Collections.newSetFromMap(WeakHashMap<Class<*>, Boolean>())
+        )
+        val doubleLineClockHostInstances = Collections.synchronizedSet(
+            Collections.newSetFromMap(WeakHashMap<ViewGroup, Boolean>())
+        )
+
+        fun installDoubleLineClockHostMeasureHook(clockView: TextView) {
+            val host = OfficialMainStatusBarMod.getDoubleLineClockHost(clockView) ?: return
+            doubleLineClockHostInstances.add(host)
+
+            val hostClass = host.javaClass
+            if (!doubleLineClockHostHooks.add(hostClass)) return
+
+            runCatching {
+                val hostMeasure = generateSequence(hostClass as Class<*>?) { it.superclass }
+                    .mapNotNull {
+                        runCatching {
+                            it.getDeclaredMethod(
+                                "onMeasure",
+                                Int::class.javaPrimitiveType,
+                                Int::class.javaPrimitiveType,
+                            )
+                        }.getOrNull()
+                    }
+                    .first()
+
+                xposedModule.hook(hostMeasure).intercept { hostChain ->
+                    val measuredHost = hostChain.thisObject as? ViewGroup
+                        ?: return@intercept hostChain.proceed()
+
+                    if (!doubleLineClockHostInstances.contains(measuredHost)) {
+                        return@intercept hostChain.proceed()
+                    }
+
+                    val clock =
+                        OfficialMainStatusBarMod.findDoubleLineClockDescendant(measuredHost)
+                            ?: return@intercept hostChain.proceed()
+
+                    if (clock.text?.contains('\n') != true || clock.maxLines != 2) {
+                        return@intercept hostChain.proceed()
+                    }
+
+                    val fullHeight =
+                        OfficialMainStatusBarMod.doubleLineClockSlotHeight(clock)
+                    if (fullHeight <= 0) {
+                        return@intercept hostChain.proceed()
+                    }
+
+                    measuredHost.clipChildren = false
+                    measuredHost.clipToPadding = false
+                    hostChain.args[1] = View.MeasureSpec.makeMeasureSpec(
+                        fullHeight,
+                        View.MeasureSpec.EXACTLY,
+                    )
+                    hostChain.proceed()
+                }
+            }.onFailure {
+                doubleLineClockHostHooks.remove(hostClass)
+                xlog(it)
+            }
+        }
+
+        fun installDoubleLineClockSlotMeasureHook(clockView: TextView) {
+            installDoubleLineClockHostMeasureHook(clockView)
+
+            val slot =
+                OfficialMainStatusBarMod.getDoubleLineClockSlot(clockView) ?: return
+            doubleLineClockSlotInstances.add(slot)
+
+            val slotClass = slot.javaClass
+            if (!doubleLineClockSlotHooks.add(slotClass)) return
+
+            runCatching {
+                val slotMeasure = generateSequence(slotClass as Class<*>?) { it.superclass }
+                    .mapNotNull {
+                        runCatching {
+                            it.getDeclaredMethod(
+                                "onMeasure",
+                                Int::class.javaPrimitiveType,
+                                Int::class.javaPrimitiveType,
+                            )
+                        }.getOrNull()
+                    }
+                    .first()
+
+                xposedModule.hook(slotMeasure).intercept { slotChain ->
+                    val host = slotChain.thisObject as? ViewGroup
+                        ?: return@intercept slotChain.proceed()
+
+                    // The class hook is shared, but only the concrete native clock
+                    // slot instances registered above may enter the custom path.
+                    if (!doubleLineClockSlotInstances.contains(host)) {
+                        return@intercept slotChain.proceed()
+                    }
+
+                    val clock = OfficialMainStatusBarMod.findDoubleLineClockDescendant(host)
+                        ?: return@intercept slotChain.proceed()
+
+                    if (clock.text?.contains('\n') != true || clock.maxLines != 2) {
+                        return@intercept slotChain.proceed()
+                    }
+
+                    val fullHeight =
+                        OfficialMainStatusBarMod.doubleLineClockSlotHeight(clock)
+                    if (fullHeight <= 0) {
+                        return@intercept slotChain.proceed()
+                    }
+
+                    host.clipChildren = false
+                    host.clipToPadding = false
+
+                    // This slot is the full-height spatial box. Samsung's native
+                    // hierarchy is preserved and no view is reparented.
+                    slotChain.args[1] = View.MeasureSpec.makeMeasureSpec(
+                        fullHeight,
+                        View.MeasureSpec.EXACTLY,
+                    )
+
+                    slotChain.proceed()
+                }
+
+                xlog(
+                    "CHAIN_PROBE double-line-clock-slot onMeasure hooked class=" +
+                        slotClass.name,
+                    priority = Log.INFO,
+                )
+            }.onFailure {
+                doubleLineClockSlotHooks.remove(slotClass)
+                xlog(it)
+            }
+        }
+
         val method = clockClass.getDeclaredMethod("notifyTimeChanged", qsClockBellSoundClass)
         val callbackLogged = AtomicBoolean(false)
         xlog(
@@ -362,6 +571,8 @@ object StatusBar {
         )
         xposedModule.hook(method).intercept { chain ->
             val clockTextView = chain.thisObject as? TextView ?: return@intercept chain.proceed()
+            val result = chain.proceed()
+            installDoubleLineClockSlotMeasureHook(clockTextView)
             OfficialMainStatusBarMod.ensurePreferenceWatcher(
                 xposedModule,
                 clockTextView.context,
@@ -372,7 +583,6 @@ object StatusBar {
 
             val current = statusBarClockRuntime
             if (current != null && !current.setStatusBarClockFormat) {
-                val result = chain.proceed()
                 rememberClockBaseTextSize(clockTextView)
                 applySingleLineClockScale(clockTextView, current)
                 return@intercept result
@@ -396,12 +606,13 @@ object StatusBar {
             rememberClockBaseTextSize(clockTextView)
             if (dateTime.contains('\n')) {
                 applySingleLineClockScale(clockTextView, effective)
+                installDoubleLineClockSlotMeasureHook(clockTextView)
                 OfficialMainStatusBarMod.applyDoubleLineClockText(clockTextView, dateTime)
             } else {
                 OfficialMainStatusBarMod.restoreSingleLineClock(clockTextView, dateTime)
                 applySingleLineClockScale(clockTextView, effective)
             }
-            null
+            result
         }
     }
 

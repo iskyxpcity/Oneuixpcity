@@ -20,7 +20,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.oneuixp.app.R
+import com.oneuixp.app.ui.viewmodel.OneuiXToolsViewModel
 import io.github.soclear.oneuix.common.Preference
 import io.github.soclear.oneuix.ui.category.SystemUIEvent
 import io.github.soclear.oneuix.ui.component.OneuiXActionButton
@@ -34,6 +36,18 @@ fun StatusNetworkSpeedCategoryControls(
     uiState: Preference.SystemUI.StatusBar,
     onEvent: (SystemUIEvent) -> Unit,
 ) {
+    val toolsViewModel = viewModel<OneuiXToolsViewModel>()
+
+    fun preview(nextStatusBar: Preference.SystemUI.StatusBar) {
+        toolsViewModel.previewData { current ->
+            current.copy(
+                systemUI = current.systemUI.copy(
+                    statusBar = nextStatusBar,
+                ),
+            )
+        }
+    }
+
     var thresholdExpanded by rememberSaveable { mutableStateOf(false) }
     var threshold by remember(uiState.networkSpeedThresholdKb) {
         mutableIntStateOf(uiState.networkSpeedThresholdKb)
@@ -83,135 +97,137 @@ fun StatusNetworkSpeedCategoryControls(
                 add {
                     SwitchItem(
                         icon = ImageVector.vectorResource(id = R.drawable.format_letter_spacing),
-                    title = stringResource(id = R.string.oneuix_networkSpeedLineGap_title),
-                    summary = if (uiState.modifyNetworkSpeedLineGap) {
-                        stringResource(
-                            id = R.string.oneuix_networkSpeedLineGap_summary,
-                            lineGapDp,
-                        )
-                    } else {
-                        stringResource(id = R.string.oneuix_networkSpeedDoubleLineOnly_summary)
-                    },
-                    modifier = Modifier.animateContentSize(),
-                    clickable = true,
-                    onClick = { lineGapExpanded = !lineGapExpanded },
-                    checked = uiState.modifyNetworkSpeedLineGap,
-                    onCheckedChange = {
-                        lineGapExpanded = it
-                        onEvent(SystemUIEvent.StatusBar.ModifyNetworkSpeedLineGap(it))
-                    },
-                )
-            }
-            if (lineGapExpanded && uiState.modifyNetworkSpeedLineGap) {
-                add {
-                    StatusThemeChildItem {
-                        OneuiXSlider(
-                            value = lineGapDp,
-                            onValueChange = {
-                                lineGapDp = (it * 10f).roundToInt() / 10f
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 8.dp),
-                            valueRange = -4f..4f,
-                            onValueChangeFinished = {
-                                onEvent(
-                                    SystemUIEvent.StatusBar.NetworkSpeedLineGapDp(lineGapDp)
-                                )
-                            },
-                        )
+                        title = stringResource(id = R.string.oneuix_networkSpeedLineGap_title),
+                        summary = if (uiState.modifyNetworkSpeedLineGap) {
+                            stringResource(
+                                id = R.string.oneuix_networkSpeedLineGap_summary,
+                                lineGapDp,
+                            )
+                        } else {
+                            stringResource(id = R.string.oneuix_networkSpeedDoubleLineOnly_summary)
+                        },
+                        modifier = Modifier.animateContentSize(),
+                        clickable = true,
+                        onClick = { lineGapExpanded = !lineGapExpanded },
+                        checked = uiState.modifyNetworkSpeedLineGap,
+                        onCheckedChange = {
+                            lineGapExpanded = it
+                            onEvent(SystemUIEvent.StatusBar.ModifyNetworkSpeedLineGap(it))
+                        },
+                    )
+                }
+                if (lineGapExpanded && uiState.modifyNetworkSpeedLineGap) {
+                    add {
+                        StatusThemeChildItem {
+                            OneuiXSlider(
+                                value = lineGapDp,
+                                onValueChange = {
+                                    lineGapDp = (it * 10f).roundToInt() / 10f
+                                    preview(uiState.copy(networkSpeedLineGapDp = lineGapDp))
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 8.dp),
+                                valueRange = -4f..4f,
+                                onValueChangeFinished = {
+                                    onEvent(
+                                        SystemUIEvent.StatusBar.NetworkSpeedLineGapDp(lineGapDp)
+                                    )
+                                },
+                            )
+                        }
                     }
                 }
-            }
 
-            add {
-                SwitchItem(
-                    icon = ImageVector.vectorResource(id = R.drawable.format_size),
-                    title = stringResource(id = R.string.oneuix_networkSpeedUploadTextScale_title),
-                    summary = if (uiState.setNetworkSpeedUploadTextScale) {
-                        stringResource(
-                            id = R.string.oneuix_networkSpeedUploadTextScale_summary,
-                            uploadScale,
-                        )
-                    } else {
-                        stringResource(id = R.string.oneuix_networkSpeedDoubleLineOnly_summary)
-                    },
-                    modifier = Modifier.animateContentSize(),
-                    clickable = true,
-                    onClick = { uploadScaleExpanded = !uploadScaleExpanded },
-                    checked = uiState.setNetworkSpeedUploadTextScale,
-                    onCheckedChange = {
-                        uploadScaleExpanded = it
-                        onEvent(SystemUIEvent.StatusBar.SetNetworkSpeedUploadTextScale(it))
-                    },
-                )
-            }
-            if (uploadScaleExpanded && uiState.setNetworkSpeedUploadTextScale) {
                 add {
-                    StatusThemeChildItem {
-                        OneuiXSlider(
-                            value = uploadScale,
-                            onValueChange = {
-                                uploadScale = (it * 100f).roundToInt() / 100f
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 8.dp),
-                            valueRange = 0.5f..2f,
-                            onValueChangeFinished = {
-                                onEvent(
-                                    SystemUIEvent.StatusBar.NetworkSpeedUploadTextScale(uploadScale)
-                                )
-                            },
-                        )
+                    SwitchItem(
+                        icon = ImageVector.vectorResource(id = R.drawable.format_size),
+                        title = stringResource(id = R.string.oneuix_networkSpeedUploadTextScale_title),
+                        summary = if (uiState.setNetworkSpeedUploadTextScale) {
+                            stringResource(
+                                id = R.string.oneuix_networkSpeedUploadTextScale_summary,
+                                uploadScale,
+                            )
+                        } else {
+                            stringResource(id = R.string.oneuix_networkSpeedDoubleLineOnly_summary)
+                        },
+                        modifier = Modifier.animateContentSize(),
+                        clickable = true,
+                        onClick = { uploadScaleExpanded = !uploadScaleExpanded },
+                        checked = uiState.setNetworkSpeedUploadTextScale,
+                        onCheckedChange = {
+                            uploadScaleExpanded = it
+                            onEvent(SystemUIEvent.StatusBar.SetNetworkSpeedUploadTextScale(it))
+                        },
+                    )
+                }
+                if (uploadScaleExpanded && uiState.setNetworkSpeedUploadTextScale) {
+                    add {
+                        StatusThemeChildItem {
+                            OneuiXSlider(
+                                value = uploadScale,
+                                onValueChange = {
+                                    uploadScale = (it * 100f).roundToInt() / 100f
+                                    preview(uiState.copy(networkSpeedUploadTextScale = uploadScale))
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 8.dp),
+                                valueRange = 0.5f..2f,
+                                onValueChangeFinished = {
+                                    onEvent(
+                                        SystemUIEvent.StatusBar.NetworkSpeedUploadTextScale(uploadScale)
+                                    )
+                                },
+                            )
+                        }
                     }
                 }
-            }
 
-            add {
-                SwitchItem(
-                    icon = ImageVector.vectorResource(id = R.drawable.format_size),
-                    title = stringResource(id = R.string.oneuix_networkSpeedDownloadTextScale_title),
-                    summary = if (uiState.setNetworkSpeedDownloadTextScale) {
-                        stringResource(
-                            id = R.string.oneuix_networkSpeedDownloadTextScale_summary,
-                            downloadScale,
-                        )
-                    } else {
-                        stringResource(id = R.string.oneuix_networkSpeedDoubleLineOnly_summary)
-                    },
-                    modifier = Modifier.animateContentSize(),
-                    clickable = true,
-                    onClick = { downloadScaleExpanded = !downloadScaleExpanded },
-                    checked = uiState.setNetworkSpeedDownloadTextScale,
-                    onCheckedChange = {
-                        downloadScaleExpanded = it
-                        onEvent(SystemUIEvent.StatusBar.SetNetworkSpeedDownloadTextScale(it))
-                    },
-                )
-            }
-            if (downloadScaleExpanded && uiState.setNetworkSpeedDownloadTextScale) {
                 add {
-                    StatusThemeChildItem {
-                        OneuiXSlider(
-                            value = downloadScale,
-                            onValueChange = {
-                                downloadScale = (it * 100f).roundToInt() / 100f
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 8.dp),
-                            valueRange = 0.5f..2f,
-                            onValueChangeFinished = {
-                                onEvent(
-                                    SystemUIEvent.StatusBar.NetworkSpeedDownloadTextScale(downloadScale)
-                                )
-                            },
-                        )
+                    SwitchItem(
+                        icon = ImageVector.vectorResource(id = R.drawable.format_size),
+                        title = stringResource(id = R.string.oneuix_networkSpeedDownloadTextScale_title),
+                        summary = if (uiState.setNetworkSpeedDownloadTextScale) {
+                            stringResource(
+                                id = R.string.oneuix_networkSpeedDownloadTextScale_summary,
+                                downloadScale,
+                            )
+                        } else {
+                            stringResource(id = R.string.oneuix_networkSpeedDoubleLineOnly_summary)
+                        },
+                        modifier = Modifier.animateContentSize(),
+                        clickable = true,
+                        onClick = { downloadScaleExpanded = !downloadScaleExpanded },
+                        checked = uiState.setNetworkSpeedDownloadTextScale,
+                        onCheckedChange = {
+                            downloadScaleExpanded = it
+                            onEvent(SystemUIEvent.StatusBar.SetNetworkSpeedDownloadTextScale(it))
+                        },
+                    )
+                }
+                if (downloadScaleExpanded && uiState.setNetworkSpeedDownloadTextScale) {
+                    add {
+                        StatusThemeChildItem {
+                            OneuiXSlider(
+                                value = downloadScale,
+                                onValueChange = {
+                                    downloadScale = (it * 100f).roundToInt() / 100f
+                                    preview(uiState.copy(networkSpeedDownloadTextScale = downloadScale))
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 8.dp),
+                                valueRange = 0.5f..2f,
+                                onValueChangeFinished = {
+                                    onEvent(
+                                        SystemUIEvent.StatusBar.NetworkSpeedDownloadTextScale(downloadScale)
+                                    )
+                                },
+                            )
+                        }
                     }
                 }
-            }
-
             }
 
             add {
@@ -252,6 +268,7 @@ fun StatusNetworkSpeedCategoryControls(
                                 value = threshold.toString(),
                                 onValueChange = {
                                     threshold = it.toIntOrNull()?.coerceAtLeast(1) ?: 1
+                                    preview(uiState.copy(networkSpeedThresholdKb = threshold))
                                 },
                                 modifier = Modifier.weight(1f),
                                 labelText = stringResource(
@@ -273,4 +290,6 @@ fun StatusNetworkSpeedCategoryControls(
             }
         },
     )
+
+    StatusNetworkSpeedRuntimeControls(uiState = uiState)
 }

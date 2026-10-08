@@ -54,6 +54,10 @@
     <string name="oneuix_statusBarDoubleLineClockSize_standard">标准（推荐）</string>
     <string name="oneuix_statusBarDoubleLineClockSize_large">较大</string>
     <string name="oneuix_statusBarDoubleLineClockSize_extraLarge">大</string>
+    <string name="oneuix_statusBarDoubleLineClockPosition_title">双行时间位置</string>
+    <string name="oneuix_statusBarDoubleLineClockPosition_top">上</string>
+    <string name="oneuix_statusBarDoubleLineClockPosition_middle">居中</string>
+    <string name="oneuix_statusBarDoubleLineClockPosition_bottom">下</string>
     <string name="oneuix_statusBarDoubleLineClockGap_title">双行时间上下间距</string>
     <string name="oneuix_statusBarDoubleLineClockGap_summary">当前间距：%1$.1f dp；修改后立即生效。</string>
     <string name="oneuix_fold7CustomDoubleLineClockScale_title">使用自定义双行文字大小</string>

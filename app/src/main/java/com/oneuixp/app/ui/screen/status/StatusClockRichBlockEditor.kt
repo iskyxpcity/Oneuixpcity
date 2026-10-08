@@ -70,7 +70,8 @@ fun StatusClockRichBlockEditor(
                     textSize,
                 ),
             )
-            OneuiXSlider(
+            OneuiXSlider( 
+                stepSize = 1f,
                 value = textSize,
                 onValueChange = { raw ->
                     val value = (raw * 2f).roundToInt() / 2f
@@ -86,21 +87,6 @@ fun StatusClockRichBlockEditor(
                 },
             )
         }
-
-        val alignValues = listOf("top", "middle", "bottom")
-        val alignLabels = listOf(
-            stringResource(id = R.string.oneuix_clockRichVerticalAlignment_top),
-            stringResource(id = R.string.oneuix_clockRichVerticalAlignment_middle),
-            stringResource(id = R.string.oneuix_clockRichVerticalAlignment_bottom),
-        )
-        SelectItem(
-            title = stringResource(id = R.string.oneuix_clockRichVerticalAlignment_title),
-            entries = alignLabels,
-            selectedIndex = alignValues.indexOf(style.verticalAlignment).coerceAtLeast(1),
-            onSelectedIndexChange = { selected ->
-                onStyleChange(style.copy(verticalAlignment = alignValues[selected]))
-            },
-        )
 
         val weights = listOf(0, 300, 400, 500, 600, 700, 800, 900)
         val weightLabels = listOf(
@@ -195,7 +181,8 @@ fun StatusClockRichBlockEditor(
                     (alpha * 100f).roundToInt(),
                 ),
             )
-            OneuiXSlider(
+            OneuiXSlider( 
+                stepSize = 1f,
                 value = alpha,
                 onValueChange = { raw ->
                     val value = (raw * 20f).roundToInt() / 20f
@@ -272,7 +259,8 @@ fun StatusClockRichBlockEditor(
                     radius,
                 ),
             )
-            OneuiXSlider(
+            OneuiXSlider( 
+                stepSize = 1f,
                 value = radius,
                 onValueChange = { raw ->
                     val value = (raw * 2f).roundToInt() / 2f
@@ -298,7 +286,8 @@ fun StatusClockRichBlockEditor(
                     horizontalPadding,
                 ),
             )
-            OneuiXSlider(
+            OneuiXSlider( 
+                stepSize = 1f,
                 value = horizontalPadding,
                 onValueChange = { raw ->
                     val value = (raw * 2f).roundToInt() / 2f
@@ -324,7 +313,8 @@ fun StatusClockRichBlockEditor(
                     verticalPadding,
                 ),
             )
-            OneuiXSlider(
+            OneuiXSlider( 
+                stepSize = 1f,
                 value = verticalPadding,
                 onValueChange = { raw ->
                     val value = (raw * 2f).roundToInt() / 2f

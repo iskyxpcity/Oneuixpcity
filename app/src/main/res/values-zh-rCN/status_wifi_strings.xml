@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="status_wifi_runtime_enable">修改状态栏 Wi‑Fi</string>
-    <string name="status_wifi_runtime_enable_summary">启用参考 Flux Decor 功能语义实现的三星状态栏 Wi‑Fi 图标设置。</string>
+    <string name="status_wifi_runtime_enable_summary">启用 OneuiXP 自己的三星状态栏 Wi‑Fi 图标设置。</string>
     <string name="status_wifi_editor_enable">自定义 Wi‑Fi 图标编辑器</string>
     <string name="status_wifi_editor_enable_summary">使用 OneuiXP 可编辑弧线图标替换原生 Wi‑Fi 图形。</string>
     <string name="status_wifi_hide_activity">隐藏 Wi‑Fi 活动箭头</string>

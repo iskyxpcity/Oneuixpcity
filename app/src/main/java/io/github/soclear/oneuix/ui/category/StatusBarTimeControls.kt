@@ -266,6 +266,28 @@ fun StatusBarTimeControls(
                             )
                         }
                     )
+                    val positionLabels = listOf(
+                        stringResource(id = R.string.oneuix_statusBarDoubleLineClockPosition_top),
+                        stringResource(id = R.string.oneuix_statusBarDoubleLineClockPosition_middle),
+                        stringResource(id = R.string.oneuix_statusBarDoubleLineClockPosition_bottom),
+                    )
+                    val positionValues = listOf("top", "middle", "bottom")
+                    val positionIndex = positionValues.indexOf(
+                        uiState.statusBarDoubleLineClockVerticalPosition
+                    ).let { if (it >= 0) it else 1 }
+                    SelectItem(
+                        icon = ImageVector.vectorResource(id = R.drawable.format_size),
+                        title = stringResource(id = R.string.oneuix_statusBarDoubleLineClockPosition_title),
+                        entries = positionLabels,
+                        selectedIndex = positionIndex,
+                        onSelectedIndexChange = {
+                            onEvent(
+                                SystemUIEvent.StatusBar.StatusBarDoubleLineClockVerticalPosition(
+                                    positionValues[it]
+                                )
+                            )
+                        }
+                    )
                 }
                 var lineGapDp by remember(uiState.doubleLineClockGapDp) {
                     mutableFloatStateOf(uiState.doubleLineClockGapDp)

@@ -34,7 +34,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
-/** Samsung SystemUI runtime for Flux-style status-bar power/thermal information. */
+/** Samsung SystemUI runtime for OneuiXP status-bar power and thermal information. */
 internal object StatusBarPowerRuntime {
     private const val PREFERENCE_CHANGED_URI =
         "content://com.oneuixp.app.statusbridge/preferences"

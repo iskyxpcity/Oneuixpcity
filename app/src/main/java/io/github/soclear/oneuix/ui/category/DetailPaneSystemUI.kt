@@ -848,6 +848,9 @@ sealed interface SystemUIEvent {
         value class StatusBarDoubleLineClockSize(val value: String) : StatusBar
 
         @JvmInline
+        value class StatusBarDoubleLineClockVerticalPosition(val value: String) : StatusBar
+
+        @JvmInline
         value class ModifyDoubleLineClockGap(val value: Boolean) : StatusBar
 
         @JvmInline
@@ -1016,6 +1019,14 @@ private fun OneuiXToolsViewModel.previewStatusBarEvent(event: SystemUIEvent.Stat
 
             is SystemUIEvent.StatusBar.DoubleLineClockGapDp ->
                 statusBar.copy(doubleLineClockGapDp = event.value)
+
+            is SystemUIEvent.StatusBar.StatusBarDoubleLineClockVerticalPosition ->
+                statusBar.copy(
+                    statusBarDoubleLineClockVerticalPosition = when (event.value) {
+                        "top", "middle", "bottom" -> event.value
+                        else -> "middle"
+                    }
+                )
 
             is SystemUIEvent.StatusBar.Fold7DoubleLineClockTimeScale ->
                 statusBar.copy(fold7DoubleLineClockTimeScale = event.value)
@@ -1386,6 +1397,19 @@ private fun OneuiXToolsViewModel.onStatusBarEvent(event: SystemUIEvent.StatusBar
                     systemUI = preference.systemUI.copy(
                         statusBar = preference.systemUI.statusBar.copy(
                             statusBarDoubleLineClockSize = event.value
+                        )
+                    )
+                )
+            }
+
+            is SystemUIEvent.StatusBar.StatusBarDoubleLineClockVerticalPosition -> {
+                preference.copy(
+                    systemUI = preference.systemUI.copy(
+                        statusBar = preference.systemUI.statusBar.copy(
+                            statusBarDoubleLineClockVerticalPosition = when (event.value) {
+                                "top", "middle", "bottom" -> event.value
+                                else -> "middle"
+                            }
                         )
                     )
                 )

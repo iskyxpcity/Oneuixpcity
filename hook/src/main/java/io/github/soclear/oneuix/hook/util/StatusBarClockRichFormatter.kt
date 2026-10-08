@@ -65,6 +65,7 @@ private class StatusBarClockBlockSpan(
     private val scaledDensity = resources.displayMetrics.scaledDensity
 
     private fun styledPaint(base: Paint): Paint {
+        StatusBarClockDrawPaintBridge.capture(base)
         val config = style
         return Paint(base).apply {
             if (config.overrideTextSize) {

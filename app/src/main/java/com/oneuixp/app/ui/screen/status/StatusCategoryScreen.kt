@@ -166,6 +166,20 @@ private fun StatusCategoryContent(
                 )
             }
         }
+        StatusCategory.Combo -> {
+            val toolsViewModel = viewModel<OneuiXToolsViewModel>()
+            val preference = toolsViewModel.preference.collectAsStateWithLifecycle().value
+            Column(
+                modifier = modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState()),
+            ) {
+                StatusComboCategoryControls(
+                    uiState = preference.systemUI.statusBar,
+                    onEvent = toolsViewModel::onSystemUIEvent,
+                )
+            }
+        }
         StatusCategory.Signal -> {
             val toolsViewModel = viewModel<OneuiXToolsViewModel>()
             val preference = toolsViewModel.preference.collectAsStateWithLifecycle().value

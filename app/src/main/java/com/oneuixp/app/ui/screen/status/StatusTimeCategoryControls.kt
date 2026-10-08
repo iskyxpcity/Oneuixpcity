@@ -120,9 +120,11 @@ fun StatusTimeCategoryControls(
     }
 
     var lineGapDp by remember(uiState.doubleLineClockGapDp) {
-        mutableFloatStateOf(uiState.doubleLineClockGapDp)
+        mutableFloatStateOf(uiState.doubleLineClockGapDp.coerceIn(-3f, 3f))
     }
-    var gapExpanded by rememberSaveable { mutableStateOf(false) }
+    var lineGapEnabled by remember(uiState.modifyDoubleLineClockGap) {
+        mutableStateOf(uiState.modifyDoubleLineClockGap)
+    }
 
     var singleLineScale by remember(uiState.statusBarClockTextScale) {
         mutableFloatStateOf(uiState.statusBarClockTextScale)
@@ -414,9 +416,10 @@ fun StatusTimeCategoryControls(
                                         ),
                                     )
                                     OneuiXSlider(
-                                        value = timeScale,
+                                        value = timeScale * 100f,
+                                        stepSize = 1f,
                                         onValueChange = { raw ->
-                                            val value = (raw * 100f).roundToInt() / 100f
+                                            val value = raw.roundToInt().coerceIn(50, 110) / 100f
                                             timeScale = value
                                             onEvent(
                                                 SystemUIEvent.StatusBarPreview(
@@ -429,7 +432,7 @@ fun StatusTimeCategoryControls(
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .padding(horizontal = 8.dp),
-                                        valueRange = 0.50f..1.10f,
+                                        valueRange = 50f..110f,
                                         onValueChangeFinished = {
                                             onEvent(
                                                 SystemUIEvent.StatusBar.Fold7DoubleLineClockTimeScale(
@@ -448,9 +451,10 @@ fun StatusTimeCategoryControls(
                                         ),
                                     )
                                     OneuiXSlider(
-                                        value = dateScale,
+                                        value = dateScale * 100f,
+                                        stepSize = 1f,
                                         onValueChange = { raw ->
-                                            val value = (raw * 100f).roundToInt() / 100f
+                                            val value = raw.roundToInt().coerceIn(50, 110) / 100f
                                             dateScale = value
                                             onEvent(
                                                 SystemUIEvent.StatusBarPreview(
@@ -463,7 +467,7 @@ fun StatusTimeCategoryControls(
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .padding(horizontal = 8.dp),
-                                        valueRange = 0.50f..1.10f,
+                                        valueRange = 50f..110f,
                                         onValueChangeFinished = {
                                             onEvent(
                                                 SystemUIEvent.StatusBar.Fold7DoubleLineClockDateScale(
@@ -513,29 +517,25 @@ fun StatusTimeCategoryControls(
                 add {
                     SwitchItem(
                         title = stringResource(id = R.string.oneuix_statusBarDoubleLineClockGap_title),
-                        summary = if (uiState.modifyDoubleLineClockGap) {
-                            stringResource(
-                                id = R.string.oneuix_statusBarDoubleLineClockGap_summary,
-                                lineGapDp,
-                            )
+                        summary = if (lineGapEnabled) {
+                            lineGapDp.roundToInt().toString() + " dp"
                         } else null,
                         icon = ImageVector.vectorResource(id = R.drawable.format_letter_spacing),
-                        clickable = true,
-                        onClick = { gapExpanded = !gapExpanded },
-                        checked = uiState.modifyDoubleLineClockGap,
-                        onCheckedChange = {
-                            gapExpanded = it
-                            onEvent(SystemUIEvent.StatusBar.ModifyDoubleLineClockGap(it))
+                        checked = lineGapEnabled,
+                        onCheckedChange = { enabled ->
+                            lineGapEnabled = enabled
+                            onEvent(SystemUIEvent.StatusBar.ModifyDoubleLineClockGap(enabled))
                         },
                     )
                 }
-                if (gapExpanded && uiState.modifyDoubleLineClockGap) {
+                if (lineGapEnabled) {
                     add {
                         StatusThemeChildItem {
                             OneuiXSlider(
                                 value = lineGapDp,
+                                stepSize = 1f,
                                 onValueChange = { raw ->
-                                    val value = (raw * 10f).roundToInt() / 10f
+                                    val value = raw.roundToInt().coerceIn(-3, 3).toFloat()
                                     lineGapDp = value
                                     onEvent(
                                         SystemUIEvent.StatusBarPreview(
@@ -548,7 +548,7 @@ fun StatusTimeCategoryControls(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(horizontal = 8.dp),
-                                valueRange = 0f..2f,
+                                valueRange = -3f..3f,
                                 onValueChangeFinished = {
                                     onEvent(
                                         SystemUIEvent.StatusBar.DoubleLineClockGapDp(
@@ -566,7 +566,7 @@ fun StatusTimeCategoryControls(
                         title = stringResource(id = R.string.oneuix_setStatusBarClockTextScale_title),
                         modifier = Modifier.animateContentSize(),
                         summary = if (uiState.setStatusBarClockTextScale) {
-                            "%.2fx".format(singleLineScale)
+                            "${(singleLineScale * 100f).roundToInt()}%"
                         } else null,
                         icon = ImageVector.vectorResource(id = R.drawable.format_size),
                         clickable = true,
@@ -586,9 +586,10 @@ fun StatusTimeCategoryControls(
                     add {
                         StatusThemeChildItem {
                             OneuiXSlider(
-                                value = singleLineScale,
+                                value = singleLineScale * 100f,
+                                stepSize = 1f,
                                 onValueChange = { raw ->
-                                    val value = (raw * 100f).roundToInt() / 100f
+                                    val value = raw.roundToInt().coerceIn(50, 250) / 100f
                                     singleLineScale = value
                                     onEvent(
                                         SystemUIEvent.StatusBarPreview(
@@ -601,7 +602,7 @@ fun StatusTimeCategoryControls(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(horizontal = 8.dp),
-                                valueRange = 0.5f..2.5f,
+                                valueRange = 50f..250f,
                                 onValueChangeFinished = {
                                     onEvent(
                                         SystemUIEvent.StatusBar.StatusBarClockTextScale(

@@ -16,6 +16,8 @@ import android.text.Spanned
 import android.text.style.RelativeSizeSpan
 import android.view.Gravity
 import android.view.View
+import android.view.ViewGroup
+import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.TextView
 import io.github.libxposed.api.XposedModule
@@ -45,6 +47,8 @@ object OfficialMainStatusBarMod {
         val height: Int?,
         val parentGravity: Int?,
         val gravity: Int,
+        val textAlignment: Int,
+        val layoutGravity: Int?,
         val includeFontPadding: Boolean,
         val paddingTop: Int,
         val paddingBottom: Int,
@@ -52,6 +56,8 @@ object OfficialMainStatusBarMod {
 
     private val singleLineClockLayouts = WeakHashMap<TextView, SingleLineClockLayout>()
     private val doubleLineClockViews = WeakHashMap<TextView, Unit>()
+    private val doubleLineClockSlotLayouts = WeakHashMap<ViewGroup, Pair<Int, Int>>()
+    private val doubleLineClockHostLayouts = WeakHashMap<ViewGroup, Pair<Int, Int>>()
 
     private data class DoubleLineClockRuntimeConfig(
         val style: DoubleLineClockStyle,
@@ -201,7 +207,7 @@ object OfficialMainStatusBarMod {
                 fold7TimeScale,
                 fold7DateScale,
             ),
-            extraLineGapDp = extraLineGapDp.coerceIn(0f, 2f),
+            extraLineGapDp = extraLineGapDp.coerceIn(-3f, 3f),
         )
         doubleLineClockRuntimeConfig = runtimeConfig
         val activeClockViews = synchronized(doubleLineClockViews) {
@@ -217,9 +223,313 @@ object OfficialMainStatusBarMod {
         }
     }
 
+    private val doubleLineClockAlignmentListeners = WeakHashMap<TextView, Unit>()
+    private val doubleLineClockSlotLayoutListeners = WeakHashMap<ViewGroup, Unit>()
+
+    private fun findFullStatusBarView(view: View): View? {
+        var current: View? = view
+        while (current != null) {
+            if (current.javaClass.name == "com.android.systemui.statusbar.phone.PhoneStatusBarView") {
+                return current
+            }
+            current = current.parent as? View
+        }
+        return null
+    }
+
+    /**
+     * Samsung exposes dedicated clock slots on different One UI layouts.
+     * Prefer those concrete containers over a guessed ancestor so only the
+     * clock's own slot becomes full-height, exactly like the combo's root slot.
+     */
+    private fun isDescendantOf(view: View, ancestor: View): Boolean {
+        var current = view.parent as? View
+        while (current != null) {
+            if (current === ancestor) return true
+            current = current.parent as? View
+        }
+        return false
+    }
+
+    /** The real vertical space host is the first ancestor directly under PhoneStatusBarView. */
+    fun findDoubleLineClockSpatialHost(clockTextView: TextView): ViewGroup? {
+        val statusBarView = findFullStatusBarView(clockTextView) as? ViewGroup ?: return null
+        return generateSequence(clockTextView.parent as? View) { it.parent as? View }
+            .filterIsInstance<ViewGroup>()
+            .firstOrNull { it.parent === statusBarView }
+    }
+
+    private fun findDoubleLineClockSlot(
+        clockTextView: TextView,
+        statusBarView: View,
+    ): ViewGroup? {
+        val resourceNames = listOf(
+            "left_clock_container",
+            "clock",
+        )
+        resourceNames.forEach { resourceName ->
+            val id = statusBarView.resources.getIdentifier(
+                resourceName,
+                "id",
+                Package.SYSTEMUI,
+            )
+            if (id == 0) return@forEach
+
+            val candidate = statusBarView.findViewById<View>(id) ?: return@forEach
+            if (candidate === clockTextView) {
+                (candidate.parent as? ViewGroup)?.let { return it }
+            }
+            if (candidate is ViewGroup) {
+                if (candidate === clockTextView ||
+                    isDescendantOf(clockTextView, candidate)
+                ) {
+                    return candidate
+                }
+            }
+        }
+
+        return generateSequence(clockTextView.parent as? View) { it.parent as? View }
+            .filterIsInstance<ViewGroup>()
+            .firstOrNull { ancestor ->
+                ancestor.parent === statusBarView
+            }
+    }
+
+    /**
+     * Use the same two-layer space model as the three-in-one icon: the existing
+     * Samsung clock slot is the spatial host, while the clock TextView remains
+     * WRAP_CONTENT and grows with the real two-line text height.
+     */
+    /**
+     * The Samsung clock TextView lives inside left_clock_container, whose stock
+     * measured height is only the normal one-line status-bar band. The combo icon
+     * avoids this problem by having a full-height host and a wrap-content child.
+     * Reproduce that space model on Samsung's existing clock slot without
+     * reparenting the native clock: the slot is measured/layouted at the real
+     * PhoneStatusBarView height, while the clock remains WRAP_CONTENT.
+     */
+    private fun ensureDoubleLineClockFullHeightSlot(
+        clockTextView: TextView,
+    ) {
+        val statusBarView = findFullStatusBarView(clockTextView) ?: return
+        val slot = findDoubleLineClockSlot(clockTextView, statusBarView) ?: return
+        val fullHeight = doubleLineClockSlotHeight(clockTextView)
+        if (fullHeight <= 0) return
+
+        // The Samsung status-bar content row may be only 58-70px high. Do not
+        // allow that row to clip the expanded clock slot or any of its ancestors.
+        var ancestor: View? = slot.parent as? View
+        while (ancestor != null && ancestor !== statusBarView) {
+            (ancestor as? ViewGroup)?.let {
+                it.clipChildren = false
+                it.clipToPadding = false
+            }
+            ancestor = ancestor.parent as? View
+        }
+        slot.clipChildren = false
+        slot.clipToPadding = false
+        (statusBarView as? ViewGroup)?.let {
+            it.clipChildren = false
+            it.clipToPadding = false
+        }
+
+        // The native Samsung clock slot is the full-height spatial box.
+        // The TextView fills that slot, while glyphs remain naturally sized.
+        // No overlay and no reparenting are used.
+        synchronized(doubleLineClockSlotLayouts) {
+            if (!doubleLineClockSlotLayouts.containsKey(slot)) {
+                val originalParams = slot.layoutParams
+                val originalHeight = originalParams?.height
+                    ?: ViewGroup.LayoutParams.WRAP_CONTENT
+                val originalGravity = when (originalParams) {
+                    is LinearLayout.LayoutParams -> originalParams.gravity
+                    is FrameLayout.LayoutParams -> originalParams.gravity
+                    else -> Gravity.NO_GRAVITY
+                }
+                doubleLineClockSlotLayouts[slot] = Pair(originalHeight, originalGravity)
+            }
+        }
+        // One UI 8.5's punch-hole IndicatorGarden can give the clock slot's
+        // immediate host a cutout-sized measured height. Expanding only the child
+        // slot cannot escape that parent measurement box. Promote the native clock
+        // host one level as well, without reparenting or creating an Overlay.
+        val host = slot.parent as? ViewGroup
+        if (host != null && host !== statusBarView) {
+            synchronized(doubleLineClockHostLayouts) {
+                if (!doubleLineClockHostLayouts.containsKey(host)) {
+                    val originalParams = host.layoutParams
+                    val originalHeight = originalParams?.height
+                        ?: ViewGroup.LayoutParams.WRAP_CONTENT
+                    val originalGravity = when (originalParams) {
+                        is LinearLayout.LayoutParams -> originalParams.gravity
+                        is FrameLayout.LayoutParams -> originalParams.gravity
+                        else -> Gravity.NO_GRAVITY
+                    }
+                    doubleLineClockHostLayouts[host] = Pair(originalHeight, originalGravity)
+                }
+            }
+            host.layoutParams?.let { params ->
+                params.height = ViewGroup.LayoutParams.MATCH_PARENT
+                when (params) {
+                    is LinearLayout.LayoutParams ->
+                        params.gravity = params.gravity and Gravity.HORIZONTAL_GRAVITY_MASK
+                    is FrameLayout.LayoutParams ->
+                        params.gravity = params.gravity and Gravity.HORIZONTAL_GRAVITY_MASK
+                }
+                host.layoutParams = params
+            }
+            host.clipChildren = false
+            host.clipToPadding = false
+        }
+
+        slot.layoutParams?.let { params ->
+            params.height = ViewGroup.LayoutParams.MATCH_PARENT
+            when (params) {
+                is LinearLayout.LayoutParams ->
+                    params.gravity = params.gravity and Gravity.HORIZONTAL_GRAVITY_MASK
+                is FrameLayout.LayoutParams ->
+                    params.gravity = params.gravity and Gravity.HORIZONTAL_GRAVITY_MASK
+            }
+            slot.layoutParams = params
+        }
+
+        clockTextView.layoutParams?.let { params ->
+            params.height = ViewGroup.LayoutParams.MATCH_PARENT
+            params.width = ViewGroup.LayoutParams.WRAP_CONTENT
+            clockTextView.layoutParams = params
+        }
+
+        // Keep Samsung's native vertical gravity unchanged. The full-height slot
+        // lets the native TextView lay out the two lines naturally.
+        clockTextView.translationY = 0f
+
+        slot.requestLayout()
+        statusBarView.requestLayout()
+        // End of the outer positioning post{}; the function itself closes below.
+    }
+
+    fun getDoubleLineClockSlot(
+        clockTextView: TextView,
+    ): ViewGroup? {
+        val statusBarView = findFullStatusBarView(clockTextView) ?: return null
+        return findDoubleLineClockSlot(clockTextView, statusBarView)
+    }
+
+    fun getDoubleLineClockHost(
+        clockTextView: TextView,
+    ): ViewGroup? =
+        getDoubleLineClockSlot(clockTextView)?.parent as? ViewGroup
+
+
+    fun isDoubleLineClockSlotHost(
+        view: View,
+        expectedId: Int = View.NO_ID,
+    ): Boolean {
+        val id = view.id
+        if (expectedId != View.NO_ID) {
+            return id == expectedId
+        }
+        if (id == View.NO_ID) return false
+        val name = runCatching {
+            view.resources.getResourceEntryName(id)
+        }.getOrNull()
+        return name == "left_clock_container" ||
+            name == "middle_clock_container" ||
+            name == "right_clock_container"
+    }
+
+    fun findDoubleLineClockDescendant(slot: View): TextView? {
+        val group = slot as? ViewGroup ?: return null
+
+        fun visit(parent: ViewGroup): TextView? {
+            for (index in 0 until parent.childCount) {
+                val child = parent.getChildAt(index)
+                if (
+                    child is TextView &&
+                    child.text?.contains('\n') == true &&
+                    child.maxLines == 2
+                ) {
+                    return child
+                }
+                if (child is ViewGroup) {
+                    visit(child)?.let { return it }
+                }
+            }
+            return null
+        }
+
+        return visit(group)
+    }
+
+    fun doubleLineClockSlotHeight(
+        clockTextView: TextView,
+    ): Int {
+        val statusBarView = findFullStatusBarView(clockTextView) ?: return 0
+        val slot = findDoubleLineClockSlot(clockTextView, statusBarView) ?: return 0
+        val slotParentHeight = (slot.parent as? View)?.let {
+            maxOf(it.height, it.measuredHeight)
+        } ?: 0
+        val resourceHeight = runCatching {
+            val id = statusBarView.resources.getIdentifier(
+                "status_bar_height",
+                "dimen",
+                "android",
+            )
+            if (id != 0) statusBarView.resources.getDimensionPixelSize(id) else 0
+        }.getOrDefault(0)
+        return maxOf(
+            statusBarView.height,
+            statusBarView.measuredHeight,
+            slotParentHeight,
+            resourceHeight,
+        )
+    }
+
+
+    /**
+     * Samsung can pass an EXACTLY one-line height to QSClockIndicatorView even
+     * when the same TextView contains two lines. Convert that height constraint
+     * to an AT_MOST constraint based on the real PhoneStatusBarView height so
+     * TextView can measure the full two-line content naturally.
+     */
+    fun expandDoubleLineClockHeightMeasureSpec(
+        clockTextView: TextView,
+        originalHeightSpec: Int,
+    ): Int {
+        if (clockTextView.text?.contains('\n') != true || clockTextView.maxLines != 2) {
+            return originalHeightSpec
+        }
+        val availableHeight = doubleLineClockSlotHeight(clockTextView)
+        if (availableHeight <= 0) return originalHeightSpec
+
+        val originalSize = View.MeasureSpec.getSize(originalHeightSpec)
+        val allowedHeight = maxOf(availableHeight, originalSize)
+        return View.MeasureSpec.makeMeasureSpec(
+            allowedHeight,
+            View.MeasureSpec.AT_MOST,
+        )
+    }
+
     private fun registerDoubleLineClockView(clockTextView: TextView) {
         synchronized(doubleLineClockViews) {
             doubleLineClockViews[clockTextView] = Unit
+        }
+        val installListener = synchronized(doubleLineClockAlignmentListeners) {
+            doubleLineClockAlignmentListeners.put(clockTextView, Unit) == null
+        }
+        if (installListener) {
+            clockTextView.addOnLayoutChangeListener(
+                View.OnLayoutChangeListener { view, _, _, _, _, _, _, _, _ ->
+                    val config = doubleLineClockRuntimeConfig
+                    if (
+                        view is TextView &&
+                        config != null &&
+                        view.text?.contains('\n') == true
+                    ) {
+                        ensureDoubleLineClockFullHeightSlot(view)
+                    }
+                }
+            )
         }
     }
 
@@ -296,22 +606,43 @@ object OfficialMainStatusBarMod {
         // High-frequency previews use an in-memory broadcast payload instead of
         // rewriting preference.json for every slider/eyedropper movement.
         val receiver = object : BroadcastReceiver() {
-            override fun onReceive(receiverContext: Context?, intent: Intent?) {
-                if (intent?.action != StatusBarRuntimeBridge.ACTION) return
-                val payload =
-                    intent.getStringExtra(StatusBarRuntimeBridge.EXTRA_STATUS_BAR_JSON)
-                        ?: return
+            private var pendingPayload: String? = null
+            private var previewRefreshScheduled = false
+
+            private val applyPreviewRunnable = Runnable {
+                val latest = synchronized(this) {
+                    previewRefreshScheduled = false
+                    pendingPayload.also { pendingPayload = null }
+                } ?: return@Runnable
+
                 background.post {
                     val current = runCatching {
                         IgnoreUnknownKeysJson.decodeFromString(
                             Preference.SystemUI.StatusBar.serializer(),
-                            payload,
+                            latest,
                         )
                     }.getOrNull() ?: return@post
 
                     previous = current
                     main.post { applyRuntimeStatusBarPreference(current) }
                 }
+            }
+
+            override fun onReceive(receiverContext: Context?, intent: Intent?) {
+                if (intent?.action != StatusBarRuntimeBridge.ACTION) return
+                val payload =
+                    intent.getStringExtra(StatusBarRuntimeBridge.EXTRA_STATUS_BAR_JSON)
+                        ?: return
+
+                // Slider previews can emit dozens of values per second. Coalesce
+                // them into one latest-value render frame so SystemUI never queues
+                // a backlog of text re-layouts while the finger is moving.
+                synchronized(this) {
+                    pendingPayload = payload
+                    if (previewRefreshScheduled) return
+                    previewRefreshScheduled = true
+                }
+                background.postDelayed(applyPreviewRunnable, 16L)
             }
         }
         runtimeReceiver = receiver
@@ -366,7 +697,12 @@ object OfficialMainStatusBarMod {
         lowerScale: Float,
     ) {
         updateDoubleLineClockRuntimeConfig(
-            preset, legacyScale, gapDp, fold7Custom, upperScale, lowerScale
+            preset,
+            legacyScale,
+            gapDp,
+            fold7Custom,
+            upperScale,
+            lowerScale,
         )
     }
 
@@ -385,6 +721,12 @@ object OfficialMainStatusBarMod {
                 height = layoutParams?.height,
                 parentGravity = (clockTextView.parent as? LinearLayout)?.gravity,
                 gravity = clockTextView.gravity,
+                textAlignment = clockTextView.textAlignment,
+                layoutGravity = when (layoutParams) {
+                    is LinearLayout.LayoutParams -> layoutParams.gravity
+                    is FrameLayout.LayoutParams -> layoutParams.gravity
+                    else -> null
+                },
                 includeFontPadding = clockTextView.includeFontPadding,
                 paddingTop = clockTextView.paddingTop,
                 paddingBottom = clockTextView.paddingBottom,
@@ -392,16 +734,13 @@ object OfficialMainStatusBarMod {
         }
 
         clockTextView.layoutParams?.let { params ->
-            params.height = 94
+            params.height = ViewGroup.LayoutParams.WRAP_CONTENT
             clockTextView.layoutParams = params
         }
-        (clockTextView.parent as? LinearLayout)?.gravity = Gravity.CENTER_VERTICAL
-        clockTextView.gravity =
-            (clockTextView.gravity and Gravity.VERTICAL_GRAVITY_MASK.inv()) or
-                Gravity.CENTER_VERTICAL
         clockTextView.isSingleLine = false
         clockTextView.maxLines = 2
-        clockTextView.minLines = 2
+        // Do not force a fixed two-line minimum box.
+        clockTextView.minLines = 1
         clockTextView.includeFontPadding = false
         clockTextView.ellipsize = null
         clockTextView.setHorizontallyScrolling(false)
@@ -434,6 +773,9 @@ object OfficialMainStatusBarMod {
         }
         clockTextView.contentDescription = plainText.replace('\n', ' ')
         clockTextView.requestLayout()
+        clockTextView.post {
+            ensureDoubleLineClockFullHeightSlot(clockTextView)
+        }
         clockTextView.invalidate()
     }
 
@@ -446,15 +788,53 @@ object OfficialMainStatusBarMod {
     /** Exactly restore the production main's stored one-line layout state. */
     fun restoreSingleLineClock(clockTextView: TextView, dateTime: CharSequence) {
         synchronized(doubleLineClockViews) { doubleLineClockViews.remove(clockTextView) }
+        val slot = findFullStatusBarView(clockTextView)?.let { statusBar ->
+            findDoubleLineClockSlot(clockTextView, statusBar)
+        }
+        slot?.let { clockSlot ->
+            synchronized(doubleLineClockSlotLayouts) {
+                doubleLineClockSlotLayouts.remove(clockSlot)?.let { original ->
+                    clockSlot.layoutParams?.let { params ->
+                        params.height = original.first
+                        when (params) {
+                            is LinearLayout.LayoutParams -> params.gravity = original.second
+                            is FrameLayout.LayoutParams -> params.gravity = original.second
+                        }
+                        clockSlot.layoutParams = params
+                    }
+                }
+            }
+        }
+        getDoubleLineClockHost(clockTextView)?.let { host ->
+            synchronized(doubleLineClockHostLayouts) {
+                doubleLineClockHostLayouts.remove(host)?.let { original ->
+                    host.layoutParams?.let { params ->
+                        params.height = original.first
+                        when (params) {
+                            is LinearLayout.LayoutParams -> params.gravity = original.second
+                            is FrameLayout.LayoutParams -> params.gravity = original.second
+                        }
+                        host.layoutParams = params
+                    }
+                }
+            }
+        }
         singleLineClockLayouts.remove(clockTextView)?.let { original ->
             clockTextView.layoutParams?.let { params ->
                 original.height?.let { params.height = it }
+                original.layoutGravity?.let { gravity ->
+                    when (params) {
+                        is LinearLayout.LayoutParams -> params.gravity = gravity
+                        is FrameLayout.LayoutParams -> params.gravity = gravity
+                    }
+                }
                 clockTextView.layoutParams = params
             }
             (clockTextView.parent as? LinearLayout)?.let { parent ->
                 original.parentGravity?.let { parent.gravity = it }
             }
             clockTextView.gravity = original.gravity
+            clockTextView.textAlignment = original.textAlignment
             clockTextView.includeFontPadding = original.includeFontPadding
             clockTextView.setPaddingRelative(
                 clockTextView.paddingStart,

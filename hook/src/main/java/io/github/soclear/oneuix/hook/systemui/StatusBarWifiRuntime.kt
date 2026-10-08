@@ -32,7 +32,7 @@ import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.tan
 
-/** Samsung SystemUI runtime for the Flux-style Wi-Fi icon editor. */
+/** Samsung SystemUI runtime for the OneuiXP Wi-Fi icon editor. */
 internal object StatusBarWifiRuntime {
     private const val PREFERENCE_CHANGED_URI =
         "content://com.oneuixp.app.statusbridge/preferences"
@@ -52,6 +52,7 @@ internal object StatusBarWifiRuntime {
         val originalHostScaleX: Float,
         val originalHostScaleY: Float,
         val originalHostTranslationY: Float,
+        val originalHostVisibility: Int,
         val originalMarginStart: Int?,
         val originalMarginEnd: Int?,
     )
@@ -324,6 +325,7 @@ internal object StatusBarWifiRuntime {
             originalHostScaleX = wifiHost.scaleX,
             originalHostScaleY = wifiHost.scaleY,
             originalHostTranslationY = wifiHost.translationY,
+            originalHostVisibility = wifiHost.visibility,
             originalMarginStart = marginParams?.marginStart,
             originalMarginEnd = marginParams?.marginEnd,
         )
@@ -415,6 +417,7 @@ internal object StatusBarWifiRuntime {
         holder.wifiHost.scaleX = holder.originalHostScaleX
         holder.wifiHost.scaleY = holder.originalHostScaleY
         holder.wifiHost.translationY = holder.originalHostTranslationY
+        holder.wifiHost.visibility = holder.originalHostVisibility
     }
 
     private fun applyMargins(
@@ -440,6 +443,15 @@ internal object StatusBarWifiRuntime {
     ) {
         restoreNative(holder)
         val density = holder.wifiHost.resources.displayMetrics.density
+
+        // The combo owns the middle Wi-Fi glyph while active.
+        if (StatusBarComboRuntime.isEnabled()) {
+            holder.glyph.visibility = View.GONE
+            holder.wifiHost.visibility = View.GONE
+            holder.statusBarView.requestLayout()
+            return
+        }
+
         applyMargins(holder, current)
 
         if (!current.enabled) {

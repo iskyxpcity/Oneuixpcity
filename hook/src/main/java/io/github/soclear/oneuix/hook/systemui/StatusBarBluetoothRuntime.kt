@@ -31,7 +31,7 @@ import java.util.WeakHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.max
 
-/** Flux-style Bluetooth status icon controls adapted to Samsung SystemUI. */
+/** OneuiXP Bluetooth status icon controls for Samsung SystemUI. */
 internal object StatusBarBluetoothRuntime {
     private const val PREFERENCE_CHANGED_URI =
         "content://com.oneuixp.app.statusbridge/preferences"
