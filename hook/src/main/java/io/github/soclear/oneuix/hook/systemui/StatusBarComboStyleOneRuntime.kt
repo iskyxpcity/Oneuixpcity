@@ -81,6 +81,7 @@ object StatusBarComboStyleOneRuntime {
     private val phoneListeners = mutableMapOf<Int, Pair<TelephonyManager, PhoneStateListener>>()
     private val displayNetworkTypes = ConcurrentHashMap<Int, String>()
     private val nativeSignalLevels = ConcurrentHashMap<Int, Int>()
+    private val lastSubscriptionSignalLevels = ConcurrentHashMap<Int, Int>()
     private val subscriptionSlots = ConcurrentHashMap<Int, Int>()
     private val nativeChildSnapshots = Collections.synchronizedMap(WeakHashMap<View, LayoutSnapshot>())
     private val knownIconSlots = Collections.synchronizedMap(WeakHashMap<View, String>())
@@ -1372,7 +1373,8 @@ object StatusBarComboStyleOneRuntime {
         subscriptionSlots.clear()
         active.forEach { info -> subscriptionSlots[info.subscriptionId] = info.simSlotIndex }
         val activeIds = active.map { it.subscriptionId }.toSet()
-        nativeSignalLevels.keys.filter { it !in activeIds }.forEach(nativeSignalLevels::remove)
+        nativeSignalLevels.keys.filter { it !in activeIds }.forEach { nativeSignalLevels.remove(it) }
+        lastSubscriptionSignalLevels.keys.filter { it !in activeIds }.forEach { lastSubscriptionSignalLevels.remove(it) }
         var dataLevel = -1
         var simOne = -1
         var simTwo = -1
@@ -1381,7 +1383,12 @@ object StatusBarComboStyleOneRuntime {
         active.forEach { info ->
             val sub = runCatching { base.createForSubscriptionId(info.subscriptionId) }.getOrNull() ?: return@forEach
             val telephonyLevel = runCatching { sub.signalStrength?.level ?: -1 }.getOrDefault(-1).coerceIn(-1, 4)
-            val level = nativeSignalLevels[info.subscriptionId] ?: telephonyLevel
+            val level = nativeSignalLevels[info.subscriptionId]
+                ?: telephonyLevel.takeIf { it in 0..4 }?.also {
+                    lastSubscriptionSignalLevels[info.subscriptionId] = it
+                }
+                ?: lastSubscriptionSignalLevels[info.subscriptionId]
+                ?: -1
             if (info.simSlotIndex == 0) simOne = level
             if (info.simSlotIndex == 1) simTwo = level
             if (info.subscriptionId == dataSub) {
@@ -1392,19 +1399,22 @@ object StatusBarComboStyleOneRuntime {
         }
         val hasActiveDataSubscription = dataSub >= 0 && active.any { it.subscriptionId == dataSub }
         if (dataLevel < 0) {
-            dataLevel = if (hasActiveDataSubscription) {
-                // Keep the last reading for the selected data SIM while its signal
-                // callback is temporarily unavailable; do not silently switch to SIM 1.
-                state.mobileLevel.takeIf { it >= 0 } ?: -1
-            } else {
-                if (simOne >= 0) simOne else simTwo
-            }
+            // Prefer this subscription's own cached state. Never reuse the prior
+            // default-data SIM's level after the user switches the data subscription.
+            dataLevel = if (hasActiveDataSubscription) -1 else if (simOne >= 0) simOne else simTwo
         }
         if (dataLevel < 0 && !hasActiveDataSubscription) {
             dataLevel = runCatching { base.signalStrength?.level ?: state.mobileLevel }
                 .getOrDefault(state.mobileLevel)
         }
-        if (dataSlot !in 0..1) dataSlot = if (simOne >= 0) 0 else if (simTwo >= 0) 1 else 0
+        if (dataSlot !in 0..1) {
+            dataSlot = subscriptionSlots[dataSub]?.takeIf { it in 0..1 }
+                ?: if (!hasActiveDataSubscription) {
+                    if (simOne >= 0) 0 else if (simTwo >= 0) 1 else 0
+                } else {
+                    state.dataSimSlotIndex.takeIf { it in 0..1 } ?: 0
+                }
+        }
         state = state.copy(
             mobileLevel = dataLevel.coerceIn(0, 4),
             simOneLevel = simOne,
@@ -1492,6 +1502,7 @@ object StatusBarComboStyleOneRuntime {
         if (subscriptionId < 0) return
         val safeLevel = level.coerceIn(0, 4)
         nativeSignalLevels[subscriptionId] = safeLevel
+        lastSubscriptionSignalLevels[subscriptionId] = safeLevel
         val slot = subscriptionSlots[subscriptionId]
         val old = state
         state = old.copy(
