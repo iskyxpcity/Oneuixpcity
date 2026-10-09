@@ -622,7 +622,7 @@ internal object StatusBarComboStyleOneRuntime {
         synchronized(holders) { holders[statusBar] = holder }
         statusBar.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
             holder.overlay?.takeIf { it.isAttached() }?.syncGeometry(config)
-            if (config.enabled && holder.batteryAnchor?.isAttachedToWindow != true) {
+            if (config.enabled && holder.batteryAnchor != null && holder.batteryAnchor?.isAttachedToWindow != true) {
                 holder.suppressionKey = null
                 mainHandler.post { applyHolder(holder) }
             }
@@ -666,7 +666,7 @@ internal object StatusBarComboStyleOneRuntime {
         overlay.update(cfg)
 
         val key = SuppressionKey(cfg.enabled, cfg.showWifi, cfg.showMobile, cfg.placementMode)
-        if (holder.suppressionKey != key || holder.batteryAnchor?.isAttachedToWindow != true) {
+        if (holder.suppressionKey != key || (holder.batteryAnchor != null && holder.batteryAnchor?.isAttachedToWindow != true)) {
             restoreNative(holder)
             holder.batteryAnchor = findBatteryAnchor(holder.statusBarView)
             suppressNative(holder, cfg)
