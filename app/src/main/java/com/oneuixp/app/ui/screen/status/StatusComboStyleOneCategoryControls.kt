@@ -3,8 +3,10 @@ package com.oneuixp.app.ui.screen.status
 import android.content.Intent
 import android.view.HapticFeedbackConstants
 import androidx.compose.foundation.background
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -46,10 +48,10 @@ import io.github.soclear.oneuix.common.Package
 import io.github.soclear.oneuix.common.Preference
 import io.github.soclear.oneuix.common.StatusBarRuntimeBridge
 import io.github.soclear.oneuix.ui.category.SystemUIEvent
-import io.github.soclear.oneuix.ui.component.OneuiXInfoItem
 import io.github.soclear.oneuix.ui.component.OneuiXSlider
 import io.github.soclear.oneuix.ui.component.OneuiXActionButton
 import com.oneuixp.app.ui.component.material.ExpressiveConfirmDialog
+import com.oneuixp.app.ui.component.material.ExpressiveTabRow
 import io.github.soclear.oneuix.ui.component.SwitchItem
 import io.github.soclear.oneuix.ui.component.SelectItem
 import com.oneuixp.app.ui.LocalUiMode
@@ -134,7 +136,7 @@ fun StatusComboStyleOneCategoryControls(
 
     StatusThemeGroup(items = listOf({
         Column {
-            OneuiXInfoItem(
+            StyleOneInfoItem(
                 title = stringResource(R.string.status_combo_style_one_preview),
                 summary = stringResource(R.string.status_combo_style_one_preview_summary),
             )
@@ -163,20 +165,45 @@ fun StatusComboStyleOneCategoryControls(
         stringResource(R.string.status_combo_style_one_tab_size),
         stringResource(R.string.status_combo_style_one_tab_color),
     )
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(
-            horizontal = if (LocalUiMode.current == UiMode.Material) 16.dp else 12.dp,
-            vertical = 4.dp,
-        ),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        tabs.forEachIndexed { index, label ->
-            StyleOneTabButton(
-                label = label,
-                selected = selectedTab == index,
-                modifier = Modifier.weight(1f),
-                onClick = { selectedTab = index },
-            )
+    when (LocalUiMode.current) {
+        UiMode.Material -> ExpressiveTabRow(
+            selectedTabIndex = selectedTab,
+            tabs = tabs,
+            onTabClick = { selectedTab = it },
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
+        )
+        UiMode.Miuix -> {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp, vertical = 4.dp)
+                    .clip(RoundedCornerShape(18.dp))
+                    .background(MiuixTheme.colorScheme.surfaceContainerHigh)
+                    .padding(4.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                tabs.forEachIndexed { index, label ->
+                    val selected = selectedTab == index
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(
+                                if (selected) MiuixTheme.colorScheme.primary
+                                else Color.Transparent,
+                            )
+                            .clickable { selectedTab = index }
+                            .padding(vertical = 10.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        MiuixText(
+                            text = label,
+                            color = if (selected) MiuixTheme.colorScheme.onPrimary
+                            else MiuixTheme.colorScheme.onSurfaceContainerHigh,
+                        )
+                    }
+                }
+            }
         }
     }
 
@@ -531,45 +558,6 @@ fun StatusComboStyleOneCategoryControls(
 
 }
 
-@Composable
-private fun StyleOneTabButton(
-    label: String,
-    selected: Boolean,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit,
-) {
-    when (LocalUiMode.current) {
-        UiMode.Material -> MaterialButton(
-            onClick = onClick,
-            modifier = modifier,
-            shape = RoundedCornerShape(16.dp),
-            colors = MaterialButtonDefaults.buttonColors(
-                containerColor = if (selected) Material3Theme.colorScheme.primaryContainer
-                    else Material3Theme.colorScheme.surfaceContainerHigh,
-                contentColor = if (selected) Material3Theme.colorScheme.onPrimaryContainer
-                    else Material3Theme.colorScheme.onSurfaceVariant,
-            ),
-            elevation = MaterialButtonDefaults.buttonElevation(defaultElevation = 0.dp),
-        ) {
-            Text(text = label, style = Material3Theme.typography.labelLarge)
-        }
-        UiMode.Miuix -> MiuixButton(
-            onClick = onClick,
-            modifier = modifier,
-            colors = if (selected) {
-                MiuixButtonDefaults.buttonColors()
-            } else {
-                MiuixButtonDefaults.buttonColors(
-                    color = MiuixTheme.colorScheme.surfaceContainerHigh,
-                    contentColor = MiuixTheme.colorScheme.onSurfaceContainerHigh,
-                )
-            },
-        ) {
-            MiuixText(text = label)
-        }
-    }
-}
-
 private enum class StyleOneColorRole(val titleRes: Int) {
     Low(R.string.status_combo_style_one_color_low),
     Charging(R.string.status_combo_style_one_color_charging),
@@ -756,6 +744,42 @@ private fun StyleOneRoleColorDialog(
                 }
             },
         )
+    }
+}
+
+@Composable
+private fun StyleOneInfoItem(
+    title: String,
+    summary: String? = null,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(if (summary == null) 0.dp else 3.dp),
+    ) {
+        when (LocalUiMode.current) {
+            UiMode.Material -> {
+                Text(text = title, style = Material3Theme.typography.titleSmall)
+                if (summary != null) {
+                    Text(
+                        text = summary,
+                        style = Material3Theme.typography.bodySmall,
+                        color = Material3Theme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+            UiMode.Miuix -> {
+                MiuixText(text = title, color = MiuixTheme.colorScheme.onSurface)
+                if (summary != null) {
+                    MiuixText(
+                        text = summary,
+                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                    )
+                }
+            }
+        }
     }
 }
 
