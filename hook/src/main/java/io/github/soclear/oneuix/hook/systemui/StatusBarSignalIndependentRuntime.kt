@@ -34,6 +34,7 @@ import io.github.soclear.oneuix.common.StatusBarRuntimeBridge
 import io.github.soclear.oneuix.hook.util.PreferenceProvider
 import java.util.WeakHashMap
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.math.max
 import kotlin.math.roundToInt
 
@@ -93,6 +94,7 @@ internal object StatusBarSignalIndependentRuntime {
         private var states: List<SignalState> = emptyList()
         private var current = Preference.SystemUI.StatusBarSignalRuntime()
         private var indicatorColor: Int = Color.WHITE
+    private val indicatorColorListeners = CopyOnWriteArrayList<(Int) -> Unit>()
 
         fun update(
             nextStates: List<SignalState>,
@@ -223,6 +225,21 @@ internal object StatusBarSignalIndependentRuntime {
     private var preferenceObserver: ContentObserver? = null
     private var runtimeReceiver: BroadcastReceiver? = null
 
+
+    fun addIndicatorColorListener(listener: (Int) -> Unit) {
+        indicatorColorListeners += listener
+        runCatching { listener(indicatorColor) }
+    }
+
+    private fun updateIndicatorColor(nextColor: Int) {
+        if (indicatorColor == nextColor) return
+        indicatorColor = nextColor
+        indicatorColorListeners.forEach { listener ->
+            runCatching { listener(nextColor) }
+        }
+        mainHandler.post { applyAll() }
+    }
+
     fun install(module: XposedModule, param: XposedModuleInterface.PackageReadyParam) {
         if (param.packageName != Package.SYSTEMUI) return
         if (!installed.compareAndSet(false, true)) return
@@ -263,8 +280,7 @@ internal object StatusBarSignalIndependentRuntime {
                     module.hook(method).intercept { chain ->
                         val result = chain.proceed()
                         (chain.thisObject as? TextView)?.let { clock ->
-                            indicatorColor = clock.currentTextColor
-                            mainHandler.post { applyAll() }
+                            updateIndicatorColor(clock.currentTextColor)
                         }
                         result
                     }
@@ -533,11 +549,11 @@ internal object StatusBarSignalIndependentRuntime {
         val density = holder.root.resources.displayMetrics.density
         // Combo owns the cellular signal presentation while enabled. Do not let
         // the independent two-SIM renderer reappear during its own live refresh.
-        if (StatusBarComboRuntime.isEnabled()) {
+        if (StatusBarComboStyleOneRuntime.isEnabled()) {
             // Combo either owns the native signal slots or explicitly hands them
             // back. Do not resurrect an alpha-hidden native icon when Combo is
             // about to fold it; that was the source of transparent empty slots.
-            if (!StatusBarComboRuntime.isMobileNativeSuppressed()) {
+            if (!StatusBarComboStyleOneRuntime.isMobileNativeSuppressed()) {
                 restoreNativeSignalViews(holder)
             }
             holder.root.visibility = View.GONE
