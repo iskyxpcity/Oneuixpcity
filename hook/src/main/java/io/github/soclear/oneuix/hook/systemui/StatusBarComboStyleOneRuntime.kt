@@ -211,12 +211,10 @@ object StatusBarComboStyleOneRuntime {
                 lp.x = (cutout.centerX() - lp.width * centreRatio).roundToInt().coerceAtLeast(0)
                 val rootPos = IntArray(2)
                 root.getLocationOnScreen(rootPos)
-                val centreOffset = root.javaClass.let {
-                    // Use the initial row centre rather than its animated height.
-                    val host = StatusBarComboStyleOneRuntime.hosts[root]
-                    host?.overlayCenterOffsetPx ?: (root.height / 2).also {
-                        if (host != null) host.overlayCenterOffsetPx = it
-                    }
+                // Use the initial row centre rather than its animated height.
+                val host = StatusBarComboStyleOneRuntime.hosts[root]
+                val centreOffset = host?.overlayCenterOffsetPx ?: (root.height / 2).also {
+                    if (host != null) host.overlayCenterOffsetPx = it
                 }
                 lp.y = (rootPos[1] + centreOffset - lp.height / 2).coerceAtLeast(0)
             } else {
@@ -832,7 +830,13 @@ object StatusBarComboStyleOneRuntime {
         runCatching {
             val cls = classLoader.loadClass(MIUI_BATTERY_METER)
             cls.declaredMethods.filter {
-                it.name == "updateLightDarkTint" && it.parameterTypes.size >= 6
+                it.name == "updateLightDarkTint" &&
+                    it.parameterTypes.size == 6 &&
+                    it.parameterTypes[1] == Float::class.javaPrimitiveType &&
+                    it.parameterTypes[2] == Int::class.javaPrimitiveType &&
+                    it.parameterTypes[3] == Int::class.javaPrimitiveType &&
+                    it.parameterTypes[4] == Int::class.javaPrimitiveType &&
+                    it.parameterTypes[5] == Boolean::class.javaPrimitiveType
             }.forEach { method ->
                 module.hook(method).intercept { chain ->
                     val result = chain.proceed()
