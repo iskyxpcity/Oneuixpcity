@@ -105,6 +105,7 @@ object StatusBarComboStyleOneRuntime {
         Collections.synchronizedMap(WeakHashMap<View, TintIconClassification>())
     @Volatile private var statusBarIconViewClass: Class<*>? = null
     @Volatile private var miuiIslandMeterHooked = false
+    @Volatile private var shadeBusy = false
     private val lastContainerFingerprints = Collections.synchronizedMap(WeakHashMap<ViewGroup, Int>())
     private val scheduledContainerPasses = Collections.synchronizedSet(
         Collections.newSetFromMap(WeakHashMap<ViewGroup, Boolean>())
@@ -256,6 +257,11 @@ object StatusBarComboStyleOneRuntime {
         fun setTintOverride(color: Int?) { glyph.setTintOverride(color) }
         fun invalidate() { glyph.invalidate() }
 
+        fun setShadeVisible(visible: Boolean) {
+            val wanted = if (visible) View.VISIBLE else View.INVISIBLE
+            if (glyph.visibility != wanted) glyph.visibility = wanted
+        }
+
         fun detach() {
             if (params == null) return
             runCatching { wm.removeView(glyph) }
@@ -293,6 +299,7 @@ object StatusBarComboStyleOneRuntime {
         // Native slots are handed off when IconManager creates a holder and when
         // the relevant icon state changes. Do not hook container onLayout here:
         // it runs repeatedly during shade expansion and causes view-tree scans.
+        hookShadeExpansion(module, param.classLoader)
         hookIconManager(module, param.classLoader)
         hookBatteryMeters(module, param.classLoader)
         hookMiuiBatteryIsland(module, param.classLoader)
@@ -300,6 +307,69 @@ object StatusBarComboStyleOneRuntime {
         hookNativeBatteryTint(module, param.classLoader)
         hookIconTint(module, param.classLoader)
         if (!hookedHost) Log.w(TAG, "No status-bar host constructor was hooked")
+    }
+
+    private fun hookShadeExpansion(module: XposedModule, classLoader: ClassLoader) {
+        val targets = listOf(
+            "com.android.systemui.shade.NotificationPanelViewControllerInjector" to "setExpandedHeightInternal",
+            "com.android.systemui.shade.NotificationPanelViewController" to "setExpandedHeight",
+        )
+        targets.forEach { (className, methodName) ->
+            runCatching {
+                var current: Class<*>? = classLoader.loadClass(className)
+                val candidates = mutableListOf<java.lang.reflect.Method>()
+                while (current != null) {
+                    candidates += current.declaredMethods.filter { method ->
+                        method.name == methodName &&
+                            method.parameterTypes.size == 1 &&
+                            method.parameterTypes[0] == Float::class.javaPrimitiveType
+                    }
+                    current = current.superclass
+                }
+                candidates.distinctBy { it.toGenericString() }.forEach { method ->
+                    module.hook(method).intercept { chain ->
+                        val result = chain.proceed()
+                        val height = runCatching { chain.getArg(0) as? Float }.getOrNull()
+                        if (height != null) updateShadeBusy(height > 0.5f)
+                        result
+                    }
+                }
+            }.onFailure { diagnostic("Shade expansion hook unavailable: $className.$methodName: $it") }
+        }
+    }
+
+    private fun updateShadeBusy(busy: Boolean) {
+        if (shadeBusy == busy) return
+        shadeBusy = busy
+        val update = Runnable {
+            val snapshot = synchronized(hosts) { hosts.values.toList() }
+            snapshot.forEach { host ->
+                if (host.retired || !config.enabled || !config.overlayGlyph) return@forEach
+                val battery = host.battery ?: return@forEach
+                val overlay = host.overlay ?: return@forEach
+                if (busy) {
+                    // The panel is transforming the bar. Hide the separate window
+                    // immediately and briefly draw inside the native-height slot.
+                    overlay.setShadeVisible(false)
+                    collapseHostView(host, battery)
+                    insertInline(host, battery, compactToAnchor = true)
+                } else {
+                    removeInline(host)
+                    // Restore the original dimensions before taking a new snapshot;
+                    // cutout and normal layouts require different native anchors.
+                    restoreHostView(host, battery)
+                    if (cutoutBounds(host.root) != null) {
+                        collapseHostView(host, battery)
+                    } else {
+                        reserveHostSlot(host, battery, StatusComboStyleOneGlyphRenderer.glyphWidthDp(config))
+                    }
+                    overlay.setShadeVisible(true)
+                    overlay.update(battery, host.root)
+                    overlay.invalidate()
+                }
+            }
+        }
+        if (Looper.myLooper() == Looper.getMainLooper()) update.run() else main.post(update)
     }
 
     fun isEnabled(): Boolean = config.enabled
@@ -536,7 +606,12 @@ object StatusBarComboStyleOneRuntime {
                     host.overlay = null
                     collapseHostView(host, battery)
                     insertInline(host, battery)
+                } else if (shadeBusy) {
+                    overlay.setShadeVisible(false)
+                    collapseHostView(host, battery)
+                    insertInline(host, battery, compactToAnchor = true)
                 } else {
+                    overlay.setShadeVisible(true)
                     if (cutoutBounds(root) != null) collapseHostView(host, battery)
                     else reserveHostSlot(host, battery, StatusComboStyleOneGlyphRenderer.glyphWidthDp(config))
                     overlay.update(battery, root)
@@ -554,10 +629,19 @@ object StatusBarComboStyleOneRuntime {
         }
     }
 
-    private fun insertInline(host: Host, anchor: View) {
+    private fun insertInline(host: Host, anchor: View, compactToAnchor: Boolean = false) {
         val parent = anchor.parent as? ViewGroup ?: return
-        val width = dp(parent.context, StatusComboStyleOneGlyphRenderer.glyphWidthDp(config))
-        val height = dp(parent.context, StatusComboStyleOneGlyphRenderer.glyphHeightDp(config))
+        val designWidth = StatusComboStyleOneGlyphRenderer.glyphWidthDp(config)
+        val designHeight = StatusComboStyleOneGlyphRenderer.glyphHeightDp(config)
+        val originalHeight = host.layouts[anchor]?.height?.takeIf { it > 0 }
+            ?: anchor.height.takeIf { it > 0 }
+            ?: dp(parent.context, 24)
+        val width = if (compactToAnchor) {
+            (originalHeight * designWidth.toFloat() / designHeight).roundToInt().coerceAtLeast(1)
+        } else {
+            dp(parent.context, designWidth)
+        }
+        val height = if (compactToAnchor) originalHeight else dp(parent.context, designHeight)
         host.inline?.takeIf { it.parent === parent }?.let { glyph ->
             val lp = glyph.layoutParams
             if (lp != null && (lp.width != width || lp.height != height)) {
