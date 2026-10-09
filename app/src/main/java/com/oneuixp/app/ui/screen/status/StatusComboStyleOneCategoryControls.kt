@@ -82,12 +82,14 @@ fun StatusComboStyleOneCategoryControls(
     // Match HyperDuo exactly: critical battery is a fixed 20% cutoff.
     // Normalize legacy saved values so preview and live SystemUI share the rule.
     val runtime = uiState.comboStyleOneRuntime.copy(criticalThreshold = 20)
+    var previewRuntime by remember(runtime) { mutableStateOf(runtime) }
     var confirmResetColors by remember { mutableStateOf(false) }
     var editingColorRole by remember { mutableStateOf<StyleOneColorRole?>(null) }
     var editingDarkBackground by remember { mutableStateOf(true) }
     var draftRoleColor by remember { mutableIntStateOf(0xFFFFFFFF.toInt()) }
 
     fun preview(next: Preference.SystemUI.StatusBarComboStyleOneRuntime) {
+        previewRuntime = next.copy(criticalThreshold = 20)
         val json = runCatching {
             IgnoreUnknownKeysJson.encodeToString(
                 Preference.SystemUI.StatusBar.serializer(),
@@ -149,7 +151,7 @@ fun StatusComboStyleOneCategoryControls(
                 AndroidView(
                     modifier = Modifier.fillMaxWidth().height(60.dp),
                     factory = { StatusComboStyleOnePreviewView(it) },
-                    update = { it.setConfig(runtime) },
+                    update = { it.setConfig(previewRuntime) },
                 )
             }
         }
