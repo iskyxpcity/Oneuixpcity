@@ -56,6 +56,7 @@
     <string name="status_combo_style_one_debug_log">Diagnostic logging</string>
     <string name="status_combo_style_one_debug_log_summary">Write more diagnostic information to the system log.</string>
     <string name="status_combo_style_one_int_summary">%1$d</string>
+    <string name="status_combo_style_one_sp_summary">%1$d sp</string>
     <string name="status_combo_style_one_dp_summary">%1$d dp</string>
     <string name="status_combo_style_one_percent_summary">%1$d%%</string>
     <string name="status_combo_style_one_weight_summary">%1$d</string>

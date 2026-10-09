@@ -86,7 +86,7 @@ fun StatusComboStyleOneCategoryControls(
 
     var ringStroke by remember(runtime.ringStroke) { mutableIntStateOf(runtime.ringStroke.coerceIn(4, 16)) }
     var arcStroke by remember(runtime.arcStroke) { mutableIntStateOf(runtime.arcStroke.coerceIn(3, 16)) }
-    var valueSize by remember(runtime.valueSize) { mutableIntStateOf(runtime.valueSize.coerceIn(16, 44)) }
+    var valueSize by remember(runtime.valueSize) { mutableIntStateOf(runtime.valueSize.coerceIn(6, 18)) }
     var valueWeight by remember(runtime.valueWeight) { mutableIntStateOf(runtime.valueWeight) }
     var typeSize by remember(runtime.typeSize) { mutableIntStateOf(runtime.typeSize.coerceIn(16, 44)) }
     var typeWeight by remember(runtime.typeWeight) { mutableIntStateOf(runtime.typeWeight) }
@@ -258,7 +258,7 @@ StatusThemeGroup(items = listOf({
             { persist(runtime.copy(arcStroke = arcStroke)) })
     }, {
         styleOneSlider(icon, stringResource(R.string.status_combo_style_one_value_size),
-            stringResource(R.string.status_combo_style_one_int_summary, valueSize), valueSize.toFloat(), 16f..44f,
+            stringResource(R.string.status_combo_style_one_sp_summary, valueSize), valueSize.toFloat(), 6f..18f,
             { valueSize = it.roundToInt(); preview(runtime.copy(valueSize = valueSize)) },
             { persist(runtime.copy(valueSize = valueSize)) })
     }, {

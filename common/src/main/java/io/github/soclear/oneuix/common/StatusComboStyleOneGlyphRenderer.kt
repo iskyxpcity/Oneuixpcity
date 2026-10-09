@@ -93,6 +93,9 @@ object StatusComboStyleOneGlyphRenderer {
         (36f * config.glyphScalePercent.coerceIn(70, 150) / 100f)
             .roundToInt().coerceAtLeast(18)
 
+    private fun valueSizeCanvasUnits(config: StatusBarComboStyleOneRuntime): Float =
+        config.valueSize.coerceIn(6, 18) * (HEIGHT / 36f)
+
     fun draw(
         canvas: Canvas,
         width: Int,
@@ -139,7 +142,7 @@ object StatusComboStyleOneGlyphRenderer {
             bolt -> contentGapRange(27f, config.ringStroke)
             wifiInGap -> contentGapRange(43f, config.ringStroke)
             valueInGap -> contentGapRange(
-                measuredTextWidth(level.toString(), config.valueSize.toFloat(), config.valueWeight),
+                measuredTextWidth(level.toString(), valueSizeCanvasUnits(config), config.valueWeight),
                 config.ringStroke,
             )
             typeInGap && innerType != null -> contentGapRange(
@@ -180,9 +183,10 @@ object StatusComboStyleOneGlyphRenderer {
             }
             if (bolt) drawBolt(canvas, offsetX, if (state.quickCharge) QUICK_CHARGE else tint)
             if (config.showValue) {
-                val clear = if (valueInCentre) centreClearWidth(config.valueSize.toFloat(), config.ringStroke)
+                val requestedSize = valueSizeCanvasUnits(config)
+                val clear = if (valueInCentre) centreClearWidth(requestedSize, config.ringStroke)
                     else gapClearWidth(config.ringStroke, gapStart, gapEnd)
-                val size = fitTextSize(level.toString(), config.valueSize.toFloat(), config.valueWeight, clear)
+                val size = fitTextSize(level.toString(), requestedSize, config.valueWeight, clear)
                 drawTextFitted(canvas, level.toString(), cx,
                     if (valueInCentre) centerBaseline(size) else gapBaseline(size),
                     size, config.valueWeight, tint, clear)
@@ -346,7 +350,7 @@ object StatusComboStyleOneGlyphRenderer {
         }
         if (config.showValue) {
             drawTextFitted(canvas, level.toString(), offsetX + 59.5f, 94f,
-                config.valueSize * 1.38f, config.valueWeight, tint, 78f)
+                valueSizeCanvasUnits(config) * 1.38f, config.valueWeight, tint, 78f)
         }
     }
 

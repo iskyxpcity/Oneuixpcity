@@ -199,7 +199,7 @@ data class Preference(
             val criticalThreshold: Int = 10,
             val ringStroke: Int = 14,
             val arcStroke: Int = 12,
-            val valueSize: Int = 36,
+            val valueSize: Int = 11,
             val valueWeight: Int = 700,
             val typeSize: Int = 32,
             val outTypeSizeDp: Int = 14,

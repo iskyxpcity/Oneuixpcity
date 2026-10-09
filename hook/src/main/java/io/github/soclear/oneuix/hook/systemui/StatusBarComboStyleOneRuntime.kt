@@ -76,9 +76,12 @@ object StatusBarComboStyleOneRuntime {
     @Volatile private var preferenceReceiverReady = false
     @Volatile private var stateReceiverReady = false
     @Volatile private var tint = Color.WHITE
+    @Volatile private var defaultDataSubscriptionId = SubscriptionManager.INVALID_SUBSCRIPTION_ID
     @Volatile private var subscriptionsListener: SubscriptionManager.OnSubscriptionsChangedListener? = null
     private val phoneListeners = mutableMapOf<Int, Pair<TelephonyManager, PhoneStateListener>>()
     private val displayNetworkTypes = ConcurrentHashMap<Int, String>()
+    private val nativeSignalLevels = ConcurrentHashMap<Int, Int>()
+    private val subscriptionSlots = ConcurrentHashMap<Int, Int>()
     private val nativeChildSnapshots = Collections.synchronizedMap(WeakHashMap<View, LayoutSnapshot>())
     private val knownIconSlots = Collections.synchronizedMap(WeakHashMap<View, String>())
     private val rowTintSnapshots = Collections.synchronizedMap(WeakHashMap<ViewGroup, Int>())
@@ -257,6 +260,9 @@ object StatusBarComboStyleOneRuntime {
             with(module) { PreferenceProvider.loadPreference() }
                 ?.systemUI?.statusBar?.comboStyleOneRuntime?.let { config = sanitize(it) }
         }.onFailure { Log.w(TAG, "Cannot read Style One settings", it) }
+
+        hookNativeMobileState(module, param.classLoader)
+        hookNativeSignalPolicy(module, param.classLoader)
 
         StatusBarSignalIndependentRuntime.addIndicatorColorListener { next ->
             if (next != tint) {
@@ -1360,7 +1366,13 @@ object StatusBarComboStyleOneRuntime {
         val sm = context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE) as? SubscriptionManager ?: return
         val base = context.getSystemService(Context.TELEPHONY_SERVICE) as? TelephonyManager ?: return
         val active: List<SubscriptionInfo> = runCatching { sm.activeSubscriptionInfoList.orEmpty() }.getOrDefault(emptyList())
-        val dataSub = runCatching { SubscriptionManager.getDefaultDataSubscriptionId() }.getOrDefault(-1)
+        val dataSub = runCatching { SubscriptionManager.getDefaultDataSubscriptionId() }
+            .getOrDefault(SubscriptionManager.INVALID_SUBSCRIPTION_ID)
+        defaultDataSubscriptionId = dataSub
+        subscriptionSlots.clear()
+        active.forEach { info -> subscriptionSlots[info.subscriptionId] = info.simSlotIndex }
+        val activeIds = active.map { it.subscriptionId }.toSet()
+        nativeSignalLevels.keys.filter { it !in activeIds }.forEach(nativeSignalLevels::remove)
         var dataLevel = -1
         var simOne = -1
         var simTwo = -1
@@ -1368,7 +1380,8 @@ object StatusBarComboStyleOneRuntime {
         var label = state.networkType
         active.forEach { info ->
             val sub = runCatching { base.createForSubscriptionId(info.subscriptionId) }.getOrNull() ?: return@forEach
-            val level = runCatching { sub.signalStrength?.level ?: -1 }.getOrDefault(-1).coerceIn(-1, 4)
+            val telephonyLevel = runCatching { sub.signalStrength?.level ?: -1 }.getOrDefault(-1).coerceIn(-1, 4)
+            val level = nativeSignalLevels[info.subscriptionId] ?: telephonyLevel
             if (info.simSlotIndex == 0) simOne = level
             if (info.simSlotIndex == 1) simTwo = level
             if (info.subscriptionId == dataSub) {
@@ -1402,6 +1415,131 @@ object StatusBarComboStyleOneRuntime {
         diagnostic("Telephony refreshed: dataSub=$dataSub, dataLevel=${state.mobileLevel}, type=${state.networkType}")
     }
 
+    private fun hookNativeMobileState(module: XposedModule, classLoader: ClassLoader) {
+        val candidates = listOf(
+            "com.android.systemui.statusbar.StatusBarMobileView",
+            "com.android.systemui.statusbar.phone.StatusBarMobileView",
+            "com.android.systemui.statusbar.views.StatusBarMobileView",
+            "com.android.systemui.statusbar.phone.ModernStatusBarMobileView",
+        )
+        candidates.forEach { name ->
+            runCatching {
+                val clazz = classLoader.loadClass(name)
+                clazz.declaredMethods.filter {
+                    it.name in setOf("applyMobileState", "updateState") && it.parameterTypes.size == 1
+                }.distinctBy { it.toGenericString() }.forEach { method ->
+                    module.hook(method).intercept { chain ->
+                        val result = chain.proceed()
+                        if (!config.enabled) return@intercept result
+                        val view = chain.thisObject as? View ?: return@intercept result
+                        val mobileState = chain.args.firstOrNull() ?: return@intercept result
+                        val strength = readSignalIntField(mobileState, "strengthId", "mStrengthId")
+                            ?: return@intercept result
+                        val subId = readSignalIntField(mobileState, "subId", "mSubId")
+                            ?: defaultDataSubscriptionId
+                        val level = if (strength in 0..4) strength else resolveSignalResourceLevel(view, strength)
+                        if (level in 0..4 && subId >= 0) updateNativeSignalLevel(subId, level)
+                        result
+                    }
+                }
+            }.onFailure { diagnostic("Native mobile state hook unavailable: $name: $it") }
+        }
+    }
+
+    private fun hookNativeSignalPolicy(module: XposedModule, classLoader: ClassLoader) {
+        val candidates = listOf(
+            "com.android.systemui.statusbar.phone.StatusBarSignalPolicy",
+            "com.android.systemui.statusbar.phone.StatusBarSignalPolicyImpl",
+            "com.android.systemui.statusbar.phone.StatusBarSignalPolicyKt",
+        )
+        candidates.forEach { name ->
+            runCatching {
+                val clazz = classLoader.loadClass(name)
+                clazz.declaredMethods.filter {
+                    it.name == "setMobileDataIndicators" || it.name == "setMobileIcons"
+                }.distinctBy { it.toGenericString() }.forEach { method ->
+                    module.hook(method).intercept { chain ->
+                        val result = chain.proceed()
+                        if (config.enabled) chain.args.take(8).forEach(::extractNativeMobileStates)
+                        result
+                    }
+                }
+            }.onFailure { diagnostic("Native signal policy hook unavailable: $name: $it") }
+        }
+    }
+
+    private fun extractNativeMobileStates(value: Any?) {
+        when (value) {
+            null -> return
+            is Iterable<*> -> { value.take(8).forEach(::extractNativeMobileStates); return }
+            is Array<*> -> { value.take(8).forEach(::extractNativeMobileStates); return }
+        }
+        val simpleName = value.javaClass.simpleName.lowercase()
+        if (!simpleName.contains("mobileiconstate") &&
+            !simpleName.contains("mobileicon") &&
+            !simpleName.contains("iconstate")
+        ) return
+        val subId = readSignalIntField(value, "subId", "subscriptionId", "mSubId", "mSubscriptionId")
+            ?: return
+        val strength = readSignalIntField(value, "strengthId", "mStrengthId", "icon", "mIcon")
+            ?: return
+        val resources = synchronized(hosts) { hosts.values.firstOrNull()?.root?.resources } ?: return
+        val level = if (strength in 0..4) strength else resolveSignalResourceLevelFromResources(resources, strength)
+        if (level in 0..4 && subId >= 0) updateNativeSignalLevel(subId, level)
+    }
+
+    private fun updateNativeSignalLevel(subscriptionId: Int, level: Int) {
+        if (subscriptionId < 0) return
+        val safeLevel = level.coerceIn(0, 4)
+        nativeSignalLevels[subscriptionId] = safeLevel
+        val slot = subscriptionSlots[subscriptionId]
+        val old = state
+        state = old.copy(
+            mobileLevel = if (subscriptionId == defaultDataSubscriptionId) safeLevel else old.mobileLevel,
+            simOneLevel = if (slot == 0) safeLevel else old.simOneLevel,
+            simTwoLevel = if (slot == 1) safeLevel else old.simTwoLevel,
+            dataSimSlotIndex = if (subscriptionId == defaultDataSubscriptionId && slot in 0..1) slot else old.dataSimSlotIndex,
+        )
+        invalidateGlyphs()
+    }
+
+    private fun readSignalIntField(target: Any, vararg names: String): Int? {
+        var type: Class<*>? = target.javaClass
+        while (type != null) {
+            val current = type
+            for (name in names) {
+                val field = runCatching {
+                    current.declaredFields.firstOrNull { it.name.equals(name, ignoreCase = true) }
+                        ?.apply { isAccessible = true }
+                }.getOrNull() ?: continue
+                val result = runCatching { (field.get(target) as? Number)?.toInt() }.getOrNull()
+                if (result != null) return result
+            }
+            type = current.superclass
+        }
+        return null
+    }
+
+    private fun resolveSignalResourceLevel(view: View, resourceId: Int): Int {
+        val resourceName = runCatching { view.resources.getResourceEntryName(resourceId) }
+            .getOrNull().orEmpty().lowercase()
+        return resolveSignalResourceName(resourceName)
+    }
+
+    private fun resolveSignalResourceLevelFromResources(resources: android.content.res.Resources, resourceId: Int): Int {
+        val resourceName = runCatching { resources.getResourceEntryName(resourceId) }
+            .getOrNull().orEmpty().lowercase()
+        return resolveSignalResourceName(resourceName)
+    }
+
+    private fun resolveSignalResourceName(name: String): Int {
+        if (!name.startsWith("stat_sys_signal") || name.contains("wifi")) return -1
+        val signalIndex = name.indexOf("signal")
+        if (signalIndex < 0) return -1
+        val suffix = name.substring(signalIndex + "signal".length).trimStart('_')
+        return suffix.firstOrNull { it in '0'..'4' }?.minus('0') ?: -1
+    }
+
     private fun displayNetworkType(info: TelephonyDisplayInfo): String? = when (info.overrideNetworkType) {
         TelephonyDisplayInfo.OVERRIDE_NETWORK_TYPE_NR_ADVANCED -> "5GA"
         TelephonyDisplayInfo.OVERRIDE_NETWORK_TYPE_NR_NSA -> "5G"
@@ -1428,7 +1566,7 @@ object StatusBarComboStyleOneRuntime {
         criticalThreshold = v.criticalThreshold.coerceIn(1, 20),
         glyphScalePercent = v.glyphScalePercent.coerceIn(70, 150),
         ringStroke = v.ringStroke.coerceIn(4, 16), arcStroke = v.arcStroke.coerceIn(3, 16),
-        valueSize = v.valueSize.coerceIn(16, 44), valueWeight = v.valueWeight.coerceIn(100, 900),
+        valueSize = v.valueSize.coerceIn(6, 18), valueWeight = v.valueWeight.coerceIn(100, 900),
         typeSize = v.typeSize.coerceIn(16, 44), typeWeight = v.typeWeight.coerceIn(100, 900),
         outTypeSizeDp = v.outTypeSizeDp.coerceIn(8, 26), outSignalSizeDp = v.outSignalSizeDp.coerceIn(6, 20),
         outTypeMarginLeftDp = v.outTypeMarginLeftDp.coerceIn(0, 16),
