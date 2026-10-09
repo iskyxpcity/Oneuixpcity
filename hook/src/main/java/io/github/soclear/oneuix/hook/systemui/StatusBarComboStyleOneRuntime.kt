@@ -38,6 +38,7 @@ import io.github.soclear.oneuix.common.StatusBarRuntimeBridge
 import io.github.soclear.oneuix.common.StatusComboStyleOneGlyphRenderer
 import io.github.soclear.oneuix.common.StatusComboStyleOneGlyphState
 import io.github.soclear.oneuix.hook.util.PreferenceProvider
+import java.lang.ref.WeakReference
 import java.util.Collections
 import java.util.IdentityHashMap
 import java.util.WeakHashMap
@@ -95,8 +96,13 @@ object StatusBarComboStyleOneRuntime {
         Collections.synchronizedMap(WeakHashMap<View, Pair<Boolean, Boolean>>())
     private val batteryContainerIslandRequests =
         Collections.synchronizedMap(WeakHashMap<View, Boolean>())
-    private val knownStatusBarTintViews =
-        Collections.synchronizedMap(WeakHashMap<View, Boolean>())
+    private data class TintIconClassification(
+        val isCollapsedStatusBar: Boolean,
+        val root: WeakReference<ViewGroup>? = null,
+        val tintOwner: WeakReference<ViewGroup>? = null,
+    )
+    private val tintIconClassifications =
+        Collections.synchronizedMap(WeakHashMap<View, TintIconClassification>())
     @Volatile private var statusBarIconViewClass: Class<*>? = null
     @Volatile private var miuiIslandMeterHooked = false
     private val lastContainerFingerprints = Collections.synchronizedMap(WeakHashMap<ViewGroup, Int>())
@@ -456,7 +462,7 @@ object StatusBarComboStyleOneRuntime {
             val root = host.root
             if (!root.isAttachedToWindow) { host.overlay?.detach(); return }
             val views = descendants(root)
-            rememberStatusBarTintViews(views)
+            rememberStatusBarTintViews(root, views)
             val battery = views.firstOrNull(::isBatteryMeterView)
                 ?: views.firstOrNull(::isBatteryIcon)
 
@@ -1184,11 +1190,46 @@ object StatusBarComboStyleOneRuntime {
         return null
     }
 
-    private fun rememberStatusBarTintViews(views: Iterable<View>) {
+    private fun classifyTintIcon(icon: View): TintIconClassification {
+        val row = statusBarRootOf(icon) ?: return TintIconClassification(false)
+        val tintOwner = batteryTintContainerFor(icon) ?: row
+        return TintIconClassification(
+            isCollapsedStatusBar = true,
+            root = WeakReference(row),
+            tintOwner = WeakReference(tintOwner),
+        )
+    }
+
+    private fun tintOwnerFor(icon: View): Pair<ViewGroup, ViewGroup>? {
+        val cached = tintIconClassifications[icon]
+        if (cached != null) {
+            if (!cached.isCollapsedStatusBar) return null
+            val root = cached.root?.get()
+            val owner = cached.tintOwner?.get()
+            if (root != null && owner != null) return root to owner
+        }
+        // Classify each icon once. Expanded shade/QS icons cache a negative
+        // result and are skipped on subsequent tint-animation frames.
+        val resolved = classifyTintIcon(icon)
+        tintIconClassifications[icon] = resolved
+        if (!resolved.isCollapsedStatusBar) return null
+        val root = resolved.root?.get() ?: return null
+        val owner = resolved.tintOwner?.get() ?: return null
+        return root to owner
+    }
+
+    private fun rememberStatusBarTintViews(root: ViewGroup, views: Iterable<View>) {
         val iconClass = statusBarIconViewClass ?: return
-        synchronized(knownStatusBarTintViews) {
+        synchronized(tintIconClassifications) {
             views.forEach { view ->
-                if (iconClass.isInstance(view)) knownStatusBarTintViews[view] = true
+                if (iconClass.isInstance(view)) {
+                    val tintOwner = batteryTintContainerFor(view) ?: root
+                    tintIconClassifications[view] = TintIconClassification(
+                        isCollapsedStatusBar = true,
+                        root = WeakReference(root),
+                        tintOwner = WeakReference(tintOwner),
+                    )
+                }
             }
         }
     }
@@ -1227,10 +1268,7 @@ object StatusBarComboStyleOneRuntime {
                     module.hook(method).intercept { chain ->
                         val result = chain.proceed()
                         val icon = chain.thisObject as? View ?: return@intercept result
-                        // QS/notification shade icons use the same platform class.
-                        // Skip them before any parent walk so shade animation frames
-                        // do not pay for a collapsed-status-bar lookup.
-                        if (!knownStatusBarTintViews.containsKey(icon)) return@intercept result
+                        val tintOwner = tintOwnerFor(icon) ?: return@intercept result
                         var color: Int? = null
                         method.parameterTypes.forEachIndexed { index, type ->
                             if (color == null && type == Int::class.javaPrimitiveType) {
@@ -1239,13 +1277,13 @@ object StatusBarComboStyleOneRuntime {
                             }
                         }
                         val resolvedColor = color
-                        val row = statusBarRootOf(icon)
-                        if (resolvedColor != null && row != null) {
-                            val tintOwner = batteryTintContainerFor(icon) ?: row
+                        val row = tintOwner.first
+                        val owner = tintOwner.second
+                        if (resolvedColor != null) {
                             // Cache by MIUI's battery container just like HyperDuo.
                             // Also keep the root value solely as the AOSP fallback.
-                            rowTintSnapshots[tintOwner] = resolvedColor
-                            if (tintOwner === row) rowTintSnapshots[row] = resolvedColor
+                            rowTintSnapshots[owner] = resolvedColor
+                            if (owner === row) rowTintSnapshots[row] = resolvedColor
                             val host = synchronized(hosts) { hosts[row] }
                             if (host != null && (host.tintRow ?: row) === tintOwner &&
                                 host.rowTint != resolvedColor
@@ -1282,7 +1320,7 @@ object StatusBarComboStyleOneRuntime {
                         view.post {
                             val host = hostFor(view) ?: return@post
                             if (statusBarIconViewClass?.isInstance(view) == true) {
-                                knownStatusBarTintViews[view] = true
+                                tintIconClassifications[view] = classifyTintIcon(view)
                             }
                             if (shouldSuppressSlot(slot)) {
                                 if (view.parent is ViewGroup) collapseHostView(host, view)
