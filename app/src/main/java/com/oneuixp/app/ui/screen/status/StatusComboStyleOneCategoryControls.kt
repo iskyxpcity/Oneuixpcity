@@ -416,7 +416,10 @@ fun StatusComboStyleOneCategoryControls(
             }))
         }
         else -> {
-            StatusThemeGroup(items = listOf({
+            // Keep the entire state-colour section together like HyperDuo:
+            // toggle, thresholds, three role rows and reset live in one card.
+            val colorItems = mutableListOf<@Composable () -> Unit>()
+            colorItems += {
                 SwitchItem(
                     icon = icon,
                     title = stringResource(R.string.status_combo_style_one_role_colors),
@@ -424,30 +427,31 @@ fun StatusComboStyleOneCategoryControls(
                     checked = runtime.roleColors,
                     onCheckedChange = { previewAndPersist(runtime.copy(roleColors = it)) },
                 )
-            }, {
-                styleOneSlider(
-                    icon,
-                    stringResource(R.string.status_combo_style_one_critical_threshold),
-                    stringResource(R.string.status_combo_style_one_percent_summary, criticalThreshold),
-                    criticalThreshold.toFloat(),
-                    1f..20f,
-                    { criticalThreshold = it.roundToInt(); preview(runtime.copy(criticalThreshold = criticalThreshold)) },
-                    { persist(runtime.copy(criticalThreshold = criticalThreshold)) },
-                )
-            }, {
-                styleOneSlider(
-                    icon,
-                    stringResource(R.string.status_combo_style_one_low_threshold),
-                    stringResource(R.string.status_combo_style_one_percent_summary, lowThreshold),
-                    lowThreshold.toFloat(),
-                    5f..50f,
-                    { lowThreshold = it.roundToInt(); preview(runtime.copy(lowThreshold = lowThreshold)) },
-                    { persist(runtime.copy(lowThreshold = lowThreshold)) },
-                )
-            }))
-
+            }
             if (runtime.roleColors) {
-                StatusThemeGroup(items = listOf({
+                colorItems += {
+                    styleOneSlider(
+                        icon,
+                        stringResource(R.string.status_combo_style_one_critical_threshold),
+                        stringResource(R.string.status_combo_style_one_critical_threshold_summary, criticalThreshold),
+                        criticalThreshold.toFloat(),
+                        1f..20f,
+                        { criticalThreshold = it.roundToInt(); preview(runtime.copy(criticalThreshold = criticalThreshold)) },
+                        { persist(runtime.copy(criticalThreshold = criticalThreshold)) },
+                    )
+                }
+                colorItems += {
+                    styleOneSlider(
+                        icon,
+                        stringResource(R.string.status_combo_style_one_low_threshold),
+                        stringResource(R.string.status_combo_style_one_low_threshold_summary, lowThreshold),
+                        lowThreshold.toFloat(),
+                        5f..50f,
+                        { lowThreshold = it.roundToInt(); preview(runtime.copy(lowThreshold = lowThreshold)) },
+                        { persist(runtime.copy(lowThreshold = lowThreshold)) },
+                    )
+                }
+                colorItems += {
                     OneuiXInfoItem(
                         title = stringResource(StyleOneColorRole.Low.titleRes),
                         summary = stringResource(R.string.status_combo_style_one_color_summary),
@@ -479,7 +483,8 @@ fun StatusComboStyleOneCategoryControls(
                             }
                         },
                     )
-                }, {
+                }
+                colorItems += {
                     OneuiXInfoItem(
                         title = stringResource(StyleOneColorRole.Charging.titleRes),
                         summary = stringResource(R.string.status_combo_style_one_color_summary),
@@ -511,7 +516,8 @@ fun StatusComboStyleOneCategoryControls(
                             }
                         },
                     )
-                }, {
+                }
+                colorItems += {
                     OneuiXInfoItem(
                         title = stringResource(StyleOneColorRole.Critical.titleRes),
                         summary = stringResource(R.string.status_combo_style_one_color_summary),
@@ -543,19 +549,19 @@ fun StatusComboStyleOneCategoryControls(
                             }
                         },
                     )
-                }, {
+                }
+                colorItems += {
                     OneuiXInfoItem(
                         title = stringResource(R.string.status_combo_style_one_reset_colors),
                         summary = stringResource(R.string.status_combo_style_one_reset_colors_summary),
+                        modifier = Modifier.clickable { confirmResetColors = true },
+                        trailingContent = {
+                            Text("›", style = Material3Theme.typography.titleLarge)
+                        },
                     )
-                    StatusThemeChildItem {
-                        OneuiXActionButton(
-                            text = stringResource(R.string.status_combo_style_one_reset_colors),
-                            onClick = { confirmResetColors = true },
-                        )
-                    }
-                }))
+                }
             }
+            StatusThemeGroup(items = colorItems)
 
             if (confirmResetColors) {
                 ExpressiveConfirmDialog(

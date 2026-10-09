@@ -53,9 +53,11 @@
     <string name="status_combo_style_one_out_type_margin_right">Outside network type right margin</string>
     <string name="status_combo_style_one_out_signal_margin">Outside signal margin</string>
     <string name="status_combo_style_one_role_colors">State colors</string>
-    <string name="status_combo_style_one_role_colors_summary">Choose colors for low battery, charging and critical battery. Each state has a separate color for dark and light status-bar backgrounds.</string>
-    <string name="status_combo_style_one_critical_threshold">Critical-battery color threshold</string>
-    <string name="status_combo_style_one_low_threshold">Low-battery color threshold</string>
+    <string name="status_combo_style_one_role_colors_summary">Pick colors for low battery, charging and critical battery.</string>
+    <string name="status_combo_style_one_critical_threshold">Critical battery threshold</string>
+    <string name="status_combo_style_one_critical_threshold_summary">Use the critical color below %1$d%%.</string>
+    <string name="status_combo_style_one_low_threshold">Low battery threshold</string>
+    <string name="status_combo_style_one_low_threshold_summary">Use the low battery color at %1$d%% or below.</string>
     <string name="status_combo_style_one_track_alpha">Inactive arcs and signal opacity</string>
     <string name="status_combo_style_one_critical_dark">Critical battery color on dark backgrounds</string>
     <string name="status_combo_style_one_critical_light">Critical battery color on light backgrounds</string>
@@ -70,7 +72,7 @@
     <string name="status_combo_style_one_dp_summary">%1$d dp</string>
     <string name="status_combo_style_one_percent_summary">%1$d%%</string>
     <string name="status_combo_style_one_weight_summary">%1$d</string>
-    <string name="status_combo_style_one_color_summary">Tap a color row to edit it. The two swatches show the dark- and light-background variants.</string>
+    <string name="status_combo_style_one_color_summary">Tap to pick a color.</string>
     <string name="status_combo_style_one_color_low">Low battery color</string>
     <string name="status_combo_style_one_color_charging">Charging color</string>
     <string name="status_combo_style_one_color_critical">Critical battery color</string>
@@ -78,7 +80,7 @@
     <string name="status_combo_style_one_color_on_light">Light background</string>
     <string name="status_combo_style_one_color_on_dark_short">Dark</string>
     <string name="status_combo_style_one_color_on_light_short">Light</string>
-    <string name="status_combo_style_one_color_dialog_summary">Choose the colour variant to edit. The selected colour is previewed on the status-bar icon.</string>
+    <string name="status_combo_style_one_color_dialog_summary">Set the color used when the status bar sits on a dark or a light background.</string>
     <string name="status_combo_style_one_color_apply">Apply</string>
     <string name="status_combo_style_one_color_cancel">Cancel</string>
     <string name="status_combo_style_one_group_appearance">Appearance</string>
@@ -89,7 +91,7 @@
     <string name="status_combo_style_one_group_out_signal">Out-of-ring signal</string>
     <string name="status_combo_style_one_group_track">Track</string>
     <string name="status_combo_style_one_reset_colors">Reset role colors</string>
-    <string name="status_combo_style_one_reset_colors_summary">Restore the three state colors to their default presets.</string>
+    <string name="status_combo_style_one_reset_colors_summary">Restore the three state colors to their factory presets.</string>
     <string name="status_combo_style_one_reset_colors_confirm">Reset all six dark- and light-background color values to the defaults?</string>
     <string name="status_combo_style_one_reset">Reset</string>
     <string name="status_combo_style_one_cancel">Cancel</string>
