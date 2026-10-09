@@ -133,7 +133,7 @@ object StatusComboStyleOneGlyphRenderer {
         // The out-of-glyph cellular view replaces the native signal only when the
         // user explicitly asks for the stacked bars-and-dots alternative.
         if (config.showMobile && config.signalMode == 1 && config.stackedSignal) {
-            val signalX = 26f - config.outSignalMarginDp.coerceIn(0, 12) * (DESIGN_HEIGHT / 36f)
+            val signalX = 26f - config.outSignalMarginDp.coerceIn(0, 16) * (DESIGN_HEIGHT / 36f)
             val bars = if (config.dataSimOnly) state.mobileLevel
                 else state.simOneLevel.takeIf { it >= 0 } ?: state.mobileLevel
             val second = if (!config.dataSimOnly && state.simTwoLevel >= 0) state.simTwoLevel else -1
@@ -141,9 +141,9 @@ object StatusComboStyleOneGlyphRenderer {
         }
         if (config.showMobile && config.mobileTypeMode == 2 && state.networkType.isNotBlank()) {
             val centre = 110f +
-                (config.outTypeMarginLeftDp.coerceIn(0, 12) - config.outTypeMarginRightDp.coerceIn(0, 12)) *
+                (config.outTypeMarginLeftDp.coerceIn(0, 16) - config.outTypeMarginRightDp.coerceIn(0, 16)) *
                 (DESIGN_HEIGHT / 36f)
-            val size = config.outTypeSizeDp.coerceIn(6, 30) * (DESIGN_HEIGHT / 36f)
+            val size = config.outTypeSizeDp.coerceIn(8, 26) * (DESIGN_HEIGHT / 36f)
             drawNetworkType(canvas, state.networkType.trim().uppercase(), centre, 67f, size, config.typeWeight, tint, config.typeSuffixScale, 77f)
         }
 
