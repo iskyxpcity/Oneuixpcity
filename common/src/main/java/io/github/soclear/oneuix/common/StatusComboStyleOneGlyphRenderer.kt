@@ -507,13 +507,14 @@ object StatusComboStyleOneGlyphRenderer {
         if (!config.roleColors) return tint
         val darkBackground = luminance(tint) > 0.5f
         return when {
+            // Match HyperDuo's role order: critical > low/power-save > charging > native foreground.
             state.batteryLevel <= config.criticalThreshold.coerceIn(1, 20) ->
                 if (darkBackground) config.criticalColorDarkArgb else config.criticalColorLightArgb
-            state.charging ->
-                if (darkBackground) config.chargingColorDarkArgb else config.chargingColorLightArgb
             state.powerSave || state.lowBatteryWarning ||
                 state.batteryLevel <= config.lowThreshold.coerceIn(5, 50) ->
                 if (darkBackground) config.lowColorDarkArgb else config.lowColorLightArgb
+            state.charging ->
+                if (darkBackground) config.chargingColorDarkArgb else config.chargingColorLightArgb
             else -> tint
         }
     }
