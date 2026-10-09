@@ -221,7 +221,7 @@ object StatusComboStyleOneGlyphRenderer {
         paint.style = Paint.Style.FILL
         paint.color = color
         paint.textAlign = Paint.Align.CENTER
-        paint.typeface = Typeface.create("sans-serif", weight.coerceIn(100, 900), false)
+        paint.typeface = Typeface.create(Typeface.create("sans-serif", Typeface.NORMAL), weight.coerceIn(100, 900), false)
         paint.textSize = size.coerceIn(8f, 64f)
         val measured = paint.measureText(text)
         if (measured > maxWidth && measured > 0f) paint.textSize *= maxWidth / measured
@@ -233,7 +233,7 @@ object StatusComboStyleOneGlyphRenderer {
         val shrunkA = label.endsWith("A") && suffixScale in 1..99
         val base = if (shrunkA) label.dropLast(1) else label
         val safeSize = size.coerceIn(8f, 64f)
-        paint.typeface = Typeface.create("sans-serif", weight.coerceIn(100, 900), false)
+        paint.typeface = Typeface.create(Typeface.create("sans-serif", Typeface.NORMAL), weight.coerceIn(100, 900), false)
         paint.textAlign = Paint.Align.LEFT
         paint.color = color
         paint.textSize = safeSize
@@ -267,7 +267,7 @@ object StatusComboStyleOneGlyphRenderer {
     }
 
     private fun measure(text: String, size: Float, weight: Int): Float {
-        paint.typeface = Typeface.create("sans-serif", weight.coerceIn(100, 900), false)
+        paint.typeface = Typeface.create(Typeface.create("sans-serif", Typeface.NORMAL), weight.coerceIn(100, 900), false)
         paint.textSize = size.coerceIn(8f, 64f)
         return paint.measureText(text)
     }
