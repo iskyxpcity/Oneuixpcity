@@ -30,6 +30,9 @@
     <string name="status_combo_style_one_data_sim_only">Show only the default data SIM</string>
     <string name="status_combo_style_one_data_sim_only_summary">Use the signal level from the SIM currently selected for mobile data.</string>
     <string name="status_combo_style_one_glyph_scale">Overall icon size</string>
+    <string name="status_combo_style_one_bolt_size">Charging bolt size</string>
+    <string name="status_combo_style_one_bolt_x">Charging bolt horizontal offset</string>
+    <string name="status_combo_style_one_bolt_y">Charging bolt vertical offset</string>
     <string name="status_combo_style_one_ring_stroke">Battery outline thickness</string>
     <string name="status_combo_style_one_arc_stroke">Wi-Fi arc thickness</string>
     <string name="status_combo_style_one_value_size">Battery number size</string>

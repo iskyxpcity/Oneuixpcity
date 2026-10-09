@@ -139,7 +139,10 @@ object StatusComboStyleOneGlyphRenderer {
         val gapRange = when {
             !gapUsed -> 0f to 0f
             dualRows -> GAP_DUAL_START to GAP_DUAL_END
-            bolt -> contentGapRange(27f, config.ringStroke)
+            bolt -> contentGapRange(
+                27f * config.chargingBoltSizePercent.coerceIn(50, 180) / 100f,
+                config.ringStroke,
+            )
             wifiInGap -> contentGapRange(43f, config.ringStroke)
             valueInGap -> contentGapRange(
                 measuredTextWidth(level.toString(), valueSizeCanvasUnits(config), config.valueWeight),
@@ -181,7 +184,7 @@ object StatusComboStyleOneGlyphRenderer {
                 drawNetworkType(canvas, innerType, cx, gapBaseline(size), size, config.typeWeight,
                     tint, config.typeSuffixScale, gapClearWidth(config.ringStroke, gapStart, gapEnd))
             }
-            if (bolt) drawBolt(canvas, offsetX, if (state.quickCharge) QUICK_CHARGE else tint)
+            if (bolt) drawBolt(canvas, offsetX, config, if (state.quickCharge) QUICK_CHARGE else tint)
             if (config.showValue) {
                 val requestedSize = valueSizeCanvasUnits(config)
                 val clear = if (valueInCentre) centreClearWidth(requestedSize, config.ringStroke)
@@ -341,7 +344,7 @@ object StatusComboStyleOneGlyphRenderer {
             canvas.drawRoundRect(rect, barHeight / 2f, barHeight / 2f, paint)
         }
         when {
-            bolt -> drawRectBolt(canvas, offsetX, if (state.quickCharge) QUICK_CHARGE else tint, config.arcStroke)
+            bolt -> drawRectBolt(canvas, offsetX, config, if (state.quickCharge) QUICK_CHARGE else tint, config.arcStroke)
             config.showWifi && state.wifiLevel >= 1 ->
                 drawRectWifi(canvas, offsetX, tint, state.wifiLevel, config.arcStroke)
             innerType != null ->
@@ -371,10 +374,13 @@ object StatusComboStyleOneGlyphRenderer {
         canvas.restoreToCount(save)
     }
 
-    private fun drawRectBolt(canvas: Canvas, offsetX: Float, color: Int, stroke: Int) {
+    private fun drawRectBolt(
+        canvas: Canvas, offsetX: Float, config: StatusBarComboStyleOneRuntime, color: Int, stroke: Int,
+    ) {
+        val scale = boltScale(config)
         val save = canvas.save()
-        canvas.translate(offsetX + boltOffsetX() + 0.55f, boltOffsetY() + 0.24f)
-        canvas.scale(BOLT_SCALE, BOLT_SCALE)
+        canvas.translate(offsetX + boltOffsetX(config) + 0.55f, boltOffsetY(config) + 0.24f)
+        canvas.scale(scale, scale)
         paint.style = Paint.Style.FILL
         paint.color = color
         canvas.drawPath(boltPath, paint)
@@ -443,18 +449,31 @@ object StatusComboStyleOneGlyphRenderer {
         paint.textAlign = Paint.Align.CENTER
     }
 
-    private fun drawBolt(canvas: Canvas, offsetX: Float, color: Int) {
+    private fun drawBolt(
+        canvas: Canvas, offsetX: Float, config: StatusBarComboStyleOneRuntime, color: Int,
+    ) {
+        val scale = boltScale(config)
         val save = canvas.save()
-        canvas.translate(offsetX + boltOffsetX(), boltOffsetY())
-        canvas.scale(BOLT_SCALE, BOLT_SCALE)
+        canvas.translate(offsetX + boltOffsetX(config), boltOffsetY(config))
+        canvas.scale(scale, scale)
         paint.style = Paint.Style.FILL
         paint.color = color
         canvas.drawPath(boltPath, paint)
         canvas.restoreToCount(save)
     }
 
-    private fun boltOffsetX(): Float = BOLT_CX - BOLT_CX_REF * BOLT_SCALE
-    private fun boltOffsetY(): Float = BOLT_TOP - BOLT_TOP_REF * BOLT_SCALE
+    private fun boltScale(config: StatusBarComboStyleOneRuntime): Float =
+        BOLT_SCALE * config.chargingBoltSizePercent.coerceIn(50, 180) / 100f
+
+    // Convert dp offsets into normalized icon coordinates so the configured
+    // offset stays optically stable when the overall icon scale changes.
+    private fun boltOffsetX(config: StatusBarComboStyleOneRuntime): Float =
+        BOLT_CX - BOLT_CX_REF * boltScale(config) +
+            config.chargingBoltXDp.coerceIn(-8, 8) / (config.glyphScalePercent.coerceIn(70, 150) / 100f)
+
+    private fun boltOffsetY(config: StatusBarComboStyleOneRuntime): Float =
+        BOLT_TOP - BOLT_TOP_REF * boltScale(config) +
+            config.chargingBoltYDp.coerceIn(-8, 8) / (config.glyphScalePercent.coerceIn(70, 150) / 100f)
 
     private fun buildBoltPath() = Path().apply {
         moveTo(62.1f, 2.2f)

@@ -30,6 +30,9 @@
     <string name="status_combo_style_one_data_sim_only">只显示默认数据 SIM</string>
     <string name="status_combo_style_one_data_sim_only_summary">使用当前被选为移动数据卡的 SIM 信号强度。</string>
     <string name="status_combo_style_one_glyph_scale">图标整体大小</string>
+    <string name="status_combo_style_one_bolt_size">充电闪电大小</string>
+    <string name="status_combo_style_one_bolt_x">充电闪电水平偏移</string>
+    <string name="status_combo_style_one_bolt_y">充电闪电垂直偏移</string>
     <string name="status_combo_style_one_ring_stroke">电量轮廓粗细</string>
     <string name="status_combo_style_one_arc_stroke">Wi-Fi 弧线粗细</string>
     <string name="status_combo_style_one_value_size">电量数字大小</string>

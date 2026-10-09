@@ -99,6 +99,9 @@ fun StatusComboStyleOneCategoryControls(
     var lowThreshold by remember(runtime.lowThreshold) { mutableIntStateOf(runtime.lowThreshold.coerceIn(5, 50)) }
     var criticalThreshold by remember(runtime.criticalThreshold) { mutableIntStateOf(runtime.criticalThreshold.coerceIn(1, 20)) }
     var glyphScale by remember(runtime.glyphScalePercent) { mutableIntStateOf(runtime.glyphScalePercent.coerceIn(70, 150)) }
+    var boltSize by remember(runtime.chargingBoltSizePercent) { mutableIntStateOf(runtime.chargingBoltSizePercent.coerceIn(50, 180)) }
+    var boltX by remember(runtime.chargingBoltXDp) { mutableIntStateOf(runtime.chargingBoltXDp.coerceIn(-8, 8)) }
+    var boltY by remember(runtime.chargingBoltYDp) { mutableIntStateOf(runtime.chargingBoltYDp.coerceIn(-8, 8)) }
     var trackAlpha by remember(runtime.trackAlpha) {
         mutableIntStateOf((runtime.trackAlpha * 100f / 255f).roundToInt())
     }
@@ -246,6 +249,21 @@ StatusThemeGroup(items = listOf({
             stringResource(R.string.status_combo_style_one_percent_summary, glyphScale), glyphScale.toFloat(), 70f..150f,
             { glyphScale = it.roundToInt(); preview(runtime.copy(glyphScalePercent = glyphScale)) },
             { persist(runtime.copy(glyphScalePercent = glyphScale)) })
+    }, {
+        styleOneSlider(icon, stringResource(R.string.status_combo_style_one_bolt_size),
+            stringResource(R.string.status_combo_style_one_percent_summary, boltSize), boltSize.toFloat(), 50f..180f,
+            { boltSize = it.roundToInt(); preview(runtime.copy(chargingBoltSizePercent = boltSize)) },
+            { persist(runtime.copy(chargingBoltSizePercent = boltSize)) })
+    }, {
+        styleOneSlider(icon, stringResource(R.string.status_combo_style_one_bolt_x),
+            stringResource(R.string.status_combo_style_one_dp_summary, boltX), boltX.toFloat(), -8f..8f,
+            { boltX = it.roundToInt(); preview(runtime.copy(chargingBoltXDp = boltX)) },
+            { persist(runtime.copy(chargingBoltXDp = boltX)) })
+    }, {
+        styleOneSlider(icon, stringResource(R.string.status_combo_style_one_bolt_y),
+            stringResource(R.string.status_combo_style_one_dp_summary, boltY), boltY.toFloat(), -8f..8f,
+            { boltY = it.roundToInt(); preview(runtime.copy(chargingBoltYDp = boltY)) },
+            { persist(runtime.copy(chargingBoltYDp = boltY)) })
     }, {
         styleOneSlider(icon, stringResource(R.string.status_combo_style_one_ring_stroke),
             stringResource(R.string.status_combo_style_one_int_summary, ringStroke), ringStroke.toFloat(), 4f..16f,
