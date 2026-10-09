@@ -163,11 +163,15 @@ object StatusBarComboStyleOneRuntime {
         override fun onDraw(canvas: Canvas) {
             super.onDraw(canvas)
             val currentState = StatusBarComboStyleOneRuntime.state
+            val currentConfig = StatusBarComboStyleOneRuntime.config
             val localTint = tintOverride
             val drawState = if (localTint == null) currentState else currentState.copy(tintColor = localTint)
             StatusComboStyleOneGlyphRenderer.draw(
-                canvas, width, height, StatusBarComboStyleOneRuntime.config, drawState,
+                canvas, width, height, currentConfig, drawState,
             )
+            if (currentState.charging && currentConfig.chargingDisplayMode == 1) {
+                postInvalidateDelayed(5_000L)
+            }
         }
     }
 

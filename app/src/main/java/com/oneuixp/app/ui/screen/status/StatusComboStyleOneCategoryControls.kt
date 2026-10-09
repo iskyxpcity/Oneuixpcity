@@ -50,7 +50,6 @@ import io.github.soclear.oneuix.ui.component.OneuiXInfoItem
 import io.github.soclear.oneuix.ui.component.OneuiXSlider
 import io.github.soclear.oneuix.ui.component.OneuiXActionButton
 import com.oneuixp.app.ui.component.material.ExpressiveConfirmDialog
-import com.oneuixp.app.ui.component.material.ExpressiveTabRow
 import io.github.soclear.oneuix.ui.component.SwitchItem
 import io.github.soclear.oneuix.ui.component.SelectItem
 import com.oneuixp.app.ui.LocalUiMode
@@ -164,33 +163,20 @@ fun StatusComboStyleOneCategoryControls(
         stringResource(R.string.status_combo_style_one_tab_size),
         stringResource(R.string.status_combo_style_one_tab_color),
     )
-    when (LocalUiMode.current) {
-        UiMode.Material -> ExpressiveTabRow(
-            selectedTabIndex = selectedTab,
-            tabs = tabs,
-            onTabClick = { selectedTab = it },
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
-        )
-        UiMode.Miuix -> Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            tabs.forEachIndexed { index, label ->
-                MiuixButton(
-                    onClick = { selectedTab = index },
-                    modifier = Modifier.weight(1f),
-                    colors = if (selectedTab == index) {
-                        MiuixButtonDefaults.buttonColors()
-                    } else {
-                        MiuixButtonDefaults.buttonColors(
-                            color = MiuixTheme.colorScheme.surfaceContainerHigh,
-                            contentColor = MiuixTheme.colorScheme.onSurfaceContainerHigh,
-                        )
-                    },
-                ) {
-                    MiuixText(text = label)
-                }
-            }
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(
+            horizontal = if (LocalUiMode.current == UiMode.Material) 16.dp else 12.dp,
+            vertical = 4.dp,
+        ),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        tabs.forEachIndexed { index, label ->
+            StyleOneTabButton(
+                label = label,
+                selected = selectedTab == index,
+                modifier = Modifier.weight(1f),
+                onClick = { selectedTab = index },
+            )
         }
     }
 
@@ -277,6 +263,19 @@ fun StatusComboStyleOneCategoryControls(
                     summary = stringResource(R.string.status_combo_style_one_show_bolt_summary),
                     checked = runtime.showBolt,
                     onCheckedChange = { previewAndPersist(runtime.copy(showBolt = it)) },
+                )
+            }, {
+                SelectItem(
+                    title = stringResource(R.string.status_combo_style_one_charging_display),
+                    summary = stringResource(R.string.status_combo_style_one_charging_display_summary),
+                    entries = listOf(
+                        stringResource(R.string.status_combo_style_one_charging_display_bolt),
+                        stringResource(R.string.status_combo_style_one_charging_display_alternate),
+                    ),
+                    selectedIndex = runtime.chargingDisplayMode.coerceIn(0, 1),
+                    onSelectedIndexChange = {
+                        previewAndPersist(runtime.copy(chargingDisplayMode = it.coerceIn(0, 1)))
+                    },
                 )
             }, {
                 SelectItem(
@@ -530,6 +529,45 @@ fun StatusComboStyleOneCategoryControls(
         }
     }
 
+}
+
+@Composable
+private fun StyleOneTabButton(
+    label: String,
+    selected: Boolean,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit,
+) {
+    when (LocalUiMode.current) {
+        UiMode.Material -> MaterialButton(
+            onClick = onClick,
+            modifier = modifier,
+            shape = RoundedCornerShape(16.dp),
+            colors = MaterialButtonDefaults.buttonColors(
+                containerColor = if (selected) Material3Theme.colorScheme.primaryContainer
+                    else Material3Theme.colorScheme.surfaceContainerHigh,
+                contentColor = if (selected) Material3Theme.colorScheme.onPrimaryContainer
+                    else Material3Theme.colorScheme.onSurfaceVariant,
+            ),
+            elevation = MaterialButtonDefaults.buttonElevation(defaultElevation = 0.dp),
+        ) {
+            Text(text = label, style = Material3Theme.typography.labelLarge)
+        }
+        UiMode.Miuix -> MiuixButton(
+            onClick = onClick,
+            modifier = modifier,
+            colors = if (selected) {
+                MiuixButtonDefaults.buttonColors()
+            } else {
+                MiuixButtonDefaults.buttonColors(
+                    color = MiuixTheme.colorScheme.surfaceContainerHigh,
+                    contentColor = MiuixTheme.colorScheme.onSurfaceContainerHigh,
+                )
+            },
+        ) {
+            MiuixText(text = label)
+        }
+    }
 }
 
 private enum class StyleOneColorRole(val titleRes: Int) {

@@ -6,6 +6,7 @@ import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.RectF
 import android.graphics.Typeface
+import android.os.SystemClock
 import io.github.soclear.oneuix.common.Preference.SystemUI.StatusBarComboStyleOneRuntime
 import kotlin.math.max
 import kotlin.math.min
@@ -122,9 +123,13 @@ object StatusComboStyleOneGlyphRenderer {
         val innerType = state.networkType.trim().uppercase().takeIf {
             config.showMobile && config.mobileTypeMode == 1 && it.isNotEmpty()
         }
-        val bolt = config.showBolt && state.charging
-        // Charging presentation replaces the percentage with the charging bolt.
-        val showBatteryValue = config.showValue && !state.charging
+        val alternateChargingPhase = state.charging &&
+            config.chargingDisplayMode == 1 &&
+            (SystemClock.uptimeMillis() / 5_000L) % 2L == 1L
+        // Charging color has priority; by default the bolt replaces the percentage.
+        // The optional alternate mode swaps the two glyphs every five seconds.
+        val bolt = config.showBolt && state.charging && !alternateChargingPhase
+        val showBatteryValue = config.showValue && (!state.charging || alternateChargingPhase)
         val inRingSignal = config.showMobile && config.signalMode == 0
         val dualRows = config.dualSim && !config.dataSimOnly && inRingSignal &&
             state.simOneLevel >= 0 && state.simTwoLevel >= 0 && !wifiInk && !state.charging
@@ -160,7 +165,10 @@ object StatusComboStyleOneGlyphRenderer {
         val gapEnd = gapRange.second
 
         if (config.trioStyle == 1) {
-            drawRectangleStyle(canvas, offsetX, config, state, level, batteryColor, tint, track, bolt, innerType)
+            drawRectangleStyle(
+                canvas, offsetX, config, state, level, batteryColor, tint, track,
+                bolt, innerType, showBatteryValue,
+            )
         } else {
             drawBatteryRing(canvas, cx, level, batteryColor, track, config.ringStroke, gapStart, gapEnd)
             if (wifiInk && (!config.valueCentred || wifiInGap)) {
@@ -327,7 +335,7 @@ object StatusComboStyleOneGlyphRenderer {
     private fun drawRectangleStyle(
         canvas: Canvas, offsetX: Float, config: StatusBarComboStyleOneRuntime,
         state: StatusComboStyleOneGlyphState, level: Int, active: Int,
-        tint: Int, track: Int, bolt: Boolean, innerType: String?,
+        tint: Int, track: Int, bolt: Boolean, innerType: String?, showBatteryValue: Boolean,
     ) {
         if (config.showMobile && config.signalMode == 0) {
             val dual = config.dualSim && !config.dataSimOnly &&
@@ -360,7 +368,7 @@ object StatusComboStyleOneGlyphRenderer {
                 drawNetworkType(canvas, innerType, offsetX + 59.5f, 42.3f,
                     config.typeSize * 1.26f, config.typeWeight, tint, config.typeSuffixScale, 74f)
         }
-        if (config.showValue && !state.charging) {
+        if (showBatteryValue) {
             drawTextFitted(canvas, level.toString(), offsetX + 59.5f, 94f,
                 valueSizeCanvasUnits(config) * 1.38f, config.valueWeight, active, 78f)
         }

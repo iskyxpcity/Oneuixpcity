@@ -99,5 +99,6 @@ class StatusComboStyleOnePreviewView(context: Context) : View(context) {
             canvas.drawText(label, (left + right) / 2f, baseline, labelPaint)
             canvas.restoreToCount(labelSave)
         }
+        if (config.chargingDisplayMode == 1) postInvalidateDelayed(5_000L)
     }
 }

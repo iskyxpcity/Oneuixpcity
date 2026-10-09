@@ -24,7 +24,11 @@
     <string name="status_combo_style_one_show_value">Show battery number</string>
     <string name="status_combo_style_one_show_value_summary">Show the battery percentage when not charging. While charging, the bolt replaces the percentage.</string>
     <string name="status_combo_style_one_show_bolt">Show charging bolt</string>
-    <string name="status_combo_style_one_show_bolt_summary">Draw the charging bolt while charging. Its size and horizontal/vertical position can be adjusted under Geometry.</string>
+    <string name="status_combo_style_one_show_bolt_summary">Draw the charging bolt while charging. Its size and horizontal/vertical position can be adjusted under Size.</string>
+    <string name="status_combo_style_one_charging_display">Charging display</string>
+    <string name="status_combo_style_one_charging_display_summary">Charging color takes priority over low and critical colors. Choose the bolt only, or alternate the bolt and battery number every 5 seconds.</string>
+    <string name="status_combo_style_one_charging_display_bolt">Charging bolt only</string>
+    <string name="status_combo_style_one_charging_display_alternate">Alternate bolt and battery number every 5 seconds</string>
     <string name="status_combo_style_one_value_centred">Center the battery number</string>
     <string name="status_combo_style_one_value_centred_summary">Place the percentage in the ring centre and keep the top notch for Wi-Fi arcs, charging bolt, or network type according to the active state.</string>
     <string name="status_combo_style_one_mobile_type_mode">Network type label</string>

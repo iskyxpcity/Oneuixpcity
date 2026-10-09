@@ -180,6 +180,8 @@ data class Preference(
             val showMobile: Boolean = true,
             val showValue: Boolean = true,
             val showBolt: Boolean = true,
+            // 0 = bolt takes priority while charging; 1 = alternate bolt/value every 5 seconds.
+            val chargingDisplayMode: Int = 0,
             val chargingBoltSizePercent: Int = 100,
             val chargingBoltXDp: Int = 0,
             val chargingBoltYDp: Int = 0,

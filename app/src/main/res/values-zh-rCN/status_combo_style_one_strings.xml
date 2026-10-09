@@ -24,7 +24,11 @@
     <string name="status_combo_style_one_show_value">显示电量数字</string>
     <string name="status_combo_style_one_show_value_summary">未充电时在圆环内显示电量百分比；充电时改为显示闪电，不显示百分比数字。</string>
     <string name="status_combo_style_one_show_bolt">显示充电闪电</string>
-    <string name="status_combo_style_one_show_bolt_summary">充电时显示闪电，可在“几何”页单独调整大小和水平/垂直位置。</string>
+    <string name="status_combo_style_one_show_bolt_summary">充电时显示闪电，可在“尺寸”页单独调整大小和水平/垂直位置。</string>
+    <string name="status_combo_style_one_charging_display">充电时的显示方式</string>
+    <string name="status_combo_style_one_charging_display_summary">充电颜色优先于低电量和危险电量颜色。可仅显示闪电，或每 5 秒轮替显示闪电与电量数字。</string>
+    <string name="status_combo_style_one_charging_display_bolt">仅显示充电闪电</string>
+    <string name="status_combo_style_one_charging_display_alternate">每 5 秒轮替闪电与电量数字</string>
     <string name="status_combo_style_one_value_centred">电量数字居中</string>
     <string name="status_combo_style_one_value_centred_summary">将电量百分比放在圆环中央；顶部缺口根据当前状态容纳 Wi-Fi 弧线、充电闪电或网络类型。</string>
     <string name="status_combo_style_one_mobile_type_mode">网络类型标签</string>
