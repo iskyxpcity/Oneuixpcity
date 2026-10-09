@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
 import android.view.View
+import kotlin.math.roundToInt
 import io.github.soclear.oneuix.common.Preference
 import io.github.soclear.oneuix.common.StatusComboStyleOneGlyphRenderer
 import io.github.soclear.oneuix.common.StatusComboStyleOneGlyphState
@@ -20,8 +21,14 @@ class StatusComboStyleOnePreviewView(context: Context) : View(context) {
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
         canvas.drawColor(0xFF202124.toInt())
+        val targetWidth = (StatusComboStyleOneGlyphRenderer.glyphWidthDp(config) *
+            resources.displayMetrics.density).roundToInt()
+        val targetHeight = (StatusComboStyleOneGlyphRenderer.glyphHeightDp(config) *
+            resources.displayMetrics.density).roundToInt()
+        val save = canvas.save()
+        canvas.translate((width - targetWidth) / 2f, (height - targetHeight) / 2f)
         StatusComboStyleOneGlyphRenderer.draw(
-            canvas, width, height, config,
+            canvas, targetWidth, targetHeight, config,
             StatusComboStyleOneGlyphState(
                 batteryLevel = 68,
                 charging = false,
@@ -33,5 +40,6 @@ class StatusComboStyleOnePreviewView(context: Context) : View(context) {
                 tintColor = Color.WHITE,
             ),
         )
+        canvas.restoreToCount(save)
     }
 }

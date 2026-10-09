@@ -29,6 +29,7 @@
     <string name="status_combo_style_one_stacked_signal_summary">When mobile signal is outside, draw four bars and an optional second-SIM dot row instead of the native icon.</string>
     <string name="status_combo_style_one_data_sim_only">Show only the default data SIM</string>
     <string name="status_combo_style_one_data_sim_only_summary">Use the signal level from the SIM currently selected for mobile data.</string>
+    <string name="status_combo_style_one_glyph_scale">Overall icon size</string>
     <string name="status_combo_style_one_ring_stroke">Battery outline thickness</string>
     <string name="status_combo_style_one_arc_stroke">Wi-Fi arc thickness</string>
     <string name="status_combo_style_one_value_size">Battery number size</string>
@@ -43,6 +44,7 @@
     <string name="status_combo_style_one_out_signal_margin">Outside signal margin</string>
     <string name="status_combo_style_one_role_colors">Use battery-state colors</string>
     <string name="status_combo_style_one_role_colors_summary">Use different colors while charging, at low battery, or at a critical battery level.</string>
+    <string name="status_combo_style_one_critical_threshold">Critical-battery color threshold</string>
     <string name="status_combo_style_one_low_threshold">Low-battery color threshold</string>
     <string name="status_combo_style_one_track_alpha">Inactive arcs and signal opacity</string>
     <string name="status_combo_style_one_critical_dark">Critical battery color on dark backgrounds</string>

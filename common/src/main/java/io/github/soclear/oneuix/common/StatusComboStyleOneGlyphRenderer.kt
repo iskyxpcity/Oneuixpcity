@@ -7,11 +7,10 @@ import android.graphics.Path
 import android.graphics.RectF
 import android.graphics.Typeface
 import io.github.soclear.oneuix.common.Preference.SystemUI.StatusBarComboStyleOneRuntime
-import kotlin.math.asin
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.math.roundToInt
 
-/** Live system state for the independent Style One glyph. */
 data class StatusComboStyleOneGlyphState(
     val batteryLevel: Int = 100,
     val charging: Boolean = false,
@@ -26,29 +25,72 @@ data class StatusComboStyleOneGlyphState(
     val tintColor: Int = Color.WHITE,
 )
 
-/**
- * Independent renderer for the Style One feature set. The preview and the
- * SystemUI glyph both call this code, so adjustments and live settings stay in sync.
- */
 object StatusComboStyleOneGlyphRenderer {
-    private const val DESIGN_WIDTH = 260f
-    private const val DESIGN_HEIGHT = 120f
-    private const val CX = 204f
-    private const val CY = 60f
-    private const val RADIUS = 42f
-    private const val RING_START = 148.69f
-    private const val RING_SWEEP = 242.62f
+    private const val COMPACT_WIDTH = 120f
+    private const val WIDE_WIDTH = 260f
+    private const val HEIGHT = 120f
+    private const val WIDE_OFFSET = 144.5f
+    private const val B_CX = 59.5f
+    private const val B_CY = 61.48715f
+    private const val B_R = 51.5f
+    private const val B_START = 148.69009f
+    private const val B_SWEEP = 242.61983f
     private const val GAP_IDLE_START = 0.325f
     private const val GAP_IDLE_END = 0.675f
     private const val GAP_CHARGE_START = 0.345f
     private const val GAP_CHARGE_END = 0.655f
-    private const val GAP_DUAL_START = 1f - 180f / RING_SWEEP
-    private const val GAP_DUAL_END = 180f / RING_SWEEP
+    private const val GAP_DUAL_START = 1f - 180f / B_SWEEP
+    private const val GAP_DUAL_END = 180f / B_SWEEP
+    private const val W_CX = 59.5f
+    private const val W1_CY = 78.3035085f
+    private const val W1_R = 31f
+    private const val W1_START = 227.3423f
+    private const val W1_SWEEP = 85.3154f
+    private const val W2_CY = 78.8881817f
+    private const val W2_R = 18.5f
+    private const val W2_START = 227.5048f
+    private const val W2_SWEEP = 84.9904f
+    private const val W_TOP = W1_CY - W1_R
+    private const val GAP_TOP = 2.5f
+    private const val GAP_WIFI_SCALE = 0.8f
+    private const val DOT_R = 5.5f
+    private const val DUAL_DOT_R = 7f
+    private const val CENTER_CY = 64f
+    private const val CAP_HEIGHT_RATIO = 0.71f
+    private const val CAP_CENTER_RATIO = CAP_HEIGHT_RATIO / 2f
+    private const val VALUE_X = 59.5f
+    private const val VALUE_BASELINE = 24f
+    private const val BOLT_CX = 59.45f
+    private const val BOLT_TOP = 1.5f
+    private const val BOLT_TOP_REF = 2.2f
+    private const val BOLT_CX_REF = 59.45f
+    private const val BOLT_SCALE = 1.6f
     private const val QUICK_CHARGE = 0xFFFFBA28.toInt()
 
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val rect = RectF()
-    private val path = Path()
+    private val boltPath = buildBoltPath()
+    private val wifiDotPath = buildWifiDotPath()
+    private val dots = arrayOf(
+        floatArrayOf(33f, 104.2f),
+        floatArrayOf(50.5f, 111.2f),
+        floatArrayOf(68.5f, 111.7f),
+        floatArrayOf(86f, 105.8f),
+    )
+
+    fun usesWideLayout(config: StatusBarComboStyleOneRuntime): Boolean =
+        config.showMobile &&
+            (config.mobileTypeMode == 2 || (config.signalMode == 1 && config.stackedSignal))
+
+    fun glyphWidthDp(config: StatusBarComboStyleOneRuntime): Int {
+        val base = if (usesWideLayout(config)) 78f else 36f
+        return (base * config.glyphScalePercent.coerceIn(70, 150) / 100f)
+            .roundToInt().coerceAtLeast(20)
+    }
+
+    fun glyphHeightDp(config: StatusBarComboStyleOneRuntime): Int =
+        (36f * config.glyphScalePercent.coerceIn(70, 150) / 100f)
+            .roundToInt().coerceAtLeast(18)
 
     fun draw(
         canvas: Canvas,
@@ -58,240 +100,275 @@ object StatusComboStyleOneGlyphRenderer {
         state: StatusComboStyleOneGlyphState,
     ) {
         if (width <= 0 || height <= 0) return
-        val scale = min(width / DESIGN_WIDTH, height / DESIGN_HEIGHT)
+        val wide = usesWideLayout(config)
+        val designWidth = if (wide) WIDE_WIDTH else COMPACT_WIDTH
+        val scale = min(width / designWidth, height / HEIGHT)
         if (scale <= 0f) return
         val save = canvas.save()
-        canvas.translate((width - DESIGN_WIDTH * scale) / 2f, (height - DESIGN_HEIGHT * scale) / 2f)
+        canvas.translate((width - designWidth * scale) / 2f, (height - HEIGHT * scale) / 2f)
         canvas.scale(scale, scale)
 
+        val offsetX = if (wide) WIDE_OFFSET else 0f
+        val cx = B_CX + offsetX
         val level = state.batteryLevel.coerceIn(0, 100)
         val tint = state.tintColor
         val track = withAlpha(tint, config.trackAlpha)
         val batteryColor = resolveBatteryColor(config, state, tint)
         val wifiInk = config.showWifi && state.wifiLevel >= 1
-        val type = state.networkType.trim().uppercase().takeIf {
+        val innerType = state.networkType.trim().uppercase().takeIf {
             config.showMobile && config.mobileTypeMode == 1 && it.isNotEmpty()
         }
         val bolt = config.showValue && config.showBolt && state.charging
-        val signalInGlyph = config.showMobile && config.signalMode == 0
-        val sims = (if (state.simOneLevel >= 0) 1 else 0) + (if (state.simTwoLevel >= 0) 1 else 0)
+        val inRingSignal = config.showMobile && config.signalMode == 0
+        val dualRows = config.dualSim && !config.dataSimOnly && inRingSignal &&
+            state.simOneLevel >= 0 && state.simTwoLevel >= 0 && !wifiInk && !state.charging
+        val valueInCentre = config.showValue &&
+            (config.valueCentred || dualRows || (!wifiInk && innerType == null))
+        val valueInGap = config.showValue && !valueInCentre && !bolt
+        val wifiInGap = wifiInk && config.valueCentred && !bolt
+        val typeInCentre = innerType != null && !wifiInk && !valueInCentre
+        val typeInGap = innerType != null && valueInCentre && !wifiInk && !bolt && !dualRows
+        val gapUsed = bolt || wifiInGap || valueInGap || typeInGap || dualRows
+        val gapStart = when {
+            !gapUsed -> 0f
+            dualRows -> GAP_DUAL_START
+            bolt -> GAP_CHARGE_START
+            else -> GAP_IDLE_START
+        }
+        val gapEnd = when {
+            !gapUsed -> 0f
+            dualRows -> GAP_DUAL_END
+            bolt -> GAP_CHARGE_END
+            else -> GAP_IDLE_END
+        }
 
         if (config.trioStyle == 1) {
-            drawRectangleStyle(canvas, config, state, level, batteryColor, tint, track, wifiInk, bolt)
+            drawRectangleStyle(canvas, offsetX, config, state, level, batteryColor, tint, track, bolt, innerType)
         } else {
-            val dualRows = config.dualSim && signalInGlyph && sims >= 2 && !wifiInk && !state.charging
-            val valueInCentre = config.showValue &&
-                (config.valueCentred || dualRows || (!wifiInk && type == null))
-            val valueInGap = config.showValue && !valueInCentre && !bolt
-            val wifiInGap = wifiInk && config.valueCentred && !bolt
-            val typeInCentre = type != null && !wifiInk && !valueInCentre
-            val typeInGap = type != null && valueInCentre && !wifiInk && !bolt && !dualRows
-            val gapUsed = bolt || wifiInGap || valueInGap || typeInGap || dualRows
-            val gapStart = when {
-                !gapUsed -> 0f
-                dualRows -> GAP_DUAL_START
-                bolt -> GAP_CHARGE_START
-                else -> GAP_IDLE_START
-            }
-            val gapEnd = when {
-                !gapUsed -> 0f
-                dualRows -> GAP_DUAL_END
-                bolt -> GAP_CHARGE_END
-                else -> GAP_IDLE_END
-            }
-            drawBatteryRing(canvas, level, batteryColor, track, config.ringStroke, gapStart, gapEnd)
-
-            // Centered value moves the Wi-Fi arcs up into the same top mouth.
-            // If the bolt owns that mouth, the arcs yield rather than overlap it.
+            drawBatteryRing(canvas, cx, level, batteryColor, track, config.ringStroke, gapStart, gapEnd)
             if (wifiInk && (!config.valueCentred || wifiInGap)) {
-                drawWifi(canvas, CX, if (wifiInGap) 20f else 60f, tint, state.wifiLevel, config.arcStroke, wifiInGap)
+                drawWifi(canvas, offsetX, tint, state.wifiLevel, config.arcStroke, wifiInGap)
             }
-            if (signalInGlyph) {
+            if (inRingSignal) {
                 if (dualRows) {
-                    drawDotRow(canvas, CX, 34f, state.simOneLevel, tint, track, 0.9f)
-                    drawDotRow(canvas, CX, 88f, state.simTwoLevel, tint, track, 0.9f)
+                    drawDotRow(canvas, offsetX, state.simOneLevel, tint, track, DUAL_DOT_R, true)
+                    drawDotRow(canvas, offsetX, state.simTwoLevel, tint, track, DUAL_DOT_R, false)
                 } else {
-                    drawDotRow(canvas, CX, 88f, state.mobileLevel, tint, track, 1f)
+                    drawSingleSignalDots(canvas, offsetX, state.mobileLevel, tint, track)
                 }
             }
-            if (typeInCentre && type != null) {
-                drawNetworkType(canvas, type, CX, 73f, config.typeSize.toFloat(), config.typeWeight, tint, config.typeSuffixScale, 72f)
+            if (typeInCentre && innerType != null) {
+                val size = fitTextSize(innerType, config.typeSize.toFloat(), config.typeWeight,
+                    centreClearWidth(config.typeSize.toFloat(), config.ringStroke), config.typeSuffixScale)
+                drawNetworkType(canvas, innerType, cx, centerBaseline(size), size, config.typeWeight,
+                    tint, config.typeSuffixScale, centreClearWidth(size, config.ringStroke))
             }
-            if (typeInGap && type != null) {
-                drawNetworkType(canvas, type, CX, 30f, config.typeSize.toFloat(), config.typeWeight, tint, config.typeSuffixScale, 65f)
+            if (typeInGap && innerType != null) {
+                val size = fitTextSize(innerType, config.typeSize.toFloat(), config.typeWeight,
+                    gapClearWidth(config.ringStroke), config.typeSuffixScale)
+                drawNetworkType(canvas, innerType, cx, gapBaseline(size), size, config.typeWeight,
+                    tint, config.typeSuffixScale, gapClearWidth(config.ringStroke))
             }
-            if (bolt) drawBolt(canvas, CX, 27f, if (state.quickCharge) QUICK_CHARGE else tint)
+            if (bolt) drawBolt(canvas, offsetX, if (state.quickCharge) QUICK_CHARGE else tint)
             if (config.showValue) {
-                if (valueInCentre) {
-                    drawTextFitted(canvas, level.toString(), CX, 72f, config.valueSize.toFloat(), config.valueWeight, tint, 70f)
-                } else if (valueInGap && !bolt) {
-                    drawTextFitted(canvas, level.toString(), CX, 30f, config.valueSize.toFloat(), config.valueWeight, tint, 65f)
-                }
+                val clear = if (valueInCentre) centreClearWidth(config.valueSize.toFloat(), config.ringStroke)
+                    else gapClearWidth(config.ringStroke)
+                val size = fitTextSize(level.toString(), config.valueSize.toFloat(), config.valueWeight, clear)
+                drawTextFitted(canvas, level.toString(), cx,
+                    if (valueInCentre) centerBaseline(size) else gapBaseline(size),
+                    size, config.valueWeight, tint, clear)
             }
         }
 
-        // The out-of-glyph cellular view replaces the native signal only when the
-        // user explicitly asks for the stacked bars-and-dots alternative.
-        if (config.showMobile && config.signalMode == 1 && config.stackedSignal) {
-            val signalX = 26f - config.outSignalMarginDp.coerceIn(0, 16) * (DESIGN_HEIGHT / 36f)
+        if (wide && config.showMobile && config.signalMode == 1 && config.stackedSignal) {
+            val margin = config.outSignalMarginDp.coerceIn(0, 16) * (HEIGHT / 36f)
+            val signalX = (26f - margin).coerceAtLeast(18f)
             val bars = if (config.dataSimOnly) state.mobileLevel
                 else state.simOneLevel.takeIf { it >= 0 } ?: state.mobileLevel
             val second = if (!config.dataSimOnly && state.simTwoLevel >= 0) state.simTwoLevel else -1
             drawStackedSignal(canvas, signalX, 52f, bars, second, tint, track, config.outSignalSizeDp)
         }
-        if (config.showMobile && config.mobileTypeMode == 2 && state.networkType.isNotBlank()) {
-            val centre = 110f +
-                (config.outTypeMarginLeftDp.coerceIn(0, 16) - config.outTypeMarginRightDp.coerceIn(0, 16)) *
-                (DESIGN_HEIGHT / 36f)
-            val size = config.outTypeSizeDp.coerceIn(8, 26) * (DESIGN_HEIGHT / 36f)
-            drawNetworkType(canvas, state.networkType.trim().uppercase(), centre, 67f, size, config.typeWeight, tint, config.typeSuffixScale, 77f)
+        if (wide && config.showMobile && config.mobileTypeMode == 2 && state.networkType.isNotBlank()) {
+            val m = HEIGHT / 36f
+            val center = (110f +
+                (config.outTypeMarginLeftDp.coerceIn(0, 16) -
+                    config.outTypeMarginRightDp.coerceIn(0, 16)) * m).coerceIn(30f, 170f)
+            val size = config.outTypeSizeDp.coerceIn(8, 26) * m
+            drawNetworkType(canvas, state.networkType.trim().uppercase(), center, 67f,
+                size, config.typeWeight, tint, config.typeSuffixScale, 78f)
         }
-
         canvas.restoreToCount(save)
     }
 
     private fun drawBatteryRing(
-        canvas: Canvas,
-        level: Int,
-        activeColor: Int,
-        trackColor: Int,
-        stroke: Int,
-        gapStart: Float,
-        gapEnd: Float,
+        canvas: Canvas, cx: Float, level: Int, active: Int, track: Int,
+        stroke: Int, gapStart: Float, gapEnd: Float,
     ) {
-        rect.set(CX - RADIUS, CY - RADIUS, CX + RADIUS, CY + RADIUS)
+        rect.set(cx - B_R, B_CY - B_R, cx + B_R, B_CY + B_R)
         paint.style = Paint.Style.STROKE
         paint.strokeWidth = stroke.coerceIn(4, 16).toFloat()
         paint.strokeCap = Paint.Cap.ROUND
-        paint.color = trackColor
-        drawRingProgress(canvas, 1f, gapStart, gapEnd)
+        paint.strokeJoin = Paint.Join.ROUND
+        paint.color = track
+        drawRingProgress(canvas, cx, 0f, 1f, gapStart, gapEnd)
         if (level > 0) {
-            paint.color = activeColor
-            drawRingProgress(canvas, (level / 100f).coerceIn(0f, 1f), gapStart, gapEnd)
+            paint.color = active
+            drawRingProgress(canvas, cx, 0f, level / 100f, gapStart, gapEnd)
         }
         paint.style = Paint.Style.FILL
         paint.strokeCap = Paint.Cap.BUTT
     }
 
-    /** Draw progress along the visible battery path, skipping only its chosen top mouth. */
-    private fun drawRingProgress(canvas: Canvas, progress: Float, mouthStart: Float, mouthEnd: Float) {
-        val start = mouthStart.coerceIn(0f, 1f)
-        val end = mouthEnd.coerceIn(0f, 1f)
-        val visiblePath = start + (1f - end)
-        if (visiblePath <= 0f) return
-        val visibleTo = progress.coerceIn(0f, 1f) * visiblePath
+    private fun drawRingProgress(
+        canvas: Canvas, cx: Float, from: Float, to: Float, gapStart: Float, gapEnd: Float,
+    ) {
+        val start = gapStart.coerceIn(0f, 1f)
+        val end = gapEnd.coerceIn(0f, 1f)
+        val drawn = start + (1f - end)
+        if (drawn <= 0f) return
+        val visibleFrom = from.coerceIn(0f, 1f) * drawn
+        val visibleTo = to.coerceIn(0f, 1f) * drawn
         val firstEnd = min(visibleTo, start)
-        if (firstEnd > 0f) {
-            canvas.drawArc(rect, RING_START, RING_SWEEP * firstEnd, false, paint)
+        if (firstEnd > visibleFrom) drawArcByProgress(canvas, cx, visibleFrom, firstEnd)
+        val secondFrom = max(visibleFrom, start)
+        if (visibleTo > secondFrom) {
+            drawArcByProgress(canvas, cx, end + secondFrom - start, end + visibleTo - start)
         }
-        val secondVisibleFrom = max(0f, start)
-        if (visibleTo > secondVisibleFrom) {
-            val pathFrom = end + secondVisibleFrom - start
-            val pathTo = end + visibleTo - start
-            if (pathTo > pathFrom) {
-                canvas.drawArc(rect, RING_START + RING_SWEEP * pathFrom, RING_SWEEP * (pathTo - pathFrom), false, paint)
-            }
+    }
+
+    private fun drawArcByProgress(canvas: Canvas, cx: Float, from: Float, to: Float) {
+        rect.set(cx - B_R, B_CY - B_R, cx + B_R, B_CY + B_R)
+        canvas.drawArc(rect, B_START + from * B_SWEEP, (to - from) * B_SWEEP, false, paint)
+    }
+
+    private fun drawWifi(
+        canvas: Canvas, offsetX: Float, color: Int, level: Int, stroke: Int, intoGap: Boolean,
+    ) {
+        val save = canvas.save()
+        if (intoGap) {
+            canvas.translate(offsetX + W_CX * (1f - GAP_WIFI_SCALE),
+                GAP_TOP - (W_TOP - stroke * 0.5f) * GAP_WIFI_SCALE)
+            canvas.scale(GAP_WIFI_SCALE, GAP_WIFI_SCALE)
+            drawWifiArcs(canvas, 0f, color, level, stroke)
+        } else {
+            drawWifiArcs(canvas, offsetX, color, level, stroke)
+        }
+        canvas.restoreToCount(save)
+    }
+
+    private fun drawWifiArcs(canvas: Canvas, offsetX: Float, color: Int, level: Int, stroke: Int) {
+        paint.style = Paint.Style.STROKE
+        paint.strokeWidth = stroke.coerceIn(3, 16).toFloat()
+        paint.strokeCap = Paint.Cap.ROUND
+        paint.strokeJoin = Paint.Join.ROUND
+        paint.color = color
+        if (level >= 3) {
+            rect.set(offsetX + W_CX - W1_R, W1_CY - W1_R, offsetX + W_CX + W1_R, W1_CY + W1_R)
+            canvas.drawArc(rect, W1_START, W1_SWEEP, false, paint)
+            rect.set(offsetX + W_CX - W2_R, W2_CY - W2_R, offsetX + W_CX + W2_R, W2_CY + W2_R)
+            canvas.drawArc(rect, W2_START, W2_SWEEP, false, paint)
+        } else if (level == 2) {
+            rect.set(offsetX + W_CX - W2_R, W2_CY - W2_R, offsetX + W_CX + W2_R, W2_CY + W2_R)
+            canvas.drawArc(rect, W2_START, W2_SWEEP, false, paint)
+        }
+        paint.style = Paint.Style.FILL
+        if (level >= 1) {
+            val save = canvas.save()
+            canvas.translate(offsetX, 0f)
+            canvas.drawPath(wifiDotPath, paint)
+            canvas.restoreToCount(save)
+        }
+        paint.strokeCap = Paint.Cap.BUTT
+    }
+
+    private fun drawSingleSignalDots(canvas: Canvas, offsetX: Float, level: Int, color: Int, track: Int) {
+        dots.forEachIndexed { index, dot ->
+            paint.style = Paint.Style.FILL
+            paint.color = if (index < level.coerceIn(0, 4)) color else track
+            canvas.drawCircle(offsetX + dot[0], dot[1], DOT_R, paint)
+        }
+    }
+
+    private fun drawDotRow(
+        canvas: Canvas, offsetX: Float, level: Int, color: Int, track: Int,
+        radius: Float, topRow: Boolean,
+    ) {
+        dots.forEachIndexed { index, point ->
+            val y = if (topRow) 2f * B_CY - point[1] else point[1]
+            paint.style = Paint.Style.FILL
+            paint.color = if (index < level.coerceIn(0, 4)) color else track
+            canvas.drawCircle(offsetX + point[0], y, radius, paint)
         }
     }
 
     private fun drawRectangleStyle(
-        canvas: Canvas,
-        config: StatusBarComboStyleOneRuntime,
-        state: StatusComboStyleOneGlyphState,
-        level: Int,
-        activeColor: Int,
-        tint: Int,
-        track: Int,
-        wifiInk: Boolean,
-        bolt: Boolean,
+        canvas: Canvas, offsetX: Float, config: StatusBarComboStyleOneRuntime,
+        state: StatusComboStyleOneGlyphState, level: Int, active: Int,
+        tint: Int, track: Int, bolt: Boolean, innerType: String?,
     ) {
-        // The rectangular arrangement uses two vertical signal columns, a top
-        // indicator slot, a number and a horizontal battery-level bar.
         if (config.showMobile && config.signalMode == 0) {
-            val dual = config.dualSim && state.simOneLevel >= 0 && state.simTwoLevel >= 0
-            drawRectDotColumn(canvas, CX - 45f, if (dual) state.simOneLevel else state.mobileLevel, tint, track)
-            drawRectDotColumn(canvas, CX + 45f, if (dual) state.simTwoLevel else state.mobileLevel, tint, track)
+            val dual = config.dualSim && !config.dataSimOnly &&
+                state.simOneLevel >= 0 && state.simTwoLevel >= 0
+            drawRectDotColumn(canvas, offsetX + 9.6f,
+                if (dual) state.simOneLevel else state.mobileLevel, tint, track)
+            drawRectDotColumn(canvas, offsetX + 110.4f,
+                if (dual) state.simTwoLevel else state.mobileLevel, tint, track)
         }
         val barHeight = config.ringStroke.coerceIn(4, 16).toFloat()
-        val top = 105f - barHeight / 2f
-        rect.set(CX - 59f, top, CX + 59f, top + barHeight)
+        val barTop = 107.3f - barHeight / 2f
+        rect.set(offsetX + 1f, barTop, offsetX + 119f, barTop + barHeight)
         paint.style = Paint.Style.FILL
         paint.color = track
         canvas.drawRoundRect(rect, barHeight / 2f, barHeight / 2f, paint)
         if (level > 0) {
-            rect.set(CX - 59f, top, CX - 59f + 118f * level / 100f, top + barHeight)
-            paint.color = activeColor
+            rect.set(offsetX + 1f, barTop, offsetX + 1f + 118f * level / 100f, barTop + barHeight)
+            paint.color = active
             canvas.drawRoundRect(rect, barHeight / 2f, barHeight / 2f, paint)
         }
-
-        val type = state.networkType.trim().uppercase().takeIf {
-            config.showMobile && config.mobileTypeMode == 1 && it.isNotEmpty()
-        }
-        val canDrawWifi = config.showWifi && state.wifiLevel >= 1
-        // Like the source design, the top slot has exactly one owner: bolt,
-        // otherwise Wi-Fi arcs, otherwise the network type.
         when {
-            bolt -> drawBolt(canvas, CX, 28f, if (state.quickCharge) QUICK_CHARGE else tint)
-            canDrawWifi -> drawWifi(canvas, CX, 31f, tint, state.wifiLevel, config.arcStroke, true)
-            type != null -> drawNetworkType(canvas, type, CX, 47f, config.typeSize * 1.26f, config.typeWeight, tint, config.typeSuffixScale, 74f)
+            bolt -> drawRectBolt(canvas, offsetX, if (state.quickCharge) QUICK_CHARGE else tint, config.arcStroke)
+            config.showWifi && state.wifiLevel >= 1 ->
+                drawRectWifi(canvas, offsetX, tint, state.wifiLevel, config.arcStroke)
+            innerType != null ->
+                drawNetworkType(canvas, innerType, offsetX + 59.5f, 42.3f,
+                    config.typeSize * 1.26f, config.typeWeight, tint, config.typeSuffixScale, 74f)
         }
         if (config.showValue) {
-            drawTextFitted(canvas, level.toString(), CX, 94f, config.valueSize * 1.38f, config.valueWeight, tint, 78f)
+            drawTextFitted(canvas, level.toString(), offsetX + 59.5f, 94f,
+                config.valueSize * 1.38f, config.valueWeight, tint, 78f)
         }
     }
 
     private fun drawRectDotColumn(canvas: Canvas, x: Float, level: Int, color: Int, track: Int) {
         for (i in 0..3) {
             paint.style = Paint.Style.FILL
-            paint.color = if (i < level.coerceIn(0, 4)) color else track
-            canvas.drawCircle(x, 22f + i * 22f, 3.8f, paint)
+            paint.color = if (i >= 4 - level.coerceIn(0, 4)) color else track
+            canvas.drawCircle(x, 15.6f + i * 22.5f, 8.6f, paint)
         }
     }
 
-    private fun drawWifi(canvas: Canvas, cx: Float, cy: Float, color: Int, level: Int, stroke: Int, compact: Boolean) {
-        val outer = if (compact) 15f else 27f
-        val inner = if (compact) 9f else 18f
-        paint.style = Paint.Style.STROKE
-        paint.strokeWidth = stroke.coerceIn(3, 16).toFloat()
-        paint.strokeCap = Paint.Cap.ROUND
-        if (level >= 3) {
-            rect.set(cx - outer, cy - outer, cx + outer, cy + outer)
-            paint.color = color
-            canvas.drawArc(rect, 225f, 90f, false, paint)
-            rect.set(cx - inner, cy - inner, cx + inner, cy + inner)
-            canvas.drawArc(rect, 225f, 90f, false, paint)
-        } else if (level == 2) {
-            rect.set(cx - inner, cy - inner, cx + inner, cy + inner)
-            paint.color = color
-            canvas.drawArc(rect, 225f, 90f, false, paint)
-        }
+    private fun drawRectWifi(canvas: Canvas, offsetX: Float, color: Int, level: Int, stroke: Int) {
+        val save = canvas.save()
+        val scale = 0.95f
+        canvas.translate(offsetX + 60f - W_CX * scale, 8.5f - (W_TOP - stroke * 0.5f) * scale)
+        canvas.scale(scale, scale)
+        drawWifiArcs(canvas, 0f, color, level, stroke)
+        canvas.restoreToCount(save)
+    }
+
+    private fun drawRectBolt(canvas: Canvas, offsetX: Float, color: Int, stroke: Int) {
+        val save = canvas.save()
+        canvas.translate(offsetX + boltOffsetX() + 0.55f, boltOffsetY() + 0.24f)
+        canvas.scale(BOLT_SCALE, BOLT_SCALE)
         paint.style = Paint.Style.FILL
-        if (level >= 1) {
-            paint.color = color
-            canvas.drawCircle(cx, cy + (if (compact) 13f else 25f), if (compact) 2.8f else 3.8f, paint)
-        }
-        paint.strokeCap = Paint.Cap.BUTT
-    }
-
-    private fun drawDotRow(canvas: Canvas, cx: Float, y: Float, level: Int, color: Int, track: Int, scale: Float) {
-        val pitch = 13f * scale
-        val radius = 5.5f * scale
-        for (i in 0..3) {
-            paint.style = Paint.Style.FILL
-            paint.color = if (i < level.coerceIn(0, 4)) color else track
-            canvas.drawCircle(cx + (i - 1.5f) * pitch, y, radius, paint)
-        }
+        paint.color = color
+        canvas.drawPath(boltPath, paint)
+        canvas.restoreToCount(save)
     }
 
     private fun drawStackedSignal(
-        canvas: Canvas,
-        cx: Float,
-        cy: Float,
-        barsLevel: Int,
-        dotsLevel: Int,
-        color: Int,
-        track: Int,
-        sizeDp: Int,
+        canvas: Canvas, cx: Float, cy: Float, bars: Int, dots: Int,
+        color: Int, track: Int, sizeDp: Int,
     ) {
         val scale = (sizeDp / 15f).coerceIn(0.55f, 1.4f)
         val barWidth = 5.8f * scale
@@ -300,24 +377,27 @@ object StatusComboStyleOneGlyphRenderer {
         for (i in 0..3) {
             val x = cx + (i - 1.5f) * pitch
             paint.style = Paint.Style.FILL
-            paint.color = if (i < barsLevel.coerceIn(0, 4)) color else track
+            paint.color = if (i < bars.coerceIn(0, 4)) color else track
             rect.set(x - barWidth / 2f, cy - heights[i] / 2f, x + barWidth / 2f, cy + heights[i] / 2f)
             canvas.drawRoundRect(rect, barWidth / 2f, barWidth / 2f, paint)
-            if (dotsLevel >= 0) {
-                paint.color = if (i < dotsLevel.coerceIn(0, 4)) color else track
+            if (dots >= 0) {
+                paint.color = if (i < dots.coerceIn(0, 4)) color else track
                 canvas.drawCircle(x, cy + 30f * scale, 2.3f * scale, paint)
             }
         }
     }
 
-    private fun drawTextFitted(canvas: Canvas, text: String, cx: Float, baseline: Float, size: Float, weight: Int, color: Int, maxWidth: Float) {
+    private fun drawTextFitted(
+        canvas: Canvas, text: String, cx: Float, baseline: Float,
+        size: Float, weight: Int, color: Int, maxWidth: Float,
+    ) {
         paint.style = Paint.Style.FILL
         paint.color = color
         paint.textAlign = Paint.Align.CENTER
         paint.typeface = weightedTypeface(weight)
         paint.textSize = size.coerceIn(8f, 64f)
-        val width = paint.measureText(text)
-        if (width > maxWidth && width > 0f) paint.textSize *= maxWidth / width
+        val w = paint.measureText(text)
+        if (maxWidth > 0f && w > maxWidth) paint.textSize *= maxWidth / w
         canvas.drawText(text, cx, baseline, paint)
     }
 
@@ -337,50 +417,110 @@ object StatusComboStyleOneGlyphRenderer {
         paint.textSize = if (smallA) safeSize * suffixScale / 100f else safeSize
         val suffixWidth = if (smallA) paint.measureText("A") else 0f
         val fullWidth = bodyWidth + suffixWidth
-        val scale = if (fullWidth > maxWidth && fullWidth > 0f) maxWidth / fullWidth else 1f
-        val left = cx - fullWidth * scale / 2f
-        paint.textSize = safeSize * scale
+        val fit = if (maxWidth > 0f && fullWidth > maxWidth) maxWidth / fullWidth else 1f
+        val left = cx - fullWidth * fit / 2f
+        paint.textSize = safeSize * fit
         canvas.drawText(body, left, baseline, paint)
         if (smallA) {
-            paint.textSize = safeSize * suffixScale / 100f * scale
-            canvas.drawText("A", left + bodyWidth * scale, baseline, paint)
+            paint.textSize = safeSize * suffixScale / 100f * fit
+            canvas.drawText("A", left + bodyWidth * fit, baseline, paint)
         }
         paint.textAlign = Paint.Align.CENTER
     }
 
-    private fun drawBolt(canvas: Canvas, cx: Float, topBaseline: Float, color: Int) {
-        path.reset()
-        path.moveTo(cx + 2f, topBaseline - 13f)
-        path.lineTo(cx - 8f, topBaseline + 1f)
-        path.lineTo(cx - 1f, topBaseline + 1f)
-        path.lineTo(cx - 4f, topBaseline + 14f)
-        path.lineTo(cx + 9f, topBaseline - 3f)
-        path.lineTo(cx + 2f, topBaseline - 3f)
-        path.close()
+    private fun drawBolt(canvas: Canvas, offsetX: Float, color: Int) {
+        val save = canvas.save()
+        canvas.translate(offsetX + boltOffsetX(), boltOffsetY())
+        canvas.scale(BOLT_SCALE, BOLT_SCALE)
         paint.style = Paint.Style.FILL
         paint.color = color
-        canvas.drawPath(path, paint)
+        canvas.drawPath(boltPath, paint)
+        canvas.restoreToCount(save)
     }
+
+    private fun boltOffsetX(): Float = BOLT_CX - BOLT_CX_REF * BOLT_SCALE
+    private fun boltOffsetY(): Float = BOLT_TOP - BOLT_TOP_REF * BOLT_SCALE
+
+    private fun buildBoltPath() = Path().apply {
+        moveTo(62.1f, 2.2f)
+        quadTo(62.8f, 2.5f, 62.6f, 3.3f)
+        lineTo(61.2f, 7.8f)
+        lineTo(65.9f, 7.8f)
+        quadTo(66.9f, 7.8f, 67.3f, 8.6f)
+        quadTo(67.6f, 9.3f, 67f, 10f)
+        lineTo(57f, 21.3f)
+        quadTo(56.4f, 22f, 55.6f, 21.6f)
+        quadTo(55f, 21.3f, 55.3f, 20.5f)
+        lineTo(57.4f, 14.1f)
+        lineTo(52.9f, 14.1f)
+        quadTo(52f, 14.1f, 51.6f, 13.3f)
+        quadTo(51.3f, 12.6f, 51.9f, 12f)
+        lineTo(61.1f, 2.7f)
+        quadTo(61.6f, 2.1f, 62.1f, 2.2f)
+        close()
+    }
+
+    private fun buildWifiDotPath() = Path().apply {
+        moveTo(59.5f, 69.9f)
+        cubicTo(61f, 69.9f, 65.2f, 70.8f, 66.5f, 73f)
+        cubicTo(66.7f, 73.8f, 66.7f, 74.3f, 66.5f, 75f)
+        cubicTo(63.8f, 78.8f, 61.15f, 80.95f, 59.5f, 80.95f)
+        cubicTo(57.85f, 80.95f, 55.2f, 78.8f, 52.5f, 75f)
+        cubicTo(52.3f, 74.3f, 52.3f, 73.8f, 52.5f, 73f)
+        cubicTo(53.8f, 70.8f, 58f, 69.9f, 59.5f, 69.9f)
+        close()
+    }
+
+    private fun fitTextSize(
+        text: String, requested: Float, weight: Int, maxWidth: Float, suffixScale: Int = 100,
+    ): Float {
+        paint.typeface = weightedTypeface(weight)
+        paint.textSize = requested.coerceIn(8f, 64f)
+        val body = if (text.endsWith("A") && suffixScale < 100) text.dropLast(1) else text
+        var width = paint.measureText(body)
+        if (body != text) {
+            paint.textSize = requested * suffixScale / 100f
+            width += paint.measureText("A")
+        }
+        return if (maxWidth > 0f && width > maxWidth) requested * maxWidth / width else requested
+    }
+
+    private fun gapClearWidth(stroke: Int): Float {
+        val radians = Math.toRadians(((GAP_IDLE_END - GAP_IDLE_START) * B_SWEEP * 0.5f).toDouble())
+        return (2.0 * B_R * kotlin.math.sin(radians)).toFloat() - stroke
+    }
+
+    private fun centreClearWidth(size: Float, stroke: Int): Float {
+        val innerRadius = B_R - stroke / 2f
+        return max(0f, (2.0 * innerRadius * kotlin.math.sin(Math.toRadians(43.0))).toFloat())
+    }
+
+    private fun gapBaseline(size: Float): Float = max(VALUE_BASELINE, GAP_TOP + size * CAP_HEIGHT_RATIO)
+    private fun centerBaseline(size: Float): Float = CENTER_CY + size * CAP_CENTER_RATIO
 
     private fun weightedTypeface(weight: Int): Typeface =
         Typeface.create(Typeface.create("sans-serif", Typeface.NORMAL), weight.coerceIn(100, 900), false)
 
-    private fun resolveBatteryColor(config: StatusBarComboStyleOneRuntime, state: StatusComboStyleOneGlyphState, tint: Int): Int {
+    private fun resolveBatteryColor(
+        config: StatusBarComboStyleOneRuntime, state: StatusComboStyleOneGlyphState, tint: Int,
+    ): Int {
         if (!config.roleColors) return tint
         val darkBackground = luminance(tint) > 0.5f
         return when {
-            state.batteryLevel in 0 until 20 ->
+            state.batteryLevel <= config.criticalThreshold.coerceIn(1, 20) ->
                 if (darkBackground) config.criticalColorDarkArgb else config.criticalColorLightArgb
+            state.charging ->
+                if (darkBackground) config.chargingColorDarkArgb else config.chargingColorLightArgb
             state.powerSave || state.lowBatteryWarning ||
                 state.batteryLevel <= config.lowThreshold.coerceIn(5, 50) ->
                 if (darkBackground) config.lowColorDarkArgb else config.lowColorLightArgb
-            state.charging ->
-                if (darkBackground) config.chargingColorDarkArgb else config.chargingColorLightArgb
             else -> tint
         }
     }
 
-    private fun withAlpha(color: Int, alpha: Int): Int = (color and 0x00FFFFFF) or ((alpha.coerceIn(0, 255)) shl 24)
+    private fun withAlpha(color: Int, alpha: Int): Int =
+        (color and 0x00FFFFFF) or ((alpha.coerceIn(0, 255)) shl 24)
+
     private fun luminance(color: Int): Float =
         (0.2126f * Color.red(color) + 0.7152f * Color.green(color) + 0.0722f * Color.blue(color)) / 255f
 }

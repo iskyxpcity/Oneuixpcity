@@ -92,6 +92,8 @@ fun StatusComboStyleOneCategoryControls(
     var outTypeRight by remember(runtime.outTypeMarginRightDp) { mutableIntStateOf(runtime.outTypeMarginRightDp.coerceIn(0, 16)) }
     var outSignalMargin by remember(runtime.outSignalMarginDp) { mutableIntStateOf(runtime.outSignalMarginDp.coerceIn(0, 16)) }
     var lowThreshold by remember(runtime.lowThreshold) { mutableIntStateOf(runtime.lowThreshold.coerceIn(5, 50)) }
+    var criticalThreshold by remember(runtime.criticalThreshold) { mutableIntStateOf(runtime.criticalThreshold.coerceIn(1, 20)) }
+    var glyphScale by remember(runtime.glyphScalePercent) { mutableIntStateOf(runtime.glyphScalePercent.coerceIn(70, 150)) }
     var trackAlpha by remember(runtime.trackAlpha) {
         mutableIntStateOf((runtime.trackAlpha * 100f / 255f).roundToInt())
     }
@@ -105,7 +107,7 @@ fun StatusComboStyleOneCategoryControls(
             )
             StatusThemeChildItem {
                 AndroidView(
-                    modifier = Modifier.fillMaxWidth().height(44.dp),
+                    modifier = Modifier.fillMaxWidth().height(60.dp),
                     factory = { StatusComboStyleOnePreviewView(it) },
                     update = { it.setConfig(runtime) },
                 )
@@ -214,6 +216,11 @@ fun StatusComboStyleOneCategoryControls(
     }))
 
     StatusThemeGroup(items = listOf({
+        styleOneSlider(icon, stringResource(R.string.status_combo_style_one_glyph_scale),
+            stringResource(R.string.status_combo_style_one_percent_summary, glyphScale), glyphScale.toFloat(), 70f..150f,
+            { glyphScale = it.roundToInt(); preview(runtime.copy(glyphScalePercent = glyphScale)) },
+            { persist(runtime.copy(glyphScalePercent = glyphScale)) })
+    }, {
         styleOneSlider(icon, stringResource(R.string.status_combo_style_one_ring_stroke),
             stringResource(R.string.status_combo_style_one_int_summary, ringStroke), ringStroke.toFloat(), 4f..16f,
             { ringStroke = it.roundToInt(); preview(runtime.copy(ringStroke = ringStroke)) },
@@ -285,6 +292,11 @@ fun StatusComboStyleOneCategoryControls(
             checked = runtime.roleColors,
             onCheckedChange = { previewAndPersist(runtime.copy(roleColors = it)) },
         )
+    }, {
+        styleOneSlider(icon, stringResource(R.string.status_combo_style_one_critical_threshold),
+            stringResource(R.string.status_combo_style_one_percent_summary, criticalThreshold), criticalThreshold.toFloat(), 1f..20f,
+            { criticalThreshold = it.roundToInt(); preview(runtime.copy(criticalThreshold = criticalThreshold)) },
+            { persist(runtime.copy(criticalThreshold = criticalThreshold)) })
     }, {
         styleOneSlider(icon, stringResource(R.string.status_combo_style_one_low_threshold),
             stringResource(R.string.status_combo_style_one_percent_summary, lowThreshold), lowThreshold.toFloat(), 5f..50f,

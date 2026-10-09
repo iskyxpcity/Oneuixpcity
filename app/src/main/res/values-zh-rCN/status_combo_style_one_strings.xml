@@ -29,6 +29,7 @@
     <string name="status_combo_style_one_stacked_signal_summary">信号位于图标外时，绘制四格信号柱和可选的第二张 SIM 点阵，代替原生信号图标。</string>
     <string name="status_combo_style_one_data_sim_only">只显示默认数据 SIM</string>
     <string name="status_combo_style_one_data_sim_only_summary">使用当前被选为移动数据卡的 SIM 信号强度。</string>
+    <string name="status_combo_style_one_glyph_scale">图标整体大小</string>
     <string name="status_combo_style_one_ring_stroke">电量轮廓粗细</string>
     <string name="status_combo_style_one_arc_stroke">Wi-Fi 弧线粗细</string>
     <string name="status_combo_style_one_value_size">电量数字大小</string>
@@ -43,6 +44,7 @@
     <string name="status_combo_style_one_out_signal_margin">图标外信号间距</string>
     <string name="status_combo_style_one_role_colors">使用电池状态颜色</string>
     <string name="status_combo_style_one_role_colors_summary">充电、低电量和临界电量状态使用不同颜色。</string>
+    <string name="status_combo_style_one_critical_threshold">临界电量颜色阈值</string>
     <string name="status_combo_style_one_low_threshold">低电量颜色阈值</string>
     <string name="status_combo_style_one_track_alpha">未点亮弧线与信号透明度</string>
     <string name="status_combo_style_one_critical_dark">深色背景下的临界电量颜色</string>
