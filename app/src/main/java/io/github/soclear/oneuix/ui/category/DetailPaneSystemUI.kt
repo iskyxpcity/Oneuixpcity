@@ -840,6 +840,27 @@ sealed interface SystemUIEvent {
         @JvmInline
         value class SetStatusBarClockRichStyle(val value: Boolean) : StatusBar
 
+        @JvmInline
+        value class ModifyStatusBarClockPosition(val value: Boolean) : StatusBar
+
+        @JvmInline
+        value class StatusBarClockOffsetXDp(val value: Float) : StatusBar
+
+        @JvmInline
+        value class StatusBarClockOffsetYDp(val value: Float) : StatusBar
+
+        @JvmInline
+        value class StatusBarClockLeftMarginDp(val value: Float) : StatusBar
+
+        @JvmInline
+        value class StatusBarClockRightMarginDp(val value: Float) : StatusBar
+
+        @JvmInline
+        value class StatusBarClockAlignment(val value: String) : StatusBar
+
+        @JvmInline
+        value class StatusBarClockFixedContentWidthDp(val value: Float) : StatusBar
+
         data class UpdateStatusBarClockBlockStyle(
             val value: Preference.SystemUI.StatusBarClockBlockStyle,
         ) : StatusBar
@@ -1016,6 +1037,30 @@ private fun OneuiXToolsViewModel.previewStatusBarEvent(event: SystemUIEvent.Stat
                     .sortedBy { it.blockIndex }
                 statusBar.copy(statusBarClockBlockStyles = updated)
             }
+
+            is SystemUIEvent.StatusBar.StatusBarClockOffsetXDp ->
+                statusBar.copy(statusBarClockOffsetXDp = event.value)
+
+            is SystemUIEvent.StatusBar.StatusBarClockOffsetYDp ->
+                statusBar.copy(statusBarClockOffsetYDp = event.value)
+
+            is SystemUIEvent.StatusBar.StatusBarClockLeftMarginDp ->
+                statusBar.copy(statusBarClockLeftMarginDp = event.value)
+
+            is SystemUIEvent.StatusBar.StatusBarClockRightMarginDp ->
+                statusBar.copy(statusBarClockRightMarginDp = event.value)
+
+            is SystemUIEvent.StatusBar.StatusBarClockAlignment ->
+                statusBar.copy(
+                    statusBarClockAlignment = event.value
+                        .takeIf { it in setOf("native", "start", "center", "end") }
+                        ?: "native"
+                )
+
+            is SystemUIEvent.StatusBar.StatusBarClockFixedContentWidthDp ->
+                statusBar.copy(
+                    statusBarClockFixedContentWidthDp = event.value.coerceIn(0f, 200f)
+                )
 
             is SystemUIEvent.StatusBar.DoubleLineClockGapDp ->
                 statusBar.copy(doubleLineClockGapDp = event.value)
@@ -1369,6 +1414,80 @@ private fun OneuiXToolsViewModel.onStatusBarEvent(event: SystemUIEvent.StatusBar
                     systemUI = preference.systemUI.copy(
                         statusBar = preference.systemUI.statusBar.copy(
                             enableStatusBarClockRichStyle = event.value
+                        )
+                    )
+                )
+            }
+
+            is SystemUIEvent.StatusBar.ModifyStatusBarClockPosition -> {
+                preference.copy(
+                    systemUI = preference.systemUI.copy(
+                        statusBar = preference.systemUI.statusBar.copy(
+                            modifyStatusBarClockPosition = event.value
+                        )
+                    )
+                )
+            }
+
+            is SystemUIEvent.StatusBar.StatusBarClockOffsetXDp -> {
+                preference.copy(
+                    systemUI = preference.systemUI.copy(
+                        statusBar = preference.systemUI.statusBar.copy(
+                            statusBarClockOffsetXDp = event.value.coerceIn(-20f, 20f)
+                        )
+                    )
+                )
+            }
+
+            is SystemUIEvent.StatusBar.StatusBarClockOffsetYDp -> {
+                preference.copy(
+                    systemUI = preference.systemUI.copy(
+                        statusBar = preference.systemUI.statusBar.copy(
+                            statusBarClockOffsetYDp = event.value.coerceIn(-20f, 20f)
+                        )
+                    )
+                )
+            }
+
+            is SystemUIEvent.StatusBar.StatusBarClockLeftMarginDp -> {
+                preference.copy(
+                    systemUI = preference.systemUI.copy(
+                        statusBar = preference.systemUI.statusBar.copy(
+                            statusBarClockLeftMarginDp = event.value.coerceIn(0f, 40f)
+                        )
+                    )
+                )
+            }
+
+            is SystemUIEvent.StatusBar.StatusBarClockRightMarginDp -> {
+                preference.copy(
+                    systemUI = preference.systemUI.copy(
+                        statusBar = preference.systemUI.statusBar.copy(
+                            statusBarClockRightMarginDp = event.value.coerceIn(0f, 40f)
+                        )
+                    )
+                )
+            }
+
+            is SystemUIEvent.StatusBar.StatusBarClockAlignment -> {
+                preference.copy(
+                    systemUI = preference.systemUI.copy(
+                        statusBar = preference.systemUI.statusBar.copy(
+                            statusBarClockAlignment =
+                                event.value.takeIf {
+                                    it in setOf("native", "start", "center", "end")
+                                } ?: "native"
+                        )
+                    )
+                )
+            }
+
+            is SystemUIEvent.StatusBar.StatusBarClockFixedContentWidthDp -> {
+                preference.copy(
+                    systemUI = preference.systemUI.copy(
+                        statusBar = preference.systemUI.statusBar.copy(
+                            statusBarClockFixedContentWidthDp =
+                                event.value.coerceIn(0f, 200f)
                         )
                     )
                 )

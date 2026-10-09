@@ -32,6 +32,24 @@
     <string name="oneuix_clockRichCommonColors">常用颜色</string>
     <string name="oneuix_clockRichHue">色相 · %1$d°</string>
     <string name="oneuix_clockRichSelectBlock_title">选择要编辑的字符串</string>
+    <string name="oneuix_statusBarClockPosition_title">状态栏时间位置</string>
+    <string name="oneuix_statusBarClockPosition_summary">整体偏移 · X %1$.0f dp · Y %2$.0f dp</string>
+    <string name="oneuix_statusBarClockOffsetX_title">X 轴偏移</string>
+    <string name="oneuix_statusBarClockOffsetY_title">Y 轴偏移</string>
+    <string name="oneuix_statusBarClockOffset_summary">当前值：%1$.0f dp</string>
+    <string name="oneuix_clockRichHorizontalOffset_title">水平偏移</string>
+    <string name="oneuix_clockRichVerticalOffset_title">垂直偏移</string>
+    <string name="oneuix_clockRichOffset_summary">%1$.0f dp</string>
+    <string name="oneuix_statusBarClockAlignment_title">对齐方式</string>
+    <string name="oneuix_statusBarClockAlignment_native">默认</string>
+    <string name="oneuix_statusBarClockAlignment_start">左对齐</string>
+    <string name="oneuix_statusBarClockAlignment_center">居中</string>
+    <string name="oneuix_statusBarClockAlignment_end">右对齐</string>
+    <string name="oneuix_statusBarClockLeftMargin_title">左边距</string>
+    <string name="oneuix_statusBarClockRightMargin_title">右边距</string>
+    <string name="oneuix_statusBarClockFixedContentWidth_title">固定内容宽度</string>
+    <string name="oneuix_statusBarClockFixedContentWidth_summary">%1$.0f dp · 0 = 原生</string>
+    <string name="oneuix_statusBarClockMargin_summary">%1$.0f dp</string>
     <string name="oneuix_clockFormatHelp_show">查看示例</string>
     <string name="oneuix_clockFormatHelp_title">时间格式示例说明</string>
     <string name="oneuix_clockFormatHelp_intro">点击下方预设按钮可把字符串追加到格式输入框。Android 标准日期时间格式与下列 OneuiXP 自定义字符串可以自由组合。</string>

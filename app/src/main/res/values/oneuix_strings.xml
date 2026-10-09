@@ -298,6 +298,24 @@
     <string name="oneuix_clockRichCommonColors">Common colors</string>
     <string name="oneuix_clockRichHue">Hue · %1$d°</string>
     <string name="oneuix_clockRichSelectBlock_title">Edit string</string>
+    <string name="oneuix_statusBarClockPosition_title">Status bar clock position</string>
+    <string name="oneuix_statusBarClockPosition_summary">Overall offset · X %1$.0f dp · Y %2$.0f dp</string>
+    <string name="oneuix_statusBarClockOffsetX_title">X-axis offset</string>
+    <string name="oneuix_statusBarClockOffsetY_title">Y-axis offset</string>
+    <string name="oneuix_statusBarClockOffset_summary">Current value: %1$.0f dp</string>
+    <string name="oneuix_clockRichHorizontalOffset_title">Horizontal offset</string>
+    <string name="oneuix_clockRichVerticalOffset_title">Vertical offset</string>
+    <string name="oneuix_clockRichOffset_summary">%1$.0f dp</string>
+    <string name="oneuix_statusBarClockAlignment_title">Alignment</string>
+    <string name="oneuix_statusBarClockAlignment_native">Default</string>
+    <string name="oneuix_statusBarClockAlignment_start">Left aligned</string>
+    <string name="oneuix_statusBarClockAlignment_center">Centered</string>
+    <string name="oneuix_statusBarClockAlignment_end">Right aligned</string>
+    <string name="oneuix_statusBarClockLeftMargin_title">Left margin</string>
+    <string name="oneuix_statusBarClockRightMargin_title">Right margin</string>
+    <string name="oneuix_statusBarClockFixedContentWidth_title">Fixed content width</string>
+    <string name="oneuix_statusBarClockFixedContentWidth_summary">%1$.0f dp · 0 = native</string>
+    <string name="oneuix_statusBarClockMargin_summary">%1$.0f dp</string>
     <string name="oneuix_clockFormatHelp_show">View examples</string>
     <string name="oneuix_clockFormatHelp_title">Time format examples</string>
     <string name="oneuix_clockFormatHelp_intro">Tap the preset buttons to append tokens to the format box. Standard Android date/time patterns and the OneuiXP custom tokens below can be combined freely.</string>

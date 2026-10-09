@@ -53,6 +53,8 @@ data class Preference(
             val cornerRadiusDp: Float = 4f,
             val horizontalPaddingDp: Float = 2f,
             val verticalPaddingDp: Float = 0f,
+            val horizontalOffsetDp: Float = 0f,
+            val verticalOffsetDp: Float = 0f,
             val verticalAlignment: String = "middle",
         )
 
@@ -288,6 +290,13 @@ data class Preference(
             val statusBarClockFormat: String = "HH:mm",
             val enableStatusBarClockRichStyle: Boolean = false,
             val statusBarClockBlockStyles: List<StatusBarClockBlockStyle> = emptyList(),
+            val modifyStatusBarClockPosition: Boolean = false,
+            val statusBarClockOffsetXDp: Float = 0f,
+            val statusBarClockOffsetYDp: Float = 0f,
+            val statusBarClockLeftMarginDp: Float = 0f,
+            val statusBarClockRightMarginDp: Float = 0f,
+            val statusBarClockAlignment: String = "native",
+            val statusBarClockFixedContentWidthDp: Float = 0f,
             // Empty means this is a pre-V11 preference. The runtime maps its old float preset.
             val statusBarDoubleLineClockSize: String = "",
             val statusBarDoubleLineClockVerticalPosition: String = "middle",
