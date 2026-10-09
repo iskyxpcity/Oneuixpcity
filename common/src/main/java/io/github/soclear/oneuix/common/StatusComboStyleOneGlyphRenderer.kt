@@ -508,7 +508,9 @@ object StatusComboStyleOneGlyphRenderer {
         val darkBackground = luminance(tint) > 0.5f
         return when {
             // Match HyperDuo's role order: critical > low/power-save > charging > native foreground.
-            state.batteryLevel <= config.criticalThreshold.coerceIn(1, 20) ->
+            // HyperDuo treats the critical cutoff as exclusive: the exact
+            // threshold value belongs to the low-battery role, not critical.
+            state.batteryLevel < config.criticalThreshold.coerceIn(1, 20) ->
                 if (darkBackground) config.criticalColorDarkArgb else config.criticalColorLightArgb
             state.powerSave || state.lowBatteryWarning ||
                 state.batteryLevel <= config.lowThreshold.coerceIn(5, 50) ->
