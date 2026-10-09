@@ -40,6 +40,7 @@ import java.util.IdentityHashMap
 import java.util.WeakHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.serialization.decodeFromString
+import kotlin.math.max
 
 /**
  * Independent runtime for the Style One icon: state polling, native icon folding,
@@ -185,7 +186,8 @@ object StatusBarComboStyleOneRuntime {
                 cls.declaredMethods.filter { it.name == "onMeasure" && it.parameterTypes.size == 2 }.forEach { method ->
                     module.hook(method).intercept { chain ->
                         val result = chain.proceed()
-                        (chain.thisObject as? ViewGroup)?.takeIf { config.enabled }?.post { suppressInContainer(it) }
+                        val container = chain.thisObject as? ViewGroup
+                        if (container != null && config.enabled) container.post { suppressInContainer(container) }
                         result
                     }
                 }
@@ -452,7 +454,7 @@ object StatusBarComboStyleOneRuntime {
         val wm = context.getSystemService(Context.WIFI_SERVICE) as? WifiManager ?: return
         runCatching {
             val info = wm.connectionInfo
-            val level = if (info == null || info.rssi == WifiManager.INVALID_RSSI) -1
+            val level = if (info == null || info.rssi == -127) -1
                 else WifiManager.calculateSignalLevel(info.rssi, 5)
             state = state.copy(wifiLevel = level.coerceIn(-1, 4))
         }
@@ -544,7 +546,6 @@ object StatusBarComboStyleOneRuntime {
         outSignalMarginDp = v.outSignalMarginDp.coerceIn(0, 12),
         typeSuffixScale = v.typeSuffixScale.coerceIn(30, 100), trackAlpha = v.trackAlpha.coerceIn(0, 255),
     )
-    private fun refreshHosts() { main.post { synchronized(hosts) { hosts.values.toList() }.forEach(::apply) } }
     private fun dp(context: Context, value: Int): Int =
         (value * context.resources.displayMetrics.density + 0.5f).toInt().coerceAtLeast(1)
 }
