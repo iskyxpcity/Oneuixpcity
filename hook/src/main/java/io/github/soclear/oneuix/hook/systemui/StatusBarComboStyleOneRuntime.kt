@@ -66,6 +66,7 @@ object StatusBarComboStyleOneRuntime {
     private const val MIUI_BATTERY_METER = "com.android.systemui.statusbar.views.MiuiBatteryMeterView"
 
     private val installed = AtomicBoolean(false)
+    @Volatile private var moduleForPreferenceReload: XposedModule? = null
     private val main = Handler(Looper.getMainLooper())
     private val hosts = Collections.synchronizedMap(WeakHashMap<ViewGroup, Host>())
     @Volatile private var config = Preference.SystemUI.StatusBarComboStyleOneRuntime()
@@ -242,6 +243,7 @@ object StatusBarComboStyleOneRuntime {
 
     fun install(module: XposedModule, param: XposedModuleInterface.PackageReadyParam) {
         if (param.packageName != Package.SYSTEMUI || !installed.compareAndSet(false, true)) return
+        moduleForPreferenceReload = module
         runCatching {
             with(module) { PreferenceProvider.loadPreference() }
                 ?.systemUI?.statusBar?.comboStyleOneRuntime?.let { config = sanitize(it) }
@@ -376,12 +378,57 @@ object StatusBarComboStyleOneRuntime {
                 }
             })
         }
+        if (!preferenceReceiverReady) reloadConfigBeforeReceiver()
         ensureReceivers(root.context)
         apply(host)
     }
 
     private fun refreshHosts() {
         main.post { synchronized(hosts) { hosts.values.toList() }.forEach(::apply) }
+    }
+
+    /**
+     * Size changes are frequent while the user drags the scale slider. Update only
+     * the glyph/anchor bounds instead of rescanning and suppressing the full view
+     * tree on every preview frame.
+     */
+    private fun resizeGlyphs() {
+        main.post {
+            synchronized(hosts) { hosts.values.toList() }.forEach { host ->
+                if (host.retired) return@forEach
+                val battery = host.battery ?: return@forEach
+                host.inline?.let { glyph ->
+                    val width = dp(glyph.context, StatusComboStyleOneGlyphRenderer.glyphWidthDp(config))
+                    val height = dp(glyph.context, StatusComboStyleOneGlyphRenderer.glyphHeightDp(config))
+                    val lp = glyph.layoutParams
+                    if (lp != null && (lp.width != width || lp.height != height)) {
+                        lp.width = width
+                        lp.height = height
+                        glyph.layoutParams = lp
+                    }
+                    glyph.invalidate()
+                }
+                host.overlay?.let { overlay ->
+                    if (cutoutBounds(host.root) != null) {
+                        collapseHostView(host, battery)
+                    } else {
+                        reserveHostSlot(host, battery, StatusComboStyleOneGlyphRenderer.glyphWidthDp(config))
+                    }
+                    overlay.update(battery, host.root)
+                    overlay.invalidate()
+                }
+            }
+        }
+    }
+
+    private fun reloadConfigBeforeReceiver() {
+        if (preferenceReceiverReady) return
+        val module = moduleForPreferenceReload ?: return
+        val latest = runCatching {
+            with(module) { PreferenceProvider.loadPreference() }?.systemUI?.statusBar?.comboStyleOneRuntime
+        }.onFailure { Log.w(TAG, "Cannot reload Style One settings before receiver setup", it) }
+            .getOrNull() ?: return
+        config = sanitize(latest)
     }
 
     private fun requiresHostRefresh(
@@ -394,8 +441,7 @@ object StatusBarComboStyleOneRuntime {
             old.showMobile != new.showMobile ||
             old.signalMode != new.signalMode ||
             old.stackedSignal != new.stackedSignal ||
-            old.mobileTypeMode != new.mobileTypeMode ||
-            old.glyphScalePercent != new.glyphScalePercent
+            old.mobileTypeMode != new.mobileTypeMode
 
     /** Refresh just the glyph drawing when telemetry changes; avoid a status-bar relayout. */
     private fun invalidateGlyphs() {
@@ -620,8 +666,11 @@ object StatusBarComboStyleOneRuntime {
         (slotOf(v) ?: knownIconSlots[v])?.let { if (isManagedMobileSlot(it)) return true }
         val name = viewSignature(v)
         if (name.contains("battery") || name.contains("bluetooth") || name.contains("airplane") || name.contains("wifi")) return false
+        // SignalClusterView is commonly a parent containing Wi-Fi, mobile,
+        // airplane and other icons. Never collapse that whole group as a signal icon.
         return name.contains("mobile") || name.contains("cellular") || name.contains("signal_mobile") ||
-            name.contains("slot_mobile") || name.contains("signal_strength") || name.contains("signalcluster")
+            name.contains("slot_mobile") || name.contains("signal_strength") ||
+            (name.contains("signalcluster") && v !is ViewGroup)
     }
 
     private fun isWithin(root: View, candidate: View): Boolean {
@@ -1011,7 +1060,12 @@ object StatusBarComboStyleOneRuntime {
                             val next = sanitize(status.comboStyleOneRuntime)
                             config = next
                             diagnostic("Settings updated: enabled=${config.enabled}, overlay=${config.overlayGlyph}, style=${config.trioStyle}, signalMode=${config.signalMode}")
-                            if (requiresHostRefresh(previous, next)) refreshHosts() else invalidateGlyphs()
+                            if (requiresHostRefresh(previous, next)) {
+                                refreshHosts()
+                            } else {
+                                if (previous.glyphScalePercent != next.glyphScalePercent) resizeGlyphs()
+                                invalidateGlyphs()
+                            }
                         }.onFailure { Log.w(TAG, "Bad Style One settings broadcast", it) }
                     }
                 }
@@ -1172,6 +1226,7 @@ object StatusBarComboStyleOneRuntime {
         var dataLevel = -1
         var simOne = -1
         var simTwo = -1
+        var dataSlot = -1
         var label = state.networkType
         active.forEach { info ->
             val sub = runCatching { base.createForSubscriptionId(info.subscriptionId) }.getOrNull() ?: return@forEach
@@ -1180,12 +1235,32 @@ object StatusBarComboStyleOneRuntime {
             if (info.simSlotIndex == 1) simTwo = level
             if (info.subscriptionId == dataSub) {
                 dataLevel = level
+                dataSlot = info.simSlotIndex
                 label = displayNetworkTypes[info.subscriptionId] ?: networkType(sub.dataNetworkType)
             }
         }
-        if (dataLevel < 0) dataLevel = if (simOne >= 0) simOne else simTwo
-        if (dataLevel < 0) dataLevel = runCatching { base.signalStrength?.level ?: state.mobileLevel }.getOrDefault(state.mobileLevel)
-        state = state.copy(mobileLevel = dataLevel.coerceIn(0, 4), simOneLevel = simOne, simTwoLevel = simTwo, networkType = label)
+        val hasActiveDataSubscription = dataSub >= 0 && active.any { it.subscriptionId == dataSub }
+        if (dataLevel < 0) {
+            dataLevel = if (hasActiveDataSubscription) {
+                // Keep the last reading for the selected data SIM while its signal
+                // callback is temporarily unavailable; do not silently switch to SIM 1.
+                state.mobileLevel.takeIf { it >= 0 } ?: -1
+            } else {
+                if (simOne >= 0) simOne else simTwo
+            }
+        }
+        if (dataLevel < 0 && !hasActiveDataSubscription) {
+            dataLevel = runCatching { base.signalStrength?.level ?: state.mobileLevel }
+                .getOrDefault(state.mobileLevel)
+        }
+        if (dataSlot !in 0..1) dataSlot = if (simOne >= 0) 0 else if (simTwo >= 0) 1 else 0
+        state = state.copy(
+            mobileLevel = dataLevel.coerceIn(0, 4),
+            simOneLevel = simOne,
+            simTwoLevel = simTwo,
+            dataSimSlotIndex = dataSlot,
+            networkType = label,
+        )
         diagnostic("Telephony refreshed: dataSub=$dataSub, dataLevel=${state.mobileLevel}, type=${state.networkType}")
     }
 

@@ -31,7 +31,7 @@ class StatusComboStyleOnePreviewView(context: Context) : View(context) {
             canvas, targetWidth, targetHeight, config,
             StatusComboStyleOneGlyphState(
                 batteryLevel = 68,
-                charging = false,
+                charging = true,
                 wifiLevel = 4,
                 mobileLevel = 3,
                 simOneLevel = 3,

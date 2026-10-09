@@ -19,6 +19,7 @@ data class StatusComboStyleOneGlyphState(
     val mobileLevel: Int = -1,
     val simOneLevel: Int = -1,
     val simTwoLevel: Int = -1,
+    val dataSimSlotIndex: Int = 0,
     val networkType: String = "4G",
     val powerSave: Boolean = false,
     val lowBatteryWarning: Boolean = false,
@@ -118,7 +119,7 @@ object StatusComboStyleOneGlyphRenderer {
         val innerType = state.networkType.trim().uppercase().takeIf {
             config.showMobile && config.mobileTypeMode == 1 && it.isNotEmpty()
         }
-        val bolt = config.showValue && config.showBolt && state.charging
+        val bolt = config.showBolt && state.charging
         val inRingSignal = config.showMobile && config.signalMode == 0
         val dualRows = config.dualSim && !config.dataSimOnly && inRingSignal &&
             state.simOneLevel >= 0 && state.simTwoLevel >= 0 && !wifiInk && !state.charging
@@ -191,9 +192,11 @@ object StatusComboStyleOneGlyphRenderer {
         if (wide && config.showMobile && config.signalMode == 1 && config.stackedSignal) {
             val margin = config.outSignalMarginDp.coerceIn(0, 16) * (HEIGHT / 36f)
             val signalX = (26f - margin).coerceAtLeast(18f)
+            val primarySlotLevel = if (state.dataSimSlotIndex == 1) state.simTwoLevel else state.simOneLevel
+            val secondarySlotLevel = if (state.dataSimSlotIndex == 1) state.simOneLevel else state.simTwoLevel
             val bars = if (config.dataSimOnly) state.mobileLevel
-                else state.simOneLevel.takeIf { it >= 0 } ?: state.mobileLevel
-            val second = if (!config.dataSimOnly && state.simTwoLevel >= 0) state.simTwoLevel else -1
+                else primarySlotLevel.takeIf { it >= 0 } ?: state.mobileLevel
+            val second = if (!config.dataSimOnly && secondarySlotLevel >= 0) secondarySlotLevel else -1
             drawStackedSignal(canvas, signalX, 52f, bars, second, tint, track, config.outSignalSizeDp)
         }
         if (wide && config.showMobile && config.mobileTypeMode == 2 && state.networkType.isNotBlank()) {
