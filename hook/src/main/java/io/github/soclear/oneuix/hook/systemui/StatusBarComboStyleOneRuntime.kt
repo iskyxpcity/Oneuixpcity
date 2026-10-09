@@ -78,6 +78,7 @@ object StatusBarComboStyleOneRuntime {
         var overlay: GlyphOverlay? = null
         var overlayFailed = false
         var applying = false
+        var retired = false
     }
 
     private class GlyphView(context: Context) : View(context) {
@@ -217,6 +218,35 @@ object StatusBarComboStyleOneRuntime {
     }
 
     private fun register(root: ViewGroup) {
+        // Prefer PhoneStatusBarView when it is present; StatusBarWindowView can
+        // contain the same battery icon and drawing both roots would double-render.
+        if (root.javaClass.name == WINDOW_BAR) {
+            val phoneRoot = descendants(root).firstOrNull {
+                it !== root && it.javaClass.name == PHONE_BAR
+            } as? ViewGroup
+            if (phoneRoot != null) {
+                register(phoneRoot)
+                return
+            }
+        }
+        if (root.javaClass.name == PHONE_BAR) {
+            val ancestorHosts = synchronized(hosts) {
+                hosts.entries.map { it.key to it.value }.filter { (existingRoot, _) ->
+                    existingRoot !== root &&
+                        existingRoot.javaClass.name == WINDOW_BAR &&
+                        isWithin(existingRoot, root)
+                }
+            }
+            ancestorHosts.forEach { (oldRoot, oldHost) ->
+                oldHost.retired = true
+                oldHost.overlay?.detach()
+                oldHost.overlay = null
+                removeInline(oldHost)
+                restore(oldHost)
+                oldHost.battery = null
+                synchronized(hosts) { hosts.remove(oldRoot) }
+            }
+        }
         val host = synchronized(hosts) {
             hosts[root] ?: Host(root).also { hosts[root] = it }
         }
@@ -251,7 +281,7 @@ object StatusBarComboStyleOneRuntime {
     }
 
     private fun apply(host: Host) {
-        if (host.applying) return
+        if (host.retired || host.applying) return
         host.applying = true
         try {
             val root = host.root
@@ -556,7 +586,7 @@ object StatusBarComboStyleOneRuntime {
                         refreshTelephony(context)
                         invalidateGlyphs()
                     }
-                    override fun onDisplayInfoChanged(displayInfo: TelephonyDisplayInfo?) {
+                    override fun onDisplayInfoChanged(displayInfo: TelephonyDisplayInfo) {
                         if (displayInfo == null ||
                             SubscriptionManager.getDefaultDataSubscriptionId() != info.subscriptionId
                         ) return
