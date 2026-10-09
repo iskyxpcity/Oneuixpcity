@@ -121,6 +121,9 @@ object StatusBarComboStyleOneRuntime {
         var applying = false
         var retired = false
         var rowTint: Int? = null
+        // MIUI can host multiple status-bar rows at once. Keep the icon ink tied
+        // to the battery's own container, not the whole PhoneStatusBarView.
+        var tintRow: ViewGroup? = null
         // Cache the centre of the status-bar row at first attachment. The row's
         // height animates while the shade opens; recentering the overlay on every
         // layout frame causes repeated WindowManager relayouts and panel jank.
@@ -483,16 +486,20 @@ object StatusBarComboStyleOneRuntime {
                 restoreNativeBatteryViews(previousBattery)
             }
             host.battery = battery
+            host.tintRow = batteryTintContainerFor(battery) ?: root
             readNativeBatteryTint(battery)?.let { batteryTintSnapshots[battery] = it }
             val meterTint = batteryTintSnapshots[battery] ?: views.firstNotNullOfOrNull { candidate ->
                 val isBatteryTintOwner = candidate === battery ||
                     isWithin(battery, candidate) || isWithin(candidate, battery)
                 if (isBatteryTintOwner) batteryTintSnapshots[candidate] else null
             }
-            // The icon's last-painted foreground is the primary source on a mode
-            // transition; MIUI's tint fields are useful only for initial state or
-            // ROMs that do not expose the icon tint callback.
-            val rowTint = rowTintSnapshots[root] ?: meterTint ?: host.rowTint
+            // HyperDuo's source of truth is a tint saved for the MIUI battery
+            // container. The phone-bar value is only a fallback for AOSP layouts.
+            val tintRow = host.tintRow
+            val rowTint = (tintRow?.let { rowTintSnapshots[it] })
+                ?: if (tintRow === root) null else rowTintSnapshots[root]
+                ?: meterTint
+                ?: host.rowTint
             if (rowTint != null && host.rowTint != rowTint) {
                 host.rowTint = rowTint
                 host.inline?.setTintOverride(rowTint)
@@ -1139,11 +1146,38 @@ object StatusBarComboStyleOneRuntime {
         val anchor = host?.battery
         val belongsToAnchor = anchor != null &&
             (anchor === meter || isWithin(anchor, meter) || isWithin(meter, anchor))
-        if (host != null && belongsToAnchor && host.rowTint != color) {
-            host.rowTint = color
-            host.inline?.setTintOverride(color)
-            host.overlay?.setTintOverride(color)
+        if (host != null && belongsToAnchor) {
+            val tintRow = host.tintRow ?: batteryTintContainerFor(anchor!!)
+            // A real icon tint already observed for this row wins over values
+            // sampled from MIUI's meter fields, which may lag behind animation.
+            val rowAlreadyKnown = tintRow?.let { rowTintSnapshots[it] } != null
+            if (!rowAlreadyKnown && host.rowTint != color) {
+                if (tintRow != null) rowTintSnapshots[tintRow] = color
+                host.rowTint = color
+                host.inline?.setTintOverride(color)
+                host.overlay?.setTintOverride(color)
+            }
         }
+    }
+
+    /**
+     * Returns the closest MIUI battery row that owns this icon. This is the same
+     * boundary HyperDuo uses to keep launcher, status bar and control-center tints
+     * from overwriting one another. AOSP has no such container, so callers fall
+     * back to the collapsed PhoneStatusBarView.
+     */
+    private fun batteryTintContainerFor(view: View): ViewGroup? {
+        var node: View? = view
+        while (node != null) {
+            if (node is ViewGroup) {
+                val name = node.javaClass.name
+                if (name == MIUI_BATTERY_CONTAINER ||
+                    node.javaClass.simpleName.contains("StatusBatteryContainer", ignoreCase = true)
+                ) return node
+            }
+            node = node.parent as? View
+        }
+        return null
     }
 
     private fun statusBarRootOf(view: View): ViewGroup? {
@@ -1187,15 +1221,20 @@ object StatusBarComboStyleOneRuntime {
                         val resolvedColor = color
                         val icon = chain.thisObject as? View
                         val row = icon?.let(::statusBarRootOf)
-                        if (resolvedColor != null && row != null) {
-                            rowTintSnapshots[row] = resolvedColor
+                        if (resolvedColor != null && row != null && icon != null) {
+                            val tintOwner = batteryTintContainerFor(icon) ?: row
+                            // Cache by MIUI's battery container just like HyperDuo.
+                            // Also keep the root value solely as the AOSP fallback.
+                            rowTintSnapshots[tintOwner] = resolvedColor
+                            if (tintOwner === row) rowTintSnapshots[row] = resolvedColor
                             val host = synchronized(hosts) { hosts[row] }
-                            // A battery-meter tint hook is more specific. Keep the
-                            // generic icon tint as fallback only when that source is
-                            // not available on this SystemUI build.
-                            if (host != null && host.rowTint != resolvedColor) {
+                            if (host != null && (host.tintRow ?: row) === tintOwner &&
+                                host.rowTint != resolvedColor
+                            ) {
                                 val applyTint = Runnable {
-                                    if (host.rowTint != resolvedColor) {
+                                    if (!host.retired && (host.tintRow ?: row) === tintOwner &&
+                                        host.rowTint != resolvedColor
+                                    ) {
                                         host.rowTint = resolvedColor
                                         host.inline?.setTintOverride(resolvedColor)
                                         host.overlay?.setTintOverride(resolvedColor)
