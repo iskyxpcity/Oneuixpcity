@@ -31,6 +31,9 @@ import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
+import android.widget.FrameLayout
+import android.widget.LinearLayout
+import android.widget.RelativeLayout
 import io.github.libxposed.api.XposedModule
 import io.github.libxposed.api.XposedModuleInterface
 import io.github.soclear.oneuix.common.IgnoreUnknownKeysJson
@@ -82,6 +85,7 @@ internal object StatusBarComboStyleOneRuntime {
         val signalMode: Int,
         val stackedSignal: Boolean,
         val mobileTypeMode: Int,
+        val overlayGlyph: Boolean,
     )
 
     private data class Metrics(
@@ -99,6 +103,8 @@ internal object StatusBarComboStyleOneRuntime {
         val hiddenNative = LinkedHashMap<View, HiddenState>()
         var batteryAnchor: View? = null
         var overlay: OverlayWindow? = null
+        var inlineView: StyleOneIconView? = null
+        var inlineParent: ViewGroup? = null
         var suppressionKey: SuppressionKey? = null
     }
 
@@ -251,11 +257,14 @@ internal object StatusBarComboStyleOneRuntime {
         }
 
         private fun resolveWindowType(): Int {
+            val paramsClass = WindowManager.LayoutParams::class.java
             return runCatching {
-                WindowManager.LayoutParams::class.java
-                    .getField("TYPE_STATUS_BAR_ADDITIONAL")
-                    .getInt(null)
-            }.getOrElse { WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY }
+                paramsClass.getField("TYPE_STATUS_BAR_SUB_PANEL").getInt(null)
+            }.recoverCatching {
+                paramsClass.getField("TYPE_STATUS_BAR_ADDITIONAL").getInt(null)
+            }.getOrElse {
+                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+            }
         }
     }
 
@@ -302,11 +311,13 @@ internal object StatusBarComboStyleOneRuntime {
     fun isEnabled(): Boolean = config.enabled && hasAttachedRenderer()
 
     fun isMobileNativeSuppressed(): Boolean =
-        config.enabled && config.showMobile &&
-            (config.signalMode == 0 || config.stackedSignal) && hasAttachedRenderer()
+        config.enabled && config.showMobile && hasAttachedRenderer()
 
     private fun hasAttachedRenderer(): Boolean = synchronized(holders) {
-        holders.values.any { it.overlay?.isAttached() == true }
+        holders.values.any {
+            it.overlay?.isAttached() == true ||
+                it.inlineView?.isAttachedToWindow == true
+        }
     }
 
     fun install(module: XposedModule, param: XposedModuleInterface.PackageReadyParam) {
@@ -450,31 +461,121 @@ internal object StatusBarComboStyleOneRuntime {
         if (!cfg.enabled || !holder.statusBarView.isAttachedToWindow) {
             holder.overlay?.detach()
             holder.overlay = null
+            removeInlineView(holder)
             restoreNative(holder)
             holder.suppressionKey = null
             return
         }
 
-        val overlay = holder.overlay ?: OverlayWindow(holder).also { holder.overlay = it }
-        if (!overlay.attach(cfg)) {
+        // Switching renderer mode must first return every native element to its
+        // original state, then establish exactly one replacement renderer.
+        if (holder.suppressionKey != null &&
+            holder.suppressionKey?.overlayGlyph != cfg.overlayGlyph
+        ) {
+            holder.overlay?.detach()
+            holder.overlay = null
+            removeInlineView(holder)
             restoreNative(holder)
             holder.suppressionKey = null
-            return
         }
-        overlay.update(cfg)
+
+        if (cfg.overlayGlyph) {
+            removeInlineView(holder)
+            val overlay = holder.overlay ?: OverlayWindow(holder).also { holder.overlay = it }
+            if (!overlay.attach(cfg)) {
+                holder.overlay = null
+                restoreNative(holder)
+                holder.suppressionKey = null
+                return
+            }
+            overlay.update(cfg)
+        } else {
+            holder.overlay?.detach()
+            holder.overlay = null
+            if (!mountInlineAtBatterySlot(holder, cfg)) {
+                removeInlineView(holder)
+                restoreNative(holder)
+                holder.suppressionKey = null
+                return
+            }
+            holder.inlineView?.update(cfg, indicatorColor)
+        }
 
         val key = SuppressionKey(
             cfg.enabled, cfg.showWifi, cfg.showMobile, cfg.showBattery,
-            cfg.signalMode, cfg.stackedSignal, cfg.mobileTypeMode,
+            cfg.signalMode, cfg.stackedSignal, cfg.mobileTypeMode, cfg.overlayGlyph,
         )
-        if (holder.suppressionKey != key || (holder.batteryAnchor != null && holder.batteryAnchor?.isAttachedToWindow != true)) {
+        if (holder.suppressionKey != key ||
+            (holder.batteryAnchor != null && holder.batteryAnchor?.isAttachedToWindow != true)
+        ) {
             restoreNative(holder)
             holder.batteryAnchor = findBatteryAnchor(holder.statusBarView)
             suppressNative(holder, cfg)
             holder.suppressionKey = key
             refreshNativeChargingFlags()
         }
-        overlay.syncGeometry(cfg)
+        holder.inlineView?.update(cfg, indicatorColor)
+        holder.overlay?.syncGeometry(cfg)
+    }
+
+    private fun mountInlineAtBatterySlot(
+        holder: Holder,
+        cfg: Preference.SystemUI.StatusBarComboStyleOneRuntime,
+    ): Boolean {
+        val anchor = findBatteryAnchor(holder.statusBarView) ?: return false
+        val parent = anchor.parent as? ViewGroup ?: return false
+        val anchorIndex = parent.indexOfChild(anchor)
+        if (anchorIndex < 0) return false
+
+        val view = holder.inlineView ?: StyleOneIconView(parent.context).apply {
+            isClickable = false
+            isFocusable = false
+            setWillNotDraw(false)
+        }.also { holder.inlineView = it }
+
+        if (view.parent !== parent) {
+            (view.parent as? ViewGroup)?.removeView(view)
+            parent.addView(view, anchorIndex, inlineLayoutParams(anchor))
+        } else {
+            val viewIndex = parent.indexOfChild(view)
+            if (viewIndex < 0 || viewIndex != anchorIndex - 1) {
+                parent.removeView(view)
+                val refreshedAnchorIndex = parent.indexOfChild(anchor).coerceAtLeast(0)
+                parent.addView(view, refreshedAnchorIndex, inlineLayoutParams(anchor))
+            }
+        }
+        holder.inlineParent = parent
+        holder.batteryAnchor = anchor
+        view.update(cfg, indicatorColor)
+        return true
+    }
+
+    private fun inlineLayoutParams(anchor: View): ViewGroup.LayoutParams {
+        val source = anchor.layoutParams
+        val width = ViewGroup.LayoutParams.WRAP_CONTENT
+        val height = source?.height ?: ViewGroup.LayoutParams.MATCH_PARENT
+        return when (source) {
+            is LinearLayout.LayoutParams -> LinearLayout.LayoutParams(source).apply {
+                this.width = width
+                gravity = Gravity.CENTER_VERTICAL
+            }
+            is FrameLayout.LayoutParams -> FrameLayout.LayoutParams(source).apply {
+                this.width = width
+            }
+            is RelativeLayout.LayoutParams -> RelativeLayout.LayoutParams(source).apply {
+                this.width = width
+            }
+            is ViewGroup.MarginLayoutParams -> ViewGroup.MarginLayoutParams(source).apply {
+                this.width = width
+            }
+            else -> ViewGroup.LayoutParams(width, height)
+        }
+    }
+
+    private fun removeInlineView(holder: Holder) {
+        val view = holder.inlineView
+        (view?.parent as? ViewGroup)?.removeView(view)
+        holder.inlineParent = null
     }
 
     private fun suppressNative(holder: Holder, cfg: Preference.SystemUI.StatusBarComboStyleOneRuntime) {
@@ -483,14 +584,15 @@ internal object StatusBarComboStyleOneRuntime {
         val anchor = holder.batteryAnchor
 
         if (anchor != null && cfg.showBattery) {
-            // Preserve the native battery width as the replacement slot.
-            rememberAndSet(holder, anchor, View.INVISIBLE)
+            // Overlay mode keeps the native width as an anchor; inline mode
+            // replaces the battery slot with the custom measured view.
+            rememberAndSet(holder, anchor, if (cfg.overlayGlyph) View.INVISIBLE else View.GONE)
         }
 
         val candidates = views.filter { view ->
             view !== anchor && (
                 (cfg.showWifi && isNativeWifi(view)) ||
-                (cfg.showMobile && (cfg.signalMode == 0 || cfg.stackedSignal) && isNativeMobile(view))
+                (cfg.showMobile && isNativeMobile(view))
             )
         }
         val candidateSet = candidates.toSet()
@@ -965,7 +1067,10 @@ internal object StatusBarComboStyleOneRuntime {
     private fun refreshGlyphs() {
         mainHandler.post {
             val active = synchronized(holders) { holders.values.toList() }
-            active.forEach { it.overlay?.refreshGlyphs() }
+            active.forEach {
+                it.overlay?.refreshGlyphs()
+                it.inlineView?.update(config, indicatorColor)
+            }
         }
     }
 }
