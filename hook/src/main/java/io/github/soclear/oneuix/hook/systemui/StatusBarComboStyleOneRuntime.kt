@@ -7,6 +7,7 @@ import android.content.IntentFilter
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.PixelFormat
+import android.graphics.Rect
 import android.net.wifi.WifiManager
 import android.os.BatteryManager
 import android.os.Build
@@ -44,6 +45,8 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.serialization.decodeFromString
 import kotlin.math.max
+import kotlin.math.abs
+import kotlin.math.roundToInt
 
 /**
  * Independent runtime for the Style One icon: state polling, native icon folding,
@@ -58,6 +61,9 @@ object StatusBarComboStyleOneRuntime {
     private const val AOSP_ICONS = "com.android.systemui.statusbar.phone.StatusBarIconContainer"
     private const val GLYPH_WIDTH_DP = 78
     private const val GLYPH_HEIGHT_DP = 36
+    private const val ICON_MANAGER = "com.android.systemui.statusbar.phone.ui.IconManager"
+    private const val BATTERY_METER = "com.android.systemui.battery.BatteryMeterView"
+    private const val MIUI_BATTERY_METER = "com.android.systemui.statusbar.views.MiuiBatteryMeterView"
 
     private val installed = AtomicBoolean(false)
     private val main = Handler(Looper.getMainLooper())
@@ -70,9 +76,17 @@ object StatusBarComboStyleOneRuntime {
     @Volatile private var subscriptionsListener: SubscriptionManager.OnSubscriptionsChangedListener? = null
     private val phoneListeners = mutableMapOf<Int, Pair<TelephonyManager, PhoneStateListener>>()
     private val displayNetworkTypes = ConcurrentHashMap<Int, String>()
+    private val nativeChildSnapshots = Collections.synchronizedMap(WeakHashMap<View, LayoutSnapshot>())
+
+    private data class LayoutSnapshot(
+        val width: Int, val height: Int,
+        val leftMargin: Int, val topMargin: Int, val rightMargin: Int, val bottomMargin: Int,
+        val visibility: Int,
+    )
 
     private class Host(val root: ViewGroup) {
         val original = IdentityHashMap<View, Int>()
+        val layouts = IdentityHashMap<View, LayoutSnapshot>()
         var battery: View? = null
         var inline: GlyphView? = null
         var overlay: GlyphOverlay? = null
@@ -99,8 +113,8 @@ object StatusBarComboStyleOneRuntime {
         private val glyph = GlyphView(app)
         private var params: WindowManager.LayoutParams? = null
 
-        fun attach(anchor: View): Boolean {
-            if (params != null) { update(anchor); return true }
+        fun attach(anchor: View, root: ViewGroup): Boolean {
+            if (params != null) { update(anchor, root); return true }
             val type = runCatching {
                 WindowManager.LayoutParams::class.java.getDeclaredField("TYPE_STATUS_BAR_ADDITIONAL")
                     .apply { isAccessible = true }.getInt(null)
@@ -108,8 +122,11 @@ object StatusBarComboStyleOneRuntime {
                 if (Build.VERSION.SDK_INT >= 26) WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
                 else WindowManager.LayoutParams.TYPE_PHONE
             }
+            val cfg = StatusBarComboStyleOneRuntime.config
             val lp = WindowManager.LayoutParams(
-                StatusBarComboStyleOneRuntime.dp(app, StatusBarComboStyleOneRuntime.GLYPH_WIDTH_DP), StatusBarComboStyleOneRuntime.dp(app, StatusBarComboStyleOneRuntime.GLYPH_HEIGHT_DP), type,
+                StatusBarComboStyleOneRuntime.dp(app, StatusComboStyleOneGlyphRenderer.glyphWidthDp(cfg)),
+                StatusBarComboStyleOneRuntime.dp(app, StatusComboStyleOneGlyphRenderer.glyphHeightDp(cfg)),
+                type,
                 WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
                     WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or
                     WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
@@ -124,7 +141,7 @@ object StatusBarComboStyleOneRuntime {
             return try {
                 wm.addView(glyph, lp)
                 params = lp
-                update(anchor)
+                update(anchor, root)
                 true
             } catch (e: Throwable) {
                 Log.w(TAG, "Status-bar glyph window failed", e)
@@ -134,7 +151,7 @@ object StatusBarComboStyleOneRuntime {
                         lp.token = null
                         wm.addView(glyph, lp)
                         params = lp
-                        update(anchor)
+                        update(anchor, root)
                         true
                     } catch (second: Throwable) {
                         Log.w(TAG, "Fallback glyph window failed", second)
@@ -144,12 +161,24 @@ object StatusBarComboStyleOneRuntime {
             }
         }
 
-        fun update(anchor: View) {
+        fun update(anchor: View, root: ViewGroup) {
             val lp = params ?: return
-            val pos = IntArray(2)
-            anchor.getLocationOnScreen(pos)
-            lp.x = (pos[0] + anchor.width - lp.width).coerceAtLeast(0)
-            lp.y = (pos[1] + (anchor.height - lp.height) / 2).coerceAtLeast(0)
+            val cfg = StatusBarComboStyleOneRuntime.config
+            lp.width = StatusBarComboStyleOneRuntime.dp(app, StatusComboStyleOneGlyphRenderer.glyphWidthDp(cfg))
+            lp.height = StatusBarComboStyleOneRuntime.dp(app, StatusComboStyleOneGlyphRenderer.glyphHeightDp(cfg))
+            val cutout = StatusBarComboStyleOneRuntime.cutoutBounds(root)
+            if (cutout != null) {
+                val centreRatio = if (StatusComboStyleOneGlyphRenderer.usesWideLayout(cfg)) 204f / 260f else 59.5f / 120f
+                lp.x = (cutout.centerX() - lp.width * centreRatio).roundToInt().coerceAtLeast(0)
+                val rootPos = IntArray(2)
+                root.getLocationOnScreen(rootPos)
+                lp.y = (rootPos[1] + (root.height - lp.height) / 2).coerceAtLeast(0)
+            } else {
+                val pos = IntArray(2)
+                anchor.getLocationOnScreen(pos)
+                lp.x = (pos[0] + anchor.width - lp.width).coerceAtLeast(0)
+                lp.y = (pos[1] + (anchor.height - lp.height) / 2).coerceAtLeast(0)
+            }
             glyph.invalidate()
             runCatching { wm.updateViewLayout(glyph, lp) }
         }
@@ -194,22 +223,38 @@ object StatusBarComboStyleOneRuntime {
         listOf(MIUI_ICONS, AOSP_ICONS).forEach { name ->
             runCatching {
                 val cls = param.classLoader.loadClass(name)
-                cls.declaredMethods.filter { it.name == "onMeasure" && it.parameterTypes.size == 2 }.forEach { method ->
+                cls.declaredMethods.filter {
+                    (it.name == "onMeasure" && it.parameterTypes.size == 2) ||
+                        (it.name == "onLayout" && it.parameterTypes.size == 5)
+                }.forEach { method ->
                     module.hook(method).intercept { chain ->
                         val result = chain.proceed()
                         val container = chain.thisObject as? ViewGroup
-                        if (container != null && config.enabled) container.post { suppressInContainer(container) }
+                        if (container != null) container.post { suppressInContainer(container) }
                         result
                     }
                 }
             }.onFailure { diagnostic("Status icon container unavailable: $name: $it") }
         }
+        hookIconManager(module, param.classLoader)
+        hookBatteryMeters(module, param.classLoader)
         if (!hookedHost) Log.w(TAG, "No status-bar host constructor was hooked")
     }
 
     fun isEnabled(): Boolean = config.enabled
     fun isMobileNativeSuppressed(): Boolean =
-        config.enabled && config.showMobile && (config.signalMode == 0 || config.stackedSignal)
+        config.enabled && config.showMobile &&
+            (config.signalMode == 0 || (config.signalMode == 1 && config.stackedSignal))
+
+    private fun cutoutBounds(root: View): Rect? {
+        if (Build.VERSION.SDK_INT < 28) return null
+        return runCatching {
+            val cutout = root.rootWindowInsets?.displayCutout ?: return@runCatching null
+            val bounds = cutout.boundingRects.filter { it.width() > 0 && it.height() > 0 }
+            val midpoint = root.resources.displayMetrics.widthPixels / 2
+            bounds.minByOrNull { abs(it.centerX() - midpoint) }?.let { Rect(it) }
+        }.getOrNull()
+    }
 
     private fun scheduleRegister(root: ViewGroup) {
         root.post { register(root) }
@@ -252,7 +297,7 @@ object StatusBarComboStyleOneRuntime {
         }
         if (host.battery == null) {
             root.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
-                host.overlay?.let { win -> host.battery?.let(win::update) }
+                host.overlay?.let { win -> host.battery?.let { battery -> win.update(battery, host.root) } }
                 if (!host.applying) main.post { apply(host) }
             }
             root.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
@@ -279,7 +324,9 @@ object StatusBarComboStyleOneRuntime {
             old.showWifi != new.showWifi ||
             old.showMobile != new.showMobile ||
             old.signalMode != new.signalMode ||
-            old.stackedSignal != new.stackedSignal
+            old.stackedSignal != new.stackedSignal ||
+            old.mobileTypeMode != new.mobileTypeMode ||
+            old.glyphScalePercent != new.glyphScalePercent
 
     /** Refresh just the glyph drawing when telemetry changes; avoid a status-bar relayout. */
     private fun invalidateGlyphs() {
@@ -298,59 +345,59 @@ object StatusBarComboStyleOneRuntime {
             val root = host.root
             if (!root.isAttachedToWindow) { host.overlay?.detach(); return }
             val views = descendants(root)
-            val battery = views.firstOrNull(::isBatteryIcon)
+            val battery = views.firstOrNull(::isBatteryMeterView)
+                ?: views.firstOrNull(::isBatteryIcon)
 
-            if (!config.enabled) {
+            if (!config.enabled || battery == null) {
                 host.overlay?.detach()
                 host.overlay = null
                 removeInline(host)
                 restore(host)
+                if (!config.enabled) restoreNativeBatteryViews(root)
                 host.battery = null
-                root.requestLayout()
                 return
             }
 
             if (host.battery != null && host.battery !== battery) {
+                val previousBattery = host.battery
                 host.overlay?.detach()
                 host.overlay = null
                 removeInline(host)
-                host.original.remove(host.battery)?.let { v -> runCatching { host.battery?.visibility = v } }
+                restoreHostView(host, previousBattery)
+                restoreNativeBatteryViews(previousBattery)
             }
             host.battery = battery
             val foldMobile = isMobileNativeSuppressed()
 
             views.forEach { view ->
                 if (view === battery || view is GlyphView) return@forEach
-                val hide = (config.showWifi && isWifiIcon(view)) || (foldMobile && isMobileIcon(view))
-                if (hide) {
-                    host.original.putIfAbsent(view, view.visibility)
-                    if (view.visibility != View.GONE) view.visibility = View.GONE
-                } else {
-                    host.original.remove(view)?.let { old -> if (view.visibility != old) view.visibility = old }
-                }
+                val hide = (config.showWifi && isWifiIcon(view)) ||
+                    (foldMobile && isMobileIcon(view)) ||
+                    (config.showMobile && config.mobileTypeMode == 2 && isMobileTypeView(view))
+                if (hide) collapseHostView(host, view) else restoreHostView(host, view)
             }
 
-            if (battery != null) {
-                host.original.putIfAbsent(battery, battery.visibility)
-                if (config.overlayGlyph && !host.overlayFailed) {
-                    removeInline(host)
-                    if (battery.visibility != View.INVISIBLE) battery.visibility = View.INVISIBLE
-                    val overlay = host.overlay ?: GlyphOverlay(root.context).also { host.overlay = it }
-                    if (!overlay.attach(battery)) {
-                        host.overlayFailed = true
-                        overlay.detach()
-                        host.overlay = null
-                        battery.visibility = View.GONE
-                        insertInline(host, battery)
-                    } else overlay.update(battery)
-                } else {
-                    host.overlay?.detach()
+            if (isBatteryMeterView(battery)) collapseNativeBatteryChildren(battery as ViewGroup)
+            if (config.overlayGlyph && !host.overlayFailed) {
+                removeInline(host)
+                val overlay = host.overlay ?: GlyphOverlay(root.context).also { host.overlay = it }
+                if (!overlay.attach(battery, root)) {
+                    host.overlayFailed = true
+                    overlay.detach()
                     host.overlay = null
-                    if (battery.visibility != View.GONE) battery.visibility = View.GONE
+                    collapseHostView(host, battery)
                     insertInline(host, battery)
+                } else {
+                    if (cutoutBounds(root) != null) collapseHostView(host, battery)
+                    else reserveHostSlot(host, battery, StatusComboStyleOneGlyphRenderer.glyphWidthDp(config))
+                    overlay.update(battery, root)
                 }
+            } else {
+                host.overlay?.detach()
+                host.overlay = null
+                collapseHostView(host, battery)
+                insertInline(host, battery)
             }
-            root.requestLayout()
         } catch (t: Throwable) {
             Log.w(TAG, "Cannot apply Style One", t)
         } finally {
@@ -364,8 +411,8 @@ object StatusBarComboStyleOneRuntime {
         removeInline(host)
         val glyph = GlyphView(parent.context)
         val old = anchor.layoutParams
-        val width = dp(parent.context, GLYPH_WIDTH_DP)
-        val height = max(dp(parent.context, 24), old?.height ?: 0)
+        val width = dp(parent.context, StatusComboStyleOneGlyphRenderer.glyphWidthDp(config))
+        val height = dp(parent.context, StatusComboStyleOneGlyphRenderer.glyphHeightDp(config))
         val lp = when (old) {
             is LinearLayout.LayoutParams -> LinearLayout.LayoutParams(old).apply { this.width = width; this.height = height }
             is FrameLayout.LayoutParams -> FrameLayout.LayoutParams(old).apply { this.width = width; this.height = height }
@@ -383,6 +430,8 @@ object StatusBarComboStyleOneRuntime {
         host.inline = null
     }
     private fun restore(host: Host) {
+        host.layouts.entries.toList().forEach { (view, layout) -> runCatching { restoreLayout(view, layout) } }
+        host.layouts.clear()
         host.original.entries.toList().forEach { (view, visibility) -> runCatching { view.visibility = visibility } }
         host.original.clear()
     }
@@ -399,28 +448,92 @@ object StatusBarComboStyleOneRuntime {
     private fun resourceName(view: View) = runCatching {
         if (view.id == View.NO_ID) "" else view.resources.getResourceEntryName(view.id)
     }.getOrDefault("")
+    private fun viewSignature(v: View): String =
+        (v.javaClass.name + " " + resourceName(v) + " " + v.tag + " " + v.contentDescription).lowercase()
+
+    private fun isBatteryMeterView(v: View): Boolean {
+        val name = viewSignature(v)
+        return v is ViewGroup && (name.contains("batterymeterview") || name.contains("miuibatterymeterview"))
+    }
+
     private fun isBatteryIcon(v: View): Boolean {
         if (v is GlyphView) return false
-        val name = (v.javaClass.name + " " + resourceName(v) + " " + v.tag).lowercase()
-        return name.contains("batterymetericonview") || name.contains("batterymeter") ||
-            name.contains("batteryiconview") ||
+        val name = viewSignature(v)
+        return name.contains("batterymetericonview") || name.contains("batteryiconview") ||
             (name.contains("battery") && (name.contains("status") || name.contains("meter") || name.contains("icon")))
     }
+
+    private fun slotOf(view: View): String? {
+        var cls: Class<*>? = view.javaClass
+        while (cls != null) {
+            val current = cls
+            for (name in listOf("getSlot", "getSlotName", "getIconSlot")) {
+                val method = current.declaredMethods.firstOrNull { it.name == name && it.parameterTypes.isEmpty() } ?: continue
+                val normalized = slotText(runCatching { method.isAccessible = true; method.invoke(view) }.getOrNull())
+                if (!normalized.isNullOrBlank()) return normalized
+            }
+            for (name in listOf("mSlot", "slot", "mSlotName", "slotName")) {
+                val field = runCatching { current.getDeclaredField(name).apply { isAccessible = true } }.getOrNull() ?: continue
+                val normalized = slotText(runCatching { field.get(view) }.getOrNull())
+                if (!normalized.isNullOrBlank()) return normalized
+            }
+            cls = current.superclass
+        }
+        return null
+    }
+
+    private fun slotText(raw: Any?): String? {
+        if (raw is String) return raw.lowercase()
+        if (raw == null) return null
+        var cls: Class<*>? = raw.javaClass
+        while (cls != null) {
+            val current = cls
+            for (name in listOf("mName", "name", "mSlot", "slot")) {
+                val field = runCatching { current.getDeclaredField(name).apply { isAccessible = true } }.getOrNull() ?: continue
+                (runCatching { field.get(raw) }.getOrNull() as? String)?.let { return it.lowercase() }
+            }
+            cls = current.superclass
+        }
+        return null
+    }
+
+    private fun isMobileTypeView(v: View): Boolean {
+        val name = viewSignature(v)
+        return name.contains("mobile_type_single") || name.contains("mobile_type") || name.contains("mobiletypedrawable")
+    }
+
+    private fun isManagedMobileSlot(slot: String): Boolean =
+        slot == "mobile" || slot == "stacked_mobile" || slot.startsWith("mobile") ||
+            slot.contains("cellular") || slot.contains("signal_strength")
+
+    private fun shouldSuppressSlot(slot: String): Boolean {
+        val normalized = slot.lowercase()
+        return (config.enabled && config.showWifi && normalized == "wifi") ||
+            (isMobileNativeSuppressed() && isManagedMobileSlot(normalized))
+    }
+
+    private fun hostFor(view: View): Host? = synchronized(hosts) {
+        hosts.values.firstOrNull { !it.retired && isWithin(it.root, view) }
+    }
+
     private fun isWifiIcon(v: View): Boolean {
         if (v is GlyphView) return false
-        val name = (v.javaClass.name + " " + resourceName(v) + " " + v.tag).lowercase()
+        val slot = slotOf(v)
+        if (slot == "wifi" || slot?.contains("wlan") == true) return true
+        val name = viewSignature(v)
         if (name.contains("battery") || name.contains("bluetooth") || name.contains("airplane")) return false
         return name.contains("wifi") || name.contains("wlan") || name.contains("slot_wifi")
     }
+
     private fun isMobileIcon(v: View): Boolean {
-        if (v is GlyphView) return false
-        val name = (v.javaClass.name + " " + resourceName(v) + " " + v.tag + " " + v.contentDescription).lowercase()
-        if (name.contains("battery") || name.contains("bluetooth") || name.contains("airplane")) return false
-        return (name.contains("mobile") || name.contains("cellular") || name.contains("signal_mobile") ||
-            name.contains("slot_mobile") || name.contains("signal_strength")) &&
-            (name.contains("statusbaricon") || name.contains("modernstatusbar") || name.contains("mobile") ||
-                name.contains("cellular") || name.contains("signalcluster"))
+        if (v is GlyphView || isMobileTypeView(v)) return false
+        slotOf(v)?.let { if (isManagedMobileSlot(it)) return true }
+        val name = viewSignature(v)
+        if (name.contains("battery") || name.contains("bluetooth") || name.contains("airplane") || name.contains("wifi")) return false
+        return name.contains("mobile") || name.contains("cellular") || name.contains("signal_mobile") ||
+            name.contains("slot_mobile") || name.contains("signal_strength") || name.contains("signalcluster")
     }
+
     private fun isWithin(root: View, candidate: View): Boolean {
         var node: View? = candidate
         while (node != null) {
@@ -431,25 +544,166 @@ object StatusBarComboStyleOneRuntime {
     }
 
     private fun suppressInContainer(container: ViewGroup) {
-        // Similar icon containers can exist in Quick Settings. Only manipulate
-        // children inside our registered collapsed status-bar host.
-        val host = synchronized(hosts) {
-            hosts.values.firstOrNull { isWithin(it.root, container) }
-        } ?: return
+        val host = hostFor(container) ?: return
         descendants(container).forEach { view ->
             if (view is GlyphView) return@forEach
-            val hide = config.enabled &&
-                ((config.showWifi && isWifiIcon(view)) ||
-                    (isMobileNativeSuppressed() && isMobileIcon(view)))
-            if (hide) {
-                host.original.putIfAbsent(view, view.visibility)
-                if (view.visibility != View.GONE) view.visibility = View.GONE
-            } else {
-                host.original.remove(view)?.let { old ->
-                    if (view.visibility != old) view.visibility = old
-                }
+            val hide = config.enabled && (
+                (config.showWifi && isWifiIcon(view)) ||
+                    (isMobileNativeSuppressed() && isMobileIcon(view)) ||
+                    (config.showMobile && config.mobileTypeMode == 2 && isMobileTypeView(view))
+            )
+            if (hide) collapseHostView(host, view) else restoreHostView(host, view)
+        }
+    }
+
+    private fun snapshotLayout(view: View): LayoutSnapshot? {
+        val lp = view.layoutParams ?: return null
+        val margin = lp as? ViewGroup.MarginLayoutParams
+        return LayoutSnapshot(
+            lp.width, lp.height, margin?.leftMargin ?: 0, margin?.topMargin ?: 0,
+            margin?.rightMargin ?: 0, margin?.bottomMargin ?: 0, view.visibility,
+        )
+    }
+
+    private fun restoreLayout(view: View, snapshot: LayoutSnapshot) {
+        val lp = view.layoutParams
+        if (lp != null) {
+            lp.width = snapshot.width
+            lp.height = snapshot.height
+            (lp as? ViewGroup.MarginLayoutParams)?.setMargins(
+                snapshot.leftMargin, snapshot.topMargin, snapshot.rightMargin, snapshot.bottomMargin,
+            )
+            view.layoutParams = lp
+        }
+        view.visibility = snapshot.visibility
+    }
+
+    private fun collapseViewLayout(view: View) {
+        val lp = view.layoutParams
+        if (lp != null) {
+            val margins = lp as? ViewGroup.MarginLayoutParams
+            val changed = lp.width != 0 || lp.height != 0 ||
+                margins?.let { it.leftMargin != 0 || it.topMargin != 0 || it.rightMargin != 0 || it.bottomMargin != 0 } == true
+            if (changed) {
+                lp.width = 0
+                lp.height = 0
+                margins?.setMargins(0, 0, 0, 0)
+                view.layoutParams = lp
             }
         }
+        if (view.width != 0 || view.height != 0) runCatching { view.layout(0, 0, 0, 0) }
+        if (view.visibility != View.GONE) view.visibility = View.GONE
+    }
+
+    private fun collapseHostView(host: Host, view: View) {
+        host.original.putIfAbsent(view, view.visibility)
+        if (!host.layouts.containsKey(view)) snapshotLayout(view)?.let { host.layouts[view] = it }
+        collapseViewLayout(view)
+    }
+
+    private fun reserveHostSlot(host: Host, view: View, widthDp: Int) {
+        host.original.putIfAbsent(view, view.visibility)
+        if (!host.layouts.containsKey(view)) snapshotLayout(view)?.let { host.layouts[view] = it }
+        val lp = view.layoutParams ?: return
+        val margins = lp as? ViewGroup.MarginLayoutParams
+        val width = dp(view.context, widthDp)
+        val changed = lp.width != width ||
+            margins?.let { it.leftMargin != 0 || it.topMargin != 0 || it.rightMargin != 0 || it.bottomMargin != 0 } == true
+        if (changed) {
+            lp.width = width
+            margins?.setMargins(0, 0, 0, 0)
+            view.layoutParams = lp
+        }
+        if (view.visibility != View.INVISIBLE) view.visibility = View.INVISIBLE
+    }
+
+    private fun restoreHostView(host: Host, view: View) {
+        host.layouts.remove(view)?.let { runCatching { restoreLayout(view, it) } }
+        host.original.remove(view)?.let { old -> runCatching { view.visibility = old } }
+    }
+
+    private fun collapseNativeChild(view: View) {
+        if (!nativeChildSnapshots.containsKey(view)) snapshotLayout(view)?.let { nativeChildSnapshots[view] = it }
+        collapseViewLayout(view)
+    }
+
+    private fun restoreNativeBatteryViews(root: View) {
+        nativeChildSnapshots.entries.toList().forEach { (view, snapshot) ->
+            if (isWithin(root, view)) {
+                runCatching { restoreLayout(view, snapshot) }
+                nativeChildSnapshots.remove(view)
+            }
+        }
+    }
+
+    private fun fieldView(instance: Any, names: List<String>): View? {
+        var cls: Class<*>? = instance.javaClass
+        while (cls != null) {
+            val current = cls
+            for (name in names) {
+                val field = runCatching { current.getDeclaredField(name).apply { isAccessible = true } }.getOrNull()
+                val view = field?.let { runCatching { it.get(instance) as? View }.getOrNull() }
+                if (view != null) return view
+            }
+            cls = current.superclass
+        }
+        return null
+    }
+
+    private fun collapseNativeBatteryChildren(meter: ViewGroup) {
+        listOf(
+            "mBatteryIconView", "batteryIconView", "mHollowBatteryIconView", "hollowBatteryIconView",
+            "mBatteryChargingView", "mBatteryChargingIconView", "batteryChargingView",
+            "mBatteryPercentContainer", "batteryPercentContainer", "mBatteryPercentView", "batteryPercentView",
+        ).forEach { name ->
+            fieldView(meter, listOf(name))?.takeIf { it !== meter }?.let(::collapseNativeChild)
+        }
+    }
+
+    private fun hookBatteryMeters(module: XposedModule, classLoader: ClassLoader) {
+        listOf(BATTERY_METER, MIUI_BATTERY_METER).forEach { className ->
+            runCatching {
+                val cls = classLoader.loadClass(className)
+                val callback = io.github.libxposed.api.XposedInterface.Hooker { chain ->
+                    val result = chain.proceed()
+                    val meter = chain.thisObject as? ViewGroup
+                    if (meter != null) meter.post {
+                        if (config.enabled && hostFor(meter) != null) collapseNativeBatteryChildren(meter)
+                        else if (!config.enabled) restoreNativeBatteryViews(meter)
+                    }
+                    result
+                }
+                cls.declaredConstructors.forEach { module.hook(it).intercept(callback) }
+                cls.declaredMethods.filter {
+                    it.name in setOf(
+                        "onFinishInflate", "onAttachedToWindow", "onBatteryLevelChanged",
+                        "updateChargeAndText", "updatePercentText", "updateShowPercent",
+                        "scaleBatteryMeterViewsLegacy", "onMeasure", "onLayout",
+                    )
+                }.forEach { module.hook(it).intercept(callback) }
+            }.onFailure { diagnostic("Battery meter hook unavailable: $className: $it") }
+        }
+    }
+
+    private fun hookIconManager(module: XposedModule, classLoader: ClassLoader) {
+        runCatching {
+            val cls = classLoader.loadClass(ICON_MANAGER)
+            cls.declaredMethods.filter { it.name == "addHolder" && it.parameterTypes.size == 4 }.forEach { method ->
+                module.hook(method).intercept { chain ->
+                    val result = chain.proceed()
+                    val slot = chain.getArg(1) as? String
+                    val view = result as? View
+                    if (slot != null && view != null) view.post {
+                        if (shouldSuppressSlot(slot)) {
+                            hostFor(view)?.let { host ->
+                                if (view.parent is ViewGroup) collapseHostView(host, view)
+                            }
+                        }
+                    }
+                    result
+                }
+            }
+        }.onFailure { diagnostic("IconManager slot hook unavailable: $it") }
     }
 
     private fun ensureReceivers(context: Context) {
@@ -503,7 +757,8 @@ object StatusBarComboStyleOneRuntime {
                         Intent.ACTION_BATTERY_CHANGED -> updateBattery(intent)
                         Intent.ACTION_BATTERY_LOW -> state = state.copy(lowBatteryWarning = true)
                         Intent.ACTION_BATTERY_OKAY -> state = state.copy(lowBatteryWarning = false)
-                        Intent.ACTION_POWER_CONNECTED, Intent.ACTION_POWER_DISCONNECTED -> updateBattery(null)
+                        Intent.ACTION_POWER_CONNECTED, Intent.ACTION_POWER_DISCONNECTED ->
+                            updateBattery(app.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED)))
                         PowerManager.ACTION_POWER_SAVE_MODE_CHANGED -> updatePowerSave(app)
                         WifiManager.RSSI_CHANGED_ACTION, WifiManager.NETWORK_STATE_CHANGED_ACTION -> updateWifi(app)
                         else -> refreshTelephony(app)
@@ -666,6 +921,8 @@ object StatusBarComboStyleOneRuntime {
     private fun sanitize(v: Preference.SystemUI.StatusBarComboStyleOneRuntime) = v.copy(
         trioStyle = v.trioStyle.coerceIn(0, 1), mobileTypeMode = v.mobileTypeMode.coerceIn(0, 2),
         signalMode = v.signalMode.coerceIn(0, 1), lowThreshold = v.lowThreshold.coerceIn(5, 50),
+        criticalThreshold = v.criticalThreshold.coerceIn(1, 20),
+        glyphScalePercent = v.glyphScalePercent.coerceIn(70, 150),
         ringStroke = v.ringStroke.coerceIn(4, 16), arcStroke = v.arcStroke.coerceIn(3, 16),
         valueSize = v.valueSize.coerceIn(16, 44), valueWeight = v.valueWeight.coerceIn(100, 900),
         typeSize = v.typeSize.coerceIn(16, 44), typeWeight = v.typeWeight.coerceIn(100, 900),
