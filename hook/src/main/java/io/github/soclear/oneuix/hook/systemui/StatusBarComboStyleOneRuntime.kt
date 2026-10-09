@@ -1330,11 +1330,15 @@ object StatusBarComboStyleOneRuntime {
                     val lightColor = runCatching { chain.getArg(3) as? Int }.getOrNull() ?: Color.TRANSPARENT
                     val darkColor = runCatching { chain.getArg(4) as? Int }.getOrNull() ?: Color.TRANSPARENT
                     val useTint = runCatching { chain.getArg(5) as? Boolean }.getOrNull() ?: false
-                    // Read the same inputs HyperDuo observes, but apply them only
-                    // to the collapsed status-bar row that owns this meter.
+                    // The current callback arguments are the colour SystemUI is
+                    // applying for this exact light/dark transition. MIUI's backing
+                    // fields can lag one transition, so use them only as fallback.
+                    val currentTint = if (useTint) tintColor else if (intensity > 0f) darkColor else lightColor
                     val fieldTint = readNativeBatteryTint(meter)
-                    val resolved = fieldTint ?: (if (useTint) tintColor else if (intensity > 0f) darkColor else lightColor)
-                    if (resolved != Color.TRANSPARENT) saveBatteryTint(meter, resolved)
+                    val resolved = currentTint.takeIf { it != Color.TRANSPARENT } ?: fieldTint
+                    if (resolved != null && resolved != Color.TRANSPARENT) {
+                        saveBatteryTint(meter, resolved)
+                    }
                 }
                 result
             }
