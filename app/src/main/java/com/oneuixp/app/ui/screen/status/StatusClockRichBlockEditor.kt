@@ -235,18 +235,18 @@ fun StatusClockRichBlockEditor(
                     (alpha * 100f).roundToInt(),
                 ),
             )
-            OneuiXSlider( 
+            OneuiXSlider(
+                value = alpha * 100f,
                 stepSize = 1f,
-                value = alpha,
                 onValueChange = { raw ->
-                    val value = (raw * 20f).roundToInt() / 20f
+                    val value = raw.roundToInt().coerceIn(0, 100) / 100f
                     alpha = value
                     onStylePreview(style.copy(backgroundAlpha = value))
                 },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 8.dp),
-                valueRange = 0f..1f,
+                valueRange = 0f..100f,
                 onValueChangeFinished = {
                     onStyleChange(style.copy(backgroundAlpha = alpha))
                 },
