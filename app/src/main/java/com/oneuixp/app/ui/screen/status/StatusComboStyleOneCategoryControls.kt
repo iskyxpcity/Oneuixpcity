@@ -1,19 +1,16 @@
 package com.oneuixp.app.ui.screen.status
 
-import kotlin.math.roundToInt
-
 import android.content.Intent
 import android.view.HapticFeedbackConstants
-import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -22,6 +19,7 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.oneuixp.app.R
 import com.oneuixp.app.ui.viewmodel.OneuiXToolsViewModel
@@ -34,43 +32,21 @@ import io.github.soclear.oneuix.ui.component.OneuiXInfoItem
 import io.github.soclear.oneuix.ui.component.OneuiXSlider
 import io.github.soclear.oneuix.ui.component.SwitchItem
 import io.github.soclear.oneuix.ui.component.SelectItem
+import kotlin.math.roundToInt
 
+@Suppress("UNUSED_PARAMETER")
 @Composable
 fun StatusComboStyleOneCategoryControls(
     uiState: Preference.SystemUI.StatusBar,
     onEvent: (SystemUIEvent) -> Unit,
 ) {
-    val comboIcon = ImageVector.vectorResource(id = R.drawable.status_combo)
-    val toolsViewModel = viewModel<OneuiXToolsViewModel>()
+    val icon = ImageVector.vectorResource(R.drawable.status_combo_style_one)
+    val viewModel = viewModel<OneuiXToolsViewModel>()
     val context = LocalContext.current
     val runtime = uiState.comboStyleOneRuntime
 
-    var expanded by rememberSaveable { mutableStateOf(runtime.enabled) }
-    var size by remember(runtime.sizePercent) { mutableFloatStateOf(runtime.sizePercent) }
-    var xOffset by remember(runtime.offsetXDp) { mutableFloatStateOf(runtime.offsetXDp) }
-    var yOffset by remember(runtime.offsetYDp) { mutableFloatStateOf(runtime.offsetYDp) }
-    var arcStroke by remember(runtime.arcStrokePercent) { mutableFloatStateOf(runtime.arcStrokePercent) }
-    var blackDepthPercent by remember(runtime.batteryBlackDepth) {
-        mutableFloatStateOf(runtime.batteryBlackDepth * 100f)
-    }
-    var dotsGap by remember(runtime.dotsGapDp) { mutableFloatStateOf(runtime.dotsGapDp) }
-    var dotsSize by remember(runtime.dotsSizePercent) { mutableFloatStateOf(runtime.dotsSizePercent) }
-    var innerSize by remember(runtime.innerSizePercent) { mutableFloatStateOf(runtime.innerSizePercent) }
-    var innerY by remember(runtime.innerYDp) { mutableFloatStateOf(runtime.innerYDp) }
-    var levelTextSize by remember(runtime.batteryTextSizeSp) {
-        mutableFloatStateOf(runtime.batteryTextSizeSp)
-    }
-    var levelTextWeight by remember(runtime.batteryTextFontWeight) {
-        mutableFloatStateOf(runtime.batteryTextFontWeight.toFloat())
-    }
-    var boltSize by remember(runtime.chargingBoltSizePercent) {
-        mutableFloatStateOf(runtime.chargingBoltSizePercent)
-    }
-    var boltX by remember(runtime.chargingBoltXDp) { mutableFloatStateOf(runtime.chargingBoltXDp) }
-    var boltY by remember(runtime.chargingBoltYDp) { mutableFloatStateOf(runtime.chargingBoltYDp) }
-
     fun preview(next: Preference.SystemUI.StatusBarComboStyleOneRuntime) {
-        val payload = runCatching {
+        val json = runCatching {
             IgnoreUnknownKeysJson.encodeToString(
                 Preference.SystemUI.StatusBar.serializer(),
                 uiState.copy(comboStyleOneRuntime = next),
@@ -81,13 +57,12 @@ fun StatusComboStyleOneCategoryControls(
                 Intent(StatusBarRuntimeBridge.ACTION)
                     .setPackage(Package.SYSTEMUI)
                     .addFlags(Intent.FLAG_RECEIVER_FOREGROUND)
-                    .putExtra(StatusBarRuntimeBridge.EXTRA_STATUS_BAR_JSON, payload),
+                    .putExtra(StatusBarRuntimeBridge.EXTRA_STATUS_BAR_JSON, json),
             )
         }
     }
-
     fun persist(next: Preference.SystemUI.StatusBarComboStyleOneRuntime) {
-        toolsViewModel.updateData { current ->
+        viewModel.updateData { current ->
             current.copy(
                 systemUI = current.systemUI.copy(
                     statusBar = current.systemUI.statusBar.copy(comboStyleOneRuntime = next),
@@ -95,680 +70,272 @@ fun StatusComboStyleOneCategoryControls(
             )
         }
     }
-
     fun previewAndPersist(next: Preference.SystemUI.StatusBarComboStyleOneRuntime) {
         preview(next)
         persist(next)
     }
 
-    StatusThemeGroup(
-        items = buildList {
-            add {
-                SwitchItem(
-                    icon = comboIcon,
-                    title = stringResource(R.string.status_combo_enable),
-                    summary = stringResource(R.string.status_combo_enable_summary),
-                    clickable = true,
-                    showChildIndicator = true,
-                    onClick = { if (runtime.enabled) expanded = !expanded },
-                    checked = runtime.enabled,
-                    onCheckedChange = {
-                        expanded = it
-                        previewAndPersist(runtime.copy(enabled = it))
-                    },
-                )
-            }
-        },
-    )
+    var ringStroke by remember(runtime.ringStroke) { mutableIntStateOf(runtime.ringStroke) }
+    var arcStroke by remember(runtime.arcStroke) { mutableIntStateOf(runtime.arcStroke) }
+    var valueSize by remember(runtime.valueSize) { mutableIntStateOf(runtime.valueSize) }
+    var valueWeight by remember(runtime.valueWeight) { mutableIntStateOf(runtime.valueWeight) }
+    var typeSize by remember(runtime.typeSize) { mutableIntStateOf(runtime.typeSize) }
+    var typeWeight by remember(runtime.typeWeight) { mutableIntStateOf(runtime.typeWeight) }
+    var suffixScale by remember(runtime.typeSuffixScale) { mutableIntStateOf(runtime.typeSuffixScale) }
+    var outTypeSize by remember(runtime.outTypeSizeDp) { mutableIntStateOf(runtime.outTypeSizeDp) }
+    var outSignalSize by remember(runtime.outSignalSizeDp) { mutableIntStateOf(runtime.outSignalSizeDp) }
+    var outTypeLeft by remember(runtime.outTypeMarginLeftDp) { mutableIntStateOf(runtime.outTypeMarginLeftDp) }
+    var outTypeRight by remember(runtime.outTypeMarginRightDp) { mutableIntStateOf(runtime.outTypeMarginRightDp) }
+    var outSignalMargin by remember(runtime.outSignalMarginDp) { mutableIntStateOf(runtime.outSignalMarginDp) }
+    var lowThreshold by remember(runtime.lowThreshold) { mutableIntStateOf(runtime.lowThreshold) }
+    var trackAlpha by remember(runtime.trackAlpha) {
+        mutableIntStateOf((runtime.trackAlpha * 100f / 255f).roundToInt())
+    }
 
-    if (!runtime.enabled || !expanded) return
+    StatusThemeGroup(items = listOf({
+        Column {
+            OneuiXInfoItem(
+                icon = icon,
+                title = stringResource(R.string.status_combo_style_one_preview),
+                summary = stringResource(R.string.status_combo_style_one_preview_summary),
+            )
+            StatusThemeChildItem {
+                AndroidView(
+                    modifier = Modifier.fillMaxWidth().height(44.dp),
+                    factory = { StatusComboStyleOnePreviewView(it) },
+                    update = { it.setConfig(runtime) },
+                )
+            }
+        }
+    }, {
+        SwitchItem(
+            icon = icon,
+            title = stringResource(R.string.status_combo_style_one_enable),
+            summary = stringResource(R.string.status_combo_style_one_enable_summary),
+            checked = runtime.enabled,
+            onCheckedChange = { previewAndPersist(runtime.copy(enabled = it)) },
+        )
+    }))
 
-    StatusThemeGroup(
-        items = buildList {
-            add {
-                SelectItem(
-                    icon = comboIcon,
-                    title = stringResource(R.string.status_combo_style),
-                    entries = listOf(
-                        stringResource(R.string.status_combo_style_ring),
-                        stringResource(R.string.status_combo_style_rect),
-                    ),
-                    selectedIndex = runtime.trioStyle.coerceIn(0, 1),
-                    onSelectedIndexChange = {
-                        previewAndPersist(runtime.copy(trioStyle = it.coerceIn(0, 1)))
-                    },
-                )
-            }
-            add {
-                SwitchItem(
-                    icon = comboIcon,
-                    title = stringResource(R.string.status_combo_overlay),
-                    summary = stringResource(R.string.status_combo_overlay_summary),
-                    checked = runtime.overlayGlyph,
-                    onCheckedChange = { previewAndPersist(runtime.copy(overlayGlyph = it)) },
-                )
-            }
-            add {
-                SwitchItem(
-                    icon = comboIcon,
-                    title = stringResource(R.string.status_combo_show_wifi),
-                    checked = runtime.showWifi,
-                    onCheckedChange = { previewAndPersist(runtime.copy(showWifi = it)) },
-                )
-            }
-            add {
-                SwitchItem(
-                    icon = comboIcon,
-                    title = stringResource(R.string.status_combo_show_mobile),
-                    checked = runtime.showMobile,
-                    onCheckedChange = { previewAndPersist(runtime.copy(showMobile = it)) },
-                )
-            }
-            add {
-                SwitchItem(
-                    icon = comboIcon,
-                    title = stringResource(R.string.status_combo_show_battery),
-                    checked = runtime.showBattery,
-                    onCheckedChange = { previewAndPersist(runtime.copy(showBattery = it)) },
-                )
-            }
-            add {
-                SwitchItem(
-                    icon = comboIcon,
-                    title = stringResource(R.string.status_combo_dual_sim),
-                    summary = stringResource(R.string.status_combo_dual_sim_summary),
-                    checked = runtime.dualSim,
-                    onCheckedChange = { previewAndPersist(runtime.copy(dualSim = it)) },
-                )
-            }
-            add {
-                SelectItem(
-                    icon = comboIcon,
-                    title = stringResource(R.string.status_combo_signal_mode),
-                    entries = listOf(
-                        stringResource(R.string.status_combo_signal_in_ring),
-                        stringResource(R.string.status_combo_signal_out_ring),
-                    ),
-                    selectedIndex = runtime.signalMode.coerceIn(0, 1),
-                    onSelectedIndexChange = {
-                        previewAndPersist(runtime.copy(signalMode = it.coerceIn(0, 1)))
-                    },
-                )
-            }
-            add {
-                SwitchItem(
-                    icon = comboIcon,
-                    title = stringResource(R.string.status_combo_stacked_signal),
-                    checked = runtime.stackedSignal,
-                    onCheckedChange = { previewAndPersist(runtime.copy(stackedSignal = it)) },
-                )
-            }
-            add {
-                SwitchItem(
-                    icon = comboIcon,
-                    title = stringResource(R.string.status_combo_data_sim_only),
-                    summary = stringResource(R.string.status_combo_data_sim_only_summary),
-                    checked = runtime.dataSimOnly,
-                    onCheckedChange = { previewAndPersist(runtime.copy(dataSimOnly = it)) },
-                )
-            }
-        },
-    )
+    if (!runtime.enabled) return
 
-    StatusThemeGroup(
-        items = buildList {
-            add {
-                SwitchItem(
-                    icon = comboIcon,
-                    title = stringResource(R.string.status_combo_battery_text),
-                    checked = runtime.showValue || runtime.showBatteryLevelText,
-                    onCheckedChange = {
-                        previewAndPersist(
-                            runtime.copy(
-                                showValue = it,
-                                showBatteryLevelText = it,
-                            ),
-                        )
-                    },
-                )
-            }
-            add {
-                SwitchItem(
-                    icon = comboIcon,
-                    title = stringResource(R.string.status_combo_5g_type),
-                    checked = runtime.show5gNetworkType,
-                    onCheckedChange = { previewAndPersist(runtime.copy(show5gNetworkType = it)) },
-                )
-            }
-            add {
-                SelectItem(
-                    icon = comboIcon,
-                    title = stringResource(R.string.status_combo_mobile_type),
-                    entries = listOf(
-                        stringResource(R.string.status_combo_mobile_type_off),
-                        stringResource(R.string.status_combo_mobile_type_in),
-                        stringResource(R.string.status_combo_mobile_type_out),
-                    ),
-                    selectedIndex = runtime.mobileTypeMode.coerceIn(0, 2),
-                    onSelectedIndexChange = {
-                        previewAndPersist(runtime.copy(mobileTypeMode = it.coerceIn(0, 2)))
-                    },
-                )
-            }
-            add {
-                SwitchItem(
-                    icon = comboIcon,
-                    title = stringResource(R.string.status_combo_charging_bolt),
-                    checked = runtime.showChargingBolt,
-                    onCheckedChange = { previewAndPersist(runtime.copy(showChargingBolt = it)) },
-                )
-            }
-        },
-    )
+    StatusThemeGroup(items = listOf({
+        SelectItem(
+            icon = icon,
+            title = stringResource(R.string.status_combo_style_one_style),
+            entries = listOf(
+                stringResource(R.string.status_combo_style_one_style_ring),
+                stringResource(R.string.status_combo_style_one_style_rect),
+            ),
+            selectedIndex = runtime.trioStyle.coerceIn(0, 1),
+            onSelectedIndexChange = { previewAndPersist(runtime.copy(trioStyle = it.coerceIn(0, 1))) },
+        )
+    }, {
+        SwitchItem(
+            icon = icon,
+            title = stringResource(R.string.status_combo_style_one_overlay),
+            summary = stringResource(R.string.status_combo_style_one_overlay_summary),
+            checked = runtime.overlayGlyph,
+            onCheckedChange = { previewAndPersist(runtime.copy(overlayGlyph = it)) },
+        )
+    }, {
+        SwitchItem(icon = icon, title = stringResource(R.string.status_combo_style_one_show_wifi),
+            checked = runtime.showWifi, onCheckedChange = { previewAndPersist(runtime.copy(showWifi = it)) })
+    }, {
+        SwitchItem(icon = icon, title = stringResource(R.string.status_combo_style_one_show_mobile),
+            checked = runtime.showMobile, onCheckedChange = { previewAndPersist(runtime.copy(showMobile = it)) })
+    }, {
+        SwitchItem(icon = icon, title = stringResource(R.string.status_combo_style_one_show_value),
+            checked = runtime.showValue, onCheckedChange = { previewAndPersist(runtime.copy(showValue = it)) })
+    }, {
+        SwitchItem(icon = icon, title = stringResource(R.string.status_combo_style_one_show_bolt),
+            checked = runtime.showBolt, onCheckedChange = { previewAndPersist(runtime.copy(showBolt = it)) })
+    }, {
+        SwitchItem(
+            icon = icon,
+            title = stringResource(R.string.status_combo_style_one_value_centred),
+            summary = stringResource(R.string.status_combo_style_one_value_centred_summary),
+            checked = runtime.valueCentred,
+            onCheckedChange = { previewAndPersist(runtime.copy(valueCentred = it)) },
+        )
+    }))
 
-    StatusThemeGroup(
-        items = buildList {
-            add {
-                comboSlider(
-                    icon = comboIcon,
-                    title = stringResource(R.string.status_combo_size),
-                    summary = stringResource(R.string.status_combo_percent_summary, size.roundToInt()),
-                    value = size,
-                    range = 50f..250f,
-                    onValueChange = {
-                        size = it
-                        preview(runtime.copy(sizePercent = it))
-                    },
-                    onFinished = { persist(runtime.copy(sizePercent = size)) },
-                )
-            }
-            add {
-                comboSlider(
-                    icon = comboIcon,
-                    title = stringResource(R.string.status_combo_offset_x),
-                    summary = stringResource(R.string.status_combo_dp_summary, xOffset.roundToInt()),
-                    value = xOffset,
-                    range = -24f..24f,
-                    onValueChange = {
-                        xOffset = it
-                        preview(runtime.copy(offsetXDp = it))
-                    },
-                    onFinished = { persist(runtime.copy(offsetXDp = xOffset)) },
-                )
-            }
-            add {
-                comboSlider(
-                    icon = comboIcon,
-                    title = stringResource(R.string.status_combo_offset_y),
-                    summary = stringResource(R.string.status_combo_dp_summary, yOffset.roundToInt()),
-                    value = yOffset,
-                    range = -15f..15f,
-                    onValueChange = {
-                        yOffset = it
-                        preview(runtime.copy(offsetYDp = it))
-                    },
-                    onFinished = { persist(runtime.copy(offsetYDp = yOffset)) },
-                )
-            }
-        },
-    )
+    StatusThemeGroup(items = listOf({
+        SelectItem(
+            icon = icon,
+            title = stringResource(R.string.status_combo_style_one_mobile_type_mode),
+            entries = listOf(
+                stringResource(R.string.status_combo_style_one_mobile_type_off),
+                stringResource(R.string.status_combo_style_one_mobile_type_inside),
+                stringResource(R.string.status_combo_style_one_mobile_type_outside),
+            ),
+            selectedIndex = runtime.mobileTypeMode.coerceIn(0, 2),
+            onSelectedIndexChange = { previewAndPersist(runtime.copy(mobileTypeMode = it.coerceIn(0, 2))) },
+        )
+    }, {
+        SelectItem(
+            icon = icon,
+            title = stringResource(R.string.status_combo_style_one_signal_mode),
+            entries = listOf(
+                stringResource(R.string.status_combo_style_one_signal_inside),
+                stringResource(R.string.status_combo_style_one_signal_outside),
+            ),
+            selectedIndex = runtime.signalMode.coerceIn(0, 1),
+            onSelectedIndexChange = { previewAndPersist(runtime.copy(signalMode = it.coerceIn(0, 1))) },
+        )
+    }, {
+        SwitchItem(
+            icon = icon,
+            title = stringResource(R.string.status_combo_style_one_dual_sim),
+            summary = stringResource(R.string.status_combo_style_one_dual_sim_summary),
+            checked = runtime.dualSim,
+            onCheckedChange = { previewAndPersist(runtime.copy(dualSim = it)) },
+        )
+    }, {
+        SwitchItem(
+            icon = icon,
+            title = stringResource(R.string.status_combo_style_one_stacked_signal),
+            summary = stringResource(R.string.status_combo_style_one_stacked_signal_summary),
+            checked = runtime.stackedSignal,
+            onCheckedChange = { previewAndPersist(runtime.copy(stackedSignal = it)) },
+        )
+    }, {
+        SwitchItem(
+            icon = icon,
+            title = stringResource(R.string.status_combo_style_one_data_sim_only),
+            summary = stringResource(R.string.status_combo_style_one_data_sim_only_summary),
+            checked = runtime.dataSimOnly,
+            onCheckedChange = { previewAndPersist(runtime.copy(dataSimOnly = it)) },
+        )
+    }))
 
-    StatusThemeGroup(
-        items = buildList {
-            add {
-                comboSlider(
-                    icon = comboIcon,
-                    title = stringResource(R.string.status_combo_arc_stroke),
-                    summary = stringResource(R.string.status_combo_percent_summary, arcStroke.roundToInt()),
-                    value = arcStroke,
-                    range = 50f..200f,
-                    onValueChange = {
-                        arcStroke = it
-                        preview(runtime.copy(arcStrokePercent = it))
-                    },
-                    onFinished = { persist(runtime.copy(arcStrokePercent = arcStroke)) },
-                )
-            }
-            add {
-                comboSlider(
-                    icon = comboIcon,
-                    title = stringResource(R.string.status_combo_battery_depth),
-                    summary = stringResource(
-                        R.string.status_combo_percent_summary,
-                        blackDepthPercent.roundToInt(),
-                    ),
-                    value = blackDepthPercent,
-                    range = 15f..100f,
-                    onValueChange = {
-                        blackDepthPercent = it
-                        preview(runtime.copy(batteryBlackDepth = it / 100f))
-                    },
-                    onFinished = {
-                        persist(
-                            runtime.copy(
-                                batteryBlackDepth = blackDepthPercent / 100f,
-                            ),
-                        )
-                    },
-                )
-            }
-            add {
-                comboSlider(
-                    icon = comboIcon,
-                    title = stringResource(R.string.status_combo_level_text_size),
-                    summary = stringResource(R.string.status_combo_sp_summary, levelTextSize.roundToInt()),
-                    value = levelTextSize,
-                    range = 5f..18f,
-                    onValueChange = {
-                        levelTextSize = it
-                        preview(runtime.copy(batteryTextSizeSp = it))
-                    },
-                    onFinished = { persist(runtime.copy(batteryTextSizeSp = levelTextSize)) },
-                )
-            }
-            add {
-                comboSlider(
-                    icon = comboIcon,
-                    title = stringResource(R.string.status_combo_level_text_weight),
-                    summary = stringResource(R.string.status_combo_weight_summary, runtime.batteryTextFontWeight),
-                    value = levelTextWeight,
-                    range = 100f..900f,
-                    onValueChange = {
-                        val weight = it.roundToNearestHundred().coerceIn(100, 900)
-                        levelTextWeight = weight.toFloat()
-                        preview(runtime.copy(batteryTextFontWeight = weight))
-                    },
-                    stepSize = 100f,
-                    onFinished = {
-                        persist(
-                            runtime.copy(
-                                batteryTextFontWeight = levelTextWeight.roundToInt().coerceIn(100, 900),
-                            ),
-                        )
-                    },
-                )
-            }
-        },
-    )
+    StatusThemeGroup(items = listOf({
+        styleOneSlider(icon, stringResource(R.string.status_combo_style_one_ring_stroke),
+            stringResource(R.string.status_combo_style_one_int_summary, ringStroke), ringStroke.toFloat(), 3f..28f,
+            { ringStroke = it.roundToInt(); preview(runtime.copy(ringStroke = ringStroke)) },
+            { persist(runtime.copy(ringStroke = ringStroke)) })
+    }, {
+        styleOneSlider(icon, stringResource(R.string.status_combo_style_one_arc_stroke),
+            stringResource(R.string.status_combo_style_one_int_summary, arcStroke), arcStroke.toFloat(), 2f..20f,
+            { arcStroke = it.roundToInt(); preview(runtime.copy(arcStroke = arcStroke)) },
+            { persist(runtime.copy(arcStroke = arcStroke)) })
+    }, {
+        styleOneSlider(icon, stringResource(R.string.status_combo_style_one_value_size),
+            stringResource(R.string.status_combo_style_one_int_summary, valueSize), valueSize.toFloat(), 8f..64f,
+            { valueSize = it.roundToInt(); preview(runtime.copy(valueSize = valueSize)) },
+            { persist(runtime.copy(valueSize = valueSize)) })
+    }, {
+        styleOneSlider(icon, stringResource(R.string.status_combo_style_one_value_weight),
+            stringResource(R.string.status_combo_style_one_weight_summary, valueWeight), valueWeight.toFloat(), 100f..900f,
+            { valueWeight = (it / 100f).roundToInt() * 100; preview(runtime.copy(valueWeight = valueWeight)) },
+            { persist(runtime.copy(valueWeight = valueWeight)) }, stepSize = 100f)
+    }, {
+        styleOneSlider(icon, stringResource(R.string.status_combo_style_one_type_size),
+            stringResource(R.string.status_combo_style_one_int_summary, typeSize), typeSize.toFloat(), 8f..64f,
+            { typeSize = it.roundToInt(); preview(runtime.copy(typeSize = typeSize)) },
+            { persist(runtime.copy(typeSize = typeSize)) })
+    }, {
+        styleOneSlider(icon, stringResource(R.string.status_combo_style_one_type_weight),
+            stringResource(R.string.status_combo_style_one_weight_summary, typeWeight), typeWeight.toFloat(), 100f..900f,
+            { typeWeight = (it / 100f).roundToInt() * 100; preview(runtime.copy(typeWeight = typeWeight)) },
+            { persist(runtime.copy(typeWeight = typeWeight)) }, stepSize = 100f)
+    }, {
+        styleOneSlider(icon, stringResource(R.string.status_combo_style_one_type_suffix_scale),
+            stringResource(R.string.status_combo_style_one_percent_summary, suffixScale), suffixScale.toFloat(), 30f..100f,
+            { suffixScale = it.roundToInt(); preview(runtime.copy(typeSuffixScale = suffixScale)) },
+            { persist(runtime.copy(typeSuffixScale = suffixScale)) })
+    }))
 
-    StatusThemeGroup(
-        items = buildList {
-            add {
-                comboSlider(
-                    icon = comboIcon,
-                    title = stringResource(R.string.status_combo_dots_gap),
-                    summary = stringResource(R.string.status_combo_dp_summary, dotsGap.roundToInt()),
-                    value = dotsGap,
-                    range = 0f..8f,
-                    onValueChange = {
-                        dotsGap = it
-                        preview(runtime.copy(dotsGapDp = it))
-                    },
-                    onFinished = { persist(runtime.copy(dotsGapDp = dotsGap)) },
-                )
-            }
-            add {
-                comboSlider(
-                    icon = comboIcon,
-                    title = stringResource(R.string.status_combo_dots_size),
-                    summary = stringResource(R.string.status_combo_percent_summary, dotsSize.roundToInt()),
-                    value = dotsSize,
-                    range = 50f..180f,
-                    onValueChange = {
-                        dotsSize = it
-                        preview(runtime.copy(dotsSizePercent = it))
-                    },
-                    onFinished = { persist(runtime.copy(dotsSizePercent = dotsSize)) },
-                )
-            }
-            add {
-                comboSlider(
-                    icon = comboIcon,
-                    title = stringResource(R.string.status_combo_inner_size),
-                    summary = stringResource(R.string.status_combo_percent_summary, innerSize.roundToInt()),
-                    value = innerSize,
-                    range = 50f..180f,
-                    onValueChange = {
-                        innerSize = it
-                        preview(runtime.copy(innerSizePercent = it))
-                    },
-                    onFinished = { persist(runtime.copy(innerSizePercent = innerSize)) },
-                )
-            }
-            add {
-                comboSlider(
-                    icon = comboIcon,
-                    title = stringResource(R.string.status_combo_inner_y),
-                    summary = stringResource(R.string.status_combo_dp_summary, innerY.roundToInt()),
-                    value = innerY,
-                    range = -8f..8f,
-                    onValueChange = {
-                        innerY = it
-                        preview(runtime.copy(innerYDp = it))
-                    },
-                    onFinished = { persist(runtime.copy(innerYDp = innerY)) },
-                )
-            }
-        },
-    )
+    StatusThemeGroup(items = listOf({
+        styleOneSlider(icon, stringResource(R.string.status_combo_style_one_out_type_size),
+            stringResource(R.string.status_combo_style_one_dp_summary, outTypeSize), outTypeSize.toFloat(), 6f..30f,
+            { outTypeSize = it.roundToInt(); preview(runtime.copy(outTypeSizeDp = outTypeSize)) },
+            { persist(runtime.copy(outTypeSizeDp = outTypeSize)) })
+    }, {
+        styleOneSlider(icon, stringResource(R.string.status_combo_style_one_out_signal_size),
+            stringResource(R.string.status_combo_style_one_dp_summary, outSignalSize), outSignalSize.toFloat(), 6f..36f,
+            { outSignalSize = it.roundToInt(); preview(runtime.copy(outSignalSizeDp = outSignalSize)) },
+            { persist(runtime.copy(outSignalSizeDp = outSignalSize)) })
+    }, {
+        styleOneSlider(icon, stringResource(R.string.status_combo_style_one_out_type_margin_left),
+            stringResource(R.string.status_combo_style_one_dp_summary, outTypeLeft), outTypeLeft.toFloat(), 0f..12f,
+            { outTypeLeft = it.roundToInt(); preview(runtime.copy(outTypeMarginLeftDp = outTypeLeft)) },
+            { persist(runtime.copy(outTypeMarginLeftDp = outTypeLeft)) })
+    }, {
+        styleOneSlider(icon, stringResource(R.string.status_combo_style_one_out_type_margin_right),
+            stringResource(R.string.status_combo_style_one_dp_summary, outTypeRight), outTypeRight.toFloat(), 0f..12f,
+            { outTypeRight = it.roundToInt(); preview(runtime.copy(outTypeMarginRightDp = outTypeRight)) },
+            { persist(runtime.copy(outTypeMarginRightDp = outTypeRight)) })
+    }, {
+        styleOneSlider(icon, stringResource(R.string.status_combo_style_one_out_signal_margin),
+            stringResource(R.string.status_combo_style_one_dp_summary, outSignalMargin), outSignalMargin.toFloat(), 0f..12f,
+            { outSignalMargin = it.roundToInt(); preview(runtime.copy(outSignalMarginDp = outSignalMargin)) },
+            { persist(runtime.copy(outSignalMarginDp = outSignalMargin)) })
+    }))
 
-    StatusThemeGroup(
-        items = buildList {
-            add {
-                SwitchItem(
-                    icon = comboIcon,
-                    title = stringResource(R.string.status_combo_wifi_two_arcs),
-                    checked = runtime.wifiTwoArcs,
-                    onCheckedChange = { previewAndPersist(runtime.copy(wifiTwoArcs = it)) },
-                )
-            }
-        },
-    )
+    StatusThemeGroup(items = listOf({
+        SwitchItem(
+            icon = icon,
+            title = stringResource(R.string.status_combo_style_one_role_colors),
+            summary = stringResource(R.string.status_combo_style_one_role_colors_summary),
+            checked = runtime.roleColors,
+            onCheckedChange = { previewAndPersist(runtime.copy(roleColors = it)) },
+        )
+    }, {
+        styleOneSlider(icon, stringResource(R.string.status_combo_style_one_low_threshold),
+            stringResource(R.string.status_combo_style_one_percent_summary, lowThreshold), lowThreshold.toFloat(), 1f..50f,
+            { lowThreshold = it.roundToInt(); preview(runtime.copy(lowThreshold = lowThreshold)) },
+            { persist(runtime.copy(lowThreshold = lowThreshold)) })
+    }, {
+        styleOneSlider(icon, stringResource(R.string.status_combo_style_one_track_alpha),
+            stringResource(R.string.status_combo_style_one_percent_summary, trackAlpha), trackAlpha.toFloat(), 0f..100f,
+            { trackAlpha = it.roundToInt(); val a = (trackAlpha * 255f / 100f).roundToInt(); preview(runtime.copy(trackAlpha = a)) },
+            { persist(runtime.copy(trackAlpha = (trackAlpha * 255f / 100f).roundToInt())) })
+    }))
 
-    StatusThemeGroup(
-        items = buildList {
-            add {
-                comboSlider(
-                    icon = comboIcon,
-                    title = stringResource(R.string.status_combo_bolt_size),
-                    summary = stringResource(R.string.status_combo_percent_summary, boltSize.roundToInt()),
-                    value = boltSize,
-                    range = 50f..180f,
-                    onValueChange = {
-                        boltSize = it
-                        preview(runtime.copy(chargingBoltSizePercent = it))
-                    },
-                    onFinished = { persist(runtime.copy(chargingBoltSizePercent = boltSize)) },
-                )
-            }
-            add {
-                comboSlider(
-                    icon = comboIcon,
-                    title = stringResource(R.string.status_combo_bolt_x),
-                    summary = stringResource(R.string.status_combo_dp_summary, boltX.roundToInt()),
-                    value = boltX,
-                    range = -8f..8f,
-                    onValueChange = {
-                        boltX = it
-                        preview(runtime.copy(chargingBoltXDp = it))
-                    },
-                    onFinished = { persist(runtime.copy(chargingBoltXDp = boltX)) },
-                )
-            }
-            add {
-                comboSlider(
-                    icon = comboIcon,
-                    title = stringResource(R.string.status_combo_bolt_y),
-                    summary = stringResource(R.string.status_combo_dp_summary, boltY.roundToInt()),
-                    value = boltY,
-                    range = -8f..8f,
-                    onValueChange = {
-                        boltY = it
-                        preview(runtime.copy(chargingBoltYDp = it))
-                    },
-                    onFinished = { persist(runtime.copy(chargingBoltYDp = boltY)) },
-                )
-            }
-        },
-    )
-    
-    StatusThemeGroup(
-        items = buildList {
-            add {
-                SwitchItem(
-                    icon = comboIcon,
-                    title = stringResource(R.string.status_combo_value_centered),
-                    checked = runtime.valueCentred,
-                    onCheckedChange = { previewAndPersist(runtime.copy(valueCentred = it)) },
-                )
-            }
-            add {
-                comboIntSlider(
-                    comboIcon,
-                    R.string.status_combo_ring_stroke,
-                    runtime.ringStroke,
-                    4,
-                    16,
-                ) { previewAndPersist(runtime.copy(ringStroke = it)) }
-            }
-            add {
-                comboIntSlider(
-                    comboIcon,
-                    R.string.status_combo_arc_stroke_exact,
-                    runtime.arcStroke,
-                    3,
-                    16,
-                ) { previewAndPersist(runtime.copy(arcStroke = it)) }
-            }
-            add {
-                comboIntSlider(
-                    comboIcon,
-                    R.string.status_combo_value_size_exact,
-                    runtime.valueSize,
-                    16,
-                    44,
-                ) { previewAndPersist(runtime.copy(valueSize = it)) }
-            }
-            add {
-                comboWeightSlider(
-                    comboIcon,
-                    R.string.status_combo_value_weight_exact,
-                    runtime.valueWeight,
-                ) { previewAndPersist(runtime.copy(valueWeight = it)) }
-            }
-            add {
-                comboIntSlider(
-                    comboIcon,
-                    R.string.status_combo_type_size,
-                    runtime.typeSize,
-                    16,
-                    44,
-                ) { previewAndPersist(runtime.copy(typeSize = it)) }
-            }
-            add {
-                comboWeightSlider(
-                    comboIcon,
-                    R.string.status_combo_type_weight,
-                    runtime.typeWeight,
-                ) { previewAndPersist(runtime.copy(typeWeight = it)) }
-            }
-            add {
-                comboIntSlider(
-                    comboIcon,
-                    R.string.status_combo_type_suffix,
-                    runtime.typeSuffixScale,
-                    50,
-                    100,
-                ) { previewAndPersist(runtime.copy(typeSuffixScale = it)) }
-            }
-            add {
-                comboIntSlider(
-                    comboIcon,
-                    R.string.status_combo_out_type_size,
-                    runtime.outTypeSizeDp,
-                    8,
-                    26,
-                ) { previewAndPersist(runtime.copy(outTypeSizeDp = it)) }
-            }
-            add {
-                comboIntSlider(
-                    comboIcon,
-                    R.string.status_combo_out_signal_size,
-                    runtime.outSignalSizeDp,
-                    6,
-                    20,
-                ) { previewAndPersist(runtime.copy(outSignalSizeDp = it)) }
-            }
-            add {
-                comboIntSlider(
-                    comboIcon,
-                    R.string.status_combo_out_signal_margin,
-                    runtime.outSignalMarginDp,
-                    0,
-                    16,
-                ) { previewAndPersist(runtime.copy(outSignalMarginDp = it)) }
-            }
-            add {
-                comboIntSlider(
-                    comboIcon,
-                    R.string.status_combo_out_type_margin_left,
-                    runtime.outTypeMarginLeftDp,
-                    0,
-                    16,
-                ) { previewAndPersist(runtime.copy(outTypeMarginLeftDp = it)) }
-            }
-            add {
-                comboIntSlider(
-                    comboIcon,
-                    R.string.status_combo_out_type_margin_right,
-                    runtime.outTypeMarginRightDp,
-                    0,
-                    16,
-                ) { previewAndPersist(runtime.copy(outTypeMarginRightDp = it)) }
-            }
-            add {
-                comboIntSlider(
-                    comboIcon,
-                    R.string.status_combo_low_threshold,
-                    runtime.lowBatteryThreshold,
-                    5,
-                    50,
-                ) { previewAndPersist(runtime.copy(lowBatteryThreshold = it)) }
-            }
-            add {
-                comboIntSlider(
-                    comboIcon,
-                    R.string.status_combo_track_alpha,
-                    runtime.trackAlpha,
-                    0,
-                    255,
-                ) { previewAndPersist(runtime.copy(trackAlpha = it)) }
-            }
-        },
-    )
+    if (runtime.roleColors) {
+        StatusThemeGroup(items = listOf({
+            styleOneColor(icon, R.string.status_combo_style_one_critical_dark, runtime.criticalColorDarkArgb,
+                { previewAndPersist(runtime.copy(criticalColorDarkArgb = it)) }, { preview(runtime.copy(criticalColorDarkArgb = it)) })
+        }, {
+            styleOneColor(icon, R.string.status_combo_style_one_critical_light, runtime.criticalColorLightArgb,
+                { previewAndPersist(runtime.copy(criticalColorLightArgb = it)) }, { preview(runtime.copy(criticalColorLightArgb = it)) })
+        }, {
+            styleOneColor(icon, R.string.status_combo_style_one_charging_dark, runtime.chargingColorDarkArgb,
+                { previewAndPersist(runtime.copy(chargingColorDarkArgb = it)) }, { preview(runtime.copy(chargingColorDarkArgb = it)) })
+        }, {
+            styleOneColor(icon, R.string.status_combo_style_one_charging_light, runtime.chargingColorLightArgb,
+                { previewAndPersist(runtime.copy(chargingColorLightArgb = it)) }, { preview(runtime.copy(chargingColorLightArgb = it)) })
+        }, {
+            styleOneColor(icon, R.string.status_combo_style_one_low_dark, runtime.lowColorDarkArgb,
+                { previewAndPersist(runtime.copy(lowColorDarkArgb = it)) }, { preview(runtime.copy(lowColorDarkArgb = it)) })
+        }, {
+            styleOneColor(icon, R.string.status_combo_style_one_low_light, runtime.lowColorLightArgb,
+                { previewAndPersist(runtime.copy(lowColorLightArgb = it)) }, { preview(runtime.copy(lowColorLightArgb = it)) })
+        }))
+    }
 
-    StatusThemeGroup(
-        items = buildList {
-            add {
-                SwitchItem(
-                    icon = comboIcon,
-                    title = stringResource(R.string.status_combo_role_colors),
-                    summary = stringResource(R.string.status_combo_role_colors_summary),
-                    checked = runtime.roleColors,
-                    onCheckedChange = { previewAndPersist(runtime.copy(roleColors = it)) },
-                )
-            }
-        },
-    )
-
-    StatusThemeGroup(
-        items = buildList {
-            add {
-                OneuiXInfoItem(
-                    icon = comboIcon,
-                    title = stringResource(R.string.status_combo_critical_dark),
-                    summary = stringResource(R.string.status_combo_color_summary),
-                )
-                StatusThemeChildItem {
-                    StatusClockColorPicker(
-                        colorArgb = runtime.criticalColorDarkArgb,
-                        onColorChange = { persist(runtime.copy(criticalColorDarkArgb = it)) },
-                        onColorPreview = { preview(runtime.copy(criticalColorDarkArgb = it)) },
-                    )
-                }
-            }
-            add {
-                OneuiXInfoItem(
-                    icon = comboIcon,
-                    title = stringResource(R.string.status_combo_critical_light),
-                    summary = stringResource(R.string.status_combo_color_summary),
-                )
-                StatusThemeChildItem {
-                    StatusClockColorPicker(
-                        colorArgb = runtime.criticalColorLightArgb,
-                        onColorChange = { persist(runtime.copy(criticalColorLightArgb = it)) },
-                        onColorPreview = { preview(runtime.copy(criticalColorLightArgb = it)) },
-                    )
-                }
-            }
-            add {
-                OneuiXInfoItem(
-                    icon = comboIcon,
-                    title = stringResource(R.string.status_combo_charging_dark),
-                    summary = stringResource(R.string.status_combo_color_summary),
-                )
-                StatusThemeChildItem {
-                    StatusClockColorPicker(
-                        colorArgb = runtime.chargingColorDarkArgb,
-                        onColorChange = { persist(runtime.copy(chargingColorDarkArgb = it)) },
-                        onColorPreview = { preview(runtime.copy(chargingColorDarkArgb = it)) },
-                    )
-                }
-            }
-            add {
-                OneuiXInfoItem(
-                    icon = comboIcon,
-                    title = stringResource(R.string.status_combo_charging_light),
-                    summary = stringResource(R.string.status_combo_color_summary),
-                )
-                StatusThemeChildItem {
-                    StatusClockColorPicker(
-                        colorArgb = runtime.chargingColorLightArgb,
-                        onColorChange = { persist(runtime.copy(chargingColorLightArgb = it)) },
-                        onColorPreview = { preview(runtime.copy(chargingColorLightArgb = it)) },
-                    )
-                }
-            }
-            add {
-                OneuiXInfoItem(
-                    icon = comboIcon,
-                    title = stringResource(R.string.status_combo_quick_charge),
-                    summary = stringResource(R.string.status_combo_color_summary),
-                )
-                StatusThemeChildItem {
-                    StatusClockColorPicker(
-                        colorArgb = runtime.quickChargeColorArgb,
-                        onColorChange = { persist(runtime.copy(quickChargeColorArgb = it)) },
-                        onColorPreview = { preview(runtime.copy(quickChargeColorArgb = it)) },
-                    )
-                }
-            }
-            add {
-                OneuiXInfoItem(
-                    icon = comboIcon,
-                    title = stringResource(R.string.status_combo_low_dark),
-                    summary = stringResource(R.string.status_combo_color_summary),
-                )
-                StatusThemeChildItem {
-                    StatusClockColorPicker(
-                        colorArgb = runtime.lowColorDarkArgb,
-                        onColorChange = { persist(runtime.copy(lowColorDarkArgb = it)) },
-                        onColorPreview = { preview(runtime.copy(lowColorDarkArgb = it)) },
-                    )
-                }
-            }
-            add {
-                OneuiXInfoItem(
-                    icon = comboIcon,
-                    title = stringResource(R.string.status_combo_low_light),
-                    summary = stringResource(R.string.status_combo_color_summary),
-                )
-                StatusThemeChildItem {
-                    StatusClockColorPicker(
-                        colorArgb = runtime.lowColorLightArgb,
-                        onColorChange = { persist(runtime.copy(lowColorLightArgb = it)) },
-                        onColorPreview = { preview(runtime.copy(lowColorLightArgb = it)) },
-                    )
-                }
-            }
-        },
-    )
-
-
+    StatusThemeGroup(items = listOf({
+        SwitchItem(
+            icon = icon,
+            title = stringResource(R.string.status_combo_style_one_debug_log),
+            summary = stringResource(R.string.status_combo_style_one_debug_log_summary),
+            checked = runtime.debugLog,
+            onCheckedChange = { previewAndPersist(runtime.copy(debugLog = it)) },
+        )
+    }))
 }
 
 @Composable
-private fun comboSlider(
+private fun styleOneColor(icon: ImageVector, titleRes: Int, value: Int, onChange: (Int) -> Unit, onPreview: (Int) -> Unit) {
+    OneuiXInfoItem(icon = icon, title = stringResource(titleRes), summary = stringResource(R.string.status_combo_style_one_color_summary))
+    StatusThemeChildItem {
+        StatusClockColorPicker(colorArgb = value, onColorChange = onChange, onColorPreview = onPreview)
+    }
+}
+
+@Composable
+private fun styleOneSlider(
     icon: ImageVector,
     title: String,
     summary: String,
@@ -779,22 +346,9 @@ private fun comboSlider(
     stepSize: Float = 1f,
 ) {
     val view = LocalView.current
-    var lastStep by remember(title, range.start, range.endInclusive) {
-        mutableFloatStateOf(value)
-    }
-
-    fun stepped(raw: Float): Float {
-        val clamped = raw.coerceIn(range.start, range.endInclusive)
-        val normalized = ((clamped - range.start) / stepSize).roundToInt() * stepSize + range.start
-        return normalized.coerceIn(range.start, range.endInclusive)
-    }
-
+    var lastStep by remember(title, range.start, range.endInclusive) { mutableFloatStateOf(value) }
     Column {
-        OneuiXInfoItem(
-            icon = icon,
-            title = title,
-            summary = summary,
-        )
+        OneuiXInfoItem(icon = icon, title = title, summary = summary)
         StatusThemeChildItem {
             OneuiXSlider(
                 value = value,
@@ -802,7 +356,9 @@ private fun comboSlider(
                 valueRange = range,
                 steps = 0,
                 onValueChange = { raw ->
-                    val next = stepped(raw)
+                    val bounded = raw.coerceIn(range.start, range.endInclusive)
+                    val next = (((bounded - range.start) / stepSize).roundToInt() * stepSize + range.start)
+                        .coerceIn(range.start, range.endInclusive)
                     if (next != lastStep) {
                         lastStep = next
                         view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
@@ -814,47 +370,3 @@ private fun comboSlider(
         }
     }
 }
-
-@Composable
-private fun comboIntSlider(
-    icon: ImageVector,
-    titleRes: Int,
-    value: Int,
-    minValue: Int,
-    maxValue: Int,
-    onChange: (Int) -> Unit,
-) {
-    comboSlider(
-        icon = icon,
-        title = stringResource(titleRes),
-        summary = stringResource(R.string.status_combo_int_summary, value),
-        value = value.toFloat(),
-        range = minValue.toFloat()..maxValue.toFloat(),
-        onValueChange = { onChange(it.roundToInt()) },
-        onFinished = {},
-    )
-}
-
-@Composable
-private fun comboWeightSlider(
-    icon: ImageVector,
-    titleRes: Int,
-    value: Int,
-    onChange: (Int) -> Unit,
-) {
-    comboSlider(
-        icon = icon,
-        title = stringResource(titleRes),
-        summary = stringResource(R.string.status_combo_weight_summary, value),
-        value = value.toFloat(),
-        range = 100f..900f,
-        stepSize = 100f,
-        onValueChange = {
-            onChange((it / 100f).roundToInt() * 100)
-        },
-        onFinished = {},
-    )
-}
-
-private fun Float.roundToNearestHundred(): Int =
-    (this / 100f).roundToInt() * 100

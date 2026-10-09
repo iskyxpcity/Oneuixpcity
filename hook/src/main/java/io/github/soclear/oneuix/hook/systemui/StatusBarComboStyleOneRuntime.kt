@@ -4,27 +4,19 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.database.ContentObserver
 import android.graphics.Canvas
 import android.graphics.Color
-import android.graphics.Paint
-import android.graphics.Path
 import android.graphics.PixelFormat
-import android.graphics.RectF
-import android.graphics.Typeface
-import android.net.wifi.SupplicantState
 import android.net.wifi.WifiManager
 import android.os.BatteryManager
 import android.os.Build
 import android.os.Handler
-import android.os.HandlerThread
 import android.os.Looper
+import android.telephony.PhoneStateListener
 import android.telephony.ServiceState
 import android.telephony.SignalStrength
 import android.telephony.SubscriptionInfo
 import android.telephony.SubscriptionManager
-import android.telephony.TelephonyCallback
-import android.telephony.TelephonyDisplayInfo
 import android.telephony.TelephonyManager
 import android.util.Log
 import android.view.Gravity
@@ -40,1042 +32,519 @@ import io.github.soclear.oneuix.common.IgnoreUnknownKeysJson
 import io.github.soclear.oneuix.common.Package
 import io.github.soclear.oneuix.common.Preference
 import io.github.soclear.oneuix.common.StatusBarRuntimeBridge
+import io.github.soclear.oneuix.common.StatusComboStyleOneGlyphRenderer
+import io.github.soclear.oneuix.common.StatusComboStyleOneGlyphState
 import io.github.soclear.oneuix.hook.util.PreferenceProvider
-import java.util.LinkedHashMap
+import java.util.Collections
+import java.util.IdentityHashMap
 import java.util.WeakHashMap
-import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicBoolean
-import kotlin.math.asin
-import kotlin.math.max
-import kotlin.math.roundToInt
+import kotlinx.serialization.decodeFromString
 
 /**
- * OneuiXP Three-in-One Icon Style One.
- *
- * A single, independently positioned status-bar window renders the battery ring,
- * Wi-Fi arcs and active-data-SIM signal. Updates are event driven; there is no
- * periodic visibility or layout polling.
+ * Independent runtime for the Style One icon: state polling, native icon folding,
+ * layout replacement, standalone rendering window and live preference updates.
  */
-internal object StatusBarComboStyleOneRuntime {
-    private const val PHONE_STATUS_BAR_VIEW =
-        "com.android.systemui.statusbar.phone.PhoneStatusBarView"
-    private const val PREFERENCE_CHANGED_URI =
-        "content://com.oneuixp.app.statusbridge/preferences"
-    private const val TAG = "OneuiXP.StyleOne"
-
-    private data class SignalState(
-        val subscriptionId: Int,
-        val slotIndex: Int = -1,
-        val level: Int = 0,
-        val inService: Boolean = false,
-        val is5g: Boolean = false,
-        val networkType: String = "",
-    )
-
-    private data class HiddenState(
-        val alpha: Float,
-        val visibility: Int,
-    )
-
-    private data class SuppressionKey(
-        val enabled: Boolean,
-        val showWifi: Boolean,
-        val showMobile: Boolean,
-        val showBattery: Boolean,
-        val signalMode: Int,
-        val stackedSignal: Boolean,
-        val mobileTypeMode: Int,
-        val overlayGlyph: Boolean,
-    )
-
-    private data class Metrics(
-        val width: Int,
-        val height: Int,
-        val side: Float,
-        val ringCenterX: Float,
-        val wifiWidth: Float,
-        val signalWidth: Float,
-        val typeWidth: Float,
-        val gap: Float,
-    )
-
-    private class Holder(val statusBarView: ViewGroup) {
-        val hiddenNative = LinkedHashMap<View, HiddenState>()
-        var batteryAnchor: View? = null
-        var overlay: OverlayWindow? = null
-        var inlineView: StyleOneIconView? = null
-        var inlineParent: ViewGroup? = null
-        var suppressionKey: SuppressionKey? = null
-    }
-
-    private class StyleOneIconView(context: Context) : View(context) {
-        private var runtime = Preference.SystemUI.StatusBarComboStyleOneRuntime()
-        private var tint = Color.WHITE
-
-        fun update(next: Preference.SystemUI.StatusBarComboStyleOneRuntime, nextTint: Int) {
-            runtime = next
-            tint = nextTint
-            val metrics = calculateMetrics(context, next)
-            val params = layoutParams
-            if (params != null && (params.width != metrics.width || params.height != metrics.height)) {
-                params.width = metrics.width
-                params.height = metrics.height
-                layoutParams = params
-            }
-            invalidate()
-        }
-
-        override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-            val metrics = calculateMetrics(context, runtime)
-            setMeasuredDimension(metrics.width, metrics.height)
-        }
-
-        override fun onDraw(canvas: Canvas) {
-            super.onDraw(canvas)
-            if (!runtime.enabled) return
-
-            val metrics = calculateMetrics(context, runtime)
-            val save = canvas.save()
-            StatusBarComboStyleOneRenderer.draw(
-                canvas,
-                width,
-                height,
-                runtime,
-                StatusBarComboStyleOneRenderer.State(
-                    batteryLevel = StatusBarComboStyleOneRuntime.batteryLevel,
-                    charging = StatusBarComboStyleOneRuntime.charging,
-                    quickCharging = StatusBarComboStyleOneRuntime.quickCharging,
-                    powerSave = StatusBarComboStyleOneRuntime.powerSave,
-                    lowBattery = StatusBarComboStyleOneRuntime.batteryLevel in
-                        0..runtime.lowBatteryThreshold,
-                    wifiLevel = if (StatusBarComboStyleOneRuntime.wifiConnected) {
-                        StatusBarComboStyleOneRuntime.wifiLevel
-                    } else {
-                        0
-                    },
-                    mobileLevel = StatusBarComboStyleOneRuntime.currentSignalLevel(),
-                    slotLevels = StatusBarComboStyleOneRuntime.currentSlotLevels(),
-                    dataSlot = StatusBarComboStyleOneRuntime.dataSlotIndex(),
-                    networkType = StatusBarComboStyleOneRuntime.currentNetworkType(),
-                    foreground = tint,
-                ),
-            )
-            canvas.restoreToCount(save)
-        }
-    }
-
-    private class OverlayWindow(private val holder: Holder) {
-        private val host: ViewGroup = holder.statusBarView
-        private val context: Context = host.context
-        private val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as? WindowManager
-        private val view = StyleOneIconView(context)
-        private val params = WindowManager.LayoutParams()
-        private var attached = false
-
-        init {
-            params.type = resolveWindowType()
-            params.gravity = Gravity.TOP or Gravity.LEFT
-            params.format = PixelFormat.TRANSLUCENT
-            params.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
-                WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or
-                WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
-                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
-            params.windowAnimations = 0
-            params.setTitle("OneuiXP Three-in-One Icon Style One")
-            view.isClickable = false
-            view.isFocusable = false
-            view.setWillNotDraw(false)
-        }
-
-        fun isAttached(): Boolean = attached
-
-        fun attach(cfg: Preference.SystemUI.StatusBarComboStyleOneRuntime): Boolean {
-            if (attached) {
-                update(cfg)
-                return true
-            }
-            val wm = windowManager ?: return false
-            val metrics = calculateMetrics(context, cfg)
-            params.width = metrics.width
-            params.height = metrics.height
-            view.update(cfg, indicatorColor)
-            return runCatching {
-                wm.addView(view, params)
-                attached = true
-                syncGeometry(cfg)
-                true
-            }.getOrElse { error ->
-                Log.w(TAG, "Unable to attach Style One window", error)
-                false
-            }
-        }
-
-        fun update(cfg: Preference.SystemUI.StatusBarComboStyleOneRuntime) {
-            if (!attached) return
-            view.update(cfg, indicatorColor)
-            syncGeometry(cfg)
-        }
-
-        fun refreshGlyphs() {
-            if (attached) update(config)
-        }
-
-        fun syncGeometry(cfg: Preference.SystemUI.StatusBarComboStyleOneRuntime = config) {
-            if (!attached || !host.isAttachedToWindow || windowManager == null) return
-            val metrics = calculateMetrics(context, cfg)
-            val hostLocation = IntArray(2)
-            host.getLocationOnScreen(hostLocation)
-
-            val x: Int
-            val y: Int
-            val anchor = holder.batteryAnchor?.takeIf { it.isAttachedToWindow }
-            val anchorLocation = IntArray(2)
-            if (anchor != null) anchor.getLocationOnScreen(anchorLocation)
-            val centerX = if (anchor != null) anchorLocation[0] + anchor.width / 2f
-                else hostLocation[0] + host.width - metrics.side / 2f
-            val centerY = if (anchor != null) anchorLocation[1] + anchor.height / 2f
-                else hostLocation[1] + host.height / 2f
-            val density = context.resources.displayMetrics.density
-            // If the battery is not part of the composite, keep the native battery
-            // visible and place the composite immediately to its left.
-            x = if (anchor != null && !cfg.showBattery) {
-                (anchorLocation[0] - metrics.width + cfg.offsetXDp * density).roundToInt()
-            } else {
-                (centerX - metrics.width / 2f + cfg.offsetXDp * density).roundToInt()
-            }
-            y = (centerY - metrics.height / 2f + cfg.offsetYDp * density).roundToInt()
-
-            val widthChanged = params.width != metrics.width || params.height != metrics.height
-            val positionChanged = params.x != x || params.y != y
-            if (!widthChanged && !positionChanged) return
-            params.width = metrics.width
-            params.height = metrics.height
-            params.x = x
-            params.y = y
-            runCatching { windowManager?.updateViewLayout(view, params) }
-        }
-
-        fun detach() {
-            if (!attached) return
-            attached = false
-            runCatching { windowManager?.removeViewImmediate(view) }
-        }
-
-        private fun resolveWindowType(): Int {
-            val paramsClass = WindowManager.LayoutParams::class.java
-            return runCatching {
-                paramsClass.getField("TYPE_STATUS_BAR_SUB_PANEL").getInt(null)
-            }.recoverCatching {
-                paramsClass.getField("TYPE_STATUS_BAR_ADDITIONAL").getInt(null)
-            }.getOrElse {
-                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
-            }
-        }
-    }
+@Suppress("DEPRECATION")
+object StatusBarComboStyleOneRuntime {
+    private const val TAG = "OneuiXPStyleOne"
+    private const val PHONE_BAR = "com.android.systemui.statusbar.phone.PhoneStatusBarView"
+    private const val WINDOW_BAR = "com.android.systemui.statusbar.phone.StatusBarWindowView"
+    private const val MIUI_ICONS = "com.android.systemui.statusbar.phone.MiuiStatusIconContainer"
+    private const val AOSP_ICONS = "com.android.systemui.statusbar.phone.StatusBarIconContainer"
+    private const val GLYPH_WIDTH_DP = 78
+    private const val GLYPH_HEIGHT_DP = 36
 
     private val installed = AtomicBoolean(false)
-    private val watcherStarted = AtomicBoolean(false)
-    private val batteryReceiverStarted = AtomicBoolean(false)
-    private val wifiReceiverStarted = AtomicBoolean(false)
-    private val telephonyStarted = AtomicBoolean(false)
-    private val previewQueued = AtomicBoolean(false)
-    @Volatile private var pendingPreview: Preference.SystemUI.StatusBarComboStyleOneRuntime? = null
-    private val holders = WeakHashMap<View, Holder>()
-    private val signalStates = LinkedHashMap<Int, SignalState>()
-    private val callbacks = LinkedHashMap<Int, Pair<TelephonyManager, TelephonyCallback>>()
-    private val mainHandler = Handler(Looper.getMainLooper())
-    private val indicatorListeners = CopyOnWriteArrayList<(Int) -> Unit>()
-
+    private val main = Handler(Looper.getMainLooper())
+    private val hosts = Collections.synchronizedMap(WeakHashMap<ViewGroup, Host>())
     @Volatile private var config = Preference.SystemUI.StatusBarComboStyleOneRuntime()
-    @Volatile private var indicatorColor = Color.WHITE
-    @Volatile var batteryLevel: Int = 0
-        private set
-    @Volatile var charging: Boolean = false
-        private set
-    @Volatile var quickCharging: Boolean = false
-        private set
-    @Volatile var powerSave: Boolean = false
-        private set
-    @Volatile var wifiConnected: Boolean = false
-        private set
-    @Volatile var wifiLevel: Int = 0
-        private set
-    @Volatile var network5g: Boolean = false
-        private set
-    @Volatile private var defaultDataSubscriptionId: Int = SubscriptionManager.INVALID_SUBSCRIPTION_ID
+    @Volatile private var state = StatusComboStyleOneGlyphState()
+    @Volatile private var preferenceReceiverReady = false
+    @Volatile private var stateReceiverReady = false
+    @Volatile private var tint = Color.WHITE
+    @Volatile private var subscriptionsListener: SubscriptionManager.OnSubscriptionsChangedListener? = null
+    private val phoneListeners = mutableMapOf<Int, Pair<TelephonyManager, PhoneStateListener>>()
 
-    private var preferenceThread: HandlerThread? = null
-    private var preferenceObserver: ContentObserver? = null
-    private var runtimeReceiver: BroadcastReceiver? = null
-    private var batteryReceiver: BroadcastReceiver? = null
-    private var wifiReceiver: BroadcastReceiver? = null
-    private var subscriptionManager: SubscriptionManager? = null
-    private var telephonyContext: Context? = null
-    private var subscriptionListener: SubscriptionManager.OnSubscriptionsChangedListener? = null
+    private class Host(val root: ViewGroup) {
+        val original = IdentityHashMap<View, Int>()
+        var battery: View? = null
+        var inline: GlyphView? = null
+        var overlay: GlyphOverlay? = null
+        var overlayFailed = false
+        var applying = false
+    }
 
-    fun isEnabled(): Boolean = config.enabled && hasAttachedRenderer()
+    private class GlyphView(context: Context) : View(context) {
+        init {
+            isClickable = false
+            isFocusable = false
+            importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+        }
+        override fun onDraw(canvas: Canvas) {
+            super.onDraw(canvas)
+            StatusComboStyleOneGlyphRenderer.draw(canvas, width, height, config, state)
+        }
+    }
 
-    fun isMobileNativeSuppressed(): Boolean =
-        config.enabled && config.showMobile && hasAttachedRenderer()
+    private class GlyphOverlay(context: Context) {
+        private val app = context.applicationContext ?: context
+        private val wm = app.getSystemService(Context.WINDOW_SERVICE) as WindowManager
+        private val glyph = GlyphView(app)
+        private var params: WindowManager.LayoutParams? = null
 
-    private fun hasAttachedRenderer(): Boolean = synchronized(holders) {
-        holders.values.any {
-            it.overlay?.isAttached() == true ||
-                it.inlineView?.isAttachedToWindow == true
+        fun attach(anchor: View): Boolean {
+            if (params != null) { update(anchor); return true }
+            val type = runCatching {
+                WindowManager.LayoutParams::class.java.getDeclaredField("TYPE_STATUS_BAR_ADDITIONAL")
+                    .apply { isAccessible = true }.getInt(null)
+            }.getOrElse {
+                if (Build.VERSION.SDK_INT >= 26) WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+                else WindowManager.LayoutParams.TYPE_PHONE
+            }
+            val lp = WindowManager.LayoutParams(
+                dp(app, GLYPH_WIDTH_DP), dp(app, GLYPH_HEIGHT_DP), type,
+                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                    WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or
+                    WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+                PixelFormat.TRANSLUCENT,
+            ).apply {
+                gravity = Gravity.TOP or Gravity.LEFT
+                title = "OneuiXP Style One"
+                if (type != WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY &&
+                    type != WindowManager.LayoutParams.TYPE_PHONE
+                ) token = anchor.applicationWindowToken
+            }
+            return try {
+                wm.addView(glyph, lp)
+                params = lp
+                update(anchor)
+                true
+            } catch (e: Throwable) {
+                Log.w(TAG, "Status-bar glyph window failed", e)
+                if (type != WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY && Build.VERSION.SDK_INT >= 26) {
+                    try {
+                        lp.type = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+                        lp.token = null
+                        wm.addView(glyph, lp)
+                        params = lp
+                        update(anchor)
+                        true
+                    } catch (second: Throwable) {
+                        Log.w(TAG, "Fallback glyph window failed", second)
+                        false
+                    }
+                } else false
+            }
+        }
+
+        fun update(anchor: View) {
+            val lp = params ?: return
+            val pos = IntArray(2)
+            anchor.getLocationOnScreen(pos)
+            lp.x = (pos[0] + anchor.width - lp.width).coerceAtLeast(0)
+            lp.y = (pos[1] + (anchor.height - lp.height) / 2).coerceAtLeast(0)
+            glyph.invalidate()
+            runCatching { wm.updateViewLayout(glyph, lp) }
+        }
+        fun detach() {
+            if (params == null) return
+            runCatching { wm.removeView(glyph) }
+            params = null
         }
     }
 
     fun install(module: XposedModule, param: XposedModuleInterface.PackageReadyParam) {
-        if (param.packageName != Package.SYSTEMUI) return
-        if (!installed.compareAndSet(false, true)) return
-
+        if (param.packageName != Package.SYSTEMUI || !installed.compareAndSet(false, true)) return
         runCatching {
             with(module) { PreferenceProvider.loadPreference() }
-                ?.systemUI?.statusBar?.comboStyleOneRuntime
-                ?.let { config = sanitize(it) }
+                ?.systemUI?.statusBar?.comboStyleOneRuntime?.let { config = sanitize(it) }
+        }.onFailure { Log.w(TAG, "Cannot read Style One settings", it) }
+
+        StatusBarSignalIndependentRuntime.addIndicatorColorListener { next ->
+            if (next != tint) { tint = next; state = state.copy(tintColor = next); refreshHosts() }
         }
 
-        StatusBarSignalIndependentRuntime.addIndicatorColorListener { nextColor ->
-            if (indicatorColor != nextColor) {
-                indicatorColor = nextColor
-                refreshGlyphs()
-            }
-        }
-
-        runCatching {
-            val clazz = param.classLoader.loadClass(PHONE_STATUS_BAR_VIEW)
-            clazz.declaredConstructors.forEach { constructor ->
-                module.hook(constructor).intercept { chain ->
-                    val result = chain.proceed()
-                    (chain.thisObject as? ViewGroup)?.let { statusBar ->
-                        statusBar.post {
-                            registerStatusBar(module, statusBar)
-                            ensurePreferenceWatcher(module, statusBar.context)
-                            ensureBatteryReceiver(statusBar.context)
-                            ensureWifiReceiver(statusBar.context)
-                            ensureTelephony(statusBar.context)
-                        }
+        var hookedHost = false
+        listOf(PHONE_BAR, WINDOW_BAR).forEach { name ->
+            runCatching {
+                val cls = param.classLoader.loadClass(name)
+                cls.declaredConstructors.forEach { constructor ->
+                    module.hook(constructor).intercept { chain ->
+                        val result = chain.proceed()
+                        (chain.thisObject as? ViewGroup)?.let(::scheduleRegister)
+                        result
                     }
-                    result
                 }
-            }
-        }.onFailure { Log.w(TAG, "Unable to hook status bar", it) }
-    }
-
-    private fun sanitize(source: Preference.SystemUI.StatusBarComboStyleOneRuntime) = source.copy(
-        placementMode = 0,
-        trioStyle = source.trioStyle.coerceIn(0, 1),
-        mobileTypeMode = source.mobileTypeMode.coerceIn(0, 2),
-        signalMode = source.signalMode.coerceIn(0, 1),
-        sizePercent = source.sizePercent.coerceIn(50f, 250f),
-        offsetXDp = source.offsetXDp.coerceIn(-24f, 24f),
-        offsetYDp = source.offsetYDp.coerceIn(-15f, 15f),
-        arcStrokePercent = source.arcStrokePercent.coerceIn(50f, 200f),
-        ringStrokeDp = source.ringStrokeDp.coerceIn(1f, 4f),
-        ringStroke = source.ringStroke.coerceIn(4, 16),
-        arcStroke = source.arcStroke.coerceIn(3, 16),
-        batteryBlackDepth = source.batteryBlackDepth.coerceIn(0.15f, 1f),
-        trackAlpha = source.trackAlpha.coerceIn(0, 255),
-        dotsGapDp = source.dotsGapDp.coerceIn(0f, 8f),
-        dotsSizePercent = source.dotsSizePercent.coerceIn(50f, 180f),
-        innerSizePercent = source.innerSizePercent.coerceIn(50f, 180f),
-        innerYDp = source.innerYDp.coerceIn(-8f, 8f),
-        batteryTextSizeSp = source.batteryTextSizeSp.coerceIn(5f, 18f),
-        batteryTextFontWeight = source.batteryTextFontWeight.coerceIn(100, 900),
-        chargingBoltSizePercent = source.chargingBoltSizePercent.coerceIn(50f, 180f),
-        chargingBoltXDp = source.chargingBoltXDp.coerceIn(-8f, 8f),
-        chargingBoltYDp = source.chargingBoltYDp.coerceIn(-8f, 8f),
-        lowBatteryThreshold = source.lowBatteryThreshold.coerceIn(5, 50),
-        valueSize = source.valueSize.coerceIn(16, 44),
-        valueWeight = source.valueWeight.coerceIn(100, 900),
-        typeSize = source.typeSize.coerceIn(16, 44),
-        typeWeight = source.typeWeight.coerceIn(100, 900),
-        typeSuffixScale = source.typeSuffixScale.coerceIn(50, 100),
-        outTypeSizeDp = source.outTypeSizeDp.coerceIn(8, 26),
-        outSignalSizeDp = source.outSignalSizeDp.coerceIn(6, 20),
-        outTypeMarginLeftDp = source.outTypeMarginLeftDp.coerceIn(0, 16),
-        outTypeMarginRightDp = source.outTypeMarginRightDp.coerceIn(0, 16),
-        outSignalMarginDp = source.outSignalMarginDp.coerceIn(0, 16),
-    )
-
-    private fun calculateMetrics(
-        context: Context,
-        cfg: Preference.SystemUI.StatusBarComboStyleOneRuntime,
-    ): Metrics {
-        val density = context.resources.displayMetrics.density
-        val scale = cfg.sizePercent.coerceIn(50f, 250f) / 100f
-        val side = (24f * density * scale).coerceIn(12f * density, 72f * density)
-        val extra = when {
-            cfg.signalMode == 1 && cfg.showMobile -> 34f * density
-            cfg.mobileTypeMode == 2 && cfg.showMobile && currentNetworkType().isNotEmpty() ->
-                24f * density
-            else -> 0f
+                hookedHost = true
+            }.onFailure { Log.d(TAG, "Status-bar host unavailable: $name", it) }
         }
-        val width = (side + extra).roundToInt().coerceAtLeast(1)
-        val height = side.roundToInt().coerceAtLeast(1)
-        return Metrics(
-            width = width,
-            height = height,
-            side = side,
-            ringCenterX = width / 2f,
-            wifiWidth = 0f,
-            signalWidth = 0f,
-            typeWidth = extra,
-            gap = 0f,
-        )
-    }
-
-    private fun registerStatusBar(module: XposedModule, statusBar: ViewGroup) {
-        val existing = synchronized(holders) { holders[statusBar] }
-        if (existing != null) {
-            applyHolder(existing)
-            return
-        }
-
-        val holder = Holder(statusBar)
-        synchronized(holders) { holders[statusBar] = holder }
-        statusBar.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
-            holder.overlay?.takeIf { it.isAttached() }?.syncGeometry(config)
-            if (config.enabled && holder.batteryAnchor != null && holder.batteryAnchor?.isAttachedToWindow != true) {
-                holder.suppressionKey = null
-                mainHandler.post { applyHolder(holder) }
-            }
-        }
-        statusBar.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
-            override fun onViewAttachedToWindow(v: View) {
-                mainHandler.post { applyHolder(holder) }
-            }
-
-            override fun onViewDetachedFromWindow(v: View) {
-                mainHandler.post {
-                    holder.overlay?.detach()
-                    restoreNative(holder)
-                    holder.suppressionKey = null
+        listOf(MIUI_ICONS, AOSP_ICONS).forEach { name ->
+            runCatching {
+                val cls = param.classLoader.loadClass(name)
+                cls.declaredMethods.filter { it.name == "onMeasure" && it.parameterTypes.size == 2 }.forEach { method ->
+                    module.hook(method).intercept { chain ->
+                        val result = chain.proceed()
+                        (chain.thisObject as? ViewGroup)?.takeIf { config.enabled }?.post { suppressInContainer(it) }
+                        result
+                    }
                 }
-            }
-        })
-        ensurePreferenceWatcher(module, statusBar.context)
-        ensureBatteryReceiver(statusBar.context)
-        ensureWifiReceiver(statusBar.context)
-        ensureTelephony(statusBar.context)
-        applyHolder(holder)
+            }.onFailure { Log.d(TAG, "Status icon container unavailable: $name", it) }
+        }
+        if (!hookedHost) Log.w(TAG, "No status-bar host constructor was hooked")
     }
 
-    private fun applyHolder(holder: Holder) {
-        val cfg = config
-        if (!cfg.enabled || !holder.statusBarView.isAttachedToWindow) {
-            holder.overlay?.detach()
-            holder.overlay = null
-            removeInlineView(holder)
-            restoreNative(holder)
-            holder.suppressionKey = null
-            return
-        }
+    fun isEnabled(): Boolean = config.enabled
+    fun isMobileNativeSuppressed(): Boolean =
+        config.enabled && config.showMobile && (config.signalMode == 0 || config.stackedSignal)
 
-        // Switching renderer mode must first return every native element to its
-        // original state, then establish exactly one replacement renderer.
-        if (holder.suppressionKey != null &&
-            holder.suppressionKey?.overlayGlyph != cfg.overlayGlyph
-        ) {
-            holder.overlay?.detach()
-            holder.overlay = null
-            removeInlineView(holder)
-            restoreNative(holder)
-            holder.suppressionKey = null
-        }
+    private fun scheduleRegister(root: ViewGroup) {
+        root.post { register(root) }
+        root.postDelayed({ register(root) }, 250L)
+        root.postDelayed({ register(root) }, 1000L)
+    }
 
-        if (cfg.overlayGlyph) {
-            removeInlineView(holder)
-            val overlay = holder.overlay ?: OverlayWindow(holder).also { holder.overlay = it }
-            if (!overlay.attach(cfg)) {
-                holder.overlay = null
-                restoreNative(holder)
-                holder.suppressionKey = null
+    private fun register(root: ViewGroup) {
+        val host = synchronized(hosts) {
+            hosts[root] ?: Host(root).also { hosts[root] = it }
+        }
+        if (host.battery == null) {
+            root.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
+                host.overlay?.let { win -> host.battery?.let(win::update) }
+                if (!host.applying) main.post { apply(host) }
+            }
+            root.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
+                override fun onViewAttachedToWindow(v: View) { main.post { apply(host) } }
+                override fun onViewDetachedFromWindow(v: View) {
+                    main.post { host.overlay?.detach(); host.overlay = null; removeInline(host) }
+                }
+            })
+        }
+        ensureReceivers(root.context)
+        apply(host)
+    }
+
+    private fun refreshHosts() {
+        main.post { synchronized(hosts) { hosts.values.toList() }.forEach(::apply) }
+    }
+
+    private fun apply(host: Host) {
+        if (host.applying) return
+        host.applying = true
+        try {
+            val root = host.root
+            if (!root.isAttachedToWindow) { host.overlay?.detach(); return }
+            val views = descendants(root)
+            val battery = views.firstOrNull(::isBatteryIcon)
+
+            if (!config.enabled) {
+                host.overlay?.detach()
+                host.overlay = null
+                removeInline(host)
+                restore(host)
+                host.battery = null
+                root.requestLayout()
                 return
             }
-            overlay.update(cfg)
-        } else {
-            holder.overlay?.detach()
-            holder.overlay = null
-            if (!mountInlineAtBatterySlot(holder, cfg)) {
-                removeInlineView(holder)
-                restoreNative(holder)
-                holder.suppressionKey = null
-                return
-            }
-            holder.inlineView?.update(cfg, indicatorColor)
-        }
 
-        val key = SuppressionKey(
-            cfg.enabled, cfg.showWifi, cfg.showMobile, cfg.showBattery,
-            cfg.signalMode, cfg.stackedSignal, cfg.mobileTypeMode, cfg.overlayGlyph,
-        )
-        if (holder.suppressionKey != key ||
-            (holder.batteryAnchor != null && holder.batteryAnchor?.isAttachedToWindow != true)
-        ) {
-            restoreNative(holder)
-            holder.batteryAnchor = findBatteryAnchor(holder.statusBarView)
-            suppressNative(holder, cfg)
-            holder.suppressionKey = key
-            refreshNativeChargingFlags()
+            if (host.battery != null && host.battery !== battery) {
+                host.overlay?.detach()
+                host.overlay = null
+                removeInline(host)
+                host.original.remove(host.battery)?.let { v -> runCatching { host.battery?.visibility = v } }
+            }
+            host.battery = battery
+            val foldMobile = isMobileNativeSuppressed()
+
+            views.forEach { view ->
+                if (view === battery || view is GlyphView) return@forEach
+                val hide = (config.showWifi && isWifiIcon(view)) || (foldMobile && isMobileIcon(view))
+                if (hide) {
+                    host.original.putIfAbsent(view, view.visibility)
+                    if (view.visibility != View.GONE) view.visibility = View.GONE
+                } else {
+                    host.original.remove(view)?.let { old -> if (view.visibility != old) view.visibility = old }
+                }
+            }
+
+            if (battery != null) {
+                host.original.putIfAbsent(battery, battery.visibility)
+                if (config.overlayGlyph && !host.overlayFailed) {
+                    removeInline(host)
+                    if (battery.visibility != View.INVISIBLE) battery.visibility = View.INVISIBLE
+                    val overlay = host.overlay ?: GlyphOverlay(root.context).also { host.overlay = it }
+                    if (!overlay.attach(battery)) {
+                        host.overlayFailed = true
+                        overlay.detach()
+                        host.overlay = null
+                        battery.visibility = View.GONE
+                        insertInline(host, battery)
+                    } else overlay.update(battery)
+                } else {
+                    host.overlay?.detach()
+                    host.overlay = null
+                    if (battery.visibility != View.GONE) battery.visibility = View.GONE
+                    insertInline(host, battery)
+                }
+            }
+            root.requestLayout()
+        } catch (t: Throwable) {
+            Log.w(TAG, "Cannot apply Style One", t)
+        } finally {
+            host.applying = false
         }
-        holder.inlineView?.update(cfg, indicatorColor)
-        holder.overlay?.syncGeometry(cfg)
     }
 
-    private fun mountInlineAtBatterySlot(
-        holder: Holder,
-        cfg: Preference.SystemUI.StatusBarComboStyleOneRuntime,
-    ): Boolean {
-        val anchor = findBatteryAnchor(holder.statusBarView) ?: return false
-        val parent = anchor.parent as? ViewGroup ?: return false
-        val anchorIndex = parent.indexOfChild(anchor)
-        if (anchorIndex < 0) return false
-
-        val view = holder.inlineView ?: StyleOneIconView(parent.context).apply {
-            isClickable = false
-            isFocusable = false
-            setWillNotDraw(false)
-        }.also { holder.inlineView = it }
-
-        if (view.parent !== parent) {
-            (view.parent as? ViewGroup)?.removeView(view)
-            parent.addView(view, anchorIndex, inlineLayoutParams(anchor))
-        } else {
-            val viewIndex = parent.indexOfChild(view)
-            if (viewIndex < 0 || viewIndex != anchorIndex - 1) {
-                parent.removeView(view)
-                val refreshedAnchorIndex = parent.indexOfChild(anchor).coerceAtLeast(0)
-                parent.addView(view, refreshedAnchorIndex, inlineLayoutParams(anchor))
-            }
-        }
-        holder.inlineParent = parent
-        holder.batteryAnchor = anchor
-        view.update(cfg, indicatorColor)
-        return true
-    }
-
-    private fun inlineLayoutParams(anchor: View): ViewGroup.LayoutParams {
-        val source = anchor.layoutParams
-        val width = ViewGroup.LayoutParams.WRAP_CONTENT
-        val height = source?.height ?: ViewGroup.LayoutParams.MATCH_PARENT
-        return when (source) {
-            is LinearLayout.LayoutParams -> LinearLayout.LayoutParams(source).apply {
-                this.width = width
-                gravity = Gravity.CENTER_VERTICAL
-            }
-            is FrameLayout.LayoutParams -> FrameLayout.LayoutParams(source).apply {
-                this.width = width
-            }
-            is RelativeLayout.LayoutParams -> RelativeLayout.LayoutParams(source).apply {
-                this.width = width
-            }
-            is ViewGroup.MarginLayoutParams -> ViewGroup.MarginLayoutParams(source).apply {
-                this.width = width
-            }
+    private fun insertInline(host: Host, anchor: View) {
+        val parent = anchor.parent as? ViewGroup ?: return
+        if (host.inline?.parent === parent) { host.inline?.invalidate(); return }
+        removeInline(host)
+        val glyph = GlyphView(parent.context)
+        val old = anchor.layoutParams
+        val width = dp(parent.context, GLYPH_WIDTH_DP)
+        val height = max(dp(parent.context, 24), old?.height ?: 0)
+        val lp = when (old) {
+            is LinearLayout.LayoutParams -> LinearLayout.LayoutParams(old).apply { this.width = width; this.height = height }
+            is FrameLayout.LayoutParams -> FrameLayout.LayoutParams(old).apply { this.width = width; this.height = height }
+            is RelativeLayout.LayoutParams -> RelativeLayout.LayoutParams(old).apply { this.width = width; this.height = height }
+            is ViewGroup.MarginLayoutParams -> ViewGroup.MarginLayoutParams(old).apply { this.width = width; this.height = height }
             else -> ViewGroup.LayoutParams(width, height)
         }
+        runCatching { parent.addView(glyph, parent.indexOfChild(anchor).coerceAtLeast(0), lp); host.inline = glyph }
+            .onFailure { Log.w(TAG, "Cannot add inline glyph", it) }
     }
 
-    private fun removeInlineView(holder: Holder) {
-        val view = holder.inlineView
-        (view?.parent as? ViewGroup)?.removeView(view)
-        holder.inlineParent = null
+    private fun removeInline(host: Host) {
+        val glyph = host.inline ?: return
+        (glyph.parent as? ViewGroup)?.removeView(glyph)
+        host.inline = null
+    }
+    private fun restore(host: Host) {
+        host.original.entries.toList().forEach { (view, visibility) -> runCatching { view.visibility = visibility } }
+        host.original.clear()
     }
 
-    private fun suppressNative(holder: Holder, cfg: Preference.SystemUI.StatusBarComboStyleOneRuntime) {
-        val statusBar = holder.statusBarView
-        val views = collectDescendants(statusBar)
-        val anchor = holder.batteryAnchor
-
-        if (anchor != null && cfg.showBattery) {
-            // Overlay mode keeps the native width as an anchor; inline mode
-            // replaces the battery slot with the custom measured view.
-            rememberAndSet(holder, anchor, if (cfg.overlayGlyph) View.INVISIBLE else View.GONE)
-        }
-
-        val candidates = views.filter { view ->
-            view !== anchor && (
-                (cfg.showWifi && isNativeWifi(view)) ||
-                (cfg.showMobile && isNativeMobile(view))
-            )
-        }
-        val candidateSet = candidates.toSet()
-        candidates.forEach { view ->
-            var parent = view.parent as? View
-            var hasCandidateAncestor = false
-            while (parent != null && parent !== statusBar) {
-                if (candidateSet.contains(parent)) {
-                    hasCandidateAncestor = true
-                    break
-                }
-                parent = parent.parent as? View
-            }
-            if (!hasCandidateAncestor) rememberAndSet(holder, view, View.GONE)
-        }
-    }
-
-    private fun rememberAndSet(holder: Holder, view: View, visibility: Int) {
-        if (!holder.hiddenNative.containsKey(view)) {
-            holder.hiddenNative[view] = HiddenState(view.alpha, view.visibility)
-        }
-        if (view.visibility != visibility) view.visibility = visibility
-    }
-
-    private fun restoreNative(holder: Holder) {
-        holder.hiddenNative.forEach { (view, state) ->
-            if (view.parent != null) {
-                view.alpha = state.alpha
-                view.visibility = state.visibility
-            }
-        }
-        holder.hiddenNative.clear()
-        holder.batteryAnchor = null
-    }
-
-    private fun findBatteryAnchor(root: View): View? {
-        val all = collectDescendants(root as? ViewGroup ?: return null)
-        return all.firstOrNull { it.javaClass.name.contains("BatteryMeterView", ignoreCase = true) }
-            ?: all.firstOrNull { view ->
-                val name = resourceName(view).lowercase()
-                name == "battery" || name.contains("battery_meter") ||
-                    name.contains("status_bar_battery") || name == "battery_icon"
-            }
-    }
-
-    private fun isNativeWifi(view: View): Boolean {
-        val value = descriptor(view)
-        if (value.contains("battery") || value.contains("bluetooth") ||
-            value.contains("network_speed") || value.contains("netspeed") ||
-            value.contains("wifi_link_speed") || value.contains("wifilinkspeed")
-        ) return false
-        return value.contains("wifi") || value.contains("wlan")
-    }
-
-    private fun isNativeMobile(view: View): Boolean {
-        val value = descriptor(view)
-        if (value.contains("battery") || value.contains("wifi") ||
-            value.contains("bluetooth") || value.contains("network_speed") ||
-            value.contains("netspeed") || value.contains("carrier") ||
-            value.contains("airplane") || value.contains("clock")
-        ) return false
-        return value.contains("mobile") || value.contains("cellular") ||
-            value.contains("signal_cluster") || value.contains("statusbar_signal") ||
-            value.contains("signal_strength") || value.contains("cell_signal") ||
-            value.contains("mobile_data")
-    }
-
-    private fun descriptor(view: View): String =
-        (resourceName(view) + " " + view.javaClass.name + " " +
-            (view.contentDescription?.toString() ?: "")).lowercase()
-
-    private fun resourceName(view: View): String {
-        if (view.id == View.NO_ID) return ""
-        return runCatching { view.resources.getResourceEntryName(view.id) }.getOrDefault("")
-    }
-
-    private fun collectDescendants(root: ViewGroup): List<View> {
+    private fun descendants(root: View): List<View> {
         val result = ArrayList<View>()
-        fun visit(group: ViewGroup) {
-            for (index in 0 until group.childCount) {
-                val child = group.getChildAt(index)
-                result += child
-                if (child is ViewGroup) visit(child)
-            }
+        fun visit(view: View) {
+            result += view
+            if (view is ViewGroup) for (i in 0 until view.childCount) visit(view.getChildAt(i))
         }
         visit(root)
         return result
     }
-
-    private fun ensurePreferenceWatcher(module: XposedModule, context: Context) {
-        if (!watcherStarted.compareAndSet(false, true)) return
-        val appContext = context.applicationContext ?: context
-        val worker = HandlerThread("OneuiXPStyleOnePrefs").apply { start() }
-        preferenceThread = worker
-        val background = Handler(worker.looper)
-
-        fun refreshStored() {
-            background.post {
-                val next = runCatching {
-                    with(module) { PreferenceProvider.loadPreference() }
-                        ?.systemUI?.statusBar?.comboStyleOneRuntime
-                }.getOrNull() ?: return@post
-                val safe = sanitize(next)
-                if (safe == config) return@post
-                mainHandler.post {
-                    config = safe
-                    applyAll()
-                }
+    private fun resourceName(view: View) = runCatching {
+        if (view.id == View.NO_ID) "" else view.resources.getResourceEntryName(view.id)
+    }.getOrDefault("")
+    private fun isBatteryIcon(v: View): Boolean {
+        if (v is GlyphView) return false
+        val name = (v.javaClass.name + " " + resourceName(v) + " " + v.tag).lowercase()
+        return name.contains("batterymetericonview") || name.contains("batterymeter") ||
+            name.contains("batteryiconview") ||
+            (name.contains("battery") && (name.contains("status") || name.contains("meter") || name.contains("icon")))
+    }
+    private fun isWifiIcon(v: View): Boolean {
+        if (v is GlyphView) return false
+        val name = (v.javaClass.name + " " + resourceName(v) + " " + v.tag).lowercase()
+        if (name.contains("battery") || name.contains("bluetooth") || name.contains("airplane")) return false
+        return name.contains("wifi") || name.contains("wlan") || name.contains("slot_wifi")
+    }
+    private fun isMobileIcon(v: View): Boolean {
+        if (v is GlyphView) return false
+        val name = (v.javaClass.name + " " + resourceName(v) + " " + v.tag + " " + v.contentDescription).lowercase()
+        if (name.contains("battery") || name.contains("bluetooth") || name.contains("airplane")) return false
+        return (name.contains("mobile") || name.contains("cellular") || name.contains("signal_mobile") ||
+            name.contains("slot_mobile") || name.contains("signal_strength")) &&
+            (name.contains("statusbaricon") || name.contains("modernstatusbar") || name.contains("mobile") ||
+                name.contains("cellular") || name.contains("signalcluster"))
+    }
+    private fun suppressInContainer(container: ViewGroup) {
+        if (!config.enabled) return
+        descendants(container).forEach { view ->
+            if (view is GlyphView) return@forEach
+            if ((config.showWifi && isWifiIcon(view)) || (isMobileNativeSuppressed() && isMobileIcon(view))) {
+                if (view.visibility != View.GONE) view.visibility = View.GONE
             }
         }
+    }
 
-        val observer = object : ContentObserver(background) {
-            override fun onChange(selfChange: Boolean) = refreshStored()
-            override fun onChange(selfChange: Boolean, uri: android.net.Uri?) = refreshStored()
-        }
-        preferenceObserver = observer
-        runCatching {
-            appContext.contentResolver.registerContentObserver(
-                android.net.Uri.parse(PREFERENCE_CHANGED_URI), false, observer,
-            )
-        }
-
-        val receiver = object : BroadcastReceiver() {
-            override fun onReceive(receiverContext: Context?, intent: Intent?) {
-                if (intent?.action != StatusBarRuntimeBridge.ACTION) return
-                val payload = intent.getStringExtra(StatusBarRuntimeBridge.EXTRA_STATUS_BAR_JSON) ?: return
-                background.post {
-                    val bar = runCatching {
-                        IgnoreUnknownKeysJson.decodeFromString(
-                            Preference.SystemUI.StatusBar.serializer(), payload,
-                        )
-                    }.getOrNull() ?: return@post
-                    val next = sanitize(bar.comboStyleOneRuntime)
-                    pendingPreview = next
-                    if (previewQueued.compareAndSet(false, true)) {
-                        mainHandler.postDelayed({
-                            val latest = pendingPreview
-                            pendingPreview = null
-                            previewQueued.set(false)
-                            if (latest != null && latest != config) {
-                                config = latest
-                                applyAll()
-                            }
-                        }, 16L)
+    private fun ensureReceivers(context: Context) {
+        val app = context.applicationContext ?: context
+        if (!preferenceReceiverReady) synchronized(this) {
+            if (!preferenceReceiverReady) {
+                val receiver = object : BroadcastReceiver() {
+                    override fun onReceive(ctx: Context, intent: Intent) {
+                        if (intent.action != StatusBarRuntimeBridge.ACTION) return
+                        val payload = intent.getStringExtra(StatusBarRuntimeBridge.EXTRA_STATUS_BAR_JSON) ?: return
+                        runCatching {
+                            val status = IgnoreUnknownKeysJson.decodeFromString(Preference.SystemUI.StatusBar.serializer(), payload)
+                            config = sanitize(status.comboStyleOneRuntime)
+                            refreshHosts()
+                        }.onFailure { Log.w(TAG, "Bad Style One settings broadcast", it) }
                     }
                 }
+                runCatching {
+                    val filter = IntentFilter(StatusBarRuntimeBridge.ACTION)
+                    if (Build.VERSION.SDK_INT >= 33) app.registerReceiver(receiver, filter, Context.RECEIVER_EXPORTED)
+                    else app.registerReceiver(receiver, filter)
+                    preferenceReceiverReady = true
+                }.onFailure { Log.w(TAG, "Preference receiver registration failed", it) }
             }
         }
-        runtimeReceiver = receiver
-        runCatching {
-            val filter = IntentFilter(StatusBarRuntimeBridge.ACTION)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                appContext.registerReceiver(receiver, filter, Context.RECEIVER_EXPORTED)
-            } else {
-                @Suppress("DEPRECATION")
-                appContext.registerReceiver(receiver, filter)
-            }
-        }
-        refreshStored()
+        ensureStateReceiver(app)
     }
 
-    private fun ensureBatteryReceiver(context: Context) {
-        if (!batteryReceiverStarted.compareAndSet(false, true)) return
-        val appContext = context.applicationContext ?: context
-        val receiver = object : BroadcastReceiver() {
-            override fun onReceive(receiverContext: Context?, intent: Intent?) {
-                if (intent?.action == Intent.ACTION_BATTERY_CHANGED) {
-                    val level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, 0)
-                    val scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, 100).coerceAtLeast(1)
-                    batteryLevel = (level * 100 / scale).coerceIn(0, 100)
-                    val status = intent.getIntExtra(
-                        BatteryManager.EXTRA_STATUS,
-                        BatteryManager.BATTERY_STATUS_UNKNOWN,
-                    )
-                    charging = status == BatteryManager.BATTERY_STATUS_CHARGING ||
-                        status == BatteryManager.BATTERY_STATUS_FULL
-                } else if (intent?.action != "android.os.action.POWER_SAVE_MODE_CHANGED") {
-                    return
+    private fun ensureStateReceiver(app: Context) {
+        if (stateReceiverReady) return
+        synchronized(this) {
+            if (stateReceiverReady) return
+            val filter = IntentFilter().apply {
+                addAction(Intent.ACTION_BATTERY_CHANGED)
+                addAction(Intent.ACTION_POWER_CONNECTED)
+                addAction(Intent.ACTION_POWER_DISCONNECTED)
+                addAction(WifiManager.RSSI_CHANGED_ACTION)
+                addAction(WifiManager.NETWORK_STATE_CHANGED_ACTION)
+                addAction("android.intent.action.ACTION_DEFAULT_DATA_SUBSCRIPTION_CHANGED")
+                addAction("android.intent.action.SUBSCRIPTION_PHONE_STATE_CHANGED")
+            }
+            val receiver = object : BroadcastReceiver() {
+                override fun onReceive(context: Context, intent: Intent) {
+                    when (intent.action) {
+                        Intent.ACTION_BATTERY_CHANGED -> updateBattery(intent)
+                        Intent.ACTION_POWER_CONNECTED, Intent.ACTION_POWER_DISCONNECTED -> updateBattery(null)
+                        WifiManager.RSSI_CHANGED_ACTION, WifiManager.NETWORK_STATE_CHANGED_ACTION -> updateWifi(app)
+                        else -> refreshTelephony(app)
+                    }
+                    refreshHosts()
                 }
-                val powerManager = appContext.getSystemService(Context.POWER_SERVICE) as? android.os.PowerManager
-                powerSave = runCatching { powerManager?.isPowerSaveMode == true }.getOrDefault(false)
-                refreshNativeChargingFlags()
-                refreshGlyphs()
             }
+            runCatching {
+                if (Build.VERSION.SDK_INT >= 33) app.registerReceiver(receiver, filter, Context.RECEIVER_EXPORTED)
+                else app.registerReceiver(receiver, filter)
+                updateBattery(app.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED)))
+                updateWifi(app)
+                ensureTelephony(app)
+                stateReceiverReady = true
+            }.onFailure { Log.w(TAG, "Battery/network receiver registration failed", it) }
         }
-        batteryReceiver = receiver
+    }
+
+    private fun updateBattery(intent: Intent?) {
+        val raw = intent?.getIntExtra(BatteryManager.EXTRA_LEVEL, -1) ?: -1
+        val scale = intent?.getIntExtra(BatteryManager.EXTRA_SCALE, 100) ?: 100
+        val level = if (raw >= 0 && scale > 0) (raw * 100f / scale).toInt() else state.batteryLevel
+        val status = intent?.getIntExtra(BatteryManager.EXTRA_STATUS, -1) ?: -1
+        val plugged = intent?.getIntExtra(BatteryManager.EXTRA_PLUGGED, 0) ?: 0
+        val charging = status == BatteryManager.BATTERY_STATUS_CHARGING ||
+            status == BatteryManager.BATTERY_STATUS_FULL || plugged != 0
+        state = state.copy(batteryLevel = level.coerceIn(0, 100), charging = charging, quickCharge = charging && quickCharge())
+    }
+    private fun quickCharge(): Boolean =
+        listOf("sys.miui.quickcharge", "persist.vendor.quickcharge.status", "ro.boot.quickcharge").any { key ->
+            runCatching {
+                val c = Class.forName("android.os.SystemProperties")
+                val v = c.getMethod("get", String::class.java).invoke(null, key) as? String
+                v == "1" || v.equals("true", true) || v.equals("fast", true)
+            }.getOrDefault(false)
+        }
+
+    private fun updateWifi(context: Context) {
+        val wm = context.getSystemService(Context.WIFI_SERVICE) as? WifiManager ?: return
         runCatching {
-            appContext.registerReceiver(
-                receiver,
-                IntentFilter().apply {
-                    addAction(Intent.ACTION_BATTERY_CHANGED)
-                    addAction("android.os.action.POWER_SAVE_MODE_CHANGED")
-                },
-            )
+            val info = wm.connectionInfo
+            val level = if (info == null || info.rssi == WifiManager.INVALID_RSSI) -1
+                else WifiManager.calculateSignalLevel(info.rssi, 5)
+            state = state.copy(wifiLevel = level.coerceIn(-1, 4))
         }
     }
-
-    private fun ensureWifiReceiver(context: Context) {
-        if (!wifiReceiverStarted.compareAndSet(false, true)) return
-        val appContext = context.applicationContext ?: context
-        val wifi = appContext.getSystemService(Context.WIFI_SERVICE) as? WifiManager
-        val receiver = object : BroadcastReceiver() {
-            override fun onReceive(receiverContext: Context?, intent: Intent?) {
-                updateWifi(wifi)
-            }
-        }
-        wifiReceiver = receiver
-        val filter = IntentFilter().apply {
-            addAction(WifiManager.NETWORK_STATE_CHANGED_ACTION)
-            addAction(WifiManager.RSSI_CHANGED_ACTION)
-            addAction(WifiManager.WIFI_STATE_CHANGED_ACTION)
-        }
-        runCatching {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                appContext.registerReceiver(receiver, filter, Context.RECEIVER_EXPORTED)
-            } else {
-                @Suppress("DEPRECATION")
-                appContext.registerReceiver(receiver, filter)
-            }
-        }
-        updateWifi(wifi)
-    }
-
-    private fun updateWifi(wifi: WifiManager?) {
-        val info = runCatching { wifi?.connectionInfo }.getOrNull()
-        val connected = info != null && info.networkId >= 0 &&
-            info.supplicantState == SupplicantState.COMPLETED
-        wifiConnected = connected
-        wifiLevel = if (connected) {
-            WifiManager.calculateSignalLevel(info!!.rssi, 4).coerceIn(0, 3) + 1
-        } else {
-            0
-        }
-        refreshGlyphs()
-    }
-
     private fun ensureTelephony(context: Context) {
-        if (!telephonyStarted.compareAndSet(false, true)) return
-        val appContext = context.applicationContext ?: context
-        telephonyContext = appContext
-        subscriptionManager = appContext.getSystemService(SubscriptionManager::class.java)
-        val listener = object : SubscriptionManager.OnSubscriptionsChangedListener() {
-            override fun onSubscriptionsChanged() {
-                refreshSubscriptions(appContext)
-            }
-        }
-        subscriptionListener = listener
-        runCatching { subscriptionManager?.addOnSubscriptionsChangedListener(listener) }
-        val receiver = object : BroadcastReceiver() {
-            override fun onReceive(receiverContext: Context?, intent: Intent?) {
-                if (intent?.action == "android.intent.action.ACTION_DEFAULT_DATA_SUBSCRIPTION_CHANGED") {
-                    refreshSubscriptions(appContext)
+        val sm = context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE) as? SubscriptionManager ?: return
+        if (subscriptionsListener == null) {
+            val listener = object : SubscriptionManager.OnSubscriptionsChangedListener() {
+                override fun onSubscriptionsChanged() {
+                    refreshTelephony(context)
+                    installPhoneListeners(context, sm)
+                    refreshHosts()
                 }
             }
+            subscriptionsListener = listener
+            runCatching { sm.addOnSubscriptionsChangedListener(listener) }
         }
-        val filter = IntentFilter("android.intent.action.ACTION_DEFAULT_DATA_SUBSCRIPTION_CHANGED")
-        runCatching {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                appContext.registerReceiver(receiver, filter, Context.RECEIVER_EXPORTED)
-            } else {
-                @Suppress("DEPRECATION")
-                appContext.registerReceiver(receiver, filter)
-            }
-        }
-        refreshSubscriptions(appContext)
+        installPhoneListeners(context, sm)
+        refreshTelephony(context)
     }
-
-    private fun refreshSubscriptions(context: Context) {
-        defaultDataSubscriptionId = runCatching {
-            SubscriptionManager.getDefaultDataSubscriptionId()
-        }.getOrDefault(SubscriptionManager.INVALID_SUBSCRIPTION_ID)
-
-        val active: List<SubscriptionInfo> = runCatching {
-            subscriptionManager?.activeSubscriptionInfoList.orEmpty()
-        }.getOrDefault(emptyList())
-        val wanted = active.map { it.subscriptionId }.toSet()
-        val stale = synchronized(callbacks) { callbacks.keys.filter { it !in wanted } }
-        stale.forEach { subId ->
-            val old = synchronized(callbacks) { callbacks.remove(subId) }
-            old?.let { (manager, callback) ->
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    runCatching { manager.unregisterTelephonyCallback(callback) }
-                }
-            }
-            synchronized(signalStates) { signalStates.remove(subId) }
+    private fun installPhoneListeners(context: Context, sm: SubscriptionManager) {
+        val base = context.getSystemService(Context.TELEPHONY_SERVICE) as? TelephonyManager ?: return
+        val active = runCatching { sm.activeSubscriptionInfoList.orEmpty() }.getOrDefault(emptyList())
+        val ids = active.map { it.subscriptionId }.toSet()
+        phoneListeners.keys.filter { it !in ids }.toList().forEach { id ->
+            phoneListeners.remove(id)?.let { old -> runCatching { old.first.listen(old.second, PhoneStateListener.LISTEN_NONE) } }
         }
-
         active.forEach { info ->
-            synchronized(signalStates) {
-                val previous = signalStates[info.subscriptionId]
-                signalStates[info.subscriptionId] = (previous ?: SignalState(info.subscriptionId)).copy(
-                    slotIndex = info.simSlotIndex,
-                )
-            }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                val alreadyRegistered = synchronized(callbacks) { callbacks.containsKey(info.subscriptionId) }
-                if (!alreadyRegistered) {
-                    val base = context.getSystemService(TelephonyManager::class.java) ?: return@forEach
-                    val manager = runCatching { base.createForSubscriptionId(info.subscriptionId) }.getOrNull()
-                        ?: return@forEach
-                    val callback = SubscriptionCallback(info.subscriptionId)
-                    runCatching {
-                        manager.registerTelephonyCallback(context.mainExecutor, callback)
-                        synchronized(callbacks) { callbacks[info.subscriptionId] = manager to callback }
+            if (phoneListeners.containsKey(info.subscriptionId)) return@forEach
+            runCatching {
+                val sub = base.createForSubscriptionId(info.subscriptionId)
+                val listener = object : PhoneStateListener() {
+                    override fun onSignalStrengthsChanged(signalStrength: SignalStrength?) {
+                        refreshTelephony(context); refreshHosts()
+                    }
+                    override fun onServiceStateChanged(serviceState: ServiceState?) {
+                        refreshTelephony(context); refreshHosts()
                     }
                 }
-            }
-        }
-        updateDefaultDataSignal()
-        refreshGlyphs()
-    }
-
-    private class SubscriptionCallback(private val subscriptionId: Int) :
-        TelephonyCallback(),
-        TelephonyCallback.SignalStrengthsListener,
-        TelephonyCallback.ServiceStateListener,
-        TelephonyCallback.DisplayInfoListener {
-        override fun onSignalStrengthsChanged(signalStrength: SignalStrength) {
-            updateSignal(subscriptionId, level = signalStrength.level.coerceIn(0, 4))
-        }
-
-        override fun onServiceStateChanged(serviceState: ServiceState) {
-            updateSignal(
-                subscriptionId,
-                inService = serviceState.state == ServiceState.STATE_IN_SERVICE,
-                networkType = baseNetworkType(subscriptionId),
-            )
-        }
-
-        override fun onDisplayInfoChanged(telephonyDisplayInfo: TelephonyDisplayInfo) {
-            val override = telephonyDisplayInfo.overrideNetworkType
-            val value = override == TelephonyDisplayInfo.OVERRIDE_NETWORK_TYPE_NR_NSA ||
-                override == TelephonyDisplayInfo.OVERRIDE_NETWORK_TYPE_NR_ADVANCED
-            val label = when (override) {
-                TelephonyDisplayInfo.OVERRIDE_NETWORK_TYPE_NR_ADVANCED -> "5GA"
-                TelephonyDisplayInfo.OVERRIDE_NETWORK_TYPE_NR_NSA -> "5G"
-                else -> baseNetworkType(subscriptionId)
-            }
-            updateSignal(subscriptionId, is5g = value, networkType = label)
-        }
-    }
-
-    private fun updateSignal(
-        subscriptionId: Int,
-        level: Int? = null,
-        inService: Boolean? = null,
-        is5g: Boolean? = null,
-        networkType: String? = null,
-    ) {
-        synchronized(signalStates) {
-            val previous = signalStates[subscriptionId] ?: SignalState(subscriptionId)
-            signalStates[subscriptionId] = previous.copy(
-                level = level ?: previous.level,
-                inService = inService ?: previous.inService,
-                is5g = is5g ?: previous.is5g,
-                networkType = networkType ?: previous.networkType,
-            )
-        }
-        updateDefaultDataSignal()
-        refreshGlyphs()
-    }
-
-    private fun updateDefaultDataSignal() {
-        network5g = synchronized(signalStates) {
-            signalStates[defaultDataSubscriptionId]?.let { it.inService && it.is5g } ?: false
-        }
-    }
-
-    private fun currentSignalLevel(): Int {
-        if (defaultDataSubscriptionId == SubscriptionManager.INVALID_SUBSCRIPTION_ID) return 0
-        return synchronized(signalStates) {
-            signalStates[defaultDataSubscriptionId]
-                ?.takeIf { it.inService }
-                ?.level?.coerceIn(0, 4) ?: 0
-        }
-    }
-
-    private fun currentSlotLevels(): IntArray {
-        val result = intArrayOf(-1, -1)
-        synchronized(signalStates) {
-            signalStates.values.forEach { state ->
-                if (state.slotIndex in 0..1 && state.inService) {
-                    result[state.slotIndex] = state.level.coerceIn(0, 4)
-                }
-            }
-        }
-        return result
-    }
-
-    private fun dataSlotIndex(): Int {
-        if (defaultDataSubscriptionId == SubscriptionManager.INVALID_SUBSCRIPTION_ID) return -1
-        val info = runCatching {
-            subscriptionManager?.activeSubscriptionInfoList
-                ?.firstOrNull { it.subscriptionId == defaultDataSubscriptionId }
-        }.getOrNull()
-        return info?.simSlotIndex ?: -1
-    }
-
-    private fun currentNetworkType(): String {
-        if (defaultDataSubscriptionId == SubscriptionManager.INVALID_SUBSCRIPTION_ID) return ""
-        return synchronized(signalStates) {
-            signalStates[defaultDataSubscriptionId]?.networkType?.takeIf { it.isNotBlank() }
-                ?: if (signalStates[defaultDataSubscriptionId]?.is5g == true) "5G" else ""
-        }
-    }
-
-    private fun baseNetworkType(subscriptionId: Int): String {
-        val manager = runCatching {
-            telephonyContext?.getSystemService(TelephonyManager::class.java)
-                ?.createForSubscriptionId(subscriptionId)
-        }.getOrNull() ?: return ""
-        return when (runCatching { manager.dataNetworkType }.getOrDefault(TelephonyManager.NETWORK_TYPE_UNKNOWN)) {
-            TelephonyManager.NETWORK_TYPE_NR -> "5G"
-            TelephonyManager.NETWORK_TYPE_LTE -> "4G"
-            TelephonyManager.NETWORK_TYPE_HSPAP,
-            TelephonyManager.NETWORK_TYPE_HSPA,
-            TelephonyManager.NETWORK_TYPE_HSDPA,
-            TelephonyManager.NETWORK_TYPE_HSUPA,
-            TelephonyManager.NETWORK_TYPE_UMTS,
-            TelephonyManager.NETWORK_TYPE_EHRPD,
-            TelephonyManager.NETWORK_TYPE_EVDO_0,
-            TelephonyManager.NETWORK_TYPE_EVDO_A,
-            TelephonyManager.NETWORK_TYPE_EVDO_B,
-            TelephonyManager.NETWORK_TYPE_1xRTT,
-            -> "3G"
-            TelephonyManager.NETWORK_TYPE_EDGE,
-            TelephonyManager.NETWORK_TYPE_GPRS,
-            TelephonyManager.NETWORK_TYPE_CDMA,
-            -> "2G"
-            else -> ""
-        }
-    }
-
-    private fun refreshNativeChargingFlags() {
-        val anchors = synchronized(holders) { holders.values.mapNotNull { it.batteryAnchor } }
-        val target = anchors.firstOrNull() ?: return
-        quickCharging = readBooleanField(
-            target,
-            "mQuickCharging",
-            "mFastCharging",
-            "mIsFastCharging",
-            "mQuickCharge",
-        ) ?: quickCharging
-    }
-
-    private fun readBooleanField(target: Any, vararg names: String): Boolean? {
-        var clazz: Class<*>? = target.javaClass
-        while (clazz != null && clazz != Any::class.java) {
-            val currentClass = clazz
-            for (name in names) {
-                val field = runCatching { currentClass.getDeclaredField(name) }.getOrNull() ?: continue
-                val value = runCatching {
-                    field.isAccessible = true
-                    field.get(target)
-                }.getOrNull()
-                when (value) {
-                    is Boolean -> return value
-                    is Number -> return value.toInt() != 0
-                }
-            }
-            clazz = currentClass.superclass
-        }
-        return null
-    }
-
-    private fun applyAll() {
-        val active = synchronized(holders) { holders.values.toList() }
-        active.forEach(::applyHolder)
-        refreshGlyphs()
-    }
-
-    private fun refreshGlyphs() {
-        mainHandler.post {
-            val active = synchronized(holders) { holders.values.toList() }
-            active.forEach {
-                it.overlay?.refreshGlyphs()
-                it.inlineView?.update(config, indicatorColor)
+                sub.listen(listener, PhoneStateListener.LISTEN_SIGNAL_STRENGTHS or PhoneStateListener.LISTEN_SERVICE_STATE)
+                phoneListeners[info.subscriptionId] = sub to listener
             }
         }
     }
+    private fun refreshTelephony(context: Context) {
+        val sm = context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE) as? SubscriptionManager ?: return
+        val base = context.getSystemService(Context.TELEPHONY_SERVICE) as? TelephonyManager ?: return
+        val active: List<SubscriptionInfo> = runCatching { sm.activeSubscriptionInfoList.orEmpty() }.getOrDefault(emptyList())
+        val dataSub = runCatching { SubscriptionManager.getDefaultDataSubscriptionId() }.getOrDefault(-1)
+        var dataLevel = -1
+        var simOne = -1
+        var simTwo = -1
+        var label = state.networkType
+        active.forEach { info ->
+            val sub = runCatching { base.createForSubscriptionId(info.subscriptionId) }.getOrNull() ?: return@forEach
+            val level = runCatching { sub.signalStrength?.level ?: -1 }.getOrDefault(-1).coerceIn(-1, 4)
+            if (info.simSlotIndex == 0) simOne = level
+            if (info.simSlotIndex == 1) simTwo = level
+            if (info.subscriptionId == dataSub) {
+                dataLevel = level
+                label = networkType(sub.dataNetworkType)
+            }
+        }
+        if (dataLevel < 0) dataLevel = if (simOne >= 0) simOne else simTwo
+        if (dataLevel < 0) dataLevel = runCatching { base.signalStrength?.level ?: state.mobileLevel }.getOrDefault(state.mobileLevel)
+        state = state.copy(mobileLevel = dataLevel.coerceIn(0, 4), simOneLevel = simOne, simTwoLevel = simTwo, networkType = label)
+    }
+    private fun networkType(type: Int): String = when (type) {
+        TelephonyManager.NETWORK_TYPE_NR -> "5G"
+        TelephonyManager.NETWORK_TYPE_LTE, TelephonyManager.NETWORK_TYPE_IWLAN -> "4G"
+        TelephonyManager.NETWORK_TYPE_HSPAP, TelephonyManager.NETWORK_TYPE_HSPA,
+        TelephonyManager.NETWORK_TYPE_HSDPA, TelephonyManager.NETWORK_TYPE_HSUPA,
+        TelephonyManager.NETWORK_TYPE_UMTS, TelephonyManager.NETWORK_TYPE_EVDO_0,
+        TelephonyManager.NETWORK_TYPE_EVDO_A, TelephonyManager.NETWORK_TYPE_EVDO_B -> "3G"
+        TelephonyManager.NETWORK_TYPE_GPRS, TelephonyManager.NETWORK_TYPE_EDGE,
+        TelephonyManager.NETWORK_TYPE_CDMA, TelephonyManager.NETWORK_TYPE_1xRTT -> "2G"
+        else -> state.networkType.ifBlank { "4G" }
+    }
+
+    private fun sanitize(v: Preference.SystemUI.StatusBarComboStyleOneRuntime) = v.copy(
+        trioStyle = v.trioStyle.coerceIn(0, 1), mobileTypeMode = v.mobileTypeMode.coerceIn(0, 2),
+        signalMode = v.signalMode.coerceIn(0, 1), lowThreshold = v.lowThreshold.coerceIn(1, 100),
+        ringStroke = v.ringStroke.coerceIn(3, 28), arcStroke = v.arcStroke.coerceIn(2, 20),
+        valueSize = v.valueSize.coerceIn(8, 64), valueWeight = v.valueWeight.coerceIn(100, 900),
+        typeSize = v.typeSize.coerceIn(8, 64), typeWeight = v.typeWeight.coerceIn(100, 900),
+        outTypeSizeDp = v.outTypeSizeDp.coerceIn(6, 30), outSignalSizeDp = v.outSignalSizeDp.coerceIn(6, 36),
+        outTypeMarginLeftDp = v.outTypeMarginLeftDp.coerceIn(0, 12),
+        outTypeMarginRightDp = v.outTypeMarginRightDp.coerceIn(0, 12),
+        outSignalMarginDp = v.outSignalMarginDp.coerceIn(0, 12),
+        typeSuffixScale = v.typeSuffixScale.coerceIn(30, 100), trackAlpha = v.trackAlpha.coerceIn(0, 255),
+    )
+    private fun refreshHosts() { main.post { synchronized(hosts) { hosts.values.toList() }.forEach(::apply) } }
+    private fun dp(context: Context, value: Int): Int =
+        (value * context.resources.displayMetrics.density + 0.5f).toInt().coerceAtLeast(1)
 }

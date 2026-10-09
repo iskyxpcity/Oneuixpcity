@@ -152,7 +152,7 @@ private fun StatusPagerMiuix(
             ) {
                 item { Spacer(Modifier.height(12.dp)) }
 
-                StatusCategory.entries.filter { it != StatusCategory.ComboStyleOne }.forEach { category ->
+                StatusCategory.entries.forEach { category ->
                     item {
                         Card(
                             modifier = Modifier
@@ -252,7 +252,7 @@ private fun StatusPagerMaterial(
                     .graphicsLayer {
                         alpha = if (lsposedActive) 1f else 0.38f
                     },
-                content = StatusCategory.entries.filter { it != StatusCategory.ComboStyleOne }.map { category ->
+                content = StatusCategory.entries.map { category ->
                     {
                         SegmentedListItem(
                             enabled = lsposedActive,
