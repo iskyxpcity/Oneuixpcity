@@ -158,7 +158,7 @@ internal object StatusBarComboStyleOneRenderer {
         val role = roleColor(cfg, s)
         val hasBattery = cfg.showBattery
         val hasValue = hasBattery && (cfg.showValue || cfg.showBatteryLevelText)
-        val displayType = if (!cfg.show5gNetworkType && s.networkType == "5G") {
+        val displayType = if (!cfg.show5gNetworkType && s.networkType.startsWith("5G")) {
             ""
         } else {
             s.networkType
@@ -275,7 +275,7 @@ internal object StatusBarComboStyleOneRenderer {
         s: State,
     ) {
         val role = roleColor(cfg, s)
-        val displayType = if (!cfg.show5gNetworkType && s.networkType == "5G") {
+        val displayType = if (!cfg.show5gNetworkType && s.networkType.startsWith("5G")) {
             ""
         } else {
             s.networkType
