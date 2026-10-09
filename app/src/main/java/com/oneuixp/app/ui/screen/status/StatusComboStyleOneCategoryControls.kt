@@ -751,32 +751,44 @@ private fun StyleOneInfoItem(
     title: String,
     summary: String? = null,
     modifier: Modifier = Modifier,
+    trailingContent: (@Composable () -> Unit)? = null,
 ) {
-    Column(
+    Row(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(if (summary == null) 0.dp else 3.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        when (LocalUiMode.current) {
-            UiMode.Material -> {
-                Text(text = title, style = Material3Theme.typography.titleSmall)
-                if (summary != null) {
-                    Text(
-                        text = summary,
-                        style = Material3Theme.typography.bodySmall,
-                        color = Material3Theme.colorScheme.onSurfaceVariant,
-                    )
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(if (summary == null) 0.dp else 3.dp),
+        ) {
+            when (LocalUiMode.current) {
+                UiMode.Material -> {
+                    Text(text = title, style = Material3Theme.typography.titleSmall)
+                    if (summary != null) {
+                        Text(
+                            text = summary,
+                            style = Material3Theme.typography.bodySmall,
+                            color = Material3Theme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+                UiMode.Miuix -> {
+                    MiuixText(text = title, color = MiuixTheme.colorScheme.onSurface)
+                    if (summary != null) {
+                        MiuixText(
+                            text = summary,
+                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                        )
+                    }
                 }
             }
-            UiMode.Miuix -> {
-                MiuixText(text = title, color = MiuixTheme.colorScheme.onSurface)
-                if (summary != null) {
-                    MiuixText(
-                        text = summary,
-                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                    )
-                }
+        }
+        if (trailingContent != null) {
+            Box(contentAlignment = Alignment.Center) {
+                trailingContent()
             }
         }
     }
