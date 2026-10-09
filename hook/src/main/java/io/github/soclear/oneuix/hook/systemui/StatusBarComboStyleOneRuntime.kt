@@ -416,7 +416,10 @@ object StatusBarComboStyleOneRuntime {
     private fun enableOnDrawIfNeeded(host: Host, view: ViewGroup) {
         if (!batteryDrawHookClasses.any { it.isInstance(view) }) return
         if (!host.batteryWillNotDrawCaptured) {
-            host.batteryWillNotDraw = readWillNotDraw(view)
+            // If this ROM does not expose willNotDraw(), don't mutate a draw flag
+            // that we cannot later restore.
+            val original = readWillNotDraw(view) ?: return
+            host.batteryWillNotDraw = original
             host.batteryWillNotDrawCaptured = true
         }
         view.setWillNotDraw(false)
@@ -635,6 +638,7 @@ object StatusBarComboStyleOneRuntime {
                 host.shadeDrawTarget = null
             }
             host.battery = battery
+            syncBatteryStateFromMeter(battery)
             host.shadeDrawTarget = views.firstOrNull { candidate ->
                 candidate !== battery &&
                     isWithin(battery, candidate) &&
@@ -1252,10 +1256,38 @@ object StatusBarComboStyleOneRuntime {
         }
         meter.post {
             try {
-                if (config.enabled && hostFor(meter) != null) collapseNativeBatteryChildren(meter)
+                if (config.enabled && hostFor(meter) != null) {
+                    // HyperDuo reads these resolved MIUI fields on the meter's own
+                    // state-update callbacks; this avoids guessing "charging" from
+                    // PLUGGED alone and keeps quick-charge/low/power-save priority
+                    // aligned with what the stock battery icon itself is showing.
+                    syncBatteryStateFromMeter(meter)
+                    collapseNativeBatteryChildren(meter)
+                }
             } finally {
                 scheduledBatteryChildPasses.remove(meter)
             }
+        }
+    }
+
+    private fun syncBatteryStateFromMeter(meter: View) {
+        val nextLevel = readSignalIntField(meter, "mLevel", "level")
+            ?.takeIf { it in 0..100 }
+        val nextCharging = readNativeBoolean(meter, "mCharging", "charging")
+        val nextQuickCharging = readNativeBoolean(meter, "mQuickCharging", "quickCharging")
+        val nextLow = readNativeBoolean(meter, "mLow", "low")
+        val nextPowerSave = readNativeBoolean(meter, "mPowerSave", "powerSave")
+        val previous = state
+        val next = previous.copy(
+            batteryLevel = nextLevel ?: previous.batteryLevel,
+            charging = nextCharging ?: previous.charging,
+            quickCharge = nextQuickCharging ?: previous.quickCharge,
+            lowBatteryWarning = nextLow ?: previous.lowBatteryWarning,
+            powerSave = nextPowerSave ?: previous.powerSave,
+        )
+        if (next != previous) {
+            state = next
+            invalidateGlyphs()
         }
     }
 
@@ -1966,7 +1998,8 @@ object StatusBarComboStyleOneRuntime {
     private fun sanitize(v: Preference.SystemUI.StatusBarComboStyleOneRuntime) = v.copy(
         trioStyle = v.trioStyle.coerceIn(0, 1), mobileTypeMode = v.mobileTypeMode.coerceIn(0, 2),
         signalMode = v.signalMode.coerceIn(0, 1), lowThreshold = v.lowThreshold.coerceIn(5, 50),
-        criticalThreshold = v.criticalThreshold.coerceIn(1, 20),
+        // The upstream critical cutoff is a constant, not a user setting.
+        criticalThreshold = 20,
         glyphScalePercent = v.glyphScalePercent.coerceIn(70, 150),
         chargingBoltSizePercent = v.chargingBoltSizePercent.coerceIn(50, 180),
         chargingBoltXDp = v.chargingBoltXDp.coerceIn(-8, 8),

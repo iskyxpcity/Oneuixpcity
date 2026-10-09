@@ -14,7 +14,7 @@ class StatusComboStyleOnePreviewView(context: Context) : View(context) {
     private var config = Preference.SystemUI.StatusBarComboStyleOneRuntime()
 
     fun setConfig(next: Preference.SystemUI.StatusBarComboStyleOneRuntime) {
-        config = next
+        config = next.copy(criticalThreshold = 20)
         invalidate()
     }
 

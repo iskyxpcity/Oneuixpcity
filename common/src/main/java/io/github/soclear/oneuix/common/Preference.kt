@@ -199,7 +199,9 @@ data class Preference(
             val lowColorDarkArgb: Int = 0xFFF2B900.toInt(),
             val lowColorLightArgb: Int = 0xFFC99700.toInt(),
             val lowThreshold: Int = 20,
-            val criticalThreshold: Int = 10,
+            // HyperDuo's critical cutoff is fixed at 20%; retain the key for
+            // saved-setting compatibility but sanitize it to this upstream value.
+            val criticalThreshold: Int = 20,
             val ringStroke: Int = 14,
             val arcStroke: Int = 12,
             val valueSize: Int = 11,

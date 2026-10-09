@@ -79,7 +79,9 @@ fun StatusComboStyleOneCategoryControls(
     val icon = ImageVector.vectorResource(R.drawable.status_combo_style_one)
     val viewModel = viewModel<OneuiXToolsViewModel>()
     val context = LocalContext.current
-    val runtime = uiState.comboStyleOneRuntime
+    // Match HyperDuo exactly: critical battery is a fixed 20% cutoff.
+    // Normalize legacy saved values so preview and live SystemUI share the rule.
+    val runtime = uiState.comboStyleOneRuntime.copy(criticalThreshold = 20)
     var confirmResetColors by remember { mutableStateOf(false) }
     var editingColorRole by remember { mutableStateOf<StyleOneColorRole?>(null) }
     var editingDarkBackground by remember { mutableStateOf(true) }
