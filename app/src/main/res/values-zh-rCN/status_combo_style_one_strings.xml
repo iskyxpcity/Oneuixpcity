@@ -75,6 +75,8 @@
     <string name="status_combo_style_one_color_critical">临界电量颜色</string>
     <string name="status_combo_style_one_color_on_dark">深色背景</string>
     <string name="status_combo_style_one_color_on_light">浅色背景</string>
+    <string name="status_combo_style_one_color_on_dark_short">深</string>
+    <string name="status_combo_style_one_color_on_light_short">浅</string>
     <string name="status_combo_style_one_color_dialog_summary">先选择深色或浅色背景版本，颜色会即时预览到状态栏图标。</string>
     <string name="status_combo_style_one_color_apply">应用</string>
     <string name="status_combo_style_one_color_cancel">取消</string>

@@ -496,9 +496,12 @@ object StatusBarComboStyleOneRuntime {
             // HyperDuo's source of truth is a tint saved for the MIUI battery
             // container. The phone-bar value is only a fallback for AOSP layouts.
             val tintRow = host.tintRow
-            val rowTint = (tintRow?.let { rowTintSnapshots[it] })
-                ?: if (tintRow === root) null else rowTintSnapshots[root]
+            val rowTint = tintRow?.let { rowTintSnapshots[it] }
                 ?: meterTint
+                // Only AOSP layouts use the whole status-bar root as their tint
+                // owner. On MIUI, falling back to another icon container's ink
+                // would reintroduce the cross-row colour leak HyperDuo fixed.
+                ?: if (tintRow === root) rowTintSnapshots[root] else null
                 ?: host.rowTint
             if (rowTint != null && host.rowTint != rowTint) {
                 host.rowTint = rowTint

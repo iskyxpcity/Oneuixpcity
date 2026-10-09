@@ -76,6 +76,8 @@
     <string name="status_combo_style_one_color_critical">Critical battery color</string>
     <string name="status_combo_style_one_color_on_dark">Dark background</string>
     <string name="status_combo_style_one_color_on_light">Light background</string>
+    <string name="status_combo_style_one_color_on_dark_short">Dark</string>
+    <string name="status_combo_style_one_color_on_light_short">Light</string>
     <string name="status_combo_style_one_color_dialog_summary">Choose the colour variant to edit. The selected colour is previewed on the status-bar icon.</string>
     <string name="status_combo_style_one_color_apply">Apply</string>
     <string name="status_combo_style_one_color_cancel">Cancel</string>

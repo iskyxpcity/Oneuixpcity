@@ -5,6 +5,7 @@ import android.view.HapticFeedbackConstants
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Alignment
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -459,7 +460,7 @@ fun StatusComboStyleOneCategoryControls(
                             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                                 StyleOneColorSwatch(
                                     color = runtime.lowColorDarkArgb,
-                                    label = stringResource(R.string.status_combo_style_one_color_on_dark),
+                                    label = stringResource(R.string.status_combo_style_one_color_on_dark_short),
                                     onClick = {
                                         editingColorRole = StyleOneColorRole.Low
                                         editingDarkBackground = true
@@ -468,7 +469,7 @@ fun StatusComboStyleOneCategoryControls(
                                 )
                                 StyleOneColorSwatch(
                                     color = runtime.lowColorLightArgb,
-                                    label = stringResource(R.string.status_combo_style_one_color_on_light),
+                                    label = stringResource(R.string.status_combo_style_one_color_on_light_short),
                                     onClick = {
                                         editingColorRole = StyleOneColorRole.Low
                                         editingDarkBackground = false
@@ -491,7 +492,7 @@ fun StatusComboStyleOneCategoryControls(
                             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                                 StyleOneColorSwatch(
                                     color = runtime.chargingColorDarkArgb,
-                                    label = stringResource(R.string.status_combo_style_one_color_on_dark),
+                                    label = stringResource(R.string.status_combo_style_one_color_on_dark_short),
                                     onClick = {
                                         editingColorRole = StyleOneColorRole.Charging
                                         editingDarkBackground = true
@@ -500,7 +501,7 @@ fun StatusComboStyleOneCategoryControls(
                                 )
                                 StyleOneColorSwatch(
                                     color = runtime.chargingColorLightArgb,
-                                    label = stringResource(R.string.status_combo_style_one_color_on_light),
+                                    label = stringResource(R.string.status_combo_style_one_color_on_light_short),
                                     onClick = {
                                         editingColorRole = StyleOneColorRole.Charging
                                         editingDarkBackground = false
@@ -523,7 +524,7 @@ fun StatusComboStyleOneCategoryControls(
                             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                                 StyleOneColorSwatch(
                                     color = runtime.criticalColorDarkArgb,
-                                    label = stringResource(R.string.status_combo_style_one_color_on_dark),
+                                    label = stringResource(R.string.status_combo_style_one_color_on_dark_short),
                                     onClick = {
                                         editingColorRole = StyleOneColorRole.Critical
                                         editingDarkBackground = true
@@ -532,7 +533,7 @@ fun StatusComboStyleOneCategoryControls(
                                 )
                                 StyleOneColorSwatch(
                                     color = runtime.criticalColorLightArgb,
-                                    label = stringResource(R.string.status_combo_style_one_color_on_light),
+                                    label = stringResource(R.string.status_combo_style_one_color_on_light_short),
                                     onClick = {
                                         editingColorRole = StyleOneColorRole.Critical
                                         editingDarkBackground = false
@@ -633,14 +634,25 @@ private fun Preference.SystemUI.StatusBarComboStyleOneRuntime.withRoleColor(
 
 @Composable
 private fun StyleOneColorSwatch(color: Int, label: String, onClick: () -> Unit) {
-    Box(
-        modifier = Modifier
-            .size(27.dp)
-            .background(Color(color), CircleShape)
-            .border(1.dp, Color(0x66000000), CircleShape)
-            .clickable(onClick = onClick)
-            .semantics { contentDescription = label },
-    )
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(3.dp),
+        modifier = Modifier.clickable(onClick = onClick).semantics {
+            contentDescription = label
+        },
+    ) {
+        Text(
+            text = label,
+            style = Material3Theme.typography.labelSmall,
+            maxLines = 1,
+        )
+        Box(
+            modifier = Modifier
+                .size(24.dp)
+                .background(Color(color), CircleShape)
+                .border(1.dp, Color(0x66000000), CircleShape),
+        )
+    }
 }
 
 @Composable
