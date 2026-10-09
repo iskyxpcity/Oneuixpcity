@@ -81,7 +81,8 @@ class StatusComboStyleOnePreviewView(context: Context) : View(context) {
             val targetWidth = (cellWidth - 4f * density).toInt().coerceAtLeast(1)
             val targetHeight = (glyphHeight - 2f * density).toInt().coerceAtLeast(1)
             val save = canvas.save()
-            canvas.translate(left + (cellWidth - targetWidth) / 2f, 0f)
+            canvas.clipRect(left, 0f, right, glyphHeight.toFloat())
+            canvas.translate(left + (cellWidth - targetWidth) / 2f + config.glyphOffsetXDp * density, config.glyphOffsetYDp * density)
             StatusComboStyleOneGlyphRenderer.draw(
                 canvas, targetWidth, targetHeight, config, sample.third.second,
             )

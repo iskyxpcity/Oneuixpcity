@@ -19,6 +19,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button as MaterialButton
 import androidx.compose.material3.ButtonDefaults as MaterialButtonDefaults
+import androidx.compose.material3.ButtonGroupDefaults
+import androidx.compose.material3.ToggleButton
 import androidx.compose.material3.MaterialTheme as Material3Theme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -34,6 +36,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.semantics.contentDescription
@@ -59,6 +66,7 @@ import top.yukonga.miuix.kmp.basic.Button as MiuixButton
 import top.yukonga.miuix.kmp.basic.ButtonDefaults as MiuixButtonDefaults
 import top.yukonga.miuix.kmp.basic.ColorPalette
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
+import top.yukonga.miuix.kmp.basic.TabRow as MiuixTabRow
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.window.WindowDialog
 import androidx.compose.foundation.layout.widthIn
@@ -126,6 +134,10 @@ fun StatusComboStyleOneCategoryControls(
     var outSignalMargin by remember(runtime.outSignalMarginDp) { mutableIntStateOf(runtime.outSignalMarginDp.coerceIn(0, 16)) }
     var lowThreshold by remember(runtime.lowThreshold) { mutableIntStateOf(runtime.lowThreshold.coerceIn(5, 50)) }
     var glyphScale by remember(runtime.glyphScalePercent) { mutableIntStateOf(runtime.glyphScalePercent.coerceIn(70, 150)) }
+    var glyphOffsetX by remember(runtime.glyphOffsetXDp) { mutableIntStateOf(runtime.glyphOffsetXDp.coerceIn(-16, 16)) }
+    var glyphOffsetY by remember(runtime.glyphOffsetYDp) { mutableIntStateOf(runtime.glyphOffsetYDp.coerceIn(-16, 16)) }
+    var glyphLeftMargin by remember(runtime.glyphLeftMarginDp) { mutableIntStateOf(runtime.glyphLeftMarginDp.coerceIn(0, 16)) }
+    var glyphRightMargin by remember(runtime.glyphRightMarginDp) { mutableIntStateOf(runtime.glyphRightMarginDp.coerceIn(0, 16)) }
     var boltSize by remember(runtime.chargingBoltSizePercent) { mutableIntStateOf(runtime.chargingBoltSizePercent.coerceIn(50, 180)) }
     var boltX by remember(runtime.chargingBoltXDp) { mutableIntStateOf(runtime.chargingBoltXDp.coerceIn(-8, 8)) }
     var boltY by remember(runtime.chargingBoltYDp) { mutableIntStateOf(runtime.chargingBoltYDp.coerceIn(-8, 8)) }
@@ -134,12 +146,12 @@ fun StatusComboStyleOneCategoryControls(
     }
 
     StatusThemeGroup(items = listOf({
-        Column {
-            StyleOneInfoItem(
-                title = stringResource(R.string.status_combo_style_one_preview),
-                summary = stringResource(R.string.status_combo_style_one_preview_summary),
-            )
-            StatusThemeChildItem {
+        StatusThemeChildItem {
+            Column {
+                StyleOneInfoItem(
+                    title = stringResource(R.string.status_combo_style_one_preview),
+                    summary = stringResource(R.string.status_combo_style_one_preview_summary),
+                )
                 AndroidView(
                     modifier = Modifier.fillMaxWidth().height(60.dp),
                     factory = { StatusComboStyleOnePreviewView(it) },
@@ -147,7 +159,8 @@ fun StatusComboStyleOneCategoryControls(
                 )
             }
         }
-    }, {
+    }))
+    StatusThemeGroup(items = listOf({
         SwitchItem(
             icon = null,
             title = stringResource(R.string.status_combo_style_one_enable),
@@ -165,28 +178,45 @@ fun StatusComboStyleOneCategoryControls(
         stringResource(R.string.status_combo_style_one_tab_size),
         stringResource(R.string.status_combo_style_one_tab_color),
     )
-    // Reuse the same theme-aware buttons used by the rest of OneuiXP.
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 4.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        tabs.forEachIndexed { index, label ->
-            StyleOneTabButton(
-                label = label,
-                selected = selectedTab == index,
-                modifier = Modifier.weight(1f).height(44.dp),
-                onClick = { selectedTab = index },
-            )
+    val tabHaptic = LocalHapticFeedback.current
+    when (LocalUiMode.current) {
+        UiMode.Material -> {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                tabs.forEachIndexed { index, label ->
+                    ToggleButton(
+                        checked = selectedTab == index,
+                        onCheckedChange = { checked ->
+                            if (checked) {
+                                tabHaptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
+                                selectedTab = index
+                            }
+                        },
+                        modifier = Modifier.weight(1f).semantics { role = Role.RadioButton },
+                        shapes = when (index) {
+                            0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
+                            tabs.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
+                            else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
+                        },
+                    ) { Text(text = label) }
+                }
+            }
         }
+        UiMode.Miuix -> MiuixTabRow(
+            tabs = tabs,
+            selectedTabIndex = selectedTab,
+            onTabSelected = { selectedTab = it },
+            height = 48.dp,
+        )
     }
 
     when (selectedTab) {
         0 -> {
             StatusThemeGroup(items = listOf({
-                StyleOneInfoItem(title = stringResource(R.string.status_combo_style_one_group_appearance))
+                StatusThemeChildItem { StyleOneInfoItem(title = stringResource(R.string.status_combo_style_one_group_appearance)) }
             }, {
                 SelectItem(
                     icon = null,
@@ -317,7 +347,7 @@ fun StatusComboStyleOneCategoryControls(
             }))
 
             StatusThemeGroup(items = listOf({
-                StyleOneInfoItem(title = stringResource(R.string.status_combo_style_one_group_advanced))
+                StatusThemeChildItem { StyleOneInfoItem(title = stringResource(R.string.status_combo_style_one_group_advanced)) }
             }, {
                 SwitchItem(
                     icon = null,
@@ -330,12 +360,40 @@ fun StatusComboStyleOneCategoryControls(
         }
         1 -> {
             StatusThemeGroup(items = listOf({
-                StyleOneInfoItem(title = stringResource(R.string.status_combo_style_one_group_appearance))
+                StatusThemeChildItem { StyleOneInfoItem(title = stringResource(R.string.status_combo_style_one_group_appearance)) }
             }, {
                 styleOneSlider(stringResource(R.string.status_combo_style_one_glyph_scale),
                     stringResource(R.string.status_combo_style_one_percent_summary, glyphScale), glyphScale.toFloat(), 70f..150f,
                     { glyphScale = it.roundToInt(); preview(runtime.copy(glyphScalePercent = glyphScale)) },
                     { persist(runtime.copy(glyphScalePercent = glyphScale)) })
+            }))
+
+            StatusThemeGroup(items = listOf({
+                StatusThemeChildItem { StyleOneInfoItem(title = stringResource(R.string.status_combo_style_one_group_position)) }
+            }, {
+                styleOneSlider(stringResource(R.string.status_combo_style_one_glyph_offset_x),
+                    stringResource(R.string.status_combo_style_one_dp_summary, glyphOffsetX), glyphOffsetX.toFloat(), -16f..16f,
+                    { glyphOffsetX = it.roundToInt(); preview(runtime.copy(glyphOffsetXDp = glyphOffsetX)) },
+                    { persist(runtime.copy(glyphOffsetXDp = glyphOffsetX)) })
+            }, {
+                styleOneSlider(stringResource(R.string.status_combo_style_one_glyph_offset_y),
+                    stringResource(R.string.status_combo_style_one_dp_summary, glyphOffsetY), glyphOffsetY.toFloat(), -16f..16f,
+                    { glyphOffsetY = it.roundToInt(); preview(runtime.copy(glyphOffsetYDp = glyphOffsetY)) },
+                    { persist(runtime.copy(glyphOffsetYDp = glyphOffsetY)) })
+            }, {
+                styleOneSlider(stringResource(R.string.status_combo_style_one_glyph_left_margin),
+                    stringResource(R.string.status_combo_style_one_dp_summary, glyphLeftMargin), glyphLeftMargin.toFloat(), 0f..16f,
+                    { glyphLeftMargin = it.roundToInt(); preview(runtime.copy(glyphLeftMarginDp = glyphLeftMargin)) },
+                    { persist(runtime.copy(glyphLeftMarginDp = glyphLeftMargin)) })
+            }, {
+                styleOneSlider(stringResource(R.string.status_combo_style_one_glyph_right_margin),
+                    stringResource(R.string.status_combo_style_one_dp_summary, glyphRightMargin), glyphRightMargin.toFloat(), 0f..16f,
+                    { glyphRightMargin = it.roundToInt(); preview(runtime.copy(glyphRightMarginDp = glyphRightMargin)) },
+                    { persist(runtime.copy(glyphRightMarginDp = glyphRightMargin)) })
+            }))
+
+            StatusThemeGroup(items = listOf({
+                StatusThemeChildItem { StyleOneInfoItem(title = stringResource(R.string.status_combo_style_one_group_charging)) }
             }, {
                 styleOneSlider(stringResource(R.string.status_combo_style_one_bolt_size),
                     stringResource(R.string.status_combo_style_one_percent_summary, boltSize), boltSize.toFloat(), 50f..180f,
@@ -354,7 +412,7 @@ fun StatusComboStyleOneCategoryControls(
             }))
 
             StatusThemeGroup(items = listOf({
-                StyleOneInfoItem(title = stringResource(R.string.status_combo_style_one_group_stroke))
+                StatusThemeChildItem { StyleOneInfoItem(title = stringResource(R.string.status_combo_style_one_group_stroke)) }
             }, {
                 styleOneSlider(stringResource(R.string.status_combo_style_one_ring_stroke),
                     stringResource(R.string.status_combo_style_one_int_summary, ringStroke), ringStroke.toFloat(), 4f..16f,
@@ -368,7 +426,7 @@ fun StatusComboStyleOneCategoryControls(
             }))
 
             StatusThemeGroup(items = listOf({
-                StyleOneInfoItem(title = stringResource(R.string.status_combo_style_one_group_text))
+                StatusThemeChildItem { StyleOneInfoItem(title = stringResource(R.string.status_combo_style_one_group_text)) }
             }, {
                 styleOneSlider(stringResource(R.string.status_combo_style_one_value_size),
                     stringResource(R.string.status_combo_style_one_sp_summary, valueSize), valueSize.toFloat(), 6f..18f,
@@ -382,7 +440,7 @@ fun StatusComboStyleOneCategoryControls(
             }))
 
             StatusThemeGroup(items = listOf({
-                StyleOneInfoItem(title = stringResource(R.string.status_combo_style_one_group_type))
+                StatusThemeChildItem { StyleOneInfoItem(title = stringResource(R.string.status_combo_style_one_group_type)) }
             }, {
                 styleOneSlider(stringResource(R.string.status_combo_style_one_type_size),
                     stringResource(R.string.status_combo_style_one_int_summary, typeSize), typeSize.toFloat(), 16f..44f,
@@ -416,7 +474,7 @@ fun StatusComboStyleOneCategoryControls(
             }))
 
             StatusThemeGroup(items = listOf({
-                StyleOneInfoItem(title = stringResource(R.string.status_combo_style_one_group_out_signal))
+                StatusThemeChildItem { StyleOneInfoItem(title = stringResource(R.string.status_combo_style_one_group_out_signal)) }
             }, {
                 styleOneSlider(stringResource(R.string.status_combo_style_one_out_signal_size),
                     stringResource(R.string.status_combo_style_one_dp_summary, outSignalSize), outSignalSize.toFloat(), 6f..20f,
@@ -430,7 +488,7 @@ fun StatusComboStyleOneCategoryControls(
             }))
 
             StatusThemeGroup(items = listOf({
-                StyleOneInfoItem(title = stringResource(R.string.status_combo_style_one_group_track))
+                StatusThemeChildItem { StyleOneInfoItem(title = stringResource(R.string.status_combo_style_one_group_track)) }
             }, {
                 styleOneSlider(stringResource(R.string.status_combo_style_one_track_alpha),
                     stringResource(R.string.status_combo_style_one_percent_summary, trackAlpha), trackAlpha.toFloat(), 0f..100f,
@@ -442,6 +500,11 @@ fun StatusComboStyleOneCategoryControls(
             // Keep the entire state-colour section together like HyperDuo:
             // toggle, thresholds, three role rows and reset live in one card.
             val colorItems = mutableListOf<@Composable () -> Unit>()
+            colorItems += {
+                StatusThemeChildItem {
+                    StyleOneInfoItem(title = stringResource(R.string.status_combo_style_one_group_colors))
+                }
+            }
             colorItems += {
                 SwitchItem(
                     icon = null,
@@ -493,8 +556,9 @@ fun StatusComboStyleOneCategoryControls(
                     )
                 }
                 colorItems += {
-                    StyleOneInfoItem(
-                        title = stringResource(R.string.status_combo_style_one_reset_colors),
+                    StatusThemeChildItem {
+                        StyleOneInfoItem(
+                            title = stringResource(R.string.status_combo_style_one_reset_colors),
                         summary = stringResource(R.string.status_combo_style_one_reset_colors_summary),
                         modifier = Modifier
                             .alpha(if (runtime.roleColors) 1f else 0.45f)
@@ -502,7 +566,8 @@ fun StatusComboStyleOneCategoryControls(
                         trailingContent = {
                             Text("›", style = Material3Theme.typography.titleLarge)
                         },
-                    )
+                        )
+                    }
                 }
             StatusThemeGroup(items = colorItems)
 
@@ -625,48 +690,6 @@ private fun StyleOneRoleColorRow(
                 }
             }
             Text("›", style = Material3Theme.typography.titleLarge)
-        }
-    }
-}
-
-@Composable
-private fun StyleOneTabButton(
-    label: String,
-    selected: Boolean,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit,
-) {
-    when (LocalUiMode.current) {
-        UiMode.Material -> MaterialButton(
-            onClick = onClick,
-            modifier = modifier,
-            shape = RoundedCornerShape(12.dp),
-            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
-            colors = MaterialButtonDefaults.buttonColors(
-                containerColor = if (selected) Material3Theme.colorScheme.primaryContainer
-                    else Material3Theme.colorScheme.surfaceContainerHigh,
-                contentColor = if (selected) Material3Theme.colorScheme.onPrimaryContainer
-                    else Material3Theme.colorScheme.onSurfaceVariant,
-            ),
-        ) {
-            Text(text = label, style = Material3Theme.typography.labelLarge)
-        }
-        UiMode.Miuix -> MiuixButton(
-            onClick = onClick,
-            modifier = modifier,
-            colors = if (selected) {
-                MiuixButtonDefaults.buttonColors(
-                    color = MiuixTheme.colorScheme.primary,
-                    contentColor = MiuixTheme.colorScheme.onPrimary,
-                )
-            } else {
-                MiuixButtonDefaults.buttonColors(
-                    color = MiuixTheme.colorScheme.surfaceContainerHigh,
-                    contentColor = MiuixTheme.colorScheme.onSurfaceContainerHigh,
-                )
-            },
-        ) {
-            MiuixText(text = label)
         }
     }
 }
@@ -841,30 +864,32 @@ private fun styleOneSlider(
 ) {
     val view = LocalView.current
     var lastStep by remember(title, range.start, range.endInclusive) { mutableFloatStateOf(value) }
-    Column {
-        StyleOneInfoItem(
-            title = title,
-            summary = summary,
-            modifier = Modifier.alpha(if (enabled) 1f else 0.45f),
-        )
-        StatusThemeChildItem {
+    StatusThemeChildItem {
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp).alpha(if (enabled) 1f else 0.45f),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                when (LocalUiMode.current) {
+                    UiMode.Material -> {
+                        Text(text = title, style = Material3Theme.typography.titleSmall)
+                        Text(text = summary, style = Material3Theme.typography.bodySmall, color = Material3Theme.colorScheme.onSurfaceVariant)
+                    }
+                    UiMode.Miuix -> {
+                        MiuixText(text = title, color = MiuixTheme.colorScheme.onSurface)
+                        MiuixText(text = summary, color = MiuixTheme.colorScheme.onSurfaceVariantSummary)
+                    }
+                }
+            }
             OneuiXSlider(
                 value = value,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp)
-                    .alpha(if (enabled) 1f else 0.45f),
-                valueRange = range,
-                steps = 0,
+                modifier = Modifier.fillMaxWidth().alpha(if (enabled) 1f else 0.45f),
+                valueRange = range, steps = 0,
                 onValueChange = { raw ->
                     if (enabled) {
                         val bounded = raw.coerceIn(range.start, range.endInclusive)
-                        val next = (((bounded - range.start) / stepSize).roundToInt() * stepSize + range.start)
-                            .coerceIn(range.start, range.endInclusive)
-                        if (next != lastStep) {
-                            lastStep = next
-                            view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
-                        }
+                        val next = (((bounded - range.start) / stepSize).roundToInt() * stepSize + range.start).coerceIn(range.start, range.endInclusive)
+                        if (next != lastStep) { lastStep = next; view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK) }
                         onValueChange(next)
                     }
                 },

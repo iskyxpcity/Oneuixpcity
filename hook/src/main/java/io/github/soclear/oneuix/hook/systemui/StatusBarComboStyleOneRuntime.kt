@@ -254,7 +254,7 @@ object StatusBarComboStyleOneRuntime {
             val cutout = StatusBarComboStyleOneRuntime.cutoutBounds(root)
             if (cutout != null) {
                 val centreRatio = if (StatusComboStyleOneGlyphRenderer.usesWideLayout(cfg)) 204f / 260f else 59.5f / 120f
-                lp.x = (cutout.centerX() - lp.width * centreRatio).roundToInt().coerceAtLeast(0)
+                lp.x = (cutout.centerX() - lp.width * centreRatio + StatusBarComboStyleOneRuntime.dpExact(app, cfg.glyphOffsetXDp + cfg.glyphLeftMarginDp - cfg.glyphRightMarginDp)).roundToInt().coerceAtLeast(0)
                 val rootPos = IntArray(2)
                 root.getLocationOnScreen(rootPos)
                 // Use the initial row centre rather than its animated height.
@@ -262,12 +262,12 @@ object StatusBarComboStyleOneRuntime {
                 val centreOffset = host?.overlayCenterOffsetPx ?: (root.height / 2).also {
                     if (host != null) host.overlayCenterOffsetPx = it
                 }
-                lp.y = (rootPos[1] + centreOffset - lp.height / 2).coerceAtLeast(0)
+                lp.y = (rootPos[1] + centreOffset - lp.height / 2 + StatusBarComboStyleOneRuntime.dpExact(app, cfg.glyphOffsetYDp)).coerceAtLeast(0)
             } else {
                 val pos = IntArray(2)
                 anchor.getLocationOnScreen(pos)
-                lp.x = (pos[0] + anchor.width - lp.width).coerceAtLeast(0)
-                lp.y = (pos[1] + (anchor.height - lp.height) / 2).coerceAtLeast(0)
+                lp.x = (pos[0] + anchor.width - lp.width + StatusBarComboStyleOneRuntime.dpExact(app, cfg.glyphOffsetXDp)).coerceAtLeast(0)
+                lp.y = (pos[1] + (anchor.height - lp.height) / 2 + StatusBarComboStyleOneRuntime.dpExact(app, cfg.glyphOffsetYDp)).coerceAtLeast(0)
             }
             // updateViewLayout invalidates/remeasures the overlay when its bounds
             // actually changed. Do not force an extra draw for every status-bar
@@ -565,11 +565,22 @@ object StatusBarComboStyleOneRuntime {
                     val width = dp(glyph.context, StatusComboStyleOneGlyphRenderer.glyphWidthDp(config))
                     val height = dp(glyph.context, StatusComboStyleOneGlyphRenderer.glyphHeightDp(config))
                     val lp = glyph.layoutParams
-                    if (lp != null && (lp.width != width || lp.height != height)) {
-                        lp.width = width
-                        lp.height = height
-                        glyph.layoutParams = lp
+                    if (lp != null) {
+                        val margins = lp as? ViewGroup.MarginLayoutParams
+                        val left = dpExact(glyph.context, config.glyphLeftMarginDp)
+                        val right = dpExact(glyph.context, config.glyphRightMarginDp)
+                        val changed = lp.width != width || lp.height != height || margins?.let {
+                            it.leftMargin != left || it.rightMargin != right || it.topMargin != 0 || it.bottomMargin != 0
+                        } == true
+                        if (changed) {
+                            lp.width = width
+                            lp.height = height
+                            margins?.setMargins(left, 0, right, 0)
+                            glyph.layoutParams = lp
+                        }
                     }
+                    glyph.translationX = dpExact(glyph.context, config.glyphOffsetXDp).toFloat()
+                    glyph.translationY = dpExact(glyph.context, config.glyphOffsetYDp).toFloat()
                     glyph.invalidate()
                 }
                 host.overlay?.let { overlay ->
@@ -785,6 +796,9 @@ object StatusBarComboStyleOneRuntime {
             is ViewGroup.MarginLayoutParams -> ViewGroup.MarginLayoutParams(old).apply { this.width = width; this.height = height }
             else -> ViewGroup.LayoutParams(width, height)
         }
+        (lp as? ViewGroup.MarginLayoutParams)?.setMargins(dpExact(parent.context, config.glyphLeftMarginDp), 0, dpExact(parent.context, config.glyphRightMarginDp), 0)
+        glyph.translationX = dpExact(parent.context, config.glyphOffsetXDp).toFloat()
+        glyph.translationY = dpExact(parent.context, config.glyphOffsetYDp).toFloat()
         runCatching { parent.addView(glyph, parent.indexOfChild(anchor).coerceAtLeast(0), lp); host.inline = glyph }
             .onFailure { Log.w(TAG, "Cannot add inline glyph", it) }
     }
@@ -1009,20 +1023,20 @@ object StatusBarComboStyleOneRuntime {
         val lp = view.layoutParams ?: return
         val margins = lp as? ViewGroup.MarginLayoutParams
         val width = dp(view.context, widthDp)
-        val changed = lp.width != width ||
-            margins?.let { it.leftMargin != 0 || it.topMargin != 0 || it.rightMargin != 0 || it.bottomMargin != 0 } == true
+        val left = dpExact(view.context, config.glyphLeftMarginDp)
+        val right = dpExact(view.context, config.glyphRightMarginDp)
+        val changed = lp.width != width || margins?.let {
+            it.leftMargin != left || it.topMargin != 0 || it.rightMargin != right || it.bottomMargin != 0
+        } == true
         if (changed) {
             lp.width = width
-            margins?.setMargins(0, 0, 0, 0)
+            margins?.setMargins(left, 0, right, 0)
             view.layoutParams = lp
         }
-        // Alpha hides the stock meter while preserving the slot's measured size;
-        // INVISIBLE/GONE on every shade transition triggers an unnecessary layout.
         val originalVisibility = host.original[view] ?: View.VISIBLE
         if (view.visibility != originalVisibility) view.visibility = originalVisibility
         if (view.alpha != 0f) view.alpha = 0f
     }
-
     private fun restoreHostView(host: Host, view: View) {
         host.layouts.remove(view)?.let { runCatching { restoreLayout(view, it) } }
         host.original.remove(view)?.let { old -> runCatching { view.visibility = old } }
@@ -1677,7 +1691,13 @@ object StatusBarComboStyleOneRuntime {
                             if (requiresHostRefresh(previous, next)) {
                                 refreshHosts()
                             } else {
-                                if (previous.glyphScalePercent != next.glyphScalePercent) resizeGlyphs()
+                                if (
+                                    previous.glyphScalePercent != next.glyphScalePercent ||
+                                    previous.glyphOffsetXDp != next.glyphOffsetXDp ||
+                                    previous.glyphOffsetYDp != next.glyphOffsetYDp ||
+                                    previous.glyphLeftMarginDp != next.glyphLeftMarginDp ||
+                                    previous.glyphRightMarginDp != next.glyphRightMarginDp
+                                ) resizeGlyphs()
                                 invalidateGlyphs()
                             }
                         }.onFailure { Log.w(TAG, "Bad Style One settings broadcast", it) }
@@ -2052,6 +2072,10 @@ object StatusBarComboStyleOneRuntime {
         // The upstream critical cutoff is a constant, not a user setting.
         criticalThreshold = 20,
         glyphScalePercent = v.glyphScalePercent.coerceIn(70, 150),
+        glyphOffsetXDp = v.glyphOffsetXDp.coerceIn(-16, 16),
+        glyphOffsetYDp = v.glyphOffsetYDp.coerceIn(-16, 16),
+        glyphLeftMarginDp = v.glyphLeftMarginDp.coerceIn(0, 16),
+        glyphRightMarginDp = v.glyphRightMarginDp.coerceIn(0, 16),
         chargingBoltSizePercent = v.chargingBoltSizePercent.coerceIn(50, 180),
         chargingBoltXDp = v.chargingBoltXDp.coerceIn(-8, 8),
         chargingBoltYDp = v.chargingBoltYDp.coerceIn(-8, 8),
@@ -2070,4 +2094,7 @@ object StatusBarComboStyleOneRuntime {
     }
     private fun dp(context: Context, value: Int): Int =
         (value * context.resources.displayMetrics.density + 0.5f).toInt().coerceAtLeast(1)
+
+    private fun dpExact(context: Context, value: Int): Int =
+        (value * context.resources.displayMetrics.density).roundToInt()
 }

@@ -47,6 +47,10 @@
     <string name="status_combo_style_one_data_sim_only">只显示默认数据 SIM</string>
     <string name="status_combo_style_one_data_sim_only_summary">使用当前被选为移动数据卡的 SIM 信号强度。</string>
     <string name="status_combo_style_one_glyph_scale">图标整体大小</string>
+    <string name="status_combo_style_one_glyph_offset_x">整体水平偏移</string>
+    <string name="status_combo_style_one_glyph_offset_y">整体垂直偏移</string>
+    <string name="status_combo_style_one_glyph_left_margin">图标左间距</string>
+    <string name="status_combo_style_one_glyph_right_margin">图标右间距</string>
     <string name="status_combo_style_one_bolt_size">充电闪电大小</string>
     <string name="status_combo_style_one_bolt_x">充电闪电水平偏移</string>
     <string name="status_combo_style_one_bolt_y">充电闪电垂直偏移</string>
@@ -93,6 +97,9 @@
     <string name="status_combo_style_one_color_apply">应用</string>
     <string name="status_combo_style_one_color_cancel">取消</string>
     <string name="status_combo_style_one_group_appearance">外观</string>
+    <string name="status_combo_style_one_group_position">整体位置与间距</string>
+    <string name="status_combo_style_one_group_charging">充电闪电</string>
+    <string name="status_combo_style_one_group_colors">状态颜色</string>
     <string name="status_combo_style_one_group_advanced">高级</string>
     <string name="status_combo_style_one_group_stroke">线条</string>
     <string name="status_combo_style_one_group_text">电量数字</string>

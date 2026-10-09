@@ -47,6 +47,10 @@
     <string name="status_combo_style_one_data_sim_only">Show only the default data SIM</string>
     <string name="status_combo_style_one_data_sim_only_summary">Use the signal level from the SIM currently selected for mobile data.</string>
     <string name="status_combo_style_one_glyph_scale">Overall icon size</string>
+    <string name="status_combo_style_one_glyph_offset_x">Overall horizontal offset</string>
+    <string name="status_combo_style_one_glyph_offset_y">Overall vertical offset</string>
+    <string name="status_combo_style_one_glyph_left_margin">Icon left margin</string>
+    <string name="status_combo_style_one_glyph_right_margin">Icon right margin</string>
     <string name="status_combo_style_one_bolt_size">Charging bolt size</string>
     <string name="status_combo_style_one_bolt_x">Charging bolt horizontal offset</string>
     <string name="status_combo_style_one_bolt_y">Charging bolt vertical offset</string>
@@ -94,6 +98,9 @@
     <string name="status_combo_style_one_color_apply">Apply</string>
     <string name="status_combo_style_one_color_cancel">Cancel</string>
     <string name="status_combo_style_one_group_appearance">Appearance</string>
+    <string name="status_combo_style_one_group_position">Overall position and spacing</string>
+    <string name="status_combo_style_one_group_charging">Charging bolt</string>
+    <string name="status_combo_style_one_group_colors">Status colors</string>
     <string name="status_combo_style_one_group_advanced">Advanced</string>
     <string name="status_combo_style_one_group_stroke">Stroke</string>
     <string name="status_combo_style_one_group_text">Text</string>
