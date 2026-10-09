@@ -79,10 +79,17 @@ object StatusBarComboStyleOneRuntime {
     private val nativeChildSnapshots = Collections.synchronizedMap(WeakHashMap<View, LayoutSnapshot>())
     private val knownIconSlots = Collections.synchronizedMap(WeakHashMap<View, String>())
     private val rowTintSnapshots = Collections.synchronizedMap(WeakHashMap<ViewGroup, Int>())
+    // Prefer the exact foreground tint applied to the native battery meter; the
+    // generic status-icon tint remains a fallback for non-MIUI implementations.
+    private val batteryTintSnapshots = Collections.synchronizedMap(WeakHashMap<View, Int>())
     private val lastContainerFingerprints = Collections.synchronizedMap(WeakHashMap<ViewGroup, Int>())
     private val scheduledContainerPasses = Collections.synchronizedSet(
         Collections.newSetFromMap(WeakHashMap<ViewGroup, Boolean>())
     )
+    private val scheduledBatteryChildPasses = Collections.synchronizedSet(
+        Collections.newSetFromMap(WeakHashMap<ViewGroup, Boolean>())
+    )
+    private val glyphInvalidationPending = AtomicBoolean(false)
 
     private data class LayoutSnapshot(
         val width: Int, val height: Int,
@@ -100,8 +107,15 @@ object StatusBarComboStyleOneRuntime {
         var applying = false
         var retired = false
         var rowTint: Int? = null
+        // Cache the centre of the status-bar row at first attachment. The row's
+        // height animates while the shade opens; recentering the overlay on every
+        // layout frame causes repeated WindowManager relayouts and panel jank.
+        var overlayCenterOffsetPx: Int? = null
         val delayedApply = Runnable {
             if (!retired && !applying) StatusBarComboStyleOneRuntime.apply(this)
+        }
+        val delayedOverlayUpdate = Runnable {
+            if (!retired) overlay?.let { win -> battery?.let { anchor -> win.update(anchor, root) } }
         }
     }
 
@@ -197,14 +211,23 @@ object StatusBarComboStyleOneRuntime {
                 lp.x = (cutout.centerX() - lp.width * centreRatio).roundToInt().coerceAtLeast(0)
                 val rootPos = IntArray(2)
                 root.getLocationOnScreen(rootPos)
-                lp.y = (rootPos[1] + (root.height - lp.height) / 2).coerceAtLeast(0)
+                val centreOffset = root.javaClass.let {
+                    // Use the initial row centre rather than its animated height.
+                    val host = StatusBarComboStyleOneRuntime.hosts[root]
+                    host?.overlayCenterOffsetPx ?: (root.height / 2).also {
+                        if (host != null) host.overlayCenterOffsetPx = it
+                    }
+                }
+                lp.y = (rootPos[1] + centreOffset - lp.height / 2).coerceAtLeast(0)
             } else {
                 val pos = IntArray(2)
                 anchor.getLocationOnScreen(pos)
                 lp.x = (pos[0] + anchor.width - lp.width).coerceAtLeast(0)
                 lp.y = (pos[1] + (anchor.height - lp.height) / 2).coerceAtLeast(0)
             }
-            glyph.invalidate()
+            // updateViewLayout invalidates/remeasures the overlay when its bounds
+            // actually changed. Do not force an extra draw for every status-bar
+            // layout callback during shade expansion.
             if (oldX != lp.x || oldY != lp.y || oldWidth != lp.width || oldHeight != lp.height) {
                 runCatching { wm.updateViewLayout(glyph, lp) }
             }
@@ -270,6 +293,7 @@ object StatusBarComboStyleOneRuntime {
         }
         hookIconManager(module, param.classLoader)
         hookBatteryMeters(module, param.classLoader)
+        hookBatteryTint(module, param.classLoader)
         hookIconTint(module, param.classLoader)
         if (!hookedHost) Log.w(TAG, "No status-bar host constructor was hooked")
     }
@@ -333,8 +357,13 @@ object StatusBarComboStyleOneRuntime {
         }
         if (host.battery == null) {
             root.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
-                host.overlay?.let { win -> host.battery?.let { battery -> win.update(battery, host.root) } }
-                // SystemUI changes the row height while the shade is animating.
+                // Defer overlay geometry reads until the expansion/collapse layout
+                // burst has settled. The glyph position itself is pinned to the
+                // initial row centre, so an animation frame must not move its window.
+                if (host.overlay != null && host.battery != null) {
+                    main.removeCallbacks(host.delayedOverlayUpdate)
+                    main.postDelayed(host.delayedOverlayUpdate, 140L)
+                }
                 // Debounce full tree scans until that layout burst settles.
                 if (!host.applying) {
                     main.removeCallbacks(host.delayedApply)
@@ -371,7 +400,9 @@ object StatusBarComboStyleOneRuntime {
 
     /** Refresh just the glyph drawing when telemetry changes; avoid a status-bar relayout. */
     private fun invalidateGlyphs() {
+        if (!glyphInvalidationPending.compareAndSet(false, true)) return
         main.post {
+            glyphInvalidationPending.set(false)
             synchronized(hosts) { hosts.values.toList() }.forEach { host ->
                 host.inline?.invalidate()
                 host.overlay?.invalidate()
@@ -408,6 +439,15 @@ object StatusBarComboStyleOneRuntime {
                 restoreNativeBatteryViews(previousBattery)
             }
             host.battery = battery
+            // BatteryMeterView receives the tint intended for the battery glyph.
+            // Prefer it over the last colour sent to another status icon.
+            val meterTint = batteryTintSnapshots[battery]
+            val rowTint = meterTint ?: rowTintSnapshots[root]
+            if (rowTint != null && host.rowTint != rowTint) {
+                host.rowTint = rowTint
+                host.inline?.setTintOverride(rowTint)
+                host.overlay?.setTintOverride(rowTint)
+            }
             val foldMobile = isMobileNativeSuppressed()
 
             views.forEach { view ->
@@ -607,16 +647,19 @@ object StatusBarComboStyleOneRuntime {
     }
 
     private fun scheduleContainerSuppression(container: ViewGroup) {
-        val fingerprint = containerSuppressionFingerprint(container)
-        synchronized(lastContainerFingerprints) {
-            if (lastContainerFingerprints[container] == fingerprint) return
-        }
+        // Mark the pass before fingerprinting. onLayout may run repeatedly during
+        // shade expansion; all callbacks in the same frame should share one scan.
         synchronized(scheduledContainerPasses) {
             if (!scheduledContainerPasses.add(container)) return
         }
         container.post {
             try {
-                if (hostFor(container) != null) suppressInContainer(container)
+                if (hostFor(container) == null) return@post
+                val fingerprint = containerSuppressionFingerprint(container)
+                synchronized(lastContainerFingerprints) {
+                    if (lastContainerFingerprints[container] == fingerprint) return@post
+                }
+                suppressInContainer(container)
             } finally {
                 scheduledContainerPasses.remove(container)
             }
@@ -748,22 +791,72 @@ object StatusBarComboStyleOneRuntime {
                 val callback = io.github.libxposed.api.XposedInterface.Hooker { chain ->
                     val result = chain.proceed()
                     val meter = chain.thisObject as? ViewGroup
-                    if (meter != null) meter.post {
-                        if (config.enabled && hostFor(meter) != null) collapseNativeBatteryChildren(meter)
-                        else if (!config.enabled) restoreNativeBatteryViews(meter)
-                    }
+                    if (meter != null) scheduleBatteryChildCollapse(meter)
                     result
                 }
                 cls.declaredConstructors.forEach { module.hook(it).intercept(callback) }
+                // Avoid onMeasure/onLayout: both are hot paths during notification
+                // shade expansion. Child suppression is handled on inflation and
+                // on the meter's actual battery/percent update methods instead.
                 cls.declaredMethods.filter {
                     it.name in setOf(
                         "onFinishInflate", "onAttachedToWindow", "onBatteryLevelChanged",
                         "updateChargeAndText", "updatePercentText", "updateShowPercent",
-                        "scaleBatteryMeterViewsLegacy", "onMeasure", "onLayout",
+                        "scaleBatteryMeterViewsLegacy",
                     )
                 }.forEach { module.hook(it).intercept(callback) }
             }.onFailure { diagnostic("Battery meter hook unavailable: $className: $it") }
         }
+    }
+
+    private fun scheduleBatteryChildCollapse(meter: ViewGroup) {
+        if (!config.enabled || hostFor(meter) == null) return
+        synchronized(scheduledBatteryChildPasses) {
+            if (!scheduledBatteryChildPasses.add(meter)) return
+        }
+        meter.post {
+            try {
+                if (config.enabled && hostFor(meter) != null) collapseNativeBatteryChildren(meter)
+            } finally {
+                scheduledBatteryChildPasses.remove(meter)
+            }
+        }
+    }
+
+    /**
+     * MIUI's battery meter is the most accurate source for the colour actually
+     * used to paint the native battery icon. Capture the resolved tint per meter,
+     * rather than deriving it from the clock or whichever icon tinted last.
+     */
+    private fun hookBatteryTint(module: XposedModule, classLoader: ClassLoader) {
+        runCatching {
+            val cls = classLoader.loadClass(MIUI_BATTERY_METER)
+            cls.declaredMethods.filter {
+                it.name == "updateLightDarkTint" && it.parameterTypes.size >= 6
+            }.forEach { method ->
+                module.hook(method).intercept { chain ->
+                    val result = chain.proceed()
+                    val meter = chain.thisObject as? View
+                    if (meter != null) {
+                        val intensity = runCatching { chain.getArg(1) as? Float }.getOrNull() ?: 0f
+                        val tintColor = runCatching { chain.getArg(2) as? Int }.getOrNull() ?: 0
+                        val lightColor = runCatching { chain.getArg(3) as? Int }.getOrNull() ?: 0
+                        val darkColor = runCatching { chain.getArg(4) as? Int }.getOrNull() ?: 0
+                        val useTint = runCatching { chain.getArg(5) as? Boolean }.getOrNull() ?: false
+                        val resolved = (if (useTint) tintColor else if (intensity > 0f) darkColor else lightColor)
+                            .takeIf { it != Color.TRANSPARENT } ?: Color.WHITE
+                        batteryTintSnapshots[meter] = resolved
+                        val host = hostFor(meter)
+                        if (host != null && host.rowTint != resolved) {
+                            host.rowTint = resolved
+                            host.inline?.setTintOverride(resolved)
+                            host.overlay?.setTintOverride(resolved)
+                        }
+                    }
+                    result
+                }
+            }
+        }.onFailure { diagnostic("Battery meter tint hook unavailable: $it") }
     }
 
     private fun statusBarRootOf(view: View): ViewGroup? {
@@ -808,9 +901,16 @@ object StatusBarComboStyleOneRuntime {
                         if (resolvedColor != null && row != null) {
                             rowTintSnapshots[row] = resolvedColor
                             val host = synchronized(hosts) { hosts[row] }
-                            if (host != null && host.rowTint != resolvedColor) {
+                            // A battery-meter tint hook is more specific. Keep the
+                            // generic icon tint as fallback only when that source is
+                            // not available on this SystemUI build.
+                            if (host != null && host.battery?.let { batteryTintSnapshots[it] } == null &&
+                                host.rowTint != resolvedColor
+                            ) {
                                 val applyTint = Runnable {
-                                    if (host.rowTint != resolvedColor) {
+                                    if (host.battery?.let { batteryTintSnapshots[it] } == null &&
+                                        host.rowTint != resolvedColor
+                                    ) {
                                         host.rowTint = resolvedColor
                                         host.inline?.setTintOverride(resolvedColor)
                                         host.overlay?.setTintOverride(resolvedColor)
