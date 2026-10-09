@@ -94,7 +94,6 @@ internal object StatusBarSignalIndependentRuntime {
         private var states: List<SignalState> = emptyList()
         private var current = Preference.SystemUI.StatusBarSignalRuntime()
         private var indicatorColor: Int = Color.WHITE
-    private val indicatorColorListeners = CopyOnWriteArrayList<(Int) -> Unit>()
 
         fun update(
             nextStates: List<SignalState>,
@@ -218,6 +217,8 @@ internal object StatusBarSignalIndependentRuntime {
 
     @Volatile
     private var indicatorColor: Int = Color.WHITE
+
+    private val indicatorColorListeners = CopyOnWriteArrayList<(Int) -> Unit>()
 
     private var subscriptionManager: SubscriptionManager? = null
     private var subscriptionListener: SubscriptionManager.OnSubscriptionsChangedListener? = null
