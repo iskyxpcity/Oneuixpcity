@@ -467,6 +467,8 @@ object StatusBarComboStyleOneRuntime {
                 restore(host)
                 if (!config.enabled) restoreNativeBatteryViews(root)
                 host.battery = null
+                host.tintRow = null
+                host.rowTint = null
                 return
             }
 
@@ -479,7 +481,13 @@ object StatusBarComboStyleOneRuntime {
                 restoreNativeBatteryViews(previousBattery)
             }
             host.battery = battery
-            host.tintRow = batteryTintContainerFor(battery) ?: root
+            val nextTintRow = batteryTintContainerFor(battery) ?: root
+            if (host.tintRow !== nextTintRow) {
+                host.tintRow = nextTintRow
+                // A replacement battery/container must not inherit the previous
+                // row's last foreground while its own tint is being initialized.
+                host.rowTint = null
+            }
             readNativeBatteryTint(battery)?.let { batteryTintSnapshots[battery] = it }
             val meterTint = batteryTintSnapshots[battery] ?: views.firstNotNullOfOrNull { candidate ->
                 val isBatteryTintOwner = candidate === battery ||
