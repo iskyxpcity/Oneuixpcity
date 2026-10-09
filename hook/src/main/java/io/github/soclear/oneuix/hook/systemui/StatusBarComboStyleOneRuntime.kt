@@ -62,9 +62,11 @@ internal object StatusBarComboStyleOneRuntime {
 
     private data class SignalState(
         val subscriptionId: Int,
+        val slotIndex: Int = -1,
         val level: Int = 0,
         val inService: Boolean = false,
         val is5g: Boolean = false,
+        val networkType: String = "",
     )
 
     private data class HiddenState(
@@ -76,7 +78,10 @@ internal object StatusBarComboStyleOneRuntime {
         val enabled: Boolean,
         val showWifi: Boolean,
         val showMobile: Boolean,
-        val placementMode: Int,
+        val showBattery: Boolean,
+        val signalMode: Int,
+        val stackedSignal: Boolean,
+        val mobileTypeMode: Int,
     )
 
     private data class Metrics(
@@ -124,252 +129,39 @@ internal object StatusBarComboStyleOneRuntime {
             if (!runtime.enabled) return
 
             val metrics = calculateMetrics(context, runtime)
-            val density = resources.displayMetrics.density
-            val side = metrics.side
-            val ringRadius = side * 0.37f
-            val ringCenterX = metrics.ringCenterX
-            val centerY = height / 2f
-            val stroke = runtime.ringStrokeDp.coerceIn(1f, 4f) * density *
-                (runtime.sizePercent.coerceIn(60f, 180f) / 100f)
-
-            val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                color = tint
-                style = Paint.Style.FILL
-                textSize = runtime.batteryTextSizeSp.coerceIn(5f, 14f) *
-                    resources.displayMetrics.scaledDensity
-                typeface = Typeface.create(
-                    Typeface.create("sans-serif", Typeface.NORMAL),
-                    runtime.batteryTextFontWeight.coerceIn(100, 900),
-                    false,
-                )
+            val extra = (metrics.width - metrics.side.roundToInt()).coerceAtLeast(0)
+            val save = canvas.save()
+            // Keep the ring centred in the native battery slot while out-of-ring
+            // signal/type content extends toward the outside of the status bar.
+            if (extra > 0 && (runtime.signalMode == 1 || runtime.mobileTypeMode == 2)) {
+                canvas.translate(-extra / 2f, 0f)
             }
-            val percentText = StatusBarComboStyleOneRuntime.batteryLevel.coerceIn(0, 100).toString()
-            val textWidth = if (runtime.showBatteryPercent) textPaint.measureText(percentText) else 0f
-            val boltActive = runtime.showChargingBolt && StatusBarComboStyleOneRuntime.charging
-            val boltNotchWidth = if (boltActive) 5.5f * density *
-                (runtime.chargingBoltSizePercent.coerceIn(50f, 180f) / 100f) else 0f
-            val notchWidth = max(
-                if (runtime.showBatteryPercent) textWidth + 2.5f * density else 0f,
-                boltNotchWidth,
+            StatusBarComboStyleOneRenderer.draw(
+                canvas,
+                width,
+                height,
+                runtime,
+                StatusBarComboStyleOneRenderer.State(
+                    batteryLevel = StatusBarComboStyleOneRuntime.batteryLevel,
+                    charging = StatusBarComboStyleOneRuntime.charging,
+                    quickCharging = StatusBarComboStyleOneRuntime.quickCharging,
+                    powerSave = StatusBarComboStyleOneRuntime.powerSave,
+                    lowBattery = StatusBarComboStyleOneRuntime.batteryLevel in
+                        0..runtime.lowBatteryThreshold,
+                    wifiLevel = if (StatusBarComboStyleOneRuntime.wifiConnected) {
+                        StatusBarComboStyleOneRuntime.wifiLevel
+                    } else {
+                        0
+                    },
+                    mobileLevel = StatusBarComboStyleOneRuntime.currentSignalLevel(),
+                    slotLevels = StatusBarComboStyleOneRuntime.currentSlotLevels(),
+                    dataSlot = StatusBarComboStyleOneRuntime.dataSlotIndex(),
+                    networkType = StatusBarComboStyleOneRuntime.currentNetworkType(),
+                    foreground = tint,
+                ),
             )
-            val gapDegrees = if (notchWidth <= 0f) 0f else {
-                val ratio = (notchWidth / (2f * ringRadius)).coerceIn(0f, 0.94f)
-                Math.toDegrees((2f * asin(ratio)).toDouble()).toFloat().coerceIn(0f, 110f)
-            }
-            val bounds = RectF(
-                ringCenterX - ringRadius,
-                centerY - ringRadius,
-                ringCenterX + ringRadius,
-                centerY + ringRadius,
-            )
-
-            val trackPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                color = tint
-                alpha = runtime.trackAlpha.coerceIn(0, 180)
-                style = Paint.Style.STROKE
-                strokeWidth = stroke
-                strokeCap = Paint.Cap.ROUND
-            }
-            if (gapDegrees <= 0.01f) {
-                canvas.drawCircle(ringCenterX, centerY, ringRadius, trackPaint)
-            } else {
-                canvas.drawArc(
-                    bounds,
-                    -90f + gapDegrees / 2f,
-                    360f - gapDegrees,
-                    false,
-                    trackPaint,
-                )
-            }
-
-            val progressPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                color = tint
-                style = Paint.Style.STROKE
-                strokeWidth = stroke
-                strokeCap = Paint.Cap.ROUND
-            }
-            val sweep = (360f - gapDegrees) *
-                StatusBarComboStyleOneRuntime.batteryLevel.coerceIn(0, 100) / 100f
-            if (sweep > 0f) {
-                canvas.drawArc(
-                    bounds,
-                    -90f + gapDegrees / 2f,
-                    sweep,
-                    false,
-                    progressPaint,
-                )
-            }
-
-            if (runtime.showBatteryPercent) {
-                val fm = textPaint.fontMetrics
-                val baseline = centerY - (fm.ascent + fm.descent) / 2f + side * 0.08f
-                canvas.drawText(
-                    percentText,
-                    ringCenterX - textPaint.measureText(percentText) / 2f,
-                    baseline,
-                    textPaint,
-                )
-            }
-
-            if (boltActive) {
-                val boltScale = runtime.chargingBoltSizePercent.coerceIn(50f, 180f) / 100f
-                val bx = ringCenterX + runtime.chargingBoltXDp.coerceIn(-8f, 8f) * density
-                val by = centerY - ringRadius * 0.58f +
-                    runtime.chargingBoltYDp.coerceIn(-8f, 8f) * density
-                val boltW = side * 0.20f * boltScale
-                val boltH = side * 0.30f * boltScale
-                val path = Path().apply {
-                    moveTo(bx + boltW * 0.15f, by - boltH * 0.55f)
-                    lineTo(bx - boltW * 0.48f, by + boltH * 0.10f)
-                    lineTo(bx - boltW * 0.03f, by + boltH * 0.10f)
-                    lineTo(bx - boltW * 0.20f, by + boltH * 0.62f)
-                    lineTo(bx + boltW * 0.48f, by - boltH * 0.12f)
-                    lineTo(bx + boltW * 0.04f, by - boltH * 0.12f)
-                    close()
-                }
-                canvas.drawPath(path, Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                    color = tint
-                    style = Paint.Style.FILL
-                })
-            }
-
-            var segmentX = if (runtime.placementMode == 0) 0f else side
-            if (runtime.placementMode == 0) {
-                if (runtime.showWifi) {
-                    drawWifi(
-                        canvas, segmentX, centerY, metrics.wifiWidth, side, density, tint,
-                        StatusBarComboStyleOneRuntime.wifiConnected,
-                        StatusBarComboStyleOneRuntime.wifiLevel, runtime.trackAlpha,
-                    )
-                    segmentX += metrics.wifiWidth + metrics.gap
-                }
-                if (runtime.showMobile) {
-                    drawSignal(
-                        canvas, segmentX, centerY, metrics.signalWidth, side, density, tint,
-                        StatusBarComboStyleOneRuntime.currentSignalLevel(), runtime.dotsGapDp,
-                        runtime.dotsSizePercent, runtime.trackAlpha,
-                    )
-                    segmentX += metrics.signalWidth + metrics.gap
-                }
-                if (metrics.typeWidth > 0f && StatusBarComboStyleOneRuntime.network5g) {
-                    drawNetworkType(canvas, segmentX, centerY, metrics.typeWidth, side, tint, density)
-                }
-            } else {
-                if (metrics.typeWidth > 0f && StatusBarComboStyleOneRuntime.network5g) {
-                    drawNetworkType(canvas, segmentX, centerY, metrics.typeWidth, side, tint, density)
-                    segmentX += metrics.typeWidth + metrics.gap
-                }
-                if (runtime.showMobile) {
-                    drawSignal(
-                        canvas, segmentX, centerY, metrics.signalWidth, side, density, tint,
-                        StatusBarComboStyleOneRuntime.currentSignalLevel(), runtime.dotsGapDp,
-                        runtime.dotsSizePercent, runtime.trackAlpha,
-                    )
-                    segmentX += metrics.signalWidth + metrics.gap
-                }
-                if (runtime.showWifi) {
-                    drawWifi(
-                        canvas, segmentX, centerY, metrics.wifiWidth, side, density, tint,
-                        StatusBarComboStyleOneRuntime.wifiConnected,
-                        StatusBarComboStyleOneRuntime.wifiLevel, runtime.trackAlpha,
-                    )
-                }
-            }
+            canvas.restoreToCount(save)
         }
-
-        private fun drawWifi(
-            canvas: Canvas,
-            left: Float,
-            centerY: Float,
-            width: Float,
-            side: Float,
-            density: Float,
-            tint: Int,
-            connected: Boolean,
-            level: Int,
-            trackAlpha: Int,
-        ) {
-            if (width <= 0f) return
-            val scale = side / (24f * density)
-            val cx = left + width / 2f
-            val cy = centerY + side * 0.04f
-            val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                color = tint
-                style = Paint.Style.STROKE
-                strokeWidth = 1.35f * density * scale
-                strokeCap = Paint.Cap.ROUND
-            }
-            val radii = floatArrayOf(0.21f, 0.32f, 0.43f)
-            radii.forEachIndexed { index, factor ->
-                paint.alpha = if (connected && index < level.coerceIn(0, 4)) {
-                    255
-                } else {
-                    trackAlpha.coerceIn(0, 180)
-                }
-                val radius = side * factor
-                canvas.drawArc(
-                    RectF(cx - radius, cy - radius, cx + radius, cy + radius),
-                    225f,
-                    90f,
-                    false,
-                    paint,
-                )
-            }
-            paint.style = Paint.Style.FILL
-            paint.alpha = if (connected && level > 0) 255 else trackAlpha.coerceIn(0, 180)
-            canvas.drawCircle(cx, cy + side * 0.34f, max(1f, side * 0.045f), paint)
-        }
-
-        private fun drawSignal(
-            canvas: Canvas,
-            left: Float,
-            centerY: Float,
-            width: Float,
-            side: Float,
-            density: Float,
-            tint: Int,
-            level: Int,
-            gapDp: Float,
-            sizePercent: Float,
-            trackAlpha: Int,
-        ) {
-            if (width <= 0f) return
-            val scale = (sizePercent.coerceIn(50f, 180f) / 100f) * (side / (24f * density))
-            val radius = max(0.65f * density, 1.1f * density * scale)
-            val gap = gapDp.coerceIn(0f, 6f) * density
-            val total = radius * 2f * 4f + gap * 3f
-            var x = left + (width - total) / 2f + radius
-            val y = centerY + side * 0.14f
-            val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                color = tint
-                style = Paint.Style.FILL
-            }
-            for (index in 0..3) {
-                paint.alpha = if (index < level.coerceIn(0, 4)) 255 else trackAlpha.coerceIn(0, 180)
-                canvas.drawCircle(x, y, radius, paint)
-                x += radius * 2f + gap
-            }
-        }
-
-        private fun drawNetworkType(
-            canvas: Canvas,
-            left: Float,
-            centerY: Float,
-            width: Float,
-            side: Float,
-            tint: Int,
-            density: Float,
-        ) {
-            val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                color = tint
-                textSize = 6.5f * density * (side / (24f * density))
-                typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
-                textAlign = Paint.Align.CENTER
-            }
-            val fm = paint.fontMetrics
-            canvas.drawText("5G", left + width / 2f, centerY - (fm.ascent + fm.descent) / 2f, paint)
-        }
-    }
 
     private class OverlayWindow(private val holder: Holder) {
         private val host: ViewGroup = holder.statusBarView
@@ -435,33 +227,17 @@ internal object StatusBarComboStyleOneRuntime {
 
             val x: Int
             val y: Int
-            if (cfg.placementMode == 1) {
-                val cutout = runCatching {
-                    host.rootWindowInsets?.displayCutout?.boundingRects
-                        ?.filter { it.width() > 0 }
-                        ?.maxByOrNull { it.width() }
-                }.getOrNull()
-                val centerX = if (cutout != null) hostLocation[0] + cutout.centerX()
-                    else context.resources.displayMetrics.widthPixels / 2
-                val centerY = if (cutout != null) hostLocation[1] + cutout.centerY()
-                    else hostLocation[1] + host.height / 2
-                x = (centerX - metrics.ringCenterX +
-                    cfg.offsetXDp * context.resources.displayMetrics.density).roundToInt()
-                y = (centerY - metrics.height / 2f +
-                    cfg.offsetYDp * context.resources.displayMetrics.density).roundToInt()
-            } else {
-                val anchor = holder.batteryAnchor?.takeIf { it.isAttachedToWindow }
-                val anchorLocation = IntArray(2)
-                if (anchor != null) anchor.getLocationOnScreen(anchorLocation)
-                val centerX = if (anchor != null) anchorLocation[0] + anchor.width / 2f
-                    else hostLocation[0] + host.width - metrics.side / 2f
-                val centerY = if (anchor != null) anchorLocation[1] + anchor.height / 2f
-                    else hostLocation[1] + host.height / 2f
-                x = (centerX - metrics.ringCenterX +
-                    cfg.offsetXDp * context.resources.displayMetrics.density).roundToInt()
-                y = (centerY - metrics.height / 2f +
-                    cfg.offsetYDp * context.resources.displayMetrics.density).roundToInt()
-            }
+            val anchor = holder.batteryAnchor?.takeIf { it.isAttachedToWindow }
+            val anchorLocation = IntArray(2)
+            if (anchor != null) anchor.getLocationOnScreen(anchorLocation)
+            val centerX = if (anchor != null) anchorLocation[0] + anchor.width / 2f
+                else hostLocation[0] + host.width - metrics.side / 2f
+            val centerY = if (anchor != null) anchorLocation[1] + anchor.height / 2f
+                else hostLocation[1] + host.height / 2f
+            x = (centerX - metrics.width / 2f +
+                cfg.offsetXDp * context.resources.displayMetrics.density).roundToInt()
+            y = (centerY - metrics.height / 2f +
+                cfg.offsetYDp * context.resources.displayMetrics.density).roundToInt()
 
             val widthChanged = params.width != metrics.width || params.height != metrics.height
             val positionChanged = params.x != x || params.y != y
@@ -507,6 +283,10 @@ internal object StatusBarComboStyleOneRuntime {
         private set
     @Volatile var charging: Boolean = false
         private set
+    @Volatile var quickCharging: Boolean = false
+        private set
+    @Volatile var powerSave: Boolean = false
+        private set
     @Volatile var wifiConnected: Boolean = false
         private set
     @Volatile var wifiLevel: Int = 0
@@ -521,12 +301,14 @@ internal object StatusBarComboStyleOneRuntime {
     private var batteryReceiver: BroadcastReceiver? = null
     private var wifiReceiver: BroadcastReceiver? = null
     private var subscriptionManager: SubscriptionManager? = null
+    private var telephonyContext: Context? = null
     private var subscriptionListener: SubscriptionManager.OnSubscriptionsChangedListener? = null
 
     fun isEnabled(): Boolean = config.enabled && hasAttachedRenderer()
 
     fun isMobileNativeSuppressed(): Boolean =
-        config.enabled && config.showMobile && hasAttachedRenderer()
+        config.enabled && config.showMobile &&
+            (config.signalMode == 0 || config.stackedSignal) && hasAttachedRenderer()
 
     private fun hasAttachedRenderer(): Boolean = synchronized(holders) {
         holders.values.any { it.overlay?.isAttached() == true }
@@ -591,24 +373,25 @@ internal object StatusBarComboStyleOneRuntime {
         cfg: Preference.SystemUI.StatusBarComboStyleOneRuntime,
     ): Metrics {
         val density = context.resources.displayMetrics.density
-        val scale = cfg.sizePercent.coerceIn(60f, 180f) / 100f
-        val side = 24f * density * scale
-        val wifiWidth = if (cfg.showWifi) 11f * density * scale else 0f
-        val signalWidth = if (cfg.showMobile) 11f * density * scale else 0f
-        val typeWidth = if (cfg.showMobile && cfg.show5gNetworkType && network5g) {
-            9f * density * scale
-        } else 0f
-        var segments = 0
-        if (wifiWidth > 0f) segments++
-        if (signalWidth > 0f) segments++
-        if (typeWidth > 0f) segments++
-        val gap = if (segments > 1) 1.5f * density * scale else 0f
-        val width = (side + wifiWidth + signalWidth + typeWidth +
-            max(0, segments - 1) * gap).roundToInt().coerceAtLeast(1)
-        val ringCenterX = if (cfg.placementMode == 0) width - side / 2f else side / 2f
+        val scale = cfg.sizePercent.coerceIn(50f, 250f) / 100f
+        val side = (24f * density * scale).coerceIn(12f * density, 72f * density)
+        val extra = when {
+            cfg.signalMode == 1 && cfg.showMobile -> 34f * density
+            cfg.mobileTypeMode == 2 && cfg.showMobile && currentNetworkType().isNotEmpty() ->
+                24f * density
+            else -> 0f
+        }
+        val width = (side + extra).roundToInt().coerceAtLeast(1)
+        val height = side.roundToInt().coerceAtLeast(1)
         return Metrics(
-            width, side.roundToInt().coerceAtLeast(1), side, ringCenterX,
-            wifiWidth, signalWidth, typeWidth, gap,
+            width = width,
+            height = height,
+            side = side,
+            ringCenterX = width / 2f,
+            wifiWidth = 0f,
+            signalWidth = 0f,
+            typeWidth = extra,
+            gap = 0f,
         )
     }
 
@@ -666,7 +449,10 @@ internal object StatusBarComboStyleOneRuntime {
         }
         overlay.update(cfg)
 
-        val key = SuppressionKey(cfg.enabled, cfg.showWifi, cfg.showMobile, cfg.placementMode)
+        val key = SuppressionKey(
+            cfg.enabled, cfg.showWifi, cfg.showMobile, cfg.showBattery,
+            cfg.signalMode, cfg.stackedSignal, cfg.mobileTypeMode,
+        )
         if (holder.suppressionKey != key || (holder.batteryAnchor != null && holder.batteryAnchor?.isAttachedToWindow != true)) {
             restoreNative(holder)
             holder.batteryAnchor = findBatteryAnchor(holder.statusBarView)
@@ -681,14 +467,15 @@ internal object StatusBarComboStyleOneRuntime {
         val views = collectDescendants(statusBar)
         val anchor = holder.batteryAnchor
 
-        if (anchor != null) {
-            rememberAndSet(holder, anchor, if (cfg.placementMode == 0) View.INVISIBLE else View.GONE)
+        if (anchor != null && cfg.showBattery) {
+            // Preserve the native battery width as the replacement slot.
+            rememberAndSet(holder, anchor, View.INVISIBLE)
         }
 
         val candidates = views.filter { view ->
             view !== anchor && (
                 (cfg.showWifi && isNativeWifi(view)) ||
-                (cfg.showMobile && isNativeMobile(view))
+                (cfg.showMobile && (cfg.signalMode == 0 || cfg.stackedSignal) && isNativeMobile(view))
             )
         }
         val candidateSet = candidates.toSet()
@@ -855,22 +642,34 @@ internal object StatusBarComboStyleOneRuntime {
         val appContext = context.applicationContext ?: context
         val receiver = object : BroadcastReceiver() {
             override fun onReceive(receiverContext: Context?, intent: Intent?) {
-                if (intent?.action != Intent.ACTION_BATTERY_CHANGED) return
-                val level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, 0)
-                val scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, 100).coerceAtLeast(1)
-                batteryLevel = (level * 100 / scale).coerceIn(0, 100)
-                val status = intent.getIntExtra(
-                    BatteryManager.EXTRA_STATUS,
-                    BatteryManager.BATTERY_STATUS_UNKNOWN,
-                )
-                charging = status == BatteryManager.BATTERY_STATUS_CHARGING ||
-                    status == BatteryManager.BATTERY_STATUS_FULL
+                if (intent?.action == Intent.ACTION_BATTERY_CHANGED) {
+                    val level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, 0)
+                    val scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, 100).coerceAtLeast(1)
+                    batteryLevel = (level * 100 / scale).coerceIn(0, 100)
+                    val status = intent.getIntExtra(
+                        BatteryManager.EXTRA_STATUS,
+                        BatteryManager.BATTERY_STATUS_UNKNOWN,
+                    )
+                    charging = status == BatteryManager.BATTERY_STATUS_CHARGING ||
+                        status == BatteryManager.BATTERY_STATUS_FULL
+                } else if (intent?.action != "android.os.action.POWER_SAVE_MODE_CHANGED") {
+                    return
+                }
+                val powerManager = appContext.getSystemService(Context.POWER_SERVICE) as? android.os.PowerManager
+                powerSave = runCatching { powerManager?.isPowerSaveMode == true }.getOrDefault(false)
+                refreshNativeChargingFlags()
                 refreshGlyphs()
             }
         }
         batteryReceiver = receiver
         runCatching {
-            appContext.registerReceiver(receiver, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
+            appContext.registerReceiver(
+                receiver,
+                IntentFilter().apply {
+                    addAction(Intent.ACTION_BATTERY_CHANGED)
+                    addAction("android.os.action.POWER_SAVE_MODE_CHANGED")
+                },
+            )
         }
     }
 
@@ -916,6 +715,7 @@ internal object StatusBarComboStyleOneRuntime {
     private fun ensureTelephony(context: Context) {
         if (!telephonyStarted.compareAndSet(false, true)) return
         val appContext = context.applicationContext ?: context
+        telephonyContext = appContext
         subscriptionManager = appContext.getSystemService(SubscriptionManager::class.java)
         val listener = object : SubscriptionManager.OnSubscriptionsChangedListener() {
             override fun onSubscriptionsChanged() {
@@ -965,9 +765,10 @@ internal object StatusBarComboStyleOneRuntime {
 
         active.forEach { info ->
             synchronized(signalStates) {
-                if (!signalStates.containsKey(info.subscriptionId)) {
-                    signalStates[info.subscriptionId] = SignalState(info.subscriptionId)
-                }
+                val previous = signalStates[info.subscriptionId]
+                signalStates[info.subscriptionId] = (previous ?: SignalState(info.subscriptionId)).copy(
+                    slotIndex = info.simSlotIndex,
+                )
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 val alreadyRegistered = synchronized(callbacks) { callbacks.containsKey(info.subscriptionId) }
@@ -997,14 +798,23 @@ internal object StatusBarComboStyleOneRuntime {
         }
 
         override fun onServiceStateChanged(serviceState: ServiceState) {
-            updateSignal(subscriptionId, inService = serviceState.state == ServiceState.STATE_IN_SERVICE)
+            updateSignal(
+                subscriptionId,
+                inService = serviceState.state == ServiceState.STATE_IN_SERVICE,
+                networkType = baseNetworkType(subscriptionId),
+            )
         }
 
         override fun onDisplayInfoChanged(telephonyDisplayInfo: TelephonyDisplayInfo) {
-            val value = telephonyDisplayInfo.overrideNetworkType ==
-                TelephonyDisplayInfo.OVERRIDE_NETWORK_TYPE_NR_NSA ||
-                telephonyDisplayInfo.overrideNetworkType == TelephonyDisplayInfo.OVERRIDE_NETWORK_TYPE_NR_ADVANCED
-            updateSignal(subscriptionId, is5g = value)
+            val override = telephonyDisplayInfo.overrideNetworkType
+            val value = override == TelephonyDisplayInfo.OVERRIDE_NETWORK_TYPE_NR_NSA ||
+                override == TelephonyDisplayInfo.OVERRIDE_NETWORK_TYPE_NR_ADVANCED
+            val label = when (override) {
+                TelephonyDisplayInfo.OVERRIDE_NETWORK_TYPE_NR_ADVANCED -> "5GA"
+                TelephonyDisplayInfo.OVERRIDE_NETWORK_TYPE_NR_NSA -> "5G"
+                else -> baseNetworkType(subscriptionId)
+            }
+            updateSignal(subscriptionId, is5g = value, networkType = label)
         }
     }
 
@@ -1013,6 +823,7 @@ internal object StatusBarComboStyleOneRuntime {
         level: Int? = null,
         inService: Boolean? = null,
         is5g: Boolean? = null,
+        networkType: String? = null,
     ) {
         synchronized(signalStates) {
             val previous = signalStates[subscriptionId] ?: SignalState(subscriptionId)
@@ -1020,6 +831,7 @@ internal object StatusBarComboStyleOneRuntime {
                 level = level ?: previous.level,
                 inService = inService ?: previous.inService,
                 is5g = is5g ?: previous.is5g,
+                networkType = networkType ?: previous.networkType,
             )
         }
         updateDefaultDataSignal()
@@ -1039,6 +851,93 @@ internal object StatusBarComboStyleOneRuntime {
                 ?.takeIf { it.inService }
                 ?.level?.coerceIn(0, 4) ?: 0
         }
+    }
+
+    private fun currentSlotLevels(): IntArray {
+        val result = intArrayOf(-1, -1)
+        synchronized(signalStates) {
+            signalStates.values.forEach { state ->
+                if (state.slotIndex in 0..1 && state.inService) {
+                    result[state.slotIndex] = state.level.coerceIn(0, 4)
+                }
+            }
+        }
+        return result
+    }
+
+    private fun dataSlotIndex(): Int {
+        if (defaultDataSubscriptionId == SubscriptionManager.INVALID_SUBSCRIPTION_ID) return -1
+        val info = runCatching {
+            subscriptionManager?.activeSubscriptionInfoList
+                ?.firstOrNull { it.subscriptionId == defaultDataSubscriptionId }
+        }.getOrNull()
+        return info?.simSlotIndex ?: -1
+    }
+
+    private fun currentNetworkType(): String {
+        if (defaultDataSubscriptionId == SubscriptionManager.INVALID_SUBSCRIPTION_ID) return ""
+        return synchronized(signalStates) {
+            signalStates[defaultDataSubscriptionId]?.networkType?.takeIf { it.isNotBlank() }
+                ?: if (signalStates[defaultDataSubscriptionId]?.is5g == true) "5G" else ""
+        }
+    }
+
+    private fun baseNetworkType(subscriptionId: Int): String {
+        val manager = runCatching {
+            telephonyContext?.getSystemService(TelephonyManager::class.java)
+                ?.createForSubscriptionId(subscriptionId)
+        }.getOrNull() ?: return ""
+        return when (runCatching { manager.dataNetworkType }.getOrDefault(TelephonyManager.NETWORK_TYPE_UNKNOWN)) {
+            TelephonyManager.NETWORK_TYPE_NR -> "5G"
+            TelephonyManager.NETWORK_TYPE_LTE -> "4G"
+            TelephonyManager.NETWORK_TYPE_HSPAP,
+            TelephonyManager.NETWORK_TYPE_HSPA,
+            TelephonyManager.NETWORK_TYPE_HSDPA,
+            TelephonyManager.NETWORK_TYPE_HSUPA,
+            TelephonyManager.NETWORK_TYPE_UMTS,
+            TelephonyManager.NETWORK_TYPE_EHRPD,
+            TelephonyManager.NETWORK_TYPE_EVDO_0,
+            TelephonyManager.NETWORK_TYPE_EVDO_A,
+            TelephonyManager.NETWORK_TYPE_EVDO_B,
+            TelephonyManager.NETWORK_TYPE_1xRTT,
+            -> "3G"
+            TelephonyManager.NETWORK_TYPE_EDGE,
+            TelephonyManager.NETWORK_TYPE_GPRS,
+            TelephonyManager.NETWORK_TYPE_CDMA,
+            -> "2G"
+            else -> ""
+        }
+    }
+
+    private fun refreshNativeChargingFlags() {
+        val anchors = synchronized(holders) { holders.values.mapNotNull { it.batteryAnchor } }
+        val target = anchors.firstOrNull() ?: return
+        quickCharging = readBooleanField(
+            target,
+            "mQuickCharging",
+            "mFastCharging",
+            "mIsFastCharging",
+            "mQuickCharge",
+        ) ?: quickCharging
+    }
+
+    private fun readBooleanField(target: Any, vararg names: String): Boolean? {
+        var clazz: Class<*>? = target.javaClass
+        while (clazz != null && clazz != Any::class.java) {
+            for (name in names) {
+                val field = runCatching { clazz.getDeclaredField(name) }.getOrNull() ?: continue
+                val value = runCatching {
+                    field.isAccessible = true
+                    field.get(target)
+                }.getOrNull()
+                when (value) {
+                    is Boolean -> return value
+                    is Number -> return value.toInt() != 0
+                }
+            }
+            clazz = clazz.superclass
+        }
+        return null
     }
 
     private fun applyAll() {
