@@ -33,7 +33,7 @@
     <string name="status_combo_style_one_dual_sim">Dual-SIM signal</string>
     <string name="status_combo_style_one_dual_sim_summary">With no Wi-Fi and not charging, show SIM 1 and SIM 2 as two rows. If only one SIM is available, show the current data SIM.</string>
     <string name="status_combo_style_one_stacked_signal">Draw signal bars outside the icon</string>
-    <string name="status_combo_style_one_stacked_signal_summary">When the signal is outside the ring, draw four bars and a row of dots for the second SIM. Turn off to keep the system's native mobile icon.</string>
+    <string name="status_combo_style_one_stacked_signal_summary">When signal is outside the ring, draw four bars for one SIM and dots for the second. Turn off to restore the native mobile icon.</string>
     <string name="status_combo_style_one_data_sim_only">Show only the default data SIM</string>
     <string name="status_combo_style_one_data_sim_only_summary">Use the signal level from the SIM currently selected for mobile data.</string>
     <string name="status_combo_style_one_glyph_scale">Overall icon size</string>
@@ -53,7 +53,7 @@
     <string name="status_combo_style_one_out_type_margin_right">Outside network type right margin</string>
     <string name="status_combo_style_one_out_signal_margin">Outside signal margin</string>
     <string name="status_combo_style_one_role_colors">State colors</string>
-    <string name="status_combo_style_one_role_colors_summary">Pick colors for low battery, charging and critical battery.</string>
+    <string name="status_combo_style_one_role_colors_summary">Choose separate colors for low battery, charging and critical battery. Priority is critical, then low battery or power save, then charging, then the system status-bar foreground.</string>
     <string name="status_combo_style_one_critical_threshold">Critical battery threshold</string>
     <string name="status_combo_style_one_critical_threshold_summary">Use the critical color below %1$d%%.</string>
     <string name="status_combo_style_one_low_threshold">Low battery threshold</string>
@@ -72,7 +72,7 @@
     <string name="status_combo_style_one_dp_summary">%1$d dp</string>
     <string name="status_combo_style_one_percent_summary">%1$d%%</string>
     <string name="status_combo_style_one_weight_summary">%1$d</string>
-    <string name="status_combo_style_one_color_summary">Tap to pick a color.</string>
+    <string name="status_combo_style_one_color_summary">Choose separate swatches for dark and light status-bar backgrounds.</string>
     <string name="status_combo_style_one_color_low">Low battery color</string>
     <string name="status_combo_style_one_color_charging">Charging color</string>
     <string name="status_combo_style_one_color_critical">Critical battery color</string>
@@ -80,7 +80,7 @@
     <string name="status_combo_style_one_color_on_light">Light background</string>
     <string name="status_combo_style_one_color_on_dark_short">Dark</string>
     <string name="status_combo_style_one_color_on_light_short">Light</string>
-    <string name="status_combo_style_one_color_dialog_summary">Set the color used when the status bar sits on a dark or a light background.</string>
+    <string name="status_combo_style_one_color_dialog_summary">Choose the color used for this state on dark or light status-bar backgrounds. The ring uses critical, low/power-save, charging, then system foreground priority.</string>
     <string name="status_combo_style_one_color_apply">Apply</string>
     <string name="status_combo_style_one_color_cancel">Cancel</string>
     <string name="status_combo_style_one_group_appearance">Appearance</string>

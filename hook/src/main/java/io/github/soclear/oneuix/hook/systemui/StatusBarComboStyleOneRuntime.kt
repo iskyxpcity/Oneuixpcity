@@ -7,6 +7,7 @@ import android.content.IntentFilter
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.PixelFormat
+import android.graphics.PorterDuff
 import android.graphics.Rect
 import android.net.wifi.WifiManager
 import android.os.BatteryManager
@@ -90,6 +91,7 @@ object StatusBarComboStyleOneRuntime {
     // Prefer the exact foreground tint applied to the native battery meter; the
     // generic status-icon tint remains a fallback for non-MIUI implementations.
     private val batteryTintSnapshots = Collections.synchronizedMap(WeakHashMap<View, Int>())
+    private val batteryDrawHookClasses = java.util.concurrent.CopyOnWriteArrayList<Class<*>>()
     // Original island requests are kept so toggling the feature during an island
     // replays the correct MIUI state immediately instead of waiting for the next event.
     private val batteryIslandRequests =
@@ -118,13 +120,16 @@ object StatusBarComboStyleOneRuntime {
     private data class LayoutSnapshot(
         val width: Int, val height: Int,
         val leftMargin: Int, val topMargin: Int, val rightMargin: Int, val bottomMargin: Int,
-        val visibility: Int,
+        val visibility: Int, val alpha: Float,
     )
 
     private class Host(val root: ViewGroup) {
         val original = IdentityHashMap<View, Int>()
         val layouts = IdentityHashMap<View, LayoutSnapshot>()
         var battery: View? = null
+        var shadeDrawTarget: View? = null
+        var batteryWillNotDraw: Boolean? = null
+        var batteryWillNotDrawCaptured: Boolean = false
         var inline: GlyphView? = null
         var overlay: GlyphOverlay? = null
         var overlayFailed = false
@@ -257,9 +262,12 @@ object StatusBarComboStyleOneRuntime {
         fun setTintOverride(color: Int?) { glyph.setTintOverride(color) }
         fun invalidate() { glyph.invalidate() }
 
+        // Keep the WindowManager window attached while shade animation runs.
+        // Hiding the only view with INVISIBLE can make the window stop reporting
+        // visible; alpha handoff lets the native battery view paint on that frame.
         fun setShadeVisible(visible: Boolean) {
-            val wanted = if (visible) View.VISIBLE else View.INVISIBLE
-            if (glyph.visibility != wanted) glyph.visibility = wanted
+            val wanted = if (visible) 1f else 0f
+            if (glyph.alpha != wanted) glyph.alpha = wanted
         }
 
         fun detach() {
@@ -302,6 +310,7 @@ object StatusBarComboStyleOneRuntime {
         hookShadeExpansion(module, param.classLoader)
         hookIconManager(module, param.classLoader)
         hookBatteryMeters(module, param.classLoader)
+        hookBatteryDrawFallback(module, param.classLoader)
         hookMiuiBatteryIsland(module, param.classLoader)
         hookBatteryTint(module, param.classLoader)
         hookNativeBatteryTint(module, param.classLoader)
@@ -344,32 +353,95 @@ object StatusBarComboStyleOneRuntime {
         val update = Runnable {
             val snapshot = synchronized(hosts) { hosts.values.toList() }
             snapshot.forEach { host ->
-                if (host.retired || !config.enabled || !config.overlayGlyph) return@forEach
+                if (host.retired || !config.enabled || !config.overlayGlyph || host.overlayFailed) return@forEach
                 val battery = host.battery ?: return@forEach
                 val overlay = host.overlay ?: return@forEach
-                if (busy) {
-                    // The panel is transforming the bar. Hide the separate window
-                    // immediately and briefly draw inside the native-height slot.
-                    overlay.setShadeVisible(false)
-                    collapseHostView(host, battery)
-                    insertInline(host, battery, compactToAnchor = true)
-                } else {
-                    removeInline(host)
-                    // Restore the original dimensions before taking a new snapshot;
-                    // cutout and normal layouts require different native anchors.
-                    restoreHostView(host, battery)
-                    if (cutoutBounds(host.root) != null) {
-                        collapseHostView(host, battery)
-                    } else {
-                        reserveHostSlot(host, battery, StatusComboStyleOneGlyphRenderer.glyphWidthDp(config))
-                    }
-                    overlay.setShadeVisible(true)
+
+                // A display cutout has a separately calculated anchor. Keep that
+                // route untouched; normal shade drags use the native icon itself.
+                if (cutoutBounds(host.root) != null) {
                     overlay.update(battery, host.root)
+                    overlay.setShadeVisible(true)
+                    return@forEach
+                }
+
+                if (busy) {
+                    // No add/removeView, zero-sized layout params, or tree scan:
+                    // the window fades out and the native battery icon fades in.
+                    overlay.setShadeVisible(false)
+                    showNativeGlyphForShade(host, battery)
+                } else {
+                    hideNativeGlyphAfterShade(host, battery)
+                    // Position is refreshed only at the transition boundary.
+                    overlay.update(battery, host.root)
+                    overlay.setShadeVisible(true)
                     overlay.invalidate()
                 }
             }
         }
         if (Looper.myLooper() == Looper.getMainLooper()) update.run() else main.post(update)
+    }
+
+    private fun showNativeGlyphForShade(host: Host, battery: View) {
+        val slotAlpha = host.layouts[battery]?.alpha ?: 1f
+        battery.alpha = slotAlpha
+        if (battery is ViewGroup) enableOnDrawIfNeeded(host, battery)
+        val target = host.shadeDrawTarget
+        if (target != null && target !== battery) {
+            if (!nativeChildSnapshots.containsKey(target)) {
+                snapshotLayout(target)?.let { nativeChildSnapshots[target] = it }
+            }
+            target.alpha = nativeChildSnapshots[target]?.alpha ?: 1f
+            if (target is ViewGroup) enableOnDrawIfNeeded(host, target)
+            target.invalidate()
+        }
+        battery.invalidate()
+    }
+
+    private fun hideNativeGlyphAfterShade(host: Host, battery: View) {
+        val target = host.shadeDrawTarget
+        if (target != null && target !== battery) {
+            if (!nativeChildSnapshots.containsKey(target)) {
+                snapshotLayout(target)?.let { nativeChildSnapshots[target] = it }
+            }
+            target.alpha = 0f
+            target.invalidate()
+        }
+        battery.alpha = 0f
+        restoreOnDrawFlag(host, battery)
+        battery.invalidate()
+    }
+
+    private fun enableOnDrawIfNeeded(host: Host, view: ViewGroup) {
+        if (!batteryDrawHookClasses.any { it.isInstance(view) }) return
+        if (!host.batteryWillNotDrawCaptured) {
+            host.batteryWillNotDraw = readWillNotDraw(view)
+            host.batteryWillNotDrawCaptured = true
+        }
+        view.setWillNotDraw(false)
+    }
+
+    private fun restoreOnDrawFlag(host: Host, battery: View) {
+        val original = host.batteryWillNotDraw
+        if (host.batteryWillNotDrawCaptured && battery is ViewGroup && original != null) {
+            battery.setWillNotDraw(original)
+        }
+        host.batteryWillNotDraw = null
+        host.batteryWillNotDrawCaptured = false
+    }
+
+    private fun readWillNotDraw(view: ViewGroup): Boolean? {
+        var type: Class<*>? = view.javaClass
+        while (type != null) {
+            val method = runCatching {
+                type.getDeclaredMethod("willNotDraw").apply { isAccessible = true }
+            }.getOrNull()
+            if (method != null) {
+                return runCatching { method.invoke(view) as? Boolean }.getOrNull()
+            }
+            type = type.superclass
+        }
+        return null
     }
 
     fun isEnabled(): Boolean = config.enabled
@@ -537,12 +609,14 @@ object StatusBarComboStyleOneRuntime {
                 ?: views.firstOrNull(::isBatteryIcon)
 
             if (!config.enabled || battery == null) {
+                host.battery?.let { restoreOnDrawFlag(host, it) }
                 host.overlay?.detach()
                 host.overlay = null
                 removeInline(host)
                 restore(host)
                 if (!config.enabled) restoreNativeBatteryViews(root)
                 host.battery = null
+                host.shadeDrawTarget = null
                 host.tintRow = null
                 host.rowTint = null
                 return
@@ -550,13 +624,20 @@ object StatusBarComboStyleOneRuntime {
 
             val previousBattery = host.battery
             if (previousBattery != null && previousBattery !== battery) {
+                restoreOnDrawFlag(host, previousBattery)
                 host.overlay?.detach()
                 host.overlay = null
                 removeInline(host)
                 restoreHostView(host, previousBattery)
                 restoreNativeBatteryViews(previousBattery)
+                host.shadeDrawTarget = null
             }
             host.battery = battery
+            host.shadeDrawTarget = views.firstOrNull { candidate ->
+                candidate !== battery &&
+                    isWithin(battery, candidate) &&
+                    candidate.javaClass.simpleName.contains("MiuiBatteryMeterIconView", ignoreCase = true)
+            } ?: battery
             val nextTintRow = batteryTintContainerFor(battery) ?: root
             if (host.tintRow !== nextTintRow) {
                 host.tintRow = nextTintRow
@@ -606,14 +687,17 @@ object StatusBarComboStyleOneRuntime {
                     host.overlay = null
                     collapseHostView(host, battery)
                     insertInline(host, battery)
-                } else if (shadeBusy) {
+                } else if (shadeBusy && cutoutBounds(root) == null) {
+                    reserveHostSlot(host, battery, StatusComboStyleOneGlyphRenderer.glyphWidthDp(config))
                     overlay.setShadeVisible(false)
-                    collapseHostView(host, battery)
-                    insertInline(host, battery, compactToAnchor = true)
+                    showNativeGlyphForShade(host, battery)
                 } else {
                     overlay.setShadeVisible(true)
                     if (cutoutBounds(root) != null) collapseHostView(host, battery)
-                    else reserveHostSlot(host, battery, StatusComboStyleOneGlyphRenderer.glyphWidthDp(config))
+                    else {
+                        reserveHostSlot(host, battery, StatusComboStyleOneGlyphRenderer.glyphWidthDp(config))
+                        hideNativeGlyphAfterShade(host, battery)
+                    }
                     overlay.update(battery, root)
                 }
             } else {
@@ -839,7 +923,7 @@ object StatusBarComboStyleOneRuntime {
         val margin = lp as? ViewGroup.MarginLayoutParams
         return LayoutSnapshot(
             lp.width, lp.height, margin?.leftMargin ?: 0, margin?.topMargin ?: 0,
-            margin?.rightMargin ?: 0, margin?.bottomMargin ?: 0, view.visibility,
+            margin?.rightMargin ?: 0, margin?.bottomMargin ?: 0, view.visibility, view.alpha,
         )
     }
 
@@ -854,6 +938,7 @@ object StatusBarComboStyleOneRuntime {
             view.layoutParams = lp
         }
         view.visibility = snapshot.visibility
+        view.alpha = snapshot.alpha
     }
 
     private fun collapseViewLayout(view: View) {
@@ -892,7 +977,9 @@ object StatusBarComboStyleOneRuntime {
             margins?.setMargins(0, 0, 0, 0)
             view.layoutParams = lp
         }
-        if (view.visibility != View.INVISIBLE) view.visibility = View.INVISIBLE
+        // Alpha hides the stock meter while preserving the slot's measured size;
+        // INVISIBLE/GONE on every shade transition triggers an unnecessary layout.
+        if (view.alpha != 0f) view.alpha = 0f
     }
 
     private fun restoreHostView(host: Host, view: View) {
@@ -902,7 +989,10 @@ object StatusBarComboStyleOneRuntime {
 
     private fun collapseNativeChild(view: View) {
         if (!nativeChildSnapshots.containsKey(view)) snapshotLayout(view)?.let { nativeChildSnapshots[view] = it }
-        collapseViewLayout(view)
+        // Keep the native child measured and attached. A zero width/height plus
+        // GONE makes MIUI relayout the entire battery subtree on every style
+        // refresh; alpha preserves its geometry and still allows live tint hooks.
+        if (view.alpha != 0f) view.alpha = 0f
     }
 
     private fun restoreNativeBatteryViews(root: View) {
@@ -1057,6 +1147,73 @@ object StatusBarComboStyleOneRuntime {
                 }
             }
         }
+    }
+
+    private fun hookBatteryDrawFallback(module: XposedModule, classLoader: ClassLoader) {
+        // HyperDuo paints into MiuiBatteryMeterIconView.onDraw when its separate
+        // window is not covering the row. Use the same event path only while the
+        // shade is transforming the status bar; never poll or rescan the tree.
+        val candidates = listOf(
+            "com.android.systemui.statusbar.views.MiuiBatteryMeterIconView",
+            MIUI_BATTERY_METER,
+            "com.android.systemui.statusbar.phone.MiuiBatteryMeterView",
+            "com.android.systemui.statusbar.phone.MiuiBatteryMeterIconView",
+            BATTERY_METER,
+        )
+        val methods = LinkedHashMap<String, java.lang.reflect.Method>()
+        candidates.forEach { className ->
+            runCatching {
+                var current: Class<*>? = classLoader.loadClass(className)
+                var found: java.lang.reflect.Method? = null
+                while (current != null &&
+                    current.name != "android.view.View" &&
+                    current.name != "android.view.ViewGroup" &&
+                    found == null
+                ) {
+                    found = current.declaredMethods.firstOrNull { method ->
+                        method.name == "onDraw" &&
+                            method.parameterTypes.size == 1 &&
+                            method.parameterTypes[0] == Canvas::class.java
+                    }
+                    current = current.superclass
+                }
+                found?.let { method ->
+                    methods.putIfAbsent(method.toGenericString(), method)
+                    if (!batteryDrawHookClasses.contains(method.declaringClass)) {
+                        batteryDrawHookClasses.add(method.declaringClass)
+                    }
+                }
+            }.onFailure { diagnostic("Battery draw hook unavailable: $className: $it") }
+        }
+        methods.values.forEach { method ->
+            module.hook(method).intercept { chain ->
+                val result = chain.proceed()
+                if (!shadeBusy || !config.enabled || !config.overlayGlyph) return@intercept result
+                val view = chain.thisObject as? View ?: return@intercept result
+                val host = synchronized(hosts) {
+                    hosts.values.firstOrNull { candidate ->
+                        !candidate.retired && candidate.overlay != null &&
+                            (candidate.battery === view || candidate.shadeDrawTarget === view)
+                    }
+                } ?: return@intercept result
+                if (cutoutBounds(host.root) != null || view.width <= 0 || view.height <= 0) {
+                    return@intercept result
+                }
+                val canvas = runCatching { chain.getArg(0) as? Canvas }.getOrNull()
+                    ?: return@intercept result
+                val currentState = state
+                canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR)
+                StatusComboStyleOneGlyphRenderer.draw(
+                    canvas,
+                    view.width,
+                    view.height,
+                    config,
+                    currentState.copy(tintColor = host.rowTint ?: currentState.tintColor),
+                )
+                result
+            }
+        }
+        if (methods.isEmpty()) diagnostic("No battery onDraw hook was found for shade fallback")
     }
 
     private fun hookBatteryMeters(module: XposedModule, classLoader: ClassLoader) {
@@ -1244,9 +1401,13 @@ object StatusBarComboStyleOneRuntime {
             val tintRow = host.tintRow ?: batteryTintContainerFor(anchor!!)
             // A real icon tint already observed for this row wins over values
             // sampled from MIUI's meter fields, which may lag behind animation.
-            val rowAlreadyKnown = tintRow?.let { rowTintSnapshots[it] } != null
-            if (!rowAlreadyKnown && host.rowTint != color) {
-                if (tintRow != null) rowTintSnapshots[tintRow] = color
+                val owner = tintRow ?: host.root
+            // This callback carries the colour SystemUI is painting now. Replace
+            // the previous value instead of freezing the first light/dark tint
+            // observed after SystemUI started.
+            rowTintSnapshots[owner] = color
+            if (owner === host.root) rowTintSnapshots[host.root] = color
+            if (host.rowTint != color) {
                 host.rowTint = color
                 host.inline?.setTintOverride(color)
                 host.overlay?.setTintOverride(color)
@@ -1369,11 +1530,11 @@ object StatusBarComboStyleOneRuntime {
                             rowTintSnapshots[owner] = resolvedColor
                             if (owner === row) rowTintSnapshots[row] = resolvedColor
                             val host = synchronized(hosts) { hosts[row] }
-                            if (host != null && (host.tintRow ?: row) === tintOwner &&
+                            if (host != null && (host.tintRow ?: row) === owner &&
                                 host.rowTint != resolvedColor
                             ) {
                                 val applyTint = Runnable {
-                                    if (!host.retired && (host.tintRow ?: row) === tintOwner &&
+                                    if (!host.retired && (host.tintRow ?: row) === owner &&
                                         host.rowTint != resolvedColor
                                     ) {
                                         host.rowTint = resolvedColor

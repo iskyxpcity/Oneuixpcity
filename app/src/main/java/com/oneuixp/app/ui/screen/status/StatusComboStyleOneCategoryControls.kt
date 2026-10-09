@@ -128,7 +128,6 @@ fun StatusComboStyleOneCategoryControls(
     var outTypeRight by remember(runtime.outTypeMarginRightDp) { mutableIntStateOf(runtime.outTypeMarginRightDp.coerceIn(0, 16)) }
     var outSignalMargin by remember(runtime.outSignalMarginDp) { mutableIntStateOf(runtime.outSignalMarginDp.coerceIn(0, 16)) }
     var lowThreshold by remember(runtime.lowThreshold) { mutableIntStateOf(runtime.lowThreshold.coerceIn(5, 50)) }
-    var criticalThreshold by remember(runtime.criticalThreshold) { mutableIntStateOf(runtime.criticalThreshold.coerceIn(1, 20)) }
     var glyphScale by remember(runtime.glyphScalePercent) { mutableIntStateOf(runtime.glyphScalePercent.coerceIn(70, 150)) }
     var boltSize by remember(runtime.chargingBoltSizePercent) { mutableIntStateOf(runtime.chargingBoltSizePercent.coerceIn(50, 180)) }
     var boltX by remember(runtime.chargingBoltXDp) { mutableIntStateOf(runtime.chargingBoltXDp.coerceIn(-8, 8)) }
@@ -429,17 +428,6 @@ fun StatusComboStyleOneCategoryControls(
                 )
             }
             if (runtime.roleColors) {
-                colorItems += {
-                    styleOneSlider(
-                        icon,
-                        stringResource(R.string.status_combo_style_one_critical_threshold),
-                        stringResource(R.string.status_combo_style_one_critical_threshold_summary, criticalThreshold),
-                        criticalThreshold.toFloat(),
-                        1f..20f,
-                        { criticalThreshold = it.roundToInt(); preview(runtime.copy(criticalThreshold = criticalThreshold)) },
-                        { persist(runtime.copy(criticalThreshold = criticalThreshold)) },
-                    )
-                }
                 colorItems += {
                     styleOneSlider(
                         icon,
