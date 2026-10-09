@@ -445,7 +445,7 @@ internal object StatusBarWifiRuntime {
         val density = holder.wifiHost.resources.displayMetrics.density
 
         // The combo owns the middle Wi-Fi glyph while active.
-        if (StatusBarComboRuntime.isEnabled()) {
+        if (StatusBarComboStyleOneRuntime.isEnabled()) {
             holder.glyph.visibility = View.GONE
             holder.wifiHost.visibility = View.GONE
             holder.statusBarView.requestLayout()
