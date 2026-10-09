@@ -2,10 +2,18 @@ package com.oneuixp.app.ui.screen.status
 
 import android.content.Intent
 import android.view.HapticFeedbackConstants
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
@@ -18,6 +26,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
@@ -25,6 +35,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.oneuixp.app.R
 import com.oneuixp.app.ui.viewmodel.OneuiXToolsViewModel
@@ -39,6 +50,14 @@ import io.github.soclear.oneuix.ui.component.OneuiXActionButton
 import com.oneuixp.app.ui.component.material.ExpressiveConfirmDialog
 import io.github.soclear.oneuix.ui.component.SwitchItem
 import io.github.soclear.oneuix.ui.component.SelectItem
+import com.oneuixp.app.ui.LocalUiMode
+import com.oneuixp.app.ui.UiMode
+import top.yukonga.miuix.kmp.basic.ColorPalette
+import top.yukonga.miuix.kmp.overlay.OverlayDialog
+import top.yukonga.miuix.kmp.window.WindowDialog
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Surface
 import kotlin.math.roundToInt
 
 @Suppress("UNUSED_PARAMETER")
@@ -53,6 +72,9 @@ fun StatusComboStyleOneCategoryControls(
     val context = LocalContext.current
     val runtime = uiState.comboStyleOneRuntime
     var confirmResetColors by remember { mutableStateOf(false) }
+    var editingColorRole by remember { mutableStateOf<StyleOneColorRole?>(null) }
+    var editingDarkBackground by remember { mutableStateOf(true) }
+    var draftRoleColor by remember { mutableIntStateOf(0xFFFFFFFF.toInt()) }
 
     fun preview(next: Preference.SystemUI.StatusBarComboStyleOneRuntime) {
         val json = runCatching {
@@ -328,99 +350,307 @@ StatusThemeGroup(items = listOf({
     }))
         }
         else -> {
-StatusThemeGroup(items = listOf({
-        SwitchItem(
-            icon = icon,
-            title = stringResource(R.string.status_combo_style_one_role_colors),
-            summary = stringResource(R.string.status_combo_style_one_role_colors_summary),
-            checked = runtime.roleColors,
-            onCheckedChange = { previewAndPersist(runtime.copy(roleColors = it)) },
-        )
-    }, {
-        styleOneSlider(icon, stringResource(R.string.status_combo_style_one_critical_threshold),
-            stringResource(R.string.status_combo_style_one_percent_summary, criticalThreshold), criticalThreshold.toFloat(), 1f..20f,
-            { criticalThreshold = it.roundToInt(); preview(runtime.copy(criticalThreshold = criticalThreshold)) },
-            { persist(runtime.copy(criticalThreshold = criticalThreshold)) })
-    }, {
-        styleOneSlider(icon, stringResource(R.string.status_combo_style_one_low_threshold),
-            stringResource(R.string.status_combo_style_one_percent_summary, lowThreshold), lowThreshold.toFloat(), 5f..50f,
-            { lowThreshold = it.roundToInt(); preview(runtime.copy(lowThreshold = lowThreshold)) },
-            { persist(runtime.copy(lowThreshold = lowThreshold)) })
-    }, {
-        styleOneSlider(icon, stringResource(R.string.status_combo_style_one_track_alpha),
-            stringResource(R.string.status_combo_style_one_percent_summary, trackAlpha), trackAlpha.toFloat(), 0f..100f,
-            { trackAlpha = it.roundToInt(); val a = (trackAlpha * 255f / 100f).roundToInt(); preview(runtime.copy(trackAlpha = a)) },
-            { persist(runtime.copy(trackAlpha = (trackAlpha * 255f / 100f).roundToInt())) })
-    }))
+            StatusThemeGroup(items = listOf({
+                SwitchItem(
+                    icon = icon,
+                    title = stringResource(R.string.status_combo_style_one_role_colors),
+                    summary = stringResource(R.string.status_combo_style_one_role_colors_summary),
+                    checked = runtime.roleColors,
+                    onCheckedChange = { previewAndPersist(runtime.copy(roleColors = it)) },
+                )
+            }, {
+                styleOneSlider(
+                    icon,
+                    stringResource(R.string.status_combo_style_one_low_threshold),
+                    stringResource(R.string.status_combo_style_one_percent_summary, lowThreshold),
+                    lowThreshold.toFloat(),
+                    5f..50f,
+                    { lowThreshold = it.roundToInt(); preview(runtime.copy(lowThreshold = lowThreshold)) },
+                    { persist(runtime.copy(lowThreshold = lowThreshold)) },
+                )
+            }))
 
-    if (runtime.roleColors) {
-StatusThemeGroup(items = listOf({
-            styleOneColor(icon, R.string.status_combo_style_one_critical_dark, runtime.criticalColorDarkArgb,
-                { previewAndPersist(runtime.copy(criticalColorDarkArgb = it)) }, { preview(runtime.copy(criticalColorDarkArgb = it)) })
-        }, {
-            styleOneColor(icon, R.string.status_combo_style_one_critical_light, runtime.criticalColorLightArgb,
-                { previewAndPersist(runtime.copy(criticalColorLightArgb = it)) }, { preview(runtime.copy(criticalColorLightArgb = it)) })
-        }, {
-            styleOneColor(icon, R.string.status_combo_style_one_charging_dark, runtime.chargingColorDarkArgb,
-                { previewAndPersist(runtime.copy(chargingColorDarkArgb = it)) }, { preview(runtime.copy(chargingColorDarkArgb = it)) })
-        }, {
-            styleOneColor(icon, R.string.status_combo_style_one_charging_light, runtime.chargingColorLightArgb,
-                { previewAndPersist(runtime.copy(chargingColorLightArgb = it)) }, { preview(runtime.copy(chargingColorLightArgb = it)) })
-        }, {
-            styleOneColor(icon, R.string.status_combo_style_one_low_dark, runtime.lowColorDarkArgb,
-                { previewAndPersist(runtime.copy(lowColorDarkArgb = it)) }, { preview(runtime.copy(lowColorDarkArgb = it)) })
-        }, {
-            styleOneColor(icon, R.string.status_combo_style_one_low_light, runtime.lowColorLightArgb,
-                { previewAndPersist(runtime.copy(lowColorLightArgb = it)) }, { preview(runtime.copy(lowColorLightArgb = it)) })
-        }))
-StatusThemeGroup(items = listOf({
-            OneuiXInfoItem(
-                icon = icon,
-                title = stringResource(R.string.status_combo_style_one_reset_colors),
-                summary = stringResource(R.string.status_combo_style_one_reset_colors_summary),
-            )
-        }, {
-            StatusThemeChildItem {
-                OneuiXActionButton(
-                    text = stringResource(R.string.status_combo_style_one_reset_colors),
-                    onClick = { confirmResetColors = true },
+            if (runtime.roleColors) {
+                StatusThemeGroup(items = listOf({
+                    OneuiXInfoItem(
+                        title = stringResource(StyleOneColorRole.Low.titleRes),
+                        summary = stringResource(R.string.status_combo_style_one_color_summary),
+                        modifier = Modifier.clickable {
+                            editingColorRole = StyleOneColorRole.Low
+                            editingDarkBackground = true
+                            draftRoleColor = runtime.lowColorDarkArgb
+                        },
+                        trailingContent = {
+                            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                StyleOneColorSwatch(
+                                    color = runtime.lowColorDarkArgb,
+                                    label = stringResource(R.string.status_combo_style_one_color_on_dark),
+                                    onClick = {
+                                        editingColorRole = StyleOneColorRole.Low
+                                        editingDarkBackground = true
+                                        draftRoleColor = runtime.lowColorDarkArgb
+                                    },
+                                )
+                                StyleOneColorSwatch(
+                                    color = runtime.lowColorLightArgb,
+                                    label = stringResource(R.string.status_combo_style_one_color_on_light),
+                                    onClick = {
+                                        editingColorRole = StyleOneColorRole.Low
+                                        editingDarkBackground = false
+                                        draftRoleColor = runtime.lowColorLightArgb
+                                    },
+                                )
+                            }
+                        },
+                    )
+                }, {
+                    OneuiXInfoItem(
+                        title = stringResource(StyleOneColorRole.Charging.titleRes),
+                        summary = stringResource(R.string.status_combo_style_one_color_summary),
+                        modifier = Modifier.clickable {
+                            editingColorRole = StyleOneColorRole.Charging
+                            editingDarkBackground = true
+                            draftRoleColor = runtime.chargingColorDarkArgb
+                        },
+                        trailingContent = {
+                            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                StyleOneColorSwatch(
+                                    color = runtime.chargingColorDarkArgb,
+                                    label = stringResource(R.string.status_combo_style_one_color_on_dark),
+                                    onClick = {
+                                        editingColorRole = StyleOneColorRole.Charging
+                                        editingDarkBackground = true
+                                        draftRoleColor = runtime.chargingColorDarkArgb
+                                    },
+                                )
+                                StyleOneColorSwatch(
+                                    color = runtime.chargingColorLightArgb,
+                                    label = stringResource(R.string.status_combo_style_one_color_on_light),
+                                    onClick = {
+                                        editingColorRole = StyleOneColorRole.Charging
+                                        editingDarkBackground = false
+                                        draftRoleColor = runtime.chargingColorLightArgb
+                                    },
+                                )
+                            }
+                        },
+                    )
+                }, {
+                    OneuiXInfoItem(
+                        title = stringResource(StyleOneColorRole.Critical.titleRes),
+                        summary = stringResource(R.string.status_combo_style_one_color_summary),
+                        modifier = Modifier.clickable {
+                            editingColorRole = StyleOneColorRole.Critical
+                            editingDarkBackground = true
+                            draftRoleColor = runtime.criticalColorDarkArgb
+                        },
+                        trailingContent = {
+                            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                StyleOneColorSwatch(
+                                    color = runtime.criticalColorDarkArgb,
+                                    label = stringResource(R.string.status_combo_style_one_color_on_dark),
+                                    onClick = {
+                                        editingColorRole = StyleOneColorRole.Critical
+                                        editingDarkBackground = true
+                                        draftRoleColor = runtime.criticalColorDarkArgb
+                                    },
+                                )
+                                StyleOneColorSwatch(
+                                    color = runtime.criticalColorLightArgb,
+                                    label = stringResource(R.string.status_combo_style_one_color_on_light),
+                                    onClick = {
+                                        editingColorRole = StyleOneColorRole.Critical
+                                        editingDarkBackground = false
+                                        draftRoleColor = runtime.criticalColorLightArgb
+                                    },
+                                )
+                            }
+                        },
+                    )
+                }, {
+                    OneuiXInfoItem(
+                        title = stringResource(R.string.status_combo_style_one_reset_colors),
+                        summary = stringResource(R.string.status_combo_style_one_reset_colors_summary),
+                    )
+                    StatusThemeChildItem {
+                        OneuiXActionButton(
+                            text = stringResource(R.string.status_combo_style_one_reset_colors),
+                            onClick = { confirmResetColors = true },
+                        )
+                    }
+                }))
+            }
+
+            if (confirmResetColors) {
+                ExpressiveConfirmDialog(
+                    title = stringResource(R.string.status_combo_style_one_reset_colors),
+                    message = stringResource(R.string.status_combo_style_one_reset_colors_confirm),
+                    confirmText = stringResource(R.string.status_combo_style_one_reset),
+                    dismissText = stringResource(R.string.status_combo_style_one_cancel),
+                    onConfirm = {
+                        previewAndPersist(
+                            runtime.copy(
+                                criticalColorDarkArgb = 0xFFFF3B30.toInt(),
+                                criticalColorLightArgb = 0xFFFF3B30.toInt(),
+                                chargingColorDarkArgb = 0xFF34C759.toInt(),
+                                chargingColorLightArgb = 0xFF1F8F3D.toInt(),
+                                lowColorDarkArgb = 0xFFF2B900.toInt(),
+                                lowColorLightArgb = 0xFFC99700.toInt(),
+                            )
+                        )
+                        confirmResetColors = false
+                    },
+                    onDismiss = { confirmResetColors = false },
                 )
             }
-        }))
-    }
 
-    if (confirmResetColors) {
-        ExpressiveConfirmDialog(
-            title = stringResource(R.string.status_combo_style_one_reset_colors),
-            message = stringResource(R.string.status_combo_style_one_reset_colors_confirm),
-            confirmText = stringResource(R.string.status_combo_style_one_reset),
-            dismissText = stringResource(R.string.status_combo_style_one_cancel),
-            onConfirm = {
-                previewAndPersist(
-                    runtime.copy(
-                        criticalColorDarkArgb = 0xFFFF3B30.toInt(),
-                        criticalColorLightArgb = 0xFFFF3B30.toInt(),
-                        chargingColorDarkArgb = 0xFF34C759.toInt(),
-                        chargingColorLightArgb = 0xFF1F8F3D.toInt(),
-                        lowColorDarkArgb = 0xFFF2B900.toInt(),
-                        lowColorLightArgb = 0xFFC99700.toInt(),
-                    )
+            val role = editingColorRole
+            if (role != null) {
+                StyleOneRoleColorDialog(
+                    roleTitle = stringResource(role.titleRes),
+                    darkLabel = stringResource(R.string.status_combo_style_one_color_on_dark),
+                    lightLabel = stringResource(R.string.status_combo_style_one_color_on_light),
+                    summary = stringResource(R.string.status_combo_style_one_color_dialog_summary),
+                    colorArgb = draftRoleColor,
+                    darkSelected = editingDarkBackground,
+                    onBackgroundSelected = { isDark ->
+                        editingDarkBackground = isDark
+                        draftRoleColor = when (role) {
+                            StyleOneColorRole.Low -> if (isDark) runtime.lowColorDarkArgb else runtime.lowColorLightArgb
+                            StyleOneColorRole.Charging -> if (isDark) runtime.chargingColorDarkArgb else runtime.chargingColorLightArgb
+                            StyleOneColorRole.Critical -> if (isDark) runtime.criticalColorDarkArgb else runtime.criticalColorLightArgb
+                        }
+                    },
+                    onColorPreview = { color ->
+                        draftRoleColor = color
+                        preview(runtime.withRoleColor(role, editingDarkBackground, color))
+                    },
+                    onApply = {
+                        previewAndPersist(runtime.withRoleColor(role, editingDarkBackground, draftRoleColor))
+                        editingColorRole = null
+                    },
+                    onCancel = {
+                        preview(runtime)
+                        editingColorRole = null
+                    },
                 )
-                confirmResetColors = false
-            },
-            onDismiss = { confirmResetColors = false },
-        )
-    }
-        }
-    }
+            }
+        }    }
 
 }
 
+private enum class StyleOneColorRole(val titleRes: Int) {
+    Low(R.string.status_combo_style_one_color_low),
+    Charging(R.string.status_combo_style_one_color_charging),
+    Critical(R.string.status_combo_style_one_color_critical),
+}
+
+private fun Preference.SystemUI.StatusBarComboStyleOneRuntime.withRoleColor(
+    role: StyleOneColorRole,
+    onDarkBackground: Boolean,
+    colorArgb: Int,
+): Preference.SystemUI.StatusBarComboStyleOneRuntime = when (role) {
+    StyleOneColorRole.Low -> if (onDarkBackground) copy(lowColorDarkArgb = colorArgb) else copy(lowColorLightArgb = colorArgb)
+    StyleOneColorRole.Charging -> if (onDarkBackground) copy(chargingColorDarkArgb = colorArgb) else copy(chargingColorLightArgb = colorArgb)
+    StyleOneColorRole.Critical -> if (onDarkBackground) copy(criticalColorDarkArgb = colorArgb) else copy(criticalColorLightArgb = colorArgb)
+}
+
 @Composable
-private fun styleOneColor(icon: ImageVector, titleRes: Int, value: Int, onChange: (Int) -> Unit, onPreview: (Int) -> Unit) {
-    OneuiXInfoItem(icon = icon, title = stringResource(titleRes), summary = stringResource(R.string.status_combo_style_one_color_summary))
-    StatusThemeChildItem {
-        StatusClockColorPicker(colorArgb = value, onColorChange = onChange, onColorPreview = onPreview)
+private fun StyleOneColorSwatch(color: Int, label: String, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .size(27.dp)
+            .background(Color(color), CircleShape)
+            .border(1.dp, Color(0x66000000), CircleShape)
+            .clickable(onClick = onClick),
+    )
+}
+
+@Composable
+private fun StyleOneRoleColorDialog(
+    roleTitle: String,
+    darkLabel: String,
+    lightLabel: String,
+    summary: String,
+    colorArgb: Int,
+    darkSelected: Boolean,
+    onBackgroundSelected: (Boolean) -> Unit,
+    onColorPreview: (Int) -> Unit,
+    onApply: () -> Unit,
+    onCancel: () -> Unit,
+) {
+    @Composable
+    fun PickerContent() {
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                OneuiXActionButton(
+                    text = darkLabel,
+                    onClick = { onBackgroundSelected(true) },
+                    modifier = Modifier.weight(1f),
+                    primary = darkSelected,
+                )
+                OneuiXActionButton(
+                    text = lightLabel,
+                    onClick = { onBackgroundSelected(false) },
+                    modifier = Modifier.weight(1f),
+                    primary = !darkSelected,
+                )
+            }
+            ColorPalette(
+                color = Color(colorArgb),
+                onColorChanged = { onColorPreview(it.toArgb()) },
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                OneuiXActionButton(
+                    text = stringResource(R.string.status_combo_style_one_color_cancel),
+                    onClick = onCancel,
+                    modifier = Modifier.weight(1f),
+                )
+                OneuiXActionButton(
+                    text = stringResource(R.string.status_combo_style_one_color_apply),
+                    onClick = onApply,
+                    modifier = Modifier.weight(1f),
+                    primary = true,
+                )
+            }
+        }
+    }
+
+    when (LocalUiMode.current) {
+        UiMode.Material -> Dialog(onDismissRequest = onCancel) {
+            Surface(
+                modifier = Modifier.fillMaxWidth().widthIn(max = 460.dp),
+                shape = RoundedCornerShape(24.dp),
+            ) {
+                Column(modifier = Modifier.padding(20.dp)) {
+                    Text(text = roleTitle)
+                    Text(text = summary)
+                    PickerContent()
+                }
+            }
+        }
+
+        UiMode.Miuix -> WindowDialog(
+            show = true,
+            title = roleTitle,
+            onDismissRequest = onCancel,
+            content = {
+                Column {
+                    top.yukonga.miuix.kmp.basic.Text(text = summary)
+                    PickerContent()
+                }
+            },
+        )
     }
 }
 
