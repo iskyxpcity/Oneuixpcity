@@ -484,7 +484,11 @@ object StatusBarComboStyleOneRuntime {
             }
             host.battery = battery
             readNativeBatteryTint(battery)?.let { batteryTintSnapshots[battery] = it }
-            val meterTint = batteryTintSnapshots[battery]
+            val meterTint = batteryTintSnapshots[battery] ?: views.firstNotNullOfOrNull { candidate ->
+                val isBatteryTintOwner = candidate === battery ||
+                    isWithin(battery, candidate) || isWithin(candidate, battery)
+                if (isBatteryTintOwner) batteryTintSnapshots[candidate] else null
+            }
             // The icon's last-painted foreground is the primary source on a mode
             // transition; MIUI's tint fields are useful only for initial state or
             // ROMs that do not expose the icon tint callback.
@@ -999,38 +1003,49 @@ object StatusBarComboStyleOneRuntime {
      * rather than deriving it from the clock or whichever icon tinted last.
      */
     private fun hookBatteryTint(module: XposedModule, classLoader: ClassLoader) {
-        runCatching {
-            var current: Class<*>? = classLoader.loadClass(MIUI_BATTERY_METER)
-            val methods = mutableListOf<java.lang.reflect.Method>()
-            while (current != null) {
-                methods += current.declaredMethods.filter { method ->
-                    method.name == "updateLightDarkTint" &&
-                        method.parameterTypes.size == 6 &&
-                        method.parameterTypes[1] == Float::class.javaPrimitiveType &&
-                        method.parameterTypes[2] == Int::class.javaPrimitiveType &&
-                        method.parameterTypes[3] == Int::class.javaPrimitiveType &&
-                        method.parameterTypes[4] == Int::class.javaPrimitiveType &&
-                        method.parameterTypes[5] == Boolean::class.javaPrimitiveType
+        val methods = LinkedHashMap<String, java.lang.reflect.Method>()
+        listOf(
+            MIUI_BATTERY_METER,
+            "com.android.systemui.statusbar.views.MiuiBatteryMeterIconView",
+            "com.android.systemui.statusbar.phone.MiuiBatteryMeterView",
+            "com.android.systemui.statusbar.phone.MiuiBatteryMeterIconView",
+        ).forEach { className ->
+            runCatching {
+                var current: Class<*>? = classLoader.loadClass(className)
+                while (current != null) {
+                    current.declaredMethods.filter { method ->
+                        method.name == "updateLightDarkTint" &&
+                            method.parameterTypes.size == 6 &&
+                            method.parameterTypes[1] == Float::class.javaPrimitiveType &&
+                            method.parameterTypes[2] == Int::class.javaPrimitiveType &&
+                            method.parameterTypes[3] == Int::class.javaPrimitiveType &&
+                            method.parameterTypes[4] == Int::class.javaPrimitiveType &&
+                            method.parameterTypes[5] == Boolean::class.javaPrimitiveType
+                    }.forEach { methods.putIfAbsent(it.toGenericString(), it) }
+                    current = current.superclass
                 }
-                current = current.superclass
-            }
-            methods.distinctBy { it.toGenericString() }.forEach { method ->
-                module.hook(method).intercept { chain ->
-                    val result = chain.proceed()
-                    val meter = chain.thisObject as? View
-                    if (meter != null) {
-                        val intensity = runCatching { chain.getArg(1) as? Float }.getOrNull() ?: 0f
-                        val tintColor = runCatching { chain.getArg(2) as? Int }.getOrNull() ?: Color.TRANSPARENT
-                        val lightColor = runCatching { chain.getArg(3) as? Int }.getOrNull() ?: Color.TRANSPARENT
-                        val darkColor = runCatching { chain.getArg(4) as? Int }.getOrNull() ?: Color.TRANSPARENT
-                        val useTint = runCatching { chain.getArg(5) as? Boolean }.getOrNull() ?: false
-                        val resolved = (if (useTint) tintColor else if (intensity > 0f) darkColor else lightColor)
-                        if (resolved != Color.TRANSPARENT) saveBatteryTint(meter, resolved)
-                    }
-                    result
+            }.onFailure { diagnostic("MIUI battery tint class unavailable: $className: $it") }
+        }
+        methods.values.forEach { method ->
+            module.hook(method).intercept { chain ->
+                val result = chain.proceed()
+                val meter = chain.thisObject as? View
+                if (meter != null) {
+                    val intensity = runCatching { chain.getArg(1) as? Float }.getOrNull() ?: 0f
+                    val tintColor = runCatching { chain.getArg(2) as? Int }.getOrNull() ?: Color.TRANSPARENT
+                    val lightColor = runCatching { chain.getArg(3) as? Int }.getOrNull() ?: Color.TRANSPARENT
+                    val darkColor = runCatching { chain.getArg(4) as? Int }.getOrNull() ?: Color.TRANSPARENT
+                    val useTint = runCatching { chain.getArg(5) as? Boolean }.getOrNull() ?: false
+                    // Read the same inputs HyperDuo observes, but apply them only
+                    // to the collapsed status-bar row that owns this meter.
+                    val fieldTint = readNativeBatteryTint(meter)
+                    val resolved = fieldTint ?: (if (useTint) tintColor else if (intensity > 0f) darkColor else lightColor)
+                    if (resolved != Color.TRANSPARENT) saveBatteryTint(meter, resolved)
                 }
+                result
             }
-        }.onFailure { diagnostic("Battery meter tint hook unavailable: $it") }
+        }
+        if (methods.isEmpty()) diagnostic("No MIUI updateLightDarkTint method was found")
     }
 
     /**
