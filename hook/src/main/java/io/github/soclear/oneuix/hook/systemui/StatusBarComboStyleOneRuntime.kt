@@ -56,6 +56,7 @@ import kotlin.math.roundToInt
 object StatusBarComboStyleOneRuntime {
     private const val TAG = "OneuiXPStyleOne"
     private const val PHONE_BAR = "com.android.systemui.statusbar.phone.PhoneStatusBarView"
+    private const val MIUI_PHONE_BAR = "com.android.systemui.statusbar.phone.MiuiPhoneStatusBarView"
     private const val WINDOW_BAR = "com.android.systemui.statusbar.phone.StatusBarWindowView"
     private const val MIUI_ICONS = "com.android.systemui.statusbar.phone.MiuiStatusIconContainer"
     private const val AOSP_ICONS = "com.android.systemui.statusbar.phone.StatusBarIconContainer"
@@ -266,7 +267,7 @@ object StatusBarComboStyleOneRuntime {
         }
 
         var hookedHost = false
-        listOf(PHONE_BAR, WINDOW_BAR).forEach { name ->
+        listOf(PHONE_BAR, MIUI_PHONE_BAR, WINDOW_BAR).forEach { name ->
             runCatching {
                 val cls = param.classLoader.loadClass(name)
                 cls.declaredConstructors.forEach { constructor ->
@@ -334,14 +335,18 @@ object StatusBarComboStyleOneRuntime {
         // contain the same battery icon and drawing both roots would double-render.
         if (root.javaClass.name == WINDOW_BAR) {
             val phoneRoot = descendants(root).firstOrNull {
-                it !== root && it.javaClass.name == PHONE_BAR
+                it !== root && (it.javaClass.name == PHONE_BAR || it.javaClass.name == MIUI_PHONE_BAR)
             } as? ViewGroup
             if (phoneRoot != null) {
                 register(phoneRoot)
                 return
             }
+            // Never treat the entire status-bar window as the combo host: it also
+            // owns shade/Quick Panel content on several ROMs. The dedicated phone
+            // bar constructor will register the right row as soon as it inflates.
+            return
         }
-        if (root.javaClass.name == PHONE_BAR) {
+        if (root.javaClass.name == PHONE_BAR || root.javaClass.name == MIUI_PHONE_BAR) {
             val ancestorHosts = synchronized(hosts) {
                 hosts.entries.map { it.key to it.value }.filter { (existingRoot, _) ->
                     existingRoot !== root &&
@@ -1087,7 +1092,9 @@ object StatusBarComboStyleOneRuntime {
     private fun statusBarRootOf(view: View): ViewGroup? {
         var node: View? = view
         while (node != null) {
-            if (node is ViewGroup && node.javaClass.name == PHONE_BAR) return node
+            if (node is ViewGroup &&
+                (node.javaClass.name == PHONE_BAR || node.javaClass.name == MIUI_PHONE_BAR)
+            ) return node
             node = node.parent as? View
         }
         return null
