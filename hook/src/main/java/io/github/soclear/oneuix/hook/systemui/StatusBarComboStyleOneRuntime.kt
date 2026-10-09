@@ -358,8 +358,8 @@ object StatusBarComboStyleOneRuntime {
                 return
             }
 
-            if (host.battery != null && host.battery !== battery) {
-                val previousBattery = host.battery
+            val previousBattery = host.battery
+            if (previousBattery != null && previousBattery !== battery) {
                 host.overlay?.detach()
                 host.overlay = null
                 removeInline(host)
