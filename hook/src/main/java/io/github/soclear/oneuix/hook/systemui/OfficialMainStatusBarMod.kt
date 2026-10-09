@@ -90,6 +90,8 @@ object OfficialMainStatusBarMod {
         WeakHashMap<TextView, Pair<Int, Int>>()
     private val statusBarClockOriginalAlignments =
         WeakHashMap<TextView, Int>()
+    private val statusBarClockOriginalGravities =
+        WeakHashMap<TextView, Int>()
     private val statusBarClockOriginalWidths =
         WeakHashMap<TextView, Int>()
     private val statusBarClockOriginalClipChildren =
@@ -282,19 +284,37 @@ object OfficialMainStatusBarMod {
                 clockTextView.textAlignment
             }
         }
-        val desiredAlignment = if (!config.enabled) {
-            originalAlignment
-        } else {
-            when (config.alignment) {
-                "start" -> View.TEXT_ALIGNMENT_TEXT_START
-                "center" -> View.TEXT_ALIGNMENT_CENTER
-                "end" -> View.TEXT_ALIGNMENT_TEXT_END
-                else -> originalAlignment
+        val originalGravity = synchronized(statusBarClockOriginalGravities) {
+            statusBarClockOriginalGravities.getOrPut(clockTextView) {
+                clockTextView.gravity
             }
+        }
+        val selectedAlignment = if (config.enabled) config.alignment else "native"
+        val desiredAlignment = when (selectedAlignment) {
+            "start" -> View.TEXT_ALIGNMENT_TEXT_START
+            "center" -> View.TEXT_ALIGNMENT_CENTER
+            "end" -> View.TEXT_ALIGNMENT_TEXT_END
+            else -> originalAlignment
+        }
+        val desiredGravity = when (selectedAlignment) {
+            "start" ->
+                (originalGravity and Gravity.VERTICAL_GRAVITY_MASK) or Gravity.START
+            "center" ->
+                (originalGravity and Gravity.VERTICAL_GRAVITY_MASK) or Gravity.CENTER_HORIZONTAL
+            "end" ->
+                (originalGravity and Gravity.VERTICAL_GRAVITY_MASK) or Gravity.END
+            else -> originalGravity
         }
         var alignmentChanged = false
         if (clockTextView.textAlignment != desiredAlignment) {
             clockTextView.textAlignment = desiredAlignment
+            alignmentChanged = true
+        }
+        // On Samsung SystemUI the clock can be measured by a native host whose
+        // own gravity governs positioning. Set both the TextView's text alignment
+        // and horizontal gravity so a newly selected option is visible immediately.
+        if (clockTextView.gravity != desiredGravity) {
+            clockTextView.gravity = desiredGravity
             alignmentChanged = true
         }
         val params = clockTextView.layoutParams
@@ -349,10 +369,26 @@ object OfficialMainStatusBarMod {
             }
         }
         if (alignmentChanged || forceAlignmentRefresh) {
-            // Force a fresh layout when the selected alignment changes, even if Samsung's
-            // current native alignment already maps to the requested TextView value.
+            // Ask the TextView and its native host to remeasure on this frame.
             clockTextView.requestLayout()
+            (clockTextView.parent as? View)?.requestLayout()
             clockTextView.invalidate()
+
+            // Samsung's clock host can finish a pending native layout after the
+            // preference broadcast was handled. Re-apply the latest selection once
+            // on the next animation frame so that host layout cannot leave the
+            // previous alignment visible until another settings interaction.
+            clockTextView.postOnAnimation {
+                if (clockTextView.isAttachedToWindow) {
+                    applyStatusBarClockPosition(
+                        clockTextView,
+                        statusBarClockPositionRuntimeConfig,
+                    )
+                    clockTextView.requestLayout()
+                    (clockTextView.parent as? View)?.requestLayout()
+                    clockTextView.invalidate()
+                }
+            }
         }
     }
 
