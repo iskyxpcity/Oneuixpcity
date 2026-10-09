@@ -78,6 +78,11 @@ object StatusBarComboStyleOneRuntime {
     private val displayNetworkTypes = ConcurrentHashMap<Int, String>()
     private val nativeChildSnapshots = Collections.synchronizedMap(WeakHashMap<View, LayoutSnapshot>())
     private val knownIconSlots = Collections.synchronizedMap(WeakHashMap<View, String>())
+    private val rowTintSnapshots = Collections.synchronizedMap(WeakHashMap<ViewGroup, Int>())
+    private val lastContainerFingerprints = Collections.synchronizedMap(WeakHashMap<ViewGroup, Int>())
+    private val scheduledContainerPasses = Collections.synchronizedSet(
+        Collections.newSetFromMap(WeakHashMap<ViewGroup, Boolean>())
+    )
 
     private data class LayoutSnapshot(
         val width: Int, val height: Int,
@@ -94,17 +99,32 @@ object StatusBarComboStyleOneRuntime {
         var overlayFailed = false
         var applying = false
         var retired = false
+        var rowTint: Int? = null
+        val delayedApply = Runnable {
+            if (!retired && !applying) StatusBarComboStyleOneRuntime.apply(this)
+        }
     }
 
     private class GlyphView(context: Context) : View(context) {
+        private var tintOverride: Int? = null
         init {
             isClickable = false
             isFocusable = false
             importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
         }
+        fun setTintOverride(color: Int?) {
+            if (tintOverride == color) return
+            tintOverride = color
+            invalidate()
+        }
         override fun onDraw(canvas: Canvas) {
             super.onDraw(canvas)
-            StatusComboStyleOneGlyphRenderer.draw(canvas, width, height, StatusBarComboStyleOneRuntime.config, StatusBarComboStyleOneRuntime.state)
+            val currentState = StatusBarComboStyleOneRuntime.state
+            val localTint = tintOverride
+            val drawState = if (localTint == null) currentState else currentState.copy(tintColor = localTint)
+            StatusComboStyleOneGlyphRenderer.draw(
+                canvas, width, height, StatusBarComboStyleOneRuntime.config, drawState,
+            )
         }
     }
 
@@ -164,6 +184,10 @@ object StatusBarComboStyleOneRuntime {
 
         fun update(anchor: View, root: ViewGroup) {
             val lp = params ?: return
+            val oldX = lp.x
+            val oldY = lp.y
+            val oldWidth = lp.width
+            val oldHeight = lp.height
             val cfg = StatusBarComboStyleOneRuntime.config
             lp.width = StatusBarComboStyleOneRuntime.dp(app, StatusComboStyleOneGlyphRenderer.glyphWidthDp(cfg))
             lp.height = StatusBarComboStyleOneRuntime.dp(app, StatusComboStyleOneGlyphRenderer.glyphHeightDp(cfg))
@@ -181,8 +205,11 @@ object StatusBarComboStyleOneRuntime {
                 lp.y = (pos[1] + (anchor.height - lp.height) / 2).coerceAtLeast(0)
             }
             glyph.invalidate()
-            runCatching { wm.updateViewLayout(glyph, lp) }
+            if (oldX != lp.x || oldY != lp.y || oldWidth != lp.width || oldHeight != lp.height) {
+                runCatching { wm.updateViewLayout(glyph, lp) }
+            }
         }
+        fun setTintOverride(color: Int?) { glyph.setTintOverride(color) }
         fun invalidate() { glyph.invalidate() }
 
         fun detach() {
@@ -224,14 +251,18 @@ object StatusBarComboStyleOneRuntime {
         listOf(MIUI_ICONS, AOSP_ICONS).forEach { name ->
             runCatching {
                 val cls = param.classLoader.loadClass(name)
+                // onMeasure is hot during shade expansion and is not needed for
+                // folding icons. Only inspect a container after layout and only
+                // when it belongs to our active status-bar host.
                 cls.declaredMethods.filter {
-                    (it.name == "onMeasure" && it.parameterTypes.size == 2) ||
-                        (it.name == "onLayout" && it.parameterTypes.size == 5)
+                    it.name == "onLayout" && it.parameterTypes.size == 5
                 }.forEach { method ->
                     module.hook(method).intercept { chain ->
                         val result = chain.proceed()
                         val container = chain.thisObject as? ViewGroup
-                        if (container != null) container.post { suppressInContainer(container) }
+                        if (container != null && hostFor(container) != null) {
+                            scheduleContainerSuppression(container)
+                        }
                         result
                     }
                 }
@@ -239,6 +270,7 @@ object StatusBarComboStyleOneRuntime {
         }
         hookIconManager(module, param.classLoader)
         hookBatteryMeters(module, param.classLoader)
+        hookIconTint(module, param.classLoader)
         if (!hookedHost) Log.w(TAG, "No status-bar host constructor was hooked")
     }
 
@@ -294,12 +326,20 @@ object StatusBarComboStyleOneRuntime {
             }
         }
         val host = synchronized(hosts) {
-            hosts[root] ?: Host(root).also { hosts[root] = it }
+            hosts[root] ?: Host(root).also {
+                it.rowTint = rowTintSnapshots[root]
+                hosts[root] = it
+            }
         }
         if (host.battery == null) {
             root.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
                 host.overlay?.let { win -> host.battery?.let { battery -> win.update(battery, host.root) } }
-                if (!host.applying) main.post { apply(host) }
+                // SystemUI changes the row height while the shade is animating.
+                // Debounce full tree scans until that layout burst settles.
+                if (!host.applying) {
+                    main.removeCallbacks(host.delayedApply)
+                    main.postDelayed(host.delayedApply, 140L)
+                }
             }
             root.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
                 override fun onViewAttachedToWindow(v: View) { main.post { apply(host) } }
@@ -382,6 +422,7 @@ object StatusBarComboStyleOneRuntime {
             if (config.overlayGlyph && !host.overlayFailed) {
                 removeInline(host)
                 val overlay = host.overlay ?: GlyphOverlay(root.context).also { host.overlay = it }
+                overlay.setTintOverride(host.rowTint)
                 if (!overlay.attach(battery, root)) {
                     host.overlayFailed = true
                     overlay.detach()
@@ -421,7 +462,7 @@ object StatusBarComboStyleOneRuntime {
             return
         }
         removeInline(host)
-        val glyph = GlyphView(parent.context)
+        val glyph = GlyphView(parent.context).apply { setTintOverride(host.rowTint) }
         val old = anchor.layoutParams
         val lp = when (old) {
             is LinearLayout.LayoutParams -> LinearLayout.LayoutParams(old).apply { this.width = width; this.height = height }
@@ -553,6 +594,35 @@ object StatusBarComboStyleOneRuntime {
         return false
     }
 
+    private fun containerSuppressionFingerprint(container: ViewGroup): Int {
+        var key = 17
+        key = 31 * key + if (config.enabled && config.showWifi) 1 else 0
+        key = 31 * key + if (isMobileNativeSuppressed()) 1 else 0
+        key = 31 * key + if (config.showMobile && config.mobileTypeMode == 2) 1 else 0
+        key = 31 * key + container.childCount
+        for (index in 0 until container.childCount) {
+            key = 31 * key + System.identityHashCode(container.getChildAt(index))
+        }
+        return key
+    }
+
+    private fun scheduleContainerSuppression(container: ViewGroup) {
+        val fingerprint = containerSuppressionFingerprint(container)
+        synchronized(lastContainerFingerprints) {
+            if (lastContainerFingerprints[container] == fingerprint) return
+        }
+        synchronized(scheduledContainerPasses) {
+            if (!scheduledContainerPasses.add(container)) return
+        }
+        container.post {
+            try {
+                if (hostFor(container) != null) suppressInContainer(container)
+            } finally {
+                scheduledContainerPasses.remove(container)
+            }
+        }
+    }
+
     private fun suppressInContainer(container: ViewGroup) {
         val host = hostFor(container) ?: return
         descendants(container).forEach { view ->
@@ -564,6 +634,7 @@ object StatusBarComboStyleOneRuntime {
             )
             if (hide) collapseHostView(host, view) else restoreHostView(host, view)
         }
+        lastContainerFingerprints[container] = containerSuppressionFingerprint(container)
     }
 
     private fun snapshotLayout(view: View): LayoutSnapshot? {
@@ -693,6 +764,66 @@ object StatusBarComboStyleOneRuntime {
                 }.forEach { module.hook(it).intercept(callback) }
             }.onFailure { diagnostic("Battery meter hook unavailable: $className: $it") }
         }
+    }
+
+    private fun statusBarRootOf(view: View): ViewGroup? {
+        var node: View? = view
+        while (node != null) {
+            if (node is ViewGroup && node.javaClass.name == PHONE_BAR) return node
+            node = node.parent as? View
+        }
+        return null
+    }
+
+    /**
+     * Capture the colour SystemUI actually applies to each status-bar icon.
+     * The QS clock is only a useful fallback: the shade and collapsed status
+     * bar may be tinted differently in the same frame.
+     */
+    private fun hookIconTint(module: XposedModule, classLoader: ClassLoader) {
+        runCatching {
+            var cls: Class<*>? = classLoader.loadClass("com.android.systemui.statusbar.StatusBarIconView")
+            val methods = mutableListOf<java.lang.reflect.Method>()
+            while (cls != null) {
+                methods += cls.declaredMethods.filter {
+                    (it.name == "onDarkChanged" || it.name == "setIconColor") &&
+                        it.parameterTypes.any { type -> type == Int::class.javaPrimitiveType }
+                }
+                cls = cls.superclass
+            }
+            methods.distinctBy { it.name + it.parameterTypes.joinToString { type -> type.name } }
+                .forEach { method ->
+                    module.hook(method).intercept { chain ->
+                        val result = chain.proceed()
+                        var color: Int? = null
+                        method.parameterTypes.forEachIndexed { index, type ->
+                            if (color == null && type == Int::class.javaPrimitiveType) {
+                                val value = runCatching { chain.getArg(index) as? Int }.getOrNull()
+                                if (value != null && value != Color.TRANSPARENT) color = value
+                            }
+                        }
+                        val resolvedColor = color
+                        val icon = chain.thisObject as? View
+                        val row = icon?.let(::statusBarRootOf)
+                        if (resolvedColor != null && row != null) {
+                            rowTintSnapshots[row] = resolvedColor
+                            val host = synchronized(hosts) { hosts[row] }
+                            if (host != null && host.rowTint != resolvedColor) {
+                                val applyTint = Runnable {
+                                    if (host.rowTint != resolvedColor) {
+                                        host.rowTint = resolvedColor
+                                        host.inline?.setTintOverride(resolvedColor)
+                                        host.overlay?.setTintOverride(resolvedColor)
+                                    }
+                                }
+                                if (Looper.myLooper() == Looper.getMainLooper()) applyTint.run()
+                                else main.post(applyTint)
+                            }
+                        }
+                        result
+                    }
+                }
+        }.onFailure { diagnostic("StatusBarIconView tint hook unavailable: $it") }
     }
 
     private fun hookIconManager(module: XposedModule, classLoader: ClassLoader) {
