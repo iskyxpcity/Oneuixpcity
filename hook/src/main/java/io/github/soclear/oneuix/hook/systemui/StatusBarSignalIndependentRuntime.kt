@@ -20,6 +20,7 @@ import android.telephony.SubscriptionInfo
 import android.telephony.SubscriptionManager
 import android.telephony.TelephonyCallback
 import android.telephony.TelephonyManager
+import android.util.Log
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
