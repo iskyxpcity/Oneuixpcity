@@ -156,6 +156,7 @@ internal object StatusBarComboStyleOneRuntime {
             )
             canvas.restoreToCount(save)
         }
+    }
 
     private class OverlayWindow(private val holder: Holder) {
         private val host: ViewGroup = holder.statusBarView
