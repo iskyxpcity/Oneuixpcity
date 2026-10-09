@@ -6,7 +6,6 @@ import androidx.compose.foundation.background
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.selection.selectable
 import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -210,7 +209,7 @@ fun StatusComboStyleOneCategoryControls(
     when (selectedTab) {
         0 -> {
             StatusThemeGroup(items = listOf({
-                OneuiXInfoItem(title = stringResource(R.string.status_combo_style_one_group_appearance))
+                StyleOneInfoItem(title = stringResource(R.string.status_combo_style_one_group_appearance))
             }, {
                 SelectItem(
                     title = stringResource(R.string.status_combo_style_one_style),
@@ -328,7 +327,7 @@ fun StatusComboStyleOneCategoryControls(
             }))
 
             StatusThemeGroup(items = listOf({
-                OneuiXInfoItem(title = stringResource(R.string.status_combo_style_one_group_advanced))
+                StyleOneInfoItem(title = stringResource(R.string.status_combo_style_one_group_advanced))
             }, {
                 SwitchItem(
                     title = stringResource(R.string.status_combo_style_one_debug_log),
@@ -340,7 +339,7 @@ fun StatusComboStyleOneCategoryControls(
         }
         1 -> {
             StatusThemeGroup(items = listOf({
-                OneuiXInfoItem(title = stringResource(R.string.status_combo_style_one_group_appearance))
+                StyleOneInfoItem(title = stringResource(R.string.status_combo_style_one_group_appearance))
             }, {
                 styleOneSlider(stringResource(R.string.status_combo_style_one_glyph_scale),
                     stringResource(R.string.status_combo_style_one_percent_summary, glyphScale), glyphScale.toFloat(), 70f..150f,
@@ -364,7 +363,7 @@ fun StatusComboStyleOneCategoryControls(
             }))
 
             StatusThemeGroup(items = listOf({
-                OneuiXInfoItem(title = stringResource(R.string.status_combo_style_one_group_stroke))
+                StyleOneInfoItem(title = stringResource(R.string.status_combo_style_one_group_stroke))
             }, {
                 styleOneSlider(stringResource(R.string.status_combo_style_one_ring_stroke),
                     stringResource(R.string.status_combo_style_one_int_summary, ringStroke), ringStroke.toFloat(), 4f..16f,
@@ -378,7 +377,7 @@ fun StatusComboStyleOneCategoryControls(
             }))
 
             StatusThemeGroup(items = listOf({
-                OneuiXInfoItem(title = stringResource(R.string.status_combo_style_one_group_text))
+                StyleOneInfoItem(title = stringResource(R.string.status_combo_style_one_group_text))
             }, {
                 styleOneSlider(stringResource(R.string.status_combo_style_one_value_size),
                     stringResource(R.string.status_combo_style_one_sp_summary, valueSize), valueSize.toFloat(), 6f..18f,
@@ -392,7 +391,7 @@ fun StatusComboStyleOneCategoryControls(
             }))
 
             StatusThemeGroup(items = listOf({
-                OneuiXInfoItem(title = stringResource(R.string.status_combo_style_one_group_type))
+                StyleOneInfoItem(title = stringResource(R.string.status_combo_style_one_group_type))
             }, {
                 styleOneSlider(stringResource(R.string.status_combo_style_one_type_size),
                     stringResource(R.string.status_combo_style_one_int_summary, typeSize), typeSize.toFloat(), 16f..44f,
@@ -426,7 +425,7 @@ fun StatusComboStyleOneCategoryControls(
             }))
 
             StatusThemeGroup(items = listOf({
-                OneuiXInfoItem(title = stringResource(R.string.status_combo_style_one_group_out_signal))
+                StyleOneInfoItem(title = stringResource(R.string.status_combo_style_one_group_out_signal))
             }, {
                 styleOneSlider(stringResource(R.string.status_combo_style_one_out_signal_size),
                     stringResource(R.string.status_combo_style_one_dp_summary, outSignalSize), outSignalSize.toFloat(), 6f..20f,
@@ -440,7 +439,7 @@ fun StatusComboStyleOneCategoryControls(
             }))
 
             StatusThemeGroup(items = listOf({
-                OneuiXInfoItem(title = stringResource(R.string.status_combo_style_one_group_track))
+                StyleOneInfoItem(title = stringResource(R.string.status_combo_style_one_group_track))
             }, {
                 styleOneSlider(stringResource(R.string.status_combo_style_one_track_alpha),
                     stringResource(R.string.status_combo_style_one_percent_summary, trackAlpha), trackAlpha.toFloat(), 0f..100f,
@@ -502,7 +501,7 @@ fun StatusComboStyleOneCategoryControls(
                     )
                 }
                 colorItems += {
-                    OneuiXInfoItem(
+                    StyleOneInfoItem(
                         title = stringResource(R.string.status_combo_style_one_reset_colors),
                         summary = stringResource(R.string.status_combo_style_one_reset_colors_summary),
                         modifier = Modifier
@@ -797,7 +796,7 @@ private fun styleOneSlider(
     val view = LocalView.current
     var lastStep by remember(title, range.start, range.endInclusive) { mutableFloatStateOf(value) }
     Column {
-        OneuiXInfoItem(
+        StyleOneInfoItem(
             title = title,
             summary = summary,
             modifier = Modifier.alpha(if (enabled) 1f else 0.45f),
