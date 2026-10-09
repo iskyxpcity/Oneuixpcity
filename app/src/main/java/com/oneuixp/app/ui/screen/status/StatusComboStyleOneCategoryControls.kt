@@ -266,88 +266,114 @@ StatusThemeGroup(items = listOf({
     }))
         }
         1 -> {
-StatusThemeGroup(items = listOf({
-        styleOneSlider(icon, stringResource(R.string.status_combo_style_one_glyph_scale),
-            stringResource(R.string.status_combo_style_one_percent_summary, glyphScale), glyphScale.toFloat(), 70f..150f,
-            { glyphScale = it.roundToInt(); preview(runtime.copy(glyphScalePercent = glyphScale)) },
-            { persist(runtime.copy(glyphScalePercent = glyphScale)) })
-    }, {
-        styleOneSlider(icon, stringResource(R.string.status_combo_style_one_bolt_size),
-            stringResource(R.string.status_combo_style_one_percent_summary, boltSize), boltSize.toFloat(), 50f..180f,
-            { boltSize = it.roundToInt(); preview(runtime.copy(chargingBoltSizePercent = boltSize)) },
-            { persist(runtime.copy(chargingBoltSizePercent = boltSize)) })
-    }, {
-        styleOneSlider(icon, stringResource(R.string.status_combo_style_one_bolt_x),
-            stringResource(R.string.status_combo_style_one_dp_summary, boltX), boltX.toFloat(), -8f..8f,
-            { boltX = it.roundToInt(); preview(runtime.copy(chargingBoltXDp = boltX)) },
-            { persist(runtime.copy(chargingBoltXDp = boltX)) })
-    }, {
-        styleOneSlider(icon, stringResource(R.string.status_combo_style_one_bolt_y),
-            stringResource(R.string.status_combo_style_one_dp_summary, boltY), boltY.toFloat(), -8f..8f,
-            { boltY = it.roundToInt(); preview(runtime.copy(chargingBoltYDp = boltY)) },
-            { persist(runtime.copy(chargingBoltYDp = boltY)) })
-    }, {
-        styleOneSlider(icon, stringResource(R.string.status_combo_style_one_ring_stroke),
-            stringResource(R.string.status_combo_style_one_int_summary, ringStroke), ringStroke.toFloat(), 4f..16f,
-            { ringStroke = it.roundToInt(); preview(runtime.copy(ringStroke = ringStroke)) },
-            { persist(runtime.copy(ringStroke = ringStroke)) })
-    }, {
-        styleOneSlider(icon, stringResource(R.string.status_combo_style_one_arc_stroke),
-            stringResource(R.string.status_combo_style_one_int_summary, arcStroke), arcStroke.toFloat(), 3f..16f,
-            { arcStroke = it.roundToInt(); preview(runtime.copy(arcStroke = arcStroke)) },
-            { persist(runtime.copy(arcStroke = arcStroke)) })
-    }, {
-        styleOneSlider(icon, stringResource(R.string.status_combo_style_one_value_size),
-            stringResource(R.string.status_combo_style_one_sp_summary, valueSize), valueSize.toFloat(), 6f..18f,
-            { valueSize = it.roundToInt(); preview(runtime.copy(valueSize = valueSize)) },
-            { persist(runtime.copy(valueSize = valueSize)) })
-    }, {
-        styleOneSlider(icon, stringResource(R.string.status_combo_style_one_value_weight),
-            stringResource(R.string.status_combo_style_one_weight_summary, valueWeight), valueWeight.toFloat(), 100f..900f,
-            { valueWeight = (it / 100f).roundToInt() * 100; preview(runtime.copy(valueWeight = valueWeight)) },
-            { persist(runtime.copy(valueWeight = valueWeight)) }, stepSize = 100f)
-    }, {
-        styleOneSlider(icon, stringResource(R.string.status_combo_style_one_type_size),
-            stringResource(R.string.status_combo_style_one_int_summary, typeSize), typeSize.toFloat(), 16f..44f,
-            { typeSize = it.roundToInt(); preview(runtime.copy(typeSize = typeSize)) },
-            { persist(runtime.copy(typeSize = typeSize)) })
-    }, {
-        styleOneSlider(icon, stringResource(R.string.status_combo_style_one_type_weight),
-            stringResource(R.string.status_combo_style_one_weight_summary, typeWeight), typeWeight.toFloat(), 100f..900f,
-            { typeWeight = (it / 100f).roundToInt() * 100; preview(runtime.copy(typeWeight = typeWeight)) },
-            { persist(runtime.copy(typeWeight = typeWeight)) }, stepSize = 100f)
-    }, {
-        styleOneSlider(icon, stringResource(R.string.status_combo_style_one_type_suffix_scale),
-            stringResource(R.string.status_combo_style_one_percent_summary, suffixScale), suffixScale.toFloat(), 50f..100f,
-            { suffixScale = it.roundToInt(); preview(runtime.copy(typeSuffixScale = suffixScale)) },
-            { persist(runtime.copy(typeSuffixScale = suffixScale)) })
-    }))
-StatusThemeGroup(items = listOf({
-        styleOneSlider(icon, stringResource(R.string.status_combo_style_one_out_type_size),
-            stringResource(R.string.status_combo_style_one_dp_summary, outTypeSize), outTypeSize.toFloat(), 8f..26f,
-            { outTypeSize = it.roundToInt(); preview(runtime.copy(outTypeSizeDp = outTypeSize)) },
-            { persist(runtime.copy(outTypeSizeDp = outTypeSize)) })
-    }, {
-        styleOneSlider(icon, stringResource(R.string.status_combo_style_one_out_signal_size),
-            stringResource(R.string.status_combo_style_one_dp_summary, outSignalSize), outSignalSize.toFloat(), 6f..20f,
-            { outSignalSize = it.roundToInt(); preview(runtime.copy(outSignalSizeDp = outSignalSize)) },
-            { persist(runtime.copy(outSignalSizeDp = outSignalSize)) })
-    }, {
-        styleOneSlider(icon, stringResource(R.string.status_combo_style_one_out_type_margin_left),
-            stringResource(R.string.status_combo_style_one_dp_summary, outTypeLeft), outTypeLeft.toFloat(), 0f..16f,
-            { outTypeLeft = it.roundToInt(); preview(runtime.copy(outTypeMarginLeftDp = outTypeLeft)) },
-            { persist(runtime.copy(outTypeMarginLeftDp = outTypeLeft)) })
-    }, {
-        styleOneSlider(icon, stringResource(R.string.status_combo_style_one_out_type_margin_right),
-            stringResource(R.string.status_combo_style_one_dp_summary, outTypeRight), outTypeRight.toFloat(), 0f..16f,
-            { outTypeRight = it.roundToInt(); preview(runtime.copy(outTypeMarginRightDp = outTypeRight)) },
-            { persist(runtime.copy(outTypeMarginRightDp = outTypeRight)) })
-    }, {
-        styleOneSlider(icon, stringResource(R.string.status_combo_style_one_out_signal_margin),
-            stringResource(R.string.status_combo_style_one_dp_summary, outSignalMargin), outSignalMargin.toFloat(), 0f..16f,
-            { outSignalMargin = it.roundToInt(); preview(runtime.copy(outSignalMarginDp = outSignalMargin)) },
-            { persist(runtime.copy(outSignalMarginDp = outSignalMargin)) })
-    }))
+            StatusThemeGroup(items = listOf({
+                OneuiXInfoItem(title = stringResource(R.string.status_combo_style_one_group_appearance))
+            }, {
+                styleOneSlider(icon, stringResource(R.string.status_combo_style_one_glyph_scale),
+                    stringResource(R.string.status_combo_style_one_percent_summary, glyphScale), glyphScale.toFloat(), 70f..150f,
+                    { glyphScale = it.roundToInt(); preview(runtime.copy(glyphScalePercent = glyphScale)) },
+                    { persist(runtime.copy(glyphScalePercent = glyphScale)) })
+            }, {
+                styleOneSlider(icon, stringResource(R.string.status_combo_style_one_bolt_size),
+                    stringResource(R.string.status_combo_style_one_percent_summary, boltSize), boltSize.toFloat(), 50f..180f,
+                    { boltSize = it.roundToInt(); preview(runtime.copy(chargingBoltSizePercent = boltSize)) },
+                    { persist(runtime.copy(chargingBoltSizePercent = boltSize)) })
+            }, {
+                styleOneSlider(icon, stringResource(R.string.status_combo_style_one_bolt_x),
+                    stringResource(R.string.status_combo_style_one_dp_summary, boltX), boltX.toFloat(), -8f..8f,
+                    { boltX = it.roundToInt(); preview(runtime.copy(chargingBoltXDp = boltX)) },
+                    { persist(runtime.copy(chargingBoltXDp = boltX)) })
+            }, {
+                styleOneSlider(icon, stringResource(R.string.status_combo_style_one_bolt_y),
+                    stringResource(R.string.status_combo_style_one_dp_summary, boltY), boltY.toFloat(), -8f..8f,
+                    { boltY = it.roundToInt(); preview(runtime.copy(chargingBoltYDp = boltY)) },
+                    { persist(runtime.copy(chargingBoltYDp = boltY)) })
+            }))
+
+            StatusThemeGroup(items = listOf({
+                OneuiXInfoItem(title = stringResource(R.string.status_combo_style_one_group_stroke))
+            }, {
+                styleOneSlider(icon, stringResource(R.string.status_combo_style_one_ring_stroke),
+                    stringResource(R.string.status_combo_style_one_int_summary, ringStroke), ringStroke.toFloat(), 4f..16f,
+                    { ringStroke = it.roundToInt(); preview(runtime.copy(ringStroke = ringStroke)) },
+                    { persist(runtime.copy(ringStroke = ringStroke)) })
+            }, {
+                styleOneSlider(icon, stringResource(R.string.status_combo_style_one_arc_stroke),
+                    stringResource(R.string.status_combo_style_one_int_summary, arcStroke), arcStroke.toFloat(), 3f..16f,
+                    { arcStroke = it.roundToInt(); preview(runtime.copy(arcStroke = arcStroke)) },
+                    { persist(runtime.copy(arcStroke = arcStroke)) })
+            }))
+
+            StatusThemeGroup(items = listOf({
+                OneuiXInfoItem(title = stringResource(R.string.status_combo_style_one_group_text))
+            }, {
+                styleOneSlider(icon, stringResource(R.string.status_combo_style_one_value_size),
+                    stringResource(R.string.status_combo_style_one_sp_summary, valueSize), valueSize.toFloat(), 6f..18f,
+                    { valueSize = it.roundToInt(); preview(runtime.copy(valueSize = valueSize)) },
+                    { persist(runtime.copy(valueSize = valueSize)) })
+            }, {
+                styleOneSlider(icon, stringResource(R.string.status_combo_style_one_value_weight),
+                    stringResource(R.string.status_combo_style_one_weight_summary, valueWeight), valueWeight.toFloat(), 100f..900f,
+                    { valueWeight = (it / 100f).roundToInt() * 100; preview(runtime.copy(valueWeight = valueWeight)) },
+                    { persist(runtime.copy(valueWeight = valueWeight)) }, stepSize = 100f)
+            }))
+
+            StatusThemeGroup(items = listOf({
+                OneuiXInfoItem(title = stringResource(R.string.status_combo_style_one_group_type))
+            }, {
+                styleOneSlider(icon, stringResource(R.string.status_combo_style_one_type_size),
+                    stringResource(R.string.status_combo_style_one_int_summary, typeSize), typeSize.toFloat(), 16f..44f,
+                    { typeSize = it.roundToInt(); preview(runtime.copy(typeSize = typeSize)) },
+                    { persist(runtime.copy(typeSize = typeSize)) })
+            }, {
+                styleOneSlider(icon, stringResource(R.string.status_combo_style_one_type_weight),
+                    stringResource(R.string.status_combo_style_one_weight_summary, typeWeight), typeWeight.toFloat(), 100f..900f,
+                    { typeWeight = (it / 100f).roundToInt() * 100; preview(runtime.copy(typeWeight = typeWeight)) },
+                    { persist(runtime.copy(typeWeight = typeWeight)) }, stepSize = 100f)
+            }, {
+                styleOneSlider(icon, stringResource(R.string.status_combo_style_one_type_suffix_scale),
+                    stringResource(R.string.status_combo_style_one_percent_summary, suffixScale), suffixScale.toFloat(), 50f..100f,
+                    { suffixScale = it.roundToInt(); preview(runtime.copy(typeSuffixScale = suffixScale)) },
+                    { persist(runtime.copy(typeSuffixScale = suffixScale)) })
+            }, {
+                styleOneSlider(icon, stringResource(R.string.status_combo_style_one_out_type_size),
+                    stringResource(R.string.status_combo_style_one_dp_summary, outTypeSize), outTypeSize.toFloat(), 8f..26f,
+                    { outTypeSize = it.roundToInt(); preview(runtime.copy(outTypeSizeDp = outTypeSize)) },
+                    { persist(runtime.copy(outTypeSizeDp = outTypeSize)) })
+            }, {
+                styleOneSlider(icon, stringResource(R.string.status_combo_style_one_out_type_margin_left),
+                    stringResource(R.string.status_combo_style_one_dp_summary, outTypeLeft), outTypeLeft.toFloat(), 0f..16f,
+                    { outTypeLeft = it.roundToInt(); preview(runtime.copy(outTypeMarginLeftDp = outTypeLeft)) },
+                    { persist(runtime.copy(outTypeMarginLeftDp = outTypeLeft)) })
+            }, {
+                styleOneSlider(icon, stringResource(R.string.status_combo_style_one_out_type_margin_right),
+                    stringResource(R.string.status_combo_style_one_dp_summary, outTypeRight), outTypeRight.toFloat(), 0f..16f,
+                    { outTypeRight = it.roundToInt(); preview(runtime.copy(outTypeMarginRightDp = outTypeRight)) },
+                    { persist(runtime.copy(outTypeMarginRightDp = outTypeRight)) })
+            }))
+
+            StatusThemeGroup(items = listOf({
+                OneuiXInfoItem(title = stringResource(R.string.status_combo_style_one_group_out_signal))
+            }, {
+                styleOneSlider(icon, stringResource(R.string.status_combo_style_one_out_signal_size),
+                    stringResource(R.string.status_combo_style_one_dp_summary, outSignalSize), outSignalSize.toFloat(), 6f..20f,
+                    { outSignalSize = it.roundToInt(); preview(runtime.copy(outSignalSizeDp = outSignalSize)) },
+                    { persist(runtime.copy(outSignalSizeDp = outSignalSize)) })
+            }, {
+                styleOneSlider(icon, stringResource(R.string.status_combo_style_one_out_signal_margin),
+                    stringResource(R.string.status_combo_style_one_dp_summary, outSignalMargin), outSignalMargin.toFloat(), 0f..16f,
+                    { outSignalMargin = it.roundToInt(); preview(runtime.copy(outSignalMarginDp = outSignalMargin)) },
+                    { persist(runtime.copy(outSignalMarginDp = outSignalMargin)) })
+            }))
+
+            StatusThemeGroup(items = listOf({
+                OneuiXInfoItem(title = stringResource(R.string.status_combo_style_one_group_track))
+            }, {
+                styleOneSlider(icon, stringResource(R.string.status_combo_style_one_track_alpha),
+                    stringResource(R.string.status_combo_style_one_percent_summary, trackAlpha), trackAlpha.toFloat(), 0f..100f,
+                    { trackAlpha = it.roundToInt(); val a = (trackAlpha * 255f / 100f).roundToInt(); preview(runtime.copy(trackAlpha = a)) },
+                    { persist(runtime.copy(trackAlpha = (trackAlpha * 255f / 100f).roundToInt())) })
+            }))
         }
         else -> {
             StatusThemeGroup(items = listOf({
@@ -535,7 +561,8 @@ StatusThemeGroup(items = listOf({
                     },
                 )
             }
-        }    }
+        }
+    }
 
 }
 

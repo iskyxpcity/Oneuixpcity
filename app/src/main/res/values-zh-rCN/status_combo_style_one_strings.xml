@@ -9,7 +9,7 @@
     <string name="status_combo_style_one_style_ring">电量圆环</string>
     <string name="status_combo_style_one_style_rect">圆角矩形</string>
     <string name="status_combo_style_one_overlay">在独立窗口绘制</string>
-    <string name="status_combo_style_one_overlay_summary">在状态栏行外绘制，避免较大的图标元素被裁切。</string>
+    <string name="status_combo_style_one_overlay_summary">在独立窗口绘制，避免图标被状态栏行的高度裁切。关闭后改为在状态栏内部绘制。</string>
     <string name="status_combo_style_one_show_wifi">显示 Wi-Fi 弧线</string>
     <string name="status_combo_style_one_show_mobile">显示移动信号点</string>
     <string name="status_combo_style_one_show_value">显示电量数字</string>
@@ -24,9 +24,9 @@
     <string name="status_combo_style_one_signal_inside">图标内部</string>
     <string name="status_combo_style_one_signal_outside">图标外侧</string>
     <string name="status_combo_style_one_dual_sim">双 SIM 信号</string>
-    <string name="status_combo_style_one_dual_sim_summary">两张卡的信号均可读取且空间足够时，分别显示信号强度。</string>
+    <string name="status_combo_style_one_dual_sim_summary">没有 Wi-Fi 且未充电时，将 SIM 1 和 SIM 2 分成两行显示；只有一张卡时显示默认数据 SIM。</string>
     <string name="status_combo_style_one_stacked_signal">在图标外绘制信号柱</string>
-    <string name="status_combo_style_one_stacked_signal_summary">信号位于图标外时，绘制四格信号柱和可选的第二张 SIM 点阵，代替原生信号图标。</string>
+    <string name="status_combo_style_one_stacked_signal_summary">信号位于圆环外时绘制四格信号柱，并可显示第二张 SIM 的点阵。关闭后保留系统原生移动信号图标。</string>
     <string name="status_combo_style_one_data_sim_only">只显示默认数据 SIM</string>
     <string name="status_combo_style_one_data_sim_only_summary">使用当前被选为移动数据卡的 SIM 信号强度。</string>
     <string name="status_combo_style_one_glyph_scale">图标整体大小</string>
@@ -46,7 +46,7 @@
     <string name="status_combo_style_one_out_type_margin_right">图标外网络类型右边距</string>
     <string name="status_combo_style_one_out_signal_margin">图标外信号间距</string>
     <string name="status_combo_style_one_role_colors">状态颜色</string>
-    <string name="status_combo_style_one_role_colors_summary">充电、低电量和临界电量状态使用不同颜色。</string>
+    <string name="status_combo_style_one_role_colors_summary">分别为低电量、充电和临界电量设置颜色，每种状态都可分别配置深色和浅色状态栏背景。</string>
     <string name="status_combo_style_one_critical_threshold">临界电量颜色阈值</string>
     <string name="status_combo_style_one_low_threshold">低电量颜色阈值</string>
     <string name="status_combo_style_one_track_alpha">未点亮弧线与信号透明度</string>
@@ -78,7 +78,7 @@
     <string name="status_combo_style_one_group_out_signal">环外信号</string>
     <string name="status_combo_style_one_group_track">未点亮部分</string>
     <string name="status_combo_style_one_reset_colors">恢复默认颜色</string>
-    <string name="status_combo_style_one_reset_colors_summary">恢复低电量、临界电量和充电状态的默认颜色。</string>
+    <string name="status_combo_style_one_reset_colors_summary">将三种状态颜色恢复为默认预设。</string>
     <string name="status_combo_style_one_reset_colors_confirm">要将深色和浅色背景的六种状态颜色全部恢复为默认值吗？</string>
     <string name="status_combo_style_one_reset">恢复默认</string>
     <string name="status_combo_style_one_cancel">取消</string>

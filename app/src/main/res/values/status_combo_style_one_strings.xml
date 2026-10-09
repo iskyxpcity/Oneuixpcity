@@ -9,7 +9,7 @@
     <string name="status_combo_style_one_style_ring">Battery ring</string>
     <string name="status_combo_style_one_style_rect">Rounded rectangle</string>
     <string name="status_combo_style_one_overlay">Draw in its own window</string>
-    <string name="status_combo_style_one_overlay_summary">Draw outside the status-bar row to prevent larger elements from being clipped.</string>
+    <string name="status_combo_style_one_overlay_summary">Draw the glyph in its own window so it is not clipped to the status-bar row height. Turn off to draw inside the bar again.</string>
     <string name="status_combo_style_one_show_wifi">Show Wi-Fi arcs</string>
     <string name="status_combo_style_one_show_mobile">Show mobile dots</string>
     <string name="status_combo_style_one_show_value">Show battery number</string>
@@ -24,9 +24,9 @@
     <string name="status_combo_style_one_signal_inside">Inside the icon</string>
     <string name="status_combo_style_one_signal_outside">Outside the icon</string>
     <string name="status_combo_style_one_dual_sim">Dual-SIM signal</string>
-    <string name="status_combo_style_one_dual_sim_summary">Show separate levels when both SIM signal readings are available and there is room.</string>
+    <string name="status_combo_style_one_dual_sim_summary">With no Wi-Fi and not charging, show SIM 1 and SIM 2 as two rows. If only one SIM is available, show the current data SIM.</string>
     <string name="status_combo_style_one_stacked_signal">Draw signal bars outside the icon</string>
-    <string name="status_combo_style_one_stacked_signal_summary">When mobile signal is outside, draw four bars and an optional second-SIM dot row instead of the native icon.</string>
+    <string name="status_combo_style_one_stacked_signal_summary">When the signal is outside the ring, draw four bars and a row of dots for the second SIM. Turn off to keep the system's native mobile icon.</string>
     <string name="status_combo_style_one_data_sim_only">Show only the default data SIM</string>
     <string name="status_combo_style_one_data_sim_only_summary">Use the signal level from the SIM currently selected for mobile data.</string>
     <string name="status_combo_style_one_glyph_scale">Overall icon size</string>
@@ -46,7 +46,7 @@
     <string name="status_combo_style_one_out_type_margin_right">Outside network type right margin</string>
     <string name="status_combo_style_one_out_signal_margin">Outside signal margin</string>
     <string name="status_combo_style_one_role_colors">State colors</string>
-    <string name="status_combo_style_one_role_colors_summary">Use different colors while charging, at low battery, or at a critical battery level.</string>
+    <string name="status_combo_style_one_role_colors_summary">Choose colors for low battery, charging and critical battery. Each state has a separate color for dark and light status-bar backgrounds.</string>
     <string name="status_combo_style_one_critical_threshold">Critical-battery color threshold</string>
     <string name="status_combo_style_one_low_threshold">Low-battery color threshold</string>
     <string name="status_combo_style_one_track_alpha">Inactive arcs and signal opacity</string>
@@ -79,7 +79,7 @@
     <string name="status_combo_style_one_group_out_signal">Out-of-ring signal</string>
     <string name="status_combo_style_one_group_track">Track</string>
     <string name="status_combo_style_one_reset_colors">Reset role colors</string>
-    <string name="status_combo_style_one_reset_colors_summary">Restore the default low, critical and charging colors.</string>
+    <string name="status_combo_style_one_reset_colors_summary">Restore the three state colors to their default presets.</string>
     <string name="status_combo_style_one_reset_colors_confirm">Reset all six dark- and light-background color values to the defaults?</string>
     <string name="status_combo_style_one_reset">Reset</string>
     <string name="status_combo_style_one_cancel">Cancel</string>
