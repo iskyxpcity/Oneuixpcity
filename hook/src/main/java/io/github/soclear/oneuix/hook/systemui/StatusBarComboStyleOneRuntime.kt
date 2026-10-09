@@ -138,7 +138,7 @@ internal object StatusBarComboStyleOneRuntime {
                 textSize = runtime.batteryTextSizeSp.coerceIn(5f, 14f) *
                     resources.displayMetrics.scaledDensity
                 typeface = Typeface.create(
-                    "sans-serif",
+                    Typeface.create("sans-serif", Typeface.NORMAL),
                     runtime.batteryTextFontWeight.coerceIn(100, 900),
                     false,
                 )
@@ -470,7 +470,7 @@ internal object StatusBarComboStyleOneRuntime {
             params.height = metrics.height
             params.x = x
             params.y = y
-            runCatching { windowManager.updateViewLayout(view, params) }
+            runCatching { windowManager?.updateViewLayout(view, params) }
         }
 
         fun detach() {
@@ -494,6 +494,7 @@ internal object StatusBarComboStyleOneRuntime {
     private val wifiReceiverStarted = AtomicBoolean(false)
     private val telephonyStarted = AtomicBoolean(false)
     private val previewQueued = AtomicBoolean(false)
+    @Volatile private var pendingPreview: Preference.SystemUI.StatusBarComboStyleOneRuntime? = null
     private val holders = WeakHashMap<View, Holder>()
     private val signalStates = LinkedHashMap<Int, SignalState>()
     private val callbacks = LinkedHashMap<Int, Pair<TelephonyManager, TelephonyCallback>>()
