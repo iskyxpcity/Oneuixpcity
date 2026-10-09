@@ -865,7 +865,7 @@ object StatusBarComboStyleOneRuntime {
      * battery itself, not the last tint observed on a neighbouring status icon.
      */
     private fun hookNativeBatteryTint(module: XposedModule, classLoader: ClassLoader) {
-        listOf(BATTERY_METER, MIUI_BATTERY_METER).forEach { className ->
+        listOf(BATTERY_METER, MIUI_BATTERY_METER).forEach classLoop@{ className ->
             runCatching {
                 var current: Class<*>? = classLoader.loadClass(className)
                 val methods = mutableListOf<java.lang.reflect.Method>()
@@ -877,10 +877,10 @@ object StatusBarComboStyleOneRuntime {
                     current = current.superclass
                 }
                 methods.distinctBy { it.name + it.parameterTypes.joinToString { type -> type.name } }
-                    .forEach { method ->
+                    .forEach methodLoop@{ method ->
                         val tintIndex = method.parameterTypes.indices.lastOrNull {
                             method.parameterTypes[it] == Int::class.javaPrimitiveType
-                        } ?: return@forEach
+                        } ?: return@methodLoop
                         module.hook(method).intercept { chain ->
                             val result = chain.proceed()
                             val meter = chain.thisObject as? View
