@@ -1498,7 +1498,7 @@ object StatusBarComboStyleOneRuntime {
             mobileLevel = if (subscriptionId == defaultDataSubscriptionId) safeLevel else old.mobileLevel,
             simOneLevel = if (slot == 0) safeLevel else old.simOneLevel,
             simTwoLevel = if (slot == 1) safeLevel else old.simTwoLevel,
-            dataSimSlotIndex = if (subscriptionId == defaultDataSubscriptionId && slot in 0..1) slot else old.dataSimSlotIndex,
+            dataSimSlotIndex = if (subscriptionId == defaultDataSubscriptionId && slot != null && slot in 0..1) slot else old.dataSimSlotIndex,
         )
         invalidateGlyphs()
     }
