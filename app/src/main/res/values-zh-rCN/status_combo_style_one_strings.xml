@@ -65,4 +65,7 @@
     <string name="status_combo_style_one_reset_colors_confirm">要将深色和浅色背景的六种状态颜色全部恢复为默认值吗？</string>
     <string name="status_combo_style_one_reset">恢复默认</string>
     <string name="status_combo_style_one_cancel">取消</string>
+    <string name="status_combo_style_one_tab_general">常规</string>
+    <string name="status_combo_style_one_tab_size">尺寸</string>
+    <string name="status_combo_style_one_tab_color">颜色</string>
 </resources>
