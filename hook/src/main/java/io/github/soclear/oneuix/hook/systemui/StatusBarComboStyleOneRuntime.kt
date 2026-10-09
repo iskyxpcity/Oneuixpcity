@@ -12,12 +12,14 @@ import android.os.BatteryManager
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.os.PowerManager
 import android.telephony.PhoneStateListener
 import android.telephony.ServiceState
 import android.telephony.SignalStrength
 import android.telephony.SubscriptionInfo
 import android.telephony.SubscriptionManager
 import android.telephony.TelephonyManager
+import android.telephony.TelephonyDisplayInfo
 import android.util.Log
 import android.view.Gravity
 import android.view.View
@@ -38,6 +40,7 @@ import io.github.soclear.oneuix.hook.util.PreferenceProvider
 import java.util.Collections
 import java.util.IdentityHashMap
 import java.util.WeakHashMap
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.serialization.decodeFromString
 import kotlin.math.max
@@ -66,6 +69,7 @@ object StatusBarComboStyleOneRuntime {
     @Volatile private var tint = Color.WHITE
     @Volatile private var subscriptionsListener: SubscriptionManager.OnSubscriptionsChangedListener? = null
     private val phoneListeners = mutableMapOf<Int, Pair<TelephonyManager, PhoneStateListener>>()
+    private val displayNetworkTypes = ConcurrentHashMap<Int, String>()
 
     private class Host(val root: ViewGroup) {
         val original = IdentityHashMap<View, Int>()
@@ -148,6 +152,8 @@ object StatusBarComboStyleOneRuntime {
             glyph.invalidate()
             runCatching { wm.updateViewLayout(glyph, lp) }
         }
+        fun invalidate() { glyph.invalidate() }
+
         fun detach() {
             if (params == null) return
             runCatching { wm.removeView(glyph) }
@@ -163,7 +169,11 @@ object StatusBarComboStyleOneRuntime {
         }.onFailure { Log.w(TAG, "Cannot read Style One settings", it) }
 
         StatusBarSignalIndependentRuntime.addIndicatorColorListener { next ->
-            if (next != tint) { tint = next; state = state.copy(tintColor = next); refreshHosts() }
+            if (next != tint) {
+                tint = next
+                state = state.copy(tintColor = next)
+                invalidateGlyphs()
+            }
         }
 
         var hookedHost = false
@@ -178,7 +188,7 @@ object StatusBarComboStyleOneRuntime {
                     }
                 }
                 hookedHost = true
-            }.onFailure { Log.d(TAG, "Status-bar host unavailable: $name", it) }
+            }.onFailure { diagnostic("Status-bar host unavailable: $name: $it") }
         }
         listOf(MIUI_ICONS, AOSP_ICONS).forEach { name ->
             runCatching {
@@ -191,7 +201,7 @@ object StatusBarComboStyleOneRuntime {
                         result
                     }
                 }
-            }.onFailure { Log.d(TAG, "Status icon container unavailable: $name", it) }
+            }.onFailure { diagnostic("Status icon container unavailable: $name: $it") }
         }
         if (!hookedHost) Log.w(TAG, "No status-bar host constructor was hooked")
     }
@@ -228,6 +238,16 @@ object StatusBarComboStyleOneRuntime {
 
     private fun refreshHosts() {
         main.post { synchronized(hosts) { hosts.values.toList() }.forEach(::apply) }
+    }
+
+    /** Refresh just the glyph drawing when telemetry changes; avoid a status-bar relayout. */
+    private fun invalidateGlyphs() {
+        main.post {
+            synchronized(hosts) { hosts.values.toList() }.forEach { host ->
+                host.inline?.invalidate()
+                host.overlay?.invalidate()
+            }
+        }
     }
 
     private fun apply(host: Host) {
@@ -360,12 +380,33 @@ object StatusBarComboStyleOneRuntime {
             (name.contains("statusbaricon") || name.contains("modernstatusbar") || name.contains("mobile") ||
                 name.contains("cellular") || name.contains("signalcluster"))
     }
+    private fun isWithin(root: View, candidate: View): Boolean {
+        var node: View? = candidate
+        while (node != null) {
+            if (node === root) return true
+            node = node.parent as? View
+        }
+        return false
+    }
+
     private fun suppressInContainer(container: ViewGroup) {
-        if (!config.enabled) return
+        // Similar icon containers can exist in Quick Settings. Only manipulate
+        // children inside our registered collapsed status-bar host.
+        val host = synchronized(hosts) {
+            hosts.values.firstOrNull { isWithin(it.root, container) }
+        } ?: return
         descendants(container).forEach { view ->
             if (view is GlyphView) return@forEach
-            if ((config.showWifi && isWifiIcon(view)) || (isMobileNativeSuppressed() && isMobileIcon(view))) {
+            val hide = config.enabled &&
+                ((config.showWifi && isWifiIcon(view)) ||
+                    (isMobileNativeSuppressed() && isMobileIcon(view)))
+            if (hide) {
+                host.original.putIfAbsent(view, view.visibility)
                 if (view.visibility != View.GONE) view.visibility = View.GONE
+            } else {
+                host.original.remove(view)?.let { old ->
+                    if (view.visibility != old) view.visibility = old
+                }
             }
         }
     }
@@ -381,6 +422,7 @@ object StatusBarComboStyleOneRuntime {
                         runCatching {
                             val status = IgnoreUnknownKeysJson.decodeFromString(Preference.SystemUI.StatusBar.serializer(), payload)
                             config = sanitize(status.comboStyleOneRuntime)
+                            diagnostic("Settings updated: enabled=${config.enabled}, overlay=${config.overlayGlyph}, style=${config.trioStyle}, signalMode=${config.signalMode}")
                             refreshHosts()
                         }.onFailure { Log.w(TAG, "Bad Style One settings broadcast", it) }
                     }
@@ -402,8 +444,11 @@ object StatusBarComboStyleOneRuntime {
             if (stateReceiverReady) return
             val filter = IntentFilter().apply {
                 addAction(Intent.ACTION_BATTERY_CHANGED)
+                addAction(Intent.ACTION_BATTERY_LOW)
+                addAction(Intent.ACTION_BATTERY_OKAY)
                 addAction(Intent.ACTION_POWER_CONNECTED)
                 addAction(Intent.ACTION_POWER_DISCONNECTED)
+                addAction(PowerManager.ACTION_POWER_SAVE_MODE_CHANGED)
                 addAction(WifiManager.RSSI_CHANGED_ACTION)
                 addAction(WifiManager.NETWORK_STATE_CHANGED_ACTION)
                 addAction("android.intent.action.ACTION_DEFAULT_DATA_SUBSCRIPTION_CHANGED")
@@ -413,17 +458,21 @@ object StatusBarComboStyleOneRuntime {
                 override fun onReceive(context: Context, intent: Intent) {
                     when (intent.action) {
                         Intent.ACTION_BATTERY_CHANGED -> updateBattery(intent)
+                        Intent.ACTION_BATTERY_LOW -> state = state.copy(lowBatteryWarning = true)
+                        Intent.ACTION_BATTERY_OKAY -> state = state.copy(lowBatteryWarning = false)
                         Intent.ACTION_POWER_CONNECTED, Intent.ACTION_POWER_DISCONNECTED -> updateBattery(null)
+                        PowerManager.ACTION_POWER_SAVE_MODE_CHANGED -> updatePowerSave(app)
                         WifiManager.RSSI_CHANGED_ACTION, WifiManager.NETWORK_STATE_CHANGED_ACTION -> updateWifi(app)
                         else -> refreshTelephony(app)
                     }
-                    refreshHosts()
+                    invalidateGlyphs()
                 }
             }
             runCatching {
                 if (Build.VERSION.SDK_INT >= 33) app.registerReceiver(receiver, filter, Context.RECEIVER_EXPORTED)
                 else app.registerReceiver(receiver, filter)
                 updateBattery(app.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED)))
+                updatePowerSave(app)
                 updateWifi(app)
                 ensureTelephony(app)
                 stateReceiverReady = true
@@ -440,7 +489,17 @@ object StatusBarComboStyleOneRuntime {
         val charging = status == BatteryManager.BATTERY_STATUS_CHARGING ||
             status == BatteryManager.BATTERY_STATUS_FULL || plugged != 0
         state = state.copy(batteryLevel = level.coerceIn(0, 100), charging = charging, quickCharge = charging && quickCharge())
+        diagnostic("Battery: level=${state.batteryLevel}, charging=${state.charging}, quick=${state.quickCharge}")
     }
+    private fun updatePowerSave(context: Context) {
+        val manager = context.getSystemService(Context.POWER_SERVICE) as? PowerManager
+        val enabled = runCatching { manager?.isPowerSaveMode == true }.getOrDefault(state.powerSave)
+        if (state.powerSave != enabled) {
+            state = state.copy(powerSave = enabled)
+            diagnostic("Power-save mode changed: $enabled")
+        }
+    }
+
     private fun quickCharge(): Boolean =
         listOf("sys.miui.quickcharge", "persist.vendor.quickcharge.status", "ro.boot.quickcharge").any { key ->
             runCatching {
@@ -457,6 +516,7 @@ object StatusBarComboStyleOneRuntime {
             val level = if (info == null || info.rssi == -127) -1
                 else WifiManager.calculateSignalLevel(info.rssi, 5)
             state = state.copy(wifiLevel = level.coerceIn(-1, 4))
+            diagnostic("Wi-Fi: level=${state.wifiLevel}")
         }
     }
     private fun ensureTelephony(context: Context) {
@@ -466,7 +526,7 @@ object StatusBarComboStyleOneRuntime {
                 override fun onSubscriptionsChanged() {
                     refreshTelephony(context)
                     installPhoneListeners(context, sm)
-                    refreshHosts()
+                    invalidateGlyphs()
                 }
             }
             subscriptionsListener = listener
@@ -481,6 +541,7 @@ object StatusBarComboStyleOneRuntime {
         val ids = active.map { it.subscriptionId }.toSet()
         phoneListeners.keys.filter { it !in ids }.toList().forEach { id ->
             phoneListeners.remove(id)?.let { old -> runCatching { old.first.listen(old.second, PhoneStateListener.LISTEN_NONE) } }
+            displayNetworkTypes.remove(id)
         }
         active.forEach { info ->
             if (phoneListeners.containsKey(info.subscriptionId)) return@forEach
@@ -488,13 +549,29 @@ object StatusBarComboStyleOneRuntime {
                 val sub = base.createForSubscriptionId(info.subscriptionId)
                 val listener = object : PhoneStateListener() {
                     override fun onSignalStrengthsChanged(signalStrength: SignalStrength?) {
-                        refreshTelephony(context); refreshHosts()
+                        refreshTelephony(context)
+                        invalidateGlyphs()
                     }
                     override fun onServiceStateChanged(serviceState: ServiceState?) {
-                        refreshTelephony(context); refreshHosts()
+                        refreshTelephony(context)
+                        invalidateGlyphs()
+                    }
+                    override fun onDisplayInfoChanged(displayInfo: TelephonyDisplayInfo?) {
+                        if (displayInfo == null ||
+                            SubscriptionManager.getDefaultDataSubscriptionId() != info.subscriptionId
+                        ) return
+                        val label = displayNetworkType(displayInfo)
+                        if (label == null) displayNetworkTypes.remove(info.subscriptionId)
+                        else displayNetworkTypes[info.subscriptionId] = label
+                        refreshTelephony(context)
+                        invalidateGlyphs()
                     }
                 }
-                sub.listen(listener, PhoneStateListener.LISTEN_SIGNAL_STRENGTHS or PhoneStateListener.LISTEN_SERVICE_STATE)
+                var events = PhoneStateListener.LISTEN_SIGNAL_STRENGTHS or PhoneStateListener.LISTEN_SERVICE_STATE
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    events = events or PhoneStateListener.LISTEN_DISPLAY_INFO_CHANGED
+                }
+                sub.listen(listener, events)
                 phoneListeners[info.subscriptionId] = sub to listener
             }
         }
@@ -515,15 +592,26 @@ object StatusBarComboStyleOneRuntime {
             if (info.simSlotIndex == 1) simTwo = level
             if (info.subscriptionId == dataSub) {
                 dataLevel = level
-                label = networkType(sub.dataNetworkType)
+                label = displayNetworkTypes[info.subscriptionId] ?: networkType(sub.dataNetworkType)
             }
         }
         if (dataLevel < 0) dataLevel = if (simOne >= 0) simOne else simTwo
         if (dataLevel < 0) dataLevel = runCatching { base.signalStrength?.level ?: state.mobileLevel }.getOrDefault(state.mobileLevel)
         state = state.copy(mobileLevel = dataLevel.coerceIn(0, 4), simOneLevel = simOne, simTwoLevel = simTwo, networkType = label)
+        diagnostic("Telephony refreshed: dataSub=$dataSub, dataLevel=${state.mobileLevel}, type=${state.networkType}")
     }
+
+    private fun displayNetworkType(info: TelephonyDisplayInfo): String? = when (info.overrideNetworkType) {
+        TelephonyDisplayInfo.OVERRIDE_NETWORK_TYPE_NR_ADVANCED -> "5GA"
+        TelephonyDisplayInfo.OVERRIDE_NETWORK_TYPE_NR_NSA -> "5G"
+        TelephonyDisplayInfo.OVERRIDE_NETWORK_TYPE_LTE_CA,
+        TelephonyDisplayInfo.OVERRIDE_NETWORK_TYPE_LTE_ADVANCED_PRO -> "4GA"
+        else -> null
+    }
+
     private fun networkType(type: Int): String = when (type) {
         TelephonyManager.NETWORK_TYPE_NR -> "5G"
+        TelephonyManager.NETWORK_TYPE_LTE_CA -> "4GA"
         TelephonyManager.NETWORK_TYPE_LTE, TelephonyManager.NETWORK_TYPE_IWLAN -> "4G"
         TelephonyManager.NETWORK_TYPE_HSPAP, TelephonyManager.NETWORK_TYPE_HSPA,
         TelephonyManager.NETWORK_TYPE_HSDPA, TelephonyManager.NETWORK_TYPE_HSUPA,
@@ -536,16 +624,20 @@ object StatusBarComboStyleOneRuntime {
 
     private fun sanitize(v: Preference.SystemUI.StatusBarComboStyleOneRuntime) = v.copy(
         trioStyle = v.trioStyle.coerceIn(0, 1), mobileTypeMode = v.mobileTypeMode.coerceIn(0, 2),
-        signalMode = v.signalMode.coerceIn(0, 1), lowThreshold = v.lowThreshold.coerceIn(1, 100),
-        ringStroke = v.ringStroke.coerceIn(3, 28), arcStroke = v.arcStroke.coerceIn(2, 20),
-        valueSize = v.valueSize.coerceIn(8, 64), valueWeight = v.valueWeight.coerceIn(100, 900),
-        typeSize = v.typeSize.coerceIn(8, 64), typeWeight = v.typeWeight.coerceIn(100, 900),
-        outTypeSizeDp = v.outTypeSizeDp.coerceIn(6, 30), outSignalSizeDp = v.outSignalSizeDp.coerceIn(6, 36),
-        outTypeMarginLeftDp = v.outTypeMarginLeftDp.coerceIn(0, 12),
-        outTypeMarginRightDp = v.outTypeMarginRightDp.coerceIn(0, 12),
-        outSignalMarginDp = v.outSignalMarginDp.coerceIn(0, 12),
-        typeSuffixScale = v.typeSuffixScale.coerceIn(30, 100), trackAlpha = v.trackAlpha.coerceIn(0, 255),
+        signalMode = v.signalMode.coerceIn(0, 1), lowThreshold = v.lowThreshold.coerceIn(5, 50),
+        ringStroke = v.ringStroke.coerceIn(4, 16), arcStroke = v.arcStroke.coerceIn(3, 16),
+        valueSize = v.valueSize.coerceIn(16, 44), valueWeight = v.valueWeight.coerceIn(100, 900),
+        typeSize = v.typeSize.coerceIn(16, 44), typeWeight = v.typeWeight.coerceIn(100, 900),
+        outTypeSizeDp = v.outTypeSizeDp.coerceIn(8, 26), outSignalSizeDp = v.outSignalSizeDp.coerceIn(6, 20),
+        outTypeMarginLeftDp = v.outTypeMarginLeftDp.coerceIn(0, 16),
+        outTypeMarginRightDp = v.outTypeMarginRightDp.coerceIn(0, 16),
+        outSignalMarginDp = v.outSignalMarginDp.coerceIn(0, 16),
+        typeSuffixScale = v.typeSuffixScale.coerceIn(50, 100), trackAlpha = v.trackAlpha.coerceIn(0, 255),
     )
+
+    private fun diagnostic(message: String) {
+        if (config.debugLog) Log.d(TAG, message)
+    }
     private fun dp(context: Context, value: Int): Int =
         (value * context.resources.displayMetrics.density + 0.5f).toInt().coerceAtLeast(1)
 }

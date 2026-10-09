@@ -21,11 +21,13 @@ data class StatusComboStyleOneGlyphState(
     val simOneLevel: Int = -1,
     val simTwoLevel: Int = -1,
     val networkType: String = "4G",
+    val powerSave: Boolean = false,
+    val lowBatteryWarning: Boolean = false,
     val tintColor: Int = Color.WHITE,
 )
 
 /**
- * Independent renderer for the HyperDuo-style feature set. The preview and the
+ * Independent renderer for the Style One feature set. The preview and the
  * SystemUI glyph both call this code, so adjustments and live settings stay in sync.
  */
 object StatusComboStyleOneGlyphRenderer {
@@ -159,7 +161,7 @@ object StatusComboStyleOneGlyphRenderer {
     ) {
         rect.set(CX - RADIUS, CY - RADIUS, CX + RADIUS, CY + RADIUS)
         paint.style = Paint.Style.STROKE
-        paint.strokeWidth = stroke.coerceIn(3, 28).toFloat()
+        paint.strokeWidth = stroke.coerceIn(4, 16).toFloat()
         paint.strokeCap = Paint.Cap.ROUND
         paint.color = trackColor
         drawRingProgress(canvas, 1f, gapStart, gapEnd)
@@ -210,7 +212,7 @@ object StatusComboStyleOneGlyphRenderer {
             drawRectDotColumn(canvas, CX - 45f, if (dual) state.simOneLevel else state.mobileLevel, tint, track)
             drawRectDotColumn(canvas, CX + 45f, if (dual) state.simTwoLevel else state.mobileLevel, tint, track)
         }
-        val barHeight = config.ringStroke.coerceIn(3, 28).toFloat()
+        val barHeight = config.ringStroke.coerceIn(4, 16).toFloat()
         val top = 105f - barHeight / 2f
         rect.set(CX - 59f, top, CX + 59f, top + barHeight)
         paint.style = Paint.Style.FILL
@@ -250,7 +252,7 @@ object StatusComboStyleOneGlyphRenderer {
         val outer = if (compact) 15f else 27f
         val inner = if (compact) 9f else 18f
         paint.style = Paint.Style.STROKE
-        paint.strokeWidth = stroke.coerceIn(2, 20).toFloat()
+        paint.strokeWidth = stroke.coerceIn(3, 16).toFloat()
         paint.strokeCap = Paint.Cap.ROUND
         if (level >= 3) {
             rect.set(cx - outer, cy - outer, cx + outer, cy + outer)
@@ -367,10 +369,13 @@ object StatusComboStyleOneGlyphRenderer {
         if (!config.roleColors) return tint
         val darkBackground = luminance(tint) > 0.5f
         return when {
-            state.charging -> if (darkBackground) config.chargingColorDarkArgb else config.chargingColorLightArgb
-            state.batteryLevel <= 5 -> if (darkBackground) config.criticalColorDarkArgb else config.criticalColorLightArgb
-            state.batteryLevel <= config.lowThreshold.coerceIn(1, 100) ->
+            state.batteryLevel in 0 until 20 ->
+                if (darkBackground) config.criticalColorDarkArgb else config.criticalColorLightArgb
+            state.powerSave || state.lowBatteryWarning ||
+                state.batteryLevel <= config.lowThreshold.coerceIn(5, 50) ->
                 if (darkBackground) config.lowColorDarkArgb else config.lowColorLightArgb
+            state.charging ->
+                if (darkBackground) config.chargingColorDarkArgb else config.chargingColorLightArgb
             else -> tint
         }
     }

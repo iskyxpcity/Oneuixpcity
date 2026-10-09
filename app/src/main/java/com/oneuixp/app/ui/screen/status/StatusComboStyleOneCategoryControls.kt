@@ -75,19 +75,19 @@ fun StatusComboStyleOneCategoryControls(
         persist(next)
     }
 
-    var ringStroke by remember(runtime.ringStroke) { mutableIntStateOf(runtime.ringStroke) }
-    var arcStroke by remember(runtime.arcStroke) { mutableIntStateOf(runtime.arcStroke) }
-    var valueSize by remember(runtime.valueSize) { mutableIntStateOf(runtime.valueSize) }
+    var ringStroke by remember(runtime.ringStroke) { mutableIntStateOf(runtime.ringStroke.coerceIn(4, 16)) }
+    var arcStroke by remember(runtime.arcStroke) { mutableIntStateOf(runtime.arcStroke.coerceIn(3, 16)) }
+    var valueSize by remember(runtime.valueSize) { mutableIntStateOf(runtime.valueSize.coerceIn(16, 44)) }
     var valueWeight by remember(runtime.valueWeight) { mutableIntStateOf(runtime.valueWeight) }
-    var typeSize by remember(runtime.typeSize) { mutableIntStateOf(runtime.typeSize) }
+    var typeSize by remember(runtime.typeSize) { mutableIntStateOf(runtime.typeSize.coerceIn(16, 44)) }
     var typeWeight by remember(runtime.typeWeight) { mutableIntStateOf(runtime.typeWeight) }
-    var suffixScale by remember(runtime.typeSuffixScale) { mutableIntStateOf(runtime.typeSuffixScale) }
-    var outTypeSize by remember(runtime.outTypeSizeDp) { mutableIntStateOf(runtime.outTypeSizeDp) }
-    var outSignalSize by remember(runtime.outSignalSizeDp) { mutableIntStateOf(runtime.outSignalSizeDp) }
-    var outTypeLeft by remember(runtime.outTypeMarginLeftDp) { mutableIntStateOf(runtime.outTypeMarginLeftDp) }
-    var outTypeRight by remember(runtime.outTypeMarginRightDp) { mutableIntStateOf(runtime.outTypeMarginRightDp) }
-    var outSignalMargin by remember(runtime.outSignalMarginDp) { mutableIntStateOf(runtime.outSignalMarginDp) }
-    var lowThreshold by remember(runtime.lowThreshold) { mutableIntStateOf(runtime.lowThreshold) }
+    var suffixScale by remember(runtime.typeSuffixScale) { mutableIntStateOf(runtime.typeSuffixScale.coerceIn(50, 100)) }
+    var outTypeSize by remember(runtime.outTypeSizeDp) { mutableIntStateOf(runtime.outTypeSizeDp.coerceIn(8, 26)) }
+    var outSignalSize by remember(runtime.outSignalSizeDp) { mutableIntStateOf(runtime.outSignalSizeDp.coerceIn(6, 20)) }
+    var outTypeLeft by remember(runtime.outTypeMarginLeftDp) { mutableIntStateOf(runtime.outTypeMarginLeftDp.coerceIn(0, 16)) }
+    var outTypeRight by remember(runtime.outTypeMarginRightDp) { mutableIntStateOf(runtime.outTypeMarginRightDp.coerceIn(0, 16)) }
+    var outSignalMargin by remember(runtime.outSignalMarginDp) { mutableIntStateOf(runtime.outSignalMarginDp.coerceIn(0, 16)) }
+    var lowThreshold by remember(runtime.lowThreshold) { mutableIntStateOf(runtime.lowThreshold.coerceIn(5, 50)) }
     var trackAlpha by remember(runtime.trackAlpha) {
         mutableIntStateOf((runtime.trackAlpha * 100f / 255f).roundToInt())
     }
@@ -211,17 +211,17 @@ fun StatusComboStyleOneCategoryControls(
 
     StatusThemeGroup(items = listOf({
         styleOneSlider(icon, stringResource(R.string.status_combo_style_one_ring_stroke),
-            stringResource(R.string.status_combo_style_one_int_summary, ringStroke), ringStroke.toFloat(), 3f..28f,
+            stringResource(R.string.status_combo_style_one_int_summary, ringStroke), ringStroke.toFloat(), 4f..16f,
             { ringStroke = it.roundToInt(); preview(runtime.copy(ringStroke = ringStroke)) },
             { persist(runtime.copy(ringStroke = ringStroke)) })
     }, {
         styleOneSlider(icon, stringResource(R.string.status_combo_style_one_arc_stroke),
-            stringResource(R.string.status_combo_style_one_int_summary, arcStroke), arcStroke.toFloat(), 2f..20f,
+            stringResource(R.string.status_combo_style_one_int_summary, arcStroke), arcStroke.toFloat(), 3f..16f,
             { arcStroke = it.roundToInt(); preview(runtime.copy(arcStroke = arcStroke)) },
             { persist(runtime.copy(arcStroke = arcStroke)) })
     }, {
         styleOneSlider(icon, stringResource(R.string.status_combo_style_one_value_size),
-            stringResource(R.string.status_combo_style_one_int_summary, valueSize), valueSize.toFloat(), 8f..64f,
+            stringResource(R.string.status_combo_style_one_int_summary, valueSize), valueSize.toFloat(), 16f..44f,
             { valueSize = it.roundToInt(); preview(runtime.copy(valueSize = valueSize)) },
             { persist(runtime.copy(valueSize = valueSize)) })
     }, {
@@ -231,7 +231,7 @@ fun StatusComboStyleOneCategoryControls(
             { persist(runtime.copy(valueWeight = valueWeight)) }, stepSize = 100f)
     }, {
         styleOneSlider(icon, stringResource(R.string.status_combo_style_one_type_size),
-            stringResource(R.string.status_combo_style_one_int_summary, typeSize), typeSize.toFloat(), 8f..64f,
+            stringResource(R.string.status_combo_style_one_int_summary, typeSize), typeSize.toFloat(), 16f..44f,
             { typeSize = it.roundToInt(); preview(runtime.copy(typeSize = typeSize)) },
             { persist(runtime.copy(typeSize = typeSize)) })
     }, {
@@ -241,34 +241,34 @@ fun StatusComboStyleOneCategoryControls(
             { persist(runtime.copy(typeWeight = typeWeight)) }, stepSize = 100f)
     }, {
         styleOneSlider(icon, stringResource(R.string.status_combo_style_one_type_suffix_scale),
-            stringResource(R.string.status_combo_style_one_percent_summary, suffixScale), suffixScale.toFloat(), 30f..100f,
+            stringResource(R.string.status_combo_style_one_percent_summary, suffixScale), suffixScale.toFloat(), 50f..100f,
             { suffixScale = it.roundToInt(); preview(runtime.copy(typeSuffixScale = suffixScale)) },
             { persist(runtime.copy(typeSuffixScale = suffixScale)) })
     }))
 
     StatusThemeGroup(items = listOf({
         styleOneSlider(icon, stringResource(R.string.status_combo_style_one_out_type_size),
-            stringResource(R.string.status_combo_style_one_dp_summary, outTypeSize), outTypeSize.toFloat(), 6f..30f,
+            stringResource(R.string.status_combo_style_one_dp_summary, outTypeSize), outTypeSize.toFloat(), 8f..26f,
             { outTypeSize = it.roundToInt(); preview(runtime.copy(outTypeSizeDp = outTypeSize)) },
             { persist(runtime.copy(outTypeSizeDp = outTypeSize)) })
     }, {
         styleOneSlider(icon, stringResource(R.string.status_combo_style_one_out_signal_size),
-            stringResource(R.string.status_combo_style_one_dp_summary, outSignalSize), outSignalSize.toFloat(), 6f..36f,
+            stringResource(R.string.status_combo_style_one_dp_summary, outSignalSize), outSignalSize.toFloat(), 6f..20f,
             { outSignalSize = it.roundToInt(); preview(runtime.copy(outSignalSizeDp = outSignalSize)) },
             { persist(runtime.copy(outSignalSizeDp = outSignalSize)) })
     }, {
         styleOneSlider(icon, stringResource(R.string.status_combo_style_one_out_type_margin_left),
-            stringResource(R.string.status_combo_style_one_dp_summary, outTypeLeft), outTypeLeft.toFloat(), 0f..12f,
+            stringResource(R.string.status_combo_style_one_dp_summary, outTypeLeft), outTypeLeft.toFloat(), 0f..16f,
             { outTypeLeft = it.roundToInt(); preview(runtime.copy(outTypeMarginLeftDp = outTypeLeft)) },
             { persist(runtime.copy(outTypeMarginLeftDp = outTypeLeft)) })
     }, {
         styleOneSlider(icon, stringResource(R.string.status_combo_style_one_out_type_margin_right),
-            stringResource(R.string.status_combo_style_one_dp_summary, outTypeRight), outTypeRight.toFloat(), 0f..12f,
+            stringResource(R.string.status_combo_style_one_dp_summary, outTypeRight), outTypeRight.toFloat(), 0f..16f,
             { outTypeRight = it.roundToInt(); preview(runtime.copy(outTypeMarginRightDp = outTypeRight)) },
             { persist(runtime.copy(outTypeMarginRightDp = outTypeRight)) })
     }, {
         styleOneSlider(icon, stringResource(R.string.status_combo_style_one_out_signal_margin),
-            stringResource(R.string.status_combo_style_one_dp_summary, outSignalMargin), outSignalMargin.toFloat(), 0f..12f,
+            stringResource(R.string.status_combo_style_one_dp_summary, outSignalMargin), outSignalMargin.toFloat(), 0f..16f,
             { outSignalMargin = it.roundToInt(); preview(runtime.copy(outSignalMarginDp = outSignalMargin)) },
             { persist(runtime.copy(outSignalMarginDp = outSignalMargin)) })
     }))
@@ -283,7 +283,7 @@ fun StatusComboStyleOneCategoryControls(
         )
     }, {
         styleOneSlider(icon, stringResource(R.string.status_combo_style_one_low_threshold),
-            stringResource(R.string.status_combo_style_one_percent_summary, lowThreshold), lowThreshold.toFloat(), 1f..50f,
+            stringResource(R.string.status_combo_style_one_percent_summary, lowThreshold), lowThreshold.toFloat(), 5f..50f,
             { lowThreshold = it.roundToInt(); preview(runtime.copy(lowThreshold = lowThreshold)) },
             { persist(runtime.copy(lowThreshold = lowThreshold)) })
     }, {
