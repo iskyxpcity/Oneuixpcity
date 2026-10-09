@@ -14,7 +14,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Button as MaterialButton
+import androidx.compose.material3.ButtonDefaults as MaterialButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme as Material3Theme
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
@@ -34,6 +37,8 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -52,8 +57,11 @@ import io.github.soclear.oneuix.ui.component.SwitchItem
 import io.github.soclear.oneuix.ui.component.SelectItem
 import com.oneuixp.app.ui.LocalUiMode
 import com.oneuixp.app.ui.UiMode
+import top.yukonga.miuix.kmp.basic.Button as MiuixButton
+import top.yukonga.miuix.kmp.basic.ButtonDefaults as MiuixButtonDefaults
 import top.yukonga.miuix.kmp.basic.ColorPalette
-import top.yukonga.miuix.kmp.overlay.OverlayDialog
+import top.yukonga.miuix.kmp.basic.Text as MiuixText
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.window.WindowDialog
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -387,6 +395,16 @@ StatusThemeGroup(items = listOf({
             }, {
                 styleOneSlider(
                     icon,
+                    stringResource(R.string.status_combo_style_one_critical_threshold),
+                    stringResource(R.string.status_combo_style_one_percent_summary, criticalThreshold),
+                    criticalThreshold.toFloat(),
+                    1f..20f,
+                    { criticalThreshold = it.roundToInt(); preview(runtime.copy(criticalThreshold = criticalThreshold)) },
+                    { persist(runtime.copy(criticalThreshold = criticalThreshold)) },
+                )
+            }, {
+                styleOneSlider(
+                    icon,
                     stringResource(R.string.status_combo_style_one_low_threshold),
                     stringResource(R.string.status_combo_style_one_percent_summary, lowThreshold),
                     lowThreshold.toFloat(),
@@ -589,8 +607,46 @@ private fun StyleOneColorSwatch(color: Int, label: String, onClick: () -> Unit) 
             .size(27.dp)
             .background(Color(color), CircleShape)
             .border(1.dp, Color(0x66000000), CircleShape)
-            .clickable(onClick = onClick),
+            .clickable(onClick = onClick)
+            .semantics { contentDescription = label },
     )
+}
+
+@Composable
+private fun StyleOneBackgroundButton(
+    label: String,
+    selected: Boolean,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit,
+) {
+    when (LocalUiMode.current) {
+        UiMode.Material -> MaterialButton(
+            onClick = onClick,
+            modifier = modifier,
+            colors = MaterialButtonDefaults.buttonColors(
+                containerColor = if (selected) Material3Theme.colorScheme.primaryContainer
+                    else Material3Theme.colorScheme.surfaceVariant,
+                contentColor = if (selected) Material3Theme.colorScheme.onPrimaryContainer
+                    else Material3Theme.colorScheme.onSurfaceVariant,
+            ),
+        ) {
+            Text(label)
+        }
+        UiMode.Miuix -> MiuixButton(
+            onClick = onClick,
+            modifier = modifier,
+            colors = if (selected) {
+                MiuixButtonDefaults.buttonColors()
+            } else {
+                MiuixButtonDefaults.buttonColors(
+                    color = MiuixTheme.colorScheme.surfaceContainerHigh,
+                    contentColor = MiuixTheme.colorScheme.onSurfaceContainerHigh,
+                )
+            },
+        ) {
+            MiuixText(text = label)
+        }
+    }
 }
 
 @Composable
@@ -616,17 +672,17 @@ private fun StyleOneRoleColorDialog(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                OneuiXActionButton(
-                    text = darkLabel,
+                StyleOneBackgroundButton(
+                    label = darkLabel,
+                    selected = darkSelected,
+                    modifier = Modifier.weight(1f),
                     onClick = { onBackgroundSelected(true) },
-                    modifier = Modifier.weight(1f),
-                    primary = darkSelected,
                 )
-                OneuiXActionButton(
-                    text = lightLabel,
-                    onClick = { onBackgroundSelected(false) },
+                StyleOneBackgroundButton(
+                    label = lightLabel,
+                    selected = !darkSelected,
                     modifier = Modifier.weight(1f),
-                    primary = !darkSelected,
+                    onClick = { onBackgroundSelected(false) },
                 )
             }
             ColorPalette(
@@ -673,7 +729,7 @@ private fun StyleOneRoleColorDialog(
             onDismissRequest = onCancel,
             content = {
                 Column {
-                    top.yukonga.miuix.kmp.basic.Text(text = summary)
+                    MiuixText(text = summary)
                     PickerContent()
                 }
             },

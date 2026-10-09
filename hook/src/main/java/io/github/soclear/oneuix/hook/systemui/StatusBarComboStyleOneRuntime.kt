@@ -483,11 +483,11 @@ object StatusBarComboStyleOneRuntime {
                 restoreNativeBatteryViews(previousBattery)
             }
             host.battery = battery
-            // BatteryMeterView receives the tint intended for the battery glyph.
-            // Prefer it over the last colour sent to another status icon.
+            readNativeBatteryTint(battery)?.let { batteryTintSnapshots[battery] = it }
             val meterTint = batteryTintSnapshots[battery]
-            // StatusBarIconView's actual last-painted row tint is the freshest
-            // source during dark-area transitions; MIUI's meter fields can lag.
+            // The icon's last-painted foreground is the primary source on a mode
+            // transition; MIUI's tint fields are useful only for initial state or
+            // ROMs that do not expose the icon tint callback.
             val rowTint = rowTintSnapshots[root] ?: meterTint ?: host.rowTint
             if (rowTint != null && host.rowTint != rowTint) {
                 host.rowTint = rowTint
@@ -1068,6 +1068,54 @@ object StatusBarComboStyleOneRuntime {
                     }
             }.onFailure { diagnostic("Native battery tint hook unavailable: $className: $it") }
         }
+    }
+
+    private fun readNativeBatteryTint(meter: View): Int? {
+        val useTint = readNativeBoolean(meter, "mUseTint", "useTint")
+        val tintColor = readSignalIntField(meter, "mTintColor", "tintColor")
+        val lightColor = readSignalIntField(meter, "mLightColor", "lightColor")
+        val darkColor = readSignalIntField(meter, "mDarkColor", "darkColor")
+        val intensity = readNativeFloat(meter, "mDarkIntensity", "darkIntensity") ?: 0f
+        val available = useTint != null || tintColor != null || lightColor != null || darkColor != null
+        if (!available) return null
+        val resolved = if (useTint == true) tintColor
+            else if (intensity > 0f) darkColor ?: lightColor
+            else lightColor ?: darkColor
+        return resolved?.takeIf { it != Color.TRANSPARENT }
+    }
+
+    private fun readNativeBoolean(target: Any, vararg names: String): Boolean? {
+        var type: Class<*>? = target.javaClass
+        while (type != null) {
+            val current = type
+            for (name in names) {
+                val field = runCatching {
+                    current.declaredFields.firstOrNull { it.name.equals(name, ignoreCase = true) }
+                        ?.apply { isAccessible = true }
+                }.getOrNull() ?: continue
+                val value = runCatching { field.get(target) as? Boolean }.getOrNull()
+                if (value != null) return value
+            }
+            type = current.superclass
+        }
+        return null
+    }
+
+    private fun readNativeFloat(target: Any, vararg names: String): Float? {
+        var type: Class<*>? = target.javaClass
+        while (type != null) {
+            val current = type
+            for (name in names) {
+                val field = runCatching {
+                    current.declaredFields.firstOrNull { it.name.equals(name, ignoreCase = true) }
+                        ?.apply { isAccessible = true }
+                }.getOrNull() ?: continue
+                val value = runCatching { (field.get(target) as? Number)?.toFloat() }.getOrNull()
+                if (value != null) return value
+            }
+            type = current.superclass
+        }
+        return null
     }
 
     private fun saveBatteryTint(meter: View, color: Int) {
