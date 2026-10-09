@@ -235,10 +235,15 @@ internal object StatusBarComboStyleOneRuntime {
                 else hostLocation[0] + host.width - metrics.side / 2f
             val centerY = if (anchor != null) anchorLocation[1] + anchor.height / 2f
                 else hostLocation[1] + host.height / 2f
-            x = (centerX - metrics.width / 2f +
-                cfg.offsetXDp * context.resources.displayMetrics.density).roundToInt()
-            y = (centerY - metrics.height / 2f +
-                cfg.offsetYDp * context.resources.displayMetrics.density).roundToInt()
+            val density = context.resources.displayMetrics.density
+            // If the battery is not part of the composite, keep the native battery
+            // visible and place the composite immediately to its left.
+            x = if (anchor != null && !cfg.showBattery) {
+                (anchorLocation[0] - metrics.width + cfg.offsetXDp * density).roundToInt()
+            } else {
+                (centerX - metrics.width / 2f + cfg.offsetXDp * density).roundToInt()
+            }
+            y = (centerY - metrics.height / 2f + cfg.offsetYDp * density).roundToInt()
 
             val widthChanged = params.width != metrics.width || params.height != metrics.height
             val positionChanged = params.x != x || params.y != y
