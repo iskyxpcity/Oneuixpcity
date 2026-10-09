@@ -76,6 +76,22 @@ object StatusBarComboStyleOneRuntime {
     @Volatile private var config = Preference.SystemUI.StatusBarComboStyleOneRuntime()
     @Volatile private var state = StatusComboStyleOneGlyphState()
     @Volatile private var preferenceReceiverReady = false
+    private val chargingRotationTicker = object : Runnable {
+        override fun run() {
+            if (!config.enabled || config.chargingDisplayMode != 1 ||
+                !config.showBolt || !config.showValue || !state.charging
+            ) {
+                if (state.chargingAlternatePhase) {
+                    state = state.copy(chargingAlternatePhase = false)
+                    invalidateGlyphs()
+                }
+                return
+            }
+            state = state.copy(chargingAlternatePhase = !state.chargingAlternatePhase)
+            invalidateGlyphs()
+            main.postDelayed(this, 5_000L)
+        }
+    }
     @Volatile private var stateReceiverReady = false
     @Volatile private var tint = Color.WHITE
     @Volatile private var defaultDataSubscriptionId = SubscriptionManager.INVALID_SUBSCRIPTION_ID
@@ -603,6 +619,22 @@ object StatusBarComboStyleOneRuntime {
                 host.inline?.invalidate()
                 host.overlay?.invalidate()
             }
+        }
+    }
+
+    private fun syncChargingRotationTicker() {
+        main.removeCallbacks(chargingRotationTicker)
+        val shouldRotate = config.enabled && config.chargingDisplayMode == 1 &&
+            config.showBolt && config.showValue && state.charging
+        if (shouldRotate) {
+            if (state.chargingAlternatePhase) {
+                state = state.copy(chargingAlternatePhase = false)
+                invalidateGlyphs()
+            }
+            main.postDelayed(chargingRotationTicker, 5_000L)
+        } else if (state.chargingAlternatePhase) {
+            state = state.copy(chargingAlternatePhase = false)
+            invalidateGlyphs()
         }
     }
 
@@ -1637,6 +1669,11 @@ object StatusBarComboStyleOneRuntime {
                             config = next
                             diagnostic("Settings updated: enabled=${config.enabled}, overlay=${config.overlayGlyph}, style=${config.trioStyle}, signalMode=${config.signalMode}")
                             if (previous.enabled != next.enabled) replayMiuiBatteryIslandRequests()
+                            if (previous.enabled != next.enabled ||
+                                previous.chargingDisplayMode != next.chargingDisplayMode ||
+                                previous.showBolt != next.showBolt ||
+                                previous.showValue != next.showValue
+                            ) syncChargingRotationTicker()
                             if (requiresHostRefresh(previous, next)) {
                                 refreshHosts()
                             } else {
@@ -1705,10 +1742,16 @@ object StatusBarComboStyleOneRuntime {
         val scale = intent?.getIntExtra(BatteryManager.EXTRA_SCALE, 100) ?: 100
         val level = if (raw >= 0 && scale > 0) (raw * 100f / scale).toInt() else state.batteryLevel
         val status = intent?.getIntExtra(BatteryManager.EXTRA_STATUS, -1) ?: -1
-        val plugged = intent?.getIntExtra(BatteryManager.EXTRA_PLUGGED, 0) ?: 0
-        val charging = status == BatteryManager.BATTERY_STATUS_CHARGING ||
-            status == BatteryManager.BATTERY_STATUS_FULL || plugged != 0
-        state = state.copy(batteryLevel = level.coerceIn(0, 100), charging = charging, quickCharge = charging && quickCharge())
+        // Plugged/full means connected, not necessarily actively charging.
+        val charging = status == BatteryManager.BATTERY_STATUS_CHARGING
+        val wasCharging = state.charging
+        state = state.copy(
+            batteryLevel = level.coerceIn(0, 100),
+            charging = charging,
+            quickCharge = charging && quickCharge(),
+            chargingAlternatePhase = if (charging) state.chargingAlternatePhase else false,
+        )
+        if (wasCharging != charging) syncChargingRotationTicker()
         diagnostic("Battery: level=${state.batteryLevel}, charging=${state.charging}, quick=${state.quickCharge}")
     }
     private fun updatePowerSave(context: Context) {

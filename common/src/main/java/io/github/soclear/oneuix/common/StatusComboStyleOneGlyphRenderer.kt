@@ -6,7 +6,6 @@ import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.RectF
 import android.graphics.Typeface
-import android.os.SystemClock
 import io.github.soclear.oneuix.common.Preference.SystemUI.StatusBarComboStyleOneRuntime
 import kotlin.math.max
 import kotlin.math.min
@@ -24,6 +23,7 @@ data class StatusComboStyleOneGlyphState(
     val networkType: String = "4G",
     val powerSave: Boolean = false,
     val lowBatteryWarning: Boolean = false,
+    val chargingAlternatePhase: Boolean = false,
     val tintColor: Int = Color.WHITE,
 )
 
@@ -123,13 +123,14 @@ object StatusComboStyleOneGlyphRenderer {
         val innerType = state.networkType.trim().uppercase().takeIf {
             config.showMobile && config.mobileTypeMode == 1 && it.isNotEmpty()
         }
-        val alternateChargingPhase = state.charging &&
-            config.chargingDisplayMode == 1 &&
-            (SystemClock.uptimeMillis() / 5_000L) % 2L == 1L
+        val shouldAlternateCharging = state.charging && config.showBolt && config.showValue &&
+            config.chargingDisplayMode == 1
+        val alternateChargingPhase = shouldAlternateCharging && state.chargingAlternatePhase
         // Charging color has priority; by default the bolt replaces the percentage.
         // The optional alternate mode swaps the two glyphs every five seconds.
         val bolt = config.showBolt && state.charging && !alternateChargingPhase
-        val showBatteryValue = config.showValue && (!state.charging || alternateChargingPhase)
+        val showBatteryValue = config.showValue &&
+            (!state.charging || alternateChargingPhase || !config.showBolt)
         val inRingSignal = config.showMobile && config.signalMode == 0
         val dualRows = config.dualSim && !config.dataSimOnly && inRingSignal &&
             state.simOneLevel >= 0 && state.simTwoLevel >= 0 && !wifiInk && !state.charging

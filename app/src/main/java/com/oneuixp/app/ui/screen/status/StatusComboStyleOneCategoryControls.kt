@@ -148,7 +148,6 @@ fun StatusComboStyleOneCategoryControls(
         }
     }, {
         SwitchItem(
-                    icon = null,
             title = stringResource(R.string.status_combo_style_one_enable),
             summary = stringResource(R.string.status_combo_style_one_enable_summary),
             checked = runtime.enabled,
@@ -164,63 +163,21 @@ fun StatusComboStyleOneCategoryControls(
         stringResource(R.string.status_combo_style_one_tab_size),
         stringResource(R.string.status_combo_style_one_tab_color),
     )
-    // Use the same three-button segmented control in both app themes.
-    // Only the palette changes, so the tab geometry and interaction stay consistent.
+    // Reuse the same theme-aware buttons used by the rest of OneuiXP.
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(
-                horizontal = if (LocalUiMode.current == UiMode.Material) 16.dp else 12.dp,
-                vertical = 4.dp,
-            )
-            .clip(RoundedCornerShape(18.dp))
-            .background(
-                if (LocalUiMode.current == UiMode.Material) {
-                    Material3Theme.colorScheme.surfaceContainerHigh
-                } else {
-                    MiuixTheme.colorScheme.surfaceContainerHigh
-                },
-            )
-            .padding(4.dp),
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
+            .padding(horizontal = 12.dp, vertical = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         tabs.forEachIndexed { index, label ->
-            val selected = selectedTab == index
-            val selectedContainer = if (LocalUiMode.current == UiMode.Material) {
-                Material3Theme.colorScheme.primaryContainer
-            } else {
-                MiuixTheme.colorScheme.primary
-            }
-            val labelColor = when (LocalUiMode.current) {
-                UiMode.Material -> if (selected) {
-                    Material3Theme.colorScheme.onPrimaryContainer
-                } else {
-                    Material3Theme.colorScheme.onSurfaceVariant
-                }
-                UiMode.Miuix -> if (selected) {
-                    MiuixTheme.colorScheme.onPrimary
-                } else {
-                    MiuixTheme.colorScheme.onSurfaceContainerHigh
-                }
-            }
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(if (selected) selectedContainer else Color.Transparent)
-                    .clickable { selectedTab = index }
-                    .padding(vertical = 10.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                when (LocalUiMode.current) {
-                    UiMode.Material -> Text(
-                        text = label,
-                        color = labelColor,
-                        style = Material3Theme.typography.labelLarge,
-                    )
-                    UiMode.Miuix -> MiuixText(text = label, color = labelColor)
-                }
-            }
+            StyleOneBackgroundButton(
+                label = label,
+                selected = selectedTab == index,
+                modifier = Modifier.weight(1f).height(44.dp),
+                onClick = { selectedTab = index },
+            )
         }
     }
 
@@ -230,7 +187,6 @@ fun StatusComboStyleOneCategoryControls(
                 StyleOneInfoItem(title = stringResource(R.string.status_combo_style_one_group_appearance))
             }, {
                 SelectItem(
-                    icon = null,
                     title = stringResource(R.string.status_combo_style_one_style),
                     summary = stringResource(R.string.status_combo_style_one_style_summary),
                     entries = listOf(
@@ -244,7 +200,6 @@ fun StatusComboStyleOneCategoryControls(
                 )
             }, {
                 SwitchItem(
-                    icon = null,
                     title = stringResource(R.string.status_combo_style_one_overlay),
                     summary = stringResource(R.string.status_combo_style_one_overlay_summary),
                     checked = runtime.overlayGlyph,
@@ -252,7 +207,6 @@ fun StatusComboStyleOneCategoryControls(
                 )
             }, {
                 SwitchItem(
-                    icon = null,
                     title = stringResource(R.string.status_combo_style_one_show_wifi),
                     summary = stringResource(R.string.status_combo_style_one_show_wifi_summary),
                     checked = runtime.showWifi,
@@ -260,7 +214,6 @@ fun StatusComboStyleOneCategoryControls(
                 )
             }, {
                 SwitchItem(
-                    icon = null,
                     title = stringResource(R.string.status_combo_style_one_show_mobile),
                     summary = stringResource(R.string.status_combo_style_one_show_mobile_summary),
                     checked = runtime.showMobile,
@@ -268,7 +221,6 @@ fun StatusComboStyleOneCategoryControls(
                 )
             }, {
                 SwitchItem(
-                    icon = null,
                     title = stringResource(R.string.status_combo_style_one_dual_sim),
                     summary = stringResource(R.string.status_combo_style_one_dual_sim_summary),
                     checked = runtime.dualSim,
@@ -276,7 +228,6 @@ fun StatusComboStyleOneCategoryControls(
                 )
             }, {
                 SwitchItem(
-                    icon = null,
                     title = stringResource(R.string.status_combo_style_one_show_value),
                     summary = stringResource(R.string.status_combo_style_one_show_value_summary),
                     checked = runtime.showValue,
@@ -284,7 +235,6 @@ fun StatusComboStyleOneCategoryControls(
                 )
             }, {
                 SelectItem(
-                    icon = null,
                     title = stringResource(R.string.status_combo_style_one_signal_mode),
                     summary = stringResource(R.string.status_combo_style_one_signal_mode_summary),
                     entries = listOf(
@@ -296,7 +246,6 @@ fun StatusComboStyleOneCategoryControls(
                 )
             }, {
                 SwitchItem(
-                    icon = null,
                     title = stringResource(R.string.status_combo_style_one_stacked_signal),
                     summary = stringResource(R.string.status_combo_style_one_stacked_signal_summary),
                     checked = runtime.stackedSignal,
@@ -304,7 +253,6 @@ fun StatusComboStyleOneCategoryControls(
                 )
             }, {
                 SwitchItem(
-                    icon = null,
                     title = stringResource(R.string.status_combo_style_one_data_sim_only),
                     summary = stringResource(R.string.status_combo_style_one_data_sim_only_summary),
                     checked = runtime.dataSimOnly,
@@ -312,7 +260,6 @@ fun StatusComboStyleOneCategoryControls(
                 )
             }, {
                 SwitchItem(
-                    icon = null,
                     title = stringResource(R.string.status_combo_style_one_show_bolt),
                     summary = stringResource(R.string.status_combo_style_one_show_bolt_summary),
                     checked = runtime.showBolt,
@@ -320,7 +267,6 @@ fun StatusComboStyleOneCategoryControls(
                 )
             }, {
                 SelectItem(
-                    icon = null,
                     title = stringResource(R.string.status_combo_style_one_charging_display),
                     summary = stringResource(R.string.status_combo_style_one_charging_display_summary),
                     entries = listOf(
@@ -334,7 +280,6 @@ fun StatusComboStyleOneCategoryControls(
                 )
             }, {
                 SelectItem(
-                    icon = null,
                     title = stringResource(R.string.status_combo_style_one_mobile_type_mode),
                     summary = stringResource(R.string.status_combo_style_one_mobile_type_mode_summary),
                     entries = listOf(
@@ -349,7 +294,6 @@ fun StatusComboStyleOneCategoryControls(
                 )
             }, {
                 SwitchItem(
-                    icon = null,
                     title = stringResource(R.string.status_combo_style_one_value_centred),
                     summary = stringResource(R.string.status_combo_style_one_value_centred_summary),
                     checked = runtime.valueCentred,
@@ -361,7 +305,6 @@ fun StatusComboStyleOneCategoryControls(
                 StyleOneInfoItem(title = stringResource(R.string.status_combo_style_one_group_advanced))
             }, {
                 SwitchItem(
-                    icon = null,
                     title = stringResource(R.string.status_combo_style_one_debug_log),
                     summary = stringResource(R.string.status_combo_style_one_debug_log_summary),
                     checked = runtime.debugLog,
@@ -485,7 +428,6 @@ fun StatusComboStyleOneCategoryControls(
             val colorItems = mutableListOf<@Composable () -> Unit>()
             colorItems += {
                 SwitchItem(
-                    icon = null,
                     title = stringResource(R.string.status_combo_style_one_role_colors),
                     summary = stringResource(R.string.status_combo_style_one_role_colors_summary),
                     checked = runtime.roleColors,
