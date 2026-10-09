@@ -173,67 +173,28 @@ data class Preference(
         )
 
         @Serializable
-        data class StatusBarComboRuntime(
+        data class StatusBarComboStyleOneRuntime(
             val enabled: Boolean = false,
-
-            // HyperDuo-compatible feature switches.
-            val overlayGlyph: Boolean = true,
-            val trioStyle: Int = 0,
+            // 0: replace the native battery slot; 1: center the ring on the front-camera cutout.
+            val placementMode: Int = 0,
             val showWifi: Boolean = true,
             val showMobile: Boolean = true,
-            val showBattery: Boolean = true,
-            val showValue: Boolean = true,
-            val showChargingBolt: Boolean = true,
-            val mobileTypeMode: Int = 0,
-            val valueCentred: Boolean = false,
-            val dualSim: Boolean = false,
-            val signalMode: Int = 0,
-            val stackedSignal: Boolean = false,
-            val dataSimOnly: Boolean = false,
-
-            // Existing OneuiXP renderer controls.
-            val showBatteryLevelText: Boolean = false,
             val show5gNetworkType: Boolean = true,
-            val wifiTwoArcs: Boolean = false,
+            val showBatteryPercent: Boolean = true,
+            val showChargingBolt: Boolean = true,
             val sizePercent: Float = 100f,
             val offsetXDp: Float = 0f,
             val offsetYDp: Float = 0f,
-            val arcStrokePercent: Float = 100f,
-            val ringStroke: Int = 14,
-            val arcStroke: Int = 12,
-            val batteryBlackDepth: Float = 1f,
-            val dotsGapDp: Float = 1.5f,
+            val ringStrokeDp: Float = 2f,
+            val trackAlpha: Int = 56,
+            val dotsGapDp: Float = 1f,
             val dotsSizePercent: Float = 100f,
-            val innerSizePercent: Float = 100f,
-            val innerYDp: Float = 0f,
-            val batteryTextSizeSp: Float = 7f,
-            val batteryTextFontWeight: Int = 400,
+            val batteryTextSizeSp: Float = 8f,
+            val batteryTextFontWeight: Int = 500,
             val chargingBoltSizePercent: Float = 100f,
             val chargingBoltXDp: Float = 0f,
             val chargingBoltYDp: Float = 0f,
-
-            // HyperDuo appearance/advanced behaviour.
-            val roleColors: Boolean = true,
-            val criticalColorDarkArgb: Int = 0xFFFF3B30.toInt(),
-            val criticalColorLightArgb: Int = 0xFFFF3B30.toInt(),
-            val chargingColorDarkArgb: Int = 0xFF34C759.toInt(),
-            val chargingColorLightArgb: Int = 0xFF1F8F3D.toInt(),
-            val lowColorDarkArgb: Int = 0xFFF2B900.toInt(),
-            val lowColorLightArgb: Int = 0xFFC99700.toInt(),
             val lowBatteryThreshold: Int = 20,
-            val trackAlpha: Int = 56,
-            val valueSize: Int = 36,
-            val valueWeight: Int = 700,
-            val typeSize: Int = 32,
-            val typeWeight: Int = 700,
-            val typeSuffixScale: Int = 65,
-            val outTypeSizeDp: Int = 14,
-            val outSignalSizeDp: Int = 15,
-            val outTypeMarginLeftDp: Int = 2,
-            val outTypeMarginRightDp: Int = 2,
-            val outSignalMarginDp: Int = 2,
-            val quickChargeColorArgb: Int = 0xFFFFBA28.toInt(),
-            val debugLog: Boolean = false,
         )
 
         @Serializable
@@ -269,7 +230,7 @@ data class Preference(
             val hideBatteryLevelTextPercentageSign: Boolean = false,
             val hideBatteryLevelTextChargingIcon: Boolean = false,
             val powerRuntime: StatusBarPowerRuntime = StatusBarPowerRuntime(),
-            val comboRuntime: StatusBarComboRuntime = StatusBarComboRuntime(),
+            val comboStyleOneRuntime: StatusBarComboStyleOneRuntime = StatusBarComboStyleOneRuntime(),
             val wifiRuntime: StatusBarWifiRuntime = StatusBarWifiRuntime(),
             val bluetoothRuntime: StatusBarBluetoothRuntime = StatusBarBluetoothRuntime(),
             val signalRuntime: StatusBarSignalRuntime = StatusBarSignalRuntime(),
