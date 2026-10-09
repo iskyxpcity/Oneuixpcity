@@ -58,4 +58,9 @@
     <string name="status_combo_style_one_percent_summary">%1$d%%</string>
     <string name="status_combo_style_one_weight_summary">%1$d</string>
     <string name="status_combo_style_one_color_summary">Choose a color; the current selection previews immediately.</string>
+    <string name="status_combo_style_one_reset_colors">Reset role colors</string>
+    <string name="status_combo_style_one_reset_colors_summary">Restore the default low, critical and charging colors.</string>
+    <string name="status_combo_style_one_reset_colors_confirm">Reset all six dark- and light-background color values to the defaults?</string>
+    <string name="status_combo_style_one_reset">Reset</string>
+    <string name="status_combo_style_one_cancel">Cancel</string>
 </resources>

@@ -600,9 +600,8 @@ object StatusBarComboStyleOneRuntime {
                         invalidateGlyphs()
                     }
                     override fun onDisplayInfoChanged(displayInfo: TelephonyDisplayInfo) {
-                        if (displayInfo == null ||
-                            SubscriptionManager.getDefaultDataSubscriptionId() != info.subscriptionId
-                        ) return
+                        // Cache each SIM's display type so switching the default data SIM
+                        // immediately uses the new subscription's network label.
                         val label = displayNetworkType(displayInfo)
                         if (label == null) displayNetworkTypes.remove(info.subscriptionId)
                         else displayNetworkTypes[info.subscriptionId] = label

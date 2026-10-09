@@ -58,4 +58,9 @@
     <string name="status_combo_style_one_percent_summary">%1$d%%</string>
     <string name="status_combo_style_one_weight_summary">%1$d</string>
     <string name="status_combo_style_one_color_summary">选择颜色，修改后会立即预览。</string>
+    <string name="status_combo_style_one_reset_colors">恢复默认颜色</string>
+    <string name="status_combo_style_one_reset_colors_summary">恢复低电量、临界电量和充电状态的默认颜色。</string>
+    <string name="status_combo_style_one_reset_colors_confirm">要将深色和浅色背景的六种状态颜色全部恢复为默认值吗？</string>
+    <string name="status_combo_style_one_reset">恢复默认</string>
+    <string name="status_combo_style_one_cancel">取消</string>
 </resources>

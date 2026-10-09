@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -30,6 +31,8 @@ import io.github.soclear.oneuix.common.StatusBarRuntimeBridge
 import io.github.soclear.oneuix.ui.category.SystemUIEvent
 import io.github.soclear.oneuix.ui.component.OneuiXInfoItem
 import io.github.soclear.oneuix.ui.component.OneuiXSlider
+import io.github.soclear.oneuix.ui.component.OneuiXActionButton
+import com.oneuixp.app.ui.component.material.ExpressiveConfirmDialog
 import io.github.soclear.oneuix.ui.component.SwitchItem
 import io.github.soclear.oneuix.ui.component.SelectItem
 import kotlin.math.roundToInt
@@ -44,6 +47,7 @@ fun StatusComboStyleOneCategoryControls(
     val viewModel = viewModel<OneuiXToolsViewModel>()
     val context = LocalContext.current
     val runtime = uiState.comboStyleOneRuntime
+    var confirmResetColors by remember { mutableStateOf(false) }
 
     fun preview(next: Preference.SystemUI.StatusBarComboStyleOneRuntime) {
         val json = runCatching {
@@ -313,6 +317,44 @@ fun StatusComboStyleOneCategoryControls(
             styleOneColor(icon, R.string.status_combo_style_one_low_light, runtime.lowColorLightArgb,
                 { previewAndPersist(runtime.copy(lowColorLightArgb = it)) }, { preview(runtime.copy(lowColorLightArgb = it)) })
         }))
+
+        StatusThemeGroup(items = listOf({
+            OneuiXInfoItem(
+                icon = icon,
+                title = stringResource(R.string.status_combo_style_one_reset_colors),
+                summary = stringResource(R.string.status_combo_style_one_reset_colors_summary),
+            )
+        }, {
+            StatusThemeChildItem {
+                OneuiXActionButton(
+                    text = stringResource(R.string.status_combo_style_one_reset_colors),
+                    onClick = { confirmResetColors = true },
+                )
+            }
+        }))
+    }
+
+    if (confirmResetColors) {
+        ExpressiveConfirmDialog(
+            title = stringResource(R.string.status_combo_style_one_reset_colors),
+            message = stringResource(R.string.status_combo_style_one_reset_colors_confirm),
+            confirmText = stringResource(R.string.status_combo_style_one_reset),
+            dismissText = stringResource(R.string.status_combo_style_one_cancel),
+            onConfirm = {
+                previewAndPersist(
+                    runtime.copy(
+                        criticalColorDarkArgb = 0xFFFF3B30.toInt(),
+                        criticalColorLightArgb = 0xFFFF3B30.toInt(),
+                        chargingColorDarkArgb = 0xFF34C759.toInt(),
+                        chargingColorLightArgb = 0xFF1F8F3D.toInt(),
+                        lowColorDarkArgb = 0xFFF2B900.toInt(),
+                        lowColorLightArgb = 0xFFC99700.toInt(),
+                    )
+                )
+                confirmResetColors = false
+            },
+            onDismiss = { confirmResetColors = false },
+        )
     }
 
     StatusThemeGroup(items = listOf({
