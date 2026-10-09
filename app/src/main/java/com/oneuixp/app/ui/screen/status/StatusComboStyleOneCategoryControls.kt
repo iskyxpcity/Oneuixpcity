@@ -439,6 +439,7 @@ fun StatusComboStyleOneCategoryControls(
                         5f..50f,
                         { lowThreshold = it.roundToInt(); preview(runtime.copy(lowThreshold = lowThreshold)) },
                         { persist(runtime.copy(lowThreshold = lowThreshold)) },
+                        enabled = runtime.roleColors,
                     )
                 }
                 colorItems += {
@@ -727,11 +728,17 @@ private fun styleOneSlider(
     onValueChange: (Float) -> Unit,
     onFinished: () -> Unit,
     stepSize: Float = 1f,
+    enabled: Boolean = true,
 ) {
     val view = LocalView.current
     var lastStep by remember(title, range.start, range.endInclusive) { mutableFloatStateOf(value) }
     Column {
-        OneuiXInfoItem(icon = icon, title = title, summary = summary)
+        OneuiXInfoItem(
+            icon = icon,
+            title = title,
+            summary = summary,
+            modifier = Modifier.alpha(if (enabled) 1f else 0.45f),
+        )
         StatusThemeChildItem {
             OneuiXSlider(
                 value = value,
@@ -739,16 +746,18 @@ private fun styleOneSlider(
                 valueRange = range,
                 steps = 0,
                 onValueChange = { raw ->
-                    val bounded = raw.coerceIn(range.start, range.endInclusive)
-                    val next = (((bounded - range.start) / stepSize).roundToInt() * stepSize + range.start)
-                        .coerceIn(range.start, range.endInclusive)
-                    if (next != lastStep) {
-                        lastStep = next
-                        view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                    if (enabled) {
+                        val bounded = raw.coerceIn(range.start, range.endInclusive)
+                        val next = (((bounded - range.start) / stepSize).roundToInt() * stepSize + range.start)
+                            .coerceIn(range.start, range.endInclusive)
+                        if (next != lastStep) {
+                            lastStep = next
+                            view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                        }
+                        onValueChange(next)
                     }
-                    onValueChange(next)
                 },
-                onValueChangeFinished = onFinished,
+                onValueChangeFinished = { if (enabled) onFinished() },
             )
         }
     }

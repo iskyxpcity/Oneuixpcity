@@ -2,7 +2,13 @@
 <resources>
     <string name="status_combo_style_one_category">三合一图标风格一</string>
     <string name="status_combo_style_one_preview">图标预览</string>
-    <string name="status_combo_style_one_preview_summary">预览与状态栏图标使用同一套绘制逻辑。</string>
+    <string name="status_combo_style_one_preview_summary">对比充电、低电量和危险电量在深色与浅色状态栏背景下的显示效果。</string>
+    <string name="status_combo_style_one_preview_charging_dark">充电·深</string>
+    <string name="status_combo_style_one_preview_charging_light">充电·浅</string>
+    <string name="status_combo_style_one_preview_low_dark">低电·深</string>
+    <string name="status_combo_style_one_preview_low_light">低电·浅</string>
+    <string name="status_combo_style_one_preview_critical_dark">危险·深</string>
+    <string name="status_combo_style_one_preview_critical_light">危险·浅</string>
     <string name="status_combo_style_one_enable">启用三合一图标</string>
     <string name="status_combo_style_one_enable_summary">将电量、Wi-Fi 弧线、移动信号与网络类型组合为一个状态栏图标。</string>
     <string name="status_combo_style_one_style">三合一图标样式</string>

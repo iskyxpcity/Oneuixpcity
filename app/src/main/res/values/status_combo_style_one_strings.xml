@@ -2,7 +2,13 @@
 <resources>
     <string name="status_combo_style_one_category">Three-in-One Icon Style One</string>
     <string name="status_combo_style_one_preview">Icon preview</string>
-    <string name="status_combo_style_one_preview_summary">The preview uses the same drawing code as the status-bar icon.</string>
+    <string name="status_combo_style_one_preview_summary">Compare charging, low-battery and critical colors on dark and light status-bar backgrounds.</string>
+    <string name="status_combo_style_one_preview_charging_dark">Charge · dark</string>
+    <string name="status_combo_style_one_preview_charging_light">Charge · light</string>
+    <string name="status_combo_style_one_preview_low_dark">Low · dark</string>
+    <string name="status_combo_style_one_preview_low_light">Low · light</string>
+    <string name="status_combo_style_one_preview_critical_dark">Critical · dark</string>
+    <string name="status_combo_style_one_preview_critical_light">Critical · light</string>
     <string name="status_combo_style_one_enable">Enable trio icon</string>
     <string name="status_combo_style_one_enable_summary">Master switch. Turn off to restore the stock battery and signal icons.</string>
     <string name="status_combo_style_one_style">Trio style</string>
