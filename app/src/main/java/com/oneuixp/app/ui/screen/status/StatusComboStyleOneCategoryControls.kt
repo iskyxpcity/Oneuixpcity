@@ -30,6 +30,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -85,8 +86,6 @@ fun StatusComboStyleOneCategoryControls(
     var previewRuntime by remember(runtime) { mutableStateOf(runtime) }
     var confirmResetColors by remember { mutableStateOf(false) }
     var editingColorRole by remember { mutableStateOf<StyleOneColorRole?>(null) }
-    var editingDarkBackground by remember { mutableStateOf(true) }
-    var draftRoleColor by remember { mutableIntStateOf(0xFFFFFFFF.toInt()) }
 
     fun preview(next: Preference.SystemUI.StatusBarComboStyleOneRuntime) {
         previewRuntime = next.copy(criticalThreshold = 20)
@@ -431,8 +430,7 @@ fun StatusComboStyleOneCategoryControls(
                     onCheckedChange = { previewAndPersist(runtime.copy(roleColors = it)) },
                 )
             }
-            if (runtime.roleColors) {
-                colorItems += {
+            colorItems += {
                     styleOneSlider(
                         icon,
                         stringResource(R.string.status_combo_style_one_low_threshold),
@@ -444,115 +442,47 @@ fun StatusComboStyleOneCategoryControls(
                     )
                 }
                 colorItems += {
-                    OneuiXInfoItem(
+                    StyleOneRoleColorRow(
                         title = stringResource(StyleOneColorRole.Low.titleRes),
                         summary = stringResource(R.string.status_combo_style_one_color_summary),
-                        modifier = Modifier.clickable {
-                            editingColorRole = StyleOneColorRole.Low
-                            editingDarkBackground = true
-                            draftRoleColor = runtime.lowColorDarkArgb
-                        },
-                        trailingContent = {
-                            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                StyleOneColorSwatch(
-                                    color = runtime.lowColorDarkArgb,
-                                    label = stringResource(R.string.status_combo_style_one_color_on_dark_short),
-                                    onClick = {
-                                        editingColorRole = StyleOneColorRole.Low
-                                        editingDarkBackground = true
-                                        draftRoleColor = runtime.lowColorDarkArgb
-                                    },
-                                )
-                                StyleOneColorSwatch(
-                                    color = runtime.lowColorLightArgb,
-                                    label = stringResource(R.string.status_combo_style_one_color_on_light_short),
-                                    onClick = {
-                                        editingColorRole = StyleOneColorRole.Low
-                                        editingDarkBackground = false
-                                        draftRoleColor = runtime.lowColorLightArgb
-                                    },
-                                )
-                            }
-                        },
+                        darkColor = runtime.lowColorDarkArgb,
+                        lightColor = runtime.lowColorLightArgb,
+                        enabled = runtime.roleColors,
+                        onClick = { editingColorRole = StyleOneColorRole.Low },
                     )
                 }
                 colorItems += {
-                    OneuiXInfoItem(
+                    StyleOneRoleColorRow(
                         title = stringResource(StyleOneColorRole.Charging.titleRes),
                         summary = stringResource(R.string.status_combo_style_one_color_summary),
-                        modifier = Modifier.clickable {
-                            editingColorRole = StyleOneColorRole.Charging
-                            editingDarkBackground = true
-                            draftRoleColor = runtime.chargingColorDarkArgb
-                        },
-                        trailingContent = {
-                            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                StyleOneColorSwatch(
-                                    color = runtime.chargingColorDarkArgb,
-                                    label = stringResource(R.string.status_combo_style_one_color_on_dark_short),
-                                    onClick = {
-                                        editingColorRole = StyleOneColorRole.Charging
-                                        editingDarkBackground = true
-                                        draftRoleColor = runtime.chargingColorDarkArgb
-                                    },
-                                )
-                                StyleOneColorSwatch(
-                                    color = runtime.chargingColorLightArgb,
-                                    label = stringResource(R.string.status_combo_style_one_color_on_light_short),
-                                    onClick = {
-                                        editingColorRole = StyleOneColorRole.Charging
-                                        editingDarkBackground = false
-                                        draftRoleColor = runtime.chargingColorLightArgb
-                                    },
-                                )
-                            }
-                        },
+                        darkColor = runtime.chargingColorDarkArgb,
+                        lightColor = runtime.chargingColorLightArgb,
+                        enabled = runtime.roleColors,
+                        onClick = { editingColorRole = StyleOneColorRole.Charging },
                     )
                 }
                 colorItems += {
-                    OneuiXInfoItem(
+                    StyleOneRoleColorRow(
                         title = stringResource(StyleOneColorRole.Critical.titleRes),
                         summary = stringResource(R.string.status_combo_style_one_color_summary),
-                        modifier = Modifier.clickable {
-                            editingColorRole = StyleOneColorRole.Critical
-                            editingDarkBackground = true
-                            draftRoleColor = runtime.criticalColorDarkArgb
-                        },
-                        trailingContent = {
-                            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                StyleOneColorSwatch(
-                                    color = runtime.criticalColorDarkArgb,
-                                    label = stringResource(R.string.status_combo_style_one_color_on_dark_short),
-                                    onClick = {
-                                        editingColorRole = StyleOneColorRole.Critical
-                                        editingDarkBackground = true
-                                        draftRoleColor = runtime.criticalColorDarkArgb
-                                    },
-                                )
-                                StyleOneColorSwatch(
-                                    color = runtime.criticalColorLightArgb,
-                                    label = stringResource(R.string.status_combo_style_one_color_on_light_short),
-                                    onClick = {
-                                        editingColorRole = StyleOneColorRole.Critical
-                                        editingDarkBackground = false
-                                        draftRoleColor = runtime.criticalColorLightArgb
-                                    },
-                                )
-                            }
-                        },
+                        darkColor = runtime.criticalColorDarkArgb,
+                        lightColor = runtime.criticalColorLightArgb,
+                        enabled = runtime.roleColors,
+                        onClick = { editingColorRole = StyleOneColorRole.Critical },
                     )
                 }
                 colorItems += {
                     OneuiXInfoItem(
                         title = stringResource(R.string.status_combo_style_one_reset_colors),
                         summary = stringResource(R.string.status_combo_style_one_reset_colors_summary),
-                        modifier = Modifier.clickable { confirmResetColors = true },
+                        modifier = Modifier
+                            .alpha(if (runtime.roleColors) 1f else 0.45f)
+                            .clickable(enabled = runtime.roleColors) { confirmResetColors = true },
                         trailingContent = {
                             Text("›", style = Material3Theme.typography.titleLarge)
                         },
                     )
                 }
-            }
             StatusThemeGroup(items = colorItems)
 
             if (confirmResetColors) {
@@ -585,30 +515,14 @@ fun StatusComboStyleOneCategoryControls(
                     darkLabel = stringResource(R.string.status_combo_style_one_color_on_dark),
                     lightLabel = stringResource(R.string.status_combo_style_one_color_on_light),
                     summary = stringResource(R.string.status_combo_style_one_color_dialog_summary),
-                    colorArgb = draftRoleColor,
-                    darkSelected = editingDarkBackground,
-                    onBackgroundSelected = { isDark ->
-                        editingDarkBackground = isDark
-                        draftRoleColor = when (role) {
-                            StyleOneColorRole.Low -> if (isDark) runtime.lowColorDarkArgb else runtime.lowColorLightArgb
-                            StyleOneColorRole.Charging -> if (isDark) runtime.chargingColorDarkArgb else runtime.chargingColorLightArgb
-                            StyleOneColorRole.Critical -> if (isDark) runtime.criticalColorDarkArgb else runtime.criticalColorLightArgb
-                        }
+                    darkColorArgb = runtime.colorForRole(role, onDarkBackground = true),
+                    lightColorArgb = runtime.colorForRole(role, onDarkBackground = false),
+                    onColorChange = { onDark, color ->
+                        previewAndPersist(runtime.withRoleColor(role, onDark, color))
                     },
-                    onColorPreview = { color ->
-                        draftRoleColor = color
-                        preview(runtime.withRoleColor(role, editingDarkBackground, color))
-                    },
-                    onApply = {
-                        previewAndPersist(runtime.withRoleColor(role, editingDarkBackground, draftRoleColor))
-                        editingColorRole = null
-                    },
-                    onCancel = {
-                        preview(runtime)
-                        editingColorRole = null
-                    },
+                    onDismiss = { editingColorRole = null },
                 )
-            }
+            }            }
         }
     }
 
@@ -618,6 +532,15 @@ private enum class StyleOneColorRole(val titleRes: Int) {
     Low(R.string.status_combo_style_one_color_low),
     Charging(R.string.status_combo_style_one_color_charging),
     Critical(R.string.status_combo_style_one_color_critical),
+}
+
+private fun Preference.SystemUI.StatusBarComboStyleOneRuntime.colorForRole(
+    role: StyleOneColorRole,
+    onDarkBackground: Boolean,
+): Int = when (role) {
+    StyleOneColorRole.Low -> if (onDarkBackground) lowColorDarkArgb else lowColorLightArgb
+    StyleOneColorRole.Charging -> if (onDarkBackground) chargingColorDarkArgb else chargingColorLightArgb
+    StyleOneColorRole.Critical -> if (onDarkBackground) criticalColorDarkArgb else criticalColorLightArgb
 }
 
 private fun Preference.SystemUI.StatusBarComboStyleOneRuntime.withRoleColor(
@@ -631,25 +554,57 @@ private fun Preference.SystemUI.StatusBarComboStyleOneRuntime.withRoleColor(
 }
 
 @Composable
-private fun StyleOneColorSwatch(color: Int, label: String, onClick: () -> Unit) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(3.dp),
-        modifier = Modifier.clickable(onClick = onClick).semantics {
-            contentDescription = label
-        },
-    ) {
-        Text(
-            text = label,
-            style = Material3Theme.typography.labelSmall,
-            maxLines = 1,
-        )
-        Box(
+private fun StyleOneColorSwatch(color: Int) {
+    Box(
+        modifier = Modifier
+            .size(18.dp)
+            .background(Color(color), CircleShape)
+            .border(1.dp, Color(0x66000000), CircleShape),
+    )
+}
+
+@Composable
+private fun StyleOneRoleColorRow(
+    title: String,
+    summary: String,
+    darkColor: Int,
+    lightColor: Int,
+    enabled: Boolean,
+    onClick: () -> Unit,
+) {
+    StatusThemeChildItem {
+        Row(
             modifier = Modifier
-                .size(24.dp)
-                .background(Color(color), CircleShape)
-                .border(1.dp, Color(0x66000000), CircleShape),
-        )
+                .fillMaxWidth()
+                .alpha(if (enabled) 1f else 0.45f)
+                .clickable(enabled = enabled, onClick = onClick)
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                StyleOneColorSwatch(darkColor)
+                StyleOneColorSwatch(lightColor)
+            }
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(3.dp),
+            ) {
+                Text(title, style = Material3Theme.typography.titleSmall)
+                when (LocalUiMode.current) {
+                    UiMode.Material -> Text(
+                        summary,
+                        style = Material3Theme.typography.bodySmall,
+                        color = Material3Theme.colorScheme.onSurfaceVariant,
+                    )
+                    UiMode.Miuix -> MiuixText(
+                        text = summary,
+                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                    )
+                }
+            }
+            Text("›", style = Material3Theme.typography.titleLarge)
+        }
     }
 }
 
@@ -696,13 +651,13 @@ private fun StyleOneRoleColorDialog(
     darkLabel: String,
     lightLabel: String,
     summary: String,
-    colorArgb: Int,
-    darkSelected: Boolean,
-    onBackgroundSelected: (Boolean) -> Unit,
-    onColorPreview: (Int) -> Unit,
-    onApply: () -> Unit,
-    onCancel: () -> Unit,
+    darkColorArgb: Int,
+    lightColorArgb: Int,
+    onColorChange: (Boolean, Int) -> Unit,
+    onDismiss: () -> Unit,
 ) {
+    var onDark by remember(roleTitle) { mutableStateOf(true) }
+
     @Composable
     fun PickerContent() {
         Column(
@@ -715,43 +670,27 @@ private fun StyleOneRoleColorDialog(
             ) {
                 StyleOneBackgroundButton(
                     label = darkLabel,
-                    selected = darkSelected,
+                    selected = onDark,
                     modifier = Modifier.weight(1f),
-                    onClick = { onBackgroundSelected(true) },
+                    onClick = { onDark = true },
                 )
                 StyleOneBackgroundButton(
                     label = lightLabel,
-                    selected = !darkSelected,
+                    selected = !onDark,
                     modifier = Modifier.weight(1f),
-                    onClick = { onBackgroundSelected(false) },
+                    onClick = { onDark = false },
                 )
             }
             ColorPalette(
-                color = Color(colorArgb),
-                onColorChanged = { onColorPreview(it.toArgb()) },
+                color = Color(if (onDark) darkColorArgb else lightColorArgb),
+                onColorChanged = { onColorChange(onDark, it.toArgb()) },
                 modifier = Modifier.fillMaxWidth(),
             )
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                OneuiXActionButton(
-                    text = stringResource(R.string.status_combo_style_one_color_cancel),
-                    onClick = onCancel,
-                    modifier = Modifier.weight(1f),
-                )
-                OneuiXActionButton(
-                    text = stringResource(R.string.status_combo_style_one_color_apply),
-                    onClick = onApply,
-                    modifier = Modifier.weight(1f),
-                    primary = true,
-                )
-            }
         }
     }
 
     when (LocalUiMode.current) {
-        UiMode.Material -> Dialog(onDismissRequest = onCancel) {
+        UiMode.Material -> Dialog(onDismissRequest = onDismiss) {
             Surface(
                 modifier = Modifier.fillMaxWidth().widthIn(max = 460.dp),
                 shape = RoundedCornerShape(24.dp),
@@ -767,7 +706,7 @@ private fun StyleOneRoleColorDialog(
         UiMode.Miuix -> WindowDialog(
             show = true,
             title = roleTitle,
-            onDismissRequest = onCancel,
+            onDismissRequest = onDismiss,
             content = {
                 Column {
                     MiuixText(text = summary)
