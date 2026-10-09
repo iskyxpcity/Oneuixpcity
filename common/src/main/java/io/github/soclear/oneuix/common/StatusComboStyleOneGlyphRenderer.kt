@@ -65,7 +65,7 @@ object StatusComboStyleOneGlyphRenderer {
     private const val BOLT_TOP = 1.5f
     private const val BOLT_TOP_REF = 2.2f
     private const val BOLT_CX_REF = 59.45f
-    private const val BOLT_SCALE = 1.6f
+    private const val BOLT_SCALE = 2.0f
     private const val QUICK_CHARGE = 0xFFFFBA28.toInt()
 
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)

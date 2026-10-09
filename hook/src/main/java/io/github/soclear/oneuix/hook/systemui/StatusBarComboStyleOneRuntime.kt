@@ -64,6 +64,7 @@ object StatusBarComboStyleOneRuntime {
     private const val ICON_MANAGER = "com.android.systemui.statusbar.phone.ui.IconManager"
     private const val BATTERY_METER = "com.android.systemui.battery.BatteryMeterView"
     private const val MIUI_BATTERY_METER = "com.android.systemui.statusbar.views.MiuiBatteryMeterView"
+    private const val MIUI_BATTERY_CONTAINER = "com.android.systemui.statusbar.views.MiuiStatusBatteryContainer"
 
     private val installed = AtomicBoolean(false)
     @Volatile private var moduleForPreferenceReload: XposedModule? = null
@@ -83,6 +84,13 @@ object StatusBarComboStyleOneRuntime {
     // Prefer the exact foreground tint applied to the native battery meter; the
     // generic status-icon tint remains a fallback for non-MIUI implementations.
     private val batteryTintSnapshots = Collections.synchronizedMap(WeakHashMap<View, Int>())
+    // Original island requests are kept so toggling the feature during an island
+    // replays the correct MIUI state immediately instead of waiting for the next event.
+    private val batteryIslandRequests =
+        Collections.synchronizedMap(WeakHashMap<View, Pair<Boolean, Boolean>>())
+    private val batteryContainerIslandRequests =
+        Collections.synchronizedMap(WeakHashMap<View, Boolean>())
+    @Volatile private var miuiIslandMeterHooked = false
     private val lastContainerFingerprints = Collections.synchronizedMap(WeakHashMap<ViewGroup, Int>())
     private val scheduledContainerPasses = Collections.synchronizedSet(
         Collections.newSetFromMap(WeakHashMap<ViewGroup, Boolean>())
@@ -293,6 +301,7 @@ object StatusBarComboStyleOneRuntime {
         }
         hookIconManager(module, param.classLoader)
         hookBatteryMeters(module, param.classLoader)
+        hookMiuiBatteryIsland(module, param.classLoader)
         hookBatteryTint(module, param.classLoader)
         hookNativeBatteryTint(module, param.classLoader)
         hookIconTint(module, param.classLoader)
@@ -832,6 +841,127 @@ object StatusBarComboStyleOneRuntime {
         }
     }
 
+    /**
+     * MIUI/HyperOS may remove the battery meter's reserved width for its charging
+     * island. The combo glyph is anchored to that meter, so doing so would leave
+     * the glyph floating over the island. While Style One owns the status icon,
+     * decline only the layout replacement request; keep the true request in the
+     * MIUI field and replay it if Style One is disabled during the animation.
+     */
+    private fun hookMiuiBatteryIsland(module: XposedModule, classLoader: ClassLoader) {
+        runCatching {
+            val meterClass = classLoader.loadClass(MIUI_BATTERY_METER)
+            meterClass.declaredMethods.filter { method ->
+                method.name == "updateIslandChanged" &&
+                    method.parameterTypes.size == 2 &&
+                    method.parameterTypes.all { it == Boolean::class.javaPrimitiveType }
+            }.forEach { method ->
+                module.hook(method).intercept { chain ->
+                    val meter = chain.thisObject as? View
+                    val requestedHide = chain.getArg(0) as? Boolean ?: false
+                    val trigger = chain.getArg(1) as? Boolean ?: false
+                    if (meter != null) batteryIslandRequests[meter] = requestedHide to trigger
+                    if (!config.enabled) {
+                        chain.proceed()
+                    } else {
+                        // Let the charging island itself continue unchanged while
+                        // retaining the battery anchor's width for the combined glyph.
+                        val result = chain.proceed(arrayOf(false, trigger))
+                        if (meter != null) {
+                            setBooleanField(meter, "mStoreIsAddBatteryIsland", requestedHide)
+                        }
+                        result
+                    }
+                }
+                miuiIslandMeterHooked = true
+            }
+        }.onFailure { diagnostic("MIUI battery island meter hook unavailable: $it") }
+
+        // Older/newer HyperOS builds may route the visibility request through the
+        // container without this meter callback. Preserve the request and suppress
+        // only the width-removal while Style One owns the anchor.
+        if (!miuiIslandMeterHooked) runCatching {
+            val containerClass = classLoader.loadClass(MIUI_BATTERY_CONTAINER)
+            containerClass.declaredMethods.filter { method ->
+                method.name == "setIsHideBattery" &&
+                    method.parameterTypes.size == 1 &&
+                    (method.parameterTypes[0] == Boolean::class.javaPrimitiveType ||
+                        method.parameterTypes[0] == Boolean::class.javaObjectType)
+            }.forEach { method ->
+                module.hook(method).intercept { chain ->
+                    val container = chain.thisObject as? View
+                    val requestedHide = chain.getArg(0) as? Boolean ?: false
+                    if (container != null) batteryContainerIslandRequests[container] = requestedHide
+                    if (config.enabled) chain.proceed(arrayOf(false)) else chain.proceed()
+                }
+            }
+        }.onFailure { diagnostic("MIUI battery island container fallback unavailable: $it") }
+    }
+
+    private fun setBooleanField(instance: Any, fieldName: String, value: Boolean) {
+        var type: Class<*>? = instance.javaClass
+        while (type != null) {
+            val current = type
+            val field = runCatching {
+                current.getDeclaredField(fieldName).apply { isAccessible = true }
+            }.getOrNull()
+            if (field != null) {
+                runCatching {
+                    if (field.type == Boolean::class.javaPrimitiveType) field.setBoolean(instance, value)
+                    else field.set(instance, value)
+                }
+                return
+            }
+            type = current.superclass
+        }
+    }
+
+    private fun replayMiuiBatteryIslandRequests() {
+        main.post {
+            if (miuiIslandMeterHooked) {
+                val requests = synchronized(batteryIslandRequests) {
+                    batteryIslandRequests.entries.map { it.key to it.value }
+                }
+                requests.forEach { (meter, request) ->
+                    runCatching {
+                        var type: Class<*>? = meter.javaClass
+                        var method: java.lang.reflect.Method? = null
+                        while (type != null && method == null) {
+                            method = type.declaredMethods.firstOrNull { candidate ->
+                                candidate.name == "updateIslandChanged" &&
+                                    candidate.parameterTypes.size == 2 &&
+                                    candidate.parameterTypes.all { it == Boolean::class.javaPrimitiveType }
+                            }
+                            type = type.superclass
+                        }
+                        method?.apply { isAccessible = true }?.invoke(meter, request.first, request.second)
+                        setBooleanField(meter, "mStoreIsAddBatteryIsland", request.first)
+                    }.onFailure { diagnostic("Cannot replay MIUI island state: $it") }
+                }
+            } else {
+                val requests = synchronized(batteryContainerIslandRequests) {
+                    batteryContainerIslandRequests.entries.map { it.key to it.value }
+                }
+                requests.forEach { (container, requestedHide) ->
+                    runCatching {
+                        var type: Class<*>? = container.javaClass
+                        var method: java.lang.reflect.Method? = null
+                        while (type != null && method == null) {
+                            method = type.declaredMethods.firstOrNull { candidate ->
+                                candidate.name == "setIsHideBattery" &&
+                                    candidate.parameterTypes.size == 1 &&
+                                    (candidate.parameterTypes[0] == Boolean::class.javaPrimitiveType ||
+                                        candidate.parameterTypes[0] == Boolean::class.javaObjectType)
+                            }
+                            type = type.superclass
+                        }
+                        method?.apply { isAccessible = true }?.invoke(container, requestedHide)
+                    }.onFailure { diagnostic("Cannot replay MIUI island container state: $it") }
+                }
+            }
+        }
+    }
+
     private fun hookBatteryMeters(module: XposedModule, classLoader: ClassLoader) {
         listOf(BATTERY_METER, MIUI_BATTERY_METER).forEach { className ->
             runCatching {
@@ -1060,6 +1190,7 @@ object StatusBarComboStyleOneRuntime {
                             val next = sanitize(status.comboStyleOneRuntime)
                             config = next
                             diagnostic("Settings updated: enabled=${config.enabled}, overlay=${config.overlayGlyph}, style=${config.trioStyle}, signalMode=${config.signalMode}")
+                            if (previous.enabled != next.enabled) replayMiuiBatteryIslandRequests()
                             if (requiresHostRefresh(previous, next)) {
                                 refreshHosts()
                             } else {
