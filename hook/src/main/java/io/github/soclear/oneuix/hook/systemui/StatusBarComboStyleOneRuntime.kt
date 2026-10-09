@@ -385,22 +385,23 @@ object StatusBarComboStyleOneRuntime {
     private fun showNativeGlyphForShade(host: Host, battery: View) {
         val slotAlpha = host.layouts[battery]?.alpha ?: 1f
         battery.alpha = slotAlpha
-        if (battery is ViewGroup) enableOnDrawIfNeeded(host, battery)
-        val target = host.shadeDrawTarget
-        if (target != null && target !== battery) {
+        val target = host.shadeDrawTarget ?: battery
+        if (target !== battery) {
             if (!nativeChildSnapshots.containsKey(target)) {
                 snapshotLayout(target)?.let { nativeChildSnapshots[target] = it }
             }
             target.alpha = nativeChildSnapshots[target]?.alpha ?: 1f
             if (target is ViewGroup) enableOnDrawIfNeeded(host, target)
             target.invalidate()
+        } else if (battery is ViewGroup) {
+            enableOnDrawIfNeeded(host, battery)
         }
         battery.invalidate()
     }
 
     private fun hideNativeGlyphAfterShade(host: Host, battery: View) {
-        val target = host.shadeDrawTarget
-        if (target != null && target !== battery) {
+        val target = host.shadeDrawTarget ?: battery
+        if (target !== battery) {
             if (!nativeChildSnapshots.containsKey(target)) {
                 snapshotLayout(target)?.let { nativeChildSnapshots[target] = it }
             }
@@ -408,7 +409,7 @@ object StatusBarComboStyleOneRuntime {
             target.invalidate()
         }
         battery.alpha = 0f
-        restoreOnDrawFlag(host, battery)
+        restoreOnDrawFlag(host, target)
         battery.invalidate()
     }
 
@@ -433,13 +434,14 @@ object StatusBarComboStyleOneRuntime {
     private fun readWillNotDraw(view: ViewGroup): Boolean? {
         var type: Class<*>? = view.javaClass
         while (type != null) {
+            val current = type
             val method = runCatching {
-                type.getDeclaredMethod("willNotDraw").apply { isAccessible = true }
+                current.getDeclaredMethod("willNotDraw").apply { isAccessible = true }
             }.getOrNull()
             if (method != null) {
                 return runCatching { method.invoke(view) as? Boolean }.getOrNull()
             }
-            type = type.superclass
+            type = current.superclass
         }
         return null
     }
@@ -609,7 +611,7 @@ object StatusBarComboStyleOneRuntime {
                 ?: views.firstOrNull(::isBatteryIcon)
 
             if (!config.enabled || battery == null) {
-                host.battery?.let { restoreOnDrawFlag(host, it) }
+                host.battery?.let { restoreOnDrawFlag(host, host.shadeDrawTarget ?: it) }
                 host.overlay?.detach()
                 host.overlay = null
                 removeInline(host)
@@ -624,7 +626,7 @@ object StatusBarComboStyleOneRuntime {
 
             val previousBattery = host.battery
             if (previousBattery != null && previousBattery !== battery) {
-                restoreOnDrawFlag(host, previousBattery)
+                restoreOnDrawFlag(host, host.shadeDrawTarget ?: previousBattery)
                 host.overlay?.detach()
                 host.overlay = null
                 removeInline(host)
@@ -1193,7 +1195,7 @@ object StatusBarComboStyleOneRuntime {
                 val host = synchronized(hosts) {
                     hosts.values.firstOrNull { candidate ->
                         !candidate.retired && candidate.overlay != null &&
-                            (candidate.battery === view || candidate.shadeDrawTarget === view)
+                            candidate.shadeDrawTarget === view
                     }
                 } ?: return@intercept result
                 if (cutoutBounds(host.root) != null || view.width <= 0 || view.height <= 0) {
@@ -1399,9 +1401,7 @@ object StatusBarComboStyleOneRuntime {
             (anchor === meter || isWithin(anchor, meter) || isWithin(meter, anchor))
         if (host != null && belongsToAnchor) {
             val tintRow = host.tintRow ?: batteryTintContainerFor(anchor!!)
-            // A real icon tint already observed for this row wins over values
-            // sampled from MIUI's meter fields, which may lag behind animation.
-                val owner = tintRow ?: host.root
+            val owner = tintRow ?: host.root
             // This callback carries the colour SystemUI is painting now. Replace
             // the previous value instead of freezing the first light/dark tint
             // observed after SystemUI started.
