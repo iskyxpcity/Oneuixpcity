@@ -408,12 +408,21 @@ object StatusBarComboStyleOneRuntime {
 
     private fun insertInline(host: Host, anchor: View) {
         val parent = anchor.parent as? ViewGroup ?: return
-        if (host.inline?.parent === parent) { host.inline?.invalidate(); return }
+        val width = dp(parent.context, StatusComboStyleOneGlyphRenderer.glyphWidthDp(config))
+        val height = dp(parent.context, StatusComboStyleOneGlyphRenderer.glyphHeightDp(config))
+        host.inline?.takeIf { it.parent === parent }?.let { glyph ->
+            val lp = glyph.layoutParams
+            if (lp != null && (lp.width != width || lp.height != height)) {
+                lp.width = width
+                lp.height = height
+                glyph.layoutParams = lp
+            }
+            glyph.invalidate()
+            return
+        }
         removeInline(host)
         val glyph = GlyphView(parent.context)
         val old = anchor.layoutParams
-        val width = dp(parent.context, StatusComboStyleOneGlyphRenderer.glyphWidthDp(config))
-        val height = dp(parent.context, StatusComboStyleOneGlyphRenderer.glyphHeightDp(config))
         val lp = when (old) {
             is LinearLayout.LayoutParams -> LinearLayout.LayoutParams(old).apply { this.width = width; this.height = height }
             is FrameLayout.LayoutParams -> FrameLayout.LayoutParams(old).apply { this.width = width; this.height = height }
