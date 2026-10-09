@@ -22,7 +22,7 @@
     <string name="status_combo_style_one_show_mobile">Show mobile dots</string>
     <string name="status_combo_style_one_show_mobile_summary">Draw four signal dots for the current data SIM, or both SIM levels when dual-SIM display is enabled.</string>
     <string name="status_combo_style_one_show_value">Show battery number</string>
-    <string name="status_combo_style_one_show_value_summary">Show the battery percentage inside the ring. Centre it independently from the charging bolt if preferred.</string>
+    <string name="status_combo_style_one_show_value_summary">Show the battery percentage when not charging. While charging, the bolt replaces the percentage.</string>
     <string name="status_combo_style_one_show_bolt">Show charging bolt</string>
     <string name="status_combo_style_one_show_bolt_summary">Draw the charging bolt while charging. Its size and horizontal/vertical position can be adjusted under Geometry.</string>
     <string name="status_combo_style_one_value_centred">Center the battery number</string>

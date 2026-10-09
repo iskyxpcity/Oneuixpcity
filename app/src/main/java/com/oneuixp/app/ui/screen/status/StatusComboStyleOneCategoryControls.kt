@@ -14,13 +14,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button as MaterialButton
 import androidx.compose.material3.ButtonDefaults as MaterialButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme as Material3Theme
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -33,11 +31,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -55,6 +51,7 @@ import io.github.soclear.oneuix.ui.component.OneuiXInfoItem
 import io.github.soclear.oneuix.ui.component.OneuiXSlider
 import io.github.soclear.oneuix.ui.component.OneuiXActionButton
 import com.oneuixp.app.ui.component.material.ExpressiveConfirmDialog
+import com.oneuixp.app.ui.component.material.ExpressiveTabRow
 import io.github.soclear.oneuix.ui.component.SwitchItem
 import io.github.soclear.oneuix.ui.component.SelectItem
 import com.oneuixp.app.ui.LocalUiMode
@@ -71,13 +68,11 @@ import androidx.compose.material3.Surface
 import kotlin.math.roundToInt
 
 @Suppress("UNUSED_PARAMETER")
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StatusComboStyleOneCategoryControls(
     uiState: Preference.SystemUI.StatusBar,
     onEvent: (SystemUIEvent) -> Unit,
 ) {
-    val icon = ImageVector.vectorResource(R.drawable.status_combo_style_one)
     val viewModel = viewModel<OneuiXToolsViewModel>()
     val context = LocalContext.current
     // Match HyperDuo exactly: critical battery is a fixed 20% cutoff.
@@ -142,7 +137,6 @@ fun StatusComboStyleOneCategoryControls(
     StatusThemeGroup(items = listOf({
         Column {
             OneuiXInfoItem(
-                icon = icon,
                 title = stringResource(R.string.status_combo_style_one_preview),
                 summary = stringResource(R.string.status_combo_style_one_preview_summary),
             )
@@ -156,7 +150,6 @@ fun StatusComboStyleOneCategoryControls(
         }
     }, {
         SwitchItem(
-            icon = icon,
             title = stringResource(R.string.status_combo_style_one_enable),
             summary = stringResource(R.string.status_combo_style_one_enable_summary),
             checked = runtime.enabled,
@@ -167,13 +160,39 @@ fun StatusComboStyleOneCategoryControls(
     if (!runtime.enabled) return
 
     var selectedTab by remember { mutableIntStateOf(0) }
-    TabRow(selectedTabIndex = selectedTab) {
-        Tab(selected = selectedTab == 0, onClick = { selectedTab = 0 },
-            text = { Text(stringResource(R.string.status_combo_style_one_tab_general)) })
-        Tab(selected = selectedTab == 1, onClick = { selectedTab = 1 },
-            text = { Text(stringResource(R.string.status_combo_style_one_tab_size)) })
-        Tab(selected = selectedTab == 2, onClick = { selectedTab = 2 },
-            text = { Text(stringResource(R.string.status_combo_style_one_tab_color)) })
+    val tabs = listOf(
+        stringResource(R.string.status_combo_style_one_tab_general),
+        stringResource(R.string.status_combo_style_one_tab_size),
+        stringResource(R.string.status_combo_style_one_tab_color),
+    )
+    when (LocalUiMode.current) {
+        UiMode.Material -> ExpressiveTabRow(
+            selectedTabIndex = selectedTab,
+            tabs = tabs,
+            onTabClick = { selectedTab = it },
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
+        )
+        UiMode.Miuix -> Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            tabs.forEachIndexed { index, label ->
+                MiuixButton(
+                    onClick = { selectedTab = index },
+                    modifier = Modifier.weight(1f),
+                    colors = if (selectedTab == index) {
+                        MiuixButtonDefaults.buttonColors()
+                    } else {
+                        MiuixButtonDefaults.buttonColors(
+                            color = MiuixTheme.colorScheme.surfaceContainerHigh,
+                            contentColor = MiuixTheme.colorScheme.onSurfaceContainerHigh,
+                        )
+                    },
+                ) {
+                    MiuixText(text = label)
+                }
+            }
+        }
     }
 
     when (selectedTab) {
@@ -182,7 +201,6 @@ fun StatusComboStyleOneCategoryControls(
                 OneuiXInfoItem(title = stringResource(R.string.status_combo_style_one_group_appearance))
             }, {
                 SelectItem(
-                    icon = icon,
                     title = stringResource(R.string.status_combo_style_one_style),
                     summary = stringResource(R.string.status_combo_style_one_style_summary),
                     entries = listOf(
@@ -196,7 +214,6 @@ fun StatusComboStyleOneCategoryControls(
                 )
             }, {
                 SwitchItem(
-                    icon = icon,
                     title = stringResource(R.string.status_combo_style_one_overlay),
                     summary = stringResource(R.string.status_combo_style_one_overlay_summary),
                     checked = runtime.overlayGlyph,
@@ -204,7 +221,6 @@ fun StatusComboStyleOneCategoryControls(
                 )
             }, {
                 SwitchItem(
-                    icon = icon,
                     title = stringResource(R.string.status_combo_style_one_show_wifi),
                     summary = stringResource(R.string.status_combo_style_one_show_wifi_summary),
                     checked = runtime.showWifi,
@@ -212,7 +228,6 @@ fun StatusComboStyleOneCategoryControls(
                 )
             }, {
                 SwitchItem(
-                    icon = icon,
                     title = stringResource(R.string.status_combo_style_one_show_mobile),
                     summary = stringResource(R.string.status_combo_style_one_show_mobile_summary),
                     checked = runtime.showMobile,
@@ -220,7 +235,6 @@ fun StatusComboStyleOneCategoryControls(
                 )
             }, {
                 SwitchItem(
-                    icon = icon,
                     title = stringResource(R.string.status_combo_style_one_dual_sim),
                     summary = stringResource(R.string.status_combo_style_one_dual_sim_summary),
                     checked = runtime.dualSim,
@@ -228,7 +242,6 @@ fun StatusComboStyleOneCategoryControls(
                 )
             }, {
                 SwitchItem(
-                    icon = icon,
                     title = stringResource(R.string.status_combo_style_one_show_value),
                     summary = stringResource(R.string.status_combo_style_one_show_value_summary),
                     checked = runtime.showValue,
@@ -236,7 +249,6 @@ fun StatusComboStyleOneCategoryControls(
                 )
             }, {
                 SelectItem(
-                    icon = icon,
                     title = stringResource(R.string.status_combo_style_one_signal_mode),
                     summary = stringResource(R.string.status_combo_style_one_signal_mode_summary),
                     entries = listOf(
@@ -248,7 +260,6 @@ fun StatusComboStyleOneCategoryControls(
                 )
             }, {
                 SwitchItem(
-                    icon = icon,
                     title = stringResource(R.string.status_combo_style_one_stacked_signal),
                     summary = stringResource(R.string.status_combo_style_one_stacked_signal_summary),
                     checked = runtime.stackedSignal,
@@ -256,7 +267,6 @@ fun StatusComboStyleOneCategoryControls(
                 )
             }, {
                 SwitchItem(
-                    icon = icon,
                     title = stringResource(R.string.status_combo_style_one_data_sim_only),
                     summary = stringResource(R.string.status_combo_style_one_data_sim_only_summary),
                     checked = runtime.dataSimOnly,
@@ -264,7 +274,6 @@ fun StatusComboStyleOneCategoryControls(
                 )
             }, {
                 SwitchItem(
-                    icon = icon,
                     title = stringResource(R.string.status_combo_style_one_show_bolt),
                     summary = stringResource(R.string.status_combo_style_one_show_bolt_summary),
                     checked = runtime.showBolt,
@@ -272,7 +281,6 @@ fun StatusComboStyleOneCategoryControls(
                 )
             }, {
                 SelectItem(
-                    icon = icon,
                     title = stringResource(R.string.status_combo_style_one_mobile_type_mode),
                     summary = stringResource(R.string.status_combo_style_one_mobile_type_mode_summary),
                     entries = listOf(
@@ -287,7 +295,6 @@ fun StatusComboStyleOneCategoryControls(
                 )
             }, {
                 SwitchItem(
-                    icon = icon,
                     title = stringResource(R.string.status_combo_style_one_value_centred),
                     summary = stringResource(R.string.status_combo_style_one_value_centred_summary),
                     checked = runtime.valueCentred,
@@ -299,7 +306,6 @@ fun StatusComboStyleOneCategoryControls(
                 OneuiXInfoItem(title = stringResource(R.string.status_combo_style_one_group_advanced))
             }, {
                 SwitchItem(
-                    icon = icon,
                     title = stringResource(R.string.status_combo_style_one_debug_log),
                     summary = stringResource(R.string.status_combo_style_one_debug_log_summary),
                     checked = runtime.debugLog,
@@ -311,22 +317,22 @@ fun StatusComboStyleOneCategoryControls(
             StatusThemeGroup(items = listOf({
                 OneuiXInfoItem(title = stringResource(R.string.status_combo_style_one_group_appearance))
             }, {
-                styleOneSlider(icon, stringResource(R.string.status_combo_style_one_glyph_scale),
+                styleOneSlider(stringResource(R.string.status_combo_style_one_glyph_scale),
                     stringResource(R.string.status_combo_style_one_percent_summary, glyphScale), glyphScale.toFloat(), 70f..150f,
                     { glyphScale = it.roundToInt(); preview(runtime.copy(glyphScalePercent = glyphScale)) },
                     { persist(runtime.copy(glyphScalePercent = glyphScale)) })
             }, {
-                styleOneSlider(icon, stringResource(R.string.status_combo_style_one_bolt_size),
+                styleOneSlider(stringResource(R.string.status_combo_style_one_bolt_size),
                     stringResource(R.string.status_combo_style_one_percent_summary, boltSize), boltSize.toFloat(), 50f..180f,
                     { boltSize = it.roundToInt(); preview(runtime.copy(chargingBoltSizePercent = boltSize)) },
                     { persist(runtime.copy(chargingBoltSizePercent = boltSize)) })
             }, {
-                styleOneSlider(icon, stringResource(R.string.status_combo_style_one_bolt_x),
+                styleOneSlider(stringResource(R.string.status_combo_style_one_bolt_x),
                     stringResource(R.string.status_combo_style_one_dp_summary, boltX), boltX.toFloat(), -8f..8f,
                     { boltX = it.roundToInt(); preview(runtime.copy(chargingBoltXDp = boltX)) },
                     { persist(runtime.copy(chargingBoltXDp = boltX)) })
             }, {
-                styleOneSlider(icon, stringResource(R.string.status_combo_style_one_bolt_y),
+                styleOneSlider(stringResource(R.string.status_combo_style_one_bolt_y),
                     stringResource(R.string.status_combo_style_one_dp_summary, boltY), boltY.toFloat(), -8f..8f,
                     { boltY = it.roundToInt(); preview(runtime.copy(chargingBoltYDp = boltY)) },
                     { persist(runtime.copy(chargingBoltYDp = boltY)) })
@@ -335,12 +341,12 @@ fun StatusComboStyleOneCategoryControls(
             StatusThemeGroup(items = listOf({
                 OneuiXInfoItem(title = stringResource(R.string.status_combo_style_one_group_stroke))
             }, {
-                styleOneSlider(icon, stringResource(R.string.status_combo_style_one_ring_stroke),
+                styleOneSlider(stringResource(R.string.status_combo_style_one_ring_stroke),
                     stringResource(R.string.status_combo_style_one_int_summary, ringStroke), ringStroke.toFloat(), 4f..16f,
                     { ringStroke = it.roundToInt(); preview(runtime.copy(ringStroke = ringStroke)) },
                     { persist(runtime.copy(ringStroke = ringStroke)) })
             }, {
-                styleOneSlider(icon, stringResource(R.string.status_combo_style_one_arc_stroke),
+                styleOneSlider(stringResource(R.string.status_combo_style_one_arc_stroke),
                     stringResource(R.string.status_combo_style_one_int_summary, arcStroke), arcStroke.toFloat(), 3f..16f,
                     { arcStroke = it.roundToInt(); preview(runtime.copy(arcStroke = arcStroke)) },
                     { persist(runtime.copy(arcStroke = arcStroke)) })
@@ -349,12 +355,12 @@ fun StatusComboStyleOneCategoryControls(
             StatusThemeGroup(items = listOf({
                 OneuiXInfoItem(title = stringResource(R.string.status_combo_style_one_group_text))
             }, {
-                styleOneSlider(icon, stringResource(R.string.status_combo_style_one_value_size),
+                styleOneSlider(stringResource(R.string.status_combo_style_one_value_size),
                     stringResource(R.string.status_combo_style_one_sp_summary, valueSize), valueSize.toFloat(), 6f..18f,
                     { valueSize = it.roundToInt(); preview(runtime.copy(valueSize = valueSize)) },
                     { persist(runtime.copy(valueSize = valueSize)) })
             }, {
-                styleOneSlider(icon, stringResource(R.string.status_combo_style_one_value_weight),
+                styleOneSlider(stringResource(R.string.status_combo_style_one_value_weight),
                     stringResource(R.string.status_combo_style_one_weight_summary, valueWeight), valueWeight.toFloat(), 100f..900f,
                     { valueWeight = (it / 100f).roundToInt() * 100; preview(runtime.copy(valueWeight = valueWeight)) },
                     { persist(runtime.copy(valueWeight = valueWeight)) }, stepSize = 100f)
@@ -363,32 +369,32 @@ fun StatusComboStyleOneCategoryControls(
             StatusThemeGroup(items = listOf({
                 OneuiXInfoItem(title = stringResource(R.string.status_combo_style_one_group_type))
             }, {
-                styleOneSlider(icon, stringResource(R.string.status_combo_style_one_type_size),
+                styleOneSlider(stringResource(R.string.status_combo_style_one_type_size),
                     stringResource(R.string.status_combo_style_one_int_summary, typeSize), typeSize.toFloat(), 16f..44f,
                     { typeSize = it.roundToInt(); preview(runtime.copy(typeSize = typeSize)) },
                     { persist(runtime.copy(typeSize = typeSize)) })
             }, {
-                styleOneSlider(icon, stringResource(R.string.status_combo_style_one_type_weight),
+                styleOneSlider(stringResource(R.string.status_combo_style_one_type_weight),
                     stringResource(R.string.status_combo_style_one_weight_summary, typeWeight), typeWeight.toFloat(), 100f..900f,
                     { typeWeight = (it / 100f).roundToInt() * 100; preview(runtime.copy(typeWeight = typeWeight)) },
                     { persist(runtime.copy(typeWeight = typeWeight)) }, stepSize = 100f)
             }, {
-                styleOneSlider(icon, stringResource(R.string.status_combo_style_one_type_suffix_scale),
+                styleOneSlider(stringResource(R.string.status_combo_style_one_type_suffix_scale),
                     stringResource(R.string.status_combo_style_one_percent_summary, suffixScale), suffixScale.toFloat(), 50f..100f,
                     { suffixScale = it.roundToInt(); preview(runtime.copy(typeSuffixScale = suffixScale)) },
                     { persist(runtime.copy(typeSuffixScale = suffixScale)) })
             }, {
-                styleOneSlider(icon, stringResource(R.string.status_combo_style_one_out_type_size),
+                styleOneSlider(stringResource(R.string.status_combo_style_one_out_type_size),
                     stringResource(R.string.status_combo_style_one_dp_summary, outTypeSize), outTypeSize.toFloat(), 8f..26f,
                     { outTypeSize = it.roundToInt(); preview(runtime.copy(outTypeSizeDp = outTypeSize)) },
                     { persist(runtime.copy(outTypeSizeDp = outTypeSize)) })
             }, {
-                styleOneSlider(icon, stringResource(R.string.status_combo_style_one_out_type_margin_left),
+                styleOneSlider(stringResource(R.string.status_combo_style_one_out_type_margin_left),
                     stringResource(R.string.status_combo_style_one_dp_summary, outTypeLeft), outTypeLeft.toFloat(), 0f..16f,
                     { outTypeLeft = it.roundToInt(); preview(runtime.copy(outTypeMarginLeftDp = outTypeLeft)) },
                     { persist(runtime.copy(outTypeMarginLeftDp = outTypeLeft)) })
             }, {
-                styleOneSlider(icon, stringResource(R.string.status_combo_style_one_out_type_margin_right),
+                styleOneSlider(stringResource(R.string.status_combo_style_one_out_type_margin_right),
                     stringResource(R.string.status_combo_style_one_dp_summary, outTypeRight), outTypeRight.toFloat(), 0f..16f,
                     { outTypeRight = it.roundToInt(); preview(runtime.copy(outTypeMarginRightDp = outTypeRight)) },
                     { persist(runtime.copy(outTypeMarginRightDp = outTypeRight)) })
@@ -397,12 +403,12 @@ fun StatusComboStyleOneCategoryControls(
             StatusThemeGroup(items = listOf({
                 OneuiXInfoItem(title = stringResource(R.string.status_combo_style_one_group_out_signal))
             }, {
-                styleOneSlider(icon, stringResource(R.string.status_combo_style_one_out_signal_size),
+                styleOneSlider(stringResource(R.string.status_combo_style_one_out_signal_size),
                     stringResource(R.string.status_combo_style_one_dp_summary, outSignalSize), outSignalSize.toFloat(), 6f..20f,
                     { outSignalSize = it.roundToInt(); preview(runtime.copy(outSignalSizeDp = outSignalSize)) },
                     { persist(runtime.copy(outSignalSizeDp = outSignalSize)) })
             }, {
-                styleOneSlider(icon, stringResource(R.string.status_combo_style_one_out_signal_margin),
+                styleOneSlider(stringResource(R.string.status_combo_style_one_out_signal_margin),
                     stringResource(R.string.status_combo_style_one_dp_summary, outSignalMargin), outSignalMargin.toFloat(), 0f..16f,
                     { outSignalMargin = it.roundToInt(); preview(runtime.copy(outSignalMarginDp = outSignalMargin)) },
                     { persist(runtime.copy(outSignalMarginDp = outSignalMargin)) })
@@ -411,7 +417,7 @@ fun StatusComboStyleOneCategoryControls(
             StatusThemeGroup(items = listOf({
                 OneuiXInfoItem(title = stringResource(R.string.status_combo_style_one_group_track))
             }, {
-                styleOneSlider(icon, stringResource(R.string.status_combo_style_one_track_alpha),
+                styleOneSlider(stringResource(R.string.status_combo_style_one_track_alpha),
                     stringResource(R.string.status_combo_style_one_percent_summary, trackAlpha), trackAlpha.toFloat(), 0f..100f,
                     { trackAlpha = it.roundToInt(); val a = (trackAlpha * 255f / 100f).roundToInt(); preview(runtime.copy(trackAlpha = a)) },
                     { persist(runtime.copy(trackAlpha = (trackAlpha * 255f / 100f).roundToInt())) })
@@ -423,7 +429,6 @@ fun StatusComboStyleOneCategoryControls(
             val colorItems = mutableListOf<@Composable () -> Unit>()
             colorItems += {
                 SwitchItem(
-                    icon = icon,
                     title = stringResource(R.string.status_combo_style_one_role_colors),
                     summary = stringResource(R.string.status_combo_style_one_role_colors_summary),
                     checked = runtime.roleColors,
@@ -432,7 +437,6 @@ fun StatusComboStyleOneCategoryControls(
             }
             colorItems += {
                     styleOneSlider(
-                        icon,
                         stringResource(R.string.status_combo_style_one_low_threshold),
                         stringResource(R.string.status_combo_style_one_low_threshold_summary, lowThreshold),
                         lowThreshold.toFloat(),
@@ -720,7 +724,6 @@ private fun StyleOneRoleColorDialog(
 
 @Composable
 private fun styleOneSlider(
-    icon: ImageVector,
     title: String,
     summary: String,
     value: Float,
@@ -734,7 +737,6 @@ private fun styleOneSlider(
     var lastStep by remember(title, range.start, range.endInclusive) { mutableFloatStateOf(value) }
     Column {
         OneuiXInfoItem(
-            icon = icon,
             title = title,
             summary = summary,
             modifier = Modifier.alpha(if (enabled) 1f else 0.45f),

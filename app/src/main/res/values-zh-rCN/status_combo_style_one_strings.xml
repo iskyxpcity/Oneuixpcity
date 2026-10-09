@@ -22,7 +22,7 @@
     <string name="status_combo_style_one_show_mobile">显示移动信号点</string>
     <string name="status_combo_style_one_show_mobile_summary">显示当前数据 SIM 的四格信号点；启用双卡显示后可显示两张卡的等级。</string>
     <string name="status_combo_style_one_show_value">显示电量数字</string>
-    <string name="status_combo_style_one_show_value_summary">在圆环内显示电量百分比；可单独调整数字居中方式，不影响充电闪电开关。</string>
+    <string name="status_combo_style_one_show_value_summary">未充电时在圆环内显示电量百分比；充电时改为显示闪电，不显示百分比数字。</string>
     <string name="status_combo_style_one_show_bolt">显示充电闪电</string>
     <string name="status_combo_style_one_show_bolt_summary">充电时显示闪电，可在“几何”页单独调整大小和水平/垂直位置。</string>
     <string name="status_combo_style_one_value_centred">电量数字居中</string>

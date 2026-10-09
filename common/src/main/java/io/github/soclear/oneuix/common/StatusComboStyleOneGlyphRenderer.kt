@@ -123,12 +123,14 @@ object StatusComboStyleOneGlyphRenderer {
             config.showMobile && config.mobileTypeMode == 1 && it.isNotEmpty()
         }
         val bolt = config.showBolt && state.charging
+        // Charging presentation replaces the percentage with the charging bolt.
+        val showBatteryValue = config.showValue && !state.charging
         val inRingSignal = config.showMobile && config.signalMode == 0
         val dualRows = config.dualSim && !config.dataSimOnly && inRingSignal &&
             state.simOneLevel >= 0 && state.simTwoLevel >= 0 && !wifiInk && !state.charging
-        val valueInCentre = config.showValue &&
+        val valueInCentre = showBatteryValue &&
             (config.valueCentred || dualRows || (!wifiInk && innerType == null))
-        val valueInGap = config.showValue && !valueInCentre && !bolt
+        val valueInGap = showBatteryValue && !valueInCentre && !bolt
         val wifiInGap = wifiInk && config.valueCentred && !bolt
         val typeInCentre = innerType != null && !wifiInk && !valueInCentre
         val typeInGap = innerType != null && valueInCentre && !wifiInk && !bolt && !dualRows
@@ -184,8 +186,11 @@ object StatusComboStyleOneGlyphRenderer {
                 drawNetworkType(canvas, innerType, cx, gapBaseline(size), size, config.typeWeight,
                     tint, config.typeSuffixScale, gapClearWidth(config.ringStroke, gapStart, gapEnd))
             }
-            if (bolt) drawBolt(canvas, offsetX, config, if (state.quickCharge) QUICK_CHARGE else tint)
-            if (config.showValue) {
+            if (bolt) drawBolt(
+                canvas, offsetX, config,
+                if (config.roleColors) batteryColor else if (state.quickCharge) QUICK_CHARGE else tint,
+            )
+            if (showBatteryValue) {
                 val requestedSize = valueSizeCanvasUnits(config)
                 val clear = if (valueInCentre) centreClearWidth(requestedSize, config.ringStroke)
                     else gapClearWidth(config.ringStroke, gapStart, gapEnd)
@@ -344,14 +349,18 @@ object StatusComboStyleOneGlyphRenderer {
             canvas.drawRoundRect(rect, barHeight / 2f, barHeight / 2f, paint)
         }
         when {
-            bolt -> drawRectBolt(canvas, offsetX, config, if (state.quickCharge) QUICK_CHARGE else tint, config.arcStroke)
+            bolt -> drawRectBolt(
+                canvas, offsetX, config,
+                if (config.roleColors && state.charging) active else if (state.quickCharge) QUICK_CHARGE else tint,
+                config.arcStroke,
+            )
             config.showWifi && state.wifiLevel >= 1 ->
                 drawRectWifi(canvas, offsetX, tint, state.wifiLevel, config.arcStroke)
             innerType != null ->
                 drawNetworkType(canvas, innerType, offsetX + 59.5f, 42.3f,
                     config.typeSize * 1.26f, config.typeWeight, tint, config.typeSuffixScale, 74f)
         }
-        if (config.showValue) {
+        if (config.showValue && !state.charging) {
             drawTextFitted(canvas, level.toString(), offsetX + 59.5f, 94f,
                 valueSizeCanvasUnits(config) * 1.38f, config.valueWeight, active, 78f)
         }
@@ -567,16 +576,15 @@ object StatusComboStyleOneGlyphRenderer {
         if (!config.roleColors) return tint
         val darkBackground = luminance(tint) > 0.5f
         return when {
-            // Match HyperDuo's role order: critical > low/power-save > charging > native foreground.
-            // HyperDuo treats the critical cutoff as exclusive: the exact
-            // threshold value belongs to the low-battery role, not critical.
+            // OneuiXP behavior: charging color wins over low/critical and power-save colors.
+            state.charging ->
+                if (darkBackground) config.chargingColorDarkArgb else config.chargingColorLightArgb
+            // The critical cutoff is exclusive; its exact value belongs to the low color.
             state.batteryLevel < config.criticalThreshold.coerceIn(1, 20) ->
                 if (darkBackground) config.criticalColorDarkArgb else config.criticalColorLightArgb
             state.powerSave || state.lowBatteryWarning ||
                 state.batteryLevel <= config.lowThreshold.coerceIn(5, 50) ->
                 if (darkBackground) config.lowColorDarkArgb else config.lowColorLightArgb
-            state.charging ->
-                if (darkBackground) config.chargingColorDarkArgb else config.chargingColorLightArgb
             else -> tint
         }
     }
