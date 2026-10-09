@@ -83,7 +83,7 @@ object StatusBarComboStyleOneRuntime {
         }
         override fun onDraw(canvas: Canvas) {
             super.onDraw(canvas)
-            StatusComboStyleOneGlyphRenderer.draw(canvas, width, height, config, state)
+            StatusComboStyleOneGlyphRenderer.draw(canvas, width, height, StatusBarComboStyleOneRuntime.config, StatusBarComboStyleOneRuntime.state)
         }
     }
 
@@ -103,7 +103,7 @@ object StatusBarComboStyleOneRuntime {
                 else WindowManager.LayoutParams.TYPE_PHONE
             }
             val lp = WindowManager.LayoutParams(
-                dp(app, GLYPH_WIDTH_DP), dp(app, GLYPH_HEIGHT_DP), type,
+                StatusBarComboStyleOneRuntime.dp(app, StatusBarComboStyleOneRuntime.GLYPH_WIDTH_DP), StatusBarComboStyleOneRuntime.dp(app, StatusBarComboStyleOneRuntime.GLYPH_HEIGHT_DP), type,
                 WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
                     WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or
                     WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
