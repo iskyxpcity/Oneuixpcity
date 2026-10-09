@@ -174,7 +174,7 @@ private fun StatusCategoryContent(
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState()),
             ) {
-                StatusComboCategoryControls(
+                StatusComboStyleOneCategoryControls(
                     uiState = preference.systemUI.statusBar,
                     onEvent = toolsViewModel::onSystemUIEvent,
                 )
