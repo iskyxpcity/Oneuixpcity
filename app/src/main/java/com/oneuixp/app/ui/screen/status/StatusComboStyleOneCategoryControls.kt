@@ -6,6 +6,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -38,6 +42,7 @@ import io.github.soclear.oneuix.ui.component.SelectItem
 import kotlin.math.roundToInt
 
 @Suppress("UNUSED_PARAMETER")
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StatusComboStyleOneCategoryControls(
     uiState: Preference.SystemUI.StatusBar,
@@ -125,7 +130,28 @@ fun StatusComboStyleOneCategoryControls(
 
     if (!runtime.enabled) return
 
-    StatusThemeGroup(items = listOf({
+    var selectedTab by remember { mutableIntStateOf(0) }
+    TabRow(selectedTabIndex = selectedTab) {
+        Tab(
+            selected = selectedTab == 0,
+            onClick = { selectedTab = 0 },
+            text = { Text(stringResource(R.string.status_combo_style_one_tab_general)) },
+        )
+        Tab(
+            selected = selectedTab == 1,
+            onClick = { selectedTab = 1 },
+            text = { Text(stringResource(R.string.status_combo_style_one_tab_size)) },
+        )
+        Tab(
+            selected = selectedTab == 2,
+            onClick = { selectedTab = 2 },
+            text = { Text(stringResource(R.string.status_combo_style_one_tab_color)) },
+        )
+    }
+
+    when (selectedTab) {
+        0 -> {
+StatusThemeGroup(items = listOf({
         SelectItem(
             icon = icon,
             title = stringResource(R.string.status_combo_style_one_style),
@@ -216,6 +242,18 @@ fun StatusComboStyleOneCategoryControls(
     }))
 
     StatusThemeGroup(items = listOf({
+        SwitchItem(
+            icon = icon,
+            title = stringResource(R.string.status_combo_style_one_debug_log),
+            summary = stringResource(R.string.status_combo_style_one_debug_log_summary),
+            checked = runtime.debugLog,
+            onCheckedChange = { previewAndPersist(runtime.copy(debugLog = it)) },
+        )
+    }))
+}
+        }
+        1 -> {
+StatusThemeGroup(items = listOf({
         styleOneSlider(icon, stringResource(R.string.status_combo_style_one_glyph_scale),
             stringResource(R.string.status_combo_style_one_percent_summary, glyphScale), glyphScale.toFloat(), 70f..150f,
             { glyphScale = it.roundToInt(); preview(runtime.copy(glyphScalePercent = glyphScale)) },
@@ -284,7 +322,10 @@ fun StatusComboStyleOneCategoryControls(
             { persist(runtime.copy(outSignalMarginDp = outSignalMargin)) })
     }))
 
-    StatusThemeGroup(items = listOf({
+    
+        }
+        else -> {
+StatusThemeGroup(items = listOf({
         SwitchItem(
             icon = icon,
             title = stringResource(R.string.status_combo_style_one_role_colors),
@@ -369,16 +410,10 @@ fun StatusComboStyleOneCategoryControls(
         )
     }
 
-    StatusThemeGroup(items = listOf({
-        SwitchItem(
-            icon = icon,
-            title = stringResource(R.string.status_combo_style_one_debug_log),
-            summary = stringResource(R.string.status_combo_style_one_debug_log_summary),
-            checked = runtime.debugLog,
-            onCheckedChange = { previewAndPersist(runtime.copy(debugLog = it)) },
-        )
-    }))
-}
+    
+        }
+    }
+
 
 @Composable
 private fun styleOneColor(icon: ImageVector, titleRes: Int, value: Int, onChange: (Int) -> Unit, onPreview: (Int) -> Unit) {
