@@ -129,18 +129,26 @@ object StatusComboStyleOneGlyphRenderer {
         val typeInCentre = innerType != null && !wifiInk && !valueInCentre
         val typeInGap = innerType != null && valueInCentre && !wifiInk && !bolt && !dualRows
         val gapUsed = bolt || wifiInGap || valueInGap || typeInGap || dualRows
-        val gapStart = when {
-            !gapUsed -> 0f
-            dualRows -> GAP_DUAL_START
-            bolt -> GAP_CHARGE_START
-            else -> GAP_IDLE_START
+        // Size the ring opening to the glyph occupying it instead of using
+        // one oversized fixed gap for every state. This keeps the top opening
+        // tight around the bolt, number, Wi-Fi mark, or network label.
+        val gapRange = when {
+            !gapUsed -> 0f to 0f
+            dualRows -> GAP_DUAL_START to GAP_DUAL_END
+            bolt -> contentGapRange(27f, config.ringStroke)
+            wifiInGap -> contentGapRange(43f, config.ringStroke)
+            valueInGap -> contentGapRange(
+                measuredTextWidth(level.toString(), config.valueSize.toFloat(), config.valueWeight),
+                config.ringStroke,
+            )
+            typeInGap && innerType != null -> contentGapRange(
+                measuredNetworkTypeWidth(innerType, config.typeSize.toFloat(), config.typeWeight, config.typeSuffixScale),
+                config.ringStroke,
+            )
+            else -> GAP_IDLE_START to GAP_IDLE_END
         }
-        val gapEnd = when {
-            !gapUsed -> 0f
-            dualRows -> GAP_DUAL_END
-            bolt -> GAP_CHARGE_END
-            else -> GAP_IDLE_END
-        }
+        val gapStart = gapRange.first
+        val gapEnd = gapRange.second
 
         if (config.trioStyle == 1) {
             drawRectangleStyle(canvas, offsetX, config, state, level, batteryColor, tint, track, bolt, innerType)
@@ -483,6 +491,32 @@ object StatusComboStyleOneGlyphRenderer {
             width += paint.measureText("A")
         }
         return if (maxWidth > 0f && width > maxWidth) requested * maxWidth / width else requested
+    }
+
+    private fun contentGapRange(contentWidth: Float, stroke: Int): Pair<Float, Float> {
+        // Include the ring stroke and a small optical clearance on both sides.
+        val chord = (contentWidth + stroke.coerceIn(4, 16) + 5f).coerceIn(12f, B_R * 1.65f)
+        val halfAngle = Math.toDegrees(kotlin.math.asin((chord / (2f * B_R)).coerceIn(0f, 0.95f).toDouble()))
+        val fraction = (2.0 * halfAngle / B_SWEEP).toFloat().coerceIn(0.06f, 0.42f)
+        val start = (1f - fraction) / 2f
+        return start to (1f - start)
+    }
+
+    private fun measuredTextWidth(text: String, size: Float, weight: Int): Float {
+        paint.typeface = weightedTypeface(weight)
+        paint.textSize = size.coerceIn(8f, 64f)
+        return paint.measureText(text)
+    }
+
+    private fun measuredNetworkTypeWidth(text: String, size: Float, weight: Int, suffixScale: Int): Float {
+        val label = text.uppercase()
+        val body = if (label.endsWith("A") && suffixScale in 1..99) label.dropLast(1) else label
+        paint.typeface = weightedTypeface(weight)
+        paint.textSize = size.coerceIn(8f, 64f)
+        val bodyWidth = paint.measureText(body)
+        if (body == label) return bodyWidth
+        paint.textSize = size.coerceIn(8f, 64f) * suffixScale / 100f
+        return bodyWidth + paint.measureText("A")
     }
 
     private fun gapClearWidth(stroke: Int): Float {
