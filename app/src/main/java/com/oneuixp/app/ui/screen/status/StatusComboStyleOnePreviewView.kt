@@ -6,7 +6,7 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Typeface
 import android.view.View
-import kotlin.math.roundToInt
+import com.oneuixp.app.R
 import io.github.soclear.oneuix.common.Preference
 import io.github.soclear.oneuix.common.StatusComboStyleOneGlyphRenderer
 import io.github.soclear.oneuix.common.StatusComboStyleOneGlyphState
@@ -90,8 +90,6 @@ class StatusComboStyleOnePreviewView(context: Context) : View(context) {
                 color = sample.first
             })
 
-            val glyphWidth = (cellWidth / density).toInt().coerceAtLeast(1)
-            val glyphHeightDp = (glyphHeight / density).toInt().coerceAtLeast(1)
             val targetWidth = (cellWidth - 8f * density).toInt().coerceAtLeast(1)
             val targetHeight = (glyphHeight - 2f * density).toInt().coerceAtLeast(1)
             val save = canvas.save()
