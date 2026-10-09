@@ -292,6 +292,7 @@ object StatusBarComboStyleOneRuntime {
         hookIconManager(module, param.classLoader)
         hookBatteryMeters(module, param.classLoader)
         hookBatteryTint(module, param.classLoader)
+        hookNativeBatteryTint(module, param.classLoader)
         hookIconTint(module, param.classLoader)
         if (!hookedHost) Log.w(TAG, "No status-bar host constructor was hooked")
     }
@@ -849,18 +850,59 @@ object StatusBarComboStyleOneRuntime {
                         val useTint = runCatching { chain.getArg(5) as? Boolean }.getOrNull() ?: false
                         val resolved = (if (useTint) tintColor else if (intensity > 0f) darkColor else lightColor)
                             .takeIf { it != Color.TRANSPARENT } ?: Color.WHITE
-                        batteryTintSnapshots[meter] = resolved
-                        val host = hostFor(meter)
-                        if (host != null && host.rowTint != resolved) {
-                            host.rowTint = resolved
-                            host.inline?.setTintOverride(resolved)
-                            host.overlay?.setTintOverride(resolved)
-                        }
+                        saveBatteryTint(meter, resolved)
                     }
                     result
                 }
             }
         }.onFailure { diagnostic("Battery meter tint hook unavailable: $it") }
+    }
+
+    /**
+     * AOSP/Samsung BatteryMeterView commonly receives its tint through
+     * DarkReceiver.onDarkChanged instead of MIUI's updateLightDarkTint method.
+     * Track that colour per meter as well; it is the foreground used for the
+     * battery itself, not the last tint observed on a neighbouring status icon.
+     */
+    private fun hookNativeBatteryTint(module: XposedModule, classLoader: ClassLoader) {
+        listOf(BATTERY_METER, MIUI_BATTERY_METER).forEach { className ->
+            runCatching {
+                var current: Class<*>? = classLoader.loadClass(className)
+                val methods = mutableListOf<java.lang.reflect.Method>()
+                while (current != null) {
+                    methods += current.declaredMethods.filter { method ->
+                        method.name == "onDarkChanged" &&
+                            method.parameterTypes.any { it == Int::class.javaPrimitiveType }
+                    }
+                    current = current.superclass
+                }
+                methods.distinctBy { it.name + it.parameterTypes.joinToString { type -> type.name } }
+                    .forEach { method ->
+                        val tintIndex = method.parameterTypes.indices.lastOrNull {
+                            method.parameterTypes[it] == Int::class.javaPrimitiveType
+                        } ?: return@forEach
+                        module.hook(method).intercept { chain ->
+                            val result = chain.proceed()
+                            val meter = chain.thisObject as? View
+                            val color = runCatching { chain.getArg(tintIndex) as? Int }.getOrNull()
+                            if (meter != null && color != null && color != Color.TRANSPARENT) {
+                                saveBatteryTint(meter, color)
+                            }
+                            result
+                        }
+                    }
+            }.onFailure { diagnostic("Native battery tint hook unavailable: $className: $it") }
+        }
+    }
+
+    private fun saveBatteryTint(meter: View, color: Int) {
+        batteryTintSnapshots[meter] = color
+        val host = hostFor(meter)
+        if (host != null && host.battery === meter && host.rowTint != color) {
+            host.rowTint = color
+            host.inline?.setTintOverride(color)
+            host.overlay?.setTintOverride(color)
+        }
     }
 
     private fun statusBarRootOf(view: View): ViewGroup? {
