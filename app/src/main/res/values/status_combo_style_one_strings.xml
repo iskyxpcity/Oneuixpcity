@@ -22,6 +22,7 @@
     <string name="status_combo_style_one_value_centred">Center the battery number</string>
     <string name="status_combo_style_one_value_centred_summary">Place the percentage in the ring centre and keep the top notch for Wi-Fi arcs, charging bolt, or network type according to the active state.</string>
     <string name="status_combo_style_one_mobile_type_mode">Network type label</string>
+    <string name="status_combo_style_one_mobile_type_mode_summary">Choose whether to hide the network type, place it inside the ring, or draw it outside the glyph.</string>
     <string name="status_combo_style_one_mobile_type_off">Off</string>
     <string name="status_combo_style_one_mobile_type_inside">Inside the icon</string>
     <string name="status_combo_style_one_mobile_type_outside">Outside the icon</string>
@@ -79,6 +80,7 @@
     <string name="status_combo_style_one_color_apply">Apply</string>
     <string name="status_combo_style_one_color_cancel">Cancel</string>
     <string name="status_combo_style_one_group_appearance">Appearance</string>
+    <string name="status_combo_style_one_group_advanced">Advanced</string>
     <string name="status_combo_style_one_group_stroke">Stroke</string>
     <string name="status_combo_style_one_group_text">Text</string>
     <string name="status_combo_style_one_group_type">Network type</string>

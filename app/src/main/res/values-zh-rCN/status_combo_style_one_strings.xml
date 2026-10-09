@@ -22,6 +22,7 @@
     <string name="status_combo_style_one_value_centred">电量数字居中</string>
     <string name="status_combo_style_one_value_centred_summary">将电量百分比放在圆环中央；顶部缺口根据当前状态容纳 Wi-Fi 弧线、充电闪电或网络类型。</string>
     <string name="status_combo_style_one_mobile_type_mode">网络类型标签</string>
+    <string name="status_combo_style_one_mobile_type_mode_summary">选择隐藏网络类型、在圆环内显示，或在图标外侧显示。</string>
     <string name="status_combo_style_one_mobile_type_off">关闭</string>
     <string name="status_combo_style_one_mobile_type_inside">图标内部</string>
     <string name="status_combo_style_one_mobile_type_outside">图标外侧</string>
@@ -78,6 +79,7 @@
     <string name="status_combo_style_one_color_apply">应用</string>
     <string name="status_combo_style_one_color_cancel">取消</string>
     <string name="status_combo_style_one_group_appearance">外观</string>
+    <string name="status_combo_style_one_group_advanced">高级</string>
     <string name="status_combo_style_one_group_stroke">线条</string>
     <string name="status_combo_style_one_group_text">电量数字</string>
     <string name="status_combo_style_one_group_type">网络类型</string>

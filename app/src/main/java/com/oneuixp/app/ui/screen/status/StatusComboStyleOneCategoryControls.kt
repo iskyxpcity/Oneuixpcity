@@ -175,125 +175,134 @@ fun StatusComboStyleOneCategoryControls(
 
     when (selectedTab) {
         0 -> {
-StatusThemeGroup(items = listOf({
-        SelectItem(
-            icon = icon,
-            title = stringResource(R.string.status_combo_style_one_style),
-            summary = stringResource(R.string.status_combo_style_one_style_summary),
-            entries = listOf(
-                stringResource(R.string.status_combo_style_one_style_ring),
-                stringResource(R.string.status_combo_style_one_style_rect),
-            ),
-            selectedIndex = runtime.trioStyle.coerceIn(0, 1),
-            onSelectedIndexChange = { previewAndPersist(runtime.copy(trioStyle = it.coerceIn(0, 1))) },
-        )
-    }, {
-        SwitchItem(
-            icon = icon,
-            title = stringResource(R.string.status_combo_style_one_overlay),
-            summary = stringResource(R.string.status_combo_style_one_overlay_summary),
-            checked = runtime.overlayGlyph,
-            onCheckedChange = { previewAndPersist(runtime.copy(overlayGlyph = it)) },
-        )
-    }, {
-        SwitchItem(
-            icon = icon,
-            title = stringResource(R.string.status_combo_style_one_show_wifi),
-            summary = stringResource(R.string.status_combo_style_one_show_wifi_summary),
-            checked = runtime.showWifi,
-            onCheckedChange = { previewAndPersist(runtime.copy(showWifi = it)) },
-        )
-    }, {
-        SwitchItem(
-            icon = icon,
-            title = stringResource(R.string.status_combo_style_one_show_mobile),
-            summary = stringResource(R.string.status_combo_style_one_show_mobile_summary),
-            checked = runtime.showMobile,
-            onCheckedChange = { previewAndPersist(runtime.copy(showMobile = it)) },
-        )
-    }, {
-        SwitchItem(
-            icon = icon,
-            title = stringResource(R.string.status_combo_style_one_show_value),
-            summary = stringResource(R.string.status_combo_style_one_show_value_summary),
-            checked = runtime.showValue,
-            onCheckedChange = { previewAndPersist(runtime.copy(showValue = it)) },
-        )
-    }, {
-        SwitchItem(
-            icon = icon,
-            title = stringResource(R.string.status_combo_style_one_show_bolt),
-            summary = stringResource(R.string.status_combo_style_one_show_bolt_summary),
-            checked = runtime.showBolt,
-            onCheckedChange = { previewAndPersist(runtime.copy(showBolt = it)) },
-        )
-    }, {
-        SwitchItem(
-            icon = icon,
-            title = stringResource(R.string.status_combo_style_one_value_centred),
-            summary = stringResource(R.string.status_combo_style_one_value_centred_summary),
-            checked = runtime.valueCentred,
-            onCheckedChange = { previewAndPersist(runtime.copy(valueCentred = it)) },
-        )
-    }))
-StatusThemeGroup(items = listOf({
-        SelectItem(
-            icon = icon,
-            title = stringResource(R.string.status_combo_style_one_mobile_type_mode),
-            entries = listOf(
-                stringResource(R.string.status_combo_style_one_mobile_type_off),
-                stringResource(R.string.status_combo_style_one_mobile_type_inside),
-                stringResource(R.string.status_combo_style_one_mobile_type_outside),
-            ),
-            selectedIndex = runtime.mobileTypeMode.coerceIn(0, 2),
-            onSelectedIndexChange = { previewAndPersist(runtime.copy(mobileTypeMode = it.coerceIn(0, 2))) },
-        )
-    }, {
-        SelectItem(
-            icon = icon,
-            title = stringResource(R.string.status_combo_style_one_signal_mode),
-            summary = stringResource(R.string.status_combo_style_one_signal_mode_summary),
-            entries = listOf(
-                stringResource(R.string.status_combo_style_one_signal_inside),
-                stringResource(R.string.status_combo_style_one_signal_outside),
-            ),
-            selectedIndex = runtime.signalMode.coerceIn(0, 1),
-            onSelectedIndexChange = { previewAndPersist(runtime.copy(signalMode = it.coerceIn(0, 1))) },
-        )
-    }, {
-        SwitchItem(
-            icon = icon,
-            title = stringResource(R.string.status_combo_style_one_dual_sim),
-            summary = stringResource(R.string.status_combo_style_one_dual_sim_summary),
-            checked = runtime.dualSim,
-            onCheckedChange = { previewAndPersist(runtime.copy(dualSim = it)) },
-        )
-    }, {
-        SwitchItem(
-            icon = icon,
-            title = stringResource(R.string.status_combo_style_one_stacked_signal),
-            summary = stringResource(R.string.status_combo_style_one_stacked_signal_summary),
-            checked = runtime.stackedSignal,
-            onCheckedChange = { previewAndPersist(runtime.copy(stackedSignal = it)) },
-        )
-    }, {
-        SwitchItem(
-            icon = icon,
-            title = stringResource(R.string.status_combo_style_one_data_sim_only),
-            summary = stringResource(R.string.status_combo_style_one_data_sim_only_summary),
-            checked = runtime.dataSimOnly,
-            onCheckedChange = { previewAndPersist(runtime.copy(dataSimOnly = it)) },
-        )
-    }))
-StatusThemeGroup(items = listOf({
-        SwitchItem(
-            icon = icon,
-            title = stringResource(R.string.status_combo_style_one_debug_log),
-            summary = stringResource(R.string.status_combo_style_one_debug_log_summary),
-            checked = runtime.debugLog,
-            onCheckedChange = { previewAndPersist(runtime.copy(debugLog = it)) },
-        )
-    }))
+            StatusThemeGroup(items = listOf({
+                OneuiXInfoItem(title = stringResource(R.string.status_combo_style_one_group_appearance))
+            }, {
+                SelectItem(
+                    icon = icon,
+                    title = stringResource(R.string.status_combo_style_one_style),
+                    summary = stringResource(R.string.status_combo_style_one_style_summary),
+                    entries = listOf(
+                        stringResource(R.string.status_combo_style_one_style_ring),
+                        stringResource(R.string.status_combo_style_one_style_rect),
+                    ),
+                    selectedIndex = runtime.trioStyle.coerceIn(0, 1),
+                    onSelectedIndexChange = {
+                        previewAndPersist(runtime.copy(trioStyle = it.coerceIn(0, 1)))
+                    },
+                )
+            }, {
+                SwitchItem(
+                    icon = icon,
+                    title = stringResource(R.string.status_combo_style_one_overlay),
+                    summary = stringResource(R.string.status_combo_style_one_overlay_summary),
+                    checked = runtime.overlayGlyph,
+                    onCheckedChange = { previewAndPersist(runtime.copy(overlayGlyph = it)) },
+                )
+            }, {
+                SwitchItem(
+                    icon = icon,
+                    title = stringResource(R.string.status_combo_style_one_show_wifi),
+                    summary = stringResource(R.string.status_combo_style_one_show_wifi_summary),
+                    checked = runtime.showWifi,
+                    onCheckedChange = { previewAndPersist(runtime.copy(showWifi = it)) },
+                )
+            }, {
+                SwitchItem(
+                    icon = icon,
+                    title = stringResource(R.string.status_combo_style_one_show_mobile),
+                    summary = stringResource(R.string.status_combo_style_one_show_mobile_summary),
+                    checked = runtime.showMobile,
+                    onCheckedChange = { previewAndPersist(runtime.copy(showMobile = it)) },
+                )
+            }, {
+                SwitchItem(
+                    icon = icon,
+                    title = stringResource(R.string.status_combo_style_one_dual_sim),
+                    summary = stringResource(R.string.status_combo_style_one_dual_sim_summary),
+                    checked = runtime.dualSim,
+                    onCheckedChange = { previewAndPersist(runtime.copy(dualSim = it)) },
+                )
+            }, {
+                SwitchItem(
+                    icon = icon,
+                    title = stringResource(R.string.status_combo_style_one_show_value),
+                    summary = stringResource(R.string.status_combo_style_one_show_value_summary),
+                    checked = runtime.showValue,
+                    onCheckedChange = { previewAndPersist(runtime.copy(showValue = it)) },
+                )
+            }, {
+                SelectItem(
+                    icon = icon,
+                    title = stringResource(R.string.status_combo_style_one_signal_mode),
+                    summary = stringResource(R.string.status_combo_style_one_signal_mode_summary),
+                    entries = listOf(
+                        stringResource(R.string.status_combo_style_one_signal_inside),
+                        stringResource(R.string.status_combo_style_one_signal_outside),
+                    ),
+                    selectedIndex = runtime.signalMode.coerceIn(0, 1),
+                    onSelectedIndexChange = { previewAndPersist(runtime.copy(signalMode = it.coerceIn(0, 1))) },
+                )
+            }, {
+                SwitchItem(
+                    icon = icon,
+                    title = stringResource(R.string.status_combo_style_one_stacked_signal),
+                    summary = stringResource(R.string.status_combo_style_one_stacked_signal_summary),
+                    checked = runtime.stackedSignal,
+                    onCheckedChange = { previewAndPersist(runtime.copy(stackedSignal = it)) },
+                )
+            }, {
+                SwitchItem(
+                    icon = icon,
+                    title = stringResource(R.string.status_combo_style_one_data_sim_only),
+                    summary = stringResource(R.string.status_combo_style_one_data_sim_only_summary),
+                    checked = runtime.dataSimOnly,
+                    onCheckedChange = { previewAndPersist(runtime.copy(dataSimOnly = it)) },
+                )
+            }, {
+                SwitchItem(
+                    icon = icon,
+                    title = stringResource(R.string.status_combo_style_one_show_bolt),
+                    summary = stringResource(R.string.status_combo_style_one_show_bolt_summary),
+                    checked = runtime.showBolt,
+                    onCheckedChange = { previewAndPersist(runtime.copy(showBolt = it)) },
+                )
+            }, {
+                SelectItem(
+                    icon = icon,
+                    title = stringResource(R.string.status_combo_style_one_mobile_type_mode),
+                    summary = stringResource(R.string.status_combo_style_one_mobile_type_mode_summary),
+                    entries = listOf(
+                        stringResource(R.string.status_combo_style_one_mobile_type_off),
+                        stringResource(R.string.status_combo_style_one_mobile_type_inside),
+                        stringResource(R.string.status_combo_style_one_mobile_type_outside),
+                    ),
+                    selectedIndex = runtime.mobileTypeMode.coerceIn(0, 2),
+                    onSelectedIndexChange = {
+                        previewAndPersist(runtime.copy(mobileTypeMode = it.coerceIn(0, 2)))
+                    },
+                )
+            }, {
+                SwitchItem(
+                    icon = icon,
+                    title = stringResource(R.string.status_combo_style_one_value_centred),
+                    summary = stringResource(R.string.status_combo_style_one_value_centred_summary),
+                    checked = runtime.valueCentred,
+                    onCheckedChange = { previewAndPersist(runtime.copy(valueCentred = it)) },
+                )
+            }))
+
+            StatusThemeGroup(items = listOf({
+                OneuiXInfoItem(title = stringResource(R.string.status_combo_style_one_group_advanced))
+            }, {
+                SwitchItem(
+                    icon = icon,
+                    title = stringResource(R.string.status_combo_style_one_debug_log),
+                    summary = stringResource(R.string.status_combo_style_one_debug_log_summary),
+                    checked = runtime.debugLog,
+                    onCheckedChange = { previewAndPersist(runtime.copy(debugLog = it)) },
+                )
+            }))
         }
         1 -> {
             StatusThemeGroup(items = listOf({
