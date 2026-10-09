@@ -77,6 +77,7 @@ object StatusBarComboStyleOneRuntime {
     private val phoneListeners = mutableMapOf<Int, Pair<TelephonyManager, PhoneStateListener>>()
     private val displayNetworkTypes = ConcurrentHashMap<Int, String>()
     private val nativeChildSnapshots = Collections.synchronizedMap(WeakHashMap<View, LayoutSnapshot>())
+    private val knownIconSlots = Collections.synchronizedMap(WeakHashMap<View, String>())
 
     private data class LayoutSnapshot(
         val width: Int, val height: Int,
@@ -518,7 +519,7 @@ object StatusBarComboStyleOneRuntime {
 
     private fun isWifiIcon(v: View): Boolean {
         if (v is GlyphView) return false
-        val slot = slotOf(v)
+        val slot = slotOf(v) ?: knownIconSlots[v]
         if (slot == "wifi" || slot?.contains("wlan") == true) return true
         val name = viewSignature(v)
         if (name.contains("battery") || name.contains("bluetooth") || name.contains("airplane")) return false
@@ -527,7 +528,7 @@ object StatusBarComboStyleOneRuntime {
 
     private fun isMobileIcon(v: View): Boolean {
         if (v is GlyphView || isMobileTypeView(v)) return false
-        slotOf(v)?.let { if (isManagedMobileSlot(it)) return true }
+        (slotOf(v) ?: knownIconSlots[v])?.let { if (isManagedMobileSlot(it)) return true }
         val name = viewSignature(v)
         if (name.contains("battery") || name.contains("bluetooth") || name.contains("airplane") || name.contains("wifi")) return false
         return name.contains("mobile") || name.contains("cellular") || name.contains("signal_mobile") ||
@@ -693,10 +694,14 @@ object StatusBarComboStyleOneRuntime {
                     val result = chain.proceed()
                     val slot = chain.getArg(1) as? String
                     val view = result as? View
-                    if (slot != null && view != null) view.post {
-                        if (shouldSuppressSlot(slot)) {
-                            hostFor(view)?.let { host ->
+                    if (slot != null && view != null) {
+                        knownIconSlots[view] = slot.lowercase()
+                        view.post {
+                            val host = hostFor(view) ?: return@post
+                            if (shouldSuppressSlot(slot)) {
                                 if (view.parent is ViewGroup) collapseHostView(host, view)
+                            } else {
+                                restoreHostView(host, view)
                             }
                         }
                     }
