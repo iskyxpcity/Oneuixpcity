@@ -148,7 +148,8 @@ fun StatusComboStyleOneCategoryControls(
         }
     }, {
         SwitchItem(
-                    icon = null,\n            title = stringResource(R.string.status_combo_style_one_enable),
+                    icon = null,
+            title = stringResource(R.string.status_combo_style_one_enable),
             summary = stringResource(R.string.status_combo_style_one_enable_summary),
             checked = runtime.enabled,
             onCheckedChange = { previewAndPersist(runtime.copy(enabled = it)) },
@@ -229,7 +230,8 @@ fun StatusComboStyleOneCategoryControls(
                 StyleOneInfoItem(title = stringResource(R.string.status_combo_style_one_group_appearance))
             }, {
                 SelectItem(
-                    icon = null,\n                    title = stringResource(R.string.status_combo_style_one_style),
+                    icon = null,
+                    title = stringResource(R.string.status_combo_style_one_style),
                     summary = stringResource(R.string.status_combo_style_one_style_summary),
                     entries = listOf(
                         stringResource(R.string.status_combo_style_one_style_ring),
@@ -242,42 +244,48 @@ fun StatusComboStyleOneCategoryControls(
                 )
             }, {
                 SwitchItem(
-                    icon = null,\n                    title = stringResource(R.string.status_combo_style_one_overlay),
+                    icon = null,
+                    title = stringResource(R.string.status_combo_style_one_overlay),
                     summary = stringResource(R.string.status_combo_style_one_overlay_summary),
                     checked = runtime.overlayGlyph,
                     onCheckedChange = { previewAndPersist(runtime.copy(overlayGlyph = it)) },
                 )
             }, {
                 SwitchItem(
-                    icon = null,\n                    title = stringResource(R.string.status_combo_style_one_show_wifi),
+                    icon = null,
+                    title = stringResource(R.string.status_combo_style_one_show_wifi),
                     summary = stringResource(R.string.status_combo_style_one_show_wifi_summary),
                     checked = runtime.showWifi,
                     onCheckedChange = { previewAndPersist(runtime.copy(showWifi = it)) },
                 )
             }, {
                 SwitchItem(
-                    icon = null,\n                    title = stringResource(R.string.status_combo_style_one_show_mobile),
+                    icon = null,
+                    title = stringResource(R.string.status_combo_style_one_show_mobile),
                     summary = stringResource(R.string.status_combo_style_one_show_mobile_summary),
                     checked = runtime.showMobile,
                     onCheckedChange = { previewAndPersist(runtime.copy(showMobile = it)) },
                 )
             }, {
                 SwitchItem(
-                    icon = null,\n                    title = stringResource(R.string.status_combo_style_one_dual_sim),
+                    icon = null,
+                    title = stringResource(R.string.status_combo_style_one_dual_sim),
                     summary = stringResource(R.string.status_combo_style_one_dual_sim_summary),
                     checked = runtime.dualSim,
                     onCheckedChange = { previewAndPersist(runtime.copy(dualSim = it)) },
                 )
             }, {
                 SwitchItem(
-                    icon = null,\n                    title = stringResource(R.string.status_combo_style_one_show_value),
+                    icon = null,
+                    title = stringResource(R.string.status_combo_style_one_show_value),
                     summary = stringResource(R.string.status_combo_style_one_show_value_summary),
                     checked = runtime.showValue,
                     onCheckedChange = { previewAndPersist(runtime.copy(showValue = it)) },
                 )
             }, {
                 SelectItem(
-                    icon = null,\n                    title = stringResource(R.string.status_combo_style_one_signal_mode),
+                    icon = null,
+                    title = stringResource(R.string.status_combo_style_one_signal_mode),
                     summary = stringResource(R.string.status_combo_style_one_signal_mode_summary),
                     entries = listOf(
                         stringResource(R.string.status_combo_style_one_signal_inside),
@@ -288,28 +296,32 @@ fun StatusComboStyleOneCategoryControls(
                 )
             }, {
                 SwitchItem(
-                    icon = null,\n                    title = stringResource(R.string.status_combo_style_one_stacked_signal),
+                    icon = null,
+                    title = stringResource(R.string.status_combo_style_one_stacked_signal),
                     summary = stringResource(R.string.status_combo_style_one_stacked_signal_summary),
                     checked = runtime.stackedSignal,
                     onCheckedChange = { previewAndPersist(runtime.copy(stackedSignal = it)) },
                 )
             }, {
                 SwitchItem(
-                    icon = null,\n                    title = stringResource(R.string.status_combo_style_one_data_sim_only),
+                    icon = null,
+                    title = stringResource(R.string.status_combo_style_one_data_sim_only),
                     summary = stringResource(R.string.status_combo_style_one_data_sim_only_summary),
                     checked = runtime.dataSimOnly,
                     onCheckedChange = { previewAndPersist(runtime.copy(dataSimOnly = it)) },
                 )
             }, {
                 SwitchItem(
-                    icon = null,\n                    title = stringResource(R.string.status_combo_style_one_show_bolt),
+                    icon = null,
+                    title = stringResource(R.string.status_combo_style_one_show_bolt),
                     summary = stringResource(R.string.status_combo_style_one_show_bolt_summary),
                     checked = runtime.showBolt,
                     onCheckedChange = { previewAndPersist(runtime.copy(showBolt = it)) },
                 )
             }, {
                 SelectItem(
-                    icon = null,\n                    title = stringResource(R.string.status_combo_style_one_charging_display),
+                    icon = null,
+                    title = stringResource(R.string.status_combo_style_one_charging_display),
                     summary = stringResource(R.string.status_combo_style_one_charging_display_summary),
                     entries = listOf(
                         stringResource(R.string.status_combo_style_one_charging_display_bolt),
@@ -322,7 +334,8 @@ fun StatusComboStyleOneCategoryControls(
                 )
             }, {
                 SelectItem(
-                    icon = null,\n                    title = stringResource(R.string.status_combo_style_one_mobile_type_mode),
+                    icon = null,
+                    title = stringResource(R.string.status_combo_style_one_mobile_type_mode),
                     summary = stringResource(R.string.status_combo_style_one_mobile_type_mode_summary),
                     entries = listOf(
                         stringResource(R.string.status_combo_style_one_mobile_type_off),
@@ -336,7 +349,8 @@ fun StatusComboStyleOneCategoryControls(
                 )
             }, {
                 SwitchItem(
-                    icon = null,\n                    title = stringResource(R.string.status_combo_style_one_value_centred),
+                    icon = null,
+                    title = stringResource(R.string.status_combo_style_one_value_centred),
                     summary = stringResource(R.string.status_combo_style_one_value_centred_summary),
                     checked = runtime.valueCentred,
                     onCheckedChange = { previewAndPersist(runtime.copy(valueCentred = it)) },
@@ -347,7 +361,8 @@ fun StatusComboStyleOneCategoryControls(
                 StyleOneInfoItem(title = stringResource(R.string.status_combo_style_one_group_advanced))
             }, {
                 SwitchItem(
-                    icon = null,\n                    title = stringResource(R.string.status_combo_style_one_debug_log),
+                    icon = null,
+                    title = stringResource(R.string.status_combo_style_one_debug_log),
                     summary = stringResource(R.string.status_combo_style_one_debug_log_summary),
                     checked = runtime.debugLog,
                     onCheckedChange = { previewAndPersist(runtime.copy(debugLog = it)) },
@@ -470,7 +485,8 @@ fun StatusComboStyleOneCategoryControls(
             val colorItems = mutableListOf<@Composable () -> Unit>()
             colorItems += {
                 SwitchItem(
-                    icon = null,\n                    title = stringResource(R.string.status_combo_style_one_role_colors),
+                    icon = null,
+                    title = stringResource(R.string.status_combo_style_one_role_colors),
                     summary = stringResource(R.string.status_combo_style_one_role_colors_summary),
                     checked = runtime.roleColors,
                     onCheckedChange = { previewAndPersist(runtime.copy(roleColors = it)) },
