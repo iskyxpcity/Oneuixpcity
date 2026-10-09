@@ -132,21 +132,12 @@ fun StatusComboStyleOneCategoryControls(
 
     var selectedTab by remember { mutableIntStateOf(0) }
     TabRow(selectedTabIndex = selectedTab) {
-        Tab(
-            selected = selectedTab == 0,
-            onClick = { selectedTab = 0 },
-            text = { Text(stringResource(R.string.status_combo_style_one_tab_general)) },
-        )
-        Tab(
-            selected = selectedTab == 1,
-            onClick = { selectedTab = 1 },
-            text = { Text(stringResource(R.string.status_combo_style_one_tab_size)) },
-        )
-        Tab(
-            selected = selectedTab == 2,
-            onClick = { selectedTab = 2 },
-            text = { Text(stringResource(R.string.status_combo_style_one_tab_color)) },
-        )
+        Tab(selected = selectedTab == 0, onClick = { selectedTab = 0 },
+            text = { Text(stringResource(R.string.status_combo_style_one_tab_general)) })
+        Tab(selected = selectedTab == 1, onClick = { selectedTab = 1 },
+            text = { Text(stringResource(R.string.status_combo_style_one_tab_size)) })
+        Tab(selected = selectedTab == 2, onClick = { selectedTab = 2 },
+            text = { Text(stringResource(R.string.status_combo_style_one_tab_color)) })
     }
 
     when (selectedTab) {
@@ -191,8 +182,7 @@ StatusThemeGroup(items = listOf({
             onCheckedChange = { previewAndPersist(runtime.copy(valueCentred = it)) },
         )
     }))
-
-    StatusThemeGroup(items = listOf({
+StatusThemeGroup(items = listOf({
         SelectItem(
             icon = icon,
             title = stringResource(R.string.status_combo_style_one_mobile_type_mode),
@@ -240,8 +230,7 @@ StatusThemeGroup(items = listOf({
             onCheckedChange = { previewAndPersist(runtime.copy(dataSimOnly = it)) },
         )
     }))
-
-    StatusThemeGroup(items = listOf({
+StatusThemeGroup(items = listOf({
         SwitchItem(
             icon = icon,
             title = stringResource(R.string.status_combo_style_one_debug_log),
@@ -250,7 +239,6 @@ StatusThemeGroup(items = listOf({
             onCheckedChange = { previewAndPersist(runtime.copy(debugLog = it)) },
         )
     }))
-}
         }
         1 -> {
 StatusThemeGroup(items = listOf({
@@ -294,8 +282,7 @@ StatusThemeGroup(items = listOf({
             { suffixScale = it.roundToInt(); preview(runtime.copy(typeSuffixScale = suffixScale)) },
             { persist(runtime.copy(typeSuffixScale = suffixScale)) })
     }))
-
-    StatusThemeGroup(items = listOf({
+StatusThemeGroup(items = listOf({
         styleOneSlider(icon, stringResource(R.string.status_combo_style_one_out_type_size),
             stringResource(R.string.status_combo_style_one_dp_summary, outTypeSize), outTypeSize.toFloat(), 8f..26f,
             { outTypeSize = it.roundToInt(); preview(runtime.copy(outTypeSizeDp = outTypeSize)) },
@@ -321,8 +308,6 @@ StatusThemeGroup(items = listOf({
             { outSignalMargin = it.roundToInt(); preview(runtime.copy(outSignalMarginDp = outSignalMargin)) },
             { persist(runtime.copy(outSignalMarginDp = outSignalMargin)) })
     }))
-
-    
         }
         else -> {
 StatusThemeGroup(items = listOf({
@@ -351,7 +336,7 @@ StatusThemeGroup(items = listOf({
     }))
 
     if (runtime.roleColors) {
-        StatusThemeGroup(items = listOf({
+StatusThemeGroup(items = listOf({
             styleOneColor(icon, R.string.status_combo_style_one_critical_dark, runtime.criticalColorDarkArgb,
                 { previewAndPersist(runtime.copy(criticalColorDarkArgb = it)) }, { preview(runtime.copy(criticalColorDarkArgb = it)) })
         }, {
@@ -370,8 +355,7 @@ StatusThemeGroup(items = listOf({
             styleOneColor(icon, R.string.status_combo_style_one_low_light, runtime.lowColorLightArgb,
                 { previewAndPersist(runtime.copy(lowColorLightArgb = it)) }, { preview(runtime.copy(lowColorLightArgb = it)) })
         }))
-
-        StatusThemeGroup(items = listOf({
+StatusThemeGroup(items = listOf({
             OneuiXInfoItem(
                 icon = icon,
                 title = stringResource(R.string.status_combo_style_one_reset_colors),
@@ -409,11 +393,10 @@ StatusThemeGroup(items = listOf({
             onDismiss = { confirmResetColors = false },
         )
     }
-
-    
         }
     }
 
+}
 
 @Composable
 private fun styleOneColor(icon: ImageVector, titleRes: Int, value: Int, onChange: (Int) -> Unit, onPreview: (Int) -> Unit) {
