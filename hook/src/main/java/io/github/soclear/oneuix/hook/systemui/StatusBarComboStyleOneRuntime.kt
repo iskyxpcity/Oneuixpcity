@@ -424,7 +424,7 @@ internal object StatusBarComboStyleOneRuntime {
         }
 
         fun refreshGlyphs() {
-            if (attached) view.update(config, indicatorColor)
+            if (attached) update(config)
         }
 
         fun syncGeometry(cfg: Preference.SystemUI.StatusBarComboStyleOneRuntime = config) {
