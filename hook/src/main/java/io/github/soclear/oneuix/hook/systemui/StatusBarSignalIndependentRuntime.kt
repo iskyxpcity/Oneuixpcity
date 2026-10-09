@@ -33,6 +33,7 @@ import io.github.soclear.oneuix.common.Package
 import io.github.soclear.oneuix.common.Preference
 import io.github.soclear.oneuix.common.StatusBarRuntimeBridge
 import io.github.soclear.oneuix.hook.util.PreferenceProvider
+import java.util.Collections
 import java.util.WeakHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.CopyOnWriteArrayList
@@ -220,6 +221,12 @@ internal object StatusBarSignalIndependentRuntime {
     private val installed = AtomicBoolean(false)
     private val watcherStarted = AtomicBoolean(false)
     private val holders = WeakHashMap<View, Holder>()
+    // Cache both positive and negative classifications. StatusBarIconView is also
+    // used by the expanded shade; after the first ancestry check, those shade icons
+    // must not trigger another parent walk on every dark-intensity animation frame.
+    private val collapsedTintViewCache =
+        Collections.synchronizedMap(WeakHashMap<View, Boolean>())
+    @Volatile private var statusBarIconViewClass: Class<*>? = null
     private val mainHandler = Handler(Looper.getMainLooper())
     private val states = LinkedHashMap<Int, SignalState>()
     private val callbacks = LinkedHashMap<Int, Pair<TelephonyManager, TelephonyCallback>>()
@@ -292,7 +299,9 @@ internal object StatusBarSignalIndependentRuntime {
 
     private fun hookCollapsedStatusBarIconTint(module: XposedModule, classLoader: ClassLoader) {
         runCatching {
-            var current: Class<*>? = classLoader.loadClass(STATUS_BAR_ICON_VIEW)
+            val iconClass = classLoader.loadClass(STATUS_BAR_ICON_VIEW)
+            statusBarIconViewClass = iconClass
+            var current: Class<*>? = iconClass
             val methods = mutableListOf<java.lang.reflect.Method>()
             while (current != null) {
                 methods += current.declaredMethods.filter { method ->
@@ -308,13 +317,16 @@ internal object StatusBarSignalIndependentRuntime {
                     } ?: return@forEach
                     module.hook(method).intercept { chain ->
                         val result = chain.proceed()
-                        val color = runCatching { chain.getArg(tintIndex) as? Int }.getOrNull()
-                        val icon = chain.thisObject as? View
-                        if (color != null && color != Color.TRANSPARENT && icon != null &&
-                            collapsedStatusBarRoot(icon) != null
-                        ) {
-                            updateIndicatorColor(color)
+                        val icon = chain.thisObject as? View ?: return@intercept result
+                        val cached = collapsedTintViewCache[icon]
+                        if (cached == false) return@intercept result
+                        if (cached == null) {
+                            val belongsToCollapsedBar = collapsedStatusBarRoot(icon) != null
+                            collapsedTintViewCache[icon] = belongsToCollapsedBar
+                            if (!belongsToCollapsedBar) return@intercept result
                         }
+                        val color = runCatching { chain.getArg(tintIndex) as? Int }.getOrNull()
+                        if (color != null && color != Color.TRANSPARENT) updateIndicatorColor(color)
                         result
                     }
                 }
@@ -342,12 +354,28 @@ internal object StatusBarSignalIndependentRuntime {
         endMarginDp = source.endMarginDp.coerceIn(-6f, 12f),
     )
 
+    private fun rememberCollapsedTintViews(statusBar: ViewGroup) {
+        val iconClass = statusBarIconViewClass ?: return
+        val matched = ArrayList<View>()
+        fun visit(view: View) {
+            if (iconClass.isInstance(view)) matched += view
+            if (view is ViewGroup) {
+                for (index in 0 until view.childCount) visit(view.getChildAt(index))
+            }
+        }
+        visit(statusBar)
+        synchronized(collapsedTintViewCache) {
+            matched.forEach { collapsedTintViewCache[it] = true }
+        }
+    }
+
     private fun registerStatusBar(module: XposedModule, raw: View) {
         val statusBar = raw as? ViewGroup ?: return
         if (!statusBar.isLaidOut) {
             statusBar.post { registerStatusBar(module, statusBar) }
             return
         }
+        rememberCollapsedTintViews(statusBar)
         val existing = synchronized(holders) { holders[statusBar] }
         if (existing != null) {
             applyHolder(existing)
