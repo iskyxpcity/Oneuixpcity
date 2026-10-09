@@ -50,7 +50,6 @@ import io.github.soclear.oneuix.ui.category.SystemUIEvent
 import io.github.soclear.oneuix.ui.component.OneuiXSlider
 import io.github.soclear.oneuix.ui.component.OneuiXActionButton
 import com.oneuixp.app.ui.component.material.ExpressiveConfirmDialog
-import com.oneuixp.app.ui.component.material.ExpressiveTabRow
 import io.github.soclear.oneuix.ui.component.SwitchItem
 import io.github.soclear.oneuix.ui.component.SelectItem
 import com.oneuixp.app.ui.LocalUiMode
@@ -149,7 +148,7 @@ fun StatusComboStyleOneCategoryControls(
         }
     }, {
         SwitchItem(
-            title = stringResource(R.string.status_combo_style_one_enable),
+                    icon = null,\n            title = stringResource(R.string.status_combo_style_one_enable),
             summary = stringResource(R.string.status_combo_style_one_enable_summary),
             checked = runtime.enabled,
             onCheckedChange = { previewAndPersist(runtime.copy(enabled = it)) },
@@ -164,43 +163,61 @@ fun StatusComboStyleOneCategoryControls(
         stringResource(R.string.status_combo_style_one_tab_size),
         stringResource(R.string.status_combo_style_one_tab_color),
     )
-    when (LocalUiMode.current) {
-        UiMode.Material -> ExpressiveTabRow(
-            selectedTabIndex = selectedTab,
-            tabs = tabs,
-            onTabClick = { selectedTab = it },
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
-        )
-        UiMode.Miuix -> {
-            Row(
+    // Use the same three-button segmented control in both app themes.
+    // Only the palette changes, so the tab geometry and interaction stay consistent.
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(
+                horizontal = if (LocalUiMode.current == UiMode.Material) 16.dp else 12.dp,
+                vertical = 4.dp,
+            )
+            .clip(RoundedCornerShape(18.dp))
+            .background(
+                if (LocalUiMode.current == UiMode.Material) {
+                    Material3Theme.colorScheme.surfaceContainerHigh
+                } else {
+                    MiuixTheme.colorScheme.surfaceContainerHigh
+                },
+            )
+            .padding(4.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        tabs.forEachIndexed { index, label ->
+            val selected = selectedTab == index
+            val selectedContainer = if (LocalUiMode.current == UiMode.Material) {
+                Material3Theme.colorScheme.primaryContainer
+            } else {
+                MiuixTheme.colorScheme.primary
+            }
+            val labelColor = when (LocalUiMode.current) {
+                UiMode.Material -> if (selected) {
+                    Material3Theme.colorScheme.onPrimaryContainer
+                } else {
+                    Material3Theme.colorScheme.onSurfaceVariant
+                }
+                UiMode.Miuix -> if (selected) {
+                    MiuixTheme.colorScheme.onPrimary
+                } else {
+                    MiuixTheme.colorScheme.onSurfaceContainerHigh
+                }
+            }
+            Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 12.dp, vertical = 4.dp)
-                    .clip(RoundedCornerShape(18.dp))
-                    .background(MiuixTheme.colorScheme.surfaceContainerHigh)
-                    .padding(4.dp),
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    .weight(1f)
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(if (selected) selectedContainer else Color.Transparent)
+                    .clickable { selectedTab = index }
+                    .padding(vertical = 10.dp),
+                contentAlignment = Alignment.Center,
             ) {
-                tabs.forEachIndexed { index, label ->
-                    val selected = selectedTab == index
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .clip(RoundedCornerShape(14.dp))
-                            .background(
-                                if (selected) MiuixTheme.colorScheme.primary
-                                else Color.Transparent,
-                            )
-                            .clickable { selectedTab = index }
-                            .padding(vertical = 10.dp),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        MiuixText(
-                            text = label,
-                            color = if (selected) MiuixTheme.colorScheme.onPrimary
-                            else MiuixTheme.colorScheme.onSurfaceContainerHigh,
-                        )
-                    }
+                when (LocalUiMode.current) {
+                    UiMode.Material -> Text(
+                        text = label,
+                        color = labelColor,
+                        style = Material3Theme.typography.labelLarge,
+                    )
+                    UiMode.Miuix -> MiuixText(text = label, color = labelColor)
                 }
             }
         }
@@ -212,7 +229,7 @@ fun StatusComboStyleOneCategoryControls(
                 StyleOneInfoItem(title = stringResource(R.string.status_combo_style_one_group_appearance))
             }, {
                 SelectItem(
-                    title = stringResource(R.string.status_combo_style_one_style),
+                    icon = null,\n                    title = stringResource(R.string.status_combo_style_one_style),
                     summary = stringResource(R.string.status_combo_style_one_style_summary),
                     entries = listOf(
                         stringResource(R.string.status_combo_style_one_style_ring),
@@ -225,42 +242,42 @@ fun StatusComboStyleOneCategoryControls(
                 )
             }, {
                 SwitchItem(
-                    title = stringResource(R.string.status_combo_style_one_overlay),
+                    icon = null,\n                    title = stringResource(R.string.status_combo_style_one_overlay),
                     summary = stringResource(R.string.status_combo_style_one_overlay_summary),
                     checked = runtime.overlayGlyph,
                     onCheckedChange = { previewAndPersist(runtime.copy(overlayGlyph = it)) },
                 )
             }, {
                 SwitchItem(
-                    title = stringResource(R.string.status_combo_style_one_show_wifi),
+                    icon = null,\n                    title = stringResource(R.string.status_combo_style_one_show_wifi),
                     summary = stringResource(R.string.status_combo_style_one_show_wifi_summary),
                     checked = runtime.showWifi,
                     onCheckedChange = { previewAndPersist(runtime.copy(showWifi = it)) },
                 )
             }, {
                 SwitchItem(
-                    title = stringResource(R.string.status_combo_style_one_show_mobile),
+                    icon = null,\n                    title = stringResource(R.string.status_combo_style_one_show_mobile),
                     summary = stringResource(R.string.status_combo_style_one_show_mobile_summary),
                     checked = runtime.showMobile,
                     onCheckedChange = { previewAndPersist(runtime.copy(showMobile = it)) },
                 )
             }, {
                 SwitchItem(
-                    title = stringResource(R.string.status_combo_style_one_dual_sim),
+                    icon = null,\n                    title = stringResource(R.string.status_combo_style_one_dual_sim),
                     summary = stringResource(R.string.status_combo_style_one_dual_sim_summary),
                     checked = runtime.dualSim,
                     onCheckedChange = { previewAndPersist(runtime.copy(dualSim = it)) },
                 )
             }, {
                 SwitchItem(
-                    title = stringResource(R.string.status_combo_style_one_show_value),
+                    icon = null,\n                    title = stringResource(R.string.status_combo_style_one_show_value),
                     summary = stringResource(R.string.status_combo_style_one_show_value_summary),
                     checked = runtime.showValue,
                     onCheckedChange = { previewAndPersist(runtime.copy(showValue = it)) },
                 )
             }, {
                 SelectItem(
-                    title = stringResource(R.string.status_combo_style_one_signal_mode),
+                    icon = null,\n                    title = stringResource(R.string.status_combo_style_one_signal_mode),
                     summary = stringResource(R.string.status_combo_style_one_signal_mode_summary),
                     entries = listOf(
                         stringResource(R.string.status_combo_style_one_signal_inside),
@@ -271,28 +288,28 @@ fun StatusComboStyleOneCategoryControls(
                 )
             }, {
                 SwitchItem(
-                    title = stringResource(R.string.status_combo_style_one_stacked_signal),
+                    icon = null,\n                    title = stringResource(R.string.status_combo_style_one_stacked_signal),
                     summary = stringResource(R.string.status_combo_style_one_stacked_signal_summary),
                     checked = runtime.stackedSignal,
                     onCheckedChange = { previewAndPersist(runtime.copy(stackedSignal = it)) },
                 )
             }, {
                 SwitchItem(
-                    title = stringResource(R.string.status_combo_style_one_data_sim_only),
+                    icon = null,\n                    title = stringResource(R.string.status_combo_style_one_data_sim_only),
                     summary = stringResource(R.string.status_combo_style_one_data_sim_only_summary),
                     checked = runtime.dataSimOnly,
                     onCheckedChange = { previewAndPersist(runtime.copy(dataSimOnly = it)) },
                 )
             }, {
                 SwitchItem(
-                    title = stringResource(R.string.status_combo_style_one_show_bolt),
+                    icon = null,\n                    title = stringResource(R.string.status_combo_style_one_show_bolt),
                     summary = stringResource(R.string.status_combo_style_one_show_bolt_summary),
                     checked = runtime.showBolt,
                     onCheckedChange = { previewAndPersist(runtime.copy(showBolt = it)) },
                 )
             }, {
                 SelectItem(
-                    title = stringResource(R.string.status_combo_style_one_charging_display),
+                    icon = null,\n                    title = stringResource(R.string.status_combo_style_one_charging_display),
                     summary = stringResource(R.string.status_combo_style_one_charging_display_summary),
                     entries = listOf(
                         stringResource(R.string.status_combo_style_one_charging_display_bolt),
@@ -305,7 +322,7 @@ fun StatusComboStyleOneCategoryControls(
                 )
             }, {
                 SelectItem(
-                    title = stringResource(R.string.status_combo_style_one_mobile_type_mode),
+                    icon = null,\n                    title = stringResource(R.string.status_combo_style_one_mobile_type_mode),
                     summary = stringResource(R.string.status_combo_style_one_mobile_type_mode_summary),
                     entries = listOf(
                         stringResource(R.string.status_combo_style_one_mobile_type_off),
@@ -319,7 +336,7 @@ fun StatusComboStyleOneCategoryControls(
                 )
             }, {
                 SwitchItem(
-                    title = stringResource(R.string.status_combo_style_one_value_centred),
+                    icon = null,\n                    title = stringResource(R.string.status_combo_style_one_value_centred),
                     summary = stringResource(R.string.status_combo_style_one_value_centred_summary),
                     checked = runtime.valueCentred,
                     onCheckedChange = { previewAndPersist(runtime.copy(valueCentred = it)) },
@@ -330,7 +347,7 @@ fun StatusComboStyleOneCategoryControls(
                 StyleOneInfoItem(title = stringResource(R.string.status_combo_style_one_group_advanced))
             }, {
                 SwitchItem(
-                    title = stringResource(R.string.status_combo_style_one_debug_log),
+                    icon = null,\n                    title = stringResource(R.string.status_combo_style_one_debug_log),
                     summary = stringResource(R.string.status_combo_style_one_debug_log_summary),
                     checked = runtime.debugLog,
                     onCheckedChange = { previewAndPersist(runtime.copy(debugLog = it)) },
@@ -453,7 +470,7 @@ fun StatusComboStyleOneCategoryControls(
             val colorItems = mutableListOf<@Composable () -> Unit>()
             colorItems += {
                 SwitchItem(
-                    title = stringResource(R.string.status_combo_style_one_role_colors),
+                    icon = null,\n                    title = stringResource(R.string.status_combo_style_one_role_colors),
                     summary = stringResource(R.string.status_combo_style_one_role_colors_summary),
                     checked = runtime.roleColors,
                     onCheckedChange = { previewAndPersist(runtime.copy(roleColors = it)) },

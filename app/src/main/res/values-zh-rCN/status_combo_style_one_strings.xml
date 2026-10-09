@@ -105,6 +105,6 @@
     <string name="status_combo_style_one_reset">恢复默认</string>
     <string name="status_combo_style_one_cancel">取消</string>
     <string name="status_combo_style_one_tab_general">常规</string>
-    <string name="status_combo_style_one_tab_size">几何</string>
+    <string name="status_combo_style_one_tab_size">尺寸</string>
     <string name="status_combo_style_one_tab_color">颜色</string>
 </resources>
