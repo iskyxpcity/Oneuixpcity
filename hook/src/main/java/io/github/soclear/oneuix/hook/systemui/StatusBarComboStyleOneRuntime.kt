@@ -95,6 +95,9 @@ object StatusBarComboStyleOneRuntime {
         Collections.synchronizedMap(WeakHashMap<View, Pair<Boolean, Boolean>>())
     private val batteryContainerIslandRequests =
         Collections.synchronizedMap(WeakHashMap<View, Boolean>())
+    private val knownStatusBarTintViews =
+        Collections.synchronizedMap(WeakHashMap<View, Boolean>())
+    @Volatile private var statusBarIconViewClass: Class<*>? = null
     @Volatile private var miuiIslandMeterHooked = false
     private val lastContainerFingerprints = Collections.synchronizedMap(WeakHashMap<ViewGroup, Int>())
     private val scheduledContainerPasses = Collections.synchronizedSet(
@@ -130,9 +133,6 @@ object StatusBarComboStyleOneRuntime {
         var overlayCenterOffsetPx: Int? = null
         val delayedApply = Runnable {
             if (!retired && !applying) StatusBarComboStyleOneRuntime.apply(this)
-        }
-        val delayedOverlayUpdate = Runnable {
-            if (!retired) overlay?.let { win -> battery?.let { anchor -> win.update(anchor, root) } }
         }
     }
 
@@ -362,17 +362,9 @@ object StatusBarComboStyleOneRuntime {
             }
         }
         if (host.battery == null) {
-            root.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
-                // Defer overlay geometry reads until the expansion/collapse layout
-                // burst has settled. The glyph position itself is pinned to the
-                // initial row centre, so an animation frame must not move its window.
-                if (host.overlay != null && host.battery != null) {
-                    main.removeCallbacks(host.delayedOverlayUpdate)
-                    main.postDelayed(host.delayedOverlayUpdate, 140L)
-                }
-                // Never reapply/sweep the whole status-bar tree from an animated
-                // layout callback. IconManager and battery events own child changes.
-            }
+            // Do not relayout a floating window from every status-bar height frame.
+            // SystemUI recreates the collapsed host on display/configuration changes;
+            // a new host will read the new anchor geometry once.
             root.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
                 override fun onViewAttachedToWindow(v: View) { main.post { apply(host) } }
                 override fun onViewDetachedFromWindow(v: View) {
@@ -464,6 +456,7 @@ object StatusBarComboStyleOneRuntime {
             val root = host.root
             if (!root.isAttachedToWindow) { host.overlay?.detach(); return }
             val views = descendants(root)
+            rememberStatusBarTintViews(views)
             val battery = views.firstOrNull(::isBatteryMeterView)
                 ?: views.firstOrNull(::isBatteryIcon)
 
@@ -1183,6 +1176,15 @@ object StatusBarComboStyleOneRuntime {
         return null
     }
 
+    private fun rememberStatusBarTintViews(views: Iterable<View>) {
+        val iconClass = statusBarIconViewClass ?: return
+        synchronized(knownStatusBarTintViews) {
+            views.forEach { view ->
+                if (iconClass.isInstance(view)) knownStatusBarTintViews[view] = true
+            }
+        }
+    }
+
     private fun statusBarRootOf(view: View): ViewGroup? {
         var node: View? = view
         while (node != null) {
@@ -1201,7 +1203,9 @@ object StatusBarComboStyleOneRuntime {
      */
     private fun hookIconTint(module: XposedModule, classLoader: ClassLoader) {
         runCatching {
-            var cls: Class<*>? = classLoader.loadClass("com.android.systemui.statusbar.StatusBarIconView")
+            val iconClass = classLoader.loadClass("com.android.systemui.statusbar.StatusBarIconView")
+            statusBarIconViewClass = iconClass
+            var cls: Class<*>? = iconClass
             val methods = mutableListOf<java.lang.reflect.Method>()
             while (cls != null) {
                 methods += cls.declaredMethods.filter {
@@ -1214,6 +1218,11 @@ object StatusBarComboStyleOneRuntime {
                 .forEach { method ->
                     module.hook(method).intercept { chain ->
                         val result = chain.proceed()
+                        val icon = chain.thisObject as? View ?: return@intercept result
+                        // QS/notification shade icons use the same platform class.
+                        // Skip them before any parent walk so shade animation frames
+                        // do not pay for a collapsed-status-bar lookup.
+                        if (!knownStatusBarTintViews.containsKey(icon)) return@intercept result
                         var color: Int? = null
                         method.parameterTypes.forEachIndexed { index, type ->
                             if (color == null && type == Int::class.javaPrimitiveType) {
@@ -1222,9 +1231,8 @@ object StatusBarComboStyleOneRuntime {
                             }
                         }
                         val resolvedColor = color
-                        val icon = chain.thisObject as? View
-                        val row = icon?.let(::statusBarRootOf)
-                        if (resolvedColor != null && row != null && icon != null) {
+                        val row = statusBarRootOf(icon)
+                        if (resolvedColor != null && row != null) {
                             val tintOwner = batteryTintContainerFor(icon) ?: row
                             // Cache by MIUI's battery container just like HyperDuo.
                             // Also keep the root value solely as the AOSP fallback.
@@ -1265,6 +1273,9 @@ object StatusBarComboStyleOneRuntime {
                         knownIconSlots[view] = slot.lowercase()
                         view.post {
                             val host = hostFor(view) ?: return@post
+                            if (statusBarIconViewClass?.isInstance(view) == true) {
+                                knownStatusBarTintViews[view] = true
+                            }
                             if (shouldSuppressSlot(slot)) {
                                 if (view.parent is ViewGroup) collapseHostView(host, view)
                             } else {
