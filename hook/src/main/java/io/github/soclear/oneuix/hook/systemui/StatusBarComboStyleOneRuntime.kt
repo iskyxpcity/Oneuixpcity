@@ -1537,7 +1537,7 @@ object StatusBarComboStyleOneRuntime {
         val signalIndex = name.indexOf("signal")
         if (signalIndex < 0) return -1
         val suffix = name.substring(signalIndex + "signal".length).trimStart('_')
-        return suffix.firstOrNull { it in '0'..'4' }?.minus('0') ?: -1
+        return suffix.firstOrNull { it in '0'..'4' }?.minus('0') ?: -1 ?: -1
     }
 
     private fun displayNetworkType(info: TelephonyDisplayInfo): String? = when (info.overrideNetworkType) {
