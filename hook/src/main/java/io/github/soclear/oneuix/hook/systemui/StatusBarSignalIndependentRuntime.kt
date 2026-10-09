@@ -68,6 +68,10 @@ internal object StatusBarSignalIndependentRuntime {
         "content://com.oneuixp.app.statusbridge/preferences"
     private const val PHONE_STATUS_BAR_VIEW =
         "com.android.systemui.statusbar.phone.PhoneStatusBarView"
+    private const val MIUI_PHONE_STATUS_BAR_VIEW =
+        "com.android.systemui.statusbar.phone.MiuiPhoneStatusBarView"
+    private const val STATUS_BAR_ICON_VIEW =
+        "com.android.systemui.statusbar.StatusBarIconView"
 
     private data class SignalState(
         val subscriptionId: Int,
@@ -105,6 +109,13 @@ internal object StatusBarSignalIndependentRuntime {
             indicatorColor = color
             visibility = if (nextConfig.enabled && visibleStates().isNotEmpty()) VISIBLE else GONE
             requestLayout()
+            invalidate()
+        }
+
+        fun updateIndicatorColor(color: Int) {
+            if (indicatorColor == color) return
+            indicatorColor = color
+            // Colour changes do not change view geometry.
             invalidate()
         }
 
@@ -238,7 +249,12 @@ internal object StatusBarSignalIndependentRuntime {
         indicatorColorListeners.forEach { listener ->
             runCatching { listener(nextColor) }
         }
-        mainHandler.post { applyAll() }
+        mainHandler.post {
+            val active = synchronized(holders) { holders.values.toList() }
+            active.forEach { holder ->
+                holder.bars.updateIndicatorColor(nextColor)
+            }
+        }
     }
 
     fun install(module: XposedModule, param: XposedModuleInterface.PackageReadyParam) {
@@ -270,23 +286,50 @@ internal object StatusBarSignalIndependentRuntime {
             }
         }
 
-        // Reuse Samsung's proven dark/light transition as color source only.
+        hookCollapsedStatusBarIconTint(module, param.classLoader)
+    }
+
+    private fun hookCollapsedStatusBarIconTint(module: XposedModule, classLoader: ClassLoader) {
         runCatching {
-            val clockClass = param.classLoader.loadClass(
-                "com.android.systemui.statusbar.policy.QSClockIndicatorView"
-            )
-            clockClass.declaredMethods
-                .filter { it.name == "onDarkChanged" }
+            var current: Class<*>? = classLoader.loadClass(STATUS_BAR_ICON_VIEW)
+            val methods = mutableListOf<java.lang.reflect.Method>()
+            while (current != null) {
+                methods += current.declaredMethods.filter { method ->
+                    (method.name == "onDarkChanged" || method.name == "setIconColor") &&
+                        method.parameterTypes.any { it == Int::class.javaPrimitiveType }
+                }
+                current = current.superclass
+            }
+            methods.distinctBy { it.name + it.parameterTypes.joinToString { type -> type.name } }
                 .forEach { method ->
+                    val tintIndex = method.parameterTypes.indices.firstOrNull {
+                        method.parameterTypes[it] == Int::class.javaPrimitiveType
+                    } ?: return@forEach
                     module.hook(method).intercept { chain ->
                         val result = chain.proceed()
-                        (chain.thisObject as? TextView)?.let { clock ->
-                            updateIndicatorColor(clock.currentTextColor)
+                        val color = runCatching { chain.getArg(tintIndex) as? Int }.getOrNull()
+                        val icon = chain.thisObject as? View
+                        if (color != null && color != Color.TRANSPARENT && icon != null &&
+                            collapsedStatusBarRoot(icon) != null
+                        ) {
+                            updateIndicatorColor(color)
                         }
                         result
                     }
                 }
+        }.onFailure { Log.w("OneuiXPStatusSignal", "Status bar tint hook unavailable", it) }
+    }
+
+    private fun collapsedStatusBarRoot(view: View): ViewGroup? {
+        var node: View? = view
+        while (node != null) {
+            if (node is ViewGroup &&
+                (node.javaClass.name == PHONE_STATUS_BAR_VIEW ||
+                    node.javaClass.name == MIUI_PHONE_STATUS_BAR_VIEW)
+            ) return node
+            node = node.parent as? View
         }
+        return null
     }
 
     private fun sanitize(source: Preference.SystemUI.StatusBarSignalRuntime) = source.copy(
@@ -339,10 +382,9 @@ internal object StatusBarSignalIndependentRuntime {
         )
         val holder = Holder(statusBar, parent, root, bars)
         synchronized(holders) { holders[statusBar] = holder }
+        // Mount once after inflation. Reordering the child from every animated
+        // layout callback makes the shade/Quick Panel feel permanently sticky.
         mountBeforeWifi(holder)
-        parent.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
-            if (config.enabled && root.parent === parent) root.post { mountBeforeWifi(holder) }
-        }
         ensurePreferenceWatcher(module, context)
         applyHolder(holder)
     }

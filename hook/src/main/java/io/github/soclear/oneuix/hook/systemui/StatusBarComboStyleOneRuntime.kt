@@ -265,16 +265,10 @@ object StatusBarComboStyleOneRuntime {
         hookNativeMobileState(module, param.classLoader)
         hookNativeSignalPolicy(module, param.classLoader)
 
-        StatusBarSignalIndependentRuntime.addIndicatorColorListener { next ->
-            if (next != tint) {
-                tint = next
-                state = state.copy(tintColor = next)
-                invalidateGlyphs()
-            }
-        }
-
+        // Style One tint is sourced per collapsed status-bar row by the native
+        // icon/battery tint hooks below, never from the Quick Panel clock.
         var hookedHost = false
-        listOf(PHONE_BAR, MIUI_PHONE_BAR, WINDOW_BAR).forEach { name ->
+        listOf(PHONE_BAR, MIUI_PHONE_BAR).forEach { name ->
             runCatching {
                 val cls = param.classLoader.loadClass(name)
                 cls.declaredConstructors.forEach { constructor ->
@@ -287,26 +281,9 @@ object StatusBarComboStyleOneRuntime {
                 hookedHost = true
             }.onFailure { diagnostic("Status-bar host unavailable: $name: $it") }
         }
-        listOf(MIUI_ICONS, AOSP_ICONS).forEach { name ->
-            runCatching {
-                val cls = param.classLoader.loadClass(name)
-                // onMeasure is hot during shade expansion and is not needed for
-                // folding icons. Only inspect a container after layout and only
-                // when it belongs to our active status-bar host.
-                cls.declaredMethods.filter {
-                    it.name == "onLayout" && it.parameterTypes.size == 5
-                }.forEach { method ->
-                    module.hook(method).intercept { chain ->
-                        val result = chain.proceed()
-                        val container = chain.thisObject as? ViewGroup
-                        if (container != null && hostFor(container) != null) {
-                            scheduleContainerSuppression(container)
-                        }
-                        result
-                    }
-                }
-            }.onFailure { diagnostic("Status icon container unavailable: $name: $it") }
-        }
+        // Native slots are handed off when IconManager creates a holder and when
+        // the relevant icon state changes. Do not hook container onLayout here:
+        // it runs repeatedly during shade expansion and causes view-tree scans.
         hookIconManager(module, param.classLoader)
         hookBatteryMeters(module, param.classLoader)
         hookMiuiBatteryIsland(module, param.classLoader)
@@ -333,8 +310,12 @@ object StatusBarComboStyleOneRuntime {
 
     private fun scheduleRegister(root: ViewGroup) {
         root.post { register(root) }
-        root.postDelayed({ register(root) }, 250L)
-        root.postDelayed({ register(root) }, 1000L)
+        // One bounded retry for SystemUI's deferred icon inflation. Do not keep
+        // repeating whole-root discovery during status-bar/Quick Panel animation.
+        root.postDelayed({
+            val needsRetry = synchronized(hosts) { hosts[root]?.battery == null }
+            if (needsRetry && root.isAttachedToWindow) register(root)
+        }, 400L)
     }
 
     private fun register(root: ViewGroup) {
@@ -386,11 +367,8 @@ object StatusBarComboStyleOneRuntime {
                     main.removeCallbacks(host.delayedOverlayUpdate)
                     main.postDelayed(host.delayedOverlayUpdate, 140L)
                 }
-                // Debounce full tree scans until that layout burst settles.
-                if (!host.applying) {
-                    main.removeCallbacks(host.delayedApply)
-                    main.postDelayed(host.delayedApply, 140L)
-                }
+                // Never reapply/sweep the whole status-bar tree from an animated
+                // layout callback. IconManager and battery events own child changes.
             }
             root.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
                 override fun onViewAttachedToWindow(v: View) { main.post { apply(host) } }
@@ -508,7 +486,9 @@ object StatusBarComboStyleOneRuntime {
             // BatteryMeterView receives the tint intended for the battery glyph.
             // Prefer it over the last colour sent to another status icon.
             val meterTint = batteryTintSnapshots[battery]
-            val rowTint = meterTint ?: rowTintSnapshots[root]
+            // StatusBarIconView's actual last-painted row tint is the freshest
+            // source during dark-area transitions; MIUI's meter fields can lag.
+            val rowTint = rowTintSnapshots[root] ?: meterTint ?: host.rowTint
             if (rowTint != null && host.rowTint != rowTint) {
                 host.rowTint = rowTint
                 host.inline?.setTintOverride(rowTint)
@@ -1020,28 +1000,32 @@ object StatusBarComboStyleOneRuntime {
      */
     private fun hookBatteryTint(module: XposedModule, classLoader: ClassLoader) {
         runCatching {
-            val cls = classLoader.loadClass(MIUI_BATTERY_METER)
-            cls.declaredMethods.filter {
-                it.name == "updateLightDarkTint" &&
-                    it.parameterTypes.size == 6 &&
-                    it.parameterTypes[1] == Float::class.javaPrimitiveType &&
-                    it.parameterTypes[2] == Int::class.javaPrimitiveType &&
-                    it.parameterTypes[3] == Int::class.javaPrimitiveType &&
-                    it.parameterTypes[4] == Int::class.javaPrimitiveType &&
-                    it.parameterTypes[5] == Boolean::class.javaPrimitiveType
-            }.forEach { method ->
+            var current: Class<*>? = classLoader.loadClass(MIUI_BATTERY_METER)
+            val methods = mutableListOf<java.lang.reflect.Method>()
+            while (current != null) {
+                methods += current.declaredMethods.filter { method ->
+                    method.name == "updateLightDarkTint" &&
+                        method.parameterTypes.size == 6 &&
+                        method.parameterTypes[1] == Float::class.javaPrimitiveType &&
+                        method.parameterTypes[2] == Int::class.javaPrimitiveType &&
+                        method.parameterTypes[3] == Int::class.javaPrimitiveType &&
+                        method.parameterTypes[4] == Int::class.javaPrimitiveType &&
+                        method.parameterTypes[5] == Boolean::class.javaPrimitiveType
+                }
+                current = current.superclass
+            }
+            methods.distinctBy { it.toGenericString() }.forEach { method ->
                 module.hook(method).intercept { chain ->
                     val result = chain.proceed()
                     val meter = chain.thisObject as? View
                     if (meter != null) {
                         val intensity = runCatching { chain.getArg(1) as? Float }.getOrNull() ?: 0f
-                        val tintColor = runCatching { chain.getArg(2) as? Int }.getOrNull() ?: 0
-                        val lightColor = runCatching { chain.getArg(3) as? Int }.getOrNull() ?: 0
-                        val darkColor = runCatching { chain.getArg(4) as? Int }.getOrNull() ?: 0
+                        val tintColor = runCatching { chain.getArg(2) as? Int }.getOrNull() ?: Color.TRANSPARENT
+                        val lightColor = runCatching { chain.getArg(3) as? Int }.getOrNull() ?: Color.TRANSPARENT
+                        val darkColor = runCatching { chain.getArg(4) as? Int }.getOrNull() ?: Color.TRANSPARENT
                         val useTint = runCatching { chain.getArg(5) as? Boolean }.getOrNull() ?: false
                         val resolved = (if (useTint) tintColor else if (intensity > 0f) darkColor else lightColor)
-                            .takeIf { it != Color.TRANSPARENT } ?: Color.WHITE
-                        saveBatteryTint(meter, resolved)
+                        if (resolved != Color.TRANSPARENT) saveBatteryTint(meter, resolved)
                     }
                     result
                 }
@@ -1089,7 +1073,10 @@ object StatusBarComboStyleOneRuntime {
     private fun saveBatteryTint(meter: View, color: Int) {
         batteryTintSnapshots[meter] = color
         val host = hostFor(meter)
-        if (host != null && host.battery === meter && host.rowTint != color) {
+        val anchor = host?.battery
+        val belongsToAnchor = anchor != null &&
+            (anchor === meter || isWithin(anchor, meter) || isWithin(meter, anchor))
+        if (host != null && belongsToAnchor && host.rowTint != color) {
             host.rowTint = color
             host.inline?.setTintOverride(color)
             host.overlay?.setTintOverride(color)
@@ -1143,13 +1130,9 @@ object StatusBarComboStyleOneRuntime {
                             // A battery-meter tint hook is more specific. Keep the
                             // generic icon tint as fallback only when that source is
                             // not available on this SystemUI build.
-                            if (host != null && host.battery?.let { batteryTintSnapshots[it] } == null &&
-                                host.rowTint != resolvedColor
-                            ) {
+                            if (host != null && host.rowTint != resolvedColor) {
                                 val applyTint = Runnable {
-                                    if (host.battery?.let { batteryTintSnapshots[it] } == null &&
-                                        host.rowTint != resolvedColor
-                                    ) {
+                                    if (host.rowTint != resolvedColor) {
                                         host.rowTint = resolvedColor
                                         host.inline?.setTintOverride(resolvedColor)
                                         host.overlay?.setTintOverride(resolvedColor)
