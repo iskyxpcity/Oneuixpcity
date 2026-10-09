@@ -179,6 +179,7 @@ StatusThemeGroup(items = listOf({
         SelectItem(
             icon = icon,
             title = stringResource(R.string.status_combo_style_one_style),
+            summary = stringResource(R.string.status_combo_style_one_style_summary),
             entries = listOf(
                 stringResource(R.string.status_combo_style_one_style_ring),
                 stringResource(R.string.status_combo_style_one_style_rect),
@@ -195,17 +196,37 @@ StatusThemeGroup(items = listOf({
             onCheckedChange = { previewAndPersist(runtime.copy(overlayGlyph = it)) },
         )
     }, {
-        SwitchItem(icon = icon, title = stringResource(R.string.status_combo_style_one_show_wifi),
-            checked = runtime.showWifi, onCheckedChange = { previewAndPersist(runtime.copy(showWifi = it)) })
+        SwitchItem(
+            icon = icon,
+            title = stringResource(R.string.status_combo_style_one_show_wifi),
+            summary = stringResource(R.string.status_combo_style_one_show_wifi_summary),
+            checked = runtime.showWifi,
+            onCheckedChange = { previewAndPersist(runtime.copy(showWifi = it)) },
+        )
     }, {
-        SwitchItem(icon = icon, title = stringResource(R.string.status_combo_style_one_show_mobile),
-            checked = runtime.showMobile, onCheckedChange = { previewAndPersist(runtime.copy(showMobile = it)) })
+        SwitchItem(
+            icon = icon,
+            title = stringResource(R.string.status_combo_style_one_show_mobile),
+            summary = stringResource(R.string.status_combo_style_one_show_mobile_summary),
+            checked = runtime.showMobile,
+            onCheckedChange = { previewAndPersist(runtime.copy(showMobile = it)) },
+        )
     }, {
-        SwitchItem(icon = icon, title = stringResource(R.string.status_combo_style_one_show_value),
-            checked = runtime.showValue, onCheckedChange = { previewAndPersist(runtime.copy(showValue = it)) })
+        SwitchItem(
+            icon = icon,
+            title = stringResource(R.string.status_combo_style_one_show_value),
+            summary = stringResource(R.string.status_combo_style_one_show_value_summary),
+            checked = runtime.showValue,
+            onCheckedChange = { previewAndPersist(runtime.copy(showValue = it)) },
+        )
     }, {
-        SwitchItem(icon = icon, title = stringResource(R.string.status_combo_style_one_show_bolt),
-            checked = runtime.showBolt, onCheckedChange = { previewAndPersist(runtime.copy(showBolt = it)) })
+        SwitchItem(
+            icon = icon,
+            title = stringResource(R.string.status_combo_style_one_show_bolt),
+            summary = stringResource(R.string.status_combo_style_one_show_bolt_summary),
+            checked = runtime.showBolt,
+            onCheckedChange = { previewAndPersist(runtime.copy(showBolt = it)) },
+        )
     }, {
         SwitchItem(
             icon = icon,
@@ -231,6 +252,7 @@ StatusThemeGroup(items = listOf({
         SelectItem(
             icon = icon,
             title = stringResource(R.string.status_combo_style_one_signal_mode),
+            summary = stringResource(R.string.status_combo_style_one_signal_mode_summary),
             entries = listOf(
                 stringResource(R.string.status_combo_style_one_signal_inside),
                 stringResource(R.string.status_combo_style_one_signal_outside),
