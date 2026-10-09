@@ -522,7 +522,7 @@ fun StatusComboStyleOneCategoryControls(
                     },
                     onDismiss = { editingColorRole = null },
                 )
-            }            }
+            }
         }
     }
 
