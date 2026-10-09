@@ -173,14 +173,14 @@ object StatusComboStyleOneGlyphRenderer {
             }
             if (typeInGap && innerType != null) {
                 val size = fitTextSize(innerType, config.typeSize.toFloat(), config.typeWeight,
-                    gapClearWidth(config.ringStroke), config.typeSuffixScale)
+                    gapClearWidth(config.ringStroke, gapStart, gapEnd), config.typeSuffixScale)
                 drawNetworkType(canvas, innerType, cx, gapBaseline(size), size, config.typeWeight,
-                    tint, config.typeSuffixScale, gapClearWidth(config.ringStroke))
+                    tint, config.typeSuffixScale, gapClearWidth(config.ringStroke, gapStart, gapEnd))
             }
             if (bolt) drawBolt(canvas, offsetX, if (state.quickCharge) QUICK_CHARGE else tint)
             if (config.showValue) {
                 val clear = if (valueInCentre) centreClearWidth(config.valueSize.toFloat(), config.ringStroke)
-                    else gapClearWidth(config.ringStroke)
+                    else gapClearWidth(config.ringStroke, gapStart, gapEnd)
                 val size = fitTextSize(level.toString(), config.valueSize.toFloat(), config.valueWeight, clear)
                 drawTextFitted(canvas, level.toString(), cx,
                     if (valueInCentre) centerBaseline(size) else gapBaseline(size),
@@ -519,9 +519,9 @@ object StatusComboStyleOneGlyphRenderer {
         return bodyWidth + paint.measureText("A")
     }
 
-    private fun gapClearWidth(stroke: Int): Float {
-        val radians = Math.toRadians(((GAP_IDLE_END - GAP_IDLE_START) * B_SWEEP * 0.5f).toDouble())
-        return (2.0 * B_R * kotlin.math.sin(radians)).toFloat() - stroke
+    private fun gapClearWidth(stroke: Int, gapStart: Float, gapEnd: Float): Float {
+        val radians = Math.toRadians(((gapEnd - gapStart) * B_SWEEP * 0.5f).toDouble())
+        return max(0f, (2.0 * B_R * kotlin.math.sin(radians)).toFloat() - stroke)
     }
 
     private fun centreClearWidth(size: Float, stroke: Int): Float {
