@@ -742,7 +742,10 @@ private fun styleOneSlider(
         StatusThemeChildItem {
             OneuiXSlider(
                 value = value,
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp)
+                    .alpha(if (enabled) 1f else 0.45f),
                 valueRange = range,
                 steps = 0,
                 onValueChange = { raw ->

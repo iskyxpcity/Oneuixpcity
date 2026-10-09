@@ -96,7 +96,7 @@
     <string name="status_combo_style_one_group_type">Network type</string>
     <string name="status_combo_style_one_group_out_signal">Out-of-ring signal</string>
     <string name="status_combo_style_one_group_track">Track</string>
-    <string name="status_combo_style_one_reset_colors">Reset colors</string>
+    <string name="status_combo_style_one_reset_colors">Reset</string>
     <string name="status_combo_style_one_reset_colors_summary">Restore the three state colors to their factory presets.</string>
     <string name="status_combo_style_one_reset_colors_confirm">The three state colors will return to their defaults; custom colors will be overwritten.</string>
     <string name="status_combo_style_one_reset">Reset</string>
