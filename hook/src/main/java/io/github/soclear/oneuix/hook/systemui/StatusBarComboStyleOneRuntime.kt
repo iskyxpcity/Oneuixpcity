@@ -270,6 +270,17 @@ object StatusBarComboStyleOneRuntime {
         main.post { synchronized(hosts) { hosts.values.toList() }.forEach(::apply) }
     }
 
+    private fun requiresHostRefresh(
+        old: Preference.SystemUI.StatusBarComboStyleOneRuntime,
+        new: Preference.SystemUI.StatusBarComboStyleOneRuntime,
+    ): Boolean =
+        old.enabled != new.enabled ||
+            old.overlayGlyph != new.overlayGlyph ||
+            old.showWifi != new.showWifi ||
+            old.showMobile != new.showMobile ||
+            old.signalMode != new.signalMode ||
+            old.stackedSignal != new.stackedSignal
+
     /** Refresh just the glyph drawing when telemetry changes; avoid a status-bar relayout. */
     private fun invalidateGlyphs() {
         main.post {
@@ -451,9 +462,11 @@ object StatusBarComboStyleOneRuntime {
                         val payload = intent.getStringExtra(StatusBarRuntimeBridge.EXTRA_STATUS_BAR_JSON) ?: return
                         runCatching {
                             val status = IgnoreUnknownKeysJson.decodeFromString(Preference.SystemUI.StatusBar.serializer(), payload)
-                            config = sanitize(status.comboStyleOneRuntime)
+                            val previous = config
+                            val next = sanitize(status.comboStyleOneRuntime)
+                            config = next
                             diagnostic("Settings updated: enabled=${config.enabled}, overlay=${config.overlayGlyph}, style=${config.trioStyle}, signalMode=${config.signalMode}")
-                            refreshHosts()
+                            if (requiresHostRefresh(previous, next)) refreshHosts() else invalidateGlyphs()
                         }.onFailure { Log.w(TAG, "Bad Style One settings broadcast", it) }
                     }
                 }
@@ -641,7 +654,6 @@ object StatusBarComboStyleOneRuntime {
 
     private fun networkType(type: Int): String = when (type) {
         TelephonyManager.NETWORK_TYPE_NR -> "5G"
-        TelephonyManager.NETWORK_TYPE_LTE_CA -> "4GA"
         TelephonyManager.NETWORK_TYPE_LTE, TelephonyManager.NETWORK_TYPE_IWLAN -> "4G"
         TelephonyManager.NETWORK_TYPE_HSPAP, TelephonyManager.NETWORK_TYPE_HSPA,
         TelephonyManager.NETWORK_TYPE_HSDPA, TelephonyManager.NETWORK_TYPE_HSUPA,
