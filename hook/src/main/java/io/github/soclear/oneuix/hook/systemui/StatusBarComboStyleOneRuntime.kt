@@ -129,13 +129,7 @@ internal object StatusBarComboStyleOneRuntime {
             if (!runtime.enabled) return
 
             val metrics = calculateMetrics(context, runtime)
-            val extra = (metrics.width - metrics.side.roundToInt()).coerceAtLeast(0)
             val save = canvas.save()
-            // Keep the ring centred in the native battery slot while out-of-ring
-            // signal/type content extends toward the outside of the status bar.
-            if (extra > 0 && (runtime.signalMode == 1 || runtime.mobileTypeMode == 2)) {
-                canvas.translate(-extra / 2f, 0f)
-            }
             StatusBarComboStyleOneRenderer.draw(
                 canvas,
                 width,
@@ -352,20 +346,39 @@ internal object StatusBarComboStyleOneRuntime {
     }
 
     private fun sanitize(source: Preference.SystemUI.StatusBarComboStyleOneRuntime) = source.copy(
-        placementMode = source.placementMode.coerceIn(0, 1),
-        sizePercent = source.sizePercent.coerceIn(60f, 180f),
+        placementMode = 0,
+        trioStyle = source.trioStyle.coerceIn(0, 1),
+        mobileTypeMode = source.mobileTypeMode.coerceIn(0, 2),
+        signalMode = source.signalMode.coerceIn(0, 1),
+        sizePercent = source.sizePercent.coerceIn(50f, 250f),
         offsetXDp = source.offsetXDp.coerceIn(-24f, 24f),
         offsetYDp = source.offsetYDp.coerceIn(-15f, 15f),
+        arcStrokePercent = source.arcStrokePercent.coerceIn(50f, 200f),
         ringStrokeDp = source.ringStrokeDp.coerceIn(1f, 4f),
-        trackAlpha = source.trackAlpha.coerceIn(0, 180),
-        dotsGapDp = source.dotsGapDp.coerceIn(0f, 6f),
+        ringStroke = source.ringStroke.coerceIn(4, 16),
+        arcStroke = source.arcStroke.coerceIn(3, 16),
+        batteryBlackDepth = source.batteryBlackDepth.coerceIn(0.15f, 1f),
+        trackAlpha = source.trackAlpha.coerceIn(0, 255),
+        dotsGapDp = source.dotsGapDp.coerceIn(0f, 8f),
         dotsSizePercent = source.dotsSizePercent.coerceIn(50f, 180f),
-        batteryTextSizeSp = source.batteryTextSizeSp.coerceIn(5f, 14f),
+        innerSizePercent = source.innerSizePercent.coerceIn(50f, 180f),
+        innerYDp = source.innerYDp.coerceIn(-8f, 8f),
+        batteryTextSizeSp = source.batteryTextSizeSp.coerceIn(5f, 18f),
         batteryTextFontWeight = source.batteryTextFontWeight.coerceIn(100, 900),
         chargingBoltSizePercent = source.chargingBoltSizePercent.coerceIn(50f, 180f),
         chargingBoltXDp = source.chargingBoltXDp.coerceIn(-8f, 8f),
         chargingBoltYDp = source.chargingBoltYDp.coerceIn(-8f, 8f),
         lowBatteryThreshold = source.lowBatteryThreshold.coerceIn(5, 50),
+        valueSize = source.valueSize.coerceIn(16, 44),
+        valueWeight = source.valueWeight.coerceIn(100, 900),
+        typeSize = source.typeSize.coerceIn(16, 44),
+        typeWeight = source.typeWeight.coerceIn(100, 900),
+        typeSuffixScale = source.typeSuffixScale.coerceIn(50, 100),
+        outTypeSizeDp = source.outTypeSizeDp.coerceIn(8, 26),
+        outSignalSizeDp = source.outSignalSizeDp.coerceIn(6, 20),
+        outTypeMarginLeftDp = source.outTypeMarginLeftDp.coerceIn(0, 16),
+        outTypeMarginRightDp = source.outTypeMarginRightDp.coerceIn(0, 16),
+        outSignalMarginDp = source.outSignalMarginDp.coerceIn(0, 16),
     )
 
     private fun calculateMetrics(
@@ -458,6 +471,7 @@ internal object StatusBarComboStyleOneRuntime {
             holder.batteryAnchor = findBatteryAnchor(holder.statusBarView)
             suppressNative(holder, cfg)
             holder.suppressionKey = key
+            refreshNativeChargingFlags()
         }
         overlay.syncGeometry(cfg)
     }
@@ -924,8 +938,9 @@ internal object StatusBarComboStyleOneRuntime {
     private fun readBooleanField(target: Any, vararg names: String): Boolean? {
         var clazz: Class<*>? = target.javaClass
         while (clazz != null && clazz != Any::class.java) {
+            val currentClass = clazz
             for (name in names) {
-                val field = runCatching { clazz.getDeclaredField(name) }.getOrNull() ?: continue
+                val field = runCatching { currentClass.getDeclaredField(name) }.getOrNull() ?: continue
                 val value = runCatching {
                     field.isAccessible = true
                     field.get(target)
@@ -935,7 +950,7 @@ internal object StatusBarComboStyleOneRuntime {
                     is Number -> return value.toInt() != 0
                 }
             }
-            clazz = clazz.superclass
+            clazz = currentClass.superclass
         }
         return null
     }
