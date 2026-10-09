@@ -53,7 +53,7 @@
     <string name="status_combo_style_one_out_type_margin_right">Outside network type right margin</string>
     <string name="status_combo_style_one_out_signal_margin">Outside signal margin</string>
     <string name="status_combo_style_one_role_colors">State colors</string>
-    <string name="status_combo_style_one_role_colors_summary">Choose separate colors for low battery, charging and critical battery. Priority is critical, then low battery or power save, then charging, then the system status-bar foreground.</string>
+    <string name="status_combo_style_one_role_colors_summary">Choose separate colors for the filled battery ring and percentage in low, charging and critical states. Priority is critical, then low battery or power save, then charging, then the system status-bar foreground.</string>
     <string name="status_combo_style_one_critical_threshold">Critical battery threshold</string>
     <string name="status_combo_style_one_critical_threshold_summary">Use the critical color below %1$d%%.</string>
     <string name="status_combo_style_one_low_threshold">Low battery threshold</string>
@@ -72,7 +72,7 @@
     <string name="status_combo_style_one_dp_summary">%1$d dp</string>
     <string name="status_combo_style_one_percent_summary">%1$d%%</string>
     <string name="status_combo_style_one_weight_summary">%1$d</string>
-    <string name="status_combo_style_one_color_summary">Choose separate swatches for dark and light status-bar backgrounds.</string>
+    <string name="status_combo_style_one_color_summary">Tap a swatch to choose the color used for this state on a dark or light status-bar background.</string>
     <string name="status_combo_style_one_color_low">Low battery color</string>
     <string name="status_combo_style_one_color_charging">Charging color</string>
     <string name="status_combo_style_one_color_critical">Critical battery color</string>
@@ -80,7 +80,7 @@
     <string name="status_combo_style_one_color_on_light">Light background</string>
     <string name="status_combo_style_one_color_on_dark_short">Dark</string>
     <string name="status_combo_style_one_color_on_light_short">Light</string>
-    <string name="status_combo_style_one_color_dialog_summary">Choose the color used for this state on dark or light status-bar backgrounds. The ring uses critical, low/power-save, charging, then system foreground priority.</string>
+    <string name="status_combo_style_one_color_dialog_summary">This color applies to the filled battery ring and percentage. Dark/light variants follow the status-bar foreground; priority is critical, low/power-save, charging, then system foreground.</string>
     <string name="status_combo_style_one_color_apply">Apply</string>
     <string name="status_combo_style_one_color_cancel">Cancel</string>
     <string name="status_combo_style_one_group_appearance">Appearance</string>

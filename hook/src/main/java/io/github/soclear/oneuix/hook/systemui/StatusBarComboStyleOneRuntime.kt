@@ -981,6 +981,8 @@ object StatusBarComboStyleOneRuntime {
         }
         // Alpha hides the stock meter while preserving the slot's measured size;
         // INVISIBLE/GONE on every shade transition triggers an unnecessary layout.
+        val originalVisibility = host.original[view] ?: View.VISIBLE
+        if (view.visibility != originalVisibility) view.visibility = originalVisibility
         if (view.alpha != 0f) view.alpha = 0f
     }
 

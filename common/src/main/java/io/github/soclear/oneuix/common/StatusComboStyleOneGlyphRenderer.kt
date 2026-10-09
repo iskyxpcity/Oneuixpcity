@@ -192,7 +192,7 @@ object StatusComboStyleOneGlyphRenderer {
                 val size = fitTextSize(level.toString(), requestedSize, config.valueWeight, clear)
                 drawTextFitted(canvas, level.toString(), cx,
                     if (valueInCentre) centerBaseline(size) else gapBaseline(size),
-                    size, config.valueWeight, tint, clear)
+                    size, config.valueWeight, batteryColor, clear)
             }
         }
 
@@ -353,7 +353,7 @@ object StatusComboStyleOneGlyphRenderer {
         }
         if (config.showValue) {
             drawTextFitted(canvas, level.toString(), offsetX + 59.5f, 94f,
-                valueSizeCanvasUnits(config) * 1.38f, config.valueWeight, tint, 78f)
+                valueSizeCanvasUnits(config) * 1.38f, config.valueWeight, active, 78f)
         }
     }
 
