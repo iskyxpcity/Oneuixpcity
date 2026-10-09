@@ -185,9 +185,6 @@ object StatusBarComboStyleOneRuntime {
             StatusComboStyleOneGlyphRenderer.draw(
                 canvas, width, height, currentConfig, drawState,
             )
-            if (currentState.charging && currentConfig.chargingDisplayMode == 1) {
-                postInvalidateDelayed(5_000L)
-            }
         }
     }
 
@@ -1324,6 +1321,9 @@ object StatusBarComboStyleOneRuntime {
         if (next != previous) {
             state = next
             invalidateGlyphs()
+        }
+        if (previous.charging != state.charging) {
+            syncChargingRotationTicker()
         }
     }
 

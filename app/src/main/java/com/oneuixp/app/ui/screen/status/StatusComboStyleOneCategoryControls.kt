@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button as MaterialButton
@@ -148,6 +149,7 @@ fun StatusComboStyleOneCategoryControls(
         }
     }, {
         SwitchItem(
+            icon = null,
             title = stringResource(R.string.status_combo_style_one_enable),
             summary = stringResource(R.string.status_combo_style_one_enable_summary),
             checked = runtime.enabled,
@@ -172,7 +174,7 @@ fun StatusComboStyleOneCategoryControls(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         tabs.forEachIndexed { index, label ->
-            StyleOneBackgroundButton(
+            StyleOneTabButton(
                 label = label,
                 selected = selectedTab == index,
                 modifier = Modifier.weight(1f).height(44.dp),
@@ -187,6 +189,7 @@ fun StatusComboStyleOneCategoryControls(
                 StyleOneInfoItem(title = stringResource(R.string.status_combo_style_one_group_appearance))
             }, {
                 SelectItem(
+                    icon = null,
                     title = stringResource(R.string.status_combo_style_one_style),
                     summary = stringResource(R.string.status_combo_style_one_style_summary),
                     entries = listOf(
@@ -200,6 +203,7 @@ fun StatusComboStyleOneCategoryControls(
                 )
             }, {
                 SwitchItem(
+                    icon = null,
                     title = stringResource(R.string.status_combo_style_one_overlay),
                     summary = stringResource(R.string.status_combo_style_one_overlay_summary),
                     checked = runtime.overlayGlyph,
@@ -207,6 +211,7 @@ fun StatusComboStyleOneCategoryControls(
                 )
             }, {
                 SwitchItem(
+                    icon = null,
                     title = stringResource(R.string.status_combo_style_one_show_wifi),
                     summary = stringResource(R.string.status_combo_style_one_show_wifi_summary),
                     checked = runtime.showWifi,
@@ -214,6 +219,7 @@ fun StatusComboStyleOneCategoryControls(
                 )
             }, {
                 SwitchItem(
+                    icon = null,
                     title = stringResource(R.string.status_combo_style_one_show_mobile),
                     summary = stringResource(R.string.status_combo_style_one_show_mobile_summary),
                     checked = runtime.showMobile,
@@ -221,6 +227,7 @@ fun StatusComboStyleOneCategoryControls(
                 )
             }, {
                 SwitchItem(
+                    icon = null,
                     title = stringResource(R.string.status_combo_style_one_dual_sim),
                     summary = stringResource(R.string.status_combo_style_one_dual_sim_summary),
                     checked = runtime.dualSim,
@@ -228,6 +235,7 @@ fun StatusComboStyleOneCategoryControls(
                 )
             }, {
                 SwitchItem(
+                    icon = null,
                     title = stringResource(R.string.status_combo_style_one_show_value),
                     summary = stringResource(R.string.status_combo_style_one_show_value_summary),
                     checked = runtime.showValue,
@@ -235,6 +243,7 @@ fun StatusComboStyleOneCategoryControls(
                 )
             }, {
                 SelectItem(
+                    icon = null,
                     title = stringResource(R.string.status_combo_style_one_signal_mode),
                     summary = stringResource(R.string.status_combo_style_one_signal_mode_summary),
                     entries = listOf(
@@ -246,6 +255,7 @@ fun StatusComboStyleOneCategoryControls(
                 )
             }, {
                 SwitchItem(
+                    icon = null,
                     title = stringResource(R.string.status_combo_style_one_stacked_signal),
                     summary = stringResource(R.string.status_combo_style_one_stacked_signal_summary),
                     checked = runtime.stackedSignal,
@@ -253,6 +263,7 @@ fun StatusComboStyleOneCategoryControls(
                 )
             }, {
                 SwitchItem(
+                    icon = null,
                     title = stringResource(R.string.status_combo_style_one_data_sim_only),
                     summary = stringResource(R.string.status_combo_style_one_data_sim_only_summary),
                     checked = runtime.dataSimOnly,
@@ -260,6 +271,7 @@ fun StatusComboStyleOneCategoryControls(
                 )
             }, {
                 SwitchItem(
+                    icon = null,
                     title = stringResource(R.string.status_combo_style_one_show_bolt),
                     summary = stringResource(R.string.status_combo_style_one_show_bolt_summary),
                     checked = runtime.showBolt,
@@ -267,6 +279,7 @@ fun StatusComboStyleOneCategoryControls(
                 )
             }, {
                 SelectItem(
+                    icon = null,
                     title = stringResource(R.string.status_combo_style_one_charging_display),
                     summary = stringResource(R.string.status_combo_style_one_charging_display_summary),
                     entries = listOf(
@@ -280,6 +293,7 @@ fun StatusComboStyleOneCategoryControls(
                 )
             }, {
                 SelectItem(
+                    icon = null,
                     title = stringResource(R.string.status_combo_style_one_mobile_type_mode),
                     summary = stringResource(R.string.status_combo_style_one_mobile_type_mode_summary),
                     entries = listOf(
@@ -294,6 +308,7 @@ fun StatusComboStyleOneCategoryControls(
                 )
             }, {
                 SwitchItem(
+                    icon = null,
                     title = stringResource(R.string.status_combo_style_one_value_centred),
                     summary = stringResource(R.string.status_combo_style_one_value_centred_summary),
                     checked = runtime.valueCentred,
@@ -305,6 +320,7 @@ fun StatusComboStyleOneCategoryControls(
                 StyleOneInfoItem(title = stringResource(R.string.status_combo_style_one_group_advanced))
             }, {
                 SwitchItem(
+                    icon = null,
                     title = stringResource(R.string.status_combo_style_one_debug_log),
                     summary = stringResource(R.string.status_combo_style_one_debug_log_summary),
                     checked = runtime.debugLog,
@@ -428,6 +444,7 @@ fun StatusComboStyleOneCategoryControls(
             val colorItems = mutableListOf<@Composable () -> Unit>()
             colorItems += {
                 SwitchItem(
+                    icon = null,
                     title = stringResource(R.string.status_combo_style_one_role_colors),
                     summary = stringResource(R.string.status_combo_style_one_role_colors_summary),
                     checked = runtime.roleColors,
@@ -608,6 +625,48 @@ private fun StyleOneRoleColorRow(
                 }
             }
             Text("›", style = Material3Theme.typography.titleLarge)
+        }
+    }
+}
+
+@Composable
+private fun StyleOneTabButton(
+    label: String,
+    selected: Boolean,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit,
+) {
+    when (LocalUiMode.current) {
+        UiMode.Material -> MaterialButton(
+            onClick = onClick,
+            modifier = modifier,
+            shape = RoundedCornerShape(12.dp),
+            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+            colors = MaterialButtonDefaults.buttonColors(
+                containerColor = if (selected) Material3Theme.colorScheme.primaryContainer
+                    else Material3Theme.colorScheme.surfaceContainerHigh,
+                contentColor = if (selected) Material3Theme.colorScheme.onPrimaryContainer
+                    else Material3Theme.colorScheme.onSurfaceVariant,
+            ),
+        ) {
+            Text(text = label, style = Material3Theme.typography.labelLarge)
+        }
+        UiMode.Miuix -> MiuixButton(
+            onClick = onClick,
+            modifier = modifier,
+            colors = if (selected) {
+                MiuixButtonDefaults.buttonColors(
+                    color = MiuixTheme.colorScheme.primary,
+                    contentColor = MiuixTheme.colorScheme.onPrimary,
+                )
+            } else {
+                MiuixButtonDefaults.buttonColors(
+                    color = MiuixTheme.colorScheme.surfaceContainerHigh,
+                    contentColor = MiuixTheme.colorScheme.onSurfaceContainerHigh,
+                )
+            },
+        ) {
+            MiuixText(text = label)
         }
     }
 }
