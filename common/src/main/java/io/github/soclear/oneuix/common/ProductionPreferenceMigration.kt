@@ -50,12 +50,12 @@ object ProductionPreferenceMigration {
                 val oldGap = statusBar["doubleLineClockGapDp"]?.toString()?.toFloatOrNull() ?: 1f
                 updatedStatusBar["modifyDoubleLineClockGap"] = JsonPrimitive(oldGap != 1f)
             }
-            // Roll back the earlier automatic 100% -> 90% default conversion. The
-            // renderer now applies a 0.9 physical-size factor, so 100% preserves the
-            // previous default appearance. This migration runs only once.
+            // One-time migrations for the Three-in-One size defaults.
             val comboRuntime = statusBar["comboStyleOneRuntime"] as? JsonObject
             if (comboRuntime != null) {
                 val updatedComboRuntime = comboRuntime.toMutableMap()
+                var comboRuntimeChanged = false
+
                 val newDefaultMigrationDone =
                     (updatedComboRuntime["glyphScaleDefault100MigrationDone"] as? JsonPrimitive)
                         ?.content?.toBooleanStrictOrNull() == true
@@ -69,6 +69,20 @@ object ProductionPreferenceMigration {
                     }
                     updatedComboRuntime["glyphScaleDefaultMigrationDone"] = JsonPrimitive(true)
                     updatedComboRuntime["glyphScaleDefault100MigrationDone"] = JsonPrimitive(true)
+                    comboRuntimeChanged = true
+                }
+
+                val marginMigrationDone =
+                    (updatedComboRuntime["outSignalMarginDefaultMigrationDone"] as? JsonPrimitive)
+                        ?.content?.toBooleanStrictOrNull() == true
+                if (!marginMigrationDone) {
+                    val oldMargin = updatedComboRuntime["outSignalMarginDp"]?.toString()?.toIntOrNull() ?: 2
+                    if (oldMargin == 2) updatedComboRuntime["outSignalMarginDp"] = JsonPrimitive(8)
+                    updatedComboRuntime["outSignalMarginDefaultMigrationDone"] = JsonPrimitive(true)
+                    comboRuntimeChanged = true
+                }
+
+                if (comboRuntimeChanged) {
                     updatedStatusBar["comboStyleOneRuntime"] = JsonObject(updatedComboRuntime)
                 }
             }

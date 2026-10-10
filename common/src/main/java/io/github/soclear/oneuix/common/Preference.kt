@@ -206,6 +206,8 @@ data class Preference(
             val chargingColorLightArgb: Int = 0xFF1F8F3D.toInt(),
             val lowColorDarkArgb: Int = 0xFFF2B900.toInt(),
             val lowColorLightArgb: Int = 0xFFC99700.toInt(),
+            val powerSaveFillColorDarkArgb: Int = 0xBFFFC107.toInt(),
+            val powerSaveFillColorLightArgb: Int = 0xBFFFC107.toInt(),
             val lowThreshold: Int = 20,
             // HyperDuo's critical cutoff is fixed at 20%; retain the key for
             // saved-setting compatibility but sanitize it to this upstream value.
@@ -219,7 +221,8 @@ data class Preference(
             val outSignalSizeDp: Int = 15,
             val outTypeMarginLeftDp: Int = 2,
             val outTypeMarginRightDp: Int = 2,
-            val outSignalMarginDp: Int = 2,
+            val outSignalMarginDp: Int = 8,
+            val outSignalMarginDefaultMigrationDone: Boolean = false,
             val typeSuffixScale: Int = 65,
             val typeWeight: Int = 700,
             val trackAlpha: Int = 56,

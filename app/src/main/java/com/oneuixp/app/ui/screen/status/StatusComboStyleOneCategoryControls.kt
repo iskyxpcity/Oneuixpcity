@@ -1,11 +1,16 @@
 package com.oneuixp.app.ui.screen.status
 
 import android.content.Intent
+import android.graphics.Color as AndroidColor
+import android.os.SystemClock
 import android.view.HapticFeedbackConstants
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -29,11 +34,16 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -64,7 +74,6 @@ import com.oneuixp.app.ui.LocalUiMode
 import com.oneuixp.app.ui.UiMode
 import top.yukonga.miuix.kmp.basic.Button as MiuixButton
 import top.yukonga.miuix.kmp.basic.ButtonDefaults as MiuixButtonDefaults
-import top.yukonga.miuix.kmp.basic.ColorPalette
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
 import top.yukonga.miuix.kmp.basic.TabRow as MiuixTabRow
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -88,6 +97,10 @@ fun StatusComboStyleOneCategoryControls(
     var previewRuntime by remember(runtime) { mutableStateOf(runtime) }
     var confirmResetColors by remember { mutableStateOf(false) }
     var editingColorRole by remember { mutableStateOf<StyleOneColorRole?>(null) }
+    // Keep drag edits in memory. Apply performs the single persistent write; previews
+    // sent to SystemUI are throttled instead of broadcasting for every pointer sample.
+    val colorPreviewDraft = remember(runtime) { arrayOf(runtime) }
+    val lastColorPreviewAt = remember { longArrayOf(0L) }
 
     fun preview(next: Preference.SystemUI.StatusBarComboStyleOneRuntime) {
         previewRuntime = next.copy(criticalThreshold = 20)
@@ -118,6 +131,16 @@ fun StatusComboStyleOneCategoryControls(
     fun previewAndPersist(next: Preference.SystemUI.StatusBarComboStyleOneRuntime) {
         preview(next)
         persist(next)
+    }
+
+    fun previewColorDraft(role: StyleOneColorRole, onDarkBackground: Boolean, colorArgb: Int) {
+        val next = colorPreviewDraft[0].withRoleColor(role, onDarkBackground, colorArgb)
+        colorPreviewDraft[0] = next
+        val now = SystemClock.uptimeMillis()
+        if (now - lastColorPreviewAt[0] >= 48L) {
+            preview(next)
+            lastColorPreviewAt[0] = now
+        }
     }
 
     var ringStroke by remember(runtime.ringStroke) { mutableIntStateOf(runtime.ringStroke.coerceIn(4, 16)) }
@@ -318,7 +341,7 @@ fun StatusComboStyleOneCategoryControls(
                         darkColor = runtime.lowColorDarkArgb,
                         lightColor = runtime.lowColorLightArgb,
                         enabled = runtime.enabled && runtime.roleColors,
-                        onClick = { editingColorRole = StyleOneColorRole.Low },
+                        onClick = { colorPreviewDraft[0] = runtime; editingColorRole = StyleOneColorRole.Low },
                     )
                 }
                 colorItems += {
@@ -328,7 +351,7 @@ fun StatusComboStyleOneCategoryControls(
                         darkColor = runtime.chargingColorDarkArgb,
                         lightColor = runtime.chargingColorLightArgb,
                         enabled = runtime.enabled && runtime.roleColors,
-                        onClick = { editingColorRole = StyleOneColorRole.Charging },
+                        onClick = { colorPreviewDraft[0] = runtime; editingColorRole = StyleOneColorRole.Charging },
                     )
                 }
                 colorItems += {
@@ -338,7 +361,20 @@ fun StatusComboStyleOneCategoryControls(
                         darkColor = runtime.criticalColorDarkArgb,
                         lightColor = runtime.criticalColorLightArgb,
                         enabled = runtime.enabled && runtime.roleColors,
-                        onClick = { editingColorRole = StyleOneColorRole.Critical },
+                        onClick = { colorPreviewDraft[0] = runtime; editingColorRole = StyleOneColorRole.Critical },
+                    )
+                }
+                colorItems += {
+                    StyleOneRoleColorRow(
+                        title = stringResource(StyleOneColorRole.PowerSaveFill.titleRes),
+                        summary = stringResource(R.string.status_combo_style_one_power_save_fill_color_summary),
+                        darkColor = runtime.powerSaveFillColorDarkArgb,
+                        lightColor = runtime.powerSaveFillColorLightArgb,
+                        enabled = runtime.enabled,
+                        onClick = {
+                            colorPreviewDraft[0] = runtime
+                            editingColorRole = StyleOneColorRole.PowerSaveFill
+                        },
                     )
                 }
                 colorItems += {
@@ -347,8 +383,8 @@ fun StatusComboStyleOneCategoryControls(
                             title = stringResource(R.string.status_combo_style_one_reset_colors),
                         summary = stringResource(R.string.status_combo_style_one_reset_colors_summary),
                         modifier = Modifier
-                            .alpha(if (runtime.enabled && runtime.roleColors) 1f else 0.45f)
-                            .clickable(enabled = runtime.enabled && runtime.roleColors) { confirmResetColors = true },
+                            .alpha(if (runtime.enabled) 1f else 0.45f)
+                            .clickable(enabled = runtime.enabled) { confirmResetColors = true },
                         trailingContent = {
                             Text("›", style = Material3Theme.typography.titleLarge)
                         },
@@ -372,6 +408,8 @@ fun StatusComboStyleOneCategoryControls(
                                 chargingColorLightArgb = 0xFF1F8F3D.toInt(),
                                 lowColorDarkArgb = 0xFFF2B900.toInt(),
                                 lowColorLightArgb = 0xFFC99700.toInt(),
+                                powerSaveFillColorDarkArgb = 0xBFFFC107.toInt(),
+                                powerSaveFillColorLightArgb = 0xBFFFC107.toInt(),
                             )
                         )
                         confirmResetColors = false
@@ -389,10 +427,24 @@ fun StatusComboStyleOneCategoryControls(
                     summary = stringResource(R.string.status_combo_style_one_color_dialog_summary),
                     darkColorArgb = runtime.colorForRole(role, onDarkBackground = true),
                     lightColorArgb = runtime.colorForRole(role, onDarkBackground = false),
-                    onColorChange = { onDark, color ->
-                        previewAndPersist(runtime.withRoleColor(role, onDark, color))
+                    onColorPreview = { onDark, color -> previewColorDraft(role, onDark, color) },
+                    onApply = { dark, light ->
+                        val next = runtime.withRoleColor(role, true, dark)
+                            .withRoleColor(role, false, light)
+                        previewAndPersist(next)
+                        colorPreviewDraft[0] = next
+                        editingColorRole = null
                     },
-                    onDismiss = { editingColorRole = null },
+                    onCancel = {
+                        preview(runtime)
+                        colorPreviewDraft[0] = runtime
+                        editingColorRole = null
+                    },
+                    onDismiss = {
+                        preview(runtime)
+                        colorPreviewDraft[0] = runtime
+                        editingColorRole = null
+                    },
                 )
             }
         }
@@ -404,6 +456,7 @@ private enum class StyleOneColorRole(val titleRes: Int) {
     Low(R.string.status_combo_style_one_color_low),
     Charging(R.string.status_combo_style_one_color_charging),
     Critical(R.string.status_combo_style_one_color_critical),
+    PowerSaveFill(R.string.status_combo_style_one_color_power_save_fill),
 }
 
 private fun Preference.SystemUI.StatusBarComboStyleOneRuntime.colorForRole(
@@ -413,6 +466,8 @@ private fun Preference.SystemUI.StatusBarComboStyleOneRuntime.colorForRole(
     StyleOneColorRole.Low -> if (onDarkBackground) lowColorDarkArgb else lowColorLightArgb
     StyleOneColorRole.Charging -> if (onDarkBackground) chargingColorDarkArgb else chargingColorLightArgb
     StyleOneColorRole.Critical -> if (onDarkBackground) criticalColorDarkArgb else criticalColorLightArgb
+    StyleOneColorRole.PowerSaveFill ->
+        if (onDarkBackground) powerSaveFillColorDarkArgb else powerSaveFillColorLightArgb
 }
 
 private fun Preference.SystemUI.StatusBarComboStyleOneRuntime.withRoleColor(
@@ -423,6 +478,8 @@ private fun Preference.SystemUI.StatusBarComboStyleOneRuntime.withRoleColor(
     StyleOneColorRole.Low -> if (onDarkBackground) copy(lowColorDarkArgb = colorArgb) else copy(lowColorLightArgb = colorArgb)
     StyleOneColorRole.Charging -> if (onDarkBackground) copy(chargingColorDarkArgb = colorArgb) else copy(chargingColorLightArgb = colorArgb)
     StyleOneColorRole.Critical -> if (onDarkBackground) copy(criticalColorDarkArgb = colorArgb) else copy(criticalColorLightArgb = colorArgb)
+    StyleOneColorRole.PowerSaveFill ->
+        if (onDarkBackground) copy(powerSaveFillColorDarkArgb = colorArgb) else copy(powerSaveFillColorLightArgb = colorArgb)
 }
 
 @Composable
@@ -525,16 +582,20 @@ private fun StyleOneRoleColorDialog(
     summary: String,
     darkColorArgb: Int,
     lightColorArgb: Int,
-    onColorChange: (Boolean, Int) -> Unit,
+    onColorPreview: (Boolean, Int) -> Unit,
+    onApply: (Int, Int) -> Unit,
+    onCancel: () -> Unit,
     onDismiss: () -> Unit,
 ) {
     var onDark by remember(roleTitle) { mutableStateOf(true) }
+    var draftDarkColor by remember(roleTitle) { mutableIntStateOf(darkColorArgb) }
+    var draftLightColor by remember(roleTitle) { mutableIntStateOf(lightColorArgb) }
 
     @Composable
     fun PickerContent() {
         Column(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -553,11 +614,32 @@ private fun StyleOneRoleColorDialog(
                     onClick = { onDark = false },
                 )
             }
-            ColorPalette(
-                color = Color(if (onDark) darkColorArgb else lightColorArgb),
-                onColorChanged = { onColorChange(onDark, it.toArgb()) },
+
+            StyleOneColorPalette(
+                colorArgb = if (onDark) draftDarkColor else draftLightColor,
+                onColorChanged = { color ->
+                    if (onDark) draftDarkColor = color else draftLightColor = color
+                    onColorPreview(onDark, color)
+                },
                 modifier = Modifier.fillMaxWidth(),
             )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                OneuiXActionButton(
+                    text = stringResource(R.string.status_combo_style_one_color_cancel),
+                    onClick = onCancel,
+                    modifier = Modifier.weight(1f),
+                )
+                OneuiXActionButton(
+                    text = stringResource(R.string.status_combo_style_one_color_apply),
+                    onClick = { onApply(draftDarkColor, draftLightColor) },
+                    modifier = Modifier.weight(1f),
+                    primary = true,
+                )
+            }
         }
     }
 
@@ -586,6 +668,217 @@ private fun StyleOneRoleColorDialog(
                 }
             },
         )
+    }
+}
+
+@Composable
+private fun StyleOneColorPalette(
+    colorArgb: Int,
+    onColorChanged: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val hsv = remember(colorArgb) {
+        FloatArray(3).also { AndroidColor.colorToHSV(colorArgb, it) }
+    }
+    val alpha = AndroidColor.alpha(colorArgb)
+
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(24.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .background(Color(colorArgb))
+                .border(1.dp, Color(0x55000000), RoundedCornerShape(8.dp)),
+        )
+        StyleOneSaturationValuePicker(
+            colorArgb = colorArgb,
+            onColorChange = onColorChanged,
+        )
+        StyleOnePickerLabel(stringResource(R.string.status_combo_style_one_color_hue, hsv[0].roundToInt()))
+        StyleOneHueSlider(
+            hue = hsv[0],
+            onHueChange = { hue ->
+                onColorChanged(
+                    AndroidColor.HSVToColor(
+                        alpha,
+                        floatArrayOf(hue.coerceIn(0f, 360f), hsv[1], hsv[2]),
+                    ),
+                )
+            },
+        )
+        StyleOnePickerLabel(
+            stringResource(
+                R.string.status_combo_style_one_color_opacity,
+                (alpha * 100f / 255f).roundToInt(),
+            ),
+        )
+        StyleOneAlphaSlider(
+            colorArgb = colorArgb,
+            onAlphaChange = { nextAlpha ->
+                onColorChanged(
+                    AndroidColor.HSVToColor(
+                        nextAlpha.coerceIn(0, 255),
+                        floatArrayOf(hsv[0], hsv[1], hsv[2]),
+                    ),
+                )
+            },
+        )
+    }
+}
+
+@Composable
+private fun StyleOnePickerLabel(text: String) {
+    when (LocalUiMode.current) {
+        UiMode.Material -> Text(text = text, style = Material3Theme.typography.bodySmall)
+        UiMode.Miuix -> MiuixText(
+            text = text,
+            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+        )
+    }
+}
+
+@Composable
+private fun StyleOneSaturationValuePicker(
+    colorArgb: Int,
+    onColorChange: (Int) -> Unit,
+) {
+    val hsv = remember(colorArgb) {
+        FloatArray(3).also { AndroidColor.colorToHSV(colorArgb, it) }
+    }
+    val hue = hsv[0]
+    val alpha = AndroidColor.alpha(colorArgb)
+    val saturation = hsv[1]
+    val value = hsv[2]
+
+    fun select(position: Offset, width: Float, height: Float) {
+        if (width <= 0f || height <= 0f) return
+        val nextSaturation = (position.x / width).coerceIn(0f, 1f)
+        val nextValue = (1f - position.y / height).coerceIn(0f, 1f)
+        onColorChange(AndroidColor.HSVToColor(alpha, floatArrayOf(hue, nextSaturation, nextValue)))
+    }
+
+    Canvas(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(156.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .pointerInput(hue, alpha) {
+                detectTapGestures { select(it, size.width.toFloat(), size.height.toFloat()) }
+            }
+            .pointerInput(hue, alpha) {
+                detectDragGestures(
+                    onDragStart = { select(it, size.width.toFloat(), size.height.toFloat()) },
+                    onDrag = { change, _ ->
+                        select(change.position, size.width.toFloat(), size.height.toFloat())
+                        change.consume()
+                    },
+                )
+            },
+    ) {
+        drawRect(brush = Brush.horizontalGradient(listOf(Color.White, Color.hsv(hue, 1f, 1f))))
+        drawRect(brush = Brush.verticalGradient(listOf(Color.Transparent, Color.Black)))
+        val marker = Offset(
+            x = saturation.coerceIn(0f, 1f) * size.width,
+            y = (1f - value.coerceIn(0f, 1f)) * size.height,
+        )
+        drawCircle(Color.Black.copy(alpha = 0.72f), 9.dp.toPx(), marker, style = Stroke(width = 3.dp.toPx()))
+        drawCircle(Color.White, 8.dp.toPx(), marker, style = Stroke(width = 2.dp.toPx()))
+    }
+}
+
+@Composable
+private fun StyleOneHueSlider(
+    hue: Float,
+    onHueChange: (Float) -> Unit,
+) {
+    val currentOnChange = rememberUpdatedState(onHueChange)
+    val colors = listOf(Color.Red, Color.Yellow, Color.Green, Color.Cyan, Color.Blue, Color.Magenta, Color.Red)
+    Canvas(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(24.dp)
+            .clip(CircleShape)
+            .pointerInput(Unit) {
+                fun select(x: Float) {
+                    if (size.width > 0) currentOnChange.value((x / size.width).coerceIn(0f, 1f) * 360f)
+                }
+                detectTapGestures { select(it.x) }
+            }
+            .pointerInput(Unit) {
+                fun select(x: Float) {
+                    if (size.width > 0) currentOnChange.value((x / size.width).coerceIn(0f, 1f) * 360f)
+                }
+                detectDragGestures(
+                    onDragStart = { select(it.x) },
+                    onDrag = { change, _ -> select(change.position.x); change.consume() },
+                )
+            },
+    ) {
+        drawRoundRect(
+            brush = Brush.horizontalGradient(colors),
+            cornerRadius = CornerRadius(size.height / 2f, size.height / 2f),
+        )
+        val x = hue.coerceIn(0f, 360f) / 360f * size.width
+        drawCircle(Color.Black.copy(alpha = 0.72f), 10.dp.toPx(), Offset(x, size.height / 2f))
+        drawCircle(Color.White, 8.dp.toPx(), Offset(x, size.height / 2f))
+    }
+}
+
+@Composable
+private fun StyleOneAlphaSlider(
+    colorArgb: Int,
+    onAlphaChange: (Int) -> Unit,
+) {
+    val currentOnChange = rememberUpdatedState(onAlphaChange)
+    val alpha = AndroidColor.alpha(colorArgb)
+    val red = AndroidColor.red(colorArgb)
+    val green = AndroidColor.green(colorArgb)
+    val blue = AndroidColor.blue(colorArgb)
+    val transparent = Color(red / 255f, green / 255f, blue / 255f, 0f)
+    val opaque = Color(red / 255f, green / 255f, blue / 255f, 1f)
+
+    Canvas(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(24.dp)
+            .clip(CircleShape)
+            .pointerInput(Unit) {
+                fun select(x: Float) {
+                    if (size.width > 0) currentOnChange.value((x / size.width).coerceIn(0f, 1f).times(255f).roundToInt())
+                }
+                detectTapGestures { select(it.x) }
+            }
+            .pointerInput(Unit) {
+                fun select(x: Float) {
+                    if (size.width > 0) currentOnChange.value((x / size.width).coerceIn(0f, 1f).times(255f).roundToInt())
+                }
+                detectDragGestures(
+                    onDragStart = { select(it.x) },
+                    onDrag = { change, _ -> select(change.position.x); change.consume() },
+                )
+            },
+    ) {
+        val cellSize = 8.dp.toPx()
+        val columns = (size.width / cellSize).toInt() + 1
+        val rows = (size.height / cellSize).toInt() + 1
+        for (row in 0 until rows) for (column in 0 until columns) {
+            drawRect(
+                color = if ((row + column) % 2 == 0) Color(0xFFE0E0E0) else Color(0xFF9E9E9E),
+                topLeft = Offset(column * cellSize, row * cellSize),
+                size = androidx.compose.ui.geometry.Size(cellSize, cellSize),
+            )
+        }
+        drawRoundRect(
+            brush = Brush.horizontalGradient(listOf(transparent, opaque)),
+            cornerRadius = CornerRadius(size.height / 2f, size.height / 2f),
+        )
+        val x = alpha / 255f * size.width
+        drawCircle(Color.Black.copy(alpha = 0.72f), 10.dp.toPx(), Offset(x, size.height / 2f))
+        drawCircle(Color.White, 8.dp.toPx(), Offset(x, size.height / 2f))
     }
 }
 

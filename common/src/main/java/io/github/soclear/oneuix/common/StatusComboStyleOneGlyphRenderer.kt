@@ -68,7 +68,6 @@ object StatusComboStyleOneGlyphRenderer {
     private const val BOLT_CX_REF = 59.45f
     private const val BOLT_SCALE = 2.0f
     private const val QUICK_CHARGE = 0xFF2196F3.toInt()
-    private const val POWER_SAVE_FILL = 0xFFFFC107.toInt()
 
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val rect = RectF()
@@ -179,13 +178,17 @@ object StatusComboStyleOneGlyphRenderer {
         // Charging color has priority; by default the bolt replaces the percentage.
         // The optional alternate mode swaps the two glyphs every five seconds.
         val bolt = config.showBolt && state.charging && !alternateChargingPhase
+        // Outside network-type mode disables the 5-second swap, not the battery value.
         val showBatteryValue = config.showValue &&
-            (!state.charging || alternateChargingPhase || !config.showBolt || centredBatteryValue)
+            (!state.charging || alternateChargingPhase || !config.showBolt ||
+                centredBatteryValue || config.mobileTypeMode == 2)
         val inRingSignal = config.showMobile && config.signalMode == 0
         val dualRows = config.dualSim && !config.dataSimOnly && inRingSignal &&
             state.simOneLevel >= 0 && state.simTwoLevel >= 0 && !wifiInk && !state.charging
         val valueInCentre = showBatteryValue &&
-            (config.valueCentred || dualRows || (!wifiInk && innerType == null))
+            (config.valueCentred || dualRows ||
+                (config.trioStyle == 0 && config.mobileTypeMode == 2) ||
+                (!wifiInk && innerType == null))
         val valueInGap = showBatteryValue && !valueInCentre && !bolt
         val wifiInGap = wifiInk && config.valueCentred && !bolt
         val typeInCentre = innerType != null && !wifiInk && !valueInCentre
@@ -221,7 +224,14 @@ object StatusComboStyleOneGlyphRenderer {
                 bolt, innerType, showBatteryValue,
             )
         } else {
-            if (state.powerSave) drawPowerSaveRingFill(canvas, cx, config.ringStroke)
+            if (state.powerSave) {
+                val powerSaveFillColor = if (luminance(tint) > 0.5f) {
+                    config.powerSaveFillColorDarkArgb
+                } else {
+                    config.powerSaveFillColorLightArgb
+                }
+                drawPowerSaveRingFill(canvas, cx, config.ringStroke, powerSaveFillColor)
+            }
             drawBatteryRing(canvas, cx, level, batteryColor, track, config.ringStroke, gapStart, gapEnd)
             if (wifiInk && (!config.valueCentred || wifiInGap)) {
                 drawWifi(canvas, offsetX, tint, state.wifiLevel, config.arcStroke, wifiInGap)
@@ -492,11 +502,14 @@ object StatusComboStyleOneGlyphRenderer {
     }
 
     /** Draws a power-save fill inset from the inner edge of the battery ring. */
-    private fun drawPowerSaveRingFill(canvas: Canvas, cx: Float, configuredStroke: Int) {
+    private fun drawPowerSaveRingFill(
+        canvas: Canvas, cx: Float, configuredStroke: Int, colorArgb: Int,
+    ) {
         val stroke = configuredStroke.coerceIn(4, 16).toFloat()
+        // Preserve the existing extra inner inset so the fill never touches the ring stroke.
         val innerRadius = (B_R - stroke / 2f - 1f - HEIGHT / 36f).coerceAtLeast(0f)
         paint.style = Paint.Style.FILL
-        paint.color = withAlpha(POWER_SAVE_FILL, (255f * 0.75f).roundToInt())
+        paint.color = colorArgb
         canvas.drawCircle(cx, B_CY, innerRadius, paint)
     }
 
