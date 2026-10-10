@@ -33,9 +33,10 @@ object StatusComboStyleOneGlyphRenderer {
     private const val HEIGHT = 120f
     private const val DUAL_BOTTOM_HEIGHT = 150f
     // Row 1 sits inside the ring's bottom opening; row 2 hugs it directly underneath.
-    private const val DUAL_BOTTOM_ROW_ONE_Y = 112f
+    // The first row sits slightly inside the bottom opening instead of hanging below the ring.
+    private const val DUAL_BOTTOM_ROW_ONE_Y = 106f
     private const val DUAL_BOTTOM_SINGLE_ROW_Y = 120.25f
-    private const val DUAL_BOTTOM_ROW_TWO_Y = 128.5f
+    private const val DUAL_BOTTOM_ROW_TWO_Y = 122.5f
     private const val WIDE_OFFSET = 144.5f
     // Outside-type-only mode should not reserve the unused signal-pillars lane.
     private const val TYPE_ONLY_SHIFT = 60f
@@ -242,6 +243,7 @@ object StatusComboStyleOneGlyphRenderer {
             bolt -> contentGapRange(
                 27f * config.chargingBoltSizePercent.coerceIn(50, 180) / 100f,
                 config.ringStroke,
+                extraClearance = 3f,
             )
             wifiInGap -> contentGapRange(43f, config.ringStroke)
             valueInGap -> contentGapRange(
@@ -280,21 +282,21 @@ object StatusComboStyleOneGlyphRenderer {
                 when {
                     dualRows -> {
                         // Existing mode: one SIM row above and one below the ring center.
-                        drawDotRow(canvas, offsetX, state.simOneLevel, tint, track, DUAL_DOT_R, true)
-                        drawDotRow(canvas, offsetX, state.simTwoLevel, tint, track, DUAL_DOT_R, false)
+                        drawDotRow(canvas, offsetX, state.simOneLevel, tint, track, DUAL_DOT_R, true, config)
+                        drawDotRow(canvas, offsetX, state.simTwoLevel, tint, track, DUAL_DOT_R, false, config)
                     }
                     dualBottomRows -> {
                         // Alternative mode: reserve real canvas height and place both SIM rows
                         // underneath the ring, outside the battery stroke.
-                        drawBottomDualDotRow(canvas, offsetX, state.simOneLevel, tint, track, DUAL_BOTTOM_ROW_ONE_Y)
-                        drawBottomDualDotRow(canvas, offsetX, state.simTwoLevel, tint, track, DUAL_BOTTOM_ROW_TWO_Y)
+                        drawBottomDualDotRow(canvas, offsetX, state.simOneLevel, tint, track, DUAL_BOTTOM_ROW_ONE_Y, config)
+                        drawBottomDualDotRow(canvas, offsetX, state.simTwoLevel, tint, track, DUAL_BOTTOM_ROW_TWO_Y, config)
                     }
                     dualBottomLayout -> {
                         // If the device only exposes the active data-SIM level, keep that
                         // single row under the ring rather than leaving the new layout blank.
-                        drawBottomDualDotRow(canvas, offsetX, state.mobileLevel, tint, track, DUAL_BOTTOM_SINGLE_ROW_Y)
+                        drawBottomDualDotRow(canvas, offsetX, state.mobileLevel, tint, track, DUAL_BOTTOM_SINGLE_ROW_Y, config)
                     }
-                    else -> drawSingleSignalDots(canvas, offsetX, state.mobileLevel, tint, track)
+                    else -> drawSingleSignalDots(canvas, offsetX, state.mobileLevel, tint, track, config)
                 }
             }
             if (typeInCentre && innerType != null) {
@@ -433,33 +435,60 @@ object StatusComboStyleOneGlyphRenderer {
         paint.strokeCap = Paint.Cap.BUTT
     }
 
-    private fun drawSingleSignalDots(canvas: Canvas, offsetX: Float, level: Int, color: Int, track: Int) {
+    private fun dotCoordinateScale(config: StatusBarComboStyleOneRuntime): Float =
+        HEIGHT / (36f * 0.9f) / (config.glyphScalePercent.coerceIn(70, 150) / 100f)
+
+    private fun dotHorizontalOffset(config: StatusBarComboStyleOneRuntime): Float =
+        config.signalDotOffsetXDp.coerceIn(-8, 8) * dotCoordinateScale(config)
+
+    private fun dotVerticalOffset(config: StatusBarComboStyleOneRuntime): Float =
+        config.signalDotOffsetYDp.coerceIn(-8, 8) * dotCoordinateScale(config)
+
+    private fun dotRadius(config: StatusBarComboStyleOneRuntime, baseRadius: Float): Float =
+        baseRadius * config.signalDotSizePercent.coerceIn(50, 150) / 100f
+
+    private fun dotCenterX(config: StatusBarComboStyleOneRuntime, index: Int): Float {
+        val pitch = config.signalDotSpacingDp.coerceIn(3, 8) * (HEIGHT / (36f * 0.9f))
+        return B_CX + (index - 1.5f) * pitch + dotHorizontalOffset(config)
+    }
+
+    private fun drawSingleSignalDots(
+        canvas: Canvas, offsetX: Float, level: Int, color: Int, track: Int,
+        config: StatusBarComboStyleOneRuntime,
+    ) {
+        val radius = dotRadius(config, DOT_R)
+        val offsetY = dotVerticalOffset(config)
         dots.forEachIndexed { index, dot ->
             paint.style = Paint.Style.FILL
             paint.color = if (index < level.coerceIn(0, 4)) color else track
-            canvas.drawCircle(offsetX + dot[0], dot[1], DOT_R, paint)
+            canvas.drawCircle(offsetX + dotCenterX(config, index), dot[1] + offsetY, radius, paint)
         }
     }
 
     private fun drawDotRow(
         canvas: Canvas, offsetX: Float, level: Int, color: Int, track: Int,
-        radius: Float, topRow: Boolean,
+        radius: Float, topRow: Boolean, config: StatusBarComboStyleOneRuntime,
     ) {
+        val resolvedRadius = dotRadius(config, radius)
+        val offsetY = dotVerticalOffset(config)
         dots.forEachIndexed { index, point ->
-            val y = if (topRow) 2f * B_CY - point[1] else point[1]
+            val y = (if (topRow) 2f * B_CY - point[1] else point[1]) + offsetY
             paint.style = Paint.Style.FILL
             paint.color = if (index < level.coerceIn(0, 4)) color else track
-            canvas.drawCircle(offsetX + point[0], y, radius, paint)
+            canvas.drawCircle(offsetX + dotCenterX(config, index), y, resolvedRadius, paint)
         }
     }
 
     private fun drawBottomDualDotRow(
         canvas: Canvas, offsetX: Float, level: Int, color: Int, track: Int, y: Float,
+        config: StatusBarComboStyleOneRuntime,
     ) {
-        dots.forEachIndexed { index, point ->
+        val radius = dotRadius(config, DOT_R)
+        val resolvedY = y + dotVerticalOffset(config)
+        dots.forEachIndexed { index, _ ->
             paint.style = Paint.Style.FILL
             paint.color = if (index < level.coerceIn(0, 4)) color else track
-            canvas.drawCircle(offsetX + point[0], y, DOT_R, paint)
+            canvas.drawCircle(offsetX + dotCenterX(config, index), resolvedY, radius, paint)
         }
     }
 
@@ -691,9 +720,12 @@ object StatusComboStyleOneGlyphRenderer {
         return if (maxWidth > 0f && width > maxWidth) requested * maxWidth / width else requested
     }
 
-    private fun contentGapRange(contentWidth: Float, stroke: Int): Pair<Float, Float> {
-        // Include the ring stroke and a small optical clearance on both sides.
-        val chord = (contentWidth + stroke.coerceIn(4, 16) + 7f).coerceIn(12f, B_R * 1.65f)
+    private fun contentGapRange(
+        contentWidth: Float, stroke: Int, extraClearance: Float = 0f,
+    ): Pair<Float, Float> {
+        // Include the ring stroke and an optical clearance on both sides. Charging gets
+        // a tiny extra allowance so the bolt does not feel cramped in the opening.
+        val chord = (contentWidth + stroke.coerceIn(4, 16) + 7f + extraClearance).coerceIn(12f, B_R * 1.65f)
         val halfAngle = Math.toDegrees(kotlin.math.asin((chord / (2f * B_R)).coerceIn(0f, 0.95f).toDouble()))
         val fraction = (2.0 * halfAngle / B_SWEEP).toFloat().coerceIn(0.06f, 0.42f)
         val start = (1f - fraction) / 2f

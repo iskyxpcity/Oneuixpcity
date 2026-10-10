@@ -147,4 +147,13 @@
     <string name="status_combo_style_one_glyph_left_margin_summary">Current %1$d dp: reserve spacing on the left of the composite icon.</string>
     <string name="status_combo_style_one_glyph_right_margin_summary">Current %1$d dp: reserve spacing on the right of the composite icon.</string>
     <string name="status_combo_style_one_group_overall_size">Overall size</string>
+    <string name="status_combo_style_one_group_signal_dots">Signal dots</string>
+    <string name="status_combo_style_one_signal_dot_size">Signal dot size</string>
+    <string name="status_combo_style_one_signal_dot_size_summary">Current %1$d%%: scale of the ring-style signal dots.</string>
+    <string name="status_combo_style_one_signal_dot_spacing">Signal dot spacing</string>
+    <string name="status_combo_style_one_signal_dot_spacing_summary">Current %1$d dp: centre-to-centre spacing of horizontal ring signal dots at 100%% overall size.</string>
+    <string name="status_combo_style_one_signal_dot_offset_x">Dot horizontal offset</string>
+    <string name="status_combo_style_one_signal_dot_offset_x_summary">Current %1$d dp: shift ring signal dots horizontally; positive values move right.</string>
+    <string name="status_combo_style_one_signal_dot_offset_y">Dot vertical offset</string>
+    <string name="status_combo_style_one_signal_dot_offset_y_summary">Current %1$d dp: shift ring signal dots vertically; positive values move down.</string>
 </resources>

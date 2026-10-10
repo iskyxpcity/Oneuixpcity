@@ -167,6 +167,10 @@ fun StatusComboStyleOneCategoryControls(
     var trackAlpha by remember(runtime.trackAlpha) {
         mutableIntStateOf((runtime.trackAlpha * 100f / 255f).roundToInt())
     }
+    var signalDotSize by remember(runtime.signalDotSizePercent) { mutableIntStateOf(runtime.signalDotSizePercent.coerceIn(50, 150)) }
+    var signalDotSpacing by remember(runtime.signalDotSpacingDp) { mutableIntStateOf(runtime.signalDotSpacingDp.coerceIn(3, 8)) }
+    var signalDotOffsetX by remember(runtime.signalDotOffsetXDp) { mutableIntStateOf(runtime.signalDotOffsetXDp.coerceIn(-8, 8)) }
+    var signalDotOffsetY by remember(runtime.signalDotOffsetYDp) { mutableIntStateOf(runtime.signalDotOffsetYDp.coerceIn(-8, 8)) }
 
     StatusThemeGroup(
         items = listOf({
@@ -276,6 +280,7 @@ fun StatusComboStyleOneCategoryControls(
         }
         1 -> {
             // Overall size, offsets and gaps all affect the complete glyph.
+            val ringDotsEnabled = runtime.enabled && runtime.trioStyle == 0 && runtime.showMobile && runtime.signalMode == 0
             StatusThemeGroup(title = stringResource(R.string.status_combo_style_one_group_overall_size), titleAlignedToContent = true, items = listOf({
                 styleOneSlider(stringResource(R.string.status_combo_style_one_glyph_scale), stringResource(R.string.status_combo_style_one_percent_summary, glyphScale), glyphScale.toFloat(), 70f..150f, { glyphScale = it.roundToInt(); preview(runtime.copy(glyphScalePercent = glyphScale)) }, { final -> persist(runtime.copy(glyphScalePercent = final.roundToInt())) }, enabled = runtime.enabled)
             }, {
@@ -286,6 +291,15 @@ fun StatusComboStyleOneCategoryControls(
                 styleOneSlider(stringResource(R.string.status_combo_style_one_glyph_left_margin), stringResource(R.string.status_combo_style_one_glyph_left_margin_summary, glyphLeftMargin), glyphLeftMargin.toFloat(), 0f..16f, { glyphLeftMargin = it.roundToInt(); preview(runtime.copy(glyphLeftMarginDp = glyphLeftMargin)) }, { final -> persist(runtime.copy(glyphLeftMarginDp = final.roundToInt())) }, enabled = runtime.enabled)
             }, {
                 styleOneSlider(stringResource(R.string.status_combo_style_one_glyph_right_margin), stringResource(R.string.status_combo_style_one_glyph_right_margin_summary, glyphRightMargin), glyphRightMargin.toFloat(), 0f..16f, { glyphRightMargin = it.roundToInt(); preview(runtime.copy(glyphRightMarginDp = glyphRightMargin)) }, { final -> persist(runtime.copy(glyphRightMarginDp = final.roundToInt())) }, enabled = runtime.enabled)
+            }))
+            StatusThemeGroup(title = stringResource(R.string.status_combo_style_one_group_signal_dots), titleAlignedToContent = true, items = listOf({
+                styleOneSlider(stringResource(R.string.status_combo_style_one_signal_dot_size), stringResource(R.string.status_combo_style_one_signal_dot_size_summary, signalDotSize), signalDotSize.toFloat(), 50f..150f, { signalDotSize = it.roundToInt(); preview(runtime.copy(signalDotSizePercent = signalDotSize)) }, { final -> persist(runtime.copy(signalDotSizePercent = final.roundToInt())) }, enabled = ringDotsEnabled)
+            }, {
+                styleOneSlider(stringResource(R.string.status_combo_style_one_signal_dot_spacing), stringResource(R.string.status_combo_style_one_signal_dot_spacing_summary, signalDotSpacing), signalDotSpacing.toFloat(), 3f..8f, { signalDotSpacing = it.roundToInt(); preview(runtime.copy(signalDotSpacingDp = signalDotSpacing)) }, { final -> persist(runtime.copy(signalDotSpacingDp = final.roundToInt())) }, enabled = ringDotsEnabled)
+            }, {
+                styleOneSlider(stringResource(R.string.status_combo_style_one_signal_dot_offset_x), stringResource(R.string.status_combo_style_one_signal_dot_offset_x_summary, signalDotOffsetX), signalDotOffsetX.toFloat(), -8f..8f, { signalDotOffsetX = it.roundToInt(); preview(runtime.copy(signalDotOffsetXDp = signalDotOffsetX)) }, { final -> persist(runtime.copy(signalDotOffsetXDp = final.roundToInt())) }, enabled = ringDotsEnabled)
+            }, {
+                styleOneSlider(stringResource(R.string.status_combo_style_one_signal_dot_offset_y), stringResource(R.string.status_combo_style_one_signal_dot_offset_y_summary, signalDotOffsetY), signalDotOffsetY.toFloat(), -8f..8f, { signalDotOffsetY = it.roundToInt(); preview(runtime.copy(signalDotOffsetYDp = signalDotOffsetY)) }, { final -> persist(runtime.copy(signalDotOffsetYDp = final.roundToInt())) }, enabled = ringDotsEnabled)
             }))
             StatusThemeGroup(title = stringResource(R.string.status_combo_style_one_group_stroke), titleAlignedToContent = true, items = listOf({
                 styleOneSlider(stringResource(if (runtime.trioStyle == 1) R.string.status_combo_style_one_ring_stroke_rect else R.string.status_combo_style_one_ring_stroke), stringResource(if (runtime.trioStyle == 1) R.string.status_combo_style_one_ring_stroke_summary_rect else R.string.status_combo_style_one_ring_stroke_summary, ringStroke), ringStroke.toFloat(), 4f..16f, { ringStroke = it.roundToInt(); preview(runtime.copy(ringStroke = ringStroke)) }, { final -> persist(runtime.copy(ringStroke = final.roundToInt())) }, enabled = runtime.enabled)

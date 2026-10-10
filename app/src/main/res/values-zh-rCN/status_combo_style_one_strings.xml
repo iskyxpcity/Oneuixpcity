@@ -147,4 +147,13 @@
     <string name="status_combo_style_one_glyph_left_margin_summary">当前 %1$d dp：在组合图标左侧为相邻状态栏图标预留的间距。</string>
     <string name="status_combo_style_one_glyph_right_margin_summary">当前 %1$d dp：在组合图标右侧为相邻状态栏图标预留的间距。</string>
     <string name="status_combo_style_one_group_overall_size">整体尺寸</string>
+    <string name="status_combo_style_one_group_signal_dots">信号圆点</string>
+    <string name="status_combo_style_one_signal_dot_size">信号圆点大小</string>
+    <string name="status_combo_style_one_signal_dot_size_summary">当前 %1$d%%：圆环样式下信号圆点的缩放比例。</string>
+    <string name="status_combo_style_one_signal_dot_spacing">信号圆点间距</string>
+    <string name="status_combo_style_one_signal_dot_spacing_summary">当前 %1$d dp：横向相邻圆点的中心间距，以图标整体大小 100%% 为基准。</string>
+    <string name="status_combo_style_one_signal_dot_offset_x">圆点水平偏移</string>
+    <string name="status_combo_style_one_signal_dot_offset_x_summary">当前 %1$d dp：调整圆环样式信号圆点的水平位置；正值向右移动。</string>
+    <string name="status_combo_style_one_signal_dot_offset_y">圆点垂直偏移</string>
+    <string name="status_combo_style_one_signal_dot_offset_y_summary">当前 %1$d dp：调整圆环样式信号圆点的垂直位置；正值向下移动。</string>
 </resources>
