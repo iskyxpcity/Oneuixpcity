@@ -50,6 +50,20 @@ object ProductionPreferenceMigration {
                 val oldGap = statusBar["doubleLineClockGapDp"]?.toString()?.toFloatOrNull() ?: 1f
                 updatedStatusBar["modifyDoubleLineClockGap"] = JsonPrimitive(oldGap != 1f)
             }
+            // Convert the previous default scale of 100% to 90% once. The marker
+            // prevents later starts from overriding an explicit 100% preference.
+            val comboRuntime = statusBar["comboStyleOneRuntime"] as? JsonObject
+            if (comboRuntime != null) {
+                val updatedComboRuntime = comboRuntime.toMutableMap()
+                val migrationDone = (updatedComboRuntime["glyphScaleDefaultMigrationDone"] as? JsonPrimitive)
+                    ?.content?.toBooleanStrictOrNull() == true
+                if (!migrationDone) {
+                    val oldScale = updatedComboRuntime["glyphScalePercent"]?.toString()?.toIntOrNull() ?: 100
+                    if (oldScale == 100) updatedComboRuntime["glyphScalePercent"] = JsonPrimitive(90)
+                    updatedComboRuntime["glyphScaleDefaultMigrationDone"] = JsonPrimitive(true)
+                    updatedStatusBar["comboStyleOneRuntime"] = JsonObject(updatedComboRuntime)
+                }
+            }
             if (updatedStatusBar != statusBar) {
                 updatedSystemUI["statusBar"] = JsonObject(updatedStatusBar)
                 changed = true
