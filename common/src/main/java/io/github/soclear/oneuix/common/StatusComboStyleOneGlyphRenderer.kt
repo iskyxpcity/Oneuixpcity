@@ -7,6 +7,7 @@ import android.graphics.Path
 import android.graphics.RectF
 import android.graphics.Typeface
 import io.github.soclear.oneuix.common.Preference.SystemUI.StatusBarComboStyleOneRuntime
+import kotlin.math.PI
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
@@ -37,6 +38,7 @@ object StatusComboStyleOneGlyphRenderer {
     private const val DUAL_BOTTOM_ROW_ONE_Y = 106f
     private const val DUAL_BOTTOM_SINGLE_ROW_Y = 120.25f
     private const val DUAL_BOTTOM_ROW_TWO_Y = 122.5f
+    private const val DUAL_BOTTOM_DOT_RAISE_DP = 3f
     private const val WIDE_OFFSET = 144.5f
     // Outside-type-only mode should not reserve the unused signal-pillars lane.
     private const val TYPE_ONLY_SHIFT = 60f
@@ -183,6 +185,11 @@ object StatusComboStyleOneGlyphRenderer {
         val signalWidth = outsideSignalWidth(config)
         val designWidth = designWidth(config)
         val designHeight = designHeight(config)
+        // Add 1dp to the bottom opening only in the dual-SIM-below-ring layout.
+        // Convert dp to arc degrees using this icon's actual rendered dp height.
+        val bottomOpeningExtraDegrees = if (dualBottomLayout) {
+            designHeight / (glyphHeightDp(config).toFloat() * B_R) * (180f / PI.toFloat())
+        } else 0f
         val scale = height / designHeight
         if (scale <= 0f) return
         val save = canvas.save()
@@ -274,7 +281,10 @@ object StatusComboStyleOneGlyphRenderer {
                 drawPowerSaveRingFill(canvas, cx, config.ringStroke, powerSaveFillColor)
             }
             // The native ring path already leaves its opening at the bottom; keep it unrotated.
-            drawBatteryRing(canvas, cx, level, batteryColor, track, config.ringStroke, gapStart, gapEnd)
+            drawBatteryRing(
+                canvas, cx, level, batteryColor, track, config.ringStroke, gapStart, gapEnd,
+                bottomOpeningExtraDegrees,
+            )
             if (wifiInk && (!config.valueCentred || wifiInGap)) {
                 drawWifi(canvas, offsetX, tint, state.wifiLevel, config.arcStroke, wifiInGap)
             }
@@ -356,18 +366,22 @@ object StatusComboStyleOneGlyphRenderer {
 
     private fun drawBatteryRing(
         canvas: Canvas, cx: Float, level: Int, active: Int, track: Int,
-        stroke: Int, gapStart: Float, gapEnd: Float,
+        stroke: Int, gapStart: Float, gapEnd: Float, extraBottomOpeningDegrees: Float,
     ) {
+        val openingExtra = extraBottomOpeningDegrees.coerceAtLeast(0f)
+        // Keep the top of the ring anchored while splitting the extra opening evenly across both ends.
+        val ringStart = B_START + openingExtra / 2f
+        val ringSweep = (B_SWEEP - openingExtra).coerceAtLeast(1f)
         rect.set(cx - B_R, B_CY - B_R, cx + B_R, B_CY + B_R)
         paint.style = Paint.Style.STROKE
         paint.strokeWidth = stroke.coerceIn(4, 16).toFloat()
         paint.strokeCap = Paint.Cap.ROUND
         paint.strokeJoin = Paint.Join.ROUND
         paint.color = track
-        drawRingProgress(canvas, cx, 0f, 1f, gapStart, gapEnd)
+        drawRingProgress(canvas, cx, 0f, 1f, gapStart, gapEnd, ringStart, ringSweep)
         if (level > 0) {
             paint.color = active
-            drawRingProgress(canvas, cx, 0f, level / 100f, gapStart, gapEnd)
+            drawRingProgress(canvas, cx, 0f, level / 100f, gapStart, gapEnd, ringStart, ringSweep)
         }
         paint.style = Paint.Style.FILL
         paint.strokeCap = Paint.Cap.BUTT
@@ -375,6 +389,7 @@ object StatusComboStyleOneGlyphRenderer {
 
     private fun drawRingProgress(
         canvas: Canvas, cx: Float, from: Float, to: Float, gapStart: Float, gapEnd: Float,
+        ringStart: Float, ringSweep: Float,
     ) {
         val start = gapStart.coerceIn(0f, 1f)
         val end = gapEnd.coerceIn(0f, 1f)
@@ -383,16 +398,20 @@ object StatusComboStyleOneGlyphRenderer {
         val visibleFrom = from.coerceIn(0f, 1f) * drawn
         val visibleTo = to.coerceIn(0f, 1f) * drawn
         val firstEnd = min(visibleTo, start)
-        if (firstEnd > visibleFrom) drawArcByProgress(canvas, cx, visibleFrom, firstEnd)
+        if (firstEnd > visibleFrom) drawArcByProgress(canvas, cx, visibleFrom, firstEnd, ringStart, ringSweep)
         val secondFrom = max(visibleFrom, start)
         if (visibleTo > secondFrom) {
-            drawArcByProgress(canvas, cx, end + secondFrom - start, end + visibleTo - start)
+            drawArcByProgress(
+                canvas, cx, end + secondFrom - start, end + visibleTo - start, ringStart, ringSweep,
+            )
         }
     }
 
-    private fun drawArcByProgress(canvas: Canvas, cx: Float, from: Float, to: Float) {
+    private fun drawArcByProgress(
+        canvas: Canvas, cx: Float, from: Float, to: Float, ringStart: Float, ringSweep: Float,
+    ) {
         rect.set(cx - B_R, B_CY - B_R, cx + B_R, B_CY + B_R)
-        canvas.drawArc(rect, B_START + from * B_SWEEP, (to - from) * B_SWEEP, false, paint)
+        canvas.drawArc(rect, ringStart + from * ringSweep, (to - from) * ringSweep, false, paint)
     }
 
     private fun drawWifi(
@@ -484,7 +503,9 @@ object StatusComboStyleOneGlyphRenderer {
         config: StatusBarComboStyleOneRuntime,
     ) {
         val radius = dotRadius(config, DOT_R)
-        val resolvedY = y + dotVerticalOffset(config)
+        // Raise the selected below-ring signal layout by 3dp while preserving its user offset slider.
+        val resolvedY = y + dotVerticalOffset(config) -
+            DUAL_BOTTOM_DOT_RAISE_DP * DUAL_BOTTOM_HEIGHT / glyphHeightDp(config).toFloat()
         dots.forEachIndexed { index, _ ->
             paint.style = Paint.Style.FILL
             paint.color = if (index < level.coerceIn(0, 4)) color else track
