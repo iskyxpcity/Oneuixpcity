@@ -33,6 +33,7 @@ object StatusComboStyleOneGlyphRenderer {
     private const val HEIGHT = 120f
     private const val DUAL_BOTTOM_HEIGHT = 144f
     private const val DUAL_BOTTOM_ROW_ONE_Y = 127f
+    private const val DUAL_BOTTOM_SINGLE_ROW_Y = 131f
     private const val DUAL_BOTTOM_ROW_TWO_Y = 135f
     private const val DUAL_BOTTOM_DOT_R = 3.2f
     private const val WIDE_OFFSET = 144.5f
@@ -219,7 +220,8 @@ object StatusComboStyleOneGlyphRenderer {
             state.simOneLevel >= 0 && state.simTwoLevel >= 0
         val dualRows = dualSimMode == 1 && dualLevelsAvailable && inRingSignal &&
             !wifiInk && !state.charging
-        val dualBottomRows = dualSimMode == 2 && dualLevelsAvailable && inRingSignal
+        val dualBottomLayout = dualSimMode == 2 && !config.dataSimOnly && inRingSignal
+        val dualBottomRows = dualBottomLayout && dualLevelsAvailable
         val valueInCentre = showBatteryValue &&
             (config.valueCentred || dualRows ||
                 (!wifiInk && config.trioStyle == 0 && config.mobileTypeMode != 1) ||
@@ -283,6 +285,11 @@ object StatusComboStyleOneGlyphRenderer {
                         // underneath the ring, outside the battery stroke.
                         drawBottomDualDotRow(canvas, offsetX, state.simOneLevel, tint, track, DUAL_BOTTOM_ROW_ONE_Y)
                         drawBottomDualDotRow(canvas, offsetX, state.simTwoLevel, tint, track, DUAL_BOTTOM_ROW_TWO_Y)
+                    }
+                    dualBottomLayout -> {
+                        // If the device only exposes the active data-SIM level, keep that
+                        // single row under the ring rather than leaving the new layout blank.
+                        drawBottomDualDotRow(canvas, offsetX, state.mobileLevel, tint, track, DUAL_BOTTOM_SINGLE_ROW_Y)
                     }
                     else -> drawSingleSignalDots(canvas, offsetX, state.mobileLevel, tint, track)
                 }
