@@ -196,7 +196,7 @@ object StatusComboStyleOneGlyphRenderer {
             state.simOneLevel >= 0 && state.simTwoLevel >= 0 && !wifiInk && !state.charging
         val valueInCentre = showBatteryValue &&
             (config.valueCentred || dualRows ||
-                (config.trioStyle == 0 && config.mobileTypeMode != 1) ||
+                (!wifiInk && config.trioStyle == 0 && config.mobileTypeMode != 1) ||
                 (!wifiInk && innerType == null))
         val valueInGap = showBatteryValue && !valueInCentre && !bolt
         val wifiInGap = wifiInk && config.valueCentred && !bolt
