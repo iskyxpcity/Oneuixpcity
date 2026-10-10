@@ -173,7 +173,7 @@ object StatusComboStyleOneGlyphRenderer {
         }
         val centredBatteryValue = config.trioStyle == 0 && config.valueCentred
         val shouldAlternateCharging = state.charging && config.showBolt && config.showValue &&
-            !centredBatteryValue && config.mobileTypeMode != 2 && config.chargingDisplayMode == 1
+            !centredBatteryValue && config.mobileTypeMode == 1 && config.chargingDisplayMode == 1
         val alternateChargingPhase = shouldAlternateCharging && state.chargingAlternatePhase
         // Charging color has priority; by default the bolt replaces the percentage.
         // The optional alternate mode swaps the two glyphs every five seconds.
@@ -181,13 +181,13 @@ object StatusComboStyleOneGlyphRenderer {
         // Outside network-type mode disables the 5-second swap, not the battery value.
         val showBatteryValue = config.showValue &&
             (!state.charging || alternateChargingPhase || !config.showBolt ||
-                centredBatteryValue || config.mobileTypeMode == 2)
+                centredBatteryValue || config.mobileTypeMode != 1)
         val inRingSignal = config.showMobile && config.signalMode == 0
         val dualRows = config.dualSim && !config.dataSimOnly && inRingSignal &&
             state.simOneLevel >= 0 && state.simTwoLevel >= 0 && !wifiInk && !state.charging
         val valueInCentre = showBatteryValue &&
             (config.valueCentred || dualRows ||
-                (config.trioStyle == 0 && config.mobileTypeMode == 2) ||
+                (config.trioStyle == 0 && config.mobileTypeMode != 1) ||
                 (!wifiInk && innerType == null))
         val valueInGap = showBatteryValue && !valueInCentre && !bolt
         val wifiInGap = wifiInk && config.valueCentred && !bolt

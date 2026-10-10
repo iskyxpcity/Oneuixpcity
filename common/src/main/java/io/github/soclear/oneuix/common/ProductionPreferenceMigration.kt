@@ -72,13 +72,20 @@ object ProductionPreferenceMigration {
                     comboRuntimeChanged = true
                 }
 
-                val marginMigrationDone =
-                    (updatedComboRuntime["outSignalMarginDefaultMigrationDone"] as? JsonPrimitive)
+                val marginResetTo2MigrationDone =
+                    (updatedComboRuntime["outSignalMarginReset2MigrationDone"] as? JsonPrimitive)
                         ?.content?.toBooleanStrictOrNull() == true
-                if (!marginMigrationDone) {
+                if (!marginResetTo2MigrationDone) {
+                    val previousBuild1406MarginMigration =
+                        (updatedComboRuntime["outSignalMarginDefaultMigrationDone"] as? JsonPrimitive)
+                            ?.content?.toBooleanStrictOrNull() == true
                     val oldMargin = updatedComboRuntime["outSignalMarginDp"]?.toString()?.toIntOrNull() ?: 2
-                    if (oldMargin == 2) updatedComboRuntime["outSignalMarginDp"] = JsonPrimitive(8)
-                    updatedComboRuntime["outSignalMarginDefaultMigrationDone"] = JsonPrimitive(true)
+                    // Build #1406 mistakenly migrated the old 2dp default to 8dp.
+                    // Undo only that value once; preserve other intentionally chosen margins.
+                    if (previousBuild1406MarginMigration && oldMargin == 8) {
+                        updatedComboRuntime["outSignalMarginDp"] = JsonPrimitive(2)
+                    }
+                    updatedComboRuntime["outSignalMarginReset2MigrationDone"] = JsonPrimitive(true)
                     comboRuntimeChanged = true
                 }
 

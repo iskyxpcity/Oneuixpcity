@@ -66,7 +66,7 @@
     <string name="status_combo_style_one_out_signal_size">Outside signal graphic height</string>
     <string name="status_combo_style_one_out_type_margin_left">Outside network type left margin</string>
     <string name="status_combo_style_one_out_type_margin_right">Outside network type right margin</string>
-    <string name="status_combo_style_one_out_signal_margin">Outside signal margin</string>
+    <string name="status_combo_style_one_out_signal_margin">Gap between outside signal and ring</string>
     <string name="status_combo_style_one_role_colors">State colors</string>
     <string name="status_combo_style_one_role_colors_summary">Pick colors for low battery, charging and critical battery.</string>
     <string name="status_combo_style_one_critical_threshold">Critical battery threshold</string>
@@ -134,7 +134,7 @@
     <string name="status_combo_style_one_out_type_margin_right_summary">Current %1$d dp: right gap around the outside network-type label.</string>
     <string name="status_combo_style_one_type_weight_summary">Current weight %1$d: 100 is thinnest and 900 is heaviest; available when a network-type label is shown.</string>
     <string name="status_combo_style_one_out_signal_size_summary">Current %1$d dp: overall height of the outside signal reading. Requires mobile signal, Outside placement and stacked signal.</string>
-    <string name="status_combo_style_one_out_signal_margin_summary">Current %1$d dp: reserved gap between the outside signal reading and the battery. Requires stacked outside signal.</string>
+    <string name="status_combo_style_one_out_signal_margin_summary">Current %1$d dp: adjusts the gap between the battery ring and the outside signal bars or network-type label; it does not resize the glyphs. Requires stacked outside signal.</string>
     <string name="status_combo_style_one_track_alpha_summary">Current %1$d%%: opacity of inactive arcs and signal graphics.</string>
     <string name="status_combo_style_one_bolt_size_summary">Current %1$d%%: scale of the charging bolt; requires both the battery number and charging bolt to be enabled.</string>
     <string name="status_combo_style_one_bolt_x_summary">Current %1$d dp: horizontal position of the charging bolt; positive values move right.</string>

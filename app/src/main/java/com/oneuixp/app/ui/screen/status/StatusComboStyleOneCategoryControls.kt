@@ -561,7 +561,7 @@ private fun StyleOneBackgroundButton(
             onClick = onClick,
             modifier = modifier,
             colors = if (selected) {
-                MiuixButtonDefaults.buttonColors()
+                MiuixButtonDefaults.buttonColorsPrimary()
             } else {
                 MiuixButtonDefaults.buttonColors(
                     color = MiuixTheme.colorScheme.surfaceContainerHigh,
