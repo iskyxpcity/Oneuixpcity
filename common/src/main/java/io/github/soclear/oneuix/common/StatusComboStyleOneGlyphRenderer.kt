@@ -271,10 +271,8 @@ object StatusComboStyleOneGlyphRenderer {
                 }
                 drawPowerSaveRingFill(canvas, cx, config.ringStroke, powerSaveFillColor)
             }
-            drawBatteryRing(
-                canvas, cx, level, batteryColor, track, config.ringStroke, gapStart, gapEnd,
-                gapAtBottom = dualBottomLayout,
-            )
+            // The native ring path already leaves its opening at the bottom; keep it unrotated.
+            drawBatteryRing(canvas, cx, level, batteryColor, track, config.ringStroke, gapStart, gapEnd)
             if (wifiInk && (!config.valueCentred || wifiInGap)) {
                 drawWifi(canvas, offsetX, tint, state.wifiLevel, config.arcStroke, wifiInGap)
             }
@@ -356,22 +354,19 @@ object StatusComboStyleOneGlyphRenderer {
 
     private fun drawBatteryRing(
         canvas: Canvas, cx: Float, level: Int, active: Int, track: Int,
-        stroke: Int, gapStart: Float, gapEnd: Float, gapAtBottom: Boolean = false,
+        stroke: Int, gapStart: Float, gapEnd: Float,
     ) {
         rect.set(cx - B_R, B_CY - B_R, cx + B_R, B_CY + B_R)
         paint.style = Paint.Style.STROKE
         paint.strokeWidth = stroke.coerceIn(4, 16).toFloat()
         paint.strokeCap = Paint.Cap.ROUND
         paint.strokeJoin = Paint.Join.ROUND
-        val save = canvas.save()
-        if (gapAtBottom) canvas.rotate(180f, cx, B_CY)
         paint.color = track
         drawRingProgress(canvas, cx, 0f, 1f, gapStart, gapEnd)
         if (level > 0) {
             paint.color = active
             drawRingProgress(canvas, cx, 0f, level / 100f, gapStart, gapEnd)
         }
-        canvas.restoreToCount(save)
         paint.style = Paint.Style.FILL
         paint.strokeCap = Paint.Cap.BUTT
     }
