@@ -79,7 +79,7 @@ object StatusBarComboStyleOneRuntime {
     private val chargingRotationTicker = object : Runnable {
         override fun run() {
             if (!config.enabled || config.chargingDisplayMode != 1 ||
-                !config.showBolt || !config.showValue || !state.charging
+                !config.showBolt || !config.showValue || (config.trioStyle == 0 && config.valueCentred) || !state.charging
             ) {
                 if (state.chargingAlternatePhase) {
                     state = state.copy(chargingAlternatePhase = false)
@@ -633,7 +633,7 @@ object StatusBarComboStyleOneRuntime {
     private fun syncChargingRotationTicker() {
         main.removeCallbacks(chargingRotationTicker)
         val shouldRotate = config.enabled && config.chargingDisplayMode == 1 &&
-            config.showBolt && config.showValue && state.charging
+            config.showBolt && config.showValue && !(config.trioStyle == 0 && config.valueCentred) && state.charging
         if (shouldRotate) {
             if (state.chargingAlternatePhase) {
                 state = state.copy(chargingAlternatePhase = false)
@@ -1686,7 +1686,9 @@ object StatusBarComboStyleOneRuntime {
                             if (previous.enabled != next.enabled ||
                                 previous.chargingDisplayMode != next.chargingDisplayMode ||
                                 previous.showBolt != next.showBolt ||
-                                previous.showValue != next.showValue
+                                previous.showValue != next.showValue ||
+                                previous.valueCentred != next.valueCentred ||
+                                previous.trioStyle != next.trioStyle
                             ) syncChargingRotationTicker()
                             if (requiresHostRefresh(previous, next)) {
                                 refreshHosts()

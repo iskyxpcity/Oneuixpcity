@@ -646,9 +646,15 @@ private fun styleOneSlider(
 ) {
     val view = LocalView.current
     var lastStep by remember(title, range.start, range.endInclusive) { mutableFloatStateOf(value) }
+    val sliderContentPadding = when (LocalUiMode.current) {
+        // SegmentedListItem already applies the native horizontal content inset.
+        UiMode.Material -> Modifier
+        // Miuix Card needs a modest inset without a duplicate oversized child margin.
+        UiMode.Miuix -> Modifier.padding(horizontal = 12.dp, vertical = 2.dp)
+    }
     StatusThemeChildItem {
         Column(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp).alpha(if (enabled) 1f else 0.45f),
+            modifier = Modifier.fillMaxWidth().then(sliderContentPadding).alpha(if (enabled) 1f else 0.45f),
             verticalArrangement = Arrangement.spacedBy(2.dp),
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {

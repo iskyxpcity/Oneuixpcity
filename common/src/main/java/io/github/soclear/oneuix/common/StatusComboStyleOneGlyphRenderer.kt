@@ -67,7 +67,7 @@ object StatusComboStyleOneGlyphRenderer {
     private const val BOLT_TOP_REF = 2.2f
     private const val BOLT_CX_REF = 59.45f
     private const val BOLT_SCALE = 2.0f
-    private const val QUICK_CHARGE = 0xFFFFBA28.toInt()
+    private const val QUICK_CHARGE = 0xFF2196F3.toInt()
     private const val POWER_SAVE_FILL = 0xFFFFC107.toInt()
 
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
@@ -131,14 +131,15 @@ object StatusComboStyleOneGlyphRenderer {
         val innerType = state.networkType.trim().uppercase().takeIf {
             config.showMobile && config.mobileTypeMode == 1 && it.isNotEmpty()
         }
+        val centredBatteryValue = config.trioStyle == 0 && config.valueCentred
         val shouldAlternateCharging = state.charging && config.showBolt && config.showValue &&
-            config.chargingDisplayMode == 1
+            !centredBatteryValue && config.chargingDisplayMode == 1
         val alternateChargingPhase = shouldAlternateCharging && state.chargingAlternatePhase
         // Charging color has priority; by default the bolt replaces the percentage.
         // The optional alternate mode swaps the two glyphs every five seconds.
         val bolt = config.showBolt && state.charging && !alternateChargingPhase
         val showBatteryValue = config.showValue &&
-            (!state.charging || alternateChargingPhase || !config.showBolt)
+            (!state.charging || alternateChargingPhase || !config.showBolt || centredBatteryValue)
         val inRingSignal = config.showMobile && config.signalMode == 0
         val dualRows = config.dualSim && !config.dataSimOnly && inRingSignal &&
             state.simOneLevel >= 0 && state.simTwoLevel >= 0 && !wifiInk && !state.charging
@@ -206,7 +207,7 @@ object StatusComboStyleOneGlyphRenderer {
             }
             if (bolt) drawBolt(
                 canvas, offsetX, config,
-                if (config.roleColors) batteryColor else if (state.quickCharge) QUICK_CHARGE else tint,
+                if (state.charging && state.quickCharge) QUICK_CHARGE else tint,
             )
             if (showBatteryValue) {
                 val requestedSize = valueSizeCanvasUnits(config)
@@ -222,7 +223,8 @@ object StatusComboStyleOneGlyphRenderer {
             // The reference mark is 251 units wide at a 209-unit height;
             // its left edge sits at the beginning of the expanded outside-signal box.
             // The requested gap is created by shifting the battery group right.
-            val signalX = 30f
+            val signalScale = config.outSignalSizeDp.coerceIn(6, 20) * 1.15f * (HEIGHT / 36f) / 209f
+            val signalX = 251f * signalScale / 2f
             val primarySlotLevel = if (state.dataSimSlotIndex == 1) state.simTwoLevel else state.simOneLevel
             val secondarySlotLevel = if (state.dataSimSlotIndex == 1) state.simOneLevel else state.simTwoLevel
             val bars = if (config.dataSimOnly) state.mobileLevel
@@ -370,7 +372,7 @@ object StatusComboStyleOneGlyphRenderer {
         when {
             bolt -> drawRectBolt(
                 canvas, offsetX, config,
-                if (config.roleColors && state.charging) active else if (state.quickCharge) QUICK_CHARGE else tint,
+                if (state.charging && state.quickCharge) QUICK_CHARGE else tint,
                 config.arcStroke,
             )
             config.showWifi && state.wifiLevel >= 1 ->
@@ -424,7 +426,7 @@ object StatusComboStyleOneGlyphRenderer {
         // HyperDuo reference geometry: 251 × 209 box, 50-wide capsules at 67-pixel
         // pitch, heights 75/100/125/150, 50-diameter dots and a 9-pixel row gap.
         // Scale the whole box uniformly to avoid taller single-SIM bars.
-        val scale = sizeDp.coerceIn(6, 20) * (HEIGHT / 36f) / 209f
+        val scale = sizeDp.coerceIn(6, 20) * 1.15f * (HEIGHT / 36f) / 209f
         val inkWidth = 251f * scale
         val inkHeight = 209f * scale
         val left = cx - inkWidth / 2f
@@ -453,7 +455,7 @@ object StatusComboStyleOneGlyphRenderer {
         val stroke = configuredStroke.coerceIn(4, 16).toFloat()
         val innerRadius = (B_R - stroke / 2f - 1f).coerceAtLeast(0f)
         paint.style = Paint.Style.FILL
-        paint.color = POWER_SAVE_FILL
+        paint.color = withAlpha(POWER_SAVE_FILL, (255f * 0.75f).roundToInt())
         canvas.drawCircle(cx, B_CY, innerRadius, paint)
     }
 
