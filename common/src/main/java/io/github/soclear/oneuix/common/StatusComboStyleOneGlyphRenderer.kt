@@ -85,14 +85,53 @@ object StatusComboStyleOneGlyphRenderer {
         config.showMobile &&
             (config.mobileTypeMode == 2 || (config.signalMode == 1 && config.stackedSignal))
 
+    fun usesOutsideNetworkTypeLayout(config: StatusBarComboStyleOneRuntime): Boolean =
+        config.showMobile && config.mobileTypeMode == 2
+
+    private fun usesOutsideSignalLayout(config: StatusBarComboStyleOneRuntime): Boolean =
+        config.showMobile && config.signalMode == 1 && config.stackedSignal
+
+    private fun outsideSignalScale(config: StatusBarComboStyleOneRuntime): Float =
+        config.outSignalSizeDp.coerceIn(6, 20) * 1.15f * (HEIGHT / 36f) / 209f
+
+    private fun outsideSignalWidth(config: StatusBarComboStyleOneRuntime): Float =
+        if (usesOutsideSignalLayout(config)) 251f * outsideSignalScale(config) else 0f
+
+    private fun outsideSignalMargin(config: StatusBarComboStyleOneRuntime): Float =
+        if (usesOutsideSignalLayout(config)) config.outSignalMarginDp.coerceIn(0, 16) * (HEIGHT / 36f) else 0f
+
+    private fun designWidth(config: StatusBarComboStyleOneRuntime): Float {
+        val typeLane = usesOutsideNetworkTypeLayout(config)
+        val signalLane = usesOutsideSignalLayout(config)
+        val margin = outsideSignalMargin(config)
+        return when {
+            typeLane -> WIDE_WIDTH + margin
+            signalLane -> outsideSignalWidth(config) + margin + B_CX + B_R
+            else -> COMPACT_WIDTH
+        }
+    }
+
     fun glyphWidthDp(config: StatusBarComboStyleOneRuntime): Int {
         val wide = usesWideLayout(config)
-        val reservesOutsideSignal = wide && config.showMobile &&
-            config.signalMode == 1 && config.stackedSignal
-        val margin = if (reservesOutsideSignal) config.outSignalMarginDp.coerceIn(0, 16) else 0
-        val base = if (wide) 78f + margin else 36f
+        val layoutWidth = designWidth(config)
+        // Keep the container proportionate to the active canvas. With no outer network
+        // type label, the signal-only layout can shrink instead of reserving its lane.
+        val base = if (wide) 78f * layoutWidth / WIDE_WIDTH else 36f
         return (base * 0.9f * config.glyphScalePercent.coerceIn(70, 150) / 100f)
             .roundToInt().coerceAtLeast(20)
+    }
+
+    /** Horizontal anchor of the battery centre within the active glyph bounds. */
+    fun glyphCenterRatio(config: StatusBarComboStyleOneRuntime): Float {
+        val margin = outsideSignalMargin(config)
+        val signalWidth = outsideSignalWidth(config)
+        return when {
+            usesOutsideNetworkTypeLayout(config) ->
+                (B_CX + WIDE_OFFSET + margin) / designWidth(config)
+            usesOutsideSignalLayout(config) ->
+                (B_CX + signalWidth + margin) / designWidth(config)
+            else -> B_CX / COMPACT_WIDTH
+        }
     }
 
     fun glyphHeightDp(config: StatusBarComboStyleOneRuntime): Int =
@@ -110,18 +149,22 @@ object StatusComboStyleOneGlyphRenderer {
         state: StatusComboStyleOneGlyphState,
     ) {
         if (width <= 0 || height <= 0) return
-        val wide = usesWideLayout(config)
-        val extraWideMargin = if (wide && config.showMobile &&
-            config.signalMode == 1 && config.stackedSignal
-        ) config.outSignalMarginDp.coerceIn(0, 16) * (HEIGHT / 36f) else 0f
-        val designWidth = (if (wide) WIDE_WIDTH else COMPACT_WIDTH) + extraWideMargin
+        val outsideType = usesOutsideNetworkTypeLayout(config)
+        val outsideSignal = usesOutsideSignalLayout(config)
+        val extraWideMargin = outsideSignalMargin(config)
+        val signalWidth = outsideSignalWidth(config)
+        val designWidth = designWidth(config)
         val scale = min(width / designWidth, height / HEIGHT)
         if (scale <= 0f) return
         val save = canvas.save()
         canvas.translate((width - designWidth * scale) / 2f, (height - HEIGHT * scale) / 2f)
         canvas.scale(scale, scale)
 
-        val offsetX = if (wide) WIDE_OFFSET + extraWideMargin else 0f
+        val offsetX = when {
+            outsideType -> WIDE_OFFSET + extraWideMargin
+            outsideSignal -> signalWidth + extraWideMargin
+            else -> 0f
+        }
         val cx = B_CX + offsetX
         val level = state.batteryLevel.coerceIn(0, 100)
         val tint = state.tintColor
@@ -223,7 +266,7 @@ object StatusComboStyleOneGlyphRenderer {
             // The reference mark is 251 units wide at a 209-unit height;
             // its left edge sits at the beginning of the expanded outside-signal box.
             // The requested gap is created by shifting the battery group right.
-            val signalScale = config.outSignalSizeDp.coerceIn(6, 20) * 1.15f * (HEIGHT / 36f) / 209f
+            val signalScale = outsideSignalScale(config)
             val signalX = 251f * signalScale / 2f
             val primarySlotLevel = if (state.dataSimSlotIndex == 1) state.simTwoLevel else state.simOneLevel
             val secondarySlotLevel = if (state.dataSimSlotIndex == 1) state.simOneLevel else state.simTwoLevel

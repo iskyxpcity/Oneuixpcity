@@ -650,7 +650,7 @@ private fun styleOneSlider(
         // SegmentedListItem already applies the native horizontal content inset.
         UiMode.Material -> Modifier
         // Miuix Card needs a modest inset without a duplicate oversized child margin.
-        UiMode.Miuix -> Modifier.padding(horizontal = 12.dp, vertical = 2.dp)
+        UiMode.Miuix -> Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
     }
     StatusThemeChildItem {
         Column(

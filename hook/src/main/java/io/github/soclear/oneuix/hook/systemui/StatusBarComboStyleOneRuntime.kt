@@ -253,7 +253,7 @@ object StatusBarComboStyleOneRuntime {
             lp.height = StatusBarComboStyleOneRuntime.dp(app, StatusComboStyleOneGlyphRenderer.glyphHeightDp(cfg))
             val cutout = StatusBarComboStyleOneRuntime.cutoutBounds(root)
             if (cutout != null) {
-                val centreRatio = if (StatusComboStyleOneGlyphRenderer.usesWideLayout(cfg)) 204f / 260f else 59.5f / 120f
+                val centreRatio = StatusComboStyleOneGlyphRenderer.glyphCenterRatio(cfg)
                 lp.x = (cutout.centerX() - lp.width * centreRatio + StatusBarComboStyleOneRuntime.dpExact(app, cfg.glyphOffsetXDp + cfg.glyphLeftMarginDp - cfg.glyphRightMarginDp)).roundToInt().coerceAtLeast(0)
                 val rootPos = IntArray(2)
                 root.getLocationOnScreen(rootPos)
@@ -720,7 +720,10 @@ object StatusBarComboStyleOneRuntime {
 
             views.forEach { view ->
                 if (view === battery || view is GlyphView) return@forEach
-                val hide = (config.showWifi && isWifiIcon(view)) ||
+                // QuickStar hides native indicator views themselves. Hide separate battery
+                // icon views too, but let the meter's own child handler manage nested views.
+                val hide = (isBatteryIcon(view) && !isWithin(battery, view) && !isWithin(view, battery)) ||
+                    (config.showWifi && isWifiIcon(view)) ||
                     (foldMobile && isMobileIcon(view)) ||
                     (config.showMobile && config.mobileTypeMode == 2 && isMobileTypeView(view))
                 if (hide) collapseHostView(host, view) else restoreHostView(host, view)
@@ -1042,12 +1045,18 @@ object StatusBarComboStyleOneRuntime {
         host.original.remove(view)?.let { old -> runCatching { view.visibility = old } }
     }
 
-    private fun collapseNativeChild(view: View) {
-        if (!nativeChildSnapshots.containsKey(view)) snapshotLayout(view)?.let { nativeChildSnapshots[view] = it }
-        // Keep the native child measured and attached. A zero width/height plus
-        // GONE makes MIUI relayout the entire battery subtree on every style
-        // refresh; alpha preserves its geometry and still allows live tint hooks.
-        if (view.alpha != 0f) view.alpha = 0f
+    private fun collapseNativeChild(view: View, hideLayout: Boolean) {
+        if (!nativeChildSnapshots.containsKey(view)) {
+            snapshotLayout(view)?.let { nativeChildSnapshots[view] = it }
+        }
+        if (hideLayout && nativeChildSnapshots.containsKey(view)) {
+            // Samsung's tint callbacks can reset native battery alpha. GONE plus zero
+            // dimensions suppresses the real icon instead of merely making it transparent.
+            collapseViewLayout(view)
+        } else {
+            // Keep MIUI children measured to avoid layout churn around its charging island.
+            if (view.alpha != 0f) view.alpha = 0f
+        }
     }
 
     private fun restoreNativeBatteryViews(root: View) {
@@ -1074,13 +1083,32 @@ object StatusBarComboStyleOneRuntime {
     }
 
     private fun collapseNativeBatteryChildren(meter: ViewGroup) {
+        // Samsung owns a SamsungBatteryMeterDrawable with a child ImageView. Hide it
+        // like the native indicator-visibility toggle; MIUI keeps its children measured.
+        val samsungBatteryMeter = hasNativeField(meter, "mSamsungDrawable", "samsungDrawable")
         listOf(
             "mBatteryIconView", "batteryIconView", "mHollowBatteryIconView", "hollowBatteryIconView",
             "mBatteryChargingView", "mBatteryChargingIconView", "batteryChargingView",
             "mBatteryPercentContainer", "batteryPercentContainer", "mBatteryPercentView", "batteryPercentView",
         ).forEach { name ->
-            fieldView(meter, listOf(name))?.takeIf { it !== meter }?.let(::collapseNativeChild)
+            fieldView(meter, listOf(name))?.takeIf { it !== meter }
+                ?.let { collapseNativeChild(it, samsungBatteryMeter) }
         }
+    }
+
+    private fun hasNativeField(target: Any, vararg names: String): Boolean {
+        var type: Class<*>? = target.javaClass
+        while (type != null) {
+            val current = type
+            val found = runCatching {
+                current.declaredFields.any { field ->
+                    names.any { name -> name.equals(field.name, ignoreCase = true) }
+                }
+            }.getOrDefault(false)
+            if (found) return true
+            type = current.superclass
+        }
+        return false
     }
 
     /**
@@ -1289,7 +1317,7 @@ object StatusBarComboStyleOneRuntime {
                     it.name in setOf(
                         "onFinishInflate", "onAttachedToWindow", "onBatteryLevelChanged",
                         "updateChargeAndText", "updatePercentText", "updateShowPercent",
-                        "scaleBatteryMeterViewsLegacy",
+                        "scaleBatteryMeterViewsLegacy", "scaleBatteryMeterViews", "updateColors", "onDarkChanged",
                     )
                 }.forEach { module.hook(it).intercept(callback) }
             }.onFailure { diagnostic("Battery meter hook unavailable: $className: $it") }
@@ -1321,7 +1349,7 @@ object StatusBarComboStyleOneRuntime {
         val nextLevel = readSignalIntField(meter, "mLevel", "level")
             ?.takeIf { it in 0..100 }
         val nextCharging = readNativeBoolean(meter, "mCharging", "charging")
-        val nextQuickCharging = readNativeBoolean(meter, "mQuickCharging", "quickCharging")
+        val nextQuickCharging = readNativeBoolean(meter, "mQuickCharging", "quickCharging", "mFastCharging", "fastCharging", "mIsFastCharging", "isFastCharging")
         val nextLow = readNativeBoolean(meter, "mLow", "low")
         val nextPowerSave = readNativeBoolean(meter, "mPowerSave", "powerSave")
         val previous = state
@@ -1764,17 +1792,23 @@ object StatusBarComboStyleOneRuntime {
         val scale = intent?.getIntExtra(BatteryManager.EXTRA_SCALE, 100) ?: 100
         val level = if (raw >= 0 && scale > 0) (raw * 100f / scale).toInt() else state.batteryLevel
         val status = intent?.getIntExtra(BatteryManager.EXTRA_STATUS, -1) ?: -1
-        // Plugged/full means connected, not necessarily actively charging.
+        // Samsung SystemUI reads "charger_type" from this BATTERY_CHANGED intent.
+        // Types 3/4/5 map to Samsung's Super Fast charging indicator.
+        val samsungChargerType = intent?.takeIf { it.hasExtra("charger_type") }
+            ?.getIntExtra("charger_type", 0)
+        val samsungSuperFast = samsungChargerType != null && samsungChargerType in 3..5
         val charging = status == BatteryManager.BATTERY_STATUS_CHARGING
         val wasCharging = state.charging
         state = state.copy(
             batteryLevel = level.coerceIn(0, 100),
             charging = charging,
-            quickCharge = charging && quickCharge(),
+            quickCharge = charging && (
+                samsungSuperFast || quickCharge() || (samsungChargerType == null && state.quickCharge)
+            ),
             chargingAlternatePhase = if (charging) state.chargingAlternatePhase else false,
         )
         if (wasCharging != charging) syncChargingRotationTicker()
-        diagnostic("Battery: level=${state.batteryLevel}, charging=${state.charging}, quick=${state.quickCharge}")
+        diagnostic("Battery: level=${state.batteryLevel}, charging=${state.charging}, quick=${state.quickCharge}, chargerType=${samsungChargerType ?: -1}")
     }
     private fun updatePowerSave(context: Context) {
         val manager = context.getSystemService(Context.POWER_SERVICE) as? PowerManager
