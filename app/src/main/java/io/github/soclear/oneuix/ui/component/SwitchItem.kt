@@ -162,7 +162,8 @@ fun SwitchItem(
                             MiuixSwitch(
                                 modifier = Modifier.align(Alignment.CenterVertically),
                                 checked = checked,
-                                onCheckedChange = onCheckedChange,
+                                enabled = enabled,
+                                onCheckedChange = { if (enabled) onCheckedChange(it) },
                             )
                         },
                         onClick = { if (enabled) onCheckedChange(!checked) },
