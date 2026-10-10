@@ -235,8 +235,10 @@ object StatusComboStyleOneGlyphRenderer {
         }
 
         if (wide && config.showMobile && config.signalMode == 1 && config.stackedSignal) {
-            val margin = config.outSignalMarginDp.coerceIn(0, 16) * (HEIGHT / 36f)
-            val signalX = (26f - margin).coerceAtLeast(18f)
+            // The reference mark is 251 units wide at a 209-unit height;
+            // its left edge sits at the beginning of the expanded outside-signal box.
+            // The requested gap is created by shifting the battery group right.
+            val signalX = 30f
             val primarySlotLevel = if (state.dataSimSlotIndex == 1) state.simTwoLevel else state.simOneLevel
             val secondarySlotLevel = if (state.dataSimSlotIndex == 1) state.simOneLevel else state.simTwoLevel
             val bars = if (config.dataSimOnly) state.mobileLevel
