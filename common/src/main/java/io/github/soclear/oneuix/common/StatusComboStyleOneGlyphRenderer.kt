@@ -497,7 +497,7 @@ object StatusComboStyleOneGlyphRenderer {
     /** Draws a power-save fill inset from the inner edge of the battery ring. */
     private fun drawPowerSaveRingFill(canvas: Canvas, cx: Float, configuredStroke: Int) {
         val stroke = configuredStroke.coerceIn(4, 16).toFloat()
-        val innerRadius = (B_R - stroke / 2f - 2f).coerceAtLeast(0f)
+        val innerRadius = (B_R - stroke / 2f - 1f - HEIGHT / 36f).coerceAtLeast(0f)
         paint.style = Paint.Style.FILL
         paint.color = withAlpha(POWER_SAVE_FILL, (255f * 0.75f).roundToInt())
         canvas.drawCircle(cx, B_CY, innerRadius, paint)
