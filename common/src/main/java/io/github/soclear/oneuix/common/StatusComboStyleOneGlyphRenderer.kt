@@ -32,6 +32,8 @@ object StatusComboStyleOneGlyphRenderer {
     private const val WIDE_WIDTH = 260f
     private const val HEIGHT = 120f
     private const val WIDE_OFFSET = 144.5f
+    // Outside-type-only mode should not reserve the unused signal-pillars lane.
+    private const val TYPE_ONLY_SHIFT = 60f
     private const val B_CX = 59.5f
     private const val B_CY = 61.48715f
     private const val B_R = 51.5f
@@ -104,7 +106,10 @@ object StatusComboStyleOneGlyphRenderer {
         val signalLane = usesOutsideSignalLayout(config)
         val margin = outsideSignalMargin(config)
         return when {
-            typeLane -> WIDE_WIDTH + margin * if (signalLane) 2f else 1f
+            // With only the outside network label enabled, remove the signal-pillars
+            // lane from the host bounds instead of leaving a transparent placeholder.
+            typeLane && signalLane -> WIDE_WIDTH + margin * 2f
+            typeLane -> WIDE_WIDTH - TYPE_ONLY_SHIFT
             signalLane -> outsideSignalWidth(config) + margin + COMPACT_WIDTH - 8f
             else -> COMPACT_WIDTH
         }
@@ -121,11 +126,14 @@ object StatusComboStyleOneGlyphRenderer {
     fun glyphCenterRatio(config: StatusBarComboStyleOneRuntime): Float {
         val margin = outsideSignalMargin(config)
         val signalWidth = outsideSignalWidth(config)
+        val outsideSignal = usesOutsideSignalLayout(config)
         return when {
-            usesOutsideNetworkTypeLayout(config) ->
-                (B_CX + WIDE_OFFSET + margin * if (usesOutsideSignalLayout(config)) 2f else 1f) / designWidth(config)
-            usesOutsideSignalLayout(config) ->
-                (B_CX + signalWidth + margin - 8f) / designWidth(config)
+            usesOutsideNetworkTypeLayout(config) -> {
+                val signalLaneMargin = margin * if (outsideSignal) 2f else 1f
+                val typeOnlyShift = if (outsideSignal) 0f else TYPE_ONLY_SHIFT
+                (B_CX + WIDE_OFFSET + signalLaneMargin - typeOnlyShift) / designWidth(config)
+            }
+            outsideSignal -> (B_CX + signalWidth + margin - 8f) / designWidth(config)
             else -> B_CX / COMPACT_WIDTH
         }
     }
@@ -157,8 +165,9 @@ object StatusComboStyleOneGlyphRenderer {
         canvas.translate((width - designWidth * scale) / 2f, (height - HEIGHT * scale) / 2f)
         canvas.scale(scale, scale)
 
+        val typeOnlyShift = if (outsideType && !outsideSignal) TYPE_ONLY_SHIFT else 0f
         val offsetX = when {
-            outsideType -> WIDE_OFFSET + extraWideMargin * if (outsideSignal) 2f else 1f
+            outsideType -> WIDE_OFFSET + extraWideMargin * if (outsideSignal) 2f else 1f - typeOnlyShift
             outsideSignal -> signalWidth + extraWideMargin - 8f
             else -> 0f
         }
@@ -285,9 +294,13 @@ object StatusComboStyleOneGlyphRenderer {
         }
         if (wide && config.showMobile && config.mobileTypeMode == 2 && state.networkType.isNotBlank()) {
             val m = HEIGHT / 36f
-            val center = (110f + extraWideMargin +
+            val typeOnlyShift = if (outsideSignal) 0f else TYPE_ONLY_SHIFT
+            val center = (110f + extraWideMargin - typeOnlyShift +
                 (config.outTypeMarginLeftDp.coerceIn(0, 16) -
-                    config.outTypeMarginRightDp.coerceIn(0, 16)) * m).coerceIn(30f + extraWideMargin, 170f + extraWideMargin)
+                    config.outTypeMarginRightDp.coerceIn(0, 16)) * m).coerceIn(
+                        30f + extraWideMargin - typeOnlyShift,
+                        170f + extraWideMargin - typeOnlyShift,
+                    )
             val size = config.outTypeSizeDp.coerceIn(8, 26) * m
             drawNetworkType(canvas, state.networkType.trim().uppercase(), center, 67f,
                 size, config.typeWeight, tint, config.typeSuffixScale, 78f)
