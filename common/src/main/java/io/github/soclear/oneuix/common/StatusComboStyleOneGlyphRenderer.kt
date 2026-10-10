@@ -167,7 +167,7 @@ object StatusComboStyleOneGlyphRenderer {
 
         val typeOnlyShift = if (outsideType && !outsideSignal) TYPE_ONLY_SHIFT else 0f
         val offsetX = when {
-            outsideType -> WIDE_OFFSET + extraWideMargin * if (outsideSignal) 2f else 1f - typeOnlyShift
+            outsideType -> WIDE_OFFSET + extraWideMargin * (if (outsideSignal) 2f else 1f) - typeOnlyShift
             outsideSignal -> signalWidth + extraWideMargin - 8f
             else -> 0f
         }
