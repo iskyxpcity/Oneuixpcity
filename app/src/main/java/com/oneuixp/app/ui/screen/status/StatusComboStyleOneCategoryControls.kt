@@ -145,30 +145,32 @@ fun StatusComboStyleOneCategoryControls(
         mutableIntStateOf((runtime.trackAlpha * 100f / 255f).roundToInt())
     }
 
-    StatusThemeGroup(items = listOf({
-        StatusThemeChildItem {
-            Column {
-                StyleOneInfoItem(
-                    title = stringResource(R.string.status_combo_style_one_preview),
-                    summary = stringResource(R.string.status_combo_style_one_preview_summary),
-                )
-                AndroidView(
-                    modifier = Modifier.fillMaxWidth().height(60.dp),
-                    factory = { StatusComboStyleOnePreviewView(it) },
-                    update = { it.setConfig(previewRuntime) },
-                )
+    StatusThemeGroup(
+        title = stringResource(R.string.status_combo_style_one_feature_name),
+        items = listOf({
+            StatusThemeChildItem {
+                Column {
+                    StyleOneInfoItem(
+                        title = stringResource(R.string.status_combo_style_one_preview),
+                        summary = stringResource(R.string.status_combo_style_one_preview_summary),
+                    )
+                    AndroidView(
+                        modifier = Modifier.fillMaxWidth().height(60.dp),
+                        factory = { StatusComboStyleOnePreviewView(it) },
+                        update = { it.setConfig(previewRuntime) },
+                    )
+                }
             }
-        }
-    }))
-    StatusThemeGroup(items = listOf({
-        SwitchItem(
-            icon = null,
-            title = stringResource(R.string.status_combo_style_one_enable),
-            summary = stringResource(R.string.status_combo_style_one_enable_summary),
-            checked = runtime.enabled,
-            onCheckedChange = { previewAndPersist(runtime.copy(enabled = it)) },
-        )
-    }))
+        }, {
+            SwitchItem(
+                icon = null,
+                title = stringResource(R.string.status_combo_style_one_enable),
+                summary = stringResource(R.string.status_combo_style_one_enable_summary),
+                checked = runtime.enabled,
+                onCheckedChange = { previewAndPersist(runtime.copy(enabled = it)) },
+            )
+        }),
+    )
 
     if (!runtime.enabled) return
 
@@ -215,9 +217,7 @@ fun StatusComboStyleOneCategoryControls(
 
     when (selectedTab) {
         0 -> {
-            StatusThemeGroup(items = listOf({
-                StatusThemeChildItem { StyleOneInfoItem(title = stringResource(R.string.status_combo_style_one_group_appearance)) }
-            }, {
+            StatusThemeGroup(title = stringResource(R.string.status_combo_style_one_group_appearance), items = listOf({
                 SelectItem(
                     icon = null,
                     title = stringResource(R.string.status_combo_style_one_style),
@@ -346,9 +346,7 @@ fun StatusComboStyleOneCategoryControls(
                 )
             }))
 
-            StatusThemeGroup(items = listOf({
-                StatusThemeChildItem { StyleOneInfoItem(title = stringResource(R.string.status_combo_style_one_group_advanced)) }
-            }, {
+            StatusThemeGroup(title = stringResource(R.string.status_combo_style_one_group_advanced), items = listOf({
                 SwitchItem(
                     icon = null,
                     title = stringResource(R.string.status_combo_style_one_debug_log),
@@ -359,18 +357,14 @@ fun StatusComboStyleOneCategoryControls(
             }))
         }
         1 -> {
-            StatusThemeGroup(items = listOf({
-                StatusThemeChildItem { StyleOneInfoItem(title = stringResource(R.string.status_combo_style_one_group_appearance)) }
-            }, {
+            StatusThemeGroup(title = stringResource(R.string.status_combo_style_one_group_appearance), items = listOf({
                 styleOneSlider(stringResource(R.string.status_combo_style_one_glyph_scale),
                     stringResource(R.string.status_combo_style_one_percent_summary, glyphScale), glyphScale.toFloat(), 70f..150f,
                     { glyphScale = it.roundToInt(); preview(runtime.copy(glyphScalePercent = glyphScale)) },
                     { persist(runtime.copy(glyphScalePercent = glyphScale)) })
             }))
 
-            StatusThemeGroup(items = listOf({
-                StatusThemeChildItem { StyleOneInfoItem(title = stringResource(R.string.status_combo_style_one_group_position)) }
-            }, {
+            StatusThemeGroup(title = stringResource(R.string.status_combo_style_one_group_position), items = listOf({
                 styleOneSlider(stringResource(R.string.status_combo_style_one_glyph_offset_x),
                     stringResource(R.string.status_combo_style_one_dp_summary, glyphOffsetX), glyphOffsetX.toFloat(), -16f..16f,
                     { glyphOffsetX = it.roundToInt(); preview(runtime.copy(glyphOffsetXDp = glyphOffsetX)) },
@@ -392,9 +386,7 @@ fun StatusComboStyleOneCategoryControls(
                     { persist(runtime.copy(glyphRightMarginDp = glyphRightMargin)) })
             }))
 
-            StatusThemeGroup(items = listOf({
-                StatusThemeChildItem { StyleOneInfoItem(title = stringResource(R.string.status_combo_style_one_group_charging)) }
-            }, {
+            StatusThemeGroup(title = stringResource(R.string.status_combo_style_one_group_charging), items = listOf({
                 styleOneSlider(stringResource(R.string.status_combo_style_one_bolt_size),
                     stringResource(R.string.status_combo_style_one_percent_summary, boltSize), boltSize.toFloat(), 50f..180f,
                     { boltSize = it.roundToInt(); preview(runtime.copy(chargingBoltSizePercent = boltSize)) },
@@ -411,9 +403,7 @@ fun StatusComboStyleOneCategoryControls(
                     { persist(runtime.copy(chargingBoltYDp = boltY)) })
             }))
 
-            StatusThemeGroup(items = listOf({
-                StatusThemeChildItem { StyleOneInfoItem(title = stringResource(R.string.status_combo_style_one_group_stroke)) }
-            }, {
+            StatusThemeGroup(title = stringResource(R.string.status_combo_style_one_group_stroke), items = listOf({
                 styleOneSlider(stringResource(R.string.status_combo_style_one_ring_stroke),
                     stringResource(R.string.status_combo_style_one_int_summary, ringStroke), ringStroke.toFloat(), 4f..16f,
                     { ringStroke = it.roundToInt(); preview(runtime.copy(ringStroke = ringStroke)) },
@@ -425,9 +415,7 @@ fun StatusComboStyleOneCategoryControls(
                     { persist(runtime.copy(arcStroke = arcStroke)) })
             }))
 
-            StatusThemeGroup(items = listOf({
-                StatusThemeChildItem { StyleOneInfoItem(title = stringResource(R.string.status_combo_style_one_group_text)) }
-            }, {
+            StatusThemeGroup(title = stringResource(R.string.status_combo_style_one_group_text), items = listOf({
                 styleOneSlider(stringResource(R.string.status_combo_style_one_value_size),
                     stringResource(R.string.status_combo_style_one_sp_summary, valueSize), valueSize.toFloat(), 6f..18f,
                     { valueSize = it.roundToInt(); preview(runtime.copy(valueSize = valueSize)) },
@@ -439,9 +427,7 @@ fun StatusComboStyleOneCategoryControls(
                     { persist(runtime.copy(valueWeight = valueWeight)) }, stepSize = 100f)
             }))
 
-            StatusThemeGroup(items = listOf({
-                StatusThemeChildItem { StyleOneInfoItem(title = stringResource(R.string.status_combo_style_one_group_type)) }
-            }, {
+            StatusThemeGroup(title = stringResource(R.string.status_combo_style_one_group_type), items = listOf({
                 styleOneSlider(stringResource(R.string.status_combo_style_one_type_size),
                     stringResource(R.string.status_combo_style_one_int_summary, typeSize), typeSize.toFloat(), 16f..44f,
                     { typeSize = it.roundToInt(); preview(runtime.copy(typeSize = typeSize)) },
@@ -473,9 +459,7 @@ fun StatusComboStyleOneCategoryControls(
                     { persist(runtime.copy(outTypeMarginRightDp = outTypeRight)) })
             }))
 
-            StatusThemeGroup(items = listOf({
-                StatusThemeChildItem { StyleOneInfoItem(title = stringResource(R.string.status_combo_style_one_group_out_signal)) }
-            }, {
+            StatusThemeGroup(title = stringResource(R.string.status_combo_style_one_group_out_signal), items = listOf({
                 styleOneSlider(stringResource(R.string.status_combo_style_one_out_signal_size),
                     stringResource(R.string.status_combo_style_one_dp_summary, outSignalSize), outSignalSize.toFloat(), 6f..20f,
                     { outSignalSize = it.roundToInt(); preview(runtime.copy(outSignalSizeDp = outSignalSize)) },
@@ -487,9 +471,7 @@ fun StatusComboStyleOneCategoryControls(
                     { persist(runtime.copy(outSignalMarginDp = outSignalMargin)) })
             }))
 
-            StatusThemeGroup(items = listOf({
-                StatusThemeChildItem { StyleOneInfoItem(title = stringResource(R.string.status_combo_style_one_group_track)) }
-            }, {
+            StatusThemeGroup(title = stringResource(R.string.status_combo_style_one_group_track), items = listOf({
                 styleOneSlider(stringResource(R.string.status_combo_style_one_track_alpha),
                     stringResource(R.string.status_combo_style_one_percent_summary, trackAlpha), trackAlpha.toFloat(), 0f..100f,
                     { trackAlpha = it.roundToInt(); val a = (trackAlpha * 255f / 100f).roundToInt(); preview(runtime.copy(trackAlpha = a)) },
@@ -500,11 +482,7 @@ fun StatusComboStyleOneCategoryControls(
             // Keep the entire state-colour section together like HyperDuo:
             // toggle, thresholds, three role rows and reset live in one card.
             val colorItems = mutableListOf<@Composable () -> Unit>()
-            colorItems += {
-                StatusThemeChildItem {
-                    StyleOneInfoItem(title = stringResource(R.string.status_combo_style_one_group_colors))
-                }
-            }
+
             colorItems += {
                 SwitchItem(
                     icon = null,
@@ -569,7 +547,7 @@ fun StatusComboStyleOneCategoryControls(
                         )
                     }
                 }
-            StatusThemeGroup(items = colorItems)
+            StatusThemeGroup(title = stringResource(R.string.status_combo_style_one_group_colors), items = colorItems)
 
             if (confirmResetColors) {
                 ExpressiveConfirmDialog(
@@ -885,6 +863,8 @@ private fun styleOneSlider(
                 value = value,
                 modifier = Modifier.fillMaxWidth().alpha(if (enabled) 1f else 0.45f),
                 valueRange = range, steps = 0,
+                stepSize = stepSize,
+                hapticOnStep = false,
                 onValueChange = { raw ->
                     if (enabled) {
                         val bounded = raw.coerceIn(range.start, range.endInclusive)

@@ -35,24 +35,30 @@ fun OneuiXSlider(
         mutableFloatStateOf(value.coerceIn(valueRange.start, valueRange.endInclusive))
     }
     var dragging by remember(valueRange, stepSize) { mutableStateOf(false) }
-    val lastEmitted = remember(valueRange, stepSize) { floatArrayOf(value) }
+    var lastEmitted by remember(valueRange, stepSize) {
+        mutableFloatStateOf(value.coerceIn(valueRange.start, valueRange.endInclusive))
+    }
 
     LaunchedEffect(value, dragging, valueRange, stepSize) {
         if (!dragging) {
-            visualValue = value.coerceIn(valueRange.start, valueRange.endInclusive)
+            val synced = value.coerceIn(valueRange.start, valueRange.endInclusive)
+            visualValue = synced
+            lastEmitted = synced
         }
     }
 
     fun emit(raw: Float) {
         val bounded = raw.coerceIn(valueRange.start, valueRange.endInclusive)
-        visualValue = bounded
-        dragging = true
         val step = stepSize
         val snapped = if (step == null || step <= 0f) bounded else (
             ((bounded - valueRange.start) / step).roundToInt() * step + valueRange.start
         ).coerceIn(valueRange.start, valueRange.endInclusive)
+        // Keep the thumb on the same quantized value emitted to the caller.
+        // Otherwise Miuix can display a raw value that snaps back on release.
+        visualValue = snapped
+        dragging = true
 
-        val previous = lastEmitted[0]
+        val previous = lastEmitted
         if (snapped == previous) return
 
         if (hapticOnStep && step != null && step > 0f) {
@@ -62,15 +68,15 @@ fun OneuiXSlider(
                 hostView.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
             }
         }
-        lastEmitted[0] = snapped
+        lastEmitted = snapped
         onValueChange(snapped)
     }
 
     val handleValueChange: (Float) -> Unit = ::emit
     val handleValueChangeFinished: () -> Unit = {
-        dragging = false
-        visualValue = lastEmitted[0]
         onValueChangeFinished?.invoke()
+        visualValue = lastEmitted
+        dragging = false
         Unit
     }
     val effectiveSteps = if (stepSize != null && stepSize > 0f) 0 else steps

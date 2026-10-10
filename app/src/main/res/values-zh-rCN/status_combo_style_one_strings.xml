@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="status_combo_style_one_category">三合一图标风格一</string>
+    <string name="status_combo_style_one_category">三合一组合图标</string>
+    <string name="status_combo_style_one_feature_name">三合一图标风格一</string>
     <string name="status_combo_style_one_preview">图标预览</string>
     <string name="status_combo_style_one_preview_summary">对比充电、低电量和危险电量在深色与浅色状态栏背景下的显示效果。</string>
     <string name="status_combo_style_one_preview_charging_dark">充电·深</string>
