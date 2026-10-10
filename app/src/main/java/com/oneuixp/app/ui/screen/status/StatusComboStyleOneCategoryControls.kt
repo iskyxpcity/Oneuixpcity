@@ -150,30 +150,12 @@ fun StatusComboStyleOneCategoryControls(
         items = listOf({
             StatusThemeChildItem {
                 Column {
-                    StyleOneInfoItem(
-                        title = stringResource(R.string.status_combo_style_one_preview),
-                        summary = stringResource(R.string.status_combo_style_one_preview_summary),
-                    )
-                    AndroidView(
-                        modifier = Modifier.fillMaxWidth().height(60.dp),
-                        factory = { StatusComboStyleOnePreviewView(it) },
-                        update = { it.setConfig(previewRuntime) },
-                    )
+                    StyleOneInfoItem(title = stringResource(R.string.status_combo_style_one_preview), summary = stringResource(R.string.status_combo_style_one_preview_summary))
+                    AndroidView(modifier = Modifier.fillMaxWidth().height(60.dp), factory = { StatusComboStyleOnePreviewView(it) }, update = { it.setConfig(previewRuntime) })
                 }
             }
-        }, {
-            SwitchItem(
-                icon = null,
-                title = stringResource(R.string.status_combo_style_one_enable),
-                summary = stringResource(R.string.status_combo_style_one_enable_summary),
-                checked = runtime.enabled,
-                onCheckedChange = { previewAndPersist(runtime.copy(enabled = it)) },
-            )
         }),
     )
-
-    if (!runtime.enabled) return
-
     var selectedTab by remember { mutableIntStateOf(0) }
     val tabs = listOf(
         stringResource(R.string.status_combo_style_one_tab_general),
@@ -218,264 +200,89 @@ fun StatusComboStyleOneCategoryControls(
     when (selectedTab) {
         0 -> {
             StatusThemeGroup(title = stringResource(R.string.status_combo_style_one_group_appearance), items = listOf({
-                SelectItem(
-                    icon = null,
-                    title = stringResource(R.string.status_combo_style_one_style),
-                    summary = stringResource(R.string.status_combo_style_one_style_summary),
-                    entries = listOf(
-                        stringResource(R.string.status_combo_style_one_style_ring),
-                        stringResource(R.string.status_combo_style_one_style_rect),
-                    ),
-                    selectedIndex = runtime.trioStyle.coerceIn(0, 1),
-                    onSelectedIndexChange = {
-                        previewAndPersist(runtime.copy(trioStyle = it.coerceIn(0, 1)))
-                    },
-                )
+                SwitchItem(icon = null, title = stringResource(R.string.status_combo_style_one_enable), summary = stringResource(R.string.status_combo_style_one_enable_summary), checked = runtime.enabled, onCheckedChange = { previewAndPersist(runtime.copy(enabled = it)) })
             }, {
-                SwitchItem(
-                    icon = null,
-                    title = stringResource(R.string.status_combo_style_one_overlay),
-                    summary = stringResource(R.string.status_combo_style_one_overlay_summary),
-                    checked = runtime.overlayGlyph,
-                    onCheckedChange = { previewAndPersist(runtime.copy(overlayGlyph = it)) },
-                )
+                SelectItem(icon = null, title = stringResource(R.string.status_combo_style_one_style), summary = stringResource(R.string.status_combo_style_one_style_summary), entries = listOf(stringResource(R.string.status_combo_style_one_style_ring), stringResource(R.string.status_combo_style_one_style_rect)), selectedIndex = runtime.trioStyle.coerceIn(0, 1), enabled = runtime.enabled, onSelectedIndexChange = { previewAndPersist(runtime.copy(trioStyle = it.coerceIn(0, 1))) })
             }, {
-                SwitchItem(
-                    icon = null,
-                    title = stringResource(R.string.status_combo_style_one_show_wifi),
-                    summary = stringResource(R.string.status_combo_style_one_show_wifi_summary),
-                    checked = runtime.showWifi,
-                    onCheckedChange = { previewAndPersist(runtime.copy(showWifi = it)) },
-                )
+                SwitchItem(icon = null, title = stringResource(R.string.status_combo_style_one_overlay), summary = stringResource(R.string.status_combo_style_one_overlay_summary), checked = runtime.overlayGlyph, enabled = runtime.enabled, onCheckedChange = { previewAndPersist(runtime.copy(overlayGlyph = it)) })
             }, {
-                SwitchItem(
-                    icon = null,
-                    title = stringResource(R.string.status_combo_style_one_show_mobile),
-                    summary = stringResource(R.string.status_combo_style_one_show_mobile_summary),
-                    checked = runtime.showMobile,
-                    onCheckedChange = { previewAndPersist(runtime.copy(showMobile = it)) },
-                )
+                SwitchItem(icon = null, title = stringResource(R.string.status_combo_style_one_show_wifi), summary = stringResource(R.string.status_combo_style_one_show_wifi_summary), checked = runtime.showWifi, enabled = runtime.enabled, onCheckedChange = { previewAndPersist(runtime.copy(showWifi = it)) })
             }, {
-                SwitchItem(
-                    icon = null,
-                    title = stringResource(R.string.status_combo_style_one_dual_sim),
-                    summary = stringResource(R.string.status_combo_style_one_dual_sim_summary),
-                    checked = runtime.dualSim,
-                    onCheckedChange = { previewAndPersist(runtime.copy(dualSim = it)) },
-                )
+                SwitchItem(icon = null, title = stringResource(R.string.status_combo_style_one_show_mobile), summary = stringResource(R.string.status_combo_style_one_show_mobile_summary), checked = runtime.showMobile, enabled = runtime.enabled, onCheckedChange = { previewAndPersist(runtime.copy(showMobile = it)) })
             }, {
-                SwitchItem(
-                    icon = null,
-                    title = stringResource(R.string.status_combo_style_one_show_value),
-                    summary = stringResource(R.string.status_combo_style_one_show_value_summary),
-                    checked = runtime.showValue,
-                    onCheckedChange = { previewAndPersist(runtime.copy(showValue = it)) },
-                )
+                SwitchItem(icon = null, title = stringResource(R.string.status_combo_style_one_dual_sim), summary = stringResource(R.string.status_combo_style_one_dual_sim_summary), checked = runtime.dualSim, enabled = runtime.enabled && runtime.showMobile, onCheckedChange = { previewAndPersist(runtime.copy(dualSim = it)) })
             }, {
-                SelectItem(
-                    icon = null,
-                    title = stringResource(R.string.status_combo_style_one_signal_mode),
-                    summary = stringResource(R.string.status_combo_style_one_signal_mode_summary),
-                    entries = listOf(
-                        stringResource(R.string.status_combo_style_one_signal_inside),
-                        stringResource(R.string.status_combo_style_one_signal_outside),
-                    ),
-                    selectedIndex = runtime.signalMode.coerceIn(0, 1),
-                    onSelectedIndexChange = { previewAndPersist(runtime.copy(signalMode = it.coerceIn(0, 1))) },
-                )
+                SwitchItem(icon = null, title = stringResource(R.string.status_combo_style_one_show_value), summary = stringResource(R.string.status_combo_style_one_show_value_summary), checked = runtime.showValue, enabled = runtime.enabled, onCheckedChange = { previewAndPersist(runtime.copy(showValue = it)) })
             }, {
-                SwitchItem(
-                    icon = null,
-                    title = stringResource(R.string.status_combo_style_one_stacked_signal),
-                    summary = stringResource(R.string.status_combo_style_one_stacked_signal_summary),
-                    checked = runtime.stackedSignal,
-                    onCheckedChange = { previewAndPersist(runtime.copy(stackedSignal = it)) },
-                )
+                SelectItem(icon = null, title = stringResource(R.string.status_combo_style_one_signal_mode), summary = stringResource(R.string.status_combo_style_one_signal_mode_summary), entries = listOf(stringResource(R.string.status_combo_style_one_signal_inside), stringResource(R.string.status_combo_style_one_signal_outside)), selectedIndex = runtime.signalMode.coerceIn(0, 1), enabled = runtime.enabled, onSelectedIndexChange = { previewAndPersist(runtime.copy(signalMode = it.coerceIn(0, 1))) })
             }, {
-                SwitchItem(
-                    icon = null,
-                    title = stringResource(R.string.status_combo_style_one_data_sim_only),
-                    summary = stringResource(R.string.status_combo_style_one_data_sim_only_summary),
-                    checked = runtime.dataSimOnly,
-                    onCheckedChange = { previewAndPersist(runtime.copy(dataSimOnly = it)) },
-                )
+                SwitchItem(icon = null, title = stringResource(R.string.status_combo_style_one_stacked_signal), summary = stringResource(R.string.status_combo_style_one_stacked_signal_summary), checked = runtime.stackedSignal, enabled = runtime.enabled && runtime.signalMode == 1, onCheckedChange = { previewAndPersist(runtime.copy(stackedSignal = it)) })
             }, {
-                SwitchItem(
-                    icon = null,
-                    title = stringResource(R.string.status_combo_style_one_show_bolt),
-                    summary = stringResource(R.string.status_combo_style_one_show_bolt_summary),
-                    checked = runtime.showBolt,
-                    onCheckedChange = { previewAndPersist(runtime.copy(showBolt = it)) },
-                )
+                SwitchItem(icon = null, title = stringResource(R.string.status_combo_style_one_data_sim_only), summary = stringResource(R.string.status_combo_style_one_data_sim_only_summary), checked = runtime.dataSimOnly, enabled = runtime.enabled && runtime.signalMode == 1 && runtime.stackedSignal, onCheckedChange = { previewAndPersist(runtime.copy(dataSimOnly = it)) })
             }, {
-                SelectItem(
-                    icon = null,
-                    title = stringResource(R.string.status_combo_style_one_charging_display),
-                    summary = stringResource(R.string.status_combo_style_one_charging_display_summary),
-                    entries = listOf(
-                        stringResource(R.string.status_combo_style_one_charging_display_bolt),
-                        stringResource(R.string.status_combo_style_one_charging_display_alternate),
-                    ),
-                    selectedIndex = runtime.chargingDisplayMode.coerceIn(0, 1),
-                    onSelectedIndexChange = {
-                        previewAndPersist(runtime.copy(chargingDisplayMode = it.coerceIn(0, 1)))
-                    },
-                )
+                SwitchItem(icon = null, title = stringResource(R.string.status_combo_style_one_show_bolt), summary = stringResource(R.string.status_combo_style_one_show_bolt_summary), checked = runtime.showBolt, enabled = runtime.enabled && runtime.showValue, onCheckedChange = { previewAndPersist(runtime.copy(showBolt = it)) })
             }, {
-                SelectItem(
-                    icon = null,
-                    title = stringResource(R.string.status_combo_style_one_mobile_type_mode),
-                    summary = stringResource(R.string.status_combo_style_one_mobile_type_mode_summary),
-                    entries = listOf(
-                        stringResource(R.string.status_combo_style_one_mobile_type_off),
-                        stringResource(R.string.status_combo_style_one_mobile_type_inside),
-                        stringResource(R.string.status_combo_style_one_mobile_type_outside),
-                    ),
-                    selectedIndex = runtime.mobileTypeMode.coerceIn(0, 2),
-                    onSelectedIndexChange = {
-                        previewAndPersist(runtime.copy(mobileTypeMode = it.coerceIn(0, 2)))
-                    },
-                )
+                SelectItem(icon = null, title = stringResource(R.string.status_combo_style_one_charging_display), summary = stringResource(R.string.status_combo_style_one_charging_display_summary), entries = listOf(stringResource(R.string.status_combo_style_one_charging_display_bolt), stringResource(R.string.status_combo_style_one_charging_display_alternate)), selectedIndex = runtime.chargingDisplayMode.coerceIn(0, 1), enabled = runtime.enabled && runtime.showValue && runtime.showBolt, onSelectedIndexChange = { previewAndPersist(runtime.copy(chargingDisplayMode = it.coerceIn(0, 1))) })
             }, {
-                SwitchItem(
-                    icon = null,
-                    title = stringResource(R.string.status_combo_style_one_value_centred),
-                    summary = stringResource(R.string.status_combo_style_one_value_centred_summary),
-                    checked = runtime.valueCentred,
-                    onCheckedChange = { previewAndPersist(runtime.copy(valueCentred = it)) },
-                )
+                SelectItem(icon = null, title = stringResource(R.string.status_combo_style_one_mobile_type_mode), summary = stringResource(R.string.status_combo_style_one_mobile_type_mode_summary), entries = listOf(stringResource(R.string.status_combo_style_one_mobile_type_off), stringResource(R.string.status_combo_style_one_mobile_type_inside), stringResource(R.string.status_combo_style_one_mobile_type_outside)), selectedIndex = runtime.mobileTypeMode.coerceIn(0, 2), enabled = runtime.enabled, onSelectedIndexChange = { previewAndPersist(runtime.copy(mobileTypeMode = it.coerceIn(0, 2))) })
+            }, {
+                SwitchItem(icon = null, title = stringResource(R.string.status_combo_style_one_value_centred), summary = stringResource(R.string.status_combo_style_one_value_centred_summary), checked = runtime.valueCentred, enabled = runtime.enabled && runtime.trioStyle == 0 && runtime.showWifi && runtime.showValue, onCheckedChange = { previewAndPersist(runtime.copy(valueCentred = it)) })
             }))
-
             StatusThemeGroup(title = stringResource(R.string.status_combo_style_one_group_advanced), items = listOf({
-                SwitchItem(
-                    icon = null,
-                    title = stringResource(R.string.status_combo_style_one_debug_log),
-                    summary = stringResource(R.string.status_combo_style_one_debug_log_summary),
-                    checked = runtime.debugLog,
-                    onCheckedChange = { previewAndPersist(runtime.copy(debugLog = it)) },
-                )
+                SwitchItem(icon = null, title = stringResource(R.string.status_combo_style_one_debug_log), summary = stringResource(R.string.status_combo_style_one_debug_log_summary), checked = runtime.debugLog, onCheckedChange = { previewAndPersist(runtime.copy(debugLog = it)) })
             }))
         }
         1 -> {
+            // Keep HyperDuo's core geometry order first; OneuiXP-only controls follow.
             StatusThemeGroup(title = stringResource(R.string.status_combo_style_one_group_appearance), items = listOf({
-                styleOneSlider(stringResource(R.string.status_combo_style_one_glyph_scale),
-                    stringResource(R.string.status_combo_style_one_percent_summary, glyphScale), glyphScale.toFloat(), 70f..150f,
-                    { glyphScale = it.roundToInt(); preview(runtime.copy(glyphScalePercent = glyphScale)) },
-                    { persist(runtime.copy(glyphScalePercent = glyphScale)) })
+                styleOneSlider(stringResource(R.string.status_combo_style_one_glyph_scale), stringResource(R.string.status_combo_style_one_percent_summary, glyphScale), glyphScale.toFloat(), 70f..150f, { glyphScale = it.roundToInt(); preview(runtime.copy(glyphScalePercent = glyphScale)) }, { persist(runtime.copy(glyphScalePercent = glyphScale)) }, enabled = runtime.enabled)
             }))
-
-            StatusThemeGroup(title = stringResource(R.string.status_combo_style_one_group_position), items = listOf({
-                styleOneSlider(stringResource(R.string.status_combo_style_one_glyph_offset_x),
-                    stringResource(R.string.status_combo_style_one_dp_summary, glyphOffsetX), glyphOffsetX.toFloat(), -16f..16f,
-                    { glyphOffsetX = it.roundToInt(); preview(runtime.copy(glyphOffsetXDp = glyphOffsetX)) },
-                    { persist(runtime.copy(glyphOffsetXDp = glyphOffsetX)) })
-            }, {
-                styleOneSlider(stringResource(R.string.status_combo_style_one_glyph_offset_y),
-                    stringResource(R.string.status_combo_style_one_dp_summary, glyphOffsetY), glyphOffsetY.toFloat(), -16f..16f,
-                    { glyphOffsetY = it.roundToInt(); preview(runtime.copy(glyphOffsetYDp = glyphOffsetY)) },
-                    { persist(runtime.copy(glyphOffsetYDp = glyphOffsetY)) })
-            }, {
-                styleOneSlider(stringResource(R.string.status_combo_style_one_glyph_left_margin),
-                    stringResource(R.string.status_combo_style_one_dp_summary, glyphLeftMargin), glyphLeftMargin.toFloat(), 0f..16f,
-                    { glyphLeftMargin = it.roundToInt(); preview(runtime.copy(glyphLeftMarginDp = glyphLeftMargin)) },
-                    { persist(runtime.copy(glyphLeftMarginDp = glyphLeftMargin)) })
-            }, {
-                styleOneSlider(stringResource(R.string.status_combo_style_one_glyph_right_margin),
-                    stringResource(R.string.status_combo_style_one_dp_summary, glyphRightMargin), glyphRightMargin.toFloat(), 0f..16f,
-                    { glyphRightMargin = it.roundToInt(); preview(runtime.copy(glyphRightMarginDp = glyphRightMargin)) },
-                    { persist(runtime.copy(glyphRightMarginDp = glyphRightMargin)) })
-            }))
-
-            StatusThemeGroup(title = stringResource(R.string.status_combo_style_one_group_charging), items = listOf({
-                styleOneSlider(stringResource(R.string.status_combo_style_one_bolt_size),
-                    stringResource(R.string.status_combo_style_one_percent_summary, boltSize), boltSize.toFloat(), 50f..180f,
-                    { boltSize = it.roundToInt(); preview(runtime.copy(chargingBoltSizePercent = boltSize)) },
-                    { persist(runtime.copy(chargingBoltSizePercent = boltSize)) })
-            }, {
-                styleOneSlider(stringResource(R.string.status_combo_style_one_bolt_x),
-                    stringResource(R.string.status_combo_style_one_dp_summary, boltX), boltX.toFloat(), -8f..8f,
-                    { boltX = it.roundToInt(); preview(runtime.copy(chargingBoltXDp = boltX)) },
-                    { persist(runtime.copy(chargingBoltXDp = boltX)) })
-            }, {
-                styleOneSlider(stringResource(R.string.status_combo_style_one_bolt_y),
-                    stringResource(R.string.status_combo_style_one_dp_summary, boltY), boltY.toFloat(), -8f..8f,
-                    { boltY = it.roundToInt(); preview(runtime.copy(chargingBoltYDp = boltY)) },
-                    { persist(runtime.copy(chargingBoltYDp = boltY)) })
-            }))
-
             StatusThemeGroup(title = stringResource(R.string.status_combo_style_one_group_stroke), items = listOf({
-                styleOneSlider(stringResource(R.string.status_combo_style_one_ring_stroke),
-                    stringResource(R.string.status_combo_style_one_int_summary, ringStroke), ringStroke.toFloat(), 4f..16f,
-                    { ringStroke = it.roundToInt(); preview(runtime.copy(ringStroke = ringStroke)) },
-                    { persist(runtime.copy(ringStroke = ringStroke)) })
+                styleOneSlider(stringResource(if (runtime.trioStyle == 1) R.string.status_combo_style_one_ring_stroke_rect else R.string.status_combo_style_one_ring_stroke), stringResource(if (runtime.trioStyle == 1) R.string.status_combo_style_one_ring_stroke_summary_rect else R.string.status_combo_style_one_ring_stroke_summary, ringStroke), ringStroke.toFloat(), 4f..16f, { ringStroke = it.roundToInt(); preview(runtime.copy(ringStroke = ringStroke)) }, { persist(runtime.copy(ringStroke = ringStroke)) }, enabled = runtime.enabled)
             }, {
-                styleOneSlider(stringResource(R.string.status_combo_style_one_arc_stroke),
-                    stringResource(R.string.status_combo_style_one_int_summary, arcStroke), arcStroke.toFloat(), 3f..16f,
-                    { arcStroke = it.roundToInt(); preview(runtime.copy(arcStroke = arcStroke)) },
-                    { persist(runtime.copy(arcStroke = arcStroke)) })
+                styleOneSlider(stringResource(R.string.status_combo_style_one_arc_stroke), stringResource(if (runtime.trioStyle == 1) R.string.status_combo_style_one_arc_stroke_summary_rect else R.string.status_combo_style_one_arc_stroke_summary, arcStroke), arcStroke.toFloat(), 3f..16f, { arcStroke = it.roundToInt(); preview(runtime.copy(arcStroke = arcStroke)) }, { persist(runtime.copy(arcStroke = arcStroke)) }, enabled = runtime.enabled)
             }))
-
             StatusThemeGroup(title = stringResource(R.string.status_combo_style_one_group_text), items = listOf({
-                styleOneSlider(stringResource(R.string.status_combo_style_one_value_size),
-                    stringResource(R.string.status_combo_style_one_sp_summary, valueSize), valueSize.toFloat(), 6f..18f,
-                    { valueSize = it.roundToInt(); preview(runtime.copy(valueSize = valueSize)) },
-                    { persist(runtime.copy(valueSize = valueSize)) })
+                styleOneSlider(stringResource(R.string.status_combo_style_one_value_size), stringResource(R.string.status_combo_style_one_value_size_summary, valueSize), valueSize.toFloat(), 6f..18f, { valueSize = it.roundToInt(); preview(runtime.copy(valueSize = valueSize)) }, { persist(runtime.copy(valueSize = valueSize)) }, enabled = runtime.enabled)
             }, {
-                styleOneSlider(stringResource(R.string.status_combo_style_one_value_weight),
-                    stringResource(R.string.status_combo_style_one_weight_summary, valueWeight), valueWeight.toFloat(), 100f..900f,
-                    { valueWeight = (it / 100f).roundToInt() * 100; preview(runtime.copy(valueWeight = valueWeight)) },
-                    { persist(runtime.copy(valueWeight = valueWeight)) }, stepSize = 100f)
+                styleOneSlider(stringResource(R.string.status_combo_style_one_value_weight), stringResource(R.string.status_combo_style_one_value_weight_summary, valueWeight), valueWeight.toFloat(), 100f..900f, { valueWeight = (it / 100f).roundToInt() * 100; preview(runtime.copy(valueWeight = valueWeight)) }, { persist(runtime.copy(valueWeight = valueWeight)) }, stepSize = 100f, enabled = runtime.enabled && runtime.showValue)
             }))
-
             StatusThemeGroup(title = stringResource(R.string.status_combo_style_one_group_type), items = listOf({
-                styleOneSlider(stringResource(R.string.status_combo_style_one_type_size),
-                    stringResource(R.string.status_combo_style_one_int_summary, typeSize), typeSize.toFloat(), 16f..44f,
-                    { typeSize = it.roundToInt(); preview(runtime.copy(typeSize = typeSize)) },
-                    { persist(runtime.copy(typeSize = typeSize)) })
+                styleOneSlider(stringResource(R.string.status_combo_style_one_type_size), stringResource(R.string.status_combo_style_one_type_size_summary, typeSize), typeSize.toFloat(), 16f..44f, { typeSize = it.roundToInt(); preview(runtime.copy(typeSize = typeSize)) }, { persist(runtime.copy(typeSize = typeSize)) }, enabled = runtime.enabled && runtime.mobileTypeMode == 1)
             }, {
-                styleOneSlider(stringResource(R.string.status_combo_style_one_type_weight),
-                    stringResource(R.string.status_combo_style_one_weight_summary, typeWeight), typeWeight.toFloat(), 100f..900f,
-                    { typeWeight = (it / 100f).roundToInt() * 100; preview(runtime.copy(typeWeight = typeWeight)) },
-                    { persist(runtime.copy(typeWeight = typeWeight)) }, stepSize = 100f)
+                styleOneSlider(stringResource(R.string.status_combo_style_one_out_type_size), stringResource(R.string.status_combo_style_one_out_type_size_summary, outTypeSize), outTypeSize.toFloat(), 8f..26f, { outTypeSize = it.roundToInt(); preview(runtime.copy(outTypeSizeDp = outTypeSize)) }, { persist(runtime.copy(outTypeSizeDp = outTypeSize)) }, enabled = runtime.enabled && runtime.mobileTypeMode == 2)
             }, {
-                styleOneSlider(stringResource(R.string.status_combo_style_one_type_suffix_scale),
-                    stringResource(R.string.status_combo_style_one_percent_summary, suffixScale), suffixScale.toFloat(), 50f..100f,
-                    { suffixScale = it.roundToInt(); preview(runtime.copy(typeSuffixScale = suffixScale)) },
-                    { persist(runtime.copy(typeSuffixScale = suffixScale)) })
+                styleOneSlider(stringResource(R.string.status_combo_style_one_type_suffix_scale), stringResource(R.string.status_combo_style_one_type_suffix_scale_summary, suffixScale), suffixScale.toFloat(), 50f..100f, { suffixScale = it.roundToInt(); preview(runtime.copy(typeSuffixScale = suffixScale)) }, { persist(runtime.copy(typeSuffixScale = suffixScale)) }, enabled = runtime.enabled && runtime.mobileTypeMode != 0)
             }, {
-                styleOneSlider(stringResource(R.string.status_combo_style_one_out_type_size),
-                    stringResource(R.string.status_combo_style_one_dp_summary, outTypeSize), outTypeSize.toFloat(), 8f..26f,
-                    { outTypeSize = it.roundToInt(); preview(runtime.copy(outTypeSizeDp = outTypeSize)) },
-                    { persist(runtime.copy(outTypeSizeDp = outTypeSize)) })
+                styleOneSlider(stringResource(R.string.status_combo_style_one_out_type_margin_left), stringResource(R.string.status_combo_style_one_out_type_margin_left_summary, outTypeLeft), outTypeLeft.toFloat(), 0f..16f, { outTypeLeft = it.roundToInt(); preview(runtime.copy(outTypeMarginLeftDp = outTypeLeft)) }, { persist(runtime.copy(outTypeMarginLeftDp = outTypeLeft)) }, enabled = runtime.enabled && runtime.mobileTypeMode == 2)
             }, {
-                styleOneSlider(stringResource(R.string.status_combo_style_one_out_type_margin_left),
-                    stringResource(R.string.status_combo_style_one_dp_summary, outTypeLeft), outTypeLeft.toFloat(), 0f..16f,
-                    { outTypeLeft = it.roundToInt(); preview(runtime.copy(outTypeMarginLeftDp = outTypeLeft)) },
-                    { persist(runtime.copy(outTypeMarginLeftDp = outTypeLeft)) })
+                styleOneSlider(stringResource(R.string.status_combo_style_one_out_type_margin_right), stringResource(R.string.status_combo_style_one_out_type_margin_right_summary, outTypeRight), outTypeRight.toFloat(), 0f..16f, { outTypeRight = it.roundToInt(); preview(runtime.copy(outTypeMarginRightDp = outTypeRight)) }, { persist(runtime.copy(outTypeMarginRightDp = outTypeRight)) }, enabled = runtime.enabled && runtime.mobileTypeMode == 2)
             }, {
-                styleOneSlider(stringResource(R.string.status_combo_style_one_out_type_margin_right),
-                    stringResource(R.string.status_combo_style_one_dp_summary, outTypeRight), outTypeRight.toFloat(), 0f..16f,
-                    { outTypeRight = it.roundToInt(); preview(runtime.copy(outTypeMarginRightDp = outTypeRight)) },
-                    { persist(runtime.copy(outTypeMarginRightDp = outTypeRight)) })
+                styleOneSlider(stringResource(R.string.status_combo_style_one_type_weight), stringResource(R.string.status_combo_style_one_type_weight_summary, typeWeight), typeWeight.toFloat(), 100f..900f, { typeWeight = (it / 100f).roundToInt() * 100; preview(runtime.copy(typeWeight = typeWeight)) }, { persist(runtime.copy(typeWeight = typeWeight)) }, stepSize = 100f, enabled = runtime.enabled && runtime.mobileTypeMode != 0)
             }))
-
             StatusThemeGroup(title = stringResource(R.string.status_combo_style_one_group_out_signal), items = listOf({
-                styleOneSlider(stringResource(R.string.status_combo_style_one_out_signal_size),
-                    stringResource(R.string.status_combo_style_one_dp_summary, outSignalSize), outSignalSize.toFloat(), 6f..20f,
-                    { outSignalSize = it.roundToInt(); preview(runtime.copy(outSignalSizeDp = outSignalSize)) },
-                    { persist(runtime.copy(outSignalSizeDp = outSignalSize)) })
+                styleOneSlider(stringResource(R.string.status_combo_style_one_out_signal_size), stringResource(R.string.status_combo_style_one_out_signal_size_summary, outSignalSize), outSignalSize.toFloat(), 6f..20f, { outSignalSize = it.roundToInt(); preview(runtime.copy(outSignalSizeDp = outSignalSize)) }, { persist(runtime.copy(outSignalSizeDp = outSignalSize)) }, enabled = runtime.enabled && runtime.showMobile && runtime.signalMode == 1 && runtime.stackedSignal)
             }, {
-                styleOneSlider(stringResource(R.string.status_combo_style_one_out_signal_margin),
-                    stringResource(R.string.status_combo_style_one_dp_summary, outSignalMargin), outSignalMargin.toFloat(), 0f..16f,
-                    { outSignalMargin = it.roundToInt(); preview(runtime.copy(outSignalMarginDp = outSignalMargin)) },
-                    { persist(runtime.copy(outSignalMarginDp = outSignalMargin)) })
+                styleOneSlider(stringResource(R.string.status_combo_style_one_out_signal_margin), stringResource(R.string.status_combo_style_one_out_signal_margin_summary, outSignalMargin), outSignalMargin.toFloat(), 0f..16f, { outSignalMargin = it.roundToInt(); preview(runtime.copy(outSignalMarginDp = outSignalMargin)) }, { persist(runtime.copy(outSignalMarginDp = outSignalMargin)) }, enabled = runtime.enabled && runtime.showMobile && runtime.signalMode == 1 && runtime.stackedSignal)
             }))
-
             StatusThemeGroup(title = stringResource(R.string.status_combo_style_one_group_track), items = listOf({
-                styleOneSlider(stringResource(R.string.status_combo_style_one_track_alpha),
-                    stringResource(R.string.status_combo_style_one_percent_summary, trackAlpha), trackAlpha.toFloat(), 0f..100f,
-                    { trackAlpha = it.roundToInt(); val a = (trackAlpha * 255f / 100f).roundToInt(); preview(runtime.copy(trackAlpha = a)) },
-                    { persist(runtime.copy(trackAlpha = (trackAlpha * 255f / 100f).roundToInt())) })
+                styleOneSlider(stringResource(R.string.status_combo_style_one_track_alpha), stringResource(R.string.status_combo_style_one_track_alpha_summary, trackAlpha), trackAlpha.toFloat(), 0f..100f, { trackAlpha = it.roundToInt(); val a = (trackAlpha * 255f / 100f).roundToInt(); preview(runtime.copy(trackAlpha = a)) }, { persist(runtime.copy(trackAlpha = (trackAlpha * 255f / 100f).roundToInt())) }, enabled = runtime.enabled)
+            }))
+            StatusThemeGroup(title = stringResource(R.string.status_combo_style_one_group_charging), items = listOf({
+                styleOneSlider(stringResource(R.string.status_combo_style_one_bolt_size), stringResource(R.string.status_combo_style_one_bolt_size_summary, boltSize), boltSize.toFloat(), 50f..180f, { boltSize = it.roundToInt(); preview(runtime.copy(chargingBoltSizePercent = boltSize)) }, { persist(runtime.copy(chargingBoltSizePercent = boltSize)) }, enabled = runtime.enabled && runtime.showValue && runtime.showBolt)
+            }, {
+                styleOneSlider(stringResource(R.string.status_combo_style_one_bolt_x), stringResource(R.string.status_combo_style_one_bolt_x_summary, boltX), boltX.toFloat(), -8f..8f, { boltX = it.roundToInt(); preview(runtime.copy(chargingBoltXDp = boltX)) }, { persist(runtime.copy(chargingBoltXDp = boltX)) }, enabled = runtime.enabled && runtime.showValue && runtime.showBolt)
+            }, {
+                styleOneSlider(stringResource(R.string.status_combo_style_one_bolt_y), stringResource(R.string.status_combo_style_one_bolt_y_summary, boltY), boltY.toFloat(), -8f..8f, { boltY = it.roundToInt(); preview(runtime.copy(chargingBoltYDp = boltY)) }, { persist(runtime.copy(chargingBoltYDp = boltY)) }, enabled = runtime.enabled && runtime.showValue && runtime.showBolt)
+            }))
+            StatusThemeGroup(title = stringResource(R.string.status_combo_style_one_group_position), items = listOf({
+                styleOneSlider(stringResource(R.string.status_combo_style_one_glyph_offset_x), stringResource(R.string.status_combo_style_one_glyph_offset_x_summary, glyphOffsetX), glyphOffsetX.toFloat(), -16f..16f, { glyphOffsetX = it.roundToInt(); preview(runtime.copy(glyphOffsetXDp = glyphOffsetX)) }, { persist(runtime.copy(glyphOffsetXDp = glyphOffsetX)) }, enabled = runtime.enabled)
+            }, {
+                styleOneSlider(stringResource(R.string.status_combo_style_one_glyph_offset_y), stringResource(R.string.status_combo_style_one_glyph_offset_y_summary, glyphOffsetY), glyphOffsetY.toFloat(), -16f..16f, { glyphOffsetY = it.roundToInt(); preview(runtime.copy(glyphOffsetYDp = glyphOffsetY)) }, { persist(runtime.copy(glyphOffsetYDp = glyphOffsetY)) }, enabled = runtime.enabled)
+            }, {
+                styleOneSlider(stringResource(R.string.status_combo_style_one_glyph_left_margin), stringResource(R.string.status_combo_style_one_glyph_left_margin_summary, glyphLeftMargin), glyphLeftMargin.toFloat(), 0f..16f, { glyphLeftMargin = it.roundToInt(); preview(runtime.copy(glyphLeftMarginDp = glyphLeftMargin)) }, { persist(runtime.copy(glyphLeftMarginDp = glyphLeftMargin)) }, enabled = runtime.enabled)
+            }, {
+                styleOneSlider(stringResource(R.string.status_combo_style_one_glyph_right_margin), stringResource(R.string.status_combo_style_one_glyph_right_margin_summary, glyphRightMargin), glyphRightMargin.toFloat(), 0f..16f, { glyphRightMargin = it.roundToInt(); preview(runtime.copy(glyphRightMarginDp = glyphRightMargin)) }, { persist(runtime.copy(glyphRightMarginDp = glyphRightMargin)) }, enabled = runtime.enabled)
             }))
         }
         else -> {
@@ -865,6 +672,7 @@ private fun styleOneSlider(
                 valueRange = range, steps = 0,
                 stepSize = stepSize,
                 hapticOnStep = false,
+                enabled = enabled,
                 onValueChange = { raw ->
                     if (enabled) {
                         val bounded = raw.coerceIn(range.start, range.endInclusive)

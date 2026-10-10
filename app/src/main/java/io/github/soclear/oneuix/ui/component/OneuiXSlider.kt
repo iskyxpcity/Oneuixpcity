@@ -28,6 +28,7 @@ fun OneuiXSlider(
     steps: Int = 0,
     stepSize: Float? = null,
     hapticOnStep: Boolean = true,
+    enabled: Boolean = true,
     onValueChangeFinished: (() -> Unit)? = null,
 ) {
     val hostView = androidx.compose.ui.platform.LocalView.current
@@ -48,6 +49,7 @@ fun OneuiXSlider(
     }
 
     fun emit(raw: Float) {
+        if (!enabled) return
         val bounded = raw.coerceIn(valueRange.start, valueRange.endInclusive)
         val step = stepSize
         val snapped = if (step == null || step <= 0f) bounded else (
@@ -74,7 +76,7 @@ fun OneuiXSlider(
 
     val handleValueChange: (Float) -> Unit = ::emit
     val handleValueChangeFinished: () -> Unit = {
-        onValueChangeFinished?.invoke()
+        if (enabled) onValueChangeFinished?.invoke()
         visualValue = lastEmitted
         dragging = false
         Unit
@@ -84,6 +86,7 @@ fun OneuiXSlider(
     when (LocalUiMode.current) {
         UiMode.Material -> MaterialSlider(
             value = visualValue,
+            enabled = enabled,
             onValueChange = handleValueChange,
             modifier = modifier,
             valueRange = valueRange,
@@ -93,6 +96,7 @@ fun OneuiXSlider(
 
         UiMode.Miuix -> MiuixSlider(
             value = visualValue,
+            enabled = enabled,
             onValueChange = handleValueChange,
             modifier = modifier.padding(bottom = 10.dp),
             valueRange = valueRange,

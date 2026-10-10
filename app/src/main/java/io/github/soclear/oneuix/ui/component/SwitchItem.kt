@@ -14,6 +14,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
@@ -45,6 +46,7 @@ fun SwitchItem(
     clickable: Boolean = false,
     showChildIndicator: Boolean = clickable,
     onClick: () -> Unit = {},
+    enabled: Boolean = true,
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit
 ) {
@@ -54,8 +56,9 @@ fun SwitchItem(
         UiMode.Material -> {
             if (clickable) {
                 SegmentedListItem(
-                    modifier = if (grouped) modifier else modifier.padding(horizontal = 16.dp, vertical = 4.dp),
-                    onClick = onClick,
+                    modifier = (if (grouped) modifier else modifier.padding(horizontal = 16.dp, vertical = 4.dp)).alpha(if (enabled) 1f else 0.45f),
+                    enabled = enabled,
+                    onClick = { if (enabled) onClick() },
                     colors = oneuiXSegmentedColors(),
                     headlineContent = { Text(title) },
                     supportingContent = summary?.let { { Text(it) } },
@@ -76,14 +79,15 @@ fun SwitchItem(
                             }
                             ExpressiveSwitch(
                                 checked = checked,
-                                onCheckedChange = onCheckedChange,
+                                enabled = enabled,
+                                onCheckedChange = { if (enabled) onCheckedChange(it) },
                             )
                         }
                     },
                 )
             } else {
                 Box(
-                    modifier = if (grouped) modifier else modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                    modifier = (if (grouped) modifier else modifier.padding(horizontal = 16.dp, vertical = 4.dp)).alpha(if (enabled) 1f else 0.45f),
                 ) {
                     SegmentedSwitchItem(
                         icon = icon,
@@ -91,7 +95,8 @@ fun SwitchItem(
                         title = title,
                         summary = summary,
                         checked = checked,
-                        onCheckedChange = onCheckedChange,
+                        enabled = enabled,
+                        onCheckedChange = { if (enabled) onCheckedChange(it) },
                     )
                 }
             }
@@ -104,6 +109,8 @@ fun SwitchItem(
                     BasicComponent(
                         title = title,
                         summary = summary,
+                        enabled = enabled,
+                        modifier = Modifier.alpha(if (enabled) 1f else 0.45f),
                         startAction = icon?.let { imageVector ->
                             {
                                 MiuixIcon(
@@ -124,16 +131,19 @@ fun SwitchItem(
                             MiuixSwitch(
                                 modifier = Modifier.align(Alignment.CenterVertically),
                                 checked = checked,
-                                onCheckedChange = onCheckedChange,
+                                enabled = enabled,
+                                onCheckedChange = { if (enabled) onCheckedChange(it) },
                             )
                         },
-                        onClick = onClick,
+                        onClick = { if (enabled) onClick() },
                         role = Role.Button,
                     )
                 } else if (showChildIndicator) {
                     BasicComponent(
                         title = title,
                         summary = summary,
+                        enabled = enabled,
+                        modifier = Modifier.alpha(if (enabled) 1f else 0.45f),
                         startAction = icon?.let { imageVector ->
                             {
                                 MiuixIcon(
@@ -155,7 +165,7 @@ fun SwitchItem(
                                 onCheckedChange = onCheckedChange,
                             )
                         },
-                        onClick = { onCheckedChange(!checked) },
+                        onClick = { if (enabled) onCheckedChange(!checked) },
                         role = Role.Switch,
                     )
                 } else {
@@ -163,7 +173,8 @@ fun SwitchItem(
                         title = title,
                         summary = summary,
                         checked = checked,
-                        onCheckedChange = onCheckedChange,
+                        enabled = enabled,
+                        onCheckedChange = { if (enabled) onCheckedChange(it) },
                         startAction = icon?.let { imageVector ->
                             {
                                 MiuixIcon(
@@ -178,10 +189,10 @@ fun SwitchItem(
             }
 
             if (grouped) {
-                Content()
+                Box(modifier = Modifier.alpha(if (enabled) 1f else 0.45f)) { Content() }
             } else {
                 Card(
-                    modifier = modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                    modifier = modifier.padding(horizontal = 12.dp, vertical = 4.dp).alpha(if (enabled) 1f else 0.45f),
                 ) {
                     Content()
                 }
