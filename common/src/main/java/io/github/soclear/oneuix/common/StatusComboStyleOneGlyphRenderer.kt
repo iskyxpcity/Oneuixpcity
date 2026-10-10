@@ -106,7 +106,7 @@ object StatusComboStyleOneGlyphRenderer {
         val margin = outsideSignalMargin(config)
         return when {
             typeLane -> WIDE_WIDTH + margin
-            signalLane -> outsideSignalWidth(config) + margin + B_CX + B_R
+            signalLane -> outsideSignalWidth(config) + margin + COMPACT_WIDTH - 8f
             else -> COMPACT_WIDTH
         }
     }
@@ -129,7 +129,7 @@ object StatusComboStyleOneGlyphRenderer {
             usesOutsideNetworkTypeLayout(config) ->
                 (B_CX + WIDE_OFFSET + margin) / designWidth(config)
             usesOutsideSignalLayout(config) ->
-                (B_CX + signalWidth + margin) / designWidth(config)
+                (B_CX + signalWidth + margin - 8f) / designWidth(config)
             else -> B_CX / COMPACT_WIDTH
         }
     }
@@ -163,7 +163,7 @@ object StatusComboStyleOneGlyphRenderer {
 
         val offsetX = when {
             outsideType -> WIDE_OFFSET + extraWideMargin
-            outsideSignal -> signalWidth + extraWideMargin
+            outsideSignal -> signalWidth + extraWideMargin - 8f
             else -> 0f
         }
         val cx = B_CX + offsetX

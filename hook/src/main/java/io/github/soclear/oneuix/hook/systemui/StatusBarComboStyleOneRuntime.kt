@@ -722,7 +722,7 @@ object StatusBarComboStyleOneRuntime {
                 if (view === battery || view is GlyphView) return@forEach
                 // QuickStar hides native indicator views themselves. Hide separate battery
                 // icon views too, but let the meter's own child handler manage nested views.
-                val hide = (isBatteryIcon(view) && !isWithin(battery, view) && !isWithin(view, battery)) ||
+                val hide = ((isBatteryIcon(view) || slotOf(view)?.contains("battery", ignoreCase = true) == true) && !isWithin(battery, view) && !isWithin(view, battery)) ||
                     (config.showWifi && isWifiIcon(view)) ||
                     (foldMobile && isMobileIcon(view)) ||
                     (config.showMobile && config.mobileTypeMode == 2 && isMobileTypeView(view))
@@ -1349,14 +1349,16 @@ object StatusBarComboStyleOneRuntime {
         val nextLevel = readSignalIntField(meter, "mLevel", "level")
             ?.takeIf { it in 0..100 }
         val nextCharging = readNativeBoolean(meter, "mCharging", "charging")
-        val nextQuickCharging = readNativeBoolean(meter, "mQuickCharging", "quickCharging", "mFastCharging", "fastCharging", "mIsFastCharging", "isFastCharging")
+        val nextQuickCharging = readSamsungFastCharging(meter)
+            ?: readNativeBoolean(meter, "mQuickCharging", "quickCharging", "mFastCharging", "fastCharging", "mIsFastCharging", "isFastCharging")
         val nextLow = readNativeBoolean(meter, "mLow", "low")
         val nextPowerSave = readNativeBoolean(meter, "mPowerSave", "powerSave")
         val previous = state
+        val charging = nextCharging ?: previous.charging
         val next = previous.copy(
             batteryLevel = nextLevel ?: previous.batteryLevel,
-            charging = nextCharging ?: previous.charging,
-            quickCharge = nextQuickCharging ?: previous.quickCharge,
+            charging = charging,
+            quickCharge = charging && (nextQuickCharging ?: isSamsungFastChargeTint(meter)),
             lowBatteryWarning = nextLow ?: previous.lowBatteryWarning,
             powerSave = nextPowerSave ?: previous.powerSave,
         )
@@ -1473,6 +1475,45 @@ object StatusBarComboStyleOneRuntime {
             else if (intensity > 0f) darkColor ?: lightColor
             else lightColor ?: darkColor
         return resolved?.takeIf { it != Color.TRANSPARENT }
+    }
+
+    private fun readSamsungFastCharging(meter: View): Boolean? {
+        val drawable = readNativeObject(meter, "mSamsungDrawable", "samsungDrawable") ?: return null
+        val batteryState = readNativeObject(drawable, "batteryState", "mBatteryState", "state") ?: drawable
+        return readNativeBoolean(
+            batteryState,
+            "mQuickCharging", "quickCharging", "isQuickCharging",
+            "mFastCharging", "fastCharging", "isFastCharging",
+            "mSuperFastCharging", "superFastCharging", "isSuperFastCharging",
+            "isFastCharger", "fastCharge", "mFastCharge",
+        )
+    }
+
+    private fun isSamsungFastChargeTint(meter: View): Boolean {
+        val drawable = readNativeObject(meter, "mSamsungDrawable", "samsungDrawable") ?: return false
+        val tint = readSignalIntField(drawable, "iconTint", "mIconTint") ?: return false
+        val red = Color.red(tint)
+        val green = Color.green(tint)
+        val blue = Color.blue(tint)
+        // Samsung's fast-charge icon tint is blue; ordinary charging remains status-bar tinted.
+        return blue >= 120 && blue > red * 1.25 && blue >= green * 0.90
+    }
+
+    private fun readNativeObject(target: Any, vararg names: String): Any? {
+        var type: Class<*>? = target.javaClass
+        while (type != null) {
+            val current = type
+            for (name in names) {
+                val field = runCatching {
+                    current.declaredFields.firstOrNull { it.name.equals(name, ignoreCase = true) }
+                        ?.apply { isAccessible = true }
+                }.getOrNull() ?: continue
+                val value = runCatching { field.get(target) }.getOrNull()
+                if (value != null) return value
+            }
+            type = current.superclass
+        }
+        return null
     }
 
     private fun readNativeBoolean(target: Any, vararg names: String): Boolean? {
@@ -1820,7 +1861,11 @@ object StatusBarComboStyleOneRuntime {
     }
 
     private fun quickCharge(): Boolean =
-        listOf("sys.miui.quickcharge", "persist.vendor.quickcharge.status", "ro.boot.quickcharge").any { key ->
+        listOf(
+            "sys.miui.quickcharge", "persist.vendor.quickcharge.status", "ro.boot.quickcharge",
+            "sys.fastcharging", "persist.sys.fastcharge", "persist.vendor.battery.fast_charge",
+            "sys.super_fast_charging",
+        ).any { key ->
             runCatching {
                 val c = Class.forName("android.os.SystemProperties")
                 val v = c.getMethod("get", String::class.java).invoke(null, key) as? String
