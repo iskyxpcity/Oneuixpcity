@@ -296,6 +296,7 @@ fun StatusComboStyleOneCategoryControls(
                     title = stringResource(R.string.status_combo_style_one_role_colors),
                     summary = stringResource(R.string.status_combo_style_one_role_colors_summary),
                     checked = runtime.roleColors,
+                    enabled = runtime.enabled,
                     onCheckedChange = { previewAndPersist(runtime.copy(roleColors = it)) },
                 )
             }
@@ -307,7 +308,7 @@ fun StatusComboStyleOneCategoryControls(
                         5f..50f,
                         { lowThreshold = it.roundToInt(); preview(runtime.copy(lowThreshold = lowThreshold)) },
                         { persist(runtime.copy(lowThreshold = lowThreshold)) },
-                        enabled = runtime.roleColors,
+                        enabled = runtime.enabled && runtime.roleColors,
                     )
                 }
                 colorItems += {
@@ -316,7 +317,7 @@ fun StatusComboStyleOneCategoryControls(
                         summary = stringResource(R.string.status_combo_style_one_color_summary),
                         darkColor = runtime.lowColorDarkArgb,
                         lightColor = runtime.lowColorLightArgb,
-                        enabled = runtime.roleColors,
+                        enabled = runtime.enabled && runtime.roleColors,
                         onClick = { editingColorRole = StyleOneColorRole.Low },
                     )
                 }
@@ -326,7 +327,7 @@ fun StatusComboStyleOneCategoryControls(
                         summary = stringResource(R.string.status_combo_style_one_color_summary),
                         darkColor = runtime.chargingColorDarkArgb,
                         lightColor = runtime.chargingColorLightArgb,
-                        enabled = runtime.roleColors,
+                        enabled = runtime.enabled && runtime.roleColors,
                         onClick = { editingColorRole = StyleOneColorRole.Charging },
                     )
                 }
@@ -336,7 +337,7 @@ fun StatusComboStyleOneCategoryControls(
                         summary = stringResource(R.string.status_combo_style_one_color_summary),
                         darkColor = runtime.criticalColorDarkArgb,
                         lightColor = runtime.criticalColorLightArgb,
-                        enabled = runtime.roleColors,
+                        enabled = runtime.enabled && runtime.roleColors,
                         onClick = { editingColorRole = StyleOneColorRole.Critical },
                     )
                 }
@@ -346,8 +347,8 @@ fun StatusComboStyleOneCategoryControls(
                             title = stringResource(R.string.status_combo_style_one_reset_colors),
                         summary = stringResource(R.string.status_combo_style_one_reset_colors_summary),
                         modifier = Modifier
-                            .alpha(if (runtime.roleColors) 1f else 0.45f)
-                            .clickable(enabled = runtime.roleColors) { confirmResetColors = true },
+                            .alpha(if (runtime.enabled && runtime.roleColors) 1f else 0.45f)
+                            .clickable(enabled = runtime.enabled && runtime.roleColors) { confirmResetColors = true },
                         trailingContent = {
                             Text("›", style = Material3Theme.typography.titleLarge)
                         },
