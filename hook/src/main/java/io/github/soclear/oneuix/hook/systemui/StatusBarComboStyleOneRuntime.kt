@@ -81,7 +81,7 @@ object StatusBarComboStyleOneRuntime {
     private val chargingRotationTicker = object : Runnable {
         override fun run() {
             if (!config.enabled || config.chargingDisplayMode != 1 ||
-                !config.showBolt || !config.showValue || config.mobileTypeMode == 2 ||
+                !config.showBolt || !config.showValue ||
                 (config.trioStyle == 0 && config.valueCentred) || !state.charging
             ) {
                 if (state.chargingAlternatePhase) {
