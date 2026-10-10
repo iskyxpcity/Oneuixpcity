@@ -149,6 +149,7 @@ object StatusComboStyleOneGlyphRenderer {
         state: StatusComboStyleOneGlyphState,
     ) {
         if (width <= 0 || height <= 0) return
+        val wide = usesWideLayout(config)
         val outsideType = usesOutsideNetworkTypeLayout(config)
         val outsideSignal = usesOutsideSignalLayout(config)
         val extraWideMargin = outsideSignalMargin(config)
