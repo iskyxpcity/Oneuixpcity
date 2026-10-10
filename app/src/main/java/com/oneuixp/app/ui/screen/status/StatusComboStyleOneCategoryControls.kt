@@ -166,7 +166,7 @@ fun StatusComboStyleOneCategoryControls(
     when (LocalUiMode.current) {
         UiMode.Material -> {
             Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 28.dp, vertical = 8.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp, vertical = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -190,7 +190,7 @@ fun StatusComboStyleOneCategoryControls(
             }
         }
         UiMode.Miuix -> Box(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 28.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp),
         ) {
             MiuixTabRow(
                 tabs = tabs,

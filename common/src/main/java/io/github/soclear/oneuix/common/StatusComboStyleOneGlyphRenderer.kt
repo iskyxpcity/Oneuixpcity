@@ -112,13 +112,10 @@ object StatusComboStyleOneGlyphRenderer {
     }
 
     fun glyphWidthDp(config: StatusBarComboStyleOneRuntime): Int {
-        val wide = usesWideLayout(config)
-        val layoutWidth = designWidth(config)
-        // Keep the container proportionate to the active canvas. With no outer network
-        // type label, the signal-only layout can shrink instead of reserving its lane.
-        val base = if (wide) 78f * layoutWidth / WIDE_WIDTH else 36f
-        return (base * 0.9f * config.glyphScalePercent.coerceIn(70, 150) / 100f)
-            .roundToInt().coerceAtLeast(20)
+        // Keep the glyph's scale tied to its height. Extra outer-signal spacing expands
+        // the canvas bounds instead of scaling down the ring, signal bars, or type label.
+        val heightDp = glyphHeightDp(config).toFloat()
+        return (designWidth(config) * heightDp / HEIGHT).roundToInt().coerceAtLeast(20)
     }
 
     /** Horizontal anchor of the battery centre within the active glyph bounds. */
@@ -155,7 +152,7 @@ object StatusComboStyleOneGlyphRenderer {
         val extraWideMargin = outsideSignalMargin(config)
         val signalWidth = outsideSignalWidth(config)
         val designWidth = designWidth(config)
-        val scale = min(width / designWidth, height / HEIGHT)
+        val scale = height / HEIGHT
         if (scale <= 0f) return
         val save = canvas.save()
         canvas.translate((width - designWidth * scale) / 2f, (height - HEIGHT * scale) / 2f)
@@ -177,7 +174,7 @@ object StatusComboStyleOneGlyphRenderer {
         }
         val centredBatteryValue = config.trioStyle == 0 && config.valueCentred
         val shouldAlternateCharging = state.charging && config.showBolt && config.showValue &&
-            !centredBatteryValue && config.chargingDisplayMode == 1
+            !centredBatteryValue && config.mobileTypeMode != 2 && config.chargingDisplayMode == 1
         val alternateChargingPhase = shouldAlternateCharging && state.chargingAlternatePhase
         // Charging color has priority; by default the bolt replaces the percentage.
         // The optional alternate mode swaps the two glyphs every five seconds.

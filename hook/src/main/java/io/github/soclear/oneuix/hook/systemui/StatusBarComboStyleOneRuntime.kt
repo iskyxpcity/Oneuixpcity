@@ -81,7 +81,8 @@ object StatusBarComboStyleOneRuntime {
     private val chargingRotationTicker = object : Runnable {
         override fun run() {
             if (!config.enabled || config.chargingDisplayMode != 1 ||
-                !config.showBolt || !config.showValue || (config.trioStyle == 0 && config.valueCentred) || !state.charging
+                !config.showBolt || !config.showValue || config.mobileTypeMode == 2 ||
+                (config.trioStyle == 0 && config.valueCentred) || !state.charging
             ) {
                 if (state.chargingAlternatePhase) {
                     state = state.copy(chargingAlternatePhase = false)
@@ -892,7 +893,8 @@ object StatusBarComboStyleOneRuntime {
 
     private fun shouldSuppressSlot(slot: String): Boolean {
         val normalized = slot.lowercase()
-        return (config.enabled && config.showWifi && normalized == "wifi") ||
+        return (config.enabled && normalized.contains("battery")) ||
+            (config.enabled && config.showWifi && normalized == "wifi") ||
             (isMobileNativeSuppressed() && isManagedMobileSlot(normalized))
     }
 
