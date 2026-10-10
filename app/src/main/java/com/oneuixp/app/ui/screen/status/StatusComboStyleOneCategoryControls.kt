@@ -169,11 +169,10 @@ fun StatusComboStyleOneCategoryControls(
     }
 
     StatusThemeGroup(
-        title = stringResource(R.string.status_combo_style_one_feature_name),
         items = listOf({
             StatusThemeChildItem {
                 Column {
-                    StyleOneInfoItem(title = stringResource(R.string.status_combo_style_one_preview), summary = stringResource(R.string.status_combo_style_one_preview_summary))
+                    StyleOneInfoItem(title = stringResource(R.string.status_combo_style_one_preview))
                     AndroidView(modifier = Modifier.fillMaxWidth().height(60.dp), factory = { StatusComboStyleOnePreviewView(it) }, update = { it.setConfig(previewRuntime) })
                 }
             }
@@ -237,7 +236,26 @@ fun StatusComboStyleOneCategoryControls(
             }, {
                 SwitchItem(icon = null, title = stringResource(R.string.status_combo_style_one_show_mobile), summary = stringResource(R.string.status_combo_style_one_show_mobile_summary), checked = runtime.showMobile, enabled = runtime.enabled, onCheckedChange = { previewAndPersist(runtime.copy(showMobile = it)) })
             }, {
-                SwitchItem(icon = null, title = stringResource(R.string.status_combo_style_one_dual_sim), summary = stringResource(R.string.status_combo_style_one_dual_sim_summary), checked = runtime.dualSim, enabled = runtime.enabled && runtime.showMobile, onCheckedChange = { previewAndPersist(runtime.copy(dualSim = it)) })
+                SelectItem(
+                    icon = null,
+                    title = stringResource(R.string.status_combo_style_one_dual_sim),
+                    summary = stringResource(R.string.status_combo_style_one_dual_sim_summary),
+                    entries = listOf(
+                        stringResource(R.string.status_combo_style_one_dual_sim_off),
+                        stringResource(R.string.status_combo_style_one_dual_sim_ring_vertical),
+                        stringResource(R.string.status_combo_style_one_dual_sim_below_ring),
+                    ),
+                    selectedIndex = when {
+                        runtime.dualSimMode in 1..2 -> runtime.dualSimMode
+                        runtime.dualSim -> 1
+                        else -> 0
+                    },
+                    enabled = runtime.enabled && runtime.showMobile,
+                    onSelectedIndexChange = { selected ->
+                        val mode = selected.coerceIn(0, 2)
+                        previewAndPersist(runtime.copy(dualSimMode = mode, dualSim = mode != 0))
+                    },
+                )
             }, {
                 SwitchItem(icon = null, title = stringResource(R.string.status_combo_style_one_show_value), summary = stringResource(R.string.status_combo_style_one_show_value_summary), checked = runtime.showValue, enabled = runtime.enabled, onCheckedChange = { previewAndPersist(runtime.copy(showValue = it)) })
             }, {

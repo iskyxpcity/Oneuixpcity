@@ -189,6 +189,9 @@ data class Preference(
             val valueCentred: Boolean = false,
             val trioStyle: Int = 0,
             val dualSim: Boolean = false,
+            // 0 = single/data SIM only, 1 = two rows at top/bottom of ring, 2 = two rows below ring.
+            // The legacy boolean is retained so older saved preferences keep their prior dual-row behavior.
+            val dualSimMode: Int = 0,
             val signalMode: Int = 0,
             val stackedSignal: Boolean = false,
             val dataSimOnly: Boolean = false,

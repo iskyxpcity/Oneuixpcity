@@ -31,6 +31,10 @@ object StatusComboStyleOneGlyphRenderer {
     private const val COMPACT_WIDTH = 120f
     private const val WIDE_WIDTH = 260f
     private const val HEIGHT = 120f
+    private const val DUAL_BOTTOM_HEIGHT = 144f
+    private const val DUAL_BOTTOM_ROW_ONE_Y = 127f
+    private const val DUAL_BOTTOM_ROW_TWO_Y = 135f
+    private const val DUAL_BOTTOM_DOT_R = 3.2f
     private const val WIDE_OFFSET = 144.5f
     // Outside-type-only mode should not reserve the unused signal-pillars lane.
     private const val TYPE_ONLY_SHIFT = 60f
@@ -89,6 +93,21 @@ object StatusComboStyleOneGlyphRenderer {
     fun usesOutsideNetworkTypeLayout(config: StatusBarComboStyleOneRuntime): Boolean =
         config.showMobile && config.mobileTypeMode == 2
 
+    /** Old configurations with dualSim=true but no dualSimMode still map to "ring top/bottom". */
+    private fun effectiveDualSimMode(config: StatusBarComboStyleOneRuntime): Int =
+        when {
+            config.dualSimMode in 1..2 -> config.dualSimMode
+            config.dualSim -> 1
+            else -> 0
+        }
+
+    private fun usesDualSignalBelowRing(config: StatusBarComboStyleOneRuntime): Boolean =
+        config.trioStyle == 0 && config.showMobile && config.signalMode == 0 &&
+            !config.dataSimOnly && effectiveDualSimMode(config) == 2
+
+    private fun designHeight(config: StatusBarComboStyleOneRuntime): Float =
+        if (usesDualSignalBelowRing(config)) DUAL_BOTTOM_HEIGHT else HEIGHT
+
     private fun usesOutsideSignalLayout(config: StatusBarComboStyleOneRuntime): Boolean =
         config.showMobile && config.signalMode == 1 && config.stackedSignal
 
@@ -116,10 +135,10 @@ object StatusComboStyleOneGlyphRenderer {
     }
 
     fun glyphWidthDp(config: StatusBarComboStyleOneRuntime): Int {
-        // Keep the glyph's scale tied to its height. Extra outer-signal spacing expands
-        // the canvas bounds instead of scaling down the ring, signal bars, or type label.
+        // Use the active design height so the below-ring dual-SIM mode can extend downward
+        // without scaling the battery ring itself.
         val heightDp = glyphHeightDp(config).toFloat()
-        return (designWidth(config) * heightDp / HEIGHT).roundToInt().coerceAtLeast(20)
+        return (designWidth(config) * heightDp / designHeight(config)).roundToInt().coerceAtLeast(20)
     }
 
     /** Horizontal anchor of the battery centre within the active glyph bounds. */
@@ -138,9 +157,11 @@ object StatusComboStyleOneGlyphRenderer {
         }
     }
 
-    fun glyphHeightDp(config: StatusBarComboStyleOneRuntime): Int =
-        (36f * 0.9f * config.glyphScalePercent.coerceIn(70, 150) / 100f)
+    fun glyphHeightDp(config: StatusBarComboStyleOneRuntime): Int {
+        val baseHeightDp = (36f * 0.9f * config.glyphScalePercent.coerceIn(70, 150) / 100f)
             .roundToInt().coerceAtLeast(18)
+        return (baseHeightDp * designHeight(config) / HEIGHT).roundToInt().coerceAtLeast(18)
+    }
 
     private fun valueSizeCanvasUnits(config: StatusBarComboStyleOneRuntime): Float =
         config.valueSize.coerceIn(6, 18) * (HEIGHT / 36f)
@@ -159,10 +180,11 @@ object StatusComboStyleOneGlyphRenderer {
         val extraWideMargin = outsideSignalMargin(config)
         val signalWidth = outsideSignalWidth(config)
         val designWidth = designWidth(config)
-        val scale = height / HEIGHT
+        val designHeight = designHeight(config)
+        val scale = height / designHeight
         if (scale <= 0f) return
         val save = canvas.save()
-        canvas.translate((width - designWidth * scale) / 2f, (height - HEIGHT * scale) / 2f)
+        canvas.translate((width - designWidth * scale) / 2f, (height - designHeight * scale) / 2f)
         canvas.scale(scale, scale)
 
         val typeOnlyShift = if (outsideType && !outsideSignal) TYPE_ONLY_SHIFT else 0f
@@ -192,8 +214,12 @@ object StatusComboStyleOneGlyphRenderer {
             (!state.charging || alternateChargingPhase || !config.showBolt ||
                 centredBatteryValue || config.mobileTypeMode != 1)
         val inRingSignal = config.showMobile && config.signalMode == 0
-        val dualRows = config.dualSim && !config.dataSimOnly && inRingSignal &&
-            state.simOneLevel >= 0 && state.simTwoLevel >= 0 && !wifiInk && !state.charging
+        val dualSimMode = effectiveDualSimMode(config)
+        val dualLevelsAvailable = !config.dataSimOnly &&
+            state.simOneLevel >= 0 && state.simTwoLevel >= 0
+        val dualRows = dualSimMode == 1 && dualLevelsAvailable && inRingSignal &&
+            !wifiInk && !state.charging
+        val dualBottomRows = dualSimMode == 2 && dualLevelsAvailable && inRingSignal
         val valueInCentre = showBatteryValue &&
             (config.valueCentred || dualRows ||
                 (!wifiInk && config.trioStyle == 0 && config.mobileTypeMode != 1) ||
@@ -246,11 +272,19 @@ object StatusComboStyleOneGlyphRenderer {
                 drawWifi(canvas, offsetX, tint, state.wifiLevel, config.arcStroke, wifiInGap)
             }
             if (inRingSignal) {
-                if (dualRows) {
-                    drawDotRow(canvas, offsetX, state.simOneLevel, tint, track, DUAL_DOT_R, true)
-                    drawDotRow(canvas, offsetX, state.simTwoLevel, tint, track, DUAL_DOT_R, false)
-                } else {
-                    drawSingleSignalDots(canvas, offsetX, state.mobileLevel, tint, track)
+                when {
+                    dualRows -> {
+                        // Existing mode: one SIM row above and one below the ring center.
+                        drawDotRow(canvas, offsetX, state.simOneLevel, tint, track, DUAL_DOT_R, true)
+                        drawDotRow(canvas, offsetX, state.simTwoLevel, tint, track, DUAL_DOT_R, false)
+                    }
+                    dualBottomRows -> {
+                        // Alternative mode: reserve real canvas height and place both SIM rows
+                        // underneath the ring, outside the battery stroke.
+                        drawBottomDualDotRow(canvas, offsetX, state.simOneLevel, tint, track, DUAL_BOTTOM_ROW_ONE_Y)
+                        drawBottomDualDotRow(canvas, offsetX, state.simTwoLevel, tint, track, DUAL_BOTTOM_ROW_TWO_Y)
+                    }
+                    else -> drawSingleSignalDots(canvas, offsetX, state.mobileLevel, tint, track)
                 }
             }
             if (typeInCentre && innerType != null) {
@@ -409,13 +443,23 @@ object StatusComboStyleOneGlyphRenderer {
         }
     }
 
+    private fun drawBottomDualDotRow(
+        canvas: Canvas, offsetX: Float, level: Int, color: Int, track: Int, y: Float,
+    ) {
+        dots.forEachIndexed { index, point ->
+            paint.style = Paint.Style.FILL
+            paint.color = if (index < level.coerceIn(0, 4)) color else track
+            canvas.drawCircle(offsetX + point[0], y, DUAL_BOTTOM_DOT_R, paint)
+        }
+    }
+
     private fun drawRectangleStyle(
         canvas: Canvas, offsetX: Float, config: StatusBarComboStyleOneRuntime,
         state: StatusComboStyleOneGlyphState, level: Int, active: Int,
         tint: Int, track: Int, bolt: Boolean, innerType: String?, showBatteryValue: Boolean,
     ) {
         if (config.showMobile && config.signalMode == 0) {
-            val dual = config.dualSim && !config.dataSimOnly &&
+            val dual = effectiveDualSimMode(config) != 0 && !config.dataSimOnly &&
                 state.simOneLevel >= 0 && state.simTwoLevel >= 0
             drawRectDotColumn(canvas, offsetX + 9.6f,
                 if (dual) state.simOneLevel else state.mobileLevel, tint, track)
@@ -639,7 +683,7 @@ object StatusComboStyleOneGlyphRenderer {
 
     private fun contentGapRange(contentWidth: Float, stroke: Int): Pair<Float, Float> {
         // Include the ring stroke and a small optical clearance on both sides.
-        val chord = (contentWidth + stroke.coerceIn(4, 16) + 5f).coerceIn(12f, B_R * 1.65f)
+        val chord = (contentWidth + stroke.coerceIn(4, 16) + 7f).coerceIn(12f, B_R * 1.65f)
         val halfAngle = Math.toDegrees(kotlin.math.asin((chord / (2f * B_R)).coerceIn(0f, 0.95f).toDouble()))
         val fraction = (2.0 * halfAngle / B_SWEEP).toFloat().coerceIn(0.06f, 0.42f)
         val start = (1f - fraction) / 2f

@@ -42,7 +42,10 @@
     <string name="status_combo_style_one_signal_inside">图标内部</string>
     <string name="status_combo_style_one_signal_outside">图标外侧</string>
     <string name="status_combo_style_one_dual_sim">双 SIM 信号</string>
-    <string name="status_combo_style_one_dual_sim_summary">没有 Wi-Fi 且未充电时，将 SIM 1 和 SIM 2 分成上下两排显示。只有双卡且能读取两张卡的信号时才会同时显示，否则回退到当前上网卡。</string>
+    <string name="status_combo_style_one_dual_sim_summary">选择双 SIM 信号点的显示位置：圆环上下或圆环底下。若无法读取两张卡的信号，则回退到当前上网卡。</string>
+    <string name="status_combo_style_one_dual_sim_off">关闭</string>
+    <string name="status_combo_style_one_dual_sim_ring_vertical">圆环上下</string>
+    <string name="status_combo_style_one_dual_sim_below_ring">圆环底下</string>
     <string name="status_combo_style_one_stacked_signal">在图标外绘制信号柱</string>
     <string name="status_combo_style_one_stacked_signal_summary">信号选择为环外时，使用四条递增信号柱显示一张卡，并以点阵显示另一张卡；关闭后恢复系统原生移动信号图标。</string>
     <string name="status_combo_style_one_data_sim_only">只显示默认数据 SIM</string>

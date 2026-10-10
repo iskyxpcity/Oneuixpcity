@@ -42,7 +42,10 @@
     <string name="status_combo_style_one_signal_inside">Inside the icon</string>
     <string name="status_combo_style_one_signal_outside">Outside the icon</string>
     <string name="status_combo_style_one_dual_sim">Dual-SIM signal</string>
-    <string name="status_combo_style_one_dual_sim_summary">When Wi-Fi is not active and the phone is not charging, show SIM 1 and SIM 2 in two rows. Both levels require two readable SIMs; otherwise the current data SIM is used.</string>
+    <string name="status_combo_style_one_dual_sim_summary">Choose whether to show dual-SIM signal dots inside the ring or in two rows below it. If both SIM levels are unavailable, the icon falls back to the active data SIM.</string>
+    <string name="status_combo_style_one_dual_sim_off">Off</string>
+    <string name="status_combo_style_one_dual_sim_ring_vertical">Top and bottom of ring</string>
+    <string name="status_combo_style_one_dual_sim_below_ring">Below ring</string>
     <string name="status_combo_style_one_stacked_signal">Draw signal bars outside the icon</string>
     <string name="status_combo_style_one_stacked_signal_summary">When signal is placed outside the ring, draw ascending bars for one SIM and dots for the other. Turn off to restore the stock mobile icon.</string>
     <string name="status_combo_style_one_data_sim_only">Show only the default data SIM</string>
