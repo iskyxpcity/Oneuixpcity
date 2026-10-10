@@ -81,7 +81,7 @@ object StatusBarComboStyleOneRuntime {
     private val chargingRotationTicker = object : Runnable {
         override fun run() {
             if (!config.enabled || config.chargingDisplayMode != 1 ||
-                !config.showBolt || !config.showValue ||
+                !config.showBolt || !config.showValue || config.mobileTypeMode == 2 ||
                 (config.trioStyle == 0 && config.valueCentred) || !state.charging
             ) {
                 if (state.chargingAlternatePhase) {
@@ -106,6 +106,13 @@ object StatusBarComboStyleOneRuntime {
     private val subscriptionSlots = ConcurrentHashMap<Int, Int>()
     private val nativeChildSnapshots = Collections.synchronizedMap(WeakHashMap<View, LayoutSnapshot>())
     private val knownIconSlots = Collections.synchronizedMap(WeakHashMap<View, String>())
+    private val iconVisibilityControllers: MutableSet<Any> =
+        Collections.synchronizedSet(Collections.newSetFromMap(WeakHashMap<Any, Boolean>()))
+    private val nativeBatterySlotVisibility =
+        Collections.synchronizedMap(WeakHashMap<Any, MutableMap<String, Boolean>>())
+    private val knownBatterySlotNames: MutableSet<String> =
+        Collections.synchronizedSet(mutableSetOf("battery"))
+    private val enforcingBatterySlotVisibility = ThreadLocal<Boolean>()
     private val rowTintSnapshots = Collections.synchronizedMap(WeakHashMap<ViewGroup, Int>())
     // Prefer the exact foreground tint applied to the native battery meter; the
     // generic status-icon tint remains a fallback for non-MIUI implementations.
@@ -329,6 +336,7 @@ object StatusBarComboStyleOneRuntime {
         // it runs repeatedly during shade expansion and causes view-tree scans.
         hookShadeExpansion(module, param.classLoader)
         hookIconManager(module, param.classLoader)
+        hookBatterySlotVisibility(module, param.classLoader)
         hookBatteryMeters(module, param.classLoader)
         hookBatteryDrawFallback(module, param.classLoader)
         hookMiuiBatteryIsland(module, param.classLoader)
@@ -636,7 +644,8 @@ object StatusBarComboStyleOneRuntime {
     private fun syncChargingRotationTicker() {
         main.removeCallbacks(chargingRotationTicker)
         val shouldRotate = config.enabled && config.chargingDisplayMode == 1 &&
-            config.showBolt && config.showValue && !(config.trioStyle == 0 && config.valueCentred) && state.charging
+            config.showBolt && config.showValue && config.mobileTypeMode != 2 &&
+            !(config.trioStyle == 0 && config.valueCentred) && state.charging
         if (shouldRotate) {
             if (state.chargingAlternatePhase) {
                 state = state.copy(chargingAlternatePhase = false)
@@ -1741,6 +1750,231 @@ object StatusBarComboStyleOneRuntime {
         }.onFailure { diagnostic("IconManager slot hook unavailable: $it") }
     }
 
+    /**
+     * QuickStar-style visibility is managed at the status-bar icon slot, not just
+     * by hiding BatteryMeterView child ImageViews. Keep the battery slot suppressed
+     * while Style One is enabled and restore SystemUI-requested visibility on disable.
+     */
+    private fun hookBatterySlotVisibility(module: XposedModule, classLoader: ClassLoader) {
+        val targets = listOf(
+            "com.android.systemui.statusbar.phone.StatusBarIconControllerImpl",
+            "com.android.systemui.statusbar.phone.ui.StatusBarIconControllerImpl",
+        )
+        val methods = mutableListOf<java.lang.reflect.Method>()
+        targets.forEach { className ->
+            runCatching { classLoader.loadClass(className) }.getOrNull()?.let { cls ->
+                var current: Class<*>? = cls
+                while (current != null) {
+                    methods += current.declaredMethods.filter { method ->
+                        method.name == "setIconVisibility" &&
+                            method.parameterTypes.size in 2..3 &&
+                            method.parameterTypes[0] == String::class.java &&
+                            method.parameterTypes[1] == Boolean::class.javaPrimitiveType &&
+                            (method.parameterTypes.size == 2 ||
+                                method.parameterTypes[2] == Int::class.javaPrimitiveType)
+                    }
+                    current = current.superclass
+                }
+                cls.declaredConstructors.forEach { constructor ->
+                    runCatching {
+                        module.hook(constructor).intercept { chain ->
+                            val result = chain.proceed()
+                            val controller = chain.thisObject
+                            if (controller != null) {
+                                iconVisibilityControllers.add(controller)
+                                main.postDelayed({ applyBatterySlotVisibility() }, 500L)
+                            }
+                            result
+                        }
+                    }.onFailure { diagnostic("Battery slot controller constructor hook failed: $it") }
+                }
+            }
+        }
+
+        methods.distinctBy { it.toGenericString() }.forEach { method ->
+            runCatching {
+                module.hook(method).setPriority(100).intercept { chain ->
+                    val controller = chain.thisObject
+                    if (controller != null) iconVisibilityControllers.add(controller)
+                    val args = chain.getArgs().toTypedArray()
+                    val slot = args.getOrNull(0) as? String
+                    val batterySlot = slot?.contains("battery", ignoreCase = true) == true
+                    if (batterySlot && slot != null) {
+                        knownBatterySlotNames.add(slot)
+                        val tag = (args.getOrNull(2) as? Int) ?: 0
+                        val alreadyEnforcing = enforcingBatterySlotVisibility.get() == true
+                        if (!alreadyEnforcing && controller != null) {
+                            rememberNativeBatterySlotVisibility(
+                                controller, slot, tag, args.getOrNull(1) as? Boolean ?: true,
+                            )
+                        }
+                        if (config.enabled) args[1] = false
+                    }
+
+                    val previousEnforcement = enforcingBatterySlotVisibility.get() == true
+                    if (batterySlot) enforcingBatterySlotVisibility.set(true)
+                    try {
+                        chain.proceed(args)
+                    } finally {
+                        if (batterySlot) {
+                            if (previousEnforcement) enforcingBatterySlotVisibility.set(true)
+                            else enforcingBatterySlotVisibility.remove()
+                        }
+                    }
+                }
+            }.onFailure { diagnostic("Battery slot visibility hook failed for ${method.declaringClass.name}: $it") }
+        }
+        diagnostic("Battery slot visibility hook installed for ${methods.distinctBy { it.toGenericString() }.size} methods")
+    }
+
+    private fun batterySlotVisibilityKey(slot: String, tag: Int): String = "$slot|$tag"
+
+    private fun parseBatterySlotVisibilityKey(key: String): Pair<String, Int>? {
+        val separator = key.lastIndexOf('|')
+        if (separator <= 0) return null
+        val tag = key.substring(separator + 1).toIntOrNull() ?: return null
+        return key.substring(0, separator) to tag
+    }
+
+    private fun rememberNativeBatterySlotVisibility(
+        controller: Any, slot: String, tag: Int, visible: Boolean,
+    ) {
+        synchronized(nativeBatterySlotVisibility) {
+            val snapshot = nativeBatterySlotVisibility[controller]
+                ?: mutableMapOf<String, Boolean>().also { nativeBatterySlotVisibility[controller] = it }
+            snapshot[batterySlotVisibilityKey(slot, tag)] = visible
+        }
+    }
+
+    private fun applyBatterySlotVisibility() {
+        main.post {
+            val controllers = synchronized(iconVisibilityControllers) { iconVisibilityControllers.toList() }
+            controllers.forEach { controller ->
+                val snapshot = synchronized(nativeBatterySlotVisibility) {
+                    nativeBatterySlotVisibility[controller]?.toMap().orEmpty()
+                }
+                if (config.enabled) {
+                    val targets = (snapshot.keys.mapNotNull(::parseBatterySlotVisibilityKey) +
+                        knownBatterySlotNames.map { it to 0 }).distinct()
+                    targets.forEach { (slot, tag) ->
+                        if (!snapshot.containsKey(batterySlotVisibilityKey(slot, tag))) {
+                            val currentVisibility = readNativeBatterySlotVisibility(controller, slot, tag) ?: true
+                            rememberNativeBatterySlotVisibility(controller, slot, tag, currentVisibility)
+                        }
+                        setNativeBatterySlotVisibility(controller, slot, tag, false)
+                    }
+                } else {
+                    snapshot.forEach { (key, visible) ->
+                        parseBatterySlotVisibilityKey(key)?.let { (slot, tag) ->
+                            setNativeBatterySlotVisibility(controller, slot, tag, visible)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun setNativeBatterySlotVisibility(controller: Any, slot: String, tag: Int, visible: Boolean) {
+        val methods = mutableListOf<java.lang.reflect.Method>()
+        var current: Class<*>? = controller.javaClass
+        while (current != null) {
+            methods += current.declaredMethods.filter { method ->
+                method.name == "setIconVisibility" &&
+                    method.parameterTypes.size in 2..3 &&
+                    method.parameterTypes[0] == String::class.java &&
+                    method.parameterTypes[1] == Boolean::class.javaPrimitiveType
+            }
+            current = current.superclass
+        }
+        val method = if (tag != 0) {
+            methods.firstOrNull { it.parameterTypes.size == 3 && it.parameterTypes[2] == Int::class.javaPrimitiveType }
+                ?: methods.firstOrNull { it.parameterTypes.size == 2 }
+        } else {
+            methods.firstOrNull { it.parameterTypes.size == 2 }
+                ?: methods.firstOrNull { it.parameterTypes.size == 3 && it.parameterTypes[2] == Int::class.javaPrimitiveType }
+        } ?: return
+
+        val wasEnforcing = enforcingBatterySlotVisibility.get() == true
+        enforcingBatterySlotVisibility.set(true)
+        try {
+            method.isAccessible = true
+            if (method.parameterTypes.size == 3) method.invoke(controller, slot, visible, tag)
+            else method.invoke(controller, slot, visible)
+        } catch (t: Throwable) {
+            diagnostic("Cannot update native battery slot visibility for $slot: $t")
+        } finally {
+            if (wasEnforcing) enforcingBatterySlotVisibility.set(true)
+            else enforcingBatterySlotVisibility.remove()
+        }
+    }
+
+    private fun readNativeBatterySlotVisibility(controller: Any, slot: String, tag: Int): Boolean? {
+        val iconList = readObjectField(controller, "mStatusBarIconList", "mIconList", "statusBarIconList")
+            ?: return null
+        val slotObject = invokeObjectMethod(iconList, listOf("getSlot"), slot) ?: return null
+        val holder = invokeObjectMethod(slotObject, listOf("getHolderForTag", "getIconHolder"), tag)
+            ?: return null
+        val visibleMethod = findNoArgMethod(holder.javaClass, "isVisible", "getVisible")
+        val visible = visibleMethod?.let { runCatching { it.invoke(holder) as? Boolean }.getOrNull() }
+        if (visible != null) return visible
+        return readBooleanField(holder, "mVisible", "visible", "isVisible")
+    }
+
+    private fun readObjectField(target: Any, vararg names: String): Any? {
+        var current: Class<*>? = target.javaClass
+        while (current != null) {
+            for (field in current.declaredFields) {
+                if (!names.any { it.equals(field.name, ignoreCase = true) }) continue
+                val value = runCatching { field.isAccessible = true; field.get(target) }.getOrNull()
+                if (value != null) return value
+            }
+            current = current.superclass
+        }
+        return null
+    }
+
+    private fun invokeObjectMethod(target: Any, names: List<String>, argument: Any): Any? {
+        var current: Class<*>? = target.javaClass
+        while (current != null) {
+            val method = current.declaredMethods.firstOrNull { candidate ->
+                candidate.name in names && candidate.parameterTypes.size == 1 &&
+                    (candidate.parameterTypes[0].isInstance(argument) ||
+                        (candidate.parameterTypes[0] == Int::class.javaPrimitiveType && argument is Int))
+            }
+            if (method != null) {
+                val result = runCatching { method.isAccessible = true; method.invoke(target, argument) }.getOrNull()
+                if (result != null) return result
+            }
+            current = current.superclass
+        }
+        return null
+    }
+
+    private fun findNoArgMethod(type: Class<*>, vararg names: String): java.lang.reflect.Method? {
+        var current: Class<*>? = type
+        while (current != null) {
+            val method = current.declaredMethods.firstOrNull {
+                it.name in names && it.parameterTypes.isEmpty()
+            }
+            if (method != null) return runCatching { method.isAccessible = true; method }.getOrNull()
+            current = current.superclass
+        }
+        return null
+    }
+
+    private fun readBooleanField(target: Any, vararg names: String): Boolean? {
+        var current: Class<*>? = target.javaClass
+        while (current != null) {
+            for (field in current.declaredFields) {
+                if (!names.any { it.equals(field.name, ignoreCase = true) }) continue
+                val value = runCatching { field.isAccessible = true; field.get(target) as? Boolean }.getOrNull()
+                if (value != null) return value
+            }
+            current = current.superclass
+        }
+        return null
+    }
+
     private fun ensureReceivers(context: Context) {
         val app = context.applicationContext ?: context
         if (!preferenceReceiverReady) synchronized(this) {
@@ -1755,13 +1989,17 @@ object StatusBarComboStyleOneRuntime {
                             val next = sanitize(status.comboStyleOneRuntime)
                             config = next
                             diagnostic("Settings updated: enabled=${config.enabled}, overlay=${config.overlayGlyph}, style=${config.trioStyle}, signalMode=${config.signalMode}")
-                            if (previous.enabled != next.enabled) replayMiuiBatteryIslandRequests()
+                            if (previous.enabled != next.enabled) {
+                                applyBatterySlotVisibility()
+                                replayMiuiBatteryIslandRequests()
+                            }
                             if (previous.enabled != next.enabled ||
                                 previous.chargingDisplayMode != next.chargingDisplayMode ||
                                 previous.showBolt != next.showBolt ||
                                 previous.showValue != next.showValue ||
                                 previous.valueCentred != next.valueCentred ||
-                                previous.trioStyle != next.trioStyle
+                                previous.trioStyle != next.trioStyle ||
+                                previous.mobileTypeMode != next.mobileTypeMode
                             ) syncChargingRotationTicker()
                             if (requiresHostRefresh(previous, next)) {
                                 refreshHosts()
@@ -1771,7 +2009,9 @@ object StatusBarComboStyleOneRuntime {
                                     previous.glyphOffsetXDp != next.glyphOffsetXDp ||
                                     previous.glyphOffsetYDp != next.glyphOffsetYDp ||
                                     previous.glyphLeftMarginDp != next.glyphLeftMarginDp ||
-                                    previous.glyphRightMarginDp != next.glyphRightMarginDp
+                                    previous.glyphRightMarginDp != next.glyphRightMarginDp ||
+                                    previous.outSignalMarginDp != next.outSignalMarginDp ||
+                                    previous.outSignalSizeDp != next.outSignalSizeDp
                                 ) resizeGlyphs()
                                 invalidateGlyphs()
                             }

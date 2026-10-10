@@ -47,12 +47,12 @@ fun StatusThemeGroup(
                     text = title,
                     style = MaterialTheme.typography.titleSmall,
                     color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = titleVerticalPadding, bottom = titleVerticalPadding),
+                    modifier = Modifier.fillMaxWidth().padding(start = 32.dp, end = 16.dp, top = titleVerticalPadding, bottom = titleVerticalPadding),
                 )
                 UiMode.Miuix -> MiuixText(
                     text = title,
                     color = colorScheme.onBackground,
-                    modifier = Modifier.fillMaxWidth().padding(start = 12.dp, end = 12.dp, top = titleVerticalPadding, bottom = titleVerticalPadding),
+                    modifier = Modifier.fillMaxWidth().padding(start = 28.dp, end = 12.dp, top = titleVerticalPadding, bottom = titleVerticalPadding),
                 )
             }
         }

@@ -174,7 +174,7 @@ object StatusComboStyleOneGlyphRenderer {
         }
         val centredBatteryValue = config.trioStyle == 0 && config.valueCentred
         val shouldAlternateCharging = state.charging && config.showBolt && config.showValue &&
-            !centredBatteryValue && config.chargingDisplayMode == 1
+            !centredBatteryValue && config.mobileTypeMode != 2 && config.chargingDisplayMode == 1
         val alternateChargingPhase = shouldAlternateCharging && state.chargingAlternatePhase
         // Charging color has priority; by default the bolt replaces the percentage.
         // The optional alternate mode swaps the two glyphs every five seconds.
