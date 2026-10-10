@@ -139,4 +139,5 @@
     <string name="status_combo_style_one_glyph_offset_y_summary">当前 %1$d dp：整个组合图标的垂直位置；正值向下移动。</string>
     <string name="status_combo_style_one_glyph_left_margin_summary">当前 %1$d dp：在组合图标左侧为相邻状态栏图标预留的间距。</string>
     <string name="status_combo_style_one_glyph_right_margin_summary">当前 %1$d dp：在组合图标右侧为相邻状态栏图标预留的间距。</string>
+    <string name="status_combo_style_one_group_overall_size">整体尺寸</string>
 </resources>

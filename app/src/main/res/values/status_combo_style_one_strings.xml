@@ -139,4 +139,5 @@
     <string name="status_combo_style_one_glyph_offset_y_summary">Current %1$d dp: vertical position of the entire composite icon; positive values move down.</string>
     <string name="status_combo_style_one_glyph_left_margin_summary">Current %1$d dp: reserve spacing on the left of the composite icon.</string>
     <string name="status_combo_style_one_glyph_right_margin_summary">Current %1$d dp: reserve spacing on the right of the composite icon.</string>
+    <string name="status_combo_style_one_group_overall_size">Overall size</string>
 </resources>

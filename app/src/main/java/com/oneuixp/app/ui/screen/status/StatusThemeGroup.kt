@@ -33,8 +33,12 @@ fun StatusThemeGroup(
     title: String? = null,
     modifier: Modifier = Modifier,
     items: List<@Composable () -> Unit>,
+    compact: Boolean = false,
 ) {
     if (items.isEmpty()) return
+
+    val titleVerticalPadding = if (compact) 4.dp else 8.dp
+    val groupVerticalPadding = if (compact) 2.dp else 4.dp
 
     Column(modifier = Modifier.fillMaxWidth()) {
         if (!title.isNullOrBlank()) {
@@ -43,19 +47,19 @@ fun StatusThemeGroup(
                     text = title,
                     style = MaterialTheme.typography.titleSmall,
                     color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
+                    modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = titleVerticalPadding, bottom = titleVerticalPadding),
                 )
                 UiMode.Miuix -> MiuixText(
                     text = title,
                     color = colorScheme.onBackground,
-                    modifier = Modifier.fillMaxWidth().padding(start = 12.dp, end = 12.dp, top = 8.dp, bottom = 8.dp),
+                    modifier = Modifier.fillMaxWidth().padding(start = 12.dp, end = 12.dp, top = titleVerticalPadding, bottom = titleVerticalPadding),
                 )
             }
         }
         when (LocalUiMode.current) {
         UiMode.Material -> {
             SegmentedColumn(
-                modifier = modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                modifier = modifier.padding(horizontal = 16.dp, vertical = groupVerticalPadding),
                 content = items.map { item ->
                     {
                         CompositionLocalProvider(
@@ -70,7 +74,7 @@ fun StatusThemeGroup(
 
         UiMode.Miuix -> {
             Card(
-                modifier = modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                modifier = modifier.padding(horizontal = 12.dp, vertical = groupVerticalPadding),
             ) {
                 CompositionLocalProvider(
                     LocalOneuiXGroupedPreference provides true,

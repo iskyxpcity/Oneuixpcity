@@ -6,7 +6,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -18,7 +17,11 @@ import top.yukonga.miuix.kmp.basic.Slider as MiuixSlider
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
-/** Preserve OneUIX slider values/events while drawing with the active OneuiXP theme. */
+/**
+ * Controlled OneuiXP slider. The owner value is the only source of truth for the
+ * thumb position; a separate animated mirror can restore a stale value when a
+ * Miuix drag-finished callback arrives before the next composition.
+ */
 @Composable
 fun OneuiXSlider(
     value: Float,
@@ -32,20 +35,11 @@ fun OneuiXSlider(
     onValueChangeFinished: (() -> Unit)? = null,
 ) {
     val hostView = androidx.compose.ui.platform.LocalView.current
-    var visualValue by remember(valueRange, stepSize) {
-        mutableFloatStateOf(value.coerceIn(valueRange.start, valueRange.endInclusive))
-    }
-    var dragging by remember(valueRange, stepSize) { mutableStateOf(false) }
-    var lastEmitted by remember(valueRange, stepSize) {
-        mutableFloatStateOf(value.coerceIn(valueRange.start, valueRange.endInclusive))
-    }
+    val controlledValue = value.coerceIn(valueRange.start, valueRange.endInclusive)
+    var lastEmitted by remember(valueRange, stepSize) { mutableFloatStateOf(controlledValue) }
 
-    LaunchedEffect(value, dragging, valueRange, stepSize) {
-        if (!dragging) {
-            val synced = value.coerceIn(valueRange.start, valueRange.endInclusive)
-            visualValue = synced
-            lastEmitted = synced
-        }
+    LaunchedEffect(controlledValue, valueRange, stepSize) {
+        lastEmitted = controlledValue
     }
 
     fun emit(raw: Float) {
@@ -55,49 +49,38 @@ fun OneuiXSlider(
         val snapped = if (step == null || step <= 0f) bounded else (
             ((bounded - valueRange.start) / step).roundToInt() * step + valueRange.start
         ).coerceIn(valueRange.start, valueRange.endInclusive)
-        // Keep the thumb on the same quantized value emitted to the caller.
-        // Otherwise Miuix can display a raw value that snaps back on release.
-        visualValue = snapped
-        dragging = true
-
         val previous = lastEmitted
         if (snapped == previous) return
 
         if (hapticOnStep && step != null && step > 0f) {
-            val previousIndex = ((previous - valueRange.start) / step).roundToInt()
-            val currentIndex = ((snapped - valueRange.start) / step).roundToInt()
-            repeat(abs(currentIndex - previousIndex)) {
-                hostView.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
-            }
+            val oldIndex = ((previous - valueRange.start) / step).roundToInt()
+            val newIndex = ((snapped - valueRange.start) / step).roundToInt()
+            repeat(abs(newIndex - oldIndex)) { hostView.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK) }
         }
         lastEmitted = snapped
         onValueChange(snapped)
     }
 
-    val handleValueChange: (Float) -> Unit = ::emit
     val handleValueChangeFinished: () -> Unit = {
         if (enabled) onValueChangeFinished?.invoke()
-        visualValue = lastEmitted
-        dragging = false
         Unit
     }
     val effectiveSteps = if (stepSize != null && stepSize > 0f) 0 else steps
 
     when (LocalUiMode.current) {
         UiMode.Material -> MaterialSlider(
-            value = visualValue,
+            value = controlledValue,
             enabled = enabled,
-            onValueChange = handleValueChange,
+            onValueChange = ::emit,
             modifier = modifier,
             valueRange = valueRange,
             steps = effectiveSteps,
             onValueChangeFinished = handleValueChangeFinished,
         )
-
         UiMode.Miuix -> MiuixSlider(
-            value = visualValue,
+            value = controlledValue,
             enabled = enabled,
-            onValueChange = handleValueChange,
+            onValueChange = ::emit,
             modifier = modifier.padding(bottom = 10.dp),
             valueRange = valueRange,
             steps = effectiveSteps,
