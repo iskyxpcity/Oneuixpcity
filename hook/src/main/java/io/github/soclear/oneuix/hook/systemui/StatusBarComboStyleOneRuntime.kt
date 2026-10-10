@@ -1358,7 +1358,7 @@ object StatusBarComboStyleOneRuntime {
         val next = previous.copy(
             batteryLevel = nextLevel ?: previous.batteryLevel,
             charging = charging,
-            quickCharge = charging && (nextQuickCharging ?: isSamsungFastChargeTint(meter)),
+            quickCharge = charging && (nextQuickCharging == true || isSamsungFastChargeTint(meter) || previous.quickCharge),
             lowBatteryWarning = nextLow ?: previous.lowBatteryWarning,
             powerSave = nextPowerSave ?: previous.powerSave,
         )
