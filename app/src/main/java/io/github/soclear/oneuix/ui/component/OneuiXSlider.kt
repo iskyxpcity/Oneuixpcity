@@ -14,6 +14,7 @@ import com.oneuixp.app.ui.LocalUiMode
 import com.oneuixp.app.ui.UiMode
 import androidx.compose.material3.Slider as MaterialSlider
 import top.yukonga.miuix.kmp.basic.Slider as MiuixSlider
+import top.yukonga.miuix.kmp.basic.SliderDefaults as MiuixSliderDefaults
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
@@ -65,7 +66,13 @@ fun OneuiXSlider(
         if (enabled) onValueChangeFinished?.invoke()
         Unit
     }
+    // Both themes expose the same value range and emitted values. Material keeps a
+    // continuous thumb to avoid visible ticks; Miuix needs native discrete steps so its
+    // animated controlled value does not fight the integer-snapped owner value.
     val effectiveSteps = if (stepSize != null && stepSize > 0f) 0 else steps
+    val miuixSteps = if (stepSize != null && stepSize > 0f) {
+        (((valueRange.endInclusive - valueRange.start) / stepSize).roundToInt() - 1).coerceAtLeast(0)
+    } else steps
 
     when (LocalUiMode.current) {
         UiMode.Material -> MaterialSlider(
@@ -83,7 +90,9 @@ fun OneuiXSlider(
             onValueChange = ::emit,
             modifier = modifier.padding(bottom = 10.dp),
             valueRange = valueRange,
-            steps = effectiveSteps,
+            steps = miuixSteps,
+            hapticEffect = MiuixSliderDefaults.SliderHapticEffect.None,
+            showKeyPoints = false,
             onValueChangeFinished = handleValueChangeFinished,
         )
     }

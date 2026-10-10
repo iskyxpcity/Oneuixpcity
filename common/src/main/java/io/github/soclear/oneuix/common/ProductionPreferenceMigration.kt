@@ -50,17 +50,25 @@ object ProductionPreferenceMigration {
                 val oldGap = statusBar["doubleLineClockGapDp"]?.toString()?.toFloatOrNull() ?: 1f
                 updatedStatusBar["modifyDoubleLineClockGap"] = JsonPrimitive(oldGap != 1f)
             }
-            // Convert the previous default scale of 100% to 90% once. The marker
-            // prevents later starts from overriding an explicit 100% preference.
+            // Roll back the earlier automatic 100% -> 90% default conversion. The
+            // renderer now applies a 0.9 physical-size factor, so 100% preserves the
+            // previous default appearance. This migration runs only once.
             val comboRuntime = statusBar["comboStyleOneRuntime"] as? JsonObject
             if (comboRuntime != null) {
                 val updatedComboRuntime = comboRuntime.toMutableMap()
-                val migrationDone = (updatedComboRuntime["glyphScaleDefaultMigrationDone"] as? JsonPrimitive)
-                    ?.content?.toBooleanStrictOrNull() == true
-                if (!migrationDone) {
-                    val oldScale = updatedComboRuntime["glyphScalePercent"]?.toString()?.toIntOrNull() ?: 100
-                    if (oldScale == 100) updatedComboRuntime["glyphScalePercent"] = JsonPrimitive(90)
+                val newDefaultMigrationDone =
+                    (updatedComboRuntime["glyphScaleDefault100MigrationDone"] as? JsonPrimitive)
+                        ?.content?.toBooleanStrictOrNull() == true
+                if (!newDefaultMigrationDone) {
+                    val priorMigrationDone =
+                        (updatedComboRuntime["glyphScaleDefaultMigrationDone"] as? JsonPrimitive)
+                            ?.content?.toBooleanStrictOrNull() == true
+                    val oldScale = updatedComboRuntime["glyphScalePercent"]?.toString()?.toIntOrNull()
+                    if (priorMigrationDone && oldScale == 90) {
+                        updatedComboRuntime["glyphScalePercent"] = JsonPrimitive(100)
+                    }
                     updatedComboRuntime["glyphScaleDefaultMigrationDone"] = JsonPrimitive(true)
+                    updatedComboRuntime["glyphScaleDefault100MigrationDone"] = JsonPrimitive(true)
                     updatedStatusBar["comboStyleOneRuntime"] = JsonObject(updatedComboRuntime)
                 }
             }

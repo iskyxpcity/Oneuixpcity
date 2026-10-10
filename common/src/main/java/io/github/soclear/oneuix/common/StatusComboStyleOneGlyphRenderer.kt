@@ -68,22 +68,12 @@ object StatusComboStyleOneGlyphRenderer {
     private const val BOLT_CX_REF = 59.45f
     private const val BOLT_SCALE = 2.0f
     private const val QUICK_CHARGE = 0xFFFFBA28.toInt()
+    private const val POWER_SAVE_FILL = 0xFFFFC107.toInt()
 
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val rect = RectF()
     private val boltPath = buildBoltPath()
     private val wifiDotPath = buildWifiDotPath()
-    private val powerSaveLeafPath = Path().apply {
-        moveTo(12f, 66f)
-        cubicTo(11f, 30f, 42f, 4f, 88f, 8f)
-        cubicTo(88f, 47f, 61f, 85f, 18f, 92f)
-        cubicTo(21f, 78f, 18f, 71f, 12f, 66f)
-        close()
-    }
-    private val powerSaveLeafVeinPath = Path().apply {
-        moveTo(17f, 84f)
-        cubicTo(35f, 62f, 58f, 37f, 82f, 13f)
-    }
     private val dots = arrayOf(
         floatArrayOf(33f, 104.2f),
         floatArrayOf(50.5f, 111.2f),
@@ -101,12 +91,12 @@ object StatusComboStyleOneGlyphRenderer {
             config.signalMode == 1 && config.stackedSignal
         val margin = if (reservesOutsideSignal) config.outSignalMarginDp.coerceIn(0, 16) else 0
         val base = if (wide) 78f + margin else 36f
-        return (base * config.glyphScalePercent.coerceIn(70, 150) / 100f)
+        return (base * 0.9f * config.glyphScalePercent.coerceIn(70, 150) / 100f)
             .roundToInt().coerceAtLeast(20)
     }
 
     fun glyphHeightDp(config: StatusBarComboStyleOneRuntime): Int =
-        (36f * config.glyphScalePercent.coerceIn(70, 150) / 100f)
+        (36f * 0.9f * config.glyphScalePercent.coerceIn(70, 150) / 100f)
             .roundToInt().coerceAtLeast(18)
 
     private fun valueSizeCanvasUnits(config: StatusBarComboStyleOneRuntime): Float =
@@ -171,8 +161,7 @@ object StatusComboStyleOneGlyphRenderer {
             )
             wifiInGap -> contentGapRange(43f, config.ringStroke)
             valueInGap -> contentGapRange(
-                measuredTextWidth(level.toString(), valueSizeCanvasUnits(config), config.valueWeight) +
-                    if (state.powerSave) valueSizeCanvasUnits(config) * 0.71f else 0f,
+                measuredTextWidth(level.toString(), valueSizeCanvasUnits(config), config.valueWeight),
                 config.ringStroke,
             )
             typeInGap && innerType != null -> contentGapRange(
@@ -190,6 +179,7 @@ object StatusComboStyleOneGlyphRenderer {
                 bolt, innerType, showBatteryValue,
             )
         } else {
+            if (state.powerSave) drawPowerSaveRingFill(canvas, cx, config.ringStroke)
             drawBatteryRing(canvas, cx, level, batteryColor, track, config.ringStroke, gapStart, gapEnd)
             if (wifiInk && (!config.valueCentred || wifiInGap)) {
                 drawWifi(canvas, offsetX, tint, state.wifiLevel, config.arcStroke, wifiInGap)
@@ -222,15 +212,9 @@ object StatusComboStyleOneGlyphRenderer {
                 val requestedSize = valueSizeCanvasUnits(config)
                 val clear = if (valueInCentre) centreClearWidth(requestedSize, config.ringStroke)
                     else gapClearWidth(config.ringStroke, gapStart, gapEnd)
-                val size = if (state.powerSave) {
-                    fitPowerSaveValueSize(level.toString(), requestedSize, config.valueWeight, clear)
-                } else fitTextSize(level.toString(), requestedSize, config.valueWeight, clear)
+                val size = fitTextSize(level.toString(), requestedSize, config.valueWeight, clear)
                 val baseline = if (valueInCentre) centerBaseline(size) else gapBaseline(size)
-                if (state.powerSave) {
-                    drawPowerSaveValue(canvas, level.toString(), cx, baseline, size, config.valueWeight, batteryColor)
-                } else {
-                    drawTextFitted(canvas, level.toString(), cx, baseline, size, config.valueWeight, batteryColor, clear)
-                }
+                drawTextFitted(canvas, level.toString(), cx, baseline, size, config.valueWeight, tint, clear)
             }
         }
 
@@ -397,16 +381,9 @@ object StatusComboStyleOneGlyphRenderer {
         }
         if (showBatteryValue) {
             val requestedSize = valueSizeCanvasUnits(config) * 1.38f
-            val size = if (state.powerSave) {
-                fitPowerSaveValueSize(level.toString(), requestedSize, config.valueWeight, 78f)
-            } else requestedSize
-            if (state.powerSave) {
-                drawPowerSaveValue(canvas, level.toString(), offsetX + 59.5f, 94f,
-                    size, config.valueWeight, active)
-            } else {
-                drawTextFitted(canvas, level.toString(), offsetX + 59.5f, 94f,
-                    requestedSize, config.valueWeight, active, 78f)
-            }
+            val size = fitTextSize(level.toString(), requestedSize, config.valueWeight, 78f)
+            drawTextFitted(canvas, level.toString(), offsetX + 59.5f, 94f,
+                size, config.valueWeight, tint, 78f)
         }
     }
 
@@ -471,50 +448,13 @@ object StatusComboStyleOneGlyphRenderer {
         }
     }
 
-    private fun fitPowerSaveValueSize(
-        text: String, requestedSize: Float, weight: Int, maxWidth: Float,
-    ): Float {
+    /** Draws a power-save fill inset from the inner edge of the battery ring. */
+    private fun drawPowerSaveRingFill(canvas: Canvas, cx: Float, configuredStroke: Int) {
+        val stroke = configuredStroke.coerceIn(4, 16).toFloat()
+        val innerRadius = (B_R - stroke / 2f - 1f).coerceAtLeast(0f)
         paint.style = Paint.Style.FILL
-        paint.typeface = weightedTypeface(weight)
-        paint.textSize = requestedSize.coerceIn(8f, 64f)
-        val fullWidth = paint.measureText(text) + paint.textSize * 0.71f
-        return if (maxWidth > 0f && fullWidth > maxWidth) paint.textSize * (maxWidth / fullWidth)
-        else paint.textSize
-    }
-
-    /** Draw the Samsung-style power-saving leaf immediately before battery digits. */
-    private fun drawPowerSaveValue(
-        canvas: Canvas, text: String, cx: Float, baseline: Float,
-        size: Float, weight: Int, color: Int,
-    ) {
-        paint.style = Paint.Style.FILL
-        paint.color = color
-        paint.typeface = weightedTypeface(weight)
-        paint.textSize = size.coerceIn(8f, 64f)
-        val textWidth = paint.measureText(text)
-        val leafWidth = paint.textSize * 0.58f
-        val leafHeight = paint.textSize * 0.58f
-        val gap = paint.textSize * 0.13f
-        val left = cx - (leafWidth + gap + textWidth) / 2f
-        val save = canvas.save()
-        canvas.translate(left, baseline - leafHeight - paint.textSize * 0.02f)
-        canvas.scale(leafWidth / 100f, leafHeight / 100f)
-        paint.style = Paint.Style.FILL
-        paint.color = color
-        canvas.drawPath(powerSaveLeafPath, paint)
-        paint.style = Paint.Style.STROKE
-        paint.strokeWidth = 5f
-        paint.strokeCap = Paint.Cap.ROUND
-        paint.strokeJoin = Paint.Join.ROUND
-        canvas.drawPath(powerSaveLeafVeinPath, paint)
-        canvas.restoreToCount(save)
-        paint.style = Paint.Style.FILL
-        paint.color = color
-        paint.typeface = weightedTypeface(weight)
-        paint.textAlign = Paint.Align.LEFT
-        paint.textSize = size.coerceIn(8f, 64f)
-        canvas.drawText(text, left + leafWidth + gap, baseline, paint)
-        paint.textAlign = Paint.Align.CENTER
+        paint.color = POWER_SAVE_FILL
+        canvas.drawCircle(cx, B_CY, innerRadius, paint)
     }
 
     private fun drawTextFitted(
