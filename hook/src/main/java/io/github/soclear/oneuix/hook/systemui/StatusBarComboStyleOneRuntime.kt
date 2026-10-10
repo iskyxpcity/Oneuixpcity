@@ -2037,7 +2037,8 @@ object StatusBarComboStyleOneRuntime {
                                     previous.outSignalMarginDp != next.outSignalMarginDp ||
                                     previous.outSignalSizeDp != next.outSignalSizeDp ||
                                     previous.dualSimMode != next.dualSimMode ||
-                                    previous.dualSim != next.dualSim
+                                    previous.dualSim != next.dualSim ||
+                                    previous.trioStyle != next.trioStyle
                                 ) resizeGlyphs()
                                 invalidateGlyphs()
                             }

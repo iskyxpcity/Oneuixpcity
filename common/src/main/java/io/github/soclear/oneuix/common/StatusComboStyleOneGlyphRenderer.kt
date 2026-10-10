@@ -31,11 +31,11 @@ object StatusComboStyleOneGlyphRenderer {
     private const val COMPACT_WIDTH = 120f
     private const val WIDE_WIDTH = 260f
     private const val HEIGHT = 120f
-    private const val DUAL_BOTTOM_HEIGHT = 144f
-    private const val DUAL_BOTTOM_ROW_ONE_Y = 127f
-    private const val DUAL_BOTTOM_SINGLE_ROW_Y = 131f
-    private const val DUAL_BOTTOM_ROW_TWO_Y = 135f
-    private const val DUAL_BOTTOM_DOT_R = 3.2f
+    private const val DUAL_BOTTOM_HEIGHT = 152f
+    // In the reference, row 1 sits in the ring's bottom opening and row 2 hugs it underneath.
+    private const val DUAL_BOTTOM_ROW_ONE_Y = 112f
+    private const val DUAL_BOTTOM_SINGLE_ROW_Y = 120.25f
+    private const val DUAL_BOTTOM_ROW_TWO_Y = 128.5f
     private const val WIDE_OFFSET = 144.5f
     // Outside-type-only mode should not reserve the unused signal-pillars lane.
     private const val TYPE_ONLY_SHIFT = 60f
@@ -104,7 +104,7 @@ object StatusComboStyleOneGlyphRenderer {
 
     private fun usesDualSignalBelowRing(config: StatusBarComboStyleOneRuntime): Boolean =
         config.trioStyle == 0 && config.showMobile && config.signalMode == 0 &&
-            !config.dataSimOnly && effectiveDualSimMode(config) == 2
+            effectiveDualSimMode(config) == 2
 
     private fun designHeight(config: StatusBarComboStyleOneRuntime): Float =
         if (usesDualSignalBelowRing(config)) DUAL_BOTTOM_HEIGHT else HEIGHT
@@ -135,12 +135,13 @@ object StatusComboStyleOneGlyphRenderer {
         }
     }
 
-    fun glyphWidthDp(config: StatusBarComboStyleOneRuntime): Int {
-        // Use the active design height so the below-ring dual-SIM mode can extend downward
-        // without scaling the battery ring itself.
-        val heightDp = glyphHeightDp(config).toFloat()
-        return (designWidth(config) * heightDp / designHeight(config)).roundToInt().coerceAtLeast(20)
-    }
+    private fun baseGlyphHeightDp(config: StatusBarComboStyleOneRuntime): Float =
+        (36f * 0.9f * config.glyphScalePercent.coerceIn(70, 150) / 100f)
+            .coerceAtLeast(18f)
+
+    fun glyphWidthDp(config: StatusBarComboStyleOneRuntime): Int =
+        (designWidth(config) * baseGlyphHeightDp(config) / HEIGHT)
+            .roundToInt().coerceAtLeast(20)
 
     /** Horizontal anchor of the battery centre within the active glyph bounds. */
     fun glyphCenterRatio(config: StatusBarComboStyleOneRuntime): Float {
@@ -158,11 +159,9 @@ object StatusComboStyleOneGlyphRenderer {
         }
     }
 
-    fun glyphHeightDp(config: StatusBarComboStyleOneRuntime): Int {
-        val baseHeightDp = (36f * 0.9f * config.glyphScalePercent.coerceIn(70, 150) / 100f)
+    fun glyphHeightDp(config: StatusBarComboStyleOneRuntime): Int =
+        (baseGlyphHeightDp(config) * designHeight(config) / HEIGHT)
             .roundToInt().coerceAtLeast(18)
-        return (baseHeightDp * designHeight(config) / HEIGHT).roundToInt().coerceAtLeast(18)
-    }
 
     private fun valueSizeCanvasUnits(config: StatusBarComboStyleOneRuntime): Float =
         config.valueSize.coerceIn(6, 18) * (HEIGHT / 36f)
@@ -178,6 +177,7 @@ object StatusComboStyleOneGlyphRenderer {
         val wide = usesWideLayout(config)
         val outsideType = usesOutsideNetworkTypeLayout(config)
         val outsideSignal = usesOutsideSignalLayout(config)
+        val dualBottomLayout = usesDualSignalBelowRing(config)
         val extraWideMargin = outsideSignalMargin(config)
         val signalWidth = outsideSignalWidth(config)
         val designWidth = designWidth(config)
@@ -187,6 +187,9 @@ object StatusComboStyleOneGlyphRenderer {
         val save = canvas.save()
         canvas.translate((width - designWidth * scale) / 2f, (height - designHeight * scale) / 2f)
         canvas.scale(scale, scale)
+        // A taller host is centered around the old glyph center; offset the content down
+        // by half the added canvas height so the battery ring retains its former on-screen size and position.
+        if (dualBottomLayout) canvas.translate(0f, (designHeight - HEIGHT) / 2f)
 
         val typeOnlyShift = if (outsideType && !outsideSignal) TYPE_ONLY_SHIFT else 0f
         val offsetX = when {
@@ -220,7 +223,6 @@ object StatusComboStyleOneGlyphRenderer {
             state.simOneLevel >= 0 && state.simTwoLevel >= 0
         val dualRows = dualSimMode == 1 && dualLevelsAvailable && inRingSignal &&
             !wifiInk && !state.charging
-        val dualBottomLayout = dualSimMode == 2 && !config.dataSimOnly && inRingSignal
         val dualBottomRows = dualBottomLayout && dualLevelsAvailable
         val valueInCentre = showBatteryValue &&
             (config.valueCentred || dualRows ||
@@ -269,7 +271,10 @@ object StatusComboStyleOneGlyphRenderer {
                 }
                 drawPowerSaveRingFill(canvas, cx, config.ringStroke, powerSaveFillColor)
             }
-            drawBatteryRing(canvas, cx, level, batteryColor, track, config.ringStroke, gapStart, gapEnd)
+            drawBatteryRing(
+                canvas, cx, level, batteryColor, track, config.ringStroke, gapStart, gapEnd,
+                gapAtBottom = dualBottomLayout,
+            )
             if (wifiInk && (!config.valueCentred || wifiInGap)) {
                 drawWifi(canvas, offsetX, tint, state.wifiLevel, config.arcStroke, wifiInGap)
             }
@@ -351,19 +356,22 @@ object StatusComboStyleOneGlyphRenderer {
 
     private fun drawBatteryRing(
         canvas: Canvas, cx: Float, level: Int, active: Int, track: Int,
-        stroke: Int, gapStart: Float, gapEnd: Float,
+        stroke: Int, gapStart: Float, gapEnd: Float, gapAtBottom: Boolean = false,
     ) {
         rect.set(cx - B_R, B_CY - B_R, cx + B_R, B_CY + B_R)
         paint.style = Paint.Style.STROKE
         paint.strokeWidth = stroke.coerceIn(4, 16).toFloat()
         paint.strokeCap = Paint.Cap.ROUND
         paint.strokeJoin = Paint.Join.ROUND
+        val save = canvas.save()
+        if (gapAtBottom) canvas.rotate(180f, cx, B_CY)
         paint.color = track
         drawRingProgress(canvas, cx, 0f, 1f, gapStart, gapEnd)
         if (level > 0) {
             paint.color = active
             drawRingProgress(canvas, cx, 0f, level / 100f, gapStart, gapEnd)
         }
+        canvas.restoreToCount(save)
         paint.style = Paint.Style.FILL
         paint.strokeCap = Paint.Cap.BUTT
     }
@@ -446,7 +454,7 @@ object StatusComboStyleOneGlyphRenderer {
             val y = if (topRow) 2f * B_CY - point[1] else point[1]
             paint.style = Paint.Style.FILL
             paint.color = if (index < level.coerceIn(0, 4)) color else track
-            canvas.drawCircle(offsetX + point[0], y, radius, paint)
+            canvas.drawCircle(offsetX + point[0], y, if (radius == DUAL_DOT_R) DOT_R else radius, paint)
         }
     }
 
@@ -456,7 +464,7 @@ object StatusComboStyleOneGlyphRenderer {
         dots.forEachIndexed { index, point ->
             paint.style = Paint.Style.FILL
             paint.color = if (index < level.coerceIn(0, 4)) color else track
-            canvas.drawCircle(offsetX + point[0], y, DUAL_BOTTOM_DOT_R, paint)
+            canvas.drawCircle(offsetX + point[0], y, DOT_R, paint)
         }
     }
 
