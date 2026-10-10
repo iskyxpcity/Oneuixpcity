@@ -74,6 +74,8 @@ object StatusBarComboStyleOneRuntime {
     private val main = Handler(Looper.getMainLooper())
     private val hosts = Collections.synchronizedMap(WeakHashMap<ViewGroup, Host>())
     @Volatile private var config = Preference.SystemUI.StatusBarComboStyleOneRuntime()
+
+    internal fun shouldHideNativeBatteryIcon(): Boolean = config.enabled
     @Volatile private var state = StatusComboStyleOneGlyphState()
     @Volatile private var preferenceReceiverReady = false
     private val chargingRotationTicker = object : Runnable {

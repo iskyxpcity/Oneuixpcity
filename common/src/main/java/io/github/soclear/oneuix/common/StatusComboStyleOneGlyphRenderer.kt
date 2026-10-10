@@ -105,7 +105,7 @@ object StatusComboStyleOneGlyphRenderer {
         val signalLane = usesOutsideSignalLayout(config)
         val margin = outsideSignalMargin(config)
         return when {
-            typeLane -> WIDE_WIDTH + margin
+            typeLane -> WIDE_WIDTH + margin * if (signalLane) 2f else 1f
             signalLane -> outsideSignalWidth(config) + margin + COMPACT_WIDTH - 8f
             else -> COMPACT_WIDTH
         }
@@ -127,7 +127,7 @@ object StatusComboStyleOneGlyphRenderer {
         val signalWidth = outsideSignalWidth(config)
         return when {
             usesOutsideNetworkTypeLayout(config) ->
-                (B_CX + WIDE_OFFSET + margin) / designWidth(config)
+                (B_CX + WIDE_OFFSET + margin * if (usesOutsideSignalLayout(config)) 2f else 1f) / designWidth(config)
             usesOutsideSignalLayout(config) ->
                 (B_CX + signalWidth + margin - 8f) / designWidth(config)
             else -> B_CX / COMPACT_WIDTH
@@ -162,7 +162,7 @@ object StatusComboStyleOneGlyphRenderer {
         canvas.scale(scale, scale)
 
         val offsetX = when {
-            outsideType -> WIDE_OFFSET + extraWideMargin
+            outsideType -> WIDE_OFFSET + extraWideMargin * if (outsideSignal) 2f else 1f
             outsideSignal -> signalWidth + extraWideMargin - 8f
             else -> 0f
         }
@@ -497,7 +497,7 @@ object StatusComboStyleOneGlyphRenderer {
     /** Draws a power-save fill inset from the inner edge of the battery ring. */
     private fun drawPowerSaveRingFill(canvas: Canvas, cx: Float, configuredStroke: Int) {
         val stroke = configuredStroke.coerceIn(4, 16).toFloat()
-        val innerRadius = (B_R - stroke / 2f - 1f).coerceAtLeast(0f)
+        val innerRadius = (B_R - stroke / 2f - 2f).coerceAtLeast(0f)
         paint.style = Paint.Style.FILL
         paint.color = withAlpha(POWER_SAVE_FILL, (255f * 0.75f).roundToInt())
         canvas.drawCircle(cx, B_CY, innerRadius, paint)
