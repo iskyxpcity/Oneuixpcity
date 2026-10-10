@@ -25,7 +25,7 @@
     <string name="status_combo_style_one_show_value">Show battery number</string>
     <string name="status_combo_style_one_show_value_summary">Show the battery percentage inside the ring; while charging, the bolt replaces the number. When off, the native charging bolt is restored.</string>
     <string name="status_combo_style_one_show_bolt">Show charging bolt</string>
-    <string name="status_combo_style_one_show_bolt_summary">Show the in-ring charging bolt. This setting depends on the battery-number switch; when off, Android's native charging bolt is restored.</string>
+    <string name="status_combo_style_one_show_bolt_summary">Show the in-ring charging bolt. This setting depends on the battery-number switch; when off, Android\'s native charging bolt is restored.</string>
     <string name="status_combo_style_one_charging_display">Charging display</string>
     <string name="status_combo_style_one_charging_display_summary">Charging color takes priority over low and critical colors. Choose the bolt only, or alternate the bolt and battery number every 5 seconds.</string>
     <string name="status_combo_style_one_charging_display_bolt">Charging bolt only</string>
@@ -38,7 +38,7 @@
     <string name="status_combo_style_one_mobile_type_inside">Inside the icon</string>
     <string name="status_combo_style_one_mobile_type_outside">Outside the icon</string>
     <string name="status_combo_style_one_signal_mode">Signal position</string>
-    <string name="status_combo_style_one_signal_mode_summary">Choose where mobile signal is drawn. Inside uses the icon's bottom dots; outside moves the reading beside the battery and uses the stacking option below to choose its shape.</string>
+    <string name="status_combo_style_one_signal_mode_summary">Choose where mobile signal is drawn. Inside uses the icon\'s bottom dots; outside moves the reading beside the battery and uses the stacking option below to choose its shape.</string>
     <string name="status_combo_style_one_signal_inside">Inside the icon</string>
     <string name="status_combo_style_one_signal_outside">Outside the icon</string>
     <string name="status_combo_style_one_dual_sim">Dual-SIM signal</string>
