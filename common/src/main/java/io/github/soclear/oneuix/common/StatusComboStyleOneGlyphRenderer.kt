@@ -247,15 +247,22 @@ object StatusComboStyleOneGlyphRenderer {
         val gapRange = when {
             !gapUsed -> 0f to 0f
             dualRows -> GAP_DUAL_START to GAP_DUAL_END
-            bolt -> contentGapRange(
-                27f * config.chargingBoltSizePercent.coerceIn(50, 180) / 100f,
-                config.ringStroke,
-                extraClearance = 3f,
-            )
+            bolt -> {
+                val originalBoltContentWidth =
+                    27f * config.chargingBoltSizePercent.coerceIn(50, 180) / 100f
+                contentGapRange(
+                    originalBoltContentWidth * 0.85f,
+                    config.ringStroke,
+                    // Offset the 15% size reduction so the opening is still 2dp wider than before.
+                    extraClearance = 3f + originalBoltContentWidth * 0.15f +
+                        2f * designHeight / glyphHeightDp(config).toFloat(),
+                )
+            }
             wifiInGap -> contentGapRange(43f, config.ringStroke)
             valueInGap -> contentGapRange(
                 measuredTextWidth(level.toString(), valueSizeCanvasUnits(config), config.valueWeight),
                 config.ringStroke,
+                extraClearance = 2f * designHeight / glyphHeightDp(config).toFloat(),
             )
             typeInGap && innerType != null -> contentGapRange(
                 measuredNetworkTypeWidth(innerType, config.typeSize.toFloat(), config.typeWeight, config.typeSuffixScale),
@@ -685,7 +692,7 @@ object StatusComboStyleOneGlyphRenderer {
     }
 
     private fun boltScale(config: StatusBarComboStyleOneRuntime): Float =
-        BOLT_SCALE * config.chargingBoltSizePercent.coerceIn(50, 180) / 100f
+        0.85f * BOLT_SCALE * config.chargingBoltSizePercent.coerceIn(50, 180) / 100f
 
     // Convert dp offsets into normalized icon coordinates so the configured
     // offset stays optically stable when the overall icon scale changes.
@@ -695,7 +702,8 @@ object StatusComboStyleOneGlyphRenderer {
 
     private fun boltOffsetY(config: StatusBarComboStyleOneRuntime): Float =
         BOLT_TOP - BOLT_TOP_REF * boltScale(config) +
-            config.chargingBoltYDp.coerceIn(-8, 8) / (config.glyphScalePercent.coerceIn(70, 150) / 100f)
+            config.chargingBoltYDp.coerceIn(-8, 8) / (config.glyphScalePercent.coerceIn(70, 150) / 100f) -
+            2f * designHeight(config) / glyphHeightDp(config).toFloat()
 
     private fun buildBoltPath() = Path().apply {
         moveTo(62.1f, 2.2f)

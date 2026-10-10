@@ -1096,16 +1096,28 @@ object StatusBarComboStyleOneRuntime {
     }
 
     private fun collapseNativeBatteryChildren(meter: ViewGroup) {
-        // Samsung owns a SamsungBatteryMeterDrawable with a child ImageView. Hide it
-        // like the native indicator-visibility toggle; MIUI keeps its children measured.
-        val samsungBatteryMeter = hasNativeField(meter, "mSamsungDrawable", "samsungDrawable")
+        // Some Samsung builds draw the stock battery from a nested icon view whose
+        // field name differs between One UI versions. Walk the actual meter subtree
+        // and collapse every battery-specific view, rather than relying on alpha:
+        // tint callbacks can restore alpha and make the native icon reappear.
+        descendants(meter).drop(1).forEach { child ->
+            val slot = slotOf(child) ?: knownIconSlots[child]
+            val signature = viewSignature(child)
+            val isBatteryDescendant = signature.contains("battery") &&
+                !signature.contains("island")
+            if (isBatteryDescendant || slot?.contains("battery", ignoreCase = true) == true) {
+                collapseNativeChild(child, hideLayout = true)
+            }
+        }
+        // Preserve explicit Samsung/MIUI field fallbacks even when resource names
+        // are obfuscated or absent. Charging-island views are handled separately.
         listOf(
             "mBatteryIconView", "batteryIconView", "mHollowBatteryIconView", "hollowBatteryIconView",
             "mBatteryChargingView", "mBatteryChargingIconView", "batteryChargingView",
             "mBatteryPercentContainer", "batteryPercentContainer", "mBatteryPercentView", "batteryPercentView",
         ).forEach { name ->
             fieldView(meter, listOf(name))?.takeIf { it !== meter }
-                ?.let { collapseNativeChild(it, samsungBatteryMeter) }
+                ?.let { collapseNativeChild(it, hideLayout = true) }
         }
     }
 
@@ -1284,28 +1296,35 @@ object StatusBarComboStyleOneRuntime {
         methods.values.forEach { method ->
             module.hook(method).intercept { chain ->
                 val result = chain.proceed()
-                if (!shadeBusy || !config.enabled || !config.overlayGlyph) return@intercept result
+                if (!config.enabled) return@intercept result
                 val view = chain.thisObject as? View ?: return@intercept result
                 val host = synchronized(hosts) {
                     hosts.values.firstOrNull { candidate ->
-                        !candidate.retired && candidate.overlay != null &&
-                            candidate.shadeDrawTarget === view
+                        !candidate.retired &&
+                            (candidate.battery === view || candidate.shadeDrawTarget === view)
                     }
                 } ?: return@intercept result
-                if (cutoutBounds(host.root) != null || view.width <= 0 || view.height <= 0) {
-                    return@intercept result
-                }
+                if (view.width <= 0 || view.height <= 0) return@intercept result
                 val canvas = runCatching { chain.getArg(0) as? Canvas }.getOrNull()
                     ?: return@intercept result
-                val currentState = state
+
+                // Clear stock pixels every time this OEM battery surface draws. Visibility
+                // and alpha alone are not sufficient on builds that reapply icon tint.
                 canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR)
-                StatusComboStyleOneGlyphRenderer.draw(
-                    canvas,
-                    view.width,
-                    view.height,
-                    config,
-                    currentState.copy(tintColor = host.rowTint ?: currentState.tintColor),
-                )
+                // During shade expansion, the native surface is temporarily the glyph
+                // renderer's canvas. Paint OneuiXP there only when the overlay is hidden.
+                if (shadeBusy && config.overlayGlyph && host.overlay != null &&
+                    host.shadeDrawTarget === view && cutoutBounds(host.root) == null
+                ) {
+                    val currentState = state
+                    StatusComboStyleOneGlyphRenderer.draw(
+                        canvas,
+                        view.width,
+                        view.height,
+                        config,
+                        currentState.copy(tintColor = host.rowTint ?: currentState.tintColor),
+                    )
+                }
                 result
             }
         }
