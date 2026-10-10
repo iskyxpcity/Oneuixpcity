@@ -203,7 +203,7 @@ fun StatusComboStyleOneCategoryControls(
 
     when (selectedTab) {
         0 -> {
-            StatusThemeGroup(title = stringResource(R.string.status_combo_style_one_group_appearance), items = listOf({
+            StatusThemeGroup(title = stringResource(R.string.status_combo_style_one_group_appearance), titleAlignedToContent = true, items = listOf({
                 SwitchItem(icon = null, title = stringResource(R.string.status_combo_style_one_enable), summary = stringResource(R.string.status_combo_style_one_enable_summary), checked = runtime.enabled, onCheckedChange = { previewAndPersist(runtime.copy(enabled = it)) })
             }, {
                 SelectItem(icon = null, title = stringResource(R.string.status_combo_style_one_style), summary = stringResource(R.string.status_combo_style_one_style_summary), entries = listOf(stringResource(R.string.status_combo_style_one_style_ring), stringResource(R.string.status_combo_style_one_style_rect)), selectedIndex = runtime.trioStyle.coerceIn(0, 1), enabled = runtime.enabled, onSelectedIndexChange = { previewAndPersist(runtime.copy(trioStyle = it.coerceIn(0, 1))) })
@@ -235,7 +235,7 @@ fun StatusComboStyleOneCategoryControls(
         }
         1 -> {
             // Overall size, offsets and gaps all affect the complete glyph.
-            StatusThemeGroup(title = stringResource(R.string.status_combo_style_one_group_overall_size), items = listOf({
+            StatusThemeGroup(title = stringResource(R.string.status_combo_style_one_group_overall_size), titleAlignedToContent = true, items = listOf({
                 styleOneSlider(stringResource(R.string.status_combo_style_one_glyph_scale), stringResource(R.string.status_combo_style_one_percent_summary, glyphScale), glyphScale.toFloat(), 70f..150f, { glyphScale = it.roundToInt(); preview(runtime.copy(glyphScalePercent = glyphScale)) }, { final -> persist(runtime.copy(glyphScalePercent = final.roundToInt())) }, enabled = runtime.enabled)
             }, {
                 styleOneSlider(stringResource(R.string.status_combo_style_one_glyph_offset_x), stringResource(R.string.status_combo_style_one_glyph_offset_x_summary, glyphOffsetX), glyphOffsetX.toFloat(), -16f..16f, { glyphOffsetX = it.roundToInt(); preview(runtime.copy(glyphOffsetXDp = glyphOffsetX)) }, { final -> persist(runtime.copy(glyphOffsetXDp = final.roundToInt())) }, enabled = runtime.enabled)
@@ -246,17 +246,17 @@ fun StatusComboStyleOneCategoryControls(
             }, {
                 styleOneSlider(stringResource(R.string.status_combo_style_one_glyph_right_margin), stringResource(R.string.status_combo_style_one_glyph_right_margin_summary, glyphRightMargin), glyphRightMargin.toFloat(), 0f..16f, { glyphRightMargin = it.roundToInt(); preview(runtime.copy(glyphRightMarginDp = glyphRightMargin)) }, { final -> persist(runtime.copy(glyphRightMarginDp = final.roundToInt())) }, enabled = runtime.enabled)
             }))
-            StatusThemeGroup(title = stringResource(R.string.status_combo_style_one_group_stroke), items = listOf({
+            StatusThemeGroup(title = stringResource(R.string.status_combo_style_one_group_stroke), titleAlignedToContent = true, items = listOf({
                 styleOneSlider(stringResource(if (runtime.trioStyle == 1) R.string.status_combo_style_one_ring_stroke_rect else R.string.status_combo_style_one_ring_stroke), stringResource(if (runtime.trioStyle == 1) R.string.status_combo_style_one_ring_stroke_summary_rect else R.string.status_combo_style_one_ring_stroke_summary, ringStroke), ringStroke.toFloat(), 4f..16f, { ringStroke = it.roundToInt(); preview(runtime.copy(ringStroke = ringStroke)) }, { final -> persist(runtime.copy(ringStroke = final.roundToInt())) }, enabled = runtime.enabled)
             }, {
                 styleOneSlider(stringResource(R.string.status_combo_style_one_arc_stroke), stringResource(if (runtime.trioStyle == 1) R.string.status_combo_style_one_arc_stroke_summary_rect else R.string.status_combo_style_one_arc_stroke_summary, arcStroke), arcStroke.toFloat(), 3f..16f, { arcStroke = it.roundToInt(); preview(runtime.copy(arcStroke = arcStroke)) }, { final -> persist(runtime.copy(arcStroke = final.roundToInt())) }, enabled = runtime.enabled)
             }))
-            StatusThemeGroup(title = stringResource(R.string.status_combo_style_one_group_text), items = listOf({
+            StatusThemeGroup(title = stringResource(R.string.status_combo_style_one_group_text), titleAlignedToContent = true, items = listOf({
                 styleOneSlider(stringResource(R.string.status_combo_style_one_value_size), stringResource(R.string.status_combo_style_one_value_size_summary, valueSize), valueSize.toFloat(), 6f..18f, { valueSize = it.roundToInt(); preview(runtime.copy(valueSize = valueSize)) }, { final -> persist(runtime.copy(valueSize = final.roundToInt())) }, enabled = runtime.enabled)
             }, {
                 styleOneSlider(stringResource(R.string.status_combo_style_one_value_weight), stringResource(R.string.status_combo_style_one_value_weight_summary, valueWeight), valueWeight.toFloat(), 100f..900f, { valueWeight = (it / 100f).roundToInt() * 100; preview(runtime.copy(valueWeight = valueWeight)) }, { final -> persist(runtime.copy(valueWeight = final.roundToInt())) }, stepSize = 100f, enabled = runtime.enabled && runtime.showValue)
             }))
-            StatusThemeGroup(title = stringResource(R.string.status_combo_style_one_group_type), items = listOf({
+            StatusThemeGroup(title = stringResource(R.string.status_combo_style_one_group_type), titleAlignedToContent = true, items = listOf({
                 styleOneSlider(stringResource(R.string.status_combo_style_one_type_size), stringResource(R.string.status_combo_style_one_type_size_summary, typeSize), typeSize.toFloat(), 16f..44f, { typeSize = it.roundToInt(); preview(runtime.copy(typeSize = typeSize)) }, { final -> persist(runtime.copy(typeSize = final.roundToInt())) }, enabled = runtime.enabled && runtime.mobileTypeMode == 1)
             }, {
                 styleOneSlider(stringResource(R.string.status_combo_style_one_out_type_size), stringResource(R.string.status_combo_style_one_out_type_size_summary, outTypeSize), outTypeSize.toFloat(), 8f..26f, { outTypeSize = it.roundToInt(); preview(runtime.copy(outTypeSizeDp = outTypeSize)) }, { final -> persist(runtime.copy(outTypeSizeDp = final.roundToInt())) }, enabled = runtime.enabled && runtime.mobileTypeMode == 2)
@@ -269,15 +269,15 @@ fun StatusComboStyleOneCategoryControls(
             }, {
                 styleOneSlider(stringResource(R.string.status_combo_style_one_type_weight), stringResource(R.string.status_combo_style_one_type_weight_summary, typeWeight), typeWeight.toFloat(), 100f..900f, { typeWeight = (it / 100f).roundToInt() * 100; preview(runtime.copy(typeWeight = typeWeight)) }, { final -> persist(runtime.copy(typeWeight = final.roundToInt())) }, stepSize = 100f, enabled = runtime.enabled && runtime.mobileTypeMode != 0)
             }))
-            StatusThemeGroup(title = stringResource(R.string.status_combo_style_one_group_out_signal), items = listOf({
+            StatusThemeGroup(title = stringResource(R.string.status_combo_style_one_group_out_signal), titleAlignedToContent = true, items = listOf({
                 styleOneSlider(stringResource(R.string.status_combo_style_one_out_signal_size), stringResource(R.string.status_combo_style_one_out_signal_size_summary, outSignalSize), outSignalSize.toFloat(), 6f..20f, { outSignalSize = it.roundToInt(); preview(runtime.copy(outSignalSizeDp = outSignalSize)) }, { final -> persist(runtime.copy(outSignalSizeDp = final.roundToInt())) }, enabled = runtime.enabled && runtime.showMobile && runtime.signalMode == 1 && runtime.stackedSignal)
             }, {
                 styleOneSlider(stringResource(R.string.status_combo_style_one_out_signal_margin), stringResource(R.string.status_combo_style_one_out_signal_margin_summary, outSignalMargin), outSignalMargin.toFloat(), 0f..16f, { outSignalMargin = it.roundToInt(); preview(runtime.copy(outSignalMarginDp = outSignalMargin)) }, { final -> persist(runtime.copy(outSignalMarginDp = final.roundToInt())) }, enabled = runtime.enabled && runtime.showMobile && runtime.signalMode == 1 && runtime.stackedSignal)
             }))
-            StatusThemeGroup(title = stringResource(R.string.status_combo_style_one_group_track), items = listOf({
+            StatusThemeGroup(title = stringResource(R.string.status_combo_style_one_group_track), titleAlignedToContent = true, items = listOf({
                 styleOneSlider(stringResource(R.string.status_combo_style_one_track_alpha), stringResource(R.string.status_combo_style_one_track_alpha_summary, trackAlpha), trackAlpha.toFloat(), 0f..100f, { trackAlpha = it.roundToInt(); val alpha = (trackAlpha * 255f / 100f).roundToInt(); preview(runtime.copy(trackAlpha = alpha)) }, { final -> persist(runtime.copy(trackAlpha = (final.roundToInt() * 255f / 100f).roundToInt())) }, enabled = runtime.enabled)
             }))
-            StatusThemeGroup(title = stringResource(R.string.status_combo_style_one_group_charging), items = listOf({
+            StatusThemeGroup(title = stringResource(R.string.status_combo_style_one_group_charging), titleAlignedToContent = true, items = listOf({
                 styleOneSlider(stringResource(R.string.status_combo_style_one_bolt_size), stringResource(R.string.status_combo_style_one_bolt_size_summary, boltSize), boltSize.toFloat(), 50f..180f, { boltSize = it.roundToInt(); preview(runtime.copy(chargingBoltSizePercent = boltSize)) }, { final -> persist(runtime.copy(chargingBoltSizePercent = final.roundToInt())) }, enabled = runtime.enabled && runtime.showValue && runtime.showBolt)
             }, {
                 styleOneSlider(stringResource(R.string.status_combo_style_one_bolt_x), stringResource(R.string.status_combo_style_one_bolt_x_summary, boltX), boltX.toFloat(), -8f..8f, { boltX = it.roundToInt(); preview(runtime.copy(chargingBoltXDp = boltX)) }, { final -> persist(runtime.copy(chargingBoltXDp = final.roundToInt())) }, enabled = runtime.enabled && runtime.showValue && runtime.showBolt)
@@ -355,7 +355,7 @@ fun StatusComboStyleOneCategoryControls(
                         )
                     }
                 }
-            StatusThemeGroup(title = stringResource(R.string.status_combo_style_one_group_colors), items = colorItems)
+            StatusThemeGroup(title = stringResource(R.string.status_combo_style_one_group_colors), titleAlignedToContent = true, items = colorItems)
 
             if (confirmResetColors) {
                 ExpressiveConfirmDialog(

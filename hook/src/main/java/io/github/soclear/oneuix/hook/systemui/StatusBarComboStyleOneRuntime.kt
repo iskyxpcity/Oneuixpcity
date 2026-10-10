@@ -1767,11 +1767,14 @@ object StatusBarComboStyleOneRuntime {
                 while (current != null) {
                     methods += current.declaredMethods.filter { method ->
                         method.name == "setIconVisibility" &&
-                            method.parameterTypes.size in 2..3 &&
                             method.parameterTypes[0] == String::class.java &&
-                            method.parameterTypes[1] == Boolean::class.javaPrimitiveType &&
-                            (method.parameterTypes.size == 2 ||
-                                method.parameterTypes[2] == Int::class.javaPrimitiveType)
+                            ((method.parameterTypes.size == 2 &&
+                                method.parameterTypes[1] == Boolean::class.javaPrimitiveType) ||
+                                (method.parameterTypes.size == 3 &&
+                                    ((method.parameterTypes[1] == Boolean::class.javaPrimitiveType &&
+                                        method.parameterTypes[2] == Int::class.javaPrimitiveType) ||
+                                     (method.parameterTypes[1] == Int::class.javaPrimitiveType &&
+                                        method.parameterTypes[2] == Boolean::class.javaPrimitiveType))))
                     }
                     current = current.superclass
                 }
@@ -1799,16 +1802,25 @@ object StatusBarComboStyleOneRuntime {
                     val args = chain.getArgs().toTypedArray()
                     val slot = args.getOrNull(0) as? String
                     val batterySlot = slot?.contains("battery", ignoreCase = true) == true
-                    if (batterySlot && slot != null) {
+                    val visibleIndex = when {
+                        args.getOrNull(1) is Boolean -> 1
+                        args.size >= 3 && args.getOrNull(1) is Int && args.getOrNull(2) is Boolean -> 2
+                        else -> -1
+                    }
+                    val tag = when {
+                        args.size >= 3 && args.getOrNull(1) is Int && visibleIndex == 2 -> args[1] as Int
+                        args.size >= 3 && args.getOrNull(2) is Int && visibleIndex == 1 -> args[2] as Int
+                        else -> 0
+                    }
+                    if (batterySlot && slot != null && visibleIndex >= 0) {
                         knownBatterySlotNames.add(slot)
-                        val tag = (args.getOrNull(2) as? Int) ?: 0
                         val alreadyEnforcing = enforcingBatterySlotVisibility.get() == true
                         if (!alreadyEnforcing && controller != null) {
                             rememberNativeBatterySlotVisibility(
-                                controller, slot, tag, args.getOrNull(1) as? Boolean ?: true,
+                                controller, slot, tag, args[visibleIndex] as? Boolean ?: true,
                             )
                         }
-                        if (config.enabled) args[1] = false
+                        if (config.enabled) args[visibleIndex] = false
                     }
 
                     val previousEnforcement = enforcingBatterySlotVisibility.get() == true
@@ -1880,26 +1892,38 @@ object StatusBarComboStyleOneRuntime {
         while (current != null) {
             methods += current.declaredMethods.filter { method ->
                 method.name == "setIconVisibility" &&
-                    method.parameterTypes.size in 2..3 &&
                     method.parameterTypes[0] == String::class.java &&
-                    method.parameterTypes[1] == Boolean::class.javaPrimitiveType
+                    ((method.parameterTypes.size == 2 &&
+                        method.parameterTypes[1] == Boolean::class.javaPrimitiveType) ||
+                        (method.parameterTypes.size == 3 &&
+                            ((method.parameterTypes[1] == Boolean::class.javaPrimitiveType &&
+                                method.parameterTypes[2] == Int::class.javaPrimitiveType) ||
+                             (method.parameterTypes[1] == Int::class.javaPrimitiveType &&
+                                method.parameterTypes[2] == Boolean::class.javaPrimitiveType))))
             }
             current = current.superclass
         }
-        val method = if (tag != 0) {
-            methods.firstOrNull { it.parameterTypes.size == 3 && it.parameterTypes[2] == Int::class.javaPrimitiveType }
-                ?: methods.firstOrNull { it.parameterTypes.size == 2 }
-        } else {
-            methods.firstOrNull { it.parameterTypes.size == 2 }
-                ?: methods.firstOrNull { it.parameterTypes.size == 3 && it.parameterTypes[2] == Int::class.javaPrimitiveType }
+        val method = methods.firstOrNull { candidate ->
+            candidate.parameterTypes.size == 2 &&
+                candidate.parameterTypes[1] == Boolean::class.javaPrimitiveType
+        } ?: methods.firstOrNull { candidate ->
+            candidate.parameterTypes.size == 3 &&
+                ((candidate.parameterTypes[1] == Boolean::class.javaPrimitiveType &&
+                    candidate.parameterTypes[2] == Int::class.javaPrimitiveType) ||
+                 (candidate.parameterTypes[1] == Int::class.javaPrimitiveType &&
+                    candidate.parameterTypes[2] == Boolean::class.javaPrimitiveType))
         } ?: return
 
         val wasEnforcing = enforcingBatterySlotVisibility.get() == true
         enforcingBatterySlotVisibility.set(true)
         try {
             method.isAccessible = true
-            if (method.parameterTypes.size == 3) method.invoke(controller, slot, visible, tag)
-            else method.invoke(controller, slot, visible)
+            when {
+                method.parameterTypes.size == 2 -> method.invoke(controller, slot, visible)
+                method.parameterTypes[1] == Boolean::class.javaPrimitiveType ->
+                    method.invoke(controller, slot, visible, tag)
+                else -> method.invoke(controller, slot, tag, visible)
+            }
         } catch (t: Throwable) {
             diagnostic("Cannot update native battery slot visibility for $slot: $t")
         } finally {
