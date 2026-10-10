@@ -194,18 +194,12 @@ object StatusComboStyleOneGlyphRenderer {
         val inRingSignal = config.showMobile && config.signalMode == 0
         val dualRows = config.dualSim && !config.dataSimOnly && inRingSignal &&
             state.simOneLevel >= 0 && state.simTwoLevel >= 0 && !wifiInk && !state.charging
-        // Wi-Fi arcs and the percentage must not share the ring interior.
-        // When the percentage is visible, reserve the ring opening for it; a visible
-        // charging bolt keeps its own top slot and retains the centered number behavior.
-        val valueInCentre = showBatteryValue && (
-            bolt || (!wifiInk && (
-                config.valueCentred || dualRows ||
-                    (config.trioStyle == 0 && config.mobileTypeMode != 1) ||
-                    innerType == null
-            ))
-        )
+        val valueInCentre = showBatteryValue &&
+            (config.valueCentred || dualRows ||
+                (!wifiInk && config.trioStyle == 0 && config.mobileTypeMode != 1) ||
+                (!wifiInk && innerType == null))
         val valueInGap = showBatteryValue && !valueInCentre && !bolt
-        val wifiInGap = wifiInk && config.valueCentred && !showBatteryValue && !bolt
+        val wifiInGap = wifiInk && config.valueCentred && !bolt
         val typeInCentre = innerType != null && !wifiInk && !valueInCentre
         val typeInGap = innerType != null && valueInCentre && !wifiInk && !bolt && !dualRows
         val gapUsed = bolt || wifiInGap || valueInGap || typeInGap || dualRows
@@ -248,10 +242,7 @@ object StatusComboStyleOneGlyphRenderer {
                 drawPowerSaveRingFill(canvas, cx, config.ringStroke, powerSaveFillColor)
             }
             drawBatteryRing(canvas, cx, level, batteryColor, track, config.ringStroke, gapStart, gapEnd)
-            // If both the charging bolt and a centered percentage are visible,
-            // keep Wi-Fi arcs out of that shared top/center area. Otherwise draw the
-            // arcs inside the ring whenever the percentage occupies the border gap.
-            if (wifiInk && !(bolt && showBatteryValue)) {
+            if (wifiInk && (!config.valueCentred || wifiInGap)) {
                 drawWifi(canvas, offsetX, tint, state.wifiLevel, config.arcStroke, wifiInGap)
             }
             if (inRingSignal) {
