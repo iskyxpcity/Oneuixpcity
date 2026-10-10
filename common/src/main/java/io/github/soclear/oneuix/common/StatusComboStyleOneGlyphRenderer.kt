@@ -31,8 +31,8 @@ object StatusComboStyleOneGlyphRenderer {
     private const val COMPACT_WIDTH = 120f
     private const val WIDE_WIDTH = 260f
     private const val HEIGHT = 120f
-    private const val DUAL_BOTTOM_HEIGHT = 152f
-    // In the reference, row 1 sits in the ring's bottom opening and row 2 hugs it underneath.
+    private const val DUAL_BOTTOM_HEIGHT = 150f
+    // Row 1 sits inside the ring's bottom opening; row 2 hugs it directly underneath.
     private const val DUAL_BOTTOM_ROW_ONE_Y = 112f
     private const val DUAL_BOTTOM_SINGLE_ROW_Y = 120.25f
     private const val DUAL_BOTTOM_ROW_TWO_Y = 128.5f
@@ -135,12 +135,12 @@ object StatusComboStyleOneGlyphRenderer {
         }
     }
 
-    private fun baseGlyphHeightDp(config: StatusBarComboStyleOneRuntime): Float =
+    private fun baseGlyphHeightDp(config: StatusBarComboStyleOneRuntime): Int =
         (36f * 0.9f * config.glyphScalePercent.coerceIn(70, 150) / 100f)
-            .coerceAtLeast(18f)
+            .roundToInt().coerceAtLeast(18)
 
     fun glyphWidthDp(config: StatusBarComboStyleOneRuntime): Int =
-        (designWidth(config) * baseGlyphHeightDp(config) / HEIGHT)
+        (designWidth(config) * baseGlyphHeightDp(config).toFloat() / HEIGHT)
             .roundToInt().coerceAtLeast(20)
 
     /** Horizontal anchor of the battery centre within the active glyph bounds. */
@@ -160,7 +160,7 @@ object StatusComboStyleOneGlyphRenderer {
     }
 
     fun glyphHeightDp(config: StatusBarComboStyleOneRuntime): Int =
-        (baseGlyphHeightDp(config) * designHeight(config) / HEIGHT)
+        (baseGlyphHeightDp(config).toFloat() * designHeight(config) / HEIGHT)
             .roundToInt().coerceAtLeast(18)
 
     private fun valueSizeCanvasUnits(config: StatusBarComboStyleOneRuntime): Float =
@@ -454,7 +454,7 @@ object StatusComboStyleOneGlyphRenderer {
             val y = if (topRow) 2f * B_CY - point[1] else point[1]
             paint.style = Paint.Style.FILL
             paint.color = if (index < level.coerceIn(0, 4)) color else track
-            canvas.drawCircle(offsetX + point[0], y, if (radius == DUAL_DOT_R) DOT_R else radius, paint)
+            canvas.drawCircle(offsetX + point[0], y, radius, paint)
         }
     }
 
