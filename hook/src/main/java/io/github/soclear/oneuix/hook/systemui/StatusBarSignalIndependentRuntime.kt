@@ -622,10 +622,10 @@ internal object StatusBarSignalIndependentRuntime {
         // Combo owns the cellular signal presentation while enabled. Do not let
         // the independent two-SIM renderer reappear during its own live refresh.
         if (StatusBarComboStyleOneRuntime.isEnabled()) {
-            // Keep Combo's cellular ownership separate from Wi-Fi. The legacy
-            // descriptor scan below could misclassify a "Wi-Fi" icon as cellular
-            // because of the hyphen; restore any such icon when Combo is not
-            // replacing native Wi-Fi with its own arc.
+            // Restore a previously hidden shared cluster regardless of whether
+            // Combo draws Wi-Fi arcs: Combo suppresses only the specific native
+            // Wi-Fi/mobile children it owns, never the entire SystemUI icon row.
+            restoreSharedSignalContainers(holder)
             if (!StatusBarComboStyleOneRuntime.isNativeWifiSuppressed()) {
                 restoreNativeWifiViews(holder)
             }
@@ -719,6 +719,11 @@ internal object StatusBarSignalIndependentRuntime {
             view.visibility = original.visibility
             (view.parent as? View)?.requestLayout()
         }
+    }
+
+    private fun restoreSharedSignalContainers(holder: Holder) {
+        holder.hiddenNative.keys.filter(::isSharedSignalWifiContainer)
+            .forEach { restoreHiddenNativeView(holder, it) }
     }
 
     private fun restoreNativeWifiViews(holder: Holder) {
