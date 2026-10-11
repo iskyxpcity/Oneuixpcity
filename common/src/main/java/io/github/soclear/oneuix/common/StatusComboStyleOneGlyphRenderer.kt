@@ -162,12 +162,6 @@ object StatusComboStyleOneGlyphRenderer {
         }
     }
 
-    /** Vertical anchor of the battery-ring centre inside the active glyph bounds. */
-    fun glyphVerticalCenterRatio(config: StatusBarComboStyleOneRuntime): Float {
-        val dualBottomExtra = if (usesDualSignalBelowRing(config)) (DUAL_BOTTOM_HEIGHT - HEIGHT) / 2f else 0f
-        return (B_CY + dualBottomExtra) / designHeight(config)
-    }
-
     fun glyphHeightDp(config: StatusBarComboStyleOneRuntime): Int =
         (baseGlyphHeightDp(config).toFloat() * designHeight(config) / HEIGHT)
             .roundToInt().coerceAtLeast(18)
@@ -708,7 +702,8 @@ object StatusComboStyleOneGlyphRenderer {
 
     private fun boltOffsetY(config: StatusBarComboStyleOneRuntime): Float =
         BOLT_TOP - BOLT_TOP_REF * boltScale(config) +
-            config.chargingBoltYDp.coerceIn(-8, 8) / (config.glyphScalePercent.coerceIn(70, 150) / 100f)
+            config.chargingBoltYDp.coerceIn(-8, 8) / (config.glyphScalePercent.coerceIn(70, 150) / 100f) -
+            2f * designHeight(config) / glyphHeightDp(config).toFloat()
 
     private fun buildBoltPath() = Path().apply {
         moveTo(62.1f, 2.2f)
