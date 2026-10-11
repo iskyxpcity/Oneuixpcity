@@ -120,7 +120,10 @@ object StatusBarComboStyleOneRuntime {
     private val modernMobileViewModels = ConcurrentHashMap<Int, WeakReference<Any>>()
     private val lastModernPipelineSignalDiagnostics = ConcurrentHashMap<Int, String>()
     private val lastModernPipelineLevelDiagnostics = ConcurrentHashMap<Int, String>()
-    private val lastNativeWifiVisibilityRequests = Collections.synchronizedMap(WeakHashMap<View, Int>())
+    private val lastNativeWifiVisibilityRequests = Collections.synchronizedMap(WeakHashMap<View, String>())
+    // Persist the pre-Combo native visibility separately from transient GONE/restore passes,
+    // so forcing a connected Wi-Fi icon visible does not override an already-hidden native slot.
+    private val nativeWifiBaselineVisibility = Collections.synchronizedMap(WeakHashMap<View, Int>())
     @Volatile private var modernWifiViewClass: Class<*>? = null
     private val lastNativeWifiDiagnostics = Collections.synchronizedMap(WeakHashMap<View, String>())
     private val lastNativeWifiSlotRequests = ConcurrentHashMap<String, String>()
@@ -964,6 +967,10 @@ object StatusBarComboStyleOneRuntime {
                 // experimental native Wi-Fi slot interception is disabled after a
                 // SystemUI/LSPosed stability regression.
                 val wifiCandidate = isWifiIcon(view)
+                if (wifiCandidate && !nativeWifiBaselineVisibility.containsKey(view)) {
+                    val nativeVisibility = host.layouts[view]?.visibility ?: view.visibility
+                    nativeWifiBaselineVisibility[view] = nativeVisibility
+                }
                 val hide =
                     (config.showWifi && wifiCandidate) ||
                     (foldMobile && isMobileIcon(view)) ||
@@ -2858,18 +2865,35 @@ object StatusBarComboStyleOneRuntime {
                 val view = chain.thisObject as? View
                 val wifiClass = modernWifiViewClass
                 if (view != null && wifiClass != null && wifiClass.isInstance(view) &&
-                    config.enabled && config.showWifi
+                    config.enabled
                 ) {
                     val args = chain.args.toTypedArray()
                     val requested = args.getOrNull(0) as? Int ?: View.VISIBLE
-                    if (lastNativeWifiVisibilityRequests.put(view, requested) != requested) {
+                    val nativeWasVisible = nativeWifiBaselineVisibility[view] == View.VISIBLE
+                    val forced = when {
+                        // The combined glyph owns Wi-Fi drawing; prevent a later binder update
+                        // from making Samsung's native modern Wi-Fi view flash over it.
+                        config.showWifi -> View.GONE
+                        // When the arc is off, hand visibility back to SystemUI. If its native
+                        // view was visible and Wi-Fi is connected, resist a stale GONE request
+                        // from the previous folded state. Preserve an originally hidden native slot.
+                        state.wifiLevel >= 0 && nativeWasVisible -> View.VISIBLE
+                        else -> requested
+                    }
+                    val snapshot = "$requested->$forced|showWifi=${config.showWifi}|wifiLevel=${state.wifiLevel}"
+                    if (lastNativeWifiVisibilityRequests.put(view, snapshot) != snapshot) {
                         diagnostic(
-                            "Modern Wi-Fi visibility request pinned: requested=$requested slot=" +
-                                (slotOf(view) ?: knownIconSlots[view] ?: "wifi")
+                            "Modern Wi-Fi visibility decision: requested=$requested forced=$forced " +
+                                "baseline=${nativeWifiBaselineVisibility[view] ?: -1} " +
+                                "showWifi=${config.showWifi} wifiLevel=${state.wifiLevel}"
                         )
                     }
-                    args[0] = View.GONE
-                    chain.proceed(args)
+                    if (forced != requested) {
+                        args[0] = forced
+                        chain.proceed(args)
+                    } else {
+                        chain.proceed()
+                    }
                 } else {
                     chain.proceed()
                 }
