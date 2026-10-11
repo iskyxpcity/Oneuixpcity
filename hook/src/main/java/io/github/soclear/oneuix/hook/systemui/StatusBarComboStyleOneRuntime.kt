@@ -2949,6 +2949,9 @@ object StatusBarComboStyleOneRuntime {
             cursor = cursor.parent as? View
         }
         val root = mobileRoot ?: return
+        // Ignore DemoStatusIcons and any other modern-icon container that is not the
+        // concrete collapsed status-bar host. These icons can share the same classes.
+        if (hostFor(root) == null) return
         val subId = modernMobileViewSubscriptionIds[root] ?: return
         val fullState = packedLevel ?: drawable.level
         val level = decodePackedSignalDrawableLevel(fullState)
@@ -2966,11 +2969,16 @@ object StatusBarComboStyleOneRuntime {
     }
 
     private fun readModernIconModel(viewModel: Any): Any? {
-        val iconFlow = readObjectMember(viewModel, "icon", "signalIcon", "signalLevelIcon")
+        // Android releases differ: newer view models expose a SignalIconModel via "icon",
+        // while older variants expose the packed drawable state through "iconId".
+        val iconFlow = readObjectMember(
+            viewModel, "icon", "signalIcon", "signalLevelIcon", "iconId", "signalIconId",
+        )
         if (iconFlow != null) {
             readObjectMember(iconFlow, "value")?.let { return it }
             val replay = readObjectMember(iconFlow, "replayCache") as? List<*>
             replay?.lastOrNull()?.let { return it }
+            if (iconFlow is Number) return iconFlow
         }
         return readObjectMember(viewModel, "iconModel", "signalIconModel", "signalStrengthModel")
     }
@@ -3016,8 +3024,12 @@ object StatusBarComboStyleOneRuntime {
             module.hook(method).intercept { chain ->
                 val view = chain.thisObject as? View
                 val wifiClass = modernWifiViewClass
+                // ModernStatusBarWifiView is also used by demo/secondary SystemUI
+                // icon hosts. Only modify the instance inside the PhoneStatusBarView
+                // host that OneuiXP has explicitly registered for the collapsed bar.
+                val host = view?.let(::hostFor)
                 if (view != null && wifiClass != null && wifiClass.isInstance(view) &&
-                    config.enabled
+                    config.enabled && host != null
                 ) {
                     val args = chain.args.toTypedArray()
                     val requested = args.getOrNull(0) as? Int ?: View.VISIBLE
@@ -3026,11 +3038,7 @@ object StatusBarComboStyleOneRuntime {
                         // Recover the pre-Combo visibility snapshot first; only then fall back to
                         // the current pre-call view state. Never treat the first requested GONE
                         // value itself as proof that the native slot was originally hidden.
-                        val savedVisibility = synchronized(hosts) {
-                            hosts.values.firstNotNullOfOrNull { host ->
-                                host.original[view] ?: host.layouts[view]?.visibility
-                            }
-                        }
+                        val savedVisibility = host.original[view] ?: host.layouts[view]?.visibility
                         nativeWifiBaselineVisibility[view] = savedVisibility ?: view.visibility
                     }
                     val nativeWasVisible = nativeWifiBaselineVisibility[view] == View.VISIBLE
@@ -3066,28 +3074,13 @@ object StatusBarComboStyleOneRuntime {
                     chain.proceed()
                 }
             }
-            // Hide the modern Wi-Fi view before constructAndBind returns it to the icon container.
-            // The binder starts by setting view.isVisible=true and only later receives the first Flow
-            // emission; post-construction hiding prevents the one-frame native icon flash.
-            val constructMethods = modernWifiViewClass?.declaredMethods.orEmpty().filter {
-                it.name == "constructAndBind" &&
-                    java.lang.reflect.Modifier.isStatic(it.modifiers)
-            }
-            constructMethods.distinctBy { it.toGenericString() }.forEach { constructMethod ->
-                module.hook(constructMethod).intercept { chain ->
-                    val result = chain.proceed()
-                    val view = result as? View
-                    if (view != null && config.enabled && config.showWifi) {
-                        nativeWifiBaselineVisibility.putIfAbsent(view, View.VISIBLE)
-                        if (view.visibility != View.GONE) view.visibility = View.GONE
-                        diagnostic("Modern Wi-Fi constructAndBind result hidden before container add")
-                    }
-                    result
-                }
-            }
+            // Do not hook constructAndBind globally: SystemUI also uses this view in
+            // demo/secondary icon containers. The visibility setter above is scoped to
+            // a registered collapsed-status-bar host and the normal tree/layout path
+            // handles newly inserted children.
             diagnostic(
                 "Modern Wi-Fi visibility guard installed: $className; " +
-                    "setterOwner=${method.declaringClass.name}; constructHooks=${constructMethods.size}"
+                    "setterOwner=${method.declaringClass.name}; scope=registered-host-only"
             )
         }.onFailure { diagnostic("Modern Wi-Fi visibility guard unavailable: $it") }
     }
@@ -3099,6 +3092,12 @@ object StatusBarComboStyleOneRuntime {
     }
 
     private fun modernPipelineSignalLevel(iconModel: Any): Int? {
+        // Legacy Android/Samsung models expose SignalDrawable's packed state as an Int,
+        // not as a model with "level" and "numberOfLevels" fields.
+        if (iconModel is Number) {
+            val decoded = decodePackedSignalDrawableLevel(iconModel.toInt())
+            if (decoded in 0..4) return decoded
+        }
         val rawLevel = readSignalIntValue(iconModel, "level", "signalLevel", "strengthLevel")
         if (rawLevel != null) {
             val numberOfLevels = readSignalIntValue(
