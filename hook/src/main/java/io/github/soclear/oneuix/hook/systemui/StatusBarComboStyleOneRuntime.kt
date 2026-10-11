@@ -79,6 +79,7 @@ object StatusBarComboStyleOneRuntime {
 
     private val installed = AtomicBoolean(false)
     @Volatile private var moduleForPreferenceReload: XposedModule? = null
+    @Volatile private var systemUiClassLoader: ClassLoader? = null
     private val main = Handler(Looper.getMainLooper())
     private val hosts = Collections.synchronizedMap(WeakHashMap<ViewGroup, Host>())
     @Volatile private var config = Preference.SystemUI.StatusBarComboStyleOneRuntime()
@@ -109,6 +110,9 @@ object StatusBarComboStyleOneRuntime {
     @Volatile private var subscriptionsListener: SubscriptionManager.OnSubscriptionsChangedListener? = null
     private val phoneListeners = mutableMapOf<Int, Pair<TelephonyManager, PhoneStateListener>>()
     private val displayNetworkTypes = ConcurrentHashMap<Int, String>()
+    // Prefer the signal level from SystemUI's Quick Settings MobileDataIndicators
+    // when available, then the status-bar icon state, and only then TelephonyManager.
+    private val quickPanelSignalLevels = ConcurrentHashMap<Int, Int>()
     private val nativeSignalLevels = ConcurrentHashMap<Int, Int>()
     private val lastSubscriptionSignalLevels = ConcurrentHashMap<Int, Int>()
     private val subscriptionSlots = ConcurrentHashMap<Int, Int>()
@@ -358,6 +362,7 @@ object StatusBarComboStyleOneRuntime {
     fun install(module: XposedModule, param: XposedModuleInterface.PackageReadyParam) {
         if (param.packageName != Package.SYSTEMUI || !installed.compareAndSet(false, true)) return
         moduleForPreferenceReload = module
+        systemUiClassLoader = param.classLoader
         runCatching {
             with(module) { PreferenceProvider.loadPreference() }
                 ?.systemUI?.statusBar?.comboStyleOneRuntime?.let { config = sanitize(it) }
@@ -1175,24 +1180,33 @@ object StatusBarComboStyleOneRuntime {
         hosts.values.firstOrNull { !it.retired && isWithin(it.root, view) }
     }
 
+    private fun compactIconDescriptor(v: View): String =
+        viewSignature(v).filter { it.isLetterOrDigit() }
+
     private fun isWifiIcon(v: View): Boolean {
         if (v is GlyphView) return false
-        val slot = slotOf(v) ?: knownIconSlots[v]
-        if (slot == "wifi" || slot?.contains("wlan") == true) return true
-        val name = viewSignature(v)
+        val slot = (slotOf(v) ?: knownIconSlots[v]).orEmpty().lowercase()
+        if (isManagedWifiSlot(slot)) return true
+        val name = compactIconDescriptor(v)
         if (name.contains("battery") || name.contains("bluetooth") || name.contains("airplane")) return false
-        return name.contains("wifi") || name.contains("wlan") || name.contains("slot_wifi")
+        // Normalize separators so "Wi-Fi" and "Wi Fi" cannot evade Wi-Fi detection.
+        return name.contains("wifi") || name.contains("wlan") || name.contains("wireless") ||
+            name.contains("slotwifi")
     }
 
     private fun isMobileIcon(v: View): Boolean {
-        if (v is GlyphView || isMobileTypeView(v)) return false
-        (slotOf(v) ?: knownIconSlots[v])?.let { if (isManagedMobileSlot(it)) return true }
-        val name = viewSignature(v)
-        if (name.contains("battery") || name.contains("bluetooth") || name.contains("airplane") || name.contains("wifi")) return false
+        if (v is GlyphView || isMobileTypeView(v) || isWifiIcon(v)) return false
+        val slot = (slotOf(v) ?: knownIconSlots[v]).orEmpty().lowercase()
+        if (isManagedWifiSlot(slot)) return false
+        if (isManagedMobileSlot(slot)) return true
+        val name = compactIconDescriptor(v)
+        if (name.contains("battery") || name.contains("bluetooth") || name.contains("airplane") ||
+            name.contains("wifi") || name.contains("wlan") || name.contains("wireless")
+        ) return false
         // SignalClusterView is commonly a parent containing Wi-Fi, mobile,
         // airplane and other icons. Never collapse that whole group as a signal icon.
-        return name.contains("mobile") || name.contains("cellular") || name.contains("signal_mobile") ||
-            name.contains("slot_mobile") || name.contains("signal_strength") ||
+        return name.contains("mobile") || name.contains("cellular") || name.contains("signalmobile") ||
+            name.contains("slotmobile") || name.contains("signalstrength") ||
             (name.contains("signalcluster") && v !is ViewGroup)
     }
 
@@ -2620,6 +2634,7 @@ object StatusBarComboStyleOneRuntime {
         subscriptionSlots.clear()
         active.forEach { info -> subscriptionSlots[info.subscriptionId] = info.simSlotIndex }
         val activeIds = active.map { it.subscriptionId }.toSet()
+        quickPanelSignalLevels.keys.filter { it !in activeIds }.forEach { quickPanelSignalLevels.remove(it) }
         nativeSignalLevels.keys.filter { it !in activeIds }.forEach { nativeSignalLevels.remove(it) }
         lastSubscriptionSignalLevels.keys.filter { it !in activeIds }.forEach { lastSubscriptionSignalLevels.remove(it) }
         var dataLevel = -1
@@ -2631,24 +2646,22 @@ object StatusBarComboStyleOneRuntime {
             val sub = runCatching { base.createForSubscriptionId(info.subscriptionId) }.getOrNull() ?: return@forEach
             val telephonyLevel = runCatching { sub.signalStrength?.level ?: -1 }
                 .getOrDefault(-1).coerceIn(-1, 4)
+            val quickPanelLevel = quickPanelSignalLevels[info.subscriptionId]?.coerceIn(0, 4)
             val nativeLevel = nativeSignalLevels[info.subscriptionId]?.coerceIn(0, 4)
-            // Use the per-subscription TelephonyManager reading first. Native icon
-            // resource IDs are OEM-specific and can be misread as a low level for
-            // one SIM (e.g. an eSIM + physical-SIM pair), even while SystemUI shows
-            // both native icons at full strength. Native state is a fallback only
-            // when the per-subscription API has no usable reading.
-            val level = telephonyLevel.takeIf { it in 0..4 }?.also {
-                lastSubscriptionSignalLevels[info.subscriptionId] = it
-            } ?: nativeLevel?.also {
-                lastSubscriptionSignalLevels[info.subscriptionId] = it
-            } ?: lastSubscriptionSignalLevels[info.subscriptionId] ?: -1
+            // The Quick Settings MobileDataIndicators model is the same SystemUI
+            // signal state consumed by the expanded panel's carrier row. Prefer it
+            // over TelephonyManager's possibly different bucket thresholds so the
+            // combo dots match the signal indicators SystemUI itself presents.
+            val level = quickPanelLevel ?: nativeLevel ?: telephonyLevel.takeIf { it in 0..4 }
+                ?: lastSubscriptionSignalLevels[info.subscriptionId] ?: -1
+            if (level in 0..4) lastSubscriptionSignalLevels[info.subscriptionId] = level
             val embedded = if (Build.VERSION.SDK_INT >= 28) {
                 runCatching { info.isEmbedded }.getOrDefault(false)
             } else false
             diagnostic(
                 "SIM signal: subId=${info.subscriptionId} slot=${info.simSlotIndex} embedded=$embedded " +
-                    "defaultData=${info.subscriptionId == dataSub} telephony=$telephonyLevel " +
-                    "native=${nativeLevel ?: -1} selected=$level"
+                    "defaultData=${info.subscriptionId == dataSub} qs=${quickPanelLevel ?: -1} " +
+                    "native=${nativeLevel ?: -1} telephony=$telephonyLevel selected=$level"
             )
             if (info.simSlotIndex == 0) simOne = level
             if (info.simSlotIndex == 1) simTwo = level
@@ -2746,6 +2759,29 @@ object StatusBarComboStyleOneRuntime {
             is Array<*> -> { value.take(8).forEach(::extractNativeMobileStates); return }
         }
         val simpleName = value.javaClass.simpleName.lowercase()
+        val resources = synchronized(hosts) { hosts.values.firstOrNull()?.root?.resources } ?: return
+
+        // NetworkController's MobileDataIndicators carries separate status-bar and
+        // Quick Settings icon states keyed by subscription ID. Read both so each SIM
+        // keeps its own SystemUI-computed level, including eSIM + physical SIM pairs.
+        if (simpleName.contains("mobiledataindicators")) {
+            val subId = readSignalIntField(value, "subId", "subscriptionId", "mSubId", "mSubscriptionId")
+                ?: return
+            val qsIcon = readObjectField(value, "qsIcon", "mQsIcon")
+            val statusIcon = readObjectField(value, "statusIcon", "mStatusIcon")
+            val qsLevel = signalLevelFromIconState(qsIcon, resources)
+            val statusLevel = signalLevelFromIconState(statusIcon, resources)
+            if (qsLevel in 0..4) {
+                quickPanelSignalLevels[subId] = qsLevel
+                diagnostic("Quick panel SIM signal: subId=$subId level=$qsLevel icon=${iconValue(qsIcon)}")
+            }
+            if (statusLevel in 0..4) {
+                updateNativeSignalLevel(subId, statusLevel)
+                diagnostic("Status bar SIM signal: subId=$subId level=$statusLevel icon=${iconValue(statusIcon)}")
+            }
+            return
+        }
+
         if (!simpleName.contains("mobileiconstate") &&
             !simpleName.contains("mobileicon") &&
             !simpleName.contains("iconstate")
@@ -2754,9 +2790,61 @@ object StatusBarComboStyleOneRuntime {
             ?: return
         val strength = readSignalIntField(value, "strengthId", "mStrengthId", "icon", "mIcon")
             ?: return
-        val resources = synchronized(hosts) { hosts.values.firstOrNull()?.root?.resources } ?: return
         val level = if (strength in 0..4) strength else resolveSignalResourceLevelFromResources(resources, strength)
+            .takeIf { it in 0..4 } ?: decodePackedSignalDrawableLevel(strength)
         if (level in 0..4 && subId >= 0) updateNativeSignalLevel(subId, level)
+    }
+
+    private fun iconValue(iconState: Any?): Int =
+        iconState?.let { readSignalIntField(it, "icon", "mIcon", "iconId", "resId") } ?: -1
+
+    private fun signalLevelFromIconState(
+        iconState: Any?,
+        resources: android.content.res.Resources,
+    ): Int {
+        if (iconState == null) return -1
+        val value = iconValue(iconState)
+        if (value < 0) return -1
+        val resourceName = runCatching { resources.getResourceEntryName(value) }
+            .getOrNull()?.lowercase()
+        if (resourceName != null) {
+            val namedLevel = resolveSignalResourceName(resourceName)
+            return namedLevel.takeIf { it in 0..4 } ?: -1
+        }
+        return decodePackedSignalDrawableLevel(value)
+    }
+
+    /**
+     * Android's SignalDrawable stores QS icon state as a packed integer rather than
+     * a drawable resource ID. Decode it through the SystemUI/SettingsLib helper when
+     * present; normalize devices with 4 or 5 level buckets to the four dots we draw.
+     */
+    private fun decodePackedSignalDrawableLevel(fullState: Int): Int {
+        val loader = systemUiClassLoader ?: javaClass.classLoader
+        val classNames = listOf(
+            "com.android.systemui.statusbar.phone.SignalDrawable",
+            "com.android.settingslib.graph.SignalDrawable",
+        )
+        for (className in classNames) {
+            val drawableClass = runCatching { Class.forName(className, false, loader) }.getOrNull() ?: continue
+            val getLevel = drawableClass.methods.firstOrNull {
+                it.name == "getLevel" && java.lang.reflect.Modifier.isStatic(it.modifiers) &&
+                    it.parameterTypes.contentEquals(arrayOf(Int::class.javaPrimitiveType))
+            } ?: continue
+            val getNumLevels = drawableClass.methods.firstOrNull {
+                it.name == "getNumLevels" && java.lang.reflect.Modifier.isStatic(it.modifiers) &&
+                    it.parameterTypes.contentEquals(arrayOf(Int::class.javaPrimitiveType))
+            } ?: continue
+            val packedLevel = runCatching { (getLevel.invoke(null, fullState) as? Number)?.toInt() }.getOrNull()
+                ?: continue
+            val numLevels = runCatching { (getNumLevels.invoke(null, fullState) as? Number)?.toInt() }.getOrNull()
+                ?: continue
+            if (numLevels in 4..8 && packedLevel in 0..numLevels) {
+                val normalizedLevel = packedLevel.coerceAtMost(numLevels - 1)
+                return (normalizedLevel * 4f / (numLevels - 1)).roundToInt().coerceIn(0, 4)
+            }
+        }
+        return fullState.takeIf { it in 0..4 } ?: -1
     }
 
     private fun updateNativeSignalLevel(subscriptionId: Int, level: Int) {
@@ -2803,11 +2891,18 @@ object StatusBarComboStyleOneRuntime {
     }
 
     private fun resolveSignalResourceName(name: String): Int {
-        if (!name.startsWith("stat_sys_signal") || name.contains("wifi")) return -1
-        val signalIndex = name.indexOf("signal")
+        val normalized = name.lowercase().filter { it.isLetterOrDigit() }
+        if (normalized.contains("wifi") || normalized.contains("wlan") ||
+            normalized.contains("bluetooth") || normalized.contains("airplane")
+        ) return -1
+        val signalIndex = normalized.indexOf("signal")
         if (signalIndex < 0) return -1
-        val suffix = name.substring(signalIndex + "signal".length).trimStart('_')
-        return suffix.firstOrNull { it in '0'..'4' }?.minus('0') ?: -1
+        val suffix = normalized.substring(signalIndex + "signal".length)
+        // Match an exact numeric token. Do not mistake names such as "signal_4g"
+        // for signal-strength level 4.
+        return suffix.split(Regex("[^a-z0-9]+"))
+            .firstNotNullOfOrNull { it.toIntOrNull()?.takeIf { level -> level in 0..4 } }
+            ?: -1
     }
 
     private fun displayNetworkType(info: TelephonyDisplayInfo): String? = when (info.overrideNetworkType) {
