@@ -69,6 +69,9 @@ object StatusBarComboStyleOneRuntime {
     private const val MIUI_BATTERY_METER = "com.android.systemui.statusbar.views.MiuiBatteryMeterView"
     private const val MIUI_BATTERY_CONTAINER = "com.android.systemui.statusbar.views.MiuiStatusBatteryContainer"
     private const val ICON_HIDE_LIST_KEY = "icon_blacklist"
+    // Build #1441 aligned the outer display but still sat 4dp too high.
+    // Keep the calibration explicit so the renderer offset remains user-controlled.
+    private const val PUNCH_HOLE_VERTICAL_CALIBRATION_DP = 4
 
     private val installed = AtomicBoolean(false)
     @Volatile private var moduleForPreferenceReload: XposedModule? = null
@@ -172,10 +175,11 @@ object StatusBarComboStyleOneRuntime {
         // MIUI can host multiple status-bar rows at once. Keep the icon ink tied
         // to the battery's own container, not the whole PhoneStatusBarView.
         var tintRow: ViewGroup? = null
-        // Cache the centre of the status-bar row at first attachment. The row's
-        // height animates while the shade opens; recentering the overlay on every
-        // layout frame causes repeated WindowManager relayouts and panel jank.
+        // Cache the fallback status-bar centre while the shade animates. Reset it
+        // when the active foldable display geometry changes (cover <-> inner).
         var overlayCameraCenterYOnScreenPx: Int? = null
+        var overlayDisplayWidthPx: Int? = null
+        var overlayDisplayHeightPx: Int? = null
         val delayedApply = Runnable {
             if (!retired && !applying) StatusBarComboStyleOneRuntime.apply(this)
         }
@@ -299,6 +303,19 @@ object StatusBarComboStyleOneRuntime {
                     )
                 ).roundToInt()
             val host = StatusBarComboStyleOneRuntime.hosts[root]
+            val displaySize = StatusBarComboStyleOneRuntime.activeDisplaySize(root)
+            if (host != null && (
+                    host.overlayDisplayWidthPx != displaySize.x ||
+                    host.overlayDisplayHeightPx != displaySize.y
+                )
+            ) {
+                // A fold transition can reuse the SystemUI host. Never carry the
+                // cover screen's fallback Y coordinate onto the inner display.
+                host.overlayDisplayWidthPx = displaySize.x
+                host.overlayDisplayHeightPx = displaySize.y
+                host.overlayCameraCenterYOnScreenPx = null
+                diagnostic("Active display changed to ${displaySize.x}x${displaySize.y}; resetting punch-hole fallback")
+            }
             val fallbackCentreY = host?.overlayCameraCenterYOnScreenPx
                 ?: (rootPos[1] + root.height / 2).also {
                     if (host != null) host.overlayCameraCenterYOnScreenPx = it
@@ -306,7 +323,9 @@ object StatusBarComboStyleOneRuntime {
             val screenCentreY = cutout?.centerY() ?: fallbackCentreY
             lp.y = (
                 screenCentreY - lp.height * centreRatioY +
-                    StatusBarComboStyleOneRuntime.dpExact(app, cfg.glyphOffsetYDp)
+                    StatusBarComboStyleOneRuntime.dpExact(
+                        app, cfg.glyphOffsetYDp + PUNCH_HOLE_VERTICAL_CALIBRATION_DP,
+                    )
                 ).roundToInt()
             diagnostic("Glyph overlay coordinates: type=${lp.type} screenCenter=(${screenCentreX},${screenCentreY}) window=(${lp.x},${lp.y}) size=${lp.width}x${lp.height} cutout=${cutout ?: "none"}")
             // updateViewLayout invalidates/remeasures the overlay when its bounds
@@ -504,54 +523,78 @@ object StatusBarComboStyleOneRuntime {
      * while TYPE_STATUS_BAR_ADDITIONAL / TYPE_APPLICATION_OVERLAY need display
      * coordinates. Only map WindowInsets coordinates as a fallback.
      */
+    private fun activeDisplaySize(root: View): android.graphics.Point {
+        val point = android.graphics.Point()
+        val display = root.display ?: runCatching {
+            (root.context.getSystemService(Context.WINDOW_SERVICE) as? WindowManager)?.defaultDisplay
+        }.getOrNull()
+        if (display != null) runCatching { display.getRealSize(point) }
+        if (point.x <= 0) point.x = root.resources.displayMetrics.widthPixels
+        if (point.y <= 0) point.y = root.resources.displayMetrics.heightPixels
+        return point
+    }
+
+    private fun punchHoleCenterTolerancePx(root: View, screenWidth: Int): Int =
+        max(dpExact(root.context, 48), (screenWidth * 0.12f).roundToInt())
+
     private fun cutoutBounds(root: View): Rect? {
         if (Build.VERSION.SDK_INT < 28) return null
 
         val display = root.display ?: runCatching {
             (root.context.getSystemService(Context.WINDOW_SERVICE) as? WindowManager)?.defaultDisplay
         }.getOrNull()
-        val displaySize = android.graphics.Point()
-        if (display != null) runCatching { display.getRealSize(displaySize) }
-        val screenWidth = displaySize.x.takeIf { it > 0 }
-            ?: root.resources.displayMetrics.widthPixels
+        val screenWidth = activeDisplaySize(root).x
+        val screenCenterX = screenWidth / 2
+        val tolerance = punchHoleCenterTolerancePx(root, screenWidth)
 
-        // Display.getCutout / DisplayInfo is already in display coordinates.
+        // Reject a cutout that is geometrically centred on the cover display but
+        // not on the currently active inner display. Some foldable firmware keeps
+        // both display/cutout metadata objects alive across a fold transition.
         val displayCutout = readDisplayCutout(display)
         if (displayCutout != null) {
             val bounds = displayCutout.boundingRects.filter { it.width() > 0 && it.height() > 0 }
-            val selected = bounds.minByOrNull { abs(it.centerX() - screenWidth / 2) }
+            val selected = bounds.minByOrNull { abs(it.centerX() - screenCenterX) }
             if (selected != null) {
-                diagnostic("Punch-hole source=DisplayInfo bounds=$selected screenWidth=$screenWidth")
-                return Rect(selected)
-            }
-            val safeTop = displayCutout.safeInsetTop
-            if (safeTop > 0) {
-                val screenX = screenWidth / 2
-                val screenY = safeTop / 2
-                diagnostic("Punch-hole source=DisplayInfo safeTop=$safeTop center=($screenX,$screenY)")
-                return Rect(screenX - 1, screenY - 1, screenX + 1, screenY + 1)
+                val delta = abs(selected.centerX() - screenCenterX)
+                if (delta <= tolerance) {
+                    diagnostic("Punch-hole source=DisplayInfo bounds=$selected screenWidth=$screenWidth delta=$delta")
+                    return Rect(selected)
+                }
+                diagnostic("Ignoring stale DisplayInfo cutout=$selected activeScreenWidth=$screenWidth centerX=$screenCenterX delta=$delta tolerance=$tolerance")
+                // Do not use safeInsetTop from a mismatched display's cutout.
+            } else {
+                val safeTop = displayCutout.safeInsetTop
+                if (safeTop > 0) {
+                    val screenY = safeTop / 2
+                    diagnostic("Punch-hole source=DisplayInfo safeTop=$safeTop center=($screenCenterX,$screenY)")
+                    return Rect(screenCenterX - 1, screenY - 1, screenCenterX + 1, screenY + 1)
+                }
             }
         }
 
-        // WindowInsets cutout coordinates may be local to the app/window content.
+        // WindowInsets bounds are first mapped from their root/window coordinate
+        // space, then checked against the active screen centre as well.
         val windowCutout = readWindowCutout(root) ?: return null
         val bounds = windowCutout.boundingRects.filter { it.width() > 0 && it.height() > 0 }
         val windowRoot = root.rootView
         val location = IntArray(2)
         windowRoot.getLocationOnScreen(location)
-        val rootWidth = windowRoot.width.takeIf { it > 0 } ?: screenWidth
-        val selected = bounds.minByOrNull { abs(it.centerX() - rootWidth / 2) }
+        val selected = bounds.minByOrNull { abs(it.centerX() - (windowRoot.width.takeIf { w -> w > 0 } ?: screenWidth) / 2) }
         if (selected != null) {
             val mapped = Rect(selected).apply { offset(location[0], location[1]) }
-            diagnostic("Punch-hole source=WindowInsets local=$selected root=$location mapped=$mapped")
-            return mapped
+            val delta = abs(mapped.centerX() - screenCenterX)
+            if (delta <= tolerance) {
+                diagnostic("Punch-hole source=WindowInsets local=$selected root=${location.contentToString()} mapped=$mapped")
+                return mapped
+            }
+            diagnostic("Ignoring stale WindowInsets cutout local=$selected mapped=$mapped activeScreenWidth=$screenWidth delta=$delta tolerance=$tolerance")
+            return null
         }
         val safeTop = windowCutout.safeInsetTop
         if (safeTop > 0) {
-            val screenX = screenWidth / 2
             val screenY = location[1] + safeTop / 2
-            diagnostic("Punch-hole source=WindowInsets safeTop=$safeTop center=($screenX,$screenY)")
-            return Rect(screenX - 1, screenY - 1, screenX + 1, screenY + 1)
+            diagnostic("Punch-hole source=WindowInsets safeTop=$safeTop center=($screenCenterX,$screenY)")
+            return Rect(screenCenterX - 1, screenY - 1, screenCenterX + 1, screenY + 1)
         }
         return null
     }
@@ -853,10 +896,11 @@ object StatusBarComboStyleOneRuntime {
                 val nativeBatteryIndicator = isBatteryIcon(view) ||
                     (slotOf(view) ?: knownIconSlots[view])?.contains("battery", ignoreCase = true) == true
                 if (view === battery || view is GlyphView || nativeBatteryIndicator) return@forEach
-                // Battery indicators are hidden through the native icon slot / icon_hide_list
-                // contract above. Only the selected network indicators use view-level folding.
+                // Wi-Fi visibility is controlled only through the native icon slot,
+                // matching QuickStar's own approach. Do not also collapse the view:
+                // that second hide path can win after a one-frame native restoration.
+                // Mobile/type indicators retain their existing view-level folding.
                 val hide =
-                    (config.showWifi && isWifiIcon(view)) ||
                     (foldMobile && isMobileIcon(view)) ||
                     (config.showMobile && config.mobileTypeMode == 2 && isMobileTypeView(view))
                 if (hide) collapseHostView(host, view) else restoreHostView(host, view)
@@ -1108,7 +1152,6 @@ object StatusBarComboStyleOneRuntime {
 
     private fun containerSuppressionFingerprint(container: ViewGroup): Int {
         var key = 17
-        key = 31 * key + if (config.enabled && config.showWifi) 1 else 0
         key = 31 * key + if (isMobileNativeSuppressed()) 1 else 0
         key = 31 * key + if (config.showMobile && config.mobileTypeMode == 2) 1 else 0
         key = 31 * key + container.childCount
@@ -1142,9 +1185,11 @@ object StatusBarComboStyleOneRuntime {
         val host = hostFor(container) ?: return
         descendants(container).forEach { view ->
             if (view is GlyphView) return@forEach
+            // Wi-Fi is hidden/restored exclusively via setIconVisibility(slot),
+            // never by collapsing the icon view itself. This prevents the view
+            // tree from re-hiding it after the native slot briefly reappears.
             val hide = config.enabled && (
-                (config.showWifi && isWifiIcon(view)) ||
-                    (isMobileNativeSuppressed() && isMobileIcon(view)) ||
+                (isMobileNativeSuppressed() && isMobileIcon(view)) ||
                     (config.showMobile && config.mobileTypeMode == 2 && isMobileTypeView(view))
             )
             if (hide) collapseHostView(host, view) else restoreHostView(host, view)
@@ -1997,7 +2042,12 @@ object StatusBarComboStyleOneRuntime {
                                 tintIconClassifications[view] = classifyTintIcon(view)
                             }
                             if (shouldSuppressSlot(slot)) {
-                                if (view.parent is ViewGroup) collapseHostView(host, view)
+                                // Wi-Fi is managed through the native slot controller only.
+                                // Never zero the view's own dimensions, which can survive
+                                // QuickStar-style slot restoration.
+                                if (!isManagedWifiSlot(slot) && view.parent is ViewGroup) {
+                                    collapseHostView(host, view)
+                                }
                             } else {
                                 restoreHostView(host, view)
                             }
@@ -2079,12 +2129,26 @@ object StatusBarComboStyleOneRuntime {
                     if (managedSlot && slot != null && visibleIndex >= 0) {
                         knownBatterySlotNames.add(slot)
                         val alreadyEnforcing = enforcingBatterySlotVisibility.get() == true
+                        val requestedVisible = args[visibleIndex] as? Boolean ?: true
+                        val styleSuppressesSlot = shouldSuppressSlot(slot)
                         if (!alreadyEnforcing && controller != null) {
-                            rememberNativeBatterySlotVisibility(
-                                controller, slot, tag, args[visibleIndex] as? Boolean ?: true,
-                            )
+                            val key = batterySlotVisibilityKey(slot, tag)
+                            val previousNativeState = synchronized(nativeBatterySlotVisibility) {
+                                nativeBatterySlotVisibility[controller]?.get(key)
+                            }
+                            // While OneuiXP owns a slot, SystemUI can repeatedly submit
+                            // false because the slot is currently hidden. Do not mistake
+                            // that enforced state for QuickStar's saved preference. Still
+                            // accept true updates so a newly-active Wi-Fi holder is cached.
+                            // Once OneuiXP stops suppressing it, accept both true and false
+                            // from SystemUI so the user's QuickStar preference is respected.
+                            if (!styleSuppressesSlot || requestedVisible || previousNativeState == null) {
+                                rememberNativeBatterySlotVisibility(
+                                    controller, slot, tag, requestedVisible,
+                                )
+                            }
                         }
-                        if (shouldSuppressSlot(slot)) args[visibleIndex] = false
+                        if (styleSuppressesSlot) args[visibleIndex] = false
                     }
 
                     val previousEnforcement = enforcingBatterySlotVisibility.get() == true
