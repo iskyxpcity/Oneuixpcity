@@ -115,6 +115,7 @@ object StatusBarComboStyleOneRuntime {
     private val quickPanelSignalLevels = ConcurrentHashMap<Int, Int>()
     private val nativeSignalLevels = ConcurrentHashMap<Int, Int>()
     private val lastNativeWifiDiagnostics = Collections.synchronizedMap(WeakHashMap<View, String>())
+    private val lastNativeWifiSlotRequests = ConcurrentHashMap<String, String>()
     private val lastSubscriptionSignalLevels = ConcurrentHashMap<Int, Int>()
     private val subscriptionSlots = ConcurrentHashMap<Int, Int>()
     private val nativeChildSnapshots = Collections.synchronizedMap(WeakHashMap<View, LayoutSnapshot>())
@@ -950,11 +951,13 @@ object StatusBarComboStyleOneRuntime {
                 // Keep Wi-Fi on the established view/layout path for now. The
                 // experimental native Wi-Fi slot interception is disabled after a
                 // SystemUI/LSPosed stability regression.
+                val wifiCandidate = isWifiIcon(view)
                 val hide =
-                    (config.showWifi && isWifiIcon(view)) ||
+                    (config.showWifi && wifiCandidate) ||
                     (foldMobile && isMobileIcon(view)) ||
                     (config.showMobile && config.mobileTypeMode == 2 && isMobileTypeView(view))
                 if (hide) collapseHostView(host, view) else restoreHostView(host, view)
+                if (wifiCandidate) diagnoseNativeWifiView(view, if (hide) "apply-collapse" else "apply-restore")
             }
 
             if (config.overlayGlyph && !host.overlayFailed) {
@@ -1197,6 +1200,27 @@ object StatusBarComboStyleOneRuntime {
             name.contains("slotwifi")
     }
 
+    private fun diagnoseNativeWifiView(view: View, action: String) {
+        val slot = (slotOf(view) ?: knownIconSlots[view]).orEmpty()
+        val lp = view.layoutParams
+        val descriptor = viewSignature(view).take(180)
+        val snapshot = "$action|showWifi=${config.showWifi}|wifiLevel=${state.wifiLevel}|" +
+            "vis=${view.visibility}|alpha=${view.alpha}|" +
+            "size=${lp?.width}x${lp?.height}|slot=$slot"
+        if (lastNativeWifiDiagnostics.put(view, snapshot) != snapshot) {
+            diagnostic("Native Wi-Fi view: $snapshot class=${view.javaClass.name} desc=$descriptor")
+        }
+    }
+
+    private fun diagnoseNativeWifiSlotRequest(controller: Any?, slot: String, requested: Boolean) {
+        val owner = controller?.let { System.identityHashCode(it).toString() } ?: "null"
+        val key = "$owner|${slot.lowercase()}"
+        val snapshot = "visible=$requested|showWifi=${config.showWifi}|wifiLevel=${state.wifiLevel}"
+        if (lastNativeWifiSlotRequests.put(key, snapshot) != snapshot) {
+            diagnostic("Native Wi-Fi slot request: slot=$slot $snapshot owner=$owner")
+        }
+    }
+
     private fun isMobileIcon(v: View): Boolean {
         if (v is GlyphView || isMobileTypeView(v) || isWifiIcon(v)) return false
         val slot = (slotOf(v) ?: knownIconSlots[v]).orEmpty().lowercase()
@@ -1261,12 +1285,14 @@ object StatusBarComboStyleOneRuntime {
             // Roll back the experimental Wi-Fi native-slot interception.
             // Use the established per-view/layout suppression path until the
             // SystemUI crash has been isolated and a safer slot API is verified.
+            val wifiCandidate = isWifiIcon(view)
             val hide = config.enabled && (
-                (config.showWifi && isWifiIcon(view)) ||
+                (config.showWifi && wifiCandidate) ||
                     (isMobileNativeSuppressed() && isMobileIcon(view)) ||
                     (config.showMobile && config.mobileTypeMode == 2 && isMobileTypeView(view))
             )
             if (hide) collapseHostView(host, view) else restoreHostView(host, view)
+            if (wifiCandidate) diagnoseNativeWifiView(view, if (hide) "container-collapse" else "container-restore")
         }
         lastContainerFingerprints[container] = containerSuppressionFingerprint(container)
     }
@@ -2190,6 +2216,11 @@ object StatusBarComboStyleOneRuntime {
                         args.getOrNull(1) is Boolean -> 1
                         args.size >= 3 && args.getOrNull(1) is Int && args.getOrNull(2) is Boolean -> 2
                         else -> -1
+                    }
+                    if (slot != null && isManagedWifiSlot(slot) && visibleIndex >= 0) {
+                        diagnoseNativeWifiSlotRequest(
+                            controller, slot, args[visibleIndex] as? Boolean ?: true,
+                        )
                     }
                     val tag = when {
                         args.size >= 3 && args.getOrNull(1) is Int && visibleIndex == 2 -> args[1] as Int
