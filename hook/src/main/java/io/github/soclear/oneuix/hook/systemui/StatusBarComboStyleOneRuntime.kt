@@ -3151,7 +3151,17 @@ object StatusBarComboStyleOneRuntime {
         // Legacy Android/Samsung models expose SignalDrawable's packed state as an Int,
         // not as a model with "level" and "numberOfLevels" fields.
         if (iconModel is Number) {
-            val decoded = decodePackedSignalDrawableLevel(iconModel.toInt())
+            val raw = iconModel.toInt()
+            val resources = synchronized(hosts) { hosts.values.firstOrNull()?.root?.resources }
+            val resourceName = resources?.let {
+                runCatching { it.getResourceEntryName(raw) }.getOrNull()
+            }
+            if (resourceName != null) {
+                // Numeric models can contain either resource IDs or packed states.
+                // If Android resolves it as a resource, never decode that ID as bit fields.
+                return resolveSignalResourceName(resourceName).takeIf { it in 0..4 }
+            }
+            val decoded = decodePackedSignalDrawableLevel(raw)
             if (decoded in 0..4) return decoded
         }
         val rawLevel = readSignalIntValue(iconModel, "level", "signalLevel", "strengthLevel")
