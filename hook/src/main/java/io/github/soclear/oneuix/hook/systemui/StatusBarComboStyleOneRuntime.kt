@@ -2961,10 +2961,16 @@ object StatusBarComboStyleOneRuntime {
         val className = "com.android.systemui.statusbar.pipeline.wifi.ui.view.ModernStatusBarWifiView"
         runCatching {
             modernWifiViewClass = classLoader.loadClass(className)
-            val method = View::class.java.getDeclaredMethod(
-                "setVisibility",
-                Int::class.javaPrimitiveType!!,
-            )
+            // Resolve the most specific public method so an OEM override on the modern
+            // Wi-Fi view/parent cannot bypass a hook attached only to android.view.View.
+            val method = runCatching {
+                modernWifiViewClass!!.getMethod("setVisibility", Int::class.javaPrimitiveType!!)
+            }.getOrElse {
+                View::class.java.getDeclaredMethod(
+                    "setVisibility",
+                    Int::class.javaPrimitiveType!!,
+                )
+            }
             module.hook(method).intercept { chain ->
                 val view = chain.thisObject as? View
                 val wifiClass = modernWifiViewClass
@@ -3027,7 +3033,10 @@ object StatusBarComboStyleOneRuntime {
                     result
                 }
             }
-            diagnostic("Modern Wi-Fi visibility guard installed: $className; constructHooks=${constructMethods.size}")
+            diagnostic(
+                "Modern Wi-Fi visibility guard installed: $className; " +
+                    "setterOwner=${method.declaringClass.name}; constructHooks=${constructMethods.size}"
+            )
         }.onFailure { diagnostic("Modern Wi-Fi visibility guard unavailable: $it") }
     }
 
