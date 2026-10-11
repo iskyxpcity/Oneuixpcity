@@ -115,9 +115,13 @@ object StatusBarComboStyleOneRuntime {
     // and TelephonyManager as fallbacks when an OEM icon resource cannot be decoded.
     private val quickPanelSignalLevels = ConcurrentHashMap<Int, Int>()
     private val nativeSignalLevels = ConcurrentHashMap<Int, Int>()
-    // Samsung's modern mobile pipeline owns the icon actually drawn in the status bar.
-    // Retain its per-subscription view model and read the current model during signal refresh.
+    // The level decoded from the SignalDrawable inside the collapsed status-bar icon is the
+    // highest-confidence source. Keep it per subscription so TelephonyManager cannot override
+    // what SystemUI is actually drawing (notably on Samsung dual-SIM/eSIM devices).
+    private val renderedSignalLevels = ConcurrentHashMap<Int, Int>()
     private val modernMobileViewModels = ConcurrentHashMap<Int, WeakReference<Any>>()
+    private val modernMobileViewSubscriptionIds = Collections.synchronizedMap(WeakHashMap<View, Int>())
+    @Volatile private var modernMobileViewClass: Class<*>? = null
     private val lastModernPipelineSignalDiagnostics = ConcurrentHashMap<Int, String>()
     private val lastModernPipelineLevelDiagnostics = ConcurrentHashMap<Int, String>()
     private val lastNativeWifiVisibilityRequests = Collections.synchronizedMap(WeakHashMap<View, String>())
@@ -385,6 +389,7 @@ object StatusBarComboStyleOneRuntime {
         hookNativeMobileState(module, param.classLoader)
         hookNativeSignalPolicy(module, param.classLoader)
         hookModernMobileViewConstruction(module, param.classLoader)
+        hookModernSignalDrawable(module)
         hookModernWifiVisibility(module, param.classLoader)
 
         // Style One tint is sourced per collapsed status-bar row by the native
@@ -2689,6 +2694,7 @@ object StatusBarComboStyleOneRuntime {
         val activeIds = active.map { it.subscriptionId }.toSet()
         quickPanelSignalLevels.keys.filter { it !in activeIds }.forEach { quickPanelSignalLevels.remove(it) }
         nativeSignalLevels.keys.filter { it !in activeIds }.forEach { nativeSignalLevels.remove(it) }
+        renderedSignalLevels.keys.filter { it !in activeIds }.forEach { renderedSignalLevels.remove(it) }
         lastSubscriptionSignalLevels.keys.filter { it !in activeIds }.forEach { lastSubscriptionSignalLevels.remove(it) }
         var dataLevel = -1
         var simOne = -1
@@ -2699,10 +2705,17 @@ object StatusBarComboStyleOneRuntime {
             val sub = runCatching { base.createForSubscriptionId(info.subscriptionId) }.getOrNull() ?: return@forEach
             val telephonyLevel = runCatching { sub.signalStrength?.level ?: -1 }
                 .getOrDefault(-1).coerceIn(-1, 4)
+            val drawnStatusBarLevel = renderedSignalLevels[info.subscriptionId]?.coerceIn(0, 4)
             val modernPipelineLevel = readModernPipelineSignalLevel(info.subscriptionId)
-            if (modernPipelineLevel != null) {
-                nativeSignalLevels[info.subscriptionId] = modernPipelineLevel
-                val snapshot = "level=$modernPipelineLevel|dataSub=${info.subscriptionId == dataSub}|telephony=$telephonyLevel"
+            // The actual SignalDrawable level wins over both the reflected model and telephony.
+            // The model remains useful as a fallback if this firmware uses a nonstandard drawable.
+            when {
+                drawnStatusBarLevel != null -> nativeSignalLevels[info.subscriptionId] = drawnStatusBarLevel
+                modernPipelineLevel != null -> nativeSignalLevels[info.subscriptionId] = modernPipelineLevel
+            }
+            if (drawnStatusBarLevel != null || modernPipelineLevel != null) {
+                val snapshot = "drawn=${drawnStatusBarLevel ?: -1}|model=${modernPipelineLevel ?: -1}" +
+                    "|dataSub=${info.subscriptionId == dataSub}|telephony=$telephonyLevel"
                 if (lastModernPipelineLevelDiagnostics.put(info.subscriptionId, snapshot) != snapshot) {
                     diagnostic("Modern status-bar signal sample: subId=${info.subscriptionId} $snapshot")
                 }
@@ -2799,23 +2812,20 @@ object StatusBarComboStyleOneRuntime {
     }
 
     /**
-     * Android's modern status-bar mobile view is updated from a per-SIM view model,
-     * not applyMobileState(). Read that view model's current SignalIconModel so the
-     * four-dot renderer follows the level SystemUI is actually drawing for each SIM.
-     */
-    /**
-     * Samsung/Android's modern status-bar mobile view is bound to a per-SIM view model.
-     * Different platform revisions add a logger argument before the slot/view model, so
-     * identify the model by its subscriptionId + icon flow rather than assuming an argument index.
+     * Read each SIM's modern status-bar model and map the returned view to its subscription.
+     * OEM Android revisions vary the logger/slot parameter order and may expose a wrapper view
+     * model, so identify the model by type/name and subscription ID instead of a fixed index.
      */
     private fun hookModernMobileViewConstruction(module: XposedModule, classLoader: ClassLoader) {
         val className = "com.android.systemui.statusbar.pipeline.mobile.ui.view.ModernStatusBarMobileView"
         runCatching {
             val clazz = classLoader.loadClass(className)
+            modernMobileViewClass = clazz
             val methods = clazz.declaredMethods.filter {
                 it.name == "constructAndBind" && it.parameterTypes.any { type ->
                     type.name.contains("MobileIconViewModel") ||
-                        type.name.contains("LocationBasedMobileViewModel")
+                        type.name.contains("LocationBasedMobileViewModel") ||
+                        type.name.contains("MobileIconViewModelCommon")
                 }
             }
             if (methods.isEmpty()) {
@@ -2827,29 +2837,37 @@ object StatusBarComboStyleOneRuntime {
                     val result = chain.proceed()
                     val viewModel = chain.args.firstNotNullOfOrNull { argument ->
                         val candidate = argument ?: return@firstNotNullOfOrNull null
+                        val typeName = candidate.javaClass.name
+                        val modelType = typeName.contains("MobileIconViewModel") ||
+                            typeName.contains("LocationBasedMobileViewModel")
                         val subId = readSignalIntValue(candidate, "subscriptionId", "subId")
                         if (subId != null && subId >= 0 &&
-                            readObjectMember(candidate, "icon") != null
+                            (modelType || readObjectMember(candidate, "icon", "signalIcon", "signalLevelIcon") != null)
                         ) candidate else null
                     }
                     if (viewModel != null) {
                         val subId = readSignalIntValue(viewModel, "subscriptionId", "subId")
                         if (subId != null && subId >= 0) {
                             modernMobileViewModels[subId] = WeakReference(viewModel)
-                            val iconFlow = readObjectMember(viewModel, "icon")
-                            val iconModel = iconFlow?.let { readObjectMember(it, "value") }
+                            val resultView = result as? View
+                            if (resultView != null) {
+                                modernMobileViewSubscriptionIds[resultView] = subId
+                                knownIconSlots[resultView] = "mobile"
+                            }
+                            val iconModel = readModernIconModel(viewModel)
                             val level = iconModel?.let(::modernPipelineSignalLevel)
                             val levels = iconModel?.let {
                                 readSignalIntValue(it, "numberOfLevels", "numLevels", "levelCount")
                             } ?: -1
-                            val snapshot = "viewModel=${viewModel.javaClass.name}|iconModel=${iconModel?.javaClass?.name}|level=${level ?: -1}|levels=$levels"
+                            val snapshot = "viewModel=${viewModel.javaClass.name}|iconModel=${iconModel?.javaClass?.name}" +
+                                "|level=${level ?: -1}|levels=$levels|drawn=${renderedSignalLevels[subId] ?: -1}"
                             if (lastModernPipelineSignalDiagnostics.put(subId, snapshot) != snapshot) {
                                 diagnostic("Modern status-bar mobile pipeline: subId=$subId $snapshot")
                             }
-                            if (level != null) nativeSignalLevels[subId] = level
-                            else diagnostic("Modern status-bar mobile pipeline: current icon level unavailable for subId=$subId")
-                            if (result is View) {
-                                knownIconSlots[result] = "mobile"
+                            if (level != null && renderedSignalLevels[subId] == null) {
+                                nativeSignalLevels[subId] = level
+                            } else if (level == null) {
+                                diagnostic("Modern status-bar mobile pipeline: current icon level unavailable for subId=$subId")
                             }
                             scheduleTelephonyRefresh()
                         }
@@ -2864,6 +2882,79 @@ object StatusBarComboStyleOneRuntime {
             }
             diagnostic("Modern mobile pipeline hook installed: $className")
         }.onFailure { diagnostic("Modern mobile pipeline hook unavailable: $it") }
+    }
+
+    /**
+     * Observe the SignalDrawable attached to the real status-bar mobile ImageView. This is
+     * intentionally per-view-model/subscription; it never samples QS icons or the other SIM.
+     */
+    private fun hookModernSignalDrawable(module: XposedModule) {
+        runCatching {
+            val setImageLevel = android.widget.ImageView::class.java.getDeclaredMethod(
+                "setImageLevel", Int::class.javaPrimitiveType!!,
+            )
+            module.hook(setImageLevel).intercept { chain ->
+                val result = chain.proceed()
+                val image = chain.thisObject as? android.widget.ImageView
+                val packedLevel = chain.args.getOrNull(0) as? Int
+                if (image != null && packedLevel != null && config.enabled) {
+                    captureModernSignalDrawable(image, packedLevel)
+                }
+                result
+            }
+        }.onFailure { diagnostic("Modern status-bar signal image-level hook unavailable: $it") }
+        runCatching {
+            val setImageDrawable = android.widget.ImageView::class.java.getDeclaredMethod(
+                "setImageDrawable", android.graphics.drawable.Drawable::class.java,
+            )
+            module.hook(setImageDrawable).intercept { chain ->
+                val result = chain.proceed()
+                val image = chain.thisObject as? android.widget.ImageView
+                if (image != null && config.enabled) captureModernSignalDrawable(image, null)
+                result
+            }
+        }.onFailure { diagnostic("Modern status-bar signal drawable hook unavailable: $it") }
+        diagnostic("Modern status-bar rendered signal observer installed")
+    }
+
+    private fun captureModernSignalDrawable(image: android.widget.ImageView, packedLevel: Int?) {
+        val drawable = image.drawable ?: return
+        if (!drawable.javaClass.name.contains("SignalDrawable", ignoreCase = true)) return
+        val mobileClass = modernMobileViewClass ?: return
+        var cursor: View? = image
+        var mobileRoot: View? = null
+        while (cursor != null) {
+            if (mobileClass.isInstance(cursor)) {
+                mobileRoot = cursor
+                break
+            }
+            cursor = cursor.parent as? View
+        }
+        val root = mobileRoot ?: return
+        val subId = modernMobileViewSubscriptionIds[root] ?: return
+        val fullState = packedLevel ?: drawable.level
+        val level = decodePackedSignalDrawableLevel(fullState)
+        if (level !in 0..4) return
+        val old = renderedSignalLevels.put(subId, level)
+        if (old != level) {
+            nativeSignalLevels[subId] = level
+            diagnostic(
+                "Modern status-bar drawn signal: subId=$subId level=$level packed=$fullState " +
+                    "drawable=${drawable.javaClass.name} dataSub=${subId == defaultDataSubscriptionId}"
+            )
+            scheduleTelephonyRefresh()
+            invalidateGlyphs()
+        }
+    }
+
+    private fun readModernIconModel(viewModel: Any): Any? {
+        val iconFlow = readObjectMember(viewModel, "icon", "signalIcon", "signalLevelIcon")
+        if (iconFlow != null) {
+            readObjectMember(iconFlow, "value")?.let { return it }
+            val replay = readObjectMember(iconFlow, "replayCache") as? List<*>
+            replay?.lastOrNull()?.let { return it }
+        }
+        return readObjectMember(viewModel, "iconModel", "signalIconModel", "signalStrengthModel")
     }
 
     private fun hookModernWifiVisibility(module: XposedModule, classLoader: ClassLoader) {
@@ -2917,14 +3008,32 @@ object StatusBarComboStyleOneRuntime {
                     chain.proceed()
                 }
             }
-            diagnostic("Modern Wi-Fi visibility guard installed: $className")
+            // Hide the modern Wi-Fi view before constructAndBind returns it to the icon container.
+            // The binder starts by setting view.isVisible=true and only later receives the first Flow
+            // emission; post-construction hiding prevents the one-frame native icon flash.
+            val constructMethods = modernWifiViewClass?.declaredMethods.orEmpty().filter {
+                it.name == "constructAndBind" &&
+                    java.lang.reflect.Modifier.isStatic(it.modifiers)
+            }
+            constructMethods.distinctBy { it.toGenericString() }.forEach { constructMethod ->
+                module.hook(constructMethod).intercept { chain ->
+                    val result = chain.proceed()
+                    val view = result as? View
+                    if (view != null && config.enabled && config.showWifi) {
+                        nativeWifiBaselineVisibility.putIfAbsent(view, View.VISIBLE)
+                        if (view.visibility != View.GONE) view.visibility = View.GONE
+                        diagnostic("Modern Wi-Fi constructAndBind result hidden before container add")
+                    }
+                    result
+                }
+            }
+            diagnostic("Modern Wi-Fi visibility guard installed: $className; constructHooks=${constructMethods.size}")
         }.onFailure { diagnostic("Modern Wi-Fi visibility guard unavailable: $it") }
     }
 
     private fun readModernPipelineSignalLevel(subscriptionId: Int): Int? {
         val viewModel = modernMobileViewModels[subscriptionId]?.get() ?: return null
-        val iconFlow = readObjectMember(viewModel, "icon") ?: return null
-        val iconModel = readObjectMember(iconFlow, "value") ?: return null
+        val iconModel = readModernIconModel(viewModel) ?: return null
         return modernPipelineSignalLevel(iconModel)
     }
 
