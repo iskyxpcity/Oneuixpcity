@@ -2349,7 +2349,7 @@ object StatusBarComboStyleOneRuntime {
             // A native icon may also have been collapsed in the view tree. Reassert
             // its original measured layout after the controller has restored its slot.
             synchronized(hosts) { hosts.values.toList() }.forEach { host ->
-                if (host.retired || config.showWifi || state.wifiLevel < 0) return@forEach
+                if (host.retired || (config.enabled && config.showWifi) || state.wifiLevel < 0) return@forEach
                 host.layouts.keys.toList().filter { view ->
                     isWifiIcon(view) || (slotOf(view) ?: knownIconSlots[view])?.let(::isManagedWifiSlot) == true
                 }.forEach { view ->
@@ -2801,7 +2801,13 @@ object StatusBarComboStyleOneRuntime {
                         val resourceName = runCatching { view.resources.getResourceEntryName(strength) }
                             .getOrNull().orEmpty()
                         val level = normalizeNativeSignalLevel(strength)
-                            ?: resolveSignalResourceName(resourceName)
+                            ?: if (resourceName.isNotBlank()) {
+                                resolveSignalResourceName(resourceName).takeIf { it in 0..4 }
+                            } else {
+                                // Legacy status-bar state may carry SignalDrawable's packed state,
+                                // not a resource ID. Decode it only when resource lookup failed.
+                                decodePackedSignalDrawableLevel(strength).takeIf { it in 0..4 }
+                            }
                         diagnostic(
                             "StatusBarMobileView state: subId=$subId strengthId=$strength " +
                                 "resource=$resourceName level=$level"
@@ -3161,9 +3167,15 @@ object StatusBarComboStyleOneRuntime {
         val resource = readSignalIntValue(iconModel, "resId", "resourceId", "iconId", "icon")
             ?: return null
         val resources = synchronized(hosts) { hosts.values.firstOrNull()?.root?.resources } ?: return null
-        val byName = resolveSignalResourceLevelFromResources(resources, resource)
-        return byName.takeIf { it in 0..4 }
-            ?: decodePackedSignalDrawableLevel(resource).takeIf { it in 0..4 }
+        // A resolved resource ID must be interpreted by its name. Do not treat an
+        // unrelated drawable resource ID as a packed SignalDrawable state; that can
+        // leave the rendered signal stuck at a false level.
+        val resourceName = runCatching { resources.getResourceEntryName(resource) }.getOrNull()
+        return if (resourceName != null) {
+            resolveSignalResourceName(resourceName).takeIf { it in 0..4 }
+        } else {
+            decodePackedSignalDrawableLevel(resource).takeIf { it in 0..4 }
+        }
     }
 
     private fun readSignalIntValue(target: Any, vararg names: String): Int? {
@@ -3278,8 +3290,12 @@ object StatusBarComboStyleOneRuntime {
             ?: return
         val resourceName = runCatching { resources.getResourceEntryName(strength) }.getOrNull().orEmpty()
         val level = normalizeNativeSignalLevel(strength)
-            ?: resolveSignalResourceName(resourceName).takeIf { it in 0..4 }
-            ?: decodePackedSignalDrawableLevel(strength)
+            ?: if (resourceName.isNotBlank()) {
+                resolveSignalResourceName(resourceName).takeIf { it in 0..4 }
+            } else {
+                // Only decode as packed bits when this integer is not a real resource ID.
+                decodePackedSignalDrawableLevel(strength).takeIf { it in 0..4 }
+            }
         diagnostic(
             "Native mobile icon state: class=${value.javaClass.simpleName} subId=$subId " +
                 "strength=$strength resource=$resourceName level=$level"
