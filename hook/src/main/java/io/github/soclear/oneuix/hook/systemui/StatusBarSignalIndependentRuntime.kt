@@ -678,6 +678,15 @@ internal object StatusBarSignalIndependentRuntime {
             if (view === holder.root || view === holder.bars || isDescendantOf(view, holder.root)) return@forEach
             if (view.width > 0 && view.width / density > 80f) return@forEach
             if (view.height > 0 && view.height / density > 48f) return@forEach
+
+            // Samsung can put Wi-Fi and both SIM indicators under a shared
+            // SignalClusterView. Never alpha-hide that parent as a "signal icon";
+            // doing so makes Wi-Fi flash briefly, then disappear on the next bind.
+            if (isSharedSignalWifiContainer(view)) {
+                restoreHiddenNativeView(holder, view)
+                return@forEach
+            }
+
             val descriptor = nativeSignalViewDescriptor(view)
             val normalized = descriptor.filter { it.isLetterOrDigit() }
             val positive = normalized.contains("mobile") || normalized.contains("signal") ||
@@ -696,15 +705,27 @@ internal object StatusBarSignalIndependentRuntime {
         }
     }
 
-    private fun restoreNativeWifiViews(holder: Holder) {
-        val wifiViews = holder.hiddenNative.keys.filter(::isWifiLikeNativeView)
-        wifiViews.forEach { view ->
-            val original = holder.hiddenNative.remove(view) ?: return@forEach
-            if (view.parent != null) {
-                view.alpha = original.alpha
-                view.visibility = original.visibility
-            }
+    private fun isSharedSignalWifiContainer(view: View): Boolean {
+        if (view !is ViewGroup) return false
+        val descriptor = nativeSignalViewDescriptor(view).filter { it.isLetterOrDigit() }
+        if (descriptor.contains("signalcluster")) return true
+        return collectDescendants(view).any(::isWifiLikeNativeView)
+    }
+
+    private fun restoreHiddenNativeView(holder: Holder, view: View) {
+        val original = holder.hiddenNative.remove(view) ?: return
+        if (view.parent != null) {
+            view.alpha = original.alpha
+            view.visibility = original.visibility
+            (view.parent as? View)?.requestLayout()
         }
+    }
+
+    private fun restoreNativeWifiViews(holder: Holder) {
+        val wifiViews = holder.hiddenNative.keys.filter { view ->
+            isWifiLikeNativeView(view) || isSharedSignalWifiContainer(view)
+        }
+        wifiViews.forEach { restoreHiddenNativeView(holder, it) }
     }
 
     private fun restoreNativeSignalViews(holder: Holder) {
