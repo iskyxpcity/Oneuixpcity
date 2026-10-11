@@ -486,22 +486,98 @@ object StatusBarComboStyleOneRuntime {
      */
     private fun cutoutBounds(root: View): Rect? {
         if (Build.VERSION.SDK_INT < 28) return null
-        return runCatching {
-            val insets = root.rootWindowInsets ?: root.rootView.rootWindowInsets
-                ?: return@runCatching null
-            val cutout = insets.displayCutout ?: return@runCatching null
-            val bounds = cutout.boundingRects.filter { it.width() > 0 && it.height() > 0 }
-            if (bounds.isEmpty()) return@runCatching null
 
-            val windowRoot = root.rootView
-            val rootLocation = IntArray(2)
-            windowRoot.getLocationOnScreen(rootLocation)
-            val displayWidth = root.resources.displayMetrics.widthPixels
-            val localMidpoint = (windowRoot.width.takeIf { it > 0 } ?: displayWidth) / 2
-            val selected = bounds.minByOrNull { abs(it.centerX() - localMidpoint) }
-                ?: return@runCatching null
-            Rect(selected).apply { offset(rootLocation[0], rootLocation[1]) }
+        // First use WindowInsets. DisplayCutout's boundingRects are relative to the
+        // window content origin, so they must be transformed to screen coordinates.
+        val windowCutout = runCatching {
+            (root.rootWindowInsets ?: root.rootView.rootWindowInsets)?.displayCutout
         }.getOrNull()
+        if (windowCutout != null) {
+            val bounds = windowCutout.boundingRects.filter { it.width() > 0 && it.height() > 0 }
+            if (bounds.isNotEmpty()) {
+                val windowRoot = root.rootView
+                val location = IntArray(2)
+                windowRoot.getLocationOnScreen(location)
+                val displayWidth = root.resources.displayMetrics.widthPixels
+                val midpoint = (windowRoot.width.takeIf { it > 0 } ?: displayWidth) / 2
+                val selected = bounds.minByOrNull { abs(it.centerX() - midpoint) }
+                if (selected != null) {
+                    return Rect(selected).apply { offset(location[0], location[1]) }
+                }
+            }
+            // Some Samsung SystemUI builds expose safe insets but an empty rect list.
+            // On a centred punch-hole device the top safe inset still gives a useful Y anchor.
+            val safeTop = runCatching { windowCutout.safeInsetTop }.getOrDefault(0)
+            if (safeTop > 0) {
+                val rootLocation = IntArray(2)
+                root.rootView.getLocationOnScreen(rootLocation)
+                val screenWidth = root.resources.displayMetrics.widthPixels
+                val cx = screenWidth / 2
+                val cy = rootLocation[1] + safeTop / 2
+                return Rect(cx - 1, cy - 1, cx + 1, cy + 1)
+            }
+        }
+
+        // Samsung may consume the cutout from the view insets while retaining it on
+        // DisplayInfo. Reflect Display.getCutout() first, then DisplayInfo.displayCutout.
+        val display = root.display ?: runCatching {
+            (root.context.getSystemService(Context.WINDOW_SERVICE) as? WindowManager)?.defaultDisplay
+        }.getOrNull()
+        val displayCutout = runCatching {
+            if (display == null) return@runCatching null
+            val getter = display.javaClass.methods.firstOrNull {
+                it.name == "getCutout" && it.parameterTypes.isEmpty()
+            } ?: display.javaClass.declaredMethods.firstOrNull {
+                it.name == "getCutout" && it.parameterTypes.isEmpty()
+            }
+            val direct = getter?.let { method ->
+                runCatching { method.isAccessible = true; method.invoke(display) }.getOrNull()
+            }
+            if (direct != null) return@runCatching direct
+
+            var type: Class<*>? = display.javaClass
+            var displayInfo: Any? = null
+            while (type != null && displayInfo == null) {
+                val field = type.declaredFields.firstOrNull {
+                    it.name.equals("mDisplayInfo", ignoreCase = true) ||
+                        it.name.equals("displayInfo", ignoreCase = true)
+                }
+                displayInfo = field?.let { runCatching { it.isAccessible = true; it.get(display) }.getOrNull() }
+                type = type.superclass
+            }
+            if (displayInfo != null) {
+                var infoType: Class<*>? = displayInfo.javaClass
+                while (infoType != null) {
+                    val field = infoType.declaredFields.firstOrNull {
+                        it.name.equals("displayCutout", ignoreCase = true)
+                    }
+                    val value = field?.let {
+                        runCatching { it.isAccessible = true; it.get(displayInfo) }.getOrNull()
+                    }
+                    if (value != null) return@runCatching value
+                    infoType = infoType.superclass
+                }
+            }
+            null
+        }.getOrNull()
+
+        if (displayCutout != null) {
+            val bounds = runCatching {
+                (displayCutout as? android.view.DisplayCutout)?.boundingRects
+                    ?.filter { it.width() > 0 && it.height() > 0 }.orEmpty()
+            }.getOrDefault(emptyList())
+            val displayWidth = root.resources.displayMetrics.widthPixels
+            val selected = bounds.minByOrNull { abs(it.centerX() - displayWidth / 2) }
+            if (selected != null) return Rect(selected)
+            val safeTop = runCatching {
+                (displayCutout as? android.view.DisplayCutout)?.safeInsetTop ?: 0
+            }.getOrDefault(0)
+            if (safeTop > 0) {
+                val cx = displayWidth / 2
+                return Rect(cx - 1, safeTop / 2 - 1, cx + 1, safeTop / 2 + 1)
+            }
+        }
+        return null
     }
 
     private fun scheduleRegister(root: ViewGroup) {
