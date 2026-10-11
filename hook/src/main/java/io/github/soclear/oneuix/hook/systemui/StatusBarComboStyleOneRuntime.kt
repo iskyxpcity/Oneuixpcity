@@ -767,7 +767,7 @@ object StatusBarComboStyleOneRuntime {
             rememberStatusBarTintViews(root, views)
             // One UI 8.5 / Android 16+ can render the battery as a ComposeView
             // immediately after the classic statusIcons cluster. Prefer that
-            // actual surface over an obsolete/inactive BatteryMeterView anchor.
+            // active surface over an obsolete/inactive BatteryMeterView anchor (Android 16/17).
             val battery = findModernBatteryComposeView(root)
                 ?: views.firstOrNull(::isBatteryMeterView)
                 ?: views.firstOrNull(::isBatteryIcon)
