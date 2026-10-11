@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="status_combo_style_one_category">三合一组合图标</string>
-    <string name="status_combo_style_one_group_diagnostics">调试与诊断</string>
     <string name="status_combo_style_one_feature_name">三合一图标风格一</string>
     <string name="status_combo_style_one_preview">图标预览</string>
     <string name="status_combo_style_one_preview_summary">对比充电、低电量和危险电量在深色与浅色状态栏背景下的显示效果。</string>
@@ -84,8 +83,6 @@
     <string name="status_combo_style_one_charging_light">浅色背景下的充电颜色</string>
     <string name="status_combo_style_one_low_dark">深色背景下的低电量颜色</string>
     <string name="status_combo_style_one_low_light">浅色背景下的低电量颜色</string>
-    <string name="status_combo_style_one_debug_log">开启调试日志</string>
-    <string name="status_combo_style_one_debug_log_summary">将 Wi-Fi 图标显隐和双卡信号等级诊断信息写入 SystemUI 日志（Logcat）。排查完成后请关闭，以免产生过多日志。</string>
     <string name="status_combo_style_one_int_summary">%1$d</string>
     <string name="status_combo_style_one_dp_summary">%1$d dp</string>
     <string name="status_combo_style_one_percent_summary">%1$d%%</string>

@@ -235,7 +235,6 @@ data class Preference(
             val typeSuffixScale: Int = 65,
             val typeWeight: Int = 700,
             val trackAlpha: Int = 56,
-            val debugLog: Boolean = false,
         )
 
         @Serializable

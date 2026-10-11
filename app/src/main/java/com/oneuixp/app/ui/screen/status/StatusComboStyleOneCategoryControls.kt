@@ -277,19 +277,6 @@ fun StatusComboStyleOneCategoryControls(
             }, {
                 SwitchItem(icon = null, title = stringResource(R.string.status_combo_style_one_value_centred), summary = stringResource(R.string.status_combo_style_one_value_centred_summary), checked = runtime.valueCentred, enabled = runtime.enabled && runtime.trioStyle == 0 && runtime.showWifi && runtime.showValue, onCheckedChange = { previewAndPersist(runtime.copy(valueCentred = it)) })
             }))
-            StatusThemeGroup(
-                title = stringResource(R.string.status_combo_style_one_group_diagnostics),
-                titleAlignedToContent = true,
-                items = listOf({
-                    SwitchItem(
-                        icon = null,
-                        title = stringResource(R.string.status_combo_style_one_debug_log),
-                        summary = stringResource(R.string.status_combo_style_one_debug_log_summary),
-                        checked = runtime.debugLog,
-                        onCheckedChange = { previewAndPersist(runtime.copy(debugLog = it)) },
-                    )
-                }),
-            )
         }
         1 -> {
             // Overall size, offsets and gaps all affect the complete glyph.

@@ -39,6 +39,7 @@ import io.github.soclear.oneuix.common.StatusBarRuntimeBridge
 import io.github.soclear.oneuix.common.StatusComboStyleOneGlyphRenderer
 import io.github.soclear.oneuix.common.StatusComboStyleOneGlyphState
 import io.github.soclear.oneuix.hook.util.PreferenceProvider
+import io.github.soclear.oneuix.hook.util.OneuiXPDiagnosticLog
 import java.lang.ref.WeakReference
 import java.util.Collections
 import java.util.IdentityHashMap
@@ -699,6 +700,8 @@ object StatusBarComboStyleOneRuntime {
     }
 
     private fun scheduleRegister(root: ViewGroup) {
+        // Register the shared, on-demand diagnostics reply channel with the first live SystemUI context.
+        OneuiXPDiagnosticLog.install(root.context)
         root.post { register(root) }
         // One bounded retry for SystemUI's deferred icon inflation. Do not keep
         // repeating whole-root discovery during status-bar/Quick Panel animation.
@@ -3041,7 +3044,8 @@ object StatusBarComboStyleOneRuntime {
     )
 
     private fun diagnostic(message: String) {
-        if (config.debugLog) Log.d(TAG, message)
+        // Bounded in-memory history for Settings → Send logs, without a feature-owned switch or Logcat flood.
+        OneuiXPDiagnosticLog.record(TAG, message)
     }
     private fun dp(context: Context, value: Int): Int =
         (value * context.resources.displayMetrics.density + 0.5f).toInt().coerceAtLeast(1)

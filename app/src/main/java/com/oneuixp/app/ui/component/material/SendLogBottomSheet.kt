@@ -21,7 +21,11 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -32,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import com.oneuixp.app.R
 import com.oneuixp.app.ui.util.createOneuiXPDiagnosticShareIntent
+import com.oneuixp.app.ui.util.buildOneuiXPDiagnosticReportForExport
 import com.oneuixp.app.ui.util.oneuiXPDiagnosticFileName
 import com.oneuixp.app.ui.util.writeOneuiXPDiagnosticReport
 
@@ -43,13 +48,18 @@ fun SendLogBottomSheet(onDismiss: () -> Unit, snackbarHostState: SnackbarHostSta
     val saveTitle = stringResource(R.string.save_log)
     val shareTitle = stringResource(R.string.send_log)
     val savedText = stringResource(R.string.log_saved)
+    var reportToExport by remember { mutableStateOf<String?>(null) }
     val saveLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument("text/plain")
     ) { uri: Uri? ->
         if (uri != null) {
             scope.launch {
                 val success = runCatching {
-                    writeOneuiXPDiagnosticReport(context, uri)
+                    writeOneuiXPDiagnosticReport(
+                        context,
+                        uri,
+                        reportToExport ?: buildOneuiXPDiagnosticReport(context),
+                    )
                 }.isSuccess
                 snackbarHostState.showSnackbar(if (success) savedText else "OneuiXP log export failed")
             }
@@ -69,7 +79,10 @@ fun SendLogBottomSheet(onDismiss: () -> Unit, snackbarHostState: SnackbarHostSta
                     modifier = Modifier.size(64.dp),
                     onClick = {
                         haptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
-                        saveLauncher.launch(oneuiXPDiagnosticFileName())
+                        scope.launch {
+                            reportToExport = buildOneuiXPDiagnosticReportForExport(context)
+                            saveLauncher.launch(oneuiXPDiagnosticFileName())
+                        }
                     },
                 ) { Icon(Icons.Filled.Save, contentDescription = saveTitle) }
                 Spacer(Modifier.height(8.dp))
@@ -81,13 +94,16 @@ fun SendLogBottomSheet(onDismiss: () -> Unit, snackbarHostState: SnackbarHostSta
                     modifier = Modifier.size(64.dp),
                     onClick = {
                         haptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
-                        context.startActivity(
-                            Intent.createChooser(
-                                createOneuiXPDiagnosticShareIntent(context),
-                                shareTitle,
+                        scope.launch {
+                            val report = buildOneuiXPDiagnosticReportForExport(context)
+                            context.startActivity(
+                                Intent.createChooser(
+                                    createOneuiXPDiagnosticShareIntent(context, report),
+                                    shareTitle,
+                                )
                             )
-                        )
-                        onDismiss()
+                            onDismiss()
+                        }
                     },
                 ) { Icon(Icons.Filled.Share, contentDescription = shareTitle) }
                 Spacer(Modifier.height(8.dp))
