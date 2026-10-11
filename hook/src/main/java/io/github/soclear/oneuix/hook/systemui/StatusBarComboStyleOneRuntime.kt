@@ -72,8 +72,8 @@ object StatusBarComboStyleOneRuntime {
     // The outer display's camera needs the established +4dp vertical calibration.
     // The foldable inner display places the camera near the right edge; this separate
     // calibration is based on the reported cutout position and does not alter outer-screen alignment.
-    private const val PUNCH_HOLE_VERTICAL_CALIBRATION_DP = 4
-    private const val INNER_PUNCH_HOLE_VERTICAL_CALIBRATION_DP = 1
+    private const val PUNCH_HOLE_VERTICAL_CALIBRATION_DP = 4f
+    private const val INNER_PUNCH_HOLE_VERTICAL_CALIBRATION_DP = 0.5f
     private const val INNER_PUNCH_HOLE_HORIZONTAL_CALIBRATION_DP = 1.5f
     private const val RIGHT_SIDE_CUTOUT_THRESHOLD = 0.65f
 
@@ -317,11 +317,12 @@ object StatusBarComboStyleOneRuntime {
                         app, cfg.glyphOffsetXDp + cfg.glyphLeftMarginDp - cfg.glyphRightMarginDp,
                     ) + horizontalCalibrationPx
                 ).roundToInt()
+            val verticalOffsetPx = (
+                (cfg.glyphOffsetYDp.toFloat() + verticalCalibrationDp) *
+                    app.resources.displayMetrics.density
+                ).roundToInt()
             lp.y = (
-                cameraCenterY - lp.height * centreRatioY +
-                    StatusBarComboStyleOneRuntime.dpExact(
-                        app, cfg.glyphOffsetYDp + verticalCalibrationDp,
-                    )
+                cameraCenterY - lp.height * centreRatioY + verticalOffsetPx
                 ).roundToInt()
             diagnostic(
                 "Glyph overlay coordinates: type=${lp.type} cameraCenter=(${cameraCenterX},${cameraCenterY}) " +
@@ -2628,13 +2629,27 @@ object StatusBarComboStyleOneRuntime {
         var label = state.networkType
         active.forEach { info ->
             val sub = runCatching { base.createForSubscriptionId(info.subscriptionId) }.getOrNull() ?: return@forEach
-            val telephonyLevel = runCatching { sub.signalStrength?.level ?: -1 }.getOrDefault(-1).coerceIn(-1, 4)
-            val level = nativeSignalLevels[info.subscriptionId]
-                ?: telephonyLevel.takeIf { it in 0..4 }?.also {
-                    lastSubscriptionSignalLevels[info.subscriptionId] = it
-                }
-                ?: lastSubscriptionSignalLevels[info.subscriptionId]
-                ?: -1
+            val telephonyLevel = runCatching { sub.signalStrength?.level ?: -1 }
+                .getOrDefault(-1).coerceIn(-1, 4)
+            val nativeLevel = nativeSignalLevels[info.subscriptionId]?.coerceIn(0, 4)
+            // Use the per-subscription TelephonyManager reading first. Native icon
+            // resource IDs are OEM-specific and can be misread as a low level for
+            // one SIM (e.g. an eSIM + physical-SIM pair), even while SystemUI shows
+            // both native icons at full strength. Native state is a fallback only
+            // when the per-subscription API has no usable reading.
+            val level = telephonyLevel.takeIf { it in 0..4 }?.also {
+                lastSubscriptionSignalLevels[info.subscriptionId] = it
+            } ?: nativeLevel?.also {
+                lastSubscriptionSignalLevels[info.subscriptionId] = it
+            } ?: lastSubscriptionSignalLevels[info.subscriptionId] ?: -1
+            val embedded = if (Build.VERSION.SDK_INT >= 28) {
+                runCatching { info.isEmbedded }.getOrDefault(false)
+            } else false
+            diagnostic(
+                "SIM signal: subId=${info.subscriptionId} slot=${info.simSlotIndex} embedded=$embedded " +
+                    "defaultData=${info.subscriptionId == dataSub} telephony=$telephonyLevel " +
+                    "native=${nativeLevel ?: -1} selected=$level"
+            )
             if (info.simSlotIndex == 0) simOne = level
             if (info.simSlotIndex == 1) simTwo = level
             if (info.subscriptionId == dataSub) {
@@ -2748,14 +2763,12 @@ object StatusBarComboStyleOneRuntime {
         if (subscriptionId < 0) return
         val safeLevel = level.coerceIn(0, 4)
         nativeSignalLevels[subscriptionId] = safeLevel
-        lastSubscriptionSignalLevels[subscriptionId] = safeLevel
-        val slot = subscriptionSlots[subscriptionId]
-        val old = state
-        state = old.copy(
-            mobileLevel = if (subscriptionId == defaultDataSubscriptionId) safeLevel else old.mobileLevel,
-            simOneLevel = if (slot == 0) safeLevel else old.simOneLevel,
-            simTwoLevel = if (slot == 1) safeLevel else old.simTwoLevel,
-            dataSimSlotIndex = if (subscriptionId == defaultDataSubscriptionId && slot != null && slot in 0..1) slot else old.dataSimSlotIndex,
+        // Cache native SystemUI levels for fallback/diagnostics, but do not let a
+        // possibly OEM-encoded strength resource overwrite the per-SIM levels that
+        // refreshTelephony reads from each subscription-specific TelephonyManager.
+        diagnostic(
+            "Native SIM signal observed: subId=$subscriptionId slot=${subscriptionSlots[subscriptionId] ?: -1} " +
+                "level=$safeLevel defaultData=${subscriptionId == defaultDataSubscriptionId}"
         )
         invalidateGlyphs()
     }
