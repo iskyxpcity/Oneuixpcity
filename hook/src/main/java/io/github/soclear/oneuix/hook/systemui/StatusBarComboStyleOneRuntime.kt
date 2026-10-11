@@ -2995,10 +2995,12 @@ object StatusBarComboStyleOneRuntime {
         val connectivity = context.getSystemService(Context.CONNECTIVITY_SERVICE)
             as? android.net.ConnectivityManager ?: return null
         val networks = runCatching { connectivity.allNetworks }.getOrNull() ?: return null
+        var queriedAny = false
         if (networks.any { network ->
                 val capabilities = runCatching {
                     connectivity.getNetworkCapabilities(network)
                 }.getOrNull()
+                if (capabilities != null) queriedAny = true
                 capabilities?.hasTransport(android.net.NetworkCapabilities.TRANSPORT_WIFI) == true
             }
         ) return true
@@ -3012,6 +3014,7 @@ object StatusBarComboStyleOneRuntime {
             // connection is ready: do not call this definitively disconnected.
             return null
         }
+        if (wifi?.isWifiEnabled == false) return false
         return if (queriedAny) false else null
     }
 
