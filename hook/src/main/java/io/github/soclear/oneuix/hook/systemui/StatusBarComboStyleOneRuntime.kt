@@ -129,6 +129,9 @@ object StatusBarComboStyleOneRuntime {
     // so forcing a connected Wi-Fi icon visible does not override an already-hidden native slot.
     private val nativeWifiBaselineVisibility = Collections.synchronizedMap(WeakHashMap<View, Int>())
     @Volatile private var modernWifiViewClass: Class<*>? = null
+    // Track each native Wi-Fi view's own status-bar pipeline model. This preserves
+    // SystemUI's true Visible/Hidden state when the custom arc is switched off.
+    private val modernWifiViewModels = Collections.synchronizedMap(WeakHashMap<View, WeakReference<Any>>())
     private val lastNativeWifiDiagnostics = Collections.synchronizedMap(WeakHashMap<View, String>())
     private val lastNativeWifiSlotRequests = ConcurrentHashMap<String, String>()
     private val lastSubscriptionSignalLevels = ConcurrentHashMap<Int, Int>()
@@ -3004,7 +3007,25 @@ object StatusBarComboStyleOneRuntime {
         if (wifi?.isWifiEnabled == true && info != null &&
             info.networkId >= 0 && info.rssi != -127
         ) return true
-        return false
+        if (wifi?.isWifiEnabled == true) {
+            // Radio enabled but NetworkCapabilities/RSSI does not yet reveal whether the
+            // connection is ready: do not call this definitively disconnected.
+            return null
+        }
+        return if (queriedAny) false else null
+    }
+
+    private fun readModernWifiModelVisibility(view: View): Boolean? {
+        val model = modernWifiViewModels[view]?.get() ?: return null
+        val flow = readObjectMember(model, "wifiIcon", "wifiIconState", "icon")
+            ?: return null
+        val icon = readObjectMember(flow, "value") ?: return null
+        val name = icon.javaClass.name.lowercase()
+        return when {
+            name.contains("invisible") || name.contains("hidden") || name.contains("notvisible") -> false
+            name.contains("visible") -> true
+            else -> null
+        }
     }
 
     private fun hookModernWifiVisibility(module: XposedModule, classLoader: ClassLoader) {
@@ -3042,26 +3063,30 @@ object StatusBarComboStyleOneRuntime {
                         nativeWifiBaselineVisibility[view] = savedVisibility ?: view.visibility
                     }
                     val nativeWasVisible = nativeWifiBaselineVisibility[view] == View.VISIBLE
+                    val modelVisible = readModernWifiModelVisibility(view)
                     val wifiConnected = isWifiTransportConnected(view.context)
+                    val desiredVisible = modelVisible
+                        ?: (state.wifiLevel >= 0 || wifiConnected == true)
                     val forced = when {
                         // The combined glyph owns Wi-Fi drawing; prevent a later binder update
-                        // from making Samsung's native modern Wi-Fi view flash over it.
+                        // from making this collapsed status-bar instance flash over it.
                         config.showWifi -> View.GONE
-                        // When the arc is disabled, restore a previously visible native slot
-                        // even if WifiManager RSSI is temporarily unknown. Respect GONE only when
-                        // the system network tracker confirms Wi-Fi is no longer connected.
-                        nativeWasVisible && wifiConnected != false -> View.VISIBLE
+                        // When the arc is disabled, follow this exact view-model's Visible/Hidden
+                        // state. Network APIs are fallback-only on Samsung Android 17 because
+                        // WifiManager RSSI/connectionInfo may be temporarily unavailable.
+                        nativeWasVisible && desiredVisible -> View.VISIBLE
                         else -> requested
                     }
                     val connectedLabel = wifiConnected?.toString() ?: "unknown"
+                    val modelLabel = modelVisible?.toString() ?: "unknown"
                     val snapshot = "$requested->$forced|showWifi=${config.showWifi}|" +
-                        "wifiLevel=${state.wifiLevel}|wifiConnected=$connectedLabel"
+                        "wifiLevel=${state.wifiLevel}|wifiConnected=$connectedLabel|modelVisible=$modelLabel"
                     if (lastNativeWifiVisibilityRequests.put(view, snapshot) != snapshot) {
                         diagnostic(
                             "Modern Wi-Fi visibility decision: requested=$requested forced=$forced " +
                                 "baseline=${nativeWifiBaselineVisibility[view] ?: -1} " +
                                 "showWifi=${config.showWifi} wifiLevel=${state.wifiLevel} " +
-                                "wifiConnected=$connectedLabel"
+                                "wifiConnected=$connectedLabel modelVisible=$modelLabel"
                         )
                     }
                     if (forced != requested) {
@@ -3074,13 +3099,35 @@ object StatusBarComboStyleOneRuntime {
                     chain.proceed()
                 }
             }
-            // Do not hook constructAndBind globally: SystemUI also uses this view in
-            // demo/secondary icon containers. The visibility setter above is scoped to
-            // a registered collapsed-status-bar host and the normal tree/layout path
-            // handles newly inserted children.
+            // Observe the per-view model without changing visibility here. SystemUI also
+            // constructs ModernStatusBarWifiView for demo/secondary surfaces, so actual
+            // hiding remains gated by hostFor(view) in the setter above.
+            val constructMethods = modernWifiViewClass?.declaredMethods.orEmpty().filter {
+                it.name == "constructAndBind" && java.lang.reflect.Modifier.isStatic(it.modifiers)
+            }
+            constructMethods.distinctBy { it.toGenericString() }.forEach { constructMethod ->
+                module.hook(constructMethod).intercept { chain ->
+                    val result = chain.proceed()
+                    val view = result as? View
+                    val model = chain.args.firstNotNullOfOrNull { argument ->
+                        val candidate = argument ?: return@firstNotNullOfOrNull null
+                        val typeName = candidate.javaClass.name
+                        if ((typeName.contains("LocationBasedWifiViewModel") ||
+                                readObjectMember(candidate, "wifiIcon", "wifiIconState") != null) &&
+                            readObjectMember(candidate, "wifiIcon", "wifiIconState") != null
+                        ) candidate else null
+                    }
+                    if (view != null && model != null) {
+                        modernWifiViewModels[view] = WeakReference(model)
+                        diagnostic("Modern Wi-Fi model mapped: view=${view.javaClass.name} model=${model.javaClass.name}")
+                    }
+                    result
+                }
+            }
             diagnostic(
                 "Modern Wi-Fi visibility guard installed: $className; " +
-                    "setterOwner=${method.declaringClass.name}; scope=registered-host-only"
+                    "setterOwner=${method.declaringClass.name}; scope=registered-host-only; " +
+                    "modelHooks=${constructMethods.size}"
             )
         }.onFailure { diagnostic("Modern Wi-Fi visibility guard unavailable: $it") }
     }
