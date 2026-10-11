@@ -2874,8 +2874,9 @@ object StatusBarComboStyleOneRuntime {
                             val levels = iconModel?.let {
                                 readSignalIntValue(it, "numberOfLevels", "numLevels", "levelCount")
                             } ?: -1
+                            val inspect = if (iconModel == null) "|inspect=${describeModernSignalModel(viewModel)}" else ""
                             val snapshot = "viewModel=${viewModel.javaClass.name}|iconModel=${iconModel?.javaClass?.name}" +
-                                "|level=${level ?: -1}|levels=$levels|drawn=${renderedSignalLevels[subId] ?: -1}"
+                                "|level=${level ?: -1}|levels=$levels|drawn=${renderedSignalLevels[subId] ?: -1}$inspect"
                             if (lastModernPipelineSignalDiagnostics.put(subId, snapshot) != snapshot) {
                                 diagnostic("Modern status-bar mobile pipeline: subId=$subId $snapshot")
                             }
@@ -2984,37 +2985,129 @@ object StatusBarComboStyleOneRuntime {
     }
 
     private fun readModernIconModel(viewModel: Any): Any? {
-        // One UI 8+/Android 17 may keep the actual signal flow on the delegated
-        // MobileIconViewModelCommon implementation. Search the wrapper and commonImpl.
-        // AOSP-compatible pipelines expose iconId as StateFlow<Int>, with an Int packed
-        // for SignalDrawable, rather than a model carrying a direct "level" property.
-        val candidates = mutableListOf<Any>()
-        candidates += viewModel
-        listOf(
+        // Samsung One UI may wrap the common mobile model more than once. Walk only
+        // known delegation links instead of relying on a single commonImpl property.
+        val wrapperMembers = listOf(
             "commonImpl", "delegate", "delegateImpl", "mobileIconViewModel",
-            "iconViewModel", "viewModel", "model",
-        ).forEach { member ->
-            readObjectMember(viewModel, member)?.let { candidate ->
-                if (candidate !== viewModel) candidates += candidate
+            "iconViewModel", "viewModel", "model", "implementation", "impl",
+            "mobileIconViewModelCommon", "common", "wrapped", "wrappedModel",
+        )
+        val iconMembers = listOf("iconId", "signalIconId", "icon", "signalIcon", "signalLevelIcon")
+        val modelMembers = listOf("iconModel", "signalIconModel", "signalStrengthModel")
+        val pending = java.util.ArrayDeque<Pair<Any, Int>>()
+        val visited = java.util.Collections.newSetFromMap(java.util.IdentityHashMap<Any, Boolean>())
+        pending.addLast(viewModel to 0)
+        while (pending.isNotEmpty()) {
+            val (candidate, depth) = pending.removeFirst()
+            if (!visited.add(candidate)) continue
+            if (candidate is Number) return candidate
+
+            for (member in iconMembers) {
+                val icon = readObjectMember(candidate, member) ?: continue
+                if (icon is Number) return icon
+                readFlowSnapshot(icon)?.let { return it }
+                if (readSignalIntValue(icon, "level", "signalLevel", "strengthLevel", "resId", "resourceId") != null) {
+                    return icon
+                }
             }
-        }
-        candidates.distinctBy { System.identityHashCode(it) }.forEach { candidate ->
-            val iconFlow = readObjectMember(
-                candidate, "icon", "signalIcon", "signalLevelIcon", "iconId", "signalIconId",
-            )
-            if (iconFlow != null) {
-                readObjectMember(iconFlow, "value")?.let { return it }
-                val replay = readObjectMember(iconFlow, "replayCache") as? List<*>
-                replay?.lastOrNull()?.let { return it }
-                if (iconFlow is Number) return iconFlow
+            for (member in modelMembers) {
+                val model = readObjectMember(candidate, member) ?: continue
+                if (model is Number) return model
+                readFlowSnapshot(model)?.let { return it }
+                if (readSignalIntValue(model, "level", "signalLevel", "strengthLevel", "resId", "resourceId") != null) {
+                    return model
+                }
             }
-            readObjectMember(
-                candidate, "iconModel", "signalIconModel", "signalStrengthModel",
-            )?.let { return it }
+
+            if (depth >= 3) continue
+            wrapperMembers.forEach { member ->
+                val nested = readObjectMember(candidate, member) ?: return@forEach
+                if (nested !== candidate && nested !is String && nested !is Number &&
+                    nested !is Boolean && nested !is Char
+                ) {
+                    pending.addLast(nested to depth + 1)
+                }
+            }
         }
         return null
     }
 
+    /** Read the latest value from StateFlow/SharedFlow even when its getter is inherited. */
+    private fun readFlowSnapshot(flow: Any): Any? {
+        if (flow is Number) return flow
+        invokeZeroArgumentMember(flow, "value", "getValue")?.let { return it }
+
+        val rawValue = readObjectField(flow, "value")
+        when (rawValue) {
+            is Number, is String, is Boolean, is Char -> return rawValue
+            null -> Unit
+            else -> {
+                if (rawValue.javaClass.name.contains("Atomic")) {
+                    invokeZeroArgumentMember(rawValue, "get")?.let { return it }
+                }
+            }
+        }
+
+        val replay = (invokeZeroArgumentMember(flow, "replayCache", "getReplayCache")
+            ?: readObjectMember(flow, "replayCache")) as? List<*>
+        return replay?.lastOrNull()
+    }
+
+    private fun invokeZeroArgumentMember(target: Any, vararg names: String): Any? {
+        fun matches(methodName: String): Boolean = names.any { name ->
+            methodName.equals(name, ignoreCase = true) ||
+                methodName == "get" + name.replaceFirstChar { it.uppercase() }
+        }
+        target.javaClass.methods.firstOrNull { it.parameterTypes.isEmpty() && matches(it.name) }?.let { method ->
+            runCatching { method.isAccessible = true; method.invoke(target) }.getOrNull()?.let { return it }
+        }
+        var type: Class<*>? = target.javaClass
+        while (type != null) {
+            type.declaredMethods.firstOrNull { it.parameterTypes.isEmpty() && matches(it.name) }?.let { method ->
+                runCatching { method.isAccessible = true; method.invoke(target) }.getOrNull()?.let { return it }
+            }
+            type = type.superclass
+        }
+        return null
+    }
+
+    private fun describeModernSignalModel(viewModel: Any): String {
+        val wrapperMembers = listOf(
+            "commonImpl", "delegate", "delegateImpl", "mobileIconViewModel",
+            "iconViewModel", "viewModel", "model", "implementation", "impl",
+            "mobileIconViewModelCommon", "common", "wrapped", "wrappedModel",
+        )
+        val iconMembers = listOf("iconId", "signalIconId", "icon", "signalIcon", "signalLevelIcon")
+        val pending = java.util.ArrayDeque<Pair<Any, Int>>()
+        val visited = java.util.Collections.newSetFromMap(java.util.IdentityHashMap<Any, Boolean>())
+        val descriptions = mutableListOf<String>()
+        pending.addLast(viewModel to 0)
+        while (pending.isNotEmpty() && descriptions.size < 6) {
+            val (candidate, depth) = pending.removeFirst()
+            if (!visited.add(candidate)) continue
+            val members = mutableListOf<String>()
+            iconMembers.forEach { name ->
+                val icon = readObjectMember(candidate, name) ?: return@forEach
+                val value = readFlowSnapshot(icon)
+                val detail = when (value) {
+                    null -> ""
+                    is Number, is String, is Boolean, is Char -> "=${value}"
+                    else -> "->${value.javaClass.simpleName}"
+                }
+                members += "$name:${icon.javaClass.simpleName}$detail"
+            }
+            descriptions += candidate.javaClass.simpleName +
+                (if (members.isEmpty()) "" else "[" + members.joinToString(",") + "]")
+            if (depth >= 2) continue
+            wrapperMembers.forEach { name ->
+                val nested = readObjectMember(candidate, name) ?: return@forEach
+                if (nested !== candidate && nested !is String && nested !is Number &&
+                    nested !is Boolean && nested !is Char
+                ) pending.addLast(nested to depth + 1)
+            }
+        }
+        return descriptions.joinToString(";").take(700)
+    }
     /**
      * Return true/false only when Android's network tracker has a usable answer.
      * WifiManager RSSI may be -127 during a transient modern-pipeline update, even while
