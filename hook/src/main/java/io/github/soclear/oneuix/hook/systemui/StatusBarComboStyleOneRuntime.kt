@@ -160,6 +160,7 @@ object StatusBarComboStyleOneRuntime {
     // icon_hide_list callback can suppress it for Style One.
     private val nativeBatteryLayouts = Collections.synchronizedMap(WeakHashMap<View, LayoutSnapshot>())
     private val glyphInvalidationPending = AtomicBoolean(false)
+    private val telephonyRefreshPending = AtomicBoolean(false)
 
     private data class LayoutSnapshot(
         val width: Int, val height: Int,
@@ -2779,6 +2780,8 @@ object StatusBarComboStyleOneRuntime {
             if (statusLevel in 0..4) {
                 updateNativeSignalLevel(subId, statusLevel)
                 diagnostic("Status bar SIM signal: subId=$subId level=$statusLevel icon=${iconValue(statusIcon)}")
+            } else if (qsLevel in 0..4) {
+                scheduleTelephonyRefresh()
             }
             return
         }
@@ -2830,11 +2833,11 @@ object StatusBarComboStyleOneRuntime {
             val drawableClass = runCatching { Class.forName(className, false, loader) }.getOrNull() ?: continue
             val getLevel = drawableClass.methods.firstOrNull {
                 it.name == "getLevel" && java.lang.reflect.Modifier.isStatic(it.modifiers) &&
-                    it.parameterTypes.contentEquals(arrayOf(Int::class.javaPrimitiveType))
+                    it.parameterTypes.size == 1 && it.parameterTypes[0] == Int::class.javaPrimitiveType
             } ?: continue
             val getNumLevels = drawableClass.methods.firstOrNull {
                 it.name == "getNumLevels" && java.lang.reflect.Modifier.isStatic(it.modifiers) &&
-                    it.parameterTypes.contentEquals(arrayOf(Int::class.javaPrimitiveType))
+                    it.parameterTypes.size == 1 && it.parameterTypes[0] == Int::class.javaPrimitiveType
             } ?: continue
             val packedLevel = runCatching { (getLevel.invoke(null, fullState) as? Number)?.toInt() }.getOrNull()
                 ?: continue
@@ -2852,14 +2855,25 @@ object StatusBarComboStyleOneRuntime {
         if (subscriptionId < 0) return
         val safeLevel = level.coerceIn(0, 4)
         nativeSignalLevels[subscriptionId] = safeLevel
-        // Cache native SystemUI levels for fallback/diagnostics, but do not let a
-        // possibly OEM-encoded strength resource overwrite the per-SIM levels that
-        // refreshTelephony reads from each subscription-specific TelephonyManager.
+        // Cache native SystemUI levels for fallback/diagnostics, but do not interpret
+        // resource IDs as levels. Re-read subscriptions so the newest QS/status icon
+        // level takes effect on the very same renderer update.
         diagnostic(
             "Native SIM signal observed: subId=$subscriptionId slot=${subscriptionSlots[subscriptionId] ?: -1} " +
                 "level=$safeLevel defaultData=${subscriptionId == defaultDataSubscriptionId}"
         )
+        scheduleTelephonyRefresh()
         invalidateGlyphs()
+    }
+
+    private fun scheduleTelephonyRefresh() {
+        if (!telephonyRefreshPending.compareAndSet(false, true)) return
+        main.post {
+            telephonyRefreshPending.set(false)
+            val context = synchronized(hosts) { hosts.values.firstOrNull()?.root?.context } ?: return@post
+            refreshTelephony(context)
+            invalidateGlyphs()
+        }
     }
 
     private fun readSignalIntField(target: Any, vararg names: String): Int? {
