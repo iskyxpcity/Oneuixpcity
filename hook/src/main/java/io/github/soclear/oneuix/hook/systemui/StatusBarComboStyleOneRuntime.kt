@@ -266,6 +266,7 @@ object StatusBarComboStyleOneRuntime {
             val rootPos = IntArray(2)
             root.getLocationOnScreen(rootPos)
             val centreRatio = StatusComboStyleOneGlyphRenderer.glyphCenterRatio(cfg)
+            val centreRatioY = StatusComboStyleOneGlyphRenderer.glyphVerticalCenterRatio(cfg)
             // Some Samsung builds do not expose the punch-hole through WindowInsets.
             // In that case, use the screen centre instead of falling back to the battery on the right.
             val screenCentreX = cutout?.centerX()
@@ -283,9 +284,9 @@ object StatusBarComboStyleOneRuntime {
                 }
             val screenCentreY = cutout?.centerY() ?: fallbackCentreY
             lp.y = (
-                screenCentreY - lp.height / 2 +
+                screenCentreY - lp.height * centreRatioY +
                     StatusBarComboStyleOneRuntime.dpExact(app, cfg.glyphOffsetYDp)
-                ).coerceAtLeast(0)
+                ).roundToInt().coerceAtLeast(0)
             // updateViewLayout invalidates/remeasures the overlay when its bounds
             // actually changed. Do not force an extra draw for every status-bar
             // layout callback during shade expansion.
@@ -674,7 +675,9 @@ object StatusBarComboStyleOneRuntime {
                 host.overlay = null
                 removeInline(host)
                 restore(host)
-                if (!config.enabled) restoreNativeBatteryViews(root)
+                // If no supported native battery host is present, release all of our
+                // nested-view snapshots instead of leaving the stock icon suppressed.
+                restoreNativeBatteryViews(root)
                 host.battery = null
                 host.nativeBatteryViews.clear()
                 host.shadeDrawTarget = null
@@ -1825,8 +1828,15 @@ object StatusBarComboStyleOneRuntime {
                     val view = result as? View
                     if (slot != null && view != null) {
                         knownIconSlots[view] = slot.lowercase()
+                        if (slot.contains("battery", ignoreCase = true) || isManagedWifiSlot(slot)) {
+                            knownManagedSlotNames.add(slot)
+                            main.postDelayed({ applyManagedSlotVisibility() }, 50L)
+                        }
                         view.post {
                             val host = hostFor(view) ?: return@post
+                            if (slot.contains("battery", ignoreCase = true)) {
+                                host.nativeBatteryViews.add(view)
+                            }
                             if (statusBarIconViewClass?.isInstance(view) == true) {
                                 tintIconClassifications[view] = classifyTintIcon(view)
                             }
