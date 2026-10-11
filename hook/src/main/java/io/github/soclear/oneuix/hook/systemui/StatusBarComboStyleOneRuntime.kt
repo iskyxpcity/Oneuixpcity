@@ -110,8 +110,8 @@ object StatusBarComboStyleOneRuntime {
     @Volatile private var subscriptionsListener: SubscriptionManager.OnSubscriptionsChangedListener? = null
     private val phoneListeners = mutableMapOf<Int, Pair<TelephonyManager, PhoneStateListener>>()
     private val displayNetworkTypes = ConcurrentHashMap<Int, String>()
-    // Prefer the signal level from SystemUI's Quick Settings MobileDataIndicators
-    // when available, then the status-bar icon state, and only then TelephonyManager.
+    // Prefer the exact collapsed status-bar signal icon level; use Quick Settings
+    // and TelephonyManager as fallbacks when an OEM icon resource cannot be decoded.
     private val quickPanelSignalLevels = ConcurrentHashMap<Int, Int>()
     private val nativeSignalLevels = ConcurrentHashMap<Int, Int>()
     private val lastNativeWifiDiagnostics = Collections.synchronizedMap(WeakHashMap<View, String>())
@@ -2838,8 +2838,14 @@ object StatusBarComboStyleOneRuntime {
             ?: return
         val strength = readSignalIntField(value, "strengthId", "mStrengthId", "icon", "mIcon")
             ?: return
-        val level = if (strength in 0..4) strength else resolveSignalResourceLevelFromResources(resources, strength)
-            .takeIf { it in 0..4 } ?: decodePackedSignalDrawableLevel(strength)
+        val resourceName = runCatching { resources.getResourceEntryName(strength) }.getOrNull().orEmpty()
+        val level = normalizeNativeSignalLevel(strength)
+            ?: resolveSignalResourceName(resourceName).takeIf { it in 0..4 }
+            ?: decodePackedSignalDrawableLevel(strength)
+        diagnostic(
+            "Native mobile icon state: class=${value.javaClass.simpleName} subId=$subId " +
+                "strength=$strength resource=$resourceName level=$level"
+        )
         if (level in 0..4 && subId >= 0) updateNativeSignalLevel(subId, level)
     }
 
