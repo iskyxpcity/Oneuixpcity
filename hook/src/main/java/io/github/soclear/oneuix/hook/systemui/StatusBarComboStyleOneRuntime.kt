@@ -2857,7 +2857,13 @@ object StatusBarComboStyleOneRuntime {
                     if (viewModel != null) {
                         val subId = readSignalIntValue(viewModel, "subscriptionId", "subId")
                         if (subId != null && subId >= 0) {
-                            modernMobileViewModels[subId] = WeakReference(viewModel)
+                            // Keep the collapsed status-bar HOME model as the canonical
+                            // signal source; later QS/Keyguard view construction must not
+                            // replace it for the same subscription.
+                            val modelSimpleName = viewModel.javaClass.simpleName
+                            if (modelSimpleName.contains("HomeMobileIconViewModel")) {
+                                modernMobileViewModels[subId] = WeakReference(viewModel)
+                            }
                             val resultView = result as? View
                             if (resultView != null) {
                                 modernMobileViewSubscriptionIds[resultView] = subId
@@ -2978,18 +2984,35 @@ object StatusBarComboStyleOneRuntime {
     }
 
     private fun readModernIconModel(viewModel: Any): Any? {
-        // Android releases differ: newer view models expose a SignalIconModel via "icon",
-        // while older variants expose the packed drawable state through "iconId".
-        val iconFlow = readObjectMember(
-            viewModel, "icon", "signalIcon", "signalLevelIcon", "iconId", "signalIconId",
-        )
-        if (iconFlow != null) {
-            readObjectMember(iconFlow, "value")?.let { return it }
-            val replay = readObjectMember(iconFlow, "replayCache") as? List<*>
-            replay?.lastOrNull()?.let { return it }
-            if (iconFlow is Number) return iconFlow
+        // One UI 8+/Android 17 may keep the actual signal flow on the delegated
+        // MobileIconViewModelCommon implementation. Search the wrapper and commonImpl.
+        // AOSP-compatible pipelines expose iconId as StateFlow<Int>, with an Int packed
+        // for SignalDrawable, rather than a model carrying a direct "level" property.
+        val candidates = mutableListOf<Any>()
+        candidates += viewModel
+        listOf(
+            "commonImpl", "delegate", "delegateImpl", "mobileIconViewModel",
+            "iconViewModel", "viewModel", "model",
+        ).forEach { member ->
+            readObjectMember(viewModel, member)?.let { candidate ->
+                if (candidate !== viewModel) candidates += candidate
+            }
         }
-        return readObjectMember(viewModel, "iconModel", "signalIconModel", "signalStrengthModel")
+        candidates.distinctBy { System.identityHashCode(it) }.forEach { candidate ->
+            val iconFlow = readObjectMember(
+                candidate, "icon", "signalIcon", "signalLevelIcon", "iconId", "signalIconId",
+            )
+            if (iconFlow != null) {
+                readObjectMember(iconFlow, "value")?.let { return it }
+                val replay = readObjectMember(iconFlow, "replayCache") as? List<*>
+                replay?.lastOrNull()?.let { return it }
+                if (iconFlow is Number) return iconFlow
+            }
+            readObjectMember(
+                candidate, "iconModel", "signalIconModel", "signalStrengthModel",
+            )?.let { return it }
+        }
+        return null
     }
 
     /**
