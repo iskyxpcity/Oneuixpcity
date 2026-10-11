@@ -69,9 +69,13 @@ object StatusBarComboStyleOneRuntime {
     private const val MIUI_BATTERY_METER = "com.android.systemui.statusbar.views.MiuiBatteryMeterView"
     private const val MIUI_BATTERY_CONTAINER = "com.android.systemui.statusbar.views.MiuiStatusBatteryContainer"
     private const val ICON_HIDE_LIST_KEY = "icon_blacklist"
-    // Build #1441 aligned the outer display but still sat 4dp too high.
-    // Keep the calibration explicit so the renderer offset remains user-controlled.
+    // The outer display's camera needs the established +4dp vertical calibration.
+    // The foldable inner display places the camera near the right edge; this separate
+    // calibration is based on the reported cutout position and does not alter outer-screen alignment.
     private const val PUNCH_HOLE_VERTICAL_CALIBRATION_DP = 4
+    private const val INNER_PUNCH_HOLE_VERTICAL_CALIBRATION_DP = 1
+    private const val INNER_PUNCH_HOLE_HORIZONTAL_CALIBRATION_DP = 1.5f
+    private const val RIGHT_SIDE_CUTOUT_THRESHOLD = 0.65f
 
     private val installed = AtomicBoolean(false)
     @Volatile private var moduleForPreferenceReload: XposedModule? = null
@@ -114,11 +118,11 @@ object StatusBarComboStyleOneRuntime {
         Collections.synchronizedSet(Collections.newSetFromMap(WeakHashMap<Any, Boolean>()))
     private val nativeBatterySlotVisibility =
         Collections.synchronizedMap(WeakHashMap<Any, MutableMap<String, Boolean>>())
-    // Track original visibility for both slots. Wi-Fi must be restored through
-    // the same icon-controller binding that hid it; View.VISIBLE alone is not
-    // sufficient on modern status bars.
+    // Native-slot visibility control is battery-only. Wi-Fi suppression stays on
+    // the established view/layout path; changing its holder visibility directly
+    // can race with SystemUI's rebinding and leave the native icon hidden.
     private val knownBatterySlotNames: MutableSet<String> =
-        Collections.synchronizedSet(mutableSetOf("battery", "wifi"))
+        Collections.synchronizedSet(mutableSetOf("battery"))
     private val enforcingBatterySlotVisibility = ThreadLocal<Boolean>()
     private val rowTintSnapshots = Collections.synchronizedMap(WeakHashMap<ViewGroup, Int>())
     // Prefer the exact foreground tint applied to the native battery meter; the
@@ -292,19 +296,40 @@ object StatusBarComboStyleOneRuntime {
             // screens can place the camera well to the right of the geometric centre.
             val cameraCenterX = cutout.centerX()
             val cameraCenterY = cutout.centerY()
+            val displaySize = activeDisplaySize(root)
+            // On this foldable, the inner-screen camera is on the right side while
+            // the cover-screen camera is near the centre. Detect from cutout geometry
+            // instead of applying an inner-screen correction to every display.
+            val rightSideCutout = displaySize.x > 0 &&
+                cameraCenterX >= displaySize.x * RIGHT_SIDE_CUTOUT_THRESHOLD
+            val horizontalCalibrationPx = if (rightSideCutout) {
+                (INNER_PUNCH_HOLE_HORIZONTAL_CALIBRATION_DP *
+                    app.resources.displayMetrics.density).roundToInt()
+            } else 0
+            val verticalCalibrationDp = if (rightSideCutout) {
+                INNER_PUNCH_HOLE_VERTICAL_CALIBRATION_DP
+            } else {
+                PUNCH_HOLE_VERTICAL_CALIBRATION_DP
+            }
             lp.x = (
                 cameraCenterX - lp.width * centreRatioX +
                     StatusBarComboStyleOneRuntime.dpExact(
                         app, cfg.glyphOffsetXDp + cfg.glyphLeftMarginDp - cfg.glyphRightMarginDp,
-                    )
+                    ) + horizontalCalibrationPx
                 ).roundToInt()
             lp.y = (
                 cameraCenterY - lp.height * centreRatioY +
                     StatusBarComboStyleOneRuntime.dpExact(
-                        app, cfg.glyphOffsetYDp + PUNCH_HOLE_VERTICAL_CALIBRATION_DP,
+                        app, cfg.glyphOffsetYDp + verticalCalibrationDp,
                     )
                 ).roundToInt()
-            diagnostic("Glyph overlay coordinates: type=${lp.type} cameraCenter=(${cameraCenterX},${cameraCenterY}) window=(${lp.x},${lp.y}) size=${lp.width}x${lp.height} cutout=$cutout")
+            diagnostic(
+                "Glyph overlay coordinates: type=${lp.type} cameraCenter=(${cameraCenterX},${cameraCenterY}) " +
+                    "window=(${lp.x},${lp.y}) size=${lp.width}x${lp.height} cutout=$cutout " +
+                    "rightSideCutout=$rightSideCutout correctionDp=(" +
+                    "${if (rightSideCutout) INNER_PUNCH_HOLE_HORIZONTAL_CALIBRATION_DP else 0f}," +
+                    "${verticalCalibrationDp})"
+            )
             if (oldX != lp.x || oldY != lp.y || oldWidth != lp.width || oldHeight != lp.height) {
                 runCatching { wm.updateViewLayout(glyph, lp) }
                     .onFailure { Log.w(TAG, "Cannot update camera-anchored glyph window", it) }
@@ -2222,30 +2247,28 @@ object StatusBarComboStyleOneRuntime {
                 }
                 val targets = (snapshot.keys.mapNotNull(::parseBatterySlotVisibilityKey) +
                     knownBatterySlotNames.map { it to 0 }).distinct()
-                targets.forEach { (slot, tag) ->
-                    val key = batterySlotVisibilityKey(slot, tag)
-                    if (shouldSuppressSlot(slot)) {
-                        if (!snapshot.containsKey(key)) {
-                            val currentVisibility = readNativeBatterySlotVisibility(controller, slot, tag) ?: true
-                            rememberNativeBatterySlotVisibility(controller, slot, tag, currentVisibility)
-                        }
-                        setNativeBatterySlotVisibility(controller, slot, tag, false)
-                    } else {
-                        val original = synchronized(nativeBatterySlotVisibility) {
-                            nativeBatterySlotVisibility[controller]?.get(key)
-                        }
-                        if (original != null) {
-                            setNativeBatterySlotVisibility(controller, slot, tag, original)
-                        } else if (isManagedWifiSlot(slot) && state.wifiLevel >= 0) {
-                            // If this controller/holder was first discovered after the
-                            // arc had already hidden Wi-Fi, there is no trustworthy
-                            // snapshot to restore. The active Wi-Fi state is positive
-                            // evidence that the native icon should be rebound/visible.
-                            setNativeBatterySlotVisibility(controller, slot, tag, true)
-                            diagnostic("Restored active native Wi-Fi slot without snapshot: $slot tag=$tag")
+                // Never mutate the Wi-Fi holder's native visibility. A previous
+                // implementation could hide the holder while the view briefly
+                // reappeared, then SystemUI's next bind hid it again. Wi-Fi now
+                // uses collapseHostView()/restoreHostView() exclusively.
+                targets.filterNot { (slot, _) -> isManagedWifiSlot(slot) }
+                    .forEach { (slot, tag) ->
+                        val key = batterySlotVisibilityKey(slot, tag)
+                        if (shouldSuppressSlot(slot)) {
+                            if (!snapshot.containsKey(key)) {
+                                val currentVisibility = readNativeBatterySlotVisibility(controller, slot, tag) ?: true
+                                rememberNativeBatterySlotVisibility(controller, slot, tag, currentVisibility)
+                            }
+                            setNativeBatterySlotVisibility(controller, slot, tag, false)
+                        } else {
+                            val original = synchronized(nativeBatterySlotVisibility) {
+                                nativeBatterySlotVisibility[controller]?.get(key)
+                            }
+                            if (original != null) {
+                                setNativeBatterySlotVisibility(controller, slot, tag, original)
+                            }
                         }
                     }
-                }
             }
             // A native icon may also have been collapsed in the view tree. Reassert
             // its original measured layout after the controller has restored its slot.
