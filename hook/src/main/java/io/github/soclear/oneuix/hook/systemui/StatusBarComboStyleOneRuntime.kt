@@ -111,11 +111,11 @@ object StatusBarComboStyleOneRuntime {
         Collections.synchronizedSet(Collections.newSetFromMap(WeakHashMap<Any, Boolean>()))
     private val nativeBatterySlotVisibility =
         Collections.synchronizedMap(WeakHashMap<Any, MutableMap<String, Boolean>>())
-    // Only battery slots are controlled through the icon controller. Wi-Fi is
-    // folded at the view/layout layer so disabling its arc cannot leave the
-    // controller's internal visibility state stuck at hidden.
+    // Track original visibility for both slots. Wi-Fi must be restored through
+    // the same icon-controller binding that hid it; View.VISIBLE alone is not
+    // sufficient on modern status bars.
     private val knownBatterySlotNames: MutableSet<String> =
-        Collections.synchronizedSet(mutableSetOf("battery"))
+        Collections.synchronizedSet(mutableSetOf("battery", "wifi"))
     private val enforcingBatterySlotVisibility = ThreadLocal<Boolean>()
     private val rowTintSnapshots = Collections.synchronizedMap(WeakHashMap<ViewGroup, Int>())
     // Prefer the exact foreground tint applied to the native battery meter; the
@@ -213,50 +213,65 @@ object StatusBarComboStyleOneRuntime {
 
         fun attach(anchor: View, root: ViewGroup): Boolean {
             if (params != null) { update(anchor, root); return true }
-            val type = runCatching {
-                WindowManager.LayoutParams::class.java.getDeclaredField("TYPE_STATUS_BAR_ADDITIONAL")
-                    .apply { isAccessible = true }.getInt(null)
-            }.getOrElse {
-                if (Build.VERSION.SDK_INT >= 26) WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
-                else WindowManager.LayoutParams.TYPE_PHONE
-            }
             val cfg = StatusBarComboStyleOneRuntime.config
-            val lp = WindowManager.LayoutParams(
-                StatusBarComboStyleOneRuntime.dp(app, StatusComboStyleOneGlyphRenderer.glyphWidthDp(cfg)),
-                StatusBarComboStyleOneRuntime.dp(app, StatusComboStyleOneGlyphRenderer.glyphHeightDp(cfg)),
-                type,
-                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
-                    WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or
-                    WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
-                PixelFormat.TRANSLUCENT,
-            ).apply {
-                gravity = Gravity.TOP or Gravity.LEFT
-                title = "OneuiXP Style One"
-                if (type != WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY &&
-                    type != WindowManager.LayoutParams.TYPE_PHONE
-                ) token = anchor.applicationWindowToken
+            val width = StatusBarComboStyleOneRuntime.dp(
+                app, StatusComboStyleOneGlyphRenderer.glyphWidthDp(cfg),
+            )
+            val height = StatusBarComboStyleOneRuntime.dp(
+                app, StatusComboStyleOneGlyphRenderer.glyphHeightDp(cfg),
+            )
+            val flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or
+                WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
+                // Without NO_LIMITS, Samsung may inset an independent overlay below
+                // the status bar. The camera/punch-hole is inside that bar.
+                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
+
+            for (type in windowTypeCandidates()) {
+                val lp = WindowManager.LayoutParams(
+                    width, height, type, flags, PixelFormat.TRANSLUCENT,
+                ).apply {
+                    gravity = Gravity.TOP or Gravity.LEFT
+                    title = "OneuiXP Style One"
+                    // Status-bar-owned window types are system windows. Do not pass
+                    // the app-window token: Samsung may reject the type/token pair
+                    // and the old fallback then silently shifted the glyph down.
+                    token = null
+                }
+                try {
+                    wm.addView(glyph, lp)
+                    params = lp
+                    diagnostic("Glyph overlay attached: type=$type size=${width}x${height} flags=$flags")
+                    update(anchor, root)
+                    return true
+                } catch (error: Throwable) {
+                    Log.w(TAG, "Glyph overlay attach failed for type=$type", error)
+                }
             }
-            return try {
-                wm.addView(glyph, lp)
-                params = lp
-                update(anchor, root)
-                true
-            } catch (e: Throwable) {
-                Log.w(TAG, "Status-bar glyph window failed", e)
-                if (type != WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY && Build.VERSION.SDK_INT >= 26) {
-                    try {
-                        lp.type = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
-                        lp.token = null
-                        wm.addView(glyph, lp)
-                        params = lp
-                        update(anchor, root)
-                        true
-                    } catch (second: Throwable) {
-                        Log.w(TAG, "Fallback glyph window failed", second)
-                        false
+            Log.w(TAG, "No supported status-bar glyph window type; using inline renderer")
+            return false
+        }
+
+        private fun windowTypeCandidates(): List<Int> {
+            val result = linkedSetOf<Int>()
+            // A sub-panel sits above the ordinary status-bar window. Prefer it so
+            // the glyph cannot be painted underneath the status bar on newer builds.
+            listOf("TYPE_STATUS_BAR_SUB_PANEL", "TYPE_STATUS_BAR_ADDITIONAL").forEach { name ->
+                runCatching {
+                    val field = WindowManager.LayoutParams::class.java.fields.firstOrNull {
+                        it.name == name
+                    } ?: WindowManager.LayoutParams::class.java.getDeclaredField(name).apply {
+                        isAccessible = true
                     }
-                } else false
+                    result += field.getInt(null)
+                }.onFailure { diagnostic("Window type unavailable: $name: $it") }
             }
+            if (Build.VERSION.SDK_INT >= 26) {
+                result += WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+            } else {
+                result += WindowManager.LayoutParams.TYPE_PHONE
+            }
+            return result.toList()
         }
 
         fun update(anchor: View, root: ViewGroup) {
@@ -282,7 +297,7 @@ object StatusBarComboStyleOneRuntime {
                     StatusBarComboStyleOneRuntime.dpExact(
                         app, cfg.glyphOffsetXDp + cfg.glyphLeftMarginDp - cfg.glyphRightMarginDp,
                     )
-                ).roundToInt().coerceAtLeast(0)
+                ).roundToInt()
             val host = StatusBarComboStyleOneRuntime.hosts[root]
             val fallbackCentreY = host?.overlayCameraCenterYOnScreenPx
                 ?: (rootPos[1] + root.height / 2).also {
@@ -292,7 +307,8 @@ object StatusBarComboStyleOneRuntime {
             lp.y = (
                 screenCentreY - lp.height * centreRatioY +
                     StatusBarComboStyleOneRuntime.dpExact(app, cfg.glyphOffsetYDp)
-                ).roundToInt().coerceAtLeast(0)
+                ).roundToInt()
+            diagnostic("Glyph overlay coordinates: type=${lp.type} screenCenter=(${screenCentreX},${screenCentreY}) window=(${lp.x},${lp.y}) size=${lp.width}x${lp.height} cutout=${cutout ?: "none"}")
             // updateViewLayout invalidates/remeasures the overlay when its bounds
             // actually changed. Do not force an extra draw for every status-bar
             // layout callback during shade expansion.
@@ -2044,12 +2060,12 @@ object StatusBarComboStyleOneRuntime {
                     if (controller != null) iconVisibilityControllers.add(controller)
                     val args = chain.getArgs().toTypedArray()
                     val slot = args.getOrNull(0) as? String
-                    // Battery is controlled by the icon controller on legacy
-                    // layouts. Wi-Fi deliberately stays out of this path: its
-                    // visibility is folded/restored from the actual status-icons
-                    // view so the combo toggle cannot poison the native slot state.
+                    // Keep the icon controller's semantic visibility in sync with
+                    // the view tree. New status-bar icons may ignore View.VISIBLE if
+                    // their holder/binding still says the slot is hidden.
                     val batterySlot = slot?.contains("battery", ignoreCase = true) == true
-                    val managedSlot = batterySlot
+                    val wifiSlot = slot?.let(::isManagedWifiSlot) == true
+                    val managedSlot = batterySlot || wifiSlot
                     val visibleIndex = when {
                         args.getOrNull(1) is Boolean -> 1
                         args.size >= 3 && args.getOrNull(1) is Int && args.getOrNull(2) is Boolean -> 2
@@ -2129,8 +2145,27 @@ object StatusBarComboStyleOneRuntime {
                         }
                         if (original != null) {
                             setNativeBatterySlotVisibility(controller, slot, tag, original)
+                        } else if (isManagedWifiSlot(slot) && state.wifiLevel >= 0) {
+                            // If this controller/holder was first discovered after the
+                            // arc had already hidden Wi-Fi, there is no trustworthy
+                            // snapshot to restore. The active Wi-Fi state is positive
+                            // evidence that the native icon should be rebound/visible.
+                            setNativeBatterySlotVisibility(controller, slot, tag, true)
+                            diagnostic("Restored active native Wi-Fi slot without snapshot: $slot tag=$tag")
                         }
                     }
+                }
+            }
+            // A native icon may also have been collapsed in the view tree. Reassert
+            // its original measured layout after the controller has restored its slot.
+            synchronized(hosts) { hosts.values.toList() }.forEach { host ->
+                if (host.retired || config.showWifi || state.wifiLevel < 0) return@forEach
+                host.layouts.keys.toList().filter { view ->
+                    isWifiIcon(view) || (slotOf(view) ?: knownIconSlots[view])?.let(::isManagedWifiSlot) == true
+                }.forEach { view ->
+                    restoreHostView(host, view)
+                    (view.parent as? ViewGroup)?.requestLayout()
+                    view.invalidate()
                 }
             }
         }
