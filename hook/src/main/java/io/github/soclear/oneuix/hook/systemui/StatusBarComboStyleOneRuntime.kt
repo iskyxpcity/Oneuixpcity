@@ -2803,22 +2803,35 @@ object StatusBarComboStyleOneRuntime {
      * not applyMobileState(). Read that view model's current SignalIconModel so the
      * four-dot renderer follows the level SystemUI is actually drawing for each SIM.
      */
+    /**
+     * Samsung/Android's modern status-bar mobile view is bound to a per-SIM view model.
+     * Different platform revisions add a logger argument before the slot/view model, so
+     * identify the model by its subscriptionId + icon flow rather than assuming an argument index.
+     */
     private fun hookModernMobileViewConstruction(module: XposedModule, classLoader: ClassLoader) {
         val className = "com.android.systemui.statusbar.pipeline.mobile.ui.view.ModernStatusBarMobileView"
         runCatching {
             val clazz = classLoader.loadClass(className)
             val methods = clazz.declaredMethods.filter {
-                it.name == "constructAndBind" && it.parameterTypes.size >= 3
+                it.name == "constructAndBind" && it.parameterTypes.any { type ->
+                    type.name.contains("MobileIconViewModel") ||
+                        type.name.contains("LocationBasedMobileViewModel")
+                }
             }
             if (methods.isEmpty()) {
-                diagnostic("Modern mobile pipeline hook unavailable: no constructAndBind method")
+                diagnostic("Modern mobile pipeline hook unavailable: no constructAndBind method with view-model parameter")
                 return@runCatching
             }
             methods.distinctBy { it.toGenericString() }.forEach { method ->
                 module.hook(method).intercept { chain ->
                     val result = chain.proceed()
-                    val args = chain.args
-                    val viewModel = args.getOrNull(2)
+                    val viewModel = chain.args.firstNotNullOfOrNull { argument ->
+                        val candidate = argument ?: return@firstNotNullOfOrNull null
+                        val subId = readSignalIntValue(candidate, "subscriptionId", "subId")
+                        if (subId != null && subId >= 0 &&
+                            readObjectMember(candidate, "icon") != null
+                        ) candidate else null
+                    }
                     if (viewModel != null) {
                         val subId = readSignalIntValue(viewModel, "subscriptionId", "subId")
                         if (subId != null && subId >= 0) {
@@ -2840,6 +2853,11 @@ object StatusBarComboStyleOneRuntime {
                             }
                             scheduleTelephonyRefresh()
                         }
+                    } else {
+                        val signature = chain.args.mapIndexed { index, argument ->
+                            "$index:${argument?.javaClass?.name ?: "null"}"
+                        }.joinToString(",")
+                        diagnostic("Modern mobile pipeline view-model parameter not identified: $signature")
                     }
                     result
                 }
@@ -2848,11 +2866,6 @@ object StatusBarComboStyleOneRuntime {
         }.onFailure { diagnostic("Modern mobile pipeline hook unavailable: $it") }
     }
 
-    /**
-     * SystemUI's modern Wi-Fi binder can publish isVisible=true after the initial
-     * icon-tree pass. Pin visibility only for the modern status-bar Wi-Fi view while
-     * Combo owns the Wi-Fi arc; other SystemUI views are never affected.
-     */
     private fun hookModernWifiVisibility(module: XposedModule, classLoader: ClassLoader) {
         val className = "com.android.systemui.statusbar.pipeline.wifi.ui.view.ModernStatusBarWifiView"
         runCatching {
@@ -2869,6 +2882,12 @@ object StatusBarComboStyleOneRuntime {
                 ) {
                     val args = chain.args.toTypedArray()
                     val requested = args.getOrNull(0) as? Int ?: View.VISIBLE
+                    if (!nativeWifiBaselineVisibility.containsKey(view)) {
+                        // While Combo currently hides the view, its incoming visibility may
+                        // already be folded; use the pre-call view state in that case.
+                        nativeWifiBaselineVisibility[view] =
+                            if (config.showWifi) view.visibility else requested
+                    }
                     val nativeWasVisible = nativeWifiBaselineVisibility[view] == View.VISIBLE
                     val forced = when {
                         // The combined glyph owns Wi-Fi drawing; prevent a later binder update
