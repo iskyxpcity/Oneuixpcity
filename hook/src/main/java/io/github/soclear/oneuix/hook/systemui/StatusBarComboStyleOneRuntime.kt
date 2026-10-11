@@ -3045,12 +3045,15 @@ object StatusBarComboStyleOneRuntime {
                         nativeWasVisible && wifiConnected != false -> View.VISIBLE
                         else -> requested
                     }
-                    val snapshot = "$requested->$forced|showWifi=${config.showWifi}|wifiLevel=${state.wifiLevel}"
+                    val connectedLabel = wifiConnected?.toString() ?: "unknown"
+                    val snapshot = "$requested->$forced|showWifi=${config.showWifi}|" +
+                        "wifiLevel=${state.wifiLevel}|wifiConnected=$connectedLabel"
                     if (lastNativeWifiVisibilityRequests.put(view, snapshot) != snapshot) {
                         diagnostic(
                             "Modern Wi-Fi visibility decision: requested=$requested forced=$forced " +
                                 "baseline=${nativeWifiBaselineVisibility[view] ?: -1} " +
-                                "showWifi=${config.showWifi} wifiLevel=${state.wifiLevel}"
+                                "showWifi=${config.showWifi} wifiLevel=${state.wifiLevel} " +
+                                "wifiConnected=$connectedLabel"
                         )
                     }
                     if (forced != requested) {
