@@ -111,8 +111,11 @@ object StatusBarComboStyleOneRuntime {
         Collections.synchronizedSet(Collections.newSetFromMap(WeakHashMap<Any, Boolean>()))
     private val nativeBatterySlotVisibility =
         Collections.synchronizedMap(WeakHashMap<Any, MutableMap<String, Boolean>>())
+    // Only battery slots are controlled through the icon controller. Wi-Fi is
+    // folded at the view/layout layer so disabling its arc cannot leave the
+    // controller's internal visibility state stuck at hidden.
     private val knownBatterySlotNames: MutableSet<String> =
-        Collections.synchronizedSet(mutableSetOf("battery", "wifi"))
+        Collections.synchronizedSet(mutableSetOf("battery"))
     private val enforcingBatterySlotVisibility = ThreadLocal<Boolean>()
     private val rowTintSnapshots = Collections.synchronizedMap(WeakHashMap<ViewGroup, Int>())
     // Prefer the exact foreground tint applied to the native battery meter; the
@@ -480,50 +483,58 @@ object StatusBarComboStyleOneRuntime {
             (config.signalMode == 0 || (config.signalMode == 1 && config.stackedSignal))
 
     /**
-     * DisplayCutout bounding rectangles are in the coordinate space of the window
-     * content, not screen coordinates. Convert them before using them in an overlay
-     * WindowManager.LayoutParams, whose gravity is TOP|LEFT.
+     * Prefer DisplayInfo's display-space cutout for the independent WindowManager
+     * window. WindowInsets can be relative to the status-bar window on Samsung,
+     * while TYPE_STATUS_BAR_ADDITIONAL / TYPE_APPLICATION_OVERLAY need display
+     * coordinates. Only map WindowInsets coordinates as a fallback.
      */
     private fun cutoutBounds(root: View): Rect? {
         if (Build.VERSION.SDK_INT < 28) return null
 
-        // WindowInsets cutout rectangles are window-content-relative. Convert them
-        // before assigning coordinates to the independent status-bar window.
-        val windowCutout = readWindowCutout(root)
-        if (windowCutout != null) {
-            val bounds = windowCutout.boundingRects.filter { it.width() > 0 && it.height() > 0 }
-            val windowRoot = root.rootView
-            val location = IntArray(2)
-            windowRoot.getLocationOnScreen(location)
-            val displayWidth = root.resources.displayMetrics.widthPixels
-            val midpoint = (windowRoot.width.takeIf { it > 0 } ?: displayWidth) / 2
-            val selected = bounds.minByOrNull { abs(it.centerX() - midpoint) }
+        val display = root.display ?: runCatching {
+            (root.context.getSystemService(Context.WINDOW_SERVICE) as? WindowManager)?.defaultDisplay
+        }.getOrNull()
+        val displaySize = android.graphics.Point()
+        if (display != null) runCatching { display.getRealSize(displaySize) }
+        val screenWidth = displaySize.x.takeIf { it > 0 }
+            ?: root.resources.displayMetrics.widthPixels
+
+        // Display.getCutout / DisplayInfo is already in display coordinates.
+        val displayCutout = readDisplayCutout(display)
+        if (displayCutout != null) {
+            val bounds = displayCutout.boundingRects.filter { it.width() > 0 && it.height() > 0 }
+            val selected = bounds.minByOrNull { abs(it.centerX() - screenWidth / 2) }
             if (selected != null) {
-                return Rect(selected).apply { offset(location[0], location[1]) }
+                diagnostic("Punch-hole source=DisplayInfo bounds=$selected screenWidth=$screenWidth")
+                return Rect(selected)
             }
-            val safeTop = windowCutout.safeInsetTop
+            val safeTop = displayCutout.safeInsetTop
             if (safeTop > 0) {
-                val screenX = displayWidth / 2
-                val screenY = location[1] + safeTop / 2
+                val screenX = screenWidth / 2
+                val screenY = safeTop / 2
+                diagnostic("Punch-hole source=DisplayInfo safeTop=$safeTop center=($screenX,$screenY)")
                 return Rect(screenX - 1, screenY - 1, screenX + 1, screenY + 1)
             }
         }
 
-        // Samsung can consume the cutout from view insets but retain it in DisplayInfo; this fallback is isolated for compatibility.
-        val display = root.display ?: runCatching {
-            (root.context.getSystemService(Context.WINDOW_SERVICE) as? WindowManager)?.defaultDisplay
-        }.getOrNull()
-        val displayCutout = readDisplayCutout(display) ?: return null
-        val screenWidth = root.resources.displayMetrics.widthPixels
-        val selected = displayCutout.boundingRects
-            .filter { it.width() > 0 && it.height() > 0 }
-            .minByOrNull { abs(it.centerX() - screenWidth / 2) }
-        if (selected != null) return Rect(selected)
-
-        val safeTop = displayCutout.safeInsetTop
+        // WindowInsets cutout coordinates may be local to the app/window content.
+        val windowCutout = readWindowCutout(root) ?: return null
+        val bounds = windowCutout.boundingRects.filter { it.width() > 0 && it.height() > 0 }
+        val windowRoot = root.rootView
+        val location = IntArray(2)
+        windowRoot.getLocationOnScreen(location)
+        val rootWidth = windowRoot.width.takeIf { it > 0 } ?: screenWidth
+        val selected = bounds.minByOrNull { abs(it.centerX() - rootWidth / 2) }
+        if (selected != null) {
+            val mapped = Rect(selected).apply { offset(location[0], location[1]) }
+            diagnostic("Punch-hole source=WindowInsets local=$selected root=$location mapped=$mapped")
+            return mapped
+        }
+        val safeTop = windowCutout.safeInsetTop
         if (safeTop > 0) {
             val screenX = screenWidth / 2
-            val screenY = safeTop / 2
+            val screenY = location[1] + safeTop / 2
+            diagnostic("Punch-hole source=WindowInsets safeTop=$safeTop center=($screenX,$screenY)")
             return Rect(screenX - 1, screenY - 1, screenX + 1, screenY + 1)
         }
         return null
@@ -754,7 +765,11 @@ object StatusBarComboStyleOneRuntime {
             if (!root.isAttachedToWindow) { host.overlay?.detach(); return }
             val views = descendants(root)
             rememberStatusBarTintViews(root, views)
-            val battery = views.firstOrNull(::isBatteryMeterView)
+            // One UI 8.5 / Android 16+ can render the battery as a ComposeView
+            // immediately after the classic statusIcons cluster. Prefer that
+            // actual surface over an obsolete/inactive BatteryMeterView anchor.
+            val battery = findModernBatteryComposeView(root)
+                ?: views.firstOrNull(::isBatteryMeterView)
                 ?: views.firstOrNull(::isBatteryIcon)
 
             if (!config.enabled || battery == null) {
@@ -930,6 +945,49 @@ object StatusBarComboStyleOneRuntime {
     private fun viewSignature(v: View): String =
         (v.javaClass.name + " " + resourceName(v) + " " + v.tag + " " + v.contentDescription).lowercase()
 
+    private fun isComposeHost(view: View): Boolean {
+        val name = view.javaClass.name.lowercase()
+        return name.contains("androidx.compose.ui.platform.composeview") ||
+            name.contains("androidcomposeview") ||
+            name.endsWith(".composeview")
+    }
+
+    private fun isStatusIconsCluster(view: View): Boolean {
+        val resource = resourceName(view)
+        val name = view.javaClass.name
+        return resource.equals("statusIcons", ignoreCase = true) ||
+            resource.equals("status_icons", ignoreCase = true) ||
+            name.contains("StatusIconContainer", ignoreCase = true) ||
+            viewSignature(view).contains("statusicons")
+    }
+
+    /**
+     * Android 16's newStatusBarIcons path may put the battery in Compose after
+     * the classic statusIcons cluster, with no R.id.battery / BatteryMeterView.
+     * Resolve that sibling structurally; do not guess by hiding arbitrary
+     * ComposeViews elsewhere in SystemUI.
+     */
+    private fun findModernBatteryComposeView(root: View): View? {
+        val clusters = descendants(root).filter(::isStatusIconsCluster)
+        for (cluster in clusters) {
+            val parent = cluster.parent as? ViewGroup ?: continue
+            val index = parent.indexOfChild(cluster)
+            if (index < 0) continue
+            val end = minOf(parent.childCount, index + 4)
+            for (childIndex in (index + 1) until end) {
+                val candidate = parent.getChildAt(childIndex)
+                if (isComposeHost(candidate)) return candidate
+                // Some builds wrap the battery's ComposeView in a single-child
+                // container. Only accept this narrow wrapper shape.
+                val wrapper = candidate as? ViewGroup ?: continue
+                if (wrapper.childCount == 1 && isComposeHost(wrapper.getChildAt(0))) {
+                    return wrapper
+                }
+            }
+        }
+        return null
+    }
+
     private fun isBatteryMeterView(v: View): Boolean {
         val name = viewSignature(v)
         return v is ViewGroup && (name.contains("batterymeterview") || name.contains("miuibatterymeterview"))
@@ -1099,6 +1157,9 @@ object StatusBarComboStyleOneRuntime {
         }
         view.visibility = snapshot.visibility
         view.alpha = snapshot.alpha
+        // Modern status-bar icon containers can cache child placement until the
+        // parent is asked to lay out again after GONE/0x0 folding is reversed.
+        (view.parent as? View)?.requestLayout()
     }
 
     private fun collapseViewLayout(view: View) {
@@ -1983,9 +2044,12 @@ object StatusBarComboStyleOneRuntime {
                     if (controller != null) iconVisibilityControllers.add(controller)
                     val args = chain.getArgs().toTypedArray()
                     val slot = args.getOrNull(0) as? String
+                    // Battery is controlled by the icon controller on legacy
+                    // layouts. Wi-Fi deliberately stays out of this path: its
+                    // visibility is folded/restored from the actual status-icons
+                    // view so the combo toggle cannot poison the native slot state.
                     val batterySlot = slot?.contains("battery", ignoreCase = true) == true
-                    val wifiSlot = slot?.let(::isManagedWifiSlot) == true
-                    val managedSlot = batterySlot || wifiSlot
+                    val managedSlot = batterySlot
                     val visibleIndex = when {
                         args.getOrNull(1) is Boolean -> 1
                         args.size >= 3 && args.getOrNull(1) is Int && args.getOrNull(2) is Boolean -> 2
