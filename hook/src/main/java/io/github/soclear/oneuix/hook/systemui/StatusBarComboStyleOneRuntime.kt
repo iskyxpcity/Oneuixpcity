@@ -728,7 +728,9 @@ object StatusBarComboStyleOneRuntime {
             val foldMobile = isMobileNativeSuppressed()
 
             views.forEach { view ->
-                if (view === battery || view is GlyphView || isNativeBatteryView(view)) return@forEach
+                val nativeBatteryIndicator = isBatteryIcon(view) ||
+                    (slotOf(view) ?: knownIconSlots[view])?.contains("battery", ignoreCase = true) == true
+                if (view === battery || view is GlyphView || nativeBatteryIndicator) return@forEach
                 // Battery indicators are hidden through the native icon slot / icon_hide_list
                 // contract above. Only the selected network indicators use view-level folding.
                 val hide =
