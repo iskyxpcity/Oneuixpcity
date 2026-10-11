@@ -112,7 +112,7 @@ object StatusBarComboStyleOneRuntime {
     private val nativeBatterySlotVisibility =
         Collections.synchronizedMap(WeakHashMap<Any, MutableMap<String, Boolean>>())
     private val knownBatterySlotNames: MutableSet<String> =
-        Collections.synchronizedSet(mutableSetOf("battery"))
+        Collections.synchronizedSet(mutableSetOf("battery", "wifi"))
     private val enforcingBatterySlotVisibility = ThreadLocal<Boolean>()
     private val rowTintSnapshots = Collections.synchronizedMap(WeakHashMap<ViewGroup, Int>())
     // Prefer the exact foreground tint applied to the native battery meter; the
@@ -479,13 +479,28 @@ object StatusBarComboStyleOneRuntime {
         config.enabled && config.showMobile &&
             (config.signalMode == 0 || (config.signalMode == 1 && config.stackedSignal))
 
+    /**
+     * DisplayCutout bounding rectangles are in the coordinate space of the window
+     * content, not screen coordinates. Convert them before using them in an overlay
+     * WindowManager.LayoutParams, whose gravity is TOP|LEFT.
+     */
     private fun cutoutBounds(root: View): Rect? {
         if (Build.VERSION.SDK_INT < 28) return null
         return runCatching {
-            val cutout = root.rootWindowInsets?.displayCutout ?: return@runCatching null
+            val insets = root.rootWindowInsets ?: root.rootView.rootWindowInsets
+                ?: return@runCatching null
+            val cutout = insets.displayCutout ?: return@runCatching null
             val bounds = cutout.boundingRects.filter { it.width() > 0 && it.height() > 0 }
-            val midpoint = root.resources.displayMetrics.widthPixels / 2
-            bounds.minByOrNull { abs(it.centerX() - midpoint) }?.let { Rect(it) }
+            if (bounds.isEmpty()) return@runCatching null
+
+            val windowRoot = root.rootView
+            val rootLocation = IntArray(2)
+            windowRoot.getLocationOnScreen(rootLocation)
+            val displayWidth = root.resources.displayMetrics.widthPixels
+            val localMidpoint = (windowRoot.width.takeIf { it > 0 } ?: displayWidth) / 2
+            val selected = bounds.minByOrNull { abs(it.centerX() - localMidpoint) }
+                ?: return@runCatching null
+            Rect(selected).apply { offset(rootLocation[0], rootLocation[1]) }
         }.getOrNull()
     }
 
@@ -894,10 +909,16 @@ object StatusBarComboStyleOneRuntime {
         slot == "mobile" || slot == "stacked_mobile" || slot.startsWith("mobile") ||
             slot.contains("cellular") || slot.contains("signal_strength")
 
+    private fun isManagedWifiSlot(slot: String): Boolean {
+        val normalized = slot.lowercase()
+        return normalized == "wifi" || normalized.contains("wlan") ||
+            normalized.startsWith("wifi_") || normalized.startsWith("wifi.")
+    }
+
     private fun shouldSuppressSlot(slot: String): Boolean {
         val normalized = slot.lowercase()
         return (config.enabled && normalized.contains("battery")) ||
-            (config.enabled && config.showWifi && normalized == "wifi") ||
+            (config.enabled && config.showWifi && isManagedWifiSlot(normalized)) ||
             (isMobileNativeSuppressed() && isManagedMobileSlot(normalized))
     }
 
@@ -1382,8 +1403,11 @@ object StatusBarComboStyleOneRuntime {
                                 val baseline = if (userHidesBattery) snapshot.copy(visibility = View.GONE) else snapshot
                                 nativeBatteryLayouts.putIfAbsent(meter, baseline)
                             }
-                            if (config.enabled && nativeList != null) {
-                                args[1] = appendHiddenSlot(nativeList, "battery")
+                            if (config.enabled) {
+                                // A null tuner value means the blacklist is empty. Still pass
+                                // an explicit battery entry so SystemUI's own visibility path
+                                // can hide the stock indicator.
+                                args[1] = appendHiddenSlot(nativeList.orEmpty(), "battery")
                             }
                         }
                         val result = chain.proceed(args)
@@ -1428,6 +1452,11 @@ object StatusBarComboStyleOneRuntime {
                     // Keep reading Samsung's resolved charging state, but delegate stock
                     // icon visibility to the native icon-hide-list/slot visibility path.
                     syncBatteryStateFromMeter(meter)
+                    // Some Samsung battery callbacks reset VISIBLE after the tuner update.
+                    // Re-assert only on existing battery-state callbacks, never on measure/layout.
+                    if (config.enabled && meter.visibility != View.GONE) {
+                        meter.visibility = View.GONE
+                    }
                 }
             } finally {
                 scheduledBatteryChildPasses.remove(meter)
@@ -1879,6 +1908,8 @@ object StatusBarComboStyleOneRuntime {
                     val args = chain.getArgs().toTypedArray()
                     val slot = args.getOrNull(0) as? String
                     val batterySlot = slot?.contains("battery", ignoreCase = true) == true
+                    val wifiSlot = slot?.let(::isManagedWifiSlot) == true
+                    val managedSlot = batterySlot || wifiSlot
                     val visibleIndex = when {
                         args.getOrNull(1) is Boolean -> 1
                         args.size >= 3 && args.getOrNull(1) is Int && args.getOrNull(2) is Boolean -> 2
@@ -1889,7 +1920,7 @@ object StatusBarComboStyleOneRuntime {
                         args.size >= 3 && args.getOrNull(2) is Int && visibleIndex == 1 -> args[2] as Int
                         else -> 0
                     }
-                    if (batterySlot && slot != null && visibleIndex >= 0) {
+                    if (managedSlot && slot != null && visibleIndex >= 0) {
                         knownBatterySlotNames.add(slot)
                         val alreadyEnforcing = enforcingBatterySlotVisibility.get() == true
                         if (!alreadyEnforcing && controller != null) {
@@ -1897,15 +1928,15 @@ object StatusBarComboStyleOneRuntime {
                                 controller, slot, tag, args[visibleIndex] as? Boolean ?: true,
                             )
                         }
-                        if (config.enabled) args[visibleIndex] = false
+                        if (shouldSuppressSlot(slot)) args[visibleIndex] = false
                     }
 
                     val previousEnforcement = enforcingBatterySlotVisibility.get() == true
-                    if (batterySlot) enforcingBatterySlotVisibility.set(true)
+                    if (managedSlot) enforcingBatterySlotVisibility.set(true)
                     try {
                         chain.proceed(args)
                     } finally {
-                        if (batterySlot) {
+                        if (managedSlot) {
                             if (previousEnforcement) enforcingBatterySlotVisibility.set(true)
                             else enforcingBatterySlotVisibility.remove()
                         }
@@ -1942,20 +1973,22 @@ object StatusBarComboStyleOneRuntime {
                 val snapshot = synchronized(nativeBatterySlotVisibility) {
                     nativeBatterySlotVisibility[controller]?.toMap().orEmpty()
                 }
-                if (config.enabled) {
-                    val targets = (snapshot.keys.mapNotNull(::parseBatterySlotVisibilityKey) +
-                        knownBatterySlotNames.map { it to 0 }).distinct()
-                    targets.forEach { (slot, tag) ->
-                        if (!snapshot.containsKey(batterySlotVisibilityKey(slot, tag))) {
+                val targets = (snapshot.keys.mapNotNull(::parseBatterySlotVisibilityKey) +
+                    knownBatterySlotNames.map { it to 0 }).distinct()
+                targets.forEach { (slot, tag) ->
+                    val key = batterySlotVisibilityKey(slot, tag)
+                    if (shouldSuppressSlot(slot)) {
+                        if (!snapshot.containsKey(key)) {
                             val currentVisibility = readNativeBatterySlotVisibility(controller, slot, tag) ?: true
                             rememberNativeBatterySlotVisibility(controller, slot, tag, currentVisibility)
                         }
                         setNativeBatterySlotVisibility(controller, slot, tag, false)
-                    }
-                } else {
-                    snapshot.forEach { (key, visible) ->
-                        parseBatterySlotVisibilityKey(key)?.let { (slot, tag) ->
-                            setNativeBatterySlotVisibility(controller, slot, tag, visible)
+                    } else {
+                        val original = synchronized(nativeBatterySlotVisibility) {
+                            nativeBatterySlotVisibility[controller]?.get(key)
+                        }
+                        if (original != null) {
+                            setNativeBatterySlotVisibility(controller, slot, tag, original)
                         }
                     }
                 }
@@ -2090,10 +2123,10 @@ object StatusBarComboStyleOneRuntime {
                             val next = sanitize(status.comboStyleOneRuntime)
                             config = next
                             diagnostic("Settings updated: enabled=${config.enabled}, overlay=${config.overlayGlyph}, style=${config.trioStyle}, signalMode=${config.signalMode}")
-                            if (previous.enabled != next.enabled) {
+                            if (previous.enabled != next.enabled || previous.showWifi != next.showWifi) {
                                 applyBatterySlotVisibility()
-                                replayMiuiBatteryIslandRequests()
                             }
+                            if (previous.enabled != next.enabled) replayMiuiBatteryIslandRequests()
                             if (previous.enabled != next.enabled ||
                                 previous.chargingDisplayMode != next.chargingDisplayMode ||
                                 previous.showBolt != next.showBolt ||
