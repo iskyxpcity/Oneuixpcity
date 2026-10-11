@@ -114,6 +114,7 @@ object StatusBarComboStyleOneRuntime {
     // when available, then the status-bar icon state, and only then TelephonyManager.
     private val quickPanelSignalLevels = ConcurrentHashMap<Int, Int>()
     private val nativeSignalLevels = ConcurrentHashMap<Int, Int>()
+    private val lastNativeWifiDiagnostics = Collections.synchronizedMap(WeakHashMap<View, String>())
     private val lastSubscriptionSignalLevels = ConcurrentHashMap<Int, Int>()
     private val subscriptionSlots = ConcurrentHashMap<Int, Int>()
     private val nativeChildSnapshots = Collections.synchronizedMap(WeakHashMap<View, LayoutSnapshot>())
@@ -2650,11 +2651,10 @@ object StatusBarComboStyleOneRuntime {
                 .getOrDefault(-1).coerceIn(-1, 4)
             val quickPanelLevel = quickPanelSignalLevels[info.subscriptionId]?.coerceIn(0, 4)
             val nativeLevel = nativeSignalLevels[info.subscriptionId]?.coerceIn(0, 4)
-            // The Quick Settings MobileDataIndicators model is the same SystemUI
-            // signal state consumed by the expanded panel's carrier row. Prefer it
-            // over TelephonyManager's possibly different bucket thresholds so the
-            // combo dots match the signal indicators SystemUI itself presents.
-            val level = quickPanelLevel ?: nativeLevel ?: telephonyLevel.takeIf { it in 0..4 }
+            // Match the collapsed status-bar icon first. Quick Settings is a fallback
+            // for Samsung builds where the status-bar icon state doesn't expose a
+            // decodable level; TelephonyManager comes after both SystemUI sources.
+            val level = nativeLevel ?: quickPanelLevel ?: telephonyLevel.takeIf { it in 0..4 }
                 ?: lastSubscriptionSignalLevels[info.subscriptionId] ?: -1
             if (level in 0..4) lastSubscriptionSignalLevels[info.subscriptionId] = level
             val embedded = if (Build.VERSION.SDK_INT >= 28) {
@@ -2723,7 +2723,14 @@ object StatusBarComboStyleOneRuntime {
                             ?: return@intercept result
                         val subId = readSignalIntField(mobileState, "subId", "mSubId")
                             ?: defaultDataSubscriptionId
-                        val level = if (strength in 0..4) strength else resolveSignalResourceLevel(view, strength)
+                        val resourceName = runCatching { view.resources.getResourceEntryName(strength) }
+                            .getOrNull().orEmpty()
+                        val level = normalizeNativeSignalLevel(strength)
+                            ?: resolveSignalResourceName(resourceName)
+                        diagnostic(
+                            "StatusBarMobileView state: subId=$subId strengthId=$strength " +
+                                "resource=$resourceName level=$level"
+                        )
                         if (level in 0..4 && subId >= 0) updateNativeSignalLevel(subId, level)
                         result
                     }
@@ -2773,18 +2780,21 @@ object StatusBarComboStyleOneRuntime {
             val statusIcon = readObjectField(value, "statusIcon", "mStatusIcon")
             val qsLevel = signalLevelFromIconState(qsIcon, resources)
             val statusLevel = signalLevelFromIconState(statusIcon, resources)
+            val qsName = iconResourceName(qsIcon, resources)
+            val statusName = iconResourceName(statusIcon, resources)
+            diagnostic(
+                "SystemUI MobileDataIndicators: subId=$subId " +
+                    "statusIcon=${iconValue(statusIcon)}:$statusName level=$statusLevel " +
+                    "qsIcon=${iconValue(qsIcon)}:$qsName level=$qsLevel"
+            )
             if (qsLevel in 0..4) {
                 quickPanelSignalLevels[subId] = qsLevel
-                diagnostic("Quick panel SIM signal: subId=$subId level=$qsLevel icon=${iconValue(qsIcon)}")
             } else {
                 // A null/unsupported QS icon means this subscription has no current
                 // Quick Settings signal state. Do not keep an old data-SIM level.
                 quickPanelSignalLevels.remove(subId)
             }
-            if (statusLevel in 0..4) {
-                updateNativeSignalLevel(subId, statusLevel)
-                diagnostic("Status bar SIM signal: subId=$subId level=$statusLevel icon=${iconValue(statusIcon)}")
-            }
+            if (statusLevel in 0..4) updateNativeSignalLevel(subId, statusLevel)
             scheduleTelephonyRefresh()
             return
         }
@@ -2805,6 +2815,22 @@ object StatusBarComboStyleOneRuntime {
     private fun iconValue(iconState: Any?): Int =
         iconState?.let { readSignalIntField(it, "icon", "mIcon", "iconId", "resId") } ?: -1
 
+    private fun iconResourceName(
+        iconState: Any?,
+        resources: android.content.res.Resources,
+    ): String {
+        val value = iconValue(iconState)
+        if (value < 0) return "none"
+        return runCatching { resources.getResourceEntryName(value) }.getOrNull()
+            ?: "packed-or-unresolved"
+    }
+
+    private fun normalizeNativeSignalLevel(value: Int): Int? = when (value) {
+        in 0..4 -> value
+        5 -> 4 // Some Samsung signal packs number the full-strength icon as level 5.
+        else -> null
+    }
+
     private fun signalLevelFromIconState(
         iconState: Any?,
         resources: android.content.res.Resources,
@@ -2818,7 +2844,7 @@ object StatusBarComboStyleOneRuntime {
             val namedLevel = resolveSignalResourceName(resourceName)
             return namedLevel.takeIf { it in 0..4 } ?: -1
         }
-        return decodePackedSignalDrawableLevel(value)
+        return normalizeNativeSignalLevel(value) ?: decodePackedSignalDrawableLevel(value)
     }
 
     /**
@@ -2919,9 +2945,15 @@ object StatusBarComboStyleOneRuntime {
         val suffix = lower.substring(signalIndex + "signal".length)
         // Match an exact numeric token. Do not mistake names such as "signal_4g"
         // for signal-strength level 4.
-        return suffix.split(Regex("[^a-z0-9]+"))
-            .firstNotNullOfOrNull { it.toIntOrNull()?.takeIf { level -> level in 0..4 } }
-            ?: -1
+        val namedLevel = suffix.split(Regex("[^a-z0-9]+"))
+            .firstNotNullOfOrNull { it.toIntOrNull()?.takeIf { level -> level in 0..5 } }
+            ?: return when {
+                suffix.contains("full") || suffix.contains("excellent") || suffix.contains("strong") -> 4
+                else -> -1
+            }
+        // Samsung resource packs may expose five visible strength steps (0..5),
+        // while the OneuiXP renderer uses four dots (0..4).
+        return namedLevel.coerceAtMost(4)
     }
 
     private fun displayNetworkType(info: TelephonyDisplayInfo): String? = when (info.overrideNetworkType) {
