@@ -133,15 +133,21 @@ internal object StatusBarWifiRuntime {
         preferenceThread = worker
         val background = Handler(worker.looper)
         var previous: Preference.SystemUI.StatusBarWifiRuntime? = null
+        // The Wi-Fi host must be re-applied when Style One changes ownership,
+        // even when the standalone Wi-Fi category settings are unchanged.
+        var previousComboOwnsWifi: Boolean? = null
 
         fun refreshOnce() {
             background.post {
-                val current = runCatching {
-                    with(module) { PreferenceProvider.loadPreference() }
-                        ?.systemUI?.statusBar?.wifiRuntime
+                val statusBar = runCatching {
+                    with(module) { PreferenceProvider.loadPreference() }?.systemUI?.statusBar
                 }.getOrNull() ?: return@post
-                if (current == previous) return@post
+                val current = statusBar.wifiRuntime
+                val comboOwnsWifi = statusBar.comboStyleOneRuntime.enabled &&
+                    statusBar.comboStyleOneRuntime.showWifi
+                if (current == previous && comboOwnsWifi == previousComboOwnsWifi) return@post
                 previous = current
+                previousComboOwnsWifi = comboOwnsWifi
                 mainHandler.post { updateRuntime(current) }
             }
         }
@@ -173,8 +179,14 @@ internal object StatusBarWifiRuntime {
                         )
                     }.getOrNull() ?: return@post
                     val current = statusBar.wifiRuntime
+                    val comboOwnsWifi = statusBar.comboStyleOneRuntime.enabled &&
+                        statusBar.comboStyleOneRuntime.showWifi
+                    val ownershipChanged = comboOwnsWifi != previousComboOwnsWifi
                     previous = current
-                    mainHandler.post { updateRuntime(current) }
+                    previousComboOwnsWifi = comboOwnsWifi
+                    if (current != config || ownershipChanged) {
+                        mainHandler.post { updateRuntime(current) }
+                    }
                 }
             }
         }
@@ -444,8 +456,10 @@ internal object StatusBarWifiRuntime {
         restoreNative(holder)
         val density = holder.wifiHost.resources.displayMetrics.density
 
-        // The combo owns the middle Wi-Fi glyph while active.
-        if (StatusBarComboStyleOneRuntime.isEnabled()) {
+        // Only hide this independent Wi-Fi category when the combo actually draws
+        // Wi-Fi arcs. If its Wi-Fi option is off, leave the native icon or this
+        // category's own replacement available.
+        if (StatusBarComboStyleOneRuntime.isNativeWifiSuppressed()) {
             holder.glyph.visibility = View.GONE
             holder.wifiHost.visibility = View.GONE
             holder.statusBarView.requestLayout()
