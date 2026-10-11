@@ -276,16 +276,9 @@ object StatusBarComboStyleOneRuntime {
             return result.toList()
         }
 
-        fun update(anchor: View, root: ViewGroup, cameraBounds: Rect? = null): Boolean {
+        fun update(anchor: View, root: ViewGroup, cameraBounds: Rect): Boolean {
             val lp = params ?: return false
-            val cutout = cameraBounds?.let(::Rect)
-                ?: StatusBarComboStyleOneRuntime.cutoutBounds(root)
-            if (cutout == null) {
-                // Never leave or move a floating glyph to a guessed screen-centre
-                // coordinate when the active display has not supplied camera geometry.
-                diagnostic("Glyph overlay update skipped: no verified active-display cutout bounds")
-                return false
-            }
+            val cutout = Rect(cameraBounds)
             val oldX = lp.x
             val oldY = lp.y
             val oldWidth = lp.width
@@ -418,11 +411,20 @@ object StatusBarComboStyleOneRuntime {
                 val overlay = host.overlay ?: return@forEach
 
                 // QuickStar-style native visibility remains authoritative even while the
-                // shade expands. Do not temporarily bring the stock battery surface back.
+                // shade expands. Re-resolve camera geometry because the active foldable
+                // display may have changed while the same SystemUI host was reused.
+                val cameraBounds = cutoutBounds(host.root)
+                if (cameraBounds == null) {
+                    apply(host)
+                    return@forEach
+                }
                 collapseHostView(host, battery)
-                overlay.update(battery, host.root)
-                overlay.setShadeVisible(true)
-                overlay.invalidate()
+                if (overlay.update(battery, host.root, cameraBounds)) {
+                    overlay.setShadeVisible(true)
+                    overlay.invalidate()
+                } else {
+                    apply(host)
+                }
             }
         }
         if (Looper.myLooper() == Looper.getMainLooper()) update.run() else main.post(update)
@@ -764,13 +766,17 @@ object StatusBarComboStyleOneRuntime {
                     glyph.invalidate()
                 }
                 host.overlay?.let { overlay ->
-                    if (cutoutBounds(host.root) != null) {
-                        collapseHostView(host, battery)
+                    val cameraBounds = cutoutBounds(host.root)
+                    if (cameraBounds == null) {
+                        apply(host)
                     } else {
-                        reserveHostSlot(host, battery, StatusComboStyleOneGlyphRenderer.glyphWidthDp(config))
+                        collapseHostView(host, battery)
+                        if (overlay.update(battery, host.root, cameraBounds)) {
+                            overlay.invalidate()
+                        } else {
+                            apply(host)
+                        }
                     }
-                    overlay.update(battery, host.root)
-                    overlay.invalidate()
                 }
             }
         }
