@@ -2776,13 +2776,16 @@ object StatusBarComboStyleOneRuntime {
             if (qsLevel in 0..4) {
                 quickPanelSignalLevels[subId] = qsLevel
                 diagnostic("Quick panel SIM signal: subId=$subId level=$qsLevel icon=${iconValue(qsIcon)}")
+            } else {
+                // A null/unsupported QS icon means this subscription has no current
+                // Quick Settings signal state. Do not keep an old data-SIM level.
+                quickPanelSignalLevels.remove(subId)
             }
             if (statusLevel in 0..4) {
                 updateNativeSignalLevel(subId, statusLevel)
                 diagnostic("Status bar SIM signal: subId=$subId level=$statusLevel icon=${iconValue(statusIcon)}")
-            } else if (qsLevel in 0..4) {
-                scheduleTelephonyRefresh()
             }
+            scheduleTelephonyRefresh()
             return
         }
 
