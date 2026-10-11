@@ -172,7 +172,7 @@ object StatusBarComboStyleOneRuntime {
         // Cache the centre of the status-bar row at first attachment. The row's
         // height animates while the shade opens; recentering the overlay on every
         // layout frame causes repeated WindowManager relayouts and panel jank.
-        var overlayCenterOffsetPx: Int? = null
+        var overlayCameraCenterYOnScreenPx: Int? = null
         val delayedApply = Runnable {
             if (!retired && !applying) StatusBarComboStyleOneRuntime.apply(this)
         }
@@ -266,23 +266,30 @@ object StatusBarComboStyleOneRuntime {
             lp.width = StatusBarComboStyleOneRuntime.dp(app, StatusComboStyleOneGlyphRenderer.glyphWidthDp(cfg))
             lp.height = StatusBarComboStyleOneRuntime.dp(app, StatusComboStyleOneGlyphRenderer.glyphHeightDp(cfg))
             val cutout = StatusBarComboStyleOneRuntime.cutoutBounds(root)
-            if (cutout != null) {
-                val centreRatio = StatusComboStyleOneGlyphRenderer.glyphCenterRatio(cfg)
-                lp.x = (cutout.centerX() - lp.width * centreRatio + StatusBarComboStyleOneRuntime.dpExact(app, cfg.glyphOffsetXDp + cfg.glyphLeftMarginDp - cfg.glyphRightMarginDp)).roundToInt().coerceAtLeast(0)
-                val rootPos = IntArray(2)
-                root.getLocationOnScreen(rootPos)
-                // Use the initial row centre rather than its animated height.
-                val host = StatusBarComboStyleOneRuntime.hosts[root]
-                val centreOffset = host?.overlayCenterOffsetPx ?: (root.height / 2).also {
-                    if (host != null) host.overlayCenterOffsetPx = it
+            val rootPos = IntArray(2)
+            root.getLocationOnScreen(rootPos)
+            val centreRatioX = StatusComboStyleOneGlyphRenderer.glyphCenterRatio(cfg)
+            val centreRatioY = StatusComboStyleOneGlyphRenderer.glyphVerticalCenterRatio(cfg)
+            // Samsung versions differ in whether the punch-hole is exposed through
+            // WindowInsets. If absent, use the display centre, never the old battery slot.
+            val screenCentreX = cutout?.centerX()
+                ?: (rootPos[0] + (root.width.takeIf { it > 0 } ?: app.resources.displayMetrics.widthPixels) / 2)
+            lp.x = (
+                screenCentreX - lp.width * centreRatioX +
+                    StatusBarComboStyleOneRuntime.dpExact(
+                        app, cfg.glyphOffsetXDp + cfg.glyphLeftMarginDp - cfg.glyphRightMarginDp,
+                    )
+                ).roundToInt().coerceAtLeast(0)
+            val host = StatusBarComboStyleOneRuntime.hosts[root]
+            val fallbackCentreY = host?.overlayCameraCenterYOnScreenPx
+                ?: (rootPos[1] + root.height / 2).also {
+                    if (host != null) host.overlayCameraCenterYOnScreenPx = it
                 }
-                lp.y = (rootPos[1] + centreOffset - lp.height / 2 + StatusBarComboStyleOneRuntime.dpExact(app, cfg.glyphOffsetYDp)).coerceAtLeast(0)
-            } else {
-                val pos = IntArray(2)
-                anchor.getLocationOnScreen(pos)
-                lp.x = (pos[0] + anchor.width - lp.width + StatusBarComboStyleOneRuntime.dpExact(app, cfg.glyphOffsetXDp)).coerceAtLeast(0)
-                lp.y = (pos[1] + (anchor.height - lp.height) / 2 + StatusBarComboStyleOneRuntime.dpExact(app, cfg.glyphOffsetYDp)).coerceAtLeast(0)
-            }
+            val screenCentreY = cutout?.centerY() ?: fallbackCentreY
+            lp.y = (
+                screenCentreY - lp.height * centreRatioY +
+                    StatusBarComboStyleOneRuntime.dpExact(app, cfg.glyphOffsetYDp)
+                ).roundToInt().coerceAtLeast(0)
             // updateViewLayout invalidates/remeasures the overlay when its bounds
             // actually changed. Do not force an extra draw for every status-bar
             // layout callback during shade expansion.
