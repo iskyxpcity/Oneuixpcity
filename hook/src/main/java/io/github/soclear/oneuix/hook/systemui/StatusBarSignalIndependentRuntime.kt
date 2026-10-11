@@ -622,9 +622,13 @@ internal object StatusBarSignalIndependentRuntime {
         // Combo owns the cellular signal presentation while enabled. Do not let
         // the independent two-SIM renderer reappear during its own live refresh.
         if (StatusBarComboStyleOneRuntime.isEnabled()) {
-            // Combo either owns the native signal slots or explicitly hands them
-            // back. Do not resurrect an alpha-hidden native icon when Combo is
-            // about to fold it; that was the source of transparent empty slots.
+            // Keep Combo's cellular ownership separate from Wi-Fi. The legacy
+            // descriptor scan below could misclassify a "Wi-Fi" icon as cellular
+            // because of the hyphen; restore any such icon when Combo is not
+            // replacing native Wi-Fi with its own arc.
+            if (!StatusBarComboStyleOneRuntime.isNativeWifiSuppressed()) {
+                restoreNativeWifiViews(holder)
+            }
             if (!StatusBarComboStyleOneRuntime.isMobileNativeSuppressed()) {
                 restoreNativeSignalViews(holder)
             }
@@ -653,31 +657,53 @@ internal object StatusBarSignalIndependentRuntime {
         }
     }
 
+    private fun nativeSignalViewDescriptor(view: View): String = buildString {
+        if (view.id != View.NO_ID) {
+            runCatching { view.resources.getResourceEntryName(view.id) }
+                .getOrNull()?.let { append(it).append(' ') }
+        }
+        append(view.javaClass.name).append(' ')
+        append(view.contentDescription ?: "")
+    }.lowercase()
+
+    private fun isWifiLikeNativeView(view: View): Boolean {
+        val descriptor = nativeSignalViewDescriptor(view).filter { it.isLetterOrDigit() }
+        return descriptor.contains("wifi") || descriptor.contains("wlan") ||
+            descriptor.contains("wireless")
+    }
+
     private fun hideNativeSignalViews(holder: Holder) {
         val density = holder.statusBarView.resources.displayMetrics.density.coerceAtLeast(1f)
         collectDescendants(holder.parent).forEach { view ->
             if (view === holder.root || view === holder.bars || isDescendantOf(view, holder.root)) return@forEach
             if (view.width > 0 && view.width / density > 80f) return@forEach
             if (view.height > 0 && view.height / density > 48f) return@forEach
-            val descriptor = buildString {
-                if (view.id != View.NO_ID) {
-                    runCatching { view.resources.getResourceEntryName(view.id) }
-                        .getOrNull()?.let { append(it).append(' ') }
-                }
-                append(view.javaClass.name).append(' ')
-                append(view.contentDescription ?: "")
-            }.lowercase()
-            val positive = descriptor.contains("mobile") || descriptor.contains("signal") ||
-                descriptor.contains("cellular") || descriptor.contains("cell signal") ||
+            val descriptor = nativeSignalViewDescriptor(view)
+            val normalized = descriptor.filter { it.isLetterOrDigit() }
+            val positive = normalized.contains("mobile") || normalized.contains("signal") ||
+                normalized.contains("cellular") || normalized.contains("cellsignal") ||
                 descriptor.contains("移动网络") || descriptor.contains("信号")
-            val negative = descriptor.contains("wifi") || descriptor.contains("bluetooth") ||
-                descriptor.contains("battery") || descriptor.contains("network_speed") ||
-                descriptor.contains("netspeed") || descriptor.contains("clock")
+            // Strip punctuation before matching so "Wi-Fi" is excluded just like "wifi".
+            val negative = normalized.contains("wifi") || normalized.contains("wlan") ||
+                normalized.contains("wireless") || normalized.contains("bluetooth") ||
+                normalized.contains("battery") || normalized.contains("networkspeed") ||
+                normalized.contains("netspeed") || normalized.contains("clock")
             if (!positive || negative) return@forEach
             if (!holder.hiddenNative.containsKey(view)) {
                 holder.hiddenNative[view] = NativeHiddenState(view.alpha, view.visibility)
             }
             view.alpha = 0f
+        }
+    }
+
+    private fun restoreNativeWifiViews(holder: Holder) {
+        val wifiViews = holder.hiddenNative.keys.filter(::isWifiLikeNativeView)
+        wifiViews.forEach { view ->
+            val original = holder.hiddenNative.remove(view) ?: return@forEach
+            if (view.parent != null) {
+                view.alpha = original.alpha
+                view.visibility = original.visibility
+            }
         }
     }
 
