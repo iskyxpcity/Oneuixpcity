@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="status_combo_style_one_category">Three-in-One Combined Icon</string>
+    <string name="status_combo_style_one_group_diagnostics">Diagnostics</string>
+    <string name="status_combo_style_one_debug_log">Debug log</string>
+    <string name="status_combo_style_one_debug_log_summary">Write Wi-Fi visibility and per-SIM signal diagnostics to SystemUI Logcat. Turn this off after troubleshooting.</string>
     <string name="status_combo_style_one_feature_name">Three-in-One Icon Style One</string>
     <string name="status_combo_style_one_preview">Icon preview</string>
     <string name="status_combo_style_one_preview_summary">Compare charging, low-battery and critical colors on dark and light status-bar backgrounds.</string>
