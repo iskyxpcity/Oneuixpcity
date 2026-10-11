@@ -529,6 +529,7 @@ object StatusBarComboStyleOneRuntime {
     }
 
     fun isEnabled(): Boolean = config.enabled
+    fun isNativeWifiSuppressed(): Boolean = config.enabled && config.showWifi
     fun isMobileNativeSuppressed(): Boolean =
         config.enabled && config.showMobile &&
             (config.signalMode == 0 || (config.signalMode == 1 && config.stackedSignal))
