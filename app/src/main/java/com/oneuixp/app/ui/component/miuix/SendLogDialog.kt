@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import com.oneuixp.app.R
 import com.oneuixp.app.ui.util.createOneuiXPDiagnosticShareIntent
+import com.oneuixp.app.ui.util.buildOneuiXPDiagnosticReport
 import com.oneuixp.app.ui.util.buildOneuiXPDiagnosticReportForExport
 import com.oneuixp.app.ui.util.oneuiXPDiagnosticFileName
 import com.oneuixp.app.ui.util.writeOneuiXPDiagnosticReport
