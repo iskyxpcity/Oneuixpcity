@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.oneuixp.app.ui.LocalUiMode
@@ -15,6 +17,8 @@ import com.oneuixp.app.ui.component.material.SegmentedListItem
 import com.oneuixp.app.ui.component.material.oneuiXSegmentedColors
 import io.github.soclear.oneuix.ui.component.LocalOneuiXGroupedPreference
 import top.yukonga.miuix.kmp.basic.Card
+import top.yukonga.miuix.kmp.basic.Text as MiuixText
+import top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme
 
 /**
  * Native status-tab group container.
@@ -26,15 +30,41 @@ import top.yukonga.miuix.kmp.basic.Card
  */
 @Composable
 fun StatusThemeGroup(
+    title: String? = null,
     modifier: Modifier = Modifier,
     items: List<@Composable () -> Unit>,
+    compact: Boolean = false,
+    titleAlignedToContent: Boolean = false,
 ) {
     if (items.isEmpty()) return
 
-    when (LocalUiMode.current) {
+    val titleVerticalPadding = if (compact) 4.dp else 8.dp
+    val groupVerticalPadding = if (compact) 2.dp else 4.dp
+    val titleStartPadding = when (LocalUiMode.current) {
+        UiMode.Material -> if (titleAlignedToContent) 32.dp else 16.dp
+        UiMode.Miuix -> if (titleAlignedToContent) 28.dp else 12.dp
+    }
+
+    Column(modifier = Modifier.fillMaxWidth()) {
+        if (!title.isNullOrBlank()) {
+            when (LocalUiMode.current) {
+                UiMode.Material -> Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.fillMaxWidth().padding(start = titleStartPadding, end = 16.dp, top = titleVerticalPadding, bottom = titleVerticalPadding),
+                )
+                UiMode.Miuix -> MiuixText(
+                    text = title,
+                    color = colorScheme.onBackground,
+                    modifier = Modifier.fillMaxWidth().padding(start = titleStartPadding, end = 12.dp, top = titleVerticalPadding, bottom = titleVerticalPadding),
+                )
+            }
+        }
+        when (LocalUiMode.current) {
         UiMode.Material -> {
             SegmentedColumn(
-                modifier = modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                modifier = modifier.padding(horizontal = 16.dp, vertical = groupVerticalPadding),
                 content = items.map { item ->
                     {
                         CompositionLocalProvider(
@@ -49,7 +79,7 @@ fun StatusThemeGroup(
 
         UiMode.Miuix -> {
             Card(
-                modifier = modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                modifier = modifier.padding(horizontal = 12.dp, vertical = groupVerticalPadding),
             ) {
                 CompositionLocalProvider(
                     LocalOneuiXGroupedPreference provides true,
@@ -59,6 +89,7 @@ fun StatusThemeGroup(
                     }
                 }
             }
+        }
         }
     }
 }

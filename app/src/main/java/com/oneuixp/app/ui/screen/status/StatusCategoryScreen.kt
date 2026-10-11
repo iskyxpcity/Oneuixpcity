@@ -166,7 +166,7 @@ private fun StatusCategoryContent(
                 )
             }
         }
-        StatusCategory.Combo -> {
+        StatusCategory.ComboStyleOne -> {
             val toolsViewModel = viewModel<OneuiXToolsViewModel>()
             val preference = toolsViewModel.preference.collectAsStateWithLifecycle().value
             Column(
@@ -174,7 +174,7 @@ private fun StatusCategoryContent(
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState()),
             ) {
-                StatusComboCategoryControls(
+                StatusComboStyleOneCategoryControls(
                     uiState = preference.systemUI.statusBar,
                     onEvent = toolsViewModel::onSystemUIEvent,
                 )

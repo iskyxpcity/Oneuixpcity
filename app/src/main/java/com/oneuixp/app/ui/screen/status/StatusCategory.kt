@@ -34,9 +34,9 @@ enum class StatusCategory(
         R.drawable.flux_status_power,
         0xFFFF6B6B.toInt(),
     ),
-    Combo(
-        R.string.status_category_combo,
-        R.drawable.status_combo,
+    ComboStyleOne(
+        R.string.status_combo_style_one_category,
+        R.drawable.status_combo_style_one,
         0xFF7C6CFF.toInt(),
     ),
     Signal(

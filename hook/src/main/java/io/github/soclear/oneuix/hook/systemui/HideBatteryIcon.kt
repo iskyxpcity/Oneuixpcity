@@ -120,6 +120,15 @@ internal object HideBatteryIcon {
                 listOf("mBatteryPercentView", "batteryPercentView")
             ) as? TextView
 
+            if (StatusBarComboStyleOneRuntime.shouldHideNativeBatteryIcon()) {
+                collapseBatteryIconLayout(iconView)
+                iconView.visibility = View.GONE
+                // The parent remains a stable anchor for the composite glyph; its own
+                // native child must not reappear when Samsung refreshes charging state.
+                view.visibility = View.VISIBLE
+                return
+            }
+
             if (isBatteryCharging(batteryMeterView)) {
                 restoreBatteryIconLayout(iconView)
                 restoreBatteryMeterPadding(view)

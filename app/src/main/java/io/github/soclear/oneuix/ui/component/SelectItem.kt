@@ -2,6 +2,7 @@ package io.github.soclear.oneuix.ui.component
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.Box
@@ -24,6 +25,7 @@ fun SelectItem(
     icon: ImageVector? = null,
     entries: List<String>,
     selectedIndex: Int,
+    enabled: Boolean = true,
     onSelectedIndexChange: (Int) -> Unit
 ) {
     val safeIndex = if (entries.isEmpty()) 0 else selectedIndex.coerceIn(0, entries.lastIndex)
@@ -32,9 +34,10 @@ fun SelectItem(
     when (LocalUiMode.current) {
         UiMode.Material -> {
             Box(
-                modifier = if (grouped) modifier else modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                modifier = (if (grouped) modifier else modifier.padding(horizontal = 16.dp, vertical = 4.dp)).alpha(if (enabled) 1f else 0.45f),
             ) {
                 SegmentedDropdownItem(
+                    enabled = enabled,
                     icon = icon,
                     colors = oneuiXSegmentedColors(),
                     title = title,
@@ -52,6 +55,7 @@ fun SelectItem(
                 OverlayDropdownPreference(
                     title = title,
                     summary = summary,
+                    enabled = enabled,
                     items = entries,
                     selectedIndex = safeIndex,
                     startAction = icon?.let { imageVector ->
@@ -68,10 +72,10 @@ fun SelectItem(
             }
 
             if (grouped) {
-                Content()
+                Box(modifier = Modifier.alpha(if (enabled) 1f else 0.45f)) { Content() }
             } else {
                 Card(
-                    modifier = modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                    modifier = modifier.padding(horizontal = 12.dp, vertical = 4.dp).alpha(if (enabled) 1f else 0.45f),
                 ) {
                     Content()
                 }

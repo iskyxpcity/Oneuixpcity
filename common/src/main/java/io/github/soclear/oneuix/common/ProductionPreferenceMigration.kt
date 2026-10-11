@@ -50,6 +50,49 @@ object ProductionPreferenceMigration {
                 val oldGap = statusBar["doubleLineClockGapDp"]?.toString()?.toFloatOrNull() ?: 1f
                 updatedStatusBar["modifyDoubleLineClockGap"] = JsonPrimitive(oldGap != 1f)
             }
+            // One-time migrations for the Three-in-One size defaults.
+            val comboRuntime = statusBar["comboStyleOneRuntime"] as? JsonObject
+            if (comboRuntime != null) {
+                val updatedComboRuntime = comboRuntime.toMutableMap()
+                var comboRuntimeChanged = false
+
+                val newDefaultMigrationDone =
+                    (updatedComboRuntime["glyphScaleDefault100MigrationDone"] as? JsonPrimitive)
+                        ?.content?.toBooleanStrictOrNull() == true
+                if (!newDefaultMigrationDone) {
+                    val priorMigrationDone =
+                        (updatedComboRuntime["glyphScaleDefaultMigrationDone"] as? JsonPrimitive)
+                            ?.content?.toBooleanStrictOrNull() == true
+                    val oldScale = updatedComboRuntime["glyphScalePercent"]?.toString()?.toIntOrNull()
+                    if (priorMigrationDone && oldScale == 90) {
+                        updatedComboRuntime["glyphScalePercent"] = JsonPrimitive(100)
+                    }
+                    updatedComboRuntime["glyphScaleDefaultMigrationDone"] = JsonPrimitive(true)
+                    updatedComboRuntime["glyphScaleDefault100MigrationDone"] = JsonPrimitive(true)
+                    comboRuntimeChanged = true
+                }
+
+                val marginResetTo2MigrationDone =
+                    (updatedComboRuntime["outSignalMarginReset2MigrationDone"] as? JsonPrimitive)
+                        ?.content?.toBooleanStrictOrNull() == true
+                if (!marginResetTo2MigrationDone) {
+                    val previousBuild1406MarginMigration =
+                        (updatedComboRuntime["outSignalMarginDefaultMigrationDone"] as? JsonPrimitive)
+                            ?.content?.toBooleanStrictOrNull() == true
+                    val oldMargin = updatedComboRuntime["outSignalMarginDp"]?.toString()?.toIntOrNull() ?: 2
+                    // Build #1406 mistakenly migrated the old 2dp default to 8dp.
+                    // Undo only that value once; preserve other intentionally chosen margins.
+                    if (previousBuild1406MarginMigration && oldMargin == 8) {
+                        updatedComboRuntime["outSignalMarginDp"] = JsonPrimitive(2)
+                    }
+                    updatedComboRuntime["outSignalMarginReset2MigrationDone"] = JsonPrimitive(true)
+                    comboRuntimeChanged = true
+                }
+
+                if (comboRuntimeChanged) {
+                    updatedStatusBar["comboStyleOneRuntime"] = JsonObject(updatedComboRuntime)
+                }
+            }
             if (updatedStatusBar != statusBar) {
                 updatedSystemUI["statusBar"] = JsonObject(updatedStatusBar)
                 changed = true

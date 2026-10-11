@@ -20,6 +20,7 @@ import android.telephony.SubscriptionInfo
 import android.telephony.SubscriptionManager
 import android.telephony.TelephonyCallback
 import android.telephony.TelephonyManager
+import android.util.Log
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
@@ -32,8 +33,10 @@ import io.github.soclear.oneuix.common.Package
 import io.github.soclear.oneuix.common.Preference
 import io.github.soclear.oneuix.common.StatusBarRuntimeBridge
 import io.github.soclear.oneuix.hook.util.PreferenceProvider
+import java.util.Collections
 import java.util.WeakHashMap
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.math.max
 import kotlin.math.roundToInt
 
@@ -67,6 +70,10 @@ internal object StatusBarSignalIndependentRuntime {
         "content://com.oneuixp.app.statusbridge/preferences"
     private const val PHONE_STATUS_BAR_VIEW =
         "com.android.systemui.statusbar.phone.PhoneStatusBarView"
+    private const val MIUI_PHONE_STATUS_BAR_VIEW =
+        "com.android.systemui.statusbar.phone.MiuiPhoneStatusBarView"
+    private const val STATUS_BAR_ICON_VIEW =
+        "com.android.systemui.statusbar.StatusBarIconView"
 
     private data class SignalState(
         val subscriptionId: Int,
@@ -104,6 +111,13 @@ internal object StatusBarSignalIndependentRuntime {
             indicatorColor = color
             visibility = if (nextConfig.enabled && visibleStates().isNotEmpty()) VISIBLE else GONE
             requestLayout()
+            invalidate()
+        }
+
+        fun updateIndicatorColor(color: Int) {
+            if (indicatorColor == color) return
+            indicatorColor = color
+            // Colour changes do not change view geometry.
             invalidate()
         }
 
@@ -207,6 +221,12 @@ internal object StatusBarSignalIndependentRuntime {
     private val installed = AtomicBoolean(false)
     private val watcherStarted = AtomicBoolean(false)
     private val holders = WeakHashMap<View, Holder>()
+    // Cache both positive and negative classifications. StatusBarIconView is also
+    // used by the expanded shade; after the first ancestry check, those shade icons
+    // must not trigger another parent walk on every dark-intensity animation frame.
+    private val collapsedTintViewCache =
+        Collections.synchronizedMap(WeakHashMap<View, Boolean>())
+    @Volatile private var statusBarIconViewClass: Class<*>? = null
     private val mainHandler = Handler(Looper.getMainLooper())
     private val states = LinkedHashMap<Int, SignalState>()
     private val callbacks = LinkedHashMap<Int, Pair<TelephonyManager, TelephonyCallback>>()
@@ -217,11 +237,33 @@ internal object StatusBarSignalIndependentRuntime {
     @Volatile
     private var indicatorColor: Int = Color.WHITE
 
+    private val indicatorColorListeners = CopyOnWriteArrayList<(Int) -> Unit>()
+
     private var subscriptionManager: SubscriptionManager? = null
     private var subscriptionListener: SubscriptionManager.OnSubscriptionsChangedListener? = null
     private var preferenceThread: HandlerThread? = null
     private var preferenceObserver: ContentObserver? = null
     private var runtimeReceiver: BroadcastReceiver? = null
+
+
+    fun addIndicatorColorListener(listener: (Int) -> Unit) {
+        indicatorColorListeners += listener
+        runCatching { listener(indicatorColor) }
+    }
+
+    private fun updateIndicatorColor(nextColor: Int) {
+        if (indicatorColor == nextColor) return
+        indicatorColor = nextColor
+        indicatorColorListeners.forEach { listener ->
+            runCatching { listener(nextColor) }
+        }
+        mainHandler.post {
+            val active = synchronized(holders) { holders.values.toList() }
+            active.forEach { holder ->
+                holder.bars.updateIndicatorColor(nextColor)
+            }
+        }
+    }
 
     fun install(module: XposedModule, param: XposedModuleInterface.PackageReadyParam) {
         if (param.packageName != Package.SYSTEMUI) return
@@ -252,24 +294,55 @@ internal object StatusBarSignalIndependentRuntime {
             }
         }
 
-        // Reuse Samsung's proven dark/light transition as color source only.
+        hookCollapsedStatusBarIconTint(module, param.classLoader)
+    }
+
+    private fun hookCollapsedStatusBarIconTint(module: XposedModule, classLoader: ClassLoader) {
         runCatching {
-            val clockClass = param.classLoader.loadClass(
-                "com.android.systemui.statusbar.policy.QSClockIndicatorView"
-            )
-            clockClass.declaredMethods
-                .filter { it.name == "onDarkChanged" }
+            val iconClass = classLoader.loadClass(STATUS_BAR_ICON_VIEW)
+            statusBarIconViewClass = iconClass
+            var current: Class<*>? = iconClass
+            val methods = mutableListOf<java.lang.reflect.Method>()
+            while (current != null) {
+                methods += current.declaredMethods.filter { method ->
+                    (method.name == "onDarkChanged" || method.name == "setIconColor") &&
+                        method.parameterTypes.any { it == Int::class.javaPrimitiveType }
+                }
+                current = current.superclass
+            }
+            methods.distinctBy { it.name + it.parameterTypes.joinToString { type -> type.name } }
                 .forEach { method ->
+                    val tintIndex = method.parameterTypes.indices.firstOrNull {
+                        method.parameterTypes[it] == Int::class.javaPrimitiveType
+                    } ?: return@forEach
                     module.hook(method).intercept { chain ->
                         val result = chain.proceed()
-                        (chain.thisObject as? TextView)?.let { clock ->
-                            indicatorColor = clock.currentTextColor
-                            mainHandler.post { applyAll() }
+                        val icon = chain.thisObject as? View ?: return@intercept result
+                        val cached = collapsedTintViewCache[icon]
+                        if (cached == false) return@intercept result
+                        if (cached == null) {
+                            val belongsToCollapsedBar = collapsedStatusBarRoot(icon) != null
+                            collapsedTintViewCache[icon] = belongsToCollapsedBar
+                            if (!belongsToCollapsedBar) return@intercept result
                         }
+                        val color = runCatching { chain.getArg(tintIndex) as? Int }.getOrNull()
+                        if (color != null && color != Color.TRANSPARENT) updateIndicatorColor(color)
                         result
                     }
                 }
+        }.onFailure { Log.w("OneuiXPStatusSignal", "Status bar tint hook unavailable", it) }
+    }
+
+    private fun collapsedStatusBarRoot(view: View): ViewGroup? {
+        var node: View? = view
+        while (node != null) {
+            if (node is ViewGroup &&
+                (node.javaClass.name == PHONE_STATUS_BAR_VIEW ||
+                    node.javaClass.name == MIUI_PHONE_STATUS_BAR_VIEW)
+            ) return node
+            node = node.parent as? View
         }
+        return null
     }
 
     private fun sanitize(source: Preference.SystemUI.StatusBarSignalRuntime) = source.copy(
@@ -281,12 +354,28 @@ internal object StatusBarSignalIndependentRuntime {
         endMarginDp = source.endMarginDp.coerceIn(-6f, 12f),
     )
 
+    private fun rememberCollapsedTintViews(statusBar: ViewGroup) {
+        val iconClass = statusBarIconViewClass ?: return
+        val matched = ArrayList<View>()
+        fun visit(view: View) {
+            if (iconClass.isInstance(view)) matched += view
+            if (view is ViewGroup) {
+                for (index in 0 until view.childCount) visit(view.getChildAt(index))
+            }
+        }
+        visit(statusBar)
+        synchronized(collapsedTintViewCache) {
+            matched.forEach { collapsedTintViewCache[it] = true }
+        }
+    }
+
     private fun registerStatusBar(module: XposedModule, raw: View) {
         val statusBar = raw as? ViewGroup ?: return
         if (!statusBar.isLaidOut) {
             statusBar.post { registerStatusBar(module, statusBar) }
             return
         }
+        rememberCollapsedTintViews(statusBar)
         val existing = synchronized(holders) { holders[statusBar] }
         if (existing != null) {
             applyHolder(existing)
@@ -322,10 +411,9 @@ internal object StatusBarSignalIndependentRuntime {
         )
         val holder = Holder(statusBar, parent, root, bars)
         synchronized(holders) { holders[statusBar] = holder }
+        // Mount once after inflation. Reordering the child from every animated
+        // layout callback makes the shade/Quick Panel feel permanently sticky.
         mountBeforeWifi(holder)
-        parent.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
-            if (config.enabled && root.parent === parent) root.post { mountBeforeWifi(holder) }
-        }
         ensurePreferenceWatcher(module, context)
         applyHolder(holder)
     }
@@ -533,11 +621,11 @@ internal object StatusBarSignalIndependentRuntime {
         val density = holder.root.resources.displayMetrics.density
         // Combo owns the cellular signal presentation while enabled. Do not let
         // the independent two-SIM renderer reappear during its own live refresh.
-        if (StatusBarComboRuntime.isEnabled()) {
+        if (StatusBarComboStyleOneRuntime.isEnabled()) {
             // Combo either owns the native signal slots or explicitly hands them
             // back. Do not resurrect an alpha-hidden native icon when Combo is
             // about to fold it; that was the source of transparent empty slots.
-            if (!StatusBarComboRuntime.isMobileNativeSuppressed()) {
+            if (!StatusBarComboStyleOneRuntime.isMobileNativeSuppressed()) {
                 restoreNativeSignalViews(holder)
             }
             holder.root.visibility = View.GONE
