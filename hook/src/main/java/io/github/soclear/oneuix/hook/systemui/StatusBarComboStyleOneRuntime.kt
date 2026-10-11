@@ -68,6 +68,7 @@ object StatusBarComboStyleOneRuntime {
     private const val BATTERY_METER = "com.android.systemui.battery.BatteryMeterView"
     private const val MIUI_BATTERY_METER = "com.android.systemui.statusbar.views.MiuiBatteryMeterView"
     private const val MIUI_BATTERY_CONTAINER = "com.android.systemui.statusbar.views.MiuiStatusBatteryContainer"
+    private const val ICON_HIDE_LIST_KEY = "icon_blacklist"
 
     private val installed = AtomicBoolean(false)
     @Volatile private var moduleForPreferenceReload: XposedModule? = null
@@ -141,6 +142,9 @@ object StatusBarComboStyleOneRuntime {
     private val scheduledBatteryChildPasses = Collections.synchronizedSet(
         Collections.newSetFromMap(WeakHashMap<ViewGroup, Boolean>())
     )
+    // Preserve the SystemUI battery meter's native visibility/layout before the
+    // icon_hide_list callback can suppress it for Style One.
+    private val nativeBatteryLayouts = Collections.synchronizedMap(WeakHashMap<View, LayoutSnapshot>())
     private val glyphInvalidationPending = AtomicBoolean(false)
 
     private data class LayoutSnapshot(
@@ -385,26 +389,12 @@ object StatusBarComboStyleOneRuntime {
                 val battery = host.battery ?: return@forEach
                 val overlay = host.overlay ?: return@forEach
 
-                // A display cutout has a separately calculated anchor. Keep that
-                // route untouched; normal shade drags use the native icon itself.
-                if (cutoutBounds(host.root) != null) {
-                    overlay.update(battery, host.root)
-                    overlay.setShadeVisible(true)
-                    return@forEach
-                }
-
-                if (busy) {
-                    // No add/removeView, zero-sized layout params, or tree scan:
-                    // the window fades out and the native battery icon fades in.
-                    overlay.setShadeVisible(false)
-                    showNativeGlyphForShade(host, battery)
-                } else {
-                    hideNativeGlyphAfterShade(host, battery)
-                    // Position is refreshed only at the transition boundary.
-                    overlay.update(battery, host.root)
-                    overlay.setShadeVisible(true)
-                    overlay.invalidate()
-                }
+                // QuickStar-style native visibility remains authoritative even while the
+                // shade expands. Do not temporarily bring the stock battery surface back.
+                collapseHostView(host, battery)
+                overlay.update(battery, host.root)
+                overlay.setShadeVisible(true)
+                overlay.invalidate()
             }
         }
         if (Looper.myLooper() == Looper.getMainLooper()) update.run() else main.post(update)
@@ -731,17 +721,16 @@ object StatusBarComboStyleOneRuntime {
             val foldMobile = isMobileNativeSuppressed()
 
             views.forEach { view ->
-                if (view === battery || view is GlyphView) return@forEach
-                // QuickStar hides native indicator views themselves. Hide separate battery
-                // icon views too, but let the meter's own child handler manage nested views.
-                val hide = ((isBatteryIcon(view) || slotOf(view)?.contains("battery", ignoreCase = true) == true) && !isWithin(battery, view) && !isWithin(view, battery)) ||
+                if (view === battery || view is GlyphView || isNativeBatteryView(view)) return@forEach
+                // Battery indicators are hidden through the native icon slot / icon_hide_list
+                // contract above. Only the selected network indicators use view-level folding.
+                val hide =
                     (config.showWifi && isWifiIcon(view)) ||
                     (foldMobile && isMobileIcon(view)) ||
                     (config.showMobile && config.mobileTypeMode == 2 && isMobileTypeView(view))
                 if (hide) collapseHostView(host, view) else restoreHostView(host, view)
             }
 
-            if (isBatteryMeterView(battery)) collapseNativeBatteryChildren(battery as ViewGroup)
             if (config.overlayGlyph && !host.overlayFailed) {
                 removeInline(host)
                 val overlay = host.overlay ?: GlyphOverlay(root.context).also { host.overlay = it }
@@ -752,18 +741,14 @@ object StatusBarComboStyleOneRuntime {
                     host.overlay = null
                     collapseHostView(host, battery)
                     insertInline(host, battery)
-                } else if (shadeBusy && cutoutBounds(root) == null) {
-                    reserveHostSlot(host, battery, StatusComboStyleOneGlyphRenderer.glyphWidthDp(config))
-                    overlay.setShadeVisible(false)
-                    showNativeGlyphForShade(host, battery)
                 } else {
+                    // The independent overlay is positioned from the camera/display centre,
+                    // not from the stock battery slot. Collapse the native meter so it neither
+                    // paints over our glyph nor leaves an empty reserved slot at the right edge.
+                    collapseHostView(host, battery)
                     overlay.setShadeVisible(true)
-                    if (cutoutBounds(root) != null) collapseHostView(host, battery)
-                    else {
-                        reserveHostSlot(host, battery, StatusComboStyleOneGlyphRenderer.glyphWidthDp(config))
-                        hideNativeGlyphAfterShade(host, battery)
-                    }
                     overlay.update(battery, root)
+                    overlay.invalidate()
                 }
             } else {
                 host.overlay?.detach()
@@ -1028,8 +1013,11 @@ object StatusBarComboStyleOneRuntime {
     }
 
     private fun collapseHostView(host: Host, view: View) {
-        host.original.putIfAbsent(view, view.visibility)
-        if (!host.layouts.containsKey(view)) snapshotLayout(view)?.let { host.layouts[view] = it }
+        val nativeBatterySnapshot = nativeBatteryLayouts[view]
+        host.original.putIfAbsent(view, nativeBatterySnapshot?.visibility ?: view.visibility)
+        if (!host.layouts.containsKey(view)) {
+            (nativeBatterySnapshot ?: snapshotLayout(view))?.let { host.layouts[view] = it }
+        }
         collapseViewLayout(view)
     }
 
@@ -1332,6 +1320,7 @@ object StatusBarComboStyleOneRuntime {
     }
 
     private fun hookBatteryMeters(module: XposedModule, classLoader: ClassLoader) {
+        val hookedHideListMethods = mutableSetOf<String>()
         listOf(BATTERY_METER, MIUI_BATTERY_METER).forEach { className ->
             runCatching {
                 val cls = classLoader.loadClass(className)
@@ -1343,8 +1332,7 @@ object StatusBarComboStyleOneRuntime {
                 }
                 cls.declaredConstructors.forEach { module.hook(it).intercept(callback) }
                 // Avoid onMeasure/onLayout: both are hot paths during notification
-                // shade expansion. Child suppression is handled on inflation and
-                // on the meter's actual battery/percent update methods instead.
+                // shade expansion. State is read from the native meter's own callbacks.
                 cls.declaredMethods.filter {
                     it.name in setOf(
                         "onFinishInflate", "onAttachedToWindow", "onBatteryLevelChanged",
@@ -1352,8 +1340,72 @@ object StatusBarComboStyleOneRuntime {
                         "scaleBatteryMeterViewsLegacy", "scaleBatteryMeterViews", "updateColors", "onDarkChanged",
                     )
                 }.forEach { module.hook(it).intercept(callback) }
+
+                // Match SystemUI/QuickStar's native icon-hide-list contract. BatteryMeterView
+                // consumes "icon_blacklist" and applies View.GONE itself; pass a temporary
+                // list with the battery slot hidden only while Style One is enabled. Do not
+                // write Settings.Secure, so user/QuickStar preferences remain untouched.
+                var current: Class<*>? = cls
+                val hideListMethods = mutableListOf<java.lang.reflect.Method>()
+                while (current != null) {
+                    hideListMethods += current.declaredMethods.filter { method ->
+                        method.name == "onTuningChanged" &&
+                            method.parameterTypes.size == 2 &&
+                            method.parameterTypes[0] == String::class.java &&
+                            method.parameterTypes[1] == String::class.java
+                    }
+                    current = current.superclass
+                }
+                hideListMethods.distinctBy { it.toGenericString() }.forEach { method ->
+                    if (!hookedHideListMethods.add(method.toGenericString())) return@forEach
+                    module.hook(method).setPriority(100).intercept { chain ->
+                        val args = chain.getArgs().toTypedArray()
+                        val key = args.getOrNull(0) as? String
+                        val meter = chain.thisObject as? ViewGroup
+                        val target = key == ICON_HIDE_LIST_KEY && meter != null &&
+                            isStatusBarBatteryMeter(meter)
+                        val nativeList = args.getOrNull(1) as? String
+                        if (target && meter != null) {
+                            snapshotLayout(meter)?.let { snapshot ->
+                                val userHidesBattery = nativeList?.split(',')?.any {
+                                    it.trim().equals("battery", ignoreCase = true)
+                                } == true
+                                val baseline = if (userHidesBattery) snapshot.copy(visibility = View.GONE) else snapshot
+                                nativeBatteryLayouts.putIfAbsent(meter, baseline)
+                            }
+                            if (config.enabled && nativeList != null) {
+                                args[1] = appendHiddenSlot(nativeList, "battery")
+                            }
+                        }
+                        val result = chain.proceed(args)
+                        if (target && config.enabled && meter != null) {
+                            // Also cover Samsung variants that consume the callback but do
+                            // not use AOSP's helper to update the BatteryMeterView visibility.
+                            if (meter.visibility != View.GONE) meter.visibility = View.GONE
+                        }
+                        result
+                    }
+                }
+                diagnostic("Battery icon-hide-list hook installed for $className (${hideListMethods.size} candidate methods)")
             }.onFailure { diagnostic("Battery meter hook unavailable: $className: $it") }
         }
+    }
+
+    private fun isStatusBarBatteryMeter(view: View): Boolean {
+        if (hostFor(view) != null) return true
+        var current: View? = view
+        while (current != null) {
+            val name = current.javaClass.name
+            if (name == PHONE_BAR || name == MIUI_PHONE_BAR) return true
+            current = current.parent as? View
+        }
+        return false
+    }
+
+    private fun appendHiddenSlot(rawList: String, slot: String): String {
+        val entries = rawList.split(',').map { it.trim() }.filter { it.isNotEmpty() }
+        return if (entries.any { it.equals(slot, ignoreCase = true) }) rawList
+        else (entries + slot).joinToString(",")
     }
 
     private fun scheduleBatteryChildCollapse(meter: ViewGroup) {
@@ -1364,12 +1416,9 @@ object StatusBarComboStyleOneRuntime {
         meter.post {
             try {
                 if (config.enabled && hostFor(meter) != null) {
-                    // HyperDuo reads these resolved MIUI fields on the meter's own
-                    // state-update callbacks; this avoids guessing "charging" from
-                    // PLUGGED alone and keeps quick-charge/low/power-save priority
-                    // aligned with what the stock battery icon itself is showing.
+                    // Keep reading Samsung's resolved charging state, but delegate stock
+                    // icon visibility to the native icon-hide-list/slot visibility path.
                     syncBatteryStateFromMeter(meter)
-                    collapseNativeBatteryChildren(meter)
                 }
             } finally {
                 scheduledBatteryChildPasses.remove(meter)
