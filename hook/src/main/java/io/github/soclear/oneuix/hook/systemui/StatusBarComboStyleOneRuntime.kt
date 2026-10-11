@@ -2891,13 +2891,14 @@ object StatusBarComboStyleOneRuntime {
     }
 
     private fun resolveSignalResourceName(name: String): Int {
-        val normalized = name.lowercase().filter { it.isLetterOrDigit() }
-        if (normalized.contains("wifi") || normalized.contains("wlan") ||
-            normalized.contains("bluetooth") || normalized.contains("airplane")
+        val lower = name.lowercase()
+        val compact = lower.filter { it.isLetterOrDigit() }
+        if (compact.contains("wifi") || compact.contains("wlan") ||
+            compact.contains("bluetooth") || compact.contains("airplane")
         ) return -1
-        val signalIndex = normalized.indexOf("signal")
+        val signalIndex = lower.indexOf("signal")
         if (signalIndex < 0) return -1
-        val suffix = normalized.substring(signalIndex + "signal".length)
+        val suffix = lower.substring(signalIndex + "signal".length)
         // Match an exact numeric token. Do not mistake names such as "signal_4g"
         // for signal-strength level 4.
         return suffix.split(Regex("[^a-z0-9]+"))
