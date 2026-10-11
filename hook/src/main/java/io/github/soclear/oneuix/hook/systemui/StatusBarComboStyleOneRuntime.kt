@@ -509,7 +509,7 @@ object StatusBarComboStyleOneRuntime {
             }
         }
 
-        // Samsung can consume the cutout from view insets but retain it in DisplayInfo.
+        // Samsung can consume the cutout from view insets but retain it in DisplayInfo; this fallback is isolated for compatibility.
         val display = root.display ?: runCatching {
             (root.context.getSystemService(Context.WINDOW_SERVICE) as? WindowManager)?.defaultDisplay
         }.getOrNull()
