@@ -2812,7 +2812,7 @@ object StatusBarComboStyleOneRuntime {
                             "StatusBarMobileView state: subId=$subId strengthId=$strength " +
                                 "resource=$resourceName level=$level"
                         )
-                        if (level in 0..4 && subId >= 0) updateNativeSignalLevel(subId, level)
+                        if (level != null && level in 0..4 && subId >= 0) updateNativeSignalLevel(subId, level)
                         result
                     }
                 }
@@ -3310,7 +3310,7 @@ object StatusBarComboStyleOneRuntime {
             "Native mobile icon state: class=${value.javaClass.simpleName} subId=$subId " +
                 "strength=$strength resource=$resourceName level=$level"
         )
-        if (level in 0..4 && subId >= 0) updateNativeSignalLevel(subId, level)
+        if (level != null && level in 0..4 && subId >= 0) updateNativeSignalLevel(subId, level)
     }
 
     private fun iconValue(iconState: Any?): Int =
