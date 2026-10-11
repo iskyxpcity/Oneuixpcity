@@ -175,11 +175,6 @@ object StatusBarComboStyleOneRuntime {
         // MIUI can host multiple status-bar rows at once. Keep the icon ink tied
         // to the battery's own container, not the whole PhoneStatusBarView.
         var tintRow: ViewGroup? = null
-        // Cache the fallback status-bar centre while the shade animates. Reset it
-        // when the active foldable display geometry changes (cover <-> inner).
-        var overlayCameraCenterYOnScreenPx: Int? = null
-        var overlayDisplayWidthPx: Int? = null
-        var overlayDisplayHeightPx: Int? = null
         val delayedApply = Runnable {
             if (!retired && !applying) StatusBarComboStyleOneRuntime.apply(this)
         }
@@ -215,8 +210,8 @@ object StatusBarComboStyleOneRuntime {
         private val glyph = GlyphView(app)
         private var params: WindowManager.LayoutParams? = null
 
-        fun attach(anchor: View, root: ViewGroup): Boolean {
-            if (params != null) { update(anchor, root); return true }
+        fun attach(anchor: View, root: ViewGroup, cameraBounds: Rect): Boolean {
+            if (params != null) return update(anchor, root, cameraBounds)
             val cfg = StatusBarComboStyleOneRuntime.config
             val width = StatusBarComboStyleOneRuntime.dp(
                 app, StatusComboStyleOneGlyphRenderer.glyphWidthDp(cfg),
@@ -245,8 +240,11 @@ object StatusBarComboStyleOneRuntime {
                 try {
                     wm.addView(glyph, lp)
                     params = lp
-                    diagnostic("Glyph overlay attached: type=$type size=${width}x${height} flags=$flags")
-                    update(anchor, root)
+                    diagnostic("Glyph overlay attached: type=$type size=${width}x${height} flags=$flags cameraBounds=$cameraBounds")
+                    if (!update(anchor, root, cameraBounds)) {
+                        detach()
+                        return false
+                    }
                     return true
                 } catch (error: Throwable) {
                     Log.w(TAG, "Glyph overlay attach failed for type=$type", error)
@@ -278,8 +276,16 @@ object StatusBarComboStyleOneRuntime {
             return result.toList()
         }
 
-        fun update(anchor: View, root: ViewGroup) {
-            val lp = params ?: return
+        fun update(anchor: View, root: ViewGroup, cameraBounds: Rect? = null): Boolean {
+            val lp = params ?: return false
+            val cutout = cameraBounds?.let(::Rect)
+                ?: StatusBarComboStyleOneRuntime.cutoutBounds(root)
+            if (cutout == null) {
+                // Never leave or move a floating glyph to a guessed screen-centre
+                // coordinate when the active display has not supplied camera geometry.
+                diagnostic("Glyph overlay update skipped: no verified active-display cutout bounds")
+                return false
+            }
             val oldX = lp.x
             val oldY = lp.y
             val oldWidth = lp.width
@@ -287,53 +293,30 @@ object StatusBarComboStyleOneRuntime {
             val cfg = StatusBarComboStyleOneRuntime.config
             lp.width = StatusBarComboStyleOneRuntime.dp(app, StatusComboStyleOneGlyphRenderer.glyphWidthDp(cfg))
             lp.height = StatusBarComboStyleOneRuntime.dp(app, StatusComboStyleOneGlyphRenderer.glyphHeightDp(cfg))
-            val cutout = StatusBarComboStyleOneRuntime.cutoutBounds(root)
-            val rootPos = IntArray(2)
-            root.getLocationOnScreen(rootPos)
             val centreRatioX = StatusComboStyleOneGlyphRenderer.glyphCenterRatio(cfg)
             val centreRatioY = StatusComboStyleOneGlyphRenderer.glyphVerticalCenterRatio(cfg)
-            // Samsung versions differ in whether the punch-hole is exposed through
-            // WindowInsets. If absent, use the display centre, never the old battery slot.
-            val screenCentreX = cutout?.centerX()
-                ?: (rootPos[0] + (root.width.takeIf { it > 0 } ?: app.resources.displayMetrics.widthPixels) / 2)
+            // Use the active status bar/display's reported cutout rectangle. Fold inner
+            // screens can place the camera well to the right of the geometric centre.
+            val cameraCenterX = cutout.centerX()
+            val cameraCenterY = cutout.centerY()
             lp.x = (
-                screenCentreX - lp.width * centreRatioX +
+                cameraCenterX - lp.width * centreRatioX +
                     StatusBarComboStyleOneRuntime.dpExact(
                         app, cfg.glyphOffsetXDp + cfg.glyphLeftMarginDp - cfg.glyphRightMarginDp,
                     )
                 ).roundToInt()
-            val host = StatusBarComboStyleOneRuntime.hosts[root]
-            val displaySize = StatusBarComboStyleOneRuntime.activeDisplaySize(root)
-            if (host != null && (
-                    host.overlayDisplayWidthPx != displaySize.x ||
-                    host.overlayDisplayHeightPx != displaySize.y
-                )
-            ) {
-                // A fold transition can reuse the SystemUI host. Never carry the
-                // cover screen's fallback Y coordinate onto the inner display.
-                host.overlayDisplayWidthPx = displaySize.x
-                host.overlayDisplayHeightPx = displaySize.y
-                host.overlayCameraCenterYOnScreenPx = null
-                diagnostic("Active display changed to ${displaySize.x}x${displaySize.y}; resetting punch-hole fallback")
-            }
-            val fallbackCentreY = host?.overlayCameraCenterYOnScreenPx
-                ?: (rootPos[1] + root.height / 2).also {
-                    if (host != null) host.overlayCameraCenterYOnScreenPx = it
-                }
-            val screenCentreY = cutout?.centerY() ?: fallbackCentreY
             lp.y = (
-                screenCentreY - lp.height * centreRatioY +
+                cameraCenterY - lp.height * centreRatioY +
                     StatusBarComboStyleOneRuntime.dpExact(
                         app, cfg.glyphOffsetYDp + PUNCH_HOLE_VERTICAL_CALIBRATION_DP,
                     )
                 ).roundToInt()
-            diagnostic("Glyph overlay coordinates: type=${lp.type} screenCenter=(${screenCentreX},${screenCentreY}) window=(${lp.x},${lp.y}) size=${lp.width}x${lp.height} cutout=${cutout ?: "none"}")
-            // updateViewLayout invalidates/remeasures the overlay when its bounds
-            // actually changed. Do not force an extra draw for every status-bar
-            // layout callback during shade expansion.
+            diagnostic("Glyph overlay coordinates: type=${lp.type} cameraCenter=(${cameraCenterX},${cameraCenterY}) window=(${lp.x},${lp.y}) size=${lp.width}x${lp.height} cutout=$cutout")
             if (oldX != lp.x || oldY != lp.y || oldWidth != lp.width || oldHeight != lp.height) {
                 runCatching { wm.updateViewLayout(glyph, lp) }
+                    .onFailure { Log.w(TAG, "Cannot update camera-anchored glyph window", it) }
             }
+            return true
         }
         fun setTintOverride(color: Int?) { glyph.setTintOverride(color) }
         fun invalidate() { glyph.invalidate() }
@@ -534,68 +517,96 @@ object StatusBarComboStyleOneRuntime {
         return point
     }
 
-    private fun punchHoleCenterTolerancePx(root: View, screenWidth: Int): Int =
-        max(dpExact(root.context, 48), (screenWidth * 0.12f).roundToInt())
-
+    /**
+     * Resolve the actual camera cutout for the currently attached SystemUI root.
+     *
+     * Do not assume the punch-hole sits near the horizontal centre. Samsung foldable
+     * inner displays can put the camera well to the right. A reported rectangle is
+     * accepted only when it fits the active display and touches the top edge where
+     * the status bar is hosted. If no such rectangle is reported, return null so the
+     * caller uses the inline renderer instead of fabricating centre coordinates.
+     */
     private fun cutoutBounds(root: View): Rect? {
         if (Build.VERSION.SDK_INT < 28) return null
 
         val display = root.display ?: runCatching {
             (root.context.getSystemService(Context.WINDOW_SERVICE) as? WindowManager)?.defaultDisplay
         }.getOrNull()
-        val screenWidth = activeDisplaySize(root).x
-        val screenCenterX = screenWidth / 2
-        val tolerance = punchHoleCenterTolerancePx(root, screenWidth)
+        val displaySize = activeDisplaySize(root)
+        val screenWidth = displaySize.x
+        val screenHeight = displaySize.y
+        if (screenWidth <= 0 || screenHeight <= 0) return null
 
-        // Reject a cutout that is geometrically centred on the cover display but
-        // not on the currently active inner display. Some foldable firmware keeps
-        // both display/cutout metadata objects alive across a fold transition.
+        val horizontalTolerance = dpExact(root.context, 8).coerceAtLeast(1)
+        val edgeTolerance = dpExact(root.context, 8).coerceAtLeast(1)
+        val topBand = max(dpExact(root.context, 64), (screenHeight * 0.12f).roundToInt())
+
+        fun selectTopCutout(bounds: List<Rect>, source: String): Rect? {
+            val candidates = bounds.filter { rect ->
+                rect.width() > 0 &&
+                    rect.height() > 0 &&
+                    rect.left >= -horizontalTolerance &&
+                    rect.right <= screenWidth + horizontalTolerance &&
+                    rect.top >= -edgeTolerance &&
+                    rect.top <= edgeTolerance &&
+                    rect.bottom <= topBand &&
+                    rect.bottom <= screenHeight + edgeTolerance
+            }
+            val selected = candidates.maxByOrNull { it.width().toLong() * it.height().toLong() }
+                ?: return null
+            val result = Rect(selected)
+            diagnostic(
+                "Punch-hole source=$source bounds=$result displayId=${display?.displayId} " +
+                    "activeDisplay=${screenWidth}x${screenHeight}; horizontal position from reported geometry"
+            )
+            return result
+        }
+
+        // WindowInsets belongs to the current status-bar root and may be fresher
+        // than reflected DisplayInfo while a fold/unfold transition is in flight.
+        // Samsung builds vary in coordinate space, so try mapping from the attached
+        // root to screen coordinates first, then try raw coordinates if already valid.
+        val windowCutout = readWindowCutout(root)
+        if (windowCutout != null) {
+            val windowRoot = root.rootView
+            val location = IntArray(2)
+            windowRoot.getLocationOnScreen(location)
+            val localBounds = windowCutout.boundingRects.filter { it.width() > 0 && it.height() > 0 }
+            val mappedBounds = localBounds.map { Rect(it).apply { offset(location[0], location[1]) } }
+            selectTopCutout(mappedBounds, "WindowInsets-mapped root=${location.contentToString()}")?.let {
+                return it
+            }
+            selectTopCutout(localBounds, "WindowInsets-raw")?.let {
+                diagnostic("WindowInsets bounds already matched active display coordinate space")
+                return it
+            }
+            diagnostic(
+                "WindowInsets did not yield a valid top-edge cutout: local=$localBounds " +
+                    "root=${location.contentToString()} activeDisplay=${screenWidth}x${screenHeight}"
+            )
+        }
+
+        // DisplayInfo gives display-space geometry and is the next source. A camera
+        // rectangle is not rejected just because its X coordinate is far from centre.
         val displayCutout = readDisplayCutout(display)
         if (displayCutout != null) {
-            val bounds = displayCutout.boundingRects.filter { it.width() > 0 && it.height() > 0 }
-            val selected = bounds.minByOrNull { abs(it.centerX() - screenCenterX) }
-            if (selected != null) {
-                val delta = abs(selected.centerX() - screenCenterX)
-                if (delta <= tolerance) {
-                    diagnostic("Punch-hole source=DisplayInfo bounds=$selected screenWidth=$screenWidth delta=$delta")
-                    return Rect(selected)
-                }
-                diagnostic("Ignoring stale DisplayInfo cutout=$selected activeScreenWidth=$screenWidth centerX=$screenCenterX delta=$delta tolerance=$tolerance")
-                // Do not use safeInsetTop from a mismatched display's cutout.
-            } else {
-                val safeTop = displayCutout.safeInsetTop
-                if (safeTop > 0) {
-                    val screenY = safeTop / 2
-                    diagnostic("Punch-hole source=DisplayInfo safeTop=$safeTop center=($screenCenterX,$screenY)")
-                    return Rect(screenCenterX - 1, screenY - 1, screenCenterX + 1, screenY + 1)
-                }
-            }
+            selectTopCutout(displayCutout.boundingRects, "DisplayInfo")?.let { return it }
+            diagnostic(
+                "DisplayInfo did not provide a valid active-display top-edge cutout: " +
+                    "bounds=${displayCutout.boundingRects} safeTop=${displayCutout.safeInsetTop} " +
+                    "activeDisplay=${screenWidth}x${screenHeight}"
+            )
+        } else {
+            diagnostic(
+                "No DisplayInfo cutout available: displayId=${display?.displayId} " +
+                    "activeDisplay=${screenWidth}x${screenHeight}"
+            )
         }
 
-        // WindowInsets bounds are first mapped from their root/window coordinate
-        // space, then checked against the active screen centre as well.
-        val windowCutout = readWindowCutout(root) ?: return null
-        val bounds = windowCutout.boundingRects.filter { it.width() > 0 && it.height() > 0 }
-        val windowRoot = root.rootView
-        val location = IntArray(2)
-        windowRoot.getLocationOnScreen(location)
-        val selected = bounds.minByOrNull { abs(it.centerX() - (windowRoot.width.takeIf { w -> w > 0 } ?: screenWidth) / 2) }
-        if (selected != null) {
-            val mapped = Rect(selected).apply { offset(location[0], location[1]) }
-            val delta = abs(mapped.centerX() - screenCenterX)
-            if (delta <= tolerance) {
-                diagnostic("Punch-hole source=WindowInsets local=$selected root=${location.contentToString()} mapped=$mapped")
-                return mapped
-            }
-            diagnostic("Ignoring stale WindowInsets cutout local=$selected mapped=$mapped activeScreenWidth=$screenWidth delta=$delta tolerance=$tolerance")
-            return null
-        }
-        val safeTop = windowCutout.safeInsetTop
-        if (safeTop > 0) {
-            val screenY = location[1] + safeTop / 2
-            diagnostic("Punch-hole source=WindowInsets safeTop=$safeTop center=($screenCenterX,$screenY)")
-            return Rect(screenCenterX - 1, screenY - 1, screenCenterX + 1, screenY + 1)
-        }
+        // safeInsetTop describes avoidance depth, not the camera's horizontal location.
+        // It is insufficient for positioning an independent window, so never synthesize
+        // a fake cutout around the display centre.
+        diagnostic("No verified camera rectangle for active display; independent overlay must not use screen centre")
         return null
     }
 
@@ -907,23 +918,35 @@ object StatusBarComboStyleOneRuntime {
             }
 
             if (config.overlayGlyph && !host.overlayFailed) {
-                removeInline(host)
-                val overlay = host.overlay ?: GlyphOverlay(root.context).also { host.overlay = it }
-                overlay.setTintOverride(host.rowTint)
-                if (!overlay.attach(battery, root)) {
-                    host.overlayFailed = true
-                    overlay.detach()
+                val cameraBounds = cutoutBounds(root)
+                if (cameraBounds == null) {
+                    // If Samsung does not expose reliable active-display geometry, never
+                    // guess the whole-screen centre. Fall back in-slot and retry on the next
+                    // host/configuration pass instead of leaving a misplaced floating window.
+                    diagnostic("Independent glyph overlay unavailable: missing verified cutout geometry; using inline renderer")
+                    host.overlay?.detach()
                     host.overlay = null
+                    removeInline(host)
                     collapseHostView(host, battery)
                     insertInline(host, battery)
                 } else {
-                    // The independent overlay is positioned from the camera/display centre,
-                    // not from the stock battery slot. Collapse the native meter so it neither
-                    // paints over our glyph nor leaves an empty reserved slot at the right edge.
-                    collapseHostView(host, battery)
-                    overlay.setShadeVisible(true)
-                    overlay.update(battery, root)
-                    overlay.invalidate()
+                    removeInline(host)
+                    val overlay = host.overlay ?: GlyphOverlay(root.context).also { host.overlay = it }
+                    overlay.setTintOverride(host.rowTint)
+                    if (!overlay.attach(battery, root, cameraBounds)) {
+                        host.overlayFailed = true
+                        overlay.detach()
+                        host.overlay = null
+                        collapseHostView(host, battery)
+                        insertInline(host, battery)
+                    } else {
+                        // Anchor the independent renderer to the reported camera rectangle,
+                        // never a presumed centre. Collapse the native meter to avoid overdraw.
+                        collapseHostView(host, battery)
+                        overlay.setShadeVisible(true)
+                        overlay.update(battery, root, cameraBounds)
+                        overlay.invalidate()
+                    }
                 }
             } else {
                 host.overlay?.detach()
