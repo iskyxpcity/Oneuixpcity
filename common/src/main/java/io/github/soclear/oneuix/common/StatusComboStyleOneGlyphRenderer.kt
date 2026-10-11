@@ -162,6 +162,12 @@ object StatusComboStyleOneGlyphRenderer {
         }
     }
 
+    /** Vertical anchor of the battery-ring centre inside the active glyph bounds. */
+    fun glyphVerticalCenterRatio(config: StatusBarComboStyleOneRuntime): Float {
+        val dualBottomExtra = if (usesDualSignalBelowRing(config)) (DUAL_BOTTOM_HEIGHT - HEIGHT) / 2f else 0f
+        return (B_CY + dualBottomExtra) / designHeight(config)
+    }
+
     fun glyphHeightDp(config: StatusBarComboStyleOneRuntime): Int =
         (baseGlyphHeightDp(config).toFloat() * designHeight(config) / HEIGHT)
             .roundToInt().coerceAtLeast(18)
