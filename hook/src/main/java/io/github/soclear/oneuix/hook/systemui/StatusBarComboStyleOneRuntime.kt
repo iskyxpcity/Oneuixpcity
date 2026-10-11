@@ -2860,7 +2860,7 @@ object StatusBarComboStyleOneRuntime {
                 if (view != null && wifiClass != null && wifiClass.isInstance(view) &&
                     config.enabled && config.showWifi
                 ) {
-                    val args = chain.args
+                    val args = chain.args.toTypedArray()
                     val requested = args.getOrNull(0) as? Int ?: View.VISIBLE
                     if (lastNativeWifiVisibilityRequests.put(view, requested) != requested) {
                         diagnostic(
