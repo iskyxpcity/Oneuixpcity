@@ -2914,6 +2914,24 @@ object StatusBarComboStyleOneRuntime {
                 result
             }
         }.onFailure { diagnostic("Modern status-bar signal drawable hook unavailable: $it") }
+        runCatching {
+            // Some SystemUI versions update Drawable.level directly after the ImageView was
+            // bound; observing ImageView setters alone misses those per-signal state changes.
+            val setDrawableLevel = android.graphics.drawable.Drawable::class.java.getDeclaredMethod(
+                "setLevel", Int::class.javaPrimitiveType!!,
+            )
+            module.hook(setDrawableLevel).intercept { chain ->
+                val result = chain.proceed()
+                val drawable = chain.thisObject as? android.graphics.drawable.Drawable
+                val image = drawable?.callback as? android.widget.ImageView
+                if (image != null && config.enabled &&
+                    drawable.javaClass.name.contains("SignalDrawable", ignoreCase = true)
+                ) {
+                    captureModernSignalDrawable(image, drawable.level)
+                }
+                result
+            }
+        }.onFailure { diagnostic("Modern status-bar drawable-level hook unavailable: $it") }
         diagnostic("Modern status-bar rendered signal observer installed")
     }
 
@@ -2957,6 +2975,30 @@ object StatusBarComboStyleOneRuntime {
         return readObjectMember(viewModel, "iconModel", "signalIconModel", "signalStrengthModel")
     }
 
+    /**
+     * Return true/false only when Android's network tracker has a usable answer.
+     * WifiManager RSSI may be -127 during a transient modern-pipeline update, even while
+     * the native status-bar Wi-Fi view was visibly connected.
+     */
+    private fun isWifiTransportConnected(context: Context): Boolean? {
+        val connectivity = context.getSystemService(Context.CONNECTIVITY_SERVICE)
+            as? android.net.ConnectivityManager ?: return null
+        val networks = runCatching { connectivity.allNetworks }.getOrNull() ?: return null
+        if (networks.any { network ->
+                val capabilities = runCatching {
+                    connectivity.getNetworkCapabilities(network)
+                }.getOrNull()
+                capabilities?.hasTransport(android.net.NetworkCapabilities.TRANSPORT_WIFI) == true
+            }
+        ) return true
+        val wifi = context.getSystemService(Context.WIFI_SERVICE) as? WifiManager
+        val info = runCatching { wifi?.connectionInfo }.getOrNull()
+        if (wifi?.isWifiEnabled == true && info != null &&
+            info.networkId >= 0 && info.rssi != -127
+        ) return true
+        return false
+    }
+
     private fun hookModernWifiVisibility(module: XposedModule, classLoader: ClassLoader) {
         val className = "com.android.systemui.statusbar.pipeline.wifi.ui.view.ModernStatusBarWifiView"
         runCatching {
@@ -2980,20 +3022,27 @@ object StatusBarComboStyleOneRuntime {
                     val args = chain.args.toTypedArray()
                     val requested = args.getOrNull(0) as? Int ?: View.VISIBLE
                     if (!nativeWifiBaselineVisibility.containsKey(view)) {
-                        // While Combo currently hides the view, its incoming visibility may
-                        // already be folded; use the pre-call view state in that case.
-                        nativeWifiBaselineVisibility[view] =
-                            if (config.showWifi) view.visibility else requested
+                        // The incoming argument may be a stale asynchronous Binder request.
+                        // Recover the pre-Combo visibility snapshot first; only then fall back to
+                        // the current pre-call view state. Never treat the first requested GONE
+                        // value itself as proof that the native slot was originally hidden.
+                        val savedVisibility = synchronized(hosts) {
+                            hosts.values.firstNotNullOfOrNull { host ->
+                                host.original[view] ?: host.layouts[view]?.visibility
+                            }
+                        }
+                        nativeWifiBaselineVisibility[view] = savedVisibility ?: view.visibility
                     }
                     val nativeWasVisible = nativeWifiBaselineVisibility[view] == View.VISIBLE
+                    val wifiConnected = isWifiTransportConnected(view.context)
                     val forced = when {
                         // The combined glyph owns Wi-Fi drawing; prevent a later binder update
                         // from making Samsung's native modern Wi-Fi view flash over it.
                         config.showWifi -> View.GONE
-                        // When the arc is off, hand visibility back to SystemUI. If its native
-                        // view was visible and Wi-Fi is connected, resist a stale GONE request
-                        // from the previous folded state. Preserve an originally hidden native slot.
-                        state.wifiLevel >= 0 && nativeWasVisible -> View.VISIBLE
+                        // When the arc is disabled, restore a previously visible native slot
+                        // even if WifiManager RSSI is temporarily unknown. Respect GONE only when
+                        // the system network tracker confirms Wi-Fi is no longer connected.
+                        nativeWasVisible && wifiConnected != false -> View.VISIBLE
                         else -> requested
                     }
                     val snapshot = "$requested->$forced|showWifi=${config.showWifi}|wifiLevel=${state.wifiLevel}"
