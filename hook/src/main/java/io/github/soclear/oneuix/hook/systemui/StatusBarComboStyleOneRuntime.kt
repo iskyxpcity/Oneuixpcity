@@ -896,11 +896,11 @@ object StatusBarComboStyleOneRuntime {
                 val nativeBatteryIndicator = isBatteryIcon(view) ||
                     (slotOf(view) ?: knownIconSlots[view])?.contains("battery", ignoreCase = true) == true
                 if (view === battery || view is GlyphView || nativeBatteryIndicator) return@forEach
-                // Wi-Fi visibility is controlled only through the native icon slot,
-                // matching QuickStar's own approach. Do not also collapse the view:
-                // that second hide path can win after a one-frame native restoration.
-                // Mobile/type indicators retain their existing view-level folding.
+                // Keep Wi-Fi on the established view/layout path for now. The
+                // experimental native Wi-Fi slot interception is disabled after a
+                // SystemUI/LSPosed stability regression.
                 val hide =
+                    (config.showWifi && isWifiIcon(view)) ||
                     (foldMobile && isMobileIcon(view)) ||
                     (config.showMobile && config.mobileTypeMode == 2 && isMobileTypeView(view))
                 if (hide) collapseHostView(host, view) else restoreHostView(host, view)
@@ -1152,6 +1152,7 @@ object StatusBarComboStyleOneRuntime {
 
     private fun containerSuppressionFingerprint(container: ViewGroup): Int {
         var key = 17
+        key = 31 * key + if (config.enabled && config.showWifi) 1 else 0
         key = 31 * key + if (isMobileNativeSuppressed()) 1 else 0
         key = 31 * key + if (config.showMobile && config.mobileTypeMode == 2) 1 else 0
         key = 31 * key + container.childCount
@@ -1185,11 +1186,12 @@ object StatusBarComboStyleOneRuntime {
         val host = hostFor(container) ?: return
         descendants(container).forEach { view ->
             if (view is GlyphView) return@forEach
-            // Wi-Fi is hidden/restored exclusively via setIconVisibility(slot),
-            // never by collapsing the icon view itself. This prevents the view
-            // tree from re-hiding it after the native slot briefly reappears.
+            // Roll back the experimental Wi-Fi native-slot interception.
+            // Use the established per-view/layout suppression path until the
+            // SystemUI crash has been isolated and a safer slot API is verified.
             val hide = config.enabled && (
-                (isMobileNativeSuppressed() && isMobileIcon(view)) ||
+                (config.showWifi && isWifiIcon(view)) ||
+                    (isMobileNativeSuppressed() && isMobileIcon(view)) ||
                     (config.showMobile && config.mobileTypeMode == 2 && isMobileTypeView(view))
             )
             if (hide) collapseHostView(host, view) else restoreHostView(host, view)
@@ -2042,12 +2044,7 @@ object StatusBarComboStyleOneRuntime {
                                 tintIconClassifications[view] = classifyTintIcon(view)
                             }
                             if (shouldSuppressSlot(slot)) {
-                                // Wi-Fi is managed through the native slot controller only.
-                                // Never zero the view's own dimensions, which can survive
-                                // QuickStar-style slot restoration.
-                                if (!isManagedWifiSlot(slot) && view.parent is ViewGroup) {
-                                    collapseHostView(host, view)
-                                }
+                                if (view.parent is ViewGroup) collapseHostView(host, view)
                             } else {
                                 restoreHostView(host, view)
                             }
@@ -2113,9 +2110,10 @@ object StatusBarComboStyleOneRuntime {
                     // Keep the icon controller's semantic visibility in sync with
                     // the view tree. New status-bar icons may ignore View.VISIBLE if
                     // their holder/binding still says the slot is hidden.
+                    // Keep this native-slot hook battery-only. Extending it to Wi-Fi
+                    // was the latest high-risk change preceding the LSPosed safe mode.
                     val batterySlot = slot?.contains("battery", ignoreCase = true) == true
-                    val wifiSlot = slot?.let(::isManagedWifiSlot) == true
-                    val managedSlot = batterySlot || wifiSlot
+                    val managedSlot = batterySlot
                     val visibleIndex = when {
                         args.getOrNull(1) is Boolean -> 1
                         args.size >= 3 && args.getOrNull(1) is Int && args.getOrNull(2) is Boolean -> 2
