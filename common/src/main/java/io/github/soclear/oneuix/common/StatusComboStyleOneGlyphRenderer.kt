@@ -48,6 +48,7 @@ object StatusComboStyleOneGlyphRenderer {
     private const val OUTSIDE_TYPE_REFERENCE_WIDTH = 78f
     // Without a signal lane, trim the empty leading edge by about 2.5dp.
     private const val OUTSIDE_TYPE_ONLY_REFERENCE_WIDTH = 87f
+    private const val OUTSIDE_TYPE_REFERENCE_SIZE_DP = 14f
     private const val OUTSIDE_TYPE_RIGHT_GAP = 3.5f
     // Out-of-ring-type-only mode should not reserve the unused signal-pillars lane.
     private const val TYPE_ONLY_SHIFT = 60f
@@ -162,7 +163,7 @@ object StatusComboStyleOneGlyphRenderer {
         } else {
             OUTSIDE_TYPE_ONLY_REFERENCE_WIDTH
         }
-        outsideTypeLabelWidth(config, networkType) - referenceWidth
+        (outsideTypeLabelWidth(config, networkType) - referenceWidth) / 2f
     } else 0f
 
     private fun designWidth(
@@ -193,14 +194,7 @@ object StatusComboStyleOneGlyphRenderer {
         (designWidth(config, networkType) * baseGlyphHeightDp(config).toFloat() / HEIGHT)
             .roundToInt().coerceAtLeast(20)
 
-    /** Width change in dp; inline hosts offset their leading margin so the ring stays anchored. */
-    fun glyphContentWidthDeltaDp(
-        config: StatusBarComboStyleOneRuntime,
-        networkType: String,
-    ): Float = outsideTypeWidthDelta(config, networkType) *
-        baseGlyphHeightDp(config).toFloat() / HEIGHT
-
-    /** Horizontal anchor of the battery centre within the active glyph bounds. */
+removeMarginCompensationHelper    /** Horizontal anchor of the battery centre within the active glyph bounds. */
     fun glyphCenterRatio(config: StatusBarComboStyleOneRuntime, networkType: String = ""): Float {
         val signalMargin = outsideSignalMargin(config)
         val signalWidth = outsideSignalWidth(config)
@@ -431,7 +425,7 @@ object StatusComboStyleOneGlyphRenderer {
             // compensates for cutout anchoring when the signal lane changes width, so the
             // label's on-screen position remains governed by its existing left/right margins.
             val typeGapOffset = if (outsideSignal) signalMargin else 0f
-            val typeCenterShift = typeWidthDelta / 2f
+            val typeCenterShift = typeWidthDelta
             val typeReferenceWidth = if (outsideSignal) {
                 OUTSIDE_TYPE_REFERENCE_WIDTH
             } else {
@@ -446,8 +440,10 @@ object StatusComboStyleOneGlyphRenderer {
                         170f + typeGapOffset - typeOnlyShift + typeCenterShift,
                     )
             val size = config.outTypeSizeDp.coerceIn(8, 26) * m
+            // Keep the text's visual centre fixed as its size changes, rather than pinning its baseline.
+            val baseline = 67f + (size - OUTSIDE_TYPE_REFERENCE_SIZE_DP * m) * CAP_CENTER_RATIO
             // Use the full measured text width; the host bounds expand/contract with this label.
-            drawNetworkType(canvas, state.networkType.trim().uppercase(), center, 67f,
+            drawNetworkType(canvas, state.networkType.trim().uppercase(), center, baseline,
                 size, config.typeWeight, tint, config.typeSuffixScale, 0f)
         }
         canvas.restoreToCount(save)
