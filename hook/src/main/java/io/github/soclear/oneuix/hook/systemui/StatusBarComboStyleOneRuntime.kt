@@ -1498,8 +1498,9 @@ object StatusBarComboStyleOneRuntime {
         val iconRight = lastVisibleStatusIconRightScreenPx(root) ?: return null
         val viewLocation = IntArray(2)
         if (runCatching { view.getLocationOnScreen(viewLocation) }.isFailure) return null
-        // Keep a small, real gap between the custom label and the last visible native icon.
-        return (iconRight + dpExact(view.context, 2) - viewLocation[0]).toFloat()
+        // Keep a tight 1dp gap between the custom lane and the last visible native icon.
+        // The same boundary is used by both the outside network type and outside signal lanes.
+        return (iconRight + dpExact(view.context, 1) - viewLocation[0]).toFloat()
     }
 
     private fun descendants(root: View): List<View> {
