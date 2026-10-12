@@ -40,6 +40,10 @@ object StatusComboStyleOneGlyphRenderer {
     private const val DUAL_BOTTOM_ROW_TWO_Y = 122.5f
     private const val DUAL_BOTTOM_DOT_RAISE_DP = 3f
     private const val WIDE_OFFSET = 144.5f
+    // Reserve trailing canvas room for the complete outer ring stroke and antialiasing
+    // when a network-type label is drawn outside. This widens only the host bounds;
+    // the ring itself remains anchored to the display cutout.
+    private const val OUTSIDE_TYPE_RIGHT_CLEARANCE = 8f
     // Outside-type-only mode should not reserve the unused signal-pillars lane.
     private const val TYPE_ONLY_SHIFT = 60f
     private const val B_CX = 59.5f
@@ -135,10 +139,10 @@ object StatusComboStyleOneGlyphRenderer {
         return when {
             // With only the outside network label enabled, remove the signal-pillars
             // lane from the host bounds instead of leaving a transparent placeholder.
-            typeLane && signalLane -> WIDE_WIDTH + margin * 2f
+            typeLane && signalLane -> WIDE_WIDTH + margin * 2f + OUTSIDE_TYPE_RIGHT_CLEARANCE
             // Add room to the left when the network label is outside by itself,
             // so increasing the gap moves the ring right relative to the label.
-            typeLane -> WIDE_WIDTH - TYPE_ONLY_SHIFT + margin
+            typeLane -> WIDE_WIDTH - TYPE_ONLY_SHIFT + margin + OUTSIDE_TYPE_RIGHT_CLEARANCE
             signalLane -> outsideSignalWidth(config) + margin + COMPACT_WIDTH - 8f
             else -> COMPACT_WIDTH
         }
