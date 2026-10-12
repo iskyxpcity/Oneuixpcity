@@ -121,6 +121,7 @@ object StatusBarComboStyleOneRuntime {
     private val renderedSignalLevels = ConcurrentHashMap<Int, Int>()
     private val modernMobileViewModels = ConcurrentHashMap<Int, WeakReference<Any>>()
     private val modernMobileViewSubscriptionIds = Collections.synchronizedMap(WeakHashMap<View, Int>())
+    private val lastModernSignalSamplingDiagnostics = ConcurrentHashMap<String, String>()
     @Volatile private var modernMobileViewClass: Class<*>? = null
     private val lastModernPipelineSignalDiagnostics = ConcurrentHashMap<Int, String>()
     private val lastModernPipelineLevelDiagnostics = ConcurrentHashMap<Int, String>()
@@ -2699,6 +2700,8 @@ object StatusBarComboStyleOneRuntime {
         nativeSignalLevels.keys.filter { it !in activeIds }.forEach { nativeSignalLevels.remove(it) }
         renderedSignalLevels.keys.filter { it !in activeIds }.forEach { renderedSignalLevels.remove(it) }
         lastSubscriptionSignalLevels.keys.filter { it !in activeIds }.forEach { lastSubscriptionSignalLevels.remove(it) }
+        // Read the live collapsed-status-bar SignalDrawable before falling back to TelephonyManager.
+        sampleModernStatusBarSignalDrawables()
         var dataLevel = -1
         var simOne = -1
         var simTwo = -1
@@ -2886,6 +2889,8 @@ object StatusBarComboStyleOneRuntime {
                                 diagnostic("Modern status-bar mobile pipeline: current icon level unavailable for subId=$subId")
                             }
                             scheduleTelephonyRefresh()
+                            // Binding can finish before the mobile view is attached; sample again on main.
+                            main.post { sampleModernStatusBarSignalDrawables() }
                         }
                     } else {
                         val signature = chain.args.mapIndexed { index, argument ->
@@ -2984,6 +2989,86 @@ object StatusBarComboStyleOneRuntime {
         }
     }
 
+    /**
+     * Sample the actual SignalDrawable instances hosted by the collapsed status bar.
+     * Samsung's mobile view-model exposes a cold ChannelFlowTransformLatest rather than
+     * a directly readable StateFlow, so reading the model property alone cannot return
+     * its latest emission. The attached native drawable remains the authoritative state.
+     */
+    private fun sampleModernStatusBarSignalDrawables() {
+        val mobileClass = modernMobileViewClass ?: return
+        val hostSnapshot = synchronized(hosts) { hosts.values.filter { !it.retired }.toList() }
+        if (hostSnapshot.isEmpty()) return
+        var anyMobileView = false
+        var anySignalDrawable = false
+        hostSnapshot.forEach { host ->
+            val mobileViews = descendants(host.root).filter { mobileClass.isInstance(it) }
+            if (mobileViews.isNotEmpty()) anyMobileView = true
+            mobileViews.forEach { mobileRoot ->
+                val subId = modernMobileViewSubscriptionIds[mobileRoot]
+                if (subId == null || subId < 0) {
+                    val key = "unmapped:${System.identityHashCode(mobileRoot)}"
+                    val snapshot = "root=${mobileRoot.javaClass.name}|attached=${mobileRoot.isAttachedToWindow}|" +
+                        "children=${(mobileRoot as? ViewGroup)?.childCount ?: 0}"
+                    if (lastModernSignalSamplingDiagnostics.put(key, snapshot) != snapshot) {
+                        diagnostic("Modern status-bar signal live sample unmapped: $snapshot")
+                    }
+                    return@forEach
+                }
+                val imageViews = descendants(mobileRoot).filterIsInstance<android.widget.ImageView>()
+                val signals = imageViews.mapNotNull { image ->
+                    val drawable = image.drawable ?: return@mapNotNull null
+                    if (drawable.javaClass.name.contains("SignalDrawable", ignoreCase = true)) {
+                        Triple(image, drawable, drawable.level)
+                    } else null
+                }
+                if (signals.isEmpty()) {
+                    val key = "no-drawable:${System.identityHashCode(mobileRoot)}"
+                    val details = imageViews.take(12).joinToString(",") { image ->
+                        val id = resourceName(image)
+                        "${image.javaClass.simpleName}:${id.ifBlank { "no-id" }}:${image.drawable?.javaClass?.simpleName ?: "no-drawable"}"
+                    }
+                    val snapshot = "subId=$subId|root=${mobileRoot.javaClass.simpleName}|" +
+                        "attached=${mobileRoot.isAttachedToWindow}|images=${imageViews.size}|$details"
+                    if (lastModernSignalSamplingDiagnostics.put(key, snapshot) != snapshot) {
+                        diagnostic("Modern status-bar signal live sample has no SignalDrawable: $snapshot")
+                    }
+                    return@forEach
+                }
+                anySignalDrawable = true
+                signals.forEach { (image, drawable, fullState) ->
+                    val level = decodePackedSignalDrawableLevel(fullState)
+                    if (level !in 0..4) {
+                        val key = "undecoded:${System.identityHashCode(image)}"
+                        val snapshot = "subId=$subId|state=$fullState|level=$level|" +
+                            "drawable=${drawable.javaClass.name}|image=${resourceName(image)}"
+                        if (lastModernSignalSamplingDiagnostics.put(key, snapshot) != snapshot) {
+                            diagnostic("Modern status-bar signal live sample undecoded: $snapshot")
+                        }
+                        return@forEach
+                    }
+                    lastModernSignalSamplingDiagnostics.remove("no-drawable:${System.identityHashCode(mobileRoot)}")
+                    lastModernSignalSamplingDiagnostics.remove("undecoded:${System.identityHashCode(image)}")
+                    val old = renderedSignalLevels.put(subId, level)
+                    nativeSignalLevels[subId] = level
+                    val key = "live:$subId:${System.identityHashCode(image)}"
+                    val snapshot = "level=$level|packed=$fullState|drawable=${drawable.javaClass.name}|image=${resourceName(image)}"
+                    if (old != level || lastModernSignalSamplingDiagnostics.put(key, snapshot) != snapshot) {
+                        lastModernSignalSamplingDiagnostics[key] = snapshot
+                        diagnostic(
+                            "Modern status-bar drawn signal: subId=$subId level=$level packed=$fullState " +
+                                "drawable=${drawable.javaClass.name} source=live-view-tree defaultData=${subId == defaultDataSubscriptionId}"
+                        )
+                    }
+                }
+            }
+        }
+        val summary = "hosts=${hostSnapshot.size}|mobileViews=${if (anyMobileView) "present" else "none"}|" +
+            "signalDrawables=${if (anySignalDrawable) "present" else "none"}"
+        if (lastModernSignalSamplingDiagnostics.put("summary", summary) != summary) {
+            diagnostic("Modern status-bar signal live sampling: $summary")
+        }
+    }
     private fun readModernIconModel(viewModel: Any): Any? {
         // Samsung One UI may wrap the common mobile model more than once. Walk only
         // known delegation links instead of relying on a single commonImpl property.
