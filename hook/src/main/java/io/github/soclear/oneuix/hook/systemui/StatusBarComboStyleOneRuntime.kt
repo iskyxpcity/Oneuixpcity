@@ -2964,6 +2964,10 @@ object StatusBarComboStyleOneRuntime {
                                     previous.glyphRightMarginDp != next.glyphRightMarginDp ||
                                     previous.outSignalMarginDp != next.outSignalMarginDp ||
                                     previous.outSignalSizeDp != next.outSignalSizeDp ||
+                                    // Network-type margins change the canvas width too, so resize
+                                    // the glyph/hidden battery slot just like the outside signal lane.
+                                    previous.outTypeMarginLeftDp != next.outTypeMarginLeftDp ||
+                                    previous.outTypeMarginRightDp != next.outTypeMarginRightDp ||
                                     previous.outTypeSizeDp != next.outTypeSizeDp ||
                                     previous.typeWeight != next.typeWeight ||
                                     previous.typeSuffixScale != next.typeSuffixScale ||
