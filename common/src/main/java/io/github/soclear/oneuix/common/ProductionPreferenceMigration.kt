@@ -150,6 +150,21 @@ object ProductionPreferenceMigration {
                     comboRuntimeChanged = true
                 }
 
+                // 8dp is the first clearly separated appearance confirmed on device.
+                // Migrate only the former 6dp default; leave other custom spacing untouched.
+                val outsideSignalMarginEightDpMigrationDone =
+                    (updatedComboRuntime["outSignalMarginEightDpMigrationDone"] as? JsonPrimitive)
+                        ?.content?.toBooleanStrictOrNull() == true
+                if (!outsideSignalMarginEightDpMigrationDone) {
+                    val oldOutsideSignalMargin =
+                        updatedComboRuntime["outSignalMarginDp"]?.toString()?.toIntOrNull() ?: 8
+                    if (oldOutsideSignalMargin == 6) {
+                        updatedComboRuntime["outSignalMarginDp"] = JsonPrimitive(8)
+                    }
+                    updatedComboRuntime["outSignalMarginEightDpMigrationDone"] = JsonPrimitive(true)
+                    comboRuntimeChanged = true
+                }
+
                 if (comboRuntimeChanged) {
                     updatedStatusBar["comboStyleOneRuntime"] = JsonObject(updatedComboRuntime)
                 }

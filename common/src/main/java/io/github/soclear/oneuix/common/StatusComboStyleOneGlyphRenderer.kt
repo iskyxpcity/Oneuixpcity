@@ -121,18 +121,24 @@ object StatusComboStyleOneGlyphRenderer {
     private fun outsideSignalWidth(config: StatusBarComboStyleOneRuntime): Float =
         if (usesOutsideSignalLayout(config)) 251f * outsideSignalScale(config) else 0f
 
-    private fun outsideSignalMargin(config: StatusBarComboStyleOneRuntime): Float =
-        if (usesOutsideSignalLayout(config)) config.outSignalMarginDp.coerceIn(0, 16) * (HEIGHT / 36f) else 0f
+    // Shared clearance for self-drawn elements on the ring's outside:
+    // this must also work in network-type-only mode (without stacked signal bars).
+    private fun outsideContentMargin(config: StatusBarComboStyleOneRuntime): Float =
+        if (usesOutsideSignalLayout(config) || usesOutsideNetworkTypeLayout(config)) {
+            config.outSignalMarginDp.coerceIn(0, 16) * (HEIGHT / 36f)
+        } else 0f
 
     private fun designWidth(config: StatusBarComboStyleOneRuntime): Float {
         val typeLane = usesOutsideNetworkTypeLayout(config)
         val signalLane = usesOutsideSignalLayout(config)
-        val margin = outsideSignalMargin(config)
+        val margin = outsideContentMargin(config)
         return when {
             // With only the outside network label enabled, remove the signal-pillars
             // lane from the host bounds instead of leaving a transparent placeholder.
             typeLane && signalLane -> WIDE_WIDTH + margin * 2f
-            typeLane -> WIDE_WIDTH - TYPE_ONLY_SHIFT
+            // Add room to the left when the network label is outside by itself,
+            // so increasing the gap moves the ring right relative to the label.
+            typeLane -> WIDE_WIDTH - TYPE_ONLY_SHIFT + margin
             signalLane -> outsideSignalWidth(config) + margin + COMPACT_WIDTH - 8f
             else -> COMPACT_WIDTH
         }
@@ -148,7 +154,7 @@ object StatusComboStyleOneGlyphRenderer {
 
     /** Horizontal anchor of the battery centre within the active glyph bounds. */
     fun glyphCenterRatio(config: StatusBarComboStyleOneRuntime): Float {
-        val margin = outsideSignalMargin(config)
+        val margin = outsideContentMargin(config)
         val signalWidth = outsideSignalWidth(config)
         val outsideSignal = usesOutsideSignalLayout(config)
         return when {
@@ -187,7 +193,7 @@ object StatusComboStyleOneGlyphRenderer {
         val outsideType = usesOutsideNetworkTypeLayout(config)
         val outsideSignal = usesOutsideSignalLayout(config)
         val dualBottomLayout = usesDualSignalBelowRing(config)
-        val extraWideMargin = outsideSignalMargin(config)
+        val extraWideMargin = outsideContentMargin(config)
         val signalWidth = outsideSignalWidth(config)
         val designWidth = designWidth(config)
         val designHeight = designHeight(config)
@@ -364,11 +370,16 @@ object StatusComboStyleOneGlyphRenderer {
         if (wide && config.showMobile && config.mobileTypeMode == 2 && state.networkType.isNotBlank()) {
             val m = HEIGHT / 36f
             val typeOnlyShift = if (outsideSignal) 0f else TYPE_ONLY_SHIFT
-            val center = (110f + extraWideMargin - typeOnlyShift +
+            // In network-type-only mode, keep the label in place while the ring's
+            // content group moves right; that creates real clearance instead of translating
+            // the label and ring together. When signal bars are also outside, the label sits
+            // between those bars and the ring and follows the first margin lane.
+            val typeGapOffset = if (outsideSignal) extraWideMargin else 0f
+            val center = (110f + typeGapOffset - typeOnlyShift +
                 (config.outTypeMarginLeftDp.coerceIn(0, 16) -
                     config.outTypeMarginRightDp.coerceIn(0, 16)) * m).coerceIn(
-                        30f + extraWideMargin - typeOnlyShift,
-                        170f + extraWideMargin - typeOnlyShift,
+                        30f + typeGapOffset - typeOnlyShift,
+                        170f + typeGapOffset - typeOnlyShift,
                     )
             val size = config.outTypeSizeDp.coerceIn(8, 26) * m
             drawNetworkType(canvas, state.networkType.trim().uppercase(), center, 67f,
