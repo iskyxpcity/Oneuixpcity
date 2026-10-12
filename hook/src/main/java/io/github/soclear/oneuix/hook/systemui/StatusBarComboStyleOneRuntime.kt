@@ -2522,6 +2522,7 @@ object StatusBarComboStyleOneRuntime {
                                     previous.glyphLeftMarginDp != next.glyphLeftMarginDp ||
                                     previous.glyphRightMarginDp != next.glyphRightMarginDp ||
                                     previous.outSignalMarginDp != next.outSignalMarginDp ||
+                                     previous.outTypeRingGapDp != next.outTypeRingGapDp ||
                                     previous.outSignalSizeDp != next.outSignalSizeDp ||
                                     previous.dualSimMode != next.dualSimMode ||
                                     previous.dualSim != next.dualSim ||
@@ -3860,6 +3861,7 @@ object StatusBarComboStyleOneRuntime {
         outTypeMarginLeftDp = v.outTypeMarginLeftDp.coerceIn(0, 16),
         outTypeMarginRightDp = v.outTypeMarginRightDp.coerceIn(0, 16),
         outSignalMarginDp = v.outSignalMarginDp.coerceIn(0, 16),
+         outTypeRingGapDp = v.outTypeRingGapDp.coerceIn(0, 16),
         typeSuffixScale = v.typeSuffixScale.coerceIn(50, 100), trackAlpha = v.trackAlpha.coerceIn(0, 255),
     )
 
