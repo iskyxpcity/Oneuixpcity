@@ -391,6 +391,26 @@ fun StatusComboStyleOneCategoryControls(
                 }
                 colorItems += {
                     StyleOneRoleColorRow(
+                        title = stringResource(StyleOneColorRole.NormalChargingBolt.titleRes),
+                        summary = stringResource(R.string.status_combo_style_one_color_summary),
+                        darkColor = runtime.normalChargingBoltColorDarkArgb,
+                        lightColor = runtime.normalChargingBoltColorLightArgb,
+                        enabled = runtime.enabled && runtime.showBolt,
+                        onClick = { colorPreviewDraft[0] = runtime; editingColorRole = StyleOneColorRole.NormalChargingBolt },
+                    )
+                }
+                colorItems += {
+                    StyleOneRoleColorRow(
+                        title = stringResource(StyleOneColorRole.QuickChargingBolt.titleRes),
+                        summary = stringResource(R.string.status_combo_style_one_color_summary),
+                        darkColor = runtime.quickChargingBoltColorDarkArgb,
+                        lightColor = runtime.quickChargingBoltColorLightArgb,
+                        enabled = runtime.enabled && runtime.showBolt,
+                        onClick = { colorPreviewDraft[0] = runtime; editingColorRole = StyleOneColorRole.QuickChargingBolt },
+                    )
+                }
+                colorItems += {
+                    StyleOneRoleColorRow(
                         title = stringResource(StyleOneColorRole.Critical.titleRes),
                         summary = stringResource(R.string.status_combo_style_one_color_summary),
                         darkColor = runtime.criticalColorDarkArgb,
@@ -441,6 +461,10 @@ fun StatusComboStyleOneCategoryControls(
                                 criticalColorLightArgb = 0xFFFF3B30.toInt(),
                                 chargingColorDarkArgb = 0xFF34C759.toInt(),
                                 chargingColorLightArgb = 0xFF1F8F3D.toInt(),
+                                normalChargingBoltColorDarkArgb = 0xFFFFFFFF.toInt(),
+                                normalChargingBoltColorLightArgb = 0xFF000000.toInt(),
+                                quickChargingBoltColorDarkArgb = 0xFF2196F3.toInt(),
+                                quickChargingBoltColorLightArgb = 0xFF2196F3.toInt(),
                                 lowColorDarkArgb = 0xFFF2B900.toInt(),
                                 lowColorLightArgb = 0xFFC99700.toInt(),
                                 powerSaveFillColorDarkArgb = 0xBFFFC107.toInt(),
@@ -490,6 +514,8 @@ fun StatusComboStyleOneCategoryControls(
 private enum class StyleOneColorRole(val titleRes: Int) {
     Low(R.string.status_combo_style_one_color_low),
     Charging(R.string.status_combo_style_one_color_charging),
+    NormalChargingBolt(R.string.status_combo_style_one_color_normal_charging_bolt),
+    QuickChargingBolt(R.string.status_combo_style_one_color_quick_charging_bolt),
     Critical(R.string.status_combo_style_one_color_critical),
     PowerSaveFill(R.string.status_combo_style_one_color_power_save_fill),
 }
@@ -500,6 +526,8 @@ private fun Preference.SystemUI.StatusBarComboStyleOneRuntime.colorForRole(
 ): Int = when (role) {
     StyleOneColorRole.Low -> if (onDarkBackground) lowColorDarkArgb else lowColorLightArgb
     StyleOneColorRole.Charging -> if (onDarkBackground) chargingColorDarkArgb else chargingColorLightArgb
+    StyleOneColorRole.NormalChargingBolt -> if (onDarkBackground) normalChargingBoltColorDarkArgb else normalChargingBoltColorLightArgb
+    StyleOneColorRole.QuickChargingBolt -> if (onDarkBackground) quickChargingBoltColorDarkArgb else quickChargingBoltColorLightArgb
     StyleOneColorRole.Critical -> if (onDarkBackground) criticalColorDarkArgb else criticalColorLightArgb
     StyleOneColorRole.PowerSaveFill ->
         if (onDarkBackground) powerSaveFillColorDarkArgb else powerSaveFillColorLightArgb
@@ -512,6 +540,8 @@ private fun Preference.SystemUI.StatusBarComboStyleOneRuntime.withRoleColor(
 ): Preference.SystemUI.StatusBarComboStyleOneRuntime = when (role) {
     StyleOneColorRole.Low -> if (onDarkBackground) copy(lowColorDarkArgb = colorArgb) else copy(lowColorLightArgb = colorArgb)
     StyleOneColorRole.Charging -> if (onDarkBackground) copy(chargingColorDarkArgb = colorArgb) else copy(chargingColorLightArgb = colorArgb)
+    StyleOneColorRole.NormalChargingBolt -> if (onDarkBackground) copy(normalChargingBoltColorDarkArgb = colorArgb) else copy(normalChargingBoltColorLightArgb = colorArgb)
+    StyleOneColorRole.QuickChargingBolt -> if (onDarkBackground) copy(quickChargingBoltColorDarkArgb = colorArgb) else copy(quickChargingBoltColorLightArgb = colorArgb)
     StyleOneColorRole.Critical -> if (onDarkBackground) copy(criticalColorDarkArgb = colorArgb) else copy(criticalColorLightArgb = colorArgb)
     StyleOneColorRole.PowerSaveFill ->
         if (onDarkBackground) copy(powerSaveFillColorDarkArgb = colorArgb) else copy(powerSaveFillColorLightArgb = colorArgb)
