@@ -54,10 +54,9 @@ object StatusComboStyleOneGlyphRenderer {
     // Pull the out-of-ring type a little closer to the preceding system icons by default.
     // Extra leading canvas room below prevents the tighter position from clipping the glyphs.
     private const val OUTSIDE_TYPE_GAP_REDUCTION = 18f
-    // Reserve the maximum type-label margin at all times. This keeps the host width and ring
-    // anchor fixed while the label moves within its preallocated leading lane.
+    // Keep a minimum label-side clearance; configured margins add to the left-growing host lane.
     private const val OUTSIDE_TYPE_LEADING_CLEARANCE = 18f
-    // Minimum signal-lane clearance; reserve its maximum selectable margin once at layout time.
+    // Keep a minimum signal-to-ring clearance; configured spacing widens the host lane dynamically.
     private const val OUTSIDE_SIGNAL_RING_CLEARANCE = 20f
     // Out-of-ring-type-only mode should not reserve the unused signal-pillars lane.
     private const val TYPE_ONLY_SHIFT = 60f
@@ -148,11 +147,9 @@ object StatusComboStyleOneGlyphRenderer {
                 config.outSignalMarginDp.coerceIn(0, 16) * (HEIGHT / 36f)
         } else 0f
 
-    /** Fixed leading space reserved for the signal lane's maximum selectable margin. */
+    /** Leading space follows the selected signal margin, allowing the row to grow left dynamically. */
     private fun outsideSignalLeadingExpansion(config: StatusBarComboStyleOneRuntime): Float =
-        if (usesOutsideSignalLayout(config)) {
-            OUTSIDE_SIGNAL_RING_CLEARANCE + 16f * (HEIGHT / 36f)
-        } else 0f
+        if (usesOutsideSignalLayout(config)) outsideSignalMargin(config) else 0f
 
     private fun outsideTypeLabelWidth(
         config: StatusBarComboStyleOneRuntime,
@@ -181,12 +178,13 @@ object StatusComboStyleOneGlyphRenderer {
         } else 0f
 
     /**
-     * Fixed leading canvas width for the outside-type label, reserved for its maximum right margin.
-     * Slider changes move only the text, never the host width or the ring position.
+     * Leading canvas width grows with the selected type margins. The canvas translates by the same
+     * amount, so its ring anchor stays fixed while the status-bar row can allocate space to the left.
      */
     private fun outsideTypeLeadingExpansion(config: StatusBarComboStyleOneRuntime): Float =
         if (usesOutsideNetworkTypeLayout(config)) {
-            OUTSIDE_TYPE_LEADING_CLEARANCE + 16f * (HEIGHT / 36f)
+            OUTSIDE_TYPE_LEADING_CLEARANCE +
+                outsideTypeMarginLeft(config) + outsideTypeMarginRight(config)
         } else 0f
 
     private fun outsideTypeWidthDelta(
@@ -211,8 +209,8 @@ object StatusComboStyleOneGlyphRenderer {
         val typeLeadingExpansion = outsideTypeLeadingExpansion(config)
         val typeWidthDelta = outsideTypeWidthDelta(config, networkType)
         return when {
-            // Preallocate the maximum width for each enabled lane. User sliders do not change
-            // parent measurement, so they cannot push the ring or neighbouring native icons.
+            // Grow the host width by the selected outside margins only. Drawing offsets and overlay
+            // anchoring compensate for the added leading canvas, keeping the ring fixed in place.
             typeLane && signalLane ->
                 WIDE_WIDTH + signalLeadingExpansion + OUTSIDE_TYPE_RIGHT_CLEARANCE +
                     typeWidthDelta + typeLeadingExpansion
@@ -233,8 +231,8 @@ object StatusComboStyleOneGlyphRenderer {
             .roundToInt().coerceAtLeast(20)
 
     /**
-     * Width before added leading space for the outside type or signal lane. The inline runtime
-     * uses the pixel-width difference as a negative start margin so native icons do not shift.
+     * Width before added leading space for diagnostics and layout comparisons.
+     * The actual inline/overlay host uses glyphWidthDp() so selected lane spacing is allocated.
      */
     fun glyphWidthDpWithoutLeadingExpansion(
         config: StatusBarComboStyleOneRuntime,
