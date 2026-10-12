@@ -968,14 +968,14 @@ object StatusBarComboStyleOneRuntime {
                     isWithin(battery, candidate) || isWithin(candidate, battery)
                 if (isBatteryTintOwner) batteryTintSnapshots[candidate] else null
             }
-            // HyperDuo's source of truth is a tint saved for the MIUI battery
+            // The upstream tint source is a value saved for the MIUI battery
             // container. The phone-bar value is only a fallback for AOSP layouts.
             val tintRow = host.tintRow
             val rowTint = tintRow?.let { rowTintSnapshots[it] }
                 ?: meterTint
                 // Only AOSP layouts use the whole status-bar root as their tint
                 // owner. On MIUI, falling back to another icon container's ink
-                // would reintroduce the cross-row colour leak HyperDuo fixed.
+                // would reintroduce the previously identified cross-row colour leak.
                 ?: if (tintRow === root) rowTintSnapshots[root] else null
                 ?: host.rowTint
             if (rowTint != null && host.rowTint != rowTint) {
@@ -1619,7 +1619,7 @@ object StatusBarComboStyleOneRuntime {
     }
 
     private fun hookBatteryDrawFallback(module: XposedModule, classLoader: ClassLoader) {
-        // HyperDuo paints into MiuiBatteryMeterIconView.onDraw when its separate
+        // The upstream renderer paints into MiuiBatteryMeterIconView.onDraw when its separate
         // window is not covering the row. Use the same event path only while the
         // shade is transforming the status bar; never poll or rescan the tree.
         val candidates = listOf(
