@@ -26,10 +26,10 @@
     <string name="status_combo_style_one_show_value_summary">Show the battery percentage inside the ring; while charging, the bolt replaces the number. When off, the native charging bolt is restored.</string>
     <string name="status_combo_style_one_show_bolt">Show charging bolt</string>
     <string name="status_combo_style_one_show_bolt_summary">Show the in-ring charging bolt. This setting depends on the battery-number switch; when off, Android\'s native charging bolt is restored.</string>
-    <string name="status_combo_style_one_charging_display">Charging display</string>
+    <string name="status_combo_style_one_charging_display">Charging display mode</string>
     <string name="status_combo_style_one_charging_display_summary">Charging color takes priority over low and critical colors. Choose the bolt only, or alternate the bolt and battery number every 5 seconds.</string>
-    <string name="status_combo_style_one_charging_display_bolt">Charging bolt only</string>
-    <string name="status_combo_style_one_charging_display_alternate">Alternate bolt and battery number every 5 seconds</string>
+    <string name="status_combo_style_one_charging_display_bolt">Charging bolt</string>
+    <string name="status_combo_style_one_charging_display_alternate">Bolt and number</string>
     <string name="status_combo_style_one_value_centred">Center the battery number</string>
     <string name="status_combo_style_one_value_centred_summary">Enlarge the battery percentage and keep it in the ring centre. Available only for the ring layout while Wi-Fi arcs and the battery number are enabled.</string>
     <string name="status_combo_style_one_mobile_type_mode">Network type label</string>
@@ -46,8 +46,8 @@
     <string name="status_combo_style_one_dual_sim_off">Off</string>
     <string name="status_combo_style_one_dual_sim_ring_vertical">Top and bottom of ring</string>
     <string name="status_combo_style_one_dual_sim_below_ring">Below ring</string>
-    <string name="status_combo_style_one_stacked_signal">Draw signal bars outside the icon</string>
-    <string name="status_combo_style_one_stacked_signal_summary">When signal is placed outside the ring, draw ascending bars for one SIM and dots for the other. Turn off to restore the stock mobile icon.</string>
+    <string name="status_combo_style_one_stacked_signal">Signal bars outside the ring</string>
+    <string name="status_combo_style_one_stacked_signal_summary">When signal is placed outside the ring, draw ascending bars for one SIM and dots for the other. Adjust the gap below to separate the bars from the ring; turn off to restore the stock mobile icon.</string>
     <string name="status_combo_style_one_data_sim_only">Show only the default data SIM</string>
     <string name="status_combo_style_one_data_sim_only_summary">Use the signal level from the SIM currently selected for mobile data.</string>
     <string name="status_combo_style_one_glyph_scale">Overall icon size</string>
@@ -69,7 +69,7 @@
     <string name="status_combo_style_one_out_signal_size">Outside signal graphic height</string>
     <string name="status_combo_style_one_out_type_margin_left">Outside network type left margin</string>
     <string name="status_combo_style_one_out_type_margin_right">Outside network type right margin</string>
-    <string name="status_combo_style_one_out_signal_margin">Gap between outside signal and ring</string>
+    <string name="status_combo_style_one_out_signal_margin">Gap between outside signal bars and ring</string>
     <string name="status_combo_style_one_role_colors">State colors</string>
     <string name="status_combo_style_one_role_colors_summary">Pick colors for low battery, charging and critical battery.</string>
     <string name="status_combo_style_one_critical_threshold">Critical battery threshold</string>
@@ -111,7 +111,7 @@
     <string name="status_combo_style_one_group_stroke">Stroke</string>
     <string name="status_combo_style_one_group_text">Text</string>
     <string name="status_combo_style_one_group_type">Network type</string>
-    <string name="status_combo_style_one_group_out_signal">Out-of-ring signal</string>
+    <string name="status_combo_style_one_group_out_signal">Signal bars outside the ring</string>
     <string name="status_combo_style_one_group_track">Track</string>
     <string name="status_combo_style_one_reset_colors">Reset</string>
     <string name="status_combo_style_one_reset_colors_summary">Restore the low, charging, critical and power-saving fill colors to their defaults.</string>
