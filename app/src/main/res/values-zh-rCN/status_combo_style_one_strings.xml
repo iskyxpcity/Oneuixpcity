@@ -135,14 +135,14 @@
     <string name="status_combo_style_one_out_type_margin_right_summary">当前 %1$d dp：环外网络类型标签右侧留白，仅在网络类型显示于图标外侧时生效。</string>
     <string name="status_combo_style_one_type_weight_summary">当前字重 %1$d：100 最细，900 最粗；仅显示网络类型文字时可调整。</string>
     <string name="status_combo_style_one_out_signal_size_summary">当前 %1$d dp：环外信号读数的整体高度。只有开启移动信号、选择环外位置并启用堆叠信号后才可调整。</string>
-    <string name="status_combo_style_one_out_signal_margin_summary">当前 %1$d dp：调整圆环与左侧环外信号柱或网络类型标签之间的间距，不改变图标自身大小。只有环外堆叠信号实际启用时才可调整。</string>
+    <string name="status_combo_style_one_out_signal_margin_summary">当前 %1$d dp：只调整自绘圆环外信号柱与电量圆环之间的距离；不会改变三合一图标整体左边距，也不会缩放图形。只有开启环外堆叠信号时才生效。</string>
     <string name="status_combo_style_one_track_alpha_summary">当前 %1$d%%：控制未点亮的弧线与信号图形的透明度。</string>
     <string name="status_combo_style_one_bolt_size_summary">当前 %1$d%%：充电时闪电的缩放比例；需要同时开启电量数字和充电闪电。</string>
     <string name="status_combo_style_one_bolt_x_summary">当前 %1$d dp：充电闪电的水平位置；正值向右移动。</string>
     <string name="status_combo_style_one_bolt_y_summary">当前 %1$d dp：充电闪电的垂直位置；正值向下移动。</string>
     <string name="status_combo_style_one_glyph_offset_x_summary">当前 %1$d dp：整个组合图标的水平位置；正值向右移动。</string>
     <string name="status_combo_style_one_glyph_offset_y_summary">当前 %1$d dp：整个组合图标的垂直位置；正值向下移动。</string>
-    <string name="status_combo_style_one_glyph_left_margin_summary">当前 %1$d dp：在组合图标左侧为相邻状态栏图标预留的间距。</string>
+    <string name="status_combo_style_one_glyph_left_margin_summary">当前 %1$d dp：三合一图标额外增加的左侧留白；原生状态栏图标自身已有留白。</string>
     <string name="status_combo_style_one_glyph_right_margin_summary">当前 %1$d dp：在组合图标右侧为相邻状态栏图标预留的间距。</string>
     <string name="status_combo_style_one_group_overall_size">整体尺寸</string>
     <string name="status_combo_style_one_group_signal_dots">信号圆点</string>
