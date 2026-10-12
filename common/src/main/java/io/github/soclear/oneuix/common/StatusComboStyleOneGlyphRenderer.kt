@@ -295,6 +295,7 @@ object StatusComboStyleOneGlyphRenderer {
         density: Float,
         windowScreenX: Int,
         windowScreenY: Int,
+        minimumOutsideTypeAdvanceLeftPx: Float? = null,
     ): String {
         val safeWidth = windowWidthPx.coerceAtLeast(0)
         val safeHeight = windowHeightPx.coerceAtLeast(0)
@@ -364,9 +365,20 @@ object StatusComboStyleOneGlyphRenderer {
                 inkLeftOffset = min(inkLeftOffset, suffixInkLeft)
                 inkRightOffset = max(inkRightOffset, suffixInkRight)
             }
+            // Keep the text's measured advance to the right of the last real system icon.
+            // The user margin can request more space, but must not draw over a visible icon.
+            val boundaryClampedCenter = minimumOutsideTypeAdvanceLeftPx?.takeIf {
+                renderScale > 0f
+            }?.let { minimumLeftPx ->
+                max(
+                    center,
+                    (minimumLeftPx - canvasLeftInsetPx) / renderScale -
+                        leadingExpansion + advanceWidth / 2f,
+                )
+            } ?: center
             // draw() translates the full glyph right while its view grows left; include that
-            // translation in measured screen bounds so clipping diagnostics match the renderer.
-            val drawnCenter = center + leadingExpansion
+            // translation and any icon-bound clamp in the measured screen coordinates.
+            val drawnCenter = boundaryClampedCenter + leadingExpansion
             val advanceLeftUnits = drawnCenter - advanceWidth / 2f
             val advanceRightUnits = advanceLeftUnits + advanceWidth
             val inkLeftUnits = advanceLeftUnits + inkLeftOffset
@@ -385,7 +397,9 @@ object StatusComboStyleOneGlyphRenderer {
                     "typeMarginsDp=left:${config.outTypeMarginLeftDp},right:${config.outTypeMarginRightDp} " +
                         "marginUnits=left:${leftMarginUnits},right:${rightMarginUnits} " +
                         "widthDeltaUnits=${typeWidthDelta} baseCenterUnits=${baseTypeCenter} " +
-                        "rawCenterUnits=${centerRaw} drawnCenterUnits=${drawnCenter} " +
+                        "rawCenterUnits=${centerRaw} requestedDrawnCenterUnits=${center + leadingExpansion} " +
+                        "drawnCenterUnits=${drawnCenter} boundaryClampUnits=${boundaryClampedCenter - center} " +
+                        "minimumOutsideTypeAdvanceLeftPx=${minimumOutsideTypeAdvanceLeftPx}," +
                         "canvasLeadingExpansionUnits=${leadingExpansion}"
                 )
                 appendLine(
@@ -445,6 +459,7 @@ object StatusComboStyleOneGlyphRenderer {
         height: Int,
         config: StatusBarComboStyleOneRuntime,
         state: StatusComboStyleOneGlyphState,
+        minimumOutsideTypeAdvanceLeftPx: Float? = null,
     ) {
         if (width <= 0 || height <= 0) return
         val wide = usesWideLayout(config)
@@ -666,8 +681,21 @@ object StatusComboStyleOneGlyphRenderer {
             // Center the measured capital glyphs vertically around the host's centre line.
             // Apply the same cap-height correction at every size so scaling grows in both directions.
             val baseline = HEIGHT / 2f + size * CAP_CENTER_RATIO
-            // Use the full measured text width; the host bounds expand/contract with this label.
-            drawNetworkType(canvas, state.networkType.trim().uppercase(), center, baseline,
+            // If a larger right margin would put the label on top of native status icons, clamp
+            // the text inside the currently available gap. The host may extend left transparently;
+            // the ring remains anchored and the existing margin controls are preserved.
+            val labelWidthUnits = measuredNetworkTypeWidth(
+                state.networkType.trim().uppercase(), size, config.typeWeight, config.typeSuffixScale,
+            )
+            val canvasLeftInsetPx = (width - designWidth * scale) / 2f
+            val safeCenter = minimumOutsideTypeAdvanceLeftPx?.let { minimumLeftPx ->
+                max(
+                    center,
+                    (minimumLeftPx - canvasLeftInsetPx) / scale -
+                        leadingExpansion + labelWidthUnits / 2f,
+                )
+            } ?: center
+            drawNetworkType(canvas, state.networkType.trim().uppercase(), safeCenter, baseline,
                 size, config.typeWeight, tint, config.typeSuffixScale, 0f)
         }
         canvas.restoreToCount(save)

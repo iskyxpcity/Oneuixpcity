@@ -241,11 +241,21 @@ object StatusBarComboStyleOneRuntime {
 
     private class GlyphView(context: Context) : View(context) {
         private var tintOverride: Int? = null
+        private var statusBarRootForTypeBounds: View? = null
         init {
             isClickable = false
             isFocusable = false
             importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
         }
+        fun setStatusBarRootForTypeBounds(root: View?) {
+            if (statusBarRootForTypeBounds === root) return
+            statusBarRootForTypeBounds = root
+            invalidate()
+        }
+        fun minimumOutsideTypeAdvanceLeftPx(): Float? =
+            StatusBarComboStyleOneRuntime.minimumOutsideTypeAdvanceLeftPx(
+                this, statusBarRootForTypeBounds,
+            )
         fun setTintOverride(color: Int?) {
             if (tintOverride == color) return
             tintOverride = color
@@ -259,6 +269,7 @@ object StatusBarComboStyleOneRuntime {
             val drawState = if (localTint == null) currentState else currentState.copy(tintColor = localTint)
             StatusComboStyleOneGlyphRenderer.draw(
                 canvas, width, height, currentConfig, drawState,
+                minimumOutsideTypeAdvanceLeftPx(),
             )
         }
     }
@@ -353,6 +364,7 @@ object StatusBarComboStyleOneRuntime {
 
         fun update(anchor: View, root: ViewGroup, cameraBounds: Rect): Boolean {
             val lp = params ?: return false
+            glyph.setStatusBarRootForTypeBounds(root)
             val cutout = Rect(cameraBounds)
             val oldX = lp.x
             val oldY = lp.y
@@ -446,6 +458,7 @@ object StatusBarComboStyleOneRuntime {
                         density,
                         screenX,
                         screenY,
+                        glyph.minimumOutsideTypeAdvanceLeftPx(),
                     )
                 )
             }
@@ -890,7 +903,8 @@ object StatusBarComboStyleOneRuntime {
                     appendLine("[Inline glyph geometry]")
                     appendLine(
                         StatusComboStyleOneGlyphRenderer.diagnosticGeometrySnapshot(
-                            cfg, currentState.networkType, glyph.width, glyph.height, metrics.density, pos[0], pos[1],
+                            cfg, currentState.networkType, glyph.width, glyph.height, metrics.density,
+                            pos[0], pos[1], glyph.minimumOutsideTypeAdvanceLeftPx(),
                         )
                     )
                 }
@@ -1091,6 +1105,7 @@ object StatusBarComboStyleOneRuntime {
                 if (host.retired) return@forEach
                 val battery = host.battery ?: return@forEach
                 host.inline?.let { glyph ->
+                    glyph.setStatusBarRootForTypeBounds(host.root)
                     val width = dp(glyph.context, StatusComboStyleOneGlyphRenderer.glyphWidthDp(config, state.networkType))
                     val height = dp(glyph.context, StatusComboStyleOneGlyphRenderer.glyphHeightDp(config))
                     val lp = glyph.layoutParams
@@ -1399,6 +1414,7 @@ object StatusBarComboStyleOneRuntime {
         }
         val height = if (compactToAnchor) originalHeight else dp(parent.context, designHeight)
         host.inline?.takeIf { it.parent === parent }?.let { glyph ->
+            glyph.setStatusBarRootForTypeBounds(host.root)
             val lp = glyph.layoutParams
             if (lp != null) {
                 val margins = lp as? ViewGroup.MarginLayoutParams
@@ -1420,7 +1436,10 @@ object StatusBarComboStyleOneRuntime {
             return
         }
         removeInline(host)
-        val glyph = GlyphView(parent.context).apply { setTintOverride(host.rowTint) }
+        val glyph = GlyphView(parent.context).apply {
+            setTintOverride(host.rowTint)
+            setStatusBarRootForTypeBounds(host.root)
+        }
         val old = anchor.layoutParams
         val lp = when (old) {
             is LinearLayout.LayoutParams -> LinearLayout.LayoutParams(old).apply { this.width = width; this.height = height }
@@ -1453,6 +1472,43 @@ object StatusBarComboStyleOneRuntime {
         host.layouts.clear()
         host.original.entries.toList().forEach { (view, visibility) -> runCatching { view.visibility = visibility } }
         host.original.clear()
+    }
+
+    /**
+     * Rightmost visible native icon edge within the active status-icons cluster. Only leaves are
+     * measured: the StatusIconContainer's own bounds include unused end padding, not visible ink.
+     */
+    private fun lastVisibleStatusIconRightScreenPx(root: View?): Int? {
+        root ?: return null
+        val cluster = descendants(root).firstOrNull(::isStatusIconsCluster) ?: return null
+        val leaves = descendants(cluster).drop(1).filter { candidate ->
+            val isLeaf = candidate !is ViewGroup || candidate.childCount == 0
+            if (!isLeaf || candidate.width <= 0 || candidate.height <= 0) return@filter false
+            var current: View? = candidate
+            var visible = true
+            while (current != null) {
+                if (current.visibility != View.VISIBLE || current.alpha <= 0f) visible = false
+                if (current === cluster) break
+                current = current.parent as? View
+            }
+            visible
+        }
+        return leaves.mapNotNull { candidate ->
+            runCatching {
+                val location = IntArray(2)
+                candidate.getLocationOnScreen(location)
+                location[0] + candidate.width
+            }.getOrNull()
+        }.maxOrNull()
+    }
+
+    private fun minimumOutsideTypeAdvanceLeftPx(view: View, statusBarRoot: View?): Float? {
+        val root = statusBarRoot ?: view.rootView
+        val iconRight = lastVisibleStatusIconRightScreenPx(root) ?: return null
+        val viewLocation = IntArray(2)
+        if (runCatching { view.getLocationOnScreen(viewLocation) }.isFailure) return null
+        // Keep a small, real gap between the custom label and the last visible native icon.
+        return (iconRight + dpExact(view.context, 2) - viewLocation[0]).toFloat()
     }
 
     private fun descendants(root: View): List<View> {
