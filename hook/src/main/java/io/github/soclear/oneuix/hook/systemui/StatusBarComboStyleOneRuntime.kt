@@ -85,6 +85,10 @@ object StatusBarComboStyleOneRuntime {
     @Volatile private var systemUiClassLoader: ClassLoader? = null
     private val main = Handler(Looper.getMainLooper())
     private val hosts = Collections.synchronizedMap(WeakHashMap<ViewGroup, Host>())
+    // Keep exactly one lifecycle listener per root across fold/unfold reattachment.
+    // Listener values do not capture their weak-map keys, so destroyed roots remain collectible.
+    private val hostLifecycleListeners =
+        Collections.synchronizedMap(WeakHashMap<ViewGroup, View.OnAttachStateChangeListener>())
     @Volatile private var config = Preference.SystemUI.StatusBarComboStyleOneRuntime()
 
     internal fun shouldHideNativeBatteryIcon(): Boolean = config.enabled
@@ -209,6 +213,7 @@ object StatusBarComboStyleOneRuntime {
         var applying = false
         var retired = false
         var rowTint: Int? = null
+        var activeDisplayId: Int = -1
         var geometryRetryPending = false
         var geometryRetryAttempts = 0
         // Foldable display transitions can temporarily report no cutout. Retry geometry
@@ -218,7 +223,7 @@ object StatusBarComboStyleOneRuntime {
             if (!retired && !applying &&
                 StatusBarComboStyleOneRuntime.config.enabled &&
                 StatusBarComboStyleOneRuntime.config.overlayGlyph &&
-                geometryRetryAttempts < 10
+                geometryRetryAttempts < 1
             ) {
                 geometryRetryAttempts++
                 StatusBarComboStyleOneRuntime.apply(this)
@@ -257,7 +262,9 @@ object StatusBarComboStyleOneRuntime {
     }
 
     private class GlyphOverlay(context: Context) {
-        private val app = context.applicationContext ?: context
+        // Keep the display-bound SystemUI context; applicationContext can resolve WindowManager
+        // on the cover/default display while this status-bar root belongs to the inner display.
+        private val app = context
         private val wm = app.getSystemService(Context.WINDOW_SERVICE) as WindowManager
         private val glyph = GlyphView(app)
         private var params: WindowManager.LayoutParams? = null
@@ -807,16 +814,9 @@ object StatusBarComboStyleOneRuntime {
                 hosts[root] = it
             }
         }
-        if (host.battery == null) {
-            // Do not relayout a floating window from every status-bar height frame.
-            // SystemUI recreates the collapsed host on display/configuration changes;
-            // a new host will read the new anchor geometry once.
-            root.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
-                override fun onViewAttachedToWindow(v: View) { main.post { apply(host) } }
-                override fun onViewDetachedFromWindow(v: View) {
-                    main.post { host.overlay?.detach(); host.overlay = null; removeInline(host) }
-                }
-            })
+        ensureHostLifecycleListener(root)
+        if (host.activeDisplayId < 0) {
+            host.activeDisplayId = root.display?.displayId ?: -1
         }
         if (!preferenceReceiverReady) reloadConfigBeforeReceiver()
         ensureReceivers(root.context)
@@ -1484,9 +1484,11 @@ object StatusBarComboStyleOneRuntime {
     }
 
     private fun scheduleGeometryRetry(host: Host) {
-        if (host.geometryRetryPending || host.geometryRetryAttempts >= 10) return
+        // Exactly one delayed retry per failed attach/display transition. Re-running apply
+        // in a rapid loop repeatedly scans and collapses the entire icon row.
+        if (host.geometryRetryPending || host.geometryRetryAttempts >= 1) return
         host.geometryRetryPending = true
-        main.postDelayed(host.geometryRetry, 120L)
+        main.postDelayed(host.geometryRetry, 320L)
     }
 
     private fun reserveHostSlot(host: Host, view: View, widthDp: Int) {
