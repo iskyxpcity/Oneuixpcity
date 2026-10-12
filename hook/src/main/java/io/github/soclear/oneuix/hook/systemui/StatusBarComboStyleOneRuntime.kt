@@ -263,13 +263,13 @@ object StatusBarComboStyleOneRuntime {
         }
     }
 
-    private class GlyphOverlay(context: Context, display: android.view.Display?) {
+    private class GlyphOverlay(rootContext: Context, private val display: android.view.Display?) {
         // Bind the overlay WindowManager/resources to the status-bar root's actual display.
         // applicationContext can resolve to the cover/default display even when the inner
         // status-bar root is active; re-create this object when the root display geometry changes.
-        private val app = display?.let { target ->
-            runCatching { context.createDisplayContext(target) }.getOrNull()
-        } ?: context
+        private val context = display?.let { target ->
+            runCatching { rootContext.createDisplayContext(target) }.getOrNull()
+        } ?: rootContext
         private var wm: WindowManager? = null
         private val glyph = GlyphView(app)
         private var params: WindowManager.LayoutParams? = null
@@ -302,8 +302,8 @@ object StatusBarComboStyleOneRuntime {
                     token = null
                 }
                 val windowContext = if (Build.VERSION.SDK_INT >= 30 && display != null) {
-                    runCatching { context.createWindowContext(display, type, null) }.getOrElse { app }
-                } else app
+                    runCatching { context.createWindowContext(display, type, null) }.getOrElse { context }
+                } else context
                 val candidateWindowManager = runCatching {
                     windowContext.getSystemService(Context.WINDOW_SERVICE) as? WindowManager
                 }.getOrNull() ?: continue
@@ -359,9 +359,9 @@ object StatusBarComboStyleOneRuntime {
             val oldHeight = lp.height
             val cfg = StatusBarComboStyleOneRuntime.config
             lp.width = StatusBarComboStyleOneRuntime.dp(
-                app, StatusComboStyleOneGlyphRenderer.glyphWidthDp(cfg, StatusBarComboStyleOneRuntime.state.networkType),
+                context, StatusComboStyleOneGlyphRenderer.glyphWidthDp(cfg, StatusBarComboStyleOneRuntime.state.networkType),
             )
-            lp.height = StatusBarComboStyleOneRuntime.dp(app, StatusComboStyleOneGlyphRenderer.glyphHeightDp(cfg))
+            lp.height = StatusBarComboStyleOneRuntime.dp(context, StatusComboStyleOneGlyphRenderer.glyphHeightDp(cfg))
             val networkType = StatusBarComboStyleOneRuntime.state.networkType
             val designWidthUnits = StatusComboStyleOneGlyphRenderer.glyphDesignWidth(cfg, networkType)
             val designHeightUnits = StatusComboStyleOneGlyphRenderer.glyphDesignHeight(cfg)
