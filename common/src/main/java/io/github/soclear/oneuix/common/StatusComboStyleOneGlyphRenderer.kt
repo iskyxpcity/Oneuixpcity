@@ -231,6 +231,46 @@ object StatusComboStyleOneGlyphRenderer {
             .roundToInt().coerceAtLeast(20)
 
     /**
+     * Only user-selected increases above normal defaults occupy extra native status-row width.
+     * Base drawing-lane clearances stay transparent, preserving the corrected default icon gap.
+     */
+    fun glyphOutsideSpacingExpansionDp(
+        config: StatusBarComboStyleOneRuntime,
+    ): Int {
+        val defaults = StatusBarComboStyleOneRuntime()
+        val typeDeltaDp = if (usesOutsideNetworkTypeLayout(config)) {
+            (config.outTypeMarginLeftDp.coerceIn(0, 16) - defaults.outTypeMarginLeftDp) +
+                (config.outTypeMarginRightDp.coerceIn(0, 16) - defaults.outTypeMarginRightDp)
+        } else 0
+        val signalDeltaDp = if (usesOutsideSignalLayout(config)) {
+            config.outSignalMarginDp.coerceIn(0, 16) - defaults.outSignalMarginDp
+        } else 0
+        val netDeltaDp = typeDeltaDp + signalDeltaDp
+        return (netDeltaDp * baseGlyphHeightDp(config).toFloat() / 36f)
+            .roundToInt().coerceAtLeast(0)
+    }
+
+    /**
+     * Fixed leading drawing area at normal defaults. Inline mode cancels only this base
+     * occupancy but leaves user-added margin growth allocated in the native status row.
+     */
+    fun glyphBaseLeadingExpansionDp(
+        config: StatusBarComboStyleOneRuntime,
+        networkType: String = "",
+    ): Int {
+        val defaults = StatusBarComboStyleOneRuntime()
+        val baseConfig = config.copy(
+            outTypeMarginLeftDp = defaults.outTypeMarginLeftDp,
+            outTypeMarginRightDp = defaults.outTypeMarginRightDp,
+            outSignalMarginDp = defaults.outSignalMarginDp,
+        )
+        return (
+            glyphWidthDp(baseConfig, networkType) -
+                glyphWidthDpWithoutLeadingExpansion(baseConfig, networkType)
+            ).coerceAtLeast(0)
+    }
+
+    /**
      * Width before added leading space for diagnostics and layout comparisons.
      * The actual inline/overlay host uses glyphWidthDp() so selected lane spacing is allocated.
      */

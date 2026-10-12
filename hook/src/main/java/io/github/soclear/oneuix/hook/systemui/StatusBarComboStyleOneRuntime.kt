@@ -1812,33 +1812,47 @@ object StatusBarComboStyleOneRuntime {
      * spacing is allocated to its left. During shade expansion, keep the old collapsed slot.
      */
     private fun updateOverlayHostSlot(host: Host, view: View) {
-        // The separate overlay already owns its drawing width. Keep the native slot collapsed
-        // so its extra canvas width does not push earlier status icons left.
-        collapseHostView(host, view)
+        if (shadeBusy) {
+            collapseHostView(host, view)
+            return
+        }
+        // Keep the corrected default gap, but grow the native slot leftward as users increase
+        // the outside margins/spacing. The ring stays tied to the same trailing slot edge.
+        val extraWidthDp = StatusComboStyleOneGlyphRenderer.glyphOutsideSpacingExpansionDp(config)
+        if (extraWidthDp > 0) {
+            reserveHostSlot(host, view, extraWidthDp)
+        } else {
+            collapseHostView(host, view)
+        }
     }
 
     private fun reserveHostSlot(host: Host, view: View, widthDp: Int) {
         val nativeBatterySnapshot = nativeBatteryLayouts[view]
-        host.original.putIfAbsent(view, nativeBatterySnapshot?.visibility ?: view.visibility)
+        val originalLayout = nativeBatterySnapshot ?: host.layouts[view] ?: snapshotLayout(view)
+        host.original.putIfAbsent(view, originalLayout?.visibility ?: view.visibility)
         if (!host.layouts.containsKey(view)) {
-            (nativeBatterySnapshot ?: snapshotLayout(view))?.let { host.layouts[view] = it }
+            originalLayout?.let { host.layouts[view] = it }
         }
         val lp = view.layoutParams ?: return
         val margins = lp as? ViewGroup.MarginLayoutParams
+        // The slot starts collapsed, so restore its original height while reserving only the
+        // incremental spacing width; never reserve the entire combination glyph width.
         val width = dp(view.context, widthDp)
+        val height = originalLayout?.height?.takeIf { it != 0 } ?: dp(view.context, 24)
         val left = dpExact(view.context, config.glyphLeftMarginDp)
         val right = dpExact(view.context, config.glyphRightMarginDp)
-        val changed = lp.width != width || margins?.let {
+        val changed = lp.width != width || lp.height != height || margins?.let {
             it.leftMargin != left || it.topMargin != 0 || it.rightMargin != right || it.bottomMargin != 0
         } == true
         if (changed) {
             lp.width = width
+            lp.height = height
             margins?.setMargins(left, 0, right, 0)
             view.layoutParams = lp
             val parent = view.parent as? View
             diagnostic(
-                "Dynamic battery slot width: requestedDp=${widthDp} targetPx=${width} " +
-                    "measuredNowPx=${view.width} parent=${parent?.javaClass?.simpleName} " +
+                "Dynamic battery slot expansion: requestedExtraDp=${widthDp} targetPx=${width} " +
+                    "height=${height} measuredNowPx=${view.width} parent=${parent?.javaClass?.simpleName} " +
                     "parentWidthPx=${parent?.width ?: -1} marginsPx=(${left},${right}) " +
                     "shadeBusy=${shadeBusy}"
             )
@@ -4322,15 +4336,8 @@ object StatusBarComboStyleOneRuntime {
         OneuiXPDiagnosticLog.record(TAG, message)
     }
     private fun glyphLeadingExpansionPx(context: Context, networkType: String): Int {
-        val expandedWidthPx = dp(
-            context,
-            StatusComboStyleOneGlyphRenderer.glyphWidthDp(config, networkType),
-        )
-        val baseWidthPx = dp(
-            context,
-            StatusComboStyleOneGlyphRenderer.glyphWidthDpWithoutLeadingExpansion(config, networkType),
-        )
-        return (expandedWidthPx - baseWidthPx).coerceAtLeast(0)
+        val leadingDp = StatusComboStyleOneGlyphRenderer.glyphBaseLeadingExpansionDp(config, networkType)
+        return if (leadingDp > 0) dp(context, leadingDp) else 0
     }
 
     private fun dp(context: Context, value: Int): Int =
