@@ -165,6 +165,17 @@ object ProductionPreferenceMigration {
                     comboRuntimeChanged = true
                 }
 
+                // The former shared outside-gap slider also controlled the external type label.
+                // On upgrade, give the newly independent type-to-ring gap the previous value once,
+                // preserving any user-selected spacing instead of silently resetting it to 8dp.
+                if ("outTypeRingGapDp" !in updatedComboRuntime) {
+                    val previousOutsideGap = updatedComboRuntime["outSignalMarginDp"]
+                        ?.toString()?.toIntOrNull() ?: 8
+                    updatedComboRuntime["outTypeRingGapDp"] =
+                        JsonPrimitive(previousOutsideGap.coerceIn(0, 16))
+                    comboRuntimeChanged = true
+                }
+
                 if (comboRuntimeChanged) {
                     updatedStatusBar["comboStyleOneRuntime"] = JsonObject(updatedComboRuntime)
                 }
