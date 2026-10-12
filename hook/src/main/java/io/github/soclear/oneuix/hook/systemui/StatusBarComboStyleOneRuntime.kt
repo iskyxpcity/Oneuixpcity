@@ -402,11 +402,12 @@ object StatusBarComboStyleOneRuntime {
             }
             val renderScale = lp.height.toFloat() / designHeightUnits
             val canvasLeftInsetPx = (lp.width - designWidthUnits * renderScale) / 2f
-            // Right-edge anchoring is the key invariant. Width changes move lp.x left, while
-            // leadingExpansion moves ringCenterXUnits right by the same amount inside the view.
+            // Align the actual design canvas to the slot's right edge, not merely the
+            // rounded WindowManager frame. This prevents width rounding from nudging the ring.
+            val horizontalOffsetPx = StatusBarComboStyleOneRuntime.dpExact(context, cfg.glyphOffsetXDp)
             lp.x = (
-                slotRightPx - lp.width +
-                    StatusBarComboStyleOneRuntime.dpExact(context, cfg.glyphOffsetXDp)
+                slotRightPx - canvasLeftInsetPx - designWidthUnits * renderScale +
+                    horizontalOffsetPx
                 ).roundToInt()
             val verticalOffsetPx = StatusBarComboStyleOneRuntime.dpExact(context, cfg.glyphOffsetYDp)
             lp.y = (
