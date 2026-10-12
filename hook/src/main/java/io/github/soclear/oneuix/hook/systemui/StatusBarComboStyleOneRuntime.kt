@@ -215,7 +215,9 @@ object StatusBarComboStyleOneRuntime {
         // without inserting a wide inline glyph into the status-bar row.
         val geometryRetry = Runnable {
             geometryRetryPending = false
-            if (!retired && !applying && config.enabled && config.overlayGlyph &&
+            if (!retired && !applying &&
+                StatusBarComboStyleOneRuntime.config.enabled &&
+                StatusBarComboStyleOneRuntime.config.overlayGlyph &&
                 geometryRetryAttempts < 10
             ) {
                 geometryRetryAttempts++
