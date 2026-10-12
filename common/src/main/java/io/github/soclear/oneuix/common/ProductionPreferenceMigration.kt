@@ -87,6 +87,20 @@ object ProductionPreferenceMigration {
                     comboRuntimeChanged = true
                 }
 
+                // The native status-bar icons already supply their own padding.
+                // Remove only the former 1dp extra inset; preserve larger custom values.
+                val glyphLeftMarginZeroDpMigrationDone =
+                    (updatedComboRuntime["glyphLeftMarginZeroDpMigrationDone"] as? JsonPrimitive)
+                        ?.content?.toBooleanStrictOrNull() == true
+                if (!glyphLeftMarginZeroDpMigrationDone) {
+                    val oldLeftMargin = updatedComboRuntime["glyphLeftMarginDp"]?.toString()?.toIntOrNull() ?: 0
+                    if (oldLeftMargin == 1) {
+                        updatedComboRuntime["glyphLeftMarginDp"] = JsonPrimitive(0)
+                    }
+                    updatedComboRuntime["glyphLeftMarginZeroDpMigrationDone"] = JsonPrimitive(true)
+                    comboRuntimeChanged = true
+                }
+
                 val marginResetTo2MigrationDone =
                     (updatedComboRuntime["outSignalMarginReset2MigrationDone"] as? JsonPrimitive)
                         ?.content?.toBooleanStrictOrNull() == true
@@ -117,6 +131,22 @@ object ProductionPreferenceMigration {
                         updatedComboRuntime["outSignalMarginDp"] = JsonPrimitive(4)
                     }
                     updatedComboRuntime["outSignalMarginFourDpMigrationDone"] = JsonPrimitive(true)
+                    comboRuntimeChanged = true
+                }
+
+                // The 4dp setting still looks too tight on the device. Increase only
+                // the outside-signal-to-ring gap; keep the composite icon's own
+                // left margin independent and preserve manually chosen other values.
+                val outsideSignalMarginSixDpMigrationDone =
+                    (updatedComboRuntime["outSignalMarginSixDpMigrationDone"] as? JsonPrimitive)
+                        ?.content?.toBooleanStrictOrNull() == true
+                if (!outsideSignalMarginSixDpMigrationDone) {
+                    val oldOutsideSignalMargin =
+                        updatedComboRuntime["outSignalMarginDp"]?.toString()?.toIntOrNull() ?: 6
+                    if (oldOutsideSignalMargin == 4) {
+                        updatedComboRuntime["outSignalMarginDp"] = JsonPrimitive(6)
+                    }
+                    updatedComboRuntime["outSignalMarginSixDpMigrationDone"] = JsonPrimitive(true)
                     comboRuntimeChanged = true
                 }
 
