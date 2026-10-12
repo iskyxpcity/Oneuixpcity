@@ -214,6 +214,11 @@ data class Preference(
             val criticalColorLightArgb: Int = 0xFFFF3B30.toInt(),
             val chargingColorDarkArgb: Int = 0xFF34C759.toInt(),
             val chargingColorLightArgb: Int = 0xFF1F8F3D.toInt(),
+            // Defaults preserve native status-bar tint for ordinary charging and blue for fast charging.
+            val normalChargingBoltColorDarkArgb: Int = 0xFFFFFFFF.toInt(),
+            val normalChargingBoltColorLightArgb: Int = 0xFF000000.toInt(),
+            val quickChargingBoltColorDarkArgb: Int = 0xFF2196F3.toInt(),
+            val quickChargingBoltColorLightArgb: Int = 0xFF2196F3.toInt(),
             val lowColorDarkArgb: Int = 0xFFF2B900.toInt(),
             val lowColorLightArgb: Int = 0xFFC99700.toInt(),
             val powerSaveFillColorDarkArgb: Int = 0xBFFFC107.toInt(),
