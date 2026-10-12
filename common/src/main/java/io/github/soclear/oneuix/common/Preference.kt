@@ -229,6 +229,8 @@ data class Preference(
             val typeSize: Int = 32,
             val outTypeSizeDp: Int = 14,
             val outSignalSizeDp: Int = 15,
+            // Outer/left margin for the self-drawn signal lane; zero preserves existing geometry.
+            val outSignalMarginLeftDp: Int = 0,
             val outTypeMarginLeftDp: Int = 2,
             val outTypeMarginRightDp: Int = 2,
             val outSignalMarginDp: Int = 8,

@@ -65,9 +65,10 @@
     <string name="status_combo_style_one_type_suffix_scale">The A in 5GA</string>
     <string name="status_combo_style_one_out_type_size">Out-of-ring type size</string>
     <string name="status_combo_style_one_out_signal_size">Out-of-ring signal size</string>
+    <string name="status_combo_style_one_out_signal_margin_left">Out-of-ring signal left margin</string>
     <string name="status_combo_style_one_out_type_margin_left">Out-of-ring type margin, left</string>
     <string name="status_combo_style_one_out_type_margin_right">Out-of-ring type margin, right</string>
-    <string name="status_combo_style_one_out_signal_margin">Out-of-ring signal gap</string>
+    <string name="status_combo_style_one_out_signal_margin">Out-of-ring signal right margin</string>
     <string name="status_combo_style_one_role_colors">State colors</string>
     <string name="status_combo_style_one_role_colors_summary">Pick colors for low battery, charging and critical battery.</string>
     <string name="status_combo_style_one_critical_threshold">Critical battery threshold</string>
@@ -133,7 +134,8 @@
     <string name="status_combo_style_one_out_type_margin_right_summary">Current %1$d dp: gap between the out-of-ring network-type label and its inner side, facing the battery and out-of-ring reading. The default is 2 dp and the range is 0–16 dp. It mirrors in RTL layouts too.</string>
     <string name="status_combo_style_one_type_weight_summary">Current weight %1$d: stroke weight of the network type, 100 lightest to 900 heaviest.</string>
     <string name="status_combo_style_one_out_signal_size_summary">Current %1$d dp: overall height of the out-of-ring reading, in dp so it converts to pixels on any screen density. 15 dp matches the height of the status bar\'s own signal icon and is the default; the range is 6–20 dp. The same row is drawn at the same size whether or not a dot row follows it, so the two shapes never come out different sizes, and pulling down Quick Settings does not change it.</string>
-    <string name="status_combo_style_one_out_signal_margin_summary">Current %1$d dp: controls only the gap between the self-drawn out-of-ring signal bars and the battery ring. It does not move the out-of-ring network-type label or change the overall left margin of the composite icon. Available only when Signal position is Outside the ring and Stacked signal is enabled.</string>
+    <string name="status_combo_style_one_out_signal_margin_summary">Current %1$d dp: controls the additional blank space on the right side of the out-of-ring signal bars, facing the battery ring. It is independent from the Out-of-ring signal left margin. Increasing it moves the bars away from the ring while keeping the ring anchored. Default 8 dp; range 0–16 dp. Available only when Signal position is Outside the ring and Stacked signal is enabled.</string>
+    <string name="status_combo_style_one_out_signal_margin_left_summary">Current %1$d dp: controls the blank space on the left/outward side of the out-of-ring signal bars, independently from the Out-of-ring signal right margin. Increasing it expands the status-bar slot to the left while keeping the battery ring anchored. Default 0 dp; range 0–16 dp. Available only when Signal position is Outside the ring and Stacked signal is enabled.</string>
     <string name="status_combo_style_one_track_alpha_summary">Current %1$d%%: opacity of the unlit parts of the glyph.</string>
     <string name="status_combo_style_one_bolt_size_summary">Current %1$d%%: scale of the charging bolt; requires both the battery number and charging bolt to be enabled.</string>
     <string name="status_combo_style_one_bolt_x_summary">Current %1$d dp: horizontal position of the charging bolt; positive values move right.</string>

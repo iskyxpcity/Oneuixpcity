@@ -25,6 +25,12 @@ object OneuiXPDiagnosticLog {
     private val entries = ArrayDeque<String>()
     private val receiverInstalled = AtomicBoolean(false)
     private var totalChars = 0
+    @Volatile private var liveSnapshotProvider: (() -> String)? = null
+
+    /** Supplies the live geometry snapshot collected by the existing Send logs action. */
+    fun setLiveSnapshotProvider(provider: (() -> String)?) {
+        liveSnapshotProvider = provider
+    }
 
     fun record(category: String, message: String) {
         val safeMessage = message.replace('\n', ' ').replace('\r', ' ').take(MAX_ENTRY_CHARS)
@@ -51,7 +57,22 @@ object OneuiXPDiagnosticLog {
                 if (requestId.isNullOrBlank()) return
 
                 record("OneuiXPDiagnostics", "Settings requested the SystemUI diagnostic buffer.")
-                val payload = dump()
+                val snapshot = runCatching {
+                    liveSnapshotProvider?.invoke()
+                        ?: "(Live status-bar geometry provider is not registered.)"
+                }.getOrElse {
+                    "Live status-bar geometry snapshot failed: ${it.javaClass.simpleName}: ${it.message.orEmpty()}"
+                }.take(48 * 1024)
+                record(
+                    "OneuiXPDiagnostics",
+                    "On-demand live geometry snapshot collected: ${snapshot.length} characters.",
+                )
+                val payload = buildString {
+                    append(dump())
+                    appendLine()
+                    appendLine("[Live status-bar geometry snapshot]")
+                    appendLine(snapshot)
+                }
                 val reply = Intent(StatusBarRuntimeBridge.ACTION_DIAGNOSTIC_LOG_RESPONSE)
                     .setPackage(StatusBarRuntimeBridge.ONEUIXP_APP_PACKAGE)
                     .putExtra(StatusBarRuntimeBridge.EXTRA_DIAGNOSTIC_REQUEST_ID, requestId)

@@ -72,13 +72,6 @@ object StatusBarComboStyleOneRuntime {
     private const val MIUI_BATTERY_METER = "com.android.systemui.statusbar.views.MiuiBatteryMeterView"
     private const val MIUI_BATTERY_CONTAINER = "com.android.systemui.statusbar.views.MiuiStatusBatteryContainer"
     private const val ICON_HIDE_LIST_KEY = "icon_blacklist"
-    // The outer display's camera needs the established +4dp vertical calibration.
-    // The foldable inner display places the camera near the right edge; this separate
-    // calibration is based on the reported cutout position and does not alter outer-screen alignment.
-    private const val PUNCH_HOLE_VERTICAL_CALIBRATION_DP = 4f
-    private const val INNER_PUNCH_HOLE_VERTICAL_CALIBRATION_DP = 0.5f
-    private const val INNER_PUNCH_HOLE_HORIZONTAL_CALIBRATION_DP = 1.5f
-    private const val RIGHT_SIDE_CUTOUT_THRESHOLD = 0.65f
 
     private val installed = AtomicBoolean(false)
     @Volatile private var moduleForPreferenceReload: XposedModule? = null
@@ -241,11 +234,21 @@ object StatusBarComboStyleOneRuntime {
 
     private class GlyphView(context: Context) : View(context) {
         private var tintOverride: Int? = null
+        private var statusBarRootForTypeBounds: View? = null
         init {
             isClickable = false
             isFocusable = false
             importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
         }
+        fun setStatusBarRootForTypeBounds(root: View?) {
+            if (statusBarRootForTypeBounds === root) return
+            statusBarRootForTypeBounds = root
+            invalidate()
+        }
+        fun minimumVisibleIconLeftPx(): Float? =
+            StatusBarComboStyleOneRuntime.minimumVisibleIconLeftPx(
+                this, statusBarRootForTypeBounds,
+            )
         fun setTintOverride(color: Int?) {
             if (tintOverride == color) return
             tintOverride = color
@@ -259,6 +262,7 @@ object StatusBarComboStyleOneRuntime {
             val drawState = if (localTint == null) currentState else currentState.copy(tintColor = localTint)
             StatusComboStyleOneGlyphRenderer.draw(
                 canvas, width, height, currentConfig, drawState,
+                minimumVisibleIconLeftPx(),
             )
         }
     }
@@ -353,6 +357,7 @@ object StatusBarComboStyleOneRuntime {
 
         fun update(anchor: View, root: ViewGroup, cameraBounds: Rect): Boolean {
             val lp = params ?: return false
+            glyph.setStatusBarRootForTypeBounds(root)
             val cutout = Rect(cameraBounds)
             val oldX = lp.x
             val oldY = lp.y
@@ -368,58 +373,91 @@ object StatusBarComboStyleOneRuntime {
             val designHeightUnits = StatusComboStyleOneGlyphRenderer.glyphDesignHeight(cfg)
             val ringCenterXUnits = StatusComboStyleOneGlyphRenderer.glyphCenterX(cfg, networkType)
             val centreRatioY = StatusComboStyleOneGlyphRenderer.glyphVerticalCenterRatio(cfg)
-            // Use the active status bar/display's reported cutout rectangle. Fold inner
-            // screens can place the camera well to the right of the geometric centre.
-            val cameraCenterX = cutout.centerX()
-            val cameraCenterY = cutout.centerY()
-            val displaySize = activeDisplaySize(root)
-            // On this foldable, the inner-screen camera is on the right side while
-            // the cover-screen camera is near the centre. Detect from cutout geometry
-            // instead of applying an inner-screen correction to every display.
-            val rightSideCutout = displaySize.x > 0 &&
-                cameraCenterX >= displaySize.x * RIGHT_SIDE_CUTOUT_THRESHOLD
-            val horizontalCalibrationPx = if (rightSideCutout) {
-                (INNER_PUNCH_HOLE_HORIZONTAL_CALIBRATION_DP *
-                    context.resources.displayMetrics.density).roundToInt()
-            } else 0
-            val verticalCalibrationDp = if (rightSideCutout) {
-                INNER_PUNCH_HOLE_VERTICAL_CALIBRATION_DP
-            } else {
-                PUNCH_HOLE_VERTICAL_CALIBRATION_DP
+            // The cutout bounds decide whether independent rendering is available, but they
+            // must not position the glyph. The native battery slot is the layout anchor: its
+            // right edge remains fixed while the slot/window gain width to the left.
+            val anchorLocation = IntArray(2)
+            val anchorLocated = anchor.isAttachedToWindow &&
+                runCatching { anchor.getLocationOnScreen(anchorLocation) }.isSuccess
+            val rootLocation = IntArray(2)
+            val rootLocated = root.isAttachedToWindow &&
+                runCatching { root.getLocationOnScreen(rootLocation) }.isSuccess
+            if (!anchorLocated && !rootLocated) {
+                diagnostic("Glyph overlay cannot resolve status-bar slot or root screen coordinates")
+                return false
             }
-            // Anchor the actual drawn ring centre, not a ratio of the window width.
-            // The renderer centres its canvas inside the integer-sized WindowManager bounds;
-            // compensating for that exact inset prevents label-margin width changes from moving
-            // the ring by even a rounded pixel.
+            val slotRightPx = when {
+                anchorLocated && anchor.width > 0 -> anchorLocation[0] + anchor.width
+                // A zero-width anchor can occur between slot-reservation and the next layout pass.
+                // Its laid-out X is the end edge of the collapsed battery slot in the icon row.
+                anchorLocated -> anchorLocation[0]
+                rootLocated -> rootLocation[0] + root.width -
+                    StatusBarComboStyleOneRuntime.dpExact(context, cfg.glyphRightMarginDp)
+                else -> return false
+            }
+            val slotCenterY = when {
+                anchorLocated && anchor.height > 0 -> anchorLocation[1] + anchor.height / 2f
+                rootLocated -> rootLocation[1] + root.height / 2f
+                else -> return false
+            }
             val renderScale = lp.height.toFloat() / designHeightUnits
             val canvasLeftInsetPx = (lp.width - designWidthUnits * renderScale) / 2f
-            val ringCenterOffsetPx = ringCenterXUnits * renderScale + canvasLeftInsetPx
+            // Align the actual design canvas to the slot's right edge, not merely the
+            // rounded WindowManager frame. This prevents width rounding from nudging the ring.
+            val horizontalOffsetPx = StatusBarComboStyleOneRuntime.dpExact(context, cfg.glyphOffsetXDp)
             lp.x = (
-                cameraCenterX - ringCenterOffsetPx +
-                    StatusBarComboStyleOneRuntime.dpExact(
-                        context, cfg.glyphOffsetXDp + cfg.glyphLeftMarginDp - cfg.glyphRightMarginDp,
-                    ) + horizontalCalibrationPx
+                slotRightPx - canvasLeftInsetPx - designWidthUnits * renderScale +
+                    horizontalOffsetPx
                 ).roundToInt()
-            val verticalOffsetPx = (
-                (cfg.glyphOffsetYDp.toFloat() + verticalCalibrationDp) *
-                    context.resources.displayMetrics.density
-                ).roundToInt()
+            val verticalOffsetPx = StatusBarComboStyleOneRuntime.dpExact(context, cfg.glyphOffsetYDp)
             lp.y = (
-                cameraCenterY - lp.height * centreRatioY + verticalOffsetPx
+                slotCenterY - lp.height * centreRatioY + verticalOffsetPx
                 ).roundToInt()
+            val ringCenterScreenPx = lp.x + canvasLeftInsetPx + ringCenterXUnits * renderScale
             diagnostic(
-                "Glyph overlay coordinates: type=${lp.type} cameraCenter=(${cameraCenterX},${cameraCenterY}) " +
-                    "window=(${lp.x},${lp.y}) size=${lp.width}x${lp.height} cutout=$cutout " +
-                    "rightSideCutout=$rightSideCutout correctionDp=(" +
-                    "${if (rightSideCutout) INNER_PUNCH_HOLE_HORIZONTAL_CALIBRATION_DP else 0f}," +
-                    "${verticalCalibrationDp})"
+                "Glyph overlay slot-anchored coordinates: type=${lp.type} slotRightPx=${slotRightPx} " +
+                    "slotCenterY=${slotCenterY} anchorSize=${anchor.width}x${anchor.height} " +
+                    "anchorLocated=${anchorLocated} window=(${lp.x},${lp.y}) size=${lp.width}x${lp.height} " +
+                    "ringCenterScreenX=${ringCenterScreenPx} cutoutBounds=${cutout}(diagnostic-only)"
             )
             if (oldX != lp.x || oldY != lp.y || oldWidth != lp.width || oldHeight != lp.height) {
                 runCatching { wm?.updateViewLayout(glyph, lp) }
-                    .onFailure { Log.w(TAG, "Cannot update camera-anchored glyph window", it) }
+                    .onFailure { Log.w(TAG, "Cannot update status-slot-anchored glyph window", it) }
             }
             return true
         }
+
+        fun diagnosticSnapshot(): String {
+            val lp = params ?: return "overlayWindow=not-attached (no LayoutParams)"
+            val actual = IntArray(2)
+            val hasScreenOrigin = glyph.isAttachedToWindow &&
+                runCatching { glyph.getLocationOnScreen(actual) }.isSuccess
+            val screenX = if (hasScreenOrigin) actual[0] else lp.x
+            val screenY = if (hasScreenOrigin) actual[1] else lp.y
+            val density = context.resources.displayMetrics.density
+            return buildString {
+                appendLine(
+                    "windowType=${lp.type},title=${lp.title},flags=${lp.flags},gravity=${lp.gravity}," +
+                        "lpOrigin=(${lp.x},${lp.y}),actualViewScreenOrigin=(${if (hasScreenOrigin) actual[0] else "unknown"}," +
+                        "${if (hasScreenOrigin) actual[1] else "unknown"}),lpSizePx=${lp.width}x${lp.height}," +
+                        "actualViewSize=${glyph.width}x${glyph.height},attached=${glyph.isAttachedToWindow}," +
+                        "windowTokenPresent=${lp.token != null},density=${density}"
+                )
+                appendLine(
+                    StatusComboStyleOneGlyphRenderer.diagnosticGeometrySnapshot(
+                        StatusBarComboStyleOneRuntime.config,
+                        StatusBarComboStyleOneRuntime.state.networkType,
+                        lp.width,
+                        lp.height,
+                        density,
+                        screenX,
+                        screenY,
+                        glyph.minimumVisibleIconLeftPx(),
+                    )
+                )
+            }
+        }
+
         fun setTintOverride(color: Int?) { glyph.setTintOverride(color) }
         fun invalidate() { glyph.invalidate() }
 
@@ -536,7 +574,7 @@ object StatusBarComboStyleOneRuntime {
                     apply(host)
                     return@forEach
                 }
-                collapseHostView(host, battery)
+                updateOverlayHostSlot(host, battery)
                 if (overlay.update(battery, host.root, cameraBounds)) {
                     overlay.setShadeVisible(true)
                     overlay.invalidate()
@@ -782,8 +820,174 @@ object StatusBarComboStyleOneRuntime {
         return null
     }
 
+
+    /**
+     * Captures status-bar/window geometry only when Settings → Send logs is requested.
+     * This is read-only: it never changes layout, visibility, or the foldable lifecycle.
+     */
+    private fun buildLiveDiagnosticSnapshot(): String {
+        val hostList = synchronized(hosts) { hosts.values.toList().filter { !it.retired } }
+        val cfg = config
+        val currentState = state
+        return buildString {
+            appendLine("SnapshotTimeMs=${System.currentTimeMillis()}")
+            appendLine(
+                "Config enabled=${cfg.enabled},overlayGlyph=${cfg.overlayGlyph},showMobile=${cfg.showMobile}," +
+                    "showWifi=${cfg.showWifi},signalMode=${cfg.signalMode},mobileTypeMode=${cfg.mobileTypeMode}," +
+                    "stackedSignal=${cfg.stackedSignal},dataSimOnly=${cfg.dataSimOnly},dualSim=${cfg.dualSim}," +
+                    "dualSimMode=${cfg.dualSimMode},trioStyle=${cfg.trioStyle}"
+            )
+            appendLine(
+                "Config glyphScalePercent=${cfg.glyphScalePercent},glyphOffsetXDp=${cfg.glyphOffsetXDp}," +
+                    "glyphOffsetYDp=${cfg.glyphOffsetYDp},glyphLeftMarginDp=${cfg.glyphLeftMarginDp}," +
+                    "glyphRightMarginDp=${cfg.glyphRightMarginDp},outTypeSizeDp=${cfg.outTypeSizeDp}," +
+                    "outTypeMarginLeftDp=${cfg.outTypeMarginLeftDp},outTypeMarginRightDp=${cfg.outTypeMarginRightDp}," +
+                    "outSignalSizeDp=${cfg.outSignalSizeDp},outSignalMarginDp=${cfg.outSignalMarginDp}," +
+                    "outSignalMarginLeftDp=${cfg.outSignalMarginLeftDp}," +
+                    "ringStroke=${cfg.ringStroke},typeWeight=${cfg.typeWeight},typeSuffixScale=${cfg.typeSuffixScale}"
+            )
+            appendLine(
+                "State batteryLevel=${currentState.batteryLevel},charging=${currentState.charging}," +
+                    "quickCharge=${currentState.quickCharge},wifiLevel=${currentState.wifiLevel}," +
+                    "mobileLevel=${currentState.mobileLevel},simOneLevel=${currentState.simOneLevel}," +
+                    "simTwoLevel=${currentState.simTwoLevel},dataSimSlotIndex=${currentState.dataSimSlotIndex}," +
+                    "networkType=${currentState.networkType},powerSave=${currentState.powerSave}," +
+                    "lowBatteryWarning=${currentState.lowBatteryWarning}"
+            )
+            appendLine("Hosts collected=${hostList.size}; attached=${hostList.count { it.root.isAttachedToWindow }}")
+            if (hostList.isEmpty()) {
+                appendLine("No registered StatusBarComboStyleOneRuntime hosts are currently available.")
+            }
+            hostList.take(6).forEachIndexed { hostIndex, host ->
+                val root = host.root
+                val metrics = root.resources.displayMetrics
+                val displaySize = activeDisplaySize(root)
+                val rootScreen = IntArray(2)
+                val rootWindow = IntArray(2)
+                runCatching { root.getLocationOnScreen(rootScreen) }
+                runCatching { root.getLocationInWindow(rootWindow) }
+                val camera = runCatching { cutoutBounds(root) }.getOrNull()
+                appendLine("[Host ${hostIndex}] retired=${host.retired},applying=${host.applying}," +
+                    "overlayFailed=${host.overlayFailed},rootAttached=${root.isAttachedToWindow}")
+                appendLine(
+                    "Display id=${root.display?.displayId},realSizePx=${displaySize.x}x${displaySize.y}," +
+                        "metricsPx=${metrics.widthPixels}x${metrics.heightPixels},density=${metrics.density}," +
+                        "densityDpi=${metrics.densityDpi},cameraBounds=${camera}"
+                )
+                appendLine(
+                    "Root class=${root.javaClass.name},resource=${resourceName(root)},screenOrigin=${rootScreen.contentToString()}," +
+                        "windowOrigin=${rootWindow.contentToString()},localBounds=[${root.left},${root.top},${root.right},${root.bottom}]," +
+                        "size=${root.width}x${root.height},measured=${root.measuredWidth}x${root.measuredHeight}," +
+                        "padding=[${root.paddingLeft},${root.paddingTop},${root.paddingRight},${root.paddingBottom}]," +
+                        "clipChildren=${root.clipChildren},clipToPadding=${root.clipToPadding}"
+                )
+                appendLine(
+                    "Host battery=${host.battery?.javaClass?.name},shadeDrawTarget=${host.shadeDrawTarget?.javaClass?.name}," +
+                        "inlinePresent=${host.inline != null},overlayPresent=${host.overlay != null}," +
+                        "savedLayouts=${host.layouts.size},savedVisibility=${host.original.size}," +
+                        "batteryWillNotDraw=${host.batteryWillNotDraw},activeDisplay=${host.activeDisplayId}:" +
+                        "${host.activeDisplayWidth}x${host.activeDisplayHeight}"
+                )
+                if (host.overlay != null) {
+                    appendLine("[Independent overlay geometry]")
+                    appendLine(host.overlay!!.diagnosticSnapshot())
+                }
+                host.inline?.let { glyph ->
+                    val pos = IntArray(2)
+                    runCatching { glyph.getLocationOnScreen(pos) }
+                    appendLine("[Inline glyph geometry]")
+                    appendLine(
+                        StatusComboStyleOneGlyphRenderer.diagnosticGeometrySnapshot(
+                            cfg, currentState.networkType, glyph.width, glyph.height, metrics.density,
+                            pos[0], pos[1], glyph.minimumVisibleIconLeftPx(),
+                        )
+                    )
+                }
+
+                val allViews = descendants(root)
+                val candidates = linkedSetOf<View>()
+                candidates += root
+                val clusters = allViews.filter(::isStatusIconsCluster)
+                clusters.forEach { cluster ->
+                    candidates += cluster
+                    val group = cluster as? ViewGroup ?: return@forEach
+                    for (i in 0 until group.childCount) {
+                        val child = group.getChildAt(i)
+                        candidates += child
+                        val nested = child as? ViewGroup
+                        if (nested != null) {
+                            for (j in 0 until nested.childCount) candidates += nested.getChildAt(j)
+                        }
+                    }
+                }
+                listOfNotNull(host.battery, host.shadeDrawTarget, host.inline).forEach { anchor ->
+                    candidates += anchor
+                    val parent = anchor.parent as? ViewGroup ?: return@forEach
+                    candidates += parent
+                    for (i in 0 until parent.childCount) candidates += parent.getChildAt(i)
+                }
+                allViews.forEach { view ->
+                    val className = view.javaClass.name.lowercase()
+                    val resource = resourceName(view).lowercase()
+                    val slot = (knownIconSlots[view] ?: slotOf(view)).orEmpty()
+                    val looksLikeStatusIcon = className.contains("statusbariconview") ||
+                        className.contains("statusicon") || className.contains("iconcontainer") ||
+                        className.contains("batterymeter") || className.contains("batteryicon") ||
+                        className.contains("mobileview") || className.contains("wifi") ||
+                        resource.contains("status_icon") || resource.contains("statusicon") ||
+                        resource.contains("battery") || resource.contains("mobile") ||
+                        resource.contains("wifi") || slot.isNotBlank()
+                    if (looksLikeStatusIcon || view === host.battery || view === host.inline ||
+                        view === host.shadeDrawTarget || isWifiIcon(view) || isMobileIcon(view) ||
+                        isMobileTypeView(view) || isBatteryIcon(view)
+                    ) candidates += view
+                }
+                appendLine("[Status-bar view geometry] candidates=${candidates.size}; outputLimit=100")
+                candidates.take(100).forEach { view -> appendLine(diagnosticViewSummary(host, view)) }
+                if (candidates.size > 100) {
+                    appendLine("View geometry truncated: ${candidates.size - 100} additional views omitted.")
+                }
+            }
+        }.take(48 * 1024)
+    }
+
+    private fun diagnosticViewSummary(host: Host, view: View): String {
+        val screen = IntArray(2)
+        val window = IntArray(2)
+        runCatching { view.getLocationOnScreen(screen) }
+        runCatching { view.getLocationInWindow(window) }
+        val parent = view.parent as? View
+        val parentGroup = parent as? ViewGroup
+        val childIndex = parentGroup?.indexOfChild(view) ?: -1
+        val lp = view.layoutParams
+        val margins = lp as? ViewGroup.MarginLayoutParams
+        val saved = host.layouts[view]
+        val slot = (knownIconSlots[view] ?: slotOf(view)).orEmpty()
+        val visibility = when (view.visibility) {
+            View.VISIBLE -> "VISIBLE"
+            View.INVISIBLE -> "INVISIBLE"
+            View.GONE -> "GONE"
+            else -> view.visibility.toString()
+        }
+        val savedText = saved?.let {
+            "${it.width}x${it.height}/m=${it.leftMargin},${it.topMargin},${it.rightMargin},${it.bottomMargin}/vis=${it.visibility}/alpha=${it.alpha}"
+        } ?: "-"
+        return "View class=${view.javaClass.name},id=${resourceName(view).ifBlank { "-" }},slot=${slot.ifBlank { "-" }}," +
+            "visibility=${visibility},alpha=${view.alpha},screenOrigin=${screen.contentToString()}," +
+            "windowOrigin=${window.contentToString()},localBounds=[${view.left},${view.top},${view.right},${view.bottom}]," +
+            "size=${view.width}x${view.height},measured=${view.measuredWidth}x${view.measuredHeight}," +
+            "translation=[${view.translationX},${view.translationY}],padding=[${view.paddingLeft},${view.paddingTop}," +
+            "${view.paddingRight},${view.paddingBottom}],lp=${lp?.width}x${lp?.height}," +
+            "margins=[${margins?.leftMargin ?: 0},${margins?.topMargin ?: 0},${margins?.rightMargin ?: 0},${margins?.bottomMargin ?: 0}]," +
+            "clipBounds=${view.clipBounds},parent=${parent?.javaClass?.name}:${resourceName(parent ?: view).ifBlank { "-" }}," +
+            "childIndex=${childIndex},parentChildCount=${parentGroup?.childCount ?: -1}," +
+            "parentClipChildren=${parentGroup?.clipChildren},parentClipToPadding=${parentGroup?.clipToPadding}," +
+            "savedOriginal=${savedText},originalVisibility=${host.original[view] ?: "-"}"
+    }
+
     private fun scheduleRegister(root: ViewGroup) {
         // Register the shared, on-demand diagnostics reply channel with the first live SystemUI context.
+        OneuiXPDiagnosticLog.setLiveSnapshotProvider { buildLiveDiagnosticSnapshot() }
         OneuiXPDiagnosticLog.install(root.context)
         root.post { register(root) }
         // One bounded retry for SystemUI's deferred icon inflation. Do not keep
@@ -896,14 +1100,15 @@ object StatusBarComboStyleOneRuntime {
                 if (host.retired) return@forEach
                 val battery = host.battery ?: return@forEach
                 host.inline?.let { glyph ->
+                    glyph.setStatusBarRootForTypeBounds(host.root)
                     val width = dp(glyph.context, StatusComboStyleOneGlyphRenderer.glyphWidthDp(config, state.networkType))
                     val height = dp(glyph.context, StatusComboStyleOneGlyphRenderer.glyphHeightDp(config))
                     val lp = glyph.layoutParams
                     if (lp != null) {
                         val margins = lp as? ViewGroup.MarginLayoutParams
-                        // Let the parent's measured occupied width follow the actual label.
-                        // Renderer coordinates keep the ring anchored without cancelling width via margins.
-                        val left = dpExact(glyph.context, config.glyphLeftMarginDp)
+                        // Keep the canvas's extra leading lane out of native row measurement.
+                        val leadingExpansionPx = glyphLeadingExpansionPx(glyph.context, state.networkType)
+                        val left = dpExact(glyph.context, config.glyphLeftMarginDp) - leadingExpansionPx
                         val right = dpExact(glyph.context, config.glyphRightMarginDp)
                         val changed = lp.width != width || lp.height != height || margins?.let {
                             it.leftMargin != left || it.rightMargin != right || it.topMargin != 0 || it.bottomMargin != 0
@@ -924,7 +1129,7 @@ object StatusBarComboStyleOneRuntime {
                     if (cameraBounds == null) {
                         apply(host)
                     } else {
-                        collapseHostView(host, battery)
+                        updateOverlayHostSlot(host, battery)
                         if (overlay.update(battery, host.root, cameraBounds)) {
                             overlay.invalidate()
                         } else {
@@ -1166,9 +1371,9 @@ object StatusBarComboStyleOneRuntime {
                     main.removeCallbacks(host.geometryRetry)
                     host.geometryRetryPending = false
                     host.geometryRetryAttempts = 0
-                    // Anchor the independent renderer to the reported camera rectangle,
-                    // never a presumed centre. Collapse the native meter to avoid overdraw.
-                    collapseHostView(host, battery)
+                    // Reserve the live-width battery slot; the renderer aligns to that slot's
+                    // right edge, not to the camera/cutout position.
+                    updateOverlayHostSlot(host, battery)
                     overlay.setShadeVisible(true)
                     overlay.update(battery, root, cameraBounds)
                     overlay.invalidate()
@@ -1203,17 +1408,32 @@ object StatusBarComboStyleOneRuntime {
         }
         val height = if (compactToAnchor) originalHeight else dp(parent.context, designHeight)
         host.inline?.takeIf { it.parent === parent }?.let { glyph ->
+            glyph.setStatusBarRootForTypeBounds(host.root)
             val lp = glyph.layoutParams
-            if (lp != null && (lp.width != width || lp.height != height)) {
-                lp.width = width
-                lp.height = height
-                glyph.layoutParams = lp
+            if (lp != null) {
+                val margins = lp as? ViewGroup.MarginLayoutParams
+                val leadingExpansionPx = glyphLeadingExpansionPx(parent.context, state.networkType)
+                val left = dpExact(parent.context, config.glyphLeftMarginDp) - leadingExpansionPx
+                val right = dpExact(parent.context, config.glyphRightMarginDp)
+                val changed = lp.width != width || lp.height != height || margins?.let {
+                    it.leftMargin != left || it.rightMargin != right ||
+                        it.topMargin != 0 || it.bottomMargin != 0
+                } == true
+                if (changed) {
+                    lp.width = width
+                    lp.height = height
+                    margins?.setMargins(left, 0, right, 0)
+                    glyph.layoutParams = lp
+                }
             }
             glyph.invalidate()
             return
         }
         removeInline(host)
-        val glyph = GlyphView(parent.context).apply { setTintOverride(host.rowTint) }
+        val glyph = GlyphView(parent.context).apply {
+            setTintOverride(host.rowTint)
+            setStatusBarRootForTypeBounds(host.root)
+        }
         val old = anchor.layoutParams
         val lp = when (old) {
             is LinearLayout.LayoutParams -> LinearLayout.LayoutParams(old).apply { this.width = width; this.height = height }
@@ -1223,8 +1443,9 @@ object StatusBarComboStyleOneRuntime {
             else -> ViewGroup.LayoutParams(width, height)
         }
         val margins = lp as? ViewGroup.MarginLayoutParams
+        val leadingExpansionPx = glyphLeadingExpansionPx(parent.context, state.networkType)
         margins?.setMargins(
-            dpExact(parent.context, config.glyphLeftMarginDp),
+            dpExact(parent.context, config.glyphLeftMarginDp) - leadingExpansionPx,
             0,
             dpExact(parent.context, config.glyphRightMarginDp),
             0,
@@ -1245,6 +1466,44 @@ object StatusBarComboStyleOneRuntime {
         host.layouts.clear()
         host.original.entries.toList().forEach { (view, visibility) -> runCatching { view.visibility = visibility } }
         host.original.clear()
+    }
+
+    /**
+     * Rightmost visible native icon edge within the active status-icons cluster. Only leaves are
+     * measured: the StatusIconContainer's own bounds include unused end padding, not visible ink.
+     */
+    private fun lastVisibleStatusIconRightScreenPx(root: View?): Int? {
+        root ?: return null
+        val cluster = descendants(root).firstOrNull(::isStatusIconsCluster) ?: return null
+        val leaves = descendants(cluster).drop(1).filter { candidate ->
+            val isLeaf = candidate !is ViewGroup || candidate.childCount == 0
+            if (!isLeaf || candidate.width <= 0 || candidate.height <= 0) return@filter false
+            var current: View? = candidate
+            var visible = true
+            while (current != null) {
+                if (current.visibility != View.VISIBLE || current.alpha <= 0f) visible = false
+                if (current === cluster) break
+                current = current.parent as? View
+            }
+            visible
+        }
+        return leaves.mapNotNull { candidate ->
+            runCatching {
+                val location = IntArray(2)
+                candidate.getLocationOnScreen(location)
+                location[0] + candidate.width
+            }.getOrNull()
+        }.maxOrNull()
+    }
+
+    private fun minimumVisibleIconLeftPx(view: View, statusBarRoot: View?): Float? {
+        val root = statusBarRoot ?: view.rootView
+        val iconRight = lastVisibleStatusIconRightScreenPx(root) ?: return null
+        val viewLocation = IntArray(2)
+        if (runCatching { view.getLocationOnScreen(viewLocation) }.isFailure) return null
+        // Keep a tight 1dp gap between the custom lane and the last visible native icon.
+        // The same boundary is used by both the outside network type and outside signal lanes.
+        return (iconRight + dpExact(view.context, 1) - viewLocation[0]).toFloat()
     }
 
     private fun descendants(root: View): List<View> {
@@ -1548,21 +1807,56 @@ object StatusBarComboStyleOneRuntime {
         main.postDelayed(host.geometryRetry, 320L)
     }
 
+    /**
+     * Keep the native battery icon invisible while reserving the actual dynamic glyph width.
+     * SystemUI lays the battery slot at the trailing edge, so additional outside-label/signal
+     * spacing is allocated to its left. During shade expansion, keep the old collapsed slot.
+     */
+    private fun updateOverlayHostSlot(host: Host, view: View) {
+        if (shadeBusy) {
+            collapseHostView(host, view)
+            return
+        }
+        // Keep the corrected default gap, but grow the native slot leftward as users increase
+        // the outside margins/spacing. The ring stays tied to the same trailing slot edge.
+        val extraWidthDp = StatusComboStyleOneGlyphRenderer.glyphOutsideSpacingExpansionDp(config)
+        if (extraWidthDp > 0) {
+            reserveHostSlot(host, view, extraWidthDp)
+        } else {
+            collapseHostView(host, view)
+        }
+    }
+
     private fun reserveHostSlot(host: Host, view: View, widthDp: Int) {
-        host.original.putIfAbsent(view, view.visibility)
-        if (!host.layouts.containsKey(view)) snapshotLayout(view)?.let { host.layouts[view] = it }
+        val nativeBatterySnapshot = nativeBatteryLayouts[view]
+        val originalLayout = nativeBatterySnapshot ?: host.layouts[view] ?: snapshotLayout(view)
+        host.original.putIfAbsent(view, originalLayout?.visibility ?: view.visibility)
+        if (!host.layouts.containsKey(view)) {
+            originalLayout?.let { host.layouts[view] = it }
+        }
         val lp = view.layoutParams ?: return
         val margins = lp as? ViewGroup.MarginLayoutParams
+        // The slot starts collapsed, so restore its original height while reserving only the
+        // incremental spacing width; never reserve the entire combination glyph width.
         val width = dp(view.context, widthDp)
+        val height = originalLayout?.height?.takeIf { it != 0 } ?: dp(view.context, 24)
         val left = dpExact(view.context, config.glyphLeftMarginDp)
         val right = dpExact(view.context, config.glyphRightMarginDp)
-        val changed = lp.width != width || margins?.let {
+        val changed = lp.width != width || lp.height != height || margins?.let {
             it.leftMargin != left || it.topMargin != 0 || it.rightMargin != right || it.bottomMargin != 0
         } == true
         if (changed) {
             lp.width = width
+            lp.height = height
             margins?.setMargins(left, 0, right, 0)
             view.layoutParams = lp
+            val parent = view.parent as? View
+            diagnostic(
+                "Dynamic battery slot expansion: requestedExtraDp=${widthDp} targetPx=${width} " +
+                    "height=${height} measuredNowPx=${view.width} parent=${parent?.javaClass?.simpleName} " +
+                    "parentWidthPx=${parent?.width ?: -1} marginsPx=(${left},${right}) " +
+                    "shadeBusy=${shadeBusy}"
+            )
         }
         val originalVisibility = host.original[view] ?: View.VISIBLE
         if (view.visibility != originalVisibility) view.visibility = originalVisibility
@@ -2682,7 +2976,12 @@ object StatusBarComboStyleOneRuntime {
                                     previous.glyphLeftMarginDp != next.glyphLeftMarginDp ||
                                     previous.glyphRightMarginDp != next.glyphRightMarginDp ||
                                     previous.outSignalMarginDp != next.outSignalMarginDp ||
+                                    previous.outSignalMarginLeftDp != next.outSignalMarginLeftDp ||
                                     previous.outSignalSizeDp != next.outSignalSizeDp ||
+                                    // Network-type margins change the canvas width too, so resize
+                                    // the glyph/hidden battery slot just like the outside signal lane.
+                                    previous.outTypeMarginLeftDp != next.outTypeMarginLeftDp ||
+                                    previous.outTypeMarginRightDp != next.outTypeMarginRightDp ||
                                     previous.outTypeSizeDp != next.outTypeSizeDp ||
                                     previous.typeWeight != next.typeWeight ||
                                     previous.typeSuffixScale != next.typeSuffixScale ||
@@ -4031,6 +4330,7 @@ object StatusBarComboStyleOneRuntime {
         outTypeMarginLeftDp = v.outTypeMarginLeftDp.coerceIn(0, 16),
         outTypeMarginRightDp = v.outTypeMarginRightDp.coerceIn(0, 16),
         outSignalMarginDp = v.outSignalMarginDp.coerceIn(0, 16),
+        outSignalMarginLeftDp = v.outSignalMarginLeftDp.coerceIn(0, 16),
         typeSuffixScale = v.typeSuffixScale.coerceIn(50, 100), trackAlpha = v.trackAlpha.coerceIn(0, 255),
     )
 
@@ -4038,6 +4338,11 @@ object StatusBarComboStyleOneRuntime {
         // Bounded in-memory history for Settings → Send logs, without a feature-owned switch or Logcat flood.
         OneuiXPDiagnosticLog.record(TAG, message)
     }
+    private fun glyphLeadingExpansionPx(context: Context, networkType: String): Int {
+        val leadingDp = StatusComboStyleOneGlyphRenderer.glyphBaseLeadingExpansionDp(config, networkType)
+        return if (leadingDp > 0) dp(context, leadingDp) else 0
+    }
+
     private fun dp(context: Context, value: Int): Int =
         (value * context.resources.displayMetrics.density + 0.5f).toInt().coerceAtLeast(1)
 
