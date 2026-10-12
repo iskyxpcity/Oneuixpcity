@@ -94,7 +94,6 @@ object StatusComboStyleOneGlyphRenderer {
     private const val BOLT_TOP_REF = 2.2f
     private const val BOLT_CX_REF = 59.45f
     private const val BOLT_SCALE = 2.0f
-    private const val QUICK_CHARGE = 0xFF2196F3.toInt()
 
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val diagnosticPaint = Paint(Paint.ANTI_ALIAS_FLAG)
@@ -718,7 +717,7 @@ object StatusComboStyleOneGlyphRenderer {
             }
             if (bolt) drawBolt(
                 canvas, offsetX, config,
-                if (state.charging && state.quickCharge) QUICK_CHARGE else tint,
+                resolveChargingBoltColor(config, state, tint),
             )
             if (showBatteryValue) {
                 val requestedSize = valueSizeCanvasUnits(config)
@@ -976,7 +975,7 @@ object StatusComboStyleOneGlyphRenderer {
         when {
             bolt -> drawRectBolt(
                 canvas, offsetX, config,
-                if (state.charging && state.quickCharge) QUICK_CHARGE else tint,
+                resolveChargingBoltColor(config, state, tint),
                 config.arcStroke,
             )
             config.showWifi && state.wifiLevel >= 1 ->
@@ -1221,6 +1220,22 @@ object StatusComboStyleOneGlyphRenderer {
 
     private fun weightedTypeface(weight: Int): Typeface =
         Typeface.create(Typeface.create("sans-serif", Typeface.NORMAL), weight.coerceIn(100, 900), false)
+
+    private fun resolveChargingBoltColor(
+        config: StatusBarComboStyleOneRuntime,
+        state: StatusComboStyleOneGlyphState,
+        tint: Int,
+    ): Int {
+        // Bolt colours are independent of the ring's roleColors switch.
+        // White status-bar tint means a dark background; black tint means a light one.
+        val darkBackground = luminance(tint) > 0.5f
+        return when {
+            state.quickCharge && darkBackground -> config.quickChargingBoltColorDarkArgb
+            state.quickCharge -> config.quickChargingBoltColorLightArgb
+            darkBackground -> config.normalChargingBoltColorDarkArgb
+            else -> config.normalChargingBoltColorLightArgb
+        }
+    }
 
     private fun resolveBatteryColor(
         config: StatusBarComboStyleOneRuntime, state: StatusComboStyleOneGlyphState, tint: Int,
