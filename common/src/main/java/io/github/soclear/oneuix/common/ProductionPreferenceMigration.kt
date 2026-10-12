@@ -72,6 +72,21 @@ object ProductionPreferenceMigration {
                     comboRuntimeChanged = true
                 }
 
+                // Give the combined icon a small 1dp left inset to complement
+                // the native status icons' own spacing. Migrate only the old
+                // zero default; preserve intentionally larger custom values.
+                val glyphLeftMarginOneDpMigrationDone =
+                    (updatedComboRuntime["glyphLeftMarginOneDpMigrationDone"] as? JsonPrimitive)
+                        ?.content?.toBooleanStrictOrNull() == true
+                if (!glyphLeftMarginOneDpMigrationDone) {
+                    val oldLeftMargin = updatedComboRuntime["glyphLeftMarginDp"]?.toString()?.toIntOrNull() ?: 1
+                    if (oldLeftMargin == 0) {
+                        updatedComboRuntime["glyphLeftMarginDp"] = JsonPrimitive(1)
+                    }
+                    updatedComboRuntime["glyphLeftMarginOneDpMigrationDone"] = JsonPrimitive(true)
+                    comboRuntimeChanged = true
+                }
+
                 val marginResetTo2MigrationDone =
                     (updatedComboRuntime["outSignalMarginReset2MigrationDone"] as? JsonPrimitive)
                         ?.content?.toBooleanStrictOrNull() == true
@@ -86,6 +101,22 @@ object ProductionPreferenceMigration {
                         updatedComboRuntime["outSignalMarginDp"] = JsonPrimitive(2)
                     }
                     updatedComboRuntime["outSignalMarginReset2MigrationDone"] = JsonPrimitive(true)
+                    comboRuntimeChanged = true
+                }
+
+                // Build #43 showed the old 2dp outside-signal gap was visually
+                // too tight on the ring layout. Raise the untouched default to 4dp,
+                // while preserving any other user-selected spacing.
+                val outsideSignalMarginFourDpMigrationDone =
+                    (updatedComboRuntime["outSignalMarginFourDpMigrationDone"] as? JsonPrimitive)
+                        ?.content?.toBooleanStrictOrNull() == true
+                if (!outsideSignalMarginFourDpMigrationDone) {
+                    val oldOutsideSignalMargin =
+                        updatedComboRuntime["outSignalMarginDp"]?.toString()?.toIntOrNull() ?: 4
+                    if (oldOutsideSignalMargin == 2) {
+                        updatedComboRuntime["outSignalMarginDp"] = JsonPrimitive(4)
+                    }
+                    updatedComboRuntime["outSignalMarginFourDpMigrationDone"] = JsonPrimitive(true)
                     comboRuntimeChanged = true
                 }
 
