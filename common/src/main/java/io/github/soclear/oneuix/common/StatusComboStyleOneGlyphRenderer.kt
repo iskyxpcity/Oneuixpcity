@@ -50,6 +50,9 @@ object StatusComboStyleOneGlyphRenderer {
     private const val OUTSIDE_TYPE_ONLY_REFERENCE_WIDTH = 87f
     private const val OUTSIDE_TYPE_REFERENCE_SIZE_DP = 14f
     private const val OUTSIDE_TYPE_RIGHT_GAP = 3.5f
+    // Expand the host toward the neighbouring-icon side by about 3dp at default size.
+    // Move the host's left edge, not the label inside a fixed-width box; the ring stays anchored.
+    private const val OUTSIDE_TYPE_LEADING_EXPANSION = 10f
     // Out-of-ring-type-only mode should not reserve the unused signal-pillars lane.
     private const val TYPE_ONLY_SHIFT = 60f
     private const val B_CX = 59.5f
@@ -154,6 +157,16 @@ object StatusComboStyleOneGlyphRenderer {
         ).coerceAtLeast(1f)
     }
 
+    private fun outsideTypeMarginLeft(config: StatusBarComboStyleOneRuntime): Float =
+        if (usesOutsideNetworkTypeLayout(config)) {
+            config.outTypeMarginLeftDp.coerceIn(0, 16) * (HEIGHT / 36f)
+        } else 0f
+
+    private fun outsideTypeMarginRight(config: StatusBarComboStyleOneRuntime): Float =
+        if (usesOutsideNetworkTypeLayout(config)) {
+            config.outTypeMarginRightDp.coerceIn(0, 16) * (HEIGHT / 36f)
+        } else 0f
+
     private fun outsideTypeWidthDelta(
         config: StatusBarComboStyleOneRuntime,
         networkType: String,
@@ -174,13 +187,19 @@ object StatusComboStyleOneGlyphRenderer {
         val signalLane = usesOutsideSignalLayout(config)
         val signalMargin = outsideSignalMargin(config)
         val typeWidthDelta = outsideTypeWidthDelta(config, networkType)
+        val typeMarginExpansion = if (typeLane) {
+            outsideTypeMarginLeft(config) + outsideTypeMarginRight(config)
+        } else 0f
+        val typeLeadingExpansion = if (typeLane) OUTSIDE_TYPE_LEADING_EXPANSION else 0f
         return when {
             // No unused signal-pillars lane is reserved when the out-of-ring type is alone.
             // Expand or contract this lane with the actual label while retaining the ring-side gap.
             typeLane && signalLane ->
-                WIDE_WIDTH + signalMargin + OUTSIDE_TYPE_RIGHT_CLEARANCE + typeWidthDelta
+                WIDE_WIDTH + signalMargin + OUTSIDE_TYPE_RIGHT_CLEARANCE + typeWidthDelta +
+                    typeMarginExpansion + typeLeadingExpansion
             typeLane ->
-                WIDE_WIDTH - TYPE_ONLY_SHIFT + OUTSIDE_TYPE_RIGHT_CLEARANCE + typeWidthDelta
+                WIDE_WIDTH - TYPE_ONLY_SHIFT + OUTSIDE_TYPE_RIGHT_CLEARANCE + typeWidthDelta +
+                    typeMarginExpansion + typeLeadingExpansion
             signalLane -> outsideSignalWidth(config) + signalMargin + COMPACT_WIDTH - 8f
             else -> COMPACT_WIDTH
         }
@@ -200,12 +219,17 @@ object StatusComboStyleOneGlyphRenderer {
         val signalWidth = outsideSignalWidth(config)
         val outsideSignal = usesOutsideSignalLayout(config)
         val typeWidthDelta = outsideTypeWidthDelta(config, networkType)
+        val typeRightMargin = outsideTypeMarginRight(config)
+        val typeLeadingExpansion = if (usesOutsideNetworkTypeLayout(config)) {
+            OUTSIDE_TYPE_LEADING_EXPANSION
+        } else 0f
         val activeWidth = designWidth(config, networkType)
         return when {
             usesOutsideNetworkTypeLayout(config) -> {
                 val signalLaneShift = if (outsideSignal) signalMargin else 0f
                 val typeOnlyShift = if (outsideSignal) 0f else TYPE_ONLY_SHIFT
-                (B_CX + WIDE_OFFSET + signalLaneShift - typeOnlyShift + typeWidthDelta) / activeWidth
+                (B_CX + WIDE_OFFSET + signalLaneShift - typeOnlyShift + typeWidthDelta +
+                    typeRightMargin + typeLeadingExpansion) / activeWidth
             }
             outsideSignal -> (B_CX + signalWidth + signalMargin - 8f) / activeWidth
             else -> B_CX / activeWidth
@@ -259,7 +283,8 @@ object StatusComboStyleOneGlyphRenderer {
         val typeOnlyShift = if (outsideType && !outsideSignal) TYPE_ONLY_SHIFT else 0f
         val offsetX = when {
             outsideType -> WIDE_OFFSET + (if (outsideSignal) signalMargin else 0f) -
-                typeOnlyShift + typeWidthDelta
+                typeOnlyShift + typeWidthDelta + outsideTypeMarginRight(config) +
+                OUTSIDE_TYPE_LEADING_EXPANSION
             outsideSignal -> signalWidth + signalMargin - 8f
             else -> 0f
         }
@@ -433,15 +458,15 @@ object StatusComboStyleOneGlyphRenderer {
             }
             val baseTypeCenter = B_CX + WIDE_OFFSET - B_R - OUTSIDE_TYPE_RIGHT_GAP -
                 typeReferenceWidth / 2f + typeGapOffset - typeOnlyShift
-            val center = (baseTypeCenter + typeCenterShift +
-                (config.outTypeMarginLeftDp.coerceIn(0, 16) -
-                    config.outTypeMarginRightDp.coerceIn(0, 16)) * m).coerceIn(
-                        30f + typeGapOffset - typeOnlyShift + typeCenterShift,
-                        170f + typeGapOffset - typeOnlyShift + typeCenterShift,
-                    )
+            val typeLeftMargin = outsideTypeMarginLeft(config)
+            val center = (baseTypeCenter + typeCenterShift + typeLeftMargin).coerceIn(
+                30f + typeGapOffset - typeOnlyShift + typeCenterShift,
+                170f + typeGapOffset - typeOnlyShift + typeCenterShift + typeLeftMargin,
+            )
             val size = config.outTypeSizeDp.coerceIn(8, 26) * m
-            // Keep the text's visual centre fixed as its size changes, rather than pinning its baseline.
-            val baseline = 67f + (size - OUTSIDE_TYPE_REFERENCE_SIZE_DP * m) * CAP_CENTER_RATIO
+            // Center the measured capital glyphs vertically around the host's centre line.
+            // Apply the same cap-height correction at every size so scaling grows in both directions.
+            val baseline = HEIGHT / 2f + size * CAP_CENTER_RATIO
             // Use the full measured text width; the host bounds expand/contract with this label.
             drawNetworkType(canvas, state.networkType.trim().uppercase(), center, baseline,
                 size, config.typeWeight, tint, config.typeSuffixScale, 0f)
