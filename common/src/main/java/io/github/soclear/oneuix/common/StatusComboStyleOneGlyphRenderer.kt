@@ -37,7 +37,6 @@ object StatusComboStyleOneGlyphRenderer {
     // Row 1 sits inside the ring's bottom opening; row 2 hugs it directly underneath.
     // The first row sits slightly inside the bottom opening instead of hanging below the ring.
     private const val DUAL_BOTTOM_ROW_ONE_Y = 106f
-    private const val DUAL_BOTTOM_SINGLE_ROW_Y = 120.25f
     private const val DUAL_BOTTOM_ROW_TWO_Y = 122.5f
     private const val DUAL_BOTTOM_DOT_RAISE_DP = 3f
     private const val WIDE_OFFSET = 144.5f
@@ -698,9 +697,9 @@ object StatusComboStyleOneGlyphRenderer {
                         drawBottomDualDotRow(canvas, offsetX, state.simTwoLevel, tint, track, DUAL_BOTTOM_ROW_TWO_Y, config)
                     }
                     dualBottomLayout -> {
-                        // If the device only exposes the active data-SIM level, keep that
-                        // single row under the ring rather than leaving the new layout blank.
-                        drawBottomDualDotRow(canvas, offsetX, state.mobileLevel, tint, track, DUAL_BOTTOM_SINGLE_ROW_Y, config)
+                        // With only one SIM available, place its dots in the first row position,
+                        // not the lower row used by a two-SIM layout.
+                        drawBottomDualDotRow(canvas, offsetX, state.mobileLevel, tint, track, DUAL_BOTTOM_ROW_ONE_Y, config)
                     }
                     else -> drawSingleSignalDots(canvas, offsetX, state.mobileLevel, tint, track, config)
                 }
@@ -751,7 +750,8 @@ object StatusComboStyleOneGlyphRenderer {
             val bars = if (config.dataSimOnly) state.mobileLevel
                 else primarySlotLevel.takeIf { it >= 0 } ?: state.mobileLevel
             val second = if (!config.dataSimOnly && secondarySlotLevel >= 0) secondarySlotLevel else -1
-            drawStackedSignal(canvas, signalX, 52f, bars, second, tint, track, config.outSignalSizeDp)
+            // Center the complete signal-bars-and-dots box on the status-bar/battery-ring axis.
+            drawStackedSignal(canvas, signalX, B_CY, bars, second, tint, track, config.outSignalSizeDp)
         }
         if (wide && config.showMobile && config.mobileTypeMode == 2 && state.networkType.isNotBlank()) {
             val m = HEIGHT / 36f

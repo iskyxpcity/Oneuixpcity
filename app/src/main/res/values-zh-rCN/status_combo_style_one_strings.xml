@@ -68,7 +68,7 @@
     <string name="status_combo_style_one_out_signal_margin_left">环外信号左边距</string>
     <string name="status_combo_style_one_out_type_margin_left">环外类型左边距</string>
     <string name="status_combo_style_one_out_type_margin_right">环外类型右边距</string>
-    <string name="status_combo_style_one_out_signal_margin">环外信号间距</string>
+    <string name="status_combo_style_one_out_signal_margin">环外信号右边距</string>
     <string name="status_combo_style_one_role_colors">状态颜色</string>
     <string name="status_combo_style_one_role_colors_summary">分别为低电量、充电与危险电量指定颜色。</string>
     <string name="status_combo_style_one_critical_threshold">临界电量阈值</string>
@@ -134,8 +134,8 @@
     <string name="status_combo_style_one_out_type_margin_right_summary">当前 %1$d dp：环外网络类型标签与其内侧（朝向电池与环外读数的一侧）之间的空隙。默认 2 dp，可调范围 0–16 dp。RTL 语言下同样会镜像。</string>
     <string name="status_combo_style_one_type_weight_summary">当前字重 %1$d：网络类型的笔画粗细，100 最细，900 最粗；仅显示网络类型时可调整。</string>
     <string name="status_combo_style_one_out_signal_size_summary">当前 %1$d dp：环外读数的整体高度，单位为 dp（会随屏幕密度自动换算成像素）。15 dp 与状态栏原生信号图标同高，也是默认值；可调范围 6–20 dp。无论有没有下方圆点排，同一行都按同一大小绘制，两种形状不会一大一小。下拉控制中心不会改变它。</string>
-    <string name="status_combo_style_one_out_signal_margin_summary">当前 %1$d dp：仅调整自绘环外信号柱与电量圆环之间的距离，不改变环外网络类型标签的位置或三合一图标的整体左边距。仅在信号位置选择环外且开启堆叠信号时生效。</string>
-    <string name="status_combo_style_one_out_signal_margin_left_summary">当前 %1$d dp：调整环外信号柱左侧（远离电量圆环的一侧）的留白，与“环外信号间距”相互独立；增大后会向左扩展状态栏占位，圆环位置保持不变。默认 0 dp，可调范围 0–16 dp。仅在信号位置为环外且开启堆叠信号时生效。</string>
+    <string name="status_combo_style_one_out_signal_margin_summary">当前 %1$d dp：控制自绘环外信号柱右侧（朝向电量圆环一侧）的额外留白，与“环外信号左边距”独立控制。增大右边距会让信号柱远离圆环，圆环位置保持不变。默认 8 dp，可调范围 0–16 dp。仅在信号位置选择环外且开启堆叠信号时生效。</string>
+    <string name="status_combo_style_one_out_signal_margin_left_summary">当前 %1$d dp：调整环外信号柱左侧（远离电量圆环的一侧）的留白，与“环外信号右边距”相互独立；增大后会向左扩展状态栏占位，圆环位置保持不变。默认 0 dp，可调范围 0–16 dp。仅在信号位置为环外且开启堆叠信号时生效。</string>
     <string name="status_combo_style_one_track_alpha_summary">当前 %1$d%%：未点亮部分的透明度。</string>
     <string name="status_combo_style_one_bolt_size_summary">当前 %1$d%%：充电时闪电的缩放比例；需要同时开启电量数字和充电闪电。</string>
     <string name="status_combo_style_one_bolt_x_summary">当前 %1$d dp：充电闪电的水平位置；正值向右移动。</string>
