@@ -91,7 +91,7 @@ fun StatusComboStyleOneCategoryControls(
 ) {
     val viewModel = viewModel<OneuiXToolsViewModel>()
     val context = LocalContext.current
-    // Match HyperDuo exactly: critical battery is a fixed 20% cutoff.
+    // Match the upstream threshold rule: critical battery uses a fixed 20% cutoff.
     // Normalize legacy saved values so preview and live SystemUI share the rule.
     val runtime = uiState.comboStyleOneRuntime.copy(criticalThreshold = 20)
     var previewRuntime by remember(runtime) { mutableStateOf(runtime) }
@@ -341,7 +341,7 @@ fun StatusComboStyleOneCategoryControls(
             }))
         }
         else -> {
-            // Keep the entire state-colour section together like HyperDuo:
+            // Keep the entire state-colour section together:
             // toggle, thresholds, three role rows and reset live in one card.
             val colorItems = mutableListOf<@Composable () -> Unit>()
 

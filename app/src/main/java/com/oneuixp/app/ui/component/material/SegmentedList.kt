@@ -19,6 +19,8 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenuGroup
 import androidx.compose.material3.DropdownMenuItem
@@ -322,12 +324,21 @@ fun SegmentedDropdownItem(
         supportingContent = summary?.let { { Text(it) } },
         trailingContent = {
             Box(modifier = Modifier.wrapContentSize(Alignment.TopStart)) {
-                Text(
-                    text = if (hasItems && safeIndex >= 0) items[safeIndex] else "",
-                    textAlign = TextAlign.End,
-                    modifier = Modifier.fillMaxWidth(0.3f),
-                    color = if (enabled) colorScheme.primary else colorScheme.onSurfaceVariant
-                )
+                // Match HyperDuo/Miuix: always show a direction cue, and flip it while
+                // the selection menu is expanded so dropdown rows are visibly interactive.
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = if (hasItems && safeIndex >= 0) items[safeIndex] else "",
+                        textAlign = TextAlign.End,
+                        color = if (enabled) colorScheme.primary else colorScheme.onSurfaceVariant,
+                    )
+                    Icon(
+                        imageVector = if (expanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
+                        contentDescription = null,
+                        modifier = Modifier.padding(start = 4.dp).size(24.dp),
+                        tint = if (enabled) colorScheme.primary else colorScheme.onSurfaceVariant,
+                    )
+                }
                 DropdownMenuPopup(
                     expanded = expanded,
                     onDismissRequest = { expanded = false }

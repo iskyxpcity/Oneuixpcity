@@ -207,6 +207,8 @@ data class Preference(
             val glyphOffsetXDp: Int = 0,
             val glyphOffsetYDp: Int = 0,
             val glyphLeftMarginDp: Int = 0,
+            val glyphLeftMarginOneDpMigrationDone: Boolean = false,
+            val glyphLeftMarginZeroDpMigrationDone: Boolean = false,
             val glyphRightMarginDp: Int = 0,
             val criticalColorDarkArgb: Int = 0xFFFF3B30.toInt(),
             val criticalColorLightArgb: Int = 0xFFFF3B30.toInt(),
@@ -229,13 +231,15 @@ data class Preference(
             val outSignalSizeDp: Int = 15,
             val outTypeMarginLeftDp: Int = 2,
             val outTypeMarginRightDp: Int = 2,
-            val outSignalMarginDp: Int = 2,
+            val outSignalMarginDp: Int = 8,
             val outSignalMarginDefaultMigrationDone: Boolean = false,
             val outSignalMarginReset2MigrationDone: Boolean = false,
+            val outSignalMarginFourDpMigrationDone: Boolean = false,
+            val outSignalMarginSixDpMigrationDone: Boolean = false,
+            val outSignalMarginEightDpMigrationDone: Boolean = false,
             val typeSuffixScale: Int = 65,
             val typeWeight: Int = 700,
             val trackAlpha: Int = 56,
-            val debugLog: Boolean = false,
         )
 
         @Serializable

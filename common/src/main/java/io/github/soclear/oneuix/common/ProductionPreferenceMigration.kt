@@ -72,6 +72,35 @@ object ProductionPreferenceMigration {
                     comboRuntimeChanged = true
                 }
 
+                // Give the combined icon a small 1dp left inset to complement
+                // the native status icons' own spacing. Migrate only the old
+                // zero default; preserve intentionally larger custom values.
+                val glyphLeftMarginOneDpMigrationDone =
+                    (updatedComboRuntime["glyphLeftMarginOneDpMigrationDone"] as? JsonPrimitive)
+                        ?.content?.toBooleanStrictOrNull() == true
+                if (!glyphLeftMarginOneDpMigrationDone) {
+                    val oldLeftMargin = updatedComboRuntime["glyphLeftMarginDp"]?.toString()?.toIntOrNull() ?: 1
+                    if (oldLeftMargin == 0) {
+                        updatedComboRuntime["glyphLeftMarginDp"] = JsonPrimitive(1)
+                    }
+                    updatedComboRuntime["glyphLeftMarginOneDpMigrationDone"] = JsonPrimitive(true)
+                    comboRuntimeChanged = true
+                }
+
+                // The native status-bar icons already supply their own padding.
+                // Remove only the former 1dp extra inset; preserve larger custom values.
+                val glyphLeftMarginZeroDpMigrationDone =
+                    (updatedComboRuntime["glyphLeftMarginZeroDpMigrationDone"] as? JsonPrimitive)
+                        ?.content?.toBooleanStrictOrNull() == true
+                if (!glyphLeftMarginZeroDpMigrationDone) {
+                    val oldLeftMargin = updatedComboRuntime["glyphLeftMarginDp"]?.toString()?.toIntOrNull() ?: 0
+                    if (oldLeftMargin == 1) {
+                        updatedComboRuntime["glyphLeftMarginDp"] = JsonPrimitive(0)
+                    }
+                    updatedComboRuntime["glyphLeftMarginZeroDpMigrationDone"] = JsonPrimitive(true)
+                    comboRuntimeChanged = true
+                }
+
                 val marginResetTo2MigrationDone =
                     (updatedComboRuntime["outSignalMarginReset2MigrationDone"] as? JsonPrimitive)
                         ?.content?.toBooleanStrictOrNull() == true
@@ -86,6 +115,53 @@ object ProductionPreferenceMigration {
                         updatedComboRuntime["outSignalMarginDp"] = JsonPrimitive(2)
                     }
                     updatedComboRuntime["outSignalMarginReset2MigrationDone"] = JsonPrimitive(true)
+                    comboRuntimeChanged = true
+                }
+
+                // Build #43 showed the old 2dp outside-signal gap was visually
+                // too tight on the ring layout. Raise the untouched default to 4dp,
+                // while preserving any other user-selected spacing.
+                val outsideSignalMarginFourDpMigrationDone =
+                    (updatedComboRuntime["outSignalMarginFourDpMigrationDone"] as? JsonPrimitive)
+                        ?.content?.toBooleanStrictOrNull() == true
+                if (!outsideSignalMarginFourDpMigrationDone) {
+                    val oldOutsideSignalMargin =
+                        updatedComboRuntime["outSignalMarginDp"]?.toString()?.toIntOrNull() ?: 4
+                    if (oldOutsideSignalMargin == 2) {
+                        updatedComboRuntime["outSignalMarginDp"] = JsonPrimitive(4)
+                    }
+                    updatedComboRuntime["outSignalMarginFourDpMigrationDone"] = JsonPrimitive(true)
+                    comboRuntimeChanged = true
+                }
+
+                // The 4dp setting still looks too tight on the device. Increase only
+                // the outside-signal-to-ring gap; keep the composite icon's own
+                // left margin independent and preserve manually chosen other values.
+                val outsideSignalMarginSixDpMigrationDone =
+                    (updatedComboRuntime["outSignalMarginSixDpMigrationDone"] as? JsonPrimitive)
+                        ?.content?.toBooleanStrictOrNull() == true
+                if (!outsideSignalMarginSixDpMigrationDone) {
+                    val oldOutsideSignalMargin =
+                        updatedComboRuntime["outSignalMarginDp"]?.toString()?.toIntOrNull() ?: 6
+                    if (oldOutsideSignalMargin == 4) {
+                        updatedComboRuntime["outSignalMarginDp"] = JsonPrimitive(6)
+                    }
+                    updatedComboRuntime["outSignalMarginSixDpMigrationDone"] = JsonPrimitive(true)
+                    comboRuntimeChanged = true
+                }
+
+                // 8dp is the first clearly separated appearance confirmed on device.
+                // Migrate only the former 6dp default; leave other custom spacing untouched.
+                val outsideSignalMarginEightDpMigrationDone =
+                    (updatedComboRuntime["outSignalMarginEightDpMigrationDone"] as? JsonPrimitive)
+                        ?.content?.toBooleanStrictOrNull() == true
+                if (!outsideSignalMarginEightDpMigrationDone) {
+                    val oldOutsideSignalMargin =
+                        updatedComboRuntime["outSignalMarginDp"]?.toString()?.toIntOrNull() ?: 8
+                    if (oldOutsideSignalMargin == 6) {
+                        updatedComboRuntime["outSignalMarginDp"] = JsonPrimitive(8)
+                    }
+                    updatedComboRuntime["outSignalMarginEightDpMigrationDone"] = JsonPrimitive(true)
                     comboRuntimeChanged = true
                 }
 

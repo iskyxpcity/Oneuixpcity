@@ -1,14 +1,23 @@
 package com.oneuixp.app.ui.util
 
+import android.Manifest
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.net.Uri
 import android.os.Build
 import com.oneuixp.app.BuildConfig
 import com.oneuixp.app.statusbar.LsposedFrameworkStatus
+import io.github.soclear.oneuix.common.Package
+import io.github.soclear.oneuix.common.StatusBarRuntimeBridge
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
+import java.util.UUID
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.withTimeoutOrNull
 
 fun buildOneuiXPDiagnosticReport(context: Context): String {
     val framework = LsposedFrameworkStatus.state.value
@@ -33,21 +42,88 @@ fun buildOneuiXPDiagnosticReport(context: Context): String {
     }
 }
 
+/**
+ * Builds the single canonical export used by Settings → Send logs.
+ * SystemUI records bounded events in memory and replies only to an explicit export
+ * request. This adds no polling, restart, or background heartbeat.
+ */
+suspend fun buildOneuiXPDiagnosticReportForExport(context: Context): String {
+    val appReport = buildOneuiXPDiagnosticReport(context)
+    val runtimeLog = requestSystemUiDiagnosticLog(context)
+    return buildString {
+        append(appReport)
+        appendLine()
+        appendLine("[SystemUI runtime diagnostics]")
+        appendLine(runtimeLog)
+    }
+}
+
+private suspend fun requestSystemUiDiagnosticLog(context: Context): String {
+    val appContext = context.applicationContext ?: context
+    val requestId = UUID.randomUUID().toString()
+    val response = CompletableDeferred<String?>()
+    val receiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            if (intent.action != StatusBarRuntimeBridge.ACTION_DIAGNOSTIC_LOG_RESPONSE) return
+            if (intent.getStringExtra(StatusBarRuntimeBridge.EXTRA_DIAGNOSTIC_REQUEST_ID) != requestId) return
+            response.complete(intent.getStringExtra(StatusBarRuntimeBridge.EXTRA_DIAGNOSTIC_LOG_TEXT))
+        }
+    }
+    var receiverRegistered = false
+    try {
+        val filter = IntentFilter(StatusBarRuntimeBridge.ACTION_DIAGNOSTIC_LOG_RESPONSE)
+        if (Build.VERSION.SDK_INT >= 33) {
+            // Only accept the reply from a privileged process such as SystemUI.
+            appContext.registerReceiver(
+                receiver,
+                filter,
+                Manifest.permission.DUMP,
+                null,
+                Context.RECEIVER_EXPORTED,
+            )
+        } else {
+            @Suppress("DEPRECATION")
+            appContext.registerReceiver(receiver, filter, Manifest.permission.DUMP, null)
+        }
+        receiverRegistered = true
+        appContext.sendBroadcast(
+            Intent(StatusBarRuntimeBridge.ACTION_DIAGNOSTIC_LOG_REQUEST)
+                .setPackage(Package.SYSTEMUI)
+                .putExtra(StatusBarRuntimeBridge.EXTRA_DIAGNOSTIC_REQUEST_ID, requestId),
+        )
+        return withTimeoutOrNull(1800L) { response.await() }
+            ?: "No SystemUI diagnostic response received within 1.8 seconds. " +
+                "The SystemUI hook may not be active yet; the app status report is still included."
+    } catch (cancelled: CancellationException) {
+        throw cancelled
+    } catch (error: Exception) {
+        return "Unable to collect SystemUI diagnostics: ${error.javaClass.simpleName}: ${error.message.orEmpty()}"
+    } finally {
+        if (receiverRegistered) runCatching { appContext.unregisterReceiver(receiver) }
+    }
+}
+
 fun oneuiXPDiagnosticFileName(): String {
     val stamp = LocalDateTime.now()
         .format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss"))
     return "OneuiXP_diagnostic_${stamp}.txt"
 }
 
-fun writeOneuiXPDiagnosticReport(context: Context, uri: Uri) {
+fun writeOneuiXPDiagnosticReport(
+    context: Context,
+    uri: Uri,
+    reportText: String = buildOneuiXPDiagnosticReport(context),
+) {
     context.contentResolver.openOutputStream(uri)?.use { stream ->
-        stream.write(buildOneuiXPDiagnosticReport(context).toByteArray(Charsets.UTF_8))
+        stream.write(reportText.toByteArray(Charsets.UTF_8))
     } ?: error("Could not open diagnostic output")
 }
 
-fun createOneuiXPDiagnosticShareIntent(context: Context): Intent =
-    Intent(Intent.ACTION_SEND).apply {
-        type = "text/plain"
-        putExtra(Intent.EXTRA_SUBJECT, "OneuiXP diagnostic")
-        putExtra(Intent.EXTRA_TEXT, buildOneuiXPDiagnosticReport(context))
-    }
+fun createOneuiXPDiagnosticShareIntent(
+    context: Context,
+    reportText: String = buildOneuiXPDiagnosticReport(context),
+): Intent = Intent(Intent.ACTION_SEND).apply {
+    type = "text/plain"
+    putExtra(Intent.EXTRA_SUBJECT, "OneuiXP diagnostic")
+    putExtra(Intent.EXTRA_TEXT, reportText)
+}

@@ -2,6 +2,8 @@ package io.github.soclear.oneuix.hook.systemui
 
 import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.res.Resources
+import android.graphics.drawable.Drawable
 import android.content.Intent
 import android.content.IntentFilter
 import android.graphics.Canvas
@@ -39,6 +41,7 @@ import io.github.soclear.oneuix.common.StatusBarRuntimeBridge
 import io.github.soclear.oneuix.common.StatusComboStyleOneGlyphRenderer
 import io.github.soclear.oneuix.common.StatusComboStyleOneGlyphState
 import io.github.soclear.oneuix.hook.util.PreferenceProvider
+import io.github.soclear.oneuix.hook.util.OneuiXPDiagnosticLog
 import java.lang.ref.WeakReference
 import java.util.Collections
 import java.util.IdentityHashMap
@@ -69,14 +72,23 @@ object StatusBarComboStyleOneRuntime {
     private const val MIUI_BATTERY_METER = "com.android.systemui.statusbar.views.MiuiBatteryMeterView"
     private const val MIUI_BATTERY_CONTAINER = "com.android.systemui.statusbar.views.MiuiStatusBatteryContainer"
     private const val ICON_HIDE_LIST_KEY = "icon_blacklist"
-    // Build #1441 aligned the outer display but still sat 4dp too high.
-    // Keep the calibration explicit so the renderer offset remains user-controlled.
-    private const val PUNCH_HOLE_VERTICAL_CALIBRATION_DP = 4
+    // The outer display's camera needs the established +4dp vertical calibration.
+    // The foldable inner display places the camera near the right edge; this separate
+    // calibration is based on the reported cutout position and does not alter outer-screen alignment.
+    private const val PUNCH_HOLE_VERTICAL_CALIBRATION_DP = 4f
+    private const val INNER_PUNCH_HOLE_VERTICAL_CALIBRATION_DP = 0.5f
+    private const val INNER_PUNCH_HOLE_HORIZONTAL_CALIBRATION_DP = 1.5f
+    private const val RIGHT_SIDE_CUTOUT_THRESHOLD = 0.65f
 
     private val installed = AtomicBoolean(false)
     @Volatile private var moduleForPreferenceReload: XposedModule? = null
+    @Volatile private var systemUiClassLoader: ClassLoader? = null
     private val main = Handler(Looper.getMainLooper())
     private val hosts = Collections.synchronizedMap(WeakHashMap<ViewGroup, Host>())
+    // Keep exactly one lifecycle listener per root across fold/unfold reattachment.
+    // Listener values do not capture their weak-map keys, so destroyed roots remain collectible.
+    private val hostLifecycleListeners =
+        Collections.synchronizedMap(WeakHashMap<ViewGroup, View.OnAttachStateChangeListener>())
     @Volatile private var config = Preference.SystemUI.StatusBarComboStyleOneRuntime()
 
     internal fun shouldHideNativeBatteryIcon(): Boolean = config.enabled
@@ -84,10 +96,7 @@ object StatusBarComboStyleOneRuntime {
     @Volatile private var preferenceReceiverReady = false
     private val chargingRotationTicker = object : Runnable {
         override fun run() {
-            if (!config.enabled || config.chargingDisplayMode != 1 ||
-                !config.showBolt || !config.showValue || config.mobileTypeMode != 1 ||
-                (config.trioStyle == 0 && config.valueCentred) || !state.charging
-            ) {
+            if (!shouldRotateChargingDisplay()) {
                 if (state.chargingAlternatePhase) {
                     state = state.copy(chargingAlternatePhase = false)
                     invalidateGlyphs()
@@ -105,7 +114,38 @@ object StatusBarComboStyleOneRuntime {
     @Volatile private var subscriptionsListener: SubscriptionManager.OnSubscriptionsChangedListener? = null
     private val phoneListeners = mutableMapOf<Int, Pair<TelephonyManager, PhoneStateListener>>()
     private val displayNetworkTypes = ConcurrentHashMap<Int, String>()
+    // Prefer the exact collapsed status-bar signal icon level; use Quick Settings
+    // and TelephonyManager as fallbacks when an OEM icon resource cannot be decoded.
+    private val quickPanelSignalLevels = ConcurrentHashMap<Int, Int>()
     private val nativeSignalLevels = ConcurrentHashMap<Int, Int>()
+    // The level decoded from the SignalDrawable inside the collapsed status-bar icon is the
+    // highest-confidence source. Keep it per subscription so TelephonyManager cannot override
+    // what SystemUI is actually drawing (notably on Samsung dual-SIM/eSIM devices).
+    private val renderedSignalLevels = ConcurrentHashMap<Int, Int>()
+    private val modernMobileViewModels = ConcurrentHashMap<Int, WeakReference<Any>>()
+    private val modernMobileViewSubscriptionIds = Collections.synchronizedMap(WeakHashMap<View, Int>())
+    private val lastModernSignalSamplingDiagnostics = ConcurrentHashMap<String, String>()
+    private data class NativeDrawableOrigin(
+        val resourceId: Int,
+        val resourcePackage: String,
+        val resourceName: String,
+    )
+    private val drawableOrigins = Collections.synchronizedMap(WeakHashMap<Drawable, NativeDrawableOrigin>())
+    private val drawableStateOrigins =
+        Collections.synchronizedMap(WeakHashMap<Drawable.ConstantState, NativeDrawableOrigin>())
+    @Volatile private var modernMobileViewClass: Class<*>? = null
+    private val lastModernPipelineSignalDiagnostics = ConcurrentHashMap<Int, String>()
+    private val lastModernPipelineLevelDiagnostics = ConcurrentHashMap<Int, String>()
+    private val lastNativeWifiVisibilityRequests = Collections.synchronizedMap(WeakHashMap<View, String>())
+    // Persist the pre-Combo native visibility separately from transient GONE/restore passes,
+    // so forcing a connected Wi-Fi icon visible does not override an already-hidden native slot.
+    private val nativeWifiBaselineVisibility = Collections.synchronizedMap(WeakHashMap<View, Int>())
+    @Volatile private var modernWifiViewClass: Class<*>? = null
+    // Track each native Wi-Fi view's own status-bar pipeline model. This preserves
+    // SystemUI's true Visible/Hidden state when the custom arc is switched off.
+    private val modernWifiViewModels = Collections.synchronizedMap(WeakHashMap<View, WeakReference<Any>>())
+    private val lastNativeWifiDiagnostics = Collections.synchronizedMap(WeakHashMap<View, String>())
+    private val lastNativeWifiSlotRequests = ConcurrentHashMap<String, String>()
     private val lastSubscriptionSignalLevels = ConcurrentHashMap<Int, Int>()
     private val subscriptionSlots = ConcurrentHashMap<Int, Int>()
     private val nativeChildSnapshots = Collections.synchronizedMap(WeakHashMap<View, LayoutSnapshot>())
@@ -114,11 +154,11 @@ object StatusBarComboStyleOneRuntime {
         Collections.synchronizedSet(Collections.newSetFromMap(WeakHashMap<Any, Boolean>()))
     private val nativeBatterySlotVisibility =
         Collections.synchronizedMap(WeakHashMap<Any, MutableMap<String, Boolean>>())
-    // Track original visibility for both slots. Wi-Fi must be restored through
-    // the same icon-controller binding that hid it; View.VISIBLE alone is not
-    // sufficient on modern status bars.
+    // Native-slot visibility control is battery-only. Wi-Fi suppression stays on
+    // the established view/layout path; changing its holder visibility directly
+    // can race with SystemUI's rebinding and leave the native icon hidden.
     private val knownBatterySlotNames: MutableSet<String> =
-        Collections.synchronizedSet(mutableSetOf("battery", "wifi"))
+        Collections.synchronizedSet(mutableSetOf("battery"))
     private val enforcingBatterySlotVisibility = ThreadLocal<Boolean>()
     private val rowTintSnapshots = Collections.synchronizedMap(WeakHashMap<ViewGroup, Int>())
     // Prefer the exact foreground tint applied to the native battery meter; the
@@ -152,6 +192,7 @@ object StatusBarComboStyleOneRuntime {
     // icon_hide_list callback can suppress it for Style One.
     private val nativeBatteryLayouts = Collections.synchronizedMap(WeakHashMap<View, LayoutSnapshot>())
     private val glyphInvalidationPending = AtomicBoolean(false)
+    private val telephonyRefreshPending = AtomicBoolean(false)
 
     private data class LayoutSnapshot(
         val width: Int, val height: Int,
@@ -172,14 +213,27 @@ object StatusBarComboStyleOneRuntime {
         var applying = false
         var retired = false
         var rowTint: Int? = null
+        var activeDisplayId: Int = -1
+        var activeDisplayWidth: Int = -1
+        var activeDisplayHeight: Int = -1
+        var geometryRetryPending = false
+        var geometryRetryAttempts = 0
+        // Foldable display transitions can temporarily report no cutout. Retry geometry
+        // without inserting a wide inline glyph into the status-bar row.
+        val geometryRetry = Runnable {
+            geometryRetryPending = false
+            if (!retired && !applying &&
+                StatusBarComboStyleOneRuntime.config.enabled &&
+                StatusBarComboStyleOneRuntime.config.overlayGlyph &&
+                geometryRetryAttempts < 1
+            ) {
+                geometryRetryAttempts++
+                StatusBarComboStyleOneRuntime.apply(this)
+            }
+        }
         // MIUI can host multiple status-bar rows at once. Keep the icon ink tied
         // to the battery's own container, not the whole PhoneStatusBarView.
         var tintRow: ViewGroup? = null
-        // Cache the fallback status-bar centre while the shade animates. Reset it
-        // when the active foldable display geometry changes (cover <-> inner).
-        var overlayCameraCenterYOnScreenPx: Int? = null
-        var overlayDisplayWidthPx: Int? = null
-        var overlayDisplayHeightPx: Int? = null
         val delayedApply = Runnable {
             if (!retired && !applying) StatusBarComboStyleOneRuntime.apply(this)
         }
@@ -209,20 +263,25 @@ object StatusBarComboStyleOneRuntime {
         }
     }
 
-    private class GlyphOverlay(context: Context) {
-        private val app = context.applicationContext ?: context
-        private val wm = app.getSystemService(Context.WINDOW_SERVICE) as WindowManager
-        private val glyph = GlyphView(app)
+    private class GlyphOverlay(rootContext: Context, private val display: android.view.Display?) {
+        // Bind the overlay WindowManager/resources to the status-bar root's actual display.
+        // applicationContext can resolve to the cover/default display even when the inner
+        // status-bar root is active; re-create this object when the root display geometry changes.
+        private val context = display?.let { target ->
+            runCatching { rootContext.createDisplayContext(target) }.getOrNull()
+        } ?: rootContext
+        private var wm: WindowManager? = null
+        private val glyph = GlyphView(context)
         private var params: WindowManager.LayoutParams? = null
 
-        fun attach(anchor: View, root: ViewGroup): Boolean {
-            if (params != null) { update(anchor, root); return true }
+        fun attach(anchor: View, root: ViewGroup, cameraBounds: Rect): Boolean {
+            if (params != null) return update(anchor, root, cameraBounds)
             val cfg = StatusBarComboStyleOneRuntime.config
             val width = StatusBarComboStyleOneRuntime.dp(
-                app, StatusComboStyleOneGlyphRenderer.glyphWidthDp(cfg),
+                context, StatusComboStyleOneGlyphRenderer.glyphWidthDp(cfg, StatusBarComboStyleOneRuntime.state.networkType),
             )
             val height = StatusBarComboStyleOneRuntime.dp(
-                app, StatusComboStyleOneGlyphRenderer.glyphHeightDp(cfg),
+                context, StatusComboStyleOneGlyphRenderer.glyphHeightDp(cfg),
             )
             val flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
                 WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or
@@ -238,15 +297,29 @@ object StatusBarComboStyleOneRuntime {
                     gravity = Gravity.TOP or Gravity.LEFT
                     title = "OneuiXP Style One"
                     // Status-bar-owned window types are system windows. Do not pass
-                    // the app-window token: Samsung may reject the type/token pair
+                    // the context-window token: Samsung may reject the type/token pair
                     // and the old fallback then silently shifted the glyph down.
                     token = null
                 }
+                val targetDisplay = display
+                val windowContext = if (Build.VERSION.SDK_INT >= 30 && targetDisplay != null) {
+                    runCatching { context.createWindowContext(targetDisplay, type, null) }.getOrElse { context }
+                } else context
+                val candidateWindowManager = runCatching {
+                    windowContext.getSystemService(Context.WINDOW_SERVICE) as? WindowManager
+                }.getOrNull() ?: continue
                 try {
-                    wm.addView(glyph, lp)
+                    candidateWindowManager.addView(glyph, lp)
+                    wm = candidateWindowManager
                     params = lp
-                    diagnostic("Glyph overlay attached: type=$type size=${width}x${height} flags=$flags")
-                    update(anchor, root)
+                    diagnostic(
+                        "Glyph overlay attached: type=$type displayId=${display?.displayId} " +
+                            "size=${width}x${height} flags=$flags cameraBounds=$cameraBounds"
+                    )
+                    if (!update(anchor, root, cameraBounds)) {
+                        detach()
+                        return false
+                    }
                     return true
                 } catch (error: Throwable) {
                     Log.w(TAG, "Glyph overlay attach failed for type=$type", error)
@@ -278,62 +351,74 @@ object StatusBarComboStyleOneRuntime {
             return result.toList()
         }
 
-        fun update(anchor: View, root: ViewGroup) {
-            val lp = params ?: return
+        fun update(anchor: View, root: ViewGroup, cameraBounds: Rect): Boolean {
+            val lp = params ?: return false
+            val cutout = Rect(cameraBounds)
             val oldX = lp.x
             val oldY = lp.y
             val oldWidth = lp.width
             val oldHeight = lp.height
             val cfg = StatusBarComboStyleOneRuntime.config
-            lp.width = StatusBarComboStyleOneRuntime.dp(app, StatusComboStyleOneGlyphRenderer.glyphWidthDp(cfg))
-            lp.height = StatusBarComboStyleOneRuntime.dp(app, StatusComboStyleOneGlyphRenderer.glyphHeightDp(cfg))
-            val cutout = StatusBarComboStyleOneRuntime.cutoutBounds(root)
-            val rootPos = IntArray(2)
-            root.getLocationOnScreen(rootPos)
-            val centreRatioX = StatusComboStyleOneGlyphRenderer.glyphCenterRatio(cfg)
+            lp.width = StatusBarComboStyleOneRuntime.dp(
+                context, StatusComboStyleOneGlyphRenderer.glyphWidthDp(cfg, StatusBarComboStyleOneRuntime.state.networkType),
+            )
+            lp.height = StatusBarComboStyleOneRuntime.dp(context, StatusComboStyleOneGlyphRenderer.glyphHeightDp(cfg))
+            val networkType = StatusBarComboStyleOneRuntime.state.networkType
+            val designWidthUnits = StatusComboStyleOneGlyphRenderer.glyphDesignWidth(cfg, networkType)
+            val designHeightUnits = StatusComboStyleOneGlyphRenderer.glyphDesignHeight(cfg)
+            val ringCenterXUnits = StatusComboStyleOneGlyphRenderer.glyphCenterX(cfg, networkType)
             val centreRatioY = StatusComboStyleOneGlyphRenderer.glyphVerticalCenterRatio(cfg)
-            // Samsung versions differ in whether the punch-hole is exposed through
-            // WindowInsets. If absent, use the display centre, never the old battery slot.
-            val screenCentreX = cutout?.centerX()
-                ?: (rootPos[0] + (root.width.takeIf { it > 0 } ?: app.resources.displayMetrics.widthPixels) / 2)
+            // Use the active status bar/display's reported cutout rectangle. Fold inner
+            // screens can place the camera well to the right of the geometric centre.
+            val cameraCenterX = cutout.centerX()
+            val cameraCenterY = cutout.centerY()
+            val displaySize = activeDisplaySize(root)
+            // On this foldable, the inner-screen camera is on the right side while
+            // the cover-screen camera is near the centre. Detect from cutout geometry
+            // instead of applying an inner-screen correction to every display.
+            val rightSideCutout = displaySize.x > 0 &&
+                cameraCenterX >= displaySize.x * RIGHT_SIDE_CUTOUT_THRESHOLD
+            val horizontalCalibrationPx = if (rightSideCutout) {
+                (INNER_PUNCH_HOLE_HORIZONTAL_CALIBRATION_DP *
+                    context.resources.displayMetrics.density).roundToInt()
+            } else 0
+            val verticalCalibrationDp = if (rightSideCutout) {
+                INNER_PUNCH_HOLE_VERTICAL_CALIBRATION_DP
+            } else {
+                PUNCH_HOLE_VERTICAL_CALIBRATION_DP
+            }
+            // Anchor the actual drawn ring centre, not a ratio of the window width.
+            // The renderer centres its canvas inside the integer-sized WindowManager bounds;
+            // compensating for that exact inset prevents label-margin width changes from moving
+            // the ring by even a rounded pixel.
+            val renderScale = lp.height.toFloat() / designHeightUnits
+            val canvasLeftInsetPx = (lp.width - designWidthUnits * renderScale) / 2f
+            val ringCenterOffsetPx = ringCenterXUnits * renderScale + canvasLeftInsetPx
             lp.x = (
-                screenCentreX - lp.width * centreRatioX +
+                cameraCenterX - ringCenterOffsetPx +
                     StatusBarComboStyleOneRuntime.dpExact(
-                        app, cfg.glyphOffsetXDp + cfg.glyphLeftMarginDp - cfg.glyphRightMarginDp,
-                    )
+                        context, cfg.glyphOffsetXDp + cfg.glyphLeftMarginDp - cfg.glyphRightMarginDp,
+                    ) + horizontalCalibrationPx
                 ).roundToInt()
-            val host = StatusBarComboStyleOneRuntime.hosts[root]
-            val displaySize = StatusBarComboStyleOneRuntime.activeDisplaySize(root)
-            if (host != null && (
-                    host.overlayDisplayWidthPx != displaySize.x ||
-                    host.overlayDisplayHeightPx != displaySize.y
-                )
-            ) {
-                // A fold transition can reuse the SystemUI host. Never carry the
-                // cover screen's fallback Y coordinate onto the inner display.
-                host.overlayDisplayWidthPx = displaySize.x
-                host.overlayDisplayHeightPx = displaySize.y
-                host.overlayCameraCenterYOnScreenPx = null
-                diagnostic("Active display changed to ${displaySize.x}x${displaySize.y}; resetting punch-hole fallback")
-            }
-            val fallbackCentreY = host?.overlayCameraCenterYOnScreenPx
-                ?: (rootPos[1] + root.height / 2).also {
-                    if (host != null) host.overlayCameraCenterYOnScreenPx = it
-                }
-            val screenCentreY = cutout?.centerY() ?: fallbackCentreY
+            val verticalOffsetPx = (
+                (cfg.glyphOffsetYDp.toFloat() + verticalCalibrationDp) *
+                    context.resources.displayMetrics.density
+                ).roundToInt()
             lp.y = (
-                screenCentreY - lp.height * centreRatioY +
-                    StatusBarComboStyleOneRuntime.dpExact(
-                        app, cfg.glyphOffsetYDp + PUNCH_HOLE_VERTICAL_CALIBRATION_DP,
-                    )
+                cameraCenterY - lp.height * centreRatioY + verticalOffsetPx
                 ).roundToInt()
-            diagnostic("Glyph overlay coordinates: type=${lp.type} screenCenter=(${screenCentreX},${screenCentreY}) window=(${lp.x},${lp.y}) size=${lp.width}x${lp.height} cutout=${cutout ?: "none"}")
-            // updateViewLayout invalidates/remeasures the overlay when its bounds
-            // actually changed. Do not force an extra draw for every status-bar
-            // layout callback during shade expansion.
+            diagnostic(
+                "Glyph overlay coordinates: type=${lp.type} cameraCenter=(${cameraCenterX},${cameraCenterY}) " +
+                    "window=(${lp.x},${lp.y}) size=${lp.width}x${lp.height} cutout=$cutout " +
+                    "rightSideCutout=$rightSideCutout correctionDp=(" +
+                    "${if (rightSideCutout) INNER_PUNCH_HOLE_HORIZONTAL_CALIBRATION_DP else 0f}," +
+                    "${verticalCalibrationDp})"
+            )
             if (oldX != lp.x || oldY != lp.y || oldWidth != lp.width || oldHeight != lp.height) {
-                runCatching { wm.updateViewLayout(glyph, lp) }
+                runCatching { wm?.updateViewLayout(glyph, lp) }
+                    .onFailure { Log.w(TAG, "Cannot update camera-anchored glyph window", it) }
             }
+            return true
         }
         fun setTintOverride(color: Int?) { glyph.setTintOverride(color) }
         fun invalidate() { glyph.invalidate() }
@@ -347,15 +432,20 @@ object StatusBarComboStyleOneRuntime {
         }
 
         fun detach() {
-            if (params == null) return
-            runCatching { wm.removeView(glyph) }
+            if (params == null) {
+                wm = null
+                return
+            }
+            runCatching { wm?.removeView(glyph) }
             params = null
+            wm = null
         }
     }
 
     fun install(module: XposedModule, param: XposedModuleInterface.PackageReadyParam) {
         if (param.packageName != Package.SYSTEMUI || !installed.compareAndSet(false, true)) return
         moduleForPreferenceReload = module
+        systemUiClassLoader = param.classLoader
         runCatching {
             with(module) { PreferenceProvider.loadPreference() }
                 ?.systemUI?.statusBar?.comboStyleOneRuntime?.let { config = sanitize(it) }
@@ -363,6 +453,10 @@ object StatusBarComboStyleOneRuntime {
 
         hookNativeMobileState(module, param.classLoader)
         hookNativeSignalPolicy(module, param.classLoader)
+        hookVectorSignalResourceOrigins(module)
+        hookModernMobileViewConstruction(module, param.classLoader)
+        hookModernSignalDrawable(module)
+        hookModernWifiVisibility(module, param.classLoader)
 
         // Style One tint is sourced per collapsed status-bar row by the native
         // icon/battery tint hooks below, never from the Quick Panel clock.
@@ -435,11 +529,20 @@ object StatusBarComboStyleOneRuntime {
                 val overlay = host.overlay ?: return@forEach
 
                 // QuickStar-style native visibility remains authoritative even while the
-                // shade expands. Do not temporarily bring the stock battery surface back.
+                // shade expands. Re-resolve camera geometry because the active foldable
+                // display may have changed while the same SystemUI host was reused.
+                val cameraBounds = cutoutBounds(host.root)
+                if (cameraBounds == null) {
+                    apply(host)
+                    return@forEach
+                }
                 collapseHostView(host, battery)
-                overlay.update(battery, host.root)
-                overlay.setShadeVisible(true)
-                overlay.invalidate()
+                if (overlay.update(battery, host.root, cameraBounds)) {
+                    overlay.setShadeVisible(true)
+                    overlay.invalidate()
+                } else {
+                    apply(host)
+                }
             }
         }
         if (Looper.myLooper() == Looper.getMainLooper()) update.run() else main.post(update)
@@ -513,6 +616,7 @@ object StatusBarComboStyleOneRuntime {
     }
 
     fun isEnabled(): Boolean = config.enabled
+    fun isNativeWifiSuppressed(): Boolean = config.enabled && config.showWifi
     fun isMobileNativeSuppressed(): Boolean =
         config.enabled && config.showMobile &&
             (config.signalMode == 0 || (config.signalMode == 1 && config.stackedSignal))
@@ -534,68 +638,96 @@ object StatusBarComboStyleOneRuntime {
         return point
     }
 
-    private fun punchHoleCenterTolerancePx(root: View, screenWidth: Int): Int =
-        max(dpExact(root.context, 48), (screenWidth * 0.12f).roundToInt())
-
+    /**
+     * Resolve the actual camera cutout for the currently attached SystemUI root.
+     *
+     * Do not assume the punch-hole sits near the horizontal centre. Samsung foldable
+     * inner displays can put the camera well to the right. A reported rectangle is
+     * accepted only when it fits the active display and touches the top edge where
+     * the status bar is hosted. If no such rectangle is reported, return null so the
+     * caller uses the inline renderer instead of fabricating centre coordinates.
+     */
     private fun cutoutBounds(root: View): Rect? {
         if (Build.VERSION.SDK_INT < 28) return null
 
         val display = root.display ?: runCatching {
             (root.context.getSystemService(Context.WINDOW_SERVICE) as? WindowManager)?.defaultDisplay
         }.getOrNull()
-        val screenWidth = activeDisplaySize(root).x
-        val screenCenterX = screenWidth / 2
-        val tolerance = punchHoleCenterTolerancePx(root, screenWidth)
+        val displaySize = activeDisplaySize(root)
+        val screenWidth = displaySize.x
+        val screenHeight = displaySize.y
+        if (screenWidth <= 0 || screenHeight <= 0) return null
 
-        // Reject a cutout that is geometrically centred on the cover display but
-        // not on the currently active inner display. Some foldable firmware keeps
-        // both display/cutout metadata objects alive across a fold transition.
+        val horizontalTolerance = dpExact(root.context, 8).coerceAtLeast(1)
+        val edgeTolerance = dpExact(root.context, 8).coerceAtLeast(1)
+        val topBand = max(dpExact(root.context, 64), (screenHeight * 0.12f).roundToInt())
+
+        fun selectTopCutout(bounds: List<Rect>, source: String): Rect? {
+            val candidates = bounds.filter { rect ->
+                rect.width() > 0 &&
+                    rect.height() > 0 &&
+                    rect.left >= -horizontalTolerance &&
+                    rect.right <= screenWidth + horizontalTolerance &&
+                    rect.top >= -edgeTolerance &&
+                    rect.top <= edgeTolerance &&
+                    rect.bottom <= topBand &&
+                    rect.bottom <= screenHeight + edgeTolerance
+            }
+            val selected = candidates.maxByOrNull { it.width().toLong() * it.height().toLong() }
+                ?: return null
+            val result = Rect(selected)
+            diagnostic(
+                "Punch-hole source=$source bounds=$result displayId=${display?.displayId} " +
+                    "activeDisplay=${screenWidth}x${screenHeight}; horizontal position from reported geometry"
+            )
+            return result
+        }
+
+        // WindowInsets belongs to the current status-bar root and may be fresher
+        // than reflected DisplayInfo while a fold/unfold transition is in flight.
+        // Samsung builds vary in coordinate space, so try mapping from the attached
+        // root to screen coordinates first, then try raw coordinates if already valid.
+        val windowCutout = readWindowCutout(root)
+        if (windowCutout != null) {
+            val windowRoot = root.rootView
+            val location = IntArray(2)
+            windowRoot.getLocationOnScreen(location)
+            val localBounds = windowCutout.boundingRects.filter { it.width() > 0 && it.height() > 0 }
+            val mappedBounds = localBounds.map { Rect(it).apply { offset(location[0], location[1]) } }
+            selectTopCutout(mappedBounds, "WindowInsets-mapped root=${location.contentToString()}")?.let {
+                return it
+            }
+            selectTopCutout(localBounds, "WindowInsets-raw")?.let {
+                diagnostic("WindowInsets bounds already matched active display coordinate space")
+                return it
+            }
+            diagnostic(
+                "WindowInsets did not yield a valid top-edge cutout: local=$localBounds " +
+                    "root=${location.contentToString()} activeDisplay=${screenWidth}x${screenHeight}"
+            )
+        }
+
+        // DisplayInfo gives display-space geometry and is the next source. A camera
+        // rectangle is not rejected just because its X coordinate is far from centre.
         val displayCutout = readDisplayCutout(display)
         if (displayCutout != null) {
-            val bounds = displayCutout.boundingRects.filter { it.width() > 0 && it.height() > 0 }
-            val selected = bounds.minByOrNull { abs(it.centerX() - screenCenterX) }
-            if (selected != null) {
-                val delta = abs(selected.centerX() - screenCenterX)
-                if (delta <= tolerance) {
-                    diagnostic("Punch-hole source=DisplayInfo bounds=$selected screenWidth=$screenWidth delta=$delta")
-                    return Rect(selected)
-                }
-                diagnostic("Ignoring stale DisplayInfo cutout=$selected activeScreenWidth=$screenWidth centerX=$screenCenterX delta=$delta tolerance=$tolerance")
-                // Do not use safeInsetTop from a mismatched display's cutout.
-            } else {
-                val safeTop = displayCutout.safeInsetTop
-                if (safeTop > 0) {
-                    val screenY = safeTop / 2
-                    diagnostic("Punch-hole source=DisplayInfo safeTop=$safeTop center=($screenCenterX,$screenY)")
-                    return Rect(screenCenterX - 1, screenY - 1, screenCenterX + 1, screenY + 1)
-                }
-            }
+            selectTopCutout(displayCutout.boundingRects, "DisplayInfo")?.let { return it }
+            diagnostic(
+                "DisplayInfo did not provide a valid active-display top-edge cutout: " +
+                    "bounds=${displayCutout.boundingRects} safeTop=${displayCutout.safeInsetTop} " +
+                    "activeDisplay=${screenWidth}x${screenHeight}"
+            )
+        } else {
+            diagnostic(
+                "No DisplayInfo cutout available: displayId=${display?.displayId} " +
+                    "activeDisplay=${screenWidth}x${screenHeight}"
+            )
         }
 
-        // WindowInsets bounds are first mapped from their root/window coordinate
-        // space, then checked against the active screen centre as well.
-        val windowCutout = readWindowCutout(root) ?: return null
-        val bounds = windowCutout.boundingRects.filter { it.width() > 0 && it.height() > 0 }
-        val windowRoot = root.rootView
-        val location = IntArray(2)
-        windowRoot.getLocationOnScreen(location)
-        val selected = bounds.minByOrNull { abs(it.centerX() - (windowRoot.width.takeIf { w -> w > 0 } ?: screenWidth) / 2) }
-        if (selected != null) {
-            val mapped = Rect(selected).apply { offset(location[0], location[1]) }
-            val delta = abs(mapped.centerX() - screenCenterX)
-            if (delta <= tolerance) {
-                diagnostic("Punch-hole source=WindowInsets local=$selected root=${location.contentToString()} mapped=$mapped")
-                return mapped
-            }
-            diagnostic("Ignoring stale WindowInsets cutout local=$selected mapped=$mapped activeScreenWidth=$screenWidth delta=$delta tolerance=$tolerance")
-            return null
-        }
-        val safeTop = windowCutout.safeInsetTop
-        if (safeTop > 0) {
-            val screenY = location[1] + safeTop / 2
-            diagnostic("Punch-hole source=WindowInsets safeTop=$safeTop center=($screenCenterX,$screenY)")
-            return Rect(screenCenterX - 1, screenY - 1, screenCenterX + 1, screenY + 1)
-        }
+        // safeInsetTop describes avoidance depth, not the camera's horizontal location.
+        // It is insufficient for positioning an independent window, so never synthesize
+        // a fake cutout around the display centre.
+        diagnostic("No verified camera rectangle for active display; independent overlay must not use screen centre")
         return null
     }
 
@@ -651,6 +783,8 @@ object StatusBarComboStyleOneRuntime {
     }
 
     private fun scheduleRegister(root: ViewGroup) {
+        // Register the shared, on-demand diagnostics reply channel with the first live SystemUI context.
+        OneuiXPDiagnosticLog.install(root.context)
         root.post { register(root) }
         // One bounded retry for SystemUI's deferred icon inflation. Do not keep
         // repeating whole-root discovery during status-bar/Quick Panel animation.
@@ -658,6 +792,44 @@ object StatusBarComboStyleOneRuntime {
             val needsRetry = synchronized(hosts) { hosts[root]?.battery == null }
             if (needsRetry && root.isAttachedToWindow) register(root)
         }, 400L)
+    }
+
+    private fun ensureHostLifecycleListener(root: ViewGroup) {
+        synchronized(hostLifecycleListeners) {
+            if (hostLifecycleListeners.containsKey(root)) return
+            val listener = object : View.OnAttachStateChangeListener {
+                override fun onViewAttachedToWindow(v: View) {
+                    (v as? ViewGroup)?.let(::scheduleRegister)
+                }
+
+                override fun onViewDetachedFromWindow(v: View) {
+                    val detachedRoot = v as? ViewGroup ?: return
+                    main.post { cleanupDetachedHost(detachedRoot) }
+                }
+            }
+            hostLifecycleListeners[root] = listener
+            root.addOnAttachStateChangeListener(listener)
+        }
+    }
+
+    private fun cleanupDetachedHost(root: ViewGroup) {
+        val host = synchronized(hosts) { hosts.remove(root) } ?: return
+        host.retired = true
+        main.removeCallbacks(host.geometryRetry)
+        main.removeCallbacks(host.delayedApply)
+        host.geometryRetryPending = false
+        host.geometryRetryAttempts = 0
+        host.battery?.let { restoreOnDrawFlag(host, host.shadeDrawTarget ?: it) }
+        host.overlay?.detach()
+        host.overlay = null
+        removeInline(host)
+        restore(host)
+        restoreNativeBatteryViews(root)
+        host.battery = null
+        host.shadeDrawTarget = null
+        host.tintRow = null
+        host.rowTint = null
+        diagnostic("Status-bar host detached; restored native views and released overlay")
     }
 
     private fun register(root: ViewGroup) {
@@ -700,16 +872,9 @@ object StatusBarComboStyleOneRuntime {
                 hosts[root] = it
             }
         }
-        if (host.battery == null) {
-            // Do not relayout a floating window from every status-bar height frame.
-            // SystemUI recreates the collapsed host on display/configuration changes;
-            // a new host will read the new anchor geometry once.
-            root.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
-                override fun onViewAttachedToWindow(v: View) { main.post { apply(host) } }
-                override fun onViewDetachedFromWindow(v: View) {
-                    main.post { host.overlay?.detach(); host.overlay = null; removeInline(host) }
-                }
-            })
+        ensureHostLifecycleListener(root)
+        if (host.activeDisplayId < 0) {
+            host.activeDisplayId = root.display?.displayId ?: -1
         }
         if (!preferenceReceiverReady) reloadConfigBeforeReceiver()
         ensureReceivers(root.context)
@@ -731,11 +896,13 @@ object StatusBarComboStyleOneRuntime {
                 if (host.retired) return@forEach
                 val battery = host.battery ?: return@forEach
                 host.inline?.let { glyph ->
-                    val width = dp(glyph.context, StatusComboStyleOneGlyphRenderer.glyphWidthDp(config))
+                    val width = dp(glyph.context, StatusComboStyleOneGlyphRenderer.glyphWidthDp(config, state.networkType))
                     val height = dp(glyph.context, StatusComboStyleOneGlyphRenderer.glyphHeightDp(config))
                     val lp = glyph.layoutParams
                     if (lp != null) {
                         val margins = lp as? ViewGroup.MarginLayoutParams
+                        // Let the parent's measured occupied width follow the actual label.
+                        // Renderer coordinates keep the ring anchored without cancelling width via margins.
                         val left = dpExact(glyph.context, config.glyphLeftMarginDp)
                         val right = dpExact(glyph.context, config.glyphRightMarginDp)
                         val changed = lp.width != width || lp.height != height || margins?.let {
@@ -753,13 +920,17 @@ object StatusBarComboStyleOneRuntime {
                     glyph.invalidate()
                 }
                 host.overlay?.let { overlay ->
-                    if (cutoutBounds(host.root) != null) {
-                        collapseHostView(host, battery)
+                    val cameraBounds = cutoutBounds(host.root)
+                    if (cameraBounds == null) {
+                        apply(host)
                     } else {
-                        reserveHostSlot(host, battery, StatusComboStyleOneGlyphRenderer.glyphWidthDp(config))
+                        collapseHostView(host, battery)
+                        if (overlay.update(battery, host.root, cameraBounds)) {
+                            overlay.invalidate()
+                        } else {
+                            apply(host)
+                        }
                     }
-                    overlay.update(battery, host.root)
-                    overlay.invalidate()
                 }
             }
         }
@@ -799,13 +970,22 @@ object StatusBarComboStyleOneRuntime {
         }
     }
 
-    private fun syncChargingRotationTicker() {
+    private fun shouldRotateChargingDisplay(): Boolean {
+        val centredBatteryValue = config.trioStyle == 0 && config.valueCentred
+        val wifiInk = config.showWifi && state.wifiLevel >= 1
+        val innerType = config.showMobile && config.mobileTypeMode == 1 &&
+            state.networkType.isNotBlank()
+        val batteryValueInOpening = config.trioStyle == 0 && !config.valueCentred &&
+            (wifiInk || innerType != null)
+        return config.enabled && config.chargingDisplayMode == 1 &&
+            config.showBolt && config.showValue && state.charging &&
+            ((!centredBatteryValue && config.mobileTypeMode == 1) || batteryValueInOpening)
+    }
+
+    private fun syncChargingRotationTicker(resetPhase: Boolean = true) {
         main.removeCallbacks(chargingRotationTicker)
-        val shouldRotate = config.enabled && config.chargingDisplayMode == 1 &&
-            config.showBolt && config.showValue && config.mobileTypeMode == 1 &&
-            !(config.trioStyle == 0 && config.valueCentred) && state.charging
-        if (shouldRotate) {
-            if (state.chargingAlternatePhase) {
+        if (shouldRotateChargingDisplay()) {
+            if (resetPhase && state.chargingAlternatePhase) {
                 state = state.copy(chargingAlternatePhase = false)
                 invalidateGlyphs()
             }
@@ -821,7 +1001,46 @@ object StatusBarComboStyleOneRuntime {
         host.applying = true
         try {
             val root = host.root
-            if (!root.isAttachedToWindow) { host.overlay?.detach(); return }
+            if (!root.isAttachedToWindow) {
+                main.removeCallbacks(host.geometryRetry)
+                host.geometryRetryPending = false
+                host.geometryRetryAttempts = 0
+                host.overlay?.detach()
+                return
+            }
+            val currentDisplayId = root.display?.displayId ?: -1
+            val currentDisplaySize = activeDisplaySize(root)
+            val displayIdentityChanged =
+                (currentDisplayId >= 0 && host.activeDisplayId >= 0 &&
+                    currentDisplayId != host.activeDisplayId) ||
+                (host.activeDisplayWidth > 0 && host.activeDisplayHeight > 0 &&
+                    (currentDisplaySize.x != host.activeDisplayWidth ||
+                        currentDisplaySize.y != host.activeDisplayHeight))
+            if (displayIdentityChanged) {
+                diagnostic(
+                    "Status-bar display geometry changed: id=${host.activeDisplayId}->${currentDisplayId}, " +
+                        "size=${host.activeDisplayWidth}x${host.activeDisplayHeight}->" +
+                        "${currentDisplaySize.x}x${currentDisplaySize.y}; resetting overlay only"
+                )
+                main.removeCallbacks(host.geometryRetry)
+                host.geometryRetryPending = false
+                host.geometryRetryAttempts = 0
+                host.battery?.let { restoreOnDrawFlag(host, host.shadeDrawTarget ?: it) }
+                host.overlay?.detach()
+                host.overlay = null
+                removeInline(host)
+                restore(host)
+                restoreNativeBatteryViews(root)
+                host.battery = null
+                host.shadeDrawTarget = null
+                host.tintRow = null
+                host.rowTint = rowTintSnapshots[root]
+            }
+            if (currentDisplayId >= 0) host.activeDisplayId = currentDisplayId
+            if (currentDisplaySize.x > 0 && currentDisplaySize.y > 0) {
+                host.activeDisplayWidth = currentDisplaySize.x
+                host.activeDisplayHeight = currentDisplaySize.y
+            }
             val views = descendants(root)
             rememberStatusBarTintViews(root, views)
             // One UI 8.5 / Android 16+ can render the battery as a ComposeView
@@ -832,6 +1051,9 @@ object StatusBarComboStyleOneRuntime {
                 ?: views.firstOrNull(::isBatteryIcon)
 
             if (!config.enabled || battery == null) {
+                main.removeCallbacks(host.geometryRetry)
+                host.geometryRetryPending = false
+                host.geometryRetryAttempts = 0
                 host.battery?.let { restoreOnDrawFlag(host, host.shadeDrawTarget ?: it) }
                 host.overlay?.detach()
                 host.overlay = null
@@ -875,14 +1097,14 @@ object StatusBarComboStyleOneRuntime {
                     isWithin(battery, candidate) || isWithin(candidate, battery)
                 if (isBatteryTintOwner) batteryTintSnapshots[candidate] else null
             }
-            // HyperDuo's source of truth is a tint saved for the MIUI battery
+            // The upstream tint source is a value saved for the MIUI battery
             // container. The phone-bar value is only a fallback for AOSP layouts.
             val tintRow = host.tintRow
             val rowTint = tintRow?.let { rowTintSnapshots[it] }
                 ?: meterTint
                 // Only AOSP layouts use the whole status-bar root as their tint
                 // owner. On MIUI, falling back to another icon container's ink
-                // would reintroduce the cross-row colour leak HyperDuo fixed.
+                // would reintroduce the previously identified cross-row colour leak.
                 ?: if (tintRow === root) rowTintSnapshots[root] else null
                 ?: host.rowTint
             if (rowTint != null && host.rowTint != rowTint) {
@@ -890,6 +1112,19 @@ object StatusBarComboStyleOneRuntime {
                 host.inline?.setTintOverride(rowTint)
                 host.overlay?.setTintOverride(rowTint)
             }
+            // Resolve the active display's camera before touching native status-bar slots.
+            // If Samsung has not supplied valid geometry yet, leave the whole native icon row alone
+            // and perform at most one delayed retry; never collapse/restore it on a retry loop.
+            val wantsOverlay = config.overlayGlyph && !host.overlayFailed
+            val overlayCameraBounds = if (wantsOverlay) cutoutBounds(root) else null
+            if (wantsOverlay && overlayCameraBounds == null) {
+                if (!host.geometryRetryPending && host.geometryRetryAttempts == 0) {
+                    diagnostic("No stable cutout geometry yet; leaving native status-bar layout unchanged")
+                }
+                scheduleGeometryRetry(host)
+                return
+            }
+
             val foldMobile = isMobileNativeSuppressed()
 
             views.forEach { view ->
@@ -899,33 +1134,49 @@ object StatusBarComboStyleOneRuntime {
                 // Keep Wi-Fi on the established view/layout path for now. The
                 // experimental native Wi-Fi slot interception is disabled after a
                 // SystemUI/LSPosed stability regression.
+                val wifiCandidate = isWifiIcon(view)
+                if (wifiCandidate && !nativeWifiBaselineVisibility.containsKey(view)) {
+                    val nativeVisibility = host.layouts[view]?.visibility ?: view.visibility
+                    nativeWifiBaselineVisibility[view] = nativeVisibility
+                }
                 val hide =
-                    (config.showWifi && isWifiIcon(view)) ||
+                    (config.showWifi && wifiCandidate) ||
                     (foldMobile && isMobileIcon(view)) ||
                     (config.showMobile && config.mobileTypeMode == 2 && isMobileTypeView(view))
                 if (hide) collapseHostView(host, view) else restoreHostView(host, view)
+                if (wifiCandidate) diagnoseNativeWifiView(view, if (hide) "apply-collapse" else "apply-restore")
             }
 
-            if (config.overlayGlyph && !host.overlayFailed) {
+            if (wantsOverlay) {
+                // Geometry was checked before suppressing any native slot. Reuse that one
+                // snapshot throughout this apply pass so all icon/window work is atomic.
+                val cameraBounds = requireNotNull(overlayCameraBounds)
                 removeInline(host)
-                val overlay = host.overlay ?: GlyphOverlay(root.context).also { host.overlay = it }
+                val overlay = host.overlay ?: GlyphOverlay(root.context, root.display).also { host.overlay = it }
                 overlay.setTintOverride(host.rowTint)
-                if (!overlay.attach(battery, root)) {
-                    host.overlayFailed = true
+                if (!overlay.attach(battery, root, cameraBounds)) {
+                    // Failed attachment must restore every native view changed above.
+                    // Never leave the row collapsed while a retry waits.
+                    diagnostic("Overlay attach failed; restoring native icon row and retrying once")
                     overlay.detach()
                     host.overlay = null
-                    collapseHostView(host, battery)
-                    insertInline(host, battery)
+                    restore(host)
+                    scheduleGeometryRetry(host)
                 } else {
-                    // The independent overlay is positioned from the camera/display centre,
-                    // not from the stock battery slot. Collapse the native meter so it neither
-                    // paints over our glyph nor leaves an empty reserved slot at the right edge.
+                    main.removeCallbacks(host.geometryRetry)
+                    host.geometryRetryPending = false
+                    host.geometryRetryAttempts = 0
+                    // Anchor the independent renderer to the reported camera rectangle,
+                    // never a presumed centre. Collapse the native meter to avoid overdraw.
                     collapseHostView(host, battery)
                     overlay.setShadeVisible(true)
-                    overlay.update(battery, root)
+                    overlay.update(battery, root, cameraBounds)
                     overlay.invalidate()
                 }
             } else {
+                main.removeCallbacks(host.geometryRetry)
+                host.geometryRetryPending = false
+                host.geometryRetryAttempts = 0
                 host.overlay?.detach()
                 host.overlay = null
                 collapseHostView(host, battery)
@@ -940,7 +1191,7 @@ object StatusBarComboStyleOneRuntime {
 
     private fun insertInline(host: Host, anchor: View, compactToAnchor: Boolean = false) {
         val parent = anchor.parent as? ViewGroup ?: return
-        val designWidth = StatusComboStyleOneGlyphRenderer.glyphWidthDp(config)
+        val designWidth = StatusComboStyleOneGlyphRenderer.glyphWidthDp(config, state.networkType)
         val designHeight = StatusComboStyleOneGlyphRenderer.glyphHeightDp(config)
         val originalHeight = host.layouts[anchor]?.height?.takeIf { it > 0 }
             ?: anchor.height.takeIf { it > 0 }
@@ -971,7 +1222,13 @@ object StatusBarComboStyleOneRuntime {
             is ViewGroup.MarginLayoutParams -> ViewGroup.MarginLayoutParams(old).apply { this.width = width; this.height = height }
             else -> ViewGroup.LayoutParams(width, height)
         }
-        (lp as? ViewGroup.MarginLayoutParams)?.setMargins(dpExact(parent.context, config.glyphLeftMarginDp), 0, dpExact(parent.context, config.glyphRightMarginDp), 0)
+        val margins = lp as? ViewGroup.MarginLayoutParams
+        margins?.setMargins(
+            dpExact(parent.context, config.glyphLeftMarginDp),
+            0,
+            dpExact(parent.context, config.glyphRightMarginDp),
+            0,
+        )
         glyph.translationX = dpExact(parent.context, config.glyphOffsetXDp).toFloat()
         glyph.translationY = dpExact(parent.context, config.glyphOffsetYDp).toFloat()
         runCatching { parent.addView(glyph, parent.indexOfChild(anchor).coerceAtLeast(0), lp); host.inline = glyph }
@@ -1120,24 +1377,54 @@ object StatusBarComboStyleOneRuntime {
         hosts.values.firstOrNull { !it.retired && isWithin(it.root, view) }
     }
 
+    private fun compactIconDescriptor(v: View): String =
+        viewSignature(v).filter { it.isLetterOrDigit() }
+
     private fun isWifiIcon(v: View): Boolean {
         if (v is GlyphView) return false
-        val slot = slotOf(v) ?: knownIconSlots[v]
-        if (slot == "wifi" || slot?.contains("wlan") == true) return true
-        val name = viewSignature(v)
+        val slot = (slotOf(v) ?: knownIconSlots[v]).orEmpty().lowercase()
+        if (isManagedWifiSlot(slot)) return true
+        val name = compactIconDescriptor(v)
         if (name.contains("battery") || name.contains("bluetooth") || name.contains("airplane")) return false
-        return name.contains("wifi") || name.contains("wlan") || name.contains("slot_wifi")
+        // Normalize separators so "Wi-Fi" and "Wi Fi" cannot evade Wi-Fi detection.
+        return name.contains("wifi") || name.contains("wlan") || name.contains("wireless") ||
+            name.contains("slotwifi")
+    }
+
+    private fun diagnoseNativeWifiView(view: View, action: String) {
+        val slot = (slotOf(view) ?: knownIconSlots[view]).orEmpty()
+        val lp = view.layoutParams
+        val descriptor = viewSignature(view).take(180)
+        val snapshot = "$action|showWifi=${config.showWifi}|wifiLevel=${state.wifiLevel}|" +
+            "vis=${view.visibility}|alpha=${view.alpha}|" +
+            "size=${lp?.width}x${lp?.height}|slot=$slot"
+        if (lastNativeWifiDiagnostics.put(view, snapshot) != snapshot) {
+            diagnostic("Native Wi-Fi view: $snapshot class=${view.javaClass.name} desc=$descriptor")
+        }
+    }
+
+    private fun diagnoseNativeWifiSlotRequest(controller: Any?, slot: String, requested: Boolean) {
+        val owner = controller?.let { System.identityHashCode(it).toString() } ?: "null"
+        val key = "$owner|${slot.lowercase()}"
+        val snapshot = "visible=$requested|showWifi=${config.showWifi}|wifiLevel=${state.wifiLevel}"
+        if (lastNativeWifiSlotRequests.put(key, snapshot) != snapshot) {
+            diagnostic("Native Wi-Fi slot request: slot=$slot $snapshot owner=$owner")
+        }
     }
 
     private fun isMobileIcon(v: View): Boolean {
-        if (v is GlyphView || isMobileTypeView(v)) return false
-        (slotOf(v) ?: knownIconSlots[v])?.let { if (isManagedMobileSlot(it)) return true }
-        val name = viewSignature(v)
-        if (name.contains("battery") || name.contains("bluetooth") || name.contains("airplane") || name.contains("wifi")) return false
+        if (v is GlyphView || isMobileTypeView(v) || isWifiIcon(v)) return false
+        val slot = (slotOf(v) ?: knownIconSlots[v]).orEmpty().lowercase()
+        if (isManagedWifiSlot(slot)) return false
+        if (isManagedMobileSlot(slot)) return true
+        val name = compactIconDescriptor(v)
+        if (name.contains("battery") || name.contains("bluetooth") || name.contains("airplane") ||
+            name.contains("wifi") || name.contains("wlan") || name.contains("wireless")
+        ) return false
         // SignalClusterView is commonly a parent containing Wi-Fi, mobile,
         // airplane and other icons. Never collapse that whole group as a signal icon.
-        return name.contains("mobile") || name.contains("cellular") || name.contains("signal_mobile") ||
-            name.contains("slot_mobile") || name.contains("signal_strength") ||
+        return name.contains("mobile") || name.contains("cellular") || name.contains("signalmobile") ||
+            name.contains("slotmobile") || name.contains("signalstrength") ||
             (name.contains("signalcluster") && v !is ViewGroup)
     }
 
@@ -1189,12 +1476,14 @@ object StatusBarComboStyleOneRuntime {
             // Roll back the experimental Wi-Fi native-slot interception.
             // Use the established per-view/layout suppression path until the
             // SystemUI crash has been isolated and a safer slot API is verified.
+            val wifiCandidate = isWifiIcon(view)
             val hide = config.enabled && (
-                (config.showWifi && isWifiIcon(view)) ||
+                (config.showWifi && wifiCandidate) ||
                     (isMobileNativeSuppressed() && isMobileIcon(view)) ||
                     (config.showMobile && config.mobileTypeMode == 2 && isMobileTypeView(view))
             )
             if (hide) collapseHostView(host, view) else restoreHostView(host, view)
+            if (wifiCandidate) diagnoseNativeWifiView(view, if (hide) "container-collapse" else "container-restore")
         }
         lastContainerFingerprints[container] = containerSuppressionFingerprint(container)
     }
@@ -1249,6 +1538,14 @@ object StatusBarComboStyleOneRuntime {
             (nativeBatterySnapshot ?: snapshotLayout(view))?.let { host.layouts[view] = it }
         }
         collapseViewLayout(view)
+    }
+
+    private fun scheduleGeometryRetry(host: Host) {
+        // Exactly one delayed retry per failed attach/display transition. Re-running apply
+        // in a rapid loop repeatedly scans and collapses the entire icon row.
+        if (host.geometryRetryPending || host.geometryRetryAttempts >= 1) return
+        host.geometryRetryPending = true
+        main.postDelayed(host.geometryRetry, 320L)
     }
 
     private fun reserveHostSlot(host: Host, view: View, widthDp: Int) {
@@ -1476,7 +1773,7 @@ object StatusBarComboStyleOneRuntime {
     }
 
     private fun hookBatteryDrawFallback(module: XposedModule, classLoader: ClassLoader) {
-        // HyperDuo paints into MiuiBatteryMeterIconView.onDraw when its separate
+        // The upstream renderer paints into MiuiBatteryMeterIconView.onDraw when its separate
         // window is not covering the row. Use the same event path only while the
         // shade is transforming the status bar; never poll or rescan the tree.
         val candidates = listOf(
@@ -1893,7 +2190,7 @@ object StatusBarComboStyleOneRuntime {
 
     /**
      * Returns the closest MIUI battery row that owns this icon. This is the same
-     * boundary HyperDuo uses to keep launcher, status bar and control-center tints
+     * boundary used to keep launcher, status-bar, and control-center tints consistent
      * from overwriting one another. AOSP has no such container, so callers fall
      * back to the collapsed PhoneStatusBarView.
      */
@@ -2001,7 +2298,7 @@ object StatusBarComboStyleOneRuntime {
                         val row = tintOwner.first
                         val owner = tintOwner.second
                         if (resolvedColor != null) {
-                            // Cache by MIUI's battery container just like HyperDuo.
+                            // Cache by MIUI's battery container so each status-bar row keeps its own tint.
                             // Also keep the root value solely as the AOSP fallback.
                             rowTintSnapshots[owner] = resolvedColor
                             if (owner === row) rowTintSnapshots[row] = resolvedColor
@@ -2119,6 +2416,11 @@ object StatusBarComboStyleOneRuntime {
                         args.size >= 3 && args.getOrNull(1) is Int && args.getOrNull(2) is Boolean -> 2
                         else -> -1
                     }
+                    if (slot != null && isManagedWifiSlot(slot) && visibleIndex >= 0) {
+                        diagnoseNativeWifiSlotRequest(
+                            controller, slot, args[visibleIndex] as? Boolean ?: true,
+                        )
+                    }
                     val tag = when {
                         args.size >= 3 && args.getOrNull(1) is Int && visibleIndex == 2 -> args[1] as Int
                         args.size >= 3 && args.getOrNull(2) is Int && visibleIndex == 1 -> args[2] as Int
@@ -2193,35 +2495,33 @@ object StatusBarComboStyleOneRuntime {
                 }
                 val targets = (snapshot.keys.mapNotNull(::parseBatterySlotVisibilityKey) +
                     knownBatterySlotNames.map { it to 0 }).distinct()
-                targets.forEach { (slot, tag) ->
-                    val key = batterySlotVisibilityKey(slot, tag)
-                    if (shouldSuppressSlot(slot)) {
-                        if (!snapshot.containsKey(key)) {
-                            val currentVisibility = readNativeBatterySlotVisibility(controller, slot, tag) ?: true
-                            rememberNativeBatterySlotVisibility(controller, slot, tag, currentVisibility)
-                        }
-                        setNativeBatterySlotVisibility(controller, slot, tag, false)
-                    } else {
-                        val original = synchronized(nativeBatterySlotVisibility) {
-                            nativeBatterySlotVisibility[controller]?.get(key)
-                        }
-                        if (original != null) {
-                            setNativeBatterySlotVisibility(controller, slot, tag, original)
-                        } else if (isManagedWifiSlot(slot) && state.wifiLevel >= 0) {
-                            // If this controller/holder was first discovered after the
-                            // arc had already hidden Wi-Fi, there is no trustworthy
-                            // snapshot to restore. The active Wi-Fi state is positive
-                            // evidence that the native icon should be rebound/visible.
-                            setNativeBatterySlotVisibility(controller, slot, tag, true)
-                            diagnostic("Restored active native Wi-Fi slot without snapshot: $slot tag=$tag")
+                // Never mutate the Wi-Fi holder's native visibility. A previous
+                // implementation could hide the holder while the view briefly
+                // reappeared, then SystemUI's next bind hid it again. Wi-Fi now
+                // uses collapseHostView()/restoreHostView() exclusively.
+                targets.filterNot { (slot, _) -> isManagedWifiSlot(slot) }
+                    .forEach { (slot, tag) ->
+                        val key = batterySlotVisibilityKey(slot, tag)
+                        if (shouldSuppressSlot(slot)) {
+                            if (!snapshot.containsKey(key)) {
+                                val currentVisibility = readNativeBatterySlotVisibility(controller, slot, tag) ?: true
+                                rememberNativeBatterySlotVisibility(controller, slot, tag, currentVisibility)
+                            }
+                            setNativeBatterySlotVisibility(controller, slot, tag, false)
+                        } else {
+                            val original = synchronized(nativeBatterySlotVisibility) {
+                                nativeBatterySlotVisibility[controller]?.get(key)
+                            }
+                            if (original != null) {
+                                setNativeBatterySlotVisibility(controller, slot, tag, original)
+                            }
                         }
                     }
-                }
             }
             // A native icon may also have been collapsed in the view tree. Reassert
             // its original measured layout after the controller has restored its slot.
             synchronized(hosts) { hosts.values.toList() }.forEach { host ->
-                if (host.retired || config.showWifi || state.wifiLevel < 0) return@forEach
+                if (host.retired || (config.enabled && config.showWifi) || state.wifiLevel < 0) return@forEach
                 host.layouts.keys.toList().filter { view ->
                     isWifiIcon(view) || (slotOf(view) ?: knownIconSlots[view])?.let(::isManagedWifiSlot) == true
                 }.forEach { view ->
@@ -2383,6 +2683,9 @@ object StatusBarComboStyleOneRuntime {
                                     previous.glyphRightMarginDp != next.glyphRightMarginDp ||
                                     previous.outSignalMarginDp != next.outSignalMarginDp ||
                                     previous.outSignalSizeDp != next.outSignalSizeDp ||
+                                    previous.outTypeSizeDp != next.outTypeSizeDp ||
+                                    previous.typeWeight != next.typeWeight ||
+                                    previous.typeSuffixScale != next.typeSuffixScale ||
                                     previous.dualSimMode != next.dualSimMode ||
                                     previous.dualSim != next.dualSim ||
                                     previous.trioStyle != next.trioStyle
@@ -2497,7 +2800,10 @@ object StatusBarComboStyleOneRuntime {
             val info = wm.connectionInfo
             val level = if (info == null || info.rssi == -127) -1
                 else WifiManager.calculateSignalLevel(info.rssi, 5)
-            state = state.copy(wifiLevel = level.coerceIn(-1, 4))
+            val nextLevel = level.coerceIn(-1, 4)
+            val wifiLevelChanged = state.wifiLevel != nextLevel
+            state = state.copy(wifiLevel = nextLevel)
+            if (wifiLevelChanged) syncChargingRotationTicker(resetPhase = false)
             diagnostic("Wi-Fi: level=${state.wifiLevel}")
         }
     }
@@ -2567,8 +2873,12 @@ object StatusBarComboStyleOneRuntime {
         subscriptionSlots.clear()
         active.forEach { info -> subscriptionSlots[info.subscriptionId] = info.simSlotIndex }
         val activeIds = active.map { it.subscriptionId }.toSet()
+        quickPanelSignalLevels.keys.filter { it !in activeIds }.forEach { quickPanelSignalLevels.remove(it) }
         nativeSignalLevels.keys.filter { it !in activeIds }.forEach { nativeSignalLevels.remove(it) }
+        renderedSignalLevels.keys.filter { it !in activeIds }.forEach { renderedSignalLevels.remove(it) }
         lastSubscriptionSignalLevels.keys.filter { it !in activeIds }.forEach { lastSubscriptionSignalLevels.remove(it) }
+        // Read the live collapsed-status-bar SignalDrawable before falling back to TelephonyManager.
+        sampleModernStatusBarSignalDrawables()
         var dataLevel = -1
         var simOne = -1
         var simTwo = -1
@@ -2576,13 +2886,39 @@ object StatusBarComboStyleOneRuntime {
         var label = state.networkType
         active.forEach { info ->
             val sub = runCatching { base.createForSubscriptionId(info.subscriptionId) }.getOrNull() ?: return@forEach
-            val telephonyLevel = runCatching { sub.signalStrength?.level ?: -1 }.getOrDefault(-1).coerceIn(-1, 4)
-            val level = nativeSignalLevels[info.subscriptionId]
-                ?: telephonyLevel.takeIf { it in 0..4 }?.also {
-                    lastSubscriptionSignalLevels[info.subscriptionId] = it
+            val telephonyLevel = runCatching { sub.signalStrength?.level ?: -1 }
+                .getOrDefault(-1).coerceIn(-1, 4)
+            val drawnStatusBarLevel = renderedSignalLevels[info.subscriptionId]?.coerceIn(0, 4)
+            val modernPipelineLevel = readModernPipelineSignalLevel(info.subscriptionId)
+            // The actual SignalDrawable level wins over both the reflected model and telephony.
+            // The model remains useful as a fallback if this firmware uses a nonstandard drawable.
+            when {
+                drawnStatusBarLevel != null -> nativeSignalLevels[info.subscriptionId] = drawnStatusBarLevel
+                modernPipelineLevel != null -> nativeSignalLevels[info.subscriptionId] = modernPipelineLevel
+            }
+            if (drawnStatusBarLevel != null || modernPipelineLevel != null) {
+                val snapshot = "drawn=${drawnStatusBarLevel ?: -1}|model=${modernPipelineLevel ?: -1}" +
+                    "|dataSub=${info.subscriptionId == dataSub}|telephony=$telephonyLevel"
+                if (lastModernPipelineLevelDiagnostics.put(info.subscriptionId, snapshot) != snapshot) {
+                    diagnostic("Modern status-bar signal sample: subId=${info.subscriptionId} $snapshot")
                 }
-                ?: lastSubscriptionSignalLevels[info.subscriptionId]
-                ?: -1
+            }
+            val quickPanelLevel = quickPanelSignalLevels[info.subscriptionId]?.coerceIn(0, 4)
+            val nativeLevel = nativeSignalLevels[info.subscriptionId]?.coerceIn(0, 4)
+            // Match the collapsed status-bar icon first. Quick Settings is a fallback
+            // for Samsung builds where the status-bar icon state doesn't expose a
+            // decodable level; TelephonyManager comes after both SystemUI sources.
+            val level = nativeLevel ?: quickPanelLevel ?: telephonyLevel.takeIf { it in 0..4 }
+                ?: lastSubscriptionSignalLevels[info.subscriptionId] ?: -1
+            if (level in 0..4) lastSubscriptionSignalLevels[info.subscriptionId] = level
+            val embedded = if (Build.VERSION.SDK_INT >= 28) {
+                runCatching { info.isEmbedded }.getOrDefault(false)
+            } else false
+            diagnostic(
+                "SIM signal: subId=${info.subscriptionId} slot=${info.simSlotIndex} embedded=$embedded " +
+                    "defaultData=${info.subscriptionId == dataSub} qs=${quickPanelLevel ?: -1} " +
+                    "native=${nativeLevel ?: -1} telephony=$telephonyLevel selected=$level"
+            )
             if (info.simSlotIndex == 0) simOne = level
             if (info.simSlotIndex == 1) simTwo = level
             if (info.subscriptionId == dataSub) {
@@ -2609,6 +2945,7 @@ object StatusBarComboStyleOneRuntime {
                     state.dataSimSlotIndex.takeIf { it in 0..1 } ?: 0
                 }
         }
+        val networkTypeChanged = state.networkType != label
         state = state.copy(
             mobileLevel = dataLevel.coerceIn(0, 4),
             simOneLevel = simOne,
@@ -2616,6 +2953,10 @@ object StatusBarComboStyleOneRuntime {
             dataSimSlotIndex = dataSlot,
             networkType = label,
         )
+        if (networkTypeChanged) {
+            syncChargingRotationTicker(resetPhase = false)
+            resizeGlyphs()
+        }
         diagnostic("Telephony refreshed: dataSub=$dataSub, dataLevel=${state.mobileLevel}, type=${state.networkType}")
     }
 
@@ -2625,6 +2966,7 @@ object StatusBarComboStyleOneRuntime {
             "com.android.systemui.statusbar.phone.StatusBarMobileView",
             "com.android.systemui.statusbar.views.StatusBarMobileView",
             "com.android.systemui.statusbar.phone.ModernStatusBarMobileView",
+            "com.android.systemui.statusbar.pipeline.mobile.ui.view.ModernStatusBarMobileView",
         )
         candidates.forEach { name ->
             runCatching {
@@ -2641,13 +2983,781 @@ object StatusBarComboStyleOneRuntime {
                             ?: return@intercept result
                         val subId = readSignalIntField(mobileState, "subId", "mSubId")
                             ?: defaultDataSubscriptionId
-                        val level = if (strength in 0..4) strength else resolveSignalResourceLevel(view, strength)
-                        if (level in 0..4 && subId >= 0) updateNativeSignalLevel(subId, level)
+                        val resourceName = runCatching { view.resources.getResourceEntryName(strength) }
+                            .getOrNull().orEmpty()
+                        val level = normalizeNativeSignalLevel(strength)
+                            ?: if (resourceName.isNotBlank()) {
+                                resolveSignalResourceName(resourceName).takeIf { it in 0..4 }
+                            } else {
+                                // Legacy status-bar state may carry SignalDrawable's packed state,
+                                // not a resource ID. Decode it only when resource lookup failed.
+                                decodePackedSignalDrawableLevel(strength).takeIf { it in 0..4 }
+                            }
+                        diagnostic(
+                            "StatusBarMobileView state: subId=$subId strengthId=$strength " +
+                                "resource=$resourceName level=$level"
+                        )
+                        if (level != null && level in 0..4 && subId >= 0) updateNativeSignalLevel(subId, level)
                         result
                     }
                 }
             }.onFailure { diagnostic("Native mobile state hook unavailable: $name: $it") }
         }
+    }
+
+    /**
+     * Read each SIM's modern status-bar model and map the returned view to its subscription.
+     * OEM Android revisions vary the logger/slot parameter order and may expose a wrapper view
+     * model, so identify the model by type/name and subscription ID instead of a fixed index.
+     */
+    private fun hookModernMobileViewConstruction(module: XposedModule, classLoader: ClassLoader) {
+        val className = "com.android.systemui.statusbar.pipeline.mobile.ui.view.ModernStatusBarMobileView"
+        runCatching {
+            val clazz = classLoader.loadClass(className)
+            modernMobileViewClass = clazz
+            val methods = clazz.declaredMethods.filter {
+                it.name == "constructAndBind" && it.parameterTypes.any { type ->
+                    type.name.contains("MobileIconViewModel") ||
+                        type.name.contains("LocationBasedMobileViewModel") ||
+                        type.name.contains("MobileIconViewModelCommon")
+                }
+            }
+            if (methods.isEmpty()) {
+                diagnostic("Modern mobile pipeline hook unavailable: no constructAndBind method with view-model parameter")
+                return@runCatching
+            }
+            methods.distinctBy { it.toGenericString() }.forEach { method ->
+                module.hook(method).intercept { chain ->
+                    val result = chain.proceed()
+                    val viewModel = chain.args.firstNotNullOfOrNull { argument ->
+                        val candidate = argument ?: return@firstNotNullOfOrNull null
+                        val typeName = candidate.javaClass.name
+                        val modelType = typeName.contains("MobileIconViewModel") ||
+                            typeName.contains("LocationBasedMobileViewModel")
+                        val subId = readSignalIntValue(candidate, "subscriptionId", "subId")
+                        if (subId != null && subId >= 0 &&
+                            (modelType || readObjectMember(candidate, "icon", "signalIcon", "signalLevelIcon") != null)
+                        ) candidate else null
+                    }
+                    if (viewModel != null) {
+                        val subId = readSignalIntValue(viewModel, "subscriptionId", "subId")
+                        if (subId != null && subId >= 0) {
+                            // Keep the collapsed status-bar HOME model as the canonical
+                            // signal source; later QS/Keyguard view construction must not
+                            // replace it for the same subscription.
+                            val modelSimpleName = viewModel.javaClass.simpleName
+                            if (modelSimpleName.contains("HomeMobileIconViewModel")) {
+                                modernMobileViewModels[subId] = WeakReference(viewModel)
+                            }
+                            val resultView = result as? View
+                            if (resultView != null) {
+                                modernMobileViewSubscriptionIds[resultView] = subId
+                                knownIconSlots[resultView] = "mobile"
+                            }
+                            val iconModel = readModernIconModel(viewModel)
+                            val level = iconModel?.let(::modernPipelineSignalLevel)
+                            val levels = iconModel?.let {
+                                readSignalIntValue(it, "numberOfLevels", "numLevels", "levelCount")
+                            } ?: -1
+                            val inspect = if (iconModel == null) "|inspect=${describeModernSignalModel(viewModel)}" else ""
+                            val snapshot = "viewModel=${viewModel.javaClass.name}|iconModel=${iconModel?.javaClass?.name}" +
+                                "|level=${level ?: -1}|levels=$levels|drawn=${renderedSignalLevels[subId] ?: -1}$inspect"
+                            if (lastModernPipelineSignalDiagnostics.put(subId, snapshot) != snapshot) {
+                                diagnostic("Modern status-bar mobile pipeline: subId=$subId $snapshot")
+                            }
+                            if (level != null && renderedSignalLevels[subId] == null) {
+                                nativeSignalLevels[subId] = level
+                            } else if (level == null) {
+                                diagnostic("Modern status-bar mobile pipeline: current icon level unavailable for subId=$subId")
+                            }
+                            scheduleTelephonyRefresh()
+                            // Binding can finish before the mobile view is attached; sample again on main.
+                            main.post { sampleModernStatusBarSignalDrawables() }
+                        }
+                    } else {
+                        val signature = chain.args.mapIndexed { index, argument ->
+                            "$index:${argument?.javaClass?.name ?: "null"}"
+                        }.joinToString(",")
+                        diagnostic("Modern mobile pipeline view-model parameter not identified: $signature")
+                    }
+                    result
+                }
+            }
+            diagnostic("Modern mobile pipeline hook installed: $className")
+        }.onFailure { diagnostic("Modern mobile pipeline hook unavailable: $it") }
+    }
+
+    /**
+     * Observe the SignalDrawable attached to the real status-bar mobile ImageView. This is
+     * intentionally per-view-model/subscription; it never samples QS icons or the other SIM.
+     */
+    /**
+     * Keep resource identities attached to drawable instances. Samsung One UI uses
+     * VectorDrawable resources for mobile_signal, unlike AOSP SignalDrawable.
+     */
+    private fun hookVectorSignalResourceOrigins(module: XposedModule) {
+        var hookedResourceMethods = 0
+        Resources::class.java.methods.filter { method ->
+            method.name in setOf("getDrawable", "getDrawableForDensity") &&
+                method.parameterTypes.firstOrNull() == Int::class.javaPrimitiveType &&
+                Drawable::class.java.isAssignableFrom(method.returnType)
+        }.distinctBy { it.toGenericString() }.forEach { method ->
+            runCatching {
+                module.hook(method).intercept { chain ->
+                    val result = chain.proceed()
+                    val resources = chain.thisObject as? Resources
+                    val resourceId = chain.args.firstOrNull() as? Int
+                    val drawable = result as? Drawable
+                    if (resources != null && resourceId != null && drawable != null) {
+                        rememberDrawableOrigin(resources, resourceId, drawable)
+                    }
+                    result
+                }
+                hookedResourceMethods++
+            }.onFailure { diagnostic("Signal resource origin hook unavailable: ${method.name}: $it") }
+        }
+
+        // Icon.loadDrawable() is a common SystemUI path. It exposes the original Icon
+        // resource even when the ImageView only receives a VectorDrawable instance.
+        runCatching {
+            val iconClass = android.graphics.drawable.Icon::class.java
+            val methods = iconClass.methods.filter { method ->
+                method.name.startsWith("loadDrawable") &&
+                    method.parameterTypes.firstOrNull()?.let { Context::class.java.isAssignableFrom(it) } == true &&
+                    Drawable::class.java.isAssignableFrom(method.returnType)
+            }.distinctBy { it.toGenericString() }
+            methods.forEach { method ->
+                module.hook(method).intercept { chain ->
+                    val result = chain.proceed()
+                    val icon = chain.thisObject
+                    val drawable = result as? Drawable
+                    val context = chain.args.firstOrNull() as? Context
+                    val resourceId = readSignalIntValue(icon, "resId", "mInt1", "int1")
+                    if (drawable != null && context != null && resourceId != null && resourceId != 0) {
+                        rememberDrawableOrigin(context.resources, resourceId, drawable)
+                    }
+                    result
+                }
+            }
+            diagnostic("Signal resource origin hooks installed: Resources=$hookedResourceMethods Icon.loadDrawable=${methods.size}")
+        }.onFailure {
+            diagnostic("Signal Icon.loadDrawable origin hook unavailable: $it; Resources=$hookedResourceMethods")
+        }
+    }
+
+    private fun rememberDrawableOrigin(resources: Resources, resourceId: Int, drawable: Drawable) {
+        val name = runCatching { resources.getResourceEntryName(resourceId) }.getOrNull() ?: return
+        val normalized = name.lowercase()
+        // Keep the cache focused on likely status signal resources, not every drawable
+        // loaded by SystemUI. We can resolve the named level later against the live view.
+        if (!normalized.contains("signal") || normalized.contains("wifi") ||
+            normalized.contains("wlan") || normalized.contains("bluetooth")
+        ) return
+        val pkg = runCatching { resources.getResourcePackageName(resourceId) }.getOrDefault("unknown")
+        val origin = NativeDrawableOrigin(resourceId, pkg, name)
+        drawableOrigins[drawable] = origin
+        drawable.constantState?.let { drawableStateOrigins[it] = origin }
+    }
+
+    private fun drawableOrigin(drawable: Drawable): NativeDrawableOrigin? =
+        drawableOrigins[drawable] ?: drawable.constantState?.let { drawableStateOrigins[it] }
+
+    private fun hookModernSignalDrawable(module: XposedModule) {
+        runCatching {
+            val setImageLevel = android.widget.ImageView::class.java.getDeclaredMethod(
+                "setImageLevel", Int::class.javaPrimitiveType!!,
+            )
+            module.hook(setImageLevel).intercept { chain ->
+                val result = chain.proceed()
+                val image = chain.thisObject as? android.widget.ImageView
+                val packedLevel = chain.args.getOrNull(0) as? Int
+                if (image != null && packedLevel != null && config.enabled) {
+                    captureModernSignalDrawable(image, packedLevel)
+                }
+                result
+            }
+        }.onFailure { diagnostic("Modern status-bar signal image-level hook unavailable: $it") }
+
+        runCatching {
+            val setImageDrawable = android.widget.ImageView::class.java.getDeclaredMethod(
+                "setImageDrawable", Drawable::class.java,
+            )
+            module.hook(setImageDrawable).intercept { chain ->
+                val result = chain.proceed()
+                val image = chain.thisObject as? android.widget.ImageView
+                if (image != null && config.enabled) captureModernMobileSignalImage(image)
+                result
+            }
+        }.onFailure { diagnostic("Modern status-bar signal drawable hook unavailable: $it") }
+
+        runCatching {
+            val setImageResource = android.widget.ImageView::class.java.getDeclaredMethod(
+                "setImageResource", Int::class.javaPrimitiveType!!,
+            )
+            module.hook(setImageResource).intercept { chain ->
+                val result = chain.proceed()
+                val image = chain.thisObject as? android.widget.ImageView
+                val resourceId = chain.args.getOrNull(0) as? Int
+                if (image != null && resourceId != null && config.enabled) {
+                    val root = findModernMobileRoot(image)
+                    val subId = root?.let { modernMobileViewSubscriptionIds[it] }
+                    if (root != null && subId != null && isMobileSignalImage(image)) {
+                        val name = runCatching { image.resources.getResourceEntryName(resourceId) }
+                            .getOrNull().orEmpty()
+                        val level = resolveSignalResourceName(name)
+                        if (level in 0..4) {
+                            recordModernStatusBarSignal(
+                                subId, level, "image-resource",
+                                "resource=$name id=$resourceId image=${resourceName(image)}",
+                            )
+                        } else {
+                            diagnoseVectorSignalOrigin(
+                                image, subId, "image-resource=$name id=$resourceId level=$level",
+                            )
+                        }
+                    }
+                }
+                result
+            }
+        }.onFailure { diagnostic("Modern status-bar signal image-resource hook unavailable: $it") }
+
+        runCatching {
+            // Some status-bar implementations update Drawable.level directly after binding.
+            val setDrawableLevel = Drawable::class.java.getDeclaredMethod(
+                "setLevel", Int::class.javaPrimitiveType!!,
+            )
+            module.hook(setDrawableLevel).intercept { chain ->
+                val result = chain.proceed()
+                val drawable = chain.thisObject as? Drawable
+                val image = drawable?.callback as? android.widget.ImageView
+                if (image != null && config.enabled &&
+                    drawable.javaClass.name.contains("SignalDrawable", ignoreCase = true)
+                ) {
+                    captureModernSignalDrawable(image, drawable.level)
+                }
+                result
+            }
+        }.onFailure { diagnostic("Modern status-bar drawable-level hook unavailable: $it") }
+        diagnostic("Modern status-bar rendered signal observer installed")
+    }
+
+    private fun isMobileSignalImage(image: android.widget.ImageView): Boolean =
+        resourceName(image).equals("mobile_signal", ignoreCase = true) ||
+            resourceName(image).equals("signal_strength", ignoreCase = true)
+
+    private fun findModernMobileRoot(image: View): View? {
+        val mobileClass = modernMobileViewClass ?: return null
+        var cursor: View? = image
+        while (cursor != null) {
+            if (mobileClass.isInstance(cursor)) return cursor
+            cursor = cursor.parent as? View
+        }
+        return null
+    }
+
+    private fun captureModernMobileSignalImage(image: android.widget.ImageView) {
+        val drawable = image.drawable ?: return
+        if (drawable.javaClass.name.contains("SignalDrawable", ignoreCase = true)) {
+            captureModernSignalDrawable(image, drawable.level)
+            return
+        }
+        if (!isMobileSignalImage(image)) return
+        val root = findModernMobileRoot(image) ?: return
+        if (hostFor(root) == null) return
+        val subId = modernMobileViewSubscriptionIds[root] ?: return
+        val origin = drawableOrigin(drawable)
+        val level = origin?.let { resolveSignalResourceName(it.resourceName) } ?: -1
+        if (level in 0..4) {
+            recordModernStatusBarSignal(
+                subId, level, "vector-resource",
+                "resource=${origin!!.resourcePackage}:${origin.resourceName} id=${origin.resourceId} drawable=${drawable.javaClass.name}",
+            )
+        } else {
+            diagnoseVectorSignalOrigin(
+                image, subId,
+                "drawable=${drawable.javaClass.name}|origin=${origin?.resourcePackage ?: "unknown"}:${origin?.resourceName ?: "unknown"}",
+            )
+        }
+    }
+
+    private fun diagnoseVectorSignalOrigin(image: android.widget.ImageView, subId: Int, details: String) {
+        val key = "vector-origin:$subId:${System.identityHashCode(image)}"
+        val snapshot = "subId=$subId|image=${resourceName(image)}|$details"
+        if (lastModernSignalSamplingDiagnostics.put(key, snapshot) != snapshot) {
+            diagnostic("Modern status-bar signal vector origin unresolved: $snapshot")
+        }
+    }
+
+    private fun recordModernStatusBarSignal(subId: Int, level: Int, source: String, details: String) {
+        if (subId < 0 || level !in 0..4) return
+        val old = renderedSignalLevels.put(subId, level)
+        nativeSignalLevels[subId] = level
+        val key = "captured:$subId"
+        val snapshot = "level=$level|source=$source|$details"
+        if (old != level || lastModernSignalSamplingDiagnostics.put(key, snapshot) != snapshot) {
+            lastModernSignalSamplingDiagnostics[key] = snapshot
+            diagnostic(
+                "Modern status-bar drawn signal: subId=$subId level=$level source=$source " +
+                    "$details defaultData=${subId == defaultDataSubscriptionId}"
+            )
+            scheduleTelephonyRefresh()
+            invalidateGlyphs()
+        }
+    }
+
+    private fun captureModernSignalDrawable(image: android.widget.ImageView, packedLevel: Int?) {
+        val drawable = image.drawable ?: return
+        if (!drawable.javaClass.name.contains("SignalDrawable", ignoreCase = true)) return
+        val root = findModernMobileRoot(image) ?: return
+        // Ignore demo/keyguard/Quick Settings views: only sample the registered collapsed host.
+        if (hostFor(root) == null) return
+        val subId = modernMobileViewSubscriptionIds[root] ?: return
+        val fullState = packedLevel ?: drawable.level
+        val level = decodePackedSignalDrawableLevel(fullState)
+        if (level !in 0..4) return
+        recordModernStatusBarSignal(
+            subId, level, "signal-drawable",
+            "packed=$fullState drawable=${drawable.javaClass.name} image=${resourceName(image)}",
+        )
+    }
+
+    /**
+     * Sample the actual SignalDrawable instances hosted by the collapsed status bar.
+     * Samsung's mobile view-model exposes a cold ChannelFlowTransformLatest rather than
+     * a directly readable StateFlow, so reading the model property alone cannot return
+     * its latest emission. The attached native drawable remains the authoritative state.
+     */
+    private fun sampleModernStatusBarSignalDrawables() {
+        val mobileClass = modernMobileViewClass ?: return
+        val hostSnapshot = synchronized(hosts) { hosts.values.filter { !it.retired }.toList() }
+        if (hostSnapshot.isEmpty()) return
+        var anyMobileView = false
+        var anySignalDrawable = false
+        hostSnapshot.forEach { host ->
+            val mobileViews = descendants(host.root).filter { mobileClass.isInstance(it) }
+            if (mobileViews.isNotEmpty()) anyMobileView = true
+            mobileViews.forEach { mobileRoot ->
+                val subId = modernMobileViewSubscriptionIds[mobileRoot]
+                if (subId == null || subId < 0) {
+                    val key = "unmapped:${System.identityHashCode(mobileRoot)}"
+                    val snapshot = "root=${mobileRoot.javaClass.name}|attached=${mobileRoot.isAttachedToWindow}|" +
+                        "children=${(mobileRoot as? ViewGroup)?.childCount ?: 0}"
+                    if (lastModernSignalSamplingDiagnostics.put(key, snapshot) != snapshot) {
+                        diagnostic("Modern status-bar signal live sample unmapped: $snapshot")
+                    }
+                    return@forEach
+                }
+                val imageViews = descendants(mobileRoot).filterIsInstance<android.widget.ImageView>()
+                val signals = imageViews.mapNotNull { image ->
+                    val drawable = image.drawable ?: return@mapNotNull null
+                    if (drawable.javaClass.name.contains("SignalDrawable", ignoreCase = true)) {
+                        val decoded = decodePackedSignalDrawableLevel(drawable.level)
+                        if (decoded in 0..4) {
+                            Triple(image, drawable, decoded to ("signal-drawable packed=${drawable.level}"))
+                        } else null
+                    } else if (isMobileSignalImage(image)) {
+                        val origin = drawableOrigin(drawable) ?: return@mapNotNull null
+                        val decoded = resolveSignalResourceName(origin.resourceName)
+                        if (decoded in 0..4) {
+                            Triple(
+                                image, drawable,
+                                decoded to ("vector-resource ${origin.resourcePackage}:${origin.resourceName} id=${origin.resourceId}"),
+                            )
+                        } else null
+                    } else null
+                }
+                if (signals.isEmpty()) {
+                    val key = "no-drawable:${System.identityHashCode(mobileRoot)}"
+                    val details = imageViews.take(12).joinToString(",") { image ->
+                        val id = resourceName(image)
+                        "${image.javaClass.simpleName}:${id.ifBlank { "no-id" }}:${image.drawable?.javaClass?.simpleName ?: "no-drawable"}"
+                    }
+                    val snapshot = "subId=$subId|root=${mobileRoot.javaClass.simpleName}|" +
+                        "attached=${mobileRoot.isAttachedToWindow}|images=${imageViews.size}|$details"
+                    if (lastModernSignalSamplingDiagnostics.put(key, snapshot) != snapshot) {
+                        diagnostic("Modern status-bar signal live sample has no SignalDrawable: $snapshot")
+                    }
+                    return@forEach
+                }
+                anySignalDrawable = true
+                signals.forEach { (image, drawable, decoded) ->
+                    recordModernStatusBarSignal(
+                        subId,
+                        decoded.first,
+                        "live-view-tree",
+                        "${decoded.second}|drawable=${drawable.javaClass.name}|image=${resourceName(image)}",
+                    )
+                    lastModernSignalSamplingDiagnostics.remove("no-drawable:${System.identityHashCode(mobileRoot)}")
+                    lastModernSignalSamplingDiagnostics.remove("undecoded:${System.identityHashCode(image)}")
+                }
+            }
+        }
+        val summary = "hosts=${hostSnapshot.size}|mobileViews=${if (anyMobileView) "present" else "none"}|" +
+            "signalDrawables=${if (anySignalDrawable) "present" else "none"}"
+        if (lastModernSignalSamplingDiagnostics.put("summary", summary) != summary) {
+            diagnostic("Modern status-bar signal live sampling: $summary")
+        }
+    }
+    private fun readModernIconModel(viewModel: Any): Any? {
+        // Samsung One UI may wrap the common mobile model more than once. Walk only
+        // known delegation links instead of relying on a single commonImpl property.
+        val wrapperMembers = listOf(
+            "commonImpl", "delegate", "delegateImpl", "mobileIconViewModel",
+            "iconViewModel", "viewModel", "model", "implementation", "impl",
+            "mobileIconViewModelCommon", "common", "wrapped", "wrappedModel",
+        )
+        val iconMembers = listOf("iconId", "signalIconId", "icon", "signalIcon", "signalLevelIcon")
+        val modelMembers = listOf("iconModel", "signalIconModel", "signalStrengthModel")
+        val pending = java.util.ArrayDeque<Pair<Any, Int>>()
+        val visited = java.util.Collections.newSetFromMap(java.util.IdentityHashMap<Any, Boolean>())
+        pending.addLast(viewModel to 0)
+        while (pending.isNotEmpty()) {
+            val (candidate, depth) = pending.removeFirst()
+            if (!visited.add(candidate)) continue
+            if (candidate is Number) return candidate
+
+            for (member in iconMembers) {
+                val icon = readObjectMember(candidate, member) ?: continue
+                if (icon is Number) return icon
+                readFlowSnapshot(icon)?.let { return it }
+                if (readSignalIntValue(icon, "level", "signalLevel", "strengthLevel", "resId", "resourceId") != null) {
+                    return icon
+                }
+            }
+            for (member in modelMembers) {
+                val model = readObjectMember(candidate, member) ?: continue
+                if (model is Number) return model
+                readFlowSnapshot(model)?.let { return it }
+                if (readSignalIntValue(model, "level", "signalLevel", "strengthLevel", "resId", "resourceId") != null) {
+                    return model
+                }
+            }
+
+            if (depth >= 3) continue
+            wrapperMembers.forEach { member ->
+                val nested = readObjectMember(candidate, member) ?: return@forEach
+                if (nested !== candidate && nested !is String && nested !is Number &&
+                    nested !is Boolean && nested !is Char
+                ) {
+                    pending.addLast(nested to depth + 1)
+                }
+            }
+        }
+        return null
+    }
+
+    /** Read the latest value from StateFlow/SharedFlow even when its getter is inherited. */
+    private fun readFlowSnapshot(flow: Any): Any? {
+        if (flow is Number) return flow
+        invokeZeroArgumentMember(flow, "value", "getValue")?.let { return it }
+
+        val rawValue = readObjectField(flow, "value")
+        when (rawValue) {
+            is Number, is String, is Boolean, is Char -> return rawValue
+            null -> Unit
+            else -> {
+                if (rawValue.javaClass.name.contains("Atomic")) {
+                    invokeZeroArgumentMember(rawValue, "get")?.let { return it }
+                }
+            }
+        }
+
+        val replay = (invokeZeroArgumentMember(flow, "replayCache", "getReplayCache")
+            ?: readObjectMember(flow, "replayCache")) as? List<*>
+        return replay?.lastOrNull()
+    }
+
+    private fun invokeZeroArgumentMember(target: Any, vararg names: String): Any? {
+        fun matches(methodName: String): Boolean = names.any { name ->
+            methodName.equals(name, ignoreCase = true) ||
+                methodName == "get" + name.replaceFirstChar { it.uppercase() }
+        }
+        target.javaClass.methods.firstOrNull { it.parameterTypes.isEmpty() && matches(it.name) }?.let { method ->
+            runCatching { method.isAccessible = true; method.invoke(target) }.getOrNull()?.let { return it }
+        }
+        var type: Class<*>? = target.javaClass
+        while (type != null) {
+            type.declaredMethods.firstOrNull { it.parameterTypes.isEmpty() && matches(it.name) }?.let { method ->
+                runCatching { method.isAccessible = true; method.invoke(target) }.getOrNull()?.let { return it }
+            }
+            type = type.superclass
+        }
+        return null
+    }
+
+    private fun describeModernSignalModel(viewModel: Any): String {
+        val wrapperMembers = listOf(
+            "commonImpl", "delegate", "delegateImpl", "mobileIconViewModel",
+            "iconViewModel", "viewModel", "model", "implementation", "impl",
+            "mobileIconViewModelCommon", "common", "wrapped", "wrappedModel",
+        )
+        val iconMembers = listOf("iconId", "signalIconId", "icon", "signalIcon", "signalLevelIcon")
+        val pending = java.util.ArrayDeque<Pair<Any, Int>>()
+        val visited = java.util.Collections.newSetFromMap(java.util.IdentityHashMap<Any, Boolean>())
+        val descriptions = mutableListOf<String>()
+        pending.addLast(viewModel to 0)
+        while (pending.isNotEmpty() && descriptions.size < 6) {
+            val (candidate, depth) = pending.removeFirst()
+            if (!visited.add(candidate)) continue
+            val members = mutableListOf<String>()
+            iconMembers.forEach { name ->
+                val icon = readObjectMember(candidate, name) ?: return@forEach
+                val value = readFlowSnapshot(icon)
+                val detail = when (value) {
+                    null -> ""
+                    is Number, is String, is Boolean, is Char -> "=${value}"
+                    else -> "->${value.javaClass.simpleName}"
+                }
+                members += "$name:${icon.javaClass.simpleName}$detail"
+            }
+            descriptions += candidate.javaClass.simpleName +
+                (if (members.isEmpty()) "" else "[" + members.joinToString(",") + "]")
+            if (depth >= 2) continue
+            wrapperMembers.forEach { name ->
+                val nested = readObjectMember(candidate, name) ?: return@forEach
+                if (nested !== candidate && nested !is String && nested !is Number &&
+                    nested !is Boolean && nested !is Char
+                ) pending.addLast(nested to depth + 1)
+            }
+        }
+        return descriptions.joinToString(";").take(700)
+    }
+    /**
+     * Return true/false only when Android's network tracker has a usable answer.
+     * WifiManager RSSI may be -127 during a transient modern-pipeline update, even while
+     * the native status-bar Wi-Fi view was visibly connected.
+     */
+    private fun isWifiTransportConnected(context: Context): Boolean? {
+        val connectivity = context.getSystemService(Context.CONNECTIVITY_SERVICE)
+            as? android.net.ConnectivityManager ?: return null
+        val networks = runCatching { connectivity.allNetworks }.getOrNull() ?: return null
+        var queriedAny = false
+        if (networks.any { network ->
+                val capabilities = runCatching {
+                    connectivity.getNetworkCapabilities(network)
+                }.getOrNull()
+                if (capabilities != null) queriedAny = true
+                capabilities?.hasTransport(android.net.NetworkCapabilities.TRANSPORT_WIFI) == true
+            }
+        ) return true
+        val wifi = context.getSystemService(Context.WIFI_SERVICE) as? WifiManager
+        val info = runCatching { wifi?.connectionInfo }.getOrNull()
+        if (wifi?.isWifiEnabled == true && info != null &&
+            info.networkId >= 0 && info.rssi != -127
+        ) return true
+        if (wifi?.isWifiEnabled == true) {
+            // Radio enabled but NetworkCapabilities/RSSI does not yet reveal whether the
+            // connection is ready: do not call this definitively disconnected.
+            return null
+        }
+        if (wifi?.isWifiEnabled == false) return false
+        return if (queriedAny) false else null
+    }
+
+    private fun readModernWifiModelVisibility(view: View): Boolean? {
+        val model = modernWifiViewModels[view]?.get() ?: return null
+        val flow = readObjectMember(model, "wifiIcon", "wifiIconState", "icon")
+            ?: return null
+        val icon = readObjectMember(flow, "value") ?: return null
+        val name = icon.javaClass.name.lowercase()
+        return when {
+            name.contains("invisible") || name.contains("hidden") || name.contains("notvisible") -> false
+            name.contains("visible") -> true
+            else -> null
+        }
+    }
+
+    private fun hookModernWifiVisibility(module: XposedModule, classLoader: ClassLoader) {
+        val className = "com.android.systemui.statusbar.pipeline.wifi.ui.view.ModernStatusBarWifiView"
+        runCatching {
+            modernWifiViewClass = classLoader.loadClass(className)
+            // Resolve the most specific public method so an OEM override on the modern
+            // Wi-Fi view/parent cannot bypass a hook attached only to android.view.View.
+            val method = runCatching {
+                modernWifiViewClass!!.getMethod("setVisibility", Int::class.javaPrimitiveType!!)
+            }.getOrElse {
+                View::class.java.getDeclaredMethod(
+                    "setVisibility",
+                    Int::class.javaPrimitiveType!!,
+                )
+            }
+            module.hook(method).intercept { chain ->
+                val view = chain.thisObject as? View
+                val wifiClass = modernWifiViewClass
+                // ModernStatusBarWifiView is also used by demo/secondary SystemUI
+                // icon hosts. Only modify the instance inside the PhoneStatusBarView
+                // host that OneuiXP has explicitly registered for the collapsed bar.
+                val host = view?.let(::hostFor)
+                if (view != null && wifiClass != null && wifiClass.isInstance(view) &&
+                    config.enabled && host != null
+                ) {
+                    val args = chain.args.toTypedArray()
+                    val requested = args.getOrNull(0) as? Int ?: View.VISIBLE
+                    if (!nativeWifiBaselineVisibility.containsKey(view)) {
+                        // The incoming argument may be a stale asynchronous Binder request.
+                        // Recover the pre-Combo visibility snapshot first; only then fall back to
+                        // the current pre-call view state. Never treat the first requested GONE
+                        // value itself as proof that the native slot was originally hidden.
+                        val savedVisibility = host.original[view] ?: host.layouts[view]?.visibility
+                        nativeWifiBaselineVisibility[view] = savedVisibility ?: view.visibility
+                    }
+                    val nativeWasVisible = nativeWifiBaselineVisibility[view] == View.VISIBLE
+                    val modelVisible = readModernWifiModelVisibility(view)
+                    val wifiConnected = isWifiTransportConnected(view.context)
+                    val desiredVisible = modelVisible
+                        ?: (state.wifiLevel >= 0 || wifiConnected == true)
+                    val forced = when {
+                        // The combined glyph owns Wi-Fi drawing; prevent a later binder update
+                        // from making this collapsed status-bar instance flash over it.
+                        config.showWifi -> View.GONE
+                        // When the arc is disabled, follow this exact view-model's Visible/Hidden
+                        // state. Network APIs are fallback-only on Samsung Android 17 because
+                        // WifiManager RSSI/connectionInfo may be temporarily unavailable.
+                        nativeWasVisible && desiredVisible -> View.VISIBLE
+                        else -> requested
+                    }
+                    val connectedLabel = wifiConnected?.toString() ?: "unknown"
+                    val modelLabel = modelVisible?.toString() ?: "unknown"
+                    val snapshot = "$requested->$forced|showWifi=${config.showWifi}|" +
+                        "wifiLevel=${state.wifiLevel}|wifiConnected=$connectedLabel|modelVisible=$modelLabel"
+                    if (lastNativeWifiVisibilityRequests.put(view, snapshot) != snapshot) {
+                        diagnostic(
+                            "Modern Wi-Fi visibility decision: requested=$requested forced=$forced " +
+                                "baseline=${nativeWifiBaselineVisibility[view] ?: -1} " +
+                                "showWifi=${config.showWifi} wifiLevel=${state.wifiLevel} " +
+                                "wifiConnected=$connectedLabel modelVisible=$modelLabel"
+                        )
+                    }
+                    if (forced != requested) {
+                        args[0] = forced
+                        chain.proceed(args)
+                    } else {
+                        chain.proceed()
+                    }
+                } else {
+                    chain.proceed()
+                }
+            }
+            // Observe the per-view model without changing visibility here. SystemUI also
+            // constructs ModernStatusBarWifiView for demo/secondary surfaces, so actual
+            // hiding remains gated by hostFor(view) in the setter above.
+            val constructMethods = modernWifiViewClass?.declaredMethods.orEmpty().filter {
+                it.name == "constructAndBind" && java.lang.reflect.Modifier.isStatic(it.modifiers)
+            }
+            constructMethods.distinctBy { it.toGenericString() }.forEach { constructMethod ->
+                module.hook(constructMethod).intercept { chain ->
+                    val result = chain.proceed()
+                    val view = result as? View
+                    val model = chain.args.firstNotNullOfOrNull { argument ->
+                        val candidate = argument ?: return@firstNotNullOfOrNull null
+                        val typeName = candidate.javaClass.name
+                        if ((typeName.contains("LocationBasedWifiViewModel") ||
+                                readObjectMember(candidate, "wifiIcon", "wifiIconState") != null) &&
+                            readObjectMember(candidate, "wifiIcon", "wifiIconState") != null
+                        ) candidate else null
+                    }
+                    if (view != null && model != null) {
+                        modernWifiViewModels[view] = WeakReference(model)
+                        diagnostic("Modern Wi-Fi model mapped: view=${view.javaClass.name} model=${model.javaClass.name}")
+                    }
+                    result
+                }
+            }
+            diagnostic(
+                "Modern Wi-Fi visibility guard installed: $className; " +
+                    "setterOwner=${method.declaringClass.name}; scope=registered-host-only; " +
+                    "modelHooks=${constructMethods.size}"
+            )
+        }.onFailure { diagnostic("Modern Wi-Fi visibility guard unavailable: $it") }
+    }
+
+    private fun readModernPipelineSignalLevel(subscriptionId: Int): Int? {
+        val viewModel = modernMobileViewModels[subscriptionId]?.get() ?: return null
+        val iconModel = readModernIconModel(viewModel) ?: return null
+        return modernPipelineSignalLevel(iconModel)
+    }
+
+    private fun modernPipelineSignalLevel(iconModel: Any): Int? {
+        // Legacy Android/Samsung models expose SignalDrawable's packed state as an Int,
+        // not as a model with "level" and "numberOfLevels" fields.
+        if (iconModel is Number) {
+            val raw = iconModel.toInt()
+            val resources = synchronized(hosts) { hosts.values.firstOrNull()?.root?.resources }
+            val resourceName = resources?.let {
+                runCatching { it.getResourceEntryName(raw) }.getOrNull()
+            }
+            if (resourceName != null) {
+                // Numeric models can contain either resource IDs or packed states.
+                // If Android resolves it as a resource, never decode that ID as bit fields.
+                return resolveSignalResourceName(resourceName).takeIf { it in 0..4 }
+            }
+            val decoded = decodePackedSignalDrawableLevel(raw)
+            if (decoded in 0..4) return decoded
+        }
+        val rawLevel = readSignalIntValue(iconModel, "level", "signalLevel", "strengthLevel")
+        if (rawLevel != null) {
+            val numberOfLevels = readSignalIntValue(
+                iconModel, "numberOfLevels", "numLevels", "levelCount", "levels"
+            ) ?: 5
+            if (numberOfLevels > 1 && rawLevel in 0..numberOfLevels) {
+                return (rawLevel.toFloat() * 4f / (numberOfLevels - 1).toFloat())
+                    .roundToInt().coerceIn(0, 4)
+            }
+        }
+        val resource = readSignalIntValue(iconModel, "resId", "resourceId", "iconId", "icon")
+            ?: return null
+        val resources = synchronized(hosts) { hosts.values.firstOrNull()?.root?.resources } ?: return null
+        // A resolved resource ID must be interpreted by its name. Do not treat an
+        // unrelated drawable resource ID as a packed SignalDrawable state; that can
+        // leave the rendered signal stuck at a false level.
+        val resourceName = runCatching { resources.getResourceEntryName(resource) }.getOrNull()
+        return if (resourceName != null) {
+            resolveSignalResourceName(resourceName).takeIf { it in 0..4 }
+        } else {
+            decodePackedSignalDrawableLevel(resource).takeIf { it in 0..4 }
+        }
+    }
+
+    private fun readSignalIntValue(target: Any, vararg names: String): Int? {
+        readSignalIntField(target, *names)?.let { return it }
+        var type: Class<*>? = target.javaClass
+        while (type != null) {
+            for (name in names) {
+                val cap = name.replaceFirstChar { it.uppercase() }
+                val method = type.declaredMethods.firstOrNull {
+                    it.parameterTypes.isEmpty() &&
+                        (it.name.equals(name, true) || it.name == "get$cap")
+                } ?: continue
+                val value = runCatching {
+                    method.isAccessible = true
+                    method.invoke(target)
+                }.getOrNull()
+                if (value is Number) return value.toInt()
+            }
+            type = type.superclass
+        }
+        return null
+    }
+
+    private fun readObjectMember(target: Any, vararg names: String): Any? {
+        readObjectField(target, *names)?.let { return it }
+        var type: Class<*>? = target.javaClass
+        while (type != null) {
+            for (name in names) {
+                val cap = name.replaceFirstChar { it.uppercase() }
+                val method = type.declaredMethods.firstOrNull {
+                    it.parameterTypes.isEmpty() &&
+                        (it.name.equals(name, true) || it.name == "get$cap")
+                } ?: continue
+                val value = runCatching {
+                    method.isAccessible = true
+                    method.invoke(target)
+                }.getOrNull()
+                if (value != null) return value
+            }
+            type = type.superclass
+        }
+        return null
     }
 
     private fun hookNativeSignalPolicy(module: XposedModule, classLoader: ClassLoader) {
@@ -2679,6 +3789,37 @@ object StatusBarComboStyleOneRuntime {
             is Array<*> -> { value.take(8).forEach(::extractNativeMobileStates); return }
         }
         val simpleName = value.javaClass.simpleName.lowercase()
+        val resources = synchronized(hosts) { hosts.values.firstOrNull()?.root?.resources } ?: return
+
+        // NetworkController's MobileDataIndicators carries separate status-bar and
+        // Quick Settings icon states keyed by subscription ID. Read both so each SIM
+        // keeps its own SystemUI-computed level, including eSIM + physical SIM pairs.
+        if (simpleName.contains("mobiledataindicators")) {
+            val subId = readSignalIntField(value, "subId", "subscriptionId", "mSubId", "mSubscriptionId")
+                ?: return
+            val qsIcon = readObjectField(value, "qsIcon", "mQsIcon")
+            val statusIcon = readObjectField(value, "statusIcon", "mStatusIcon")
+            val qsLevel = signalLevelFromIconState(qsIcon, resources)
+            val statusLevel = signalLevelFromIconState(statusIcon, resources)
+            val qsName = iconResourceName(qsIcon, resources)
+            val statusName = iconResourceName(statusIcon, resources)
+            diagnostic(
+                "SystemUI MobileDataIndicators: subId=$subId " +
+                    "statusIcon=${iconValue(statusIcon)}:$statusName level=$statusLevel " +
+                    "qsIcon=${iconValue(qsIcon)}:$qsName level=$qsLevel"
+            )
+            if (qsLevel in 0..4) {
+                quickPanelSignalLevels[subId] = qsLevel
+            } else {
+                // A null/unsupported QS icon means this subscription has no current
+                // Quick Settings signal state. Do not keep an old data-SIM level.
+                quickPanelSignalLevels.remove(subId)
+            }
+            if (statusLevel in 0..4) updateNativeSignalLevel(subId, statusLevel)
+            scheduleTelephonyRefresh()
+            return
+        }
+
         if (!simpleName.contains("mobileiconstate") &&
             !simpleName.contains("mobileicon") &&
             !simpleName.contains("iconstate")
@@ -2687,25 +3828,112 @@ object StatusBarComboStyleOneRuntime {
             ?: return
         val strength = readSignalIntField(value, "strengthId", "mStrengthId", "icon", "mIcon")
             ?: return
-        val resources = synchronized(hosts) { hosts.values.firstOrNull()?.root?.resources } ?: return
-        val level = if (strength in 0..4) strength else resolveSignalResourceLevelFromResources(resources, strength)
-        if (level in 0..4 && subId >= 0) updateNativeSignalLevel(subId, level)
+        val resourceName = runCatching { resources.getResourceEntryName(strength) }.getOrNull().orEmpty()
+        val level = normalizeNativeSignalLevel(strength)
+            ?: if (resourceName.isNotBlank()) {
+                resolveSignalResourceName(resourceName).takeIf { it in 0..4 }
+            } else {
+                // Only decode as packed bits when this integer is not a real resource ID.
+                decodePackedSignalDrawableLevel(strength).takeIf { it in 0..4 }
+            }
+        diagnostic(
+            "Native mobile icon state: class=${value.javaClass.simpleName} subId=$subId " +
+                "strength=$strength resource=$resourceName level=$level"
+        )
+        if (level != null && level in 0..4 && subId >= 0) updateNativeSignalLevel(subId, level)
+    }
+
+    private fun iconValue(iconState: Any?): Int =
+        iconState?.let { readSignalIntField(it, "icon", "mIcon", "iconId", "resId") } ?: -1
+
+    private fun iconResourceName(
+        iconState: Any?,
+        resources: android.content.res.Resources,
+    ): String {
+        val value = iconValue(iconState)
+        if (value < 0) return "none"
+        return runCatching { resources.getResourceEntryName(value) }.getOrNull()
+            ?: "packed-or-unresolved"
+    }
+
+    private fun normalizeNativeSignalLevel(value: Int): Int? = when (value) {
+        in 0..4 -> value
+        5 -> 4 // Some Samsung signal packs number the full-strength icon as level 5.
+        else -> null
+    }
+
+    private fun signalLevelFromIconState(
+        iconState: Any?,
+        resources: android.content.res.Resources,
+    ): Int {
+        if (iconState == null) return -1
+        val value = iconValue(iconState)
+        if (value < 0) return -1
+        val resourceName = runCatching { resources.getResourceEntryName(value) }
+            .getOrNull()?.lowercase()
+        if (resourceName != null) {
+            val namedLevel = resolveSignalResourceName(resourceName)
+            return namedLevel.takeIf { it in 0..4 } ?: -1
+        }
+        return normalizeNativeSignalLevel(value) ?: decodePackedSignalDrawableLevel(value)
+    }
+
+    /**
+     * Android's SignalDrawable stores QS icon state as a packed integer rather than
+     * a drawable resource ID. Decode it through the SystemUI/SettingsLib helper when
+     * present; normalize devices with 4 or 5 level buckets to the four dots we draw.
+     */
+    private fun decodePackedSignalDrawableLevel(fullState: Int): Int {
+        val loader = systemUiClassLoader ?: javaClass.classLoader
+        val classNames = listOf(
+            "com.android.systemui.statusbar.phone.SignalDrawable",
+            "com.android.settingslib.graph.SignalDrawable",
+        )
+        for (className in classNames) {
+            val drawableClass = runCatching { Class.forName(className, false, loader) }.getOrNull() ?: continue
+            val getLevel = drawableClass.methods.firstOrNull {
+                it.name == "getLevel" && java.lang.reflect.Modifier.isStatic(it.modifiers) &&
+                    it.parameterTypes.size == 1 && it.parameterTypes[0] == Int::class.javaPrimitiveType
+            } ?: continue
+            val getNumLevels = drawableClass.methods.firstOrNull {
+                it.name == "getNumLevels" && java.lang.reflect.Modifier.isStatic(it.modifiers) &&
+                    it.parameterTypes.size == 1 && it.parameterTypes[0] == Int::class.javaPrimitiveType
+            } ?: continue
+            val packedLevel = runCatching { (getLevel.invoke(null, fullState) as? Number)?.toInt() }.getOrNull()
+                ?: continue
+            val numLevels = runCatching { (getNumLevels.invoke(null, fullState) as? Number)?.toInt() }.getOrNull()
+                ?: continue
+            if (numLevels in 4..8 && packedLevel in 0..numLevels) {
+                val normalizedLevel = packedLevel.coerceAtMost(numLevels - 1)
+                return (normalizedLevel * 4f / (numLevels - 1)).roundToInt().coerceIn(0, 4)
+            }
+        }
+        return fullState.takeIf { it in 0..4 } ?: -1
     }
 
     private fun updateNativeSignalLevel(subscriptionId: Int, level: Int) {
         if (subscriptionId < 0) return
         val safeLevel = level.coerceIn(0, 4)
         nativeSignalLevels[subscriptionId] = safeLevel
-        lastSubscriptionSignalLevels[subscriptionId] = safeLevel
-        val slot = subscriptionSlots[subscriptionId]
-        val old = state
-        state = old.copy(
-            mobileLevel = if (subscriptionId == defaultDataSubscriptionId) safeLevel else old.mobileLevel,
-            simOneLevel = if (slot == 0) safeLevel else old.simOneLevel,
-            simTwoLevel = if (slot == 1) safeLevel else old.simTwoLevel,
-            dataSimSlotIndex = if (subscriptionId == defaultDataSubscriptionId && slot != null && slot in 0..1) slot else old.dataSimSlotIndex,
+        // Cache native SystemUI levels for fallback/diagnostics, but do not interpret
+        // resource IDs as levels. Re-read subscriptions so the newest QS/status icon
+        // level takes effect on the very same renderer update.
+        diagnostic(
+            "Native SIM signal observed: subId=$subscriptionId slot=${subscriptionSlots[subscriptionId] ?: -1} " +
+                "level=$safeLevel defaultData=${subscriptionId == defaultDataSubscriptionId}"
         )
+        scheduleTelephonyRefresh()
         invalidateGlyphs()
+    }
+
+    private fun scheduleTelephonyRefresh() {
+        if (!telephonyRefreshPending.compareAndSet(false, true)) return
+        main.post {
+            telephonyRefreshPending.set(false)
+            val context = synchronized(hosts) { hosts.values.firstOrNull()?.root?.context } ?: return@post
+            refreshTelephony(context)
+            invalidateGlyphs()
+        }
     }
 
     private fun readSignalIntField(target: Any, vararg names: String): Int? {
@@ -2738,11 +3966,25 @@ object StatusBarComboStyleOneRuntime {
     }
 
     private fun resolveSignalResourceName(name: String): Int {
-        if (!name.startsWith("stat_sys_signal") || name.contains("wifi")) return -1
-        val signalIndex = name.indexOf("signal")
+        val lower = name.lowercase()
+        val compact = lower.filter { it.isLetterOrDigit() }
+        if (compact.contains("wifi") || compact.contains("wlan") ||
+            compact.contains("bluetooth") || compact.contains("airplane")
+        ) return -1
+        val signalIndex = lower.indexOf("signal")
         if (signalIndex < 0) return -1
-        val suffix = name.substring(signalIndex + "signal".length).trimStart('_')
-        return suffix.firstOrNull { it in '0'..'4' }?.minus('0') ?: -1
+        val suffix = lower.substring(signalIndex + "signal".length)
+        // Match an exact numeric token. Do not mistake names such as "signal_4g"
+        // for signal-strength level 4.
+        val namedLevel = suffix.split(Regex("[^a-z0-9]+"))
+            .firstNotNullOfOrNull { it.toIntOrNull()?.takeIf { level -> level in 0..5 } }
+            ?: return when {
+                suffix.contains("full") || suffix.contains("excellent") || suffix.contains("strong") -> 4
+                else -> -1
+            }
+        // Samsung resource packs may expose five visible strength steps (0..5),
+        // while the OneuiXP renderer uses four dots (0..4).
+        return namedLevel.coerceAtMost(4)
     }
 
     private fun displayNetworkType(info: TelephonyDisplayInfo): String? = when (info.overrideNetworkType) {
@@ -2793,7 +4035,8 @@ object StatusBarComboStyleOneRuntime {
     )
 
     private fun diagnostic(message: String) {
-        if (config.debugLog) Log.d(TAG, message)
+        // Bounded in-memory history for Settings → Send logs, without a feature-owned switch or Logcat flood.
+        OneuiXPDiagnosticLog.record(TAG, message)
     }
     private fun dp(context: Context, value: Int): Int =
         (value * context.resources.displayMetrics.density + 0.5f).toInt().coerceAtLeast(1)
