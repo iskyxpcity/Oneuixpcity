@@ -50,9 +50,9 @@ object StatusComboStyleOneGlyphRenderer {
     private const val OUTSIDE_TYPE_ONLY_REFERENCE_WIDTH = 87f
     private const val OUTSIDE_TYPE_REFERENCE_SIZE_DP = 14f
     private const val OUTSIDE_TYPE_RIGHT_GAP = 3.5f
-    // Expand the host toward the neighbouring-icon side by about 3dp at default size.
-    // Move the host's left edge, not the label inside a fixed-width box; the ring stays anchored.
-    private const val OUTSIDE_TYPE_LEADING_EXPANSION = 10f
+    // Move only the outside type label toward the neighbouring icons by about 3dp
+    // at the default rendered size. Never add this adjustment to the host width or ring offset.
+    private const val OUTSIDE_TYPE_GAP_REDUCTION = 10f
     // Out-of-ring-type-only mode should not reserve the unused signal-pillars lane.
     private const val TYPE_ONLY_SHIFT = 60f
     private const val B_CX = 59.5f
@@ -190,16 +190,15 @@ object StatusComboStyleOneGlyphRenderer {
         val typeMarginExpansion = if (typeLane) {
             outsideTypeMarginLeft(config) + outsideTypeMarginRight(config)
         } else 0f
-        val typeLeadingExpansion = if (typeLane) OUTSIDE_TYPE_LEADING_EXPANSION else 0f
         return when {
             // No unused signal-pillars lane is reserved when the out-of-ring type is alone.
             // Expand or contract this lane with the actual label while retaining the ring-side gap.
             typeLane && signalLane ->
                 WIDE_WIDTH + signalMargin + OUTSIDE_TYPE_RIGHT_CLEARANCE + typeWidthDelta +
-                    typeMarginExpansion + typeLeadingExpansion
+                    typeMarginExpansion
             typeLane ->
                 WIDE_WIDTH - TYPE_ONLY_SHIFT + OUTSIDE_TYPE_RIGHT_CLEARANCE + typeWidthDelta +
-                    typeMarginExpansion + typeLeadingExpansion
+                    typeMarginExpansion
             signalLane -> outsideSignalWidth(config) + signalMargin + COMPACT_WIDTH - 8f
             else -> COMPACT_WIDTH
         }
@@ -213,29 +212,35 @@ object StatusComboStyleOneGlyphRenderer {
         (designWidth(config, networkType) * baseGlyphHeightDp(config).toFloat() / HEIGHT)
             .roundToInt().coerceAtLeast(20)
 
-    /** Horizontal anchor of the battery centre within the active glyph bounds. */
-    fun glyphCenterRatio(config: StatusBarComboStyleOneRuntime, networkType: String = ""): Float {
+    /** Width of the canvas in the same design units used by draw(). */
+    fun glyphDesignWidth(config: StatusBarComboStyleOneRuntime, networkType: String = ""): Float =
+        designWidth(config, networkType)
+
+    /** Height of the canvas in the same design units used by draw(). */
+    fun glyphDesignHeight(config: StatusBarComboStyleOneRuntime): Float =
+        designHeight(config)
+
+    /** Exact ring-centre X coordinate in draw() canvas units; independent of label margins. */
+    fun glyphCenterX(config: StatusBarComboStyleOneRuntime, networkType: String = ""): Float {
         val signalMargin = outsideSignalMargin(config)
         val signalWidth = outsideSignalWidth(config)
         val outsideSignal = usesOutsideSignalLayout(config)
         val typeWidthDelta = outsideTypeWidthDelta(config, networkType)
-        // Only the fixed leading-side frame extension shifts the ring within the host.
-        // User-controlled label margins must never enter the ring anchor calculation.
-        val typeLeadingExpansion = if (usesOutsideNetworkTypeLayout(config)) {
-            OUTSIDE_TYPE_LEADING_EXPANSION
-        } else 0f
-        val activeWidth = designWidth(config, networkType)
-        return when {
+        val offsetX = when {
             usesOutsideNetworkTypeLayout(config) -> {
                 val signalLaneShift = if (outsideSignal) signalMargin else 0f
                 val typeOnlyShift = if (outsideSignal) 0f else TYPE_ONLY_SHIFT
-                (B_CX + WIDE_OFFSET + signalLaneShift - typeOnlyShift + typeWidthDelta +
-                    typeLeadingExpansion) / activeWidth
+                WIDE_OFFSET + signalLaneShift - typeOnlyShift + typeWidthDelta
             }
-            outsideSignal -> (B_CX + signalWidth + signalMargin - 8f) / activeWidth
-            else -> B_CX / activeWidth
+            outsideSignal -> signalWidth + signalMargin - 8f
+            else -> 0f
         }
+        return B_CX + offsetX
     }
+
+    /** Horizontal anchor ratio, retained for callers that need the relative location only. */
+    fun glyphCenterRatio(config: StatusBarComboStyleOneRuntime, networkType: String = ""): Float =
+        glyphCenterX(config, networkType) / designWidth(config, networkType)
 
     /** Vertical anchor of the battery-ring centre inside the active glyph bounds. */
     fun glyphVerticalCenterRatio(config: StatusBarComboStyleOneRuntime): Float {
@@ -284,7 +289,7 @@ object StatusComboStyleOneGlyphRenderer {
         val typeOnlyShift = if (outsideType && !outsideSignal) TYPE_ONLY_SHIFT else 0f
         val offsetX = when {
             outsideType -> WIDE_OFFSET + (if (outsideSignal) signalMargin else 0f) -
-                typeOnlyShift + typeWidthDelta + OUTSIDE_TYPE_LEADING_EXPANSION
+                typeOnlyShift + typeWidthDelta
             outsideSignal -> signalWidth + signalMargin - 8f
             else -> 0f
         }
@@ -462,7 +467,7 @@ object StatusComboStyleOneGlyphRenderer {
             val typeRightMargin = outsideTypeMarginRight(config)
             // Margins are label-only offsets. They do not modify offsetX/circle geometry.
             // The leading expansion is a constant canvas-origin adjustment, not a user margin.
-            val typeOffset = typeCenterShift + OUTSIDE_TYPE_LEADING_EXPANSION +
+            val typeOffset = typeCenterShift - OUTSIDE_TYPE_GAP_REDUCTION +
                 typeLeftMargin - typeRightMargin
             val center = (baseTypeCenter + typeOffset).coerceIn(
                 30f + typeGapOffset - typeOnlyShift + typeOffset,
