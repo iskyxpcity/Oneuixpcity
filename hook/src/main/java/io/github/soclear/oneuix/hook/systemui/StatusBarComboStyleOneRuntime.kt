@@ -252,8 +252,8 @@ object StatusBarComboStyleOneRuntime {
             statusBarRootForTypeBounds = root
             invalidate()
         }
-        fun minimumOutsideTypeAdvanceLeftPx(): Float? =
-            StatusBarComboStyleOneRuntime.minimumOutsideTypeAdvanceLeftPx(
+        fun minimumVisibleIconLeftPx(): Float? =
+            StatusBarComboStyleOneRuntime.minimumVisibleIconLeftPx(
                 this, statusBarRootForTypeBounds,
             )
         fun setTintOverride(color: Int?) {
@@ -269,7 +269,7 @@ object StatusBarComboStyleOneRuntime {
             val drawState = if (localTint == null) currentState else currentState.copy(tintColor = localTint)
             StatusComboStyleOneGlyphRenderer.draw(
                 canvas, width, height, currentConfig, drawState,
-                minimumOutsideTypeAdvanceLeftPx(),
+                minimumVisibleIconLeftPx(),
             )
         }
     }
@@ -458,7 +458,7 @@ object StatusBarComboStyleOneRuntime {
                         density,
                         screenX,
                         screenY,
-                        glyph.minimumOutsideTypeAdvanceLeftPx(),
+                        glyph.minimumVisibleIconLeftPx(),
                     )
                 )
             }
@@ -904,7 +904,7 @@ object StatusBarComboStyleOneRuntime {
                     appendLine(
                         StatusComboStyleOneGlyphRenderer.diagnosticGeometrySnapshot(
                             cfg, currentState.networkType, glyph.width, glyph.height, metrics.density,
-                            pos[0], pos[1], glyph.minimumOutsideTypeAdvanceLeftPx(),
+                            pos[0], pos[1], glyph.minimumVisibleIconLeftPx(),
                         )
                     )
                 }
@@ -1502,7 +1502,7 @@ object StatusBarComboStyleOneRuntime {
         }.maxOrNull()
     }
 
-    private fun minimumOutsideTypeAdvanceLeftPx(view: View, statusBarRoot: View?): Float? {
+    private fun minimumVisibleIconLeftPx(view: View, statusBarRoot: View?): Float? {
         val root = statusBarRoot ?: view.rootView
         val iconRight = lastVisibleStatusIconRightScreenPx(root) ?: return null
         val viewLocation = IntArray(2)
