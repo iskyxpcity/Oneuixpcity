@@ -219,7 +219,8 @@ object StatusComboStyleOneGlyphRenderer {
         val signalWidth = outsideSignalWidth(config)
         val outsideSignal = usesOutsideSignalLayout(config)
         val typeWidthDelta = outsideTypeWidthDelta(config, networkType)
-        val typeRightMargin = outsideTypeMarginRight(config)
+        // Only the fixed leading-side frame extension shifts the ring within the host.
+        // User-controlled label margins must never enter the ring anchor calculation.
         val typeLeadingExpansion = if (usesOutsideNetworkTypeLayout(config)) {
             OUTSIDE_TYPE_LEADING_EXPANSION
         } else 0f
@@ -229,7 +230,7 @@ object StatusComboStyleOneGlyphRenderer {
                 val signalLaneShift = if (outsideSignal) signalMargin else 0f
                 val typeOnlyShift = if (outsideSignal) 0f else TYPE_ONLY_SHIFT
                 (B_CX + WIDE_OFFSET + signalLaneShift - typeOnlyShift + typeWidthDelta +
-                    typeRightMargin + typeLeadingExpansion) / activeWidth
+                    typeLeadingExpansion) / activeWidth
             }
             outsideSignal -> (B_CX + signalWidth + signalMargin - 8f) / activeWidth
             else -> B_CX / activeWidth
@@ -283,8 +284,7 @@ object StatusComboStyleOneGlyphRenderer {
         val typeOnlyShift = if (outsideType && !outsideSignal) TYPE_ONLY_SHIFT else 0f
         val offsetX = when {
             outsideType -> WIDE_OFFSET + (if (outsideSignal) signalMargin else 0f) -
-                typeOnlyShift + typeWidthDelta + outsideTypeMarginRight(config) +
-                OUTSIDE_TYPE_LEADING_EXPANSION
+                typeOnlyShift + typeWidthDelta + OUTSIDE_TYPE_LEADING_EXPANSION
             outsideSignal -> signalWidth + signalMargin - 8f
             else -> 0f
         }
@@ -459,9 +459,16 @@ object StatusComboStyleOneGlyphRenderer {
             val baseTypeCenter = B_CX + WIDE_OFFSET - B_R - OUTSIDE_TYPE_RIGHT_GAP -
                 typeReferenceWidth / 2f + typeGapOffset - typeOnlyShift
             val typeLeftMargin = outsideTypeMarginLeft(config)
-            val center = (baseTypeCenter + typeCenterShift + typeLeftMargin).coerceIn(
-                30f + typeGapOffset - typeOnlyShift + typeCenterShift,
-                170f + typeGapOffset - typeOnlyShift + typeCenterShift + typeLeftMargin,
+            val typeRightMargin = outsideTypeMarginRight(config)
+            // Margins are label-only offsets. They do not modify offsetX/circle geometry.
+            // The leading expansion is a constant canvas-origin adjustment, not a user margin.
+            val labelCenter = baseTypeCenter + typeCenterShift + OUTSIDE_TYPE_LEADING_EXPANSION +
+                typeLeftMargin - typeRightMargin
+            val center = labelCenter.coerceIn(
+                30f + typeGapOffset - typeOnlyShift + typeCenterShift +
+                    OUTSIDE_TYPE_LEADING_EXPANSION + typeLeftMargin - typeRightMargin,
+                170f + typeGapOffset - typeOnlyShift + typeCenterShift +
+                    OUTSIDE_TYPE_LEADING_EXPANSION + typeLeftMargin - typeRightMargin,
             )
             val size = config.outTypeSizeDp.coerceIn(8, 26) * m
             // Center the measured capital glyphs vertically around the host's centre line.
