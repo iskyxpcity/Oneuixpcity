@@ -187,18 +187,14 @@ object StatusComboStyleOneGlyphRenderer {
         val signalLane = usesOutsideSignalLayout(config)
         val signalMargin = outsideSignalMargin(config)
         val typeWidthDelta = outsideTypeWidthDelta(config, networkType)
-        val typeMarginExpansion = if (typeLane) {
-            outsideTypeMarginLeft(config) + outsideTypeMarginRight(config)
-        } else 0f
         return when {
+            // The host width follows the measured label size only. User margin sliders move
+            // the label inside this existing lane; they must not resize/re-anchor the overlay.
             // No unused signal-pillars lane is reserved when the out-of-ring type is alone.
-            // Expand or contract this lane with the actual label while retaining the ring-side gap.
             typeLane && signalLane ->
-                WIDE_WIDTH + signalMargin + OUTSIDE_TYPE_RIGHT_CLEARANCE + typeWidthDelta +
-                    typeMarginExpansion
+                WIDE_WIDTH + signalMargin + OUTSIDE_TYPE_RIGHT_CLEARANCE + typeWidthDelta
             typeLane ->
-                WIDE_WIDTH - TYPE_ONLY_SHIFT + OUTSIDE_TYPE_RIGHT_CLEARANCE + typeWidthDelta +
-                    typeMarginExpansion
+                WIDE_WIDTH - TYPE_ONLY_SHIFT + OUTSIDE_TYPE_RIGHT_CLEARANCE + typeWidthDelta
             signalLane -> outsideSignalWidth(config) + signalMargin + COMPACT_WIDTH - 8f
             else -> COMPACT_WIDTH
         }
