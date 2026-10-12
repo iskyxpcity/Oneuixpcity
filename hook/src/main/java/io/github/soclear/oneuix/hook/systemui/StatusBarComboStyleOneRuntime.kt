@@ -376,7 +376,6 @@ object StatusBarComboStyleOneRuntime {
             // The cutout bounds decide whether independent rendering is available, but they
             // must not position the glyph. The native battery slot is the layout anchor: its
             // right edge remains fixed while the slot/window gain width to the left.
-            val cutout = Rect(cameraBounds)
             val anchorLocation = IntArray(2)
             val anchorLocated = anchor.isAttachedToWindow &&
                 runCatching { anchor.getLocationOnScreen(anchorLocation) }.isSuccess
