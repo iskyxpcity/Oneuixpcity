@@ -154,7 +154,6 @@ fun StatusComboStyleOneCategoryControls(
     var outSignalSize by remember(runtime.outSignalSizeDp) { mutableIntStateOf(runtime.outSignalSizeDp.coerceIn(6, 20)) }
     var outTypeLeft by remember(runtime.outTypeMarginLeftDp) { mutableIntStateOf(runtime.outTypeMarginLeftDp.coerceIn(0, 16)) }
     var outTypeRight by remember(runtime.outTypeMarginRightDp) { mutableIntStateOf(runtime.outTypeMarginRightDp.coerceIn(0, 16)) }
-    var outTypeRingGap by remember(runtime.outTypeRingGapDp) { mutableIntStateOf(runtime.outTypeRingGapDp.coerceIn(0, 16)) }
     var outSignalMargin by remember(runtime.outSignalMarginDp) { mutableIntStateOf(runtime.outSignalMarginDp.coerceIn(0, 16)) }
     var lowThreshold by remember(runtime.lowThreshold) { mutableIntStateOf(runtime.lowThreshold.coerceIn(5, 50)) }
     var glyphScale by remember(runtime.glyphScalePercent) { mutableIntStateOf(runtime.glyphScalePercent.coerceIn(70, 150)) }
@@ -323,7 +322,6 @@ fun StatusComboStyleOneCategoryControls(
             }, {
                 styleOneSlider(stringResource(R.string.status_combo_style_one_out_type_margin_right), stringResource(R.string.status_combo_style_one_out_type_margin_right_summary, outTypeRight), outTypeRight.toFloat(), 0f..16f, { outTypeRight = it.roundToInt(); preview(runtime.copy(outTypeMarginRightDp = outTypeRight)) }, { final -> persist(runtime.copy(outTypeMarginRightDp = final.roundToInt())) }, enabled = runtime.enabled && runtime.mobileTypeMode == 2)
             }, {
-                styleOneSlider(stringResource(R.string.status_combo_style_one_out_type_ring_gap), stringResource(R.string.status_combo_style_one_out_type_ring_gap_summary, outTypeRingGap), outTypeRingGap.toFloat(), 0f..16f, { outTypeRingGap = it.roundToInt(); preview(runtime.copy(outTypeRingGapDp = outTypeRingGap)) }, { final -> persist(runtime.copy(outTypeRingGapDp = final.roundToInt())) }, enabled = runtime.enabled && runtime.mobileTypeMode == 2)
             }, {
                 styleOneSlider(stringResource(R.string.status_combo_style_one_type_weight), stringResource(R.string.status_combo_style_one_type_weight_summary, typeWeight), typeWeight.toFloat(), 100f..900f, { typeWeight = (it / 100f).roundToInt() * 100; preview(runtime.copy(typeWeight = typeWeight)) }, { final -> persist(runtime.copy(typeWeight = final.roundToInt())) }, stepSize = 100f, enabled = runtime.enabled && runtime.mobileTypeMode != 0)
             }))
