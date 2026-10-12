@@ -26,10 +26,10 @@
     <string name="status_combo_style_one_show_value_summary">在圆环内显示电量百分比；充电时由闪电替代数字。关闭后，原生充电闪电也交还给系统显示。</string>
     <string name="status_combo_style_one_show_bolt">显示充电闪电</string>
     <string name="status_combo_style_one_show_bolt_summary">充电时显示圆环内的闪电。此选项依赖「显示电量数字」；关闭后恢复系统原生充电闪电。</string>
-    <string name="status_combo_style_one_charging_display">充电时的显示方式</string>
+    <string name="status_combo_style_one_charging_display">充电显示方式</string>
     <string name="status_combo_style_one_charging_display_summary">充电颜色优先于低电量和危险电量颜色。可仅显示闪电，或每 5 秒轮替显示闪电与电量数字。</string>
-    <string name="status_combo_style_one_charging_display_bolt">仅显示充电闪电</string>
-    <string name="status_combo_style_one_charging_display_alternate">每 5 秒轮替闪电与电量数字</string>
+    <string name="status_combo_style_one_charging_display_bolt">充电闪电</string>
+    <string name="status_combo_style_one_charging_display_alternate">闪电数字</string>
     <string name="status_combo_style_one_value_centred">电量数字居中</string>
     <string name="status_combo_style_one_value_centred_summary">将电量百分比放大并固定在圆环中央。仅圆环样式且 Wi-Fi 弧线和电量数字均开启时可用；顶部缺口为 Wi-Fi 弧线或充电状态留出空间。</string>
     <string name="status_combo_style_one_mobile_type_mode">网络类型标签</string>
@@ -46,8 +46,8 @@
     <string name="status_combo_style_one_dual_sim_off">关闭</string>
     <string name="status_combo_style_one_dual_sim_ring_vertical">圆环上下</string>
     <string name="status_combo_style_one_dual_sim_below_ring">圆环底下</string>
-    <string name="status_combo_style_one_stacked_signal">在图标外绘制信号柱</string>
-    <string name="status_combo_style_one_stacked_signal_summary">信号选择为环外时，使用四条递增信号柱显示一张卡，并以点阵显示另一张卡；关闭后恢复系统原生移动信号图标。</string>
+    <string name="status_combo_style_one_stacked_signal">圆环外信号柱</string>
+    <string name="status_combo_style_one_stacked_signal_summary">信号位置选择为图标外侧时，使用四条递增信号柱显示一张卡，并以点阵显示另一张卡；可在下方调整信号柱与圆环的间距，关闭后恢复系统原生移动信号图标。</string>
     <string name="status_combo_style_one_data_sim_only">只显示默认数据 SIM</string>
     <string name="status_combo_style_one_data_sim_only_summary">使用当前被选为移动数据卡的 SIM 信号强度。</string>
     <string name="status_combo_style_one_glyph_scale">图标整体大小</string>
@@ -69,7 +69,7 @@
     <string name="status_combo_style_one_out_signal_size">图标外信号图形高度</string>
     <string name="status_combo_style_one_out_type_margin_left">图标外网络类型左边距</string>
     <string name="status_combo_style_one_out_type_margin_right">图标外网络类型右边距</string>
-    <string name="status_combo_style_one_out_signal_margin">环外信号与圆环间距</string>
+    <string name="status_combo_style_one_out_signal_margin">圆环外信号柱与圆环间距</string>
     <string name="status_combo_style_one_role_colors">状态颜色</string>
     <string name="status_combo_style_one_role_colors_summary">分别为低电量、充电与危险电量指定颜色。</string>
     <string name="status_combo_style_one_critical_threshold">临界电量阈值</string>
@@ -110,7 +110,7 @@
     <string name="status_combo_style_one_group_stroke">线条</string>
     <string name="status_combo_style_one_group_text">电量数字</string>
     <string name="status_combo_style_one_group_type">网络类型</string>
-    <string name="status_combo_style_one_group_out_signal">环外信号</string>
+    <string name="status_combo_style_one_group_out_signal">圆环外信号柱</string>
     <string name="status_combo_style_one_group_track">未点亮部分</string>
     <string name="status_combo_style_one_reset_colors">恢复默认</string>
     <string name="status_combo_style_one_reset_colors_summary">恢复低电量、充电、危险电量和省电模式底色的默认颜色。</string>
