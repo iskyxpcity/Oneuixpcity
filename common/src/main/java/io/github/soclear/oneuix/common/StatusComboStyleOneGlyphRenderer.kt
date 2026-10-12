@@ -193,6 +193,13 @@ object StatusComboStyleOneGlyphRenderer {
         (designWidth(config, networkType) * baseGlyphHeightDp(config).toFloat() / HEIGHT)
             .roundToInt().coerceAtLeast(20)
 
+    /** Width change in dp; inline hosts offset their leading margin so the ring stays anchored. */
+    fun glyphContentWidthDeltaDp(
+        config: StatusBarComboStyleOneRuntime,
+        networkType: String,
+    ): Float = outsideTypeWidthDelta(config, networkType) *
+        baseGlyphHeightDp(config).toFloat() / HEIGHT
+
     /** Horizontal anchor of the battery centre within the active glyph bounds. */
     fun glyphCenterRatio(config: StatusBarComboStyleOneRuntime, networkType: String = ""): Float {
         val signalMargin = outsideSignalMargin(config)
