@@ -1105,9 +1105,9 @@ object StatusBarComboStyleOneRuntime {
                     val lp = glyph.layoutParams
                     if (lp != null) {
                         val margins = lp as? ViewGroup.MarginLayoutParams
-                        // Let the view width grow with the selected lane margins. A normal start
-                        // margin lets the row move preceding SystemUI icons left to make real space.
-                        val left = dpExact(glyph.context, config.glyphLeftMarginDp)
+                        // Keep the canvas's extra leading lane out of native row measurement.
+                        val leadingExpansionPx = glyphLeadingExpansionPx(glyph.context, state.networkType)
+                        val left = dpExact(glyph.context, config.glyphLeftMarginDp) - leadingExpansionPx
                         val right = dpExact(glyph.context, config.glyphRightMarginDp)
                         val changed = lp.width != width || lp.height != height || margins?.let {
                             it.leftMargin != left || it.rightMargin != right || it.topMargin != 0 || it.bottomMargin != 0
@@ -1411,7 +1411,8 @@ object StatusBarComboStyleOneRuntime {
             val lp = glyph.layoutParams
             if (lp != null) {
                 val margins = lp as? ViewGroup.MarginLayoutParams
-                val left = dpExact(parent.context, config.glyphLeftMarginDp)
+                val leadingExpansionPx = glyphLeadingExpansionPx(parent.context, state.networkType)
+                val left = dpExact(parent.context, config.glyphLeftMarginDp) - leadingExpansionPx
                 val right = dpExact(parent.context, config.glyphRightMarginDp)
                 val changed = lp.width != width || lp.height != height || margins?.let {
                     it.leftMargin != left || it.rightMargin != right ||
@@ -1441,8 +1442,9 @@ object StatusBarComboStyleOneRuntime {
             else -> ViewGroup.LayoutParams(width, height)
         }
         val margins = lp as? ViewGroup.MarginLayoutParams
+        val leadingExpansionPx = glyphLeadingExpansionPx(parent.context, state.networkType)
         margins?.setMargins(
-            dpExact(parent.context, config.glyphLeftMarginDp),
+            dpExact(parent.context, config.glyphLeftMarginDp) - leadingExpansionPx,
             0,
             dpExact(parent.context, config.glyphRightMarginDp),
             0,
