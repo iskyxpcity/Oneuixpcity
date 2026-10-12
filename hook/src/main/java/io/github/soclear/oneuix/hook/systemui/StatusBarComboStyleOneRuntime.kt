@@ -1096,9 +1096,10 @@ object StatusBarComboStyleOneRuntime {
                     val lp = glyph.layoutParams
                     if (lp != null) {
                         val margins = lp as? ViewGroup.MarginLayoutParams
-                        // Let the parent's measured occupied width follow the actual label.
-                        // Renderer coordinates keep the ring anchored without cancelling width via margins.
-                        val left = dpExact(glyph.context, config.glyphLeftMarginDp)
+                        // Extra label/signal space grows the canvas to the left. Cancel its added
+                        // row occupancy with a negative start margin so native icons stay fixed.
+                        val leadingExpansionPx = glyphLeadingExpansionPx(glyph.context, state.networkType)
+                        val left = dpExact(glyph.context, config.glyphLeftMarginDp) - leadingExpansionPx
                         val right = dpExact(glyph.context, config.glyphRightMarginDp)
                         val changed = lp.width != width || lp.height != height || margins?.let {
                             it.leftMargin != left || it.rightMargin != right || it.topMargin != 0 || it.bottomMargin != 0
@@ -1399,10 +1400,21 @@ object StatusBarComboStyleOneRuntime {
         val height = if (compactToAnchor) originalHeight else dp(parent.context, designHeight)
         host.inline?.takeIf { it.parent === parent }?.let { glyph ->
             val lp = glyph.layoutParams
-            if (lp != null && (lp.width != width || lp.height != height)) {
-                lp.width = width
-                lp.height = height
-                glyph.layoutParams = lp
+            if (lp != null) {
+                val margins = lp as? ViewGroup.MarginLayoutParams
+                val leadingExpansionPx = glyphLeadingExpansionPx(parent.context, state.networkType)
+                val left = dpExact(parent.context, config.glyphLeftMarginDp) - leadingExpansionPx
+                val right = dpExact(parent.context, config.glyphRightMarginDp)
+                val changed = lp.width != width || lp.height != height || margins?.let {
+                    it.leftMargin != left || it.rightMargin != right ||
+                        it.topMargin != 0 || it.bottomMargin != 0
+                } == true
+                if (changed) {
+                    lp.width = width
+                    lp.height = height
+                    margins?.setMargins(left, 0, right, 0)
+                    glyph.layoutParams = lp
+                }
             }
             glyph.invalidate()
             return
@@ -1418,8 +1430,9 @@ object StatusBarComboStyleOneRuntime {
             else -> ViewGroup.LayoutParams(width, height)
         }
         val margins = lp as? ViewGroup.MarginLayoutParams
+        val leadingExpansionPx = glyphLeadingExpansionPx(parent.context, state.networkType)
         margins?.setMargins(
-            dpExact(parent.context, config.glyphLeftMarginDp),
+            dpExact(parent.context, config.glyphLeftMarginDp) - leadingExpansionPx,
             0,
             dpExact(parent.context, config.glyphRightMarginDp),
             0,
@@ -4233,6 +4246,18 @@ object StatusBarComboStyleOneRuntime {
         // Bounded in-memory history for Settings → Send logs, without a feature-owned switch or Logcat flood.
         OneuiXPDiagnosticLog.record(TAG, message)
     }
+    private fun glyphLeadingExpansionPx(context: Context, networkType: String): Int {
+        val expandedWidthPx = dp(
+            context,
+            StatusComboStyleOneGlyphRenderer.glyphWidthDp(config, networkType),
+        )
+        val baseWidthPx = dp(
+            context,
+            StatusComboStyleOneGlyphRenderer.glyphWidthDpWithoutLeadingExpansion(config, networkType),
+        )
+        return (expandedWidthPx - baseWidthPx).coerceAtLeast(0)
+    }
+
     private fun dp(context: Context, value: Int): Int =
         (value * context.resources.displayMetrics.density + 0.5f).toInt().coerceAtLeast(1)
 
