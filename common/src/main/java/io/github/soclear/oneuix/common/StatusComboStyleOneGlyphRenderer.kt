@@ -194,7 +194,7 @@ object StatusComboStyleOneGlyphRenderer {
         (designWidth(config, networkType) * baseGlyphHeightDp(config).toFloat() / HEIGHT)
             .roundToInt().coerceAtLeast(20)
 
-removeMarginCompensationHelper    /** Horizontal anchor of the battery centre within the active glyph bounds. */
+    /** Horizontal anchor of the battery centre within the active glyph bounds. */
     fun glyphCenterRatio(config: StatusBarComboStyleOneRuntime, networkType: String = ""): Float {
         val signalMargin = outsideSignalMargin(config)
         val signalWidth = outsideSignalWidth(config)
