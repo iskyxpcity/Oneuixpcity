@@ -580,7 +580,7 @@ object StatusBarComboStyleOneRuntime {
                     apply(host)
                     return@forEach
                 }
-                collapseHostView(host, battery)
+                updateOverlayHostSlot(host, battery)
                 if (overlay.update(battery, host.root, cameraBounds)) {
                     overlay.setShadeVisible(true)
                     overlay.invalidate()
@@ -1111,10 +1111,9 @@ object StatusBarComboStyleOneRuntime {
                     val lp = glyph.layoutParams
                     if (lp != null) {
                         val margins = lp as? ViewGroup.MarginLayoutParams
-                        // Extra label/signal space grows the canvas to the left. Cancel its added
-                        // row occupancy with a negative start margin so native icons stay fixed.
-                        val leadingExpansionPx = glyphLeadingExpansionPx(glyph.context, state.networkType)
-                        val left = dpExact(glyph.context, config.glyphLeftMarginDp) - leadingExpansionPx
+                        // Let the view width grow with the selected lane margins. A normal start
+                        // margin lets the row move preceding SystemUI icons left to make real space.
+                        val left = dpExact(glyph.context, config.glyphLeftMarginDp)
                         val right = dpExact(glyph.context, config.glyphRightMarginDp)
                         val changed = lp.width != width || lp.height != height || margins?.let {
                             it.leftMargin != left || it.rightMargin != right || it.topMargin != 0 || it.bottomMargin != 0
@@ -1135,7 +1134,7 @@ object StatusBarComboStyleOneRuntime {
                     if (cameraBounds == null) {
                         apply(host)
                     } else {
-                        collapseHostView(host, battery)
+                        updateOverlayHostSlot(host, battery)
                         if (overlay.update(battery, host.root, cameraBounds)) {
                             overlay.invalidate()
                         } else {
@@ -1378,8 +1377,8 @@ object StatusBarComboStyleOneRuntime {
                     host.geometryRetryPending = false
                     host.geometryRetryAttempts = 0
                     // Anchor the independent renderer to the reported camera rectangle,
-                    // never a presumed centre. Collapse the native meter to avoid overdraw.
-                    collapseHostView(host, battery)
+                    // never a presumed centre. Reserve the live-width slot without drawing its meter.
+                    updateOverlayHostSlot(host, battery)
                     overlay.setShadeVisible(true)
                     overlay.update(battery, root, cameraBounds)
                     overlay.invalidate()
@@ -1418,8 +1417,7 @@ object StatusBarComboStyleOneRuntime {
             val lp = glyph.layoutParams
             if (lp != null) {
                 val margins = lp as? ViewGroup.MarginLayoutParams
-                val leadingExpansionPx = glyphLeadingExpansionPx(parent.context, state.networkType)
-                val left = dpExact(parent.context, config.glyphLeftMarginDp) - leadingExpansionPx
+                val left = dpExact(parent.context, config.glyphLeftMarginDp)
                 val right = dpExact(parent.context, config.glyphRightMarginDp)
                 val changed = lp.width != width || lp.height != height || margins?.let {
                     it.leftMargin != left || it.rightMargin != right ||
@@ -1449,9 +1447,8 @@ object StatusBarComboStyleOneRuntime {
             else -> ViewGroup.LayoutParams(width, height)
         }
         val margins = lp as? ViewGroup.MarginLayoutParams
-        val leadingExpansionPx = glyphLeadingExpansionPx(parent.context, state.networkType)
         margins?.setMargins(
-            dpExact(parent.context, config.glyphLeftMarginDp) - leadingExpansionPx,
+            dpExact(parent.context, config.glyphLeftMarginDp),
             0,
             dpExact(parent.context, config.glyphRightMarginDp),
             0,
@@ -1812,9 +1809,28 @@ object StatusBarComboStyleOneRuntime {
         main.postDelayed(host.geometryRetry, 320L)
     }
 
+    /**
+     * Keep the native battery icon invisible while preserving a dynamically sized layout slot.
+     * Wider outside-label/signal spacing then pushes preceding status-bar icons left. While the
+     * notification shade is expanded, use the old collapsed slot to avoid disturbing shade layout.
+     */
+    private fun updateOverlayHostSlot(host: Host, view: View) {
+        if (shadeBusy) {
+            collapseHostView(host, view)
+        } else {
+            reserveHostSlot(
+                host, view,
+                StatusComboStyleOneGlyphRenderer.glyphWidthDp(config, state.networkType),
+            )
+        }
+    }
+
     private fun reserveHostSlot(host: Host, view: View, widthDp: Int) {
-        host.original.putIfAbsent(view, view.visibility)
-        if (!host.layouts.containsKey(view)) snapshotLayout(view)?.let { host.layouts[view] = it }
+        val nativeBatterySnapshot = nativeBatteryLayouts[view]
+        host.original.putIfAbsent(view, nativeBatterySnapshot?.visibility ?: view.visibility)
+        if (!host.layouts.containsKey(view)) {
+            (nativeBatterySnapshot ?: snapshotLayout(view))?.let { host.layouts[view] = it }
+        }
         val lp = view.layoutParams ?: return
         val margins = lp as? ViewGroup.MarginLayoutParams
         val width = dp(view.context, widthDp)
