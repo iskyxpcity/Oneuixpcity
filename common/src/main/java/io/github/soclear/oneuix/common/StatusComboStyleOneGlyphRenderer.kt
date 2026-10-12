@@ -4,6 +4,7 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Path
+import android.graphics.Rect
 import android.graphics.RectF
 import android.graphics.Typeface
 import io.github.soclear.oneuix.common.Preference.SystemUI.StatusBarComboStyleOneRuntime
@@ -93,6 +94,7 @@ object StatusComboStyleOneGlyphRenderer {
     private const val QUICK_CHARGE = 0xFF2196F3.toInt()
 
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+    private val diagnosticPaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val rect = RectF()
     private val boltPath = buildBoltPath()
     private val wifiDotPath = buildWifiDotPath()
@@ -247,6 +249,153 @@ object StatusComboStyleOneGlyphRenderer {
     fun glyphHeightDp(config: StatusBarComboStyleOneRuntime): Int =
         (baseGlyphHeightDp(config).toFloat() * designHeight(config) / HEIGHT)
             .roundToInt().coerceAtLeast(18)
+
+
+    /**
+     * Export-time geometry report for the exact coordinates used by draw().
+     * Design-unit bounds and screen-pixel bounds are separate, exposing clipping,
+     * transparent canvas space, and window/renderer alignment differences.
+     */
+    fun diagnosticGeometrySnapshot(
+        config: StatusBarComboStyleOneRuntime,
+        networkType: String,
+        windowWidthPx: Int,
+        windowHeightPx: Int,
+        density: Float,
+        windowScreenX: Int,
+        windowScreenY: Int,
+    ): String {
+        val safeWidth = windowWidthPx.coerceAtLeast(0)
+        val safeHeight = windowHeightPx.coerceAtLeast(0)
+        val designWidth = designWidth(config, networkType)
+        val designHeight = designHeight(config)
+        val renderScale = if (designHeight > 0f) safeHeight.toFloat() / designHeight else 0f
+        val canvasLeftInsetPx = (safeWidth - designWidth * renderScale) / 2f
+        val outsideType = usesOutsideNetworkTypeLayout(config)
+        val outsideSignal = usesOutsideSignalLayout(config)
+        val signalMargin = outsideSignalMargin(config)
+        val typeWidthDelta = outsideTypeWidthDelta(config, networkType)
+        val ringOffsetX = when {
+            outsideType -> WIDE_OFFSET + (if (outsideSignal) signalMargin else 0f) -
+                (if (outsideSignal) 0f else TYPE_ONLY_SHIFT) + typeWidthDelta
+            outsideSignal -> outsideSignalWidth(config) + signalMargin - 8f
+            else -> 0f
+        }
+        val ringCenterUnits = B_CX + ringOffsetX
+        val ringRadiusUnits = B_R + config.ringStroke / 2f
+        val ringLeftPx = canvasLeftInsetPx + (ringCenterUnits - ringRadiusUnits) * renderScale
+        val ringRightPx = canvasLeftInsetPx + (ringCenterUnits + ringRadiusUnits) * renderScale
+        val ringCenterPx = canvasLeftInsetPx + ringCenterUnits * renderScale
+        val screenRingLeft = windowScreenX + ringLeftPx
+        val screenRingRight = windowScreenX + ringRightPx
+        val screenRingCenter = windowScreenX + ringCenterPx
+        val densitySafe = density.takeIf { it > 0f } ?: 1f
+        val label = networkType.trim().uppercase()
+        val labelInfo = if (outsideType && label.isNotBlank()) {
+            val typeOnlyShift = if (outsideSignal) 0f else TYPE_ONLY_SHIFT
+            val typeGapOffset = if (outsideSignal) signalMargin else 0f
+            val typeReferenceWidth = if (outsideSignal) OUTSIDE_TYPE_REFERENCE_WIDTH
+                else OUTSIDE_TYPE_ONLY_REFERENCE_WIDTH
+            val baseTypeCenter = B_CX + WIDE_OFFSET - B_R - OUTSIDE_TYPE_RIGHT_GAP -
+                typeReferenceWidth / 2f + typeGapOffset - typeOnlyShift
+            val leftMarginUnits = outsideTypeMarginLeft(config)
+            val rightMarginUnits = outsideTypeMarginRight(config)
+            val typeOffset = typeWidthDelta - OUTSIDE_TYPE_GAP_REDUCTION +
+                leftMarginUnits - rightMarginUnits
+            val centerRaw = baseTypeCenter + typeOffset
+            val center = centerRaw.coerceIn(
+                30f + typeGapOffset - typeOnlyShift + typeOffset,
+                170f + typeGapOffset - typeOnlyShift + typeOffset,
+            )
+            val requestedTextSize = config.outTypeSizeDp.coerceIn(8, 26) * (HEIGHT / 36f)
+            val safeTextSize = requestedTextSize.coerceIn(8f, 96f)
+            val smallA = label.endsWith("A") && config.typeSuffixScale in 1..99
+            val textBody = if (smallA) label.dropLast(1) else label
+            val measure = diagnosticPaint
+            measure.typeface = weightedTypeface(config.typeWeight)
+            measure.textSize = safeTextSize
+            val bodyAdvance = measure.measureText(textBody)
+            val bodyBounds = Rect()
+            if (textBody.isNotEmpty()) measure.getTextBounds(textBody, 0, textBody.length, bodyBounds)
+            var advanceWidth = bodyAdvance
+            var inkLeftOffset = bodyBounds.left.toFloat()
+            var inkRightOffset = bodyBounds.right.toFloat()
+            var suffixAdvance = 0f
+            if (smallA) {
+                measure.textSize = safeTextSize * config.typeSuffixScale / 100f
+                suffixAdvance = measure.measureText("A")
+                val suffixBounds = Rect()
+                measure.getTextBounds("A", 0, 1, suffixBounds)
+                val suffixInkLeft = bodyAdvance + suffixBounds.left
+                val suffixInkRight = bodyAdvance + suffixBounds.right
+                advanceWidth += suffixAdvance
+                inkLeftOffset = min(inkLeftOffset, suffixInkLeft)
+                inkRightOffset = max(inkRightOffset, suffixInkRight)
+            }
+            val advanceLeftUnits = center - advanceWidth / 2f
+            val advanceRightUnits = advanceLeftUnits + advanceWidth
+            val inkLeftUnits = advanceLeftUnits + inkLeftOffset
+            val inkRightUnits = advanceLeftUnits + inkRightOffset
+            val advanceLeftPx = canvasLeftInsetPx + advanceLeftUnits * renderScale
+            val advanceRightPx = canvasLeftInsetPx + advanceRightUnits * renderScale
+            val inkLeftPx = canvasLeftInsetPx + inkLeftUnits * renderScale
+            val inkRightPx = canvasLeftInsetPx + inkRightUnits * renderScale
+            val screenAdvanceLeft = windowScreenX + advanceLeftPx
+            val screenAdvanceRight = windowScreenX + advanceRightPx
+            val screenInkLeft = windowScreenX + inkLeftPx
+            val screenInkRight = windowScreenX + inkRightPx
+            buildString {
+                appendLine("networkTypeLabel=${label},outsideSignal=${outsideSignal}")
+                appendLine(
+                    "typeMarginsDp=left:${config.outTypeMarginLeftDp},right:${config.outTypeMarginRightDp} " +
+                        "marginUnits=left:${leftMarginUnits},right:${rightMarginUnits} " +
+                        "widthDeltaUnits=${typeWidthDelta} baseCenterUnits=${baseTypeCenter} " +
+                        "rawCenterUnits=${centerRaw} drawnCenterUnits=${center}"
+                )
+                appendLine(
+                    "typeTextSizeDp=${config.outTypeSizeDp},weight=${config.typeWeight}," +
+                        "suffixScale=${config.typeSuffixScale},advanceWidthUnits=${advanceWidth}," +
+                        "advanceBoundsUnits=[${advanceLeftUnits},${advanceRightUnits}]," +
+                        "inkBoundsUnits=[${inkLeftUnits},${inkRightUnits}]"
+                )
+                appendLine(
+                    "typeAdvanceLocalPx=[${advanceLeftPx},${advanceRightPx}]," +
+                        "typeInkLocalPx=[${inkLeftPx},${inkRightPx}]," +
+                        "typeAdvanceScreenPx=[${screenAdvanceLeft},${screenAdvanceRight}]," +
+                        "typeInkScreenPx=[${screenInkLeft},${screenInkRight}]"
+                )
+                appendLine(
+                    "typeClipPx=advanceLeft:${max(0f, -advanceLeftPx)}," +
+                        "advanceRight:${max(0f, advanceRightPx - safeWidth)}," +
+                        "inkLeft:${max(0f, -inkLeftPx)},inkRight:${max(0f, inkRightPx - safeWidth)}"
+                )
+            }
+        } else {
+            "networkTypeLabel=not-drawn (outsideNetworkType=${outsideType},textBlank=${label.isBlank()})"
+        }
+        return buildString {
+            appendLine(
+                "rendererWindowPx=${safeWidth}x${safeHeight},windowDp=${safeWidth / densitySafe}x${safeHeight / densitySafe}," +
+                    "designUnits=${designWidth}x${designHeight},density=${density},renderScale=${renderScale}"
+            )
+            appendLine(
+                "windowScreenOriginPx=(${windowScreenX},${windowScreenY}),canvasLeftInsetPx=${canvasLeftInsetPx}," +
+                    "canvasRightInsetPx=${safeWidth - canvasLeftInsetPx - designWidth * renderScale}," +
+                    "canvasInsetDp=${canvasLeftInsetPx / densitySafe}"
+            )
+            appendLine(
+                "ringCenterUnits=${ringCenterUnits},ringOuterBoundsLocalPx=[${ringLeftPx},${ringRightPx}]," +
+                    "ringCenterScreenPx=${screenRingCenter},ringOuterBoundsScreenPx=[${screenRingLeft},${screenRingRight}]," +
+                    "ringBoundsScreenDp=[${screenRingLeft / densitySafe},${screenRingRight / densitySafe}]"
+            )
+            appendLine(
+                "rendererFlags=outsideType:${outsideType},outsideSignal:${outsideSignal},wide:${usesWideLayout(config)}," +
+                    "ringStroke=${config.ringStroke},OUTSIDE_TYPE_GAP_REDUCTION=${OUTSIDE_TYPE_GAP_REDUCTION}," +
+                    "TYPE_ONLY_SHIFT=${TYPE_ONLY_SHIFT}"
+            )
+            append(labelInfo)
+        }
+    }
 
     private fun valueSizeCanvasUnits(config: StatusBarComboStyleOneRuntime): Float =
         config.valueSize.coerceIn(6, 18) * (HEIGHT / 36f)

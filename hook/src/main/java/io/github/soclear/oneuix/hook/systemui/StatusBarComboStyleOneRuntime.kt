@@ -420,6 +420,37 @@ object StatusBarComboStyleOneRuntime {
             }
             return true
         }
+
+        fun diagnosticSnapshot(): String {
+            val lp = params ?: return "overlayWindow=not-attached (no LayoutParams)"
+            val actual = IntArray(2)
+            val hasScreenOrigin = glyph.isAttachedToWindow &&
+                runCatching { glyph.getLocationOnScreen(actual) }.isSuccess
+            val screenX = if (hasScreenOrigin) actual[0] else lp.x
+            val screenY = if (hasScreenOrigin) actual[1] else lp.y
+            val density = context.resources.displayMetrics.density
+            return buildString {
+                appendLine(
+                    "windowType=${lp.type},title=${lp.title},flags=${lp.flags},gravity=${lp.gravity}," +
+                        "lpOrigin=(${lp.x},${lp.y}),actualViewScreenOrigin=(${if (hasScreenOrigin) actual[0] else "unknown"}," +
+                        "${if (hasScreenOrigin) actual[1] else "unknown"}),lpSizePx=${lp.width}x${lp.height}," +
+                        "actualViewSize=${glyph.width}x${glyph.height},attached=${glyph.isAttachedToWindow}," +
+                        "windowTokenPresent=${lp.token != null},density=${density}"
+                )
+                appendLine(
+                    StatusComboStyleOneGlyphRenderer.diagnosticGeometrySnapshot(
+                        StatusBarComboStyleOneRuntime.config,
+                        StatusBarComboStyleOneRuntime.state.networkType,
+                        lp.width,
+                        lp.height,
+                        density,
+                        screenX,
+                        screenY,
+                    )
+                )
+            }
+        }
+
         fun setTintOverride(color: Int?) { glyph.setTintOverride(color) }
         fun invalidate() { glyph.invalidate() }
 
@@ -782,8 +813,172 @@ object StatusBarComboStyleOneRuntime {
         return null
     }
 
+
+    /**
+     * Captures status-bar/window geometry only when Settings → Send logs is requested.
+     * This is read-only: it never changes layout, visibility, or the foldable lifecycle.
+     */
+    private fun buildLiveDiagnosticSnapshot(): String {
+        val hostList = synchronized(hosts) { hosts.values.toList().filter { !it.retired } }
+        val cfg = config
+        val currentState = state
+        return buildString {
+            appendLine("SnapshotTimeMs=${System.currentTimeMillis()}")
+            appendLine(
+                "Config enabled=${cfg.enabled},overlayGlyph=${cfg.overlayGlyph},showMobile=${cfg.showMobile}," +
+                    "showWifi=${cfg.showWifi},signalMode=${cfg.signalMode},mobileTypeMode=${cfg.mobileTypeMode}," +
+                    "stackedSignal=${cfg.stackedSignal},dataSimOnly=${cfg.dataSimOnly},dualSim=${cfg.dualSim}," +
+                    "dualSimMode=${cfg.dualSimMode},trioStyle=${cfg.trioStyle}"
+            )
+            appendLine(
+                "Config glyphScalePercent=${cfg.glyphScalePercent},glyphOffsetXDp=${cfg.glyphOffsetXDp}," +
+                    "glyphOffsetYDp=${cfg.glyphOffsetYDp},glyphLeftMarginDp=${cfg.glyphLeftMarginDp}," +
+                    "glyphRightMarginDp=${cfg.glyphRightMarginDp},outTypeSizeDp=${cfg.outTypeSizeDp}," +
+                    "outTypeMarginLeftDp=${cfg.outTypeMarginLeftDp},outTypeMarginRightDp=${cfg.outTypeMarginRightDp}," +
+                    "outSignalSizeDp=${cfg.outSignalSizeDp},outSignalMarginDp=${cfg.outSignalMarginDp}," +
+                    "ringStroke=${cfg.ringStroke},typeWeight=${cfg.typeWeight},typeSuffixScale=${cfg.typeSuffixScale}"
+            )
+            appendLine(
+                "State batteryLevel=${currentState.batteryLevel},charging=${currentState.charging}," +
+                    "quickCharge=${currentState.quickCharge},wifiLevel=${currentState.wifiLevel}," +
+                    "mobileLevel=${currentState.mobileLevel},simOneLevel=${currentState.simOneLevel}," +
+                    "simTwoLevel=${currentState.simTwoLevel},dataSimSlotIndex=${currentState.dataSimSlotIndex}," +
+                    "networkType=${currentState.networkType},powerSave=${currentState.powerSave}," +
+                    "lowBatteryWarning=${currentState.lowBatteryWarning}"
+            )
+            appendLine("Hosts collected=${hostList.size}; attached=${hostList.count { it.root.isAttachedToWindow }}")
+            if (hostList.isEmpty()) {
+                appendLine("No registered StatusBarComboStyleOneRuntime hosts are currently available.")
+            }
+            hostList.take(6).forEachIndexed { hostIndex, host ->
+                val root = host.root
+                val metrics = root.resources.displayMetrics
+                val displaySize = activeDisplaySize(root)
+                val rootScreen = IntArray(2)
+                val rootWindow = IntArray(2)
+                runCatching { root.getLocationOnScreen(rootScreen) }
+                runCatching { root.getLocationInWindow(rootWindow) }
+                val camera = runCatching { cutoutBounds(root) }.getOrNull()
+                appendLine("[Host ${hostIndex}] retired=${host.retired},applying=${host.applying}," +
+                    "overlayFailed=${host.overlayFailed},rootAttached=${root.isAttachedToWindow}")
+                appendLine(
+                    "Display id=${root.display?.displayId},realSizePx=${displaySize.x}x${displaySize.y}," +
+                        "metricsPx=${metrics.widthPixels}x${metrics.heightPixels},density=${metrics.density}," +
+                        "densityDpi=${metrics.densityDpi},cameraBounds=${camera}"
+                )
+                appendLine(
+                    "Root class=${root.javaClass.name},resource=${resourceName(root)},screenOrigin=${rootScreen.contentToString()}," +
+                        "windowOrigin=${rootWindow.contentToString()},localBounds=[${root.left},${root.top},${root.right},${root.bottom}]," +
+                        "size=${root.width}x${root.height},measured=${root.measuredWidth}x${root.measuredHeight}," +
+                        "padding=[${root.paddingLeft},${root.paddingTop},${root.paddingRight},${root.paddingBottom}]," +
+                        "clipChildren=${root.clipChildren},clipToPadding=${root.clipToPadding}"
+                )
+                appendLine(
+                    "Host battery=${host.battery?.javaClass?.name},shadeDrawTarget=${host.shadeDrawTarget?.javaClass?.name}," +
+                        "inlinePresent=${host.inline != null},overlayPresent=${host.overlay != null}," +
+                        "savedLayouts=${host.layouts.size},savedVisibility=${host.original.size}," +
+                        "batteryWillNotDraw=${host.batteryWillNotDraw},activeDisplay=${host.activeDisplayId}:" +
+                        "${host.activeDisplayWidth}x${host.activeDisplayHeight}"
+                )
+                if (host.overlay != null) {
+                    appendLine("[Independent overlay geometry]")
+                    appendLine(host.overlay!!.diagnosticSnapshot())
+                }
+                host.inline?.let { glyph ->
+                    val pos = IntArray(2)
+                    runCatching { glyph.getLocationOnScreen(pos) }
+                    appendLine("[Inline glyph geometry]")
+                    appendLine(
+                        StatusComboStyleOneGlyphRenderer.diagnosticGeometrySnapshot(
+                            cfg, currentState.networkType, glyph.width, glyph.height, metrics.density, pos[0], pos[1],
+                        )
+                    )
+                }
+
+                val allViews = descendants(root)
+                val candidates = linkedSetOf<View>()
+                candidates += root
+                val clusters = allViews.filter(::isStatusIconsCluster)
+                clusters.forEach { cluster ->
+                    candidates += cluster
+                    val group = cluster as? ViewGroup ?: return@forEach
+                    for (i in 0 until group.childCount) {
+                        val child = group.getChildAt(i)
+                        candidates += child
+                        val nested = child as? ViewGroup
+                        if (nested != null) {
+                            for (j in 0 until nested.childCount) candidates += nested.getChildAt(j)
+                        }
+                    }
+                }
+                listOfNotNull(host.battery, host.shadeDrawTarget, host.inline).forEach { anchor ->
+                    candidates += anchor
+                    val parent = anchor.parent as? ViewGroup ?: return@forEach
+                    candidates += parent
+                    for (i in 0 until parent.childCount) candidates += parent.getChildAt(i)
+                }
+                allViews.forEach { view ->
+                    val className = view.javaClass.name.lowercase()
+                    val resource = resourceName(view).lowercase()
+                    val slot = (knownIconSlots[view] ?: slotOf(view)).orEmpty()
+                    val looksLikeStatusIcon = className.contains("statusbariconview") ||
+                        className.contains("statusicon") || className.contains("iconcontainer") ||
+                        className.contains("batterymeter") || className.contains("batteryicon") ||
+                        className.contains("mobileview") || className.contains("wifi") ||
+                        resource.contains("status_icon") || resource.contains("statusicon") ||
+                        resource.contains("battery") || resource.contains("mobile") ||
+                        resource.contains("wifi") || slot.isNotBlank()
+                    if (looksLikeStatusIcon || view === host.battery || view === host.inline ||
+                        view === host.shadeDrawTarget || isWifiIcon(view) || isMobileIcon(view) ||
+                        isMobileTypeView(view) || isBatteryIcon(view)
+                    ) candidates += view
+                }
+                appendLine("[Status-bar view geometry] candidates=${candidates.size}; outputLimit=100")
+                candidates.take(100).forEach { view -> appendLine(diagnosticViewSummary(host, view)) }
+                if (candidates.size > 100) {
+                    appendLine("View geometry truncated: ${candidates.size - 100} additional views omitted.")
+                }
+            }
+        }.take(48 * 1024)
+    }
+
+    private fun diagnosticViewSummary(host: Host, view: View): String {
+        val screen = IntArray(2)
+        val window = IntArray(2)
+        runCatching { view.getLocationOnScreen(screen) }
+        runCatching { view.getLocationInWindow(window) }
+        val parent = view.parent as? View
+        val parentGroup = parent as? ViewGroup
+        val childIndex = parentGroup?.indexOfChild(view) ?: -1
+        val lp = view.layoutParams
+        val margins = lp as? ViewGroup.MarginLayoutParams
+        val saved = host.layouts[view]
+        val slot = (knownIconSlots[view] ?: slotOf(view)).orEmpty()
+        val visibility = when (view.visibility) {
+            View.VISIBLE -> "VISIBLE"
+            View.INVISIBLE -> "INVISIBLE"
+            View.GONE -> "GONE"
+            else -> view.visibility.toString()
+        }
+        val savedText = saved?.let {
+            "${it.width}x${it.height}/m=${it.leftMargin},${it.topMargin},${it.rightMargin},${it.bottomMargin}/vis=${it.visibility}/alpha=${it.alpha}"
+        } ?: "-"
+        return "View class=${view.javaClass.name},id=${resourceName(view).ifBlank { "-" }},slot=${slot.ifBlank { "-" }}," +
+            "visibility=${visibility},alpha=${view.alpha},screenOrigin=${screen.contentToString()}," +
+            "windowOrigin=${window.contentToString()},localBounds=[${view.left},${view.top},${view.right},${view.bottom}]," +
+            "size=${view.width}x${view.height},measured=${view.measuredWidth}x${view.measuredHeight}," +
+            "translation=[${view.translationX},${view.translationY}],padding=[${view.paddingLeft},${view.paddingTop}," +
+            "${view.paddingRight},${view.paddingBottom}],lp=${lp?.width}x${lp?.height}," +
+            "margins=[${margins?.leftMargin ?: 0},${margins?.topMargin ?: 0},${margins?.rightMargin ?: 0},${margins?.bottomMargin ?: 0}]," +
+            "clipBounds=${view.clipBounds},parent=${parent?.javaClass?.name}:${resourceName(parent ?: view).ifBlank { "-" }}," +
+            "childIndex=${childIndex},parentChildCount=${parentGroup?.childCount ?: -1}," +
+            "parentClipChildren=${parentGroup?.clipChildren},parentClipToPadding=${parentGroup?.clipToPadding}," +
+            "savedOriginal=${savedText},originalVisibility=${host.original[view] ?: "-"}"
+    }
+
     private fun scheduleRegister(root: ViewGroup) {
         // Register the shared, on-demand diagnostics reply channel with the first live SystemUI context.
+        OneuiXPDiagnosticLog.setLiveSnapshotProvider { buildLiveDiagnosticSnapshot() }
         OneuiXPDiagnosticLog.install(root.context)
         root.post { register(root) }
         // One bounded retry for SystemUI's deferred icon inflation. Do not keep

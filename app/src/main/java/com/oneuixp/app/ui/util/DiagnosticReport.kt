@@ -91,9 +91,10 @@ private suspend fun requestSystemUiDiagnosticLog(context: Context): String {
                 .setPackage(Package.SYSTEMUI)
                 .putExtra(StatusBarRuntimeBridge.EXTRA_DIAGNOSTIC_REQUEST_ID, requestId),
         )
-        return withTimeoutOrNull(1800L) { response.await() }
-            ?: "No SystemUI diagnostic response received within 1.8 seconds. " +
-                "The SystemUI hook may not be active yet; the app status report is still included."
+        return withTimeoutOrNull(5000L) { response.await() }
+            ?: "No SystemUI diagnostic response received within 5 seconds. " +
+                "The SystemUI hook may not be active yet or the live geometry snapshot did not finish; " +
+                "the app status report is still included."
     } catch (cancelled: CancellationException) {
         throw cancelled
     } catch (error: Exception) {
