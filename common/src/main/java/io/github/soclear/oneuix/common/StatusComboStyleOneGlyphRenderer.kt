@@ -462,13 +462,11 @@ object StatusComboStyleOneGlyphRenderer {
             val typeRightMargin = outsideTypeMarginRight(config)
             // Margins are label-only offsets. They do not modify offsetX/circle geometry.
             // The leading expansion is a constant canvas-origin adjustment, not a user margin.
-            val labelCenter = baseTypeCenter + typeCenterShift + OUTSIDE_TYPE_LEADING_EXPANSION +
+            val typeOffset = typeCenterShift + OUTSIDE_TYPE_LEADING_EXPANSION +
                 typeLeftMargin - typeRightMargin
-            val center = labelCenter.coerceIn(
-                30f + typeGapOffset - typeOnlyShift + typeCenterShift +
-                    OUTSIDE_TYPE_LEADING_EXPANSION + typeLeftMargin - typeRightMargin,
-                170f + typeGapOffset - typeOnlyShift + typeCenterShift +
-                    OUTSIDE_TYPE_LEADING_EXPANSION + typeLeftMargin - typeRightMargin,
+            val center = (baseTypeCenter + typeOffset).coerceIn(
+                30f + typeGapOffset - typeOnlyShift + typeOffset,
+                170f + typeGapOffset - typeOnlyShift + typeOffset,
             )
             val size = config.outTypeSizeDp.coerceIn(8, 26) * m
             // Center the measured capital glyphs vertically around the host's centre line.
