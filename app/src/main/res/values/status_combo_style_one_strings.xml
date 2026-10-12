@@ -90,6 +90,8 @@
     <string name="status_combo_style_one_color_summary">Tap to pick a color.</string>
     <string name="status_combo_style_one_color_low">Low battery color</string>
     <string name="status_combo_style_one_color_charging">Charging color</string>
+    <string name="status_combo_style_one_color_normal_charging_bolt">Normal charging bolt color</string>
+    <string name="status_combo_style_one_color_quick_charging_bolt">Fast charging bolt color</string>
     <string name="status_combo_style_one_color_critical">Critical battery color</string>
     <string name="status_combo_style_one_color_power_save_fill">Power-saving fill color</string>
     <string name="status_combo_style_one_power_save_fill_color_summary">Set the fill inside the battery ring separately for dark and light status-bar backgrounds. Default opacity is 75%.</string>
@@ -113,8 +115,8 @@
     <string name="status_combo_style_one_group_out_signal">Out-of-ring signal</string>
     <string name="status_combo_style_one_group_track">Track</string>
     <string name="status_combo_style_one_reset_colors">Reset</string>
-    <string name="status_combo_style_one_reset_colors_summary">Restore the low, charging, critical and power-saving fill colors to their defaults.</string>
-    <string name="status_combo_style_one_reset_colors_confirm">The low, charging, critical and power-saving fill colors will return to their defaults; custom colors will be overwritten.</string>
+    <string name="status_combo_style_one_reset_colors_summary">Restore low, charging, critical, power-saving fill and charging-bolt colors to their defaults.</string>
+    <string name="status_combo_style_one_reset_colors_confirm">Low, charging, critical, power-saving fill and both charging-bolt color sets will return to their defaults; custom colors will be overwritten.</string>
     <string name="status_combo_style_one_reset">Reset</string>
     <string name="status_combo_style_one_cancel">Cancel</string>
     <string name="status_combo_style_one_tab_general">General</string>
