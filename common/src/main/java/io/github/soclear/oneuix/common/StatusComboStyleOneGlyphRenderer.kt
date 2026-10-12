@@ -147,9 +147,17 @@ object StatusComboStyleOneGlyphRenderer {
                 config.outSignalMarginDp.coerceIn(0, 16) * (HEIGHT / 36f)
         } else 0f
 
-    /** Leading space follows the selected signal margin, allowing the row to grow left dynamically. */
+    // Extra outer/left margin is independent from the signal-to-ring gap.
+    private fun outsideSignalMarginLeft(config: StatusBarComboStyleOneRuntime): Float =
+        if (usesOutsideSignalLayout(config)) {
+            config.outSignalMarginLeftDp.coerceIn(0, 16) * (HEIGHT / 36f)
+        } else 0f
+
+    /** The row grows leftward for both signal-to-ring spacing and the outer-left margin. */
     private fun outsideSignalLeadingExpansion(config: StatusBarComboStyleOneRuntime): Float =
-        if (usesOutsideSignalLayout(config)) outsideSignalMargin(config) else 0f
+        if (usesOutsideSignalLayout(config)) {
+            outsideSignalMargin(config) + outsideSignalMarginLeft(config)
+        } else 0f
 
     private fun outsideTypeLabelWidth(
         config: StatusBarComboStyleOneRuntime,
@@ -243,7 +251,8 @@ object StatusComboStyleOneGlyphRenderer {
                 (config.outTypeMarginRightDp.coerceIn(0, 16) - defaults.outTypeMarginRightDp)
         } else 0
         val signalDeltaDp = if (usesOutsideSignalLayout(config)) {
-            config.outSignalMarginDp.coerceIn(0, 16) - defaults.outSignalMarginDp
+            (config.outSignalMarginDp.coerceIn(0, 16) - defaults.outSignalMarginDp) +
+                (config.outSignalMarginLeftDp.coerceIn(0, 16) - defaults.outSignalMarginLeftDp)
         } else 0
         val netDeltaDp = typeDeltaDp + signalDeltaDp
         return (netDeltaDp * baseGlyphHeightDp(config).toFloat() / 36f)
@@ -263,6 +272,7 @@ object StatusComboStyleOneGlyphRenderer {
             outTypeMarginLeftDp = defaults.outTypeMarginLeftDp,
             outTypeMarginRightDp = defaults.outTypeMarginRightDp,
             outSignalMarginDp = defaults.outSignalMarginDp,
+            outSignalMarginLeftDp = defaults.outSignalMarginLeftDp,
         )
         return (
             glyphWidthDp(baseConfig, networkType) -
@@ -352,6 +362,7 @@ object StatusComboStyleOneGlyphRenderer {
         val outsideSignal = usesOutsideSignalLayout(config)
         val signalWidth = outsideSignalWidth(config)
         val signalMargin = outsideSignalMargin(config)
+        val signalMarginLeft = outsideSignalMarginLeft(config)
         val typeWidthDelta = outsideTypeWidthDelta(config, networkType)
         val leadingExpansion = outsideTypeLeadingExpansion(config) + outsideSignalLeadingExpansion(config)
         val ringOffsetX = when {
@@ -470,7 +481,7 @@ object StatusComboStyleOneGlyphRenderer {
             "networkTypeLabel=not-drawn (outsideNetworkType=${outsideType},textBlank=${label.isBlank()})"
         }
         val signalLaneInfo = if (outsideSignal && renderScale > 0f) {
-            val requestedSignalX = signalWidth / 2f - signalMargin
+            val requestedSignalX = signalWidth / 2f - signalMargin + signalMarginLeft
             val effectiveSignalX = minimumVisibleIconLeftPx?.let { minimumLeftPx ->
                 max(
                     requestedSignalX,
@@ -486,6 +497,7 @@ object StatusComboStyleOneGlyphRenderer {
                 appendLine(
                     "outsideSignalLane=requestedCenterUnits=${requestedSignalX}," +
                         "effectiveCenterUnits=${effectiveSignalX},marginUnits=${signalMargin}," +
+                        "leftMarginUnits=${signalMarginLeft}," +
                         "reservedExpansionUnits=${outsideSignalLeadingExpansion(config)}"
                 )
                 appendLine(
@@ -546,6 +558,7 @@ object StatusComboStyleOneGlyphRenderer {
         val outsideSignal = usesOutsideSignalLayout(config)
         val dualBottomLayout = usesDualSignalBelowRing(config)
         val signalMargin = outsideSignalMargin(config)
+        val signalMarginLeft = outsideSignalMarginLeft(config)
         val signalWidth = outsideSignalWidth(config)
         val typeWidthDelta = outsideTypeWidthDelta(config, state.networkType)
         val leadingExpansion = outsideTypeLeadingExpansion(config) + outsideSignalLeadingExpansion(config)
@@ -722,7 +735,7 @@ object StatusComboStyleOneGlyphRenderer {
             // The reference mark is 251 units wide at a 209-unit height;
             // its left edge sits at the beginning of the expanded out-of-ring signal box.
             // The requested gap is created by shifting the battery group right.
-            val requestedSignalX = signalWidth / 2f - signalMargin
+            val requestedSignalX = signalWidth / 2f - signalMargin + signalMarginLeft
             val canvasLeftInsetPx = (width - designWidth * scale) / 2f
             // The host reserves the maximum lane once. Move signal pillars left to add the requested
             // ring gap, but clamp at the real icon boundary instead of painting over native icons.

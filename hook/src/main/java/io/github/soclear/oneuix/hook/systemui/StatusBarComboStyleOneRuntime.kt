@@ -843,6 +843,7 @@ object StatusBarComboStyleOneRuntime {
                     "glyphRightMarginDp=${cfg.glyphRightMarginDp},outTypeSizeDp=${cfg.outTypeSizeDp}," +
                     "outTypeMarginLeftDp=${cfg.outTypeMarginLeftDp},outTypeMarginRightDp=${cfg.outTypeMarginRightDp}," +
                     "outSignalSizeDp=${cfg.outSignalSizeDp},outSignalMarginDp=${cfg.outSignalMarginDp}," +
+                    "outSignalMarginLeftDp=${cfg.outSignalMarginLeftDp}," +
                     "ringStroke=${cfg.ringStroke},typeWeight=${cfg.typeWeight},typeSuffixScale=${cfg.typeSuffixScale}"
             )
             appendLine(
@@ -2975,6 +2976,7 @@ object StatusBarComboStyleOneRuntime {
                                     previous.glyphLeftMarginDp != next.glyphLeftMarginDp ||
                                     previous.glyphRightMarginDp != next.glyphRightMarginDp ||
                                     previous.outSignalMarginDp != next.outSignalMarginDp ||
+                                    previous.outSignalMarginLeftDp != next.outSignalMarginLeftDp ||
                                     previous.outSignalSizeDp != next.outSignalSizeDp ||
                                     // Network-type margins change the canvas width too, so resize
                                     // the glyph/hidden battery slot just like the outside signal lane.
@@ -4328,6 +4330,7 @@ object StatusBarComboStyleOneRuntime {
         outTypeMarginLeftDp = v.outTypeMarginLeftDp.coerceIn(0, 16),
         outTypeMarginRightDp = v.outTypeMarginRightDp.coerceIn(0, 16),
         outSignalMarginDp = v.outSignalMarginDp.coerceIn(0, 16),
+        outSignalMarginLeftDp = v.outSignalMarginLeftDp.coerceIn(0, 16),
         typeSuffixScale = v.typeSuffixScale.coerceIn(50, 100), trackAlpha = v.trackAlpha.coerceIn(0, 255),
     )
 

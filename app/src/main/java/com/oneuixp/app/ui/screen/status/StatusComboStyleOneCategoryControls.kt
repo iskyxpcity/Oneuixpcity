@@ -152,6 +152,7 @@ fun StatusComboStyleOneCategoryControls(
     var suffixScale by remember(runtime.typeSuffixScale) { mutableIntStateOf(runtime.typeSuffixScale.coerceIn(50, 100)) }
     var outTypeSize by remember(runtime.outTypeSizeDp) { mutableIntStateOf(runtime.outTypeSizeDp.coerceIn(8, 26)) }
     var outSignalSize by remember(runtime.outSignalSizeDp) { mutableIntStateOf(runtime.outSignalSizeDp.coerceIn(6, 20)) }
+    var outSignalMarginLeft by remember(runtime.outSignalMarginLeftDp) { mutableIntStateOf(runtime.outSignalMarginLeftDp.coerceIn(0, 16)) }
     var outTypeLeft by remember(runtime.outTypeMarginLeftDp) { mutableIntStateOf(runtime.outTypeMarginLeftDp.coerceIn(0, 16)) }
     var outTypeRight by remember(runtime.outTypeMarginRightDp) { mutableIntStateOf(runtime.outTypeMarginRightDp.coerceIn(0, 16)) }
     var outSignalMargin by remember(runtime.outSignalMarginDp) { mutableIntStateOf(runtime.outSignalMarginDp.coerceIn(0, 16)) }
@@ -326,6 +327,8 @@ fun StatusComboStyleOneCategoryControls(
             }))
             StatusThemeGroup(title = stringResource(R.string.status_combo_style_one_group_out_signal), titleAlignedToContent = true, items = listOf({
                 styleOneSlider(stringResource(R.string.status_combo_style_one_out_signal_size), stringResource(R.string.status_combo_style_one_out_signal_size_summary, outSignalSize), outSignalSize.toFloat(), 6f..20f, { outSignalSize = it.roundToInt(); preview(runtime.copy(outSignalSizeDp = outSignalSize)) }, { final -> persist(runtime.copy(outSignalSizeDp = final.roundToInt())) }, enabled = runtime.enabled && runtime.showMobile && runtime.signalMode == 1 && runtime.stackedSignal)
+            }, {
+                styleOneSlider(stringResource(R.string.status_combo_style_one_out_signal_margin_left), stringResource(R.string.status_combo_style_one_out_signal_margin_left_summary, outSignalMarginLeft), outSignalMarginLeft.toFloat(), 0f..16f, { outSignalMarginLeft = it.roundToInt(); preview(runtime.copy(outSignalMarginLeftDp = outSignalMarginLeft)) }, { final -> persist(runtime.copy(outSignalMarginLeftDp = final.roundToInt())) }, enabled = runtime.enabled && runtime.showMobile && runtime.signalMode == 1 && runtime.stackedSignal)
             }, {
                 styleOneSlider(stringResource(R.string.status_combo_style_one_out_signal_margin), stringResource(R.string.status_combo_style_one_out_signal_margin_summary, outSignalMargin), outSignalMargin.toFloat(), 0f..16f, { outSignalMargin = it.roundToInt(); preview(runtime.copy(outSignalMarginDp = outSignalMargin)) }, { final -> persist(runtime.copy(outSignalMarginDp = final.roundToInt())) }, enabled = runtime.enabled && runtime.showMobile && runtime.signalMode == 1 && runtime.stackedSignal)
             }))
