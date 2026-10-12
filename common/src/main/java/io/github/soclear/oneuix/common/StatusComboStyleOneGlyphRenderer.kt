@@ -46,6 +46,8 @@ object StatusComboStyleOneGlyphRenderer {
     private const val OUTSIDE_TYPE_RIGHT_CLEARANCE = 8f
     // Preserve the old label-to-ring gap while sizing the host to the real network-type text.
     private const val OUTSIDE_TYPE_REFERENCE_WIDTH = 78f
+    // Without a signal lane, trim the empty leading edge by about 2.5dp.
+    private const val OUTSIDE_TYPE_ONLY_REFERENCE_WIDTH = 87f
     private const val OUTSIDE_TYPE_RIGHT_GAP = 3.5f
     // Out-of-ring-type-only mode should not reserve the unused signal-pillars lane.
     private const val TYPE_ONLY_SHIFT = 60f
@@ -155,7 +157,12 @@ object StatusComboStyleOneGlyphRenderer {
         config: StatusBarComboStyleOneRuntime,
         networkType: String,
     ): Float = if (usesOutsideNetworkTypeLayout(config) && networkType.isNotBlank()) {
-        outsideTypeLabelWidth(config, networkType) - OUTSIDE_TYPE_REFERENCE_WIDTH
+        val referenceWidth = if (usesOutsideSignalLayout(config)) {
+            OUTSIDE_TYPE_REFERENCE_WIDTH
+        } else {
+            OUTSIDE_TYPE_ONLY_REFERENCE_WIDTH
+        }
+        outsideTypeLabelWidth(config, networkType) - referenceWidth
     } else 0f
 
     private fun designWidth(
@@ -418,8 +425,13 @@ object StatusComboStyleOneGlyphRenderer {
             // label's on-screen position remains governed by its existing left/right margins.
             val typeGapOffset = if (outsideSignal) signalMargin else 0f
             val typeCenterShift = typeWidthDelta / 2f
+            val typeReferenceWidth = if (outsideSignal) {
+                OUTSIDE_TYPE_REFERENCE_WIDTH
+            } else {
+                OUTSIDE_TYPE_ONLY_REFERENCE_WIDTH
+            }
             val baseTypeCenter = B_CX + WIDE_OFFSET - B_R - OUTSIDE_TYPE_RIGHT_GAP -
-                OUTSIDE_TYPE_REFERENCE_WIDTH / 2f + typeGapOffset - typeOnlyShift
+                typeReferenceWidth / 2f + typeGapOffset - typeOnlyShift
             val center = (baseTypeCenter + typeCenterShift +
                 (config.outTypeMarginLeftDp.coerceIn(0, 16) -
                     config.outTypeMarginRightDp.coerceIn(0, 16)) * m).coerceIn(
