@@ -1079,6 +1079,19 @@ object StatusBarComboStyleOneRuntime {
                 host.inline?.setTintOverride(rowTint)
                 host.overlay?.setTintOverride(rowTint)
             }
+            // Resolve the active display's camera before touching native status-bar slots.
+            // If Samsung has not supplied valid geometry yet, leave the whole native icon row alone
+            // and perform at most one delayed retry; never collapse/restore it on a retry loop.
+            val wantsOverlay = config.overlayGlyph && !host.overlayFailed
+            val overlayCameraBounds = if (wantsOverlay) cutoutBounds(root) else null
+            if (wantsOverlay && overlayCameraBounds == null) {
+                if (!host.geometryRetryPending && host.geometryRetryAttempts == 0) {
+                    diagnostic("No stable cutout geometry yet; leaving native status-bar layout unchanged")
+                }
+                scheduleGeometryRetry(host)
+                return
+            }
+
             val foldMobile = isMobileNativeSuppressed()
 
             views.forEach { view ->
@@ -1101,44 +1114,31 @@ object StatusBarComboStyleOneRuntime {
                 if (wifiCandidate) diagnoseNativeWifiView(view, if (hide) "apply-collapse" else "apply-restore")
             }
 
-            if (config.overlayGlyph && !host.overlayFailed) {
-                val cameraBounds = cutoutBounds(root)
-                if (cameraBounds == null) {
-                    // During fold/unfold, Samsung may briefly expose no valid cutout geometry.
-                    // Never replace this overlay with a wide inline glyph while geometry is
-                    // unstable: doing so repeatedly resizes the status-bar icon row and makes
-                    // the icons jump across the inner display.
-                    if (!host.geometryRetryPending && host.geometryRetryAttempts == 0) {
-                        diagnostic("Overlay geometry temporarily unavailable; preserving native slot layout and retrying")
-                    }
-                    removeInline(host)
-                    host.overlay?.setShadeVisible(false)
-                    hideHostViewPreservingLayout(host, battery)
+            if (wantsOverlay) {
+                // Geometry was checked before suppressing any native slot. Reuse that one
+                // snapshot throughout this apply pass so all icon/window work is atomic.
+                val cameraBounds = requireNotNull(overlayCameraBounds)
+                removeInline(host)
+                val overlay = host.overlay ?: GlyphOverlay(root.context).also { host.overlay = it }
+                overlay.setTintOverride(host.rowTint)
+                if (!overlay.attach(battery, root, cameraBounds)) {
+                    // Failed attachment must restore every native view changed above.
+                    // Never leave the row collapsed while a retry waits.
+                    diagnostic("Overlay attach failed; restoring native icon row and retrying once")
+                    overlay.detach()
+                    host.overlay = null
+                    restore(host)
                     scheduleGeometryRetry(host)
                 } else {
-                    removeInline(host)
-                    val overlay = host.overlay ?: GlyphOverlay(root.context).also { host.overlay = it }
-                    overlay.setTintOverride(host.rowTint)
-                    if (!overlay.attach(battery, root, cameraBounds)) {
-                        // WindowManager can reject an attach during a fold transition even when
-                        // geometry is already available. Do not permanently switch to the wide
-                        // inline renderer: that expands the status-bar row and makes icons jump.
-                        diagnostic("Overlay attach temporarily failed; preserving native slot layout and retrying")
-                        overlay.detach()
-                        host.overlay = null
-                        hideHostViewPreservingLayout(host, battery)
-                        scheduleGeometryRetry(host)
-                    } else {
-                        main.removeCallbacks(host.geometryRetry)
-                        host.geometryRetryPending = false
-                        host.geometryRetryAttempts = 0
-                        // Anchor the independent renderer to the reported camera rectangle,
-                        // never a presumed centre. Collapse the native meter to avoid overdraw.
-                        collapseHostView(host, battery)
-                        overlay.setShadeVisible(true)
-                        overlay.update(battery, root, cameraBounds)
-                        overlay.invalidate()
-                    }
+                    main.removeCallbacks(host.geometryRetry)
+                    host.geometryRetryPending = false
+                    host.geometryRetryAttempts = 0
+                    // Anchor the independent renderer to the reported camera rectangle,
+                    // never a presumed centre. Collapse the native meter to avoid overdraw.
+                    collapseHostView(host, battery)
+                    overlay.setShadeVisible(true)
+                    overlay.update(battery, root, cameraBounds)
+                    overlay.invalidate()
                 }
             } else {
                 main.removeCallbacks(host.geometryRetry)
@@ -1505,40 +1505,6 @@ object StatusBarComboStyleOneRuntime {
             (nativeBatterySnapshot ?: snapshotLayout(view))?.let { host.layouts[view] = it }
         }
         collapseViewLayout(view)
-    }
-
-    /**
-     * Keep the battery view's original measured slot during a temporary cutout-geometry gap.
-     * Only its alpha changes, so switching displays does not repeatedly reflow the status-bar row.
-     */
-    private fun hideHostViewPreservingLayout(host: Host, view: View) {
-        val nativeSnapshot = nativeBatteryLayouts[view]
-        host.original.putIfAbsent(view, nativeSnapshot?.visibility ?: view.visibility)
-        if (!host.layouts.containsKey(view)) {
-            (nativeSnapshot ?: snapshotLayout(view))?.let { host.layouts[view] = it }
-        }
-        val snapshot = host.layouts[view]
-        if (snapshot != null) {
-            val lp = view.layoutParams
-            if (lp != null) {
-                var changed = false
-                if (lp.width != snapshot.width) { lp.width = snapshot.width; changed = true }
-                if (lp.height != snapshot.height) { lp.height = snapshot.height; changed = true }
-                val margins = lp as? ViewGroup.MarginLayoutParams
-                if (margins != null && (
-                    margins.leftMargin != snapshot.leftMargin ||
-                    margins.topMargin != snapshot.topMargin ||
-                    margins.rightMargin != snapshot.rightMargin ||
-                    margins.bottomMargin != snapshot.bottomMargin
-                )) {
-                    margins.setMargins(snapshot.leftMargin, snapshot.topMargin, snapshot.rightMargin, snapshot.bottomMargin)
-                    changed = true
-                }
-                if (changed) view.layoutParams = lp
-            }
-            if (view.visibility != snapshot.visibility) view.visibility = snapshot.visibility
-        }
-        if (view.alpha != 0f) view.alpha = 0f
     }
 
     private fun scheduleGeometryRetry(host: Host) {
