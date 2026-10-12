@@ -27,7 +27,7 @@
     <string name="status_combo_style_one_show_bolt">显示充电闪电</string>
     <string name="status_combo_style_one_show_bolt_summary">充电时显示圆环内的闪电。此选项依赖「显示电量数字」；关闭后恢复系统原生充电闪电。</string>
     <string name="status_combo_style_one_charging_display">充电显示方式</string>
-    <string name="status_combo_style_one_charging_display_summary">充电颜色优先于低电量和危险电量颜色。可仅显示闪电，或每 5 秒轮替显示闪电与电量数字。</string>
+    <string name="status_combo_style_one_charging_display_summary">充电颜色优先于低电量和危险电量颜色。可仅显示闪电，或每 5 秒轮替显示闪电与电量数字；当电量数字位于圆环开口时，同样遵循此设置。</string>
     <string name="status_combo_style_one_charging_display_bolt">充电闪电</string>
     <string name="status_combo_style_one_charging_display_alternate">闪电数字</string>
     <string name="status_combo_style_one_value_centred">电量数字居中</string>
