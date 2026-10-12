@@ -47,9 +47,9 @@
     <string name="status_combo_style_one_dual_sim_ring_vertical">Top and bottom of ring</string>
     <string name="status_combo_style_one_dual_sim_below_ring">Below ring</string>
     <string name="status_combo_style_one_stacked_signal">Stacked signal</string>
-    <string name="status_combo_style_one_stacked_signal_summary">Draw the reading yourself while it is outside the ring: four bars of increasing height for one SIM, a row of dots below them for the other. With a single SIM, only the bars are drawn. When disabled, the native mobile signal icon remains visible.</string>
+    <string name="status_combo_style_one_stacked_signal_summary">Draw the reading yourself while it is outside the ring: four bars of increasing height for one SIM, a row of dots below them for the other. With a single SIM, only the bars are drawn. Turned off, the system\'s own mobile signal icon is kept.</string>
     <string name="status_combo_style_one_data_sim_only">Data SIM only</string>
-    <string name="status_combo_style_one_data_sim_only_summary">With two SIMs, show only the reading of the SIM carrying mobile data and hide the other SIM. With one SIM, or when the data SIM cannot be read, this setting has no effect.</string>
+    <string name="status_combo_style_one_data_sim_only_summary">With two SIMs, draw only the reading of the SIM that carries data and leave the other one out. A single SIM, or one whose data SIM cannot be read, is unaffected.</string>
     <string name="status_combo_style_one_glyph_scale">Overall icon size</string>
     <string name="status_combo_style_one_glyph_offset_x">Overall horizontal offset</string>
     <string name="status_combo_style_one_glyph_offset_y">Overall vertical offset</string>
@@ -122,7 +122,7 @@
     <string name="status_combo_style_one_tab_size">Size</string>
     <string name="status_combo_style_one_tab_color">Colors</string>
     <string name="status_combo_style_one_ring_stroke_rect">Bar thickness</string>
-    <string name="status_combo_style_one_ring_stroke_summary">Current %1$d: thickness of the battery-ring outline.</string>
+    <string name="status_combo_style_one_ring_stroke_summary">Current %1$d: stroke width of the battery ring.</string>
     <string name="status_combo_style_one_ring_stroke_summary_rect">Current %1$d: thickness of the battery bar along the bottom.</string>
     <string name="status_combo_style_one_arc_stroke_summary">Current %1$d: stroke width of the Wi-Fi arcs.</string>
     <string name="status_combo_style_one_arc_stroke_summary_rect">Current %1$d: Wi-Fi arc stroke width and vertical position inside the top slot.</string>
@@ -134,7 +134,7 @@
     <string name="status_combo_style_one_out_type_margin_left_summary">Current %1$d dp: gap between the out-of-ring network-type label and its outer side, facing away from the battery. The default is 2 dp and the range is 0–16 dp. The row mirrors in RTL layouts, moving this margin to the opposite side.</string>
     <string name="status_combo_style_one_out_type_margin_right_summary">Current %1$d dp: gap between the out-of-ring network-type label and its inner side, facing the battery and out-of-ring reading. The default is 2 dp and the range is 0–16 dp. It mirrors in RTL layouts too.</string>
     <string name="status_combo_style_one_type_weight_summary">Current weight %1$d: stroke weight of the network type, 100 lightest to 900 heaviest.</string>
-    <string name="status_combo_style_one_out_signal_size_summary">Current %1$d dp: overall height of the out-of-ring signal reading. 15 dp matches the height of the native signal icon in the status bar and is the default; the range is 6–20 dp. The same row keeps the same size whether or not a dot row follows it, and pulling down Quick Settings does not change it.</string>
+    <string name="status_combo_style_one_out_signal_size_summary">Current %1$d dp: overall height of the out-of-ring reading, in dp so it converts to pixels on any screen density. 15 dp matches the height of the status bar\'s own signal icon and is the default; the range is 6–20 dp. The same row is drawn at the same size whether or not a dot row follows it, so the two shapes never come out different sizes, and pulling down Quick Settings does not change it.</string>
     <string name="status_combo_style_one_out_signal_margin_summary">Current %1$d dp: controls only the gap between the self-drawn out-of-ring signal bars and the battery ring. It does not move the out-of-ring network-type label or change the overall left margin of the composite icon. Available only when Signal position is Outside the ring and Stacked signal is enabled.</string>
     <string name="status_combo_style_one_track_alpha_summary">Current %1$d%%: opacity of the unlit parts of the glyph.</string>
     <string name="status_combo_style_one_bolt_size_summary">Current %1$d%%: scale of the charging bolt; requires both the battery number and charging bolt to be enabled.</string>
