@@ -125,29 +125,22 @@ object StatusComboStyleOneGlyphRenderer {
     private fun outsideSignalWidth(config: StatusBarComboStyleOneRuntime): Float =
         if (usesOutsideSignalLayout(config)) 251f * outsideSignalScale(config) else 0f
 
-    // The two outside lanes have independent spacing controls. If both are enabled,
-    // the signal gap positions the type label after the signal graphic, while the type
-    // gap controls the clearance between that label and the battery ring.
+    // The outside-signal gap controls only the signal lane and ring spacing.
+    // Outside network-type placement uses its existing left/right margin settings.
     private fun outsideSignalMargin(config: StatusBarComboStyleOneRuntime): Float =
         if (usesOutsideSignalLayout(config)) {
             config.outSignalMarginDp.coerceIn(0, 16) * (HEIGHT / 36f)
-        } else 0f
-
-    private fun outsideTypeRingGap(config: StatusBarComboStyleOneRuntime): Float =
-        if (usesOutsideNetworkTypeLayout(config)) {
-            config.outTypeRingGapDp.coerceIn(0, 16) * (HEIGHT / 36f)
         } else 0f
 
     private fun designWidth(config: StatusBarComboStyleOneRuntime): Float {
         val typeLane = usesOutsideNetworkTypeLayout(config)
         val signalLane = usesOutsideSignalLayout(config)
         val signalMargin = outsideSignalMargin(config)
-        val typeRingGap = outsideTypeRingGap(config)
         return when {
             // No unused signal-pillars lane is reserved when the outside type is alone.
-            typeLane && signalLane -> WIDE_WIDTH + signalMargin + typeRingGap + OUTSIDE_TYPE_RIGHT_CLEARANCE
+            typeLane && signalLane -> WIDE_WIDTH + signalMargin + OUTSIDE_TYPE_RIGHT_CLEARANCE
             // Add room when the outside network label is enabled by itself.
-            typeLane -> WIDE_WIDTH - TYPE_ONLY_SHIFT + typeRingGap + OUTSIDE_TYPE_RIGHT_CLEARANCE
+            typeLane -> WIDE_WIDTH - TYPE_ONLY_SHIFT + OUTSIDE_TYPE_RIGHT_CLEARANCE
             signalLane -> outsideSignalWidth(config) + signalMargin + COMPACT_WIDTH - 8f
             else -> COMPACT_WIDTH
         }
@@ -164,14 +157,13 @@ object StatusComboStyleOneGlyphRenderer {
     /** Horizontal anchor of the battery centre within the active glyph bounds. */
     fun glyphCenterRatio(config: StatusBarComboStyleOneRuntime): Float {
         val signalMargin = outsideSignalMargin(config)
-        val typeRingGap = outsideTypeRingGap(config)
         val signalWidth = outsideSignalWidth(config)
         val outsideSignal = usesOutsideSignalLayout(config)
         return when {
             usesOutsideNetworkTypeLayout(config) -> {
                 val signalLaneShift = if (outsideSignal) signalMargin else 0f
                 val typeOnlyShift = if (outsideSignal) 0f else TYPE_ONLY_SHIFT
-                (B_CX + WIDE_OFFSET + signalLaneShift + typeRingGap - typeOnlyShift) / designWidth(config)
+                (B_CX + WIDE_OFFSET + signalLaneShift - typeOnlyShift) / designWidth(config)
             }
             outsideSignal -> (B_CX + signalWidth + signalMargin - 8f) / designWidth(config)
             else -> B_CX / COMPACT_WIDTH
@@ -204,7 +196,6 @@ object StatusComboStyleOneGlyphRenderer {
         val outsideSignal = usesOutsideSignalLayout(config)
         val dualBottomLayout = usesDualSignalBelowRing(config)
         val signalMargin = outsideSignalMargin(config)
-        val typeRingGap = outsideTypeRingGap(config)
         val signalWidth = outsideSignalWidth(config)
         val designWidth = designWidth(config)
         val designHeight = designHeight(config)
@@ -224,8 +215,7 @@ object StatusComboStyleOneGlyphRenderer {
 
         val typeOnlyShift = if (outsideType && !outsideSignal) TYPE_ONLY_SHIFT else 0f
         val offsetX = when {
-            outsideType -> WIDE_OFFSET + (if (outsideSignal) signalMargin else 0f) +
-                typeRingGap - typeOnlyShift
+            outsideType -> WIDE_OFFSET + (if (outsideSignal) signalMargin else 0f) - typeOnlyShift
             outsideSignal -> signalWidth + signalMargin - 8f
             else -> 0f
         }
@@ -386,7 +376,8 @@ object StatusComboStyleOneGlyphRenderer {
             // content group moves right; that creates real clearance instead of translating
             // the label and ring together. When signal bars are also outside, the label sits
             // between those bars and the ring and follows the outside-signal lane.
-            // The label-to-ring gap is controlled independently by typeRingGap above.
+            // Keep the label's on-screen position stable as outside-signal spacing changes;
+            // its position is still controlled by the existing left/right margin sliders.
             val typeGapOffset = if (outsideSignal) signalMargin else 0f
             val center = (110f + typeGapOffset - typeOnlyShift +
                 (config.outTypeMarginLeftDp.coerceIn(0, 16) -
