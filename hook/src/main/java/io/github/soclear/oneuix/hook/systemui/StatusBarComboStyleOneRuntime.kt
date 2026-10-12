@@ -400,10 +400,6 @@ object StatusBarComboStyleOneRuntime {
                 rootLocated -> rootLocation[1] + root.height / 2f
                 else -> return false
             }
-            val designWidthUnits = StatusComboStyleOneGlyphRenderer.glyphDesignWidth(cfg, networkType)
-            val designHeightUnits = StatusComboStyleOneGlyphRenderer.glyphDesignHeight(cfg)
-            val ringCenterXUnits = StatusComboStyleOneGlyphRenderer.glyphCenterX(cfg, networkType)
-            val centreRatioY = StatusComboStyleOneGlyphRenderer.glyphVerticalCenterRatio(cfg)
             val renderScale = lp.height.toFloat() / designHeightUnits
             val canvasLeftInsetPx = (lp.width - designWidthUnits * renderScale) / 2f
             // Right-edge anchoring is the key invariant. Width changes move lp.x left, while
