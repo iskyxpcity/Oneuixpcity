@@ -251,7 +251,7 @@ object StatusBarComboStyleOneRuntime {
             if (params != null) return update(anchor, root, cameraBounds)
             val cfg = StatusBarComboStyleOneRuntime.config
             val width = StatusBarComboStyleOneRuntime.dp(
-                app, StatusComboStyleOneGlyphRenderer.glyphWidthDp(cfg),
+                app, StatusComboStyleOneGlyphRenderer.glyphWidthDp(cfg, StatusBarComboStyleOneRuntime.state.networkType),
             )
             val height = StatusBarComboStyleOneRuntime.dp(
                 app, StatusComboStyleOneGlyphRenderer.glyphHeightDp(cfg),
@@ -321,9 +321,13 @@ object StatusBarComboStyleOneRuntime {
             val oldWidth = lp.width
             val oldHeight = lp.height
             val cfg = StatusBarComboStyleOneRuntime.config
-            lp.width = StatusBarComboStyleOneRuntime.dp(app, StatusComboStyleOneGlyphRenderer.glyphWidthDp(cfg))
+            lp.width = StatusBarComboStyleOneRuntime.dp(
+                app, StatusComboStyleOneGlyphRenderer.glyphWidthDp(cfg, StatusBarComboStyleOneRuntime.state.networkType),
+            )
             lp.height = StatusBarComboStyleOneRuntime.dp(app, StatusComboStyleOneGlyphRenderer.glyphHeightDp(cfg))
-            val centreRatioX = StatusComboStyleOneGlyphRenderer.glyphCenterRatio(cfg)
+            val centreRatioX = StatusComboStyleOneGlyphRenderer.glyphCenterRatio(
+                cfg, StatusBarComboStyleOneRuntime.state.networkType,
+            )
             val centreRatioY = StatusComboStyleOneGlyphRenderer.glyphVerticalCenterRatio(cfg)
             // Use the active status bar/display's reported cutout rectangle. Fold inner
             // screens can place the camera well to the right of the geometric centre.
@@ -811,7 +815,7 @@ object StatusBarComboStyleOneRuntime {
                 if (host.retired) return@forEach
                 val battery = host.battery ?: return@forEach
                 host.inline?.let { glyph ->
-                    val width = dp(glyph.context, StatusComboStyleOneGlyphRenderer.glyphWidthDp(config))
+                    val width = dp(glyph.context, StatusComboStyleOneGlyphRenderer.glyphWidthDp(config, state.networkType))
                     val height = dp(glyph.context, StatusComboStyleOneGlyphRenderer.glyphHeightDp(config))
                     val lp = glyph.layoutParams
                     if (lp != null) {
@@ -1051,7 +1055,7 @@ object StatusBarComboStyleOneRuntime {
 
     private fun insertInline(host: Host, anchor: View, compactToAnchor: Boolean = false) {
         val parent = anchor.parent as? ViewGroup ?: return
-        val designWidth = StatusComboStyleOneGlyphRenderer.glyphWidthDp(config)
+        val designWidth = StatusComboStyleOneGlyphRenderer.glyphWidthDp(config, state.networkType)
         val designHeight = StatusComboStyleOneGlyphRenderer.glyphHeightDp(config)
         val originalHeight = host.layouts[anchor]?.height?.takeIf { it > 0 }
             ?: anchor.height.takeIf { it > 0 }
@@ -2529,6 +2533,9 @@ object StatusBarComboStyleOneRuntime {
                                     previous.glyphRightMarginDp != next.glyphRightMarginDp ||
                                     previous.outSignalMarginDp != next.outSignalMarginDp ||
                                     previous.outSignalSizeDp != next.outSignalSizeDp ||
+                                    previous.outTypeSizeDp != next.outTypeSizeDp ||
+                                    previous.typeWeight != next.typeWeight ||
+                                    previous.typeSuffixScale != next.typeSuffixScale ||
                                     previous.dualSimMode != next.dualSimMode ||
                                     previous.dualSim != next.dualSim ||
                                     previous.trioStyle != next.trioStyle
@@ -2796,7 +2803,10 @@ object StatusBarComboStyleOneRuntime {
             dataSimSlotIndex = dataSlot,
             networkType = label,
         )
-        if (networkTypeChanged) syncChargingRotationTicker(resetPhase = false)
+        if (networkTypeChanged) {
+            syncChargingRotationTicker(resetPhase = false)
+            resizeGlyphs()
+        }
         diagnostic("Telephony refreshed: dataSub=$dataSub, dataLevel=${state.mobileLevel}, type=${state.networkType}")
     }
 
