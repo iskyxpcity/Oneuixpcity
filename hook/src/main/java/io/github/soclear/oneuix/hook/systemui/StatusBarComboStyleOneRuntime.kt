@@ -214,6 +214,8 @@ object StatusBarComboStyleOneRuntime {
         var retired = false
         var rowTint: Int? = null
         var activeDisplayId: Int = -1
+        var activeDisplayWidth: Int = -1
+        var activeDisplayHeight: Int = -1
         var geometryRetryPending = false
         var geometryRetryAttempts = 0
         // Foldable display transitions can temporarily report no cutout. Retry geometry
@@ -989,10 +991,19 @@ object StatusBarComboStyleOneRuntime {
                 return
             }
             val currentDisplayId = root.display?.displayId ?: -1
-            if (currentDisplayId >= 0 && host.activeDisplayId >= 0 &&
-                currentDisplayId != host.activeDisplayId
-            ) {
-                diagnostic("Status-bar host moved displays: ${host.activeDisplayId} -> $currentDisplayId; resetting overlay only")
+            val currentDisplaySize = activeDisplaySize(root)
+            val displayIdentityChanged =
+                (currentDisplayId >= 0 && host.activeDisplayId >= 0 &&
+                    currentDisplayId != host.activeDisplayId) ||
+                (host.activeDisplayWidth > 0 && host.activeDisplayHeight > 0 &&
+                    (currentDisplaySize.x != host.activeDisplayWidth ||
+                        currentDisplaySize.y != host.activeDisplayHeight))
+            if (displayIdentityChanged) {
+                diagnostic(
+                    "Status-bar display geometry changed: id=${host.activeDisplayId}->${currentDisplayId}, " +
+                        "size=${host.activeDisplayWidth}x${host.activeDisplayHeight}->" +
+                        "${currentDisplaySize.x}x${currentDisplaySize.y}; resetting overlay only"
+                )
                 main.removeCallbacks(host.geometryRetry)
                 host.geometryRetryPending = false
                 host.geometryRetryAttempts = 0
@@ -1008,6 +1019,10 @@ object StatusBarComboStyleOneRuntime {
                 host.rowTint = rowTintSnapshots[root]
             }
             if (currentDisplayId >= 0) host.activeDisplayId = currentDisplayId
+            if (currentDisplaySize.x > 0 && currentDisplaySize.y > 0) {
+                host.activeDisplayWidth = currentDisplaySize.x
+                host.activeDisplayHeight = currentDisplaySize.y
+            }
             val views = descendants(root)
             rememberStatusBarTintViews(root, views)
             // One UI 8.5 / Android 16+ can render the battery as a ComposeView
