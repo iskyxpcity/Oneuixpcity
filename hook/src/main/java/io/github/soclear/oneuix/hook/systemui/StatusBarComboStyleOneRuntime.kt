@@ -818,13 +818,11 @@ object StatusBarComboStyleOneRuntime {
                     val width = dp(glyph.context, StatusComboStyleOneGlyphRenderer.glyphWidthDp(config, state.networkType))
                     val height = dp(glyph.context, StatusComboStyleOneGlyphRenderer.glyphHeightDp(config))
                     val lp = glyph.layoutParams
-                    val typeWidthAdjustmentPx = (
-                        StatusComboStyleOneGlyphRenderer.glyphContentWidthDeltaDp(config, state.networkType) *
-                            glyph.resources.displayMetrics.density
-                    ).roundToInt()
                     if (lp != null) {
                         val margins = lp as? ViewGroup.MarginLayoutParams
-                        val left = dpExact(glyph.context, config.glyphLeftMarginDp) - typeWidthAdjustmentPx
+                        // Let the parent's measured occupied width follow the actual label.
+                        // Renderer coordinates keep the ring anchored without cancelling width via margins.
+                        val left = dpExact(glyph.context, config.glyphLeftMarginDp)
                         val right = dpExact(glyph.context, config.glyphRightMarginDp)
                         val changed = lp.width != width || lp.height != height || margins?.let {
                             it.leftMargin != left || it.rightMargin != right || it.topMargin != 0 || it.bottomMargin != 0
@@ -836,8 +834,7 @@ object StatusBarComboStyleOneRuntime {
                             glyph.layoutParams = lp
                         }
                     }
-                    glyph.translationX = dpExact(glyph.context, config.glyphOffsetXDp).toFloat() -
-                        if (glyph.layoutParams !is ViewGroup.MarginLayoutParams) typeWidthAdjustmentPx.toFloat() else 0f
+                    glyph.translationX = dpExact(glyph.context, config.glyphOffsetXDp).toFloat()
                     glyph.translationY = dpExact(glyph.context, config.glyphOffsetYDp).toFloat()
                     glyph.invalidate()
                 }
@@ -1091,19 +1088,14 @@ object StatusBarComboStyleOneRuntime {
             is ViewGroup.MarginLayoutParams -> ViewGroup.MarginLayoutParams(old).apply { this.width = width; this.height = height }
             else -> ViewGroup.LayoutParams(width, height)
         }
-        val typeWidthAdjustmentPx = (
-            StatusComboStyleOneGlyphRenderer.glyphContentWidthDeltaDp(config, state.networkType) *
-                parent.resources.displayMetrics.density
-        ).roundToInt()
         val margins = lp as? ViewGroup.MarginLayoutParams
         margins?.setMargins(
-            dpExact(parent.context, config.glyphLeftMarginDp) - typeWidthAdjustmentPx,
+            dpExact(parent.context, config.glyphLeftMarginDp),
             0,
             dpExact(parent.context, config.glyphRightMarginDp),
             0,
         )
-        glyph.translationX = dpExact(parent.context, config.glyphOffsetXDp).toFloat() -
-            if (margins == null) typeWidthAdjustmentPx.toFloat() else 0f
+        glyph.translationX = dpExact(parent.context, config.glyphOffsetXDp).toFloat()
         glyph.translationY = dpExact(parent.context, config.glyphOffsetYDp).toFloat()
         runCatching { parent.addView(glyph, parent.indexOfChild(anchor).coerceAtLeast(0), lp); host.inline = glyph }
             .onFailure { Log.w(TAG, "Cannot add inline glyph", it) }
