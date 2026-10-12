@@ -21,7 +21,7 @@ val managerVersionName = rootProject.extra["managerVersionName"] as String
 
 val isPrBuild = project.findProperty("IS_PR_BUILD")?.toString()?.toBoolean() ?: false
 val defaultManagerPackageName = "com.oneuixp.app"
-val defaultManagerName = "OneuiXP"
+val defaultManagerName = "OneUI XP"
 val managerPackageName = project.findProperty("ONEUIXP_PACKAGE_NAME")?.toString() ?: defaultManagerPackageName
 val managerName = project.findProperty("ONEUIXP_NAME")?.toString() ?: defaultManagerName
 
