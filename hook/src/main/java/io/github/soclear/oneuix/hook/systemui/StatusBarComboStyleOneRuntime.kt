@@ -325,9 +325,10 @@ object StatusBarComboStyleOneRuntime {
                 app, StatusComboStyleOneGlyphRenderer.glyphWidthDp(cfg, StatusBarComboStyleOneRuntime.state.networkType),
             )
             lp.height = StatusBarComboStyleOneRuntime.dp(app, StatusComboStyleOneGlyphRenderer.glyphHeightDp(cfg))
-            val centreRatioX = StatusComboStyleOneGlyphRenderer.glyphCenterRatio(
-                cfg, StatusBarComboStyleOneRuntime.state.networkType,
-            )
+            val networkType = StatusBarComboStyleOneRuntime.state.networkType
+            val designWidthUnits = StatusComboStyleOneGlyphRenderer.glyphDesignWidth(cfg, networkType)
+            val designHeightUnits = StatusComboStyleOneGlyphRenderer.glyphDesignHeight(cfg)
+            val ringCenterXUnits = StatusComboStyleOneGlyphRenderer.glyphCenterX(cfg, networkType)
             val centreRatioY = StatusComboStyleOneGlyphRenderer.glyphVerticalCenterRatio(cfg)
             // Use the active status bar/display's reported cutout rectangle. Fold inner
             // screens can place the camera well to the right of the geometric centre.
@@ -348,8 +349,15 @@ object StatusBarComboStyleOneRuntime {
             } else {
                 PUNCH_HOLE_VERTICAL_CALIBRATION_DP
             }
+            // Anchor the actual drawn ring centre, not a ratio of the window width.
+            // The renderer centres its canvas inside the integer-sized WindowManager bounds;
+            // compensating for that exact inset prevents label-margin width changes from moving
+            // the ring by even a rounded pixel.
+            val renderScale = lp.height.toFloat() / designHeightUnits
+            val canvasLeftInsetPx = (lp.width - designWidthUnits * renderScale) / 2f
+            val ringCenterOffsetPx = ringCenterXUnits * renderScale + canvasLeftInsetPx
             lp.x = (
-                cameraCenterX - lp.width * centreRatioX +
+                cameraCenterX - ringCenterOffsetPx +
                     StatusBarComboStyleOneRuntime.dpExact(
                         app, cfg.glyphOffsetXDp + cfg.glyphLeftMarginDp - cfg.glyphRightMarginDp,
                     ) + horizontalCalibrationPx
