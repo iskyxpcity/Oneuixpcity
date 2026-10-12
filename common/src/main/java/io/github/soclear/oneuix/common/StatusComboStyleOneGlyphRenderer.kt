@@ -229,8 +229,13 @@ object StatusComboStyleOneGlyphRenderer {
             config.showMobile && config.mobileTypeMode == 1 && it.isNotEmpty()
         }
         val centredBatteryValue = config.trioStyle == 0 && config.valueCentred
+        // When Wi-Fi or the inner network-type label occupies the ring opening, the battery
+        // number may also be placed in that opening. Charging display mode must apply there too.
+        val batteryValueInOpening = config.trioStyle == 0 && !config.valueCentred &&
+            (wifiInk || innerType != null)
         val shouldAlternateCharging = state.charging && config.showBolt && config.showValue &&
-            !centredBatteryValue && config.mobileTypeMode == 1 && config.chargingDisplayMode == 1
+            ((!centredBatteryValue && config.mobileTypeMode == 1) || batteryValueInOpening) &&
+            config.chargingDisplayMode == 1
         val alternateChargingPhase = shouldAlternateCharging && state.chargingAlternatePhase
         // Charging color has priority; by default the bolt replaces the percentage.
         // The optional alternate mode swaps the two glyphs every five seconds.
@@ -238,7 +243,7 @@ object StatusComboStyleOneGlyphRenderer {
         // Outside network-type mode disables the 5-second swap, not the battery value.
         val showBatteryValue = config.showValue &&
             (!state.charging || alternateChargingPhase || !config.showBolt ||
-                centredBatteryValue || config.mobileTypeMode != 1)
+                centredBatteryValue || (config.mobileTypeMode != 1 && !batteryValueInOpening))
         val inRingSignal = config.showMobile && config.signalMode == 0
         val dualSimMode = effectiveDualSimMode(config)
         val dualLevelsAvailable = !config.dataSimOnly &&
