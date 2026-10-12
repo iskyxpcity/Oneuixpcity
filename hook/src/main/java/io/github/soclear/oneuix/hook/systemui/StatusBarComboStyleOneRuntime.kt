@@ -209,6 +209,19 @@ object StatusBarComboStyleOneRuntime {
         var applying = false
         var retired = false
         var rowTint: Int? = null
+        var geometryRetryPending = false
+        var geometryRetryAttempts = 0
+        // Foldable display transitions can temporarily report no cutout. Retry geometry
+        // without inserting a wide inline glyph into the status-bar row.
+        val geometryRetry = Runnable {
+            geometryRetryPending = false
+            if (!retired && !applying && config.enabled && config.overlayGlyph &&
+                geometryRetryAttempts < 10
+            ) {
+                geometryRetryAttempts++
+                StatusBarComboStyleOneRuntime.apply(this)
+            }
+        }
         // MIUI can host multiple status-bar rows at once. Keep the icon ink tied
         // to the battery's own container, not the whole PhoneStatusBarView.
         var tintRow: ViewGroup? = null
@@ -928,7 +941,13 @@ object StatusBarComboStyleOneRuntime {
         host.applying = true
         try {
             val root = host.root
-            if (!root.isAttachedToWindow) { host.overlay?.detach(); return }
+            if (!root.isAttachedToWindow) {
+                main.removeCallbacks(host.geometryRetry)
+                host.geometryRetryPending = false
+                host.geometryRetryAttempts = 0
+                host.overlay?.detach()
+                return
+            }
             val views = descendants(root)
             rememberStatusBarTintViews(root, views)
             // One UI 8.5 / Android 16+ can render the battery as a ComposeView
@@ -939,6 +958,9 @@ object StatusBarComboStyleOneRuntime {
                 ?: views.firstOrNull(::isBatteryIcon)
 
             if (!config.enabled || battery == null) {
+                main.removeCallbacks(host.geometryRetry)
+                host.geometryRetryPending = false
+                host.geometryRetryAttempts = 0
                 host.battery?.let { restoreOnDrawFlag(host, host.shadeDrawTarget ?: it) }
                 host.overlay?.detach()
                 host.overlay = null
@@ -1022,16 +1044,21 @@ object StatusBarComboStyleOneRuntime {
             if (config.overlayGlyph && !host.overlayFailed) {
                 val cameraBounds = cutoutBounds(root)
                 if (cameraBounds == null) {
-                    // If Samsung does not expose reliable active-display geometry, never
-                    // guess the whole-screen centre. Fall back in-slot and retry on the next
-                    // host/configuration pass instead of leaving a misplaced floating window.
-                    diagnostic("Independent glyph overlay unavailable: missing verified cutout geometry; using inline renderer")
-                    host.overlay?.detach()
-                    host.overlay = null
+                    // During fold/unfold, Samsung may briefly expose no valid cutout geometry.
+                    // Never replace this overlay with a wide inline glyph while geometry is
+                    // unstable: doing so repeatedly resizes the status-bar icon row and makes
+                    // the icons jump across the inner display.
+                    if (!host.geometryRetryPending && host.geometryRetryAttempts == 0) {
+                        diagnostic("Overlay geometry temporarily unavailable; preserving native slot layout and retrying")
+                    }
                     removeInline(host)
-                    collapseHostView(host, battery)
-                    insertInline(host, battery)
+                    host.overlay?.setShadeVisible(false)
+                    hideHostViewPreservingLayout(host, battery)
+                    scheduleGeometryRetry(host)
                 } else {
+                    main.removeCallbacks(host.geometryRetry)
+                    host.geometryRetryPending = false
+                    host.geometryRetryAttempts = 0
                     removeInline(host)
                     val overlay = host.overlay ?: GlyphOverlay(root.context).also { host.overlay = it }
                     overlay.setTintOverride(host.rowTint)
@@ -1412,6 +1439,46 @@ object StatusBarComboStyleOneRuntime {
             (nativeBatterySnapshot ?: snapshotLayout(view))?.let { host.layouts[view] = it }
         }
         collapseViewLayout(view)
+    }
+
+    /**
+     * Keep the battery view's original measured slot during a temporary cutout-geometry gap.
+     * Only its alpha changes, so switching displays does not repeatedly reflow the status-bar row.
+     */
+    private fun hideHostViewPreservingLayout(host: Host, view: View) {
+        val nativeSnapshot = nativeBatteryLayouts[view]
+        host.original.putIfAbsent(view, nativeSnapshot?.visibility ?: view.visibility)
+        if (!host.layouts.containsKey(view)) {
+            (nativeSnapshot ?: snapshotLayout(view))?.let { host.layouts[view] = it }
+        }
+        val snapshot = host.layouts[view]
+        if (snapshot != null) {
+            val lp = view.layoutParams
+            if (lp != null) {
+                var changed = false
+                if (lp.width != snapshot.width) { lp.width = snapshot.width; changed = true }
+                if (lp.height != snapshot.height) { lp.height = snapshot.height; changed = true }
+                val margins = lp as? ViewGroup.MarginLayoutParams
+                if (margins != null && (
+                    margins.leftMargin != snapshot.leftMargin ||
+                    margins.topMargin != snapshot.topMargin ||
+                    margins.rightMargin != snapshot.rightMargin ||
+                    margins.bottomMargin != snapshot.bottomMargin
+                )) {
+                    margins.setMargins(snapshot.leftMargin, snapshot.topMargin, snapshot.rightMargin, snapshot.bottomMargin)
+                    changed = true
+                }
+                if (changed) view.layoutParams = lp
+            }
+            if (view.visibility != snapshot.visibility) view.visibility = snapshot.visibility
+        }
+        if (view.alpha != 0f) view.alpha = 0f
+    }
+
+    private fun scheduleGeometryRetry(host: Host) {
+        if (host.geometryRetryPending || host.geometryRetryAttempts >= 10) return
+        host.geometryRetryPending = true
+        main.postDelayed(host.geometryRetry, 120L)
     }
 
     private fun reserveHostSlot(host: Host, view: View, widthDp: Int) {
