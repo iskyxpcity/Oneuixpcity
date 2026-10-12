@@ -46,7 +46,7 @@
     <string name="status_combo_style_one_dual_sim_off">Off</string>
     <string name="status_combo_style_one_dual_sim_ring_vertical">Top and bottom of ring</string>
     <string name="status_combo_style_one_dual_sim_below_ring">Below ring</string>
-    <string name="status_combo_style_one_stacked_signal">Outside elements and ring spacing</string>
+    <string name="status_combo_style_one_stacked_signal">Signal bars outside the ring</string>
     <string name="status_combo_style_one_stacked_signal_summary">When signal is placed outside the ring, draw ascending bars for one SIM and dots for the other. Adjust the gap below to separate the bars from the ring; turn off to restore the stock mobile icon.</string>
     <string name="status_combo_style_one_data_sim_only">Show only the default data SIM</string>
     <string name="status_combo_style_one_data_sim_only_summary">Use the signal level from the SIM currently selected for mobile data.</string>
@@ -111,7 +111,7 @@
     <string name="status_combo_style_one_group_stroke">Stroke</string>
     <string name="status_combo_style_one_group_text">Text</string>
     <string name="status_combo_style_one_group_type">Network type</string>
-    <string name="status_combo_style_one_group_out_signal">Signal bars outside the ring</string>
+    <string name="status_combo_style_one_group_out_signal">Outside signal and network type</string>
     <string name="status_combo_style_one_group_track">Track</string>
     <string name="status_combo_style_one_reset_colors">Reset</string>
     <string name="status_combo_style_one_reset_colors_summary">Restore the low, charging, critical and power-saving fill colors to their defaults.</string>

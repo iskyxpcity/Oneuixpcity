@@ -110,7 +110,7 @@
     <string name="status_combo_style_one_group_stroke">线条</string>
     <string name="status_combo_style_one_group_text">电量数字</string>
     <string name="status_combo_style_one_group_type">网络类型</string>
-    <string name="status_combo_style_one_group_out_signal">环外内容间距</string>
+    <string name="status_combo_style_one_group_out_signal">环外信号与网络类型</string>
     <string name="status_combo_style_one_group_track">未点亮部分</string>
     <string name="status_combo_style_one_reset_colors">恢复默认</string>
     <string name="status_combo_style_one_reset_colors_summary">恢复低电量、充电、危险电量和省电模式底色的默认颜色。</string>
