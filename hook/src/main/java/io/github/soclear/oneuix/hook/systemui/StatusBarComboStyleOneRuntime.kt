@@ -92,10 +92,7 @@ object StatusBarComboStyleOneRuntime {
     @Volatile private var preferenceReceiverReady = false
     private val chargingRotationTicker = object : Runnable {
         override fun run() {
-            if (!config.enabled || config.chargingDisplayMode != 1 ||
-                !config.showBolt || !config.showValue || config.mobileTypeMode != 1 ||
-                (config.trioStyle == 0 && config.valueCentred) || !state.charging
-            ) {
+            if (!shouldRotateChargingDisplay()) {
                 if (state.chargingAlternatePhase) {
                     state = state.copy(chargingAlternatePhase = false)
                     invalidateGlyphs()
@@ -886,13 +883,22 @@ object StatusBarComboStyleOneRuntime {
         }
     }
 
-    private fun syncChargingRotationTicker() {
+    private fun shouldRotateChargingDisplay(): Boolean {
+        val centredBatteryValue = config.trioStyle == 0 && config.valueCentred
+        val wifiInk = config.showWifi && state.wifiLevel >= 1
+        val innerType = config.showMobile && config.mobileTypeMode == 1 &&
+            state.networkType.isNotBlank()
+        val batteryValueInOpening = config.trioStyle == 0 && !config.valueCentred &&
+            (wifiInk || innerType != null)
+        return config.enabled && config.chargingDisplayMode == 1 &&
+            config.showBolt && config.showValue && state.charging &&
+            ((!centredBatteryValue && config.mobileTypeMode == 1) || batteryValueInOpening)
+    }
+
+    private fun syncChargingRotationTicker(resetPhase: Boolean = true) {
         main.removeCallbacks(chargingRotationTicker)
-        val shouldRotate = config.enabled && config.chargingDisplayMode == 1 &&
-            config.showBolt && config.showValue && config.mobileTypeMode == 1 &&
-            !(config.trioStyle == 0 && config.valueCentred) && state.charging
-        if (shouldRotate) {
-            if (state.chargingAlternatePhase) {
+        if (shouldRotateChargingDisplay()) {
+            if (resetPhase && state.chargingAlternatePhase) {
                 state = state.copy(chargingAlternatePhase = false)
                 invalidateGlyphs()
             }
@@ -2637,7 +2643,10 @@ object StatusBarComboStyleOneRuntime {
             val info = wm.connectionInfo
             val level = if (info == null || info.rssi == -127) -1
                 else WifiManager.calculateSignalLevel(info.rssi, 5)
-            state = state.copy(wifiLevel = level.coerceIn(-1, 4))
+            val nextLevel = level.coerceIn(-1, 4)
+            val wifiLevelChanged = state.wifiLevel != nextLevel
+            state = state.copy(wifiLevel = nextLevel)
+            if (wifiLevelChanged) syncChargingRotationTicker(resetPhase = false)
             diagnostic("Wi-Fi: level=${state.wifiLevel}")
         }
     }
@@ -2779,6 +2788,7 @@ object StatusBarComboStyleOneRuntime {
                     state.dataSimSlotIndex.takeIf { it in 0..1 } ?: 0
                 }
         }
+        val networkTypeChanged = state.networkType != label
         state = state.copy(
             mobileLevel = dataLevel.coerceIn(0, 4),
             simOneLevel = simOne,
@@ -2786,6 +2796,7 @@ object StatusBarComboStyleOneRuntime {
             dataSimSlotIndex = dataSlot,
             networkType = label,
         )
+        if (networkTypeChanged) syncChargingRotationTicker(resetPhase = false)
         diagnostic("Telephony refreshed: dataSub=$dataSub, dataLevel=${state.mobileLevel}, type=${state.networkType}")
     }
 
