@@ -263,10 +263,13 @@ object StatusBarComboStyleOneRuntime {
         }
     }
 
-    private class GlyphOverlay(context: Context) {
-        // Keep the display-bound SystemUI context; applicationContext can resolve WindowManager
-        // on the cover/default display while this status-bar root belongs to the inner display.
-        private val app = context
+    private class GlyphOverlay(context: Context, display: android.view.Display?) {
+        // Bind the overlay WindowManager/resources to the status-bar root's actual display.
+        // applicationContext can resolve to the cover/default display even when the inner
+        // status-bar root is active; re-create this object when the root display geometry changes.
+        private val app = display?.let { target ->
+            runCatching { context.createDisplayContext(target) }.getOrNull()
+        } ?: context
         private val wm = app.getSystemService(Context.WINDOW_SERVICE) as WindowManager
         private val glyph = GlyphView(app)
         private var params: WindowManager.LayoutParams? = null
@@ -1134,7 +1137,7 @@ object StatusBarComboStyleOneRuntime {
                 // snapshot throughout this apply pass so all icon/window work is atomic.
                 val cameraBounds = requireNotNull(overlayCameraBounds)
                 removeInline(host)
-                val overlay = host.overlay ?: GlyphOverlay(root.context).also { host.overlay = it }
+                val overlay = host.overlay ?: GlyphOverlay(root.context, root.display).also { host.overlay = it }
                 overlay.setTintOverride(host.rowTint)
                 if (!overlay.attach(battery, root, cameraBounds)) {
                     // Failed attachment must restore every native view changed above.
