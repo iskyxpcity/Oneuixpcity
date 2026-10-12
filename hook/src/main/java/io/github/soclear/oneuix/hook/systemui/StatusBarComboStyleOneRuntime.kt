@@ -2036,7 +2036,7 @@ object StatusBarComboStyleOneRuntime {
 
     /**
      * Returns the closest MIUI battery row that owns this icon. This is the same
-     * boundary HyperDuo uses to keep launcher, status bar and control-center tints
+     * boundary used to keep launcher, status-bar, and control-center tints consistent
      * from overwriting one another. AOSP has no such container, so callers fall
      * back to the collapsed PhoneStatusBarView.
      */
@@ -2144,7 +2144,7 @@ object StatusBarComboStyleOneRuntime {
                         val row = tintOwner.first
                         val owner = tintOwner.second
                         if (resolvedColor != null) {
-                            // Cache by MIUI's battery container just like HyperDuo.
+                            // Cache by MIUI's battery container so each status-bar row keeps its own tint.
                             // Also keep the root value solely as the AOSP fallback.
                             rowTintSnapshots[owner] = resolvedColor
                             if (owner === row) rowTintSnapshots[row] = resolvedColor
