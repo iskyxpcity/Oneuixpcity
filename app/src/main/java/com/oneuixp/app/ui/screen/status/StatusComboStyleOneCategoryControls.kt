@@ -322,7 +322,6 @@ fun StatusComboStyleOneCategoryControls(
             }, {
                 styleOneSlider(stringResource(R.string.status_combo_style_one_out_type_margin_right), stringResource(R.string.status_combo_style_one_out_type_margin_right_summary, outTypeRight), outTypeRight.toFloat(), 0f..16f, { outTypeRight = it.roundToInt(); preview(runtime.copy(outTypeMarginRightDp = outTypeRight)) }, { final -> persist(runtime.copy(outTypeMarginRightDp = final.roundToInt())) }, enabled = runtime.enabled && runtime.mobileTypeMode == 2)
             }, {
-            }, {
                 styleOneSlider(stringResource(R.string.status_combo_style_one_type_weight), stringResource(R.string.status_combo_style_one_type_weight_summary, typeWeight), typeWeight.toFloat(), 100f..900f, { typeWeight = (it / 100f).roundToInt() * 100; preview(runtime.copy(typeWeight = typeWeight)) }, { final -> persist(runtime.copy(typeWeight = final.roundToInt())) }, stepSize = 100f, enabled = runtime.enabled && runtime.mobileTypeMode != 0)
             }))
             StatusThemeGroup(title = stringResource(R.string.status_combo_style_one_group_out_signal), titleAlignedToContent = true, items = listOf({
