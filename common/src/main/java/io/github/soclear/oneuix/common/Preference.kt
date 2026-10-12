@@ -232,6 +232,7 @@ data class Preference(
             val outTypeMarginLeftDp: Int = 2,
             val outTypeMarginRightDp: Int = 2,
             val outSignalMarginDp: Int = 8,
+            val outTypeRingGapDp: Int = 8,
             val outSignalMarginDefaultMigrationDone: Boolean = false,
             val outSignalMarginReset2MigrationDone: Boolean = false,
             val outSignalMarginFourDpMigrationDone: Boolean = false,
