@@ -1058,19 +1058,22 @@ object StatusBarComboStyleOneRuntime {
                     hideHostViewPreservingLayout(host, battery)
                     scheduleGeometryRetry(host)
                 } else {
-                    main.removeCallbacks(host.geometryRetry)
-                    host.geometryRetryPending = false
-                    host.geometryRetryAttempts = 0
                     removeInline(host)
                     val overlay = host.overlay ?: GlyphOverlay(root.context).also { host.overlay = it }
                     overlay.setTintOverride(host.rowTint)
                     if (!overlay.attach(battery, root, cameraBounds)) {
-                        host.overlayFailed = true
+                        // WindowManager can reject an attach during a fold transition even when
+                        // geometry is already available. Do not permanently switch to the wide
+                        // inline renderer: that expands the status-bar row and makes icons jump.
+                        diagnostic("Overlay attach temporarily failed; preserving native slot layout and retrying")
                         overlay.detach()
                         host.overlay = null
-                        collapseHostView(host, battery)
-                        insertInline(host, battery)
+                        hideHostViewPreservingLayout(host, battery)
+                        scheduleGeometryRetry(host)
                     } else {
+                        main.removeCallbacks(host.geometryRetry)
+                        host.geometryRetryPending = false
+                        host.geometryRetryAttempts = 0
                         // Anchor the independent renderer to the reported camera rectangle,
                         // never a presumed centre. Collapse the native meter to avoid overdraw.
                         collapseHostView(host, battery)
@@ -1080,6 +1083,9 @@ object StatusBarComboStyleOneRuntime {
                     }
                 }
             } else {
+                main.removeCallbacks(host.geometryRetry)
+                host.geometryRetryPending = false
+                host.geometryRetryAttempts = 0
                 host.overlay?.detach()
                 host.overlay = null
                 collapseHostView(host, battery)
