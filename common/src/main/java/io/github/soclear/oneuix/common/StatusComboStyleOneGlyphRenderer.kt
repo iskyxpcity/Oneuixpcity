@@ -41,10 +41,10 @@ object StatusComboStyleOneGlyphRenderer {
     private const val DUAL_BOTTOM_DOT_RAISE_DP = 3f
     private const val WIDE_OFFSET = 144.5f
     // Reserve trailing canvas room for the complete outer ring stroke and antialiasing
-    // when a network-type label is drawn outside. This widens only the host bounds;
+    // when a network-type label is drawn out of the ring. This widens only the host bounds;
     // the ring itself remains anchored to the display cutout.
     private const val OUTSIDE_TYPE_RIGHT_CLEARANCE = 8f
-    // Outside-type-only mode should not reserve the unused signal-pillars lane.
+    // Out-of-ring-type-only mode should not reserve the unused signal-pillars lane.
     private const val TYPE_ONLY_SHIFT = 60f
     private const val B_CX = 59.5f
     private const val B_CY = 61.48715f
@@ -125,8 +125,8 @@ object StatusComboStyleOneGlyphRenderer {
     private fun outsideSignalWidth(config: StatusBarComboStyleOneRuntime): Float =
         if (usesOutsideSignalLayout(config)) 251f * outsideSignalScale(config) else 0f
 
-    // The outside-signal gap controls only the signal lane and ring spacing.
-    // Outside network-type placement uses its existing left/right margin settings.
+    // The out-of-ring signal gap controls only the signal lane and ring spacing.
+    // Out-of-ring network-type placement uses its existing left/right margin settings.
     private fun outsideSignalMargin(config: StatusBarComboStyleOneRuntime): Float =
         if (usesOutsideSignalLayout(config)) {
             config.outSignalMarginDp.coerceIn(0, 16) * (HEIGHT / 36f)
@@ -137,9 +137,9 @@ object StatusComboStyleOneGlyphRenderer {
         val signalLane = usesOutsideSignalLayout(config)
         val signalMargin = outsideSignalMargin(config)
         return when {
-            // No unused signal-pillars lane is reserved when the outside type is alone.
+            // No unused signal-pillars lane is reserved when the out-of-ring type is alone.
             typeLane && signalLane -> WIDE_WIDTH + signalMargin + OUTSIDE_TYPE_RIGHT_CLEARANCE
-            // Add room when the outside network label is enabled by itself.
+            // Add room when the out-of-ring network-type label is enabled by itself.
             typeLane -> WIDE_WIDTH - TYPE_ONLY_SHIFT + OUTSIDE_TYPE_RIGHT_CLEARANCE
             signalLane -> outsideSignalWidth(config) + signalMargin + COMPACT_WIDTH - 8f
             else -> COMPACT_WIDTH
@@ -240,7 +240,7 @@ object StatusComboStyleOneGlyphRenderer {
         // Charging color has priority; by default the bolt replaces the percentage.
         // The optional alternate mode swaps the two glyphs every five seconds.
         val bolt = config.showBolt && state.charging && !alternateChargingPhase
-        // Outside network-type mode disables the 5-second swap, not the battery value.
+        // Out-of-ring network-type mode disables the 5-second swap, not the battery value.
         val showBatteryValue = config.showValue &&
             (!state.charging || alternateChargingPhase || !config.showBolt ||
                 centredBatteryValue || (config.mobileTypeMode != 1 && !batteryValueInOpening))
@@ -363,7 +363,7 @@ object StatusComboStyleOneGlyphRenderer {
 
         if (wide && config.showMobile && config.signalMode == 1 && config.stackedSignal) {
             // The reference mark is 251 units wide at a 209-unit height;
-            // its left edge sits at the beginning of the expanded outside-signal box.
+            // its left edge sits at the beginning of the expanded out-of-ring signal box.
             // The requested gap is created by shifting the battery group right.
             val signalScale = outsideSignalScale(config)
             val signalX = 251f * signalScale / 2f
@@ -377,7 +377,7 @@ object StatusComboStyleOneGlyphRenderer {
         if (wide && config.showMobile && config.mobileTypeMode == 2 && state.networkType.isNotBlank()) {
             val m = HEIGHT / 36f
             val typeOnlyShift = if (outsideSignal) 0f else TYPE_ONLY_SHIFT
-            // Keep the outside network-type label in its own lane. The offset below
+            // Keep the out-of-ring network-type label in its own lane. The offset below
             // compensates for cutout anchoring when the signal lane changes width, so the
             // label's on-screen position remains governed by its existing left/right margins.
             val typeGapOffset = if (outsideSignal) signalMargin else 0f
@@ -621,7 +621,7 @@ object StatusComboStyleOneGlyphRenderer {
         canvas: Canvas, cx: Float, cy: Float, bars: Int, dots: Int,
         color: Int, track: Int, sizeDp: Int,
     ) {
-        // HyperDuo reference geometry: 251 × 209 box, 50-wide capsules at 67-pixel
+        // Reference geometry: 251 × 209 box, 50-wide capsules at 67-pixel
         // pitch, heights 75/100/125/150, 50-diameter dots and a 9-pixel row gap.
         // Scale the whole box uniformly to avoid taller single-SIM bars.
         val scale = sizeDp.coerceIn(6, 20) * 1.15f * (HEIGHT / 36f) / 209f
