@@ -27,7 +27,7 @@
     <string name="status_combo_style_one_show_bolt">Show charging bolt</string>
     <string name="status_combo_style_one_show_bolt_summary">Show the in-ring charging bolt. This setting depends on the battery-number switch; when off, Android\'s native charging bolt is restored.</string>
     <string name="status_combo_style_one_charging_display">Charging display mode</string>
-    <string name="status_combo_style_one_charging_display_summary">Charging color takes priority over low and critical colors. Choose the bolt only, or alternate the bolt and battery number every 5 seconds.</string>
+    <string name="status_combo_style_one_charging_display_summary">Charging color takes priority over low and critical colors. Choose the bolt only, or alternate the bolt and battery number every 5 seconds. This also applies when the battery number occupies the ring opening.</string>
     <string name="status_combo_style_one_charging_display_bolt">Charging bolt</string>
     <string name="status_combo_style_one_charging_display_alternate">Bolt and number</string>
     <string name="status_combo_style_one_value_centred">Center the battery number</string>
