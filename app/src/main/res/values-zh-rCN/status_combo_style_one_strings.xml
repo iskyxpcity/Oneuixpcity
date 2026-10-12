@@ -89,6 +89,8 @@
     <string name="status_combo_style_one_color_summary">点按选择颜色</string>
     <string name="status_combo_style_one_color_low">低电量颜色</string>
     <string name="status_combo_style_one_color_charging">充电颜色</string>
+    <string name="status_combo_style_one_color_normal_charging_bolt">普通充电闪电颜色</string>
+    <string name="status_combo_style_one_color_quick_charging_bolt">快速充电闪电颜色</string>
     <string name="status_combo_style_one_color_critical">危险电量颜色</string>
     <string name="status_combo_style_one_color_power_save_fill">省电模式底色</string>
     <string name="status_combo_style_one_power_save_fill_color_summary">分别设置状态栏深色和浅色背景下，电量圆环内部的底色。默认透明度为 75%。</string>
@@ -112,8 +114,8 @@
     <string name="status_combo_style_one_group_out_signal">环外信号</string>
     <string name="status_combo_style_one_group_track">底纹</string>
     <string name="status_combo_style_one_reset_colors">恢复默认</string>
-    <string name="status_combo_style_one_reset_colors_summary">恢复低电量、充电、危险电量和省电模式底色的默认颜色。</string>
-    <string name="status_combo_style_one_reset_colors_confirm">低电量、充电、危险电量和省电模式底色都会恢复默认颜色，当前自定义颜色会被覆盖。</string>
+    <string name="status_combo_style_one_reset_colors_summary">恢复低电量、充电、危险电量、省电模式底色及普通/快速充电闪电颜色的默认值。</string>
+    <string name="status_combo_style_one_reset_colors_confirm">低电量、充电、危险电量、省电模式底色以及普通/快速充电闪电的颜色都会恢复默认值，当前自定义颜色会被覆盖。</string>
     <string name="status_combo_style_one_reset">恢复默认</string>
     <string name="status_combo_style_one_cancel">取消</string>
     <string name="status_combo_style_one_tab_general">常规</string>
