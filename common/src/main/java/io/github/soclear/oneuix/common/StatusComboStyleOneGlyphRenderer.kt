@@ -371,27 +371,17 @@ object StatusComboStyleOneGlyphRenderer {
                 inkLeftOffset = min(inkLeftOffset, suffixInkLeft)
                 inkRightOffset = max(inkRightOffset, suffixInkRight)
             }
-            // In outside-type-only mode, the left margin is the gap after the last
-            // visible native icon. Anchor to that live edge instead of only clamping overlaps;
-            // right-margin expansion then moves this whole lane left without changing that gap.
-            val iconAnchoredCenter = minimumVisibleIconLeftPx?.takeIf {
-                renderScale > 0f && !outsideSignal
+            // Keep the text's measured advance to the right of the last real system icon.
+            // The user margin can request more space, but must not draw over a visible icon.
+            val boundaryClampedCenter = minimumVisibleIconLeftPx?.takeIf {
+                renderScale > 0f
             }?.let { minimumLeftPx ->
-                (minimumLeftPx - canvasLeftInsetPx) / renderScale -
-                    leadingExpansion + leftMarginUnits + advanceWidth / 2f
-            }
-            val rightGapUnits = OUTSIDE_TYPE_RIGHT_GAP + rightMarginUnits
-            val ringLimitedCenter = ringCenterUnits - leadingExpansion - B_R -
-                rightGapUnits - advanceWidth / 2f
-            val boundaryClampedCenter = when {
-                iconAnchoredCenter != null -> min(iconAnchoredCenter, ringLimitedCenter)
-                minimumVisibleIconLeftPx != null && renderScale > 0f -> max(
+                max(
                     center,
-                    (minimumVisibleIconLeftPx - canvasLeftInsetPx) / renderScale -
+                    (minimumLeftPx - canvasLeftInsetPx) / renderScale -
                         leadingExpansion + advanceWidth / 2f,
                 )
-                else -> center
-            }
+            } ?: center
             // draw() translates the full glyph right while its view grows left; include that
             // translation and any icon-bound clamp in the measured screen coordinates.
             val drawnCenter = boundaryClampedCenter + leadingExpansion
@@ -744,27 +734,13 @@ object StatusComboStyleOneGlyphRenderer {
                 state.networkType.trim().uppercase(), size, config.typeWeight, config.typeSuffixScale,
             )
             val canvasLeftInsetPx = (width - designWidth * scale) / 2f
-            // With network type outside by itself, preserve the #119 native-icon gap exactly:
-            // label-left = last visible icon-right + 2dp + the configured left margin.
-            // The right margin expands the host leftward, moving both the native edge and label
-            // together while leaving their gap unchanged.
-            val iconAnchoredCenter = minimumVisibleIconLeftPx?.takeIf {
-                it.isFinite() && scale > 0f && !outsideSignal
-            }?.let { minimumLeftPx ->
-                (minimumLeftPx - canvasLeftInsetPx) / scale -
-                    leadingExpansion + outsideTypeMarginLeft(config) + labelWidthUnits / 2f
-            }
-            val maximumCenterAtRing = cx - B_R - OUTSIDE_TYPE_RIGHT_GAP -
-                outsideTypeMarginRight(config) - labelWidthUnits / 2f
-            val safeCenter = when {
-                iconAnchoredCenter != null -> min(iconAnchoredCenter, maximumCenterAtRing)
-                minimumVisibleIconLeftPx != null -> max(
+            val safeCenter = minimumVisibleIconLeftPx?.let { minimumLeftPx ->
+                max(
                     center,
-                    (minimumVisibleIconLeftPx - canvasLeftInsetPx) / scale -
+                    (minimumLeftPx - canvasLeftInsetPx) / scale -
                         leadingExpansion + labelWidthUnits / 2f,
                 )
-                else -> center
-            }
+            } ?: center
             drawNetworkType(canvas, state.networkType.trim().uppercase(), safeCenter, baseline,
                 size, config.typeWeight, tint, config.typeSuffixScale, 0f)
         }
