@@ -270,7 +270,7 @@ object StatusBarComboStyleOneRuntime {
         private val app = display?.let { target ->
             runCatching { context.createDisplayContext(target) }.getOrNull()
         } ?: context
-        private val wm = app.getSystemService(Context.WINDOW_SERVICE) as WindowManager
+        private var wm: WindowManager? = null
         private val glyph = GlyphView(app)
         private var params: WindowManager.LayoutParams? = null
 
@@ -301,10 +301,20 @@ object StatusBarComboStyleOneRuntime {
                     // and the old fallback then silently shifted the glyph down.
                     token = null
                 }
+                val windowContext = if (Build.VERSION.SDK_INT >= 30 && display != null) {
+                    runCatching { context.createWindowContext(display, type, null) }.getOrElse { app }
+                } else app
+                val candidateWindowManager = runCatching {
+                    windowContext.getSystemService(Context.WINDOW_SERVICE) as? WindowManager
+                }.getOrNull() ?: continue
                 try {
-                    wm.addView(glyph, lp)
+                    candidateWindowManager.addView(glyph, lp)
+                    wm = candidateWindowManager
                     params = lp
-                    diagnostic("Glyph overlay attached: type=$type size=${width}x${height} flags=$flags cameraBounds=$cameraBounds")
+                    diagnostic(
+                        "Glyph overlay attached: type=$type displayId=${display?.displayId} " +
+                            "size=${width}x${height} flags=$flags cameraBounds=$cameraBounds"
+                    )
                     if (!update(anchor, root, cameraBounds)) {
                         detach()
                         return false
@@ -404,7 +414,7 @@ object StatusBarComboStyleOneRuntime {
                     "${verticalCalibrationDp})"
             )
             if (oldX != lp.x || oldY != lp.y || oldWidth != lp.width || oldHeight != lp.height) {
-                runCatching { wm.updateViewLayout(glyph, lp) }
+                runCatching { wm?.updateViewLayout(glyph, lp) }
                     .onFailure { Log.w(TAG, "Cannot update camera-anchored glyph window", it) }
             }
             return true
@@ -421,9 +431,13 @@ object StatusBarComboStyleOneRuntime {
         }
 
         fun detach() {
-            if (params == null) return
-            runCatching { wm.removeView(glyph) }
+            if (params == null) {
+                wm = null
+                return
+            }
+            runCatching { wm?.removeView(glyph) }
             params = null
+            wm = null
         }
     }
 
