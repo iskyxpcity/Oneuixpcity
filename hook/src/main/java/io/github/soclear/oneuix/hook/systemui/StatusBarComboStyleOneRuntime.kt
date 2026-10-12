@@ -72,13 +72,6 @@ object StatusBarComboStyleOneRuntime {
     private const val MIUI_BATTERY_METER = "com.android.systemui.statusbar.views.MiuiBatteryMeterView"
     private const val MIUI_BATTERY_CONTAINER = "com.android.systemui.statusbar.views.MiuiStatusBatteryContainer"
     private const val ICON_HIDE_LIST_KEY = "icon_blacklist"
-    // The outer display's camera needs the established +4dp vertical calibration.
-    // The foldable inner display places the camera near the right edge; this separate
-    // calibration is based on the reported cutout position and does not alter outer-screen alignment.
-    private const val PUNCH_HOLE_VERTICAL_CALIBRATION_DP = 4f
-    private const val INNER_PUNCH_HOLE_VERTICAL_CALIBRATION_DP = 0.5f
-    private const val INNER_PUNCH_HOLE_HORIZONTAL_CALIBRATION_DP = 1.5f
-    private const val RIGHT_SIDE_CUTOUT_THRESHOLD = 0.65f
 
     private val installed = AtomicBoolean(false)
     @Volatile private var moduleForPreferenceReload: XposedModule? = null
@@ -380,55 +373,60 @@ object StatusBarComboStyleOneRuntime {
             val designHeightUnits = StatusComboStyleOneGlyphRenderer.glyphDesignHeight(cfg)
             val ringCenterXUnits = StatusComboStyleOneGlyphRenderer.glyphCenterX(cfg, networkType)
             val centreRatioY = StatusComboStyleOneGlyphRenderer.glyphVerticalCenterRatio(cfg)
-            // Use the active status bar/display's reported cutout rectangle. Fold inner
-            // screens can place the camera well to the right of the geometric centre.
-            val cameraCenterX = cutout.centerX()
-            val cameraCenterY = cutout.centerY()
-            val displaySize = activeDisplaySize(root)
-            // On this foldable, the inner-screen camera is on the right side while
-            // the cover-screen camera is near the centre. Detect from cutout geometry
-            // instead of applying an inner-screen correction to every display.
-            val rightSideCutout = displaySize.x > 0 &&
-                cameraCenterX >= displaySize.x * RIGHT_SIDE_CUTOUT_THRESHOLD
-            val horizontalCalibrationPx = if (rightSideCutout) {
-                (INNER_PUNCH_HOLE_HORIZONTAL_CALIBRATION_DP *
-                    context.resources.displayMetrics.density).roundToInt()
-            } else 0
-            val verticalCalibrationDp = if (rightSideCutout) {
-                INNER_PUNCH_HOLE_VERTICAL_CALIBRATION_DP
-            } else {
-                PUNCH_HOLE_VERTICAL_CALIBRATION_DP
+            // The cutout bounds decide whether independent rendering is available, but they
+            // must not position the glyph. The native battery slot is the layout anchor: its
+            // right edge remains fixed while the slot/window gain width to the left.
+            val cutout = Rect(cameraBounds)
+            val anchorLocation = IntArray(2)
+            val anchorLocated = anchor.isAttachedToWindow &&
+                runCatching { anchor.getLocationOnScreen(anchorLocation) }.isSuccess
+            val rootLocation = IntArray(2)
+            val rootLocated = root.isAttachedToWindow &&
+                runCatching { root.getLocationOnScreen(rootLocation) }.isSuccess
+            if (!anchorLocated && !rootLocated) {
+                diagnostic("Glyph overlay cannot resolve status-bar slot or root screen coordinates")
+                return false
             }
-            // Anchor the actual drawn ring centre, not a ratio of the window width.
-            // The renderer centres its canvas inside the integer-sized WindowManager bounds;
-            // compensating for that exact inset prevents label-margin width changes from moving
-            // the ring by even a rounded pixel.
+            val slotRightPx = when {
+                anchorLocated && anchor.width > 0 -> anchorLocation[0] + anchor.width
+                // A zero-width anchor can occur between slot-reservation and the next layout pass.
+                // Its laid-out X is the end edge of the collapsed battery slot in the icon row.
+                anchorLocated -> anchorLocation[0]
+                rootLocated -> rootLocation[0] + root.width -
+                    StatusBarComboStyleOneRuntime.dpExact(context, cfg.glyphRightMarginDp)
+                else -> return false
+            }
+            val slotCenterY = when {
+                anchorLocated && anchor.height > 0 -> anchorLocation[1] + anchor.height / 2f
+                rootLocated -> rootLocation[1] + root.height / 2f
+                else -> return false
+            }
+            val designWidthUnits = StatusComboStyleOneGlyphRenderer.glyphDesignWidth(cfg, networkType)
+            val designHeightUnits = StatusComboStyleOneGlyphRenderer.glyphDesignHeight(cfg)
+            val ringCenterXUnits = StatusComboStyleOneGlyphRenderer.glyphCenterX(cfg, networkType)
+            val centreRatioY = StatusComboStyleOneGlyphRenderer.glyphVerticalCenterRatio(cfg)
             val renderScale = lp.height.toFloat() / designHeightUnits
             val canvasLeftInsetPx = (lp.width - designWidthUnits * renderScale) / 2f
-            val ringCenterOffsetPx = ringCenterXUnits * renderScale + canvasLeftInsetPx
+            // Right-edge anchoring is the key invariant. Width changes move lp.x left, while
+            // leadingExpansion moves ringCenterXUnits right by the same amount inside the view.
             lp.x = (
-                cameraCenterX - ringCenterOffsetPx +
-                    StatusBarComboStyleOneRuntime.dpExact(
-                        context, cfg.glyphOffsetXDp + cfg.glyphLeftMarginDp - cfg.glyphRightMarginDp,
-                    ) + horizontalCalibrationPx
+                slotRightPx - lp.width +
+                    StatusBarComboStyleOneRuntime.dpExact(context, cfg.glyphOffsetXDp)
                 ).roundToInt()
-            val verticalOffsetPx = (
-                (cfg.glyphOffsetYDp.toFloat() + verticalCalibrationDp) *
-                    context.resources.displayMetrics.density
-                ).roundToInt()
+            val verticalOffsetPx = StatusBarComboStyleOneRuntime.dpExact(context, cfg.glyphOffsetYDp)
             lp.y = (
-                cameraCenterY - lp.height * centreRatioY + verticalOffsetPx
+                slotCenterY - lp.height * centreRatioY + verticalOffsetPx
                 ).roundToInt()
+            val ringCenterScreenPx = lp.x + canvasLeftInsetPx + ringCenterXUnits * renderScale
             diagnostic(
-                "Glyph overlay coordinates: type=${lp.type} cameraCenter=(${cameraCenterX},${cameraCenterY}) " +
-                    "window=(${lp.x},${lp.y}) size=${lp.width}x${lp.height} cutout=$cutout " +
-                    "rightSideCutout=$rightSideCutout correctionDp=(" +
-                    "${if (rightSideCutout) INNER_PUNCH_HOLE_HORIZONTAL_CALIBRATION_DP else 0f}," +
-                    "${verticalCalibrationDp})"
+                "Glyph overlay slot-anchored coordinates: type=${lp.type} slotRightPx=${slotRightPx} " +
+                    "slotCenterY=${slotCenterY} anchorSize=${anchor.width}x${anchor.height} " +
+                    "anchorLocated=${anchorLocated} window=(${lp.x},${lp.y}) size=${lp.width}x${lp.height} " +
+                    "ringCenterScreenX=${ringCenterScreenPx} cutoutBounds=${cutout}(diagnostic-only)"
             )
             if (oldX != lp.x || oldY != lp.y || oldWidth != lp.width || oldHeight != lp.height) {
                 runCatching { wm?.updateViewLayout(glyph, lp) }
-                    .onFailure { Log.w(TAG, "Cannot update camera-anchored glyph window", it) }
+                    .onFailure { Log.w(TAG, "Cannot update status-slot-anchored glyph window", it) }
             }
             return true
         }
@@ -1376,8 +1374,8 @@ object StatusBarComboStyleOneRuntime {
                     main.removeCallbacks(host.geometryRetry)
                     host.geometryRetryPending = false
                     host.geometryRetryAttempts = 0
-                    // Anchor the independent renderer to the reported camera rectangle,
-                    // never a presumed centre. Reserve the live-width slot without drawing its meter.
+                    // Reserve the live-width battery slot; the renderer aligns to that slot's
+                    // right edge, not to the camera/cutout position.
                     updateOverlayHostSlot(host, battery)
                     overlay.setShadeVisible(true)
                     overlay.update(battery, root, cameraBounds)
@@ -1810,9 +1808,9 @@ object StatusBarComboStyleOneRuntime {
     }
 
     /**
-     * Keep the native battery icon invisible while preserving a dynamically sized layout slot.
-     * Wider outside-label/signal spacing then pushes preceding status-bar icons left. While the
-     * notification shade is expanded, use the old collapsed slot to avoid disturbing shade layout.
+     * Keep the native battery icon invisible while reserving the actual dynamic glyph width.
+     * SystemUI lays the battery slot at the trailing edge, so additional outside-label/signal
+     * spacing is allocated to its left. During shade expansion, keep the old collapsed slot.
      */
     private fun updateOverlayHostSlot(host: Host, view: View) {
         if (shadeBusy) {
@@ -1843,6 +1841,13 @@ object StatusBarComboStyleOneRuntime {
             lp.width = width
             margins?.setMargins(left, 0, right, 0)
             view.layoutParams = lp
+            val parent = view.parent as? View
+            diagnostic(
+                "Dynamic battery slot width: requestedDp=${widthDp} targetPx=${width} " +
+                    "measuredNowPx=${view.width} parent=${parent?.javaClass?.simpleName} " +
+                    "parentWidthPx=${parent?.width ?: -1} marginsPx=(${left},${right}) " +
+                    "shadeBusy=${shadeBusy}"
+            )
         }
         val originalVisibility = host.original[view] ?: View.VISIBLE
         if (view.visibility != originalVisibility) view.visibility = originalVisibility

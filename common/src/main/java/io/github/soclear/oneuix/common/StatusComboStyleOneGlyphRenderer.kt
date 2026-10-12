@@ -42,8 +42,8 @@ object StatusComboStyleOneGlyphRenderer {
     private const val DUAL_BOTTOM_DOT_RAISE_DP = 3f
     private const val WIDE_OFFSET = 144.5f
     // Reserve trailing canvas room for the complete outer ring stroke and antialiasing
-    // when a network-type label is drawn out of the ring. This widens only the host bounds;
-    // the ring itself remains anchored to the display cutout.
+    // when a network-type label is drawn out of the ring. The host's right edge is stable,
+    // so any dynamic leading expansion grows left without moving the ring.
     private const val OUTSIDE_TYPE_RIGHT_CLEARANCE = 8f
     // Preserve the old label-to-ring gap while sizing the host to the real network-type text.
     private const val OUTSIDE_TYPE_REFERENCE_WIDTH = 78f
@@ -252,7 +252,10 @@ object StatusComboStyleOneGlyphRenderer {
     fun glyphDesignHeight(config: StatusBarComboStyleOneRuntime): Float =
         designHeight(config)
 
-    /** Ring-centre X after leading-canvas translation; the global display anchor remains unchanged. */
+    /**
+     * Ring-centre X inside the canvas. When the host is right-edge anchored, the view grows left
+     * by the same amount that this local coordinate grows, keeping the ring's screen X unchanged.
+     */
     fun glyphCenterX(config: StatusBarComboStyleOneRuntime, networkType: String = ""): Float {
         val signalWidth = outsideSignalWidth(config)
         val outsideSignal = usesOutsideSignalLayout(config)
