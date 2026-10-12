@@ -774,6 +774,44 @@ object StatusBarComboStyleOneRuntime {
         }, 400L)
     }
 
+    private fun ensureHostLifecycleListener(root: ViewGroup) {
+        synchronized(hostLifecycleListeners) {
+            if (hostLifecycleListeners.containsKey(root)) return
+            val listener = object : View.OnAttachStateChangeListener {
+                override fun onViewAttachedToWindow(v: View) {
+                    (v as? ViewGroup)?.let(::scheduleRegister)
+                }
+
+                override fun onViewDetachedFromWindow(v: View) {
+                    val detachedRoot = v as? ViewGroup ?: return
+                    main.post { cleanupDetachedHost(detachedRoot) }
+                }
+            }
+            hostLifecycleListeners[root] = listener
+            root.addOnAttachStateChangeListener(listener)
+        }
+    }
+
+    private fun cleanupDetachedHost(root: ViewGroup) {
+        val host = synchronized(hosts) { hosts.remove(root) } ?: return
+        host.retired = true
+        main.removeCallbacks(host.geometryRetry)
+        main.removeCallbacks(host.delayedApply)
+        host.geometryRetryPending = false
+        host.geometryRetryAttempts = 0
+        host.battery?.let { restoreOnDrawFlag(host, host.shadeDrawTarget ?: it) }
+        host.overlay?.detach()
+        host.overlay = null
+        removeInline(host)
+        restore(host)
+        restoreNativeBatteryViews(root)
+        host.battery = null
+        host.shadeDrawTarget = null
+        host.tintRow = null
+        host.rowTint = null
+        diagnostic("Status-bar host detached; restored native views and released overlay")
+    }
+
     private fun register(root: ViewGroup) {
         // Prefer PhoneStatusBarView when it is present; StatusBarWindowView can
         // contain the same battery icon and drawing both roots would double-render.
@@ -950,6 +988,26 @@ object StatusBarComboStyleOneRuntime {
                 host.overlay?.detach()
                 return
             }
+            val currentDisplayId = root.display?.displayId ?: -1
+            if (currentDisplayId >= 0 && host.activeDisplayId >= 0 &&
+                currentDisplayId != host.activeDisplayId
+            ) {
+                diagnostic("Status-bar host moved displays: ${host.activeDisplayId} -> $currentDisplayId; resetting overlay only")
+                main.removeCallbacks(host.geometryRetry)
+                host.geometryRetryPending = false
+                host.geometryRetryAttempts = 0
+                host.battery?.let { restoreOnDrawFlag(host, host.shadeDrawTarget ?: it) }
+                host.overlay?.detach()
+                host.overlay = null
+                removeInline(host)
+                restore(host)
+                restoreNativeBatteryViews(root)
+                host.battery = null
+                host.shadeDrawTarget = null
+                host.tintRow = null
+                host.rowTint = rowTintSnapshots[root]
+            }
+            if (currentDisplayId >= 0) host.activeDisplayId = currentDisplayId
             val views = descendants(root)
             rememberStatusBarTintViews(root, views)
             // One UI 8.5 / Android 16+ can render the battery as a ComposeView
