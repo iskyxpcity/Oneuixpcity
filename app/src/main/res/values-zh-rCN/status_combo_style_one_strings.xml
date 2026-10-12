@@ -69,8 +69,7 @@
     <string name="status_combo_style_one_out_signal_size">图标外信号图形高度</string>
     <string name="status_combo_style_one_out_type_margin_left">图标外网络类型左边距</string>
     <string name="status_combo_style_one_out_type_margin_right">图标外网络类型右边距</string>
-    <string name="status_combo_style_one_out_signal_margin">环外信号间距</string>
-    <string name="status_combo_style_one_out_type_ring_gap">图标外网络类型与圆环间距</string>
+    <string name="status_combo_style_one_out_signal_margin">环外信号柱与圆环间距</string>
     <string name="status_combo_style_one_role_colors">状态颜色</string>
     <string name="status_combo_style_one_role_colors_summary">分别为低电量、充电与危险电量指定颜色。</string>
     <string name="status_combo_style_one_critical_threshold">临界电量阈值</string>
@@ -136,8 +135,7 @@
     <string name="status_combo_style_one_out_type_margin_right_summary">当前 %1$d dp：环外网络类型标签右侧留白，仅在网络类型显示于图标外侧时生效。</string>
     <string name="status_combo_style_one_type_weight_summary">当前字重 %1$d：100 最细，900 最粗；仅显示网络类型文字时可调整。</string>
     <string name="status_combo_style_one_out_signal_size_summary">当前 %1$d dp：环外信号读数的整体高度。只有开启移动信号、选择环外位置并启用堆叠信号后才可调整。</string>
-    <string name="status_combo_style_one_out_signal_margin_summary">当前 %1$d dp：只控制环外信号布局间距。只显示环外信号柱时，调整信号柱与圆环的间距；同时显示图标外网络类型时，调整信号图形与网络类型标签之间的间距。网络类型标签与圆环的间距在“网络类型”分类单独设置。</string>
-    <string name="status_combo_style_one_out_type_ring_gap_summary">当前 %1$d dp：只调整图标外网络类型标签与电量圆环之间的间距，不改变“环外信号”分类的间距值。</string>
+    <string name="status_combo_style_one_out_signal_margin_summary">当前 %1$d dp：仅调整自绘环外信号柱与电量圆环之间的距离，不改变网络类型标签的位置或三合一整体左边距。仅在信号位置选择图标外侧且开启圆环外信号柱时生效。</string>
     <string name="status_combo_style_one_track_alpha_summary">当前 %1$d%%：控制未点亮的弧线与信号图形的透明度。</string>
     <string name="status_combo_style_one_bolt_size_summary">当前 %1$d%%：充电时闪电的缩放比例；需要同时开启电量数字和充电闪电。</string>
     <string name="status_combo_style_one_bolt_x_summary">当前 %1$d dp：充电闪电的水平位置；正值向右移动。</string>
