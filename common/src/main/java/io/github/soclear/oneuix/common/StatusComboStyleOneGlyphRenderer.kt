@@ -372,12 +372,9 @@ object StatusComboStyleOneGlyphRenderer {
         if (wide && config.showMobile && config.mobileTypeMode == 2 && state.networkType.isNotBlank()) {
             val m = HEIGHT / 36f
             val typeOnlyShift = if (outsideSignal) 0f else TYPE_ONLY_SHIFT
-            // In network-type-only mode, keep the label in place while the ring's
-            // content group moves right; that creates real clearance instead of translating
-            // the label and ring together. When signal bars are also outside, the label sits
-            // between those bars and the ring and follows the outside-signal lane.
-            // Keep the label's on-screen position stable as outside-signal spacing changes;
-            // its position is still controlled by the existing left/right margin sliders.
+            // Keep the outside network-type label in its own lane. The offset below
+            // compensates for cutout anchoring when the signal lane changes width, so the
+            // label's on-screen position remains governed by its existing left/right margins.
             val typeGapOffset = if (outsideSignal) signalMargin else 0f
             val center = (110f + typeGapOffset - typeOnlyShift +
                 (config.outTypeMarginLeftDp.coerceIn(0, 16) -
