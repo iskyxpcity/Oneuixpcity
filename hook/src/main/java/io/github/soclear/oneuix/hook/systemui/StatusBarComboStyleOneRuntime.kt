@@ -271,17 +271,17 @@ object StatusBarComboStyleOneRuntime {
             runCatching { rootContext.createDisplayContext(target) }.getOrNull()
         } ?: rootContext
         private var wm: WindowManager? = null
-        private val glyph = GlyphView(app)
+        private val glyph = GlyphView(context)
         private var params: WindowManager.LayoutParams? = null
 
         fun attach(anchor: View, root: ViewGroup, cameraBounds: Rect): Boolean {
             if (params != null) return update(anchor, root, cameraBounds)
             val cfg = StatusBarComboStyleOneRuntime.config
             val width = StatusBarComboStyleOneRuntime.dp(
-                app, StatusComboStyleOneGlyphRenderer.glyphWidthDp(cfg, StatusBarComboStyleOneRuntime.state.networkType),
+                context, StatusComboStyleOneGlyphRenderer.glyphWidthDp(cfg, StatusBarComboStyleOneRuntime.state.networkType),
             )
             val height = StatusBarComboStyleOneRuntime.dp(
-                app, StatusComboStyleOneGlyphRenderer.glyphHeightDp(cfg),
+                context, StatusComboStyleOneGlyphRenderer.glyphHeightDp(cfg),
             )
             val flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
                 WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or
