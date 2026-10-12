@@ -2,6 +2,8 @@ package io.github.soclear.oneuix.hook.systemui
 
 import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.res.Resources
+import android.graphics.drawable.Drawable
 import android.content.Intent
 import android.content.IntentFilter
 import android.graphics.Canvas
@@ -122,6 +124,14 @@ object StatusBarComboStyleOneRuntime {
     private val modernMobileViewModels = ConcurrentHashMap<Int, WeakReference<Any>>()
     private val modernMobileViewSubscriptionIds = Collections.synchronizedMap(WeakHashMap<View, Int>())
     private val lastModernSignalSamplingDiagnostics = ConcurrentHashMap<String, String>()
+    private data class NativeDrawableOrigin(
+        val resourceId: Int,
+        val resourcePackage: String,
+        val resourceName: String,
+    )
+    private val drawableOrigins = Collections.synchronizedMap(WeakHashMap<Drawable, NativeDrawableOrigin>())
+    private val drawableStateOrigins =
+        Collections.synchronizedMap(WeakHashMap<Drawable.ConstantState, NativeDrawableOrigin>())
     @Volatile private var modernMobileViewClass: Class<*>? = null
     private val lastModernPipelineSignalDiagnostics = ConcurrentHashMap<Int, String>()
     private val lastModernPipelineLevelDiagnostics = ConcurrentHashMap<Int, String>()
@@ -392,6 +402,7 @@ object StatusBarComboStyleOneRuntime {
 
         hookNativeMobileState(module, param.classLoader)
         hookNativeSignalPolicy(module, param.classLoader)
+        hookVectorSignalResourceOrigins(module)
         hookModernMobileViewConstruction(module, param.classLoader)
         hookModernSignalDrawable(module)
         hookModernWifiVisibility(module, param.classLoader)
@@ -2909,6 +2920,77 @@ object StatusBarComboStyleOneRuntime {
      * Observe the SignalDrawable attached to the real status-bar mobile ImageView. This is
      * intentionally per-view-model/subscription; it never samples QS icons or the other SIM.
      */
+    /**
+     * Keep resource identities attached to drawable instances. Samsung One UI uses
+     * VectorDrawable resources for mobile_signal, unlike AOSP SignalDrawable.
+     */
+    private fun hookVectorSignalResourceOrigins(module: XposedModule) {
+        var hookedResourceMethods = 0
+        Resources::class.java.methods.filter { method ->
+            method.name in setOf("getDrawable", "getDrawableForDensity") &&
+                method.parameterTypes.firstOrNull() == Int::class.javaPrimitiveType &&
+                Drawable::class.java.isAssignableFrom(method.returnType)
+        }.distinctBy { it.toGenericString() }.forEach { method ->
+            runCatching {
+                module.hook(method).intercept { chain ->
+                    val result = chain.proceed()
+                    val resources = chain.thisObject as? Resources
+                    val resourceId = chain.args.firstOrNull() as? Int
+                    val drawable = result as? Drawable
+                    if (resources != null && resourceId != null && drawable != null) {
+                        rememberDrawableOrigin(resources, resourceId, drawable)
+                    }
+                    result
+                }
+                hookedResourceMethods++
+            }.onFailure { diagnostic("Signal resource origin hook unavailable: ${method.name}: $it") }
+        }
+
+        // Icon.loadDrawable() is a common SystemUI path. It exposes the original Icon
+        // resource even when the ImageView only receives a VectorDrawable instance.
+        runCatching {
+            val iconClass = android.graphics.drawable.Icon::class.java
+            val methods = iconClass.methods.filter { method ->
+                method.name.startsWith("loadDrawable") &&
+                    method.parameterTypes.firstOrNull()?.let { Context::class.java.isAssignableFrom(it) } == true &&
+                    Drawable::class.java.isAssignableFrom(method.returnType)
+            }.distinctBy { it.toGenericString() }
+            methods.forEach { method ->
+                module.hook(method).intercept { chain ->
+                    val result = chain.proceed()
+                    val icon = chain.thisObject
+                    val drawable = result as? Drawable
+                    val context = chain.args.firstOrNull() as? Context
+                    val resourceId = readSignalIntValue(icon, "resId", "mInt1", "int1")
+                    if (drawable != null && context != null && resourceId != null && resourceId != 0) {
+                        rememberDrawableOrigin(context.resources, resourceId, drawable)
+                    }
+                    result
+                }
+            }
+            diagnostic("Signal resource origin hooks installed: Resources=$hookedResourceMethods Icon.loadDrawable=${methods.size}")
+        }.onFailure {
+            diagnostic("Signal Icon.loadDrawable origin hook unavailable: $it; Resources=$hookedResourceMethods")
+        }
+    }
+
+    private fun rememberDrawableOrigin(resources: Resources, resourceId: Int, drawable: Drawable) {
+        val name = runCatching { resources.getResourceEntryName(resourceId) }.getOrNull() ?: return
+        val normalized = name.lowercase()
+        // Keep the cache focused on likely status signal resources, not every drawable
+        // loaded by SystemUI. We can resolve the named level later against the live view.
+        if (!normalized.contains("signal") || normalized.contains("wifi") ||
+            normalized.contains("wlan") || normalized.contains("bluetooth")
+        ) return
+        val pkg = runCatching { resources.getResourcePackageName(resourceId) }.getOrDefault("unknown")
+        val origin = NativeDrawableOrigin(resourceId, pkg, name)
+        drawableOrigins[drawable] = origin
+        drawable.constantState?.let { drawableStateOrigins[it] = origin }
+    }
+
+    private fun drawableOrigin(drawable: Drawable): NativeDrawableOrigin? =
+        drawableOrigins[drawable] ?: drawable.constantState?.let { drawableStateOrigins[it] }
+
     private fun hookModernSignalDrawable(module: XposedModule) {
         runCatching {
             val setImageLevel = android.widget.ImageView::class.java.getDeclaredMethod(
@@ -2924,26 +3006,58 @@ object StatusBarComboStyleOneRuntime {
                 result
             }
         }.onFailure { diagnostic("Modern status-bar signal image-level hook unavailable: $it") }
+
         runCatching {
             val setImageDrawable = android.widget.ImageView::class.java.getDeclaredMethod(
-                "setImageDrawable", android.graphics.drawable.Drawable::class.java,
+                "setImageDrawable", Drawable::class.java,
             )
             module.hook(setImageDrawable).intercept { chain ->
                 val result = chain.proceed()
                 val image = chain.thisObject as? android.widget.ImageView
-                if (image != null && config.enabled) captureModernSignalDrawable(image, null)
+                if (image != null && config.enabled) captureModernMobileSignalImage(image)
                 result
             }
         }.onFailure { diagnostic("Modern status-bar signal drawable hook unavailable: $it") }
+
         runCatching {
-            // Some SystemUI versions update Drawable.level directly after the ImageView was
-            // bound; observing ImageView setters alone misses those per-signal state changes.
-            val setDrawableLevel = android.graphics.drawable.Drawable::class.java.getDeclaredMethod(
+            val setImageResource = android.widget.ImageView::class.java.getDeclaredMethod(
+                "setImageResource", Int::class.javaPrimitiveType!!,
+            )
+            module.hook(setImageResource).intercept { chain ->
+                val result = chain.proceed()
+                val image = chain.thisObject as? android.widget.ImageView
+                val resourceId = chain.args.getOrNull(0) as? Int
+                if (image != null && resourceId != null && config.enabled) {
+                    val root = findModernMobileRoot(image)
+                    val subId = root?.let { modernMobileViewSubscriptionIds[it] }
+                    if (root != null && subId != null && isMobileSignalImage(image)) {
+                        val name = runCatching { image.resources.getResourceEntryName(resourceId) }
+                            .getOrNull().orEmpty()
+                        val level = resolveSignalResourceName(name)
+                        if (level in 0..4) {
+                            recordModernStatusBarSignal(
+                                subId, level, "image-resource",
+                                "resource=$name id=$resourceId image=${resourceName(image)}",
+                            )
+                        } else {
+                            diagnoseVectorSignalOrigin(
+                                image, subId, "image-resource=$name id=$resourceId level=$level",
+                            )
+                        }
+                    }
+                }
+                result
+            }
+        }.onFailure { diagnostic("Modern status-bar signal image-resource hook unavailable: $it") }
+
+        runCatching {
+            // Some status-bar implementations update Drawable.level directly after binding.
+            val setDrawableLevel = Drawable::class.java.getDeclaredMethod(
                 "setLevel", Int::class.javaPrimitiveType!!,
             )
             module.hook(setDrawableLevel).intercept { chain ->
                 val result = chain.proceed()
-                val drawable = chain.thisObject as? android.graphics.drawable.Drawable
+                val drawable = chain.thisObject as? Drawable
                 val image = drawable?.callback as? android.widget.ImageView
                 if (image != null && config.enabled &&
                     drawable.javaClass.name.contains("SignalDrawable", ignoreCase = true)
@@ -2956,37 +3070,84 @@ object StatusBarComboStyleOneRuntime {
         diagnostic("Modern status-bar rendered signal observer installed")
     }
 
+    private fun isMobileSignalImage(image: android.widget.ImageView): Boolean =
+        resourceName(image).equals("mobile_signal", ignoreCase = true) ||
+            resourceName(image).equals("signal_strength", ignoreCase = true)
+
+    private fun findModernMobileRoot(image: View): View? {
+        val mobileClass = modernMobileViewClass ?: return null
+        var cursor: View? = image
+        while (cursor != null) {
+            if (mobileClass.isInstance(cursor)) return cursor
+            cursor = cursor.parent as? View
+        }
+        return null
+    }
+
+    private fun captureModernMobileSignalImage(image: android.widget.ImageView) {
+        val drawable = image.drawable ?: return
+        if (drawable.javaClass.name.contains("SignalDrawable", ignoreCase = true)) {
+            captureModernSignalDrawable(image, drawable.level)
+            return
+        }
+        if (!isMobileSignalImage(image)) return
+        val root = findModernMobileRoot(image) ?: return
+        if (hostFor(root) == null) return
+        val subId = modernMobileViewSubscriptionIds[root] ?: return
+        val origin = drawableOrigin(drawable)
+        val level = origin?.let { resolveSignalResourceName(it.resourceName) } ?: -1
+        if (level in 0..4) {
+            recordModernStatusBarSignal(
+                subId, level, "vector-resource",
+                "resource=${origin!!.resourcePackage}:${origin.resourceName} id=${origin.resourceId} drawable=${drawable.javaClass.name}",
+            )
+        } else {
+            diagnoseVectorSignalOrigin(
+                image, subId,
+                "drawable=${drawable.javaClass.name}|origin=${origin?.resourcePackage ?: "unknown"}:${origin?.resourceName ?: "unknown"}",
+            )
+        }
+    }
+
+    private fun diagnoseVectorSignalOrigin(image: android.widget.ImageView, subId: Int, details: String) {
+        val key = "vector-origin:$subId:${System.identityHashCode(image)}"
+        val snapshot = "subId=$subId|image=${resourceName(image)}|$details"
+        if (lastModernSignalSamplingDiagnostics.put(key, snapshot) != snapshot) {
+            diagnostic("Modern status-bar signal vector origin unresolved: $snapshot")
+        }
+    }
+
+    private fun recordModernStatusBarSignal(subId: Int, level: Int, source: String, details: String) {
+        if (subId < 0 || level !in 0..4) return
+        val old = renderedSignalLevels.put(subId, level)
+        nativeSignalLevels[subId] = level
+        val key = "captured:$subId"
+        val snapshot = "level=$level|source=$source|$details"
+        if (old != level || lastModernSignalSamplingDiagnostics.put(key, snapshot) != snapshot) {
+            lastModernSignalSamplingDiagnostics[key] = snapshot
+            diagnostic(
+                "Modern status-bar drawn signal: subId=$subId level=$level source=$source " +
+                    "$details defaultData=${subId == defaultDataSubscriptionId}"
+            )
+            scheduleTelephonyRefresh()
+            invalidateGlyphs()
+        }
+    }
+
     private fun captureModernSignalDrawable(image: android.widget.ImageView, packedLevel: Int?) {
         val drawable = image.drawable ?: return
         if (!drawable.javaClass.name.contains("SignalDrawable", ignoreCase = true)) return
-        val mobileClass = modernMobileViewClass ?: return
-        var cursor: View? = image
-        var mobileRoot: View? = null
-        while (cursor != null) {
-            if (mobileClass.isInstance(cursor)) {
-                mobileRoot = cursor
-                break
-            }
-            cursor = cursor.parent as? View
-        }
-        val root = mobileRoot ?: return
-        // Ignore DemoStatusIcons and any other modern-icon container that is not the
-        // concrete collapsed status-bar host. These icons can share the same classes.
+        val root = findModernMobileRoot(image) ?: return
+        // Ignore demo/keyguard/Quick Settings views: only sample the registered collapsed host.
         if (hostFor(root) == null) return
         val subId = modernMobileViewSubscriptionIds[root] ?: return
         val fullState = packedLevel ?: drawable.level
         val level = decodePackedSignalDrawableLevel(fullState)
         if (level !in 0..4) return
-        val old = renderedSignalLevels.put(subId, level)
-        if (old != level) {
-            nativeSignalLevels[subId] = level
-            diagnostic(
-                "Modern status-bar drawn signal: subId=$subId level=$level packed=$fullState " +
-                    "drawable=${drawable.javaClass.name} dataSub=${subId == defaultDataSubscriptionId}"
-            )
-            scheduleTelephonyRefresh()
-            invalidateGlyphs()
-        }
+        recordModernStatusBarSignal(
+            subId, level, "signal-drawable",
+            "packed=$fullState drawable=${drawable.javaClass.name} image=${resourceName(image)}",
+        )
     }
 
     /**
@@ -3019,7 +3180,19 @@ object StatusBarComboStyleOneRuntime {
                 val signals = imageViews.mapNotNull { image ->
                     val drawable = image.drawable ?: return@mapNotNull null
                     if (drawable.javaClass.name.contains("SignalDrawable", ignoreCase = true)) {
-                        Triple(image, drawable, drawable.level)
+                        val decoded = decodePackedSignalDrawableLevel(drawable.level)
+                        if (decoded in 0..4) {
+                            Triple(image, drawable, decoded to ("signal-drawable packed=${drawable.level}"))
+                        } else null
+                    } else if (isMobileSignalImage(image)) {
+                        val origin = drawableOrigin(drawable) ?: return@mapNotNull null
+                        val decoded = resolveSignalResourceName(origin.resourceName)
+                        if (decoded in 0..4) {
+                            Triple(
+                                image, drawable,
+                                decoded to ("vector-resource ${origin.resourcePackage}:${origin.resourceName} id=${origin.resourceId}"),
+                            )
+                        } else null
                     } else null
                 }
                 if (signals.isEmpty()) {
@@ -3036,30 +3209,15 @@ object StatusBarComboStyleOneRuntime {
                     return@forEach
                 }
                 anySignalDrawable = true
-                signals.forEach { (image, drawable, fullState) ->
-                    val level = decodePackedSignalDrawableLevel(fullState)
-                    if (level !in 0..4) {
-                        val key = "undecoded:${System.identityHashCode(image)}"
-                        val snapshot = "subId=$subId|state=$fullState|level=$level|" +
-                            "drawable=${drawable.javaClass.name}|image=${resourceName(image)}"
-                        if (lastModernSignalSamplingDiagnostics.put(key, snapshot) != snapshot) {
-                            diagnostic("Modern status-bar signal live sample undecoded: $snapshot")
-                        }
-                        return@forEach
-                    }
+                signals.forEach { (image, drawable, decoded) ->
+                    recordModernStatusBarSignal(
+                        subId,
+                        decoded.first,
+                        "live-view-tree",
+                        "${decoded.second}|drawable=${drawable.javaClass.name}|image=${resourceName(image)}",
+                    )
                     lastModernSignalSamplingDiagnostics.remove("no-drawable:${System.identityHashCode(mobileRoot)}")
                     lastModernSignalSamplingDiagnostics.remove("undecoded:${System.identityHashCode(image)}")
-                    val old = renderedSignalLevels.put(subId, level)
-                    nativeSignalLevels[subId] = level
-                    val key = "live:$subId:${System.identityHashCode(image)}"
-                    val snapshot = "level=$level|packed=$fullState|drawable=${drawable.javaClass.name}|image=${resourceName(image)}"
-                    if (old != level || lastModernSignalSamplingDiagnostics.put(key, snapshot) != snapshot) {
-                        lastModernSignalSamplingDiagnostics[key] = snapshot
-                        diagnostic(
-                            "Modern status-bar drawn signal: subId=$subId level=$level packed=$fullState " +
-                                "drawable=${drawable.javaClass.name} source=live-view-tree defaultData=${subId == defaultDataSubscriptionId}"
-                        )
-                    }
                 }
             }
         }
