@@ -297,12 +297,13 @@ object StatusBarComboStyleOneRuntime {
                     gravity = Gravity.TOP or Gravity.LEFT
                     title = "OneuiXP Style One"
                     // Status-bar-owned window types are system windows. Do not pass
-                    // the app-window token: Samsung may reject the type/token pair
+                    // the context-window token: Samsung may reject the type/token pair
                     // and the old fallback then silently shifted the glyph down.
                     token = null
                 }
-                val windowContext = if (Build.VERSION.SDK_INT >= 30 && display != null) {
-                    runCatching { context.createWindowContext(display, type, null) }.getOrElse { context }
+                val targetDisplay = display
+                val windowContext = if (Build.VERSION.SDK_INT >= 30 && targetDisplay != null) {
+                    runCatching { context.createWindowContext(targetDisplay, type, null) }.getOrElse { context }
                 } else context
                 val candidateWindowManager = runCatching {
                     windowContext.getSystemService(Context.WINDOW_SERVICE) as? WindowManager
@@ -379,7 +380,7 @@ object StatusBarComboStyleOneRuntime {
                 cameraCenterX >= displaySize.x * RIGHT_SIDE_CUTOUT_THRESHOLD
             val horizontalCalibrationPx = if (rightSideCutout) {
                 (INNER_PUNCH_HOLE_HORIZONTAL_CALIBRATION_DP *
-                    app.resources.displayMetrics.density).roundToInt()
+                    context.resources.displayMetrics.density).roundToInt()
             } else 0
             val verticalCalibrationDp = if (rightSideCutout) {
                 INNER_PUNCH_HOLE_VERTICAL_CALIBRATION_DP
@@ -396,12 +397,12 @@ object StatusBarComboStyleOneRuntime {
             lp.x = (
                 cameraCenterX - ringCenterOffsetPx +
                     StatusBarComboStyleOneRuntime.dpExact(
-                        app, cfg.glyphOffsetXDp + cfg.glyphLeftMarginDp - cfg.glyphRightMarginDp,
+                        context, cfg.glyphOffsetXDp + cfg.glyphLeftMarginDp - cfg.glyphRightMarginDp,
                     ) + horizontalCalibrationPx
                 ).roundToInt()
             val verticalOffsetPx = (
                 (cfg.glyphOffsetYDp.toFloat() + verticalCalibrationDp) *
-                    app.resources.displayMetrics.density
+                    context.resources.displayMetrics.density
                 ).roundToInt()
             lp.y = (
                 cameraCenterY - lp.height * centreRatioY + verticalOffsetPx
