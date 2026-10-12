@@ -1810,14 +1810,9 @@ object StatusBarComboStyleOneRuntime {
      * spacing is allocated to its left. During shade expansion, keep the old collapsed slot.
      */
     private fun updateOverlayHostSlot(host: Host, view: View) {
-        if (shadeBusy) {
-            collapseHostView(host, view)
-        } else {
-            reserveHostSlot(
-                host, view,
-                StatusComboStyleOneGlyphRenderer.glyphWidthDp(config, state.networkType),
-            )
-        }
+        // The separate overlay already owns its drawing width. Keep the native slot collapsed
+        // so its extra canvas width does not push earlier status icons left.
+        collapseHostView(host, view)
     }
 
     private fun reserveHostSlot(host: Host, view: View, widthDp: Int) {
