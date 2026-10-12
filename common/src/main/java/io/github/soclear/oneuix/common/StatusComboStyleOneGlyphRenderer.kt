@@ -44,6 +44,9 @@ object StatusComboStyleOneGlyphRenderer {
     // when a network-type label is drawn out of the ring. This widens only the host bounds;
     // the ring itself remains anchored to the display cutout.
     private const val OUTSIDE_TYPE_RIGHT_CLEARANCE = 8f
+    // Preserve the old label-to-ring gap while sizing the host to the real network-type text.
+    private const val OUTSIDE_TYPE_REFERENCE_WIDTH = 78f
+    private const val OUTSIDE_TYPE_RIGHT_GAP = 3.5f
     // Out-of-ring-type-only mode should not reserve the unused signal-pillars lane.
     private const val TYPE_ONLY_SHIFT = 60f
     private const val B_CX = 59.5f
@@ -132,15 +135,44 @@ object StatusComboStyleOneGlyphRenderer {
             config.outSignalMarginDp.coerceIn(0, 16) * (HEIGHT / 36f)
         } else 0f
 
-    private fun designWidth(config: StatusBarComboStyleOneRuntime): Float {
+    private fun outsideTypeLabelWidth(
+        config: StatusBarComboStyleOneRuntime,
+        networkType: String,
+    ): Float {
+        if (!usesOutsideNetworkTypeLayout(config) || networkType.isBlank()) {
+            return OUTSIDE_TYPE_REFERENCE_WIDTH
+        }
+        val requestedSize = config.outTypeSizeDp.coerceIn(8, 26) * (HEIGHT / 36f)
+        return measuredNetworkTypeWidth(
+            networkType.trim().uppercase(),
+            requestedSize,
+            config.typeWeight,
+            config.typeSuffixScale,
+        ).coerceAtLeast(1f)
+    }
+
+    private fun outsideTypeWidthDelta(
+        config: StatusBarComboStyleOneRuntime,
+        networkType: String,
+    ): Float = if (usesOutsideNetworkTypeLayout(config) && networkType.isNotBlank()) {
+        outsideTypeLabelWidth(config, networkType) - OUTSIDE_TYPE_REFERENCE_WIDTH
+    } else 0f
+
+    private fun designWidth(
+        config: StatusBarComboStyleOneRuntime,
+        networkType: String = "",
+    ): Float {
         val typeLane = usesOutsideNetworkTypeLayout(config)
         val signalLane = usesOutsideSignalLayout(config)
         val signalMargin = outsideSignalMargin(config)
+        val typeWidthDelta = outsideTypeWidthDelta(config, networkType)
         return when {
             // No unused signal-pillars lane is reserved when the out-of-ring type is alone.
-            typeLane && signalLane -> WIDE_WIDTH + signalMargin + OUTSIDE_TYPE_RIGHT_CLEARANCE
-            // Add room when the out-of-ring network-type label is enabled by itself.
-            typeLane -> WIDE_WIDTH - TYPE_ONLY_SHIFT + OUTSIDE_TYPE_RIGHT_CLEARANCE
+            // Expand or contract this lane with the actual label while retaining the ring-side gap.
+            typeLane && signalLane ->
+                WIDE_WIDTH + signalMargin + OUTSIDE_TYPE_RIGHT_CLEARANCE + typeWidthDelta
+            typeLane ->
+                WIDE_WIDTH - TYPE_ONLY_SHIFT + OUTSIDE_TYPE_RIGHT_CLEARANCE + typeWidthDelta
             signalLane -> outsideSignalWidth(config) + signalMargin + COMPACT_WIDTH - 8f
             else -> COMPACT_WIDTH
         }
@@ -150,23 +182,25 @@ object StatusComboStyleOneGlyphRenderer {
         (36f * 0.9f * config.glyphScalePercent.coerceIn(70, 150) / 100f)
             .roundToInt().coerceAtLeast(18)
 
-    fun glyphWidthDp(config: StatusBarComboStyleOneRuntime): Int =
-        (designWidth(config) * baseGlyphHeightDp(config).toFloat() / HEIGHT)
+    fun glyphWidthDp(config: StatusBarComboStyleOneRuntime, networkType: String = ""): Int =
+        (designWidth(config, networkType) * baseGlyphHeightDp(config).toFloat() / HEIGHT)
             .roundToInt().coerceAtLeast(20)
 
     /** Horizontal anchor of the battery centre within the active glyph bounds. */
-    fun glyphCenterRatio(config: StatusBarComboStyleOneRuntime): Float {
+    fun glyphCenterRatio(config: StatusBarComboStyleOneRuntime, networkType: String = ""): Float {
         val signalMargin = outsideSignalMargin(config)
         val signalWidth = outsideSignalWidth(config)
         val outsideSignal = usesOutsideSignalLayout(config)
+        val typeWidthDelta = outsideTypeWidthDelta(config, networkType)
+        val activeWidth = designWidth(config, networkType)
         return when {
             usesOutsideNetworkTypeLayout(config) -> {
                 val signalLaneShift = if (outsideSignal) signalMargin else 0f
                 val typeOnlyShift = if (outsideSignal) 0f else TYPE_ONLY_SHIFT
-                (B_CX + WIDE_OFFSET + signalLaneShift - typeOnlyShift) / designWidth(config)
+                (B_CX + WIDE_OFFSET + signalLaneShift - typeOnlyShift + typeWidthDelta) / activeWidth
             }
-            outsideSignal -> (B_CX + signalWidth + signalMargin - 8f) / designWidth(config)
-            else -> B_CX / COMPACT_WIDTH
+            outsideSignal -> (B_CX + signalWidth + signalMargin - 8f) / activeWidth
+            else -> B_CX / activeWidth
         }
     }
 
@@ -197,7 +231,8 @@ object StatusComboStyleOneGlyphRenderer {
         val dualBottomLayout = usesDualSignalBelowRing(config)
         val signalMargin = outsideSignalMargin(config)
         val signalWidth = outsideSignalWidth(config)
-        val designWidth = designWidth(config)
+        val typeWidthDelta = outsideTypeWidthDelta(config, state.networkType)
+        val designWidth = designWidth(config, state.networkType)
         val designHeight = designHeight(config)
         // Add 1dp to the bottom opening only in the dual-SIM-below-ring layout.
         // Convert dp to arc degrees using this icon's actual rendered dp height.
@@ -215,7 +250,8 @@ object StatusComboStyleOneGlyphRenderer {
 
         val typeOnlyShift = if (outsideType && !outsideSignal) TYPE_ONLY_SHIFT else 0f
         val offsetX = when {
-            outsideType -> WIDE_OFFSET + (if (outsideSignal) signalMargin else 0f) - typeOnlyShift
+            outsideType -> WIDE_OFFSET + (if (outsideSignal) signalMargin else 0f) -
+                typeOnlyShift + typeWidthDelta
             outsideSignal -> signalWidth + signalMargin - 8f
             else -> 0f
         }
@@ -381,15 +417,19 @@ object StatusComboStyleOneGlyphRenderer {
             // compensates for cutout anchoring when the signal lane changes width, so the
             // label's on-screen position remains governed by its existing left/right margins.
             val typeGapOffset = if (outsideSignal) signalMargin else 0f
-            val center = (110f + typeGapOffset - typeOnlyShift +
+            val typeCenterShift = typeWidthDelta / 2f
+            val baseTypeCenter = B_CX + WIDE_OFFSET - B_R - OUTSIDE_TYPE_RIGHT_GAP -
+                OUTSIDE_TYPE_REFERENCE_WIDTH / 2f + typeGapOffset - typeOnlyShift
+            val center = (baseTypeCenter + typeCenterShift +
                 (config.outTypeMarginLeftDp.coerceIn(0, 16) -
                     config.outTypeMarginRightDp.coerceIn(0, 16)) * m).coerceIn(
-                        30f + typeGapOffset - typeOnlyShift,
-                        170f + typeGapOffset - typeOnlyShift,
+                        30f + typeGapOffset - typeOnlyShift + typeCenterShift,
+                        170f + typeGapOffset - typeOnlyShift + typeCenterShift,
                     )
             val size = config.outTypeSizeDp.coerceIn(8, 26) * m
+            // Use the full measured text width; the host bounds expand/contract with this label.
             drawNetworkType(canvas, state.networkType.trim().uppercase(), center, 67f,
-                size, config.typeWeight, tint, config.typeSuffixScale, 78f)
+                size, config.typeWeight, tint, config.typeSuffixScale, 0f)
         }
         canvas.restoreToCount(save)
     }
@@ -681,7 +721,7 @@ object StatusComboStyleOneGlyphRenderer {
         val label = text.uppercase()
         val smallA = label.endsWith("A") && suffixScale in 1..99
         val body = if (smallA) label.dropLast(1) else label
-        val safeSize = size.coerceIn(8f, 64f)
+        val safeSize = size.coerceIn(8f, 96f)
         paint.typeface = weightedTypeface(weight)
         paint.textAlign = Paint.Align.LEFT
         paint.color = color
@@ -793,10 +833,10 @@ object StatusComboStyleOneGlyphRenderer {
         val label = text.uppercase()
         val body = if (label.endsWith("A") && suffixScale in 1..99) label.dropLast(1) else label
         paint.typeface = weightedTypeface(weight)
-        paint.textSize = size.coerceIn(8f, 64f)
+        paint.textSize = size.coerceIn(8f, 96f)
         val bodyWidth = paint.measureText(body)
         if (body == label) return bodyWidth
-        paint.textSize = size.coerceIn(8f, 64f) * suffixScale / 100f
+        paint.textSize = size.coerceIn(8f, 96f) * suffixScale / 100f
         return bodyWidth + paint.measureText("A")
     }
 
