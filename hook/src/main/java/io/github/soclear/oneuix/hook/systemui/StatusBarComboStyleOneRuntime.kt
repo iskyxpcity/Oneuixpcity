@@ -281,6 +281,10 @@ object StatusBarComboStyleOneRuntime {
             StatusBarComboStyleOneRuntime.minimumVisibleIconBottomPx(
                 this, statusBarRootForTypeBounds,
             )
+        fun statusIconVerticalReferenceSnapshot(): String =
+            StatusBarComboStyleOneRuntime.statusIconVerticalReferenceSnapshot(
+                this, statusBarRootForTypeBounds,
+            )
         fun requestLeadingCanvasExpansion(clipPx: Float) {
             if (clipPx > 0.5f && beginLeadingPaddingExpansion()) {
                 StatusBarComboStyleOneRuntime.ensureSignalCanvasLeadingSpace(this, clipPx)
@@ -502,6 +506,7 @@ object StatusBarComboStyleOneRuntime {
                         leadingCanvasPaddingPx = glyph.leadingCanvasPaddingPx().toFloat(),
                     )
                 )
+                appendLine(glyph.statusIconVerticalReferenceSnapshot())
             }
         }
 
@@ -971,6 +976,7 @@ object StatusBarComboStyleOneRuntime {
                             glyph.leadingCanvasPaddingPx().toFloat(),
                         )
                     )
+                    appendLine(glyph.statusIconVerticalReferenceSnapshot())
                 }
 
                 val allViews = descendants(root)
@@ -1685,6 +1691,28 @@ object StatusBarComboStyleOneRuntime {
         if (runCatching { view.getLocationOnScreen(viewLocation) }.isFailure) return null
         val nativeIconBottomScreenPx = visibleBounds.second
         return (nativeIconBottomScreenPx - viewLocation[1]).toFloat()
+    }
+
+    private fun statusIconVerticalReferenceSnapshot(view: View, statusBarRoot: View?): String {
+        val root = statusBarRoot ?: view.rootView
+        val cluster = descendants(root).firstOrNull(::isStatusIconsCluster)
+        val nativeBounds = lastVisibleStatusIconBoundsScreenPx(root)
+        val nativeBottom = nativeBounds?.second
+        val viewLocation = IntArray(2)
+        val clusterLocation = IntArray(2)
+        val hasViewLocation = runCatching { view.getLocationOnScreen(viewLocation) }.isSuccess
+        val hasClusterLocation = cluster != null &&
+            runCatching { cluster.getLocationOnScreen(clusterLocation) }.isSuccess
+        val containerBottom = if (hasClusterLocation) clusterLocation[1] + cluster!!.height else null
+        val localNativeBottom = if (nativeBottom != null && hasViewLocation) {
+            nativeBottom - viewLocation[1]
+        } else null
+        return "statusIconVerticalReference: nativeIconBottomScreenPx=" + (nativeBottom ?: "unknown") +
+            ", containerBottomScreenPx=" + (containerBottom ?: "unknown") +
+            ", containerMinusNativeBottomPx=" +
+            (if (containerBottom != null && nativeBottom != null) containerBottom - nativeBottom else "unknown") +
+            ", glyphScreenY=" + (if (hasViewLocation) viewLocation[1] else "unknown") +
+            ", nativeBottomLocalPx=" + (localNativeBottom ?: "unknown")
     }
 
     private fun minimumVisibleIconLeftPx(view: View, statusBarRoot: View?): Float? {
