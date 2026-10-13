@@ -59,7 +59,7 @@ object StatusComboStyleOneGlyphRenderer {
     private const val OUTSIDE_SIGNAL_RING_CLEARANCE = 20f
     private const val OUTSIDE_SIGNAL_NATIVE_ICON_GAP_PX = 20f
     // Add 1.5dp of room on the ring-facing side of the outer signal lane.
-    private const val OUTSIDE_SIGNAL_RING_SIDE_EXTRA_GAP_UNITS = 5f
+    private const val OUTSIDE_SIGNAL_RING_SIDE_EXTRA_GAP_UNITS = 5.625f
     // Align the network label to the actual status-bar / battery-ring vertical centre.
     private const val OUTSIDE_FRAME_CENTER_Y = 61.48715f
     private const val OUTSIDE_FRAME_SIDE = 153f
