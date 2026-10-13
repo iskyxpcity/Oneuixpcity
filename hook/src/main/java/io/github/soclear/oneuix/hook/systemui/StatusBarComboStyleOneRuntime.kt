@@ -899,6 +899,7 @@ object StatusBarComboStyleOneRuntime {
                         StatusComboStyleOneGlyphRenderer.diagnosticGeometrySnapshot(
                             cfg, currentState.networkType, glyph.width, glyph.height, metrics.density,
                             pos[0], pos[1], glyph.minimumVisibleIconLeftPx(),
+                            StatusComboStyleOneGlyphRenderer.hasOutsideSecondarySignalLevel(cfg, currentState),
                         )
                     )
                 }
