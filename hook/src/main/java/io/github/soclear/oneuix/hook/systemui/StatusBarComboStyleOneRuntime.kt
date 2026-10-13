@@ -1478,6 +1478,9 @@ object StatusBarComboStyleOneRuntime {
         root ?: return null
         val cluster = descendants(root).firstOrNull(::isStatusIconsCluster) ?: return null
         val leaves = descendants(cluster).drop(1).filter { candidate ->
+            // The custom glyph can be inserted into this same status-icon cluster. It is not a
+            // native neighbour and must never become the boundary that pushes its own contents.
+            if (candidate is GlyphView) return@filter false
             val isLeaf = candidate !is ViewGroup || candidate.childCount == 0
             if (!isLeaf || candidate.width <= 0 || candidate.height <= 0) return@filter false
             var current: View? = candidate
@@ -1503,9 +1506,9 @@ object StatusBarComboStyleOneRuntime {
         val iconRight = lastVisibleStatusIconRightScreenPx(root) ?: return null
         val viewLocation = IntArray(2)
         if (runCatching { view.getLocationOnScreen(viewLocation) }.isFailure) return null
-        // Keep a tight 1dp gap between the custom lane and the last visible native icon.
-        // The same boundary is used by both the outside network type and outside signal lanes.
-        return (iconRight + dpExact(view.context, 1) - viewLocation[0]).toFloat()
+        // Return the native icon's true measured right edge in glyph-local pixels. The renderer
+        // applies one shared 20px inter-icon gap for both outside network type and signal lanes.
+        return (iconRight - viewLocation[0]).toFloat()
     }
 
     private fun descendants(root: View): List<View> {
