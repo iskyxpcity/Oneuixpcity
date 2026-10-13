@@ -4320,10 +4320,10 @@ object StatusBarComboStyleOneRuntime {
         valueSize = v.valueSize.coerceIn(6, 18), valueWeight = v.valueWeight.coerceIn(100, 900),
         typeSize = v.typeSize.coerceIn(16, 44), typeWeight = v.typeWeight.coerceIn(100, 900),
         outTypeSizeDp = v.outTypeSizeDp.coerceIn(8, 26), outSignalSizeDp = v.outSignalSizeDp.coerceIn(6, 20),
-        outTypeMarginLeftDp = v.outTypeMarginLeftDp.coerceIn(0, 16),
-        outTypeMarginRightDp = v.outTypeMarginRightDp.coerceIn(0, 16),
-        outSignalMarginDp = v.outSignalMarginDp.coerceIn(0, 16),
-        outSignalMarginLeftDp = v.outSignalMarginLeftDp.coerceIn(0, 16),
+        outTypeMarginLeftDp = v.outTypeMarginLeftDp.coerceIn(-16, 16),
+        outTypeMarginRightDp = v.outTypeMarginRightDp.coerceIn(-16, 16),
+        outSignalMarginDp = v.outSignalMarginDp.coerceIn(-16, 16),
+        outSignalMarginLeftDp = v.outSignalMarginLeftDp.coerceIn(-16, 16),
         typeSuffixScale = v.typeSuffixScale.coerceIn(50, 100), trackAlpha = v.trackAlpha.coerceIn(0, 255),
     )
 
