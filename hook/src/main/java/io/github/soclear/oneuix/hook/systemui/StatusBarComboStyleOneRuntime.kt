@@ -843,7 +843,9 @@ object StatusBarComboStyleOneRuntime {
                     "glyphRightMarginDp=${cfg.glyphRightMarginDp},outTypeSizeDp=${cfg.outTypeSizeDp}," +
                     "outTypeMarginLeftDp=${cfg.outTypeMarginLeftDp},outTypeMarginRightDp=${cfg.outTypeMarginRightDp}," +
                     "outSignalSizeDp=${cfg.outSignalSizeDp},outSignalMarginDp=${cfg.outSignalMarginDp}," +
-                    "outSignalMarginLeftDp=${cfg.outSignalMarginLeftDp}," +
+                    "outSignalMarginLeftDp=${cfg.outSignalMarginLeftDp},outSignalOffsetXDp=${cfg.outSignalOffsetXDp}," +
+                    "outSignalOffsetYDp=${cfg.outSignalOffsetYDp},outTypeOffsetXDp=${cfg.outTypeOffsetXDp}," +
+                    "outTypeOffsetYDp=${cfg.outTypeOffsetYDp}," +
                     "ringStroke=${cfg.ringStroke},typeWeight=${cfg.typeWeight},typeSuffixScale=${cfg.typeSuffixScale}"
             )
             appendLine(
