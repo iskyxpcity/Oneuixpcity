@@ -1065,6 +1065,16 @@ object StatusComboStyleOneGlyphRenderer {
                     "canvasInsetDp=${canvasLeftInsetPx / densitySafe}"
             )
             appendLine(
+                "nativeIconBottomLocalPx=" + (minimumVisibleIconBottomPx ?: "unknown") +
+                    ",nativeIconBottomScreenPx=" + (minimumVisibleIconBottomPx?.let { windowScreenY + it } ?: "unknown") +
+                    ",effectiveSignalBaselineScreenPx=" +
+                    (windowScreenY + (signalBaseline + verticalContentOffset + outsideSignalOffsetYUnits(config)) * renderScale) +
+                    ",signalBaselineDeltaFromNativeBottomPx=" +
+                    (minimumVisibleIconBottomPx?.let {
+                        (signalBaseline + verticalContentOffset + outsideSignalOffsetYUnits(config)) * renderScale - it
+                    } ?: "unknown")
+            )
+            appendLine(
                 "verticalContentOffset=${verticalContentOffset},glyphVerticalCenterRatio=${(B_CY + verticalContentOffset) / designHeight}," +
                     "ringCenterUnits=${ringCenterUnits},ringOuterBoundsLocalPx=[${ringLeftPx},${ringRightPx}]," +
                     "ringCenterScreenPx=${screenRingCenter},ringOuterBoundsScreenPx=[${screenRingLeft},${screenRingRight}]," +
