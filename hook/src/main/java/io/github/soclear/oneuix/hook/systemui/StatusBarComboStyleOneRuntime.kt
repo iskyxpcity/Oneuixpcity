@@ -404,11 +404,14 @@ object StatusBarComboStyleOneRuntime {
             val canvasLeftInsetPx = (lp.width - designWidthUnits * renderScale) / 2f
             // Align the actual design canvas to the slot's right edge, not merely the
             // rounded WindowManager frame. This prevents width rounding from nudging the ring.
+            val horizontalOffsetPx = StatusBarComboStyleOneRuntime.dpExact(context, cfg.glyphOffsetXDp)
             lp.x = (
-                slotRightPx - canvasLeftInsetPx - designWidthUnits * renderScale
+                slotRightPx - canvasLeftInsetPx - designWidthUnits * renderScale +
+                    horizontalOffsetPx
                 ).roundToInt()
+            val verticalOffsetPx = StatusBarComboStyleOneRuntime.dpExact(context, cfg.glyphOffsetYDp)
             lp.y = (
-                slotCenterY - lp.height * centreRatioY
+                slotCenterY - lp.height * centreRatioY + verticalOffsetPx
                 ).roundToInt()
             val ringCenterScreenPx = lp.x + canvasLeftInsetPx + ringCenterXUnits * renderScale
             diagnostic(
@@ -1119,6 +1122,8 @@ object StatusBarComboStyleOneRuntime {
                             glyph.layoutParams = lp
                         }
                     }
+                    glyph.translationX = dpExact(glyph.context, config.glyphOffsetXDp).toFloat()
+                    glyph.translationY = dpExact(glyph.context, config.glyphOffsetYDp).toFloat()
                     glyph.invalidate()
                 }
                 host.overlay?.let { overlay ->
@@ -1422,6 +1427,8 @@ object StatusBarComboStyleOneRuntime {
                     glyph.layoutParams = lp
                 }
             }
+            glyph.translationX = dpExact(parent.context, config.glyphOffsetXDp).toFloat()
+            glyph.translationY = dpExact(parent.context, config.glyphOffsetYDp).toFloat()
             glyph.invalidate()
             return
         }
@@ -1445,6 +1452,8 @@ object StatusBarComboStyleOneRuntime {
             dpExact(parent.context, config.glyphRightMarginDp),
             0,
         )
+        glyph.translationX = dpExact(parent.context, config.glyphOffsetXDp).toFloat()
+        glyph.translationY = dpExact(parent.context, config.glyphOffsetYDp).toFloat()
         runCatching { parent.addView(glyph, parent.indexOfChild(anchor).coerceAtLeast(0), lp); host.inline = glyph }
             .onFailure { Log.w(TAG, "Cannot add inline glyph", it) }
     }
@@ -4300,11 +4309,11 @@ object StatusBarComboStyleOneRuntime {
         // The upstream critical cutoff is a constant, not a user setting.
         criticalThreshold = 20,
         glyphScalePercent = v.glyphScalePercent.coerceIn(70, 150),
-        // Deprecated whole-glyph positioning must never displace the battery-ring anchor.
-        glyphOffsetXDp = 0,
-        glyphOffsetYDp = 0,
-        glyphLeftMarginDp = 0,
-        glyphRightMarginDp = 0,
+        // Overall position and spacing remain user-adjustable; default zero preserves native slot anchoring.
+        glyphOffsetXDp = v.glyphOffsetXDp.coerceIn(-16, 16),
+        glyphOffsetYDp = v.glyphOffsetYDp.coerceIn(-16, 16),
+        glyphLeftMarginDp = v.glyphLeftMarginDp.coerceIn(0, 16),
+        glyphRightMarginDp = v.glyphRightMarginDp.coerceIn(0, 16),
         signalDotSizePercent = v.signalDotSizePercent.coerceIn(50, 150),
         signalDotSpacingDp = v.signalDotSpacingDp.coerceIn(3, 8),
         signalDotOffsetXDp = v.signalDotOffsetXDp.coerceIn(-8, 8),
