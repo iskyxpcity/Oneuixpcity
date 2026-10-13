@@ -141,7 +141,7 @@ object StatusComboStyleOneGlyphRenderer {
     private fun outsideSignalWidth(config: StatusBarComboStyleOneRuntime): Float =
         if (usesOutsideSignalLayout(config)) 251f * outsideSignalScale(config) else 0f
 
-    // Live signal-lane shift only. It never participates in ring anchoring or text placement.
+    // Standalone mode shifts only the signal lane; composite mode applies margin deltas to text and bars together. Ring anchoring stays independent.
     private fun outsideSignalMargin(config: StatusBarComboStyleOneRuntime): Float =
         if (usesOutsideSignalLayout(config)) {
             OUTSIDE_SIGNAL_RING_CLEARANCE +
@@ -643,9 +643,9 @@ object StatusComboStyleOneGlyphRenderer {
         val save = canvas.save()
         canvas.translate((width - designWidth * scale) / 2f, (height - designHeight * scale) / 2f)
         canvas.scale(scale, scale)
-        // The host grows leftward for the outside type; translate content by the same amount to
-        // keep the ring anchored. The network-type margins then move only the label, while the
-        // signal lane's spacing remains an independent setting.
+        // The host grows leftward for outside content; translate the glyph by the same amount
+        // to keep the ring anchored. When type and signal are both outside, their shared centre
+        // keeps them stacked as one network icon.
         canvas.translate(
             leadingExpansion,
             if (dualBottomLayout) (designHeight - HEIGHT) / 2f else 0f,
