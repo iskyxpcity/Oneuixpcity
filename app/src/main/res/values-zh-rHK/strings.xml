@@ -55,7 +55,7 @@
     <string name="settings_enable_glass">液態玻璃</string>
     <string name="settings_enable_glass_summary">為懸浮底部欄啟用液態玻璃效果</string>
     <string name="oneuixp_tools">功能</string>
-    <string name="oneuixp_feature_injection_count">功能注入數量</string>
+    <string name="oneuixp_feature_injection_count">已開啟功能</string>
     <string name="status_category_time">狀態欄時間</string>
     <string name="status_category_notification">狀態欄通知</string>
     <string name="status_category_network_speed">狀態欄網速</string>
