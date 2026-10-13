@@ -58,7 +58,8 @@ object StatusComboStyleOneGlyphRenderer {
     // The shared fixed frame uses native-like clearances and never changes the ring anchor.
     private const val OUTSIDE_SIGNAL_RING_CLEARANCE = 20f
     private const val OUTSIDE_SIGNAL_NATIVE_ICON_GAP_PX = 20f
-    private const val OUTSIDE_FRAME_CENTER_Y = 46.20471f
+    // Align the network label to the actual status-bar / battery-ring vertical centre.
+    private const val OUTSIDE_FRAME_CENTER_Y = 61.48715f
     private const val OUTSIDE_FRAME_SIDE = 153f
     // Out-of-ring-type-only mode should not reserve the unused signal-pillars lane.
     private const val TYPE_ONLY_SHIFT = 60f
