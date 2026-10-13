@@ -178,38 +178,29 @@ object StatusComboStyleOneGlyphRenderer {
     }
 
     /**
-     * Keep a combined outside network-type + signal lane together when its left edge would
-     * collide with native icons. The same delta is applied to both children, preserving their
-     * shared frame centre and each child's configured relative offset.
+     * Clamp a single outside element against the last native icon.
+     *
+     * Keep its requested centre and X offset local to that element. In combined mode the type
+     * label and signal bars must never share a collision delta: changing either child's X offset
+     * must not shift the other child or the battery ring.
      */
-    private fun outsideCompositeNativeBoundaryShift(
-        config: StatusBarComboStyleOneRuntime,
-        networkType: String,
-        typeCenter: Float,
-        signalCenter: Float,
-        typeWidth: Float,
-        signalWidth: Float,
+    private fun outsideElementNativeBoundaryCenter(
+        requestedCenter: Float,
+        offsetXUnits: Float,
+        visibleWidth: Float,
         minimumVisibleIconLeftPx: Float?,
         canvasLeftInsetPx: Float,
         renderScale: Float,
         leadingExpansion: Float,
     ): Float {
-        val label = networkType.trim().uppercase()
-        if (
-            !usesOutsideNetworkTypeLayout(config) ||
-            !usesOutsideSignalLayout(config) ||
-            label.isBlank() ||
-            minimumVisibleIconLeftPx == null ||
-            renderScale <= 0f
-        ) return 0f
-
-        val typeLeft = typeCenter + outsideTypeOffsetXUnits(config) - typeWidth / 2f
-        val signalLeft = signalCenter + outsideSignalOffsetXUnits(config) - signalWidth / 2f
-        val currentLeft = min(typeLeft, signalLeft)
-        val requiredLeft = (
+        if (minimumVisibleIconLeftPx == null || renderScale <= 0f || visibleWidth <= 0f) {
+            return requestedCenter
+        }
+        val requiredCenter = (
             minimumVisibleIconLeftPx + OUTSIDE_SIGNAL_NATIVE_ICON_GAP_PX - canvasLeftInsetPx
-            ) / renderScale - leadingExpansion
-        return (requiredLeft - currentLeft).coerceAtLeast(0f)
+        ) / renderScale - leadingExpansion + visibleWidth / 2f
+        // The returned centre excludes offsetXUnits because draw callers still apply that offset.
+        return max(requestedCenter, requiredCenter - offsetXUnits)
     }
 
     private fun outsideSignalHeight(
@@ -820,25 +811,17 @@ object StatusComboStyleOneGlyphRenderer {
         val typeWidthForClamp = if (outsideType && label.isNotBlank()) {
             outsideTypeLabelWidth(config, label)
         } else 0f
-        val compositeBoundaryShift = outsideCompositeNativeBoundaryShift(
-            config, label, baseTypeCenter, baseSignalCenter, typeWidthForClamp, signalWidth,
-            minimumVisibleIconLeftPx, canvasLeftInsetPx, renderScale, leadingExpansion,
-        )
-        val hasOutsideComposite = outsideType && outsideSignal && label.isNotBlank()
-        val safeTypeCenter = if (hasOutsideComposite) {
-            baseTypeCenter + compositeBoundaryShift
-        } else if (outsideType && minimumVisibleIconLeftPx != null && renderScale > 0f) {
-            max(
-                baseTypeCenter,
-                (minimumVisibleIconLeftPx - canvasLeftInsetPx) / renderScale -
-                    leadingExpansion + typeWidthForClamp / 2f +
-                    OUTSIDE_SIGNAL_NATIVE_ICON_GAP_PX / renderScale,
+        val typeOffsetX = outsideTypeOffsetXUnits(config)
+        val signalOffsetX = outsideSignalOffsetXUnits(config)
+        val safeTypeCenter = if (outsideType && label.isNotBlank()) {
+            outsideElementNativeBoundaryCenter(
+                baseTypeCenter, typeOffsetX, typeWidthForClamp,
+                minimumVisibleIconLeftPx, canvasLeftInsetPx, renderScale, leadingExpansion,
             )
         } else baseTypeCenter
-        val safeSignalCenter = if (hasOutsideComposite) {
-            baseSignalCenter + compositeBoundaryShift
-        } else if (
-            outsideSignal && minimumVisibleIconLeftPx != null && renderScale > 0f
+        val requestedSignalCenter = if (
+            outsideSignal && !(outsideType && label.isNotBlank()) &&
+            minimumVisibleIconLeftPx != null && renderScale > 0f
         ) {
             outsideSignalCenterFromIconBoundary(
                 config,
@@ -849,6 +832,12 @@ object StatusComboStyleOneGlyphRenderer {
                 signalWidth,
             )
         } else baseSignalCenter
+        val safeSignalCenter = if (outsideSignal) {
+            outsideElementNativeBoundaryCenter(
+                requestedSignalCenter, signalOffsetX, signalWidth,
+                minimumVisibleIconLeftPx, canvasLeftInsetPx, renderScale, leadingExpansion,
+            )
+        } else requestedSignalCenter
         val labelInfo = if (outsideType && label.isNotBlank()) {
             val typeOnlyShift = if (outsideSignal) 0f else TYPE_ONLY_SHIFT
             val typeReferenceWidth = if (outsideSignal) OUTSIDE_TYPE_REFERENCE_WIDTH
@@ -1051,25 +1040,18 @@ object StatusComboStyleOneGlyphRenderer {
         val outsideTypeCenter = outsideTypeBaseCenter(config, state.networkType) + compositeShift
         val outsideSignalCenter = outsideSignalCanvasCenter(config, state.networkType) + compositeShift
         val canvasLeftInsetPx = (width - designWidth * scale) / 2f
-        val compositeBoundaryShift = outsideCompositeNativeBoundaryShift(
-            config, state.networkType, outsideTypeCenter, outsideSignalCenter,
-            outsideTypeLabelWidth, signalWidth, minimumVisibleIconLeftPx,
-            canvasLeftInsetPx, scale, leadingExpansion,
-        )
-        val hasOutsideComposite = outsideType && outsideSignal && state.networkType.isNotBlank()
-        val safeOutsideTypeCenter = if (hasOutsideComposite) {
-            outsideTypeCenter + compositeBoundaryShift
-        } else if (outsideType && outsideTypeLabelWidth > 0f && minimumVisibleIconLeftPx != null) {
-            max(
-                outsideTypeCenter,
-                (minimumVisibleIconLeftPx - canvasLeftInsetPx) / scale -
-                    leadingExpansion + outsideTypeLabelWidth / 2f +
-                    OUTSIDE_SIGNAL_NATIVE_ICON_GAP_PX / scale,
+        val typeOffsetX = outsideTypeOffsetXUnits(config)
+        val signalOffsetX = outsideSignalOffsetXUnits(config)
+        val safeOutsideTypeCenter = if (outsideType && state.networkType.isNotBlank()) {
+            outsideElementNativeBoundaryCenter(
+                outsideTypeCenter, typeOffsetX, outsideTypeLabelWidth,
+                minimumVisibleIconLeftPx, canvasLeftInsetPx, scale, leadingExpansion,
             )
         } else outsideTypeCenter
-        val safeOutsideSignalCenter = if (hasOutsideComposite) {
-            outsideSignalCenter + compositeBoundaryShift
-        } else if (outsideSignal && signalWidth > 0f && minimumVisibleIconLeftPx != null) {
+        val requestedOutsideSignalCenter = if (
+            outsideSignal && !(outsideType && state.networkType.isNotBlank()) &&
+            signalWidth > 0f && minimumVisibleIconLeftPx != null
+        ) {
             outsideSignalCenterFromIconBoundary(
                 config,
                 minimumVisibleIconLeftPx,
@@ -1079,6 +1061,12 @@ object StatusComboStyleOneGlyphRenderer {
                 signalWidth,
             )
         } else outsideSignalCenter
+        val safeOutsideSignalCenter = if (outsideSignal && signalWidth > 0f) {
+            outsideElementNativeBoundaryCenter(
+                requestedOutsideSignalCenter, signalOffsetX, signalWidth,
+                minimumVisibleIconLeftPx, canvasLeftInsetPx, scale, leadingExpansion,
+            )
+        } else requestedOutsideSignalCenter
         val save = canvas.save()
         canvas.translate((width - designWidth * scale) / 2f, (height - designHeight * scale) / 2f)
         canvas.scale(scale, scale)
