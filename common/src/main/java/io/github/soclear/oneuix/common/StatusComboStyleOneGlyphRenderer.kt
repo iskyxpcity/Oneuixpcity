@@ -652,14 +652,16 @@ object StatusComboStyleOneGlyphRenderer {
 
         if (typeActive) {
             val width = outsideTypeLabelWidth(config, label)
-            val center = leading + outsideTypeBaseCenter(config, label) +
-                compositeShift + outsideTypeOffsetXUnits(config)
+            // Horizontal offsets are paint-only adjustments. Do not include them in the
+            // leading trim: changing a label's X offset must not resize the inline host slot,
+            // alter the ring's local centre, or reflow the native status-icon row.
+            val center = leading + outsideTypeBaseCenter(config, label) + compositeShift
             left = min(left, center - width / 2f)
         }
         if (signalActive) {
             val width = outsideSignalWidth(config)
-            val center = leading + outsideSignalCanvasCenter(config, label) +
-                compositeShift + outsideSignalOffsetXUnits(config)
+            // Keep the host envelope and battery-ring anchor stable as the signal bars move.
+            val center = leading + outsideSignalCanvasCenter(config, label) + compositeShift
             left = min(left, center - width / 2f)
         }
         if (!left.isFinite()) return 0f
