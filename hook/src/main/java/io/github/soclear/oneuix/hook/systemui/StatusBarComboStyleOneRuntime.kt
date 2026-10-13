@@ -4342,7 +4342,13 @@ object StatusBarComboStyleOneRuntime {
     }
     private fun glyphLeadingExpansionPx(context: Context, networkType: String): Int {
         val leadingDp = StatusComboStyleOneGlyphRenderer.glyphBaseLeadingExpansionDp(config, networkType)
-        return if (leadingDp > 0) dp(context, leadingDp) else 0
+        val standaloneSignalReservationDp =
+            StatusComboStyleOneGlyphRenderer.glyphStandaloneOutsideSignalReservationDp(config, networkType)
+        // Keep the ring's right edge anchored but reserve the outside signal's actual square
+        // width in the native status row. A signed result may intentionally add a positive
+        // leading margin, causing preceding SystemUI icons to reflow left instead of forcing
+        // the signal frame over the ring when the free lane is too narrow.
+        return dpExact(context, leadingDp - standaloneSignalReservationDp)
     }
 
     private fun dp(context: Context, value: Int): Int =
