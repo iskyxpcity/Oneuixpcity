@@ -59,8 +59,6 @@ object StatusComboStyleOneGlyphRenderer {
     private const val OUTSIDE_SIGNAL_NATIVE_ICON_GAP_PX = 20f
     private const val OUTSIDE_FRAME_CENTER_Y = 46.20471f
     private const val OUTSIDE_FRAME_SIDE = 153f
-    // Keep a narrow gap between stacked child bounds; their outer extents stay centred in the frame.
-    private const val OUTSIDE_COMPOSITE_ELEMENT_GAP = 6f
     // Out-of-ring-type-only mode should not reserve the unused signal-pillars lane.
     private const val TYPE_ONLY_SHIFT = 60f
     private const val B_CX = 59.5f
@@ -190,18 +188,11 @@ object StatusComboStyleOneGlyphRenderer {
     private fun outsideTypeBaseline(
         config: StatusBarComboStyleOneRuntime,
         networkType: String,
-        hasSecondarySignalLevel: Boolean = false,
     ): Float {
         val textSize = config.outTypeSizeDp.coerceIn(8, 26) * (HEIGHT / 36f)
-        val textHalfHeight = textSize * CAP_HEIGHT_RATIO / 2f
-        val hasStackedSignal = usesOutsideSignalLayout(config) && networkType.isNotBlank()
-        if (!hasStackedSignal) return OUTSIDE_FRAME_CENTER_Y + textHalfHeight
-
-        val signalHalfHeight = outsideSignalHeight(config, hasSecondarySignalLevel) / 2f
-        // Keep the text in the upper lane. As either child grows, both children move outward
-        // from the shared composition centre while their inner gap remains stable.
-        return OUTSIDE_FRAME_CENTER_Y - signalHalfHeight -
-            OUTSIDE_COMPOSITE_ELEMENT_GAP / 2f + textHalfHeight
+        // The network label is centred in the common frame by default. Its size changes only
+        // expand or shrink the text bounds around this anchor; the signal and ring do not move.
+        return OUTSIDE_FRAME_CENTER_Y + textSize * CAP_HEIGHT_RATIO / 2f
     }
 
     private fun outsideSignalBaseline(
@@ -209,21 +200,13 @@ object StatusComboStyleOneGlyphRenderer {
         networkType: String,
         hasSecondarySignalLevel: Boolean = false,
     ): Float {
-        val hasStackedType = usesOutsideNetworkTypeLayout(config) && networkType.isNotBlank()
-        val textSize = config.outTypeSizeDp.coerceIn(8, 26) * (HEIGHT / 36f)
-        val textHalfHeight = if (hasStackedType) textSize * CAP_HEIGHT_RATIO / 2f else 0f
-        val signalCenterY = if (hasStackedType) {
-            OUTSIDE_FRAME_CENTER_Y + textHalfHeight + OUTSIDE_COMPOSITE_ELEMENT_GAP / 2f
-        } else {
-            OUTSIDE_FRAME_CENTER_Y
-        }
-        // drawStackedSignal is asymmetric around its bar baseline: the tallest bar rises 150
-        // scaled units, while the second-SIM dot row can extend 59 units below it. Centre that
-        // complete visible extent, rather than centring the baseline itself.
+        // Network type and signal share the same frame-centre anchor. The signal itself is
+        // asymmetric around its bar baseline: the tallest bar rises 150 scaled units, while the
+        // second-SIM dot row can extend 59 units below it. Centre the full visible bounds.
         val scale = outsideSignalScale(config)
         val lowerTail = if (hasSecondarySignalLevel) 59f * scale else 0f
         val upperExtent = 150f * scale
-        return signalCenterY + (upperExtent - lowerTail) / 2f
+        return OUTSIDE_FRAME_CENTER_Y + (upperExtent - lowerTail) / 2f
     }
 
     fun hasOutsideSecondarySignalLevel(
@@ -744,7 +727,7 @@ object StatusComboStyleOneGlyphRenderer {
                         "marginUnits=left:${leftMarginUnits},right:${rightMarginUnits} " +
                         "widthDeltaUnits=${typeWidthDelta} baseCenterUnits=${baseTypeCenter} " +
                         "rawCenterUnits=${centerRaw} requestedDrawnCenterUnits=${center + leadingExpansion} " +
-                        "typeBaseline=${outsideTypeBaseline(config, label, hasSecondarySignalLevel) + outsideTypeOffsetYUnits(config) + verticalContentOffset} " +
+                        "typeBaseline=${outsideTypeBaseline(config, label) + outsideTypeOffsetYUnits(config) + verticalContentOffset} " +
                         "horizontalOffsetDp=${config.outTypeOffsetXDp},verticalOffsetDp=${config.outTypeOffsetYDp} " +
                         "drawnCenterUnits=${drawnCenter} boundaryClampUnits=${boundaryClampedCenter - center} " +
                         "minimumVisibleIconLeftPx=${minimumVisibleIconLeftPx}," +
@@ -1082,8 +1065,7 @@ object StatusComboStyleOneGlyphRenderer {
             drawNetworkType(
                 canvas, state.networkType.trim().uppercase(),
                 safeOutsideTypeCenter + outsideTypeOffsetXUnits(config),
-                outsideTypeBaseline(config, state.networkType, hasOutsideSecondarySignalLevel(config, state)) +
-                    outsideTypeOffsetYUnits(config),
+                outsideTypeBaseline(config, state.networkType) + outsideTypeOffsetYUnits(config),
                 outsideTypeSize, config.typeWeight, tint, config.typeSuffixScale, 0f,
             )
         }
