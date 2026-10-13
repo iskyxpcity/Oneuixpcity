@@ -653,8 +653,8 @@ object OneuiXFeatureCatalog {
      * injects into two target apps is two actual injection targets. Child value fields and
      * power-menu action rows are not counted separately.
      */
-    fun enabledInjectionCount(preference: Preference): Int =
-        OneuiXCategory.entries.sumOf { category ->
+    fun enabledInjectionCount(preference: Preference): Int {
+        val catalogCount = OneuiXCategory.entries.sumOf { category ->
             settings(category).count { spec ->
                 if (!visibilityMatches(spec.visibility, preference)) {
                     false
@@ -670,6 +670,23 @@ object OneuiXFeatureCatalog {
                 }
             }
         }
+
+        // Include OneuiXP's newer standalone runtime features alongside the legacy
+        // OneUIX catalog. Count only each feature's master enable switch; appearance,
+        // size, color, spacing, and per-element settings are not separate injections.
+        val statusBar = preference.systemUI.statusBar
+        val runtimeFeatureCount = listOf(
+            statusBar.powerRuntime.enabled,
+            statusBar.comboStyleOneRuntime.enabled,
+            statusBar.wifiRuntime.enabled,
+            statusBar.bluetoothRuntime.enabled,
+            statusBar.signalRuntime.enabled,
+            statusBar.networkSpeedRuntime.enabled,
+            statusBar.enableStatusBarClockRichStyle,
+        ).count { it }
+
+        return catalogCount + runtimeFeatureCount
+    }
 
     fun settings(category: OneuiXCategory): List<OneuiXSettingSpec> =
         byCategory[category].orEmpty().map { spec ->
