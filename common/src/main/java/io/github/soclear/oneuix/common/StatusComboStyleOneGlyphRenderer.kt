@@ -129,8 +129,154 @@ object StatusComboStyleOneGlyphRenderer {
         config.trioStyle == 0 && config.showMobile && config.signalMode == 0 &&
             effectiveDualSimMode(config) == 2
 
-    private fun designHeight(config: StatusBarComboStyleOneRuntime): Float =
-        if (usesDualSignalBelowRing(config)) DUAL_BOTTOM_HEIGHT else HEIGHT
+    private data class OutsideFrameGeometry(
+        val left: Float,
+        val top: Float,
+        val right: Float,
+        val bottom: Float,
+        val squareLeft: Float,
+        val squareTop: Float,
+        val squareRight: Float,
+        val squareBottom: Float,
+        val side: Float,
+        val centerX: Float,
+        val centerY: Float,
+    )
+
+    private fun outsideTypeOffsetXUnits(config: StatusBarComboStyleOneRuntime): Float =
+        config.outTypeOffsetXDp.coerceIn(-16, 16) * (HEIGHT / 36f)
+
+    private fun outsideTypeOffsetYUnits(config: StatusBarComboStyleOneRuntime): Float =
+        config.outTypeOffsetYDp.coerceIn(-16, 16) * (HEIGHT / 36f)
+
+    private fun outsideSignalOffsetXUnits(config: StatusBarComboStyleOneRuntime): Float =
+        config.outSignalOffsetXDp.coerceIn(-16, 16) * (HEIGHT / 36f)
+
+    private fun outsideSignalOffsetYUnits(config: StatusBarComboStyleOneRuntime): Float =
+        config.outSignalOffsetYDp.coerceIn(-16, 16) * (HEIGHT / 36f)
+
+    private fun outsideSignalHeight(config: StatusBarComboStyleOneRuntime): Float =
+        if (usesOutsideSignalLayout(config)) 209f * outsideSignalScale(config) else 0f
+
+    private fun outsideTypeBaseline(
+        config: StatusBarComboStyleOneRuntime,
+        networkType: String,
+    ): Float = if (
+        usesOutsideNetworkTypeLayout(config) &&
+        usesOutsideSignalLayout(config) &&
+        networkType.isNotBlank()
+    ) {
+        OUTSIDE_SIGNAL_BAR_BASELINE - outsideSignalHeight(config) - 4f
+    } else OUTSIDE_TYPE_TOP_BASELINE
+
+    private fun outsideBaseCenter(
+        config: StatusBarComboStyleOneRuntime,
+        networkType: String,
+    ): Float = when {
+        usesOutsideNetworkTypeLayout(config) && networkType.isNotBlank() ->
+            outsideNetworkTypeCenter(config, networkType.trim().uppercase())
+        usesOutsideSignalLayout(config) ->
+            outsideSignalWidth(config) / 2f - outsideSignalMargin(config) +
+                outsideSignalMarginLeft(config)
+        else -> 0f
+    }
+
+    /**
+     * Bounds for the invisible square that contains the outside network type and signal bars.
+     * The square is recomputed from actual element sizes and individual X/Y offsets.
+     */
+    private fun outsideFrameGeometry(
+        config: StatusBarComboStyleOneRuntime,
+        networkType: String,
+    ): OutsideFrameGeometry? {
+        val label = networkType.trim().uppercase()
+        val typeActive = usesOutsideNetworkTypeLayout(config) && label.isNotBlank()
+        val signalActive = usesOutsideSignalLayout(config)
+        if (!typeActive && !signalActive) return null
+
+        val center = outsideBaseCenter(config, label)
+        var left = Float.POSITIVE_INFINITY
+        var top = Float.POSITIVE_INFINITY
+        var right = Float.NEGATIVE_INFINITY
+        var bottom = Float.NEGATIVE_INFINITY
+
+        if (typeActive) {
+            val size = config.outTypeSizeDp.coerceIn(8, 26) * (HEIGHT / 36f)
+            val textWidth = measuredNetworkTypeWidth(label, size, config.typeWeight, config.typeSuffixScale)
+            val childCenterX = center + outsideTypeOffsetXUnits(config)
+            val baseline = outsideTypeBaseline(config, label) + outsideTypeOffsetYUnits(config)
+            left = min(left, childCenterX - textWidth / 2f)
+            right = max(right, childCenterX + textWidth / 2f)
+            top = min(top, baseline - size * CAP_HEIGHT_RATIO)
+            bottom = max(bottom, baseline + 2f)
+        }
+        if (signalActive) {
+            val signalScale = outsideSignalScale(config)
+            val signalWidth = outsideSignalWidth(config)
+            val childCenterX = center + outsideSignalOffsetXUnits(config)
+            val baseline = OUTSIDE_SIGNAL_BAR_BASELINE + outsideSignalOffsetYUnits(config)
+            left = min(left, childCenterX - signalWidth / 2f)
+            right = max(right, childCenterX + signalWidth / 2f)
+            top = min(top, baseline - outsideSignalHeight(config))
+            // When dual-SIM signal dots are enabled, include their lower row in the frame bounds.
+            val hasSecondRow = !config.dataSimOnly && config.dualSim
+            bottom = max(bottom, baseline + if (hasSecondRow) 59f * signalScale else 2f)
+        }
+
+        val width = (right - left).coerceAtLeast(0f)
+        val height = (bottom - top).coerceAtLeast(0f)
+        val side = max(width, height)
+        val centerX = (left + right) / 2f
+        val centerY = (top + bottom) / 2f
+        return OutsideFrameGeometry(
+            left = left,
+            top = top,
+            right = right,
+            bottom = bottom,
+            squareLeft = centerX - side / 2f,
+            squareTop = centerY - side / 2f,
+            squareRight = centerX + side / 2f,
+            squareBottom = centerY + side / 2f,
+            side = side,
+            centerX = centerX,
+            centerY = centerY,
+        )
+    }
+
+    private fun outsideFrameLeadingExpansion(
+        config: StatusBarComboStyleOneRuntime,
+        networkType: String,
+    ): Float {
+        val frame = outsideFrameGeometry(config, networkType) ?: return 0f
+        return if (frame.squareLeft < 0f) -frame.squareLeft + 1f else 0f
+    }
+
+    private fun outsideFrameTopExpansion(
+        config: StatusBarComboStyleOneRuntime,
+        networkType: String,
+    ): Float {
+        val frame = outsideFrameGeometry(config, networkType) ?: return 0f
+        return if (frame.squareTop < 0f) -frame.squareTop + 1f else 0f
+    }
+
+    private fun outsideFrameBottomExpansion(
+        config: StatusBarComboStyleOneRuntime,
+        networkType: String,
+    ): Float {
+        val frame = outsideFrameGeometry(config, networkType) ?: return 0f
+        return if (frame.squareBottom > HEIGHT) frame.squareBottom - HEIGHT + 1f else 0f
+    }
+
+    private fun dualBottomExpansion(config: StatusBarComboStyleOneRuntime): Float =
+        if (usesDualSignalBelowRing(config)) (DUAL_BOTTOM_HEIGHT - HEIGHT) / 2f else 0f
+
+    private fun designHeight(
+        config: StatusBarComboStyleOneRuntime,
+        networkType: String = "",
+    ): Float = HEIGHT +
+        outsideFrameTopExpansion(config, networkType) +
+        outsideFrameBottomExpansion(config, networkType) +
+        2f * dualBottomExpansion(config)
 
     private fun usesOutsideSignalLayout(config: StatusBarComboStyleOneRuntime): Boolean =
         config.showMobile && config.signalMode == 1 && config.stackedSignal
