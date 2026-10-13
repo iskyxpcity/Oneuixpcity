@@ -522,11 +522,15 @@ object StatusComboStyleOneGlyphRenderer {
         // centreline, letting half the stroke provide its natural visual overlap.
         val ringLeft = ringCenter - B_R
 
-        val typeWidth = outsideTypeLabelWidth(baseConfig, label)
-        val signalWidth = outsideSignalWidth(baseConfig)
-        val visibleGroupWidth = max(typeWidth, signalWidth)
+        // Use the normal reference frame, not the live child bounds. Font/signal size changes
+        // must grow and shrink around this same shared centre rather than dragging the centre.
+        val referenceFrameWidth = if (usesOutsideSignalLayout(baseConfig)) {
+            OUTSIDE_TYPE_REFERENCE_WIDTH
+        } else {
+            OUTSIDE_TYPE_ONLY_REFERENCE_WIDTH
+        }
         val currentCenter = outsideTypeBaseCenter(baseConfig, label) + leading
-        val desiredCenter = ringLeft - OUTSIDE_SIGNAL_RING_CLEARANCE - visibleGroupWidth / 2f
+        val desiredCenter = ringLeft - OUTSIDE_SIGNAL_RING_CLEARANCE - referenceFrameWidth / 2f
         return desiredCenter - currentCenter
     }
 
