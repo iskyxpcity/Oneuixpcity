@@ -161,13 +161,11 @@ object StatusComboStyleOneGlyphRenderer {
     private fun outsideTypeBaseline(
         config: StatusBarComboStyleOneRuntime,
         networkType: String,
-    ): Float = if (
-        usesOutsideNetworkTypeLayout(config) &&
-        usesOutsideSignalLayout(config) &&
-        networkType.isNotBlank()
-    ) {
-        OUTSIDE_SIGNAL_BAR_BASELINE - outsideSignalHeight(config) - 4f
-    } else OUTSIDE_TYPE_TOP_BASELINE
+    ): Float {
+        // Keep each child's size independent: resizing the signal bars must not reposition the
+        // network-type label. Their shared square frame grows around both actual content bounds.
+        return OUTSIDE_TYPE_TOP_BASELINE
+    }
 
     private fun outsideBaseCenter(
         config: StatusBarComboStyleOneRuntime,
