@@ -1809,14 +1809,9 @@ object StatusBarComboStyleOneRuntime {
             collapseHostView(host, view)
             return
         }
-        // Keep the corrected default gap, but grow the native slot leftward as users increase
-        // the outside margins/spacing. The ring stays tied to the same trailing slot edge.
-        val extraWidthDp = StatusComboStyleOneGlyphRenderer.glyphOutsideSpacingExpansionDp(config)
-        if (extraWidthDp > 0) {
-            reserveHostSlot(host, view, extraWidthDp)
-        } else {
-            collapseHostView(host, view)
-        }
+        // Outside margins are rendered inside the fixed canvas and must not enlarge the native
+        // battery slot, since doing so reflows sibling status-bar icons.
+        collapseHostView(host, view)
     }
 
     private fun reserveHostSlot(host: Host, view: View, widthDp: Int) {
