@@ -4097,6 +4097,41 @@ object StatusBarComboStyleOneRuntime {
         }
     }
 
+    /**
+     * The collapsed SystemUI Wi-Fi model is the same live state that flips the native
+     * status-bar icon. Use it as the authoritative connection signal for the custom
+     * in-ring glyph; WifiManager.connectionInfo can retain stale RSSI/networkId when
+     * an access point disappears (for example, when the router is powered off).
+     */
+    private fun syncWifiGlyphFromSystemUiModel(context: Context, connected: Boolean) {
+        val previousLevel = state.wifiLevel
+        val nextLevel = if (!connected) {
+            -1
+        } else if (previousLevel >= 1) {
+            previousLevel
+        } else {
+            val wifi = context.getSystemService(Context.WIFI_SERVICE) as? WifiManager
+            val info = runCatching { wifi?.connectionInfo }.getOrNull()
+            val measured = if (info != null && info.rssi != -127) {
+                runCatching { WifiManager.calculateSignalLevel(info.rssi, 5) }.getOrNull()
+            } else {
+                null
+            }
+            // SystemUI's Visible model means Wi-Fi is currently displayed as connected.
+            // Keep a minimum non-zero level if RSSI is unavailable or temporarily reads 0.
+            measured?.coerceAtLeast(1)?.coerceAtMost(4) ?: 1
+        }
+        if (previousLevel == nextLevel) return
+
+        state = state.copy(wifiLevel = nextLevel)
+        syncChargingRotationTicker(resetPhase = false)
+        diagnostic(
+            "Wi-Fi glyph synchronized from SystemUI model: connected=$connected " +
+                "previousLevel=$previousLevel level=$nextLevel"
+        )
+        invalidateGlyphs()
+    }
+
     private fun hookModernWifiVisibility(module: XposedModule, classLoader: ClassLoader) {
         val className = "com.android.systemui.statusbar.pipeline.wifi.ui.view.ModernStatusBarWifiView"
         runCatching {
@@ -4133,6 +4168,11 @@ object StatusBarComboStyleOneRuntime {
                     }
                     val nativeWasVisible = nativeWifiBaselineVisibility[view] == View.VISIBLE
                     val modelVisible = readModernWifiModelVisibility(view)
+                    if (modelVisible != null) {
+                        // Synchronize the custom ring glyph directly with SystemUI's live
+                        // Visible/Hidden model before deciding native-view visibility.
+                        syncWifiGlyphFromSystemUiModel(view.context, modelVisible)
+                    }
                     val wifiConnected = isWifiTransportConnected(view.context)
                     val desiredVisible = modelVisible
                         ?: (state.wifiLevel >= 0 || wifiConnected == true)
