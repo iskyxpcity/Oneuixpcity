@@ -3309,14 +3309,27 @@ object StatusBarComboStyleOneRuntime {
     private fun updateWifi(context: Context) {
         val wm = context.getSystemService(Context.WIFI_SERVICE) as? WifiManager ?: return
         runCatching {
-            val info = wm.connectionInfo
-            val level = if (info == null || info.rssi == -127) -1
-                else WifiManager.calculateSignalLevel(info.rssi, 5)
-            val nextLevel = level.coerceIn(-1, 4)
+            // SystemUI's NetworkCapabilities is authoritative when it can confirm that
+            // no Wi-Fi transport is connected. WifiManager.connectionInfo may retain the
+            // previous network ID/RSSI briefly after disconnection, which must not keep
+            // the in-ring Wi-Fi mark visible in place of the mobile network type.
+            val connected = isWifiTransportConnected(context)
+            val info = runCatching { wm.connectionInfo }.getOrNull()
+            val nextLevel = when {
+                connected == false -> -1
+                connected == true && (info == null || info.rssi == -127) ->
+                    state.wifiLevel.coerceAtLeast(1)
+                info == null || info.rssi == -127 || (info.networkId < 0 && connected != true) -> -1
+                else -> WifiManager.calculateSignalLevel(info.rssi, 5).coerceIn(0, 4)
+            }.coerceIn(-1, 4)
             val wifiLevelChanged = state.wifiLevel != nextLevel
             state = state.copy(wifiLevel = nextLevel)
             if (wifiLevelChanged) syncChargingRotationTicker(resetPhase = false)
-            diagnostic("Wi-Fi: level=${state.wifiLevel}")
+            diagnostic(
+                "Wi-Fi state: connected=${connected?.toString() ?: "unknown"} " +
+                    "radioEnabled=${wm.isWifiEnabled} networkId=${info?.networkId ?: -1} " +
+                    "rssi=${info?.rssi ?: -127} level=${state.wifiLevel}"
+            )
         }
     }
     private fun ensureTelephony(context: Context) {
@@ -4052,6 +4065,11 @@ object StatusBarComboStyleOneRuntime {
                 capabilities?.hasTransport(android.net.NetworkCapabilities.TRANSPORT_WIFI) == true
             }
         ) return true
+        // Once at least one current network has readable capabilities and none of them
+        // carries Wi-Fi, trust that disconnection result before consulting WifiManager.
+        // Its connectionInfo can lag behind the actual network transition and expose a
+        // stale networkId/RSSI from the just-disconnected access point.
+        if (queriedAny) return false
         val wifi = context.getSystemService(Context.WIFI_SERVICE) as? WifiManager
         val info = runCatching { wifi?.connectionInfo }.getOrNull()
         if (wifi?.isWifiEnabled == true && info != null &&
