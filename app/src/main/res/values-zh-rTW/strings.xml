@@ -22,7 +22,7 @@
     <string name="settings_theme_mode_dark">深色</string>
     <string name="settings_theme_summary">選擇應用的主題模式。</string>
     <string name="oneuixp_tools">功能</string>
-    <string name="oneuixp_feature_injection_count">功能注入數量</string>
+    <string name="oneuixp_feature_injection_count">已開啟功能</string>
     <string name="status_category_time">狀態列時間</string>
     <string name="status_category_notification">狀態列通知</string>
     <string name="status_category_network_speed">狀態列網速</string>
