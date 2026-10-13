@@ -235,6 +235,7 @@ object StatusBarComboStyleOneRuntime {
     private class GlyphView(context: Context) : View(context) {
         private var tintOverride: Int? = null
         private var statusBarRootForTypeBounds: View? = null
+        private var inlineTrailingAnchor: WeakReference<View>? = null
         init {
             isClickable = false
             isFocusable = false
@@ -244,6 +245,17 @@ object StatusBarComboStyleOneRuntime {
             if (statusBarRootForTypeBounds === root) return
             statusBarRootForTypeBounds = root
             invalidate()
+        }
+        fun setInlineTrailingAnchor(anchor: View?) {
+            inlineTrailingAnchor = anchor?.let(::WeakReference)
+        }
+        override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
+            super.onLayout(changed, left, top, right, bottom)
+            if (!changed || inlineTrailingAnchor == null) return
+            post {
+                val anchor = inlineTrailingAnchor?.get() ?: return@post
+                StatusBarComboStyleOneRuntime.anchorInlineGlyphToTrailingSlot(this, anchor)
+            }
         }
         fun minimumVisibleIconLeftPx(): Float? =
             StatusBarComboStyleOneRuntime.minimumVisibleIconLeftPx(
@@ -1122,8 +1134,9 @@ object StatusBarComboStyleOneRuntime {
                             glyph.layoutParams = lp
                         }
                     }
-                    glyph.translationX = dpExact(glyph.context, config.glyphOffsetXDp).toFloat()
                     glyph.translationY = dpExact(glyph.context, config.glyphOffsetYDp).toFloat()
+                    glyph.setInlineTrailingAnchor(battery)
+                    glyph.post { anchorInlineGlyphToTrailingSlot(glyph, battery) }
                     glyph.invalidate()
                 }
                 host.overlay?.let { overlay ->
@@ -1396,6 +1409,52 @@ object StatusBarComboStyleOneRuntime {
         }
     }
 
+    /**
+     * The inline renderer must obey the same trailing-edge contract as the independent overlay.
+     * The native battery child is collapsed but remains in the row after GlyphView, so its left
+     * edge (or right edge while still measured) identifies the original trailing slot. Keeping
+     * the ring at this screen coordinate prevents child-width changes and outside-element offsets
+     * from dragging the ring horizontally.
+     */
+    private fun anchorInlineGlyphToTrailingSlot(glyph: GlyphView, anchor: View) {
+        if (glyph.parent == null || anchor.parent !== glyph.parent ||
+            glyph.width <= 0 || glyph.height <= 0
+        ) return
+
+        val cfg = config
+        val networkType = state.networkType
+        val designWidth = StatusComboStyleOneGlyphRenderer.glyphDesignWidth(cfg, networkType)
+        val designHeight = StatusComboStyleOneGlyphRenderer.glyphDesignHeight(cfg, networkType)
+        if (designWidth <= 0f || designHeight <= 0f) return
+        val renderScale = glyph.height.toFloat() / designHeight
+        if (renderScale <= 0f) return
+        val canvasLeftInsetPx = (glyph.width - designWidth * renderScale) / 2f
+        val ringCenterUnits = StatusComboStyleOneGlyphRenderer.glyphCenterX(cfg, networkType)
+
+        val glyphLocation = IntArray(2)
+        val anchorLocation = IntArray(2)
+        if (runCatching { glyph.getLocationOnScreen(glyphLocation) }.isFailure ||
+            runCatching { anchor.getLocationOnScreen(anchorLocation) }.isFailure
+        ) return
+
+        val slotRightPx = if (anchor.width > 0) {
+            anchorLocation[0] + anchor.width
+        } else {
+            anchorLocation[0]
+        }
+        val overallOffsetPx = dpExact(glyph.context, cfg.glyphOffsetXDp).toFloat()
+        val desiredRingScreenX = slotRightPx -
+            (designWidth - ringCenterUnits) * renderScale + overallOffsetPx
+        // getLocationOnScreen includes the current translation; remove it to recover the layout
+        // origin, then solve the translation required for the ring to remain at the slot anchor.
+        val layoutOriginX = glyphLocation[0] - glyph.translationX
+        val desiredTranslationX = desiredRingScreenX -
+            (layoutOriginX + canvasLeftInsetPx + ringCenterUnits * renderScale)
+        if (abs(glyph.translationX - desiredTranslationX) >= 0.75f) {
+            glyph.translationX = desiredTranslationX
+        }
+    }
+
     private fun insertInline(host: Host, anchor: View, compactToAnchor: Boolean = false) {
         val parent = anchor.parent as? ViewGroup ?: return
         val designWidth = StatusComboStyleOneGlyphRenderer.glyphWidthDp(config, state.networkType)
@@ -1411,6 +1470,7 @@ object StatusBarComboStyleOneRuntime {
         val height = if (compactToAnchor) originalHeight else dp(parent.context, designHeight)
         host.inline?.takeIf { it.parent === parent }?.let { glyph ->
             glyph.setStatusBarRootForTypeBounds(host.root)
+            glyph.setInlineTrailingAnchor(anchor)
             val lp = glyph.layoutParams
             if (lp != null) {
                 val margins = lp as? ViewGroup.MarginLayoutParams
@@ -1427,8 +1487,8 @@ object StatusBarComboStyleOneRuntime {
                     glyph.layoutParams = lp
                 }
             }
-            glyph.translationX = dpExact(parent.context, config.glyphOffsetXDp).toFloat()
             glyph.translationY = dpExact(parent.context, config.glyphOffsetYDp).toFloat()
+            glyph.post { anchorInlineGlyphToTrailingSlot(glyph, anchor) }
             glyph.invalidate()
             return
         }
@@ -1454,8 +1514,12 @@ object StatusBarComboStyleOneRuntime {
         )
         glyph.translationX = dpExact(parent.context, config.glyphOffsetXDp).toFloat()
         glyph.translationY = dpExact(parent.context, config.glyphOffsetYDp).toFloat()
-        runCatching { parent.addView(glyph, parent.indexOfChild(anchor).coerceAtLeast(0), lp); host.inline = glyph }
-            .onFailure { Log.w(TAG, "Cannot add inline glyph", it) }
+        glyph.setInlineTrailingAnchor(anchor)
+        runCatching {
+            parent.addView(glyph, parent.indexOfChild(anchor).coerceAtLeast(0), lp)
+            host.inline = glyph
+            glyph.post { anchorInlineGlyphToTrailingSlot(glyph, anchor) }
+        }.onFailure { Log.w(TAG, "Cannot add inline glyph", it) }
     }
 
     private fun removeInline(host: Host) {
