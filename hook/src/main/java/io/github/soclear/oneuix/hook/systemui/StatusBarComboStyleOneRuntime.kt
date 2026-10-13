@@ -261,6 +261,10 @@ object StatusBarComboStyleOneRuntime {
             StatusBarComboStyleOneRuntime.minimumVisibleIconLeftPx(
                 this, statusBarRootForTypeBounds,
             )
+        fun minimumVisibleIconBottomPx(): Float? =
+            StatusBarComboStyleOneRuntime.minimumVisibleIconBottomPx(
+                this, statusBarRootForTypeBounds,
+            )
         fun setTintOverride(color: Int?) {
             if (tintOverride == color) return
             tintOverride = color
@@ -274,7 +278,7 @@ object StatusBarComboStyleOneRuntime {
             val drawState = if (localTint == null) currentState else currentState.copy(tintColor = localTint)
             StatusComboStyleOneGlyphRenderer.draw(
                 canvas, width, height, currentConfig, drawState,
-                minimumVisibleIconLeftPx(),
+                minimumVisibleIconLeftPx(), minimumVisibleIconBottomPx(),
             )
         }
     }
@@ -465,6 +469,7 @@ object StatusBarComboStyleOneRuntime {
                         screenX,
                         screenY,
                         glyph.minimumVisibleIconLeftPx(),
+                        minimumVisibleIconBottomPx = glyph.minimumVisibleIconBottomPx(),
                     )
                 )
             }
@@ -1541,7 +1546,7 @@ object StatusBarComboStyleOneRuntime {
      * Rightmost visible native icon edge within the active status-icons cluster. Only leaves are
      * measured: the StatusIconContainer's own bounds include unused end padding, not visible ink.
      */
-    private fun lastVisibleStatusIconRightScreenPx(root: View?): Int? {
+    private fun lastVisibleStatusIconBoundsScreenPx(root: View?): Pair<Int, Int>? {
         root ?: return null
         val cluster = descendants(root).firstOrNull(::isStatusIconsCluster) ?: return null
         val leaves = descendants(cluster).drop(1).filter { candidate ->
@@ -1563,9 +1568,21 @@ object StatusBarComboStyleOneRuntime {
             runCatching {
                 val location = IntArray(2)
                 candidate.getLocationOnScreen(location)
-                location[0] + candidate.width
+                (location[0] + candidate.width) to (location[1] + candidate.height)
             }.getOrNull()
-        }.maxOrNull()
+        }.maxByOrNull { it.first }
+    }
+
+    private fun lastVisibleStatusIconRightScreenPx(root: View?): Int? =
+        lastVisibleStatusIconBoundsScreenPx(root)?.first
+
+    private fun minimumVisibleIconBottomPx(view: View, statusBarRoot: View?): Float? {
+        val root = statusBarRoot ?: view.rootView
+        val iconBottom = lastVisibleStatusIconBoundsScreenPx(root)?.second ?: return null
+        val viewLocation = IntArray(2)
+        if (runCatching { view.getLocationOnScreen(viewLocation) }.isFailure) return null
+        // Express the same rightmost visible native icon's lower edge in this glyph's local pixels.
+        return (iconBottom - viewLocation[1]).toFloat()
     }
 
     private fun minimumVisibleIconLeftPx(view: View, statusBarRoot: View?): Float? {
@@ -1573,8 +1590,7 @@ object StatusBarComboStyleOneRuntime {
         val iconRight = lastVisibleStatusIconRightScreenPx(root) ?: return null
         val viewLocation = IntArray(2)
         if (runCatching { view.getLocationOnScreen(viewLocation) }.isFailure) return null
-        // Return the native icon's true measured right edge in glyph-local pixels. The renderer
-        // applies one shared 20px inter-icon gap for both outside network type and signal lanes.
+        // The signal's reduced native gap is applied separately by the renderer.
         return (iconRight - viewLocation[0]).toFloat()
     }
 
