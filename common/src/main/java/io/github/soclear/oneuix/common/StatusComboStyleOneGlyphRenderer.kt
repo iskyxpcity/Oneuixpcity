@@ -635,7 +635,14 @@ object StatusComboStyleOneGlyphRenderer {
         val label = networkType.trim().uppercase()
         val typeActive = usesOutsideNetworkTypeLayout(config) && label.isNotBlank()
         val signalActive = usesOutsideSignalLayout(config)
-        if (!typeActive && !signalActive) return 0f
+        if (!typeActive && !signalActive) {
+            // With both outside lanes disabled, the ring itself is the first visible element.
+            // Crop only the transparent canvas before its outer stroke so that this unused
+            // leading padding does not widen the inline status-icon slot and push native icons
+            // away. Keep the rectangular style unchanged; its bounds are different from the ring.
+            if (config.trioStyle != 0) return 0f
+            return (B_CX - B_R - config.ringStroke.coerceIn(4, 16) / 2f).coerceAtLeast(0f)
+        }
 
         val leading = outsideTypeLeadingExpansion(config) +
             outsideSignalLeadingExpansion(config) +
