@@ -522,13 +522,22 @@ object StatusComboStyleOneGlyphRenderer {
         // centreline, letting half the stroke provide its natural visual overlap.
         val ringLeft = ringCenter - B_R
 
-        // Use the normal reference frame, not the live child bounds. Font/signal size changes
-        // must grow and shrink around this same shared centre rather than dragging the centre.
-        val referenceFrameWidth = if (usesOutsideSignalLayout(baseConfig)) {
-            OUTSIDE_TYPE_REFERENCE_WIDTH
+        // Measure a canonical default-size "5G" label and the default-size signal. Never use
+        // the live text/bar dimensions here: changing size or switching 5G ↔ 5GA must not drag
+        // the shared centre. Actual child bounds expand and contract around this anchor.
+        val defaults = StatusBarComboStyleOneRuntime()
+        val typeReferenceWidth = measuredNetworkTypeWidth(
+            "5G",
+            defaults.outTypeSizeDp.coerceIn(8, 26) * (HEIGHT / 36f),
+            defaults.typeWeight,
+            defaults.typeSuffixScale,
+        )
+        val signalReferenceWidth = if (usesOutsideSignalLayout(baseConfig)) {
+            outsideSignalWidth(baseConfig.copy(outSignalSizeDp = defaults.outSignalSizeDp))
         } else {
-            OUTSIDE_TYPE_ONLY_REFERENCE_WIDTH
+            0f
         }
+        val referenceFrameWidth = max(typeReferenceWidth, signalReferenceWidth)
         val currentCenter = outsideTypeBaseCenter(baseConfig, label) + leading
         val desiredCenter = ringLeft - OUTSIDE_SIGNAL_RING_CLEARANCE - referenceFrameWidth / 2f
         return desiredCenter - currentCenter
