@@ -483,18 +483,9 @@ object StatusComboStyleOneGlyphRenderer {
     fun glyphOutsideSpacingExpansionDp(
         config: StatusBarComboStyleOneRuntime,
     ): Int {
-        val defaults = StatusBarComboStyleOneRuntime()
-        val typeDeltaDp = if (usesOutsideNetworkTypeLayout(config)) {
-            (config.outTypeMarginLeftDp.coerceIn(0, 16) - defaults.outTypeMarginLeftDp) +
-                (config.outTypeMarginRightDp.coerceIn(0, 16) - defaults.outTypeMarginRightDp)
-        } else 0
-        val signalDeltaDp = if (usesOutsideSignalLayout(config)) {
-            (config.outSignalMarginDp.coerceIn(0, 16) - defaults.outSignalMarginDp) +
-                (config.outSignalMarginLeftDp.coerceIn(0, 16) - defaults.outSignalMarginLeftDp)
-        } else 0
-        val netDeltaDp = typeDeltaDp + signalDeltaDp
-        return (netDeltaDp * baseGlyphHeightDp(config).toFloat() / 36f)
-            .roundToInt().coerceAtLeast(0)
+        // Left/right margins and offsets only reposition the individual child inside the fixed
+        // host envelope. Do not expand the native battery slot, which would reflow sibling icons.
+        return 0
     }
 
     /**
