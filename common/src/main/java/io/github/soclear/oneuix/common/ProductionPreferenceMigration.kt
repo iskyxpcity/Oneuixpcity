@@ -165,18 +165,13 @@ object ProductionPreferenceMigration {
                     comboRuntimeChanged = true
                 }
 
-                // Retire whole-glyph positions: independent outside elements cannot move the ring anchor.
+                // Complete the one-time ring-layout migration without erasing user-controlled overall-size values.
                 val ringTrailingAnchorMigrationDone =
                     (updatedComboRuntime["ringTrailingAnchorMigrationDone"] as? JsonPrimitive)
                         ?.content?.toBooleanStrictOrNull() == true
                 if (!ringTrailingAnchorMigrationDone) {
-                    listOf(
-                        "glyphOffsetXDp",
-                        "glyphOffsetYDp",
-                        "glyphLeftMarginDp",
-                        "glyphRightMarginDp",
-                    ).forEach { key -> updatedComboRuntime[key] = JsonPrimitive(0) }
-
+                    // Do not reset whole-glyph offset or margin values here. These controls
+                    // remain part of the Overall Size group and are user-adjustable.
                     // Only replace the known untouched default tuple, keeping custom values intact.
                     val oldSignalGap = updatedComboRuntime["outSignalMarginDp"]?.toString()?.toIntOrNull() ?: 8
                     val oldTypeLeft = updatedComboRuntime["outTypeMarginLeftDp"]?.toString()?.toIntOrNull() ?: 2
