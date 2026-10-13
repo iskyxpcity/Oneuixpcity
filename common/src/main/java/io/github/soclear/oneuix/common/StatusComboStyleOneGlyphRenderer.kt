@@ -155,8 +155,12 @@ object StatusComboStyleOneGlyphRenderer {
     private fun outsideSignalOffsetXUnits(config: StatusBarComboStyleOneRuntime): Float =
         config.outSignalOffsetXDp.coerceIn(-16, 16) * (HEIGHT / 36f)
 
-    private fun outsideSignalOffsetYUnits(config: StatusBarComboStyleOneRuntime): Float =
-        config.outSignalOffsetYDp.coerceIn(-16, 16) * (HEIGHT / 36f)
+    private fun outsideSignalOffsetYUnits(config: StatusBarComboStyleOneRuntime): Float {
+        // Visual alignment correction: outer signal bars sit about 5dp too low against
+        // native status-bar icons. Keep the user's offset adjustable relative to this fix.
+        val alignmentCorrectionDp = -5f
+        return (config.outSignalOffsetYDp.coerceIn(-16, 16) + alignmentCorrectionDp) * (HEIGHT / 36f)
+    }
 
     private fun outsideSignalCenterFromIconBoundary(
         config: StatusBarComboStyleOneRuntime,
