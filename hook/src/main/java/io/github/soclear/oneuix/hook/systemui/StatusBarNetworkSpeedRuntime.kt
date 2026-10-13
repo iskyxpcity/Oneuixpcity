@@ -24,6 +24,7 @@ import android.text.style.ReplacementSpan
 import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
+import android.view.ViewGroup
 import android.widget.TextView
 import io.github.libxposed.api.XposedModule
 import io.github.libxposed.api.XposedModuleInterface
@@ -57,6 +58,9 @@ internal object StatusBarNetworkSpeedRuntime {
     private const val MESSAGE_INITIAL = 1
     private const val MESSAGE_UPDATE = 2
 
+    // Use real SystemUI layout spacing instead of trailing text whitespace.
+    private const val NETWORK_SPEED_TRAILING_GAP_DP = 3f
+
     private data class RuntimeConfig(
         val display: Preference.SystemUI.StatusBarNetworkSpeedRuntime =
             Preference.SystemUI.StatusBarNetworkSpeedRuntime(),
@@ -72,6 +76,9 @@ internal object StatusBarNetworkSpeedRuntime {
 
     private data class ViewState(
         var host: View? = null,
+        var nativeHostMarginStart: Int? = null,
+        var nativeHostMarginEnd: Int? = null,
+        var hostMarginsCaptured: Boolean = false,
         var nativeTextSizePx: Float = 0f,
         var nativeTypeface: Typeface? = null,
         var nativeFontVariationSettings: String? = null,
@@ -501,6 +508,41 @@ internal object StatusBarNetworkSpeedRuntime {
         view.alpha = state.nativeAlpha
     }
 
+    /**
+     * Keep the original NetspeedView margins and add a real trailing layout gap.
+     * This replaces the old non-breaking-space suffix used to fake inter-icon
+     * spacing in the displayed string. The text and line-spacing logic stay
+     * independent from the host's layout spacing.
+     */
+    private fun applyHostTrailingGap(state: ViewState, showGap: Boolean) {
+        val host = state.host ?: return
+        val params = host.layoutParams as? ViewGroup.MarginLayoutParams ?: return
+
+        if (!state.hostMarginsCaptured) {
+            state.nativeHostMarginStart = params.marginStart
+            state.nativeHostMarginEnd = params.marginEnd
+            state.hostMarginsCaptured = true
+        }
+
+        val baseStart = state.nativeHostMarginStart ?: params.marginStart
+        val baseEnd = state.nativeHostMarginEnd ?: params.marginEnd
+        val density = host.resources.displayMetrics.density
+        val gapPx = if (showGap) {
+            (NETWORK_SPEED_TRAILING_GAP_DP * density).roundToInt()
+        } else {
+            0
+        }
+        val targetEnd = baseEnd + gapPx
+
+        if (params.marginStart != baseStart || params.marginEnd != targetEnd) {
+            params.marginStart = baseStart
+            params.marginEnd = targetEnd
+            host.layoutParams = params
+            host.requestLayout()
+            (host.parent as? View)?.requestLayout()
+        }
+    }
+
     private fun applyConfig(view: TextView, state: ViewState) {
         if (!state.captured) {
             captureNative(view, state)
@@ -546,7 +588,12 @@ internal object StatusBarNetworkSpeedRuntime {
         }
 
         val source = state.sourceText ?: view.text
-        if (shouldHideForThreshold(source, current.thresholdKb)) {
+        val hiddenByThreshold = shouldHideForThreshold(source, current.thresholdKb)
+        applyHostTrailingGap(
+            state,
+            showGap = !hiddenByThreshold && source.toString().isNotBlank(),
+        )
+        if (hiddenByThreshold) {
             view.text = ""
             return
         }
