@@ -209,15 +209,21 @@ object StatusComboStyleOneGlyphRenderer {
         networkType: String,
         hasSecondarySignalLevel: Boolean = false,
     ): Float {
-        val signalHalfHeight = outsideSignalHeight(config, hasSecondarySignalLevel) / 2f
         val hasStackedType = usesOutsideNetworkTypeLayout(config) && networkType.isNotBlank()
-        if (!hasStackedType) return OUTSIDE_FRAME_CENTER_Y + signalHalfHeight
-
         val textSize = config.outTypeSizeDp.coerceIn(8, 26) * (HEIGHT / 36f)
-        val textHalfHeight = textSize * CAP_HEIGHT_RATIO / 2f
-        // Keep signal bars and the optional SIM row in the lower lane, centred with the text above.
-        return OUTSIDE_FRAME_CENTER_Y + textHalfHeight +
-            OUTSIDE_COMPOSITE_ELEMENT_GAP / 2f + signalHalfHeight
+        val textHalfHeight = if (hasStackedType) textSize * CAP_HEIGHT_RATIO / 2f else 0f
+        val signalCenterY = if (hasStackedType) {
+            OUTSIDE_FRAME_CENTER_Y + textHalfHeight + OUTSIDE_COMPOSITE_ELEMENT_GAP / 2f
+        } else {
+            OUTSIDE_FRAME_CENTER_Y
+        }
+        // drawStackedSignal is asymmetric around its bar baseline: the tallest bar rises 150
+        // scaled units, while the second-SIM dot row can extend 59 units below it. Centre that
+        // complete visible extent, rather than centring the baseline itself.
+        val scale = outsideSignalScale(config)
+        val lowerTail = if (hasSecondarySignalLevel) 59f * scale else 0f
+        val upperExtent = 150f * scale
+        return signalCenterY + (upperExtent - lowerTail) / 2f
     }
 
     fun hasOutsideSecondarySignalLevel(
