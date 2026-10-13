@@ -737,7 +737,8 @@ object StatusComboStyleOneGlyphRenderer {
             max(
                 baseTypeCenter,
                 (minimumVisibleIconLeftPx - canvasLeftInsetPx) / renderScale -
-                    leadingExpansion + typeWidthForClamp / 2f,
+                    leadingExpansion + typeWidthForClamp / 2f +
+                    OUTSIDE_SIGNAL_NATIVE_ICON_GAP_PX / renderScale,
             )
         } else baseTypeCenter
         val safeSignalCenter = if (
@@ -961,7 +962,8 @@ object StatusComboStyleOneGlyphRenderer {
             max(
                 outsideTypeCenter,
                 (minimumVisibleIconLeftPx - canvasLeftInsetPx) / scale -
-                    leadingExpansion + outsideTypeLabelWidth / 2f,
+                    leadingExpansion + outsideTypeLabelWidth / 2f +
+                    OUTSIDE_SIGNAL_NATIVE_ICON_GAP_PX / scale,
             )
         } else outsideTypeCenter
         val safeOutsideSignalCenter = if (
