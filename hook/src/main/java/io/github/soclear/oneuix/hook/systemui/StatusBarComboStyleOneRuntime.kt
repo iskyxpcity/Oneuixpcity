@@ -285,7 +285,7 @@ object StatusBarComboStyleOneRuntime {
                 context, StatusComboStyleOneGlyphRenderer.glyphWidthDp(cfg, StatusBarComboStyleOneRuntime.state.networkType),
             )
             val height = StatusBarComboStyleOneRuntime.dp(
-                context, StatusComboStyleOneGlyphRenderer.glyphHeightDp(cfg),
+                context, StatusComboStyleOneGlyphRenderer.glyphHeightDp(cfg, StatusBarComboStyleOneRuntime.state.networkType),
             )
             val flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
                 WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or
@@ -367,12 +367,12 @@ object StatusBarComboStyleOneRuntime {
             lp.width = StatusBarComboStyleOneRuntime.dp(
                 context, StatusComboStyleOneGlyphRenderer.glyphWidthDp(cfg, StatusBarComboStyleOneRuntime.state.networkType),
             )
-            lp.height = StatusBarComboStyleOneRuntime.dp(context, StatusComboStyleOneGlyphRenderer.glyphHeightDp(cfg))
+            lp.height = StatusBarComboStyleOneRuntime.dp(context, StatusComboStyleOneGlyphRenderer.glyphHeightDp(cfg, StatusBarComboStyleOneRuntime.state.networkType))
             val networkType = StatusBarComboStyleOneRuntime.state.networkType
             val designWidthUnits = StatusComboStyleOneGlyphRenderer.glyphDesignWidth(cfg, networkType)
-            val designHeightUnits = StatusComboStyleOneGlyphRenderer.glyphDesignHeight(cfg)
+            val designHeightUnits = StatusComboStyleOneGlyphRenderer.glyphDesignHeight(cfg, StatusBarComboStyleOneRuntime.state.networkType)
             val ringCenterXUnits = StatusComboStyleOneGlyphRenderer.glyphCenterX(cfg, networkType)
-            val centreRatioY = StatusComboStyleOneGlyphRenderer.glyphVerticalCenterRatio(cfg)
+            val centreRatioY = StatusComboStyleOneGlyphRenderer.glyphVerticalCenterRatio(cfg, StatusBarComboStyleOneRuntime.state.networkType)
             // The cutout bounds decide whether independent rendering is available, but they
             // must not position the glyph. The native battery slot is the layout anchor: its
             // right edge remains fixed while the slot/window gain width to the left.
@@ -1104,7 +1104,7 @@ object StatusBarComboStyleOneRuntime {
                 host.inline?.let { glyph ->
                     glyph.setStatusBarRootForTypeBounds(host.root)
                     val width = dp(glyph.context, StatusComboStyleOneGlyphRenderer.glyphWidthDp(config, state.networkType))
-                    val height = dp(glyph.context, StatusComboStyleOneGlyphRenderer.glyphHeightDp(config))
+                    val height = dp(glyph.context, StatusComboStyleOneGlyphRenderer.glyphHeightDp(config, state.networkType))
                     val lp = glyph.layoutParams
                     if (lp != null) {
                         val margins = lp as? ViewGroup.MarginLayoutParams
@@ -1399,7 +1399,7 @@ object StatusBarComboStyleOneRuntime {
     private fun insertInline(host: Host, anchor: View, compactToAnchor: Boolean = false) {
         val parent = anchor.parent as? ViewGroup ?: return
         val designWidth = StatusComboStyleOneGlyphRenderer.glyphWidthDp(config, state.networkType)
-        val designHeight = StatusComboStyleOneGlyphRenderer.glyphHeightDp(config)
+        val designHeight = StatusComboStyleOneGlyphRenderer.glyphHeightDp(config, state.networkType)
         val originalHeight = host.layouts[anchor]?.height?.takeIf { it > 0 }
             ?: anchor.height.takeIf { it > 0 }
             ?: dp(parent.context, 24)
