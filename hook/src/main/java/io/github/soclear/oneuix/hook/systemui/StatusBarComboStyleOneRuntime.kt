@@ -51,6 +51,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.serialization.decodeFromString
 import kotlin.math.max
 import kotlin.math.abs
+import kotlin.math.ceil
 import kotlin.math.roundToInt
 
 /**
@@ -236,6 +237,21 @@ object StatusBarComboStyleOneRuntime {
         private var tintOverride: Int? = null
         private var statusBarRootForTypeBounds: View? = null
         private var inlineTrailingAnchor: WeakReference<View>? = null
+        private var leadingCanvasPaddingPx = 0
+        private var leadingPaddingExpansionPending = false
+
+        fun leadingCanvasPaddingPx(): Int = leadingCanvasPaddingPx
+        fun beginLeadingPaddingExpansion(): Boolean {
+            if (leadingPaddingExpansionPending) return false
+            leadingPaddingExpansionPending = true
+            return true
+        }
+        fun addLeadingCanvasPadding(deltaPx: Int) {
+            if (deltaPx > 0) leadingCanvasPaddingPx += deltaPx
+        }
+        fun finishLeadingPaddingExpansion() {
+            leadingPaddingExpansionPending = false
+        }
         init {
             isClickable = false
             isFocusable = false
@@ -265,6 +281,11 @@ object StatusBarComboStyleOneRuntime {
             StatusBarComboStyleOneRuntime.minimumVisibleIconBottomPx(
                 this, statusBarRootForTypeBounds,
             )
+        fun requestLeadingCanvasExpansion(clipPx: Float) {
+            if (clipPx > 0.5f && beginLeadingPaddingExpansion()) {
+                StatusBarComboStyleOneRuntime.ensureSignalCanvasLeadingSpace(this, clipPx)
+            }
+        }
         fun setTintOverride(color: Int?) {
             if (tintOverride == color) return
             tintOverride = color
@@ -276,10 +297,16 @@ object StatusBarComboStyleOneRuntime {
             val currentConfig = StatusBarComboStyleOneRuntime.config
             val localTint = tintOverride
             val drawState = if (localTint == null) currentState else currentState.copy(tintColor = localTint)
+            val iconRight = minimumVisibleIconLeftPx()
+            val iconBottom = minimumVisibleIconBottomPx()
             StatusComboStyleOneGlyphRenderer.draw(
                 canvas, width, height, currentConfig, drawState,
-                minimumVisibleIconLeftPx(), minimumVisibleIconBottomPx(),
+                iconRight, iconBottom, leadingCanvasPaddingPx.toFloat(),
             )
+            val clipPx = StatusComboStyleOneGlyphRenderer.requiredSignalLeadingPaddingPx(
+                currentConfig, drawState, width, height, iconRight, leadingCanvasPaddingPx.toFloat(),
+            )
+            requestLeadingCanvasExpansion(clipPx)
         }
     }
 
@@ -299,7 +326,7 @@ object StatusBarComboStyleOneRuntime {
             val cfg = StatusBarComboStyleOneRuntime.config
             val width = StatusBarComboStyleOneRuntime.dp(
                 context, StatusComboStyleOneGlyphRenderer.glyphWidthDp(cfg, StatusBarComboStyleOneRuntime.state.networkType),
-            )
+            ) + glyph.leadingCanvasPaddingPx()
             val height = StatusBarComboStyleOneRuntime.dp(
                 context, StatusComboStyleOneGlyphRenderer.glyphHeightDp(cfg, StatusBarComboStyleOneRuntime.state.networkType),
             )
@@ -382,7 +409,7 @@ object StatusBarComboStyleOneRuntime {
             val cfg = StatusBarComboStyleOneRuntime.config
             lp.width = StatusBarComboStyleOneRuntime.dp(
                 context, StatusComboStyleOneGlyphRenderer.glyphWidthDp(cfg, StatusBarComboStyleOneRuntime.state.networkType),
-            )
+            ) + glyph.leadingCanvasPaddingPx()
             lp.height = StatusBarComboStyleOneRuntime.dp(context, StatusComboStyleOneGlyphRenderer.glyphHeightDp(cfg, StatusBarComboStyleOneRuntime.state.networkType))
             val networkType = StatusBarComboStyleOneRuntime.state.networkType
             val designWidthUnits = StatusComboStyleOneGlyphRenderer.glyphDesignWidth(cfg, networkType)
@@ -417,7 +444,9 @@ object StatusBarComboStyleOneRuntime {
                 else -> return false
             }
             val renderScale = lp.height.toFloat() / designHeightUnits
-            val canvasLeftInsetPx = (lp.width - designWidthUnits * renderScale) / 2f
+            val canvasLeftInsetPx = StatusComboStyleOneGlyphRenderer.glyphCanvasLeftInsetPx(
+                cfg, networkType, lp.width, lp.height, glyph.leadingCanvasPaddingPx().toFloat(),
+            )
             // Align the actual design canvas to the slot's right edge, not merely the
             // rounded WindowManager frame. This prevents width rounding from nudging the ring.
             val horizontalOffsetPx = StatusBarComboStyleOneRuntime.dpExact(context, cfg.glyphOffsetXDp)
@@ -470,8 +499,26 @@ object StatusBarComboStyleOneRuntime {
                         screenY,
                         glyph.minimumVisibleIconLeftPx(),
                         minimumVisibleIconBottomPx = glyph.minimumVisibleIconBottomPx(),
+                        leadingCanvasPaddingPx = glyph.leadingCanvasPaddingPx().toFloat(),
                     )
                 )
+            }
+        }
+
+        fun owns(candidate: GlyphView): Boolean = candidate === glyph
+
+        fun expandLeadingCanvas(deltaPx: Int) {
+            val lp = params ?: run {
+                glyph.finishLeadingPaddingExpansion()
+                return
+            }
+            lp.width += deltaPx
+            lp.x -= deltaPx
+            runCatching { wm?.updateViewLayout(glyph, lp) }
+                .onFailure { Log.w(TAG, "Cannot expand outside-signal canvas frame", it) }
+            glyph.post {
+                glyph.finishLeadingPaddingExpansion()
+                glyph.invalidate()
             }
         }
 
@@ -1121,13 +1168,14 @@ object StatusBarComboStyleOneRuntime {
                 val battery = host.battery ?: return@forEach
                 host.inline?.let { glyph ->
                     glyph.setStatusBarRootForTypeBounds(host.root)
-                    val width = dp(glyph.context, StatusComboStyleOneGlyphRenderer.glyphWidthDp(config, state.networkType))
+                    val leadingPad = glyph.leadingCanvasPaddingPx()
+                    val width = dp(glyph.context, StatusComboStyleOneGlyphRenderer.glyphWidthDp(config, state.networkType)) + leadingPad
                     val height = dp(glyph.context, StatusComboStyleOneGlyphRenderer.glyphHeightDp(config, state.networkType))
                     val lp = glyph.layoutParams
                     if (lp != null) {
                         val margins = lp as? ViewGroup.MarginLayoutParams
                         // Keep the canvas's extra leading lane out of native row measurement.
-                        val left = dpExact(glyph.context, config.glyphLeftMarginDp)
+                        val left = dpExact(glyph.context, config.glyphLeftMarginDp) - leadingPad
                         val right = dpExact(glyph.context, config.glyphRightMarginDp)
                         val changed = lp.width != width || lp.height != height || margins?.let {
                             it.leftMargin != left || it.rightMargin != right || it.topMargin != 0 || it.bottomMargin != 0
@@ -1433,7 +1481,9 @@ object StatusBarComboStyleOneRuntime {
         if (designWidth <= 0f || designHeight <= 0f) return
         val renderScale = glyph.height.toFloat() / designHeight
         if (renderScale <= 0f) return
-        val canvasLeftInsetPx = (glyph.width - designWidth * renderScale) / 2f
+        val canvasLeftInsetPx = StatusComboStyleOneGlyphRenderer.glyphCanvasLeftInsetPx(
+            cfg, networkType, glyph.width, glyph.height, glyph.leadingCanvasPaddingPx().toFloat(),
+        )
         val ringCenterUnits = StatusComboStyleOneGlyphRenderer.glyphCenterX(cfg, networkType)
 
         val glyphLocation = IntArray(2)
@@ -1470,19 +1520,21 @@ object StatusBarComboStyleOneRuntime {
         val originalHeight = host.layouts[anchor]?.height?.takeIf { it > 0 }
             ?: anchor.height.takeIf { it > 0 }
             ?: dp(parent.context, 24)
-        val width = if (compactToAnchor) {
+        val existingGlyph = host.inline?.takeIf { it.parent === parent }
+        val leadingPad = existingGlyph?.leadingCanvasPaddingPx() ?: 0
+        val width = (if (compactToAnchor) {
             (originalHeight * designWidth.toFloat() / designHeight).roundToInt().coerceAtLeast(1)
         } else {
             dp(parent.context, designWidth)
-        }
+        }) + leadingPad
         val height = if (compactToAnchor) originalHeight else dp(parent.context, designHeight)
-        host.inline?.takeIf { it.parent === parent }?.let { glyph ->
+        existingGlyph?.let { glyph ->
             glyph.setStatusBarRootForTypeBounds(host.root)
             glyph.setInlineTrailingAnchor(anchor)
             val lp = glyph.layoutParams
             if (lp != null) {
                 val margins = lp as? ViewGroup.MarginLayoutParams
-                val left = dpExact(parent.context, config.glyphLeftMarginDp)
+                val left = dpExact(parent.context, config.glyphLeftMarginDp) - leadingPad
                 val right = dpExact(parent.context, config.glyphRightMarginDp)
                 val changed = lp.width != width || lp.height != height || margins?.let {
                     it.leftMargin != left || it.rightMargin != right ||
@@ -1515,7 +1567,7 @@ object StatusBarComboStyleOneRuntime {
         }
         val margins = lp as? ViewGroup.MarginLayoutParams
         margins?.setMargins(
-            dpExact(parent.context, config.glyphLeftMarginDp),
+            dpExact(parent.context, config.glyphLeftMarginDp) - leadingPad,
             0,
             dpExact(parent.context, config.glyphRightMarginDp),
             0,
@@ -1546,6 +1598,51 @@ object StatusBarComboStyleOneRuntime {
      * Rightmost visible native icon edge within the active status-icons cluster. Only leaves are
      * measured: the StatusIconContainer's own bounds include unused end padding, not visible ink.
      */
+    private fun ensureSignalCanvasLeadingSpace(glyph: GlyphView, clipPx: Float) {
+        val deltaPx = ceil(clipPx + 0.75f).toInt().coerceAtLeast(1)
+        main.post {
+            val host = synchronized(hosts) {
+                hosts.values.firstOrNull { it.inline === glyph || it.overlay?.owns(glyph) == true }
+            }
+            if (host == null || host.retired || !glyph.isAttachedToWindow) {
+                glyph.finishLeadingPaddingExpansion()
+                return@post
+            }
+            val overlay = host.overlay
+            if (overlay != null && overlay.owns(glyph)) {
+                glyph.addLeadingCanvasPadding(deltaPx)
+                overlay.expandLeadingCanvas(deltaPx)
+                diagnostic(
+                    "Expanded outside-signal canvas left edge by ${deltaPx}px; ring anchor preserved"
+                )
+                return@post
+            }
+            val parent = glyph.parent as? ViewGroup
+            val lp = glyph.layoutParams
+            val margins = lp as? ViewGroup.MarginLayoutParams
+            if (parent == null || lp == null || margins == null) {
+                glyph.finishLeadingPaddingExpansion()
+                return@post
+            }
+            glyph.addLeadingCanvasPadding(deltaPx)
+            // Expand only the left edge. The matching negative margin keeps the system row's
+            // total measured width stable; the trailing ring anchor remains independent.
+            lp.width += deltaPx
+            margins.leftMargin -= deltaPx
+            glyph.layoutParams = lp
+            parent.requestLayout()
+            glyph.post {
+                host.battery?.let { anchorInlineGlyphToTrailingSlot(glyph, it) }
+                glyph.finishLeadingPaddingExpansion()
+                glyph.invalidate()
+            }
+            diagnostic(
+                "Expanded inline outside-signal canvas left edge by ${deltaPx}px; " +
+                    "native row width and ring anchor preserved"
+            )
+        }
+    }
+
     private fun lastVisibleStatusIconBoundsScreenPx(root: View?): Pair<Int, Int>? {
         root ?: return null
         val cluster = descendants(root).firstOrNull(::isStatusIconsCluster) ?: return null
@@ -1578,10 +1675,20 @@ object StatusBarComboStyleOneRuntime {
 
     private fun minimumVisibleIconBottomPx(view: View, statusBarRoot: View?): Float? {
         val root = statusBarRoot ?: view.rootView
-        val iconBottom = lastVisibleStatusIconBoundsScreenPx(root)?.second ?: return null
+        val cluster = descendants(root).firstOrNull(::isStatusIconsCluster) ?: return null
+        val visibleBounds = lastVisibleStatusIconBoundsScreenPx(root) ?: return null
+        val clusterLocation = IntArray(2)
         val viewLocation = IntArray(2)
         if (runCatching { view.getLocationOnScreen(viewLocation) }.isFailure) return null
-        // Express the same rightmost visible native icon's lower edge in this glyph's local pixels.
+        val iconBottom = if (
+            cluster.height > 0 &&
+            runCatching { cluster.getLocationOnScreen(clusterLocation) }.isSuccess
+        ) {
+            clusterLocation[1] + cluster.height
+        } else {
+            visibleBounds.second
+        }
+        // Align to the common lower edge of the native StatusIconContainer row.
         return (iconBottom - viewLocation[1]).toFloat()
     }
 
