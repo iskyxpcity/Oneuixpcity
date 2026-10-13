@@ -248,7 +248,7 @@ data class Preference(
             val outSignalMarginFourDpMigrationDone: Boolean = false,
             val outSignalMarginSixDpMigrationDone: Boolean = false,
             val outSignalMarginEightDpMigrationDone: Boolean = false,
-            // One-time cleanup for legacy group offsets that shifted the right-anchored ring.
+            // One-time ring-layout migration marker; overall position and spacing controls remain active.
             val ringTrailingAnchorMigrationDone: Boolean = false,
             val typeSuffixScale: Int = 65,
             val typeWeight: Int = 700,
