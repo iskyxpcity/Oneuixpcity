@@ -345,19 +345,18 @@ object StatusComboStyleOneGlyphRenderer {
         config: StatusBarComboStyleOneRuntime,
         networkType: String,
     ): Float {
-        // The fixed outer frame is logical centering metadata, not drawable content.
-        // Expanding the canvas to fit its invisible corners inflates the status-bar view
-        // without changing the drawn glyph scale. Keep overall-size geometry tied to HEIGHT.
-        return 0f
+        if (!usesOutsideNetworkTypeLayout(config) && !usesOutsideSignalLayout(config)) return 0f
+        val fixedTop = OUTSIDE_FRAME_CENTER_Y - OUTSIDE_FRAME_SIDE / 2f
+        return if (fixedTop < 0f) -fixedTop + 1f else 0f
     }
 
     private fun outsideFrameBottomExpansion(
         config: StatusBarComboStyleOneRuntime,
         networkType: String,
     ): Float {
-        // The fixed outer frame is logical centering metadata, not drawable content.
-        // Its invisible bottom edge must not add height to the rendered glyph.
-        return 0f
+        if (!usesOutsideNetworkTypeLayout(config) && !usesOutsideSignalLayout(config)) return 0f
+        val fixedBottom = OUTSIDE_FRAME_CENTER_Y + OUTSIDE_FRAME_SIDE / 2f
+        return if (fixedBottom > HEIGHT) fixedBottom - HEIGHT + 1f else 0f
     }
 
     private fun dualBottomExpansion(config: StatusBarComboStyleOneRuntime): Float =
