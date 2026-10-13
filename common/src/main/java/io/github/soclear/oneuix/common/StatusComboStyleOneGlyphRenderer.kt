@@ -52,7 +52,7 @@ object StatusComboStyleOneGlyphRenderer {
     private const val OUTSIDE_TYPE_RIGHT_GAP = 3.5f
     // Pull the out-of-ring type a little closer to the preceding system icons by default.
     // Extra leading canvas room below prevents the tighter position from clipping the glyphs.
-    private const val OUTSIDE_TYPE_GAP_REDUCTION = 18f
+    private const val OUTSIDE_TYPE_GAP_REDUCTION = 21f
     // Keep a minimum label-side clearance; configured margins add to the left-growing host lane.
     private const val OUTSIDE_TYPE_LEADING_CLEARANCE = 18f
     // Keep a minimum signal-to-ring clearance; configured spacing widens the host lane dynamically.
@@ -186,6 +186,7 @@ object StatusComboStyleOneGlyphRenderer {
     private fun outsideFrameGeometry(
         config: StatusBarComboStyleOneRuntime,
         networkType: String,
+        includeOffsets: Boolean = true,
     ): OutsideFrameGeometry? {
         val label = networkType.trim().uppercase()
         val typeActive = usesOutsideNetworkTypeLayout(config) && label.isNotBlank()
@@ -201,8 +202,9 @@ object StatusComboStyleOneGlyphRenderer {
         if (typeActive) {
             val size = config.outTypeSizeDp.coerceIn(8, 26) * (HEIGHT / 36f)
             val textWidth = measuredNetworkTypeWidth(label, size, config.typeWeight, config.typeSuffixScale)
-            val childCenterX = center + outsideTypeOffsetXUnits(config)
-            val baseline = outsideTypeBaseline(config, label) + outsideTypeOffsetYUnits(config)
+            val childCenterX = center + if (includeOffsets) outsideTypeOffsetXUnits(config) else 0f
+            val baseline = outsideTypeBaseline(config, label) +
+                if (includeOffsets) outsideTypeOffsetYUnits(config) else 0f
             left = min(left, childCenterX - textWidth / 2f)
             right = max(right, childCenterX + textWidth / 2f)
             top = min(top, baseline - size * CAP_HEIGHT_RATIO)
@@ -211,8 +213,9 @@ object StatusComboStyleOneGlyphRenderer {
         if (signalActive) {
             val signalScale = outsideSignalScale(config)
             val signalWidth = outsideSignalWidth(config)
-            val childCenterX = center + outsideSignalOffsetXUnits(config)
-            val baseline = OUTSIDE_SIGNAL_BAR_BASELINE + outsideSignalOffsetYUnits(config)
+            val childCenterX = center + if (includeOffsets) outsideSignalOffsetXUnits(config) else 0f
+            val baseline = OUTSIDE_SIGNAL_BAR_BASELINE +
+                if (includeOffsets) outsideSignalOffsetYUnits(config) else 0f
             left = min(left, childCenterX - signalWidth / 2f)
             right = max(right, childCenterX + signalWidth / 2f)
             top = min(top, baseline - outsideSignalHeight(config))
@@ -253,7 +256,7 @@ object StatusComboStyleOneGlyphRenderer {
         config: StatusBarComboStyleOneRuntime,
         networkType: String,
     ): Float {
-        val frame = outsideFrameGeometry(config, networkType) ?: return 0f
+        val frame = outsideFrameGeometry(config, networkType, includeOffsets = false) ?: return 0f
         return if (frame.squareTop < 0f) -frame.squareTop + 1f else 0f
     }
 
@@ -261,7 +264,7 @@ object StatusComboStyleOneGlyphRenderer {
         config: StatusBarComboStyleOneRuntime,
         networkType: String,
     ): Float {
-        val frame = outsideFrameGeometry(config, networkType) ?: return 0f
+        val frame = outsideFrameGeometry(config, networkType, includeOffsets = false) ?: return 0f
         return if (frame.squareBottom > HEIGHT) frame.squareBottom - HEIGHT + 1f else 0f
     }
 
