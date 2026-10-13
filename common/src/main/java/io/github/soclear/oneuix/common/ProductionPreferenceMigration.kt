@@ -165,6 +165,38 @@ object ProductionPreferenceMigration {
                     comboRuntimeChanged = true
                 }
 
+                // Retire whole-glyph positions: independent outside elements cannot move the ring anchor.
+                val ringTrailingAnchorMigrationDone =
+                    (updatedComboRuntime["ringTrailingAnchorMigrationDone"] as? JsonPrimitive)
+                        ?.content?.toBooleanStrictOrNull() == true
+                if (!ringTrailingAnchorMigrationDone) {
+                    listOf(
+                        "glyphOffsetXDp",
+                        "glyphOffsetYDp",
+                        "glyphLeftMarginDp",
+                        "glyphRightMarginDp",
+                    ).forEach { key -> updatedComboRuntime[key] = JsonPrimitive(0) }
+
+                    // Only replace the known untouched default tuple, keeping custom values intact.
+                    val oldSignalGap = updatedComboRuntime["outSignalMarginDp"]?.toString()?.toIntOrNull() ?: 8
+                    val oldTypeLeft = updatedComboRuntime["outTypeMarginLeftDp"]?.toString()?.toIntOrNull() ?: 2
+                    val oldTypeRight = updatedComboRuntime["outTypeMarginRightDp"]?.toString()?.toIntOrNull() ?: 2
+                    val oldSignalLeft = updatedComboRuntime["outSignalMarginLeftDp"]?.toString()?.toIntOrNull() ?: 0
+                    val elementOffsetsZero = listOf(
+                        "outTypeOffsetXDp", "outTypeOffsetYDp",
+                        "outSignalOffsetXDp", "outSignalOffsetYDp",
+                    ).all { key -> (updatedComboRuntime[key]?.toString()?.toIntOrNull() ?: 0) == 0 }
+                    if (oldSignalGap == 8 && oldTypeLeft == 2 && oldTypeRight == 2 &&
+                        oldSignalLeft == 0 && elementOffsetsZero
+                    ) {
+                        updatedComboRuntime["outSignalMarginDp"] = JsonPrimitive(0)
+                        updatedComboRuntime["outTypeMarginLeftDp"] = JsonPrimitive(0)
+                        updatedComboRuntime["outTypeMarginRightDp"] = JsonPrimitive(0)
+                    }
+                    updatedComboRuntime["ringTrailingAnchorMigrationDone"] = JsonPrimitive(true)
+                    comboRuntimeChanged = true
+                }
+
                 if (comboRuntimeChanged) {
                     updatedStatusBar["comboStyleOneRuntime"] = JsonObject(updatedComboRuntime)
                 }

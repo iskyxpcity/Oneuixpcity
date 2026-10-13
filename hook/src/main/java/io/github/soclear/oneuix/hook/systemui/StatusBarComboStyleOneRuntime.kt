@@ -404,14 +404,11 @@ object StatusBarComboStyleOneRuntime {
             val canvasLeftInsetPx = (lp.width - designWidthUnits * renderScale) / 2f
             // Align the actual design canvas to the slot's right edge, not merely the
             // rounded WindowManager frame. This prevents width rounding from nudging the ring.
-            val horizontalOffsetPx = StatusBarComboStyleOneRuntime.dpExact(context, cfg.glyphOffsetXDp)
             lp.x = (
-                slotRightPx - canvasLeftInsetPx - designWidthUnits * renderScale +
-                    horizontalOffsetPx
+                slotRightPx - canvasLeftInsetPx - designWidthUnits * renderScale
                 ).roundToInt()
-            val verticalOffsetPx = StatusBarComboStyleOneRuntime.dpExact(context, cfg.glyphOffsetYDp)
             lp.y = (
-                slotCenterY - lp.height * centreRatioY + verticalOffsetPx
+                slotCenterY - lp.height * centreRatioY
                 ).roundToInt()
             val ringCenterScreenPx = lp.x + canvasLeftInsetPx + ringCenterXUnits * renderScale
             diagnostic(
@@ -1109,8 +1106,7 @@ object StatusBarComboStyleOneRuntime {
                     if (lp != null) {
                         val margins = lp as? ViewGroup.MarginLayoutParams
                         // Keep the canvas's extra leading lane out of native row measurement.
-                        val leadingExpansionPx = glyphLeadingExpansionPx(glyph.context, state.networkType)
-                        val left = dpExact(glyph.context, config.glyphLeftMarginDp) - leadingExpansionPx
+                        val left = dpExact(glyph.context, config.glyphLeftMarginDp)
                         val right = dpExact(glyph.context, config.glyphRightMarginDp)
                         val changed = lp.width != width || lp.height != height || margins?.let {
                             it.leftMargin != left || it.rightMargin != right || it.topMargin != 0 || it.bottomMargin != 0
@@ -1122,8 +1118,6 @@ object StatusBarComboStyleOneRuntime {
                             glyph.layoutParams = lp
                         }
                     }
-                    glyph.translationX = dpExact(glyph.context, config.glyphOffsetXDp).toFloat()
-                    glyph.translationY = dpExact(glyph.context, config.glyphOffsetYDp).toFloat()
                     glyph.invalidate()
                 }
                 host.overlay?.let { overlay ->
@@ -1414,8 +1408,7 @@ object StatusBarComboStyleOneRuntime {
             val lp = glyph.layoutParams
             if (lp != null) {
                 val margins = lp as? ViewGroup.MarginLayoutParams
-                val leadingExpansionPx = glyphLeadingExpansionPx(parent.context, state.networkType)
-                val left = dpExact(parent.context, config.glyphLeftMarginDp) - leadingExpansionPx
+                val left = dpExact(parent.context, config.glyphLeftMarginDp)
                 val right = dpExact(parent.context, config.glyphRightMarginDp)
                 val changed = lp.width != width || lp.height != height || margins?.let {
                     it.leftMargin != left || it.rightMargin != right ||
@@ -1445,15 +1438,12 @@ object StatusBarComboStyleOneRuntime {
             else -> ViewGroup.LayoutParams(width, height)
         }
         val margins = lp as? ViewGroup.MarginLayoutParams
-        val leadingExpansionPx = glyphLeadingExpansionPx(parent.context, state.networkType)
         margins?.setMargins(
-            dpExact(parent.context, config.glyphLeftMarginDp) - leadingExpansionPx,
+            dpExact(parent.context, config.glyphLeftMarginDp),
             0,
             dpExact(parent.context, config.glyphRightMarginDp),
             0,
         )
-        glyph.translationX = dpExact(parent.context, config.glyphOffsetXDp).toFloat()
-        glyph.translationY = dpExact(parent.context, config.glyphOffsetYDp).toFloat()
         runCatching { parent.addView(glyph, parent.indexOfChild(anchor).coerceAtLeast(0), lp); host.inline = glyph }
             .onFailure { Log.w(TAG, "Cannot add inline glyph", it) }
     }
@@ -4314,10 +4304,11 @@ object StatusBarComboStyleOneRuntime {
         // The upstream critical cutoff is a constant, not a user setting.
         criticalThreshold = 20,
         glyphScalePercent = v.glyphScalePercent.coerceIn(70, 150),
-        glyphOffsetXDp = v.glyphOffsetXDp.coerceIn(-16, 16),
-        glyphOffsetYDp = v.glyphOffsetYDp.coerceIn(-16, 16),
-        glyphLeftMarginDp = v.glyphLeftMarginDp.coerceIn(0, 16),
-        glyphRightMarginDp = v.glyphRightMarginDp.coerceIn(0, 16),
+        // Deprecated whole-glyph positioning must never displace the battery-ring anchor.
+        glyphOffsetXDp = 0,
+        glyphOffsetYDp = 0,
+        glyphLeftMarginDp = 0,
+        glyphRightMarginDp = 0,
         signalDotSizePercent = v.signalDotSizePercent.coerceIn(50, 150),
         signalDotSpacingDp = v.signalDotSpacingDp.coerceIn(3, 8),
         signalDotOffsetXDp = v.signalDotOffsetXDp.coerceIn(-8, 8),
@@ -4340,17 +4331,6 @@ object StatusBarComboStyleOneRuntime {
         // Bounded in-memory history for Settings → Send logs, without a feature-owned switch or Logcat flood.
         OneuiXPDiagnosticLog.record(TAG, message)
     }
-    private fun glyphLeadingExpansionPx(context: Context, networkType: String): Int {
-        val leadingDp = StatusComboStyleOneGlyphRenderer.glyphBaseLeadingExpansionDp(config, networkType)
-        val standaloneSignalReservationDp =
-            StatusComboStyleOneGlyphRenderer.glyphStandaloneOutsideSignalReservationDp(config, networkType)
-        // Keep the ring's right edge anchored but reserve the outside signal's actual square
-        // width in the native status row. A signed result may intentionally add a positive
-        // leading margin, causing preceding SystemUI icons to reflow left instead of forcing
-        // the signal frame over the ring when the free lane is too narrow.
-        return dpExact(context, leadingDp - standaloneSignalReservationDp)
-    }
-
     private fun dp(context: Context, value: Int): Int =
         (value * context.resources.displayMetrics.density + 0.5f).toInt().coerceAtLeast(1)
 

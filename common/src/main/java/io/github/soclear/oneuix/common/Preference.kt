@@ -236,11 +236,11 @@ data class Preference(
             val outSignalSizeDp: Int = 15,
             // Outer/left margin for the self-drawn signal lane; zero preserves existing geometry.
             val outSignalMarginLeftDp: Int = 0,
-            val outTypeMarginLeftDp: Int = 2,
-            val outTypeMarginRightDp: Int = 2,
+            val outTypeMarginLeftDp: Int = 0,
+            val outTypeMarginRightDp: Int = 0,
             val outTypeOffsetXDp: Int = 0,
             val outTypeOffsetYDp: Int = 0,
-            val outSignalMarginDp: Int = 8,
+            val outSignalMarginDp: Int = 0,
             val outSignalOffsetXDp: Int = 0,
             val outSignalOffsetYDp: Int = 0,
             val outSignalMarginDefaultMigrationDone: Boolean = false,
@@ -248,6 +248,8 @@ data class Preference(
             val outSignalMarginFourDpMigrationDone: Boolean = false,
             val outSignalMarginSixDpMigrationDone: Boolean = false,
             val outSignalMarginEightDpMigrationDone: Boolean = false,
+            // One-time cleanup for legacy group offsets that shifted the right-anchored ring.
+            val ringTrailingAnchorMigrationDone: Boolean = false,
             val typeSuffixScale: Int = 65,
             val typeWeight: Int = 700,
             val trackAlpha: Int = 56,
