@@ -1677,21 +1677,14 @@ object StatusBarComboStyleOneRuntime {
 
     private fun minimumVisibleIconBottomPx(view: View, statusBarRoot: View?): Float? {
         val root = statusBarRoot ?: view.rootView
-        val cluster = descendants(root).firstOrNull(::isStatusIconsCluster) ?: return null
+        // Use the bottom of the rightmost visible native icon leaf, not the enclosing
+        // StatusIconContainer bottom. On Samsung the container may include vertical padding,
+        // which would shift the custom signal bars below the actual native icons.
         val visibleBounds = lastVisibleStatusIconBoundsScreenPx(root) ?: return null
-        val clusterLocation = IntArray(2)
         val viewLocation = IntArray(2)
         if (runCatching { view.getLocationOnScreen(viewLocation) }.isFailure) return null
-        val iconBottom = if (
-            cluster.height > 0 &&
-            runCatching { cluster.getLocationOnScreen(clusterLocation) }.isSuccess
-        ) {
-            clusterLocation[1] + cluster.height
-        } else {
-            visibleBounds.second
-        }
-        // Align to the common lower edge of the native StatusIconContainer row.
-        return (iconBottom - viewLocation[1]).toFloat()
+        val nativeIconBottomScreenPx = visibleBounds.second
+        return (nativeIconBottomScreenPx - viewLocation[1]).toFloat()
     }
 
     private fun minimumVisibleIconLeftPx(view: View, statusBarRoot: View?): Float? {
