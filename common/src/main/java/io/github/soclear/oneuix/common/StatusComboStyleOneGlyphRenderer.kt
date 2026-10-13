@@ -9,6 +9,7 @@ import android.graphics.RectF
 import android.graphics.Typeface
 import io.github.soclear.oneuix.common.Preference.SystemUI.StatusBarComboStyleOneRuntime
 import kotlin.math.PI
+import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
@@ -235,13 +236,10 @@ object StatusComboStyleOneGlyphRenderer {
         networkType: String,
         hasSecondarySignalLevel: Boolean = false,
     ): Float {
-        // Network type and signal share the same frame-centre anchor. The signal itself is
-        // asymmetric around its bar baseline: the tallest bar rises 150 scaled units, while the
-        // second-SIM dot row can extend 59 units below it. Centre the full visible bounds.
-        val scale = outsideSignalScale(config)
-        val lowerTail = if (hasSecondarySignalLevel) 59f * scale else 0f
-        val upperExtent = 150f * scale
-        return OUTSIDE_FRAME_CENTER_Y + (upperExtent - lowerTail) / 2f
+        // The native status icon baseline is near the lower edge of the status-bar row.
+        // Keep it fixed when size changes so the custom signal grows upward instead of floating
+        // around the network label. Individual Y adjustment is applied by the draw caller.
+        return 90f
     }
 
     fun hasOutsideSecondarySignalLevel(
@@ -319,8 +317,9 @@ object StatusComboStyleOneGlyphRenderer {
     }
 
     /**
-     * Bounds for the invisible square that contains the outside network type and signal bars.
-     * The square is recomputed from actual element sizes and individual X/Y offsets.
+     * Compute a live square from the actual visible outside elements. Bounds are calculated from
+     * the text ink width/height and signal column extents, including element offsets when asked.
+     * This geometry is not used to resize the ring itself; the ring remains trailing-edge anchored.
      */
     private fun outsideFrameGeometry(
         config: StatusBarComboStyleOneRuntime,
@@ -332,10 +331,87 @@ object StatusComboStyleOneGlyphRenderer {
         val signalActive = usesOutsideSignalLayout(config)
         if (!typeActive && !signalActive) return null
 
-        // Reserve a fixed square based on the supported maximum visual size. Do not derive this
-        // frame from the current font, signal size, margins, offsets, or network-type string:
-        // otherwise changing one child resizes the window and moves the battery ring vertically.
-        val stableConfig = config.copy(
+        val unitPerDp = HEIGHT / 36f
+        val typeWidth = if (typeActive) outsideTypeLabelWidth(config, label) else 0f
+        val typeHeight = if (typeActive) {
+            config.outTypeSizeDp.coerceIn(8, 26) * unitPerDp * CAP_HEIGHT_RATIO
+        } else 0f
+        val signalWidth = if (signalActive) outsideSignalWidth(config) else 0f
+        val includeSecondary = signalActive && !config.dataSimOnly
+        val signalScale = outsideSignalScale(config)
+        val signalTop = if (signalActive) outsideSignalBaseline(config, label, includeSecondary) -
+            150f * signalScale else Float.POSITIVE_INFINITY
+        val signalBottom = if (signalActive) outsideSignalBaseline(config, label, includeSecondary) +
+            (if (includeSecondary) 59f * signalScale else 0f) else Float.NEGATIVE_INFINITY
+        val typeX = if (includeOffsets && typeActive) {
+            outsideTypeOffsetXUnits(config) + outsideTypeMarginLeft(config) - outsideTypeMarginRight(config)
+        } else 0f
+        val typeY = if (includeOffsets && typeActive) outsideTypeOffsetYUnits(config) else 0f
+        val signalX = if (includeOffsets && signalActive) {
+            outsideSignalOffsetXUnits(config) +
+                (config.outSignalMarginLeftDp.coerceIn(-16, 16) -
+                    config.outSignalMarginDp.coerceIn(-16, 16)) * unitPerDp
+        } else 0f
+        val signalY = if (includeOffsets && signalActive) outsideSignalOffsetYUnits(config) else 0f
+
+        var minX = Float.POSITIVE_INFINITY
+        var maxX = Float.NEGATIVE_INFINITY
+        var minY = Float.POSITIVE_INFINITY
+        var maxY = Float.NEGATIVE_INFINITY
+        fun includeBounds(cx: Float, top: Float, bottom: Float, width: Float) {
+            minX = min(minX, cx - width / 2f)
+            maxX = max(maxX, cx + width / 2f)
+            minY = min(minY, top)
+            maxY = max(maxY, bottom)
+        }
+        if (typeActive) {
+            includeBounds(typeX, OUTSIDE_FRAME_CENTER_Y + typeY - typeHeight / 2f,
+                OUTSIDE_FRAME_CENTER_Y + typeY + typeHeight / 2f, typeWidth)
+        }
+        if (signalActive) includeBounds(signalX, signalTop + signalY, signalBottom + signalY, signalWidth)
+        val side = max(maxX - minX, maxY - minY).coerceAtLeast(1f)
+        val centerX = (minX + maxX) / 2f
+        val centerY = (minY + maxY) / 2f
+        val logicalCenterX = if (typeActive) outsideTypeBaseCenter(
+            config.copy(
+                outTypeMarginLeftDp = 0, outTypeMarginRightDp = 0,
+                outTypeOffsetXDp = 0, outTypeOffsetYDp = 0,
+                outSignalMarginDp = 0, outSignalMarginLeftDp = 0,
+                outSignalOffsetXDp = 0, outSignalOffsetYDp = 0,
+            ), label,
+        ) else outsideSignalWidth(config) / 2f
+        val squareCenterX = logicalCenterX + centerX
+        return OutsideFrameGeometry(
+            left = squareCenterX - side / 2f,
+            top = centerY - side / 2f,
+            right = squareCenterX + side / 2f,
+            bottom = centerY + side / 2f,
+            squareLeft = squareCenterX - side / 2f,
+            squareTop = centerY - side / 2f,
+            squareRight = squareCenterX + side / 2f,
+            squareBottom = centerY + side / 2f,
+            side = side,
+            centerX = squareCenterX,
+            centerY = centerY,
+        )
+    }
+
+    private fun outsideFrameSide(
+        config: StatusBarComboStyleOneRuntime,
+        networkType: String,
+        includeOffsets: Boolean = false,
+    ): Float = outsideFrameGeometry(config, networkType, includeOffsets)?.side ?: 0f
+
+    private fun outsideFrameWidthDelta(
+        config: StatusBarComboStyleOneRuntime,
+        networkType: String,
+    ): Float {
+        val defaults = StatusBarComboStyleOneRuntime()
+        val referenceConfig = config.copy(
+            outTypeSizeDp = defaults.outTypeSizeDp,
+            outSignalSizeDp = defaults.outSignalSizeDp,
+            typeWeight = defaults.typeWeight,
+            typeSuffixScale = defaults.typeSuffixScale,
             outTypeMarginLeftDp = 0,
             outTypeMarginRightDp = 0,
             outTypeOffsetXDp = 0,
@@ -345,22 +421,8 @@ object StatusComboStyleOneGlyphRenderer {
             outSignalOffsetXDp = 0,
             outSignalOffsetYDp = 0,
         )
-        val centerX = if (typeActive) outsideTypeBaseCenter(stableConfig, label) else 126.5f
-        val centerY = OUTSIDE_FRAME_CENTER_Y
-        val side = OUTSIDE_FRAME_SIDE
-        return OutsideFrameGeometry(
-            left = centerX - side / 2f,
-            top = centerY - side / 2f,
-            right = centerX + side / 2f,
-            bottom = centerY + side / 2f,
-            squareLeft = centerX - side / 2f,
-            squareTop = centerY - side / 2f,
-            squareRight = centerX + side / 2f,
-            squareBottom = centerY + side / 2f,
-            side = side,
-            centerX = centerX,
-            centerY = centerY,
-        )
+        return outsideFrameSide(config, networkType, includeOffsets = false) -
+            outsideFrameSide(referenceConfig, "5G", includeOffsets = false)
     }
 
     private fun outsideFrameLeadingExpansion(
@@ -489,18 +551,16 @@ object StatusComboStyleOneGlyphRenderer {
             OUTSIDE_TYPE_ONLY_REFERENCE_WIDTH
         }
         val base = if (outsideSignal) {
-            // Place the shared square between the preceding icons and the ring. The frame itself
-            // is fixed-size; type and signal share its centre by default.
+            // Stable logical centre shared by the label and signal; actual frame width is computed
+            // from their live bounds and applied only to the left-growing host lane.
             OUTSIDE_FRAME_SIDE / 2f - OUTSIDE_SIGNAL_RING_CLEARANCE
         } else {
             B_CX + WIDE_OFFSET - B_R - OUTSIDE_TYPE_RIGHT_GAP -
                 typeReferenceWidth / 2f - typeOnlyShift - OUTSIDE_TYPE_GAP_REDUCTION
         }
-        // Text-width compensation moves both anchors together as the host expands to the left.
-        // Each element's own margin and X/Y offset still affects only that element.
-        val offset = outsideTypeWidthDelta(config, networkType.trim().uppercase()) +
-            outsideTypeMarginLeft(config) - outsideTypeMarginRight(config)
-        return base + offset
+        // Margins are per-element translations. Never add the live font-width delta to the
+        // element centre, because doing so also moved the battery ring in the trailing anchor.
+        return base + outsideTypeMarginLeft(config) - outsideTypeMarginRight(config)
     }
 
     private fun baseDesignWidth(
@@ -511,14 +571,14 @@ object StatusComboStyleOneGlyphRenderer {
         val signalLane = usesOutsideSignalLayout(config)
         val signalLeadingExpansion = outsideSignalLeadingExpansion(config)
         val typeLeadingExpansion = outsideTypeLeadingExpansion(config)
-        val typeWidthDelta = outsideTypeWidthDelta(config, networkType)
+        val frameWidthDelta = outsideFrameWidthDelta(config, networkType)
         val baseWidth = when {
             typeLane && signalLane ->
                 WIDE_WIDTH + signalLeadingExpansion + OUTSIDE_TYPE_RIGHT_CLEARANCE +
-                    typeWidthDelta + typeLeadingExpansion
+                    frameWidthDelta + typeLeadingExpansion
             typeLane ->
                 WIDE_WIDTH - TYPE_ONLY_SHIFT + OUTSIDE_TYPE_RIGHT_CLEARANCE +
-                    typeWidthDelta + typeLeadingExpansion
+                    frameWidthDelta + typeLeadingExpansion
             signalLane -> outsideSignalWidth(config) + signalLeadingExpansion + COMPACT_WIDTH - 8f
             else -> COMPACT_WIDTH
         }
@@ -552,29 +612,13 @@ object StatusComboStyleOneGlyphRenderer {
             outsideFrameLeadingExpansion(baseConfig, label)
         val typeOnlyShift = if (usesOutsideSignalLayout(baseConfig)) 0f else TYPE_ONLY_SHIFT
         val ringCenter = B_CX + WIDE_OFFSET - typeOnlyShift +
-            outsideTypeWidthDelta(baseConfig, label) + leading
-        // Keep the same clearance convention as signal-only mode: measure from the ring path
-        // centreline, letting half the stroke provide its natural visual overlap.
-        val ringLeft = ringCenter - B_R
-
-        // Measure a canonical default-size "5G" label and the default-size signal. Never use
-        // the live text/bar dimensions here: changing size or switching 5G ↔ 5GA must not drag
-        // the shared centre. Actual child bounds expand and contract around this anchor.
-        val defaults = StatusBarComboStyleOneRuntime()
-        val typeReferenceWidth = measuredNetworkTypeWidth(
-            "5G",
-            defaults.outTypeSizeDp.coerceIn(8, 26) * (HEIGHT / 36f),
-            defaults.typeWeight,
-            defaults.typeSuffixScale,
-        )
-        val signalReferenceWidth = if (usesOutsideSignalLayout(baseConfig)) {
-            outsideSignalWidth(baseConfig.copy(outSignalSizeDp = defaults.outSignalSizeDp))
-        } else {
-            0f
-        }
-        val referenceFrameWidth = max(typeReferenceWidth, signalReferenceWidth)
+            outsideFrameWidthDelta(baseConfig, label) + leading
+        // Reserve a true gap between the live square frame and the ring stroke so a larger label
+        // or signal cannot be drawn underneath the ring.
+        val ringLeft = ringCenter - B_R - config.ringStroke / 2f
+        val frameSide = outsideFrameSide(baseConfig, label, includeOffsets = false)
         val currentCenter = outsideTypeBaseCenter(baseConfig, label) + leading
-        val desiredCenter = ringLeft - OUTSIDE_SIGNAL_RING_CLEARANCE - referenceFrameWidth / 2f
+        val desiredCenter = ringLeft - OUTSIDE_SIGNAL_RING_CLEARANCE - frameSide / 2f
         return desiredCenter - currentCenter
     }
 
@@ -680,7 +724,7 @@ object StatusComboStyleOneGlyphRenderer {
         val offsetX = when {
             usesOutsideNetworkTypeLayout(config) -> {
                 val typeOnlyShift = if (outsideSignal) 0f else TYPE_ONLY_SHIFT
-                WIDE_OFFSET - typeOnlyShift + typeWidthDelta + leadingExpansion
+                WIDE_OFFSET - typeOnlyShift + outsideFrameWidthDelta(config, networkType) + leadingExpansion
             }
             outsideSignal -> signalWidth - 8f + leadingExpansion
             else -> 0f
@@ -747,7 +791,7 @@ object StatusComboStyleOneGlyphRenderer {
         val compositeShift = outsideCompositeShift(config, networkType)
         val ringOffsetX = when {
             outsideType -> WIDE_OFFSET - (if (outsideSignal) 0f else TYPE_ONLY_SHIFT) +
-                typeWidthDelta + leadingExpansion
+                outsideFrameWidthDelta(config, networkType) + leadingExpansion
             outsideSignal -> signalWidth - 8f + leadingExpansion
             else -> 0f
         }
@@ -1038,8 +1082,9 @@ object StatusComboStyleOneGlyphRenderer {
 
         val typeOnlyShift = if (outsideType && !outsideSignal) TYPE_ONLY_SHIFT else 0f
         val offsetX = when {
-            // Neither user spacing slider changes the ring anchor; each moves only its own content lane.
-            outsideType -> WIDE_OFFSET - typeOnlyShift + typeWidthDelta
+            // Ring X follows only the size-derived frame delta, never either child's X offset.
+            // The trailing edge stays anchored while the lane expands/contracts around the ring.
+            outsideType -> WIDE_OFFSET - typeOnlyShift + outsideFrameWidthDelta(config, state.networkType)
             outsideSignal -> signalWidth - 8f
             else -> 0f
         }
