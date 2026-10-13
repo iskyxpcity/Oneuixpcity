@@ -284,8 +284,8 @@ fun StatusComboStyleOneCategoryControls(
             }))
         }
         1 -> {
-            // Overall scaling changes size only; each positional slider belongs to its own element.
-            // The ring's trailing edge remains anchored to the native battery slot.
+            // Overall Size contains whole-glyph scale, X/Y position, and left/right spacing.
+            // Element-specific offsets remain in their own groups; zero offsets preserve slot anchoring.
             val ringDotsEnabled = runtime.enabled && runtime.trioStyle == 0 && runtime.showMobile && runtime.signalMode == 0
             StatusThemeGroup(title = stringResource(R.string.status_combo_style_one_group_overall_size), titleAlignedToContent = true, items = listOf({
                 styleOneSlider(stringResource(R.string.status_combo_style_one_glyph_scale), stringResource(R.string.status_combo_style_one_percent_summary, glyphScale), glyphScale.toFloat(), 70f..150f, { glyphScale = it.roundToInt(); preview(runtime.copy(glyphScalePercent = glyphScale)) }, { final -> persist(runtime.copy(glyphScalePercent = final.roundToInt())) }, enabled = runtime.enabled)
