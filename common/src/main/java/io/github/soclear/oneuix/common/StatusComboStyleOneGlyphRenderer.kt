@@ -518,7 +518,9 @@ object StatusComboStyleOneGlyphRenderer {
         val typeOnlyShift = if (usesOutsideSignalLayout(baseConfig)) 0f else TYPE_ONLY_SHIFT
         val ringCenter = B_CX + WIDE_OFFSET - typeOnlyShift +
             outsideTypeWidthDelta(baseConfig, label) + leading
-        val ringLeft = ringCenter - B_R - config.ringStroke / 2f
+        // Keep the same clearance convention as signal-only mode: measure from the ring path
+        // centreline, letting half the stroke provide its natural visual overlap.
+        val ringLeft = ringCenter - B_R
 
         val typeWidth = outsideTypeLabelWidth(baseConfig, label)
         val signalWidth = outsideSignalWidth(baseConfig)
