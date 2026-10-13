@@ -156,6 +156,10 @@ fun StatusComboStyleOneCategoryControls(
     var outTypeLeft by remember(runtime.outTypeMarginLeftDp) { mutableIntStateOf(runtime.outTypeMarginLeftDp.coerceIn(0, 16)) }
     var outTypeRight by remember(runtime.outTypeMarginRightDp) { mutableIntStateOf(runtime.outTypeMarginRightDp.coerceIn(0, 16)) }
     var outSignalMargin by remember(runtime.outSignalMarginDp) { mutableIntStateOf(runtime.outSignalMarginDp.coerceIn(0, 16)) }
+    var outTypeOffsetX by remember(runtime.outTypeOffsetXDp) { mutableIntStateOf(runtime.outTypeOffsetXDp.coerceIn(-16, 16)) }
+    var outTypeOffsetY by remember(runtime.outTypeOffsetYDp) { mutableIntStateOf(runtime.outTypeOffsetYDp.coerceIn(-16, 16)) }
+    var outSignalOffsetX by remember(runtime.outSignalOffsetXDp) { mutableIntStateOf(runtime.outSignalOffsetXDp.coerceIn(-16, 16)) }
+    var outSignalOffsetY by remember(runtime.outSignalOffsetYDp) { mutableIntStateOf(runtime.outSignalOffsetYDp.coerceIn(-16, 16)) }
     var lowThreshold by remember(runtime.lowThreshold) { mutableIntStateOf(runtime.lowThreshold.coerceIn(5, 50)) }
     var glyphScale by remember(runtime.glyphScalePercent) { mutableIntStateOf(runtime.glyphScalePercent.coerceIn(70, 150)) }
     var glyphOffsetX by remember(runtime.glyphOffsetXDp) { mutableIntStateOf(runtime.glyphOffsetXDp.coerceIn(-16, 16)) }
@@ -323,6 +327,10 @@ fun StatusComboStyleOneCategoryControls(
             }, {
                 styleOneSlider(stringResource(R.string.status_combo_style_one_out_type_margin_right), stringResource(R.string.status_combo_style_one_out_type_margin_right_summary, outTypeRight), outTypeRight.toFloat(), 0f..16f, { outTypeRight = it.roundToInt(); preview(runtime.copy(outTypeMarginRightDp = outTypeRight)) }, { final -> persist(runtime.copy(outTypeMarginRightDp = final.roundToInt())) }, enabled = runtime.enabled && runtime.mobileTypeMode == 2)
             }, {
+                styleOneSlider(stringResource(R.string.status_combo_style_one_out_type_offset_x), stringResource(R.string.status_combo_style_one_out_type_offset_x_summary, outTypeOffsetX), outTypeOffsetX.toFloat(), -16f..16f, { outTypeOffsetX = it.roundToInt(); preview(runtime.copy(outTypeOffsetXDp = outTypeOffsetX)) }, { final -> persist(runtime.copy(outTypeOffsetXDp = final.roundToInt())) }, enabled = runtime.enabled && runtime.mobileTypeMode == 2)
+            }, {
+                styleOneSlider(stringResource(R.string.status_combo_style_one_out_type_offset_y), stringResource(R.string.status_combo_style_one_out_type_offset_y_summary, outTypeOffsetY), outTypeOffsetY.toFloat(), -16f..16f, { outTypeOffsetY = it.roundToInt(); preview(runtime.copy(outTypeOffsetYDp = outTypeOffsetY)) }, { final -> persist(runtime.copy(outTypeOffsetYDp = final.roundToInt())) }, enabled = runtime.enabled && runtime.mobileTypeMode == 2)
+            }, {
                 styleOneSlider(stringResource(R.string.status_combo_style_one_type_weight), stringResource(R.string.status_combo_style_one_type_weight_summary, typeWeight), typeWeight.toFloat(), 100f..900f, { typeWeight = (it / 100f).roundToInt() * 100; preview(runtime.copy(typeWeight = typeWeight)) }, { final -> persist(runtime.copy(typeWeight = final.roundToInt())) }, stepSize = 100f, enabled = runtime.enabled && runtime.mobileTypeMode != 0)
             }))
             StatusThemeGroup(title = stringResource(R.string.status_combo_style_one_group_out_signal), titleAlignedToContent = true, items = listOf({
@@ -331,6 +339,10 @@ fun StatusComboStyleOneCategoryControls(
                 styleOneSlider(stringResource(R.string.status_combo_style_one_out_signal_margin_left), stringResource(R.string.status_combo_style_one_out_signal_margin_left_summary, outSignalMarginLeft), outSignalMarginLeft.toFloat(), 0f..16f, { outSignalMarginLeft = it.roundToInt(); preview(runtime.copy(outSignalMarginLeftDp = outSignalMarginLeft)) }, { final -> persist(runtime.copy(outSignalMarginLeftDp = final.roundToInt())) }, enabled = runtime.enabled && runtime.showMobile && runtime.signalMode == 1 && runtime.stackedSignal)
             }, {
                 styleOneSlider(stringResource(R.string.status_combo_style_one_out_signal_margin), stringResource(R.string.status_combo_style_one_out_signal_margin_summary, outSignalMargin), outSignalMargin.toFloat(), 0f..16f, { outSignalMargin = it.roundToInt(); preview(runtime.copy(outSignalMarginDp = outSignalMargin)) }, { final -> persist(runtime.copy(outSignalMarginDp = final.roundToInt())) }, enabled = runtime.enabled && runtime.showMobile && runtime.signalMode == 1 && runtime.stackedSignal)
+            }, {
+                styleOneSlider(stringResource(R.string.status_combo_style_one_out_signal_offset_x), stringResource(R.string.status_combo_style_one_out_signal_offset_x_summary, outSignalOffsetX), outSignalOffsetX.toFloat(), -16f..16f, { outSignalOffsetX = it.roundToInt(); preview(runtime.copy(outSignalOffsetXDp = outSignalOffsetX)) }, { final -> persist(runtime.copy(outSignalOffsetXDp = final.roundToInt())) }, enabled = runtime.enabled && runtime.showMobile && runtime.signalMode == 1 && runtime.stackedSignal)
+            }, {
+                styleOneSlider(stringResource(R.string.status_combo_style_one_out_signal_offset_y), stringResource(R.string.status_combo_style_one_out_signal_offset_y_summary, outSignalOffsetY), outSignalOffsetY.toFloat(), -16f..16f, { outSignalOffsetY = it.roundToInt(); preview(runtime.copy(outSignalOffsetYDp = outSignalOffsetY)) }, { final -> persist(runtime.copy(outSignalOffsetYDp = final.roundToInt())) }, enabled = runtime.enabled && runtime.showMobile && runtime.signalMode == 1 && runtime.stackedSignal)
             }))
             StatusThemeGroup(title = stringResource(R.string.status_combo_style_one_group_track), titleAlignedToContent = true, items = listOf({
                 styleOneSlider(stringResource(R.string.status_combo_style_one_track_alpha), stringResource(R.string.status_combo_style_one_track_alpha_summary, trackAlpha), trackAlpha.toFloat(), 0f..100f, { trackAlpha = it.roundToInt(); val alpha = (trackAlpha * 255f / 100f).roundToInt(); preview(runtime.copy(trackAlpha = alpha)) }, { final -> persist(runtime.copy(trackAlpha = (final.roundToInt() * 255f / 100f).roundToInt())) }, enabled = runtime.enabled)
