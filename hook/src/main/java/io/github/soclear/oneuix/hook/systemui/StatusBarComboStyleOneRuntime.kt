@@ -1432,16 +1432,19 @@ object StatusBarComboStyleOneRuntime {
         val ringCenterUnits = StatusComboStyleOneGlyphRenderer.glyphCenterX(cfg, networkType)
 
         val glyphLocation = IntArray(2)
-        val anchorLocation = IntArray(2)
+        val parentLocation = IntArray(2)
+        val parent = glyph.parent as? ViewGroup ?: return
         if (runCatching { glyph.getLocationOnScreen(glyphLocation) }.isFailure ||
-            runCatching { anchor.getLocationOnScreen(anchorLocation) }.isFailure
+            runCatching { parent.getLocationOnScreen(parentLocation) }.isFailure
         ) return
 
-        val slotRightPx = if (anchor.width > 0) {
-            anchorLocation[0] + anchor.width
-        } else {
-            anchorLocation[0]
-        }
+        // Do not use the collapsed battery child's location as an anchor: in inline mode that
+        // child follows GlyphView in the same layout row, so its X moves whenever the glyph's
+        // measured width changes. Anchor to the status-icon container's trailing edge instead.
+        val originalRightMargin = synchronized(hosts) {
+            hosts.values.firstOrNull { it.battery === anchor }?.layouts?.get(anchor)?.rightMargin
+        } ?: nativeBatteryLayouts[anchor]?.rightMargin ?: 0
+        val slotRightPx = parentLocation[0] + parent.width - parent.paddingRight - originalRightMargin
         val overallOffsetPx = dpExact(glyph.context, cfg.glyphOffsetXDp).toFloat()
         val desiredRingScreenX = slotRightPx -
             (designWidth - ringCenterUnits) * renderScale + overallOffsetPx
