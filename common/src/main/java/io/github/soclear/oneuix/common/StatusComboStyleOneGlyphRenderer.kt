@@ -357,20 +357,20 @@ object StatusComboStyleOneGlyphRenderer {
         if (usesOutsideSignalLayout(config)) {
             OUTSIDE_SIGNAL_RING_CLEARANCE +
                 config.outSignalMarginDp.coerceIn(-16, 16) * (HEIGHT / 36f)
-        } else 0f else 0f
+        } else 0f
 
     // Extra outer/left margin is independent from the signal-to-ring gap.
     private fun outsideSignalMarginLeft(config: StatusBarComboStyleOneRuntime): Float =
         if (usesOutsideSignalLayout(config)) {
             config.outSignalMarginLeftDp.coerceIn(-16, 16) * (HEIGHT / 36f)
-        } else 0f else 0f
+        } else 0f
 
     /** The row grows leftward for both signal-to-ring spacing and the outer-left margin. */
     private fun outsideSignalLeadingExpansion(config: StatusBarComboStyleOneRuntime): Float =
         if (usesOutsideSignalLayout(config)) {
             OUTSIDE_SIGNAL_RING_CLEARANCE +
                 if (usesOutsideNetworkTypeLayout(config)) OUTSIDE_COMPOSITE_HOST_EXTRA else 0f
-        } else 0f else 0f
+        } else 0f
 
     private fun outsideTypeLabelWidth(
         config: StatusBarComboStyleOneRuntime,
@@ -391,19 +391,19 @@ object StatusComboStyleOneGlyphRenderer {
     private fun outsideTypeMarginLeft(config: StatusBarComboStyleOneRuntime): Float =
         if (usesOutsideNetworkTypeLayout(config)) {
             config.outTypeMarginLeftDp.coerceIn(-16, 16) * (HEIGHT / 36f)
-        } else 0f else 0f
+        } else 0f
 
     private fun outsideTypeMarginRight(config: StatusBarComboStyleOneRuntime): Float =
         if (usesOutsideNetworkTypeLayout(config)) {
             config.outTypeMarginRightDp.coerceIn(-16, 16) * (HEIGHT / 36f)
-        } else 0f else 0f
+        } else 0f
 
     /**
      * Leading canvas width grows with the selected type margins. The canvas translates by the same
      * amount, so its ring anchor stays fixed while the status-bar row can allocate space to the left.
      */
     private fun outsideTypeLeadingExpansion(config: StatusBarComboStyleOneRuntime): Float =
-        if (usesOutsideNetworkTypeLayout(config)) OUTSIDE_TYPE_LEADING_CLEARANCE else 0f else 0f
+        if (usesOutsideNetworkTypeLayout(config)) OUTSIDE_TYPE_LEADING_CLEARANCE else 0f
 
     private fun outsideTypeWidthDelta(
         config: StatusBarComboStyleOneRuntime,
