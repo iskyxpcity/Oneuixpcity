@@ -399,9 +399,8 @@ object StatusComboStyleOneGlyphRenderer {
         val signalLeadingExpansion = outsideSignalLeadingExpansion(config)
         val typeLeadingExpansion = outsideTypeLeadingExpansion(config)
         val typeWidthDelta = outsideTypeWidthDelta(config, networkType)
-        return when {
-            // Grow the host width by the selected outside margins only. Drawing offsets and overlay
-            // anchoring compensate for the added leading canvas, keeping the ring fixed in place.
+        val baseWidth = when {
+            // Grow the host width by selected margins and any square-frame overflow to the left.
             typeLane && signalLane ->
                 WIDE_WIDTH + signalLeadingExpansion + OUTSIDE_TYPE_RIGHT_CLEARANCE +
                     typeWidthDelta + typeLeadingExpansion
@@ -411,6 +410,7 @@ object StatusComboStyleOneGlyphRenderer {
             signalLane -> outsideSignalWidth(config) + signalLeadingExpansion + COMPACT_WIDTH - 8f
             else -> COMPACT_WIDTH
         }
+        return baseWidth + outsideFrameLeadingExpansion(config, networkType)
     }
 
     private fun baseGlyphHeightDp(config: StatusBarComboStyleOneRuntime): Int =
@@ -471,7 +471,8 @@ object StatusComboStyleOneGlyphRenderer {
         config: StatusBarComboStyleOneRuntime,
         networkType: String = "",
     ): Int {
-        val expansion = outsideTypeLeadingExpansion(config) + outsideSignalLeadingExpansion(config)
+        val expansion = outsideTypeLeadingExpansion(config) + outsideSignalLeadingExpansion(config) +
+            outsideFrameLeadingExpansion(config, networkType)
         val width = designWidth(config, networkType) - expansion
         return (width * baseGlyphHeightDp(config).toFloat() / HEIGHT)
             .roundToInt().coerceAtLeast(20)
@@ -482,8 +483,10 @@ object StatusComboStyleOneGlyphRenderer {
         designWidth(config, networkType)
 
     /** Height of the canvas in the same design units used by draw(). */
-    fun glyphDesignHeight(config: StatusBarComboStyleOneRuntime): Float =
-        designHeight(config)
+    fun glyphDesignHeight(
+        config: StatusBarComboStyleOneRuntime,
+        networkType: String = "",
+    ): Float = designHeight(config, networkType)
 
     /**
      * Ring-centre X inside the canvas. When the host is right-edge anchored, the view grows left
@@ -493,7 +496,8 @@ object StatusComboStyleOneGlyphRenderer {
         val signalWidth = outsideSignalWidth(config)
         val outsideSignal = usesOutsideSignalLayout(config)
         val typeWidthDelta = outsideTypeWidthDelta(config, networkType)
-        val leadingExpansion = outsideTypeLeadingExpansion(config) + outsideSignalLeadingExpansion(config)
+        val leadingExpansion = outsideTypeLeadingExpansion(config) + outsideSignalLeadingExpansion(config) +
+            outsideFrameLeadingExpansion(config, networkType)
         val offsetX = when {
             usesOutsideNetworkTypeLayout(config) -> {
                 val typeOnlyShift = if (outsideSignal) 0f else TYPE_ONLY_SHIFT
@@ -510,13 +514,19 @@ object StatusComboStyleOneGlyphRenderer {
         glyphCenterX(config, networkType) / designWidth(config, networkType)
 
     /** Vertical anchor of the battery-ring centre inside the active glyph bounds. */
-    fun glyphVerticalCenterRatio(config: StatusBarComboStyleOneRuntime): Float {
-        val dualBottomExtra = if (usesDualSignalBelowRing(config)) (DUAL_BOTTOM_HEIGHT - HEIGHT) / 2f else 0f
-        return (B_CY + dualBottomExtra) / designHeight(config)
+    fun glyphVerticalCenterRatio(
+        config: StatusBarComboStyleOneRuntime,
+        networkType: String = "",
+    ): Float {
+        val verticalContentOffset = outsideFrameTopExpansion(config, networkType) + dualBottomExpansion(config)
+        return (B_CY + verticalContentOffset) / designHeight(config, networkType)
     }
 
-    fun glyphHeightDp(config: StatusBarComboStyleOneRuntime): Int =
-        (baseGlyphHeightDp(config).toFloat() * designHeight(config) / HEIGHT)
+    fun glyphHeightDp(
+        config: StatusBarComboStyleOneRuntime,
+        networkType: String = "",
+    ): Int =
+        (baseGlyphHeightDp(config).toFloat() * designHeight(config, networkType) / HEIGHT)
             .roundToInt().coerceAtLeast(18)
 
 
