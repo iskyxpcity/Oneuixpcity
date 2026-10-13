@@ -332,31 +332,27 @@ object StatusComboStyleOneGlyphRenderer {
         config: StatusBarComboStyleOneRuntime,
         networkType: String,
     ): Float {
-        val frame = outsideFrameGeometry(config, networkType, includeOffsets = false) ?: return 0f
-        // Existing type/signal expansion already moves the frame right within the enlarged host.
-        // Only reserve more room if the frame would still extend beyond that translated canvas.
-        val priorLeadingExpansion = outsideTypeLeadingExpansion(config) +
-            outsideSignalLeadingExpansion(config)
-        val translatedSquareLeft = frame.squareLeft + priorLeadingExpansion
-        return if (translatedSquareLeft < 0f) -translatedSquareLeft + 1f else 0f
+        // The shared frame is a visual-centre reference only. Its invisible square bounds must
+        // not reserve blank width in the native status row.
+        return 0f
     }
 
     private fun outsideFrameTopExpansion(
         config: StatusBarComboStyleOneRuntime,
         networkType: String,
     ): Float {
-        if (!usesOutsideNetworkTypeLayout(config) && !usesOutsideSignalLayout(config)) return 0f
-        val fixedTop = OUTSIDE_FRAME_CENTER_Y - OUTSIDE_FRAME_SIDE / 2f
-        return if (fixedTop < 0f) -fixedTop + 1f else 0f
+        // Do not enlarge the actual child/window height to fit an invisible square: a tall inline
+        // child makes SystemUI recenter the entire status row and pushes the battery ring down.
+        return 0f
     }
 
     private fun outsideFrameBottomExpansion(
         config: StatusBarComboStyleOneRuntime,
         networkType: String,
     ): Float {
-        if (!usesOutsideNetworkTypeLayout(config) && !usesOutsideSignalLayout(config)) return 0f
-        val fixedBottom = OUTSIDE_FRAME_CENTER_Y + OUTSIDE_FRAME_SIDE / 2f
-        return if (fixedBottom > HEIGHT) fixedBottom - HEIGHT + 1f else 0f
+        // The outer label and bars fit within the native-height design canvas; only visible
+        // dual-SIM-below-ring content is allowed to increase height.
+        return 0f
     }
 
     private fun dualBottomExpansion(config: StatusBarComboStyleOneRuntime): Float =
@@ -472,7 +468,7 @@ object StatusComboStyleOneGlyphRenderer {
         return base + offset
     }
 
-    private fun designWidth(
+    private fun baseDesignWidth(
         config: StatusBarComboStyleOneRuntime,
         networkType: String = "",
     ): Float {
@@ -482,7 +478,6 @@ object StatusComboStyleOneGlyphRenderer {
         val typeLeadingExpansion = outsideTypeLeadingExpansion(config)
         val typeWidthDelta = outsideTypeWidthDelta(config, networkType)
         val baseWidth = when {
-            // Grow the host width by selected margins and any square-frame overflow to the left.
             typeLane && signalLane ->
                 WIDE_WIDTH + signalLeadingExpansion + OUTSIDE_TYPE_RIGHT_CLEARANCE +
                     typeWidthDelta + typeLeadingExpansion
@@ -494,6 +489,87 @@ object StatusComboStyleOneGlyphRenderer {
         }
         return baseWidth + outsideFrameLeadingExpansion(config, networkType)
     }
+
+    /**
+     * When the type is outside, place the actual visible label/signal bounds beside the ring.
+     * The fixed frame's blank internal margins are not part of the visual composition width.
+     * Both visible elements use this one centre; per-element margins and offsets remain independent.
+     */
+    private fun outsideCompositeShift(
+        config: StatusBarComboStyleOneRuntime,
+        networkType: String,
+    ): Float {
+        val label = networkType.trim().uppercase()
+        if (!usesOutsideNetworkTypeLayout(config) || label.isBlank()) return 0f
+
+        val baseConfig = config.copy(
+            outTypeMarginLeftDp = 0,
+            outTypeMarginRightDp = 0,
+            outTypeOffsetXDp = 0,
+            outTypeOffsetYDp = 0,
+            outSignalMarginDp = 0,
+            outSignalMarginLeftDp = 0,
+            outSignalOffsetXDp = 0,
+            outSignalOffsetYDp = 0,
+        )
+        val leading = outsideTypeLeadingExpansion(baseConfig) +
+            outsideSignalLeadingExpansion(baseConfig) +
+            outsideFrameLeadingExpansion(baseConfig, label)
+        val typeOnlyShift = if (usesOutsideSignalLayout(baseConfig)) 0f else TYPE_ONLY_SHIFT
+        val ringCenter = B_CX + WIDE_OFFSET - typeOnlyShift +
+            outsideTypeWidthDelta(baseConfig, label) + leading
+        val ringLeft = ringCenter - B_R - config.ringStroke / 2f
+
+        val typeWidth = outsideTypeLabelWidth(baseConfig, label)
+        val signalWidth = outsideSignalWidth(baseConfig)
+        val visibleGroupWidth = max(typeWidth, signalWidth)
+        val currentCenter = outsideTypeBaseCenter(baseConfig, label) + leading
+        val desiredCenter = ringLeft - OUTSIDE_SIGNAL_RING_CLEARANCE - visibleGroupWidth / 2f
+        return desiredCenter - currentCenter
+    }
+
+    /**
+     * Crops transparent leading canvas area to the first visible outer element. The view width
+     * shrinks by the same amount that drawing coordinates shift left, preserving the ring's
+     * screen X while allowing native icons to return to their original spacing.
+     */
+    private fun outsideContentLeadingTrimUnits(
+        config: StatusBarComboStyleOneRuntime,
+        networkType: String,
+    ): Float {
+        val label = networkType.trim().uppercase()
+        val typeActive = usesOutsideNetworkTypeLayout(config) && label.isNotBlank()
+        val signalActive = usesOutsideSignalLayout(config)
+        if (!typeActive && !signalActive) return 0f
+
+        val leading = outsideTypeLeadingExpansion(config) +
+            outsideSignalLeadingExpansion(config) +
+            outsideFrameLeadingExpansion(config, label)
+        val compositeShift = outsideCompositeShift(config, label)
+        var left = Float.POSITIVE_INFINITY
+
+        if (typeActive) {
+            val width = outsideTypeLabelWidth(config, label)
+            val center = leading + outsideTypeBaseCenter(config, label) +
+                compositeShift + outsideTypeOffsetXUnits(config)
+            left = min(left, center - width / 2f)
+        }
+        if (signalActive) {
+            val width = outsideSignalWidth(config)
+            val center = leading + outsideSignalCanvasCenter(config, label) +
+                compositeShift + outsideSignalOffsetXUnits(config)
+            left = min(left, center - width / 2f)
+        }
+        if (!left.isFinite()) return 0f
+        // A negative trim intentionally grows the host to keep user-shifted content inside it.
+        return left
+    }
+
+    private fun designWidth(
+        config: StatusBarComboStyleOneRuntime,
+        networkType: String = "",
+    ): Float = (baseDesignWidth(config, networkType) -
+        outsideContentLeadingTrimUnits(config, networkType)).coerceAtLeast(20f)
 
     private fun baseGlyphHeightDp(config: StatusBarComboStyleOneRuntime): Int =
         (36f * 0.9f * config.glyphScalePercent.coerceIn(70, 150) / 100f)
@@ -548,8 +624,9 @@ object StatusComboStyleOneGlyphRenderer {
         val signalWidth = outsideSignalWidth(config)
         val outsideSignal = usesOutsideSignalLayout(config)
         val typeWidthDelta = outsideTypeWidthDelta(config, networkType)
-        val leadingExpansion = outsideTypeLeadingExpansion(config) + outsideSignalLeadingExpansion(config) +
-            outsideFrameLeadingExpansion(config, networkType)
+        val leadingExpansion = outsideTypeLeadingExpansion(config) +
+            outsideSignalLeadingExpansion(config) + outsideFrameLeadingExpansion(config, networkType)
+        val trim = outsideContentLeadingTrimUnits(config, networkType)
         val offsetX = when {
             usesOutsideNetworkTypeLayout(config) -> {
                 val typeOnlyShift = if (outsideSignal) 0f else TYPE_ONLY_SHIFT
@@ -558,7 +635,7 @@ object StatusComboStyleOneGlyphRenderer {
             outsideSignal -> signalWidth - 8f + leadingExpansion
             else -> 0f
         }
-        return B_CX + offsetX
+        return B_CX + offsetX - trim
     }
 
     /** Horizontal anchor ratio, retained for callers that need the relative location only. */
@@ -614,8 +691,10 @@ object StatusComboStyleOneGlyphRenderer {
         val signalMargin = outsideSignalMargin(config)
         val signalMarginLeft = outsideSignalMarginLeft(config)
         val typeWidthDelta = outsideTypeWidthDelta(config, networkType)
+        val contentTrim = outsideContentLeadingTrimUnits(config, networkType)
         val leadingExpansion = outsideTypeLeadingExpansion(config) + outsideSignalLeadingExpansion(config) +
-            outsideFrameLeadingExpansion(config, networkType)
+            outsideFrameLeadingExpansion(config, networkType) - contentTrim
+        val compositeShift = outsideCompositeShift(config, networkType)
         val ringOffsetX = when {
             outsideType -> WIDE_OFFSET - (if (outsideSignal) 0f else TYPE_ONLY_SHIFT) +
                 typeWidthDelta + leadingExpansion
@@ -632,8 +711,8 @@ object StatusComboStyleOneGlyphRenderer {
         val screenRingCenter = windowScreenX + ringCenterPx
         val densitySafe = density.takeIf { it > 0f } ?: 1f
         val label = networkType.trim().uppercase()
-        val baseTypeCenter = outsideTypeBaseCenter(config, label)
-        val baseSignalCenter = outsideSignalCanvasCenter(config, label)
+        val baseTypeCenter = outsideTypeBaseCenter(config, label) + compositeShift
+        val baseSignalCenter = outsideSignalCanvasCenter(config, label) + compositeShift
         val typeWidthForClamp = if (outsideType && label.isNotBlank()) {
             outsideTypeLabelWidth(config, label)
         } else 0f
@@ -836,8 +915,10 @@ object StatusComboStyleOneGlyphRenderer {
         val signalMarginLeft = outsideSignalMarginLeft(config)
         val signalWidth = outsideSignalWidth(config)
         val typeWidthDelta = outsideTypeWidthDelta(config, state.networkType)
+        val contentTrim = outsideContentLeadingTrimUnits(config, state.networkType)
         val leadingExpansion = outsideTypeLeadingExpansion(config) + outsideSignalLeadingExpansion(config) +
-            outsideFrameLeadingExpansion(config, state.networkType)
+            outsideFrameLeadingExpansion(config, state.networkType) - contentTrim
+        val compositeShift = outsideCompositeShift(config, state.networkType)
         val designWidth = designWidth(config, state.networkType)
         val designHeight = designHeight(config, state.networkType)
         val frameGeometry = outsideFrameGeometry(config, state.networkType)
@@ -856,8 +937,8 @@ object StatusComboStyleOneGlyphRenderer {
                 state.networkType.trim().uppercase(), outsideTypeSize, config.typeWeight, config.typeSuffixScale,
             )
         } else 0f
-        val outsideTypeCenter = outsideTypeBaseCenter(config, state.networkType)
-        val outsideSignalCenter = outsideSignalCanvasCenter(config, state.networkType)
+        val outsideTypeCenter = outsideTypeBaseCenter(config, state.networkType) + compositeShift
+        val outsideSignalCenter = outsideSignalCanvasCenter(config, state.networkType) + compositeShift
         val canvasLeftInsetPx = (width - designWidth * scale) / 2f
         val safeOutsideTypeCenter = if (
             outsideType && outsideTypeLabelWidth > 0f && minimumVisibleIconLeftPx != null
@@ -884,9 +965,9 @@ object StatusComboStyleOneGlyphRenderer {
         val save = canvas.save()
         canvas.translate((width - designWidth * scale) / 2f, (height - designHeight * scale) / 2f)
         canvas.scale(scale, scale)
-        // The host grows leftward for outside content; translate the glyph by the same amount
-        // to keep the ring anchored. When type and signal are both outside, their shared centre
-        // keeps them stacked as one network icon.
+        // Crop only transparent leading canvas area. The design canvas and ring anchor shift
+        // by the same amount as the host shrinks, so native siblings regain space without moving
+        // the circle. Outer type and signal share a computed visible-bounds centre.
         canvas.translate(
             leadingExpansion,
             verticalContentOffset,
