@@ -465,6 +465,25 @@ object StatusComboStyleOneGlyphRenderer {
     }
 
     /**
+     * Extra status-row width required by standalone outside-signal mode.
+     *
+     * The signal's square frame occupies its full visual width. In inline mode, reserving
+     * that width lets preceding native status icons reflow left, instead of clamping the
+     * signal frame into the ring's own space. When network type shares the frame, the
+     * existing composite lane already accounts for both elements and this reservation is not used.
+     */
+    fun glyphStandaloneOutsideSignalReservationDp(
+        config: StatusBarComboStyleOneRuntime,
+        networkType: String = "",
+    ): Int {
+        if (!usesOutsideSignalLayout(config)) return 0
+        if (usesOutsideNetworkTypeLayout(config) && networkType.isNotBlank()) return 0
+        return (
+            outsideSignalWidth(config) * baseGlyphHeightDp(config).toFloat() / HEIGHT
+            ).roundToInt().coerceAtLeast(0)
+    }
+
+    /**
      * Width before added leading space for diagnostics and layout comparisons.
      * The actual inline/overlay host uses glyphWidthDp() so selected lane spacing is allocated.
      */
