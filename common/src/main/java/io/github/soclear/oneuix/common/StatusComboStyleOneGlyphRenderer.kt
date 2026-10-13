@@ -878,14 +878,14 @@ object StatusComboStyleOneGlyphRenderer {
                     config.ringStroke,
                     // Offset the 15% size reduction so the opening is still 2dp wider than before.
                     extraClearance = 3f + originalBoltContentWidth * 0.15f +
-                        2f * designHeight / glyphHeightDp(config).toFloat(),
+                        2f * designHeight / glyphHeightDp(config, state.networkType).toFloat(),
                 )
             }
             wifiInGap -> contentGapRange(43f, config.ringStroke)
             valueInGap -> contentGapRange(
                 measuredTextWidth(level.toString(), valueSizeCanvasUnits(config), config.valueWeight),
                 config.ringStroke,
-                extraClearance = 2f * designHeight / glyphHeightDp(config).toFloat(),
+                extraClearance = 2f * designHeight / glyphHeightDp(config, state.networkType).toFloat(),
             )
             typeInGap && innerType != null -> contentGapRange(
                 measuredNetworkTypeWidth(innerType, config.typeSize.toFloat(), config.typeWeight, config.typeSuffixScale),
@@ -928,13 +928,13 @@ object StatusComboStyleOneGlyphRenderer {
                     dualBottomRows -> {
                         // Alternative mode: reserve real canvas height and place both SIM rows
                         // underneath the ring, outside the battery stroke.
-                        drawBottomDualDotRow(canvas, offsetX, state.simOneLevel, tint, track, DUAL_BOTTOM_ROW_ONE_Y, config)
-                        drawBottomDualDotRow(canvas, offsetX, state.simTwoLevel, tint, track, DUAL_BOTTOM_ROW_TWO_Y, config)
+                        drawBottomDualDotRow(canvas, offsetX, state.simOneLevel, tint, track, DUAL_BOTTOM_ROW_ONE_Y, config, state.networkType)
+                        drawBottomDualDotRow(canvas, offsetX, state.simTwoLevel, tint, track, DUAL_BOTTOM_ROW_TWO_Y, config, state.networkType)
                     }
                     dualBottomLayout -> {
                         // With only one SIM available, place its dots in the first row position,
                         // not the lower row used by a two-SIM layout.
-                        drawBottomDualDotRow(canvas, offsetX, state.mobileLevel, tint, track, DUAL_BOTTOM_ROW_ONE_Y, config)
+                        drawBottomDualDotRow(canvas, offsetX, state.mobileLevel, tint, track, DUAL_BOTTOM_ROW_ONE_Y, config, state.networkType)
                     }
                     else -> drawSingleSignalDots(canvas, offsetX, state.mobileLevel, tint, track, config)
                 }
@@ -1145,12 +1145,12 @@ object StatusComboStyleOneGlyphRenderer {
 
     private fun drawBottomDualDotRow(
         canvas: Canvas, offsetX: Float, level: Int, color: Int, track: Int, y: Float,
-        config: StatusBarComboStyleOneRuntime,
+        config: StatusBarComboStyleOneRuntime, networkType: String,
     ) {
         val radius = dotRadius(config, DOT_R)
         // Raise the selected below-ring signal layout by 3dp while preserving its user offset slider.
         val resolvedY = y + dotVerticalOffset(config) -
-            DUAL_BOTTOM_DOT_RAISE_DP * DUAL_BOTTOM_HEIGHT / glyphHeightDp(config).toFloat()
+            DUAL_BOTTOM_DOT_RAISE_DP * DUAL_BOTTOM_HEIGHT / glyphHeightDp(config, networkType).toFloat()
         dots.forEachIndexed { index, _ ->
             paint.style = Paint.Style.FILL
             paint.color = if (index < level.coerceIn(0, 4)) color else track
