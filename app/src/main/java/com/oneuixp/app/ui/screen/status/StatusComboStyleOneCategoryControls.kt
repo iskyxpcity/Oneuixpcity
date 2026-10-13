@@ -162,11 +162,7 @@ fun StatusComboStyleOneCategoryControls(
     var outSignalOffsetY by remember(runtime.outSignalOffsetYDp) { mutableIntStateOf(runtime.outSignalOffsetYDp.coerceIn(-16, 16)) }
     var lowThreshold by remember(runtime.lowThreshold) { mutableIntStateOf(runtime.lowThreshold.coerceIn(5, 50)) }
     var glyphScale by remember(runtime.glyphScalePercent) { mutableIntStateOf(runtime.glyphScalePercent.coerceIn(70, 150)) }
-    var glyphOffsetX by remember(runtime.glyphOffsetXDp) { mutableIntStateOf(runtime.glyphOffsetXDp.coerceIn(-16, 16)) }
-    var glyphOffsetY by remember(runtime.glyphOffsetYDp) { mutableIntStateOf(runtime.glyphOffsetYDp.coerceIn(-16, 16)) }
-    var glyphLeftMargin by remember(runtime.glyphLeftMarginDp) { mutableIntStateOf(runtime.glyphLeftMarginDp.coerceIn(0, 16)) }
-    var glyphRightMargin by remember(runtime.glyphRightMarginDp) { mutableIntStateOf(runtime.glyphRightMarginDp.coerceIn(0, 16)) }
-    var boltSize by remember(runtime.chargingBoltSizePercent) { mutableIntStateOf(runtime.chargingBoltSizePercent.coerceIn(50, 180)) }
+     var boltSize by remember(runtime.chargingBoltSizePercent) { mutableIntStateOf(runtime.chargingBoltSizePercent.coerceIn(50, 180)) }
     var boltX by remember(runtime.chargingBoltXDp) { mutableIntStateOf(runtime.chargingBoltXDp.coerceIn(-8, 8)) }
     var boltY by remember(runtime.chargingBoltYDp) { mutableIntStateOf(runtime.chargingBoltYDp.coerceIn(-8, 8)) }
     var trackAlpha by remember(runtime.trackAlpha) {
@@ -284,18 +280,11 @@ fun StatusComboStyleOneCategoryControls(
             }))
         }
         1 -> {
-            // Overall size, offsets and gaps all affect the complete glyph.
+            // Overall scaling changes size only; each positional slider belongs to its own element.
+            // The ring's trailing edge remains anchored to the native battery slot.
             val ringDotsEnabled = runtime.enabled && runtime.trioStyle == 0 && runtime.showMobile && runtime.signalMode == 0
             StatusThemeGroup(title = stringResource(R.string.status_combo_style_one_group_overall_size), titleAlignedToContent = true, items = listOf({
                 styleOneSlider(stringResource(R.string.status_combo_style_one_glyph_scale), stringResource(R.string.status_combo_style_one_percent_summary, glyphScale), glyphScale.toFloat(), 70f..150f, { glyphScale = it.roundToInt(); preview(runtime.copy(glyphScalePercent = glyphScale)) }, { final -> persist(runtime.copy(glyphScalePercent = final.roundToInt())) }, enabled = runtime.enabled)
-            }, {
-                styleOneSlider(stringResource(R.string.status_combo_style_one_glyph_offset_x), stringResource(R.string.status_combo_style_one_glyph_offset_x_summary, glyphOffsetX), glyphOffsetX.toFloat(), -16f..16f, { glyphOffsetX = it.roundToInt(); preview(runtime.copy(glyphOffsetXDp = glyphOffsetX)) }, { final -> persist(runtime.copy(glyphOffsetXDp = final.roundToInt())) }, enabled = runtime.enabled)
-            }, {
-                styleOneSlider(stringResource(R.string.status_combo_style_one_glyph_offset_y), stringResource(R.string.status_combo_style_one_glyph_offset_y_summary, glyphOffsetY), glyphOffsetY.toFloat(), -16f..16f, { glyphOffsetY = it.roundToInt(); preview(runtime.copy(glyphOffsetYDp = glyphOffsetY)) }, { final -> persist(runtime.copy(glyphOffsetYDp = final.roundToInt())) }, enabled = runtime.enabled)
-            }, {
-                styleOneSlider(stringResource(R.string.status_combo_style_one_glyph_left_margin), stringResource(R.string.status_combo_style_one_glyph_left_margin_summary, glyphLeftMargin), glyphLeftMargin.toFloat(), 0f..16f, { glyphLeftMargin = it.roundToInt(); preview(runtime.copy(glyphLeftMarginDp = glyphLeftMargin)) }, { final -> persist(runtime.copy(glyphLeftMarginDp = final.roundToInt())) }, enabled = runtime.enabled)
-            }, {
-                styleOneSlider(stringResource(R.string.status_combo_style_one_glyph_right_margin), stringResource(R.string.status_combo_style_one_glyph_right_margin_summary, glyphRightMargin), glyphRightMargin.toFloat(), 0f..16f, { glyphRightMargin = it.roundToInt(); preview(runtime.copy(glyphRightMarginDp = glyphRightMargin)) }, { final -> persist(runtime.copy(glyphRightMarginDp = final.roundToInt())) }, enabled = runtime.enabled)
             }))
             StatusThemeGroup(title = stringResource(R.string.status_combo_style_one_group_signal_dots), titleAlignedToContent = true, items = listOf({
                 styleOneSlider(stringResource(R.string.status_combo_style_one_signal_dot_size), stringResource(R.string.status_combo_style_one_signal_dot_size_summary, signalDotSize), signalDotSize.toFloat(), 50f..150f, { signalDotSize = it.roundToInt(); preview(runtime.copy(signalDotSizePercent = signalDotSize)) }, { final -> persist(runtime.copy(signalDotSizePercent = final.roundToInt())) }, enabled = ringDotsEnabled)
