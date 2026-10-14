@@ -143,10 +143,13 @@ object StatusBarComboStyleOneRuntime {
     // SystemUI's true Visible/Hidden state when the custom arc is switched off.
     private val modernWifiViewModels = Collections.synchronizedMap(WeakHashMap<View, WeakReference<Any>>())
     private val lastNativeWifiDiagnostics = Collections.synchronizedMap(WeakHashMap<View, String>())
-    private val lastNativeWifiParentLayoutDiagnostics = Collections.synchronizedMap(WeakHashMap<ViewGroup, String>())
-    private val pendingNativeWifiParentRemeasures = Collections.synchronizedSet(
-        Collections.newSetFromMap(WeakHashMap<ViewGroup, Boolean>())
-    )
+    // AOSP/Samsung can keep a measured width after native Wi-Fi is collapsed.
+    private val nativeWifiClusterBaselineVisibility = Collections.synchronizedMap(WeakHashMap<ViewGroup, Int>())
+    private val pendingNativeWifiClusterReconciliations =
+        Collections.synchronizedSet(Collections.newSetFromMap(WeakHashMap<ViewGroup, Boolean>()))
+    private val pendingNativeWifiClusterCandidates = Collections.synchronizedMap(WeakHashMap<ViewGroup, View>())
+    private val lastNativeWifiClusterDiagnostics = Collections.synchronizedMap(WeakHashMap<ViewGroup, String>())
+    private val adjustingNativeWifiClusterVisibility = ThreadLocal.withInitial { false }
     private val lastNativeWifiSlotRequests = ConcurrentHashMap<String, String>()
     private val lastSubscriptionSignalLevels = ConcurrentHashMap<Int, Int>()
     private val subscriptionSlots = ConcurrentHashMap<Int, Int>()
