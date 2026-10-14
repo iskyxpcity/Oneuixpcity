@@ -815,11 +815,12 @@ object StatusBarComboStyleOneRuntime {
             lp.x = (
                 slotRightPx - canvasLeftInsetPx - designWidthUnits * renderScale +
                     horizontalOffsetPx
-                ).roundToInt() + StatusBarComboStyleOneRuntime.dpExact(context, burnInOffsetXDp)
+                ).roundToInt() +
+                (burnInOffsetXDp * (context.resources.displayMetrics.density.takeIf { it > 0f } ?: 1f)).roundToInt()
             val verticalOffsetPx = StatusBarComboStyleOneRuntime.dpExact(context, cfg.glyphOffsetYDp)
             val requestedWindowY = (
                 slotCenterY - lp.height * centreRatioY + verticalOffsetPx +
-                    StatusBarComboStyleOneRuntime.dpExact(context, burnInOffsetYDp)
+                    burnInOffsetYDp * (context.resources.displayMetrics.density.takeIf { it > 0f } ?: 1f)
                 ).roundToInt()
             // FLAG_LAYOUT_NO_LIMITS is required by Samsung so coordinates remain screen-based,
             // but it also permits a scaled-up overlay to extend above y=0. The inner display's
