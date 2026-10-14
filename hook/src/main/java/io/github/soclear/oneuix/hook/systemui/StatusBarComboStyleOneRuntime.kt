@@ -2452,7 +2452,7 @@ object StatusBarComboStyleOneRuntime {
                 val listener = View.OnLayoutChangeListener { view, left, _, right, _, oldLeft, _, oldRight, _ ->
                     // Horizontal changes only; ignore shade-height animation and avoid a poll loop.
                     if (left != oldLeft || right != oldRight) {
-                        (view as? ViewGroup)?.let(::scheduleNativeWifiClusterReconciliation)
+                        (view as? ViewGroup)?.let { changedCluster -> scheduleNativeWifiClusterReconciliation(changedCluster) }
                     }
                 }
                 nativeWifiClusterLayoutListeners[cluster] = listener
