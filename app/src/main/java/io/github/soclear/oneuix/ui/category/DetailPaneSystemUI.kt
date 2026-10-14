@@ -190,10 +190,6 @@ fun DetailPaneSystemUI(
             uiState = uiState.statusBar,
             onEvent = onEvent,
         )
-        StatusBarBurnInProtectionControls(
-            uiState = uiState.statusBar,
-            onEvent = onEvent,
-        )
         SwitchItem(
             icon = ImageVector.vectorResource(id = R.drawable.folder_managed),
             title = stringResource(id = R.string.oneuix_hideSecureFolderStatusBarIcon_title),
