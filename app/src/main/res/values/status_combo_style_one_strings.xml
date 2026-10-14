@@ -15,7 +15,9 @@
     <string name="status_combo_style_one_style_ring">Ring</string>
     <string name="status_combo_style_one_style_rect">Rectangular</string>
     <string name="status_combo_style_one_overlay">Draw in its own window</string>
-    <string name="status_combo_style_one_overlay_summary">Draw the glyph in its own window so it is not clipped to the status-bar height (about 43 dp), allowing the whole icon to show. The lower part of the glyph then hangs outside the status-bar background. Turn off to draw inside the bar again.</string>
+    <string name="status_combo_style_one_overlay_summary">Independent-window rendering is paused because it may cause system UI stalls.</string>
+    <string name="status_combo_style_one_render_mode_title">Rendering mode</string>
+    <string name="status_combo_style_one_render_mode_summary">For system stability, the trio icon is currently drawn inside the native status-bar layout. Independent-window rendering is paused.</string>
     <string name="status_combo_style_one_show_wifi">Show Wi-Fi arcs</string>
     <string name="status_combo_style_one_show_wifi_summary">Draw the Wi-Fi arcs; the number of arcs follows the real signal level. Turn off to send the stock Wi-Fi icon back to its usual place in the status bar.</string>
     <string name="status_combo_style_one_show_mobile">Show mobile dots</string>
