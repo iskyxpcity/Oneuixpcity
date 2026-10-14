@@ -99,14 +99,20 @@ fun AboutScreenMaterial(
             item {
                 SegmentedColumn(
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                    content = state.links.map { linkInfo ->
+                    content = listOf(
                         {
                             SegmentedListItem(
-                                onClick = { actions.onOpenLink(linkInfo.url) },
-                                headlineContent = { Text(linkInfo.fullText) }
+                                onClick = actions.onOpenFeatureIntroduction,
+                                headlineContent = { Text(state.featureIntroductionTitle) }
                             )
-                        }
-                    }
+                        },
+                        {
+                            SegmentedListItem(
+                                onClick = actions.onOpenDisclaimer,
+                                headlineContent = { Text(state.disclaimerTitle) }
+                            )
+                        },
+                    )
                 )
                 Spacer(
                     Modifier.height(
