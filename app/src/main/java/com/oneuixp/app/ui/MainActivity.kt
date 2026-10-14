@@ -45,6 +45,7 @@ import com.oneuixp.app.ui.navigation3.rememberNavigator
 import com.oneuixp.app.ui.screen.about.AboutScreen
 import com.oneuixp.app.ui.screen.about.FeatureIntroductionScreen
 import com.oneuixp.app.ui.screen.about.VersionChangelogScreen
+import com.oneuixp.app.ui.screen.about.VersionChangelog261013Screen
 import com.oneuixp.app.ui.screen.colorpalette.ColorPaletteScreen
 import com.oneuixp.app.ui.screen.home.HomePager
 import com.oneuixp.app.ui.screen.home.LocalLsposedHomeStatus
