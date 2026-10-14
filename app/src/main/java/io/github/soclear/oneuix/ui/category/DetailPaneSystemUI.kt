@@ -1201,15 +1201,33 @@ private fun OneuiXToolsViewModel.onStatusBarEvent(event: SystemUIEvent.StatusBar
             }
 
             is SystemUIEvent.StatusBar.StatusBarBurnInProtectionEnabled -> {
-                preference.copy(systemUI = preference.systemUI.copy(statusBar = preference.systemUI.statusBar.copy(statusBarBurnInProtectionEnabled = event.value)))
+                preference.copy(
+                    systemUI = preference.systemUI.copy(
+                        statusBar = preference.systemUI.statusBar.copy(
+                            statusBarBurnInProtectionEnabled = event.value
+                        )
+                    )
+                )
             }
 
             is SystemUIEvent.StatusBar.StatusBarBurnInProtectionAmplitudeDp -> {
-                preference.copy(systemUI = preference.systemUI.copy(statusBar = preference.systemUI.statusBar.copy(statusBarBurnInProtectionAmplitudeDp = event.value.coerceIn(0f, 2f)))
+                preference.copy(
+                    systemUI = preference.systemUI.copy(
+                        statusBar = preference.systemUI.statusBar.copy(
+                            statusBarBurnInProtectionAmplitudeDp = event.value.coerceIn(0f, 2f)
+                        )
+                    )
+                )
             }
 
             is SystemUIEvent.StatusBar.StatusBarBurnInProtectionPeriodSeconds -> {
-                preference.copy(systemUI = preference.systemUI.copy(statusBar = preference.systemUI.statusBar.copy(statusBarBurnInProtectionPeriodSeconds = event.value.coerceIn(10, 300)))
+                preference.copy(
+                    systemUI = preference.systemUI.copy(
+                        statusBar = preference.systemUI.statusBar.copy(
+                            statusBarBurnInProtectionPeriodSeconds = event.value.coerceIn(10, 300)
+                        )
+                    )
+                )
             }
 
             is SystemUIEvent.StatusBar.SetBatteryIconWidthScale -> {
