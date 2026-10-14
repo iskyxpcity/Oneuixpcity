@@ -105,6 +105,13 @@ fun AboutScreenMaterial(
                             onClick = actions.onOpenFeatureIntroduction,
                             headlineContent = { Text(state.featureIntroductionTitle) }
                         )
+                    ,
+                    {
+                        SegmentedListItem(
+                            onClick = actions.onOpenDisclaimer,
+                            headlineContent = { Text(state.disclaimerTitle) }
+                        )
+                    }
                     }
                 )
                 )

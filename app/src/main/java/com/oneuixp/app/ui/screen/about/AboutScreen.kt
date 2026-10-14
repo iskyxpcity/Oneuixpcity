@@ -18,11 +18,15 @@ fun AboutScreen() {
         appName = stringResource(R.string.app_name),
         versionName = BuildConfig.VERSION_NAME,
         featureIntroductionTitle = stringResource(R.string.feature_introduction),
+        disclaimerTitle = stringResource(R.string.disclaimer_title),
     )
     val actions = AboutScreenActions(
         onBack = dropUnlessResumed { navigator.pop() },
         onOpenFeatureIntroduction = dropUnlessResumed {
             navigator.push(Route.FeatureIntroduction)
+        },
+        onOpenDisclaimer = dropUnlessResumed {
+            navigator.push(Route.Disclaimer)
         },
     )
 

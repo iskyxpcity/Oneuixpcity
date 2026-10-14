@@ -8,10 +8,12 @@ data class AboutUiState(
     val appName: String,
     val versionName: String,
     val featureIntroductionTitle: String,
+    val disclaimerTitle: String,
 )
 
 @Immutable
 data class AboutScreenActions(
     val onBack: () -> Unit,
     val onOpenFeatureIntroduction: () -> Unit,
+    val onOpenDisclaimer: () -> Unit,
 )
