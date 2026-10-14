@@ -66,6 +66,13 @@
     <string name="status_category_notification_center">通知中心</string>
     <string name="status_category_control_center">控制中心</string>
     <string name="feature_introduction">功能介紹</string>
+    <string name="disclaimer_title">免責聲明</string>
+    <string name="disclaimer_source_title">原始碼使用說明</string>
+    <string name="disclaimer_source_body">本專案使用並整合、修改了 OneUIX 與 HyperDuo 的相關原始碼。</string>
+    <string name="disclaimer_style_title">介面風格說明</string>
+    <string name="disclaimer_style_body">本應用程式部分介面採用了 KernelSU 的介面風格。</string>
+    <string name="disclaimer_relationship_title">專案關係說明</string>
+    <string name="disclaimer_relationship_body">OneUI XP 為獨立專案，並非 OneUIX、HyperDuo 或 KernelSU 的官方版本，也不代表上述專案認可或背書本應用程式。相關名稱及原有權利歸各自權利人所有。</string>
     <string name="feature_intro_version_updates">OneUI XP 1.0.260930 主要更新</string>
     <string name="feature_intro_version_updates_summary">2026-09-30</string>
     <string name="feature_intro_version_updates_261013">OneUI XP 1.0.261013 主要更新</string>
