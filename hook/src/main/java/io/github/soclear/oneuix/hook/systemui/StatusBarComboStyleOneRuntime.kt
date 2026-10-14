@@ -58,8 +58,8 @@ import kotlin.math.ceil
 import kotlin.math.roundToInt
 
 /**
- * Independent runtime for the Style One icon: state polling, native icon folding,
- * layout replacement, standalone rendering window and live preference updates.
+ * Runtime for the Style One icon: state sampling, native icon folding,
+ * in-layout glyph rendering and live preference updates.
  */
 @Suppress("DEPRECATION")
 object StatusBarComboStyleOneRuntime {
@@ -71,6 +71,10 @@ object StatusBarComboStyleOneRuntime {
     private const val AOSP_ICONS = "com.android.systemui.statusbar.phone.StatusBarIconContainer"
     private const val GLYPH_WIDTH_DP = 78
     private const val GLYPH_HEIGHT_DP = 36
+    // Independent TYPE_STATUS_BAR_SUB_PANEL rendering caused repeated SystemUI/WindowManager
+    // churn during foldable display changes. Keep the path dormant until it can be validated
+    // without whole-system UI stalls; render inside the native battery row instead.
+    private const val INDEPENDENT_OVERLAY_RENDERING_ENABLED = false
     private const val ICON_MANAGER = "com.android.systemui.statusbar.phone.ui.IconManager"
     private const val BATTERY_METER = "com.android.systemui.battery.BatteryMeterView"
     private const val MIUI_BATTERY_METER = "com.android.systemui.statusbar.views.MiuiBatteryMeterView"
@@ -275,7 +279,7 @@ object StatusBarComboStyleOneRuntime {
             geometryRetryPending = false
             if (!retired && !applying &&
                 StatusBarComboStyleOneRuntime.config.enabled &&
-                StatusBarComboStyleOneRuntime.config.overlayGlyph &&
+                StatusBarComboStyleOneRuntime.INDEPENDENT_OVERLAY_RENDERING_ENABLED && StatusBarComboStyleOneRuntime.config.overlayGlyph &&
                 geometryRetryAttempts < 1
             ) {
                 geometryRetryAttempts++
@@ -812,7 +816,7 @@ object StatusBarComboStyleOneRuntime {
         val update = Runnable {
             val snapshot = synchronized(hosts) { hosts.values.toList() }
             snapshot.forEach { host ->
-                if (host.retired || !config.enabled || !config.overlayGlyph || host.overlayFailed) return@forEach
+                if (host.retired || !config.enabled || !(INDEPENDENT_OVERLAY_RENDERING_ENABLED && config.overlayGlyph) || host.overlayFailed) return@forEach
                 val battery = host.battery ?: return@forEach
                 val overlay = host.overlay ?: return@forEach
 
@@ -1094,8 +1098,10 @@ object StatusBarComboStyleOneRuntime {
         return buildString {
             appendLine("SnapshotTimeMs=${System.currentTimeMillis()}")
             appendLine(
-                "Config enabled=${cfg.enabled},overlayGlyph=${cfg.overlayGlyph},showMobile=${cfg.showMobile}," +
-                    "showWifi=${cfg.showWifi},signalMode=${cfg.signalMode},mobileTypeMode=${cfg.mobileTypeMode}," +
+                "Config enabled=${cfg.enabled},overlayGlyphRequested=${cfg.overlayGlyph}," +
+                    "effectiveIndependentOverlay=${INDEPENDENT_OVERLAY_RENDERING_ENABLED},renderPath=inline," +
+                    "showMobile=${cfg.showMobile},showWifi=${cfg.showWifi}," +
+                    "signalMode=${cfg.signalMode},mobileTypeMode=${cfg.mobileTypeMode}," +
                     "stackedSignal=${cfg.stackedSignal},dataSimOnly=${cfg.dataSimOnly},dualSim=${cfg.dualSim}," +
                     "dualSimMode=${cfg.dualSimMode},trioStyle=${cfg.trioStyle}"
             )
@@ -1489,10 +1495,11 @@ object StatusBarComboStyleOneRuntime {
                     (currentDisplaySize.x != host.activeDisplayWidth ||
                         currentDisplaySize.y != host.activeDisplayHeight))
             if (displayIdentityChanged) {
+                if (displayIdentityChanged && host.overlay != null) {
                 diagnostic(
                     "Status-bar display geometry changed: id=${host.activeDisplayId}->${currentDisplayId}, " +
                         "size=${host.activeDisplayWidth}x${host.activeDisplayHeight}->" +
-                        "${currentDisplaySize.x}x${currentDisplaySize.y}; rebuilding overlay at active battery slot"
+                        "${currentDisplaySize.x}x${currentDisplaySize.y}; detaching stale overlay"
                 )
                 main.removeCallbacks(host.geometryRetry)
                 host.geometryRetryPending = false
@@ -1507,6 +1514,14 @@ object StatusBarComboStyleOneRuntime {
                 host.shadeDrawTarget = null
                 host.tintRow = null
                 host.rowTint = rowTintSnapshots[root]
+            } else if (displayIdentityChanged) {
+                // The in-layout glyph follows ordinary Android view measurement/layout on fold
+                // transitions. Do not reset the native row or re-apply all child snapshots here.
+                diagnostic(
+                    "Inline status-bar geometry changed: id=${host.activeDisplayId}->${currentDisplayId}, " +
+                        "size=${host.activeDisplayWidth}x${host.activeDisplayHeight}->" +
+                        "${currentDisplaySize.x}x${currentDisplaySize.y}; native layout will reflow"
+                )
             }
             if (currentDisplayId >= 0) host.activeDisplayId = currentDisplayId
             if (currentDisplaySize.x > 0 && currentDisplaySize.y > 0) {
@@ -1584,10 +1599,11 @@ object StatusBarComboStyleOneRuntime {
                 host.inline?.setTintOverride(rowTint)
                 host.overlay?.setTintOverride(rowTint)
             }
-            // Match HyperDuo's placement contract: the independent window belongs to the
-            // system battery slot, not the camera hole. Validate a live slot/root coordinate
-            // first, then reserve the full canvas width before folding other native indicators.
-            val wantsOverlay = config.overlayGlyph && !host.overlayFailed
+            // Inline mode is deliberately used while the standalone window renderer is disabled
+            // for stability. Let the status-bar row own placement and clipping; do not attach a
+            // separate TYPE_STATUS_BAR_SUB_PANEL or poll its geometry.
+            val wantsOverlay = INDEPENDENT_OVERLAY_RENDERING_ENABLED &&
+                config.overlayGlyph && !host.overlayFailed
             val overlay = if (wantsOverlay) {
                 host.overlay ?: GlyphOverlay(root.context, root.display).also { host.overlay = it }
             } else null
@@ -2059,7 +2075,8 @@ object StatusBarComboStyleOneRuntime {
         // HyperDuo's overlay replaces the battery drawing but keeps its host participating
         // in native layout. This lets the status-bar row reserve the combo's real width,
         // preventing the large canvas from painting over Bluetooth/alarm/other icons.
-        val collapseBatterySlot = config.enabled && !config.overlayGlyph &&
+        val collapseBatterySlot = config.enabled &&
+            (!INDEPENDENT_OVERLAY_RENDERING_ENABLED || !config.overlayGlyph) &&
             normalized.contains("battery")
         return collapseBatterySlot ||
             (config.enabled && config.showWifi && isManagedWifiSlot(normalized)) ||
@@ -2447,7 +2464,10 @@ object StatusBarComboStyleOneRuntime {
     /** Reserve/update the transparent battery replacement slot without touching neighboring icons. */
     private fun reserveOverlayHostSlot(root: ViewGroup, anchor: View, widthPx: Int) {
         val host = synchronized(hosts) { hosts[root] } ?: return
-        if (host.retired || !config.enabled || !config.overlayGlyph || host.battery !== anchor) return
+        if (host.retired || !config.enabled ||
+            !(INDEPENDENT_OVERLAY_RENDERING_ENABLED && config.overlayGlyph) ||
+            host.battery !== anchor
+        ) return
         reserveHostSlot(host, anchor, widthPx)
     }
 
@@ -2841,17 +2861,13 @@ object StatusBarComboStyleOneRuntime {
                                 val baseline = if (userHidesBattery) snapshot.copy(visibility = View.GONE) else snapshot
                                 nativeBatteryLayouts.putIfAbsent(meter, baseline)
                             }
-                            if (config.enabled && !config.overlayGlyph) {
-                                // Inline mode has no separate window to replace the battery
-                                // slot, so it uses the native hide-list path. Overlay mode keeps
-                                // this host measured and clears its pixels, as HyperDuo does.
+                            if (config.enabled && !INDEPENDENT_OVERLAY_RENDERING_ENABLED) {
+                                // The stable in-layout renderer replaces the native battery slot.
                                 args[1] = appendHiddenSlot(nativeList.orEmpty(), "battery")
                             }
                         }
                         val result = chain.proceed(args)
-                        if (target && config.enabled && !config.overlayGlyph && meter != null) {
-                            // Inline mode removes the native battery slot. Overlay mode must
-                            // keep the host in the row so its reserved width protects neighbors.
+                        if (target && config.enabled && !INDEPENDENT_OVERLAY_RENDERING_ENABLED && meter != null) {
                             if (meter.visibility != View.GONE) meter.visibility = View.GONE
                         }
                         result
@@ -3600,7 +3616,10 @@ object StatusBarComboStyleOneRuntime {
                             val previous = config
                             val next = sanitize(status.comboStyleOneRuntime)
                             config = next
-                            diagnostic("Settings updated: enabled=${config.enabled}, overlay=${config.overlayGlyph}, style=${config.trioStyle}, signalMode=${config.signalMode}")
+                            diagnostic(
+                "Settings updated: enabled=${config.enabled}, overlayRequested=${config.overlayGlyph}, " +
+                    "renderPath=inline, style=${config.trioStyle}, signalMode=${config.signalMode}"
+            )
                             if (previous.enabled != next.enabled ||
                                 previous.overlayGlyph != next.overlayGlyph ||
                                 previous.showWifi != next.showWifi
@@ -3653,7 +3672,10 @@ object StatusBarComboStyleOneRuntime {
             }
         }
         ensureStateReceiver(app)
-        ensureDisplayGeometryListener(app)
+        // Do not register a global DisplayManager listener for the inline renderer. On the
+        // foldable, SystemUI emits a burst of changed events for both logical displays; each
+        // event used to trigger multiple full host applies and overlay-window re-anchors.
+        diagnostic("Display geometry listener disabled: inline rendering owns native layout")
     }
 
     private fun ensureDisplayGeometryListener(context: Context) {
