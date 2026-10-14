@@ -30,7 +30,6 @@ import android.util.Log
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
-import android.view.ViewTreeObserver
 import android.view.WindowManager
 import android.widget.FrameLayout
 import android.widget.LinearLayout
@@ -182,13 +181,6 @@ object StatusBarComboStyleOneRuntime {
     // SystemUI's true Visible/Hidden state when the custom arc is switched off.
     private val modernWifiViewModels = Collections.synchronizedMap(WeakHashMap<View, WeakReference<Any>>())
     private val lastNativeWifiDiagnostics = Collections.synchronizedMap(WeakHashMap<View, String>())
-    // A Samsung ModernStatusBarWifiView can draw its full Wi-Fi signal and its 54dp
-    // status_bar_dot child simultaneously after the Combo view state is restored.
-    // Reconcile on global layout so a later SystemUI rebind cannot bring the dot back.
-    private val nativeWifiDotGuardListeners =
-        Collections.synchronizedMap(WeakHashMap<ViewGroup, ViewTreeObserver.OnGlobalLayoutListener>())
-    private val nativeWifiDotGuardObservers =
-        Collections.synchronizedMap(WeakHashMap<ViewGroup, WeakReference<ViewTreeObserver>>())
     // AOSP/Samsung can keep a measured width after native Wi-Fi is collapsed.
     private val nativeWifiClusterBaselineVisibility = Collections.synchronizedMap(WeakHashMap<ViewGroup, Int>())
     // Only remove horizontal padding while the Wi-Fi-replaced cluster has no visible native
@@ -1484,7 +1476,6 @@ object StatusBarComboStyleOneRuntime {
                 host.overlay?.detach()
                 return
             }
-            if (config.enabled) ensureNativeWifiDotGuard(root)
             if (!config.enabled || !config.showWifi) restoreNativeWifiClusters(root)
             val currentDisplayId = root.display?.displayId ?: -1
             val currentDisplaySize = activeDisplaySize(root)
@@ -4672,31 +4663,6 @@ object StatusBarComboStyleOneRuntime {
         return false
     }
 
-    private fun ensureNativeWifiDotGuard(root: ViewGroup) {
-        if (!root.isAttachedToWindow) return
-        val observer = root.viewTreeObserver
-        if (!observer.isAlive) return
-        synchronized(nativeWifiDotGuardListeners) {
-            val existing = nativeWifiDotGuardListeners[root]
-            val previousObserver = nativeWifiDotGuardObservers[root]?.get()
-            if (existing != null && previousObserver === observer) return
-            if (existing != null && previousObserver?.isAlive == true) {
-                runCatching { previousObserver.removeOnGlobalLayoutListener(existing) }
-            }
-            val listener = existing ?: object : ViewTreeObserver.OnGlobalLayoutListener {
-                private val rootRef = WeakReference(root)
-                override fun onGlobalLayout() {
-                    val currentRoot = rootRef.get() ?: return
-                    if (!currentRoot.isAttachedToWindow) return
-                    if (config.enabled) reconcileNativeWifiStatusBarDots(currentRoot)
-                }
-            }
-            nativeWifiDotGuardListeners[root] = listener
-            nativeWifiDotGuardObservers[root] = WeakReference(observer)
-            observer.addOnGlobalLayoutListener(listener)
-        }
-    }
-
     private fun reconcileNativeWifiStatusBarDots(root: View) {
         if (!config.enabled || config.showWifi) return
         descendants(root).filter(::isModernNativeWifiView).forEach { wifiView ->
@@ -4833,6 +4799,14 @@ object StatusBarComboStyleOneRuntime {
                             scheduleNativeWifiClusterReconciliation(cluster, view, requestedAfterPolicy)
                         }
                     }
+                }
+                // Run the dot guard only when this registered status-bar Wi-Fi view receives
+                // a native visibility update. Avoid a root-wide OnGlobalLayoutListener because
+                // Samsung's status bar can lay out repeatedly while the shade animates.
+                if (view != null && host != null && wifiClass != null &&
+                    wifiClass.isInstance(view) && config.enabled && !config.showWifi
+                ) {
+                    reconcileNativeWifiStatusBarDots(view)
                 }
                 hookResult
             }
