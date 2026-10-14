@@ -32,6 +32,7 @@ import io.github.soclear.oneuix.ui.component.OneuiXSlider
 import io.github.soclear.oneuix.ui.component.OneuiXSwitch
 import io.github.soclear.oneuix.ui.component.SwitchItem
 import io.github.soclear.oneuix.common.R as CommonR
+import kotlin.math.roundToInt
 
 /**
  * Independent Status > Other controls extracted from the legacy System UI page.
@@ -190,7 +191,7 @@ private fun StatusBurnInProtectionControls(
                     BurnInSliderSetting(
                         title = stringResource(id = R.string.oneuix_statusBarBurnInProtectionAmplitude_title),
                         summary = stringResource(id = R.string.oneuix_statusBarBurnInProtectionAmplitude_summary) +
-                            "\\n" + stringResource(
+                            "\n" + stringResource(
                                 id = R.string.oneuix_statusBarBurnInProtectionAmplitude_value,
                                 amplitude,
                             ),
@@ -214,7 +215,7 @@ private fun StatusBurnInProtectionControls(
                     BurnInSliderSetting(
                         title = stringResource(id = R.string.oneuix_statusBarBurnInProtectionPeriod_title),
                         summary = stringResource(id = R.string.oneuix_statusBarBurnInProtectionPeriod_summary) +
-                            "\\n" + stringResource(
+                            "\n" + stringResource(
                                 id = R.string.oneuix_statusBarBurnInProtectionPeriod_value,
                                 period.roundToInt(),
                             ),
