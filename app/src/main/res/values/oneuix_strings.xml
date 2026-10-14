@@ -8,6 +8,14 @@
     <string name="oneuix_status_bar">Status Bar</string>
     <string name="oneuix_qs">Quick Settings</string>
     <string name="oneuix_aod">Always On Display</string>
+    <string name="oneuix_statusBarBurnInProtection_title">Status bar burn-in protection</string>
+    <string name="oneuix_statusBarBurnInProtection_summary">All status-bar elements drawn or mounted by OneuiXP participate in micro-shifting; Samsung-native icons are not moved additionally by this feature.</string>
+    <string name="oneuix_statusBarBurnInProtectionAmplitude_title">Offset amplitude</string>
+    <string name="oneuix_statusBarBurnInProtectionAmplitude_summary">Maximum distance from the original position, in dp; each step is 0.25 dp. Set to 0 to disable movement.</string>
+    <string name="oneuix_statusBarBurnInProtectionAmplitude_value">Current: %1$.2f dp</string>
+    <string name="oneuix_statusBarBurnInProtectionPeriod_title">Offset cycle</string>
+    <string name="oneuix_statusBarBurnInProtectionPeriod_summary">Seconds for one back-and-forth cycle on the horizontal axis. Horizontal and vertical periods use a non-integer ratio to form a Lissajous curve, avoiding precise periodic returns to the same point. Shorter cycles move faster; movement below 10 seconds may be visible.</string>
+    <string name="oneuix_statusBarBurnInProtectionPeriod_value">Current: %1$d seconds</string>
     <string name="oneuix_statusBarLeftPaddingDp_title">Modify status bar left padding</string>
     <string name="oneuix_statusBarRightPaddingDp_title">Modify status bar right padding</string>
     <string name="oneuix_statusBarTopPaddingDp_title">Status bar top margin</string>

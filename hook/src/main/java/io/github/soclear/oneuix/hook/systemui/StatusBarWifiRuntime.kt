@@ -328,6 +328,7 @@ internal object StatusBarWifiRuntime {
         val marginParams = wifiHost.layoutParams as? ViewGroup.MarginLayoutParams
         val glyph = WifiGlyphView(statusHost.context)
         statusHost.overlay.add(glyph)
+        StatusBarBurnInProtectionRuntime.registerView(glyph)
 
         val holder = Holder(
             statusBarView = statusHost,

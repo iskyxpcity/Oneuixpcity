@@ -219,7 +219,10 @@ internal object StatusBarBluetoothRuntime {
         val holder = synchronized(holders) {
             holders[statusBarView] ?: Holder(
                 statusBarView = host,
-                overlay = BluetoothGlyphView(host.context).also { host.overlay.add(it) },
+                overlay = BluetoothGlyphView(host.context).also {
+                    host.overlay.add(it)
+                    StatusBarBurnInProtectionRuntime.registerView(it)
+                },
             ).also { newHolder ->
                 holders[statusBarView] = newHolder
             }

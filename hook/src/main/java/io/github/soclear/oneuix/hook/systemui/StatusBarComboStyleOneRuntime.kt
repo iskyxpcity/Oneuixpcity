@@ -43,6 +43,7 @@ import io.github.soclear.oneuix.common.StatusBarRuntimeBridge
 import io.github.soclear.oneuix.common.StatusComboStyleOneGlyphRenderer
 import io.github.soclear.oneuix.common.StatusComboStyleOneGlyphState
 import io.github.soclear.oneuix.hook.util.PreferenceProvider
+import io.github.soclear.oneuix.hook.systemui.StatusBarBurnInProtectionRuntime
 import io.github.soclear.oneuix.hook.util.OneuiXPDiagnosticLog
 import java.lang.ref.WeakReference
 import java.util.Collections
@@ -293,6 +294,8 @@ object StatusBarComboStyleOneRuntime {
 
     private class GlyphView(context: Context) : View(context) {
         private var tintOverride: Int? = null
+        private var burnInOffsetXpx: Float = 0f
+        private var burnInOffsetYpx: Float = 0f
         private var statusBarRootForTypeBounds: View? = null
         private var inlineTrailingAnchor: WeakReference<View>? = null
         private var leadingCanvasPaddingPx = 0
@@ -348,6 +351,15 @@ object StatusBarComboStyleOneRuntime {
                 StatusBarComboStyleOneRuntime.ensureSignalCanvasLeadingSpace(this, clipPx)
             }
         }
+        fun setBurnInCanvasOffsetDp(xDp: Float, yDp: Float) {
+            val density = resources.displayMetrics.density.takeIf { it > 0f } ?: 1f
+            val x = xDp * density
+            val y = yDp * density
+            if (burnInOffsetXpx == x && burnInOffsetYpx == y) return
+            burnInOffsetXpx = x
+            burnInOffsetYpx = y
+            invalidate()
+        }
         fun setTintOverride(color: Int?) {
             if (tintOverride == color) return
             tintOverride = color
@@ -361,10 +373,13 @@ object StatusBarComboStyleOneRuntime {
             val drawState = if (localTint == null) currentState else currentState.copy(tintColor = localTint)
             val iconRight = minimumVisibleIconLeftPx()
             val iconBottom = minimumVisibleIconBottomPx()
+            canvas.save()
+            canvas.translate(burnInOffsetXpx, burnInOffsetYpx)
             StatusComboStyleOneGlyphRenderer.draw(
                 canvas, width, height, currentConfig, drawState,
                 iconRight, iconBottom, leadingCanvasPaddingPx.toFloat(),
             )
+            canvas.restore()
             val clipPx = StatusComboStyleOneGlyphRenderer.requiredSignalLeadingPaddingPx(
                 currentConfig, drawState, width, height, iconRight, leadingCanvasPaddingPx.toFloat(),
             )
@@ -387,6 +402,8 @@ object StatusBarComboStyleOneRuntime {
         private data class DisplayGeometry(val displayId: Int, val width: Int, val height: Int)
 
         private var placementSyncScheduled = false
+        private var burnInOffsetXDp: Float = 0f
+        private var burnInOffsetYDp: Float = 0f
         private var observedTreeObserver: android.view.ViewTreeObserver? = null
         private var geometryConfirmationScheduled = false
         private var lastStableGeometry: DisplayGeometry? = null
@@ -607,6 +624,15 @@ object StatusBarComboStyleOneRuntime {
                 ),
             ) + glyph.leadingCanvasPaddingPx()
 
+        fun setBurnInOffsetDp(xDp: Float, yDp: Float) {
+            if (burnInOffsetXDp == xDp && burnInOffsetYDp == yDp) return
+            burnInOffsetXDp = xDp
+            burnInOffsetYDp = yDp
+            val anchor = watchedAnchor?.get() ?: return
+            val root = watchedRoot?.get() ?: return
+            update(anchor, root)
+        }
+
         fun attach(anchor: View, root: ViewGroup): Boolean {
             if (params != null) {
                 val updated = update(anchor, root)
@@ -656,6 +682,9 @@ object StatusBarComboStyleOneRuntime {
                         return false
                     }
                     watchPlacementEvents(anchor, root, captureDisplayGeometry = true)
+                    StatusBarBurnInProtectionRuntime.registerOffsetTarget(this) { target, x, y ->
+                        (target as? GlyphOverlay)?.setBurnInOffsetDp(x, y)
+                    }
                     return true
                 } catch (error: Throwable) {
                     Log.w(TAG, "Glyph overlay attach failed for type=$type", error)
@@ -786,10 +815,11 @@ object StatusBarComboStyleOneRuntime {
             lp.x = (
                 slotRightPx - canvasLeftInsetPx - designWidthUnits * renderScale +
                     horizontalOffsetPx
-                ).roundToInt()
+                ).roundToInt() + StatusBarComboStyleOneRuntime.dpExact(context, burnInOffsetXDp)
             val verticalOffsetPx = StatusBarComboStyleOneRuntime.dpExact(context, cfg.glyphOffsetYDp)
             val requestedWindowY = (
-                slotCenterY - lp.height * centreRatioY + verticalOffsetPx
+                slotCenterY - lp.height * centreRatioY + verticalOffsetPx +
+                    StatusBarComboStyleOneRuntime.dpExact(context, burnInOffsetYDp)
                 ).roundToInt()
             // FLAG_LAYOUT_NO_LIMITS is required by Samsung so coordinates remain screen-based,
             // but it also permits a scaled-up overlay to extend above y=0. The inner display's
@@ -894,6 +924,7 @@ object StatusBarComboStyleOneRuntime {
         fun boundDisplayId(): Int = display?.displayId ?: -1
 
         fun detach() {
+            StatusBarBurnInProtectionRuntime.unregisterOffsetTarget(this)
             glyph.removeCallbacks(placementSync)
             glyph.removeCallbacks(geometryConfirmation)
             placementSyncScheduled = false
@@ -1999,12 +2030,16 @@ object StatusBarComboStyleOneRuntime {
         runCatching {
             parent.addView(glyph, parent.indexOfChild(anchor).coerceAtLeast(0), lp)
             host.inline = glyph
+            StatusBarBurnInProtectionRuntime.registerOffsetTarget(glyph) { target, x, y ->
+                (target as? GlyphView)?.setBurnInCanvasOffsetDp(x, y)
+            }
             glyph.post { anchorInlineGlyphToTrailingSlot(glyph, anchor) }
         }.onFailure { Log.w(TAG, "Cannot add inline glyph", it) }
     }
 
     private fun removeInline(host: Host) {
         val glyph = host.inline ?: return
+        StatusBarBurnInProtectionRuntime.unregisterOffsetTarget(glyph)
         (glyph.parent as? ViewGroup)?.removeView(glyph)
         host.inline = null
     }

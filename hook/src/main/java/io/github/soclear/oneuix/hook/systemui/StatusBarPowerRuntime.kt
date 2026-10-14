@@ -379,6 +379,7 @@ internal object StatusBarPowerRuntime {
                 ViewGroup.LayoutParams.MATCH_PARENT,
             ),
         )
+        StatusBarBurnInProtectionRuntime.registerView(root)
 
         val holder = Holder(
             statusBarView = host,
