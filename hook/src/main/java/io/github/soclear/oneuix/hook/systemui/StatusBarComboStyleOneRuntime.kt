@@ -89,6 +89,9 @@ object StatusBarComboStyleOneRuntime {
     @Volatile private var systemUiClassLoader: ClassLoader? = null
     private val main = Handler(Looper.getMainLooper())
     private val hosts = Collections.synchronizedMap(WeakHashMap<ViewGroup, Host>())
+    // Deduplicate recurring cutout samples so the live overlay watcher does not flood
+    // the unified diagnostic buffer with an unchanged punch-hole rectangle.
+    private val lastCutoutGeometryDiagnostics = Collections.synchronizedMap(WeakHashMap<View, String>())
     // Keep exactly one lifecycle listener per root across fold/unfold reattachment.
     // Listener values do not capture their weak-map keys, so destroyed roots remain collectible.
     private val hostLifecycleListeners =
@@ -898,10 +901,12 @@ object StatusBarComboStyleOneRuntime {
             val selected = candidates.maxByOrNull { it.width().toLong() * it.height().toLong() }
                 ?: return null
             val result = Rect(selected)
-            diagnostic(
+            val geometryNote =
                 "Punch-hole source=$source bounds=$result displayId=${display?.displayId} " +
                     "activeDisplay=${screenWidth}x${screenHeight}; horizontal position from reported geometry"
-            )
+            if (lastCutoutGeometryDiagnostics.put(root, geometryNote) != geometryNote) {
+                diagnostic(geometryNote)
+            }
             return result
         }
 
