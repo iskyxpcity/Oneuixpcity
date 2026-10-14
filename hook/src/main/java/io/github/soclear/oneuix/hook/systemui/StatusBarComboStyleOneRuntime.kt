@@ -11,6 +11,7 @@ import android.graphics.Color
 import android.graphics.PixelFormat
 import android.graphics.PorterDuff
 import android.graphics.Rect
+import android.hardware.display.DisplayManager
 import android.net.NetworkInfo
 import android.net.wifi.WifiManager
 import android.os.BatteryManager
@@ -89,6 +90,26 @@ object StatusBarComboStyleOneRuntime {
     // Listener values do not capture their weak-map keys, so destroyed roots remain collectible.
     private val hostLifecycleListeners =
         Collections.synchronizedMap(WeakHashMap<ViewGroup, View.OnAttachStateChangeListener>())
+    @Volatile private var displayGeometryListenerRegistered = false
+    @Volatile private var displayManagerForGeometry: DisplayManager? = null
+    private val displayGeometryRefresh = object : Runnable {
+        override fun run() {
+            val snapshot = synchronized(hosts) { hosts.values.toList() }
+            snapshot.forEach { host ->
+                if (!host.retired && host.root.isAttachedToWindow) apply(host)
+            }
+        }
+    }
+    private val displayGeometryListener = object : DisplayManager.DisplayListener {
+        override fun onDisplayAdded(displayId: Int) =
+            scheduleDisplayGeometryRefresh(displayId, "added")
+
+        override fun onDisplayRemoved(displayId: Int) =
+            scheduleDisplayGeometryRefresh(displayId, "removed")
+
+        override fun onDisplayChanged(displayId: Int) =
+            scheduleDisplayGeometryRefresh(displayId, "changed")
+    }
     @Volatile private var config = Preference.SystemUI.StatusBarComboStyleOneRuntime()
 
     internal fun shouldHideNativeBatteryIcon(): Boolean = config.enabled
@@ -759,10 +780,9 @@ object StatusBarComboStyleOneRuntime {
     }
 
     /**
-     * Read reported camera-cutout geometry for diagnostics only.
-     * The independent combo window is intentionally anchored to the normal right-side
-     * status-bar battery slot; missing or stale cutout geometry must not affect placement
-     * or force the renderer back into the native icon row.
+     * Resolve the active display's actual camera-cutout geometry for the top-layer
+     * independent window. Never substitute the battery slot or a guessed screen centre:
+     * if the new foldable display has not reported its cutout yet, retry after its mode settles.
      */
     private fun cutoutBounds(root: View): Rect? {
         if (Build.VERSION.SDK_INT < 28) return null
@@ -1313,7 +1333,7 @@ object StatusBarComboStyleOneRuntime {
                 diagnostic(
                     "Status-bar display geometry changed: id=${host.activeDisplayId}->${currentDisplayId}, " +
                         "size=${host.activeDisplayWidth}x${host.activeDisplayHeight}->" +
-                        "${currentDisplaySize.x}x${currentDisplaySize.y}; resetting overlay only"
+                        "${currentDisplaySize.x}x${currentDisplaySize.y}; rebuilding overlay at active cutout"
                 )
                 main.removeCallbacks(host.geometryRetry)
                 host.geometryRetryPending = false
@@ -2108,12 +2128,38 @@ object StatusBarComboStyleOneRuntime {
                             cluster.paddingRight, cluster.paddingBottom,
                         ).also { nativeWifiClusterBaselinePadding[cluster] = it }
                 }
-                val hasVisibleNativeIcon = (0 until cluster.childCount).any { index ->
-                    val child = cluster.getChildAt(index)
-                    child.visibility == View.VISIBLE &&
-                        child.alpha > 0f &&
-                        !isSuppressedNativeStatusChild(child)
+                // StatusIconContainer can leave placeholder holders (satellite/stacked
+                // mobile/Compose wrappers) marked VISIBLE even when they occupy 0x0 pixels.
+                // Counting visibility alone repeatedly restores the two 10px paddings and
+                // recreates the Wi-Fi gap. Only a real laid-out, unsuppressed icon is evidence
+                // that the shared cluster needs its original horizontal padding.
+                fun hasVisibleNativeIconFootprint(view: View): Boolean {
+                    var current: View? = view
+                    while (current != null) {
+                        if (current.visibility != View.VISIBLE || current.alpha <= 0f) return false
+                        if (current === cluster) break
+                        current = current.parent as? View
+                    }
+                    if (current !== cluster || isSuppressedNativeStatusChild(view)) return false
+                    val width = max(view.width, view.measuredWidth)
+                    val height = max(view.height, view.measuredHeight)
+                    return width > 0 && height > 0
                 }
+                val hasVisibleNativeIcon = (0 until cluster.childCount).any { index ->
+                    hasVisibleNativeIconFootprint(cluster.getChildAt(index))
+                }
+                val zeroFootprintVisibleChildren = (0 until cluster.childCount).mapNotNull { index ->
+                    val child = cluster.getChildAt(index)
+                    if (child.visibility == View.VISIBLE && child.alpha > 0f &&
+                        !isSuppressedNativeStatusChild(child) &&
+                        (max(child.width, child.measuredWidth) <= 0 ||
+                            max(child.height, child.measuredHeight) <= 0)
+                    ) {
+                        val slot = (slotOf(child) ?: knownIconSlots[child] ?: resourceName(child)).ifBlank { child.javaClass.simpleName }
+                        "$slot:${child.javaClass.simpleName}:${child.width}x${child.height}/" +
+                            "${child.measuredWidth}x${child.measuredHeight}"
+                    } else null
+                }.take(8).joinToString(",")
                 val targetLeft = if (hasVisibleNativeIcon) baselinePadding[0] else 0
                 val targetRight = if (hasVisibleNativeIcon) baselinePadding[2] else 0
                 val paddingChanged = cluster.paddingLeft != targetLeft ||
@@ -2134,6 +2180,7 @@ object StatusBarComboStyleOneRuntime {
                     "|measured=" + cluster.measuredWidth + "x" + cluster.measuredHeight +
                     "|padding=${cluster.paddingLeft},${cluster.paddingTop},${cluster.paddingRight},${cluster.paddingBottom}" +
                     "|baselinePadding=${baselinePadding.contentToString()}|paddingChanged=${paddingChanged}" +
+                    "|zeroFootprintVisible=$zeroFootprintVisibleChildren" +
                     "|lp=" + lp?.width + "x" + lp?.height + "|childCount=" + cluster.childCount +
                     "|row=" + row?.javaClass?.simpleName + ":" + row?.width + "x" + row?.height
                 if (lastNativeWifiClusterDiagnostics.put(cluster, snapshot) != snapshot) {
@@ -3377,6 +3424,37 @@ object StatusBarComboStyleOneRuntime {
             }
         }
         ensureStateReceiver(app)
+        ensureDisplayGeometryListener(app)
+    }
+
+    private fun ensureDisplayGeometryListener(context: Context) {
+        if (displayGeometryListenerRegistered) return
+        synchronized(this) {
+            if (displayGeometryListenerRegistered) return
+            val manager = context.getSystemService(Context.DISPLAY_SERVICE) as? DisplayManager
+                ?: run {
+                    diagnostic("Display geometry listener unavailable: DisplayManager is null")
+                    return
+                }
+            runCatching {
+                manager.registerDisplayListener(displayGeometryListener, main)
+                displayManagerForGeometry = manager
+                displayGeometryListenerRegistered = true
+                diagnostic("Display geometry listener registered for fold/unfold repositioning")
+            }.onFailure {
+                diagnostic("Display geometry listener registration failed: $it")
+            }
+        }
+    }
+
+    private fun scheduleDisplayGeometryRefresh(displayId: Int, event: String) {
+        diagnostic("Display geometry event: id=$displayId event=$event; scheduling overlay re-anchor")
+        // Fold/unfold can emit the logical display change before WindowInsets and cutout
+        // bounds have settled. Re-run once after the mode switch, then once after layout
+        // propagation; this is event-driven and does not poll while the device is idle.
+        main.removeCallbacks(displayGeometryRefresh)
+        main.postDelayed(displayGeometryRefresh, 180L)
+        main.postDelayed(displayGeometryRefresh, 520L)
     }
 
     private fun ensureStateReceiver(app: Context) {
