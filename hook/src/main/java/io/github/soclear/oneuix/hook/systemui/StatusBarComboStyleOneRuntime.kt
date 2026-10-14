@@ -430,30 +430,42 @@ object StatusBarComboStyleOneRuntime {
             val designHeightUnits = StatusComboStyleOneGlyphRenderer.glyphDesignHeight(cfg, StatusBarComboStyleOneRuntime.state.networkType)
             val ringCenterXUnits = StatusComboStyleOneGlyphRenderer.glyphCenterX(cfg, networkType)
             val centreRatioY = StatusComboStyleOneGlyphRenderer.glyphVerticalCenterRatio(cfg, StatusBarComboStyleOneRuntime.state.networkType)
-            // Independent rendering is positioned at the normal right-side status-bar slot,
-            // not at the camera cutout. Use the native battery slot's trailing edge as the
-            // anchor so the ring replaces the battery at its usual status-bar position.
+            // The battery view is collapsed to GONE/0x0 in independent-window mode, so its
+            // own X becomes stale/meaningless. Anchor to its PARENT slot's actual trailing edge,
+            // exactly like the inline renderer. Each outer/inner display host has its own parent,
+            // screen coordinates and display-specific WindowManager, so no camera offsets are used.
+            val slotParent = anchor.parent as? ViewGroup
+            val parentLocation = IntArray(2)
+            val parentLocated = slotParent != null && slotParent.isAttachedToWindow &&
+                slotParent.width > 0 &&
+                runCatching { slotParent.getLocationOnScreen(parentLocation) }.isSuccess
             val anchorLocation = IntArray(2)
             val anchorLocated = anchor.isAttachedToWindow &&
                 runCatching { anchor.getLocationOnScreen(anchorLocation) }.isSuccess
             val rootLocation = IntArray(2)
             val rootLocated = root.isAttachedToWindow &&
                 runCatching { root.getLocationOnScreen(rootLocation) }.isSuccess
-            if (!anchorLocated && !rootLocated) {
-                diagnostic("Glyph overlay cannot resolve status-bar slot or root screen coordinates")
+            if (!parentLocated && !anchorLocated && !rootLocated) {
+                diagnostic("Glyph overlay cannot resolve status-bar parent slot or root screen coordinates")
                 return false
             }
+            val originalRightMargin = synchronized(hosts) {
+                hosts.values.firstOrNull { it.battery === anchor }?.layouts?.get(anchor)?.rightMargin
+            } ?: nativeBatteryLayouts[anchor]?.rightMargin
+                ?: (anchor.layoutParams as? ViewGroup.MarginLayoutParams)?.rightMargin
+                ?: 0
             val slotRightPx = when {
+                parentLocated && slotParent != null ->
+                    parentLocation[0] + slotParent.width - slotParent.paddingRight - originalRightMargin
                 anchorLocated && anchor.width > 0 -> anchorLocation[0] + anchor.width
-                // A zero-width anchor can occur between slot-reservation and the next layout pass.
-                // Its laid-out X is the end edge of the collapsed battery slot in the icon row.
-                anchorLocated -> anchorLocation[0]
-                rootLocated -> rootLocation[0] + root.width -
-                    StatusBarComboStyleOneRuntime.dpExact(context, cfg.glyphRightMarginDp)
+                rootLocated -> rootLocation[0] + root.width - root.paddingRight - originalRightMargin
                 else -> return false
             }
             val slotCenterY = when {
-                anchorLocated && anchor.height > 0 -> anchorLocation[1] + anchor.height / 2f
+                anchorLocated && anchor.height > 0 && anchor.visibility == View.VISIBLE ->
+                    anchorLocation[1] + anchor.height / 2f
+                parentLocated && slotParent != null ->
+                    parentLocation[1] + slotParent.height / 2f
                 rootLocated -> rootLocation[1] + root.height / 2f
                 else -> return false
             }
@@ -474,9 +486,13 @@ object StatusBarComboStyleOneRuntime {
                 ).roundToInt()
             val ringCenterScreenPx = lp.x + canvasLeftInsetPx + ringCenterXUnits * renderScale
             diagnostic(
-                "Glyph overlay slot-anchored coordinates: type=${lp.type} slotRightPx=${slotRightPx} " +
-                    "slotCenterY=${slotCenterY} anchorSize=${anchor.width}x${anchor.height} " +
-                    "anchorLocated=${anchorLocated} window=(${lp.x},${lp.y}) size=${lp.width}x${lp.height} " +
+                "Glyph overlay right-slot coordinates: displayId=${display?.displayId} type=${lp.type} " +
+                    "parent=${slotParent?.javaClass?.simpleName} parentLocated=${parentLocated} " +
+                    "parentOrigin=${if (parentLocated) parentLocation.contentToString() else "unknown"} " +
+                    "parentSize=${slotParent?.width}x${slotParent?.height} paddingRight=${slotParent?.paddingRight} " +
+                    "slotRightPx=${slotRightPx} slotCenterY=${slotCenterY} " +
+                    "anchorSize=${anchor.width}x${anchor.height} anchorLocated=${anchorLocated} " +
+                    "window=(${lp.x},${lp.y}) size=${lp.width}x${lp.height} " +
                     "ringCenterScreenX=${ringCenterScreenPx} placement=statusbar-right-slot"
             )
             if (oldX != lp.x || oldY != lp.y || oldWidth != lp.width || oldHeight != lp.height) {
@@ -2056,38 +2072,10 @@ object StatusBarComboStyleOneRuntime {
             (isMobileNativeSuppressed() && isMobileIcon(view)) ||
             (config.showMobile && config.mobileTypeMode == 2 && isMobileTypeView(view))
 
-    private fun hasNativeStatusIconFootprint(cluster: ViewGroup, candidate: View?): Boolean {
-        if (candidate != null && candidate.parent === cluster &&
-            candidate.visibility == View.VISIBLE && !isSuppressedNativeStatusChild(candidate) &&
-            candidate.layoutParams?.width != 0
-        ) {
-            // A newly-visible wrap-content icon may have zero old measurement while the parent
-            // cluster is recovering from GONE. Keep the cluster alive for the first layout pass.
-            return true
-        }
-        for (index in 0 until cluster.childCount) {
-            val child = cluster.getChildAt(index)
-            if (child.visibility != View.VISIBLE || isSuppressedNativeStatusChild(child)) continue
-            val lpWidth = child.layoutParams?.width ?: 0
-            if (child.width > 0 || child.measuredWidth > 0 || lpWidth > 0) return true
-        }
-        return false
-    }
-
-    private fun setNativeWifiClusterVisibility(cluster: ViewGroup, visibility: Int) {
-        if (cluster.visibility == visibility) return
-        adjustingNativeWifiClusterVisibility.set(true)
-        try {
-            cluster.visibility = visibility
-        } finally {
-            adjustingNativeWifiClusterVisibility.set(false)
-        }
-    }
-
     /**
-     * Samsung can report measuredWidth=25px on StatusIconContainer when its actual width and
-     * LayoutParams width are zero. Requesting layout alone leaves that measured width in the
-     * parent LinearLayout. Collapse this cluster only while no other native icon occupies it.
+     * Re-measure only the Wi-Fi icon's parent row. Never change StatusIconContainer visibility:
+     * that container also owns Bluetooth, alarm and other native status-bar icons. The old
+     * empty-cluster collapse heuristic misclassified these children on Samsung and hid them all.
      */
     private fun scheduleNativeWifiClusterReconciliation(
         cluster: ViewGroup?,
@@ -2095,73 +2083,19 @@ object StatusBarComboStyleOneRuntime {
         requestedVisibility: Int? = null,
     ) {
         if (cluster == null || !isStatusIconsCluster(cluster) || hostFor(cluster) == null) return
-
-        if (!config.enabled || !config.showWifi) {
-            val baseline = synchronized(nativeWifiClusterBaselineVisibility) {
-                nativeWifiClusterBaselineVisibility.remove(cluster)
-            }
-            if (baseline != null) {
-                setNativeWifiClusterVisibility(cluster, baseline)
-                cluster.requestLayout()
-                (cluster.parent as? View)?.requestLayout()
-                diagnostic("Native Wi-Fi parent layout: stage=restore-on-config-change " +
-                    "visibility=" + cluster.visibility + " size=" + cluster.width + "x" + cluster.height)
-            }
-            return
-        }
-
-        val potentialCandidate = triggeringChild?.takeIf {
-            requestedVisibility == View.VISIBLE && it.parent === cluster &&
-                !isSuppressedNativeStatusChild(it) && it.layoutParams?.width != 0
-        }
-        if (potentialCandidate != null) {
-            synchronized(pendingNativeWifiClusterCandidates) {
-                pendingNativeWifiClusterCandidates[cluster] = potentialCandidate
-            }
-        }
         synchronized(pendingNativeWifiClusterReconciliations) {
             if (!pendingNativeWifiClusterReconciliations.add(cluster)) return
         }
 
         cluster.post {
             try {
-                if (!config.enabled || !config.showWifi) {
-                    val baseline = synchronized(nativeWifiClusterBaselineVisibility) {
-                        nativeWifiClusterBaselineVisibility.remove(cluster)
-                    }
-                    if (baseline != null) setNativeWifiClusterVisibility(cluster, baseline)
-                    (cluster.parent as? View)?.requestLayout()
-                    return@post
-                }
-                val candidate = synchronized(pendingNativeWifiClusterCandidates) {
-                    pendingNativeWifiClusterCandidates.remove(cluster)
-                }
-                val knownBaseline = nativeWifiClusterBaselineVisibility[cluster]
-                // Leave a cluster that SystemUI had already hidden under SystemUI's ownership.
-                if (knownBaseline == null && cluster.visibility == View.GONE) return@post
-
-                val hasContent = hasNativeStatusIconFootprint(cluster, candidate)
-                if (hasContent) {
-                    if (knownBaseline != null && knownBaseline != View.GONE) {
-                        setNativeWifiClusterVisibility(cluster, knownBaseline)
-                    }
-                } else {
-                    if (knownBaseline == null) {
-                        nativeWifiClusterBaselineVisibility[cluster] = cluster.visibility
-                    }
-                    val baseline = nativeWifiClusterBaselineVisibility[cluster]
-                    if (baseline != null && baseline != View.GONE) {
-                        setNativeWifiClusterVisibility(cluster, View.GONE)
-                    }
-                }
-
+                // Reconcile layout width only; preserve SystemUI's own visibility state.
                 cluster.requestLayout()
                 (cluster.parent as? View)?.requestLayout()
                 (cluster.parent as? View)?.invalidate()
                 val lp = cluster.layoutParams
                 val row = cluster.parent as? View
-                val stage = if (hasContent) "icon-present" else "empty-cluster-collapse"
-                val snapshot = "stage=" + stage + "|visibility=" + cluster.visibility +
+                val snapshot = "stage=parent-remeasure-only|visibility=" + cluster.visibility +
                     "|size=" + cluster.width + "x" + cluster.height +
                     "|measured=" + cluster.measuredWidth + "x" + cluster.measuredHeight +
                     "|lp=" + lp?.width + "x" + lp?.height + "|childCount=" + cluster.childCount +
