@@ -1988,7 +1988,7 @@ object StatusBarComboStyleOneRuntime {
             if (hide) collapseHostView(host, view) else restoreHostView(host, view)
             if (wifiCandidate) {
                 diagnoseNativeWifiView(view, if (hide) "container-collapse" else "container-restore")
-                if (hide && config.enabled && config.showWifi) requestNativeWifiParentRemeasure(view)
+                if (hide && config.enabled && config.showWifi) scheduleNativeWifiClusterReconciliation(view.parent as? ViewGroup)
             }
         }
         lastContainerFingerprints[container] = containerSuppressionFingerprint(container)
@@ -2060,7 +2060,7 @@ object StatusBarComboStyleOneRuntime {
             baseline?.copy(visibility = baselineVisibility)?.let { host.layouts[view] = it }
         }
         collapseViewLayout(view)
-        requestNativeWifiParentRemeasure(view)
+        scheduleNativeWifiClusterReconciliation(view.parent as? ViewGroup)
     }
 
     /**
@@ -2070,44 +2070,152 @@ object StatusBarComboStyleOneRuntime {
      * Request a post-bind remeasure of the cluster and its row; never hide the whole cluster,
      * because it also owns unrelated native status icons.
      */
-    private fun requestNativeWifiParentRemeasure(view: View) {
-        val cluster = view.parent as? ViewGroup ?: return
-        if (cluster.width <= 0 && cluster.measuredWidth <= 0) return
-        synchronized(pendingNativeWifiParentRemeasures) {
-            if (!pendingNativeWifiParentRemeasures.add(cluster)) return
-        }
+    private fun isSuppressedNativeStatusChild(view: View): Boolean =
+        (config.enabled && config.showWifi && isWifiIcon(view)) ||
+            (isMobileNativeSuppressed() && isMobileIcon(view)) ||
+            (config.showMobile && config.mobileTypeMode == 2 && isMobileTypeView(view))
 
-        fun emit(stage: String) {
-            val params = cluster.layoutParams
-            val row = cluster.parent as? View
-            val snapshot = "stage=${stage}|id=${resourceName(cluster)}|class=${cluster.javaClass.name}|" +
-                "visibility=${cluster.visibility}|size=${cluster.width}x${cluster.height}|" +
-                "measured=${cluster.measuredWidth}x${cluster.measuredHeight}|" +
-                "lp=${params?.width}x${params?.height}|padding=${cluster.paddingLeft},${cluster.paddingTop}," +
-                "${cluster.paddingRight},${cluster.paddingBottom}|wifi=${view.visibility}:${view.width}x${view.height}|" +
-                "row=${row?.javaClass?.simpleName}:${row?.width}x${row?.height}"
-            if (lastNativeWifiParentLayoutDiagnostics.put(cluster, snapshot) != snapshot) {
-                diagnostic("Native Wi-Fi parent layout: $snapshot")
+    private fun hasNativeStatusIconFootprint(cluster: ViewGroup, candidate: View?): Boolean {
+        if (candidate != null && candidate.parent === cluster &&
+            candidate.visibility == View.VISIBLE && !isSuppressedNativeStatusChild(candidate) &&
+            candidate.layoutParams?.width != 0
+        ) {
+            // A newly-visible wrap-content icon may have zero old measurement while the parent
+            // cluster is recovering from GONE. Keep the cluster alive for the first layout pass.
+            return true
+        }
+        for (index in 0 until cluster.childCount) {
+            val child = cluster.getChildAt(index)
+            if (child.visibility != View.VISIBLE || isSuppressedNativeStatusChild(child)) continue
+            val lpWidth = child.layoutParams?.width ?: 0
+            if (child.width > 0 || child.measuredWidth > 0 || lpWidth > 0) return true
+        }
+        return false
+    }
+
+    private fun setNativeWifiClusterVisibility(cluster: ViewGroup, visibility: Int) {
+        if (cluster.visibility == visibility) return
+        adjustingNativeWifiClusterVisibility.set(true)
+        try {
+            cluster.visibility = visibility
+        } finally {
+            adjustingNativeWifiClusterVisibility.set(false)
+        }
+    }
+
+    /**
+     * Samsung can report measuredWidth=25px on StatusIconContainer when its actual width and
+     * LayoutParams width are zero. Requesting layout alone leaves that measured width in the
+     * parent LinearLayout. Collapse this cluster only while no other native icon occupies it.
+     */
+    private fun scheduleNativeWifiClusterReconciliation(
+        cluster: ViewGroup?,
+        triggeringChild: View? = null,
+        requestedVisibility: Int? = null,
+    ) {
+        if (cluster == null || !isStatusIconsCluster(cluster) || hostFor(cluster) == null) return
+
+        if (!config.enabled || !config.showWifi) {
+            val baseline = synchronized(nativeWifiClusterBaselineVisibility) {
+                nativeWifiClusterBaselineVisibility.remove(cluster)
             }
-        }
-
-        emit("before-request")
-        cluster.requestLayout()
-        (cluster.parent as? View)?.requestLayout()
-        cluster.post {
-            try {
-                if (!config.enabled || !config.showWifi || view.visibility != View.GONE) return@post
+            if (baseline != null) {
+                setNativeWifiClusterVisibility(cluster, baseline)
                 cluster.requestLayout()
                 (cluster.parent as? View)?.requestLayout()
-                cluster.invalidate()
+                diagnostic("Native Wi-Fi parent layout: stage=restore-on-config-change " +
+                    "visibility=" + cluster.visibility + " size=" + cluster.width + "x" + cluster.height)
+            }
+            return
+        }
+
+        val potentialCandidate = triggeringChild?.takeIf {
+            requestedVisibility == View.VISIBLE && it.parent === cluster &&
+                !isSuppressedNativeStatusChild(it) && it.layoutParams?.width != 0
+        }
+        if (potentialCandidate != null) {
+            synchronized(pendingNativeWifiClusterCandidates) {
+                pendingNativeWifiClusterCandidates[cluster] = potentialCandidate
+            }
+        }
+        synchronized(pendingNativeWifiClusterReconciliations) {
+            if (!pendingNativeWifiClusterReconciliations.add(cluster)) return
+        }
+
+        cluster.post {
+            try {
+                if (!config.enabled || !config.showWifi) {
+                    val baseline = synchronized(nativeWifiClusterBaselineVisibility) {
+                        nativeWifiClusterBaselineVisibility.remove(cluster)
+                    }
+                    if (baseline != null) setNativeWifiClusterVisibility(cluster, baseline)
+                    (cluster.parent as? View)?.requestLayout()
+                    return@post
+                }
+                val candidate = synchronized(pendingNativeWifiClusterCandidates) {
+                    pendingNativeWifiClusterCandidates.remove(cluster)
+                }
+                val knownBaseline = nativeWifiClusterBaselineVisibility[cluster]
+                // Leave a cluster that SystemUI had already hidden under SystemUI's ownership.
+                if (knownBaseline == null && cluster.visibility == View.GONE) return@post
+
+                val hasContent = hasNativeStatusIconFootprint(cluster, candidate)
+                if (hasContent) {
+                    if (knownBaseline != null && knownBaseline != View.GONE) {
+                        setNativeWifiClusterVisibility(cluster, knownBaseline)
+                    }
+                } else {
+                    if (knownBaseline == null) {
+                        nativeWifiClusterBaselineVisibility[cluster] = cluster.visibility
+                    }
+                    val baseline = nativeWifiClusterBaselineVisibility[cluster]
+                    if (baseline != null && baseline != View.GONE) {
+                        setNativeWifiClusterVisibility(cluster, View.GONE)
+                    }
+                }
+
+                cluster.requestLayout()
+                (cluster.parent as? View)?.requestLayout()
                 (cluster.parent as? View)?.invalidate()
-                cluster.postDelayed({ emit("after-remeasure") }, 64L)
+                val lp = cluster.layoutParams
+                val row = cluster.parent as? View
+                val stage = if (hasContent) "icon-present" else "empty-cluster-collapse"
+                val snapshot = "stage=" + stage + "|visibility=" + cluster.visibility +
+                    "|size=" + cluster.width + "x" + cluster.height +
+                    "|measured=" + cluster.measuredWidth + "x" + cluster.measuredHeight +
+                    "|lp=" + lp?.width + "x" + lp?.height + "|childCount=" + cluster.childCount +
+                    "|row=" + row?.javaClass?.simpleName + ":" + row?.width + "x" + row?.height
+                if (lastNativeWifiClusterDiagnostics.put(cluster, snapshot) != snapshot) {
+                    diagnostic("Native Wi-Fi parent layout: " + snapshot)
+                }
+                cluster.postDelayed({
+                    val afterRow = cluster.parent as? View
+                    val after = "stage=after-row-layout|visibility=" + cluster.visibility +
+                        "|size=" + cluster.width + "x" + cluster.height +
+                        "|measured=" + cluster.measuredWidth + "x" + cluster.measuredHeight +
+                        "|row=" + afterRow?.javaClass?.simpleName + ":" + afterRow?.width + "x" + afterRow?.height
+                    if (lastNativeWifiClusterDiagnostics.put(cluster, after) != after) {
+                        diagnostic("Native Wi-Fi parent layout: " + after)
+                    }
+                }, 64L)
             } finally {
-                pendingNativeWifiParentRemeasures.remove(cluster)
+                pendingNativeWifiClusterReconciliations.remove(cluster)
             }
         }
     }
 
+    private fun restoreNativeWifiClusters(root: View) {
+        descendants(root).filterIsInstance<ViewGroup>().filter(::isStatusIconsCluster).forEach { cluster ->
+            val baseline = synchronized(nativeWifiClusterBaselineVisibility) {
+                nativeWifiClusterBaselineVisibility.remove(cluster)
+            } ?: return@forEach
+            setNativeWifiClusterVisibility(cluster, baseline)
+            cluster.requestLayout()
+            (cluster.parent as? View)?.requestLayout()
+            diagnostic("Native Wi-Fi parent layout: stage=restore-native-state visibility=" +
+                cluster.visibility + " size=" + cluster.width + "x" + cluster.height)
+        }
+    }
     private fun scheduleGeometryRetry(host: Host) {
         // Exactly one delayed retry per failed attach/display transition. Re-running apply
         // in a rapid loop repeatedly scans and collapses the entire icon row.
