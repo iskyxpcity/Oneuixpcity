@@ -212,56 +212,41 @@ jobs:
         if: success() && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/migration/') || startsWith(github.ref, 'refs/heads/test/'))
         env:
           SOURCE_REPO_TOKEN: ${{ github.token }}
-          PUBLIC_RELEASE_TOKEN: ${{ secrets.RELEASE_REPO_TOKEN }}
-          PUBLIC_RELEASE_REPO: iSkyJIE/OneuiXP-Releases
         run: |
           set -euo pipefail
           SHORT_SHA="${GITHUB_SHA::7}"
           COMMIT_SUBJECT=$(git log -1 --pretty=%s)
           FORMAL_RELEASE=false
+          RELEASE_REPO="$GITHUB_REPOSITORY"
+          GH_TOKEN="$SOURCE_REPO_TOKEN"
+          export GH_TOKEN
 
           if [ "$GITHUB_REF" = "refs/heads/main" ] && [[ "$COMMIT_SUBJECT" == release:* ]]; then
             FORMAL_RELEASE=true
-            RELEASE_REPO="$PUBLIC_RELEASE_REPO"
-            GH_TOKEN="$PUBLIC_RELEASE_TOKEN"
-            export GH_TOKEN
-
-            if [ -z "$GH_TOKEN" ]; then
-              echo "::error::Missing Actions secret RELEASE_REPO_TOKEN. It must be a fine-grained token with Contents: Read and write access to $PUBLIC_RELEASE_REPO."
-              exit 1
-            fi
-
             TAG="v${VERSION_NAME}"
             TITLE="OneuiXP ${VERSION_NAME}"
-            NOTES="OneuiXP ${VERSION_NAME} 正式版。源码仓库为私有仓库；本公开仓库仅提供正式版 APK 下载和更新说明。"
+            NOTES="OneuiXP ${VERSION_NAME} 正式版。此 Release 提供正式版 APK 下载和更新说明。"
 
             if ! gh release view "$TAG" --repo "$RELEASE_REPO" >/dev/null 2>&1; then
-              # The public binary repository owns its own Git history. Do not
-              # target the private source commit SHA here.
               gh release create "$TAG" \
                 --repo "$RELEASE_REPO" \
+                --target "$GITHUB_SHA" \
                 --title "$TITLE" \
                 --notes "$NOTES" \
                 --latest
             fi
           else
-            # Migration/test builds stay with the source repository. Once the
-            # source repository is private, these builds are private as well.
-            RELEASE_REPO="$GITHUB_REPOSITORY"
-            GH_TOKEN="$SOURCE_REPO_TOKEN"
-            export GH_TOKEN
-
             if [ "$GITHUB_REF" = "refs/heads/main" ]; then
-              TAG="main-build-${GITHUB_RUN_NUMBER}-${SHORT_SHA}"
+              TAG="main-build-${GITHUB_RUN_NUMBER}-$SHORT_SHA"
               TITLE="OneuiXP main build #${GITHUB_RUN_NUMBER}"
               NOTES="Automated signed main-branch test build. This is a prerelease, not a formal OneuiXP release."
             else
               if [[ "$GITHUB_REF" == refs/heads/test/* ]]; then
-                TAG="test-build-${GITHUB_RUN_NUMBER}-${SHORT_SHA}"
+                TAG="test-build-${GITHUB_RUN_NUMBER}-$SHORT_SHA"
                 TITLE="OneuiXP test build #${GITHUB_RUN_NUMBER}"
                 NOTES="Signed test build. Validate on Samsung hardware before merging to main."
               else
-                TAG="migration-build-${GITHUB_RUN_NUMBER}-${SHORT_SHA}"
+                TAG="migration-build-${GITHUB_RUN_NUMBER}-$SHORT_SHA"
                 TITLE="OneuiXP migration build #${GITHUB_RUN_NUMBER}"
                 NOTES="Signed migration test build. Validate on Samsung hardware before merging to main."
               fi
@@ -283,7 +268,7 @@ jobs:
               --repo "$RELEASE_REPO" \
               "dist/$OUTPUT_APK" \
               --clobber
-            echo "Published formal signed APK only to public release repo: $RELEASE_REPO / $TAG"
+            echo "Published formal signed APK to source repository release: $RELEASE_REPO / $TAG"
           else
             gh release upload "$TAG" \
               --repo "$RELEASE_REPO" \
@@ -292,7 +277,7 @@ jobs:
               dist/SIGNING_INFO.txt \
               dist/APK_PACKAGE_INFO.txt \
               --clobber
-            echo "Published signed test APK to source repo prerelease: $RELEASE_REPO / $TAG"
+            echo "Published signed test APK to source repository prerelease: $RELEASE_REPO / $TAG"
           fi
 
       - name: Save Gradle diagnostics on failure
