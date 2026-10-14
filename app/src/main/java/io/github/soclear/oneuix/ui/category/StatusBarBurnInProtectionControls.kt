@@ -96,7 +96,7 @@ fun StatusBarBurnInProtectionControls(
                     },
                     modifier = Modifier.padding(horizontal = 16.dp),
                     valueRange = 10f..300f,
-                    stepSize = 1f,
+                    stepSize = 5f,
                     onValueChangeFinished = {
                         onEvent(SystemUIEvent.StatusBar.StatusBarBurnInProtectionPeriodSeconds(period))
                     },

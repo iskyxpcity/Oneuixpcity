@@ -221,7 +221,7 @@ private fun StatusBurnInProtectionControls(
                             ),
                         value = period,
                         valueRange = 10f..300f,
-                        stepSize = 1f,
+                        stepSize = 5f,
                         onValueChange = { raw ->
                             period = raw.roundToInt().coerceIn(10, 300).toFloat()
                             onEvent(
