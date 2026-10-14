@@ -403,6 +403,14 @@ object StatusBarComboStyleOneRuntime {
                     (placementDisplayWidth > 0 && placementDisplayHeight > 0 &&
                         (currentSize.x != placementDisplayWidth || currentSize.y != placementDisplayHeight))
                 var nextDelay = GLYPH_POSITION_WATCH_INTERVAL_MS
+                if (!displayGeometryChanged) {
+                    // SystemUI/QuickStar can rebind a battery holder after the first layout.
+                    // Reassert only our transparent measured slot (idempotent when unchanged)
+                    // so neighboring native icons always have the same reserved space.
+                    StatusBarComboStyleOneRuntime.reserveOverlayHostSlot(
+                        root, anchor, requiredSlotWidthPx(),
+                    )
+                }
                 if (displayGeometryChanged) {
                     // A WindowContext belongs to its display. Rebuild through the owner Runtime
                     // rather than moving a window created for the previous display.
@@ -2454,8 +2462,8 @@ object StatusBarComboStyleOneRuntime {
         }
         val lp = view.layoutParams ?: return
         val margins = lp as? ViewGroup.MarginLayoutParams
-        // The slot starts collapsed, so restore its original height while reserving only the
-        // incremental spacing width; never reserve the entire combination glyph width.
+        // Reserve the full canvas width at the trailing battery position. The drawing window
+        // uses the same width, so SystemUI naturally lays preceding icons outside its footprint.
         val width = widthPx.coerceAtLeast(1)
         val height = originalLayout?.height?.takeIf { it != 0 } ?: dp(view.context, 24)
         val left = dpExact(view.context, config.glyphLeftMarginDp)
