@@ -842,9 +842,9 @@ object StatusBarComboStyleOneRuntime {
             burnInMinimumWindowY = minimumWindowY
             val density = context.resources.displayMetrics.density.takeIf { it > 0f } ?: 1f
             lp.x = baseWindowX + (burnInOffsetXDp * density).roundToInt()
-            val unboundedY = requireNotNull(burnInBaseYpx) + (burnInOffsetYDp * density).roundToInt()
-            lp.y = unboundedY.coerceAtLeast(minimumWindowY)
-            val topEdgeClamped = requireNotNull(burnInBaseYpx) != requestedBaseWindowY || lp.y != unboundedY
+            val requestedWindowY = requireNotNull(burnInBaseYpx) + (burnInOffsetYDp * density).roundToInt()
+            lp.y = requestedWindowY.coerceAtLeast(minimumWindowY)
+            val topEdgeClamped = requireNotNull(burnInBaseYpx) != requestedBaseWindowY || lp.y != requestedWindowY
 
             val ringCenterXUnits = StatusComboStyleOneGlyphRenderer.glyphCenterX(cfg, networkType)
             val ringCenterScreenPx = lp.x + canvasLeftInsetPx + ringCenterXUnits * renderScale
@@ -912,6 +912,7 @@ object StatusBarComboStyleOneRuntime {
             }
             lp.width += deltaPx
             lp.x -= deltaPx
+            burnInBaseXpx = burnInBaseXpx?.minus(deltaPx)
             runCatching { wm?.updateViewLayout(glyph, lp) }
                 .onFailure { Log.w(TAG, "Cannot expand outside-signal canvas frame", it) }
             val expandedWidthPx = lp.width

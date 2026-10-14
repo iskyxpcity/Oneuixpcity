@@ -46,8 +46,6 @@ internal object StatusBarBurnInProtectionRuntime {
     private data class ViewBaseline(
         var x: Float,
         var y: Float,
-        var lastOffsetX: Float = 0f,
-        var lastOffsetY: Float = 0f,
         var lastWrittenX: Float = x,
         var lastWrittenY: Float = y,
     )
@@ -116,18 +114,17 @@ internal object StatusBarBurnInProtectionRuntime {
 
     fun registerOffsetTarget(owner: Any, apply: (Any, Float, Float) -> Unit) {
         runOnMain {
-            synchronized(targets) {
+            val target = synchronized(targets) {
                 targets.removeAll { it.owner.get() == null }
-                if (targets.none { it.owner.get() === owner }) {
-                    targets += Target(WeakReference(owner), apply)
-                }
+                targets.firstOrNull { it.owner.get() === owner }
+                    ?: Target(WeakReference(owner), apply).also { targets += it }
             }
+            // registerView() is also used after a OneuiXP style change. Re-capture the view's
+            // intended translation before adding the currently-selected micro-offset.
+            if (owner is View) synchronized(viewBaselines) { viewBaselines.remove(owner) }
             val offset = currentOffset()
-            synchronized(targets) { targets.firstOrNull { it.owner.get() === owner } }
-                ?.let { target ->
-                    runCatching { target.apply(owner, offset.first, offset.second) }
-                        .onFailure { Log.d(TAG, "Initial custom target offset failed", it) }
-                }
+            runCatching { target.apply(owner, offset.first, offset.second) }
+                .onFailure { Log.d(TAG, "Initial custom target offset failed", it) }
             syncTicker()
         }
     }
@@ -139,6 +136,7 @@ internal object StatusBarBurnInProtectionRuntime {
                 targets.removeAll { it.owner.get() == null || it.owner.get() === owner }
                 matching
             }
+            if (removed.isEmpty()) return@runOnMain
             removed.forEach { target ->
                 runCatching { target.apply(owner, 0f, 0f) }
                     .onFailure { Log.d(TAG, "Cannot restore custom target", it) }
@@ -266,23 +264,15 @@ internal object StatusBarBurnInProtectionRuntime {
                 ViewBaseline(view.translationX, view.translationY)
             }
         }
-        // If another OneuiXP setting writes a new translation, reconstruct its unshifted
-        // baseline by removing our previous contribution before applying the new offset.
-        if (abs(view.translationX - base.lastWrittenX) > 0.01f) {
-            base.x = view.translationX - base.lastOffsetX
-        }
-        if (abs(view.translationY - base.lastWrittenY) > 0.01f) {
-            base.y = view.translationY - base.lastOffsetY
-        }
+        // Custom OneuiXP layout code writes its intended translation without our micro-shift.
+        // Detect that change and accept it as the new base before applying the offset again.
+        if (abs(view.translationX - base.lastWrittenX) > 0.01f) base.x = view.translationX
+        if (abs(view.translationY - base.lastWrittenY) > 0.01f) base.y = view.translationY
         val density = view.resources.displayMetrics.density.takeIf { it > 0f } ?: 1f
-        val offsetX = xDp * density
-        val offsetY = yDp * density
-        val targetX = base.x + offsetX
-        val targetY = base.y + offsetY
+        val targetX = base.x + xDp * density
+        val targetY = base.y + yDp * density
         if (abs(view.translationX - targetX) > 0.01f) view.translationX = targetX
         if (abs(view.translationY - targetY) > 0.01f) view.translationY = targetY
-        base.lastOffsetX = offsetX
-        base.lastOffsetY = offsetY
         base.lastWrittenX = targetX
         base.lastWrittenY = targetY
     }

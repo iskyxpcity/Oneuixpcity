@@ -108,7 +108,7 @@ object StatusBar {
             current.modifyDoubleLineClockGap ||
             current.useFold7CustomDoubleLineClockScale
 
-    private fun applyStatusBarClockRuntime(
+    private fun syncClockBurnInTarget(
         clockTextView: TextView,
         current: Preference.SystemUI.StatusBar,
     ) {
@@ -117,9 +117,16 @@ object StatusBar {
         } else {
             StatusBarBurnInProtectionRuntime.unregisterOffsetTarget(clockTextView)
         }
+    }
+
+    private fun applyStatusBarClockRuntime(
+        clockTextView: TextView,
+        current: Preference.SystemUI.StatusBar,
+    ) {
         if (!current.setStatusBarClockFormat) {
             applySingleLineClockScale(clockTextView, current)
             OfficialMainStatusBarMod.applyStatusBarClockPosition(clockTextView)
+            syncClockBurnInTarget(clockTextView, current)
             return
         }
         val dateTime = renderStatusBarClock(clockTextView, current)
@@ -131,6 +138,7 @@ object StatusBar {
             applySingleLineClockScale(clockTextView, current)
         }
         OfficialMainStatusBarMod.applyStatusBarClockPosition(clockTextView)
+        syncClockBurnInTarget(clockTextView, current)
     }
 
     private fun clockContentSettingsChanged(
@@ -631,14 +639,10 @@ object StatusBar {
             }
 
             val current = statusBarClockRuntime
-            if (current != null && shouldBurnInMoveClock(current)) {
-                StatusBarBurnInProtectionRuntime.registerView(clockTextView)
-            } else {
-                StatusBarBurnInProtectionRuntime.unregisterOffsetTarget(clockTextView)
-            }
             if (current != null && !current.setStatusBarClockFormat) {
                 rememberClockBaseTextSize(clockTextView)
                 applySingleLineClockScale(clockTextView, current)
+                syncClockBurnInTarget(clockTextView, current)
                 return@intercept result
             }
 
@@ -667,6 +671,7 @@ object StatusBar {
                 applySingleLineClockScale(clockTextView, effective)
             }
             OfficialMainStatusBarMod.applyStatusBarClockPosition(clockTextView)
+            syncClockBurnInTarget(clockTextView, effective)
             result
         }
     }
