@@ -408,10 +408,7 @@ object StatusBarComboStyleOneRuntime {
                     // rather than moving a window created for the previous display.
                     StatusBarComboStyleOneRuntime.refreshHostForOverlay(root)
                 } else {
-                    val freshCutout = StatusBarComboStyleOneRuntime.cutoutBounds(root)
-                    if (freshCutout != null) {
-                        update(anchor, root, freshCutout)
-                    } else {
+                    if (!update(anchor, root)) {
                         StatusBarComboStyleOneRuntime.retryOverlayGeometry(root)
                         nextDelay = GLYPH_POSITION_IDLE_RETRY_INTERVAL_MS
                     }
@@ -422,16 +419,23 @@ object StatusBarComboStyleOneRuntime {
             }
         }
 
-        fun attach(anchor: View, root: ViewGroup, cameraBounds: Rect): Boolean {
+        fun requiredSlotWidthPx(): Int =
+            StatusBarComboStyleOneRuntime.dp(
+                context,
+                StatusComboStyleOneGlyphRenderer.glyphWidthDp(
+                    StatusBarComboStyleOneRuntime.config,
+                    StatusBarComboStyleOneRuntime.state.networkType,
+                ),
+            ) + glyph.leadingCanvasPaddingPx()
+
+        fun attach(anchor: View, root: ViewGroup): Boolean {
             if (params != null) {
-                val updated = update(anchor, root, cameraBounds)
+                val updated = update(anchor, root)
                 if (updated) startPlacementWatch(anchor, root, captureDisplayGeometry = false)
                 return updated
             }
             val cfg = StatusBarComboStyleOneRuntime.config
-            val width = StatusBarComboStyleOneRuntime.dp(
-                context, StatusComboStyleOneGlyphRenderer.glyphWidthDp(cfg, StatusBarComboStyleOneRuntime.state.networkType),
-            ) + glyph.leadingCanvasPaddingPx()
+            val width = requiredSlotWidthPx()
             val height = StatusBarComboStyleOneRuntime.dp(
                 context, StatusComboStyleOneGlyphRenderer.glyphHeightDp(cfg, StatusBarComboStyleOneRuntime.state.networkType),
             )
@@ -468,7 +472,7 @@ object StatusBarComboStyleOneRuntime {
                         "Glyph overlay attached: type=$type displayId=${display?.displayId} " +
                             "size=${width}x${height} flags=$flags placement=active-display-cutout"
                     )
-                    if (!update(anchor, root, cameraBounds)) {
+                    if (!update(anchor, root)) {
                         detach()
                         return false
                     }
@@ -524,78 +528,108 @@ object StatusBarComboStyleOneRuntime {
             return result.toList()
         }
 
-        fun update(anchor: View, root: ViewGroup, cameraBounds: Rect): Boolean {
+        fun update(anchor: View, root: ViewGroup): Boolean {
             val lp = params ?: return false
             glyph.setStatusBarRootForTypeBounds(root)
-            val cutout = Rect(cameraBounds)
             val oldX = lp.x
             val oldY = lp.y
             val oldWidth = lp.width
             val oldHeight = lp.height
             val cfg = StatusBarComboStyleOneRuntime.config
-            lp.width = StatusBarComboStyleOneRuntime.dp(
-                context, StatusComboStyleOneGlyphRenderer.glyphWidthDp(cfg, StatusBarComboStyleOneRuntime.state.networkType),
-            ) + glyph.leadingCanvasPaddingPx()
-            lp.height = StatusBarComboStyleOneRuntime.dp(context, StatusComboStyleOneGlyphRenderer.glyphHeightDp(cfg, StatusBarComboStyleOneRuntime.state.networkType))
+            lp.width = requiredSlotWidthPx()
+            lp.height = StatusBarComboStyleOneRuntime.dp(
+                context,
+                StatusComboStyleOneGlyphRenderer.glyphHeightDp(cfg, StatusBarComboStyleOneRuntime.state.networkType),
+            )
             val networkType = StatusBarComboStyleOneRuntime.state.networkType
             val designWidthUnits = StatusComboStyleOneGlyphRenderer.glyphDesignWidth(cfg, networkType)
-            val designHeightUnits = StatusComboStyleOneGlyphRenderer.glyphDesignHeight(cfg, StatusBarComboStyleOneRuntime.state.networkType)
-            val ringCenterXUnits = StatusComboStyleOneGlyphRenderer.glyphCenterX(cfg, networkType)
-            val centreRatioY = StatusComboStyleOneGlyphRenderer.glyphVerticalCenterRatio(cfg, StatusBarComboStyleOneRuntime.state.networkType)
-            // The independent window draws above status-bar siblings, so it must occupy the
-            // actual camera cutout, not the battery slot. cutoutBounds() is resolved separately
-            // for each active display and is passed in only after validating that display's geometry.
-            val cameraCenterX = cutout.centerX()
-            val cameraCenterY = cutout.centerY()
-            val displaySize = StatusBarComboStyleOneRuntime.activeDisplaySize(root)
-            val rightSideCutout = displaySize.x > 0 &&
-                cameraCenterX >= displaySize.x * RIGHT_SIDE_CUTOUT_THRESHOLD
-            val density = context.resources.displayMetrics.density
-            val horizontalCalibrationPx = if (rightSideCutout) {
-                (INNER_PUNCH_HOLE_HORIZONTAL_CALIBRATION_DP * density).roundToInt()
-            } else 0
-            val verticalCalibrationDp = if (rightSideCutout) {
-                INNER_PUNCH_HOLE_VERTICAL_CALIBRATION_DP
-            } else {
-                PUNCH_HOLE_VERTICAL_CALIBRATION_DP
+            val designHeightUnits = StatusComboStyleOneGlyphRenderer.glyphDesignHeight(cfg, networkType)
+            val centreRatioY = StatusComboStyleOneGlyphRenderer.glyphVerticalCenterRatio(cfg, networkType)
+
+            // Match TrioOverlay.sync(): the separate window follows the native battery host's
+            // real status-bar slot. If OneuiXP has already zero-sized the child, use its parent
+            // trailing edge and saved original margins, never the collapsed child's stale X.
+            val slotParent = anchor.parent as? ViewGroup
+            val parentLocation = IntArray(2)
+            val parentLocated = slotParent != null && slotParent.isAttachedToWindow &&
+                slotParent.width > 0 &&
+                runCatching { slotParent.getLocationOnScreen(parentLocation) }.isSuccess
+            val anchorLocation = IntArray(2)
+            val anchorLocated = anchor.isAttachedToWindow &&
+                runCatching { anchor.getLocationOnScreen(anchorLocation) }.isSuccess
+            val rootLocation = IntArray(2)
+            val rootLocated = root.isAttachedToWindow &&
+                runCatching { root.getLocationOnScreen(rootLocation) }.isSuccess
+            if (!parentLocated && !anchorLocated && !rootLocated) {
+                diagnostic("Glyph overlay cannot resolve battery-slot or status-bar-root screen coordinates")
+                return false
+            }
+            val originalRightMargin = synchronized(StatusBarComboStyleOneRuntime.hosts) {
+                StatusBarComboStyleOneRuntime.hosts.values.firstOrNull { it.battery === anchor }
+                    ?.layouts?.get(anchor)?.rightMargin
+            } ?: StatusBarComboStyleOneRuntime.nativeBatteryLayouts[anchor]?.rightMargin
+                ?: (anchor.layoutParams as? ViewGroup.MarginLayoutParams)?.rightMargin
+                ?: 0
+            val activeRightMargin =
+                (anchor.layoutParams as? ViewGroup.MarginLayoutParams)?.rightMargin ?: originalRightMargin
+            val slotRightPx = when {
+                parentLocated && slotParent != null ->
+                    parentLocation[0] + slotParent.width - slotParent.paddingRight - activeRightMargin
+                anchorLocated && anchor.width > 0 ->
+                    anchorLocation[0] + anchor.width
+                rootLocated ->
+                    rootLocation[0] + root.width - root.paddingRight - originalRightMargin
+                else -> return false
+            }
+            val slotCenterY = when {
+                anchorLocated && anchor.height > 0 && anchor.visibility == View.VISIBLE ->
+                    anchorLocation[1] + anchor.height / 2f
+                parentLocated && slotParent != null ->
+                    parentLocation[1] + slotParent.height / 2f
+                rootLocated ->
+                    rootLocation[1] + root.height / 2f
+                else -> return false
             }
             val renderScale = lp.height.toFloat() / designHeightUnits
             val canvasLeftInsetPx = StatusComboStyleOneGlyphRenderer.glyphCanvasLeftInsetPx(
                 cfg, networkType, lp.width, lp.height, glyph.leadingCanvasPaddingPx().toFloat(),
             )
-            val horizontalOffsetPx = StatusBarComboStyleOneRuntime.dpExact(
-                context, cfg.glyphOffsetXDp + cfg.glyphLeftMarginDp - cfg.glyphRightMarginDp,
-            ) + horizontalCalibrationPx
+            // The right edge of the full drawing canvas sits on the battery slot's right
+            // edge. The expanded transparent host reserves this same width in native layout,
+            // leaving the preceding Bluetooth/alarm/network icons to the left of our canvas.
+            val horizontalOffsetPx = StatusBarComboStyleOneRuntime.dpExact(context, cfg.glyphOffsetXDp)
             lp.x = (
-                cameraCenterX - canvasLeftInsetPx - ringCenterXUnits * renderScale +
+                slotRightPx - canvasLeftInsetPx - designWidthUnits * renderScale +
                     horizontalOffsetPx
                 ).roundToInt()
-            val verticalOffsetPx = (
-                (cfg.glyphOffsetYDp.toFloat() + verticalCalibrationDp) * density
-                ).roundToInt()
+            val verticalOffsetPx = StatusBarComboStyleOneRuntime.dpExact(context, cfg.glyphOffsetYDp)
             lp.y = (
-                cameraCenterY - lp.height * centreRatioY + verticalOffsetPx
+                slotCenterY - lp.height * centreRatioY + verticalOffsetPx
                 ).roundToInt()
+
+            val ringCenterXUnits = StatusComboStyleOneGlyphRenderer.glyphCenterX(cfg, networkType)
             val ringCenterScreenPx = lp.x + canvasLeftInsetPx + ringCenterXUnits * renderScale
             val positionChanged = oldX != lp.x || oldY != lp.y || oldWidth != lp.width || oldHeight != lp.height
             if (positionChanged) {
                 runCatching { wm?.updateViewLayout(glyph, lp) }
-                    .onFailure { Log.w(TAG, "Cannot update cutout-anchored glyph window", it) }
-                // The position watcher runs repeatedly; only log changed geometry to keep the
-                // unified Settings -> Send log output useful instead of flooding it.
+                    .onFailure { Log.w(TAG, "Cannot update battery-slot-anchored glyph window", it) }
                 diagnostic(
-                    "Glyph overlay camera coordinates: displayId=${display?.displayId} type=${lp.type} " +
-                        "cameraCenter=(${cameraCenterX},${cameraCenterY}) cutout=${cutout} " +
-                        "activeDisplay=${displaySize.x}x${displaySize.y} rightSideCutout=${rightSideCutout} " +
-                        "correctionDp=(${if (rightSideCutout) INNER_PUNCH_HOLE_HORIZONTAL_CALIBRATION_DP else 0f}," +
-                        "${verticalCalibrationDp}) window=(${lp.x},${lp.y}) size=${lp.width}x${lp.height} " +
-                        "ringCenterScreen=(${ringCenterScreenPx},${lp.y + lp.height * centreRatioY})"
+                    "Glyph overlay right-slot coordinates: displayId=${display?.displayId} type=${lp.type} " +
+                        "parent=${slotParent?.javaClass?.simpleName} parentLocated=${parentLocated} " +
+                        "parentOrigin=${if (parentLocated) parentLocation.contentToString() else "unknown"} " +
+                        "parentSize=${slotParent?.width}x${slotParent?.height} " +
+                        "parentPaddingRight=${slotParent?.paddingRight} originalRightMargin=${originalRightMargin} " +
+                        "activeRightMargin=${activeRightMargin} slotRightPx=${slotRightPx} slotCenterY=${slotCenterY} " +
+                        "anchorSize=${anchor.width}x${anchor.height} measured=${anchor.measuredWidth}x${anchor.measuredHeight} " +
+                        "anchorVisibility=${anchor.visibility} anchorAlpha=${anchor.alpha} " +
+                        "window=(${lp.x},${lp.y}) size=${lp.width}x${lp.height} " +
+                        "ringCenterScreen=(${ringCenterScreenPx},${lp.y + lp.height * centreRatioY}) placement=statusbar-right-slot"
                 )
             }
             return true
         }
 
-        fun diagnosticSnapshot(): String {
+                fun diagnosticSnapshot(): String {
             val lp = params ?: return "overlayWindow=not-attached (no LayoutParams)"
             val actual = IntArray(2)
             val hasScreenOrigin = glyph.isAttachedToWindow &&
@@ -640,7 +674,13 @@ object StatusBarComboStyleOneRuntime {
             lp.x -= deltaPx
             runCatching { wm?.updateViewLayout(glyph, lp) }
                 .onFailure { Log.w(TAG, "Cannot expand outside-signal canvas frame", it) }
+            val expandedWidthPx = lp.width
             glyph.post {
+                watchedAnchor?.get()?.let { anchor ->
+                    watchedRoot?.get()?.let { root ->
+                        StatusBarComboStyleOneRuntime.reserveOverlayHostSlot(root, anchor, expandedWidthPx)
+                    }
+                }
                 glyph.finishLeadingPaddingExpansion()
                 glyph.invalidate()
             }
@@ -760,19 +800,14 @@ object StatusBarComboStyleOneRuntime {
                 val battery = host.battery ?: return@forEach
                 val overlay = host.overlay ?: return@forEach
 
-                // Refresh the active display cutout while the shade expands; never reuse a
-                // stale cover-screen rectangle for the inner display.
-                val cameraBounds = cutoutBounds(host.root)
-                if (cameraBounds == null) {
-                    scheduleGeometryRetry(host)
-                    return@forEach
-                }
+                // Keep the window attached to the active battery slot as status-bar
+                // layout/visibility changes during a shade transition.
                 updateOverlayHostSlot(host, battery)
-                if (overlay.update(battery, host.root, cameraBounds)) {
+                if (overlay.update(battery, host.root)) {
                     overlay.setShadeVisible(true)
                     overlay.invalidate()
                 } else {
-                    apply(host)
+                    scheduleGeometryRetry(host)
                 }
             }
         }
@@ -1343,16 +1378,11 @@ object StatusBarComboStyleOneRuntime {
                     glyph.invalidate()
                 }
                 host.overlay?.let { overlay ->
-                    val cameraBounds = cutoutBounds(host.root)
-                    if (cameraBounds == null) {
-                        scheduleGeometryRetry(host)
+                    updateOverlayHostSlot(host, battery)
+                    if (overlay.update(battery, host.root)) {
+                        overlay.invalidate()
                     } else {
-                        updateOverlayHostSlot(host, battery)
-                        if (overlay.update(battery, host.root, cameraBounds)) {
-                            overlay.invalidate()
-                        } else {
-                            apply(host)
-                        }
+                        scheduleGeometryRetry(host)
                     }
                 }
             }
@@ -1445,7 +1475,7 @@ object StatusBarComboStyleOneRuntime {
                 diagnostic(
                     "Status-bar display geometry changed: id=${host.activeDisplayId}->${currentDisplayId}, " +
                         "size=${host.activeDisplayWidth}x${host.activeDisplayHeight}->" +
-                        "${currentDisplaySize.x}x${currentDisplaySize.y}; rebuilding overlay at active cutout"
+                        "${currentDisplaySize.x}x${currentDisplaySize.y}; rebuilding overlay at active battery slot"
                 )
                 main.removeCallbacks(host.geometryRetry)
                 host.geometryRetryPending = false
@@ -1537,17 +1567,24 @@ object StatusBarComboStyleOneRuntime {
                 host.inline?.setTintOverride(rowTint)
                 host.overlay?.setTintOverride(rowTint)
             }
-            // A top-layer independent window must be placed at the real cutout so it does
-            // not cover ordinary status-bar icons. Do not touch native slot visibility until
-            // the active display has supplied a verified rectangle.
+            // Match HyperDuo's placement contract: the independent window belongs to the
+            // system battery slot, not the camera hole. Validate a live slot/root coordinate
+            // first, then reserve the full canvas width before folding other native indicators.
             val wantsOverlay = config.overlayGlyph && !host.overlayFailed
-            val overlayCameraBounds = if (wantsOverlay) cutoutBounds(root) else null
-            if (wantsOverlay && overlayCameraBounds == null) {
+            val overlay = if (wantsOverlay) {
+                host.overlay ?: GlyphOverlay(root.context, root.display).also { host.overlay = it }
+            } else null
+            if (wantsOverlay && !canResolveBatterySlot(battery, root)) {
                 if (!host.geometryRetryPending && host.geometryRetryAttempts == 0) {
-                    diagnostic("No verified active-display cutout yet; preserving native row and retrying")
+                    diagnostic("No usable battery-slot geometry yet; preserving native row and retrying")
                 }
                 scheduleGeometryRetry(host)
                 return
+            }
+            if (wantsOverlay && overlay != null) {
+                removeInline(host)
+                overlay.setTintOverride(host.rowTint)
+                updateOverlayHostSlot(host, battery, overlay.requiredSlotWidthPx())
             }
 
             val foldMobile = isMobileNativeSuppressed()
@@ -1578,17 +1615,12 @@ object StatusBarComboStyleOneRuntime {
             }
 
             if (wantsOverlay) {
-                // Use this host's verified active-display camera rectangle; outer and inner
-                // displays are never positioned from the same cached slot or stale cutout.
-                val cameraBounds = requireNotNull(overlayCameraBounds)
-                removeInline(host)
-                val overlay = host.overlay ?: GlyphOverlay(root.context, root.display).also { host.overlay = it }
-                overlay.setTintOverride(host.rowTint)
-                if (!overlay.attach(battery, root, cameraBounds)) {
-                    // Failed attachment must restore every native view changed above.
-                    // Never leave the row collapsed while a retry waits.
+                val activeOverlay = requireNotNull(overlay)
+                if (!activeOverlay.attach(battery, root)) {
+                    // Failed attachment must restore the native row, including the original
+                    // battery-slot width, before retrying the independent window.
                     diagnostic("Overlay attach failed; restoring native icon row and retrying once")
-                    overlay.detach()
+                    activeOverlay.detach()
                     host.overlay = null
                     restore(host)
                     scheduleGeometryRetry(host)
@@ -1596,12 +1628,10 @@ object StatusBarComboStyleOneRuntime {
                     main.removeCallbacks(host.geometryRetry)
                     host.geometryRetryPending = false
                     host.geometryRetryAttempts = 0
-                    // The ring is drawn at the camera cutout; collapse only the native battery
-                    // element being replaced, not the surrounding system-icon container.
-                    updateOverlayHostSlot(host, battery)
-                    overlay.setShadeVisible(true)
-                    overlay.update(battery, root, cameraBounds)
-                    overlay.invalidate()
+                    updateOverlayHostSlot(host, battery, activeOverlay.requiredSlotWidthPx())
+                    activeOverlay.update(battery, root)
+                    activeOverlay.setShadeVisible(true)
+                    activeOverlay.invalidate()
                 }
             } else {
                 main.removeCallbacks(host.geometryRetry)
@@ -1994,7 +2024,12 @@ object StatusBarComboStyleOneRuntime {
 
     private fun shouldSuppressSlot(slot: String): Boolean {
         val normalized = slot.lowercase()
-        return (config.enabled && normalized.contains("battery")) ||
+        // HyperDuo's overlay replaces the battery drawing but keeps its host participating
+        // in native layout. This lets the status-bar row reserve the combo's real width,
+        // preventing the large canvas from painting over Bluetooth/alarm/other icons.
+        val collapseBatterySlot = config.enabled && !config.overlayGlyph &&
+            normalized.contains("battery")
+        return collapseBatterySlot ||
             (config.enabled && config.showWifi && isManagedWifiSlot(normalized)) ||
             (isMobileNativeSuppressed() && isManagedMobileSlot(normalized))
     }
@@ -2351,6 +2386,30 @@ object StatusBarComboStyleOneRuntime {
             }
         }
     }
+    private fun canResolveBatterySlot(anchor: View, root: ViewGroup): Boolean {
+        val parent = anchor.parent as? ViewGroup
+        val parentLocation = IntArray(2)
+        val parentLocated = parent != null && parent.isAttachedToWindow && parent.width > 0 &&
+            runCatching { parent.getLocationOnScreen(parentLocation) }.isSuccess
+        if (parentLocated) return true
+
+        val anchorLocation = IntArray(2)
+        val anchorLocated = anchor.isAttachedToWindow && anchor.width > 0 &&
+            runCatching { anchor.getLocationOnScreen(anchorLocation) }.isSuccess
+        if (anchorLocated) return true
+
+        val rootLocation = IntArray(2)
+        return root.isAttachedToWindow && root.width > 0 &&
+            runCatching { root.getLocationOnScreen(rootLocation) }.isSuccess
+    }
+
+    /** Reserve/update the transparent battery replacement slot without touching neighboring icons. */
+    private fun reserveOverlayHostSlot(root: ViewGroup, anchor: View, widthPx: Int) {
+        val host = synchronized(hosts) { hosts[root] } ?: return
+        if (host.retired || !config.enabled || !config.overlayGlyph || host.battery !== anchor) return
+        reserveHostSlot(host, anchor, widthPx)
+    }
+
     /** Refresh the owning host when the overlay detects that its WindowContext is stale. */
     private fun refreshHostForOverlay(root: ViewGroup) {
         val host = synchronized(hosts) { hosts[root] } ?: return
@@ -2373,21 +2432,20 @@ object StatusBarComboStyleOneRuntime {
     }
 
     /**
-     * Keep the native battery icon invisible while reserving the actual dynamic glyph width.
-     * SystemUI lays the battery slot at the trailing edge, so additional outside-label/signal
-     * spacing is allocated to its left. During shade expansion, keep the old collapsed slot.
+     * Replace the stock battery drawing while retaining its actual status-bar layout slot.
+     * Like HyperDuo, the overlay is anchored to that measured slot; reserving the complete
+     * canvas width lets SystemUI move other icons left instead of letting the overlay cover them.
      */
-    private fun updateOverlayHostSlot(host: Host, view: View) {
-        if (shadeBusy) {
-            collapseHostView(host, view)
-            return
-        }
-        // Outside margins are rendered inside the fixed canvas and must not enlarge the native
-        // battery slot, since doing so reflows sibling status-bar icons.
-        collapseHostView(host, view)
+    private fun updateOverlayHostSlot(
+        host: Host,
+        view: View,
+        reservedWidthPx: Int = host.overlay?.requiredSlotWidthPx()
+            ?: (dp(view.context, StatusComboStyleOneGlyphRenderer.glyphWidthDp(config, state.networkType))),
+    ) {
+        reserveHostSlot(host, view, reservedWidthPx)
     }
 
-    private fun reserveHostSlot(host: Host, view: View, widthDp: Int) {
+    private fun reserveHostSlot(host: Host, view: View, widthPx: Int) {
         val nativeBatterySnapshot = nativeBatteryLayouts[view]
         val originalLayout = nativeBatterySnapshot ?: host.layouts[view] ?: snapshotLayout(view)
         host.original.putIfAbsent(view, originalLayout?.visibility ?: view.visibility)
@@ -2398,7 +2456,7 @@ object StatusBarComboStyleOneRuntime {
         val margins = lp as? ViewGroup.MarginLayoutParams
         // The slot starts collapsed, so restore its original height while reserving only the
         // incremental spacing width; never reserve the entire combination glyph width.
-        val width = dp(view.context, widthDp)
+        val width = widthPx.coerceAtLeast(1)
         val height = originalLayout?.height?.takeIf { it != 0 } ?: dp(view.context, 24)
         val left = dpExact(view.context, config.glyphLeftMarginDp)
         val right = dpExact(view.context, config.glyphRightMarginDp)
@@ -2412,14 +2470,16 @@ object StatusBarComboStyleOneRuntime {
             view.layoutParams = lp
             val parent = view.parent as? View
             diagnostic(
-                "Dynamic battery slot expansion: requestedExtraDp=${widthDp} targetPx=${width} " +
+                "Dynamic battery slot expansion: reservedWidthPx=${width} " +
                     "height=${height} measuredNowPx=${view.width} parent=${parent?.javaClass?.simpleName} " +
                     "parentWidthPx=${parent?.width ?: -1} marginsPx=(${left},${right}) " +
                     "shadeBusy=${shadeBusy}"
             )
         }
-        val originalVisibility = host.original[view] ?: View.VISIBLE
-        if (view.visibility != originalVisibility) view.visibility = originalVisibility
+        // The host is a transparent layout placeholder while the separate window draws.
+        // Force it visible for measurement even when the original battery slot was hidden;
+        // alpha=0 prevents native pixels, while disabling the feature restores the saved state.
+        if (view.visibility != View.VISIBLE) view.visibility = View.VISIBLE
         if (view.alpha != 0f) view.alpha = 0f
     }
     private fun restoreHostView(host: Host, view: View) {
@@ -2740,17 +2800,17 @@ object StatusBarComboStyleOneRuntime {
                                 val baseline = if (userHidesBattery) snapshot.copy(visibility = View.GONE) else snapshot
                                 nativeBatteryLayouts.putIfAbsent(meter, baseline)
                             }
-                            if (config.enabled) {
-                                // A null tuner value means the blacklist is empty. Still pass
-                                // an explicit battery entry so SystemUI's own visibility path
-                                // can hide the stock indicator.
+                            if (config.enabled && !config.overlayGlyph) {
+                                // Inline mode has no separate window to replace the battery
+                                // slot, so it uses the native hide-list path. Overlay mode keeps
+                                // this host measured and clears its pixels, as HyperDuo does.
                                 args[1] = appendHiddenSlot(nativeList.orEmpty(), "battery")
                             }
                         }
                         val result = chain.proceed(args)
-                        if (target && config.enabled && meter != null) {
-                            // Also cover Samsung variants that consume the callback but do
-                            // not use AOSP's helper to update the BatteryMeterView visibility.
+                        if (target && config.enabled && !config.overlayGlyph && meter != null) {
+                            // Inline mode removes the native battery slot. Overlay mode must
+                            // keep the host in the row so its reserved width protects neighbors.
                             if (meter.visibility != View.GONE) meter.visibility = View.GONE
                         }
                         result
@@ -3500,7 +3560,10 @@ object StatusBarComboStyleOneRuntime {
                             val next = sanitize(status.comboStyleOneRuntime)
                             config = next
                             diagnostic("Settings updated: enabled=${config.enabled}, overlay=${config.overlayGlyph}, style=${config.trioStyle}, signalMode=${config.signalMode}")
-                            if (previous.enabled != next.enabled || previous.showWifi != next.showWifi) {
+                            if (previous.enabled != next.enabled ||
+                                previous.overlayGlyph != next.overlayGlyph ||
+                                previous.showWifi != next.showWifi
+                            ) {
                                 applyBatterySlotVisibility()
                             }
                             if (previous.enabled != next.enabled) replayMiuiBatteryIslandRequests()
