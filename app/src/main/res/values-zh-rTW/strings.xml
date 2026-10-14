@@ -33,8 +33,8 @@
     <string name="status_category_notification_center">通知中心</string>
     <string name="status_category_control_center">控制中心</string>
     <string name="feature_introduction">功能介紹</string>
-    <string name="feature_intro_version_updates">OneUI XP 應用程式版本主要更新</string>
-    <string name="feature_intro_version_updates_summary">依應用程式版本查看主要功能與更新說明</string>
+    <string name="feature_intro_version_updates">OneUI XP 1.0.260930 主要更新</string>
+    <string name="feature_intro_version_updates_summary">2026-09-30</string>
     <string name="version_updates_title">版本主要更新</string>
     <string name="version_1_0_260930_title">1.0.260930 · 首個版本</string>
     <string name="version_1_0_260930_summary">首個版本的主要功能介紹。</string>
