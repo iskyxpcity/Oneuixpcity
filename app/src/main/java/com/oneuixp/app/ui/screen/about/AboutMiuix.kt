@@ -413,14 +413,10 @@ private fun AboutContent(
                             Color.Transparent,
                         ),
                     ) {
-                        state.links.forEach {
-                            ArrowPreference(
-                                title = it.fullText,
-                                onClick = {
-                                    actions.onOpenLink(it.url)
-                                }
-                            )
-                        }
+                        ArrowPreference(
+                            title = state.featureIntroductionTitle,
+                            onClick = actions.onOpenFeatureIntroduction,
+                        )
                     }
                     Spacer(
                         Modifier.height(

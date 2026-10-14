@@ -43,6 +43,8 @@ import com.oneuixp.app.ui.navigation3.Navigator
 import com.oneuixp.app.ui.navigation3.Route
 import com.oneuixp.app.ui.navigation3.rememberNavigator
 import com.oneuixp.app.ui.screen.about.AboutScreen
+import com.oneuixp.app.ui.screen.about.FeatureIntroductionScreen
+import com.oneuixp.app.ui.screen.about.VersionChangelogScreen
 import com.oneuixp.app.ui.screen.colorpalette.ColorPaletteScreen
 import com.oneuixp.app.ui.screen.home.HomePager
 import com.oneuixp.app.ui.screen.home.LocalLsposedHomeStatus
@@ -133,6 +135,8 @@ class MainActivity : ComponentActivity() {
                             entryProvider = entryProvider {
                                 entry<Route.Main> { mainScreenEntry() }
                                 entry<Route.About> { AboutScreen() }
+                                entry<Route.FeatureIntroduction> { FeatureIntroductionScreen() }
+                                entry<Route.VersionChangelog> { VersionChangelogScreen() }
                                 entry<Route.ColorPalette> { ColorPaletteScreen() }
                                 entry<Route.OneuiXCategory> { key -> OneuiXCategoryScreen(key.category) }
                                 entry<Route.StatusCategory> { key -> StatusCategoryScreen(key.category) }

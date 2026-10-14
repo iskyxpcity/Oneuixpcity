@@ -123,4 +123,23 @@
     <string name="status_signal_start_margin">Horizontal spacing</string>
     <string name="status_signal_dp_summary">%1$.1f dp</string>
 
+    <string name="feature_introduction">Feature Introduction</string>
+    <string name="feature_intro_version_updates">OneUI XP app version highlights</string>
+    <string name="feature_intro_version_updates_summary">Browse the main features and changes by app version</string>
+    <string name="version_updates_title">Version Highlights</string>
+    <string name="version_1_0_260930_title">1.0.260930 · First Release</string>
+    <string name="version_1_0_260930_summary">An introduction to the main features included in the first release.</string>
+    <string name="changelog_section_combo_title">Three-in-one status bar icon</string>
+    <string name="changelog_section_combo_body">Combine the battery ring, mobile signal, network type and Wi-Fi state in one customizable status-bar indicator. Adjust its size, position, spacing and colors, with support for dual SIM/eSIM presentation and charging or power-saving states.</string>
+    <string name="changelog_section_statusbar_title">Status bar appearance</string>
+    <string name="changelog_section_statusbar_body">Customize the status-bar clock and other indicators, including text style, color, size, weight, background, position and spacing.</string>
+    <string name="changelog_section_network_title">Network indicators</string>
+    <string name="changelog_section_network_body">Configure status-bar network speed, Wi-Fi, cellular signal and network-type indicators to make the information display fit your preferences.</string>
+    <string name="changelog_section_power_title">Real-time power information</string>
+    <string name="changelog_section_power_body">Configure status-bar fields for power consumption, current, battery temperature, CPU temperature, voltage and battery level, including the displayed items, layout, text size and spacing.</string>
+    <string name="changelog_section_ui_title">Two app interface styles</string>
+    <string name="changelog_section_ui_body">Choose between Miuix and Material in Settings. Theme appearance also includes light/dark mode and accent-color options.</string>
+    <string name="changelog_section_diagnostics_title">Settings and diagnostics</string>
+    <string name="changelog_section_diagnostics_body">Feature categories are organized across the app's main pages. Use Settings → Send log to export runtime diagnostics when troubleshooting module behavior or status-bar display issues.</string>
+
 </resources>
