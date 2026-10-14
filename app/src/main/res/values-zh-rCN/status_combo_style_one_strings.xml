@@ -15,9 +15,7 @@
     <string name="status_combo_style_one_style_ring">圆环</string>
     <string name="status_combo_style_one_style_rect">矩形</string>
     <string name="status_combo_style_one_overlay">独立窗口绘制</string>
-    <string name="status_combo_style_one_overlay_summary">为避免独立窗口引起系统界面卡顿，已暂停独立窗口绘制。</string>
-    <string name="status_combo_style_one_render_mode_title">当前绘制方式</string>
-    <string name="status_combo_style_one_render_mode_summary">为优先保证系统稳定，三合一图标暂时改为在系统状态栏布局内绘制，独立窗口绘制已暂停。</string>
+    <string name="status_combo_style_one_overlay_summary">将三合一图标绘制在独立窗口中，避免受系统状态栏原生布局区域裁切。</string>
     <string name="status_combo_style_one_show_wifi">显示 Wi-Fi 弧</string>
     <string name="status_combo_style_one_show_wifi_summary">在最外层绘制 Wi-Fi 弧线，弧数跟随实际信号强度；关闭后原生 Wi-Fi 图标回到状态栏原本的位置。</string>
     <string name="status_combo_style_one_show_mobile">显示移动信号点</string>

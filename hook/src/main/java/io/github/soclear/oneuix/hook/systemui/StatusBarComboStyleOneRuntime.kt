@@ -70,10 +70,9 @@ object StatusBarComboStyleOneRuntime {
     private const val AOSP_ICONS = "com.android.systemui.statusbar.phone.StatusBarIconContainer"
     private const val GLYPH_WIDTH_DP = 78
     private const val GLYPH_HEIGHT_DP = 36
-    // Independent TYPE_STATUS_BAR_SUB_PANEL rendering caused repeated SystemUI/WindowManager
-    // churn during foldable display changes. Keep the path dormant until it can be validated
-    // without whole-system UI stalls; render inside the native battery row instead.
-    private const val INDEPENDENT_OVERLAY_RENDERING_ENABLED = false
+    // Keep independent-window rendering available. The global DisplayManager listener remains
+    // disabled; this window confirms stable geometry before rebuilding its host.
+    private const val INDEPENDENT_OVERLAY_RENDERING_ENABLED = true
     private const val ICON_MANAGER = "com.android.systemui.statusbar.phone.ui.IconManager"
     private const val BATTERY_METER = "com.android.systemui.battery.BatteryMeterView"
     private const val MIUI_BATTERY_METER = "com.android.systemui.statusbar.views.MiuiBatteryMeterView"
@@ -84,9 +83,12 @@ object StatusBarComboStyleOneRuntime {
     private const val INNER_PUNCH_HOLE_VERTICAL_CALIBRATION_DP = 0.5f
     private const val INNER_PUNCH_HOLE_HORIZONTAL_CALIBRATION_DP = 1.5f
     private const val RIGHT_SIDE_CUTOUT_THRESHOLD = 0.65f
-    // Follow HyperDuo's live overlay-sync cadence while keeping OneuiXP's verified cutout anchor.
+    // Keep the responsive anchor watcher, but do not rebuild the window for a single transient
+    // foldable DisplayInfo sample.
     private const val GLYPH_POSITION_WATCH_INTERVAL_MS = 100L
     private const val GLYPH_POSITION_IDLE_RETRY_INTERVAL_MS = 500L
+    private const val GLYPH_POSITION_GEOMETRY_CONFIRM_INTERVAL_MS = 220L
+    private const val GLYPH_POSITION_GEOMETRY_CONFIRM_SAMPLES = 2
 
     private val installed = AtomicBoolean(false)
     @Volatile private var moduleForPreferenceReload: XposedModule? = null
@@ -383,6 +385,10 @@ object StatusBarComboStyleOneRuntime {
         private var placementDisplayId = display?.displayId ?: -1
         private var placementDisplayWidth = 0
         private var placementDisplayHeight = 0
+        private var pendingGeometryDisplayId = -1
+        private var pendingGeometryWidth = 0
+        private var pendingGeometryHeight = 0
+        private var pendingGeometrySamples = 0
         /**
          * Upstream HyperDuo continuously syncs its separate window to the live host.
          * Here we retain OneuiXP's required camera-cutout anchor, but re-read the active
@@ -407,19 +413,48 @@ object StatusBarComboStyleOneRuntime {
                     (placementDisplayWidth > 0 && placementDisplayHeight > 0 &&
                         (currentSize.x != placementDisplayWidth || currentSize.y != placementDisplayHeight))
                 var nextDelay = GLYPH_POSITION_WATCH_INTERVAL_MS
-                if (!displayGeometryChanged) {
+                if (displayGeometryChanged) {
+                    val samePendingGeometry =
+                        pendingGeometrySamples > 0 &&
+                            pendingGeometryDisplayId == currentDisplayId &&
+                            pendingGeometryWidth == currentSize.x &&
+                            pendingGeometryHeight == currentSize.y
+                    if (samePendingGeometry) {
+                        pendingGeometrySamples++
+                    } else {
+                        pendingGeometryDisplayId = currentDisplayId
+                        pendingGeometryWidth = currentSize.x
+                        pendingGeometryHeight = currentSize.y
+                        pendingGeometrySamples = 1
+                    }
+
+                    if (pendingGeometrySamples >= GLYPH_POSITION_GEOMETRY_CONFIRM_SAMPLES) {
+                        // Record this stable geometry before applying. If another host callback
+                        // is already in progress, the watcher will not keep retriggering refreshes
+                        // for the same display-size sample.
+                        placementDisplayId = currentDisplayId
+                        placementDisplayWidth = currentSize.x
+                        placementDisplayHeight = currentSize.y
+                        pendingGeometrySamples = 0
+                        diagnostic(
+                            "Stable overlay display geometry confirmed: id=$currentDisplayId " +
+                                "size=${currentSize.x}x${currentSize.y}; rebuilding once"
+                        )
+                        StatusBarComboStyleOneRuntime.refreshHostForOverlay(root)
+                    } else {
+                        nextDelay = GLYPH_POSITION_GEOMETRY_CONFIRM_INTERVAL_MS
+                    }
+                } else {
+                    pendingGeometrySamples = 0
+                    pendingGeometryDisplayId = -1
+                    pendingGeometryWidth = 0
+                    pendingGeometryHeight = 0
                     // SystemUI/QuickStar can rebind a battery holder after the first layout.
                     // Reassert only our transparent measured slot (idempotent when unchanged)
                     // so neighboring native icons always have the same reserved space.
                     StatusBarComboStyleOneRuntime.reserveOverlayHostSlot(
                         root, anchor, requiredSlotWidthPx(),
                     )
-                }
-                if (displayGeometryChanged) {
-                    // A WindowContext belongs to its display. Rebuild through the owner Runtime
-                    // rather than moving a window created for the previous display.
-                    StatusBarComboStyleOneRuntime.refreshHostForOverlay(root)
-                } else {
                     if (!update(anchor, root)) {
                         StatusBarComboStyleOneRuntime.retryOverlayGeometry(root)
                         nextDelay = GLYPH_POSITION_IDLE_RETRY_INTERVAL_MS
@@ -1089,9 +1124,11 @@ object StatusBarComboStyleOneRuntime {
         val currentState = state
         return buildString {
             appendLine("SnapshotTimeMs=${System.currentTimeMillis()}")
+            val effectiveOverlay = cfg.overlayGlyph && INDEPENDENT_OVERLAY_RENDERING_ENABLED
             appendLine(
                 "Config enabled=${cfg.enabled},overlayGlyphRequested=${cfg.overlayGlyph}," +
-                    "effectiveIndependentOverlay=${INDEPENDENT_OVERLAY_RENDERING_ENABLED},renderPath=inline," +
+                    "effectiveIndependentOverlay=$effectiveOverlay," +
+                    "renderPath=${if (effectiveOverlay) "independent-window" else "inline"}," +
                     "showMobile=${cfg.showMobile},showWifi=${cfg.showWifi}," +
                     "signalMode=${cfg.signalMode},mobileTypeMode=${cfg.mobileTypeMode}," +
                     "stackedSignal=${cfg.stackedSignal},dataSimOnly=${cfg.dataSimOnly},dualSim=${cfg.dualSim}," +
@@ -1589,9 +1626,8 @@ object StatusBarComboStyleOneRuntime {
                 host.inline?.setTintOverride(rowTint)
                 host.overlay?.setTintOverride(rowTint)
             }
-            // Inline mode is deliberately used while the standalone window renderer is disabled
-            // for stability. Let the status-bar row own placement and clipping; do not attach a
-            // separate TYPE_STATUS_BAR_SUB_PANEL or poll its geometry.
+            // Independent-window rendering remains a real user-selectable mode. The global
+            // DisplayManager listener stays off; the single anchor watcher handles stable changes.
             val wantsOverlay = INDEPENDENT_OVERLAY_RENDERING_ENABLED &&
                 config.overlayGlyph && !host.overlayFailed
             val overlay = if (wantsOverlay) {
@@ -3606,10 +3642,13 @@ object StatusBarComboStyleOneRuntime {
                             val previous = config
                             val next = sanitize(status.comboStyleOneRuntime)
                             config = next
+                            val effectiveOverlay = config.overlayGlyph && INDEPENDENT_OVERLAY_RENDERING_ENABLED
                             diagnostic(
-                "Settings updated: enabled=${config.enabled}, overlayRequested=${config.overlayGlyph}, " +
-                    "renderPath=inline, style=${config.trioStyle}, signalMode=${config.signalMode}"
-            )
+                                "Settings updated: enabled=${config.enabled}, overlayRequested=${config.overlayGlyph}, " +
+                                    "effectiveIndependentOverlay=$effectiveOverlay, " +
+                                    "renderPath=${if (effectiveOverlay) "independent-window" else "inline"}, " +
+                                    "style=${config.trioStyle}, signalMode=${config.signalMode}"
+                            )
                             if (previous.enabled != next.enabled ||
                                 previous.overlayGlyph != next.overlayGlyph ||
                                 previous.showWifi != next.showWifi
@@ -3662,10 +3701,10 @@ object StatusBarComboStyleOneRuntime {
             }
         }
         ensureStateReceiver(app)
-        // Do not register a global DisplayManager listener for the inline renderer. On the
-        // foldable, SystemUI emits a burst of changed events for both logical displays; each
-        // event used to trigger multiple full host applies and overlay-window re-anchors.
-        diagnostic("Display geometry listener disabled: inline rendering owns native layout")
+        // Do not register a global DisplayManager listener. Foldable transitions can emit a burst
+        // of changed events for both logical displays; the independent window's own watcher
+        // confirms a stable display/size pair and rebuilds at most once per settled transition.
+        diagnostic("Global DisplayManager listener disabled: independent overlay uses debounced geometry watcher")
     }
 
     private fun ensureDisplayGeometryListener(context: Context) {
