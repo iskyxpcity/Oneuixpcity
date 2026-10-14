@@ -3351,8 +3351,12 @@ object StatusBarComboStyleOneRuntime {
             val connected = when {
                 !wm.isWifiEnabled -> false
                 reportedConnection != null -> reportedConnection
-                lastWifiBroadcastConnectionState != null -> lastWifiBroadcastConnectionState
-                transportConnected != null -> transportConnected
+                // A recorded disconnect beats a stale Wi-Fi Network/connectionInfo. A new
+                // CONNECTED broadcast replaces this latch before evaluating the snapshot.
+                lastWifiBroadcastConnectionState == false -> false
+                transportConnected == false -> false
+                lastWifiBroadcastConnectionState == true -> true
+                transportConnected == true -> true
                 else -> null
             }
             val info = runCatching { wm.connectionInfo }.getOrNull()
