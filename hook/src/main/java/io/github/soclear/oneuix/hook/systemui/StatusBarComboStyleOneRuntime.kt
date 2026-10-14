@@ -3369,7 +3369,12 @@ object StatusBarComboStyleOneRuntime {
             }.coerceIn(-1, 4)
             val wifiLevelChanged = state.wifiLevel != nextLevel
             state = state.copy(wifiLevel = nextLevel)
-            if (wifiLevelChanged) syncChargingRotationTicker(resetPhase = false)
+            if (wifiLevelChanged) {
+                syncChargingRotationTicker(resetPhase = false)
+                // updateWifi() is also called from the native view-model hook, outside the
+                // broadcast receiver. Redraw the independent custom window immediately.
+                invalidateGlyphs()
+            }
             diagnostic(
                 "Wi-Fi state: action=${sourceIntent?.action ?: "refresh"} " +
                     "broadcastConnected=${reportedConnection?.toString() ?: "unknown"} " +
