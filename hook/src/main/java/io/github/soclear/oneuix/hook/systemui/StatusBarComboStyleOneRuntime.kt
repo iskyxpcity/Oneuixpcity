@@ -185,6 +185,13 @@ object StatusBarComboStyleOneRuntime {
     // status icons. Keep the cluster visible and restore its exact padding as soon as an icon returns.
     private val nativeWifiClusterBaselinePadding =
         Collections.synchronizedMap(WeakHashMap<ViewGroup, IntArray>())
+    // Some Samsung builds measure StatusIconContainer wider than its width=0 LayoutParams.
+    // Preserve its native minimum width so the empty signal cluster can release the residue.
+    private val nativeWifiClusterBaselineMinimumWidth =
+        Collections.synchronizedMap(WeakHashMap<ViewGroup, Int>())
+    // One per-cluster listener; its value must not capture the WeakHashMap key.
+    private val nativeWifiClusterLayoutListeners =
+        Collections.synchronizedMap(WeakHashMap<ViewGroup, View.OnLayoutChangeListener>())
     private val pendingNativeWifiClusterReconciliations =
         Collections.synchronizedSet(Collections.newSetFromMap(WeakHashMap<ViewGroup, Boolean>()))
     private val pendingNativeWifiClusterCandidates = Collections.synchronizedMap(WeakHashMap<ViewGroup, View>())
@@ -2429,33 +2436,43 @@ object StatusBarComboStyleOneRuntime {
      * that container also owns Bluetooth, alarm and other native status-bar icons. The old
      * empty-cluster collapse heuristic misclassified these children on Samsung and hid them all.
      */
+    /**
+     * Release the empty native signal cluster's horizontal padding/minimum width after
+     * replacing native signals with the trio. Restore the exact baseline when any native
+     * icon has a real visible footprint; never hide the shared container itself.
+     */
     private fun scheduleNativeWifiClusterReconciliation(
         cluster: ViewGroup?,
         triggeringChild: View? = null,
         requestedVisibility: Int? = null,
     ) {
         if (cluster == null || !isStatusIconsCluster(cluster) || hostFor(cluster) == null) return
+        synchronized(nativeWifiClusterLayoutListeners) {
+            if (!nativeWifiClusterLayoutListeners.containsKey(cluster)) {
+                val listener = View.OnLayoutChangeListener { view, left, _, right, _, oldLeft, _, oldRight, _ ->
+                    // Horizontal changes only; ignore shade-height animation and avoid a poll loop.
+                    if (left != oldLeft || right != oldRight) {
+                        (view as? ViewGroup)?.let(::scheduleNativeWifiClusterReconciliation)
+                    }
+                }
+                nativeWifiClusterLayoutListeners[cluster] = listener
+                cluster.addOnLayoutChangeListener(listener)
+            }
+        }
         synchronized(pendingNativeWifiClusterReconciliations) {
             if (!pendingNativeWifiClusterReconciliations.add(cluster)) return
         }
-
         cluster.post {
             try {
-                // Samsung can retain a measured width made only from the empty Wi-Fi slot and
-                // horizontal cluster padding after wifi_combo is collapsed. Remove only that
-                // empty padding; never set the shared icon container GONE or collapse its width.
                 val baselinePadding = synchronized(nativeWifiClusterBaselinePadding) {
-                    nativeWifiClusterBaselinePadding[cluster]
-                        ?: intArrayOf(
-                            cluster.paddingLeft, cluster.paddingTop,
-                            cluster.paddingRight, cluster.paddingBottom,
-                        ).also { nativeWifiClusterBaselinePadding[cluster] = it }
+                    nativeWifiClusterBaselinePadding[cluster] ?: intArrayOf(
+                        cluster.paddingLeft, cluster.paddingTop, cluster.paddingRight, cluster.paddingBottom,
+                    ).also { nativeWifiClusterBaselinePadding[cluster] = it }
                 }
-                // StatusIconContainer can leave placeholder holders (satellite/stacked
-                // mobile/Compose wrappers) marked VISIBLE even when they occupy 0x0 pixels.
-                // Counting visibility alone repeatedly restores the two 10px paddings and
-                // recreates the Wi-Fi gap. Only a real laid-out, unsuppressed icon is evidence
-                // that the shared cluster needs its original horizontal padding.
+                val baselineMinimumWidth = synchronized(nativeWifiClusterBaselineMinimumWidth) {
+                    nativeWifiClusterBaselineMinimumWidth[cluster]
+                        ?: cluster.minimumWidth.also { nativeWifiClusterBaselineMinimumWidth[cluster] = it }
+                }
                 fun hasVisibleNativeIconFootprint(view: View): Boolean {
                     var current: View? = view
                     while (current != null) {
@@ -2464,12 +2481,11 @@ object StatusBarComboStyleOneRuntime {
                         current = current.parent as? View
                     }
                     if (current !== cluster || isSuppressedNativeStatusChild(view)) return false
-                    val width = max(view.width, view.measuredWidth)
-                    val height = max(view.height, view.measuredHeight)
-                    return width > 0 && height > 0
+                    return max(view.width, view.measuredWidth) > 0 &&
+                        max(view.height, view.measuredHeight) > 0
                 }
-                val hasVisibleNativeIcon = (0 until cluster.childCount).any { index ->
-                    hasVisibleNativeIconFootprint(cluster.getChildAt(index))
+                val hasVisibleNativeIcon = (0 until cluster.childCount).any {
+                    hasVisibleNativeIconFootprint(cluster.getChildAt(it))
                 }
                 val zeroFootprintVisibleChildren = (0 until cluster.childCount).mapNotNull { index ->
                     val child = cluster.getChildAt(index)
@@ -2478,44 +2494,56 @@ object StatusBarComboStyleOneRuntime {
                         (max(child.width, child.measuredWidth) <= 0 ||
                             max(child.height, child.measuredHeight) <= 0)
                     ) {
-                        val slot = (slotOf(child) ?: knownIconSlots[child] ?: resourceName(child)).ifBlank { child.javaClass.simpleName }
+                        val slot = (slotOf(child) ?: knownIconSlots[child] ?: resourceName(child))
+                            .ifBlank { child.javaClass.simpleName }
                         "$slot:${child.javaClass.simpleName}:${child.width}x${child.height}/" +
                             "${child.measuredWidth}x${child.measuredHeight}"
                     } else null
                 }.take(8).joinToString(",")
                 val targetLeft = if (hasVisibleNativeIcon) baselinePadding[0] else 0
                 val targetRight = if (hasVisibleNativeIcon) baselinePadding[2] else 0
+                val targetMinimumWidth = if (hasVisibleNativeIcon) baselineMinimumWidth else 0
                 val paddingChanged = cluster.paddingLeft != targetLeft ||
                     cluster.paddingRight != targetRight ||
                     cluster.paddingTop != baselinePadding[1] ||
                     cluster.paddingBottom != baselinePadding[3]
+                val minimumWidthChanged = cluster.minimumWidth != targetMinimumWidth
                 if (paddingChanged) {
                     cluster.setPadding(targetLeft, baselinePadding[1], targetRight, baselinePadding[3])
                 }
-                cluster.requestLayout()
-                (cluster.parent as? View)?.requestLayout()
-                (cluster.parent as? View)?.invalidate()
+                if (minimumWidthChanged) cluster.setMinimumWidth(targetMinimumWidth)
+                // Request a row remeasure only when a baseline property actually changes.
+                if (paddingChanged || minimumWidthChanged) {
+                    cluster.requestLayout()
+                    (cluster.parent as? View)?.requestLayout()
+                    (cluster.parent as? View)?.invalidate()
+                }
                 val lp = cluster.layoutParams
                 val row = cluster.parent as? View
-                val stage = if (hasVisibleNativeIcon) "native-icon-present-restore-padding" else "empty-wifi-padding-collapse"
+                val stage = if (hasVisibleNativeIcon) "native-icon-present-restore-baseline"
+                    else "empty-native-signal-cluster-release-width"
                 val snapshot = "stage=" + stage + "|visibility=" + cluster.visibility +
                     "|size=" + cluster.width + "x" + cluster.height +
                     "|measured=" + cluster.measuredWidth + "x" + cluster.measuredHeight +
                     "|padding=${cluster.paddingLeft},${cluster.paddingTop},${cluster.paddingRight},${cluster.paddingBottom}" +
                     "|baselinePadding=${baselinePadding.contentToString()}|paddingChanged=${paddingChanged}" +
-                    "|zeroFootprintVisible=$zeroFootprintVisibleChildren" +
+                    "|minimumWidth=${cluster.minimumWidth}|baselineMinimumWidth=${baselineMinimumWidth}" +
+                    "|minimumWidthChanged=${minimumWidthChanged}|zeroFootprintVisible=$zeroFootprintVisibleChildren" +
                     "|lp=" + lp?.width + "x" + lp?.height + "|childCount=" + cluster.childCount +
                     "|row=" + row?.javaClass?.simpleName + ":" + row?.width + "x" + row?.height
                 if (lastNativeWifiClusterDiagnostics.put(cluster, snapshot) != snapshot) {
                     diagnostic("Native Wi-Fi parent layout: " + snapshot)
                 }
+                // One deferred diagnostic only. If SystemUI resets these properties during layout,
+                // the cluster's horizontal layout listener queues the next reconciliation.
                 cluster.postDelayed({
-                    val afterRow = cluster.parent as? View
+                    val rowAfter = cluster.parent as? View
                     val after = "stage=after-row-layout|visibility=" + cluster.visibility +
                         "|size=" + cluster.width + "x" + cluster.height +
                         "|measured=" + cluster.measuredWidth + "x" + cluster.measuredHeight +
                         "|padding=${cluster.paddingLeft},${cluster.paddingTop},${cluster.paddingRight},${cluster.paddingBottom}" +
-                        "|row=" + afterRow?.javaClass?.simpleName + ":" + afterRow?.width + "x" + afterRow?.height
+                        "|minimumWidth=${cluster.minimumWidth}" +
+                        "|row=" + rowAfter?.javaClass?.simpleName + ":" + rowAfter?.width + "x" + rowAfter?.height
                     if (lastNativeWifiClusterDiagnostics.put(cluster, after) != after) {
                         diagnostic("Native Wi-Fi parent layout: " + after)
                     }
@@ -2546,6 +2574,13 @@ object StatusBarComboStyleOneRuntime {
             val baselinePadding = synchronized(nativeWifiClusterBaselinePadding) {
                 nativeWifiClusterBaselinePadding.remove(cluster)
             }
+            val baselineMinimumWidth = synchronized(nativeWifiClusterBaselineMinimumWidth) {
+                nativeWifiClusterBaselineMinimumWidth.remove(cluster)
+            }
+            val listener = synchronized(nativeWifiClusterLayoutListeners) {
+                nativeWifiClusterLayoutListeners.remove(cluster)
+            }
+            if (listener != null) cluster.removeOnLayoutChangeListener(listener)
             if (baselineVisibility != null) setNativeWifiClusterVisibility(cluster, baselineVisibility)
             if (baselinePadding != null) {
                 cluster.setPadding(
@@ -2553,12 +2588,14 @@ object StatusBarComboStyleOneRuntime {
                     baselinePadding[2], baselinePadding[3],
                 )
             }
-            if (baselineVisibility != null || baselinePadding != null) {
+            if (baselineMinimumWidth != null) cluster.setMinimumWidth(baselineMinimumWidth)
+            if (baselineVisibility != null || baselinePadding != null || baselineMinimumWidth != null) {
                 cluster.requestLayout()
                 (cluster.parent as? View)?.requestLayout()
                 diagnostic("Native Wi-Fi parent layout: stage=restore-native-state visibility=" +
                     cluster.visibility + " size=" + cluster.width + "x" + cluster.height +
-                    " padding=${cluster.paddingLeft},${cluster.paddingTop},${cluster.paddingRight},${cluster.paddingBottom}")
+                    " padding=${cluster.paddingLeft},${cluster.paddingTop},${cluster.paddingRight},${cluster.paddingBottom}" +
+                    " minimumWidth=${cluster.minimumWidth}")
             }
         }
     }
