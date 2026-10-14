@@ -11,6 +11,7 @@ import android.graphics.Color
 import android.graphics.PixelFormat
 import android.graphics.PorterDuff
 import android.graphics.Rect
+import android.net.NetworkInfo
 import android.net.wifi.WifiManager
 import android.os.BatteryManager
 import android.os.Build
@@ -103,6 +104,9 @@ object StatusBarComboStyleOneRuntime {
         }
     }
     @Volatile private var stateReceiverReady = false
+    // Preserve explicit Wi-Fi association transitions so stale framework snapshots cannot
+    // resurrect a phantom one-bar glyph after the access point has disconnected.
+    @Volatile private var lastWifiBroadcastConnectionState: Boolean? = null
     @Volatile private var tint = Color.WHITE
     @Volatile private var defaultDataSubscriptionId = SubscriptionManager.INVALID_SUBSCRIPTION_ID
     @Volatile private var subscriptionsListener: SubscriptionManager.OnSubscriptionsChangedListener? = null
@@ -3231,6 +3235,7 @@ object StatusBarComboStyleOneRuntime {
                 addAction(PowerManager.ACTION_POWER_SAVE_MODE_CHANGED)
                 addAction(WifiManager.RSSI_CHANGED_ACTION)
                 addAction(WifiManager.NETWORK_STATE_CHANGED_ACTION)
+                addAction(WifiManager.WIFI_STATE_CHANGED_ACTION)
                 addAction("android.intent.action.ACTION_DEFAULT_DATA_SUBSCRIPTION_CHANGED")
                 addAction("android.intent.action.SUBSCRIPTION_PHONE_STATE_CHANGED")
             }
@@ -3243,7 +3248,9 @@ object StatusBarComboStyleOneRuntime {
                         Intent.ACTION_POWER_CONNECTED, Intent.ACTION_POWER_DISCONNECTED ->
                             updateBattery(app.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED)))
                         PowerManager.ACTION_POWER_SAVE_MODE_CHANGED -> updatePowerSave(app)
-                        WifiManager.RSSI_CHANGED_ACTION, WifiManager.NETWORK_STATE_CHANGED_ACTION -> updateWifi(app)
+                        WifiManager.RSSI_CHANGED_ACTION,
+                        WifiManager.NETWORK_STATE_CHANGED_ACTION,
+                        WifiManager.WIFI_STATE_CHANGED_ACTION -> updateWifi(app, intent)
                         else -> refreshTelephony(app)
                     }
                     invalidateGlyphs()
@@ -3306,14 +3313,48 @@ object StatusBarComboStyleOneRuntime {
             }.getOrDefault(false)
         }
 
-    private fun updateWifi(context: Context) {
+    private fun wifiConnectionStateFromBroadcast(intent: Intent?): Boolean? {
+        intent ?: return null
+        return when (intent.action) {
+            WifiManager.WIFI_STATE_CHANGED_ACTION -> when (
+                intent.getIntExtra(WifiManager.EXTRA_WIFI_STATE, WifiManager.WIFI_STATE_UNKNOWN)
+            ) {
+                WifiManager.WIFI_STATE_DISABLED, WifiManager.WIFI_STATE_DISABLING -> false
+                else -> null
+            }
+            WifiManager.NETWORK_STATE_CHANGED_ACTION -> {
+                @Suppress("DEPRECATION")
+                val networkInfo = runCatching {
+                    intent.getParcelableExtra<NetworkInfo>(WifiManager.EXTRA_NETWORK_INFO)
+                }.getOrNull()
+                when (networkInfo?.state) {
+                    NetworkInfo.State.CONNECTED -> true
+                    NetworkInfo.State.DISCONNECTED,
+                    NetworkInfo.State.DISCONNECTING -> false
+                    else -> null
+                }
+            }
+            else -> null
+        }
+    }
+
+    private fun updateWifi(context: Context, sourceIntent: Intent? = null) {
         val wm = context.getSystemService(Context.WIFI_SERVICE) as? WifiManager ?: return
         runCatching {
-            // SystemUI's NetworkCapabilities is authoritative when it can confirm that
-            // no Wi-Fi transport is connected. WifiManager.connectionInfo may retain the
-            // previous network ID/RSSI briefly after disconnection, which must not keep
-            // the in-ring Wi-Fi mark visible in place of the mobile network type.
-            val connected = isWifiTransportConnected(context)
+            val reportedConnection = wifiConnectionStateFromBroadcast(sourceIntent)
+            if (reportedConnection != null) lastWifiBroadcastConnectionState = reportedConnection
+
+            // Visibility of the native slot is not the same as AP association. Samsung may
+            // retain a Visible model with a one-bar/no-network drawable after the AP is gone.
+            // Explicit DISCONNECTED/Wi-Fi-disabled reports beat stale WifiInfo and network caps.
+            val transportConnected = isWifiTransportConnected(context)
+            val connected = when {
+                !wm.isWifiEnabled -> false
+                reportedConnection != null -> reportedConnection
+                lastWifiBroadcastConnectionState != null -> lastWifiBroadcastConnectionState
+                transportConnected != null -> transportConnected
+                else -> null
+            }
             val info = runCatching { wm.connectionInfo }.getOrNull()
             val nextLevel = when {
                 connected == false -> -1
@@ -3326,9 +3367,12 @@ object StatusBarComboStyleOneRuntime {
             state = state.copy(wifiLevel = nextLevel)
             if (wifiLevelChanged) syncChargingRotationTicker(resetPhase = false)
             diagnostic(
-                "Wi-Fi state: connected=${connected?.toString() ?: "unknown"} " +
-                    "radioEnabled=${wm.isWifiEnabled} networkId=${info?.networkId ?: -1} " +
-                    "rssi=${info?.rssi ?: -127} level=${state.wifiLevel}"
+                "Wi-Fi state: action=${sourceIntent?.action ?: "refresh"} " +
+                    "broadcastConnected=${reportedConnection?.toString() ?: "unknown"} " +
+                    "lastBroadcastConnected=${lastWifiBroadcastConnectionState?.toString() ?: "unknown"} " +
+                    "transportConnected=${transportConnected?.toString() ?: "unknown"} " +
+                    "connected=${connected?.toString() ?: "unknown"} radioEnabled=${wm.isWifiEnabled} " +
+                    "networkId=${info?.networkId ?: -1} rssi=${info?.rssi ?: -127} level=${state.wifiLevel}"
             )
         }
     }
@@ -4053,6 +4097,9 @@ object StatusBarComboStyleOneRuntime {
      * the native status-bar Wi-Fi view was visibly connected.
      */
     private fun isWifiTransportConnected(context: Context): Boolean? {
+        val wifi = context.getSystemService(Context.WIFI_SERVICE) as? WifiManager
+        // Radio-off is definitive even while ConnectivityManager tears down the old Network.
+        if (wifi?.isWifiEnabled == false) return false
         val connectivity = context.getSystemService(Context.CONNECTIVITY_SERVICE)
             as? android.net.ConnectivityManager ?: return null
         val networks = runCatching { connectivity.allNetworks }.getOrNull() ?: return null
@@ -4070,7 +4117,6 @@ object StatusBarComboStyleOneRuntime {
         // Its connectionInfo can lag behind the actual network transition and expose a
         // stale networkId/RSSI from the just-disconnected access point.
         if (queriedAny) return false
-        val wifi = context.getSystemService(Context.WIFI_SERVICE) as? WifiManager
         val info = runCatching { wifi?.connectionInfo }.getOrNull()
         if (wifi?.isWifiEnabled == true && info != null &&
             info.networkId >= 0 && info.rssi != -127
@@ -4097,40 +4143,7 @@ object StatusBarComboStyleOneRuntime {
         }
     }
 
-    /**
-     * The collapsed SystemUI Wi-Fi model is the same live state that flips the native
-     * status-bar icon. Use it as the authoritative connection signal for the custom
-     * in-ring glyph; WifiManager.connectionInfo can retain stale RSSI/networkId when
-     * an access point disappears (for example, when the router is powered off).
-     */
-    private fun syncWifiGlyphFromSystemUiModel(context: Context, connected: Boolean) {
-        val previousLevel = state.wifiLevel
-        val nextLevel = if (!connected) {
-            -1
-        } else if (previousLevel >= 1) {
-            previousLevel
-        } else {
-            val wifi = context.getSystemService(Context.WIFI_SERVICE) as? WifiManager
-            val info = runCatching { wifi?.connectionInfo }.getOrNull()
-            val measured = if (info != null && info.rssi != -127) {
-                runCatching { WifiManager.calculateSignalLevel(info.rssi, 5) }.getOrNull()
-            } else {
-                null
-            }
-            // SystemUI's Visible model means Wi-Fi is currently displayed as connected.
-            // Keep a minimum non-zero level if RSSI is unavailable or temporarily reads 0.
-            measured?.coerceAtLeast(1)?.coerceAtMost(4) ?: 1
-        }
-        if (previousLevel == nextLevel) return
-
-        state = state.copy(wifiLevel = nextLevel)
-        syncChargingRotationTicker(resetPhase = false)
-        diagnostic(
-            "Wi-Fi glyph synchronized from SystemUI model: connected=$connected " +
-                "previousLevel=$previousLevel level=$nextLevel"
-        )
-        invalidateGlyphs()
-    }
+    // A Visible/Hidden icon model reports slot visibility, not necessarily a live Wi-Fi association.
 
     private fun hookModernWifiVisibility(module: XposedModule, classLoader: ClassLoader) {
         val className = "com.android.systemui.statusbar.pipeline.wifi.ui.view.ModernStatusBarWifiView"
@@ -4169,9 +4182,9 @@ object StatusBarComboStyleOneRuntime {
                     val nativeWasVisible = nativeWifiBaselineVisibility[view] == View.VISIBLE
                     val modelVisible = readModernWifiModelVisibility(view)
                     if (modelVisible != null) {
-                        // Synchronize the custom ring glyph directly with SystemUI's live
-                        // Visible/Hidden model before deciding native-view visibility.
-                        syncWifiGlyphFromSystemUiModel(view.context, modelVisible)
+                        // Visibility is not connection truth: a Visible model may keep a
+                        // one-bar/no-network glyph after disconnect. Refresh from Wi-Fi state.
+                        updateWifi(view.context)
                     }
                     val wifiConnected = isWifiTransportConnected(view.context)
                     val desiredVisible = modelVisible
