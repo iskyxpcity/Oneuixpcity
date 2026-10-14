@@ -223,8 +223,8 @@ object StatusBarComboStyleOneRuntime {
         var activeDisplayHeight: Int = -1
         var geometryRetryPending = false
         var geometryRetryAttempts = 0
-        // Foldable display transitions can temporarily report no cutout. Retry geometry
-        // without inserting a wide inline glyph into the status-bar row.
+        // WindowManager/layout timing can temporarily delay the right-slot anchor.
+        // Retry the independent window without inserting a wide inline glyph into the row.
         val geometryRetry = Runnable {
             geometryRetryPending = false
             if (!retired && !applying &&
@@ -336,8 +336,8 @@ object StatusBarComboStyleOneRuntime {
         private val glyph = GlyphView(context)
         private var params: WindowManager.LayoutParams? = null
 
-        fun attach(anchor: View, root: ViewGroup, cameraBounds: Rect): Boolean {
-            if (params != null) return update(anchor, root, cameraBounds)
+        fun attach(anchor: View, root: ViewGroup): Boolean {
+            if (params != null) return update(anchor, root)
             val cfg = StatusBarComboStyleOneRuntime.config
             val width = StatusBarComboStyleOneRuntime.dp(
                 context, StatusComboStyleOneGlyphRenderer.glyphWidthDp(cfg, StatusBarComboStyleOneRuntime.state.networkType),
@@ -349,7 +349,7 @@ object StatusBarComboStyleOneRuntime {
                 WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or
                 WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
                 // Without NO_LIMITS, Samsung may inset an independent overlay below
-                // the status bar. The camera/punch-hole is inside that bar.
+                // the status bar. Keep the window free to use status-bar screen coordinates.
                 WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
 
             for (type in windowTypeCandidates()) {
@@ -376,9 +376,9 @@ object StatusBarComboStyleOneRuntime {
                     params = lp
                     diagnostic(
                         "Glyph overlay attached: type=$type displayId=${display?.displayId} " +
-                            "size=${width}x${height} flags=$flags cameraBounds=$cameraBounds"
+                            "size=${width}x${height} flags=$flags placement=statusbar-right-slot"
                     )
-                    if (!update(anchor, root, cameraBounds)) {
+                    if (!update(anchor, root)) {
                         detach()
                         return false
                     }
@@ -413,10 +413,9 @@ object StatusBarComboStyleOneRuntime {
             return result.toList()
         }
 
-        fun update(anchor: View, root: ViewGroup, cameraBounds: Rect): Boolean {
+        fun update(anchor: View, root: ViewGroup): Boolean {
             val lp = params ?: return false
             glyph.setStatusBarRootForTypeBounds(root)
-            val cutout = Rect(cameraBounds)
             val oldX = lp.x
             val oldY = lp.y
             val oldWidth = lp.width
@@ -431,9 +430,9 @@ object StatusBarComboStyleOneRuntime {
             val designHeightUnits = StatusComboStyleOneGlyphRenderer.glyphDesignHeight(cfg, StatusBarComboStyleOneRuntime.state.networkType)
             val ringCenterXUnits = StatusComboStyleOneGlyphRenderer.glyphCenterX(cfg, networkType)
             val centreRatioY = StatusComboStyleOneGlyphRenderer.glyphVerticalCenterRatio(cfg, StatusBarComboStyleOneRuntime.state.networkType)
-            // The cutout bounds decide whether independent rendering is available, but they
-            // must not position the glyph. The native battery slot is the layout anchor: its
-            // right edge remains fixed while the slot/window gain width to the left.
+            // Independent rendering is positioned at the normal right-side status-bar slot,
+            // not at the camera cutout. Use the native battery slot's trailing edge as the
+            // anchor so the ring replaces the battery at its usual status-bar position.
             val anchorLocation = IntArray(2)
             val anchorLocated = anchor.isAttachedToWindow &&
                 runCatching { anchor.getLocationOnScreen(anchorLocation) }.isSuccess
@@ -478,7 +477,7 @@ object StatusBarComboStyleOneRuntime {
                 "Glyph overlay slot-anchored coordinates: type=${lp.type} slotRightPx=${slotRightPx} " +
                     "slotCenterY=${slotCenterY} anchorSize=${anchor.width}x${anchor.height} " +
                     "anchorLocated=${anchorLocated} window=(${lp.x},${lp.y}) size=${lp.width}x${lp.height} " +
-                    "ringCenterScreenX=${ringCenterScreenPx} cutoutBounds=${cutout}(diagnostic-only)"
+                    "ringCenterScreenX=${ringCenterScreenPx} placement=statusbar-right-slot"
             )
             if (oldX != lp.x || oldY != lp.y || oldWidth != lp.width || oldHeight != lp.height) {
                 runCatching { wm?.updateViewLayout(glyph, lp) }
@@ -646,16 +645,10 @@ object StatusBarComboStyleOneRuntime {
                 val battery = host.battery ?: return@forEach
                 val overlay = host.overlay ?: return@forEach
 
-                // QuickStar-style native visibility remains authoritative even while the
-                // shade expands. Re-resolve camera geometry because the active foldable
-                // display may have changed while the same SystemUI host was reused.
-                val cameraBounds = cutoutBounds(host.root)
-                if (cameraBounds == null) {
-                    apply(host)
-                    return@forEach
-                }
+                // Keep the independent window attached to the native battery slot while the
+                // shade expands. Cutout geometry is diagnostic-only and never controls placement.
                 updateOverlayHostSlot(host, battery)
-                if (overlay.update(battery, host.root, cameraBounds)) {
+                if (overlay.update(battery, host.root)) {
                     overlay.setShadeVisible(true)
                     overlay.invalidate()
                 } else {
@@ -757,13 +750,10 @@ object StatusBarComboStyleOneRuntime {
     }
 
     /**
-     * Resolve the actual camera cutout for the currently attached SystemUI root.
-     *
-     * Do not assume the punch-hole sits near the horizontal centre. Samsung foldable
-     * inner displays can put the camera well to the right. A reported rectangle is
-     * accepted only when it fits the active display and touches the top edge where
-     * the status bar is hosted. If no such rectangle is reported, return null so the
-     * caller uses the inline renderer instead of fabricating centre coordinates.
+     * Read reported camera-cutout geometry for diagnostics only.
+     * The independent combo window is intentionally anchored to the normal right-side
+     * status-bar battery slot; missing or stale cutout geometry must not affect placement
+     * or force the renderer back into the native icon row.
      */
     private fun cutoutBounds(root: View): Rect? {
         if (Build.VERSION.SDK_INT < 28) return null
@@ -954,7 +944,7 @@ object StatusBarComboStyleOneRuntime {
                 appendLine(
                     "Display id=${root.display?.displayId},realSizePx=${displaySize.x}x${displaySize.y}," +
                         "metricsPx=${metrics.widthPixels}x${metrics.heightPixels},density=${metrics.density}," +
-                        "densityDpi=${metrics.densityDpi},cameraBounds=${camera}"
+                        "densityDpi=${metrics.densityDpi},reportedCutoutBounds=${camera}(diagnostic-only)"
                 )
                 appendLine(
                     "Root class=${root.javaClass.name},resource=${resourceName(root)},screenOrigin=${rootScreen.contentToString()}," +
@@ -1212,16 +1202,11 @@ object StatusBarComboStyleOneRuntime {
                     glyph.invalidate()
                 }
                 host.overlay?.let { overlay ->
-                    val cameraBounds = cutoutBounds(host.root)
-                    if (cameraBounds == null) {
-                        apply(host)
+                    updateOverlayHostSlot(host, battery)
+                    if (overlay.update(battery, host.root)) {
+                        overlay.invalidate()
                     } else {
-                        updateOverlayHostSlot(host, battery)
-                        if (overlay.update(battery, host.root, cameraBounds)) {
-                            overlay.invalidate()
-                        } else {
-                            apply(host)
-                        }
+                        apply(host)
                     }
                 }
             }
@@ -1405,18 +1390,9 @@ object StatusBarComboStyleOneRuntime {
                 host.inline?.setTintOverride(rowTint)
                 host.overlay?.setTintOverride(rowTint)
             }
-            // Resolve the active display's camera before touching native status-bar slots.
-            // If Samsung has not supplied valid geometry yet, leave the whole native icon row alone
-            // and perform at most one delayed retry; never collapse/restore it on a retry loop.
+            // Independent-window mode no longer waits for a camera/punch-hole report.
+            // Positioning uses the native battery slot at the status-bar's right side.
             val wantsOverlay = config.overlayGlyph && !host.overlayFailed
-            val overlayCameraBounds = if (wantsOverlay) cutoutBounds(root) else null
-            if (wantsOverlay && overlayCameraBounds == null) {
-                if (!host.geometryRetryPending && host.geometryRetryAttempts == 0) {
-                    diagnostic("No stable cutout geometry yet; leaving native status-bar layout unchanged")
-                }
-                scheduleGeometryRetry(host)
-                return
-            }
 
             val foldMobile = isMobileNativeSuppressed()
 
@@ -1446,13 +1422,12 @@ object StatusBarComboStyleOneRuntime {
             }
 
             if (wantsOverlay) {
-                // Geometry was checked before suppressing any native slot. Reuse that one
-                // snapshot throughout this apply pass so all icon/window work is atomic.
-                val cameraBounds = requireNotNull(overlayCameraBounds)
+                // Keep the glyph in an independent window at the native right-side battery slot.
+                // Camera geometry is intentionally not required for attach or positioning.
                 removeInline(host)
                 val overlay = host.overlay ?: GlyphOverlay(root.context, root.display).also { host.overlay = it }
                 overlay.setTintOverride(host.rowTint)
-                if (!overlay.attach(battery, root, cameraBounds)) {
+                if (!overlay.attach(battery, root)) {
                     // Failed attachment must restore every native view changed above.
                     // Never leave the row collapsed while a retry waits.
                     diagnostic("Overlay attach failed; restoring native icon row and retrying once")
@@ -1468,7 +1443,7 @@ object StatusBarComboStyleOneRuntime {
                     // right edge, not to the camera/cutout position.
                     updateOverlayHostSlot(host, battery)
                     overlay.setShadeVisible(true)
-                    overlay.update(battery, root, cameraBounds)
+                    overlay.update(battery, root)
                     overlay.invalidate()
                 }
             } else {
@@ -2541,7 +2516,7 @@ object StatusBarComboStyleOneRuntime {
                 // During shade expansion, the native surface is temporarily the glyph
                 // renderer's canvas. Paint OneuiXP there only when the overlay is hidden.
                 if (shadeBusy && config.overlayGlyph && host.overlay != null &&
-                    host.shadeDrawTarget === view && cutoutBounds(host.root) == null
+                    host.shadeDrawTarget === view
                 ) {
                     val currentState = state
                     StatusComboStyleOneGlyphRenderer.draw(
