@@ -30,6 +30,7 @@ import android.util.Log
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewTreeObserver
 import android.view.WindowManager
 import android.widget.FrameLayout
 import android.widget.LinearLayout
@@ -177,6 +178,13 @@ object StatusBarComboStyleOneRuntime {
     // SystemUI's true Visible/Hidden state when the custom arc is switched off.
     private val modernWifiViewModels = Collections.synchronizedMap(WeakHashMap<View, WeakReference<Any>>())
     private val lastNativeWifiDiagnostics = Collections.synchronizedMap(WeakHashMap<View, String>())
+    // A Samsung ModernStatusBarWifiView can draw its full Wi-Fi signal and its 54dp
+    // status_bar_dot child simultaneously after the Combo view state is restored.
+    // Reconcile on global layout so a later SystemUI rebind cannot bring the dot back.
+    private val nativeWifiDotGuardListeners =
+        Collections.synchronizedMap(WeakHashMap<ViewGroup, ViewTreeObserver.OnGlobalLayoutListener>())
+    private val nativeWifiDotGuardObservers =
+        Collections.synchronizedMap(WeakHashMap<ViewGroup, WeakReference<ViewTreeObserver>>())
     // AOSP/Samsung can keep a measured width after native Wi-Fi is collapsed.
     private val nativeWifiClusterBaselineVisibility = Collections.synchronizedMap(WeakHashMap<ViewGroup, Int>())
     // Only remove horizontal padding while the Wi-Fi-replaced cluster has no visible native
@@ -1470,6 +1478,7 @@ object StatusBarComboStyleOneRuntime {
                 host.overlay?.detach()
                 return
             }
+            if (config.enabled) ensureNativeWifiDotGuard(root)
             if (!config.enabled || !config.showWifi) restoreNativeWifiClusters(root)
             val currentDisplayId = root.display?.displayId ?: -1
             val currentDisplaySize = activeDisplaySize(root)
@@ -1613,9 +1622,24 @@ object StatusBarComboStyleOneRuntime {
                     (config.showWifi && wifiCandidate) ||
                     (foldMobile && isMobileIcon(view)) ||
                     (config.showMobile && config.mobileTypeMode == 2 && isMobileTypeView(view))
-                if (hide) collapseHostView(host, view) else restoreHostView(host, view)
-                if (wifiCandidate) diagnoseNativeWifiView(view, if (hide) "apply-collapse" else "apply-restore")
+                // Keep the original dot snapshot while the real native Wi-Fi signal is
+                // visible. Restoring this child on every apply would flash it over wifi_signal.
+                val preserveWifiDot = config.enabled && !config.showWifi &&
+                    isNativeWifiStatusBarDot(view) && hasVisibleNativeWifiSignal(view)
+                if (hide) collapseHostView(host, view)
+                else if (!preserveWifiDot) restoreHostView(host, view)
+                if (wifiCandidate) {
+                    val action = when {
+                        hide -> "apply-collapse"
+                        preserveWifiDot -> "apply-dot-guard"
+                        else -> "apply-restore"
+                    }
+                    diagnoseNativeWifiView(view, action)
+                }
             }
+            // Hide only the overlaid status_bar_dot while the native Wi-Fi signal itself is
+            // visible. If SystemUI switches to dot-only mode, restore the captured native state.
+            reconcileNativeWifiStatusBarDots(root)
             if (config.enabled && config.showWifi) {
                 views.filterIsInstance<ViewGroup>().filter(::isStatusIconsCluster).forEach { cluster ->
                     scheduleNativeWifiClusterReconciliation(cluster)
@@ -2166,12 +2190,21 @@ object StatusBarComboStyleOneRuntime {
                     (isMobileNativeSuppressed() && isMobileIcon(view)) ||
                     (config.showMobile && config.mobileTypeMode == 2 && isMobileTypeView(view))
             )
-            if (hide) collapseHostView(host, view) else restoreHostView(host, view)
+            val preserveWifiDot = config.enabled && !config.showWifi &&
+                isNativeWifiStatusBarDot(view) && hasVisibleNativeWifiSignal(view)
+            if (hide) collapseHostView(host, view)
+            else if (!preserveWifiDot) restoreHostView(host, view)
             if (wifiCandidate) {
-                diagnoseNativeWifiView(view, if (hide) "container-collapse" else "container-restore")
+                val action = when {
+                    hide -> "container-collapse"
+                    preserveWifiDot -> "container-dot-guard"
+                    else -> "container-restore"
+                }
+                diagnoseNativeWifiView(view, action)
                 if (hide && config.enabled && config.showWifi) scheduleNativeWifiClusterReconciliation(view.parent as? ViewGroup)
             }
         }
+        reconcileNativeWifiStatusBarDots(container)
         lastContainerFingerprints[container] = containerSuppressionFingerprint(container)
     }
 
@@ -4584,6 +4617,96 @@ object StatusBarComboStyleOneRuntime {
     }
 
     // A Visible/Hidden icon model reports slot visibility, not necessarily a live Wi-Fi association.
+
+    private fun isModernNativeWifiView(view: View): Boolean =
+        view.javaClass.name == "com.android.systemui.statusbar.pipeline.wifi.ui.view.ModernStatusBarWifiView"
+
+    private fun isNativeWifiStatusBarDot(view: View): Boolean =
+        resourceName(view).equals("status_bar_dot", ignoreCase = true) &&
+            (slotOf(view) ?: knownIconSlots[view]).orEmpty().equals("wifi", ignoreCase = true) &&
+            generateSequence(view.parent as? View) { it.parent as? View }
+                .any(::isModernNativeWifiView)
+
+    private fun hasVisibleNativeWifiSignal(wifiViewOrDot: View): Boolean {
+        val wifiView = if (isModernNativeWifiView(wifiViewOrDot)) {
+            wifiViewOrDot
+        } else {
+            generateSequence(wifiViewOrDot.parent as? View) { it.parent as? View }
+                .firstOrNull(::isModernNativeWifiView) ?: return false
+        }
+        if (wifiView.visibility != View.VISIBLE || wifiView.alpha <= 0f) return false
+        val signal = descendants(wifiView).firstOrNull {
+            resourceName(it).equals("wifi_signal", ignoreCase = true)
+        } ?: return false
+        if (max(signal.width, signal.measuredWidth) <= 0 ||
+            max(signal.height, signal.measuredHeight) <= 0
+        ) return false
+        var current: View? = signal
+        while (current != null) {
+            if (current.visibility != View.VISIBLE || current.alpha <= 0f) return false
+            if (current === wifiView) return true
+            current = current.parent as? View
+        }
+        return false
+    }
+
+    private fun ensureNativeWifiDotGuard(root: ViewGroup) {
+        if (!root.isAttachedToWindow) return
+        val observer = root.viewTreeObserver
+        if (!observer.isAlive) return
+        synchronized(nativeWifiDotGuardListeners) {
+            val existing = nativeWifiDotGuardListeners[root]
+            val previousObserver = nativeWifiDotGuardObservers[root]?.get()
+            if (existing != null && previousObserver === observer) return
+            if (existing != null && previousObserver?.isAlive == true) {
+                runCatching { previousObserver.removeOnGlobalLayoutListener(existing) }
+            }
+            val listener = existing ?: object : ViewTreeObserver.OnGlobalLayoutListener {
+                private val rootRef = WeakReference(root)
+                override fun onGlobalLayout() {
+                    val currentRoot = rootRef.get() ?: return
+                    if (!currentRoot.isAttachedToWindow) return
+                    if (config.enabled) reconcileNativeWifiStatusBarDots(currentRoot)
+                }
+            }
+            nativeWifiDotGuardListeners[root] = listener
+            nativeWifiDotGuardObservers[root] = WeakReference(observer)
+            observer.addOnGlobalLayoutListener(listener)
+        }
+    }
+
+    private fun reconcileNativeWifiStatusBarDots(root: View) {
+        if (!config.enabled || config.showWifi) return
+        descendants(root).filter(::isModernNativeWifiView).forEach { wifiView ->
+            val dots = descendants(wifiView).filter(::isNativeWifiStatusBarDot)
+            if (dots.isEmpty()) return@forEach
+            val hasSignal = hasVisibleNativeWifiSignal(wifiView)
+            val host = hostFor(wifiView) ?: return@forEach
+            dots.forEach { dot ->
+                if (hasSignal) {
+                    if (dot.visibility != View.GONE) {
+                        // Save pre-guard state in the normal host snapshot so toggling Wi-Fi arc
+                        // or disabling Style One restores the original native layout correctly.
+                        host.original.putIfAbsent(dot, dot.visibility)
+                        if (!host.layouts.containsKey(dot)) {
+                            snapshotLayout(dot)?.let { host.layouts[dot] = it }
+                        }
+                        nativeWifiBaselineVisibility.putIfAbsent(dot, dot.visibility)
+                        dot.visibility = View.GONE
+                        (dot.parent as? ViewGroup)?.requestLayout()
+                        diagnostic(
+                            "Native Wi-Fi status dot suppressed: wifi_signal visible; " +
+                                "dot=${viewSignature(dot)} size=${dot.width}x${dot.height}"
+                        )
+                    }
+                } else if (host.layouts.containsKey(dot)) {
+                    // SystemUI can legitimately use the dot when the real signal graphic is
+                    // not visible. Restore the captured pre-guard state only in that case.
+                    restoreHostView(host, dot)
+                }
+            }
+        }
+    }
 
     private fun hookModernWifiVisibility(module: XposedModule, classLoader: ClassLoader) {
         val className = "com.android.systemui.statusbar.pipeline.wifi.ui.view.ModernStatusBarWifiView"
