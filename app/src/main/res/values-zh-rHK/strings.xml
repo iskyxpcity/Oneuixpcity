@@ -72,7 +72,7 @@
     <string name="disclaimer_style_title">介面風格說明</string>
     <string name="disclaimer_style_body">本應用程式部分介面採用了 KernelSU 的介面風格。</string>
     <string name="disclaimer_risk_title">玩機風險提示</string>
-    <string name="disclaimer_risk_body">玩機有風險。本模組可能導致系統異常、資料遺失、無法開機甚至裝置損壞。使用本模組所產生的一切風險與損失由使用者自行承擔，開發者不承擔相關責任。</string>
+    <string name="disclaimer_risk_body">玩機有風險。本模組應用可能導致系統異常、資料遺失、無法開機甚至裝置損壞。使用本模組所產生的一切風險與損失由使用者自行承擔。</string>
     <string name="feature_intro_version_updates">OneUI XP 1.0.260930 主要更新</string>
     <string name="feature_intro_version_updates_summary">2026-09-30</string>
     <string name="feature_intro_version_updates_261013">OneUI XP 1.0.261013 主要更新</string>
