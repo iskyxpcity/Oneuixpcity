@@ -83,12 +83,8 @@ object StatusBarComboStyleOneRuntime {
     private const val INNER_PUNCH_HOLE_VERTICAL_CALIBRATION_DP = 0.5f
     private const val INNER_PUNCH_HOLE_HORIZONTAL_CALIBRATION_DP = 1.5f
     private const val RIGHT_SIDE_CUTOUT_THRESHOLD = 0.65f
-    // Take one fast placement sample after attach, then back off while geometry is stable.
-    // Fold/unfold still requires two matching geometry samples before rebuilding the window.
-    private const val GLYPH_POSITION_WATCH_INTERVAL_MS = 100L
-    private const val GLYPH_POSITION_IDLE_INTERVAL_MS = 500L
+    // Confirm geometry only after a layout/display event. There is no idle placement polling.
     private const val GLYPH_POSITION_GEOMETRY_CONFIRM_INTERVAL_MS = 220L
-    private const val GLYPH_POSITION_GEOMETRY_CONFIRM_SAMPLES = 2
 
     private val installed = AtomicBoolean(false)
     @Volatile private var moduleForPreferenceReload: XposedModule? = null
@@ -381,92 +377,192 @@ object StatusBarComboStyleOneRuntime {
         private var params: WindowManager.LayoutParams? = null
         private var watchedAnchor: WeakReference<View>? = null
         private var watchedRoot: WeakReference<ViewGroup>? = null
-        private var placementWatchScheduled = false
-        private var placementDisplayId = display?.displayId ?: -1
-        private var placementDisplayWidth = 0
-        private var placementDisplayHeight = 0
-        private var pendingGeometryDisplayId = -1
-        private var pendingGeometryWidth = 0
-        private var pendingGeometryHeight = 0
-        private var pendingGeometrySamples = 0
-        /**
-         * Upstream HyperDuo continuously syncs its separate window to the live host.
-         * Here we retain OneuiXP's required camera-cutout anchor, but re-read the active
-         * display geometry so delayed Samsung insets and fold transitions cannot leave
-         * the overlay at coordinates from the previous layout.
-         */
-        private val placementWatch = object : Runnable {
-            override fun run() {
-                placementWatchScheduled = false
-                if (params == null) return
-                val anchor = watchedAnchor?.get()
-                val root = watchedRoot?.get()
-                if (anchor == null || root == null || !root.isAttachedToWindow || !glyph.isAttachedToWindow) {
-                    watchedAnchor = null
-                    watchedRoot = null
-                    return
-                }
-                val currentSize = StatusBarComboStyleOneRuntime.activeDisplaySize(root)
-                val currentDisplayId = root.display?.displayId ?: -1
-                val displayGeometryChanged =
-                    (currentDisplayId >= 0 && placementDisplayId >= 0 && currentDisplayId != placementDisplayId) ||
-                    (placementDisplayWidth > 0 && placementDisplayHeight > 0 &&
-                        (currentSize.x != placementDisplayWidth || currentSize.y != placementDisplayHeight))
-                // Do not poll the SystemUI main thread at 10Hz indefinitely. A short first
-                // sample and debounced geometry checks keep fold/unfold responsive, while the
-                // steady state checks at 2Hz unless the position cannot be resolved.
-                var nextDelay = GLYPH_POSITION_IDLE_INTERVAL_MS
-                if (displayGeometryChanged) {
-                    val samePendingGeometry =
-                        pendingGeometrySamples > 0 &&
-                            pendingGeometryDisplayId == currentDisplayId &&
-                            pendingGeometryWidth == currentSize.x &&
-                            pendingGeometryHeight == currentSize.y
-                    if (samePendingGeometry) {
-                        pendingGeometrySamples++
-                    } else {
-                        pendingGeometryDisplayId = currentDisplayId
-                        pendingGeometryWidth = currentSize.x
-                        pendingGeometryHeight = currentSize.y
-                        pendingGeometrySamples = 1
-                    }
+        private data class DisplayGeometry(val displayId: Int, val width: Int, val height: Int)
 
-                    if (pendingGeometrySamples >= GLYPH_POSITION_GEOMETRY_CONFIRM_SAMPLES) {
-                        // Record this stable geometry before applying. If another host callback
-                        // is already in progress, the watcher will not keep retriggering refreshes
-                        // for the same display-size sample.
-                        placementDisplayId = currentDisplayId
-                        placementDisplayWidth = currentSize.x
-                        placementDisplayHeight = currentSize.y
-                        pendingGeometrySamples = 0
-                        diagnostic(
-                            "Stable overlay display geometry confirmed: id=$currentDisplayId " +
-                                "size=${currentSize.x}x${currentSize.y}; rebuilding once"
-                        )
-                        StatusBarComboStyleOneRuntime.refreshHostForOverlay(root)
-                    } else {
-                        nextDelay = GLYPH_POSITION_GEOMETRY_CONFIRM_INTERVAL_MS
-                    }
-                } else {
-                    pendingGeometrySamples = 0
-                    pendingGeometryDisplayId = -1
-                    pendingGeometryWidth = 0
-                    pendingGeometryHeight = 0
-                    // SystemUI/QuickStar can rebind a battery holder after the first layout.
-                    // Reassert only our transparent measured slot (idempotent when unchanged)
-                    // so neighboring native icons always have the same reserved space.
-                    StatusBarComboStyleOneRuntime.reserveOverlayHostSlot(
-                        root, anchor, requiredSlotWidthPx(),
-                    )
-                    if (!update(anchor, root)) {
-                        StatusBarComboStyleOneRuntime.retryOverlayGeometry(root)
-                        nextDelay = GLYPH_POSITION_IDLE_INTERVAL_MS
-                    }
-                }
-                if (params != null && glyph.isAttachedToWindow && watchedRoot?.get() != null) {
-                    schedulePlacementWatch(nextDelay)
-                }
+        private var placementSyncScheduled = false
+        private var observedTreeObserver: android.view.ViewTreeObserver? = null
+        private var geometryConfirmationScheduled = false
+        private var lastStableGeometry: DisplayGeometry? = null
+        private var pendingGeometry: DisplayGeometry? = null
+        private var lastAnchorFingerprint: String? = null
+
+        // The native battery slot remains the placement anchor. React to actual view-tree
+        // layout events, coalesce work to one frame, and do nothing when its screen geometry
+        // has not changed. This replaces the former perpetual 100/500ms main-thread polling.
+        private val placementGlobalLayoutListener =
+            android.view.ViewTreeObserver.OnGlobalLayoutListener {
+                schedulePlacementSync()
             }
+        private val placementSync = Runnable {
+            placementSyncScheduled = false
+            syncPlacementFromLayoutEvent()
+        }
+        private val geometryConfirmation = Runnable {
+            geometryConfirmationScheduled = false
+            confirmPlacementGeometry()
+        }
+
+        private fun readDisplayGeometry(root: ViewGroup): DisplayGeometry {
+            val size = StatusBarComboStyleOneRuntime.activeDisplaySize(root)
+            return DisplayGeometry(root.display?.displayId ?: -1, size.x, size.y)
+        }
+
+        private fun ensureLayoutObserver(root: ViewGroup) {
+            val observer = root.viewTreeObserver
+            if (observedTreeObserver === observer && observer.isAlive) return
+            removeLayoutObserver()
+            if (observer.isAlive) {
+                observer.addOnGlobalLayoutListener(placementGlobalLayoutListener)
+                observedTreeObserver = observer
+            }
+        }
+
+        private fun removeLayoutObserver() {
+            val observer = observedTreeObserver
+            if (observer != null && observer.isAlive) {
+                runCatching { observer.removeOnGlobalLayoutListener(placementGlobalLayoutListener) }
+            }
+            observedTreeObserver = null
+        }
+
+        private fun watchPlacementEvents(
+            anchor: View,
+            root: ViewGroup,
+            captureDisplayGeometry: Boolean,
+        ) {
+            watchedAnchor = WeakReference(anchor)
+            watchedRoot = WeakReference(root)
+            if (captureDisplayGeometry || lastStableGeometry == null) {
+                val geometry = readDisplayGeometry(root)
+                lastStableGeometry = DisplayGeometry(
+                    display?.displayId ?: geometry.displayId,
+                    geometry.width,
+                    geometry.height,
+                )
+            }
+            ensureLayoutObserver(root)
+            schedulePlacementSync()
+        }
+
+        private fun schedulePlacementSync() {
+            if (placementSyncScheduled || params == null || !glyph.isAttachedToWindow) return
+            val root = watchedRoot?.get() ?: return
+            if (!root.isAttachedToWindow) return
+            placementSyncScheduled = true
+            root.postOnAnimation(placementSync)
+        }
+
+        private fun scheduleGeometryConfirmation(geometry: DisplayGeometry) {
+            pendingGeometry = geometry
+            if (geometryConfirmationScheduled || params == null) return
+            geometryConfirmationScheduled = true
+            glyph.postDelayed(geometryConfirmation, GLYPH_POSITION_GEOMETRY_CONFIRM_INTERVAL_MS)
+        }
+
+        private fun placementFingerprint(anchor: View, root: ViewGroup): String {
+            val rootPosition = IntArray(2)
+            val parentPosition = IntArray(2)
+            val anchorPosition = IntArray(2)
+            val rootLocated = root.isAttachedToWindow &&
+                runCatching { root.getLocationOnScreen(rootPosition) }.isSuccess
+            val parent = anchor.parent as? ViewGroup
+            val parentLocated = parent != null && parent.isAttachedToWindow &&
+                runCatching { parent.getLocationOnScreen(parentPosition) }.isSuccess
+            val anchorLocated = anchor.isAttachedToWindow &&
+                runCatching { anchor.getLocationOnScreen(anchorPosition) }.isSuccess
+            val layout = anchor.layoutParams
+            val margins = layout as? ViewGroup.MarginLayoutParams
+            return buildString {
+                append(if (rootLocated) rootPosition.contentToString() else "root-unavailable")
+                append('|')
+                append(if (parentLocated) parentPosition.contentToString() else "parent-unavailable")
+                append('|')
+                append(parent?.width ?: -1).append('x').append(parent?.height ?: -1)
+                append('|').append(parent?.paddingRight ?: -1)
+                append('|')
+                append(if (anchorLocated) anchorPosition.contentToString() else "anchor-unavailable")
+                append('|').append(anchor.width).append('x').append(anchor.height)
+                append('|').append(anchor.visibility)
+                append('|').append(layout?.width ?: -1).append('x').append(layout?.height ?: -1)
+                append('|').append(margins?.leftMargin ?: 0).append(',')
+                append(margins?.topMargin ?: 0).append(',')
+                append(margins?.rightMargin ?: 0).append(',')
+                append(margins?.bottomMargin ?: 0)
+                append('|').append(root.width).append('x').append(root.height)
+            }
+        }
+
+        private fun syncPlacementFromLayoutEvent() {
+            if (params == null) return
+            val anchor = watchedAnchor?.get()
+            val root = watchedRoot?.get()
+            if (anchor == null || root == null || !root.isAttachedToWindow || !glyph.isAttachedToWindow) {
+                return
+            }
+
+            val current = readDisplayGeometry(root)
+            val boundDisplayId = display?.displayId ?: -1
+            val displayBindingChanged = boundDisplayId >= 0 && current.displayId >= 0 &&
+                boundDisplayId != current.displayId
+            val geometryChanged = lastStableGeometry?.let { current != it } == true
+            if (displayBindingChanged || geometryChanged) {
+                scheduleGeometryConfirmation(current)
+                return
+            }
+
+            pendingGeometry = null
+            if (geometryConfirmationScheduled) {
+                glyph.removeCallbacks(geometryConfirmation)
+                geometryConfirmationScheduled = false
+            }
+
+            val fingerprint = placementFingerprint(anchor, root)
+            if (fingerprint == lastAnchorFingerprint) return
+
+            // Keep the replacement battery slot measured, then follow the slot's current
+            // screen position. Both operations are idempotent and only run after a real layout
+            // geometry change; no idle timer repeatedly touches SystemUI's view tree.
+            StatusBarComboStyleOneRuntime.reserveOverlayHostSlot(root, anchor, requiredSlotWidthPx())
+            if (update(anchor, root)) {
+                lastAnchorFingerprint = placementFingerprint(anchor, root)
+            } else {
+                StatusBarComboStyleOneRuntime.retryOverlayGeometry(root)
+            }
+        }
+
+        private fun confirmPlacementGeometry() {
+            val expected = pendingGeometry ?: return
+            val anchor = watchedAnchor?.get()
+            val root = watchedRoot?.get()
+            if (params == null || anchor == null || root == null ||
+                !root.isAttachedToWindow || !glyph.isAttachedToWindow
+            ) {
+                return
+            }
+            val current = readDisplayGeometry(root)
+            if (current != expected) {
+                // Fold/unfold can report an intermediate display size. Continue checking only
+                // while a geometry transition is active; this is not a recurring idle poll.
+                scheduleGeometryConfirmation(current)
+                return
+            }
+
+            lastStableGeometry = current
+            pendingGeometry = null
+            lastAnchorFingerprint = null
+            val boundDisplayId = display?.displayId ?: -1
+            if (boundDisplayId >= 0 && current.displayId >= 0 && boundDisplayId != current.displayId) {
+                diagnostic(
+                    "Stable foldable display switch confirmed: overlayDisplay=$boundDisplayId " +
+                        "statusBarDisplay=${current.displayId} size=${current.width}x${current.height}; rebinding to battery slot"
+                )
+            } else {
+                diagnostic(
+                    "Stable status-bar geometry change confirmed: displayId=${current.displayId} " +
+                        "size=${current.width}x${current.height}; re-anchoring without idle polling"
+                )
+            }
+            StatusBarComboStyleOneRuntime.refreshHostForOverlay(root)
         }
 
         fun requiredSlotWidthPx(): Int =
@@ -481,7 +577,7 @@ object StatusBarComboStyleOneRuntime {
         fun attach(anchor: View, root: ViewGroup): Boolean {
             if (params != null) {
                 val updated = update(anchor, root)
-                if (updated) startPlacementWatch(anchor, root, captureDisplayGeometry = false)
+                if (updated) watchPlacementEvents(anchor, root, captureDisplayGeometry = false)
                 return updated
             }
             val cfg = StatusBarComboStyleOneRuntime.config
@@ -526,7 +622,7 @@ object StatusBarComboStyleOneRuntime {
                         detach()
                         return false
                     }
-                    startPlacementWatch(anchor, root, captureDisplayGeometry = true)
+                    watchPlacementEvents(anchor, root, captureDisplayGeometry = true)
                     return true
                 } catch (error: Throwable) {
                     Log.w(TAG, "Glyph overlay attach failed for type=$type", error)
@@ -534,26 +630,6 @@ object StatusBarComboStyleOneRuntime {
             }
             Log.w(TAG, "No supported status-bar glyph window type; using inline renderer")
             return false
-        }
-
-        private fun startPlacementWatch(anchor: View, root: ViewGroup, captureDisplayGeometry: Boolean) {
-            watchedAnchor = WeakReference(anchor)
-            watchedRoot = WeakReference(root)
-            if (captureDisplayGeometry || placementDisplayWidth <= 0 || placementDisplayHeight <= 0) {
-                // Track the display the WindowContext was created for first; the live root
-                // can already have switched displays while this overlay is still stale.
-                placementDisplayId = display?.displayId ?: root.display?.displayId ?: -1
-                val size = StatusBarComboStyleOneRuntime.activeDisplaySize(root)
-                placementDisplayWidth = size.x
-                placementDisplayHeight = size.y
-            }
-            schedulePlacementWatch(GLYPH_POSITION_WATCH_INTERVAL_MS)
-        }
-
-        private fun schedulePlacementWatch(delayMs: Long) {
-            if (placementWatchScheduled || params == null || !glyph.isAttachedToWindow) return
-            placementWatchScheduled = true
-            glyph.postDelayed(placementWatch, delayMs)
         }
 
         private fun windowTypeCandidates(): List<Int> {
@@ -747,9 +823,17 @@ object StatusBarComboStyleOneRuntime {
             if (glyph.alpha != wanted) glyph.alpha = wanted
         }
 
+        fun boundDisplayId(): Int = display?.displayId ?: -1
+
         fun detach() {
-            glyph.removeCallbacks(placementWatch)
-            placementWatchScheduled = false
+            glyph.removeCallbacks(placementSync)
+            glyph.removeCallbacks(geometryConfirmation)
+            placementSyncScheduled = false
+            geometryConfirmationScheduled = false
+            removeLayoutObserver()
+            pendingGeometry = null
+            lastStableGeometry = null
+            lastAnchorFingerprint = null
             watchedAnchor = null
             watchedRoot = null
             if (params == null) {
@@ -759,8 +843,6 @@ object StatusBarComboStyleOneRuntime {
             runCatching { wm?.removeView(glyph) }
             params = null
             wm = null
-            placementDisplayWidth = 0
-            placementDisplayHeight = 0
         }
     }
 
@@ -1519,17 +1601,20 @@ object StatusBarComboStyleOneRuntime {
             if (!config.enabled || !config.showWifi) restoreNativeWifiClusters(root)
             val currentDisplayId = root.display?.displayId ?: -1
             val currentDisplaySize = activeDisplaySize(root)
-            val displayIdentityChanged =
-                (currentDisplayId >= 0 && host.activeDisplayId >= 0 &&
-                    currentDisplayId != host.activeDisplayId) ||
-                (host.activeDisplayWidth > 0 && host.activeDisplayHeight > 0 &&
-                    (currentDisplaySize.x != host.activeDisplayWidth ||
-                        currentDisplaySize.y != host.activeDisplayHeight))
-            if (displayIdentityChanged && host.overlay != null) {
+            val displayIdChanged = currentDisplayId >= 0 && host.activeDisplayId >= 0 &&
+                currentDisplayId != host.activeDisplayId
+            val displaySizeChanged = host.activeDisplayWidth > 0 && host.activeDisplayHeight > 0 &&
+                (currentDisplaySize.x != host.activeDisplayWidth ||
+                    currentDisplaySize.y != host.activeDisplayHeight)
+            val displayIdentityChanged = displayIdChanged || displaySizeChanged
+            if (displayIdChanged && host.overlay != null) {
+                // A WindowContext is display-bound. Recreate it only when the actual display
+                // changes; a same-display size/inset change should just re-anchor the existing
+                // window after the layout event settles.
                 diagnostic(
-                    "Status-bar display geometry changed: id=${host.activeDisplayId}->${currentDisplayId}, " +
+                    "Status-bar display changed: id=${host.activeDisplayId}->${currentDisplayId}, " +
                         "size=${host.activeDisplayWidth}x${host.activeDisplayHeight}->" +
-                        "${currentDisplaySize.x}x${currentDisplaySize.y}; detaching stale overlay"
+                        "${currentDisplaySize.x}x${currentDisplaySize.y}; rebinding stale overlay"
                 )
                 main.removeCallbacks(host.geometryRetry)
                 host.geometryRetryPending = false
@@ -1544,9 +1629,13 @@ object StatusBarComboStyleOneRuntime {
                 host.shadeDrawTarget = null
                 host.tintRow = null
                 host.rowTint = rowTintSnapshots[root]
+            } else if (displaySizeChanged && host.overlay != null) {
+                diagnostic(
+                    "Status-bar display size changed on the same display: id=${currentDisplayId}, " +
+                        "size=${host.activeDisplayWidth}x${host.activeDisplayHeight}->" +
+                        "${currentDisplaySize.x}x${currentDisplaySize.y}; retaining window and re-anchoring"
+                )
             } else if (displayIdentityChanged) {
-                // The in-layout glyph follows ordinary Android view measurement/layout on fold
-                // transitions. Do not reset the native row or re-apply all child snapshots here.
                 diagnostic(
                     "Inline status-bar geometry changed: id=${host.activeDisplayId}->${currentDisplayId}, " +
                         "size=${host.activeDisplayWidth}x${host.activeDisplayHeight}->" +
@@ -2500,10 +2589,28 @@ object StatusBarComboStyleOneRuntime {
         reserveHostSlot(host, anchor, widthPx)
     }
 
-    /** Refresh the owning host when the overlay detects that its WindowContext is stale. */
+    /** Re-anchor on a layout/display event, recreating only a WindowContext bound to an old display. */
     private fun refreshHostForOverlay(root: ViewGroup) {
         val host = synchronized(hosts) { hosts[root] } ?: return
-        if (host.retired || host.applying) return
+        if (host.retired) return
+        if (host.applying) {
+            // Do not lose the event if a layout callback lands while apply() is still working.
+            main.post { refreshHostForOverlay(root) }
+            return
+        }
+        val currentDisplayId = root.display?.displayId ?: -1
+        val activeOverlay = host.overlay
+        val boundDisplayId = activeOverlay?.boundDisplayId() ?: -1
+        if (activeOverlay != null && currentDisplayId >= 0 && boundDisplayId >= 0 &&
+            currentDisplayId != boundDisplayId
+        ) {
+            diagnostic(
+                "Recreating independent overlay for active display: oldDisplay=${boundDisplayId} " +
+                    "newDisplay=${currentDisplayId}; battery anchor retained"
+            )
+            activeOverlay.detach()
+            host.overlay = null
+        }
         apply(host)
     }
 
