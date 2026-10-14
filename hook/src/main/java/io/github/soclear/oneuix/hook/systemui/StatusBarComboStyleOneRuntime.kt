@@ -80,6 +80,9 @@ object StatusBarComboStyleOneRuntime {
     private const val INNER_PUNCH_HOLE_VERTICAL_CALIBRATION_DP = 0.5f
     private const val INNER_PUNCH_HOLE_HORIZONTAL_CALIBRATION_DP = 1.5f
     private const val RIGHT_SIDE_CUTOUT_THRESHOLD = 0.65f
+    // Follow HyperDuo's live overlay-sync cadence while keeping OneuiXP's verified cutout anchor.
+    private const val GLYPH_POSITION_WATCH_INTERVAL_MS = 100L
+    private const val GLYPH_POSITION_IDLE_RETRY_INTERVAL_MS = 500L
 
     private val installed = AtomicBoolean(false)
     @Volatile private var moduleForPreferenceReload: XposedModule? = null
@@ -365,9 +368,61 @@ object StatusBarComboStyleOneRuntime {
         private var wm: WindowManager? = null
         private val glyph = GlyphView(context)
         private var params: WindowManager.LayoutParams? = null
+        private var watchedAnchor: WeakReference<View>? = null
+        private var watchedRoot: WeakReference<ViewGroup>? = null
+        private var placementWatchScheduled = false
+        private var placementDisplayId = display?.displayId ?: -1
+        private var placementDisplayWidth = 0
+        private var placementDisplayHeight = 0
+        /**
+         * Upstream HyperDuo continuously syncs its separate window to the live host.
+         * Here we retain OneuiXP's required camera-cutout anchor, but re-read the active
+         * display geometry so delayed Samsung insets and fold transitions cannot leave
+         * the overlay at coordinates from the previous layout.
+         */
+        private val placementWatch = object : Runnable {
+            override fun run() {
+                placementWatchScheduled = false
+                if (params == null) return
+                val anchor = watchedAnchor?.get()
+                val root = watchedRoot?.get()
+                if (anchor == null || root == null || !root.isAttachedToWindow || !glyph.isAttachedToWindow) {
+                    watchedAnchor = null
+                    watchedRoot = null
+                    return
+                }
+                val currentSize = StatusBarComboStyleOneRuntime.activeDisplaySize(root)
+                val currentDisplayId = root.display?.displayId ?: -1
+                val displayGeometryChanged =
+                    (currentDisplayId >= 0 && placementDisplayId >= 0 && currentDisplayId != placementDisplayId) ||
+                    (placementDisplayWidth > 0 && placementDisplayHeight > 0 &&
+                        (currentSize.x != placementDisplayWidth || currentSize.y != placementDisplayHeight))
+                var nextDelay = GLYPH_POSITION_WATCH_INTERVAL_MS
+                if (displayGeometryChanged) {
+                    // A WindowContext belongs to its display. Rebuild through the owner Runtime
+                    // rather than moving a window created for the previous display.
+                    StatusBarComboStyleOneRuntime.refreshHostForOverlay(root)
+                } else {
+                    val freshCutout = StatusBarComboStyleOneRuntime.cutoutBounds(root)
+                    if (freshCutout != null) {
+                        update(anchor, root, freshCutout)
+                    } else {
+                        StatusBarComboStyleOneRuntime.retryOverlayGeometry(root)
+                        nextDelay = GLYPH_POSITION_IDLE_RETRY_INTERVAL_MS
+                    }
+                }
+                if (params != null && glyph.isAttachedToWindow && watchedRoot?.get() != null) {
+                    schedulePlacementWatch(nextDelay)
+                }
+            }
+        }
 
         fun attach(anchor: View, root: ViewGroup, cameraBounds: Rect): Boolean {
-            if (params != null) return update(anchor, root, cameraBounds)
+            if (params != null) {
+                val updated = update(anchor, root, cameraBounds)
+                if (updated) startPlacementWatch(anchor, root, captureDisplayGeometry = false)
+                return updated
+            }
             val cfg = StatusBarComboStyleOneRuntime.config
             val width = StatusBarComboStyleOneRuntime.dp(
                 context, StatusComboStyleOneGlyphRenderer.glyphWidthDp(cfg, StatusBarComboStyleOneRuntime.state.networkType),
@@ -412,6 +467,7 @@ object StatusBarComboStyleOneRuntime {
                         detach()
                         return false
                     }
+                    startPlacementWatch(anchor, root, captureDisplayGeometry = true)
                     return true
                 } catch (error: Throwable) {
                     Log.w(TAG, "Glyph overlay attach failed for type=$type", error)
@@ -419,6 +475,24 @@ object StatusBarComboStyleOneRuntime {
             }
             Log.w(TAG, "No supported status-bar glyph window type; using inline renderer")
             return false
+        }
+
+        private fun startPlacementWatch(anchor: View, root: ViewGroup, captureDisplayGeometry: Boolean) {
+            watchedAnchor = WeakReference(anchor)
+            watchedRoot = WeakReference(root)
+            if (captureDisplayGeometry || placementDisplayWidth <= 0 || placementDisplayHeight <= 0) {
+                placementDisplayId = root.display?.displayId ?: display?.displayId ?: -1
+                val size = StatusBarComboStyleOneRuntime.activeDisplaySize(root)
+                placementDisplayWidth = size.x
+                placementDisplayHeight = size.y
+            }
+            schedulePlacementWatch(GLYPH_POSITION_WATCH_INTERVAL_MS)
+        }
+
+        private fun schedulePlacementWatch(delayMs: Long) {
+            if (placementWatchScheduled || params == null || !glyph.isAttachedToWindow) return
+            placementWatchScheduled = true
+            glyph.postDelayed(placementWatch, delayMs)
         }
 
         private fun windowTypeCandidates(): List<Int> {
@@ -496,17 +570,20 @@ object StatusBarComboStyleOneRuntime {
                 cameraCenterY - lp.height * centreRatioY + verticalOffsetPx
                 ).roundToInt()
             val ringCenterScreenPx = lp.x + canvasLeftInsetPx + ringCenterXUnits * renderScale
-            diagnostic(
-                "Glyph overlay camera coordinates: displayId=${display?.displayId} type=${lp.type} " +
-                    "cameraCenter=(${cameraCenterX},${cameraCenterY}) cutout=${cutout} " +
-                    "activeDisplay=${displaySize.x}x${displaySize.y} rightSideCutout=${rightSideCutout} " +
-                    "correctionDp=(${if (rightSideCutout) INNER_PUNCH_HOLE_HORIZONTAL_CALIBRATION_DP else 0f}," +
-                    "${verticalCalibrationDp}) window=(${lp.x},${lp.y}) size=${lp.width}x${lp.height} " +
-                    "ringCenterScreen=(${ringCenterScreenPx},${lp.y + lp.height * centreRatioY})"
-            )
-            if (oldX != lp.x || oldY != lp.y || oldWidth != lp.width || oldHeight != lp.height) {
+            val positionChanged = oldX != lp.x || oldY != lp.y || oldWidth != lp.width || oldHeight != lp.height
+            if (positionChanged) {
                 runCatching { wm?.updateViewLayout(glyph, lp) }
-                    .onFailure { Log.w(TAG, "Cannot update status-slot-anchored glyph window", it) }
+                    .onFailure { Log.w(TAG, "Cannot update cutout-anchored glyph window", it) }
+                // The position watcher runs repeatedly; only log changed geometry to keep the
+                // unified Settings -> Send log output useful instead of flooding it.
+                diagnostic(
+                    "Glyph overlay camera coordinates: displayId=${display?.displayId} type=${lp.type} " +
+                        "cameraCenter=(${cameraCenterX},${cameraCenterY}) cutout=${cutout} " +
+                        "activeDisplay=${displaySize.x}x${displaySize.y} rightSideCutout=${rightSideCutout} " +
+                        "correctionDp=(${if (rightSideCutout) INNER_PUNCH_HOLE_HORIZONTAL_CALIBRATION_DP else 0f}," +
+                        "${verticalCalibrationDp}) window=(${lp.x},${lp.y}) size=${lp.width}x${lp.height} " +
+                        "ringCenterScreen=(${ringCenterScreenPx},${lp.y + lp.height * centreRatioY})"
+                )
             }
             return true
         }
@@ -574,6 +651,10 @@ object StatusBarComboStyleOneRuntime {
         }
 
         fun detach() {
+            glyph.removeCallbacks(placementWatch)
+            placementWatchScheduled = false
+            watchedAnchor = null
+            watchedRoot = null
             if (params == null) {
                 wm = null
                 return
@@ -581,6 +662,8 @@ object StatusBarComboStyleOneRuntime {
             runCatching { wm?.removeView(glyph) }
             params = null
             wm = null
+            placementDisplayWidth = 0
+            placementDisplayHeight = 0
         }
     }
 
@@ -2239,6 +2322,19 @@ object StatusBarComboStyleOneRuntime {
             }
         }
     }
+    /** Refresh the owning host when the overlay detects that its WindowContext is stale. */
+    private fun refreshHostForOverlay(root: ViewGroup) {
+        val host = synchronized(hosts) { hosts[root] } ?: return
+        if (host.retired || host.applying) return
+        apply(host)
+    }
+
+    /** Reuse the existing bounded retry when a display's cutout information has not settled. */
+    private fun retryOverlayGeometry(root: ViewGroup) {
+        val host = synchronized(hosts) { hosts[root] } ?: return
+        if (!host.retired) scheduleGeometryRetry(host)
+    }
+
     private fun scheduleGeometryRetry(host: Host) {
         // Exactly one delayed retry per failed attach/display transition. Re-running apply
         // in a rapid loop repeatedly scans and collapses the entire icon row.
