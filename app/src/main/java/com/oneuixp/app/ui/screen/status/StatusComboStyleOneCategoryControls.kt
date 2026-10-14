@@ -239,7 +239,10 @@ fun StatusComboStyleOneCategoryControls(
             }, {
                 SelectItem(icon = null, title = stringResource(R.string.status_combo_style_one_style), summary = stringResource(R.string.status_combo_style_one_style_summary), entries = listOf(stringResource(R.string.status_combo_style_one_style_ring), stringResource(R.string.status_combo_style_one_style_rect)), selectedIndex = runtime.trioStyle.coerceIn(0, 1), enabled = runtime.enabled, onSelectedIndexChange = { previewAndPersist(runtime.copy(trioStyle = it.coerceIn(0, 1))) })
             }, {
-                SwitchItem(icon = null, title = stringResource(R.string.status_combo_style_one_overlay), summary = stringResource(R.string.status_combo_style_one_overlay_summary), checked = runtime.overlayGlyph, enabled = runtime.enabled, onCheckedChange = { previewAndPersist(runtime.copy(overlayGlyph = it)) })
+                StyleOneInfoItem(
+                    title = stringResource(R.string.status_combo_style_one_render_mode_title),
+                    summary = stringResource(R.string.status_combo_style_one_render_mode_summary),
+                )
             }, {
                 SwitchItem(icon = null, title = stringResource(R.string.status_combo_style_one_show_wifi), summary = stringResource(R.string.status_combo_style_one_show_wifi_summary), checked = runtime.showWifi, enabled = runtime.enabled, onCheckedChange = { previewAndPersist(runtime.copy(showWifi = it)) })
             }, {
