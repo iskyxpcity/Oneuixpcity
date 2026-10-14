@@ -43,6 +43,7 @@ import com.oneuixp.app.ui.navigation3.Navigator
 import com.oneuixp.app.ui.navigation3.Route
 import com.oneuixp.app.ui.navigation3.rememberNavigator
 import com.oneuixp.app.ui.screen.about.AboutScreen
+import com.oneuixp.app.ui.screen.about.DisclaimerScreen
 import com.oneuixp.app.ui.screen.about.FeatureIntroductionScreen
 import com.oneuixp.app.ui.screen.about.VersionChangelogScreen
 import com.oneuixp.app.ui.screen.about.VersionChangelog261013Screen
@@ -136,6 +137,7 @@ class MainActivity : ComponentActivity() {
                             entryProvider = entryProvider {
                                 entry<Route.Main> { mainScreenEntry() }
                                 entry<Route.About> { AboutScreen() }
+                                entry<Route.Disclaimer> { DisclaimerScreen() }
                                 entry<Route.FeatureIntroduction> { FeatureIntroductionScreen() }
                                 entry<Route.VersionChangelog> { VersionChangelogScreen() }
                                 entry<Route.VersionChangelog261013> { VersionChangelog261013Screen() }

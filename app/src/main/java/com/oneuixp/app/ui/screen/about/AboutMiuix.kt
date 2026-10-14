@@ -417,6 +417,10 @@ private fun AboutContent(
                             title = state.featureIntroductionTitle,
                             onClick = actions.onOpenFeatureIntroduction,
                         )
+                        ArrowPreference(
+                            title = state.disclaimerTitle,
+                            onClick = actions.onOpenDisclaimer,
+                        )
                     }
                     Spacer(
                         Modifier.height(
