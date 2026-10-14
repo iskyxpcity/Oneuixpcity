@@ -129,8 +129,8 @@
     <string name="disclaimer_source_body">This project incorporates and adapts source code from OneUIX and HyperDuo.</string>
     <string name="disclaimer_style_title">Interface style</string>
     <string name="disclaimer_style_body">Some parts of this app use the KernelSU interface style.</string>
-    <string name="disclaimer_relationship_title">Project relationship</string>
-    <string name="disclaimer_relationship_body">OneUI XP is an independent project. It is not an official product of, or endorsed by, OneUIX, HyperDuo, or KernelSU. Their names and original rights belong to their respective owners.</string>
+    <string name="disclaimer_risk_title">Device Modification Risks</string>
+    <string name="disclaimer_risk_body">Flashing firmware, unlocking the bootloader, rooting, modifying system settings, or using modules such as Xposed/LSPosed can cause system errors, data loss, boot failure, or device damage. This app may also have compatibility issues depending on your device, Android version, or other modules. Understand the risks and back up important data before proceeding. You choose whether to install and use the app or perform these operations. To the extent permitted by applicable law, the developer is not responsible for device faults, data loss, or other damages arising from use of this app or related device-modification operations.</string>
     <string name="feature_intro_version_updates">OneUI XP 1.0.260930 Highlights</string>
     <string name="feature_intro_version_updates_summary">2026-09-30</string>
     <string name="feature_intro_version_updates_261013">OneUI XP 1.0.261013 Highlights</string>
