@@ -2119,6 +2119,18 @@ object StatusBarComboStyleOneRuntime {
         }
     }
 
+    // Used only to restore a previously captured SystemUI baseline. The active Wi-Fi
+    // reconciliation path deliberately never changes whole-cluster visibility.
+    private fun setNativeWifiClusterVisibility(cluster: ViewGroup, visibility: Int) {
+        if (cluster.visibility == visibility) return
+        adjustingNativeWifiClusterVisibility.set(true)
+        try {
+            cluster.visibility = visibility
+        } finally {
+            adjustingNativeWifiClusterVisibility.set(false)
+        }
+    }
+
     private fun restoreNativeWifiClusters(root: View) {
         descendants(root).filterIsInstance<ViewGroup>().filter(::isStatusIconsCluster).forEach { cluster ->
             val baseline = synchronized(nativeWifiClusterBaselineVisibility) {
