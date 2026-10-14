@@ -126,6 +126,8 @@
     <string name="feature_introduction">Feature Introduction</string>
     <string name="feature_intro_version_updates">OneUI XP 1.0.260930 Highlights</string>
     <string name="feature_intro_version_updates_summary">2026-09-30</string>
+    <string name="feature_intro_version_updates_261013">OneUI XP 1.0.261013 Highlights</string>
+    <string name="feature_intro_version_updates_261013_summary">2026-10-13</string>
     <string name="version_updates_title">Version Highlights</string>
     <string name="version_1_0_260930_title">1.0.260930 · First Release</string>
     <string name="version_1_0_260930_summary">An introduction to the main features included in the first release.</string>

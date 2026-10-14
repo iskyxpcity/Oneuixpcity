@@ -137,6 +137,7 @@ class MainActivity : ComponentActivity() {
                                 entry<Route.About> { AboutScreen() }
                                 entry<Route.FeatureIntroduction> { FeatureIntroductionScreen() }
                                 entry<Route.VersionChangelog> { VersionChangelogScreen() }
+                                entry<Route.VersionChangelog261013> { VersionChangelog261013Screen() }
                                 entry<Route.ColorPalette> { ColorPaletteScreen() }
                                 entry<Route.OneuiXCategory> { key -> OneuiXCategoryScreen(key.category) }
                                 entry<Route.StatusCategory> { key -> StatusCategoryScreen(key.category) }

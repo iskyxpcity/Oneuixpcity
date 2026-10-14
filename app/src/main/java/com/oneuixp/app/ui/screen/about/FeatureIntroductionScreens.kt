@@ -64,25 +64,40 @@ import top.yukonga.miuix.kmp.utils.scrollEndHaptic
 fun FeatureIntroductionScreen() {
     val navigator = LocalNavigator.current
     val onBack = dropUnlessResumed { navigator.pop() }
-    val onOpenUpdates = dropUnlessResumed { navigator.push(Route.VersionChangelog) }
+    val onOpenLatestUpdates = dropUnlessResumed { navigator.push(Route.VersionChangelog261013) }
+    val onOpenFirstRelease = dropUnlessResumed { navigator.push(Route.VersionChangelog) }
     when (LocalUiMode.current) {
-        UiMode.Material -> FeatureIntroductionMaterial(onBack, onOpenUpdates)
-        UiMode.Miuix -> FeatureIntroductionMiuix(onBack, onOpenUpdates)
+        UiMode.Material -> FeatureIntroductionMaterial(onBack, onOpenLatestUpdates, onOpenFirstRelease)
+        UiMode.Miuix -> FeatureIntroductionMiuix(onBack, onOpenLatestUpdates, onOpenFirstRelease)
     }
 }
 
 @Composable
 fun VersionChangelogScreen() {
+    VersionChangelogContent(isLatestVersion = false)
+}
+
+@Composable
+fun VersionChangelog261013Screen() {
+    VersionChangelogContent(isLatestVersion = true)
+}
+
+@Composable
+private fun VersionChangelogContent(isLatestVersion: Boolean) {
     val navigator = LocalNavigator.current
     val onBack = dropUnlessResumed { navigator.pop() }
     when (LocalUiMode.current) {
-        UiMode.Material -> VersionChangelogMaterial(onBack)
-        UiMode.Miuix -> VersionChangelogMiuix(onBack)
+        UiMode.Material -> VersionChangelogMaterial(onBack, isLatestVersion)
+        UiMode.Miuix -> VersionChangelogMiuix(onBack, isLatestVersion)
     }
 }
 
 @Composable
-private fun FeatureIntroductionMaterial(onBack: () -> Unit, onOpenUpdates: () -> Unit) {
+private fun FeatureIntroductionMaterial(
+    onBack: () -> Unit,
+    onOpenLatestUpdates: () -> Unit,
+    onOpenFirstRelease: () -> Unit,
+) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
     Scaffold(
         topBar = {
@@ -110,7 +125,20 @@ private fun FeatureIntroductionMaterial(onBack: () -> Unit, onOpenUpdates: () ->
                     content = listOf(
                         {
                             SegmentedListItem(
-                                onClick = onOpenUpdates,
+                                onClick = onOpenLatestUpdates,
+                                headlineContent = { Text(stringResource(R.string.feature_intro_version_updates_261013)) },
+                                supportingContent = { Text(stringResource(R.string.feature_intro_version_updates_261013_summary)) },
+                                leadingContent = {
+                                    androidx.compose.material3.Icon(Icons.AutoMirrored.Filled.Article, contentDescription = null)
+                                },
+                                trailingContent = {
+                                    androidx.compose.material3.Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
+                                },
+                            )
+                        },
+                        {
+                            SegmentedListItem(
+                                onClick = onOpenFirstRelease,
                                 headlineContent = { Text(stringResource(R.string.feature_intro_version_updates)) },
                                 supportingContent = { Text(stringResource(R.string.feature_intro_version_updates_summary)) },
                                 leadingContent = {
@@ -130,7 +158,11 @@ private fun FeatureIntroductionMaterial(onBack: () -> Unit, onOpenUpdates: () ->
 }
 
 @Composable
-private fun FeatureIntroductionMiuix(onBack: () -> Unit, onOpenUpdates: () -> Unit) {
+private fun FeatureIntroductionMiuix(
+    onBack: () -> Unit,
+    onOpenLatestUpdates: () -> Unit,
+    onOpenFirstRelease: () -> Unit,
+) {
     val scrollBehavior = MiuixScrollBehavior()
     val backdrop = rememberBlurBackdrop(LocalEnableBlur.current)
     val barColor = if (backdrop != null) Color.Transparent else colorScheme.surface
@@ -167,9 +199,18 @@ private fun FeatureIntroductionMiuix(onBack: () -> Unit, onOpenUpdates: () -> Un
                 item {
                     MiuixCard(modifier = Modifier.padding(top = 12.dp).fillMaxWidth()) {
                         ArrowPreference(
+                            title = stringResource(R.string.feature_intro_version_updates_261013),
+                            summary = stringResource(R.string.feature_intro_version_updates_261013_summary),
+                            onClick = onOpenLatestUpdates,
+                        )
+                    }
+                }
+                item {
+                    MiuixCard(modifier = Modifier.padding(top = 8.dp).fillMaxWidth()) {
+                        ArrowPreference(
                             title = stringResource(R.string.feature_intro_version_updates),
                             summary = stringResource(R.string.feature_intro_version_updates_summary),
-                            onClick = onOpenUpdates,
+                            onClick = onOpenFirstRelease,
                         )
                     }
                 }
@@ -180,7 +221,7 @@ private fun FeatureIntroductionMiuix(onBack: () -> Unit, onOpenUpdates: () -> Un
 }
 
 @Composable
-private fun VersionChangelogMaterial(onBack: () -> Unit) {
+private fun VersionChangelogMaterial(onBack: () -> Unit, isLatestVersion: Boolean) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
     Scaffold(
         topBar = {
@@ -200,48 +241,51 @@ private fun VersionChangelogMaterial(onBack: () -> Unit) {
             modifier = Modifier.fillMaxSize().padding(innerPadding).nestedScroll(scrollBehavior.nestedScrollConnection),
             contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 24.dp),
         ) {
-            item {
-                Card(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
-                    Column(modifier = Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text(
-                            text = stringResource(R.string.version_1_0_261013_title),
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.SemiBold,
-                        )
-                        Text(
-                            text = stringResource(R.string.version_1_0_261013_summary),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
+            if (isLatestVersion) {
+                item {
+                    Card(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
+                        Column(modifier = Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text(
+                                text = stringResource(R.string.version_1_0_261013_title),
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.SemiBold,
+                            )
+                            Text(
+                                text = stringResource(R.string.version_1_0_261013_summary),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
                     }
                 }
-            }
-            item { MaterialChangelogSection(R.string.changelog_261013_feature_intro_title, R.string.changelog_261013_feature_intro_body) }
-            item { MaterialChangelogSection(R.string.changelog_261013_dual_ui_title, R.string.changelog_261013_dual_ui_body) }
-            item { MaterialChangelogSection(R.string.changelog_261013_first_release_title, R.string.changelog_261013_first_release_body) }
-            item { MaterialChangelogSection(R.string.changelog_261013_version_label_title, R.string.changelog_261013_version_label_body) }
-            item {
-                Card(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
-                    Column(modifier = Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text(
-                            text = stringResource(R.string.version_1_0_260930_title),
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.SemiBold,
-                        )
-                        Text(
-                            text = stringResource(R.string.version_1_0_260930_summary),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
+                item { MaterialChangelogSection(R.string.changelog_261013_feature_intro_title, R.string.changelog_261013_feature_intro_body) }
+                item { MaterialChangelogSection(R.string.changelog_261013_dual_ui_title, R.string.changelog_261013_dual_ui_body) }
+                item { MaterialChangelogSection(R.string.changelog_261013_first_release_title, R.string.changelog_261013_first_release_body) }
+                item { MaterialChangelogSection(R.string.changelog_261013_version_label_title, R.string.changelog_261013_version_label_body) }
+            } else {
+                item {
+                    Card(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
+                        Column(modifier = Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text(
+                                text = stringResource(R.string.version_1_0_260930_title),
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.SemiBold,
+                            )
+                            Text(
+                                text = stringResource(R.string.version_1_0_260930_summary),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
                     }
                 }
+                item { MaterialChangelogSection(R.string.changelog_section_combo_title, R.string.changelog_section_combo_body) }
+                item { MaterialChangelogSection(R.string.changelog_section_statusbar_title, R.string.changelog_section_statusbar_body) }
+                item { MaterialChangelogSection(R.string.changelog_section_network_title, R.string.changelog_section_network_body) }
+                item { MaterialChangelogSection(R.string.changelog_section_power_title, R.string.changelog_section_power_body) }
+                item { MaterialChangelogSection(R.string.changelog_section_ui_title, R.string.changelog_section_ui_body) }
+                item { MaterialChangelogSection(R.string.changelog_section_diagnostics_title, R.string.changelog_section_diagnostics_body) }
             }
-            item { MaterialChangelogSection(R.string.changelog_section_combo_title, R.string.changelog_section_combo_body) }
-            item { MaterialChangelogSection(R.string.changelog_section_statusbar_title, R.string.changelog_section_statusbar_body) }
-            item { MaterialChangelogSection(R.string.changelog_section_network_title, R.string.changelog_section_network_body) }
-            item { MaterialChangelogSection(R.string.changelog_section_power_title, R.string.changelog_section_power_body) }
-            item { MaterialChangelogSection(R.string.changelog_section_ui_title, R.string.changelog_section_ui_body) }
-            item { MaterialChangelogSection(R.string.changelog_section_diagnostics_title, R.string.changelog_section_diagnostics_body) }
         }
     }
 }
@@ -257,7 +301,7 @@ private fun MaterialChangelogSection(titleRes: Int, bodyRes: Int) {
 }
 
 @Composable
-private fun VersionChangelogMiuix(onBack: () -> Unit) {
+private fun VersionChangelogMiuix(onBack: () -> Unit, isLatestVersion: Boolean) {
     val scrollBehavior = MiuixScrollBehavior()
     val backdrop = rememberBlurBackdrop(LocalEnableBlur.current)
     val barColor = if (backdrop != null) Color.Transparent else colorScheme.surface
@@ -287,50 +331,53 @@ private fun VersionChangelogMiuix(onBack: () -> Unit) {
                 contentPadding = innerPadding,
                 overscrollEffect = null,
             ) {
-                item {
-                    MiuixCard(modifier = Modifier.padding(top = 12.dp).fillMaxWidth()) {
-                        Column(modifier = Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
-                            MiuixText(
-                                text = stringResource(R.string.version_1_0_261013_title),
-                                fontSize = 20.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = colorScheme.onBackground,
-                            )
-                            MiuixText(
-                                text = stringResource(R.string.version_1_0_261013_summary),
-                                fontSize = 14.sp,
-                                color = colorScheme.onSurfaceVariantSummary,
-                            )
+                if (isLatestVersion) {
+                    item {
+                        MiuixCard(modifier = Modifier.padding(top = 12.dp).fillMaxWidth()) {
+                            Column(modifier = Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
+                                MiuixText(
+                                    text = stringResource(R.string.version_1_0_261013_title),
+                                    fontSize = 20.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = colorScheme.onBackground,
+                                )
+                                MiuixText(
+                                    text = stringResource(R.string.version_1_0_261013_summary),
+                                    fontSize = 14.sp,
+                                    color = colorScheme.onSurfaceVariantSummary,
+                                )
+                            }
                         }
                     }
-                }
-                item { MiuixChangelogSection(R.string.changelog_261013_feature_intro_title, R.string.changelog_261013_feature_intro_body) }
-                item { MiuixChangelogSection(R.string.changelog_261013_dual_ui_title, R.string.changelog_261013_dual_ui_body) }
-                item { MiuixChangelogSection(R.string.changelog_261013_first_release_title, R.string.changelog_261013_first_release_body) }
-                item { MiuixChangelogSection(R.string.changelog_261013_version_label_title, R.string.changelog_261013_version_label_body) }
-                item {
-                    MiuixCard(modifier = Modifier.padding(top = 12.dp).fillMaxWidth()) {
-                        Column(modifier = Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
-                            MiuixText(
-                                text = stringResource(R.string.version_1_0_260930_title),
-                                fontSize = 20.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = colorScheme.onBackground,
-                            )
-                            MiuixText(
-                                text = stringResource(R.string.version_1_0_260930_summary),
-                                fontSize = 14.sp,
-                                color = colorScheme.onSurfaceVariantSummary,
-                            )
+                    item { MiuixChangelogSection(R.string.changelog_261013_feature_intro_title, R.string.changelog_261013_feature_intro_body) }
+                    item { MiuixChangelogSection(R.string.changelog_261013_dual_ui_title, R.string.changelog_261013_dual_ui_body) }
+                    item { MiuixChangelogSection(R.string.changelog_261013_first_release_title, R.string.changelog_261013_first_release_body) }
+                    item { MiuixChangelogSection(R.string.changelog_261013_version_label_title, R.string.changelog_261013_version_label_body) }
+                } else {
+                    item {
+                        MiuixCard(modifier = Modifier.padding(top = 12.dp).fillMaxWidth()) {
+                            Column(modifier = Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
+                                MiuixText(
+                                    text = stringResource(R.string.version_1_0_260930_title),
+                                    fontSize = 20.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = colorScheme.onBackground,
+                                )
+                                MiuixText(
+                                    text = stringResource(R.string.version_1_0_260930_summary),
+                                    fontSize = 14.sp,
+                                    color = colorScheme.onSurfaceVariantSummary,
+                                )
+                            }
                         }
                     }
+                    item { MiuixChangelogSection(R.string.changelog_section_combo_title, R.string.changelog_section_combo_body) }
+                    item { MiuixChangelogSection(R.string.changelog_section_statusbar_title, R.string.changelog_section_statusbar_body) }
+                    item { MiuixChangelogSection(R.string.changelog_section_network_title, R.string.changelog_section_network_body) }
+                    item { MiuixChangelogSection(R.string.changelog_section_power_title, R.string.changelog_section_power_body) }
+                    item { MiuixChangelogSection(R.string.changelog_section_ui_title, R.string.changelog_section_ui_body) }
+                    item { MiuixChangelogSection(R.string.changelog_section_diagnostics_title, R.string.changelog_section_diagnostics_body) }
                 }
-                item { MiuixChangelogSection(R.string.changelog_section_combo_title, R.string.changelog_section_combo_body) }
-                item { MiuixChangelogSection(R.string.changelog_section_statusbar_title, R.string.changelog_section_statusbar_body) }
-                item { MiuixChangelogSection(R.string.changelog_section_network_title, R.string.changelog_section_network_body) }
-                item { MiuixChangelogSection(R.string.changelog_section_power_title, R.string.changelog_section_power_body) }
-                item { MiuixChangelogSection(R.string.changelog_section_ui_title, R.string.changelog_section_ui_body) }
-                item { MiuixChangelogSection(R.string.changelog_section_diagnostics_title, R.string.changelog_section_diagnostics_body) }
                 item { androidx.compose.foundation.layout.Spacer(Modifier.height(24.dp)) }
             }
         }
