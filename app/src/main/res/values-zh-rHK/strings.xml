@@ -71,8 +71,8 @@
     <string name="disclaimer_source_body">本專案使用並整合、修改了 OneUIX 與 HyperDuo 的相關原始碼。</string>
     <string name="disclaimer_style_title">介面風格說明</string>
     <string name="disclaimer_style_body">本應用程式部分介面採用了 KernelSU 的介面風格。</string>
-    <string name="disclaimer_risk_title">玩機風險與責任說明</string>
-    <string name="disclaimer_risk_body">刷機、解鎖 Bootloader、取得 Root 權限、修改系統設定或使用 Xposed/LSPosed 等模組均存在風險，可能導致系統異常、資料遺失、無法開機，甚至裝置損壞。本應用程式亦可能因裝置型號、Android 版本或其他模組的相容性問題而無法正常運作。請先自行了解相關風險並備份重要資料，再決定是否安裝或使用本應用程式及進行相關操作。在適用法律允許的範圍內，開發者不對因使用本應用程式或相關玩機操作造成的裝置故障、資料遺失或其他損失承擔責任。</string>
+    <string name="disclaimer_risk_title">玩機風險提示</string>
+    <string name="disclaimer_risk_body">玩機有風險。本模組可能導致系統異常、資料遺失、無法開機甚至裝置損壞。使用本模組所產生的一切風險與損失由使用者自行承擔，開發者不承擔相關責任。</string>
     <string name="feature_intro_version_updates">OneUI XP 1.0.260930 主要更新</string>
     <string name="feature_intro_version_updates_summary">2026-09-30</string>
     <string name="feature_intro_version_updates_261013">OneUI XP 1.0.261013 主要更新</string>
