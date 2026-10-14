@@ -595,10 +595,16 @@ internal object StatusBarNetworkSpeedRuntime {
         )
         if (hiddenByThreshold) {
             view.text = ""
+            StatusBarBurnInProtectionRuntime.unregisterOffsetTarget(view)
             return
         }
 
         view.text = buildDisplayText(source, current)
+        if (display.enabled && view.text.isNotBlank()) {
+            StatusBarBurnInProtectionRuntime.registerView(view)
+        } else {
+            StatusBarBurnInProtectionRuntime.unregisterOffsetTarget(view)
+        }
     }
 
     private fun buildDisplayText(

@@ -404,6 +404,9 @@ object StatusBarComboStyleOneRuntime {
         private var placementSyncScheduled = false
         private var burnInOffsetXDp: Float = 0f
         private var burnInOffsetYDp: Float = 0f
+        private var burnInBaseXpx: Int? = null
+        private var burnInBaseYpx: Int? = null
+        private var burnInMinimumWindowY: Int = 0
         private var observedTreeObserver: android.view.ViewTreeObserver? = null
         private var geometryConfirmationScheduled = false
         private var lastStableGeometry: DisplayGeometry? = null
@@ -628,9 +631,17 @@ object StatusBarComboStyleOneRuntime {
             if (burnInOffsetXDp == xDp && burnInOffsetYDp == yDp) return
             burnInOffsetXDp = xDp
             burnInOffsetYDp = yDp
-            val anchor = watchedAnchor?.get() ?: return
-            val root = watchedRoot?.get() ?: return
-            update(anchor, root)
+            val lp = params ?: return
+            val baseX = burnInBaseXpx ?: return
+            val baseY = burnInBaseYpx ?: return
+            val density = context.resources.displayMetrics.density.takeIf { it > 0f } ?: 1f
+            val nextX = baseX + (xDp * density).roundToInt()
+            val nextY = (baseY + (yDp * density).roundToInt()).coerceAtLeast(burnInMinimumWindowY)
+            if (lp.x == nextX && lp.y == nextY) return
+            lp.x = nextX
+            lp.y = nextY
+            runCatching { wm?.updateViewLayout(glyph, lp) }
+                .onFailure { Log.w(TAG, "Cannot move burn-in glyph overlay", it) }
         }
 
         fun attach(anchor: View, root: ViewGroup): Boolean {
@@ -812,15 +823,13 @@ object StatusBarComboStyleOneRuntime {
             // edge. The expanded transparent host reserves this same width in native layout,
             // leaving the preceding Bluetooth/alarm/network icons to the left of our canvas.
             val horizontalOffsetPx = StatusBarComboStyleOneRuntime.dpExact(context, cfg.glyphOffsetXDp)
-            lp.x = (
+            val baseWindowX = (
                 slotRightPx - canvasLeftInsetPx - designWidthUnits * renderScale +
                     horizontalOffsetPx
-                ).roundToInt() +
-                (burnInOffsetXDp * (context.resources.displayMetrics.density.takeIf { it > 0f } ?: 1f)).roundToInt()
+                ).roundToInt()
             val verticalOffsetPx = StatusBarComboStyleOneRuntime.dpExact(context, cfg.glyphOffsetYDp)
-            val requestedWindowY = (
-                slotCenterY - lp.height * centreRatioY + verticalOffsetPx +
-                    burnInOffsetYDp * (context.resources.displayMetrics.density.takeIf { it > 0f } ?: 1f)
+            val requestedBaseWindowY = (
+                slotCenterY - lp.height * centreRatioY + verticalOffsetPx
                 ).roundToInt()
             // FLAG_LAYOUT_NO_LIMITS is required by Samsung so coordinates remain screen-based,
             // but it also permits a scaled-up overlay to extend above y=0. The inner display's
@@ -828,8 +837,14 @@ object StatusBarComboStyleOneRuntime {
             // can produce a negative window Y only when unfolded. Preserve normal centering until
             // the top edge would cross the active display's top boundary, then pin the window there.
             val minimumWindowY = if (rootLocated) rootLocation[1].coerceAtLeast(0) else 0
-            lp.y = requestedWindowY.coerceAtLeast(minimumWindowY)
-            val topEdgeClamped = lp.y != requestedWindowY
+            burnInBaseXpx = baseWindowX
+            burnInBaseYpx = requestedBaseWindowY.coerceAtLeast(minimumWindowY)
+            burnInMinimumWindowY = minimumWindowY
+            val density = context.resources.displayMetrics.density.takeIf { it > 0f } ?: 1f
+            lp.x = baseWindowX + (burnInOffsetXDp * density).roundToInt()
+            val unboundedY = requireNotNull(burnInBaseYpx) + (burnInOffsetYDp * density).roundToInt()
+            lp.y = unboundedY.coerceAtLeast(minimumWindowY)
+            val topEdgeClamped = requireNotNull(burnInBaseYpx) != requestedBaseWindowY || lp.y != unboundedY
 
             val ringCenterXUnits = StatusComboStyleOneGlyphRenderer.glyphCenterX(cfg, networkType)
             val ringCenterScreenPx = lp.x + canvasLeftInsetPx + ringCenterXUnits * renderScale

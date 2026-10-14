@@ -99,10 +99,24 @@ object StatusBar {
         }
     }
 
+    private fun shouldBurnInMoveClock(current: Preference.SystemUI.StatusBar): Boolean =
+        current.setStatusBarClockFormat ||
+            current.setStatusBarClockTextScale ||
+            current.enableStatusBarClockRichStyle ||
+            current.modifyStatusBarClockPosition ||
+            current.updateStatusBarClockEverySecond ||
+            current.modifyDoubleLineClockGap ||
+            current.useFold7CustomDoubleLineClockScale
+
     private fun applyStatusBarClockRuntime(
         clockTextView: TextView,
         current: Preference.SystemUI.StatusBar,
     ) {
+        if (shouldBurnInMoveClock(current)) {
+            StatusBarBurnInProtectionRuntime.registerView(clockTextView)
+        } else {
+            StatusBarBurnInProtectionRuntime.unregisterOffsetTarget(clockTextView)
+        }
         if (!current.setStatusBarClockFormat) {
             applySingleLineClockScale(clockTextView, current)
             OfficialMainStatusBarMod.applyStatusBarClockPosition(clockTextView)
@@ -141,15 +155,21 @@ object StatusBar {
     fun updateStatusBarClockRuntime(current: Preference.SystemUI.StatusBar) {
         val previous = statusBarClockRuntime
         statusBarClockRuntime = current
+        val activeViews = synchronized(statusBarClockViews) {
+            statusBarClockViews.keys.toList()
+        }
+        activeViews.forEach { clock ->
+            if (shouldBurnInMoveClock(current)) {
+                StatusBarBurnInProtectionRuntime.registerView(clock)
+            } else {
+                StatusBarBurnInProtectionRuntime.unregisterOffsetTarget(clock)
+            }
+        }
 
         // Position, alignment, fixed width and margin sliders should only move the
         // native TextView. Replacing its Spannable text on each preview frame makes
         // Samsung's clock blink and forces a layout that can undo the translation.
         if (!clockContentSettingsChanged(previous, current)) return
-
-        val activeViews = synchronized(statusBarClockViews) {
-            statusBarClockViews.keys.toList()
-        }
         activeViews.forEach { clockTextView ->
             clockTextView.post {
                 applyStatusBarClockRuntime(clockTextView, current)
@@ -611,6 +631,11 @@ object StatusBar {
             }
 
             val current = statusBarClockRuntime
+            if (current != null && shouldBurnInMoveClock(current)) {
+                StatusBarBurnInProtectionRuntime.registerView(clockTextView)
+            } else {
+                StatusBarBurnInProtectionRuntime.unregisterOffsetTarget(clockTextView)
+            }
             if (current != null && !current.setStatusBarClockFormat) {
                 rememberClockBaseTextSize(clockTextView)
                 applySingleLineClockScale(clockTextView, current)

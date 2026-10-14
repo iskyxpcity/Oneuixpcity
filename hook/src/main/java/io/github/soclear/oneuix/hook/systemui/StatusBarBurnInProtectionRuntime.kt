@@ -46,6 +46,8 @@ internal object StatusBarBurnInProtectionRuntime {
     private data class ViewBaseline(
         var x: Float,
         var y: Float,
+        var lastOffsetX: Float = 0f,
+        var lastOffsetY: Float = 0f,
         var lastWrittenX: Float = x,
         var lastWrittenY: Float = y,
     )
@@ -264,14 +266,23 @@ internal object StatusBarBurnInProtectionRuntime {
                 ViewBaseline(view.translationX, view.translationY)
             }
         }
-        // If OneuiXP's own layout routine writes a new translation, accept it as the base.
-        if (abs(view.translationX - base.lastWrittenX) > 0.5f) base.x = view.translationX
-        if (abs(view.translationY - base.lastWrittenY) > 0.5f) base.y = view.translationY
+        // If another OneuiXP setting writes a new translation, reconstruct its unshifted
+        // baseline by removing our previous contribution before applying the new offset.
+        if (abs(view.translationX - base.lastWrittenX) > 0.01f) {
+            base.x = view.translationX - base.lastOffsetX
+        }
+        if (abs(view.translationY - base.lastWrittenY) > 0.01f) {
+            base.y = view.translationY - base.lastOffsetY
+        }
         val density = view.resources.displayMetrics.density.takeIf { it > 0f } ?: 1f
-        val targetX = base.x + xDp * density
-        val targetY = base.y + yDp * density
+        val offsetX = xDp * density
+        val offsetY = yDp * density
+        val targetX = base.x + offsetX
+        val targetY = base.y + offsetY
         if (abs(view.translationX - targetX) > 0.01f) view.translationX = targetX
         if (abs(view.translationY - targetY) > 0.01f) view.translationY = targetY
+        base.lastOffsetX = offsetX
+        base.lastOffsetY = offsetY
         base.lastWrittenX = targetX
         base.lastWrittenY = targetY
     }
