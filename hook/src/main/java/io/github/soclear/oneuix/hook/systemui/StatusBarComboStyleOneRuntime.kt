@@ -1300,6 +1300,7 @@ object StatusBarComboStyleOneRuntime {
                 host.overlay?.detach()
                 return
             }
+            if (!config.enabled || !config.showWifi) restoreNativeWifiClusters(root)
             val currentDisplayId = root.display?.displayId ?: -1
             val currentDisplaySize = activeDisplaySize(root)
             val displayIdentityChanged =
@@ -1437,6 +1438,11 @@ object StatusBarComboStyleOneRuntime {
                     (config.showMobile && config.mobileTypeMode == 2 && isMobileTypeView(view))
                 if (hide) collapseHostView(host, view) else restoreHostView(host, view)
                 if (wifiCandidate) diagnoseNativeWifiView(view, if (hide) "apply-collapse" else "apply-restore")
+            }
+            if (config.enabled && config.showWifi) {
+                views.filterIsInstance<ViewGroup>().filter(::isStatusIconsCluster).forEach { cluster ->
+                    scheduleNativeWifiClusterReconciliation(cluster)
+                }
             }
 
             if (wantsOverlay) {
@@ -4370,7 +4376,8 @@ object StatusBarComboStyleOneRuntime {
                 // icon hosts. Only modify the instance inside the PhoneStatusBarView
                 // host that OneuiXP has explicitly registered for the collapsed bar.
                 val host = view?.let(::hostFor)
-                if (view != null && wifiClass != null && wifiClass.isInstance(view) &&
+                val requestedBefore = chain.args.getOrNull(0) as? Int ?: view?.visibility ?: View.VISIBLE
+                val hookResult = if (view != null && wifiClass != null && wifiClass.isInstance(view) &&
                     config.enabled && host != null
                 ) {
                     val args = chain.args.toTypedArray()
@@ -4432,6 +4439,27 @@ object StatusBarComboStyleOneRuntime {
                 } else {
                     chain.proceed()
                 }
+
+                if (view != null && host != null && !adjustingNativeWifiClusterVisibility.get()) {
+                    if (isStatusIconsCluster(view)) {
+                        val cluster = view as? ViewGroup
+                        if (cluster != null && nativeWifiClusterBaselineVisibility.containsKey(cluster)) {
+                            // Preserve a real SystemUI visibility request as the restore target.
+                            nativeWifiClusterBaselineVisibility[cluster] = requestedBefore
+                            scheduleNativeWifiClusterReconciliation(cluster)
+                        }
+                    } else {
+                        val cluster = view.parent as? ViewGroup
+                        if (cluster != null && isStatusIconsCluster(cluster)) {
+                            val requestedAfterPolicy =
+                                if (wifiClass != null && wifiClass.isInstance(view) &&
+                                    config.enabled && config.showWifi
+                                ) View.GONE else requestedBefore
+                            scheduleNativeWifiClusterReconciliation(cluster, view, requestedAfterPolicy)
+                        }
+                    }
+                }
+                hookResult
             }
             // Observe the per-view model without changing visibility here. SystemUI also
             // constructs ModernStatusBarWifiView for demo/secondary surfaces, so actual
