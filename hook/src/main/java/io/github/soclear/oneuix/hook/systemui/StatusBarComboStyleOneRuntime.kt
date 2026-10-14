@@ -1925,7 +1925,22 @@ object StatusBarComboStyleOneRuntime {
         key = 31 * key + if (config.showMobile && config.mobileTypeMode == 2) 1 else 0
         key = 31 * key + container.childCount
         for (index in 0 until container.childCount) {
-            key = 31 * key + System.identityHashCode(container.getChildAt(index))
+            val child = container.getChildAt(index)
+            key = 31 * key + System.identityHashCode(child)
+            // SystemUI can rebind a native Wi-Fi view and restore its LayoutParams without
+            // changing the child list. Include its layout footprint so the next layout pass
+            // re-applies zero-width suppression instead of leaving a transparent slot behind.
+            if (isWifiIcon(child)) {
+                val lp = child.layoutParams
+                val margins = lp as? ViewGroup.MarginLayoutParams
+                key = 31 * key + (lp?.width ?: 0)
+                key = 31 * key + (lp?.height ?: 0)
+                key = 31 * key + child.visibility
+                key = 31 * key + child.width
+                key = 31 * key + child.height
+                key = 31 * key + (margins?.leftMargin ?: 0)
+                key = 31 * key + (margins?.rightMargin ?: 0)
+            }
         }
         return key
     }
@@ -2017,6 +2032,22 @@ object StatusBarComboStyleOneRuntime {
         host.original.putIfAbsent(view, nativeBatterySnapshot?.visibility ?: view.visibility)
         if (!host.layouts.containsKey(view)) {
             (nativeBatterySnapshot ?: snapshotLayout(view))?.let { host.layouts[view] = it }
+        }
+        collapseViewLayout(view)
+    }
+
+    private fun collapseNativeWifiHostView(host: Host, view: View) {
+        // The visibility hook runs after SystemUI has begun applying its new state. Capture
+        // the real pre-Combo layout, not the forced GONE/zero-size state, so disabling the arc
+        // can restore the native Wi-Fi slot exactly as it was.
+        val baselineVisibility = nativeWifiBaselineVisibility[view]
+            ?: host.original[view]
+            ?: host.layouts[view]?.visibility
+            ?: view.visibility
+        host.original.putIfAbsent(view, baselineVisibility)
+        if (!host.layouts.containsKey(view)) {
+            val baseline = nativeBatteryLayouts[view] ?: snapshotLayout(view)
+            baseline?.copy(visibility = baselineVisibility)?.let { host.layouts[view] = it }
         }
         collapseViewLayout(view)
     }
@@ -4220,12 +4251,20 @@ object StatusBarComboStyleOneRuntime {
                                 "wifiConnected=$connectedLabel modelVisible=$modelLabel"
                         )
                     }
-                    if (forced != requested) {
+                    val result = if (forced != requested) {
                         args[0] = forced
                         chain.proceed(args)
                     } else {
                         chain.proceed()
                     }
+                    if (config.enabled && config.showWifi && forced == View.GONE) {
+                        // GONE alone is not sufficient on every Samsung StatusIconContainer:
+                        // its slot can keep the previous measurement after a Wi-Fi rebind.
+                        // Collapse the actual width/height and margins on every native update.
+                        collapseNativeWifiHostView(host, view)
+                        diagnoseNativeWifiView(view, "visibility-hook-collapse")
+                    }
+                    result
                 } else {
                     chain.proceed()
                 }
