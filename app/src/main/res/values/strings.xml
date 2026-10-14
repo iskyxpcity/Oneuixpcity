@@ -124,8 +124,8 @@
     <string name="status_signal_dp_summary">%1$.1f dp</string>
 
     <string name="feature_introduction">Feature Introduction</string>
-    <string name="feature_intro_version_updates">OneUI XP app version highlights</string>
-    <string name="feature_intro_version_updates_summary">Browse the main features and changes by app version</string>
+    <string name="feature_intro_version_updates">OneUI XP 1.0.260930 Highlights</string>
+    <string name="feature_intro_version_updates_summary">2026-09-30</string>
     <string name="version_updates_title">Version Highlights</string>
     <string name="version_1_0_260930_title">1.0.260930 · First Release</string>
     <string name="version_1_0_260930_summary">An introduction to the main features included in the first release.</string>
