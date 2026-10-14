@@ -1485,8 +1485,7 @@ object StatusBarComboStyleOneRuntime {
                 (host.activeDisplayWidth > 0 && host.activeDisplayHeight > 0 &&
                     (currentDisplaySize.x != host.activeDisplayWidth ||
                         currentDisplaySize.y != host.activeDisplayHeight))
-            if (displayIdentityChanged) {
-                if (displayIdentityChanged && host.overlay != null) {
+            if (displayIdentityChanged && host.overlay != null) {
                 diagnostic(
                     "Status-bar display geometry changed: id=${host.activeDisplayId}->${currentDisplayId}, " +
                         "size=${host.activeDisplayWidth}x${host.activeDisplayHeight}->" +
