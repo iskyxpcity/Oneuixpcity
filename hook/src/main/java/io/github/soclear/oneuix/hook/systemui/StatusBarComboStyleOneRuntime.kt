@@ -2460,9 +2460,9 @@ object StatusBarComboStyleOneRuntime {
     }
 
     private fun hookBatteryDrawFallback(module: XposedModule, classLoader: ClassLoader) {
-        // The upstream renderer paints into MiuiBatteryMeterIconView.onDraw when its separate
-        // window is not covering the row. Use the same event path only while the
-        // shade is transforming the status bar; never poll or rescan the tree.
+        // Keep native battery surfaces free of stock pixels in overlay mode.
+        // The independent window is the only combo renderer in this mode, including during
+        // shade transitions; do not paint a duplicate into the native battery canvas.
         val candidates = listOf(
             "com.android.systemui.statusbar.views.MiuiBatteryMeterIconView",
             MIUI_BATTERY_METER,
@@ -2513,20 +2513,6 @@ object StatusBarComboStyleOneRuntime {
                 // Clear stock pixels every time this OEM battery surface draws. Visibility
                 // and alpha alone are not sufficient on builds that reapply icon tint.
                 canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR)
-                // During shade expansion, the native surface is temporarily the glyph
-                // renderer's canvas. Paint OneuiXP there only when the overlay is hidden.
-                if (shadeBusy && config.overlayGlyph && host.overlay != null &&
-                    host.shadeDrawTarget === view
-                ) {
-                    val currentState = state
-                    StatusComboStyleOneGlyphRenderer.draw(
-                        canvas,
-                        view.width,
-                        view.height,
-                        config,
-                        currentState.copy(tintColor = host.rowTint ?: currentState.tintColor),
-                    )
-                }
                 result
             }
         }
