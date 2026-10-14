@@ -137,8 +137,8 @@
     <string name="changelog_261013_feature_intro_body">Added the Feature Introduction entry and version update pages.</string>
     <string name="changelog_261013_dual_ui_title">Two interface styles</string>
     <string name="changelog_261013_dual_ui_body">Version lists and details now follow the Material and Miuix interface styles.</string>
-    <string name="changelog_261013_version_label_title">Separate version notes</string>
-    <string name="changelog_261013_version_label_body">1.0.261013 and 1.0.260930 each open their own update notes.</string>
+    <string name="changelog_261013_version_split_title">Separate version notes</string>
+    <string name="changelog_261013_version_split_body">1.0.261013 and 1.0.260930 each open their own update notes.</string>
     <string name="changelog_section_combo_title">Three-in-one status bar icon</string>
     <string name="changelog_section_combo_body">Combine the battery ring, mobile signal, network type and Wi-Fi state in one customizable status-bar indicator. Adjust its size, position, spacing and colors, with support for dual SIM/eSIM presentation and charging or power-saving states.</string>
     <string name="changelog_section_statusbar_title">Status bar appearance</string>

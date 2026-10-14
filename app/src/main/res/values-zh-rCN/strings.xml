@@ -136,8 +136,8 @@
     <string name="changelog_261013_feature_intro_body">新增「功能介绍」入口与版本更新页面。</string>
     <string name="changelog_261013_dual_ui_title">双主题适配</string>
     <string name="changelog_261013_dual_ui_body">版本列表和更新详情适配 Material、Miuix 两套界面。</string>
-    <string name="changelog_261013_version_label_title">分版本查看</string>
-    <string name="changelog_261013_version_label_body">1.0.261013 与 1.0.260930 分别显示对应更新内容。</string>
+    <string name="changelog_261013_version_split_title">分版本查看</string>
+    <string name="changelog_261013_version_split_body">1.0.261013 与 1.0.260930 分别显示对应更新内容。</string>
     <string name="changelog_section_combo_title">三合一状态栏组合图标</string>
     <string name="changelog_section_combo_body">将电量圆环、移动信号、网络类型和 Wi-Fi 状态整合到一个可自定义的状态栏图标中。可调整图标大小、位置、间距和颜色，并支持双 SIM/eSIM 显示，以及充电、快充和省电状态的视觉效果。</string>
     <string name="changelog_section_statusbar_title">状态栏外观自定义</string>
