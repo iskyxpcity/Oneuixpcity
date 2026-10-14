@@ -119,9 +119,6 @@ internal object StatusBarBurnInProtectionRuntime {
                 targets.firstOrNull { it.owner.get() === owner }
                     ?: Target(WeakReference(owner), apply).also { targets += it }
             }
-            // registerView() is also used after a OneuiXP style change. Re-capture the view's
-            // intended translation before adding the currently-selected micro-offset.
-            if (owner is View) synchronized(viewBaselines) { viewBaselines.remove(owner) }
             val offset = currentOffset()
             runCatching { target.apply(owner, offset.first, offset.second) }
                 .onFailure { Log.d(TAG, "Initial custom target offset failed", it) }

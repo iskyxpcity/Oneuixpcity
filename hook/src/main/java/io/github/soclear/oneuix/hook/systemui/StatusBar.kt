@@ -102,11 +102,8 @@ object StatusBar {
     private fun shouldBurnInMoveClock(current: Preference.SystemUI.StatusBar): Boolean =
         current.setStatusBarClockFormat ||
             current.setStatusBarClockTextScale ||
-            current.enableStatusBarClockRichStyle ||
             current.modifyStatusBarClockPosition ||
-            current.updateStatusBarClockEverySecond ||
-            current.modifyDoubleLineClockGap ||
-            current.useFold7CustomDoubleLineClockScale
+            current.updateStatusBarClockEverySecond
 
     private fun syncClockBurnInTarget(
         clockTextView: TextView,
@@ -843,6 +840,7 @@ object StatusBar {
                 textView.text = "$percent$suffix"
                 val textColor = batteryMeterView.reflect["mTextColor"] as? Int ?: 0
                 textView.setTextColor(textColor)
+                StatusBarBurnInProtectionRuntime.registerView(textView)
             } catch (t: Throwable) {
                 xlog(t)
             }
