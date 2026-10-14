@@ -143,6 +143,10 @@ object StatusBarComboStyleOneRuntime {
     // SystemUI's true Visible/Hidden state when the custom arc is switched off.
     private val modernWifiViewModels = Collections.synchronizedMap(WeakHashMap<View, WeakReference<Any>>())
     private val lastNativeWifiDiagnostics = Collections.synchronizedMap(WeakHashMap<View, String>())
+    private val lastNativeWifiParentLayoutDiagnostics = Collections.synchronizedMap(WeakHashMap<ViewGroup, String>())
+    private val pendingNativeWifiParentRemeasures = Collections.synchronizedSet(
+        Collections.newSetFromMap(WeakHashMap<ViewGroup, Boolean>())
+    )
     private val lastNativeWifiSlotRequests = ConcurrentHashMap<String, String>()
     private val lastSubscriptionSignalLevels = ConcurrentHashMap<Int, Int>()
     private val subscriptionSlots = ConcurrentHashMap<Int, Int>()
@@ -1979,7 +1983,10 @@ object StatusBarComboStyleOneRuntime {
                     (config.showMobile && config.mobileTypeMode == 2 && isMobileTypeView(view))
             )
             if (hide) collapseHostView(host, view) else restoreHostView(host, view)
-            if (wifiCandidate) diagnoseNativeWifiView(view, if (hide) "container-collapse" else "container-restore")
+            if (wifiCandidate) {
+                diagnoseNativeWifiView(view, if (hide) "container-collapse" else "container-restore")
+                if (hide && config.enabled && config.showWifi) requestNativeWifiParentRemeasure(view)
+            }
         }
         lastContainerFingerprints[container] = containerSuppressionFingerprint(container)
     }
@@ -2050,6 +2057,52 @@ object StatusBarComboStyleOneRuntime {
             baseline?.copy(visibility = baselineVisibility)?.let { host.layouts[view] = it }
         }
         collapseViewLayout(view)
+        requestNativeWifiParentRemeasure(view)
+    }
+
+    /**
+     * On Samsung's StatusIconContainer, setting the ModernStatusBarWifiView to GONE/0x0
+     * can leave a stale measured width on the cluster. That width is included in system_icons
+     * and shifts the neighboring network-speed view even though wifi_combo itself is collapsed.
+     * Request a post-bind remeasure of the cluster and its row; never hide the whole cluster,
+     * because it also owns unrelated native status icons.
+     */
+    private fun requestNativeWifiParentRemeasure(view: View) {
+        val cluster = view.parent as? ViewGroup ?: return
+        if (cluster.width <= 0 && cluster.measuredWidth <= 0) return
+        synchronized(pendingNativeWifiParentRemeasures) {
+            if (!pendingNativeWifiParentRemeasures.add(cluster)) return
+        }
+
+        fun emit(stage: String) {
+            val params = cluster.layoutParams
+            val row = cluster.parent as? View
+            val snapshot = "stage=${stage}|id=${resourceName(cluster)}|class=${cluster.javaClass.name}|" +
+                "visibility=${cluster.visibility}|size=${cluster.width}x${cluster.height}|" +
+                "measured=${cluster.measuredWidth}x${cluster.measuredHeight}|" +
+                "lp=${params?.width}x${params?.height}|padding=${cluster.paddingLeft},${cluster.paddingTop}," +
+                "${cluster.paddingRight},${cluster.paddingBottom}|wifi=${view.visibility}:${view.width}x${view.height}|" +
+                "row=${row?.javaClass?.simpleName}:${row?.width}x${row?.height}"
+            if (lastNativeWifiParentLayoutDiagnostics.put(cluster, snapshot) != snapshot) {
+                diagnostic("Native Wi-Fi parent layout: $snapshot")
+            }
+        }
+
+        emit("before-request")
+        cluster.requestLayout()
+        (cluster.parent as? View)?.requestLayout()
+        cluster.post {
+            try {
+                if (!config.enabled || !config.showWifi || view.visibility != View.GONE) return@post
+                cluster.requestLayout()
+                (cluster.parent as? View)?.requestLayout()
+                cluster.invalidate()
+                (cluster.parent as? View)?.invalidate()
+                cluster.postDelayed({ emit("after-remeasure") }, 64L)
+            } finally {
+                pendingNativeWifiParentRemeasures.remove(cluster)
+            }
+        }
     }
 
     private fun scheduleGeometryRetry(host: Host) {
