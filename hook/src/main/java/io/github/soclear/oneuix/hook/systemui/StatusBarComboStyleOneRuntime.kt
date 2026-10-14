@@ -481,7 +481,9 @@ object StatusBarComboStyleOneRuntime {
             watchedAnchor = WeakReference(anchor)
             watchedRoot = WeakReference(root)
             if (captureDisplayGeometry || placementDisplayWidth <= 0 || placementDisplayHeight <= 0) {
-                placementDisplayId = root.display?.displayId ?: display?.displayId ?: -1
+                // Track the display the WindowContext was created for first; the live root
+                // can already have switched displays while this overlay is still stale.
+                placementDisplayId = display?.displayId ?: root.display?.displayId ?: -1
                 val size = StatusBarComboStyleOneRuntime.activeDisplaySize(root)
                 placementDisplayWidth = size.x
                 placementDisplayHeight = size.y
