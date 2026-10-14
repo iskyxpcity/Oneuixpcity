@@ -15,7 +15,7 @@
     <string name="status_combo_style_one_style_ring">圆环</string>
     <string name="status_combo_style_one_style_rect">矩形</string>
     <string name="status_combo_style_one_overlay">独立窗口绘制</string>
-    <string name="status_combo_style_one_overlay_summary">把三合一画在一个独立的小窗口里，不再受状态栏窗口高度（约 43dp）限制，图标可以完整显示；代价是图形下半部分会露在状态栏背景之外。关闭后回到状态栏内绘制。</string>
+    <string name="status_combo_style_one_overlay_summary">将三合一图标绘制在独立窗口中，避免受系统状态栏原生布局区域裁切。</string>
     <string name="status_combo_style_one_show_wifi">显示 Wi-Fi 弧</string>
     <string name="status_combo_style_one_show_wifi_summary">在最外层绘制 Wi-Fi 弧线，弧数跟随实际信号强度；关闭后原生 Wi-Fi 图标回到状态栏原本的位置。</string>
     <string name="status_combo_style_one_show_mobile">显示移动信号点</string>
@@ -69,6 +69,10 @@
     <string name="status_combo_style_one_out_type_margin_left">环外类型左边距</string>
     <string name="status_combo_style_one_out_type_margin_right">环外类型右边距</string>
     <string name="status_combo_style_one_out_signal_margin">环外信号右边距</string>
+    <string name="status_combo_style_one_out_type_offset_x">环外网络类型水平偏移</string>
+    <string name="status_combo_style_one_out_type_offset_y">环外网络类型垂直偏移</string>
+    <string name="status_combo_style_one_out_signal_offset_x">环外信号水平偏移</string>
+    <string name="status_combo_style_one_out_signal_offset_y">环外信号垂直偏移</string>
     <string name="status_combo_style_one_role_colors">状态颜色</string>
     <string name="status_combo_style_one_role_colors_summary">分别为低电量、充电与危险电量指定颜色。</string>
     <string name="status_combo_style_one_critical_threshold">临界电量阈值</string>
@@ -89,6 +93,8 @@
     <string name="status_combo_style_one_color_summary">点按选择颜色</string>
     <string name="status_combo_style_one_color_low">低电量颜色</string>
     <string name="status_combo_style_one_color_charging">充电颜色</string>
+    <string name="status_combo_style_one_color_normal_charging_bolt">普通充电闪电颜色</string>
+    <string name="status_combo_style_one_color_quick_charging_bolt">快速充电闪电颜色</string>
     <string name="status_combo_style_one_color_critical">危险电量颜色</string>
     <string name="status_combo_style_one_color_power_save_fill">省电模式底色</string>
     <string name="status_combo_style_one_power_save_fill_color_summary">分别设置状态栏深色和浅色背景下，电量圆环内部的底色。默认透明度为 75%。</string>
@@ -112,8 +118,8 @@
     <string name="status_combo_style_one_group_out_signal">环外信号</string>
     <string name="status_combo_style_one_group_track">底纹</string>
     <string name="status_combo_style_one_reset_colors">恢复默认</string>
-    <string name="status_combo_style_one_reset_colors_summary">恢复低电量、充电、危险电量和省电模式底色的默认颜色。</string>
-    <string name="status_combo_style_one_reset_colors_confirm">低电量、充电、危险电量和省电模式底色都会恢复默认颜色，当前自定义颜色会被覆盖。</string>
+    <string name="status_combo_style_one_reset_colors_summary">恢复低电量、充电、危险电量、省电模式底色及普通/快速充电闪电颜色的默认值。</string>
+    <string name="status_combo_style_one_reset_colors_confirm">低电量、充电、危险电量、省电模式底色以及普通/快速充电闪电的颜色都会恢复默认值，当前自定义颜色会被覆盖。</string>
     <string name="status_combo_style_one_reset">恢复默认</string>
     <string name="status_combo_style_one_cancel">取消</string>
     <string name="status_combo_style_one_tab_general">常规</string>
@@ -136,6 +142,10 @@
     <string name="status_combo_style_one_out_signal_size_summary">当前 %1$d dp：环外读数的整体高度，单位为 dp（会随屏幕密度自动换算成像素）。15 dp 与状态栏原生信号图标同高，也是默认值；可调范围 6–20 dp。无论有没有下方圆点排，同一行都按同一大小绘制，两种形状不会一大一小。下拉控制中心不会改变它。</string>
     <string name="status_combo_style_one_out_signal_margin_summary">当前 %1$d dp：控制自绘环外信号柱右侧（朝向电量圆环一侧）的额外留白，与“环外信号左边距”独立控制。增大右边距会让信号柱远离圆环，圆环位置保持不变。默认 8 dp，可调范围 0–16 dp。仅在信号位置选择环外且开启堆叠信号时生效。</string>
     <string name="status_combo_style_one_out_signal_margin_left_summary">当前 %1$d dp：调整环外信号柱左侧（远离电量圆环的一侧）的留白，与“环外信号右边距”相互独立；增大后会向左扩展状态栏占位，圆环位置保持不变。默认 0 dp，可调范围 0–16 dp。仅在信号位置为环外且开启堆叠信号时生效。</string>
+    <string name="status_combo_style_one_out_type_offset_x_summary">当前 %1$d dp：只水平移动环外网络类型文字，正值向右、负值向左，不移动环外信号柱。范围 −16 至 +16 dp。</string>
+    <string name="status_combo_style_one_out_type_offset_y_summary">当前 %1$d dp：只垂直移动环外网络类型文字，正值向下、负值向上，不移动环外信号柱。范围 −16 至 +16 dp。</string>
+    <string name="status_combo_style_one_out_signal_offset_x_summary">当前 %1$d dp：只水平移动环外信号柱，正值向右、负值向左，不移动网络类型文字。范围 −16 至 +16 dp。</string>
+    <string name="status_combo_style_one_out_signal_offset_y_summary">当前 %1$d dp：只垂直移动环外信号柱，正值向下、负值向上，不移动网络类型文字。范围 −16 至 +16 dp。</string>
     <string name="status_combo_style_one_track_alpha_summary">当前 %1$d%%：未点亮部分的透明度。</string>
     <string name="status_combo_style_one_bolt_size_summary">当前 %1$d%%：充电时闪电的缩放比例；需要同时开启电量数字和充电闪电。</string>
     <string name="status_combo_style_one_bolt_x_summary">当前 %1$d dp：充电闪电的水平位置；正值向右移动。</string>

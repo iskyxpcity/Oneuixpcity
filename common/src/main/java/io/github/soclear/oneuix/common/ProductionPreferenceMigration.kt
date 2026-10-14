@@ -101,6 +101,22 @@ object ProductionPreferenceMigration {
                     comboRuntimeChanged = true
                 }
 
+                // Restore the 1dp baseline left gap for the combined battery ring.
+                // This reverses the former 1dp-to-0dp default change exactly once;
+                // preserve any non-zero user-selected margin.
+                val glyphLeftMarginRestoreOneDpMigrationDone =
+                    (updatedComboRuntime["glyphLeftMarginRestoreOneDpMigrationDone"] as? JsonPrimitive)
+                        ?.content?.toBooleanStrictOrNull() == true
+                if (!glyphLeftMarginRestoreOneDpMigrationDone) {
+                    val oldLeftMargin =
+                        updatedComboRuntime["glyphLeftMarginDp"]?.toString()?.toIntOrNull() ?: 1
+                    if (oldLeftMargin == 0) {
+                        updatedComboRuntime["glyphLeftMarginDp"] = JsonPrimitive(1)
+                    }
+                    updatedComboRuntime["glyphLeftMarginRestoreOneDpMigrationDone"] = JsonPrimitive(true)
+                    comboRuntimeChanged = true
+                }
+
                 val marginResetTo2MigrationDone =
                     (updatedComboRuntime["outSignalMarginReset2MigrationDone"] as? JsonPrimitive)
                         ?.content?.toBooleanStrictOrNull() == true
@@ -162,6 +178,33 @@ object ProductionPreferenceMigration {
                         updatedComboRuntime["outSignalMarginDp"] = JsonPrimitive(8)
                     }
                     updatedComboRuntime["outSignalMarginEightDpMigrationDone"] = JsonPrimitive(true)
+                    comboRuntimeChanged = true
+                }
+
+                // Complete the one-time ring-layout migration without erasing user-controlled overall-size values.
+                val ringTrailingAnchorMigrationDone =
+                    (updatedComboRuntime["ringTrailingAnchorMigrationDone"] as? JsonPrimitive)
+                        ?.content?.toBooleanStrictOrNull() == true
+                if (!ringTrailingAnchorMigrationDone) {
+                    // Do not reset whole-glyph offset or margin values here. These controls
+                    // remain part of the Overall Size group and are user-adjustable.
+                    // Only replace the known untouched default tuple, keeping custom values intact.
+                    val oldSignalGap = updatedComboRuntime["outSignalMarginDp"]?.toString()?.toIntOrNull() ?: 8
+                    val oldTypeLeft = updatedComboRuntime["outTypeMarginLeftDp"]?.toString()?.toIntOrNull() ?: 2
+                    val oldTypeRight = updatedComboRuntime["outTypeMarginRightDp"]?.toString()?.toIntOrNull() ?: 2
+                    val oldSignalLeft = updatedComboRuntime["outSignalMarginLeftDp"]?.toString()?.toIntOrNull() ?: 0
+                    val elementOffsetsZero = listOf(
+                        "outTypeOffsetXDp", "outTypeOffsetYDp",
+                        "outSignalOffsetXDp", "outSignalOffsetYDp",
+                    ).all { key -> (updatedComboRuntime[key]?.toString()?.toIntOrNull() ?: 0) == 0 }
+                    if (oldSignalGap == 8 && oldTypeLeft == 2 && oldTypeRight == 2 &&
+                        oldSignalLeft == 0 && elementOffsetsZero
+                    ) {
+                        updatedComboRuntime["outSignalMarginDp"] = JsonPrimitive(0)
+                        updatedComboRuntime["outTypeMarginLeftDp"] = JsonPrimitive(0)
+                        updatedComboRuntime["outTypeMarginRightDp"] = JsonPrimitive(0)
+                    }
+                    updatedComboRuntime["ringTrailingAnchorMigrationDone"] = JsonPrimitive(true)
                     comboRuntimeChanged = true
                 }
 

@@ -210,7 +210,7 @@ private class NativeOneuiXPStartupView(
         val progress = segment(timeline, 0.12f, 0.42f)
         if (progress <= 0f) return
 
-        val title = "Samsung Galaxy One UI"
+        val title = "Samsung Galaxy OneUI"
         textPaint.typeface =
             android.graphics.Typeface.create("sans", android.graphics.Typeface.NORMAL)
         textPaint.textSize = sp(26f)
@@ -223,7 +223,7 @@ private class NativeOneuiXPStartupView(
     }
 
     private fun drawRainbowTitle(canvas: Canvas) {
-        val title = "Oneui XP"
+        val title = "OneUI XP"
         val firstLetterStart = 0.34f
         val letterDuration = 0.14f
         val visibleLetters = title.count { !it.isWhitespace() }.coerceAtLeast(1)

@@ -15,7 +15,7 @@
     <string name="status_combo_style_one_style_ring">Ring</string>
     <string name="status_combo_style_one_style_rect">Rectangular</string>
     <string name="status_combo_style_one_overlay">Draw in its own window</string>
-    <string name="status_combo_style_one_overlay_summary">Draw the glyph in its own window so it is not clipped to the status-bar height (about 43 dp), allowing the whole icon to show. The lower part of the glyph then hangs outside the status-bar background. Turn off to draw inside the bar again.</string>
+    <string name="status_combo_style_one_overlay_summary">Draw the trio icon in a separate window so it can extend beyond the native status-bar layout clipping area.</string>
     <string name="status_combo_style_one_show_wifi">Show Wi-Fi arcs</string>
     <string name="status_combo_style_one_show_wifi_summary">Draw the Wi-Fi arcs; the number of arcs follows the real signal level. Turn off to send the stock Wi-Fi icon back to its usual place in the status bar.</string>
     <string name="status_combo_style_one_show_mobile">Show mobile dots</string>
@@ -69,6 +69,10 @@
     <string name="status_combo_style_one_out_type_margin_left">Out-of-ring type margin, left</string>
     <string name="status_combo_style_one_out_type_margin_right">Out-of-ring type margin, right</string>
     <string name="status_combo_style_one_out_signal_margin">Out-of-ring signal right margin</string>
+    <string name="status_combo_style_one_out_type_offset_x">Out-of-ring type horizontal offset</string>
+    <string name="status_combo_style_one_out_type_offset_y">Out-of-ring type vertical offset</string>
+    <string name="status_combo_style_one_out_signal_offset_x">Out-of-ring signal horizontal offset</string>
+    <string name="status_combo_style_one_out_signal_offset_y">Out-of-ring signal vertical offset</string>
     <string name="status_combo_style_one_role_colors">State colors</string>
     <string name="status_combo_style_one_role_colors_summary">Pick colors for low battery, charging and critical battery.</string>
     <string name="status_combo_style_one_critical_threshold">Critical battery threshold</string>
@@ -90,6 +94,8 @@
     <string name="status_combo_style_one_color_summary">Tap to pick a color.</string>
     <string name="status_combo_style_one_color_low">Low battery color</string>
     <string name="status_combo_style_one_color_charging">Charging color</string>
+    <string name="status_combo_style_one_color_normal_charging_bolt">Normal charging bolt color</string>
+    <string name="status_combo_style_one_color_quick_charging_bolt">Fast charging bolt color</string>
     <string name="status_combo_style_one_color_critical">Critical battery color</string>
     <string name="status_combo_style_one_color_power_save_fill">Power-saving fill color</string>
     <string name="status_combo_style_one_power_save_fill_color_summary">Set the fill inside the battery ring separately for dark and light status-bar backgrounds. Default opacity is 75%.</string>
@@ -113,8 +119,8 @@
     <string name="status_combo_style_one_group_out_signal">Out-of-ring signal</string>
     <string name="status_combo_style_one_group_track">Track</string>
     <string name="status_combo_style_one_reset_colors">Reset</string>
-    <string name="status_combo_style_one_reset_colors_summary">Restore the low, charging, critical and power-saving fill colors to their defaults.</string>
-    <string name="status_combo_style_one_reset_colors_confirm">The low, charging, critical and power-saving fill colors will return to their defaults; custom colors will be overwritten.</string>
+    <string name="status_combo_style_one_reset_colors_summary">Restore low, charging, critical, power-saving fill and charging-bolt colors to their defaults.</string>
+    <string name="status_combo_style_one_reset_colors_confirm">Low, charging, critical, power-saving fill and both charging-bolt color sets will return to their defaults; custom colors will be overwritten.</string>
     <string name="status_combo_style_one_reset">Reset</string>
     <string name="status_combo_style_one_cancel">Cancel</string>
     <string name="status_combo_style_one_tab_general">General</string>
@@ -136,6 +142,10 @@
     <string name="status_combo_style_one_out_signal_size_summary">Current %1$d dp: overall height of the out-of-ring reading, in dp so it converts to pixels on any screen density. 15 dp matches the height of the status bar\'s own signal icon and is the default; the range is 6–20 dp. The same row is drawn at the same size whether or not a dot row follows it, so the two shapes never come out different sizes, and pulling down Quick Settings does not change it.</string>
     <string name="status_combo_style_one_out_signal_margin_summary">Current %1$d dp: controls the additional blank space on the right side of the out-of-ring signal bars, facing the battery ring. It is independent from the Out-of-ring signal left margin. Increasing it moves the bars away from the ring while keeping the ring anchored. Default 8 dp; range 0–16 dp. Available only when Signal position is Outside the ring and Stacked signal is enabled.</string>
     <string name="status_combo_style_one_out_signal_margin_left_summary">Current %1$d dp: controls the blank space on the left/outward side of the out-of-ring signal bars, independently from the Out-of-ring signal right margin. Increasing it expands the status-bar slot to the left while keeping the battery ring anchored. Default 0 dp; range 0–16 dp. Available only when Signal position is Outside the ring and Stacked signal is enabled.</string>
+    <string name="status_combo_style_one_out_type_offset_x_summary">Current %1$d dp: moves only the out-of-ring network-type label horizontally. Positive values move right and negative values move left; the signal bars stay in place. Range −16 to +16 dp.</string>
+    <string name="status_combo_style_one_out_type_offset_y_summary">Current %1$d dp: moves only the out-of-ring network-type label vertically. Positive values move down and negative values move up; the signal bars stay in place. Range −16 to +16 dp.</string>
+    <string name="status_combo_style_one_out_signal_offset_x_summary">Current %1$d dp: moves only the out-of-ring signal bars horizontally. Positive values move right and negative values move left; the network-type label stays in place. Range −16 to +16 dp.</string>
+    <string name="status_combo_style_one_out_signal_offset_y_summary">Current %1$d dp: moves only the out-of-ring signal bars vertically. Positive values move down and negative values move up; the network-type label stays in place. Range −16 to +16 dp.</string>
     <string name="status_combo_style_one_track_alpha_summary">Current %1$d%%: opacity of the unlit parts of the glyph.</string>
     <string name="status_combo_style_one_bolt_size_summary">Current %1$d%%: scale of the charging bolt; requires both the battery number and charging bolt to be enabled.</string>
     <string name="status_combo_style_one_bolt_x_summary">Current %1$d dp: horizontal position of the charging bolt; positive values move right.</string>

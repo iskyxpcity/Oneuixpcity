@@ -9,6 +9,7 @@ import android.graphics.RectF
 import android.graphics.Typeface
 import io.github.soclear.oneuix.common.Preference.SystemUI.StatusBarComboStyleOneRuntime
 import kotlin.math.PI
+import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
@@ -50,13 +51,18 @@ object StatusComboStyleOneGlyphRenderer {
     private const val OUTSIDE_TYPE_ONLY_REFERENCE_WIDTH = 87f
     private const val OUTSIDE_TYPE_REFERENCE_SIZE_DP = 14f
     private const val OUTSIDE_TYPE_RIGHT_GAP = 3.5f
-    // Pull the out-of-ring type a little closer to the preceding system icons by default.
-    // Extra leading canvas room below prevents the tighter position from clipping the glyphs.
-    private const val OUTSIDE_TYPE_GAP_REDUCTION = 18f
+    // Keep the label separated from the ring while reserving room for a native-sized gap on both sides.
+    private const val OUTSIDE_TYPE_GAP_REDUCTION = 64f
     // Keep a minimum label-side clearance; configured margins add to the left-growing host lane.
     private const val OUTSIDE_TYPE_LEADING_CLEARANCE = 18f
-    // Keep a minimum signal-to-ring clearance; configured spacing widens the host lane dynamically.
+    // The shared fixed frame uses native-like clearances and never changes the ring anchor.
     private const val OUTSIDE_SIGNAL_RING_CLEARANCE = 20f
+    private const val OUTSIDE_SIGNAL_NATIVE_ICON_GAP_PX = 20f
+    // Add 1.5dp of room on the ring-facing side of the outer signal lane.
+    private const val OUTSIDE_SIGNAL_RING_SIDE_EXTRA_GAP_UNITS = 5.625f
+    // Align the network label to the actual status-bar / battery-ring vertical centre.
+    private const val OUTSIDE_FRAME_CENTER_Y = 61.48715f
+    private const val OUTSIDE_FRAME_SIDE = 153f
     // Out-of-ring-type-only mode should not reserve the unused signal-pillars lane.
     private const val TYPE_ONLY_SHIFT = 60f
     private const val B_CX = 59.5f
@@ -94,7 +100,6 @@ object StatusComboStyleOneGlyphRenderer {
     private const val BOLT_TOP_REF = 2.2f
     private const val BOLT_CX_REF = 59.45f
     private const val BOLT_SCALE = 2.0f
-    private const val QUICK_CHARGE = 0xFF2196F3.toInt()
 
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val diagnosticPaint = Paint(Paint.ANTI_ALIAS_FLAG)
@@ -127,8 +132,339 @@ object StatusComboStyleOneGlyphRenderer {
         config.trioStyle == 0 && config.showMobile && config.signalMode == 0 &&
             effectiveDualSimMode(config) == 2
 
-    private fun designHeight(config: StatusBarComboStyleOneRuntime): Float =
-        if (usesDualSignalBelowRing(config)) DUAL_BOTTOM_HEIGHT else HEIGHT
+    private data class OutsideFrameGeometry(
+        val left: Float,
+        val top: Float,
+        val right: Float,
+        val bottom: Float,
+        val squareLeft: Float,
+        val squareTop: Float,
+        val squareRight: Float,
+        val squareBottom: Float,
+        val side: Float,
+        val centerX: Float,
+        val centerY: Float,
+    )
+
+    private fun outsideTypeOffsetXUnits(config: StatusBarComboStyleOneRuntime): Float =
+        config.outTypeOffsetXDp.coerceIn(-16, 16) * (HEIGHT / 36f)
+
+    private fun outsideTypeOffsetYUnits(config: StatusBarComboStyleOneRuntime): Float =
+        config.outTypeOffsetYDp.coerceIn(-16, 16) * (HEIGHT / 36f)
+
+    private fun outsideSignalOffsetXUnits(config: StatusBarComboStyleOneRuntime): Float =
+        config.outSignalOffsetXDp.coerceIn(-16, 16) * (HEIGHT / 36f)
+
+    private fun outsideSignalOffsetYUnits(config: StatusBarComboStyleOneRuntime): Float {
+        // Visual alignment correction: outer signal bars sit about 5dp too low against
+        // native status-bar icons. Keep the user's offset adjustable relative to this fix.
+        val alignmentCorrectionDp = -5f
+        return (config.outSignalOffsetYDp.coerceIn(-16, 16) + alignmentCorrectionDp) * (HEIGHT / 36f)
+    }
+
+    private fun outsideSignalCenterFromIconBoundary(
+        config: StatusBarComboStyleOneRuntime,
+        minimumVisibleIconLeftPx: Float,
+        canvasLeftInsetPx: Float,
+        renderScale: Float,
+        leadingExpansion: Float,
+        signalWidth: Float,
+    ): Float {
+        val safeScale = renderScale.coerceAtLeast(0.0001f)
+        // Default to the same 20px separation already present between adjacent native icons.
+        // Positive outer-left margin adds space from the preceding icon; positive ring-side
+        // margin moves the signal left to increase separation from the battery ring.
+        val targetLeftPx = minimumVisibleIconLeftPx + outsideSignalNativeIconGapPx(safeScale)
+        val targetLeftUnits = (targetLeftPx - canvasLeftInsetPx) / safeScale
+        val signedMarginUnits = (
+            config.outSignalMarginLeftDp.coerceIn(-16, 16) -
+                config.outSignalMarginDp.coerceIn(-16, 16)
+            ) * (HEIGHT / 36f)
+        return targetLeftUnits - leadingExpansion + signalWidth / 2f + signedMarginUnits
+    }
+
+    private fun outsideSignalNativeIconGapPx(renderScale: Float): Float =
+        (OUTSIDE_SIGNAL_NATIVE_ICON_GAP_PX -
+            OUTSIDE_SIGNAL_RING_SIDE_EXTRA_GAP_UNITS * renderScale).coerceAtLeast(0f)
+
+    /**
+     * Clamp a single outside element against the last native icon.
+     *
+     * Keep its requested centre and X offset local to that element. In combined mode the type
+     * label and signal bars must never share a collision delta: changing either child's X offset
+     * must not shift the other child or the battery ring.
+     */
+    private fun outsideElementNativeBoundaryCenter(
+        requestedCenter: Float,
+        offsetXUnits: Float,
+        visibleWidth: Float,
+        minimumVisibleIconLeftPx: Float?,
+        canvasLeftInsetPx: Float,
+        renderScale: Float,
+        leadingExpansion: Float,
+        nativeIconGapPx: Float = OUTSIDE_SIGNAL_NATIVE_ICON_GAP_PX,
+    ): Float {
+        if (minimumVisibleIconLeftPx == null || renderScale <= 0f || visibleWidth <= 0f) {
+            return requestedCenter
+        }
+        val requiredCenter = (
+            minimumVisibleIconLeftPx + nativeIconGapPx - canvasLeftInsetPx
+        ) / renderScale - leadingExpansion + visibleWidth / 2f
+        // The returned centre excludes offsetXUnits because draw callers still apply that offset.
+        return max(requestedCenter, requiredCenter - offsetXUnits)
+    }
+
+    private fun outsideSignalHeight(
+        config: StatusBarComboStyleOneRuntime,
+        includeSecondaryRow: Boolean = false,
+    ): Float {
+        if (!usesOutsideSignalLayout(config)) return 0f
+        // The optional second-SIM dots extend 59 scaled units below the main bars.
+        val referenceHeight = if (includeSecondaryRow) 209f else 150f
+        return referenceHeight * outsideSignalScale(config)
+    }
+
+    private fun outsideTypeBaseline(
+        config: StatusBarComboStyleOneRuntime,
+        networkType: String,
+    ): Float {
+        val textSize = config.outTypeSizeDp.coerceIn(8, 26) * (HEIGHT / 36f)
+        // The network label is centred in the common frame by default. Its size changes only
+        // expand or shrink the text bounds around this anchor; the signal and ring do not move.
+        return OUTSIDE_FRAME_CENTER_Y + textSize * CAP_HEIGHT_RATIO / 2f
+    }
+
+    private fun outsideSignalBaseline(
+        config: StatusBarComboStyleOneRuntime,
+        networkType: String,
+        hasSecondarySignalLevel: Boolean = false,
+    ): Float {
+        // The native status icon baseline is near the lower edge of the status-bar row.
+        // Keep it fixed when size changes so the custom signal grows upward instead of floating
+        // around the network label. Individual Y adjustment is applied by the draw caller.
+        return 90f
+    }
+
+    fun hasOutsideSecondarySignalLevel(
+        config: StatusBarComboStyleOneRuntime,
+        state: StatusComboStyleOneGlyphState,
+    ): Boolean {
+        if (!usesOutsideSignalLayout(config) || config.dataSimOnly) return false
+        val secondaryLevel = if (state.dataSimSlotIndex == 1) state.simOneLevel else state.simTwoLevel
+        return secondaryLevel >= 0
+    }
+
+    /** The text label has its own base anchor, independent of signal size and spacing. */
+    private fun outsideTypeBaseCenter(
+        config: StatusBarComboStyleOneRuntime,
+        networkType: String,
+    ): Float = if (usesOutsideNetworkTypeLayout(config) && networkType.isNotBlank()) {
+        outsideNetworkTypeCenter(config, networkType.trim().uppercase())
+    } else 0f
+
+    /**
+     * The signal has its own anchor. In combined mode use a canonical type reference so changing
+     * the displayed label, its font, or its margins cannot move the signal bars.
+     */
+    private fun outsideSignalBaseCenter(
+        config: StatusBarComboStyleOneRuntime,
+        networkType: String,
+    ): Float {
+        val scale = HEIGHT / 36f
+        if (usesOutsideNetworkTypeLayout(config) && networkType.isNotBlank()) {
+            val sharedFrameConfig = config.copy(
+                outTypeMarginLeftDp = 0,
+                outTypeMarginRightDp = 0,
+                outTypeOffsetXDp = 0,
+                outTypeOffsetYDp = 0,
+            )
+            // Both children share the same size-compensated frame centre. When text gets wider,
+            // the host grows leftward; moving both anchors by the same amount keeps the whole
+            // composition centred on screen instead of splitting the signal into a separate lane.
+            val sharedCenter = outsideNetworkTypeCenter(
+                sharedFrameConfig,
+                networkType.trim().uppercase(),
+            )
+            return sharedCenter -
+                config.outSignalMarginDp.coerceIn(-16, 16) * scale +
+                config.outSignalMarginLeftDp.coerceIn(-16, 16) * scale
+        }
+        return outsideSignalWidth(config) / 2f -
+            outsideSignalMargin(config) +
+            outsideSignalMarginLeft(config)
+    }
+
+    /**
+     * Compensate for the other lane's width changes in canvas coordinates only. This keeps each
+     * visible child and the ring stable while the expanded host reflows native icons.
+     */
+    private fun outsideSignalCanvasCenter(
+        config: StatusBarComboStyleOneRuntime,
+        networkType: String,
+    ): Float {
+        // No compensation for network-type width or the signal's own width: each child keeps
+        // its own anchor. The live draw path can additionally align the signal to the last
+        // visible native icon through minimumVisibleIconLeftPx.
+        return outsideSignalBaseCenter(config, networkType)
+    }
+
+    /** Geometry helper; draw code uses each element's dedicated anchor instead. */
+    private fun outsideBaseCenter(
+        config: StatusBarComboStyleOneRuntime,
+        networkType: String,
+    ): Float = when {
+        usesOutsideNetworkTypeLayout(config) && networkType.isNotBlank() ->
+            outsideTypeBaseCenter(config, networkType)
+        usesOutsideSignalLayout(config) -> outsideSignalCanvasCenter(config, networkType)
+        else -> 0f
+    }
+
+    /**
+     * Compute a live square from the actual visible outside elements. Bounds are calculated from
+     * the text ink width/height and signal column extents, including element offsets when asked.
+     * This geometry is not used to resize the ring itself; the ring remains trailing-edge anchored.
+     */
+    private fun outsideFrameGeometry(
+        config: StatusBarComboStyleOneRuntime,
+        networkType: String,
+        includeOffsets: Boolean = true,
+    ): OutsideFrameGeometry? {
+        val label = networkType.trim().uppercase()
+        val typeActive = usesOutsideNetworkTypeLayout(config) && label.isNotBlank()
+        val signalActive = usesOutsideSignalLayout(config)
+        if (!typeActive && !signalActive) return null
+
+        val unitPerDp = HEIGHT / 36f
+        val typeWidth = if (typeActive) outsideTypeLabelWidth(config, label) else 0f
+        val typeHeight = if (typeActive) {
+            config.outTypeSizeDp.coerceIn(8, 26) * unitPerDp * CAP_HEIGHT_RATIO
+        } else 0f
+        val signalWidth = if (signalActive) outsideSignalWidth(config) else 0f
+        val includeSecondary = signalActive && !config.dataSimOnly
+        val signalScale = outsideSignalScale(config)
+        val signalTop = if (signalActive) outsideSignalBaseline(config, label, includeSecondary) -
+            150f * signalScale else Float.POSITIVE_INFINITY
+        val signalBottom = if (signalActive) outsideSignalBaseline(config, label, includeSecondary) +
+            (if (includeSecondary) 59f * signalScale else 0f) else Float.NEGATIVE_INFINITY
+        val typeX = if (includeOffsets && typeActive) {
+            outsideTypeOffsetXUnits(config) + outsideTypeMarginLeft(config) - outsideTypeMarginRight(config)
+        } else 0f
+        val typeY = if (includeOffsets && typeActive) outsideTypeOffsetYUnits(config) else 0f
+        val signalX = if (includeOffsets && signalActive) {
+            outsideSignalOffsetXUnits(config) +
+                (config.outSignalMarginLeftDp.coerceIn(-16, 16) -
+                    config.outSignalMarginDp.coerceIn(-16, 16)) * unitPerDp
+        } else 0f
+        val signalY = if (includeOffsets && signalActive) outsideSignalOffsetYUnits(config) else 0f
+
+        var minX = Float.POSITIVE_INFINITY
+        var maxX = Float.NEGATIVE_INFINITY
+        var minY = Float.POSITIVE_INFINITY
+        var maxY = Float.NEGATIVE_INFINITY
+        fun includeBounds(cx: Float, top: Float, bottom: Float, width: Float) {
+            minX = min(minX, cx - width / 2f)
+            maxX = max(maxX, cx + width / 2f)
+            minY = min(minY, top)
+            maxY = max(maxY, bottom)
+        }
+        if (typeActive) {
+            includeBounds(typeX, OUTSIDE_FRAME_CENTER_Y + typeY - typeHeight / 2f,
+                OUTSIDE_FRAME_CENTER_Y + typeY + typeHeight / 2f, typeWidth)
+        }
+        if (signalActive) includeBounds(signalX, signalTop + signalY, signalBottom + signalY, signalWidth)
+        val side = max(maxX - minX, maxY - minY).coerceAtLeast(1f)
+        val centerX = (minX + maxX) / 2f
+        val centerY = (minY + maxY) / 2f
+        val logicalCenterX = if (typeActive) outsideTypeBaseCenter(
+            config.copy(
+                outTypeMarginLeftDp = 0, outTypeMarginRightDp = 0,
+                outTypeOffsetXDp = 0, outTypeOffsetYDp = 0,
+                outSignalMarginDp = 0, outSignalMarginLeftDp = 0,
+                outSignalOffsetXDp = 0, outSignalOffsetYDp = 0,
+            ), label,
+        ) else outsideSignalWidth(config) / 2f
+        val squareCenterX = logicalCenterX + centerX
+        return OutsideFrameGeometry(
+            left = squareCenterX - side / 2f,
+            top = centerY - side / 2f,
+            right = squareCenterX + side / 2f,
+            bottom = centerY + side / 2f,
+            squareLeft = squareCenterX - side / 2f,
+            squareTop = centerY - side / 2f,
+            squareRight = squareCenterX + side / 2f,
+            squareBottom = centerY + side / 2f,
+            side = side,
+            centerX = squareCenterX,
+            centerY = centerY,
+        )
+    }
+
+    private fun outsideFrameSide(
+        config: StatusBarComboStyleOneRuntime,
+        networkType: String,
+        includeOffsets: Boolean = false,
+    ): Float = outsideFrameGeometry(config, networkType, includeOffsets)?.side ?: 0f
+
+    private fun outsideFrameWidthDelta(
+        config: StatusBarComboStyleOneRuntime,
+        networkType: String,
+    ): Float {
+        val defaults = StatusBarComboStyleOneRuntime()
+        val referenceConfig = config.copy(
+            outTypeSizeDp = defaults.outTypeSizeDp,
+            outSignalSizeDp = defaults.outSignalSizeDp,
+            typeWeight = defaults.typeWeight,
+            typeSuffixScale = defaults.typeSuffixScale,
+            outTypeMarginLeftDp = 0,
+            outTypeMarginRightDp = 0,
+            outTypeOffsetXDp = 0,
+            outTypeOffsetYDp = 0,
+            outSignalMarginDp = 0,
+            outSignalMarginLeftDp = 0,
+            outSignalOffsetXDp = 0,
+            outSignalOffsetYDp = 0,
+        )
+        return outsideFrameSide(config, networkType, includeOffsets = false) -
+            outsideFrameSide(referenceConfig, "5G", includeOffsets = false)
+    }
+
+    private fun outsideFrameLeadingExpansion(
+        config: StatusBarComboStyleOneRuntime,
+        networkType: String,
+    ): Float {
+        // The shared frame is a visual-centre reference only. Its invisible square bounds must
+        // not reserve blank width in the native status row.
+        return 0f
+    }
+
+    private fun outsideFrameTopExpansion(
+        config: StatusBarComboStyleOneRuntime,
+        networkType: String,
+    ): Float {
+        // Do not enlarge the actual child/window height to fit an invisible square: a tall inline
+        // child makes SystemUI recenter the entire status row and pushes the battery ring down.
+        return 0f
+    }
+
+    private fun outsideFrameBottomExpansion(
+        config: StatusBarComboStyleOneRuntime,
+        networkType: String,
+    ): Float {
+        // The outer label and bars fit within the native-height design canvas; only visible
+        // dual-SIM-below-ring content is allowed to increase height.
+        return 0f
+    }
+
+    private fun dualBottomExpansion(config: StatusBarComboStyleOneRuntime): Float =
+        if (usesDualSignalBelowRing(config)) (DUAL_BOTTOM_HEIGHT - HEIGHT) / 2f else 0f
+
+    private fun designHeight(
+        config: StatusBarComboStyleOneRuntime,
+        networkType: String = "",
+    ): Float = HEIGHT +
+        outsideFrameTopExpansion(config, networkType) +
+        outsideFrameBottomExpansion(config, networkType) +
+        2f * dualBottomExpansion(config)
 
     private fun usesOutsideSignalLayout(config: StatusBarComboStyleOneRuntime): Boolean =
         config.showMobile && config.signalMode == 1 && config.stackedSignal
@@ -139,24 +475,22 @@ object StatusComboStyleOneGlyphRenderer {
     private fun outsideSignalWidth(config: StatusBarComboStyleOneRuntime): Float =
         if (usesOutsideSignalLayout(config)) 251f * outsideSignalScale(config) else 0f
 
-    // Live signal-lane shift only. It never participates in ring anchoring or text placement.
+    // Standalone mode shifts only the signal lane; composite mode applies margin deltas to text and bars together. Ring anchoring stays independent.
     private fun outsideSignalMargin(config: StatusBarComboStyleOneRuntime): Float =
         if (usesOutsideSignalLayout(config)) {
             OUTSIDE_SIGNAL_RING_CLEARANCE +
-                config.outSignalMarginDp.coerceIn(0, 16) * (HEIGHT / 36f)
+                config.outSignalMarginDp.coerceIn(-16, 16) * (HEIGHT / 36f)
         } else 0f
 
     // Extra outer/left margin is independent from the signal-to-ring gap.
     private fun outsideSignalMarginLeft(config: StatusBarComboStyleOneRuntime): Float =
         if (usesOutsideSignalLayout(config)) {
-            config.outSignalMarginLeftDp.coerceIn(0, 16) * (HEIGHT / 36f)
+            config.outSignalMarginLeftDp.coerceIn(-16, 16) * (HEIGHT / 36f)
         } else 0f
 
     /** The row grows leftward for both signal-to-ring spacing and the outer-left margin. */
     private fun outsideSignalLeadingExpansion(config: StatusBarComboStyleOneRuntime): Float =
-        if (usesOutsideSignalLayout(config)) {
-            outsideSignalMargin(config) + outsideSignalMarginLeft(config)
-        } else 0f
+        if (usesOutsideSignalLayout(config)) OUTSIDE_SIGNAL_RING_CLEARANCE else 0f
 
     private fun outsideTypeLabelWidth(
         config: StatusBarComboStyleOneRuntime,
@@ -176,12 +510,12 @@ object StatusComboStyleOneGlyphRenderer {
 
     private fun outsideTypeMarginLeft(config: StatusBarComboStyleOneRuntime): Float =
         if (usesOutsideNetworkTypeLayout(config)) {
-            config.outTypeMarginLeftDp.coerceIn(0, 16) * (HEIGHT / 36f)
+            config.outTypeMarginLeftDp.coerceIn(-16, 16) * (HEIGHT / 36f)
         } else 0f
 
     private fun outsideTypeMarginRight(config: StatusBarComboStyleOneRuntime): Float =
         if (usesOutsideNetworkTypeLayout(config)) {
-            config.outTypeMarginRightDp.coerceIn(0, 16) * (HEIGHT / 36f)
+            config.outTypeMarginRightDp.coerceIn(-16, 16) * (HEIGHT / 36f)
         } else 0f
 
     /**
@@ -189,10 +523,7 @@ object StatusComboStyleOneGlyphRenderer {
      * amount, so its ring anchor stays fixed while the status-bar row can allocate space to the left.
      */
     private fun outsideTypeLeadingExpansion(config: StatusBarComboStyleOneRuntime): Float =
-        if (usesOutsideNetworkTypeLayout(config)) {
-            OUTSIDE_TYPE_LEADING_CLEARANCE +
-                outsideTypeMarginLeft(config) + outsideTypeMarginRight(config)
-        } else 0f
+        if (usesOutsideNetworkTypeLayout(config)) OUTSIDE_TYPE_LEADING_CLEARANCE else 0f
 
     private fun outsideTypeWidthDelta(
         config: StatusBarComboStyleOneRuntime,
@@ -206,7 +537,36 @@ object StatusComboStyleOneGlyphRenderer {
         (outsideTypeLabelWidth(config, networkType) - referenceWidth) / 2f
     } else 0f
 
-    private fun designWidth(
+    /**
+     * Shared horizontal centre for the out-of-ring network-type + signal composition.
+     * The label and bars occupy one fixed frame instead of competing for separate lanes.
+     * Changes to the locked signal margins move this whole composite relative to the ring.
+     */
+    private fun outsideNetworkTypeCenter(
+        config: StatusBarComboStyleOneRuntime,
+        networkType: String,
+    ): Float {
+        val outsideSignal = usesOutsideSignalLayout(config)
+        val typeOnlyShift = if (outsideSignal) 0f else TYPE_ONLY_SHIFT
+        val typeReferenceWidth = if (outsideSignal) {
+            OUTSIDE_TYPE_REFERENCE_WIDTH
+        } else {
+            OUTSIDE_TYPE_ONLY_REFERENCE_WIDTH
+        }
+        val base = if (outsideSignal) {
+            // Stable logical centre shared by the label and signal; actual frame width is computed
+            // from their live bounds and applied only to the left-growing host lane.
+            OUTSIDE_FRAME_SIDE / 2f - OUTSIDE_SIGNAL_RING_CLEARANCE
+        } else {
+            B_CX + WIDE_OFFSET - B_R - OUTSIDE_TYPE_RIGHT_GAP -
+                typeReferenceWidth / 2f - typeOnlyShift - OUTSIDE_TYPE_GAP_REDUCTION
+        }
+        // Margins are per-element translations. Never add the live font-width delta to the
+        // element centre, because doing so also moved the battery ring in the trailing anchor.
+        return base + outsideTypeMarginLeft(config) - outsideTypeMarginRight(config)
+    }
+
+    private fun baseDesignWidth(
         config: StatusBarComboStyleOneRuntime,
         networkType: String = "",
     ): Float {
@@ -214,20 +574,109 @@ object StatusComboStyleOneGlyphRenderer {
         val signalLane = usesOutsideSignalLayout(config)
         val signalLeadingExpansion = outsideSignalLeadingExpansion(config)
         val typeLeadingExpansion = outsideTypeLeadingExpansion(config)
-        val typeWidthDelta = outsideTypeWidthDelta(config, networkType)
-        return when {
-            // Grow the host width by the selected outside margins only. Drawing offsets and overlay
-            // anchoring compensate for the added leading canvas, keeping the ring fixed in place.
+        val frameWidthDelta = outsideFrameWidthDelta(config, networkType)
+        val baseWidth = when {
             typeLane && signalLane ->
                 WIDE_WIDTH + signalLeadingExpansion + OUTSIDE_TYPE_RIGHT_CLEARANCE +
-                    typeWidthDelta + typeLeadingExpansion
+                    frameWidthDelta + typeLeadingExpansion
             typeLane ->
                 WIDE_WIDTH - TYPE_ONLY_SHIFT + OUTSIDE_TYPE_RIGHT_CLEARANCE +
-                    typeWidthDelta + typeLeadingExpansion
+                    frameWidthDelta + typeLeadingExpansion
             signalLane -> outsideSignalWidth(config) + signalLeadingExpansion + COMPACT_WIDTH - 8f
             else -> COMPACT_WIDTH
         }
+        val signalRingGap = if (signalLane) OUTSIDE_SIGNAL_RING_SIDE_EXTRA_GAP_UNITS else 0f
+        return baseWidth + outsideFrameLeadingExpansion(config, networkType) + signalRingGap
     }
+
+    /**
+     * When the type is outside, place the actual visible label/signal bounds beside the ring.
+     * The fixed frame's blank internal margins are not part of the visual composition width.
+     * Both visible elements use this one centre; per-element margins and offsets remain independent.
+     */
+    private fun outsideCompositeShift(
+        config: StatusBarComboStyleOneRuntime,
+        networkType: String,
+    ): Float {
+        val label = networkType.trim().uppercase()
+        if (!usesOutsideNetworkTypeLayout(config) || label.isBlank()) return 0f
+
+        val baseConfig = config.copy(
+            outTypeMarginLeftDp = 0,
+            outTypeMarginRightDp = 0,
+            outTypeOffsetXDp = 0,
+            outTypeOffsetYDp = 0,
+            outSignalMarginDp = 0,
+            outSignalMarginLeftDp = 0,
+            outSignalOffsetXDp = 0,
+            outSignalOffsetYDp = 0,
+        )
+        val leading = outsideTypeLeadingExpansion(baseConfig) +
+            outsideSignalLeadingExpansion(baseConfig) +
+            outsideFrameLeadingExpansion(baseConfig, label)
+        val typeOnlyShift = if (usesOutsideSignalLayout(baseConfig)) 0f else TYPE_ONLY_SHIFT
+        val ringCenter = B_CX + WIDE_OFFSET - typeOnlyShift +
+            outsideFrameWidthDelta(baseConfig, label) + leading
+        // Reserve a true gap between the live square frame and the ring stroke so a larger label
+        // or signal cannot be drawn underneath the ring.
+        val ringLeft = ringCenter - B_R - config.ringStroke / 2f
+        val frameSide = outsideFrameSide(baseConfig, label, includeOffsets = false)
+        val currentCenter = outsideTypeBaseCenter(baseConfig, label) + leading
+        val desiredCenter = ringLeft - OUTSIDE_SIGNAL_RING_CLEARANCE - frameSide / 2f
+        return desiredCenter - currentCenter
+    }
+
+    /**
+     * Crops transparent leading canvas area to the first visible outer element. The view width
+     * shrinks by the same amount that drawing coordinates shift left, preserving the ring's
+     * screen X while allowing native icons to return to their original spacing.
+     */
+    private fun outsideContentLeadingTrimUnits(
+        config: StatusBarComboStyleOneRuntime,
+        networkType: String,
+    ): Float {
+        val label = networkType.trim().uppercase()
+        val typeActive = usesOutsideNetworkTypeLayout(config) && label.isNotBlank()
+        val signalActive = usesOutsideSignalLayout(config)
+        if (!typeActive && !signalActive) {
+            // With both outside lanes disabled, the ring itself is the first visible element.
+            // Crop only the transparent canvas before its outer stroke so that this unused
+            // leading padding does not widen the inline status-icon slot and push native icons
+            // away. Keep the rectangular style unchanged; its bounds are different from the ring.
+            if (config.trioStyle != 0) return 0f
+            return (B_CX - B_R - config.ringStroke.coerceIn(4, 16) / 2f).coerceAtLeast(0f)
+        }
+
+        val leading = outsideTypeLeadingExpansion(config) +
+            outsideSignalLeadingExpansion(config) +
+            outsideFrameLeadingExpansion(config, label)
+        val compositeShift = outsideCompositeShift(config, label)
+        var left = Float.POSITIVE_INFINITY
+
+        if (typeActive) {
+            val width = outsideTypeLabelWidth(config, label)
+            // Horizontal offsets are paint-only adjustments. Do not include them in the
+            // leading trim: changing a label's X offset must not resize the inline host slot,
+            // alter the ring's local centre, or reflow the native status-icon row.
+            val center = leading + outsideTypeBaseCenter(config, label) + compositeShift
+            left = min(left, center - width / 2f)
+        }
+        if (signalActive) {
+            val width = outsideSignalWidth(config)
+            // Keep the host envelope and battery-ring anchor stable as the signal bars move.
+            val center = leading + outsideSignalCanvasCenter(config, label) + compositeShift
+            left = min(left, center - width / 2f)
+        }
+        if (!left.isFinite()) return 0f
+        // A negative trim intentionally grows the host to keep user-shifted content inside it.
+        return left
+    }
+
+    private fun designWidth(
+        config: StatusBarComboStyleOneRuntime,
+        networkType: String = "",
+    ): Float = (baseDesignWidth(config, networkType) -
+        outsideContentLeadingTrimUnits(config, networkType)).coerceAtLeast(20f)
 
     private fun baseGlyphHeightDp(config: StatusBarComboStyleOneRuntime): Int =
         (36f * 0.9f * config.glyphScalePercent.coerceIn(70, 150) / 100f)
@@ -237,6 +686,73 @@ object StatusComboStyleOneGlyphRenderer {
         (designWidth(config, networkType) * baseGlyphHeightDp(config).toFloat() / HEIGHT)
             .roundToInt().coerceAtLeast(20)
 
+    /** Canvas inset for a view that can grow only toward its leading/left edge. */
+    fun glyphCanvasLeftInsetPx(
+        config: StatusBarComboStyleOneRuntime,
+        networkType: String,
+        widthPx: Int,
+        heightPx: Int,
+        leadingCanvasPaddingPx: Float = 0f,
+    ): Float {
+        val canvasHeight = designHeight(config, networkType)
+        if (canvasHeight <= 0f) return 0f
+        val renderScale = heightPx.toFloat() / canvasHeight
+        return (widthPx - designWidth(config, networkType) * renderScale) / 2f +
+            leadingCanvasPaddingPx.coerceAtLeast(0f) / 2f
+    }
+
+    /**
+     * Measures actual left clipping after native-icon collision avoidance. The runtime uses this
+     * to grow the View frame on the left rather than clipping the outside signal's first bar.
+     */
+    fun requiredSignalLeadingPaddingPx(
+        config: StatusBarComboStyleOneRuntime,
+        state: StatusComboStyleOneGlyphState,
+        widthPx: Int,
+        heightPx: Int,
+        minimumVisibleIconLeftPx: Float?,
+        leadingCanvasPaddingPx: Float = 0f,
+    ): Float {
+        if (!usesOutsideSignalLayout(config) || widthPx <= 0 || heightPx <= 0) return 0f
+        val label = state.networkType.trim().uppercase()
+        val designWidth = designWidth(config, state.networkType)
+        val designHeight = designHeight(config, state.networkType)
+        if (designWidth <= 0f || designHeight <= 0f) return 0f
+        val scale = heightPx.toFloat() / designHeight
+        if (scale <= 0f) return 0f
+        val leadingExpansion = outsideTypeLeadingExpansion(config) +
+            outsideSignalLeadingExpansion(config) +
+            outsideFrameLeadingExpansion(config, label) -
+            outsideContentLeadingTrimUnits(config, label)
+        val inset = glyphCanvasLeftInsetPx(
+            config, state.networkType, widthPx, heightPx, leadingCanvasPaddingPx,
+        )
+        val outsideType = usesOutsideNetworkTypeLayout(config) && label.isNotBlank()
+        val signalWidth = outsideSignalWidth(config)
+        if (signalWidth <= 0f) return 0f
+        val baseCenter = outsideSignalCanvasCenter(config, label) +
+            outsideCompositeShift(config, label)
+        val requestedCenter = if (!outsideType && minimumVisibleIconLeftPx != null) {
+            outsideSignalCenterFromIconBoundary(
+                config, minimumVisibleIconLeftPx, inset, scale, leadingExpansion, signalWidth,
+            )
+        } else baseCenter
+        val safeCenter = outsideElementNativeBoundaryCenter(
+            requestedCenter,
+            outsideSignalOffsetXUnits(config),
+            signalWidth,
+            minimumVisibleIconLeftPx,
+            inset,
+            scale,
+            leadingExpansion,
+            outsideSignalNativeIconGapPx(scale),
+        )
+        val actualLeftPx = inset + (
+            leadingExpansion + safeCenter + outsideSignalOffsetXUnits(config) - signalWidth / 2f
+        ) * scale
+        return (-actualLeftPx).coerceAtLeast(0f)
+    }
+
     /**
      * Only user-selected increases above normal defaults occupy extra native status-row width.
      * Base drawing-lane clearances stay transparent, preserving the corrected default icon gap.
@@ -244,39 +760,9 @@ object StatusComboStyleOneGlyphRenderer {
     fun glyphOutsideSpacingExpansionDp(
         config: StatusBarComboStyleOneRuntime,
     ): Int {
-        val defaults = StatusBarComboStyleOneRuntime()
-        val typeDeltaDp = if (usesOutsideNetworkTypeLayout(config)) {
-            (config.outTypeMarginLeftDp.coerceIn(0, 16) - defaults.outTypeMarginLeftDp) +
-                (config.outTypeMarginRightDp.coerceIn(0, 16) - defaults.outTypeMarginRightDp)
-        } else 0
-        val signalDeltaDp = if (usesOutsideSignalLayout(config)) {
-            (config.outSignalMarginDp.coerceIn(0, 16) - defaults.outSignalMarginDp) +
-                (config.outSignalMarginLeftDp.coerceIn(0, 16) - defaults.outSignalMarginLeftDp)
-        } else 0
-        val netDeltaDp = typeDeltaDp + signalDeltaDp
-        return (netDeltaDp * baseGlyphHeightDp(config).toFloat() / 36f)
-            .roundToInt().coerceAtLeast(0)
-    }
-
-    /**
-     * Fixed leading drawing area at normal defaults. Inline mode cancels only this base
-     * occupancy but leaves user-added margin growth allocated in the native status row.
-     */
-    fun glyphBaseLeadingExpansionDp(
-        config: StatusBarComboStyleOneRuntime,
-        networkType: String = "",
-    ): Int {
-        val defaults = StatusBarComboStyleOneRuntime()
-        val baseConfig = config.copy(
-            outTypeMarginLeftDp = defaults.outTypeMarginLeftDp,
-            outTypeMarginRightDp = defaults.outTypeMarginRightDp,
-            outSignalMarginDp = defaults.outSignalMarginDp,
-            outSignalMarginLeftDp = defaults.outSignalMarginLeftDp,
-        )
-        return (
-            glyphWidthDp(baseConfig, networkType) -
-                glyphWidthDpWithoutLeadingExpansion(baseConfig, networkType)
-            ).coerceAtLeast(0)
+        // Left/right margins and offsets only reposition the individual child inside the fixed
+        // host envelope. Do not expand the native battery slot, which would reflow sibling icons.
+        return 0
     }
 
     /**
@@ -287,7 +773,8 @@ object StatusComboStyleOneGlyphRenderer {
         config: StatusBarComboStyleOneRuntime,
         networkType: String = "",
     ): Int {
-        val expansion = outsideTypeLeadingExpansion(config) + outsideSignalLeadingExpansion(config)
+        val expansion = outsideTypeLeadingExpansion(config) + outsideSignalLeadingExpansion(config) +
+            outsideFrameLeadingExpansion(config, networkType)
         val width = designWidth(config, networkType) - expansion
         return (width * baseGlyphHeightDp(config).toFloat() / HEIGHT)
             .roundToInt().coerceAtLeast(20)
@@ -298,8 +785,10 @@ object StatusComboStyleOneGlyphRenderer {
         designWidth(config, networkType)
 
     /** Height of the canvas in the same design units used by draw(). */
-    fun glyphDesignHeight(config: StatusBarComboStyleOneRuntime): Float =
-        designHeight(config)
+    fun glyphDesignHeight(
+        config: StatusBarComboStyleOneRuntime,
+        networkType: String = "",
+    ): Float = designHeight(config, networkType)
 
     /**
      * Ring-centre X inside the canvas. When the host is right-edge anchored, the view grows left
@@ -309,16 +798,20 @@ object StatusComboStyleOneGlyphRenderer {
         val signalWidth = outsideSignalWidth(config)
         val outsideSignal = usesOutsideSignalLayout(config)
         val typeWidthDelta = outsideTypeWidthDelta(config, networkType)
-        val leadingExpansion = outsideTypeLeadingExpansion(config) + outsideSignalLeadingExpansion(config)
+        val leadingExpansion = outsideTypeLeadingExpansion(config) +
+            outsideSignalLeadingExpansion(config) + outsideFrameLeadingExpansion(config, networkType)
+        val trim = outsideContentLeadingTrimUnits(config, networkType)
         val offsetX = when {
             usesOutsideNetworkTypeLayout(config) -> {
                 val typeOnlyShift = if (outsideSignal) 0f else TYPE_ONLY_SHIFT
-                WIDE_OFFSET - typeOnlyShift + typeWidthDelta + leadingExpansion
+                WIDE_OFFSET - typeOnlyShift + outsideFrameWidthDelta(config, networkType) + leadingExpansion +
+                    (if (outsideSignal) OUTSIDE_SIGNAL_RING_SIDE_EXTRA_GAP_UNITS else 0f)
             }
-            outsideSignal -> signalWidth - 8f + leadingExpansion
+            outsideSignal -> signalWidth - 8f + leadingExpansion +
+                OUTSIDE_SIGNAL_RING_SIDE_EXTRA_GAP_UNITS
             else -> 0f
         }
-        return B_CX + offsetX
+        return B_CX + offsetX - trim
     }
 
     /** Horizontal anchor ratio, retained for callers that need the relative location only. */
@@ -326,13 +819,19 @@ object StatusComboStyleOneGlyphRenderer {
         glyphCenterX(config, networkType) / designWidth(config, networkType)
 
     /** Vertical anchor of the battery-ring centre inside the active glyph bounds. */
-    fun glyphVerticalCenterRatio(config: StatusBarComboStyleOneRuntime): Float {
-        val dualBottomExtra = if (usesDualSignalBelowRing(config)) (DUAL_BOTTOM_HEIGHT - HEIGHT) / 2f else 0f
-        return (B_CY + dualBottomExtra) / designHeight(config)
+    fun glyphVerticalCenterRatio(
+        config: StatusBarComboStyleOneRuntime,
+        networkType: String = "",
+    ): Float {
+        val verticalContentOffset = outsideFrameTopExpansion(config, networkType) + dualBottomExpansion(config)
+        return (B_CY + verticalContentOffset) / designHeight(config, networkType)
     }
 
-    fun glyphHeightDp(config: StatusBarComboStyleOneRuntime): Int =
-        (baseGlyphHeightDp(config).toFloat() * designHeight(config) / HEIGHT)
+    fun glyphHeightDp(
+        config: StatusBarComboStyleOneRuntime,
+        networkType: String = "",
+    ): Int =
+        (baseGlyphHeightDp(config).toFloat() * designHeight(config, networkType) / HEIGHT)
             .roundToInt().coerceAtLeast(18)
 
 
@@ -350,24 +849,43 @@ object StatusComboStyleOneGlyphRenderer {
         windowScreenX: Int,
         windowScreenY: Int,
         minimumVisibleIconLeftPx: Float? = null,
+        hasSecondarySignalLevel: Boolean = false,
+        minimumVisibleIconBottomPx: Float? = null,
+        leadingCanvasPaddingPx: Float = 0f,
     ): String {
         val safeWidth = windowWidthPx.coerceAtLeast(0)
         val safeHeight = windowHeightPx.coerceAtLeast(0)
         val designWidth = designWidth(config, networkType)
-        val designHeight = designHeight(config)
+        val designHeight = designHeight(config, networkType)
+        val frameGeometry = outsideFrameGeometry(config, networkType)
+        val frameTopExpansion = outsideFrameTopExpansion(config, networkType)
+        val frameBottomExpansion = outsideFrameBottomExpansion(config, networkType)
+        val verticalContentOffset = frameTopExpansion + dualBottomExpansion(config)
         val renderScale = if (designHeight > 0f) safeHeight.toFloat() / designHeight else 0f
-        val canvasLeftInsetPx = (safeWidth - designWidth * renderScale) / 2f
+        val signalBaseline = if (minimumVisibleIconBottomPx != null && renderScale > 0f) {
+            minimumVisibleIconBottomPx / renderScale - verticalContentOffset
+        } else {
+            outsideSignalBaseline(config, networkType, hasSecondarySignalLevel)
+        }
+        val canvasLeftInsetPx = glyphCanvasLeftInsetPx(
+            config, networkType, safeWidth, safeHeight, leadingCanvasPaddingPx,
+        )
         val outsideType = usesOutsideNetworkTypeLayout(config)
         val outsideSignal = usesOutsideSignalLayout(config)
         val signalWidth = outsideSignalWidth(config)
         val signalMargin = outsideSignalMargin(config)
         val signalMarginLeft = outsideSignalMarginLeft(config)
         val typeWidthDelta = outsideTypeWidthDelta(config, networkType)
-        val leadingExpansion = outsideTypeLeadingExpansion(config) + outsideSignalLeadingExpansion(config)
+        val contentTrim = outsideContentLeadingTrimUnits(config, networkType)
+        val leadingExpansion = outsideTypeLeadingExpansion(config) + outsideSignalLeadingExpansion(config) +
+            outsideFrameLeadingExpansion(config, networkType) - contentTrim
+        val compositeShift = outsideCompositeShift(config, networkType)
         val ringOffsetX = when {
             outsideType -> WIDE_OFFSET - (if (outsideSignal) 0f else TYPE_ONLY_SHIFT) +
-                typeWidthDelta + leadingExpansion
-            outsideSignal -> signalWidth - 8f + leadingExpansion
+                outsideFrameWidthDelta(config, networkType) + leadingExpansion +
+                (if (outsideSignal) OUTSIDE_SIGNAL_RING_SIDE_EXTRA_GAP_UNITS else 0f)
+            outsideSignal -> signalWidth - 8f + leadingExpansion +
+                OUTSIDE_SIGNAL_RING_SIDE_EXTRA_GAP_UNITS
             else -> 0f
         }
         val ringCenterUnits = B_CX + ringOffsetX
@@ -380,22 +898,50 @@ object StatusComboStyleOneGlyphRenderer {
         val screenRingCenter = windowScreenX + ringCenterPx
         val densitySafe = density.takeIf { it > 0f } ?: 1f
         val label = networkType.trim().uppercase()
+        val baseTypeCenter = outsideTypeBaseCenter(config, label) + compositeShift +
+            (if (outsideSignal) OUTSIDE_SIGNAL_RING_SIDE_EXTRA_GAP_UNITS else 0f)
+        val baseSignalCenter = outsideSignalCanvasCenter(config, label) + compositeShift
+        val typeWidthForClamp = if (outsideType && label.isNotBlank()) {
+            outsideTypeLabelWidth(config, label)
+        } else 0f
+        val typeOffsetX = outsideTypeOffsetXUnits(config)
+        val signalOffsetX = outsideSignalOffsetXUnits(config)
+        val safeTypeCenter = if (outsideType && label.isNotBlank()) {
+            outsideElementNativeBoundaryCenter(
+                baseTypeCenter, typeOffsetX, typeWidthForClamp,
+                minimumVisibleIconLeftPx, canvasLeftInsetPx, renderScale, leadingExpansion,
+            )
+        } else baseTypeCenter
+        val requestedSignalCenter = if (
+            outsideSignal && !(outsideType && label.isNotBlank()) &&
+            minimumVisibleIconLeftPx != null && renderScale > 0f
+        ) {
+            outsideSignalCenterFromIconBoundary(
+                config,
+                minimumVisibleIconLeftPx,
+                canvasLeftInsetPx,
+                renderScale,
+                leadingExpansion,
+                signalWidth,
+            )
+        } else baseSignalCenter
+        val safeSignalCenter = if (outsideSignal) {
+            outsideElementNativeBoundaryCenter(
+                requestedSignalCenter, signalOffsetX, signalWidth,
+                minimumVisibleIconLeftPx, canvasLeftInsetPx, renderScale, leadingExpansion,
+                outsideSignalNativeIconGapPx(renderScale),
+            )
+        } else requestedSignalCenter
         val labelInfo = if (outsideType && label.isNotBlank()) {
             val typeOnlyShift = if (outsideSignal) 0f else TYPE_ONLY_SHIFT
-            val typeGapOffset = 0f
             val typeReferenceWidth = if (outsideSignal) OUTSIDE_TYPE_REFERENCE_WIDTH
                 else OUTSIDE_TYPE_ONLY_REFERENCE_WIDTH
             val baseTypeCenter = B_CX + WIDE_OFFSET - B_R - OUTSIDE_TYPE_RIGHT_GAP -
-                typeReferenceWidth / 2f + typeGapOffset - typeOnlyShift
+                typeReferenceWidth / 2f - typeOnlyShift
             val leftMarginUnits = outsideTypeMarginLeft(config)
             val rightMarginUnits = outsideTypeMarginRight(config)
-            val typeOffset = typeWidthDelta - OUTSIDE_TYPE_GAP_REDUCTION +
-                leftMarginUnits - rightMarginUnits
-            val centerRaw = baseTypeCenter + typeOffset
-            val center = centerRaw.coerceIn(
-                30f + typeGapOffset - typeOnlyShift + typeOffset,
-                170f + typeGapOffset - typeOnlyShift + typeOffset,
-            )
+            val centerRaw = outsideNetworkTypeCenter(config, label)
+            val center = safeTypeCenter + outsideTypeOffsetXUnits(config)
             val requestedTextSize = config.outTypeSizeDp.coerceIn(8, 26) * (HEIGHT / 36f)
             val safeTextSize = requestedTextSize.coerceIn(8f, 96f)
             val smallA = label.endsWith("A") && config.typeSuffixScale in 1..99
@@ -423,15 +969,7 @@ object StatusComboStyleOneGlyphRenderer {
             }
             // Keep the text's measured advance to the right of the last real system icon.
             // The user margin can request more space, but must not draw over a visible icon.
-            val boundaryClampedCenter = minimumVisibleIconLeftPx?.takeIf {
-                renderScale > 0f
-            }?.let { minimumLeftPx ->
-                max(
-                    center,
-                    (minimumLeftPx - canvasLeftInsetPx) / renderScale -
-                        leadingExpansion + advanceWidth / 2f,
-                )
-            } ?: center
+            val boundaryClampedCenter = center
             // draw() translates the full glyph right while its view grows left; include that
             // translation and any icon-bound clamp in the measured screen coordinates.
             val drawnCenter = boundaryClampedCenter + leadingExpansion
@@ -449,11 +987,21 @@ object StatusComboStyleOneGlyphRenderer {
             val screenInkRight = windowScreenX + inkRightPx
             buildString {
                 appendLine("networkTypeLabel=${label},outsideSignal=${outsideSignal}")
+                if (frameGeometry != null) {
+                    appendLine(
+                        "outsideSquareFrame=side:${frameGeometry.side},boundsX=[${frameGeometry.squareLeft},${frameGeometry.squareRight}]," +
+                            "boundsY=[${frameGeometry.squareTop},${frameGeometry.squareBottom}],topExpansion=${frameTopExpansion}," +
+                            "bottomExpansion=${frameBottomExpansion},typeOffsetDp=(${config.outTypeOffsetXDp},${config.outTypeOffsetYDp})," +
+                            "signalOffsetDp=(${config.outSignalOffsetXDp},${config.outSignalOffsetYDp})"
+                    )
+                }
                 appendLine(
                     "typeMarginsDp=left:${config.outTypeMarginLeftDp},right:${config.outTypeMarginRightDp} " +
                         "marginUnits=left:${leftMarginUnits},right:${rightMarginUnits} " +
                         "widthDeltaUnits=${typeWidthDelta} baseCenterUnits=${baseTypeCenter} " +
                         "rawCenterUnits=${centerRaw} requestedDrawnCenterUnits=${center + leadingExpansion} " +
+                        "typeBaseline=${outsideTypeBaseline(config, label) + outsideTypeOffsetYUnits(config) + verticalContentOffset} " +
+                        "horizontalOffsetDp=${config.outTypeOffsetXDp},verticalOffsetDp=${config.outTypeOffsetYDp} " +
                         "drawnCenterUnits=${drawnCenter} boundaryClampUnits=${boundaryClampedCenter - center} " +
                         "minimumVisibleIconLeftPx=${minimumVisibleIconLeftPx}," +
                         "canvasLeadingExpansionUnits=${leadingExpansion}"
@@ -480,14 +1028,10 @@ object StatusComboStyleOneGlyphRenderer {
             "networkTypeLabel=not-drawn (outsideNetworkType=${outsideType},textBlank=${label.isBlank()})"
         }
         val signalLaneInfo = if (outsideSignal && renderScale > 0f) {
-            val requestedSignalX = signalWidth / 2f - signalMargin + signalMarginLeft
-            val effectiveSignalX = minimumVisibleIconLeftPx?.let { minimumLeftPx ->
-                max(
-                    requestedSignalX,
-                    (minimumLeftPx - canvasLeftInsetPx) / renderScale -
-                        leadingExpansion + signalWidth / 2f,
-                )
-            } ?: requestedSignalX
+            val composite = outsideType && label.isNotBlank()
+            val baseSignalX = baseSignalCenter
+            val requestedSignalX = baseSignalX + outsideSignalOffsetXUnits(config)
+            val effectiveSignalX = safeSignalCenter + outsideSignalOffsetXUnits(config)
             val signalLeftUnits = leadingExpansion + effectiveSignalX - signalWidth / 2f
             val signalRightUnits = signalLeftUnits + signalWidth
             val signalLeftPx = canvasLeftInsetPx + signalLeftUnits * renderScale
@@ -497,6 +1041,9 @@ object StatusComboStyleOneGlyphRenderer {
                     "outsideSignalLane=requestedCenterUnits=${requestedSignalX}," +
                         "effectiveCenterUnits=${effectiveSignalX},marginUnits=${signalMargin}," +
                         "leftMarginUnits=${signalMarginLeft}," +
+                        "sharedNetworkComposite=${outsideType && label.isNotBlank()}," +
+                        "barBaseline=${signalBaseline + outsideSignalOffsetYUnits(config)}," +
+                        "horizontalOffsetDp=${config.outSignalOffsetXDp},verticalOffsetDp=${config.outSignalOffsetYDp}," +
                         "reservedExpansionUnits=${outsideSignalLeadingExpansion(config)}"
                 )
                 appendLine(
@@ -513,7 +1060,8 @@ object StatusComboStyleOneGlyphRenderer {
         return buildString {
             appendLine(
                 "rendererWindowPx=${safeWidth}x${safeHeight},windowDp=${safeWidth / densitySafe}x${safeHeight / densitySafe}," +
-                    "designUnits=${designWidth}x${designHeight},density=${density},renderScale=${renderScale}"
+                    "designUnits=${designWidth}x${designHeight},density=${density},renderScale=${renderScale}," +
+                    "leadingCanvasPaddingPx=${leadingCanvasPaddingPx}"
             )
             appendLine(
                 "windowScreenOriginPx=(${windowScreenX},${windowScreenY}),canvasLeftInsetPx=${canvasLeftInsetPx}," +
@@ -521,13 +1069,25 @@ object StatusComboStyleOneGlyphRenderer {
                     "canvasInsetDp=${canvasLeftInsetPx / densitySafe}"
             )
             appendLine(
-                "ringCenterUnits=${ringCenterUnits},ringOuterBoundsLocalPx=[${ringLeftPx},${ringRightPx}]," +
+                "nativeIconBottomLocalPx=" + (minimumVisibleIconBottomPx ?: "unknown") +
+                    ",nativeIconBottomScreenPx=" + (minimumVisibleIconBottomPx?.let { windowScreenY + it } ?: "unknown") +
+                    ",effectiveSignalBaselineScreenPx=" +
+                    (windowScreenY + (signalBaseline + verticalContentOffset + outsideSignalOffsetYUnits(config)) * renderScale) +
+                    ",signalBaselineDeltaFromNativeBottomPx=" +
+                    (minimumVisibleIconBottomPx?.let {
+                        (signalBaseline + verticalContentOffset + outsideSignalOffsetYUnits(config)) * renderScale - it
+                    } ?: "unknown")
+            )
+            appendLine(
+                "verticalContentOffset=${verticalContentOffset},glyphVerticalCenterRatio=${(B_CY + verticalContentOffset) / designHeight}," +
+                    "ringCenterUnits=${ringCenterUnits},ringOuterBoundsLocalPx=[${ringLeftPx},${ringRightPx}]," +
                     "ringCenterScreenPx=${screenRingCenter},ringOuterBoundsScreenPx=[${screenRingLeft},${screenRingRight}]," +
                     "ringBoundsScreenDp=[${screenRingLeft / densitySafe},${screenRingRight / densitySafe}]"
             )
             appendLine(
                 "rendererFlags=outsideType:${outsideType},outsideSignal:${outsideSignal},wide:${usesWideLayout(config)}," +
                     "ringStroke=${config.ringStroke},OUTSIDE_TYPE_GAP_REDUCTION=${OUTSIDE_TYPE_GAP_REDUCTION}," +
+                    "outsideTypeCenteredInFixedFrame=true,frameCenterY=${OUTSIDE_FRAME_CENTER_Y}," +
                     "OUTSIDE_TYPE_LEADING_CLEARANCE=${OUTSIDE_TYPE_LEADING_CLEARANCE}," +
                     "OUTSIDE_SIGNAL_RING_CLEARANCE=${OUTSIDE_SIGNAL_RING_CLEARANCE}," +
                     "leadingExpansionUnits=${leadingExpansion},signalMarginUnits=${signalMargin}," +
@@ -550,6 +1110,8 @@ object StatusComboStyleOneGlyphRenderer {
         config: StatusBarComboStyleOneRuntime,
         state: StatusComboStyleOneGlyphState,
         minimumVisibleIconLeftPx: Float? = null,
+        minimumVisibleIconBottomPx: Float? = null,
+        leadingCanvasPaddingPx: Float = 0f,
     ) {
         if (width <= 0 || height <= 0) return
         val wide = usesWideLayout(config)
@@ -560,32 +1122,85 @@ object StatusComboStyleOneGlyphRenderer {
         val signalMarginLeft = outsideSignalMarginLeft(config)
         val signalWidth = outsideSignalWidth(config)
         val typeWidthDelta = outsideTypeWidthDelta(config, state.networkType)
-        val leadingExpansion = outsideTypeLeadingExpansion(config) + outsideSignalLeadingExpansion(config)
+        val contentTrim = outsideContentLeadingTrimUnits(config, state.networkType)
+        val leadingExpansion = outsideTypeLeadingExpansion(config) + outsideSignalLeadingExpansion(config) +
+            outsideFrameLeadingExpansion(config, state.networkType) - contentTrim
+        val compositeShift = outsideCompositeShift(config, state.networkType)
         val designWidth = designWidth(config, state.networkType)
-        val designHeight = designHeight(config)
+        val designHeight = designHeight(config, state.networkType)
+        val frameGeometry = outsideFrameGeometry(config, state.networkType)
+        val frameTopExpansion = outsideFrameTopExpansion(config, state.networkType)
+        val verticalContentOffset = frameTopExpansion + dualBottomExpansion(config)
         // Add 1dp to the bottom opening only in the dual-SIM-below-ring layout.
         // Convert dp to arc degrees using this icon's actual rendered dp height.
         val bottomOpeningExtraDegrees = if (dualBottomLayout) {
-            designHeight / (glyphHeightDp(config).toFloat() * B_R) * (180f / PI.toFloat())
+            designHeight / (glyphHeightDp(config, state.networkType).toFloat() * B_R) * (180f / PI.toFloat())
         } else 0f
         val scale = height / designHeight
         if (scale <= 0f) return
+        val signalBaseline = if (minimumVisibleIconBottomPx != null) {
+            minimumVisibleIconBottomPx / scale - verticalContentOffset
+        } else {
+            outsideSignalBaseline(config, state.networkType)
+        }
+        val outsideTypeSize = config.outTypeSizeDp.coerceIn(8, 26) * (HEIGHT / 36f)
+        val outsideTypeLabelWidth = if (outsideType && state.networkType.isNotBlank()) {
+            measuredNetworkTypeWidth(
+                state.networkType.trim().uppercase(), outsideTypeSize, config.typeWeight, config.typeSuffixScale,
+            )
+        } else 0f
+        val outsideTypeCenter = outsideTypeBaseCenter(config, state.networkType) + compositeShift +
+            (if (outsideSignal) OUTSIDE_SIGNAL_RING_SIDE_EXTRA_GAP_UNITS else 0f)
+        val outsideSignalCenter = outsideSignalCanvasCenter(config, state.networkType) + compositeShift
+        val canvasLeftInsetPx = glyphCanvasLeftInsetPx(
+            config, state.networkType, width, height, leadingCanvasPaddingPx,
+        )
+        val typeOffsetX = outsideTypeOffsetXUnits(config)
+        val signalOffsetX = outsideSignalOffsetXUnits(config)
+        val safeOutsideTypeCenter = if (outsideType && state.networkType.isNotBlank()) {
+            outsideElementNativeBoundaryCenter(
+                outsideTypeCenter, typeOffsetX, outsideTypeLabelWidth,
+                minimumVisibleIconLeftPx, canvasLeftInsetPx, scale, leadingExpansion,
+            )
+        } else outsideTypeCenter
+        val requestedOutsideSignalCenter = if (
+            outsideSignal && !(outsideType && state.networkType.isNotBlank()) &&
+            signalWidth > 0f && minimumVisibleIconLeftPx != null
+        ) {
+            outsideSignalCenterFromIconBoundary(
+                config,
+                minimumVisibleIconLeftPx,
+                canvasLeftInsetPx,
+                scale,
+                leadingExpansion,
+                signalWidth,
+            )
+        } else outsideSignalCenter
+        val safeOutsideSignalCenter = if (outsideSignal && signalWidth > 0f) {
+            outsideElementNativeBoundaryCenter(
+                requestedOutsideSignalCenter, signalOffsetX, signalWidth,
+                minimumVisibleIconLeftPx, canvasLeftInsetPx, scale, leadingExpansion,
+                outsideSignalNativeIconGapPx(scale),
+            )
+        } else requestedOutsideSignalCenter
         val save = canvas.save()
-        canvas.translate((width - designWidth * scale) / 2f, (height - designHeight * scale) / 2f)
+        canvas.translate(canvasLeftInsetPx, (height - designHeight * scale) / 2f)
         canvas.scale(scale, scale)
-        // The host grows leftward for the outside type; translate content by the same amount to
-        // keep the ring anchored. The network-type margins then move only the label, while the
-        // signal lane's spacing remains an independent setting.
+        // Crop only transparent leading canvas area. The design canvas and ring anchor shift
+        // by the same amount as the host shrinks, so native siblings regain space without moving
+        // the circle. Outer type and signal share a computed visible-bounds centre.
         canvas.translate(
             leadingExpansion,
-            if (dualBottomLayout) (designHeight - HEIGHT) / 2f else 0f,
+            verticalContentOffset,
         )
 
         val typeOnlyShift = if (outsideType && !outsideSignal) TYPE_ONLY_SHIFT else 0f
         val offsetX = when {
-            // Neither user spacing slider changes the ring anchor; each moves only its own content lane.
-            outsideType -> WIDE_OFFSET - typeOnlyShift + typeWidthDelta
-            outsideSignal -> signalWidth - 8f
+            // Ring X follows only the size-derived frame delta, never either child's X offset.
+            // The trailing edge stays anchored while the lane expands/contracts around the ring.
+            outsideType -> WIDE_OFFSET - typeOnlyShift + outsideFrameWidthDelta(config, state.networkType) +
+                (if (outsideSignal) OUTSIDE_SIGNAL_RING_SIDE_EXTRA_GAP_UNITS else 0f)
+            outsideSignal -> signalWidth - 8f + OUTSIDE_SIGNAL_RING_SIDE_EXTRA_GAP_UNITS
             else -> 0f
         }
         val cx = B_CX + offsetX
@@ -643,14 +1258,14 @@ object StatusComboStyleOneGlyphRenderer {
                     config.ringStroke,
                     // Offset the 15% size reduction so the opening is still 2dp wider than before.
                     extraClearance = 3f + originalBoltContentWidth * 0.15f +
-                        2f * designHeight / glyphHeightDp(config).toFloat(),
+                        2f * designHeight / glyphHeightDp(config, state.networkType).toFloat(),
                 )
             }
             wifiInGap -> contentGapRange(43f, config.ringStroke)
             valueInGap -> contentGapRange(
                 measuredTextWidth(level.toString(), valueSizeCanvasUnits(config), config.valueWeight),
                 config.ringStroke,
-                extraClearance = 2f * designHeight / glyphHeightDp(config).toFloat(),
+                extraClearance = 2f * designHeight / glyphHeightDp(config, state.networkType).toFloat(),
             )
             typeInGap && innerType != null -> contentGapRange(
                 measuredNetworkTypeWidth(innerType, config.typeSize.toFloat(), config.typeWeight, config.typeSuffixScale),
@@ -693,13 +1308,13 @@ object StatusComboStyleOneGlyphRenderer {
                     dualBottomRows -> {
                         // Alternative mode: reserve real canvas height and place both SIM rows
                         // underneath the ring, outside the battery stroke.
-                        drawBottomDualDotRow(canvas, offsetX, state.simOneLevel, tint, track, DUAL_BOTTOM_ROW_ONE_Y, config)
-                        drawBottomDualDotRow(canvas, offsetX, state.simTwoLevel, tint, track, DUAL_BOTTOM_ROW_TWO_Y, config)
+                        drawBottomDualDotRow(canvas, offsetX, state.simOneLevel, tint, track, DUAL_BOTTOM_ROW_ONE_Y, config, state.networkType)
+                        drawBottomDualDotRow(canvas, offsetX, state.simTwoLevel, tint, track, DUAL_BOTTOM_ROW_TWO_Y, config, state.networkType)
                     }
                     dualBottomLayout -> {
                         // With only one SIM available, place its dots in the first row position,
                         // not the lower row used by a two-SIM layout.
-                        drawBottomDualDotRow(canvas, offsetX, state.mobileLevel, tint, track, DUAL_BOTTOM_ROW_ONE_Y, config)
+                        drawBottomDualDotRow(canvas, offsetX, state.mobileLevel, tint, track, DUAL_BOTTOM_ROW_ONE_Y, config, state.networkType)
                     }
                     else -> drawSingleSignalDots(canvas, offsetX, state.mobileLevel, tint, track, config)
                 }
@@ -718,7 +1333,7 @@ object StatusComboStyleOneGlyphRenderer {
             }
             if (bolt) drawBolt(
                 canvas, offsetX, config,
-                if (state.charging && state.quickCharge) QUICK_CHARGE else tint,
+                resolveChargingBoltColor(config, state, tint),
             )
             if (showBatteryValue) {
                 val requestedSize = valueSizeCanvasUnits(config)
@@ -731,71 +1346,32 @@ object StatusComboStyleOneGlyphRenderer {
         }
 
         if (wide && config.showMobile && config.signalMode == 1 && config.stackedSignal) {
-            // The reference mark is 251 units wide at a 209-unit height;
-            // its left edge sits at the beginning of the expanded out-of-ring signal box.
-            // The requested gap is created by shifting the battery group right.
-            val requestedSignalX = signalWidth / 2f - signalMargin + signalMarginLeft
-            val canvasLeftInsetPx = (width - designWidth * scale) / 2f
-            // The host reserves the maximum lane once. Move signal pillars left to add the requested
-            // ring gap, but clamp at the real icon boundary instead of painting over native icons.
-            val signalX = minimumVisibleIconLeftPx?.let { minimumLeftPx ->
-                max(
-                    requestedSignalX,
-                    (minimumLeftPx - canvasLeftInsetPx) / scale -
-                        leadingExpansion + signalWidth / 2f,
-                )
-            } ?: requestedSignalX
+            // Independent signal offsets change only this child, while the host uses the square bounds.
+            // Signal offsets and collision avoidance affect only the signal lane.
+            val signalX = safeOutsideSignalCenter + outsideSignalOffsetXUnits(config)
             val primarySlotLevel = if (state.dataSimSlotIndex == 1) state.simTwoLevel else state.simOneLevel
             val secondarySlotLevel = if (state.dataSimSlotIndex == 1) state.simOneLevel else state.simTwoLevel
             val bars = if (config.dataSimOnly) state.mobileLevel
                 else primarySlotLevel.takeIf { it >= 0 } ?: state.mobileLevel
             val second = if (!config.dataSimOnly && secondarySlotLevel >= 0) secondarySlotLevel else -1
-            // Center the complete signal-bars-and-dots box on the status-bar/battery-ring axis.
-            drawStackedSignal(canvas, signalX, B_CY, bars, second, tint, track, config.outSignalSizeDp)
+            // Bars and the optional second-SIM row form one lower child of the shared frame.
+            // Scaling grows its bounds away from the common centre while preserving the inner gap.
+            val hasSecondary = second >= 0
+            drawStackedSignal(
+                canvas, signalX,
+                signalBaseline + outsideSignalOffsetYUnits(config),
+                bars, second, tint, track, config.outSignalSizeDp,
+            )
         }
         if (wide && config.showMobile && config.mobileTypeMode == 2 && state.networkType.isNotBlank()) {
-            val m = HEIGHT / 36f
-            val typeOnlyShift = if (outsideSignal) 0f else TYPE_ONLY_SHIFT
-            // Network-type placement is independent from the external signal spacing slider.
-            val typeGapOffset = 0f
-            val typeCenterShift = typeWidthDelta
-            val typeReferenceWidth = if (outsideSignal) {
-                OUTSIDE_TYPE_REFERENCE_WIDTH
-            } else {
-                OUTSIDE_TYPE_ONLY_REFERENCE_WIDTH
-            }
-            val baseTypeCenter = B_CX + WIDE_OFFSET - B_R - OUTSIDE_TYPE_RIGHT_GAP -
-                typeReferenceWidth / 2f + typeGapOffset - typeOnlyShift
-            val typeLeftMargin = outsideTypeMarginLeft(config)
-            val typeRightMargin = outsideTypeMarginRight(config)
-            // Margins are label-only offsets. They do not modify offsetX/circle geometry.
-            // The leading expansion is a constant canvas-origin adjustment, not a user margin.
-            val typeOffset = typeCenterShift - OUTSIDE_TYPE_GAP_REDUCTION +
-                typeLeftMargin - typeRightMargin
-            val center = (baseTypeCenter + typeOffset).coerceIn(
-                30f + typeGapOffset - typeOnlyShift + typeOffset,
-                170f + typeGapOffset - typeOnlyShift + typeOffset,
+            // Centre text within the fixed outside frame by default. Its independent X/Y offsets
+            // can move it anywhere without changing the signal lane or battery-ring geometry.
+            drawNetworkType(
+                canvas, state.networkType.trim().uppercase(),
+                safeOutsideTypeCenter + outsideTypeOffsetXUnits(config),
+                outsideTypeBaseline(config, state.networkType) + outsideTypeOffsetYUnits(config),
+                outsideTypeSize, config.typeWeight, tint, config.typeSuffixScale, 0f,
             )
-            val size = config.outTypeSizeDp.coerceIn(8, 26) * m
-            // Center the measured capital glyphs vertically around the host's centre line.
-            // Apply the same cap-height correction at every size so scaling grows in both directions.
-            val baseline = HEIGHT / 2f + size * CAP_CENTER_RATIO
-            // If a larger right margin would put the label on top of native status icons, clamp
-            // the text inside the currently available gap. The host may extend left transparently;
-            // the ring remains anchored and the existing margin controls are preserved.
-            val labelWidthUnits = measuredNetworkTypeWidth(
-                state.networkType.trim().uppercase(), size, config.typeWeight, config.typeSuffixScale,
-            )
-            val canvasLeftInsetPx = (width - designWidth * scale) / 2f
-            val safeCenter = minimumVisibleIconLeftPx?.let { minimumLeftPx ->
-                max(
-                    center,
-                    (minimumLeftPx - canvasLeftInsetPx) / scale -
-                        leadingExpansion + labelWidthUnits / 2f,
-                )
-            } ?: center
-            drawNetworkType(canvas, state.networkType.trim().uppercase(), safeCenter, baseline,
-                size, config.typeWeight, tint, config.typeSuffixScale, 0f)
         }
         canvas.restoreToCount(save)
     }
@@ -936,12 +1512,12 @@ object StatusComboStyleOneGlyphRenderer {
 
     private fun drawBottomDualDotRow(
         canvas: Canvas, offsetX: Float, level: Int, color: Int, track: Int, y: Float,
-        config: StatusBarComboStyleOneRuntime,
+        config: StatusBarComboStyleOneRuntime, networkType: String,
     ) {
         val radius = dotRadius(config, DOT_R)
         // Raise the selected below-ring signal layout by 3dp while preserving its user offset slider.
         val resolvedY = y + dotVerticalOffset(config) -
-            DUAL_BOTTOM_DOT_RAISE_DP * DUAL_BOTTOM_HEIGHT / glyphHeightDp(config).toFloat()
+            DUAL_BOTTOM_DOT_RAISE_DP * DUAL_BOTTOM_HEIGHT / glyphHeightDp(config, networkType).toFloat()
         dots.forEachIndexed { index, _ ->
             paint.style = Paint.Style.FILL
             paint.color = if (index < level.coerceIn(0, 4)) color else track
@@ -976,7 +1552,7 @@ object StatusComboStyleOneGlyphRenderer {
         when {
             bolt -> drawRectBolt(
                 canvas, offsetX, config,
-                if (state.charging && state.quickCharge) QUICK_CHARGE else tint,
+                resolveChargingBoltColor(config, state, tint),
                 config.arcStroke,
             )
             config.showWifi && state.wifiLevel >= 1 ->
@@ -1024,22 +1600,20 @@ object StatusComboStyleOneGlyphRenderer {
     }
 
     private fun drawStackedSignal(
-        canvas: Canvas, cx: Float, cy: Float, bars: Int, dots: Int,
+        canvas: Canvas, cx: Float, barBaseline: Float, bars: Int, dots: Int,
         color: Int, track: Int, sizeDp: Int,
     ) {
         // Reference geometry: 251 × 209 box, 50-wide capsules at 67-pixel
         // pitch, heights 75/100/125/150, 50-diameter dots and a 9-pixel row gap.
-        // Scale the whole box uniformly to avoid taller single-SIM bars.
+        // Anchor the tallest bar's lower edge to the native status-icon baseline.
         val scale = sizeDp.coerceIn(6, 20) * 1.15f * (HEIGHT / 36f) / 209f
         val inkWidth = 251f * scale
-        val inkHeight = 209f * scale
         val left = cx - inkWidth / 2f
-        val top = cy - inkHeight / 2f
         val pitch = 67f * scale
         val barWidth = 50f * scale
         val radius = barWidth / 2f
         val heights = floatArrayOf(75f, 100f, 125f, 150f).map { it * scale }
-        val baseline = top + 150f * scale
+        val baseline = barBaseline
         val dotCenterY = baseline + 34f * scale
         for (i in 0..3) {
             val barLeft = left + i * pitch
@@ -1221,6 +1795,22 @@ object StatusComboStyleOneGlyphRenderer {
 
     private fun weightedTypeface(weight: Int): Typeface =
         Typeface.create(Typeface.create("sans-serif", Typeface.NORMAL), weight.coerceIn(100, 900), false)
+
+    private fun resolveChargingBoltColor(
+        config: StatusBarComboStyleOneRuntime,
+        state: StatusComboStyleOneGlyphState,
+        tint: Int,
+    ): Int {
+        // Bolt colours are independent of the ring's roleColors switch.
+        // White status-bar tint means a dark background; black tint means a light one.
+        val darkBackground = luminance(tint) > 0.5f
+        return when {
+            state.quickCharge && darkBackground -> config.quickChargingBoltColorDarkArgb
+            state.quickCharge -> config.quickChargingBoltColorLightArgb
+            darkBackground -> config.normalChargingBoltColorDarkArgb
+            else -> config.normalChargingBoltColorLightArgb
+        }
+    }
 
     private fun resolveBatteryColor(
         config: StatusBarComboStyleOneRuntime, state: StatusComboStyleOneGlyphState, tint: Int,

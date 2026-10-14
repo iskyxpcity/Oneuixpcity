@@ -152,10 +152,14 @@ fun StatusComboStyleOneCategoryControls(
     var suffixScale by remember(runtime.typeSuffixScale) { mutableIntStateOf(runtime.typeSuffixScale.coerceIn(50, 100)) }
     var outTypeSize by remember(runtime.outTypeSizeDp) { mutableIntStateOf(runtime.outTypeSizeDp.coerceIn(8, 26)) }
     var outSignalSize by remember(runtime.outSignalSizeDp) { mutableIntStateOf(runtime.outSignalSizeDp.coerceIn(6, 20)) }
-    var outSignalMarginLeft by remember(runtime.outSignalMarginLeftDp) { mutableIntStateOf(runtime.outSignalMarginLeftDp.coerceIn(0, 16)) }
-    var outTypeLeft by remember(runtime.outTypeMarginLeftDp) { mutableIntStateOf(runtime.outTypeMarginLeftDp.coerceIn(0, 16)) }
-    var outTypeRight by remember(runtime.outTypeMarginRightDp) { mutableIntStateOf(runtime.outTypeMarginRightDp.coerceIn(0, 16)) }
-    var outSignalMargin by remember(runtime.outSignalMarginDp) { mutableIntStateOf(runtime.outSignalMarginDp.coerceIn(0, 16)) }
+    var outSignalMarginLeft by remember(runtime.outSignalMarginLeftDp) { mutableIntStateOf(runtime.outSignalMarginLeftDp.coerceIn(-16, 16)) }
+    var outTypeLeft by remember(runtime.outTypeMarginLeftDp) { mutableIntStateOf(runtime.outTypeMarginLeftDp.coerceIn(-16, 16)) }
+    var outTypeRight by remember(runtime.outTypeMarginRightDp) { mutableIntStateOf(runtime.outTypeMarginRightDp.coerceIn(-16, 16)) }
+    var outSignalMargin by remember(runtime.outSignalMarginDp) { mutableIntStateOf(runtime.outSignalMarginDp.coerceIn(-16, 16)) }
+    var outTypeOffsetX by remember(runtime.outTypeOffsetXDp) { mutableIntStateOf(runtime.outTypeOffsetXDp.coerceIn(-16, 16)) }
+    var outTypeOffsetY by remember(runtime.outTypeOffsetYDp) { mutableIntStateOf(runtime.outTypeOffsetYDp.coerceIn(-16, 16)) }
+    var outSignalOffsetX by remember(runtime.outSignalOffsetXDp) { mutableIntStateOf(runtime.outSignalOffsetXDp.coerceIn(-16, 16)) }
+    var outSignalOffsetY by remember(runtime.outSignalOffsetYDp) { mutableIntStateOf(runtime.outSignalOffsetYDp.coerceIn(-16, 16)) }
     var lowThreshold by remember(runtime.lowThreshold) { mutableIntStateOf(runtime.lowThreshold.coerceIn(5, 50)) }
     var glyphScale by remember(runtime.glyphScalePercent) { mutableIntStateOf(runtime.glyphScalePercent.coerceIn(70, 150)) }
     var glyphOffsetX by remember(runtime.glyphOffsetXDp) { mutableIntStateOf(runtime.glyphOffsetXDp.coerceIn(-16, 16)) }
@@ -235,7 +239,14 @@ fun StatusComboStyleOneCategoryControls(
             }, {
                 SelectItem(icon = null, title = stringResource(R.string.status_combo_style_one_style), summary = stringResource(R.string.status_combo_style_one_style_summary), entries = listOf(stringResource(R.string.status_combo_style_one_style_ring), stringResource(R.string.status_combo_style_one_style_rect)), selectedIndex = runtime.trioStyle.coerceIn(0, 1), enabled = runtime.enabled, onSelectedIndexChange = { previewAndPersist(runtime.copy(trioStyle = it.coerceIn(0, 1))) })
             }, {
-                SwitchItem(icon = null, title = stringResource(R.string.status_combo_style_one_overlay), summary = stringResource(R.string.status_combo_style_one_overlay_summary), checked = runtime.overlayGlyph, enabled = runtime.enabled, onCheckedChange = { previewAndPersist(runtime.copy(overlayGlyph = it)) })
+                SwitchItem(
+                    icon = null,
+                    title = stringResource(R.string.status_combo_style_one_overlay),
+                    summary = stringResource(R.string.status_combo_style_one_overlay_summary),
+                    checked = runtime.overlayGlyph,
+                    enabled = runtime.enabled,
+                    onCheckedChange = { previewAndPersist(runtime.copy(overlayGlyph = it)) },
+                )
             }, {
                 SwitchItem(icon = null, title = stringResource(R.string.status_combo_style_one_show_wifi), summary = stringResource(R.string.status_combo_style_one_show_wifi_summary), checked = runtime.showWifi, enabled = runtime.enabled, onCheckedChange = { previewAndPersist(runtime.copy(showWifi = it)) })
             }, {
@@ -280,7 +291,8 @@ fun StatusComboStyleOneCategoryControls(
             }))
         }
         1 -> {
-            // Overall size, offsets and gaps all affect the complete glyph.
+            // Overall Size contains whole-glyph scale, X/Y position, and left/right spacing.
+            // Element-specific offsets remain in their own groups; zero offsets preserve slot anchoring.
             val ringDotsEnabled = runtime.enabled && runtime.trioStyle == 0 && runtime.showMobile && runtime.signalMode == 0
             StatusThemeGroup(title = stringResource(R.string.status_combo_style_one_group_overall_size), titleAlignedToContent = true, items = listOf({
                 styleOneSlider(stringResource(R.string.status_combo_style_one_glyph_scale), stringResource(R.string.status_combo_style_one_percent_summary, glyphScale), glyphScale.toFloat(), 70f..150f, { glyphScale = it.roundToInt(); preview(runtime.copy(glyphScalePercent = glyphScale)) }, { final -> persist(runtime.copy(glyphScalePercent = final.roundToInt())) }, enabled = runtime.enabled)
@@ -319,18 +331,26 @@ fun StatusComboStyleOneCategoryControls(
             }, {
                 styleOneSlider(stringResource(R.string.status_combo_style_one_type_suffix_scale), stringResource(R.string.status_combo_style_one_type_suffix_scale_summary, suffixScale), suffixScale.toFloat(), 50f..100f, { suffixScale = it.roundToInt(); preview(runtime.copy(typeSuffixScale = suffixScale)) }, { final -> persist(runtime.copy(typeSuffixScale = final.roundToInt())) }, enabled = runtime.enabled && runtime.mobileTypeMode != 0)
             }, {
-                styleOneSlider(stringResource(R.string.status_combo_style_one_out_type_margin_left), stringResource(R.string.status_combo_style_one_out_type_margin_left_summary, outTypeLeft), outTypeLeft.toFloat(), 0f..16f, { outTypeLeft = it.roundToInt(); preview(runtime.copy(outTypeMarginLeftDp = outTypeLeft)) }, { final -> persist(runtime.copy(outTypeMarginLeftDp = final.roundToInt())) }, enabled = runtime.enabled && runtime.mobileTypeMode == 2)
+                styleOneSlider(stringResource(R.string.status_combo_style_one_out_type_margin_left), stringResource(R.string.status_combo_style_one_out_type_margin_left_summary, outTypeLeft), outTypeLeft.toFloat(), -16f..16f, { outTypeLeft = it.roundToInt(); preview(runtime.copy(outTypeMarginLeftDp = outTypeLeft)) }, { final -> persist(runtime.copy(outTypeMarginLeftDp = final.roundToInt())) }, enabled = runtime.enabled && runtime.mobileTypeMode == 2)
             }, {
-                styleOneSlider(stringResource(R.string.status_combo_style_one_out_type_margin_right), stringResource(R.string.status_combo_style_one_out_type_margin_right_summary, outTypeRight), outTypeRight.toFloat(), 0f..16f, { outTypeRight = it.roundToInt(); preview(runtime.copy(outTypeMarginRightDp = outTypeRight)) }, { final -> persist(runtime.copy(outTypeMarginRightDp = final.roundToInt())) }, enabled = runtime.enabled && runtime.mobileTypeMode == 2)
+                styleOneSlider(stringResource(R.string.status_combo_style_one_out_type_margin_right), stringResource(R.string.status_combo_style_one_out_type_margin_right_summary, outTypeRight), outTypeRight.toFloat(), -16f..16f, { outTypeRight = it.roundToInt(); preview(runtime.copy(outTypeMarginRightDp = outTypeRight)) }, { final -> persist(runtime.copy(outTypeMarginRightDp = final.roundToInt())) }, enabled = runtime.enabled && runtime.mobileTypeMode == 2)
+            }, {
+                styleOneSlider(stringResource(R.string.status_combo_style_one_out_type_offset_x), stringResource(R.string.status_combo_style_one_out_type_offset_x_summary, outTypeOffsetX), outTypeOffsetX.toFloat(), -16f..16f, { outTypeOffsetX = it.roundToInt(); preview(runtime.copy(outTypeOffsetXDp = outTypeOffsetX)) }, { final -> persist(runtime.copy(outTypeOffsetXDp = final.roundToInt())) }, enabled = runtime.enabled && runtime.mobileTypeMode == 2)
+            }, {
+                styleOneSlider(stringResource(R.string.status_combo_style_one_out_type_offset_y), stringResource(R.string.status_combo_style_one_out_type_offset_y_summary, outTypeOffsetY), outTypeOffsetY.toFloat(), -16f..16f, { outTypeOffsetY = it.roundToInt(); preview(runtime.copy(outTypeOffsetYDp = outTypeOffsetY)) }, { final -> persist(runtime.copy(outTypeOffsetYDp = final.roundToInt())) }, enabled = runtime.enabled && runtime.mobileTypeMode == 2)
             }, {
                 styleOneSlider(stringResource(R.string.status_combo_style_one_type_weight), stringResource(R.string.status_combo_style_one_type_weight_summary, typeWeight), typeWeight.toFloat(), 100f..900f, { typeWeight = (it / 100f).roundToInt() * 100; preview(runtime.copy(typeWeight = typeWeight)) }, { final -> persist(runtime.copy(typeWeight = final.roundToInt())) }, stepSize = 100f, enabled = runtime.enabled && runtime.mobileTypeMode != 0)
             }))
             StatusThemeGroup(title = stringResource(R.string.status_combo_style_one_group_out_signal), titleAlignedToContent = true, items = listOf({
                 styleOneSlider(stringResource(R.string.status_combo_style_one_out_signal_size), stringResource(R.string.status_combo_style_one_out_signal_size_summary, outSignalSize), outSignalSize.toFloat(), 6f..20f, { outSignalSize = it.roundToInt(); preview(runtime.copy(outSignalSizeDp = outSignalSize)) }, { final -> persist(runtime.copy(outSignalSizeDp = final.roundToInt())) }, enabled = runtime.enabled && runtime.showMobile && runtime.signalMode == 1 && runtime.stackedSignal)
             }, {
-                styleOneSlider(stringResource(R.string.status_combo_style_one_out_signal_margin_left), stringResource(R.string.status_combo_style_one_out_signal_margin_left_summary, outSignalMarginLeft), outSignalMarginLeft.toFloat(), 0f..16f, { outSignalMarginLeft = it.roundToInt(); preview(runtime.copy(outSignalMarginLeftDp = outSignalMarginLeft)) }, { final -> persist(runtime.copy(outSignalMarginLeftDp = final.roundToInt())) }, enabled = runtime.enabled && runtime.showMobile && runtime.signalMode == 1 && runtime.stackedSignal)
+                styleOneSlider(stringResource(R.string.status_combo_style_one_out_signal_margin_left), stringResource(R.string.status_combo_style_one_out_signal_margin_left_summary, outSignalMarginLeft), outSignalMarginLeft.toFloat(), -16f..16f, { outSignalMarginLeft = it.roundToInt(); preview(runtime.copy(outSignalMarginLeftDp = outSignalMarginLeft)) }, { final -> persist(runtime.copy(outSignalMarginLeftDp = final.roundToInt())) }, enabled = runtime.enabled && runtime.showMobile && runtime.signalMode == 1 && runtime.stackedSignal)
             }, {
-                styleOneSlider(stringResource(R.string.status_combo_style_one_out_signal_margin), stringResource(R.string.status_combo_style_one_out_signal_margin_summary, outSignalMargin), outSignalMargin.toFloat(), 0f..16f, { outSignalMargin = it.roundToInt(); preview(runtime.copy(outSignalMarginDp = outSignalMargin)) }, { final -> persist(runtime.copy(outSignalMarginDp = final.roundToInt())) }, enabled = runtime.enabled && runtime.showMobile && runtime.signalMode == 1 && runtime.stackedSignal)
+                styleOneSlider(stringResource(R.string.status_combo_style_one_out_signal_margin), stringResource(R.string.status_combo_style_one_out_signal_margin_summary, outSignalMargin), outSignalMargin.toFloat(), -16f..16f, { outSignalMargin = it.roundToInt(); preview(runtime.copy(outSignalMarginDp = outSignalMargin)) }, { final -> persist(runtime.copy(outSignalMarginDp = final.roundToInt())) }, enabled = runtime.enabled && runtime.showMobile && runtime.signalMode == 1 && runtime.stackedSignal)
+            }, {
+                styleOneSlider(stringResource(R.string.status_combo_style_one_out_signal_offset_x), stringResource(R.string.status_combo_style_one_out_signal_offset_x_summary, outSignalOffsetX), outSignalOffsetX.toFloat(), -16f..16f, { outSignalOffsetX = it.roundToInt(); preview(runtime.copy(outSignalOffsetXDp = outSignalOffsetX)) }, { final -> persist(runtime.copy(outSignalOffsetXDp = final.roundToInt())) }, enabled = runtime.enabled && runtime.showMobile && runtime.signalMode == 1 && runtime.stackedSignal)
+            }, {
+                styleOneSlider(stringResource(R.string.status_combo_style_one_out_signal_offset_y), stringResource(R.string.status_combo_style_one_out_signal_offset_y_summary, outSignalOffsetY), outSignalOffsetY.toFloat(), -16f..16f, { outSignalOffsetY = it.roundToInt(); preview(runtime.copy(outSignalOffsetYDp = outSignalOffsetY)) }, { final -> persist(runtime.copy(outSignalOffsetYDp = final.roundToInt())) }, enabled = runtime.enabled && runtime.showMobile && runtime.signalMode == 1 && runtime.stackedSignal)
             }))
             StatusThemeGroup(title = stringResource(R.string.status_combo_style_one_group_track), titleAlignedToContent = true, items = listOf({
                 styleOneSlider(stringResource(R.string.status_combo_style_one_track_alpha), stringResource(R.string.status_combo_style_one_track_alpha_summary, trackAlpha), trackAlpha.toFloat(), 0f..100f, { trackAlpha = it.roundToInt(); val alpha = (trackAlpha * 255f / 100f).roundToInt(); preview(runtime.copy(trackAlpha = alpha)) }, { final -> persist(runtime.copy(trackAlpha = (final.roundToInt() * 255f / 100f).roundToInt())) }, enabled = runtime.enabled)
@@ -391,6 +411,26 @@ fun StatusComboStyleOneCategoryControls(
                 }
                 colorItems += {
                     StyleOneRoleColorRow(
+                        title = stringResource(StyleOneColorRole.NormalChargingBolt.titleRes),
+                        summary = stringResource(R.string.status_combo_style_one_color_summary),
+                        darkColor = runtime.normalChargingBoltColorDarkArgb,
+                        lightColor = runtime.normalChargingBoltColorLightArgb,
+                        enabled = runtime.enabled && runtime.showBolt,
+                        onClick = { colorPreviewDraft[0] = runtime; editingColorRole = StyleOneColorRole.NormalChargingBolt },
+                    )
+                }
+                colorItems += {
+                    StyleOneRoleColorRow(
+                        title = stringResource(StyleOneColorRole.QuickChargingBolt.titleRes),
+                        summary = stringResource(R.string.status_combo_style_one_color_summary),
+                        darkColor = runtime.quickChargingBoltColorDarkArgb,
+                        lightColor = runtime.quickChargingBoltColorLightArgb,
+                        enabled = runtime.enabled && runtime.showBolt,
+                        onClick = { colorPreviewDraft[0] = runtime; editingColorRole = StyleOneColorRole.QuickChargingBolt },
+                    )
+                }
+                colorItems += {
+                    StyleOneRoleColorRow(
                         title = stringResource(StyleOneColorRole.Critical.titleRes),
                         summary = stringResource(R.string.status_combo_style_one_color_summary),
                         darkColor = runtime.criticalColorDarkArgb,
@@ -441,6 +481,10 @@ fun StatusComboStyleOneCategoryControls(
                                 criticalColorLightArgb = 0xFFFF3B30.toInt(),
                                 chargingColorDarkArgb = 0xFF34C759.toInt(),
                                 chargingColorLightArgb = 0xFF1F8F3D.toInt(),
+                                normalChargingBoltColorDarkArgb = 0xFFFFFFFF.toInt(),
+                                normalChargingBoltColorLightArgb = 0xFF000000.toInt(),
+                                quickChargingBoltColorDarkArgb = 0xFF2196F3.toInt(),
+                                quickChargingBoltColorLightArgb = 0xFF2196F3.toInt(),
                                 lowColorDarkArgb = 0xFFF2B900.toInt(),
                                 lowColorLightArgb = 0xFFC99700.toInt(),
                                 powerSaveFillColorDarkArgb = 0xBFFFC107.toInt(),
@@ -490,6 +534,8 @@ fun StatusComboStyleOneCategoryControls(
 private enum class StyleOneColorRole(val titleRes: Int) {
     Low(R.string.status_combo_style_one_color_low),
     Charging(R.string.status_combo_style_one_color_charging),
+    NormalChargingBolt(R.string.status_combo_style_one_color_normal_charging_bolt),
+    QuickChargingBolt(R.string.status_combo_style_one_color_quick_charging_bolt),
     Critical(R.string.status_combo_style_one_color_critical),
     PowerSaveFill(R.string.status_combo_style_one_color_power_save_fill),
 }
@@ -500,6 +546,8 @@ private fun Preference.SystemUI.StatusBarComboStyleOneRuntime.colorForRole(
 ): Int = when (role) {
     StyleOneColorRole.Low -> if (onDarkBackground) lowColorDarkArgb else lowColorLightArgb
     StyleOneColorRole.Charging -> if (onDarkBackground) chargingColorDarkArgb else chargingColorLightArgb
+    StyleOneColorRole.NormalChargingBolt -> if (onDarkBackground) normalChargingBoltColorDarkArgb else normalChargingBoltColorLightArgb
+    StyleOneColorRole.QuickChargingBolt -> if (onDarkBackground) quickChargingBoltColorDarkArgb else quickChargingBoltColorLightArgb
     StyleOneColorRole.Critical -> if (onDarkBackground) criticalColorDarkArgb else criticalColorLightArgb
     StyleOneColorRole.PowerSaveFill ->
         if (onDarkBackground) powerSaveFillColorDarkArgb else powerSaveFillColorLightArgb
@@ -512,6 +560,8 @@ private fun Preference.SystemUI.StatusBarComboStyleOneRuntime.withRoleColor(
 ): Preference.SystemUI.StatusBarComboStyleOneRuntime = when (role) {
     StyleOneColorRole.Low -> if (onDarkBackground) copy(lowColorDarkArgb = colorArgb) else copy(lowColorLightArgb = colorArgb)
     StyleOneColorRole.Charging -> if (onDarkBackground) copy(chargingColorDarkArgb = colorArgb) else copy(chargingColorLightArgb = colorArgb)
+    StyleOneColorRole.NormalChargingBolt -> if (onDarkBackground) copy(normalChargingBoltColorDarkArgb = colorArgb) else copy(normalChargingBoltColorLightArgb = colorArgb)
+    StyleOneColorRole.QuickChargingBolt -> if (onDarkBackground) copy(quickChargingBoltColorDarkArgb = colorArgb) else copy(quickChargingBoltColorLightArgb = colorArgb)
     StyleOneColorRole.Critical -> if (onDarkBackground) copy(criticalColorDarkArgb = colorArgb) else copy(criticalColorLightArgb = colorArgb)
     StyleOneColorRole.PowerSaveFill ->
         if (onDarkBackground) copy(powerSaveFillColorDarkArgb = colorArgb) else copy(powerSaveFillColorLightArgb = colorArgb)
