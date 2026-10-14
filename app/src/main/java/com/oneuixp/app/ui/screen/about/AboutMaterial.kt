@@ -100,20 +100,19 @@ fun AboutScreenMaterial(
                 SegmentedColumn(
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                     content = listOf(
-                    {
-                        SegmentedListItem(
-                            onClick = actions.onOpenFeatureIntroduction,
-                            headlineContent = { Text(state.featureIntroductionTitle) }
-                        )
-                    ,
-                    {
-                        SegmentedListItem(
-                            onClick = actions.onOpenDisclaimer,
-                            headlineContent = { Text(state.disclaimerTitle) }
-                        )
-                    }
-                    }
-                )
+                        {
+                            SegmentedListItem(
+                                onClick = actions.onOpenFeatureIntroduction,
+                                headlineContent = { Text(state.featureIntroductionTitle) }
+                            )
+                        },
+                        {
+                            SegmentedListItem(
+                                onClick = actions.onOpenDisclaimer,
+                                headlineContent = { Text(state.disclaimerTitle) }
+                            )
+                        },
+                    )
                 )
                 Spacer(
                     Modifier.height(
