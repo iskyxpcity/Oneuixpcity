@@ -98,8 +98,8 @@ private fun DisclaimerMaterial(onBack: () -> Unit) {
                         },
                         {
                             SegmentedListItem(
-                                headlineContent = { Text(stringResource(R.string.disclaimer_relationship_title)) },
-                                supportingContent = { Text(stringResource(R.string.disclaimer_relationship_body)) },
+                                headlineContent = { Text(stringResource(R.string.disclaimer_risk_title)) },
+                                supportingContent = { Text(stringResource(R.string.disclaimer_risk_body)) },
                             )
                         },
                     ),
@@ -153,8 +153,8 @@ private fun DisclaimerMiuix(onBack: () -> Unit) {
                                 summary = stringResource(R.string.disclaimer_style_body),
                             )
                             BasicComponent(
-                                title = stringResource(R.string.disclaimer_relationship_title),
-                                summary = stringResource(R.string.disclaimer_relationship_body),
+                                title = stringResource(R.string.disclaimer_risk_title),
+                                summary = stringResource(R.string.disclaimer_risk_body),
                             )
                         }
                     }
