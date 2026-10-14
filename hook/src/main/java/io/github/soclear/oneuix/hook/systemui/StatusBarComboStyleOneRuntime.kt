@@ -83,10 +83,10 @@ object StatusBarComboStyleOneRuntime {
     private const val INNER_PUNCH_HOLE_VERTICAL_CALIBRATION_DP = 0.5f
     private const val INNER_PUNCH_HOLE_HORIZONTAL_CALIBRATION_DP = 1.5f
     private const val RIGHT_SIDE_CUTOUT_THRESHOLD = 0.65f
-    // Keep the responsive anchor watcher, but do not rebuild the window for a single transient
-    // foldable DisplayInfo sample.
+    // Take one fast placement sample after attach, then back off while geometry is stable.
+    // Fold/unfold still requires two matching geometry samples before rebuilding the window.
     private const val GLYPH_POSITION_WATCH_INTERVAL_MS = 100L
-    private const val GLYPH_POSITION_IDLE_RETRY_INTERVAL_MS = 500L
+    private const val GLYPH_POSITION_IDLE_INTERVAL_MS = 500L
     private const val GLYPH_POSITION_GEOMETRY_CONFIRM_INTERVAL_MS = 220L
     private const val GLYPH_POSITION_GEOMETRY_CONFIRM_SAMPLES = 2
 
@@ -95,8 +95,8 @@ object StatusBarComboStyleOneRuntime {
     @Volatile private var systemUiClassLoader: ClassLoader? = null
     private val main = Handler(Looper.getMainLooper())
     private val hosts = Collections.synchronizedMap(WeakHashMap<ViewGroup, Host>())
-    // Keep one last diagnostic per cutout state/key. The live overlay watcher samples
-    // every 100ms, but an unchanged geometry or repeated temporary failure is logged once.
+    // Keep one last diagnostic per cutout state/key. The overlay watcher backs off while
+    // geometry is stable; unchanged geometry and repeated temporary failures are logged once.
     private val lastCutoutDiagnostics = Collections.synchronizedMap(
         WeakHashMap<View, MutableMap<String, String>>(),
     )
@@ -412,7 +412,10 @@ object StatusBarComboStyleOneRuntime {
                     (currentDisplayId >= 0 && placementDisplayId >= 0 && currentDisplayId != placementDisplayId) ||
                     (placementDisplayWidth > 0 && placementDisplayHeight > 0 &&
                         (currentSize.x != placementDisplayWidth || currentSize.y != placementDisplayHeight))
-                var nextDelay = GLYPH_POSITION_WATCH_INTERVAL_MS
+                // Do not poll the SystemUI main thread at 10Hz indefinitely. A short first
+                // sample and debounced geometry checks keep fold/unfold responsive, while the
+                // steady state checks at 2Hz unless the position cannot be resolved.
+                var nextDelay = GLYPH_POSITION_IDLE_INTERVAL_MS
                 if (displayGeometryChanged) {
                     val samePendingGeometry =
                         pendingGeometrySamples > 0 &&
@@ -457,7 +460,7 @@ object StatusBarComboStyleOneRuntime {
                     )
                     if (!update(anchor, root)) {
                         StatusBarComboStyleOneRuntime.retryOverlayGeometry(root)
-                        nextDelay = GLYPH_POSITION_IDLE_RETRY_INTERVAL_MS
+                        nextDelay = GLYPH_POSITION_IDLE_INTERVAL_MS
                     }
                 }
                 if (params != null && glyph.isAttachedToWindow && watchedRoot?.get() != null) {
