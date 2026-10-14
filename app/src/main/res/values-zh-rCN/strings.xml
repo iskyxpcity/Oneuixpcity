@@ -128,8 +128,8 @@
     <string name="disclaimer_source_body">本项目使用并整合、修改了 OneUIX 与 HyperDuo 的相关源码。</string>
     <string name="disclaimer_style_title">界面风格说明</string>
     <string name="disclaimer_style_body">本应用部分界面采用了 KernelSU 的界面风格。</string>
-    <string name="disclaimer_relationship_title">项目关系说明</string>
-    <string name="disclaimer_relationship_body">OneUI XP 为独立项目，并非 OneUIX、HyperDuo 或 KernelSU 的官方版本，也不代表上述项目对本应用的认可或背书。相关名称及原有权利归各自权利人所有。</string>
+    <string name="disclaimer_risk_title">玩机风险提示</string>
+    <string name="disclaimer_risk_body">玩机有风险。本模块应用可能导致系统异常、数据丢失、无法开机甚至设备损坏。使用本模块所产生的一切风险与损失由用户自行承担。</string>
     <string name="feature_intro_version_updates">OneUI XP 1.0.260930 主要更新</string>
     <string name="feature_intro_version_updates_summary">2026-09-30</string>
     <string name="feature_intro_version_updates_261013">OneUI XP 1.0.261013 主要更新</string>
