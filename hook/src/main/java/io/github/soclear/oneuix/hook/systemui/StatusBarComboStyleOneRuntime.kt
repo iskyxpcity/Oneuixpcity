@@ -788,9 +788,17 @@ object StatusBarComboStyleOneRuntime {
                     horizontalOffsetPx
                 ).roundToInt()
             val verticalOffsetPx = StatusBarComboStyleOneRuntime.dpExact(context, cfg.glyphOffsetYDp)
-            lp.y = (
+            val requestedWindowY = (
                 slotCenterY - lp.height * centreRatioY + verticalOffsetPx
                 ).roundToInt()
+            // FLAG_LAYOUT_NO_LIMITS is required by Samsung so coordinates remain screen-based,
+            // but it also permits a scaled-up overlay to extend above y=0. The inner display's
+            // status-bar anchor is closer to the top edge than the cover display, so large sizes
+            // can produce a negative window Y only when unfolded. Preserve normal centering until
+            // the top edge would cross the active display's top boundary, then pin the window there.
+            val minimumWindowY = if (rootLocated) rootLocation[1].coerceAtLeast(0) else 0
+            lp.y = requestedWindowY.coerceAtLeast(minimumWindowY)
+            val topEdgeClamped = lp.y != requestedWindowY
 
             val ringCenterXUnits = StatusComboStyleOneGlyphRenderer.glyphCenterX(cfg, networkType)
             val ringCenterScreenPx = lp.x + canvasLeftInsetPx + ringCenterXUnits * renderScale
@@ -807,7 +815,8 @@ object StatusBarComboStyleOneRuntime {
                         "activeRightMargin=${activeRightMargin} slotRightPx=${slotRightPx} slotCenterY=${slotCenterY} " +
                         "anchorSize=${anchor.width}x${anchor.height} measured=${anchor.measuredWidth}x${anchor.measuredHeight} " +
                         "anchorVisibility=${anchor.visibility} anchorAlpha=${anchor.alpha} " +
-                        "window=(${lp.x},${lp.y}) size=${lp.width}x${lp.height} " +
+                        "requestedWindowY=${requestedWindowY} minimumTopY=${minimumWindowY} " +
+                        "topEdgeClamped=${topEdgeClamped} window=(${lp.x},${lp.y}) size=${lp.width}x${lp.height} " +
                         "ringCenterScreen=(${ringCenterScreenPx},${lp.y + lp.height * centreRatioY}) placement=statusbar-right-slot"
                 )
             }
