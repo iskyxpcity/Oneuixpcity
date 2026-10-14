@@ -392,6 +392,11 @@ object StatusBarComboStyleOneRuntime {
         private var lastStableGeometry: DisplayGeometry? = null
         private var pendingGeometry: DisplayGeometry? = null
         private var lastAnchorFingerprint: String? = null
+        // Remember the true gap from the active status-bar root's right edge to the
+        // trailing system-icons slot. During fold/unfold, the root can resize before
+        // Samsung relays out system_icons; using that stale parent X would place the
+        // overlay near the middle of the newly-sized display for several frames.
+        private var lastStableRightEdgeGapDp: Float? = null
 
         // The native battery slot remains the placement anchor. React to actual view-tree
         // layout events, coalesce work to one frame, and do nothing when its screen geometry
@@ -512,7 +517,28 @@ object StatusBarComboStyleOneRuntime {
             val displayBindingChanged = boundDisplayId >= 0 && current.displayId >= 0 &&
                 boundDisplayId != current.displayId
             val geometryChanged = lastStableGeometry?.let { current != it } == true
-            if (displayBindingChanged || geometryChanged) {
+            if (displayBindingChanged) {
+                // A window context is display-bound, so wait for the new display binding
+                // to settle before recreating the overlay on that display.
+                scheduleGeometryConfirmation(current)
+                return
+            }
+
+            if (geometryChanged) {
+                // On the same logical display, do not leave the overlay at its previous
+                // screen coordinates while waiting for geometry confirmation. The root may
+                // already have its new width while system_icons still has the old X. update()
+                // detects that impossible right-edge gap and immediately predicts the slot
+                // from the new root edge using the last stable system-icons inset. Once the
+                // row finishes layout, the normal anchor coordinates take over.
+                val fingerprint = placementFingerprint(anchor, root)
+                if (fingerprint != lastAnchorFingerprint) {
+                    if (update(anchor, root)) {
+                        lastAnchorFingerprint = placementFingerprint(anchor, root)
+                    } else {
+                        StatusBarComboStyleOneRuntime.retryOverlayGeometry(root)
+                    }
+                }
                 scheduleGeometryConfirmation(current)
                 return
             }
@@ -705,7 +731,7 @@ object StatusBarComboStyleOneRuntime {
                 ?: 0
             val activeRightMargin =
                 (anchor.layoutParams as? ViewGroup.MarginLayoutParams)?.rightMargin ?: originalRightMargin
-            val slotRightPx = when {
+            var slotRightPx = when {
                 parentLocated && slotParent != null ->
                     parentLocation[0] + slotParent.width - slotParent.paddingRight - activeRightMargin
                 anchorLocated && anchor.width > 0 ->
@@ -714,6 +740,32 @@ object StatusBarComboStyleOneRuntime {
                     rootLocation[0] + root.width - root.paddingRight - originalRightMargin
                 else -> return false
             }
+
+            // Foldable transitions can resize PhoneStatusBarView before the trailing
+            // system_icons row is laid out at its new position. A stale row coordinate is
+            // easy to identify because its right edge is hundreds of dp away from the root's
+            // right edge. In that short window, predict from the new root edge and the last
+            // stable system-icons inset; do not render at the old cover-screen X and then jump.
+            val rootRightPx = if (rootLocated && root.width > 0) {
+                rootLocation[0] + root.width - root.paddingRight
+            } else null
+            if (rootRightPx != null) {
+                val density = root.resources.displayMetrics.density.coerceAtLeast(0.1f)
+                val measuredGapDp = (rootRightPx - slotRightPx) / density
+                if (parentLocated && slotParent != null && measuredGapDp in 0f..64f) {
+                    lastStableRightEdgeGapDp = measuredGapDp
+                } else if (!parentLocated || measuredGapDp < -4f || measuredGapDp > 96f) {
+                    val stableGapDp = lastStableRightEdgeGapDp ?: 16f
+                    slotRightPx = rootRightPx - dpExact(root.context, stableGapDp.roundToInt())
+                    diagnostic(
+                        "Overlay used active-root right-edge prediction during layout transition: " +
+                            "displayId=${root.display?.displayId} root=${root.width}x${root.height} " +
+                            "staleGapDp=${measuredGapDp.roundToInt()} stableGapDp=${stableGapDp.roundToInt()} " +
+                            "slotRightPx=${slotRightPx}"
+                    )
+                }
+            }
+
             val slotCenterY = when {
                 anchorLocated && anchor.height > 0 && anchor.visibility == View.VISIBLE ->
                     anchorLocation[1] + anchor.height / 2f
