@@ -101,6 +101,22 @@ object ProductionPreferenceMigration {
                     comboRuntimeChanged = true
                 }
 
+                // Restore the 1dp baseline left gap for the combined battery ring.
+                // This reverses the former 1dp-to-0dp default change exactly once;
+                // preserve any non-zero user-selected margin.
+                val glyphLeftMarginRestoreOneDpMigrationDone =
+                    (updatedComboRuntime["glyphLeftMarginRestoreOneDpMigrationDone"] as? JsonPrimitive)
+                        ?.content?.toBooleanStrictOrNull() == true
+                if (!glyphLeftMarginRestoreOneDpMigrationDone) {
+                    val oldLeftMargin =
+                        updatedComboRuntime["glyphLeftMarginDp"]?.toString()?.toIntOrNull() ?: 1
+                    if (oldLeftMargin == 0) {
+                        updatedComboRuntime["glyphLeftMarginDp"] = JsonPrimitive(1)
+                    }
+                    updatedComboRuntime["glyphLeftMarginRestoreOneDpMigrationDone"] = JsonPrimitive(true)
+                    comboRuntimeChanged = true
+                }
+
                 val marginResetTo2MigrationDone =
                     (updatedComboRuntime["outSignalMarginReset2MigrationDone"] as? JsonPrimitive)
                         ?.content?.toBooleanStrictOrNull() == true
