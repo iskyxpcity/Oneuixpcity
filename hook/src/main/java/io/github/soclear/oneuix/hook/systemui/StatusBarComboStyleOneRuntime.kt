@@ -89,9 +89,11 @@ object StatusBarComboStyleOneRuntime {
     @Volatile private var systemUiClassLoader: ClassLoader? = null
     private val main = Handler(Looper.getMainLooper())
     private val hosts = Collections.synchronizedMap(WeakHashMap<ViewGroup, Host>())
-    // Deduplicate recurring cutout samples so the live overlay watcher does not flood
-    // the unified diagnostic buffer with an unchanged punch-hole rectangle.
-    private val lastCutoutGeometryDiagnostics = Collections.synchronizedMap(WeakHashMap<View, String>())
+    // Keep one last diagnostic per cutout state/key. The live overlay watcher samples
+    // every 100ms, but an unchanged geometry or repeated temporary failure is logged once.
+    private val lastCutoutDiagnostics = Collections.synchronizedMap(
+        WeakHashMap<View, MutableMap<String, String>>(),
+    )
     // Keep exactly one lifecycle listener per root across fold/unfold reattachment.
     // Listener values do not capture their weak-map keys, so destroyed roots remain collectible.
     private val hostLifecycleListeners =
@@ -904,9 +906,7 @@ object StatusBarComboStyleOneRuntime {
             val geometryNote =
                 "Punch-hole source=$source bounds=$result displayId=${display?.displayId} " +
                     "activeDisplay=${screenWidth}x${screenHeight}; horizontal position from reported geometry"
-            if (lastCutoutGeometryDiagnostics.put(root, geometryNote) != geometryNote) {
-                diagnostic(geometryNote)
-            }
+            diagnosticCutoutState(root, "geometry", geometryNote)
             return result
         }
 
@@ -925,12 +925,16 @@ object StatusBarComboStyleOneRuntime {
                 return it
             }
             selectTopCutout(localBounds, "WindowInsets-raw")?.let {
-                diagnostic("WindowInsets bounds already matched active display coordinate space")
+                diagnosticCutoutState(
+                    root, "window-insets-raw-matched",
+                    "WindowInsets bounds already matched active display coordinate space",
+                )
                 return it
             }
-            diagnostic(
+            diagnosticCutoutState(
+                root, "window-insets-invalid",
                 "WindowInsets did not yield a valid top-edge cutout: local=$localBounds " +
-                    "root=${location.contentToString()} activeDisplay=${screenWidth}x${screenHeight}"
+                    "root=${location.contentToString()} activeDisplay=${screenWidth}x${screenHeight}",
             )
         }
 
@@ -939,23 +943,41 @@ object StatusBarComboStyleOneRuntime {
         val displayCutout = readDisplayCutout(display)
         if (displayCutout != null) {
             selectTopCutout(displayCutout.boundingRects, "DisplayInfo")?.let { return it }
-            diagnostic(
+            diagnosticCutoutState(
+                root, "display-info-invalid",
                 "DisplayInfo did not provide a valid active-display top-edge cutout: " +
                     "bounds=${displayCutout.boundingRects} safeTop=${displayCutout.safeInsetTop} " +
-                    "activeDisplay=${screenWidth}x${screenHeight}"
+                    "activeDisplay=${screenWidth}x${screenHeight}",
             )
         } else {
-            diagnostic(
+            diagnosticCutoutState(
+                root, "display-info-missing",
                 "No DisplayInfo cutout available: displayId=${display?.displayId} " +
-                    "activeDisplay=${screenWidth}x${screenHeight}"
+                    "activeDisplay=${screenWidth}x${screenHeight}",
             )
         }
 
         // safeInsetTop describes avoidance depth, not the camera's horizontal location.
         // It is insufficient for positioning an independent window, so never synthesize
         // a fake cutout around the display centre.
-        diagnostic("No verified camera rectangle for active display; independent overlay must not use screen centre")
+        diagnosticCutoutState(
+            root, "no-verified-cutout",
+            "No verified camera rectangle for active display; independent overlay must not use screen centre",
+        )
         return null
+    }
+
+    private fun diagnosticCutoutState(root: View, key: String, message: String) {
+        val shouldLog = synchronized(lastCutoutDiagnostics) {
+            val perRoot = lastCutoutDiagnostics.getOrPut(root) { mutableMapOf() }
+            if (perRoot[key] == message) {
+                false
+            } else {
+                perRoot[key] = message
+                true
+            }
+        }
+        if (shouldLog) diagnostic(message)
     }
 
     private fun readWindowCutout(root: View): android.view.DisplayCutout? =
