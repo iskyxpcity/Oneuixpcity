@@ -128,6 +128,16 @@
     <string name="version_updates_title">版本主要更新</string>
     <string name="version_1_0_260930_title">1.0.260930 · 首个版本</string>
     <string name="version_1_0_260930_summary">首个版本的主要功能介绍。</string>
+    <string name="version_1_0_261013_title">OneUI XP 1.0.261013 主要更新</string>
+    <string name="version_1_0_261013_summary">2026-10-13</string>
+    <string name="changelog_261013_feature_intro_title">功能介绍与版本更新记录</string>
+    <string name="changelog_261013_feature_intro_body">在「设置 → 关于」中新增「功能介绍」入口，并加入版本主要更新页面，可按版本查看功能介绍与变更记录。</string>
+    <string name="changelog_261013_dual_ui_title">支持 Material 和 Miuix 两套界面</string>
+    <string name="changelog_261013_dual_ui_body">新页面同时适配 Material 与 Miuix 两种界面风格，保留各自的外观，并统一使用相同的版本标题、日期与更新内容。</string>
+    <string name="changelog_261013_first_release_title">首版主要功能概述</string>
+    <string name="changelog_261013_first_release_body">补充 OneUI XP 1.0.260930 首个版本的主要功能说明，涵盖三合一状态栏组合图标、状态栏外观、网络指示、实时功耗信息与日志诊断。</string>
+    <string name="changelog_261013_version_label_title">版本标题与日期</string>
+    <string name="changelog_261013_version_label_body">首版入口现显示「OneUI XP 1.0.260930 主要更新」及发布日期「2026-09-30」；本次 1.0.261013 主要更新显示在版本记录最前方。</string>
     <string name="changelog_section_combo_title">三合一状态栏组合图标</string>
     <string name="changelog_section_combo_body">将电量圆环、移动信号、网络类型和 Wi-Fi 状态整合到一个可自定义的状态栏图标中。可调整图标大小、位置、间距和颜色，并支持双 SIM/eSIM 显示，以及充电、快充和省电状态的视觉效果。</string>
     <string name="changelog_section_statusbar_title">状态栏外观自定义</string>

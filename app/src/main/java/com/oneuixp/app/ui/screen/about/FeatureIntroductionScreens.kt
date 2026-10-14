@@ -204,6 +204,26 @@ private fun VersionChangelogMaterial(onBack: () -> Unit) {
                 Card(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
                     Column(modifier = Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(
+                            text = stringResource(R.string.version_1_0_261013_title),
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                        Text(
+                            text = stringResource(R.string.version_1_0_261013_summary),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+            }
+            item { MaterialChangelogSection(R.string.changelog_261013_feature_intro_title, R.string.changelog_261013_feature_intro_body) }
+            item { MaterialChangelogSection(R.string.changelog_261013_dual_ui_title, R.string.changelog_261013_dual_ui_body) }
+            item { MaterialChangelogSection(R.string.changelog_261013_first_release_title, R.string.changelog_261013_first_release_body) }
+            item { MaterialChangelogSection(R.string.changelog_261013_version_label_title, R.string.changelog_261013_version_label_body) }
+            item {
+                Card(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
+                    Column(modifier = Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(
                             text = stringResource(R.string.version_1_0_260930_title),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.SemiBold,
@@ -267,6 +287,27 @@ private fun VersionChangelogMiuix(onBack: () -> Unit) {
                 contentPadding = innerPadding,
                 overscrollEffect = null,
             ) {
+                item {
+                    MiuixCard(modifier = Modifier.padding(top = 12.dp).fillMaxWidth()) {
+                        Column(modifier = Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
+                            MiuixText(
+                                text = stringResource(R.string.version_1_0_261013_title),
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = colorScheme.onBackground,
+                            )
+                            MiuixText(
+                                text = stringResource(R.string.version_1_0_261013_summary),
+                                fontSize = 14.sp,
+                                color = colorScheme.onSurfaceVariantSummary,
+                            )
+                        }
+                    }
+                }
+                item { MiuixChangelogSection(R.string.changelog_261013_feature_intro_title, R.string.changelog_261013_feature_intro_body) }
+                item { MiuixChangelogSection(R.string.changelog_261013_dual_ui_title, R.string.changelog_261013_dual_ui_body) }
+                item { MiuixChangelogSection(R.string.changelog_261013_first_release_title, R.string.changelog_261013_first_release_body) }
+                item { MiuixChangelogSection(R.string.changelog_261013_version_label_title, R.string.changelog_261013_version_label_body) }
                 item {
                     MiuixCard(modifier = Modifier.padding(top = 12.dp).fillMaxWidth()) {
                         Column(modifier = Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
