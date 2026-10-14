@@ -140,6 +140,6 @@
     <string name="changelog_section_ui_title">Two app interface styles</string>
     <string name="changelog_section_ui_body">Choose between Miuix and Material in Settings. Theme appearance also includes light/dark mode and accent-color options.</string>
     <string name="changelog_section_diagnostics_title">Settings and diagnostics</string>
-    <string name="changelog_section_diagnostics_body">Feature categories are organized across the app's main pages. Use Settings → Send log to export runtime diagnostics when troubleshooting module behavior or status-bar display issues.</string>
+    <string name="changelog_section_diagnostics_body">Feature categories are organized across the main pages of OneUI XP. Use Settings → Send log to export runtime diagnostics when troubleshooting module behavior or status-bar display issues.</string>
 
 </resources>
