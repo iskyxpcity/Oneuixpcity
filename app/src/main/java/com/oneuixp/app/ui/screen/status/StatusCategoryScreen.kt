@@ -296,6 +296,7 @@ private fun StatusCategoryContent(
             ) {
                 StatusOtherCategoryControls(
                     uiState = preference.systemUI.other,
+                    statusBarState = preference.systemUI.statusBar,
                     onEvent = toolsViewModel::onSystemUIEvent,
                 )
             }
