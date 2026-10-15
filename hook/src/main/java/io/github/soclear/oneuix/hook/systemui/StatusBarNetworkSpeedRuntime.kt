@@ -40,6 +40,7 @@ import java.util.WeakHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.ceil
 import kotlin.math.roundToInt
+import kotlin.math.sqrt
 
 /**
  * Event-driven presentation and data layer for Samsung's native NetspeedView.
@@ -72,6 +73,8 @@ internal object StatusBarNetworkSpeedRuntime {
         val upperScale: Float = 1f,
         val setLowerScale: Boolean = false,
         val lowerScale: Float = 1f,
+        val burnInProtectionEnabled: Boolean = false,
+        val burnInAmplitudeDp: Float = 0f,
     )
 
     private data class ViewState(
@@ -514,7 +517,11 @@ internal object StatusBarNetworkSpeedRuntime {
      * spacing in the displayed string. The text and line-spacing logic stay
      * independent from the host's layout spacing.
      */
-    private fun applyHostTrailingGap(state: ViewState, showGap: Boolean) {
+    private fun applyHostTrailingGap(
+        state: ViewState,
+        showGap: Boolean,
+        extraGapDp: Float = 0f,
+    ) {
         val host = state.host ?: return
         val params = host.layoutParams as? ViewGroup.MarginLayoutParams ?: return
 
@@ -528,7 +535,7 @@ internal object StatusBarNetworkSpeedRuntime {
         val baseEnd = state.nativeHostMarginEnd ?: params.marginEnd
         val density = host.resources.displayMetrics.density
         val gapPx = if (showGap) {
-            (NETWORK_SPEED_TRAILING_GAP_DP * density).roundToInt()
+            ((NETWORK_SPEED_TRAILING_GAP_DP + extraGapDp.coerceIn(0f, 2f)) * density).roundToInt()
         } else {
             0
         }
@@ -589,9 +596,23 @@ internal object StatusBarNetworkSpeedRuntime {
 
         val source = state.sourceText ?: view.text
         val hiddenByThreshold = shouldHideForThreshold(source, current.thresholdKb)
+        val burnInClearanceDp = if (
+            display.enabled &&
+            current.burnInProtectionEnabled &&
+            current.burnInAmplitudeDp > 0f
+        ) {
+            // The speed text and the trio can land on adjacent pixel rounding
+            // boundaries during micro-shifts. Reserve the maximum horizontal
+            // shift plus a small sub-pixel guard so the moving digits never
+            // encroach on the three-in-one glyph.
+            current.burnInAmplitudeDp.coerceIn(0f, 2f) / sqrt(2f) + 0.5f
+        } else {
+            0f
+        }
         applyHostTrailingGap(
             state,
             showGap = !hiddenByThreshold && source.toString().isNotBlank(),
+            extraGapDp = burnInClearanceDp,
         )
         if (hiddenByThreshold) {
             view.text = ""
@@ -759,6 +780,8 @@ internal object StatusBarNetworkSpeedRuntime {
         upperScale = statusBar.networkSpeedUploadTextScale.coerceIn(0.5f, 2f),
         setLowerScale = statusBar.setNetworkSpeedDownloadTextScale,
         lowerScale = statusBar.networkSpeedDownloadTextScale.coerceIn(0.5f, 2f),
+        burnInProtectionEnabled = statusBar.statusBarBurnInProtectionEnabled,
+        burnInAmplitudeDp = statusBar.statusBarBurnInProtectionAmplitudeDp.coerceIn(0f, 2f),
     )
 
     private fun updateRuntime(source: Preference.SystemUI.StatusBar) {

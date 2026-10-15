@@ -5,6 +5,7 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.width
@@ -22,7 +23,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text as MaterialText
 import com.oneuixp.app.R
+import com.oneuixp.app.ui.LocalUiMode
+import com.oneuixp.app.ui.UiMode
 import io.github.soclear.oneuix.common.PowerMenuAction
 import io.github.soclear.oneuix.common.Preference
 import io.github.soclear.oneuix.ui.category.SystemUIEvent
@@ -33,6 +38,8 @@ import io.github.soclear.oneuix.ui.component.OneuiXSwitch
 import io.github.soclear.oneuix.ui.component.SwitchItem
 import io.github.soclear.oneuix.common.R as CommonR
 import kotlin.math.roundToInt
+import top.yukonga.miuix.kmp.basic.Text as MiuixText
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 /**
  * Independent Status > Other controls extracted from the legacy System UI page.
@@ -256,16 +263,52 @@ private fun BurnInSliderSetting(
     onValueChange: (Float) -> Unit,
     onValueChangeFinished: () -> Unit,
 ) {
-    Column {
-        OneuiXInfoItem(
-            title = title,
-            summary = summary,
-        )
-        StatusThemeChildItem {
+    // Keep the title, explanation and slider inside one native grouped row.
+    // Previously OneuiXInfoItem and StatusThemeChildItem each drew their own
+    // Material segmented surface, visually splitting the same setting.
+    StatusThemeChildItem {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    horizontal = if (LocalUiMode.current == UiMode.Material) 8.dp else 16.dp,
+                    vertical = 8.dp,
+                ),
+        ) {
+            when (LocalUiMode.current) {
+                UiMode.Material -> {
+                    MaterialText(
+                        text = title,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    MaterialText(
+                        text = summary,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+
+                UiMode.Miuix -> {
+                    MiuixText(
+                        text = title,
+                        color = MiuixTheme.colorScheme.onSurface,
+                        fontSize = MiuixTheme.textStyles.body2.fontSize,
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    MiuixText(
+                        text = summary,
+                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                        fontSize = MiuixTheme.textStyles.body2.fontSize,
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(8.dp))
             OneuiXSlider(
                 value = value,
                 onValueChange = onValueChange,
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                modifier = Modifier.fillMaxWidth(),
                 valueRange = valueRange,
                 stepSize = stepSize,
                 onValueChangeFinished = onValueChangeFinished,
