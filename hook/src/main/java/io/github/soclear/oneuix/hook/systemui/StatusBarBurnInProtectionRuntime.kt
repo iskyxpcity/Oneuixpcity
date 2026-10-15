@@ -18,6 +18,7 @@ import io.github.soclear.oneuix.common.Package
 import io.github.soclear.oneuix.common.Preference
 import io.github.soclear.oneuix.common.StatusBarRuntimeBridge
 import io.github.soclear.oneuix.hook.util.PreferenceProvider
+import io.github.soclear.oneuix.hook.util.OneuiXPDiagnosticLog
 import kotlinx.serialization.decodeFromString
 import java.lang.ref.WeakReference
 import java.util.Collections
@@ -49,10 +50,23 @@ internal object StatusBarBurnInProtectionRuntime {
         var lastWrittenY: Float = y,
     )
 
+    /**
+     * Watches native layout/attachment lifecycle for translated OneuiXP TextViews.
+     * All View references reachable from this WeakHashMap's values are weak.
+     */
+    private data class ViewGeometryWatch(
+        var parent: WeakReference<View>? = null,
+        var viewLayoutListener: View.OnLayoutChangeListener? = null,
+        var parentLayoutListener: View.OnLayoutChangeListener? = null,
+        var attachListener: View.OnAttachStateChangeListener? = null,
+    )
+
     private val installed = AtomicBoolean(false)
     private val receiverReady = AtomicBoolean(false)
     private val targets = Collections.synchronizedList(mutableListOf<Target>())
     private val viewBaselines = Collections.synchronizedMap(WeakHashMap<View, ViewBaseline>())
+    private val viewGeometryWatches =
+        Collections.synchronizedMap(WeakHashMap<View, ViewGeometryWatch>())
     private val main = Handler(Looper.getMainLooper())
 
     @Volatile private var enabled = false
@@ -123,8 +137,15 @@ internal object StatusBarBurnInProtectionRuntime {
      * Vertical motion remains synchronized; the glyph can still complete the rightward half
      * of its cycle while the speed text stays clear.
      */
-    fun registerView(view: View) = registerOffsetTarget(view) { owner, xDp, yDp ->
-        applyViewOffset(owner as View, minOf(xDp, 0f), yDp)
+    fun registerView(view: View) {
+        // Keep the network-speed text from drifting right into the three-in-one glyph.
+        registerOffsetTarget(view) { owner, xDp, yDp ->
+            applyViewOffset(owner as View, minOf(xDp, 0f), yDp)
+        }
+        // Fold/unfold can reset View.translationX/Y without delivering a preference or
+        // text update. Re-apply from lifecycle events rather than waiting for the next
+        // quarter-period ticker sample (up to 75 seconds for a 300-second cycle).
+        runOnMain { ensureViewGeometryWatch(view) }
     }
 
     fun registerOffsetTarget(owner: Any, apply: (Any, Float, Float) -> Unit) {
@@ -153,7 +174,10 @@ internal object StatusBarBurnInProtectionRuntime {
                 runCatching { target.apply(owner, 0f, 0f) }
                     .onFailure { Log.d(TAG, "Cannot restore custom target", it) }
             }
-            if (owner is View) synchronized(viewBaselines) { viewBaselines.remove(owner) }
+            if (owner is View) {
+                synchronized(viewBaselines) { viewBaselines.remove(owner) }
+                removeViewGeometryWatch(owner)
+            }
             syncTicker()
         }
     }
@@ -267,6 +291,130 @@ internal object StatusBarBurnInProtectionRuntime {
                 runCatching { target.apply(owner, x, y) }
                     .onFailure { Log.d(TAG, "Cannot move OneuiXP status-bar element", it) }
             }
+        }
+    }
+
+    private fun ensureViewGeometryWatch(view: View) {
+        val watch = synchronized(viewGeometryWatches) {
+            viewGeometryWatches[view] ?: ViewGeometryWatch().also {
+                viewGeometryWatches[view] = it
+            }
+        }
+
+        if (watch.viewLayoutListener == null) {
+            val weakView = WeakReference(view)
+            val listener = View.OnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
+                weakView.get()?.let { target ->
+                    ensureParentGeometryWatch(target, watch)
+                    reapplyViewOffsetPreservingBaseline(target, "view-layout")
+                }
+            }
+            watch.viewLayoutListener = listener
+            view.addOnLayoutChangeListener(listener)
+        }
+
+        ensureParentGeometryWatch(view, watch)
+
+        if (watch.attachListener == null) {
+            val weakView = WeakReference(view)
+            val listener = object : View.OnAttachStateChangeListener {
+                override fun onViewAttachedToWindow(attached: View) {
+                    weakView.get()?.let { target ->
+                        ensureParentGeometryWatch(target, watch)
+                        reapplyViewOffsetPreservingBaseline(target, "view-attach")
+                    }
+                    main.post {
+                        weakView.get()?.let { target ->
+                            ensureParentGeometryWatch(target, watch)
+                            reapplyViewOffsetPreservingBaseline(target, "view-attach-post")
+                        }
+                    }
+                    main.postDelayed({
+                        weakView.get()?.let { target ->
+                            ensureParentGeometryWatch(target, watch)
+                            reapplyViewOffsetPreservingBaseline(target, "view-attach-settled")
+                        }
+                    }, 100L)
+                }
+
+                override fun onViewDetachedFromWindow(detached: View) = Unit
+            }
+            watch.attachListener = listener
+            view.addOnAttachStateChangeListener(listener)
+        }
+    }
+
+    private fun ensureParentGeometryWatch(view: View, watch: ViewGeometryWatch) {
+        val parent = view.parent as? View
+        val oldParent = watch.parent?.get()
+        if (parent === oldParent &&
+            (parent == null || watch.parentLayoutListener != null)
+        ) {
+            return
+        }
+
+        watch.parentLayoutListener?.let { listener ->
+            oldParent?.removeOnLayoutChangeListener(listener)
+        }
+        watch.parent = parent?.let(::WeakReference)
+        watch.parentLayoutListener = null
+
+        if (parent != null) {
+            val weakView = WeakReference(view)
+            val weakParent = WeakReference(parent)
+            val listener = View.OnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
+                val target = weakView.get()
+                val sourceParent = weakParent.get()
+                if (target != null && sourceParent != null && target.parent === sourceParent) {
+                    reapplyViewOffsetPreservingBaseline(target, "parent-layout")
+                }
+            }
+            watch.parentLayoutListener = listener
+            parent.addOnLayoutChangeListener(listener)
+        }
+    }
+
+    private fun removeViewGeometryWatch(view: View) {
+        val watch = synchronized(viewGeometryWatches) { viewGeometryWatches.remove(view) }
+            ?: return
+        watch.viewLayoutListener?.let(view::removeOnLayoutChangeListener)
+        watch.parentLayoutListener?.let { listener ->
+            watch.parent?.get()?.removeOnLayoutChangeListener(listener)
+        }
+        watch.attachListener?.let(view::removeOnAttachStateChangeListener)
+    }
+
+    /**
+     * Unlike applyViewOffset(), this deliberately does not infer a new baseline from the
+     * current translation. On fold/unfold, SystemUI may reset the native View translation
+     * to zero; treating that reset as an intentional OneuiXP position change makes the
+     * element jump back to its original location. The last known custom baseline is retained.
+     */
+    private fun reapplyViewOffsetPreservingBaseline(view: View, source: String) {
+        val baseline = synchronized(viewBaselines) { viewBaselines[view] } ?: return
+        val registered = synchronized(targets) {
+            targets.any { it.owner.get() === view }
+        }
+        if (!registered) return
+
+        val (xDp, yDp) = currentOffset()
+        val density = view.resources.displayMetrics.density.takeIf { it > 0f } ?: 1f
+        val targetX = baseline.x + minOf(xDp, 0f) * density
+        val targetY = baseline.y + yDp * density
+        val beforeX = view.translationX
+        val beforeY = view.translationY
+        if (abs(beforeX - targetX) > 0.01f) view.translationX = targetX
+        if (abs(beforeY - targetY) > 0.01f) view.translationY = targetY
+        baseline.lastWrittenX = targetX
+        baseline.lastWrittenY = targetY
+
+        if (abs(beforeX - targetX) > 0.5f || abs(beforeY - targetY) > 0.5f) {
+            OneuiXPDiagnosticLog.record(
+                TAG,
+                "Restored custom View micro-offset after $source: " +
+                    "before=($beforeX,$beforeY),target=($targetX,$targetY)," +
+                    "baseline=(${baseline.x},${baseline.y}),density=$density"
+            )
         }
     }
 
