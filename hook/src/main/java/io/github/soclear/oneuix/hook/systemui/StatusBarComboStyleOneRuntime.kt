@@ -1344,6 +1344,7 @@ object StatusBarComboStyleOneRuntime {
                     "outSignalMarginLeftDp=${cfg.outSignalMarginLeftDp},outSignalOffsetXDp=${cfg.outSignalOffsetXDp}," +
                     "outSignalOffsetYDp=${cfg.outSignalOffsetYDp},outTypeOffsetXDp=${cfg.outTypeOffsetXDp}," +
                     "outTypeOffsetYDp=${cfg.outTypeOffsetYDp}," +
+                    "frameBreathingDp=${StatusComboStyleOneGlyphRenderer.GLYPH_FRAME_BREATHING_DP},frameExpansionDp=${StatusComboStyleOneGlyphRenderer.GLYPH_FRAME_BREATHING_DP * 2}," +
                     "ringStroke=${cfg.ringStroke},typeWeight=${cfg.typeWeight},typeSuffixScale=${cfg.typeSuffixScale}"
             )
             appendLine(
@@ -1465,6 +1466,16 @@ object StatusBarComboStyleOneRuntime {
         val childIndex = parentGroup?.indexOfChild(view) ?: -1
         val lp = view.layoutParams
         val margins = lp as? ViewGroup.MarginLayoutParams
+        val density = view.resources.displayMetrics.density.takeIf { it > 0f } ?: 1f
+        val leftMarginPx = margins?.leftMargin ?: 0
+        val topMarginPx = margins?.topMargin ?: 0
+        val rightMarginPx = margins?.rightMargin ?: 0
+        val bottomMarginPx = margins?.bottomMargin ?: 0
+        val glyphLayoutDetails = if (view is GlyphView) {
+            "requestedLeftMarginDp=${config.glyphLeftMarginDp}," +
+                "frameBreathingDp=${StatusComboStyleOneGlyphRenderer.GLYPH_FRAME_BREATHING_DP}," +
+                "frameExpansionPx=${glyphFrameBreathingExpansionPx(view.context)}"
+        } else "-"
         val saved = host.layouts[view]
         val slot = (knownIconSlots[view] ?: slotOf(view)).orEmpty()
         val visibility = when (view.visibility) {
@@ -1482,7 +1493,9 @@ object StatusBarComboStyleOneRuntime {
             "size=${view.width}x${view.height},measured=${view.measuredWidth}x${view.measuredHeight}," +
             "translation=[${view.translationX},${view.translationY}],padding=[${view.paddingLeft},${view.paddingTop}," +
             "${view.paddingRight},${view.paddingBottom}],lp=${lp?.width}x${lp?.height}," +
-            "margins=[${margins?.leftMargin ?: 0},${margins?.topMargin ?: 0},${margins?.rightMargin ?: 0},${margins?.bottomMargin ?: 0}]," +
+            "marginsPx=[${leftMarginPx},${topMarginPx},${rightMarginPx},${bottomMarginPx}]," +
+            "marginsDpApprox=[${leftMarginPx / density},${topMarginPx / density},${rightMarginPx / density},${bottomMarginPx / density}]," +
+            "density=$density,glyphLayout=[$glyphLayoutDetails]," +
             "clipBounds=${view.clipBounds},parent=${parent?.javaClass?.name}:${resourceName(parent ?: view).ifBlank { "-" }}," +
             "childIndex=${childIndex},parentChildCount=${parentGroup?.childCount ?: -1}," +
             "parentClipChildren=${parentGroup?.clipChildren},parentClipToPadding=${parentGroup?.clipToPadding}," +
@@ -1612,7 +1625,7 @@ object StatusBarComboStyleOneRuntime {
                     if (lp != null) {
                         val margins = lp as? ViewGroup.MarginLayoutParams
                         // Keep the canvas's extra leading lane out of native row measurement.
-                        val left = dpExact(glyph.context, config.glyphLeftMarginDp) - leadingPad
+                        val left = dpExact(glyph.context, config.glyphLeftMarginDp) - leadingPad - glyphFrameBreathingExpansionPx(glyph.context)
                         val right = dpExact(glyph.context, config.glyphRightMarginDp)
                         val changed = lp.width != width || lp.height != height || margins?.let {
                             it.leftMargin != left || it.rightMargin != right || it.topMargin != 0 || it.bottomMargin != 0
@@ -2036,7 +2049,7 @@ object StatusBarComboStyleOneRuntime {
         }
         val margins = lp as? ViewGroup.MarginLayoutParams
         margins?.setMargins(
-            dpExact(parent.context, config.glyphLeftMarginDp) - leadingPad,
+            dpExact(parent.context, config.glyphLeftMarginDp) - leadingPad - glyphFrameBreathingExpansionPx(parent.context),
             0,
             dpExact(parent.context, config.glyphRightMarginDp),
             0,
@@ -2805,7 +2818,7 @@ object StatusBarComboStyleOneRuntime {
         // uses the same width, so SystemUI naturally lays preceding icons outside its footprint.
         val width = widthPx.coerceAtLeast(1)
         val height = originalLayout?.height?.takeIf { it != 0 } ?: dp(view.context, 24)
-        val left = dpExact(view.context, config.glyphLeftMarginDp)
+        val left = dpExact(view.context, config.glyphLeftMarginDp) - glyphFrameBreathingExpansionPx(view.context)
         val right = dpExact(view.context, config.glyphRightMarginDp)
         val changed = lp.width != width || lp.height != height || margins?.let {
             it.leftMargin != left || it.topMargin != 0 || it.rightMargin != right || it.bottomMargin != 0
@@ -5516,4 +5529,7 @@ object StatusBarComboStyleOneRuntime {
 
     private fun dpExact(context: Context, value: Int): Int =
         (value * context.resources.displayMetrics.density).roundToInt()
+
+    private fun glyphFrameBreathingExpansionPx(context: Context): Int =
+        dpExact(context, StatusComboStyleOneGlyphRenderer.GLYPH_FRAME_BREATHING_DP * 2)
 }
