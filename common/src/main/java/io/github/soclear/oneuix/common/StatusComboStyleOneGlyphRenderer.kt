@@ -34,8 +34,9 @@ object StatusComboStyleOneGlyphRenderer {
     private const val COMPACT_WIDTH = 120f
     private const val WIDE_WIDTH = 260f
     private const val HEIGHT = 120f
-    // Add transparent breathing room around the ring without scaling the glyph itself.
-    const val GLYPH_FRAME_BREATHING_DP = 3
+    // Keep modest transparent breathing room without shrinking or scaling the drawn glyph.
+    // The previous 3dp inset dominated the configured leading margin visually; use half.
+    const val GLYPH_FRAME_BREATHING_DP = 1.5f
     private const val DUAL_BOTTOM_HEIGHT = 150f
     // Row 1 sits inside the ring's bottom opening; row 2 hugs it directly underneath.
     // The first row sits slightly inside the bottom opening instead of hanging below the ring.
