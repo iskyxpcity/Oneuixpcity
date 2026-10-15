@@ -3205,8 +3205,10 @@ object StatusBarComboStyleOneRuntime {
     }
 
     private fun syncBatteryStateFromMeter(meter: View) {
-        val nextLevel = readSignalIntField(meter, "mLevel", "level")
-            ?.takeIf { it in 0..100 }
+        // Battery percentage comes only from ACTION_BATTERY_CHANGED. On foldables, a
+        // BatteryMeterView belonging to the just-hidden display can retain a stale mLevel
+        // during reattachment; copying it into this shared state lets that stale percentage
+        // leak onto the active display. This view remains a source for charging metadata only.
         val nextCharging = readNativeBoolean(meter, "mCharging", "charging")
         val nextQuickCharging = readSamsungFastCharging(meter)
             ?: readNativeBoolean(meter, "mQuickCharging", "quickCharging", "mFastCharging", "fastCharging", "mIsFastCharging", "isFastCharging")
@@ -3215,7 +3217,6 @@ object StatusBarComboStyleOneRuntime {
         val previous = state
         val charging = nextCharging ?: previous.charging
         val next = previous.copy(
-            batteryLevel = nextLevel ?: previous.batteryLevel,
             charging = charging,
             quickCharge = charging && (nextQuickCharging == true || isSamsungFastChargeTint(meter) || previous.quickCharge),
             lowBatteryWarning = nextLow ?: previous.lowBatteryWarning,
