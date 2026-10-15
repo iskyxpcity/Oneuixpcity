@@ -5050,6 +5050,14 @@ object StatusBarComboStyleOneRuntime {
 
     private fun clampEmptyNativeClusterMeasuredWidth(cluster: ViewGroup) {
         if (!config.enabled || !(config.showWifi || isMobileNativeSuppressed())) return
+        // Keep the hot onMeasure hook dormant for unrelated clusters until our established
+        // Wi-Fi reconciliation path has armed this exact status-icon container.
+        val reconciliationArmed = synchronized(nativeWifiClusterLayoutListeners) {
+            nativeWifiClusterLayoutListeners.containsKey(cluster)
+        }
+        if (!reconciliationArmed) return
+        val before = cluster.measuredWidth
+        if (before <= 0) return
         if (hostFor(cluster) == null || hasVisibleNativeClusterIconFootprint(cluster)) {
             val previous = lastNativeClusterMeasuredWidthDiagnostics[cluster]
             if (previous == "clamped-to-zero") {
@@ -5058,9 +5066,6 @@ object StatusBarComboStyleOneRuntime {
             }
             return
         }
-
-        val before = cluster.measuredWidth
-        if (before <= 0) return
         val setter = setMeasuredDimensionMethod ?: run {
             if (lastNativeClusterMeasuredWidthDiagnostics.put(cluster, "setter-unavailable") != "setter-unavailable") {
                 diagnostic("Native status-icon cluster width guard failed: setMeasuredDimension unavailable")
