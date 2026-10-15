@@ -13,6 +13,7 @@ import io.github.soclear.oneuix.hook.systemui.QS
 import io.github.soclear.oneuix.hook.systemui.StatusBar
 import io.github.soclear.oneuix.hook.systemui.StatusBarComboStyleOneRuntime
 import io.github.soclear.oneuix.hook.systemui.StatusBarSignalIndependentRuntime
+import io.github.soclear.oneuix.hook.systemui.StatusBarBurnInProtectionRuntime
 import io.github.soclear.oneuix.hook.systemui.OfficialMainStatusBarMod
 import io.github.soclear.oneuix.hook.systemui.powermenu.PowerMenu
 import io.github.soclear.oneuix.hook.util.OneuiXPStatusReporter
@@ -256,6 +257,7 @@ class Main : XposedModule() {
             }
 
             Package.SYSTEMUI if (processName == Package.SYSTEMUI) -> {
+                StatusBarBurnInProtectionRuntime.install(this@Main, param)
                 StatusBarComboStyleOneRuntime.install(this@Main, param)
                 StatusBarSignalIndependentRuntime.install(this@Main, param)
 

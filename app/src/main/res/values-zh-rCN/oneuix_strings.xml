@@ -8,6 +8,14 @@
     <string name="oneuix_status_bar">状态栏</string>
     <string name="oneuix_qs">快捷设置</string>
     <string name="oneuix_aod">息屏提醒</string>
+    <string name="oneuix_statusBarBurnInProtection_title">状态栏防烧屏</string>
+    <string name="oneuix_statusBarBurnInProtection_summary">仅让 OneuiXP 自绘的状态栏元素缓慢微移。</string>
+    <string name="oneuix_statusBarBurnInProtectionAmplitude_title">偏移微动幅度</string>
+    <string name="oneuix_statusBarBurnInProtectionAmplitude_summary">微动的最大偏移距离，单位 dp；设为 0 即停止。</string>
+    <string name="oneuix_statusBarBurnInProtectionAmplitude_value">当前：%1$.2f dp</string>
+    <string name="oneuix_statusBarBurnInProtectionPeriod_title">偏移微动周期</string>
+    <string name="oneuix_statusBarBurnInProtectionPeriod_summary">完成一个微动循环所需的秒数；数值越小，移动越快。</string>
+    <string name="oneuix_statusBarBurnInProtectionPeriod_value">当前：%1$d 秒</string>
     <string name="oneuix_statusBarLeftPaddingDp_title">修改状态栏左边距</string>
     <string name="oneuix_statusBarRightPaddingDp_title">修改状态栏右边距</string>
     <string name="oneuix_statusBarTopPaddingDp_title">状态栏顶部边距</string>

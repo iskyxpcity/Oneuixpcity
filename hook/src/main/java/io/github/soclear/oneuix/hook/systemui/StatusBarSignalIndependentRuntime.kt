@@ -409,6 +409,7 @@ internal object StatusBarSignalIndependentRuntime {
                 ViewGroup.LayoutParams.MATCH_PARENT,
             ),
         )
+        StatusBarBurnInProtectionRuntime.registerView(root)
         val holder = Holder(statusBar, parent, root, bars)
         synchronized(holders) { holders[statusBar] = holder }
         // Mount once after inflation. Reordering the child from every animated

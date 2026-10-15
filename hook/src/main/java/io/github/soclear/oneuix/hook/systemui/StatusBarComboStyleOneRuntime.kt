@@ -43,6 +43,7 @@ import io.github.soclear.oneuix.common.StatusBarRuntimeBridge
 import io.github.soclear.oneuix.common.StatusComboStyleOneGlyphRenderer
 import io.github.soclear.oneuix.common.StatusComboStyleOneGlyphState
 import io.github.soclear.oneuix.hook.util.PreferenceProvider
+import io.github.soclear.oneuix.hook.systemui.StatusBarBurnInProtectionRuntime
 import io.github.soclear.oneuix.hook.util.OneuiXPDiagnosticLog
 import java.lang.ref.WeakReference
 import java.util.Collections
@@ -66,8 +67,9 @@ object StatusBarComboStyleOneRuntime {
     private const val PHONE_BAR = "com.android.systemui.statusbar.phone.PhoneStatusBarView"
     private const val MIUI_PHONE_BAR = "com.android.systemui.statusbar.phone.MiuiPhoneStatusBarView"
     private const val WINDOW_BAR = "com.android.systemui.statusbar.phone.StatusBarWindowView"
-    private const val MIUI_ICONS = "com.android.systemui.statusbar.phone.MiuiStatusIconContainer"
-    private const val AOSP_ICONS = "com.android.systemui.statusbar.phone.StatusBarIconContainer"
+    // Modern AOSP / Samsung SystemUI class name. The legacy alias below stays for ROM forks.
+    private const val AOSP_ICONS = "com.android.systemui.statusbar.phone.StatusIconContainer"
+    private const val LEGACY_AOSP_ICONS = "com.android.systemui.statusbar.phone.StatusBarIconContainer"
     private const val GLYPH_WIDTH_DP = 78
     private const val GLYPH_HEIGHT_DP = 36
     // Keep independent-window rendering available. The global DisplayManager listener remains
@@ -196,6 +198,17 @@ object StatusBarComboStyleOneRuntime {
         Collections.synchronizedSet(Collections.newSetFromMap(WeakHashMap<ViewGroup, Boolean>()))
     private val pendingNativeWifiClusterCandidates = Collections.synchronizedMap(WeakHashMap<ViewGroup, View>())
     private val lastNativeWifiClusterDiagnostics = Collections.synchronizedMap(WeakHashMap<ViewGroup, String>())
+    private val lastNativeClusterMeasuredWidthDiagnostics =
+        Collections.synchronizedMap(WeakHashMap<View, String>())
+    private val setMeasuredDimensionMethod: java.lang.reflect.Method? by lazy {
+        runCatching {
+            View::class.java.getDeclaredMethod(
+                "setMeasuredDimension",
+                java.lang.Integer.TYPE,
+                java.lang.Integer.TYPE,
+            ).apply { isAccessible = true }
+        }.getOrNull()
+    }
     private val adjustingNativeWifiClusterVisibility = ThreadLocal.withInitial { false }
     private val lastNativeWifiSlotRequests = ConcurrentHashMap<String, String>()
     private val lastSubscriptionSignalLevels = ConcurrentHashMap<Int, Int>()
@@ -293,6 +306,8 @@ object StatusBarComboStyleOneRuntime {
 
     private class GlyphView(context: Context) : View(context) {
         private var tintOverride: Int? = null
+        private var burnInOffsetXpx: Float = 0f
+        private var burnInOffsetYpx: Float = 0f
         private var statusBarRootForTypeBounds: View? = null
         private var inlineTrailingAnchor: WeakReference<View>? = null
         private var leadingCanvasPaddingPx = 0
@@ -348,6 +363,15 @@ object StatusBarComboStyleOneRuntime {
                 StatusBarComboStyleOneRuntime.ensureSignalCanvasLeadingSpace(this, clipPx)
             }
         }
+        fun setBurnInCanvasOffsetDp(xDp: Float, yDp: Float) {
+            val density = resources.displayMetrics.density.takeIf { it > 0f } ?: 1f
+            val x = xDp * density
+            val y = yDp * density
+            if (burnInOffsetXpx == x && burnInOffsetYpx == y) return
+            burnInOffsetXpx = x
+            burnInOffsetYpx = y
+            invalidate()
+        }
         fun setTintOverride(color: Int?) {
             if (tintOverride == color) return
             tintOverride = color
@@ -361,10 +385,13 @@ object StatusBarComboStyleOneRuntime {
             val drawState = if (localTint == null) currentState else currentState.copy(tintColor = localTint)
             val iconRight = minimumVisibleIconLeftPx()
             val iconBottom = minimumVisibleIconBottomPx()
+            canvas.save()
+            canvas.translate(burnInOffsetXpx, burnInOffsetYpx)
             StatusComboStyleOneGlyphRenderer.draw(
                 canvas, width, height, currentConfig, drawState,
                 iconRight, iconBottom, leadingCanvasPaddingPx.toFloat(),
             )
+            canvas.restore()
             val clipPx = StatusComboStyleOneGlyphRenderer.requiredSignalLeadingPaddingPx(
                 currentConfig, drawState, width, height, iconRight, leadingCanvasPaddingPx.toFloat(),
             )
@@ -387,6 +414,11 @@ object StatusBarComboStyleOneRuntime {
         private data class DisplayGeometry(val displayId: Int, val width: Int, val height: Int)
 
         private var placementSyncScheduled = false
+        private var burnInOffsetXDp: Float = 0f
+        private var burnInOffsetYDp: Float = 0f
+        private var burnInBaseXpx: Int? = null
+        private var burnInBaseYpx: Int? = null
+        private var burnInMinimumWindowY: Int = 0
         private var observedTreeObserver: android.view.ViewTreeObserver? = null
         private var geometryConfirmationScheduled = false
         private var lastStableGeometry: DisplayGeometry? = null
@@ -607,6 +639,23 @@ object StatusBarComboStyleOneRuntime {
                 ),
             ) + glyph.leadingCanvasPaddingPx()
 
+        fun setBurnInOffsetDp(xDp: Float, yDp: Float) {
+            if (burnInOffsetXDp == xDp && burnInOffsetYDp == yDp) return
+            burnInOffsetXDp = xDp
+            burnInOffsetYDp = yDp
+            val lp = params ?: return
+            val baseX = burnInBaseXpx ?: return
+            val baseY = burnInBaseYpx ?: return
+            val density = context.resources.displayMetrics.density.takeIf { it > 0f } ?: 1f
+            val nextX = baseX + (xDp * density).roundToInt()
+            val nextY = (baseY + (yDp * density).roundToInt()).coerceAtLeast(burnInMinimumWindowY)
+            if (lp.x == nextX && lp.y == nextY) return
+            lp.x = nextX
+            lp.y = nextY
+            runCatching { wm?.updateViewLayout(glyph, lp) }
+                .onFailure { Log.w(TAG, "Cannot move burn-in glyph overlay", it) }
+        }
+
         fun attach(anchor: View, root: ViewGroup): Boolean {
             if (params != null) {
                 val updated = update(anchor, root)
@@ -656,6 +705,9 @@ object StatusBarComboStyleOneRuntime {
                         return false
                     }
                     watchPlacementEvents(anchor, root, captureDisplayGeometry = true)
+                    StatusBarBurnInProtectionRuntime.registerOffsetTarget(this) { target, x, y ->
+                        (target as? GlyphOverlay)?.setBurnInOffsetDp(x, y)
+                    }
                     return true
                 } catch (error: Throwable) {
                     Log.w(TAG, "Glyph overlay attach failed for type=$type", error)
@@ -783,12 +835,12 @@ object StatusBarComboStyleOneRuntime {
             // edge. The expanded transparent host reserves this same width in native layout,
             // leaving the preceding Bluetooth/alarm/network icons to the left of our canvas.
             val horizontalOffsetPx = StatusBarComboStyleOneRuntime.dpExact(context, cfg.glyphOffsetXDp)
-            lp.x = (
+            val baseWindowX = (
                 slotRightPx - canvasLeftInsetPx - designWidthUnits * renderScale +
                     horizontalOffsetPx
                 ).roundToInt()
             val verticalOffsetPx = StatusBarComboStyleOneRuntime.dpExact(context, cfg.glyphOffsetYDp)
-            val requestedWindowY = (
+            val requestedBaseWindowY = (
                 slotCenterY - lp.height * centreRatioY + verticalOffsetPx
                 ).roundToInt()
             // FLAG_LAYOUT_NO_LIMITS is required by Samsung so coordinates remain screen-based,
@@ -797,8 +849,14 @@ object StatusBarComboStyleOneRuntime {
             // can produce a negative window Y only when unfolded. Preserve normal centering until
             // the top edge would cross the active display's top boundary, then pin the window there.
             val minimumWindowY = if (rootLocated) rootLocation[1].coerceAtLeast(0) else 0
+            burnInBaseXpx = baseWindowX
+            burnInBaseYpx = requestedBaseWindowY.coerceAtLeast(minimumWindowY)
+            burnInMinimumWindowY = minimumWindowY
+            val density = context.resources.displayMetrics.density.takeIf { it > 0f } ?: 1f
+            lp.x = baseWindowX + (burnInOffsetXDp * density).roundToInt()
+            val requestedWindowY = requireNotNull(burnInBaseYpx) + (burnInOffsetYDp * density).roundToInt()
             lp.y = requestedWindowY.coerceAtLeast(minimumWindowY)
-            val topEdgeClamped = lp.y != requestedWindowY
+            val topEdgeClamped = requireNotNull(burnInBaseYpx) != requestedBaseWindowY || lp.y != requestedWindowY
 
             val ringCenterXUnits = StatusComboStyleOneGlyphRenderer.glyphCenterX(cfg, networkType)
             val ringCenterScreenPx = lp.x + canvasLeftInsetPx + ringCenterXUnits * renderScale
@@ -866,6 +924,7 @@ object StatusBarComboStyleOneRuntime {
             }
             lp.width += deltaPx
             lp.x -= deltaPx
+            burnInBaseXpx = burnInBaseXpx?.minus(deltaPx)
             runCatching { wm?.updateViewLayout(glyph, lp) }
                 .onFailure { Log.w(TAG, "Cannot expand outside-signal canvas frame", it) }
             val expandedWidthPx = lp.width
@@ -894,6 +953,7 @@ object StatusBarComboStyleOneRuntime {
         fun boundDisplayId(): Int = display?.displayId ?: -1
 
         fun detach() {
+            StatusBarBurnInProtectionRuntime.unregisterOffsetTarget(this)
             glyph.removeCallbacks(placementSync)
             glyph.removeCallbacks(geometryConfirmation)
             placementSyncScheduled = false
@@ -929,6 +989,7 @@ object StatusBarComboStyleOneRuntime {
         hookModernMobileViewConstruction(module, param.classLoader)
         hookModernSignalDrawable(module)
         hookModernWifiVisibility(module, param.classLoader)
+        hookStatusIconClusterMeasurement(module, param.classLoader)
 
         // Style One tint is sourced per collapsed status-bar row by the native
         // icon/battery tint hooks below, never from the Quick Panel clock.
@@ -1296,6 +1357,7 @@ object StatusBarComboStyleOneRuntime {
                     "outSignalMarginLeftDp=${cfg.outSignalMarginLeftDp},outSignalOffsetXDp=${cfg.outSignalOffsetXDp}," +
                     "outSignalOffsetYDp=${cfg.outSignalOffsetYDp},outTypeOffsetXDp=${cfg.outTypeOffsetXDp}," +
                     "outTypeOffsetYDp=${cfg.outTypeOffsetYDp}," +
+                    "frameBreathingDp=${StatusComboStyleOneGlyphRenderer.GLYPH_FRAME_BREATHING_DP},frameExpansionDp=${StatusComboStyleOneGlyphRenderer.GLYPH_FRAME_BREATHING_DP * 2}," +
                     "ringStroke=${cfg.ringStroke},typeWeight=${cfg.typeWeight},typeSuffixScale=${cfg.typeSuffixScale}"
             )
             appendLine(
@@ -1417,6 +1479,16 @@ object StatusBarComboStyleOneRuntime {
         val childIndex = parentGroup?.indexOfChild(view) ?: -1
         val lp = view.layoutParams
         val margins = lp as? ViewGroup.MarginLayoutParams
+        val density = view.resources.displayMetrics.density.takeIf { it > 0f } ?: 1f
+        val leftMarginPx = margins?.leftMargin ?: 0
+        val topMarginPx = margins?.topMargin ?: 0
+        val rightMarginPx = margins?.rightMargin ?: 0
+        val bottomMarginPx = margins?.bottomMargin ?: 0
+        val glyphLayoutDetails = if (view is GlyphView) {
+            "requestedLeftMarginDp=${config.glyphLeftMarginDp}," +
+                "frameBreathingDp=${StatusComboStyleOneGlyphRenderer.GLYPH_FRAME_BREATHING_DP}," +
+                "frameExpansionPx=${glyphFrameBreathingExpansionPx(view.context)}"
+        } else "-"
         val saved = host.layouts[view]
         val slot = (knownIconSlots[view] ?: slotOf(view)).orEmpty()
         val visibility = when (view.visibility) {
@@ -1434,7 +1506,9 @@ object StatusBarComboStyleOneRuntime {
             "size=${view.width}x${view.height},measured=${view.measuredWidth}x${view.measuredHeight}," +
             "translation=[${view.translationX},${view.translationY}],padding=[${view.paddingLeft},${view.paddingTop}," +
             "${view.paddingRight},${view.paddingBottom}],lp=${lp?.width}x${lp?.height}," +
-            "margins=[${margins?.leftMargin ?: 0},${margins?.topMargin ?: 0},${margins?.rightMargin ?: 0},${margins?.bottomMargin ?: 0}]," +
+            "marginsPx=[${leftMarginPx},${topMarginPx},${rightMarginPx},${bottomMarginPx}]," +
+            "marginsDpApprox=[${leftMarginPx / density},${topMarginPx / density},${rightMarginPx / density},${bottomMarginPx / density}]," +
+            "density=$density,glyphLayout=[$glyphLayoutDetails]," +
             "clipBounds=${view.clipBounds},parent=${parent?.javaClass?.name}:${resourceName(parent ?: view).ifBlank { "-" }}," +
             "childIndex=${childIndex},parentChildCount=${parentGroup?.childCount ?: -1}," +
             "parentClipChildren=${parentGroup?.clipChildren},parentClipToPadding=${parentGroup?.clipToPadding}," +
@@ -1999,12 +2073,16 @@ object StatusBarComboStyleOneRuntime {
         runCatching {
             parent.addView(glyph, parent.indexOfChild(anchor).coerceAtLeast(0), lp)
             host.inline = glyph
+            StatusBarBurnInProtectionRuntime.registerOffsetTarget(glyph) { target, x, y ->
+                (target as? GlyphView)?.setBurnInCanvasOffsetDp(x, y)
+            }
             glyph.post { anchorInlineGlyphToTrailingSlot(glyph, anchor) }
         }.onFailure { Log.w(TAG, "Cannot add inline glyph", it) }
     }
 
     private fun removeInline(host: Host) {
         val glyph = host.inline ?: return
+        StatusBarBurnInProtectionRuntime.unregisterOffsetTarget(glyph)
         (glyph.parent as? ViewGroup)?.removeView(glyph)
         host.inline = null
     }
@@ -2534,20 +2612,7 @@ object StatusBarComboStyleOneRuntime {
                     nativeWifiClusterBaselineMinimumWidth[cluster]
                         ?: cluster.minimumWidth.also { nativeWifiClusterBaselineMinimumWidth[cluster] = it }
                 }
-                fun hasVisibleNativeIconFootprint(view: View): Boolean {
-                    var current: View? = view
-                    while (current != null) {
-                        if (current.visibility != View.VISIBLE || current.alpha <= 0f) return false
-                        if (current === cluster) break
-                        current = current.parent as? View
-                    }
-                    if (current !== cluster || isSuppressedNativeStatusChild(view)) return false
-                    return max(view.width, view.measuredWidth) > 0 &&
-                        max(view.height, view.measuredHeight) > 0
-                }
-                val hasVisibleNativeIcon = (0 until cluster.childCount).any {
-                    hasVisibleNativeIconFootprint(cluster.getChildAt(it))
-                }
+                val hasVisibleNativeIcon = hasVisibleNativeClusterIconFootprint(cluster)
                 val zeroFootprintVisibleChildren = (0 until cluster.childCount).mapNotNull { index ->
                     val child = cluster.getChildAt(index)
                     if (child.visibility == View.VISIBLE && child.alpha > 0f &&
@@ -3153,8 +3218,10 @@ object StatusBarComboStyleOneRuntime {
     }
 
     private fun syncBatteryStateFromMeter(meter: View) {
-        val nextLevel = readSignalIntField(meter, "mLevel", "level")
-            ?.takeIf { it in 0..100 }
+        // Battery percentage comes only from ACTION_BATTERY_CHANGED. On foldables, a
+        // BatteryMeterView belonging to the just-hidden display can retain a stale mLevel
+        // during reattachment; copying it into this shared state lets that stale percentage
+        // leak onto the active display. This view remains a source for charging metadata only.
         val nextCharging = readNativeBoolean(meter, "mCharging", "charging")
         val nextQuickCharging = readSamsungFastCharging(meter)
             ?: readNativeBoolean(meter, "mQuickCharging", "quickCharging", "mFastCharging", "fastCharging", "mIsFastCharging", "isFastCharging")
@@ -3163,7 +3230,6 @@ object StatusBarComboStyleOneRuntime {
         val previous = state
         val charging = nextCharging ?: previous.charging
         val next = previous.copy(
-            batteryLevel = nextLevel ?: previous.batteryLevel,
             charging = charging,
             quickCharge = charging && (nextQuickCharging == true || isSamsungFastChargeTint(meter) || previous.quickCharge),
             lowBatteryWarning = nextLow ?: previous.lowBatteryWarning,
@@ -4942,6 +5008,104 @@ object StatusBarComboStyleOneRuntime {
         }
     }
 
+    /**
+     * Samsung's StatusIconContainer can report a changing measured width (5px, then 25px,
+     * then back to 5px) even when its native Wi-Fi/mobile slots have been collapsed and no
+     * other native status icon occupies the cluster. Since system_icons is right-aligned,
+     * that phantom width moves the network-speed TextView at the opposite end of the row.
+     *
+     * Clamp only an actually empty native cluster to measured width 0, after its own measure
+     * implementation and before system_icons consumes the result. Real unrelated status icons
+     * keep their measured footprint; the shared cluster itself is never hidden. Guarded by
+     * the per-cluster reconciliation listener so unrelated SystemUI measure passes stay untouched.
+     */
+    private fun hookStatusIconClusterMeasurement(module: XposedModule, classLoader: ClassLoader) {
+        // This guard targets Samsung One UI status icons only; do not probe MIUI containers.
+        listOf(AOSP_ICONS, LEGACY_AOSP_ICONS).distinct().forEach { className ->
+            runCatching {
+                val cls = classLoader.loadClass(className)
+                val methods = cls.declaredMethods.filter { method ->
+                    method.name == "onMeasure" &&
+                        method.parameterTypes.size == 2 &&
+                        method.parameterTypes[0] == java.lang.Integer.TYPE &&
+                        method.parameterTypes[1] == java.lang.Integer.TYPE
+                }.distinctBy { it.toGenericString() }
+                if (methods.isEmpty()) {
+                    diagnostic("Native status-icon width guard unavailable: no onMeasure in $className")
+                    return@runCatching
+                }
+                methods.forEach { method ->
+                    module.hook(method).intercept { chain ->
+                        val result = chain.proceed()
+                        val cluster = chain.thisObject as? ViewGroup
+                        if (cluster != null && isStatusIconsCluster(cluster)) {
+                            clampEmptyNativeClusterMeasuredWidth(cluster)
+                        }
+                        result
+                    }
+                }
+                diagnostic("Native status-icon width guard installed: class=$className methods=${methods.size}")
+            }.onFailure {
+                diagnostic("Native status-icon width guard unavailable: $className: $it")
+            }
+        }
+    }
+
+    private fun clampEmptyNativeClusterMeasuredWidth(cluster: ViewGroup) {
+        if (!config.enabled || !(config.showWifi || isMobileNativeSuppressed())) return
+        // Keep the hot onMeasure hook dormant for unrelated clusters until our established
+        // Wi-Fi reconciliation path has armed this exact status-icon container.
+        val reconciliationArmed = synchronized(nativeWifiClusterLayoutListeners) {
+            nativeWifiClusterLayoutListeners.containsKey(cluster)
+        }
+        if (!reconciliationArmed) return
+        val before = cluster.measuredWidth
+        if (before <= 0) return
+        if (hostFor(cluster) == null || hasVisibleNativeClusterIconFootprint(cluster)) {
+            val previous = lastNativeClusterMeasuredWidthDiagnostics[cluster]
+            if (previous == "clamped-to-zero") {
+                lastNativeClusterMeasuredWidthDiagnostics[cluster] = "native-icon-present"
+                diagnostic("Native status-icon cluster width restored: visible native icon footprint present")
+            }
+            return
+        }
+        val setter = setMeasuredDimensionMethod ?: run {
+            if (lastNativeClusterMeasuredWidthDiagnostics.put(cluster, "setter-unavailable") != "setter-unavailable") {
+                diagnostic("Native status-icon cluster width guard failed: setMeasuredDimension unavailable")
+            }
+            return
+        }
+        val height = cluster.measuredHeight
+        val success = runCatching { setter.invoke(cluster, 0, height); true }.getOrDefault(false)
+        if (success) {
+            val snapshot = "clamped-to-zero"
+            if (lastNativeClusterMeasuredWidthDiagnostics.put(cluster, snapshot) != snapshot) {
+                val lp = cluster.layoutParams
+                diagnostic(
+                    "Native status-icon cluster width stabilized: measuredWidth=${before}->${cluster.measuredWidth}," +
+                        "height=${height},lp=${lp?.width}x${lp?.height},padding=" +
+                        "${cluster.paddingLeft},${cluster.paddingRight},minimumWidth=${cluster.minimumWidth}"
+                )
+            }
+        } else if (lastNativeClusterMeasuredWidthDiagnostics.put(cluster, "setter-failed") != "setter-failed") {
+            diagnostic("Native status-icon cluster width guard failed: cannot clamp empty cluster measurement")
+        }
+    }
+
+    private fun hasVisibleNativeClusterIconFootprint(cluster: ViewGroup): Boolean {
+        if (cluster.visibility != View.VISIBLE || cluster.alpha <= 0f) return false
+        fun hasFootprint(view: View): Boolean {
+            if (view.visibility != View.VISIBLE || view.alpha <= 0f) return false
+            if (isSuppressedNativeStatusChild(view)) return false
+            if (view is ViewGroup && view.childCount > 0) {
+                return (0 until view.childCount).any { hasFootprint(view.getChildAt(it)) }
+            }
+            return max(view.width, view.measuredWidth) > 0 &&
+                max(view.height, view.measuredHeight) > 0
+        }
+        return (0 until cluster.childCount).any { hasFootprint(cluster.getChildAt(it)) }
+    }
+
     private fun hookModernWifiVisibility(module: XposedModule, classLoader: ClassLoader) {
         val className = "com.android.systemui.statusbar.pipeline.wifi.ui.view.ModernStatusBarWifiView"
         runCatching {
@@ -5463,4 +5627,7 @@ object StatusBarComboStyleOneRuntime {
 
     private fun dpExact(context: Context, value: Int): Int =
         (value * context.resources.displayMetrics.density).roundToInt()
+
+    private fun glyphFrameBreathingExpansionPx(context: Context): Int =
+        dpExact(context, (StatusComboStyleOneGlyphRenderer.GLYPH_FRAME_BREATHING_DP * 2f).roundToInt())
 }

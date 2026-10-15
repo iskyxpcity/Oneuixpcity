@@ -8,6 +8,14 @@
     <string name="oneuix_status_bar">Status Bar</string>
     <string name="oneuix_qs">Quick Settings</string>
     <string name="oneuix_aod">Always On Display</string>
+    <string name="oneuix_statusBarBurnInProtection_title">Status bar burn-in protection</string>
+    <string name="oneuix_statusBarBurnInProtection_summary">Gently micro-shifts status-bar elements drawn by OneuiXP.</string>
+    <string name="oneuix_statusBarBurnInProtectionAmplitude_title">Micro-shift amplitude</string>
+    <string name="oneuix_statusBarBurnInProtectionAmplitude_summary">Maximum micro-shift distance in dp; set to 0 to stop movement.</string>
+    <string name="oneuix_statusBarBurnInProtectionAmplitude_value">Current: %1$.2f dp</string>
+    <string name="oneuix_statusBarBurnInProtectionPeriod_title">Micro-shift period</string>
+    <string name="oneuix_statusBarBurnInProtectionPeriod_summary">Seconds per micro-shift cycle; shorter periods move faster.</string>
+    <string name="oneuix_statusBarBurnInProtectionPeriod_value">Current: %1$d seconds</string>
     <string name="oneuix_statusBarLeftPaddingDp_title">Modify status bar left padding</string>
     <string name="oneuix_statusBarRightPaddingDp_title">Modify status bar right padding</string>
     <string name="oneuix_statusBarTopPaddingDp_title">Status bar top margin</string>

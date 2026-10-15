@@ -26,6 +26,7 @@ import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import java.lang.ref.WeakReference
 import io.github.libxposed.api.XposedModule
 import io.github.libxposed.api.XposedModuleInterface
 import io.github.soclear.oneuix.common.IgnoreUnknownKeysJson
@@ -34,6 +35,7 @@ import io.github.soclear.oneuix.common.Preference
 import io.github.soclear.oneuix.common.StatusBarRuntimeBridge
 import io.github.soclear.oneuix.hook.util.PreferenceProvider
 import io.github.soclear.oneuix.hook.util.StatusBarClockDrawPaintBridge
+import io.github.soclear.oneuix.hook.util.OneuiXPDiagnosticLog
 import io.github.soclear.oneuix.hook.util.reflect
 import java.net.NetworkInterface
 import java.util.WeakHashMap
@@ -50,6 +52,7 @@ import kotlin.math.roundToInt
  * the legacy OneUIX Network.kt NetspeedView hooks can remain uninstalled and untouched.
  */
 internal object StatusBarNetworkSpeedRuntime {
+    private const val TAG = "OneuiXPNetworkSpeed"
     private const val PREFERENCE_CHANGED_URI =
         "content://com.oneuixp.app.statusbridge/preferences"
     private const val NETSPEED_VIEW_CLASS =
@@ -59,7 +62,7 @@ internal object StatusBarNetworkSpeedRuntime {
     private const val MESSAGE_UPDATE = 2
 
     // Use real SystemUI layout spacing instead of trailing text whitespace.
-    private const val NETWORK_SPEED_TRAILING_GAP_DP = 3f
+    private const val NETWORK_SPEED_TRAILING_GAP_DP = 5f
 
     private data class RuntimeConfig(
         val display: Preference.SystemUI.StatusBarNetworkSpeedRuntime =
@@ -79,6 +82,14 @@ internal object StatusBarNetworkSpeedRuntime {
         var nativeHostMarginStart: Int? = null,
         var nativeHostMarginEnd: Int? = null,
         var hostMarginsCaptured: Boolean = false,
+        var lastAppliedHostMarginEnd: Int? = null,
+        var trailingGapVisible: Boolean = true,
+        var trailingGapLayoutHost: View? = null,
+        var trailingGapLayoutListener: View.OnLayoutChangeListener? = null,
+        var trailingGapParent: View? = null,
+        var trailingGapParentLayoutListener: View.OnLayoutChangeListener? = null,
+        var trailingGapAttachHost: View? = null,
+        var trailingGapAttachListener: View.OnAttachStateChangeListener? = null,
         var nativeTextSizePx: Float = 0f,
         var nativeTypeface: Typeface? = null,
         var nativeFontVariationSettings: String? = null,
@@ -453,7 +464,7 @@ internal object StatusBarNetworkSpeedRuntime {
         val state = synchronized(views) {
             views[view] ?: ViewState().also { views[view] = it }
         }
-        if (state.host == null && host != null) state.host = host
+        if (host != null) bindTrailingGapHost(state, host)
         ensurePreferenceWatcher(module, view.context)
         return state
     }
@@ -509,12 +520,107 @@ internal object StatusBarNetworkSpeedRuntime {
     }
 
     /**
+     * Bind the current Samsung NetspeedView host and keep the real trailing gap
+     * attached to that host across fold/unfold detach, reinflation and re-layout.
+     * Listeners use weak references and each host/parent gets at most one listener.
+     */
+    private fun bindTrailingGapHost(state: ViewState, host: View) {
+        if (state.host !== host) {
+            state.trailingGapLayoutListener?.let { listener ->
+                state.trailingGapLayoutHost?.removeOnLayoutChangeListener(listener)
+            }
+            state.trailingGapParentLayoutListener?.let { listener ->
+                state.trailingGapParent?.removeOnLayoutChangeListener(listener)
+            }
+            state.trailingGapAttachListener?.let { listener ->
+                state.trailingGapAttachHost?.removeOnAttachStateChangeListener(listener)
+            }
+            state.trailingGapLayoutHost = null
+            state.trailingGapLayoutListener = null
+            state.trailingGapParent = null
+            state.trailingGapParentLayoutListener = null
+            state.trailingGapAttachHost = null
+            state.trailingGapAttachListener = null
+            state.host = host
+            state.nativeHostMarginStart = null
+            state.nativeHostMarginEnd = null
+            state.hostMarginsCaptured = false
+            state.lastAppliedHostMarginEnd = null
+        }
+
+        if (state.trailingGapLayoutHost !== host) {
+            state.trailingGapLayoutListener?.let { listener ->
+                state.trailingGapLayoutHost?.removeOnLayoutChangeListener(listener)
+            }
+            val weakHost = WeakReference(host)
+            val weakState = WeakReference(state)
+            val listener = View.OnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
+                reapplyHostTrailingGap(weakHost, weakState)
+            }
+            state.trailingGapLayoutHost = host
+            state.trailingGapLayoutListener = listener
+            host.addOnLayoutChangeListener(listener)
+        }
+
+        val parent = host.parent as? View
+        if (state.trailingGapParent !== parent) {
+            state.trailingGapParentLayoutListener?.let { listener ->
+                state.trailingGapParent?.removeOnLayoutChangeListener(listener)
+            }
+            state.trailingGapParent = parent
+            state.trailingGapParentLayoutListener = null
+            if (parent != null) {
+                val weakHost = WeakReference(host)
+                val weakState = WeakReference(state)
+                val listener = View.OnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
+                    reapplyHostTrailingGap(weakHost, weakState)
+                }
+                state.trailingGapParentLayoutListener = listener
+                parent.addOnLayoutChangeListener(listener)
+            }
+        }
+
+        if (state.trailingGapAttachHost !== host) {
+            state.trailingGapAttachListener?.let { listener ->
+                state.trailingGapAttachHost?.removeOnAttachStateChangeListener(listener)
+            }
+            val weakHost = WeakReference(host)
+            val weakState = WeakReference(state)
+            val listener = object : View.OnAttachStateChangeListener {
+                override fun onViewAttachedToWindow(view: View) {
+                    reapplyHostTrailingGap(weakHost, weakState)
+                    mainHandler.post { reapplyHostTrailingGap(weakHost, weakState) }
+                    mainHandler.postDelayed(
+                        { reapplyHostTrailingGap(weakHost, weakState) },
+                        100L,
+                    )
+                }
+
+                override fun onViewDetachedFromWindow(view: View) = Unit
+            }
+            state.trailingGapAttachHost = host
+            state.trailingGapAttachListener = listener
+            host.addOnAttachStateChangeListener(listener)
+        }
+    }
+
+    private fun reapplyHostTrailingGap(
+        weakHost: WeakReference<View>,
+        weakState: WeakReference<ViewState>,
+    ) {
+        val host = weakHost.get() ?: return
+        val state = weakState.get() ?: return
+        if (state.host !== host) return
+        applyHostTrailingGap(state, state.trailingGapVisible)
+    }
+
+    /**
      * Keep the original NetspeedView margins and add a real trailing layout gap.
-     * This replaces the old non-breaking-space suffix used to fake inter-icon
-     * spacing in the displayed string. The text and line-spacing logic stay
-     * independent from the host's layout spacing.
+     * Samsung can restore its native LayoutParams during fold/unfold transitions,
+     * so re-capture that reset baseline and re-apply the 5dp gap on layout/reattach.
      */
     private fun applyHostTrailingGap(state: ViewState, showGap: Boolean) {
+        state.trailingGapVisible = showGap
         val host = state.host ?: return
         val params = host.layoutParams as? ViewGroup.MarginLayoutParams ?: return
 
@@ -522,6 +628,14 @@ internal object StatusBarNetworkSpeedRuntime {
             state.nativeHostMarginStart = params.marginStart
             state.nativeHostMarginEnd = params.marginEnd
             state.hostMarginsCaptured = true
+        } else {
+            // A different end margin means SystemUI replaced/reset the LayoutParams
+            // after our previous apply. Treat the current value as the new native base.
+            val previousAppliedEnd = state.lastAppliedHostMarginEnd
+            if (previousAppliedEnd != null && params.marginEnd != previousAppliedEnd) {
+                state.nativeHostMarginStart = params.marginStart
+                state.nativeHostMarginEnd = params.marginEnd
+            }
         }
 
         val baseStart = state.nativeHostMarginStart ?: params.marginStart
@@ -540,7 +654,15 @@ internal object StatusBarNetworkSpeedRuntime {
             host.layoutParams = params
             host.requestLayout()
             (host.parent as? View)?.requestLayout()
+            OneuiXPDiagnosticLog.record(
+                TAG,
+                "Trailing gap applied: requestedDp=${if (showGap) NETWORK_SPEED_TRAILING_GAP_DP else 0f}," +
+                    "gapPx=$gapPx,density=$density,baseEndMarginPx=$baseEnd," +
+                    "appliedEndMarginPx=$targetEnd,hostWidthPx=${host.width}," +
+                    "parent=${host.parent?.javaClass?.simpleName ?: "-"}"
+            )
         }
+        state.lastAppliedHostMarginEnd = targetEnd
     }
 
     private fun applyConfig(view: TextView, state: ViewState) {
@@ -595,10 +717,16 @@ internal object StatusBarNetworkSpeedRuntime {
         )
         if (hiddenByThreshold) {
             view.text = ""
+            StatusBarBurnInProtectionRuntime.unregisterOffsetTarget(view)
             return
         }
 
         view.text = buildDisplayText(source, current)
+        if (display.enabled && view.text.isNotBlank()) {
+            StatusBarBurnInProtectionRuntime.registerView(view)
+        } else {
+            StatusBarBurnInProtectionRuntime.unregisterOffsetTarget(view)
+        }
     }
 
     private fun buildDisplayText(

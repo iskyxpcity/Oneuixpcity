@@ -772,6 +772,15 @@ sealed interface SystemUIEvent {
         value class StatusBarBottomPaddingDp(val value: Float) : StatusBar
 
         @JvmInline
+        value class StatusBarBurnInProtectionEnabled(val value: Boolean) : StatusBar
+
+        @JvmInline
+        value class StatusBarBurnInProtectionAmplitudeDp(val value: Float) : StatusBar
+
+        @JvmInline
+        value class StatusBarBurnInProtectionPeriodSeconds(val value: Int) : StatusBar
+
+        @JvmInline
         value class SetBatteryIconWidthScale(val value: Boolean) : StatusBar
 
         @JvmInline
@@ -1082,6 +1091,15 @@ private fun OneuiXToolsViewModel.previewStatusBarEvent(event: SystemUIEvent.Stat
             is SystemUIEvent.StatusBar.StatusBarClockTextScale ->
                 statusBar.copy(statusBarClockTextScale = event.value)
 
+            is SystemUIEvent.StatusBar.StatusBarBurnInProtectionEnabled ->
+                statusBar.copy(statusBarBurnInProtectionEnabled = event.value)
+
+            is SystemUIEvent.StatusBar.StatusBarBurnInProtectionAmplitudeDp ->
+                statusBar.copy(statusBarBurnInProtectionAmplitudeDp = event.value.coerceIn(0f, 2f))
+
+            is SystemUIEvent.StatusBar.StatusBarBurnInProtectionPeriodSeconds ->
+                statusBar.copy(statusBarBurnInProtectionPeriodSeconds = event.value.coerceIn(10, 300))
+
             else -> statusBar
         }
 
@@ -1173,6 +1191,36 @@ private fun OneuiXToolsViewModel.onStatusBarEvent(event: SystemUIEvent.StatusBar
                     systemUI = preference.systemUI.copy(
                         statusBar = preference.systemUI.statusBar.copy(
                             statusBarBottomPaddingDp = event.value
+                        )
+                    )
+                )
+            }
+
+            is SystemUIEvent.StatusBar.StatusBarBurnInProtectionEnabled -> {
+                preference.copy(
+                    systemUI = preference.systemUI.copy(
+                        statusBar = preference.systemUI.statusBar.copy(
+                            statusBarBurnInProtectionEnabled = event.value
+                        )
+                    )
+                )
+            }
+
+            is SystemUIEvent.StatusBar.StatusBarBurnInProtectionAmplitudeDp -> {
+                preference.copy(
+                    systemUI = preference.systemUI.copy(
+                        statusBar = preference.systemUI.statusBar.copy(
+                            statusBarBurnInProtectionAmplitudeDp = event.value.coerceIn(0f, 2f)
+                        )
+                    )
+                )
+            }
+
+            is SystemUIEvent.StatusBar.StatusBarBurnInProtectionPeriodSeconds -> {
+                preference.copy(
+                    systemUI = preference.systemUI.copy(
+                        statusBar = preference.systemUI.statusBar.copy(
+                            statusBarBurnInProtectionPeriodSeconds = event.value.coerceIn(10, 300)
                         )
                     )
                 )

@@ -47,6 +47,7 @@ import com.oneuixp.app.ui.screen.about.DisclaimerScreen
 import com.oneuixp.app.ui.screen.about.FeatureIntroductionScreen
 import com.oneuixp.app.ui.screen.about.VersionChangelogScreen
 import com.oneuixp.app.ui.screen.about.VersionChangelog261013Screen
+import com.oneuixp.app.ui.screen.about.VersionChangelog261016Screen
 import com.oneuixp.app.ui.screen.colorpalette.ColorPaletteScreen
 import com.oneuixp.app.ui.screen.home.HomePager
 import com.oneuixp.app.ui.screen.home.LocalLsposedHomeStatus
@@ -141,6 +142,7 @@ class MainActivity : ComponentActivity() {
                                 entry<Route.FeatureIntroduction> { FeatureIntroductionScreen() }
                                 entry<Route.VersionChangelog> { VersionChangelogScreen() }
                                 entry<Route.VersionChangelog261013> { VersionChangelog261013Screen() }
+                                entry<Route.VersionChangelog261016> { VersionChangelog261016Screen() }
                                 entry<Route.ColorPalette> { ColorPaletteScreen() }
                                 entry<Route.OneuiXCategory> { key -> OneuiXCategoryScreen(key.category) }
                                 entry<Route.StatusCategory> { key -> StatusCategoryScreen(key.category) }
