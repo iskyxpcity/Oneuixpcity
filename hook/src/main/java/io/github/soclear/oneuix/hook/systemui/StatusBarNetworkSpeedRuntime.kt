@@ -61,8 +61,8 @@ internal object StatusBarNetworkSpeedRuntime {
     private const val MESSAGE_INITIAL = 1
     private const val MESSAGE_UPDATE = 2
 
-    // Use real SystemUI layout spacing instead of trailing text whitespace.
-    private const val NETWORK_SPEED_TRAILING_GAP_DP = 5f
+    // Keep a compact real layout gap; the relayout listeners below preserve it across fold/unfold.
+    private const val NETWORK_SPEED_TRAILING_GAP_DP = 3f
 
     private data class RuntimeConfig(
         val display: Preference.SystemUI.StatusBarNetworkSpeedRuntime =
