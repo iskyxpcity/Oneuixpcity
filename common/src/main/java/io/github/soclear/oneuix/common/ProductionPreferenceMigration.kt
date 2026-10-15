@@ -131,6 +131,21 @@ object ProductionPreferenceMigration {
                     comboRuntimeChanged = true
                 }
 
+                // Reduce the former 2dp left inset to 1dp once per saved preference.
+                // Other custom margins are preserved; new installs also default to 1dp.
+                val glyphLeftMarginHalfDpMigrationDone =
+                    (updatedComboRuntime["glyphLeftMarginHalfDpMigrationDone"] as? JsonPrimitive)
+                        ?.content?.toBooleanStrictOrNull() == true
+                if (!glyphLeftMarginHalfDpMigrationDone) {
+                    val oldLeftMargin =
+                        updatedComboRuntime["glyphLeftMarginDp"]?.toString()?.toIntOrNull() ?: 1
+                    if (oldLeftMargin == 2) {
+                        updatedComboRuntime["glyphLeftMarginDp"] = JsonPrimitive(1)
+                    }
+                    updatedComboRuntime["glyphLeftMarginHalfDpMigrationDone"] = JsonPrimitive(true)
+                    comboRuntimeChanged = true
+                }
+
                 val marginResetTo2MigrationDone =
                     (updatedComboRuntime["outSignalMarginReset2MigrationDone"] as? JsonPrimitive)
                         ?.content?.toBooleanStrictOrNull() == true
