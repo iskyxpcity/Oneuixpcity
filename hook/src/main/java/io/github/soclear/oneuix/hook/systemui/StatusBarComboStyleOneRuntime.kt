@@ -67,7 +67,6 @@ object StatusBarComboStyleOneRuntime {
     private const val PHONE_BAR = "com.android.systemui.statusbar.phone.PhoneStatusBarView"
     private const val MIUI_PHONE_BAR = "com.android.systemui.statusbar.phone.MiuiPhoneStatusBarView"
     private const val WINDOW_BAR = "com.android.systemui.statusbar.phone.StatusBarWindowView"
-    private const val MIUI_ICONS = "com.android.systemui.statusbar.phone.MiuiStatusIconContainer"
     // Modern AOSP / Samsung SystemUI class name. The legacy alias below stays for ROM forks.
     private const val AOSP_ICONS = "com.android.systemui.statusbar.phone.StatusIconContainer"
     private const val LEGACY_AOSP_ICONS = "com.android.systemui.statusbar.phone.StatusBarIconContainer"
@@ -5021,7 +5020,8 @@ object StatusBarComboStyleOneRuntime {
      * the per-cluster reconciliation listener so unrelated SystemUI measure passes stay untouched.
      */
     private fun hookStatusIconClusterMeasurement(module: XposedModule, classLoader: ClassLoader) {
-        listOf(AOSP_ICONS, LEGACY_AOSP_ICONS, MIUI_ICONS).distinct().forEach { className ->
+        // This guard targets Samsung One UI status icons only; do not probe MIUI containers.
+        listOf(AOSP_ICONS, LEGACY_AOSP_ICONS).distinct().forEach { className ->
             runCatching {
                 val cls = classLoader.loadClass(className)
                 val methods = cls.declaredMethods.filter { method ->
