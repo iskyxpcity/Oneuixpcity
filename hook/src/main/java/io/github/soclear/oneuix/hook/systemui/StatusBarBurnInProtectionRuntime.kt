@@ -36,7 +36,6 @@ internal object StatusBarBurnInProtectionRuntime {
     private const val TAG = "OneuiXPBurnIn"
     private const val PHONE_BAR = "com.android.systemui.statusbar.phone.PhoneStatusBarView"
     private const val MIUI_PHONE_BAR = "com.android.systemui.statusbar.phone.MiuiPhoneStatusBarView"
-    private const val TICK_MS = 250L
 
     private data class Target(
         val owner: WeakReference<Any>,
@@ -84,9 +83,17 @@ internal object StatusBarBurnInProtectionRuntime {
             val y = (axisAmplitude * sin(2.0 * PI * elapsed / (periodMs * sqrt(2.0)))).toFloat()
             applyOffsetToTargets(x, y)
             tickerScheduled = true
-            main.postDelayed(this, TICK_MS)
+            main.postDelayed(this, nextTickDelayMs())
         }
     }
+
+    /**
+     * Sample four positions across the selected horizontal micro-shift cycle instead of
+     * continuously waking the main thread every 250 ms. The existing period setting controls
+     * the cadence; no separate fixed refresh interval is introduced.
+     */
+    private fun nextTickDelayMs(): Long =
+        periodSeconds.coerceIn(10, 300).toLong() * 1000L / 4L
 
     fun install(module: XposedModule, param: XposedModuleInterface.PackageReadyParam) {
         if (param.packageName != Package.SYSTEMUI || !installed.compareAndSet(false, true)) return
