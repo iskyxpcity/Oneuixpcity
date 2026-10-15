@@ -61,6 +61,8 @@ object StatusComboStyleOneGlyphRenderer {
     // The shared fixed frame uses native-like clearances and never changes the ring anchor.
     private const val OUTSIDE_SIGNAL_RING_CLEARANCE = 20f
     private const val OUTSIDE_SIGNAL_NATIVE_ICON_GAP_PX = 20f
+    // The combined network-type + signal column should sit closer to native icons than the standalone signal lane.
+    private const val OUTSIDE_COMPOSITE_NATIVE_ICON_GAP_PX = 12f
     // Add 1.5dp of room on the ring-facing side of the outer signal lane.
     private const val OUTSIDE_SIGNAL_RING_SIDE_EXTRA_GAP_UNITS = 5.625f
     // Align the network label to the actual status-bar / battery-ring vertical centre.
@@ -186,9 +188,17 @@ object StatusComboStyleOneGlyphRenderer {
         return targetLeftUnits - leadingExpansion + signalWidth / 2f + signedMarginUnits
     }
 
-    private fun outsideSignalNativeIconGapPx(renderScale: Float): Float =
-        (OUTSIDE_SIGNAL_NATIVE_ICON_GAP_PX -
-            OUTSIDE_SIGNAL_RING_SIDE_EXTRA_GAP_UNITS * renderScale).coerceAtLeast(0f)
+    private fun outsideSignalNativeIconGapPx(
+        renderScale: Float,
+        composite: Boolean = false,
+    ): Float {
+        val baseGapPx = if (composite) {
+            OUTSIDE_COMPOSITE_NATIVE_ICON_GAP_PX
+        } else {
+            OUTSIDE_SIGNAL_NATIVE_ICON_GAP_PX
+        }
+        return (baseGapPx - OUTSIDE_SIGNAL_RING_SIDE_EXTRA_GAP_UNITS * renderScale).coerceAtLeast(0f)
+    }
 
     /**
      * Clamp a single outside element against the last native icon.
@@ -749,7 +759,7 @@ object StatusComboStyleOneGlyphRenderer {
             inset,
             scale,
             leadingExpansion,
-            outsideSignalNativeIconGapPx(scale),
+            outsideSignalNativeIconGapPx(scale, composite = outsideType && label.isNotBlank()),
         )
         val actualLeftPx = inset + (
             leadingExpansion + safeCenter + outsideSignalOffsetXUnits(config) - signalWidth / 2f
@@ -915,6 +925,11 @@ object StatusComboStyleOneGlyphRenderer {
             outsideElementNativeBoundaryCenter(
                 baseTypeCenter, typeOffsetX, typeWidthForClamp,
                 minimumVisibleIconLeftPx, canvasLeftInsetPx, renderScale, leadingExpansion,
+                nativeIconGapPx = if (outsideSignal && label.isNotBlank()) {
+                    OUTSIDE_COMPOSITE_NATIVE_ICON_GAP_PX
+                } else {
+                    OUTSIDE_SIGNAL_NATIVE_ICON_GAP_PX
+                },
             )
         } else baseTypeCenter
         val requestedSignalCenter = if (
@@ -934,7 +949,7 @@ object StatusComboStyleOneGlyphRenderer {
             outsideElementNativeBoundaryCenter(
                 requestedSignalCenter, signalOffsetX, signalWidth,
                 minimumVisibleIconLeftPx, canvasLeftInsetPx, renderScale, leadingExpansion,
-                outsideSignalNativeIconGapPx(renderScale),
+                outsideSignalNativeIconGapPx(renderScale, composite = outsideType && label.isNotBlank()),
             )
         } else requestedSignalCenter
         val labelInfo = if (outsideType && label.isNotBlank()) {
@@ -1092,6 +1107,7 @@ object StatusComboStyleOneGlyphRenderer {
             appendLine(
                 "rendererFlags=outsideType:${outsideType},outsideSignal:${outsideSignal},wide:${usesWideLayout(config)}," +
                     "ringStroke=${config.ringStroke},OUTSIDE_TYPE_GAP_REDUCTION=${OUTSIDE_TYPE_GAP_REDUCTION}," +
+                    "OUTSIDE_COMPOSITE_NATIVE_ICON_GAP_PX=${OUTSIDE_COMPOSITE_NATIVE_ICON_GAP_PX}," +
                     "outsideTypeCenteredInFixedFrame=true,frameCenterY=${OUTSIDE_FRAME_CENTER_Y}," +
                     "OUTSIDE_TYPE_LEADING_CLEARANCE=${OUTSIDE_TYPE_LEADING_CLEARANCE}," +
                     "OUTSIDE_SIGNAL_RING_CLEARANCE=${OUTSIDE_SIGNAL_RING_CLEARANCE}," +
@@ -1166,6 +1182,11 @@ object StatusComboStyleOneGlyphRenderer {
             outsideElementNativeBoundaryCenter(
                 outsideTypeCenter, typeOffsetX, outsideTypeLabelWidth,
                 minimumVisibleIconLeftPx, canvasLeftInsetPx, scale, leadingExpansion,
+                nativeIconGapPx = if (outsideSignal && state.networkType.isNotBlank()) {
+                    OUTSIDE_COMPOSITE_NATIVE_ICON_GAP_PX
+                } else {
+                    OUTSIDE_SIGNAL_NATIVE_ICON_GAP_PX
+                },
             )
         } else outsideTypeCenter
         val requestedOutsideSignalCenter = if (
@@ -1185,7 +1206,10 @@ object StatusComboStyleOneGlyphRenderer {
             outsideElementNativeBoundaryCenter(
                 requestedOutsideSignalCenter, signalOffsetX, signalWidth,
                 minimumVisibleIconLeftPx, canvasLeftInsetPx, scale, leadingExpansion,
-                outsideSignalNativeIconGapPx(scale),
+                outsideSignalNativeIconGapPx(
+                    scale,
+                    composite = outsideType && state.networkType.isNotBlank(),
+                ),
             )
         } else requestedOutsideSignalCenter
         val save = canvas.save()
