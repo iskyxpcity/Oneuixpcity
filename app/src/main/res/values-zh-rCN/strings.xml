@@ -146,7 +146,7 @@
     <string name="changelog_261016_statusbar_stability_title">状态栏布局稳定性</string>
     <string name="changelog_261016_statusbar_stability_body">修复三星 One UI 折叠/展开屏幕时，空的原生状态栏图标容器测量宽度异常波动，导致网速文字短暂向左跳动后回位的问题。</string>
     <string name="changelog_261016_burnin_title">状态栏防烧屏保护</string>
-    <string name="changelog_261016_burnin_body">保留并核查 OneuiXP 自有状态栏元素的防烧屏微位移与重新布局后的偏移恢复机制；原有防烧屏开关、位移幅度和周期设置保持不变。</string>
+    <string name="changelog_261016_burnin_body">新增状态栏防烧屏保护，对 OneuiXP 绘制的状态栏元素进行缓慢、轻微的 X/Y 微位移，降低固定像素长期显示同一内容的风险。可在「状态栏 → 其他 → 状态栏防烧屏保护」中开启或关闭，并调整微位移幅度（0–2 dp）和位移周期（10–300 秒）。</string>
     <string name="changelog_261013_feature_intro_title">功能入口</string>
     <string name="changelog_261013_feature_intro_body">新增「功能介绍」入口与版本更新页面。</string>
     <string name="changelog_261013_dual_ui_title">双主题适配</string>

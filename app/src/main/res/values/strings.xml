@@ -147,7 +147,7 @@
     <string name="changelog_261016_statusbar_stability_title">Status bar layout stability</string>
     <string name="changelog_261016_statusbar_stability_body">Fixed a Samsung One UI fold/unfold issue where the empty native status-icon container reported fluctuating widths, making the network-speed text jump left briefly and return.</string>
     <string name="changelog_261016_burnin_title">Status bar burn-in protection</string>
-    <string name="changelog_261016_burnin_body">Kept and verified OneuiXP’s micro-shift and layout-recovery behavior for its own status-bar elements. Existing burn-in protection controls, movement amplitude, and cycle remain unchanged.</string>
+    <string name="changelog_261016_burnin_body">Added burn-in protection for status-bar elements drawn by OneuiXP. It applies a gentle, slow X/Y micro-shift to reduce the risk of the same pixels displaying static content for long periods. Open Status bar → Other → Status bar burn-in protection to enable or disable it and adjust the movement amplitude (0–2 dp) and cycle period (10–300 seconds).</string>
     <string name="changelog_261013_feature_intro_title">Feature introduction</string>
     <string name="changelog_261013_feature_intro_body">Added the Feature Introduction entry and version update pages.</string>
     <string name="changelog_261013_dual_ui_title">Two interface styles</string>
