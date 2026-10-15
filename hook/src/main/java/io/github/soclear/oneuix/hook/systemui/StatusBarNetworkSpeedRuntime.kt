@@ -34,6 +34,7 @@ import io.github.soclear.oneuix.common.Preference
 import io.github.soclear.oneuix.common.StatusBarRuntimeBridge
 import io.github.soclear.oneuix.hook.util.PreferenceProvider
 import io.github.soclear.oneuix.hook.util.StatusBarClockDrawPaintBridge
+import io.github.soclear.oneuix.hook.util.OneuiXPDiagnosticLog
 import io.github.soclear.oneuix.hook.util.reflect
 import java.net.NetworkInterface
 import java.util.WeakHashMap
@@ -50,6 +51,7 @@ import kotlin.math.roundToInt
  * the legacy OneUIX Network.kt NetspeedView hooks can remain uninstalled and untouched.
  */
 internal object StatusBarNetworkSpeedRuntime {
+    private const val TAG = "OneuiXPNetworkSpeed"
     private const val PREFERENCE_CHANGED_URI =
         "content://com.oneuixp.app.statusbridge/preferences"
     private const val NETSPEED_VIEW_CLASS =
@@ -59,7 +61,7 @@ internal object StatusBarNetworkSpeedRuntime {
     private const val MESSAGE_UPDATE = 2
 
     // Use real SystemUI layout spacing instead of trailing text whitespace.
-    private const val NETWORK_SPEED_TRAILING_GAP_DP = 3f
+    private const val NETWORK_SPEED_TRAILING_GAP_DP = 5f
 
     private data class RuntimeConfig(
         val display: Preference.SystemUI.StatusBarNetworkSpeedRuntime =
@@ -540,6 +542,13 @@ internal object StatusBarNetworkSpeedRuntime {
             host.layoutParams = params
             host.requestLayout()
             (host.parent as? View)?.requestLayout()
+            OneuiXPDiagnosticLog.record(
+                TAG,
+                "Trailing gap applied: requestedDp=${if (showGap) NETWORK_SPEED_TRAILING_GAP_DP else 0f}," +
+                    "gapPx=$gapPx,density=$density,baseEndMarginPx=$baseEnd," +
+                    "appliedEndMarginPx=$targetEnd,hostWidthPx=${host.width}," +
+                    "parent=${host.parent?.javaClass?.simpleName ?: "-"}"
+            )
         }
     }
 
