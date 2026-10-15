@@ -117,6 +117,20 @@ object ProductionPreferenceMigration {
                     comboRuntimeChanged = true
                 }
 
+                // Move the old 1dp left-margin baseline to the new 2dp default once.
+                // Only migrate the former baseline; keep other saved custom margins unchanged.
+                val glyphLeftMarginTwoDpDefaultMigrationDone =
+                    (updatedComboRuntime["glyphLeftMarginTwoDpDefaultMigrationDone"] as? JsonPrimitive)
+                        ?.content?.toBooleanStrictOrNull() == true
+                if (!glyphLeftMarginTwoDpDefaultMigrationDone) {
+                    val oldLeftMargin = updatedComboRuntime["glyphLeftMarginDp"]?.toString()?.toIntOrNull() ?: 1
+                    if (oldLeftMargin == 1) {
+                        updatedComboRuntime["glyphLeftMarginDp"] = JsonPrimitive(2)
+                    }
+                    updatedComboRuntime["glyphLeftMarginTwoDpDefaultMigrationDone"] = JsonPrimitive(true)
+                    comboRuntimeChanged = true
+                }
+
                 val marginResetTo2MigrationDone =
                     (updatedComboRuntime["outSignalMarginReset2MigrationDone"] as? JsonPrimitive)
                         ?.content?.toBooleanStrictOrNull() == true
