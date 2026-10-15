@@ -117,7 +117,15 @@ internal object StatusBarBurnInProtectionRuntime {
         hookShadeExpansion(module, param.classLoader)
     }
 
-    fun registerView(view: View) = registerOffsetTarget(view, applyToView)
+    /**
+     * Network speed is placed immediately before the three-in-one glyph. It may micro-shift
+     * left with the glyph, but must not independently drift right into the glyph's draw area.
+     * Vertical motion remains synchronized; the glyph can still complete the rightward half
+     * of its cycle while the speed text stays clear.
+     */
+    fun registerView(view: View) = registerOffsetTarget(view) { owner, xDp, yDp ->
+        applyViewOffset(owner as View, minOf(xDp, 0f), yDp)
+    }
 
     fun registerOffsetTarget(owner: Any, apply: (Any, Float, Float) -> Unit) {
         runOnMain {
