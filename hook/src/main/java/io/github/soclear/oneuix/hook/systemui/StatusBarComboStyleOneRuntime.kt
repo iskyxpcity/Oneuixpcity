@@ -5015,7 +5015,8 @@ object StatusBarComboStyleOneRuntime {
      *
      * Clamp only an actually empty native cluster to measured width 0, after its own measure
      * implementation and before system_icons consumes the result. Real unrelated status icons
-     * keep their measured footprint; the shared cluster itself is never hidden.
+     * keep their measured footprint; the shared cluster itself is never hidden. Guarded by
+     * the per-cluster reconciliation listener so unrelated SystemUI measure passes stay untouched.
      */
     private fun hookStatusIconClusterMeasurement(module: XposedModule, classLoader: ClassLoader) {
         listOf(AOSP_ICONS, MIUI_ICONS).distinct().forEach { className ->
