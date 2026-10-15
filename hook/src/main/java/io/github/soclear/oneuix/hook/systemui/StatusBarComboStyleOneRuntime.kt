@@ -197,6 +197,17 @@ object StatusBarComboStyleOneRuntime {
         Collections.synchronizedSet(Collections.newSetFromMap(WeakHashMap<ViewGroup, Boolean>()))
     private val pendingNativeWifiClusterCandidates = Collections.synchronizedMap(WeakHashMap<ViewGroup, View>())
     private val lastNativeWifiClusterDiagnostics = Collections.synchronizedMap(WeakHashMap<ViewGroup, String>())
+    private val lastNativeClusterMeasuredWidthDiagnostics =
+        Collections.synchronizedMap(WeakHashMap<View, String>())
+    private val setMeasuredDimensionMethod: java.lang.reflect.Method? by lazy {
+        runCatching {
+            View::class.java.getDeclaredMethod(
+                "setMeasuredDimension",
+                java.lang.Integer.TYPE,
+                java.lang.Integer.TYPE,
+            ).apply { isAccessible = true }
+        }.getOrNull()
+    }
     private val adjustingNativeWifiClusterVisibility = ThreadLocal.withInitial { false }
     private val lastNativeWifiSlotRequests = ConcurrentHashMap<String, String>()
     private val lastSubscriptionSignalLevels = ConcurrentHashMap<Int, Int>()
@@ -977,6 +988,7 @@ object StatusBarComboStyleOneRuntime {
         hookModernMobileViewConstruction(module, param.classLoader)
         hookModernSignalDrawable(module)
         hookModernWifiVisibility(module, param.classLoader)
+        hookStatusIconClusterMeasurement(module, param.classLoader)
 
         // Style One tint is sourced per collapsed status-bar row by the native
         // icon/battery tint hooks below, never from the Quick Panel clock.
@@ -2599,20 +2611,7 @@ object StatusBarComboStyleOneRuntime {
                     nativeWifiClusterBaselineMinimumWidth[cluster]
                         ?: cluster.minimumWidth.also { nativeWifiClusterBaselineMinimumWidth[cluster] = it }
                 }
-                fun hasVisibleNativeIconFootprint(view: View): Boolean {
-                    var current: View? = view
-                    while (current != null) {
-                        if (current.visibility != View.VISIBLE || current.alpha <= 0f) return false
-                        if (current === cluster) break
-                        current = current.parent as? View
-                    }
-                    if (current !== cluster || isSuppressedNativeStatusChild(view)) return false
-                    return max(view.width, view.measuredWidth) > 0 &&
-                        max(view.height, view.measuredHeight) > 0
-                }
-                val hasVisibleNativeIcon = (0 until cluster.childCount).any {
-                    hasVisibleNativeIconFootprint(cluster.getChildAt(it))
-                }
+                val hasVisibleNativeIcon = hasVisibleNativeClusterIconFootprint(cluster)
                 val zeroFootprintVisibleChildren = (0 until cluster.childCount).mapNotNull { index ->
                     val child = cluster.getChildAt(index)
                     if (child.visibility == View.VISIBLE && child.alpha > 0f &&
@@ -5008,6 +5007,97 @@ object StatusBarComboStyleOneRuntime {
         }
     }
 
+    /**
+     * Samsung's StatusIconContainer can report a changing measured width (5px, then 25px,
+     * then back to 5px) even when its native Wi-Fi/mobile slots have been collapsed and no
+     * other native status icon occupies the cluster. Since system_icons is right-aligned,
+     * that phantom width moves the network-speed TextView at the opposite end of the row.
+     *
+     * Clamp only an actually empty native cluster to measured width 0, after its own measure
+     * implementation and before system_icons consumes the result. Real unrelated status icons
+     * keep their measured footprint; the shared cluster itself is never hidden.
+     */
+    private fun hookStatusIconClusterMeasurement(module: XposedModule, classLoader: ClassLoader) {
+        listOf(AOSP_ICONS, MIUI_ICONS).distinct().forEach { className ->
+            runCatching {
+                val cls = classLoader.loadClass(className)
+                val methods = cls.declaredMethods.filter { method ->
+                    method.name == "onMeasure" &&
+                        method.parameterTypes.size == 2 &&
+                        method.parameterTypes[0] == java.lang.Integer.TYPE &&
+                        method.parameterTypes[1] == java.lang.Integer.TYPE
+                }.distinctBy { it.toGenericString() }
+                if (methods.isEmpty()) {
+                    diagnostic("Native status-icon width guard unavailable: no onMeasure in $className")
+                    return@runCatching
+                }
+                methods.forEach { method ->
+                    module.hook(method).intercept { chain ->
+                        val result = chain.proceed()
+                        val cluster = chain.thisObject as? ViewGroup
+                        if (cluster != null && isStatusIconsCluster(cluster)) {
+                            clampEmptyNativeClusterMeasuredWidth(cluster)
+                        }
+                        result
+                    }
+                }
+                diagnostic("Native status-icon width guard installed: class=$className methods=${methods.size}")
+            }.onFailure {
+                diagnostic("Native status-icon width guard unavailable: $className: $it")
+            }
+        }
+    }
+
+    private fun clampEmptyNativeClusterMeasuredWidth(cluster: ViewGroup) {
+        if (!config.enabled || !(config.showWifi || isMobileNativeSuppressed())) return
+        if (hostFor(cluster) == null || hasVisibleNativeClusterIconFootprint(cluster)) {
+            val previous = lastNativeClusterMeasuredWidthDiagnostics[cluster]
+            if (previous == "clamped-to-zero") {
+                lastNativeClusterMeasuredWidthDiagnostics[cluster] = "native-icon-present"
+                diagnostic("Native status-icon cluster width restored: visible native icon footprint present")
+            }
+            return
+        }
+
+        val before = cluster.measuredWidth
+        if (before <= 0) return
+        val setter = setMeasuredDimensionMethod ?: run {
+            if (lastNativeClusterMeasuredWidthDiagnostics.put(cluster, "setter-unavailable") != "setter-unavailable") {
+                diagnostic("Native status-icon cluster width guard failed: setMeasuredDimension unavailable")
+            }
+            return
+        }
+        val height = cluster.measuredHeight
+        val success = runCatching { setter.invoke(cluster, 0, height); true }.getOrDefault(false)
+        if (success) {
+            val snapshot = "clamped-to-zero"
+            if (lastNativeClusterMeasuredWidthDiagnostics.put(cluster, snapshot) != snapshot) {
+                val lp = cluster.layoutParams
+                diagnostic(
+                    "Native status-icon cluster width stabilized: measuredWidth=${before}->${cluster.measuredWidth}," +
+                        "height=${height},lp=${lp?.width}x${lp?.height},padding=" +
+                        "${cluster.paddingLeft},${cluster.paddingRight},minimumWidth=${cluster.minimumWidth}"
+                )
+            }
+        } else if (lastNativeClusterMeasuredWidthDiagnostics.put(cluster, "setter-failed") != "setter-failed") {
+            diagnostic("Native status-icon cluster width guard failed: cannot clamp empty cluster measurement")
+        }
+    }
+
+    private fun hasVisibleNativeClusterIconFootprint(cluster: ViewGroup): Boolean {
+        if (cluster.visibility != View.VISIBLE || cluster.alpha <= 0f) return false
+        fun hasFootprint(view: View): Boolean {
+            if (view.visibility != View.VISIBLE || view.alpha <= 0f) return false
+            if (isSuppressedNativeStatusChild(view)) return false
+            if (view is ViewGroup && view.childCount > 0) {
+                return (0 until view.childCount).any { hasFootprint(view.getChildAt(it)) }
+            }
+            return max(view.width, view.measuredWidth) > 0 &&
+                max(view.height, view.measuredHeight) > 0
+        }
+        return (0 until cluster.childCount).any { hasFootprint(cluster.getChildAt(it)) }
+    }
+
     private fun hookModernWifiVisibility(module: XposedModule, classLoader: ClassLoader) {
         val className = "com.android.systemui.statusbar.pipeline.wifi.ui.view.ModernStatusBarWifiView"
         runCatching {
@@ -5531,5 +5621,5 @@ object StatusBarComboStyleOneRuntime {
         (value * context.resources.displayMetrics.density).roundToInt()
 
     private fun glyphFrameBreathingExpansionPx(context: Context): Int =
-        dpExact(context, StatusComboStyleOneGlyphRenderer.GLYPH_FRAME_BREATHING_DP * 2)
+        dpExact(context, (StatusComboStyleOneGlyphRenderer.GLYPH_FRAME_BREATHING_DP * 2f).roundToInt())
 }
