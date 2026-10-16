@@ -1,8 +1,5 @@
 package com.oneuixp.app.ui.component.bottombar
 
-import androidx.compose.animation.core.EaseInOut
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -21,11 +18,12 @@ import com.oneuixp.app.ui.UiMode
 import com.oneuixp.app.ui.util.shouldShowSplitPane
 import top.yukonga.miuix.kmp.blur.Backdrop
 import top.yukonga.miuix.kmp.blur.LayerBackdrop
-import kotlin.math.abs
+import top.yukonga.miuix.kmp.utils.springAnimateToPage
 
 class MainPagerState(
     val pagerState: PagerState,
-    private val coroutineScope: CoroutineScope
+    private val coroutineScope: CoroutineScope,
+    private val animatePageChanges: Boolean,
 ) {
     var selectedPage by mutableIntStateOf(pagerState.currentPage)
         private set
@@ -43,20 +41,14 @@ class MainPagerState(
         selectedPage = targetIndex
         isNavigating = true
 
-        val distance = abs(targetIndex - pagerState.currentPage).coerceAtLeast(2)
-        val duration = 100 * distance + 100
-        val layoutInfo = pagerState.layoutInfo
-        val pageSize = layoutInfo.pageSize + layoutInfo.pageSpacing
-        val currentDistanceInPages = targetIndex - pagerState.currentPage - pagerState.currentPageOffsetFraction
-        val scrollPixels = currentDistanceInPages * pageSize
-
         navJob = coroutineScope.launch {
             val myJob = coroutineContext.job
             try {
-                pagerState.animateScrollBy(
-                    value = scrollPixels,
-                    animationSpec = tween(easing = EaseInOut, durationMillis = duration)
-                )
+                if (animatePageChanges) {
+                    pagerState.springAnimateToPage(targetIndex)
+                } else {
+                    pagerState.scrollToPage(targetIndex)
+                }
             } finally {
                 if (navJob == myJob) {
                     isNavigating = false
@@ -78,10 +70,11 @@ class MainPagerState(
 @Composable
 fun rememberMainPagerState(
     pagerState: PagerState,
-    coroutineScope: CoroutineScope = rememberCoroutineScope()
+    coroutineScope: CoroutineScope = rememberCoroutineScope(),
+    animatePageChanges: Boolean = true,
 ): MainPagerState {
-    return remember(pagerState, coroutineScope) {
-        MainPagerState(pagerState, coroutineScope)
+    return remember(pagerState, coroutineScope, animatePageChanges) {
+        MainPagerState(pagerState, coroutineScope, animatePageChanges)
     }
 }
 
@@ -99,8 +92,11 @@ fun BottomBar(
 
 
 /**
- * Wide/landscape windows prioritize a collapsible side rail in both themes.
- * Floating bottom-bar preference remains effective on compact windows.
+ * Match KernelSU's adaptive navigation behavior:
+ * Material uses a side rail in wide windows; Miuix keeps the floating bottom bar
+ * when that preference is enabled, including unfolded and landscape layouts.
  */
 @Composable
-fun useNavigationRail(): Boolean = shouldShowSplitPane()
+fun useNavigationRail(enableFloatingBottomBar: Boolean): Boolean =
+    shouldShowSplitPane() &&
+        !(LocalUiMode.current == UiMode.Miuix && enableFloatingBottomBar)

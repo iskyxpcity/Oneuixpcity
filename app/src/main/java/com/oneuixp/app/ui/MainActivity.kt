@@ -225,12 +225,17 @@ fun MainScreen(
 ) {
     val navController = LocalNavigator.current
     val enableBlur = LocalEnableBlur.current
+    val enableFloatingBottomBar = LocalEnableFloatingBottomBar.current
     val enableFloatingBottomBarBlur = LocalEnableFloatingBottomBarBlur.current
+    val showNavigationRail = useNavigationRail(enableFloatingBottomBar)
     val pagerState = rememberPagerState(
         initialPage = initialPage,
         pageCount = { MainPagerConfig.PAGE_COUNT },
     )
-    val mainPagerState = rememberMainPagerState(pagerState)
+    val mainPagerState = rememberMainPagerState(
+        pagerState = pagerState,
+        animatePageChanges = !showNavigationRail,
+    )
 
     // The main entry is saveable while a detail route is on top. If a page-switch
     // gesture changes the selected tab from a nested route, restore the PagerState
@@ -282,9 +287,6 @@ fun MainScreen(
         // without depending on a device model or requiring an Activity restart.
         // In landscape, wide, and unfolded windows both themes use a collapsible side rail.
         // The floating bottom-bar preference is still respected on compact windows.
-        val useWideLayout = useNavigationRail()
-        val showNavigationRail = useWideLayout
-
         val pagerContent = @Composable { bottomInnerPadding: Dp ->
             Box(
                 modifier = (if (blurBackdrop != null) {
@@ -293,7 +295,7 @@ fun MainScreen(
                     Modifier.fillMaxSize()
                 }),
             ) {
-                val responsivePagerModifier = if (useWideLayout) {
+                val responsivePagerModifier = if (showNavigationRail) {
                     Modifier
                         .widthIn(max = 1280.dp)
                         .fillMaxSize()
