@@ -8,7 +8,18 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.displayCutout
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.MaterialTheme
@@ -36,6 +47,7 @@ import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
 import com.oneuixp.app.oneuix.OneuiXPreferenceBridge
 import com.oneuixp.app.ui.component.bottombar.BottomBar
+import com.oneuixp.app.ui.component.bottombar.SideNavigationRail
 import com.oneuixp.app.ui.component.bottombar.MainPagerState
 import com.oneuixp.app.ui.component.bottombar.rememberMainPagerState
 import com.oneuixp.app.ui.navigation3.LocalNavigator
@@ -64,6 +76,7 @@ import com.oneuixp.app.ui.theme.LocalEnableFloatingBottomBarBlur
 import com.oneuixp.app.ui.theme.OneuiXPTheme
 import com.oneuixp.app.ui.util.rememberBlurBackdrop
 import com.oneuixp.app.ui.util.rememberContentReady
+import com.oneuixp.app.ui.util.shouldShowSplitPane
 import com.oneuixp.app.ui.viewmodel.MainActivityViewModel
 import com.oneuixp.app.ui.viewmodel.MainPagerConfig
 import top.yukonga.miuix.kmp.basic.Scaffold
@@ -214,20 +227,24 @@ fun MainScreen(
     CompositionLocalProvider(LocalMainPagerState provides mainPagerState) {
         val contentReady = rememberContentReady()
 
+        // Re-read the actual window bounds so fold/unfold and freeform resizing adapt
+        // without depending on a device model or requiring an Activity restart.
+        val useNavigationRail = shouldShowSplitPane()
+
         val pagerContent = @Composable { bottomInnerPadding: Dp ->
             Box(
-                modifier = if (blurBackdrop != null) {
-                    Modifier.layerBackdrop(blurBackdrop)
+                modifier = (if (blurBackdrop != null) {
+                    Modifier.fillMaxSize().layerBackdrop(blurBackdrop)
                 } else {
-                    Modifier
-                },
+                    Modifier.fillMaxSize()
+                }),
             ) {
                 HorizontalPager(
-                    modifier = if (enableFloatingBottomBarBlur) {
-                        Modifier.layerBackdrop(backdrop)
+                    modifier = (if (enableFloatingBottomBarBlur) {
+                        Modifier.fillMaxSize().layerBackdrop(backdrop)
                     } else {
-                        Modifier
-                    },
+                        Modifier.fillMaxSize()
+                    }),
                     state = mainPagerState.pagerState,
                     beyondViewportPageCount = if (contentReady) 3 else 0,
                     userScrollEnabled = true,
@@ -251,28 +268,66 @@ fun MainScreen(
             }
         }
 
-        val bottomBar = @Composable {
-            Box(modifier = Modifier.fillMaxWidth()) {
-                BottomBar(
-                    blurBackdrop = blurBackdrop,
-                    backdrop = backdrop,
-                    modifier = Modifier.align(Alignment.BottomCenter),
-                )
-            }
-        }
+        if (useNavigationRail) {
+            // A side rail is used for expanded windows and landscape layouts; the existing
+            // four destinations and their theme-specific icons remain unchanged.
+            val startInsets = WindowInsets.systemBars.union(WindowInsets.displayCutout)
+                .only(WindowInsetsSides.Start)
+            val navigationBottomPadding =
+                WindowInsets.systemBars.asPaddingValues().calculateBottomPadding()
 
-        // Keep the validated bottom-navigation layout; adaptive side rail stays disabled.
-        // Do not switch to the newer adaptive side rail.
-        when (uiMode) {
-            UiMode.Material -> androidx.compose.material3.Scaffold(
-                bottomBar = bottomBar,
-            ) { innerPadding ->
-                pagerContent(innerPadding.calculateBottomPadding())
+            when (uiMode) {
+                UiMode.Material -> androidx.compose.material3.Scaffold {
+                    Row {
+                        SideNavigationRail(modifier = Modifier.fillMaxHeight())
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .consumeWindowInsets(startInsets)
+                        ) {
+                            pagerContent(navigationBottomPadding)
+                        }
+                    }
+                }
+
+                UiMode.Miuix -> Scaffold { _ ->
+                    Row {
+                        SideNavigationRail(modifier = Modifier.fillMaxHeight())
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .consumeWindowInsets(startInsets)
+                        ) {
+                            pagerContent(navigationBottomPadding)
+                        }
+                    }
+                }
             }
-            UiMode.Miuix -> Scaffold(
-                bottomBar = bottomBar,
-            ) { innerPadding ->
-                pagerContent(innerPadding.calculateBottomPadding())
+        } else {
+            // Compact windows retain the validated bottom-bar implementation, including
+            // Miuix's native floating selection indicator when that style is enabled.
+            val bottomBar = @Composable {
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    BottomBar(
+                        blurBackdrop = blurBackdrop,
+                        backdrop = backdrop,
+                        modifier = Modifier.align(Alignment.BottomCenter),
+                    )
+                }
+            }
+
+            when (uiMode) {
+                UiMode.Material -> androidx.compose.material3.Scaffold(
+                    bottomBar = bottomBar,
+                ) { innerPadding ->
+                    pagerContent(innerPadding.calculateBottomPadding())
+                }
+
+                UiMode.Miuix -> Scaffold(
+                    bottomBar = bottomBar,
+                ) { innerPadding ->
+                    pagerContent(innerPadding.calculateBottomPadding())
+                }
             }
         }
     }
