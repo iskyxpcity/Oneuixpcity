@@ -361,6 +361,41 @@ fun ColorPaletteScreenMiuix(
                             )
                         }
 
+                        SwitchPreference(
+                            title = stringResource(R.string.settings_enable_swipe_back),
+                            summary = stringResource(R.string.settings_enable_swipe_back_summary),
+                            startAction = {
+                                Icon(
+                                    Icons.AutoMirrored.Rounded.MenuOpen,
+                                    modifier = Modifier.padding(end = 6.dp),
+                                    contentDescription = stringResource(R.string.settings_enable_swipe_back),
+                                    tint = colorScheme.onBackground
+                                )
+                            },
+                            checked = uiState.enableSwipeBack,
+                            onCheckedChange = actions.onSetEnableSwipeBack
+                        )
+
+                        val pagerGestureOptions = listOf(
+                            stringResource(R.string.settings_page_gesture_default),
+                            stringResource(R.string.settings_page_gesture_cross_axis),
+                            stringResource(R.string.settings_page_gesture_ios_like),
+                        )
+                        OverlayDropdownPreference(
+                            title = stringResource(R.string.settings_page_gesture_mode),
+                            startAction = {
+                                Icon(
+                                    Icons.Rounded.AspectRatio,
+                                    modifier = Modifier.padding(end = 6.dp),
+                                    contentDescription = stringResource(R.string.settings_page_gesture_mode),
+                                    tint = colorScheme.onBackground
+                                )
+                            },
+                            items = pagerGestureOptions,
+                            selectedIndex = uiState.pagerGestureMode.coerceIn(0, pagerGestureOptions.lastIndex),
+                            onSelectedIndexChange = actions.onSetPagerGestureMode
+                        )
+
                         var sliderValue by remember(uiState.pageScale) { mutableFloatStateOf(uiState.pageScale) }
                         ArrowPreference(
                             title = stringResource(id = R.string.settings_page_scale),

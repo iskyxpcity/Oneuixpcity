@@ -64,4 +64,12 @@ class SettingsRepositoryImpl : SettingsRepository {
     override var pageScale: Float
         get() = prefs.getFloat("page_scale", 1.0f)
         set(value) = prefs.edit { putFloat("page_scale", value) }
+
+    override var enableSwipeBack: Boolean
+        get() = prefs.getBoolean("enable_swipe_back", false)
+        set(value) = prefs.edit { putBoolean("enable_swipe_back", value) }
+
+    override var pagerGestureMode: Int
+        get() = prefs.getInt("pager_gesture_mode", 0).coerceIn(0, 2)
+        set(value) = prefs.edit { putInt("pager_gesture_mode", value.coerceIn(0, 2)) }
 }

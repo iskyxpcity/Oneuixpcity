@@ -27,5 +27,7 @@ data class ColorPaletteScreenActions(
     val onSetEnableFloatingBottomBar: (Boolean) -> Unit,
     val onSetEnableFloatingBottomBarBlur: (Boolean) -> Unit,
     val onSetEnablePredictiveBack: (Boolean) -> Unit,
+    val onSetEnableSwipeBack: (Boolean) -> Unit,
+    val onSetPagerGestureMode: (Int) -> Unit,
     val onSetPageScale: (Float) -> Unit,
 )

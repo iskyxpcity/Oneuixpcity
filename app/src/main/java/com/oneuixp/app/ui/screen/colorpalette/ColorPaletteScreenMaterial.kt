@@ -275,6 +275,35 @@ fun ColorPaletteScreenMaterial(
                     )
                 )
 
+                SegmentedColumn(
+                    modifier = Modifier.padding(top = 4.dp),
+                    content = listOf(
+                        {
+                            SegmentedSwitchItem(
+                                icon = Icons.AutoMirrored.Rounded.MenuOpen,
+                                title = stringResource(R.string.settings_enable_swipe_back),
+                                summary = stringResource(R.string.settings_enable_swipe_back_summary),
+                                checked = uiState.enableSwipeBack,
+                                onCheckedChange = actions.onSetEnableSwipeBack,
+                            )
+                        },
+                        {
+                            val pagerGestureOptions = listOf(
+                                stringResource(R.string.settings_page_gesture_default),
+                                stringResource(R.string.settings_page_gesture_cross_axis),
+                                stringResource(R.string.settings_page_gesture_ios_like),
+                            )
+                            SegmentedDropdownItem(
+                                icon = Icons.Rounded.AspectRatio,
+                                title = stringResource(R.string.settings_page_gesture_mode),
+                                items = pagerGestureOptions,
+                                selectedIndex = uiState.pagerGestureMode.coerceIn(0, pagerGestureOptions.lastIndex),
+                                onItemSelected = actions.onSetPagerGestureMode,
+                            )
+                        },
+                    ),
+                )
+
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
                     SegmentedColumn(
                         modifier = Modifier.padding(top = 4.dp),

@@ -8,6 +8,8 @@ import com.oneuixp.app.ui.theme.AppSettings
 data class MainActivityUiState(
     val appSettings: AppSettings,
     val pageScale: Float,
+    val enableSwipeBack: Boolean,
+    val pagerGestureMode: Int,
     val enableBlur: Boolean,
     val enableFloatingBottomBar: Boolean,
     val enableFloatingBottomBarBlur: Boolean,

@@ -6,7 +6,9 @@ import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
@@ -22,6 +24,7 @@ import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerDefaults
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -79,12 +82,17 @@ import com.oneuixp.app.ui.theme.LocalEnableFloatingBottomBarBlur
 import com.oneuixp.app.ui.theme.OneuiXPTheme
 import com.oneuixp.app.ui.util.rememberBlurBackdrop
 import com.oneuixp.app.ui.util.rememberContentReady
+import com.oneuixp.app.ui.util.swipeBackToPop
 import com.oneuixp.app.ui.viewmodel.MainActivityViewModel
 import com.oneuixp.app.ui.viewmodel.MainPagerConfig
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.blur.layerBackdrop
 import top.yukonga.miuix.kmp.blur.rememberLayerBackdrop
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.utils.PagerGestureNestedScrollConnection
+import top.yukonga.miuix.kmp.utils.PagerInterceptionMode
+import top.yukonga.miuix.kmp.utils.PagerNavigationSpringSpec
+import top.yukonga.miuix.kmp.utils.pagerGestureOverride
 
 class MainActivity : ComponentActivity() {
 
@@ -139,11 +147,20 @@ class MainActivity : ComponentActivity() {
                         MainScreen(
                             initialPage = selectedMainPage,
                             onPageChanged = viewModel::setSelectedMainPage,
+                            pagerGestureMode = uiState.pagerGestureMode,
                         )
                     }
 
                     val navDisplay = @Composable {
-                        NavDisplay(
+                        Box(
+                            modifier = Modifier.fillMaxSize().swipeBackToPop(
+                                enabled = uiState.enableSwipeBack && navigator.backStackSize() > 1,
+                                onBack = {
+                                    if (navigator.backStackSize() > 1) navigator.pop()
+                                },
+                            ),
+                        ) {
+                            NavDisplay(
                             backStack = navigator.backStack,
                             entryDecorators = listOf(
                                 rememberSaveableStateHolderNavEntryDecorator(),
@@ -166,7 +183,8 @@ class MainActivity : ComponentActivity() {
                                 entry<Route.Status> { mainScreenEntry() }
                                 entry<Route.Settings> { mainScreenEntry() }
                             },
-                        )
+                            )
+                        }
                     }
 
                     when (uiMode) {
@@ -189,10 +207,12 @@ val LocalMainPagerState = staticCompositionLocalOf<MainPagerState> {
 }
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun MainScreen(
     initialPage: Int = 0,
     onPageChanged: (Int) -> Unit = {},
+    pagerGestureMode: Int = PagerInterceptionMode.Native.ordinal,
 ) {
     val navController = LocalNavigator.current
     val enableBlur = LocalEnableBlur.current
@@ -202,6 +222,15 @@ fun MainScreen(
         pageCount = { MainPagerConfig.PAGE_COUNT },
     )
     val mainPagerState = rememberMainPagerState(pagerState)
+    val interceptPagerAxis = pagerGestureMode == PagerInterceptionMode.CrossAxisInterceptor.ordinal
+    val pagerFlingBehavior = PagerDefaults.flingBehavior(
+        state = mainPagerState.pagerState,
+        snapAnimationSpec = PagerNavigationSpringSpec,
+    )
+    val nativePagerNestedScrollConnection = PagerDefaults.pageNestedScrollConnection(
+        mainPagerState.pagerState,
+        Orientation.Horizontal,
+    )
     val uiMode = LocalUiMode.current
     val surfaceColor = when (uiMode) {
         UiMode.Material -> MaterialTheme.colorScheme.surface
@@ -255,10 +284,20 @@ fun MainScreen(
                 HorizontalPager(
                     modifier = responsivePagerModifier.then(
                         if (enableFloatingBottomBarBlur) Modifier.layerBackdrop(backdrop) else Modifier
+                    ).pagerGestureOverride(
+                        pagerState = mainPagerState.pagerState,
+                        mode = pagerGestureMode,
+                        enabled = true,
                     ),
                     state = mainPagerState.pagerState,
                     beyondViewportPageCount = if (contentReady) 3 else 0,
-                    userScrollEnabled = true,
+                    userScrollEnabled = !interceptPagerAxis,
+                    pageNestedScrollConnection = if (interceptPagerAxis) {
+                        PagerGestureNestedScrollConnection
+                    } else {
+                        nativePagerNestedScrollConnection
+                    },
+                    flingBehavior = pagerFlingBehavior,
                 ) { page ->
                     val isCurrentPage = page == settledPage
                     when (page) {

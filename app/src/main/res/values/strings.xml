@@ -14,6 +14,12 @@
     <string name="settings_check_update_summary">Automatically check for updates when opening the app.</string>
     <string name="settings_enable_predictive_back">Predictive back gesture</string>
     <string name="settings_enable_predictive_back_summary">Enable predictive back gesture support.</string>
+    <string name="settings_enable_swipe_back">Horizontal swipe back</string>
+    <string name="settings_enable_swipe_back_summary">Swipe horizontally to return from a nested page.</string>
+    <string name="settings_page_gesture_mode">Page switching gesture</string>
+    <string name="settings_page_gesture_default">Default</string>
+    <string name="settings_page_gesture_cross_axis">Cross-axis interception</string>
+    <string name="settings_page_gesture_ios_like">iOS-like</string>
     <string name="download_dialog_title">Enter URL</string>
     <string name="download_dialog_msg">Full OTA image or factory image</string>
     <string name="save_log">Save logs</string>

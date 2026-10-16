@@ -20,6 +20,8 @@ data class SettingsUiState(
     val enableFloatingBottomBar: Boolean = false,
     val enableFloatingBottomBarBlur: Boolean = false,
     val pageScale: Float = 1.0f,
+    val enableSwipeBack: Boolean = false,
+    val pagerGestureMode: Int = 0,
 )
 
 @Immutable
