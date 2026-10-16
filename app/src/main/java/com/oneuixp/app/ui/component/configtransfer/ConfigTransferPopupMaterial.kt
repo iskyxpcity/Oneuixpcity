@@ -36,7 +36,7 @@ fun ConfigTransferPopupMaterial(
         onDismissRequest = { expanded = false },
     ) {
         DropdownMenuGroup(shapes = MenuDefaults.groupShapes()) {
-            SelectableDropdownMenuItem(
+            SelectableSelectableDropdownMenuItem(
                 selected = false,
                 onClick = {
                     expanded = false
@@ -45,7 +45,7 @@ fun ConfigTransferPopupMaterial(
                 text = { Text(stringResource(R.string.oneuix_backup_config)) },
                 shapes = MenuDefaults.itemShape(index = 0, count = 2),
             )
-            DropdownMenuItem(
+            SelectableDropdownMenuItem(
                 selected = false,
                 onClick = {
                     expanded = false
