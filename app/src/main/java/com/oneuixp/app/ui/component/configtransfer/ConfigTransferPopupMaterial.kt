@@ -3,7 +3,7 @@ package com.oneuixp.app.ui.component.configtransfer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Article
 import androidx.compose.material3.DropdownMenuGroup
-import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.SelectableDropdownMenuItem
 import androidx.compose.material3.DropdownMenuPopup
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -36,7 +36,7 @@ fun ConfigTransferPopupMaterial(
         onDismissRequest = { expanded = false },
     ) {
         DropdownMenuGroup(shapes = MenuDefaults.groupShapes()) {
-            DropdownMenuItem(
+            SelectableDropdownMenuItem(
                 selected = false,
                 onClick = {
                     expanded = false

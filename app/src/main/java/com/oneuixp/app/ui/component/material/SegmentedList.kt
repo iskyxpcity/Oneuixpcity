@@ -23,7 +23,7 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenuGroup
-import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.SelectableDropdownMenuItem
 import androidx.compose.material3.DropdownMenuPopup
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItemColors
@@ -345,7 +345,7 @@ fun SegmentedDropdownItem(
                 ) {
                     DropdownMenuGroup(shapes = MenuDefaults.groupShapes()) {
                         items.forEachIndexed { index, text ->
-                            DropdownMenuItem(
+                            SelectableDropdownMenuItem(
                                 text = { Text(text) },
                                 selected = index == safeIndex,
                                 onClick = {
