@@ -36,9 +36,9 @@ kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", versi
 [libraries]
 androidx-datastore = { group = "androidx.datastore", name = "datastore", version.ref = "datastore" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "core-ktx" }
-dexkit = { module = "org.luckypray", name = "dexkit", version.ref = "dexkit" }
-kotlinx-serialization-json = { module = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinx-serialization-json" }
-junit = { module = "junit", name = "junit", version.ref = "junit" }
+dexkit = { group = "org.luckypray", name = "dexkit", version.ref = "dexkit" }
+kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinx-serialization-json" }
+junit = { group = "junit", name = "junit", version.ref = "junit" }
 
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activity-compose" }
 
