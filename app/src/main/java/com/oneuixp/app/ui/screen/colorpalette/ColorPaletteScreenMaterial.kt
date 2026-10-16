@@ -60,7 +60,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.ToggleButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
@@ -90,6 +89,7 @@ import com.materialkolor.PaletteStyle
 import com.materialkolor.dynamiccolor.ColorSpec
 import com.materialkolor.rememberDynamicColorScheme
 import com.oneuixp.app.R
+import com.oneuixp.app.ui.component.material.ExpressiveToggleButton
 import com.oneuixp.app.ui.component.material.SegmentedColumn
 import com.oneuixp.app.ui.component.material.SegmentedDropdownItem
 import com.oneuixp.app.ui.component.material.SegmentedSwitchItem
@@ -204,7 +204,7 @@ fun ColorPaletteScreenMaterial(
                         horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)
                     ) {
                         rowOptions.forEachIndexed { index, (modes, label) ->
-                            ToggleButton(
+                            ExpressiveToggleButton(
                                 checked = currentColorMode in modes,
                                 onCheckedChange = {
                                     if (it) {
