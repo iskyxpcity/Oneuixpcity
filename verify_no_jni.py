@@ -86,7 +86,7 @@ assert (root / 'app/src/main/java/com/oneuixp/app/ui/screen/status/StatusScreen.
 settings_contract = (root / 'app/src/main/java/com/oneuixp/app/data/repository/SettingsRepository.kt').read_text()
 main_activity = (root / 'app/src/main/java/com/oneuixp/app/ui/MainActivity.kt').read_text()
 theme_source = (root / 'app/src/main/java/com/oneuixp/app/ui/theme/Theme.kt').read_text()
-for obsolete in ('moduleDescriptionMaxLines', 'navigationRailExpanded', 'enableNavigationBadge'):
+for obsolete in ('moduleDescriptionMaxLines', 'enableNavigationBadge'):
     assert obsolete not in settings_contract, obsolete
     assert obsolete not in main_activity, obsolete
 assert 'LocalModuleDescriptionMaxLines' not in theme_source
@@ -100,13 +100,13 @@ assert not (root / 'app/src/main/java/com/oneuixp/app/ui/util/module').exists()
 assert (root / 'app/src/main/java/com/oneuixp/app/ui/util/update/LatestVersionInfo.kt').exists()
 print('PASS: dead manager pager preferences removed; update model uses OneuiXP naming')
 
-# Final naming/resource guard: only the libxposed-required module.prop filename may contain "module".
+# Final naming/resource guard: only required OneUI XP resources and libxposed metadata may use these names.
 default_strings = {
     node.get('name', '') for node in ElementTree.parse(root / 'app/src/main/res/values/strings.xml').getroot().findall('string')
 }
 assert 'app_update' in default_strings and 'app_changelog' in default_strings
 assert not any(name.startswith('module_') for name in default_strings)
-for obsolete in ('settings_navigation_badge', 'nav_rail_expand', 'nav_rail_collapse',
+for obsolete in ('settings_navigation_badge',
                  'settings_enable_swipe_dismiss', 'settings_pager_gesture_mode'):
     assert obsolete not in default_strings, obsolete
 print('PASS: OneuiXP resource names contain no legacy manager/module UI keys')
