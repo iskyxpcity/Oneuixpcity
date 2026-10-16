@@ -1,0 +1,146 @@
+name: KernelSU upstream UI and theme watch
+
+on:
+  schedule:
+    - cron: "23 14 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  review-upstream:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout OneUI XP
+        uses: actions/checkout@v4
+
+      - name: Compare tracked KernelSU UI and theme sources
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require("fs");
+            const path = require("path");
+            const baselinePath = path.join(process.env.GITHUB_WORKSPACE, "docs/upstream/kernelsu-ui-sync-baseline.json");
+            const baseline = JSON.parse(fs.readFileSync(baselinePath, "utf8"));
+            const owner = "tiann";
+            const repo = "KernelSU";
+            const { data: upstreamCommit } = await github.rest.repos.getCommit({
+              owner,
+              repo,
+              ref: "main",
+            });
+            const { data: upstreamTree } = await github.rest.git.getTree({
+              owner,
+              repo,
+              tree_sha: upstreamCommit.commit.tree.sha,
+              recursive: "1",
+            });
+            const treeEntries = new Map(upstreamTree.tree.map(entry => [entry.path, entry.sha]));
+            const changes = [];
+
+            for (const file of baseline.files) {
+              const currentSha = treeEntries.get(file.path);
+              if (!currentSha) {
+                changes.push({ path: file.path, before: file.sha, after: "MISSING upstream" });
+              } else if (currentSha !== file.sha) {
+                changes.push({ path: file.path, before: file.sha, after: currentSha });
+              }
+            }
+
+            async function readVersionCatalog(ownerName, repoName, filePath, ref) {
+              const { data } = await github.rest.repos.getContent({
+                owner: ownerName,
+                repo: repoName,
+                path: filePath,
+                ref,
+              });
+              if (Array.isArray(data) || !data.content) throw new Error("Unable to read " + filePath);
+              return Buffer.from(data.content, data.encoding || "base64").toString("utf8");
+            }
+            function readPin(text, key) {
+              const match = text.match(new RegExp("^" + key + '\\s*=\\s*"([^"]+)"', "m"));
+              return match ? match[1] : null;
+            }
+
+            const upstreamVersionsText = await readVersionCatalog(owner, repo, "manager/gradle/libs.versions.toml", upstreamCommit.sha);
+            const localVersionsText = fs.readFileSync(path.join(process.env.GITHUB_WORKSPACE, "gradle/libs.versions.toml"), "utf8");
+            const versions = {
+              material3: {
+                baseline: baseline.versions.material3,
+                upstream: readPin(upstreamVersionsText, "material3"),
+                local: readPin(localVersionsText, "material3"),
+              },
+              miuix: {
+                baseline: baseline.versions.miuix,
+                upstream: readPin(upstreamVersionsText, "miuix"),
+                local: readPin(localVersionsText, "miuix"),
+              },
+            };
+            for (const [name, value] of Object.entries(versions)) {
+              if (value.upstream !== value.baseline || value.local !== value.upstream) {
+                changes.push({
+                  path: "dependency:" + name,
+                  before: "reviewed=" + value.baseline + ", local=" + value.local,
+                  after: "upstream=" + value.upstream,
+                });
+              }
+            }
+
+            const release = await github.rest.repos.getLatestRelease({ owner, repo }).catch(() => ({ data: null }));
+            const releaseLabel = release.data ? (release.data.tag_name + " (" + release.data.published_at + ")") : "not available";
+            const summary = [
+              "### KernelSU upstream UI/theme sync check",
+              "",
+              "- Upstream HEAD: [" + upstreamCommit.sha + "](https://github.com/tiann/KernelSU/commit/" + upstreamCommit.sha + ")",
+              "- Latest release: " + releaseLabel,
+              "- Material 3: local `" + versions.material3.local + "`, upstream `" + versions.material3.upstream + "`",
+              "- Miuix: local `" + versions.miuix.local + "`, upstream `" + versions.miuix.upstream + "`",
+              "- Tracked-source changes requiring review: " + changes.length,
+            ];
+            core.summary.addRaw(summary.join("\n")).write();
+
+            if (changes.length === 0) {
+              core.info("Tracked KernelSU UI/theme files and Material 3/Miuix pins match the reviewed baseline.");
+              return;
+            }
+
+            const title = "KernelSU upstream UI/theme sync review";
+            const body = [
+              "KernelSU upstream UI/theme files or dependency versions differ from the reviewed baseline. Review and port relevant changes manually; do not blindly replace OneUI XP custom navigation destinations or behavior.",
+              "",
+              "- Upstream HEAD: https://github.com/tiann/KernelSU/commit/" + upstreamCommit.sha,
+              "- Latest release: " + releaseLabel,
+              "- Material 3: local `" + versions.material3.local + "`, upstream `" + versions.material3.upstream + "`",
+              "- Miuix: local `" + versions.miuix.local + "`, upstream `" + versions.miuix.upstream + "`",
+              "",
+              "### Changed source baselines",
+              ...changes.map(item => "- `" + item.path + "`: `" + item.before + "` → `" + item.after + "`"),
+              "",
+              "After reviewing, adapt both Material 3 and Miuix separately, validate landscape/wide/foldable previews and expandable rails, run a signed build, and then refresh the baseline file in a reviewed commit."
+            ].join("\n");
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: "open",
+              per_page: 100,
+            });
+            const existing = issues.find(issue => !issue.pull_request && issue.title === title);
+            if (existing) {
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existing.number,
+                body,
+              });
+              core.info("Updated existing sync-review issue #" + existing.number);
+            } else {
+              const created = await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body,
+              });
+              core.warning("Created sync-review issue #" + created.data.number);
+            }
