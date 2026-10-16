@@ -1,6 +1,10 @@
 name: KernelSU upstream UI and theme watch
 
 on:
+  push:
+    paths:
+      - ".github/workflows/kernelsu-upstream-watch.yml"
+      - "docs/upstream/kernelsu-ui-sync-baseline.json"
   schedule:
     - cron: "23 14 * * 1"
   workflow_dispatch:
