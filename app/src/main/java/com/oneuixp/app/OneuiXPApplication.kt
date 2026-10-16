@@ -1,6 +1,7 @@
 package com.oneuixp.app
 
 import android.app.Application
+import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.os.Build
 import android.os.UserManager
@@ -19,13 +20,26 @@ lateinit var oneuiXPApp: OneuiXPApplication
 class OneuiXPApplication : Application(), ViewModelStoreOwner {
 
     companion object {
-        fun setEnableOnBackInvokedCallback(appInfo: ApplicationInfo, enable: Boolean) {
+        fun setEnableOnBackInvokedCallback(appInfo: ApplicationInfo, enable: Boolean): Boolean =
             runCatching {
-                val applicationInfoClass = ApplicationInfo::class.java
-                val method = applicationInfoClass.getDeclaredMethod("setEnableOnBackInvokedCallback", Boolean::class.javaPrimitiveType)
+                val method = ApplicationInfo::class.java.getDeclaredMethod(
+                    "setEnableOnBackInvokedCallback",
+                    Boolean::class.javaPrimitiveType,
+                )
                 method.isAccessible = true
                 method.invoke(appInfo, enable)
+                true
+            }.getOrDefault(false)
+
+        /** Apply the preference to both contexts used to create a recreated Activity. */
+        fun applyEnableOnBackInvokedCallback(context: Context, enable: Boolean): Boolean {
+            runCatching {
+                HiddenApiBypass.addHiddenApiExemptions("Landroid/content/pm/ApplicationInfo;")
             }
+            val contextApplied = setEnableOnBackInvokedCallback(context.applicationInfo, enable)
+            val appInfo = (context.applicationContext as? OneuiXPApplication)?.applicationInfo
+            val applicationApplied = appInfo?.let { setEnableOnBackInvokedCallback(it, enable) } ?: false
+            return contextApplied || applicationApplied
         }
     }
 
@@ -48,9 +62,7 @@ class OneuiXPApplication : Application(), ViewModelStoreOwner {
         OneuiXPreferenceBridge.ensureSynchronized(this)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            val enable = SettingsRepositoryImpl().enablePredictiveBack
-            HiddenApiBypass.addHiddenApiExemptions("Landroid/content/pm/ApplicationInfo;->setEnableOnBackInvokedCallback")
-            setEnableOnBackInvokedCallback(applicationInfo, enable)
+            applyEnableOnBackInvokedCallback(this, SettingsRepositoryImpl().enablePredictiveBack)
         }
 
         okhttpClient =

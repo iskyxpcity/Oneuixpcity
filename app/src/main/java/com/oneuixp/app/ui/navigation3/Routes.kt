@@ -1,11 +1,12 @@
 package com.oneuixp.app.ui.navigation3
 
 import android.os.Parcelable
-import androidx.navigation3.runtime.NavKey
+import top.yukonga.miuix.kmp.nav.core.NavKey
 import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
 
 /** OneuiXP main pages plus theme/About and OneUIX feature-category details. */
+@Serializable
 sealed interface Route : NavKey, Parcelable {
     @Parcelize @Serializable data object Main : Route
     @Parcelize @Serializable data object Home : Route

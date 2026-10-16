@@ -1,11 +1,11 @@
 package com.oneuixp.app.ui.screen.colorpalette
 
+import android.os.Build
 import androidx.activity.compose.LocalActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.materialkolor.PaletteStyle
 import com.materialkolor.dynamiccolor.ColorSpec
@@ -40,7 +40,7 @@ fun ColorPaletteScreen() {
         currentColorSpec = currentColorSpec,
     )
     val actions = ColorPaletteScreenActions(
-        onBack = dropUnlessResumed { navigator.pop() },
+        onBack = { if (navigator.backStackSize() > 1) navigator.pop() },
         onSetThemeMode = viewModel::setThemeMode,
         onSetMiuixMonet = viewModel::setMiuixMonet,
         onSetKeyColor = viewModel::setKeyColor,
@@ -50,11 +50,15 @@ fun ColorPaletteScreen() {
         onSetEnableBlur = viewModel::setEnableBlur,
         onSetEnableFloatingBottomBar = viewModel::setEnableFloatingBottomBar,
         onSetEnableFloatingBottomBarBlur = viewModel::setEnableFloatingBottomBarBlur,
-        onSetEnablePredictiveBack = {
-            viewModel.setEnablePredictiveBack(it)
-            OneuiXPApplication.setEnableOnBackInvokedCallback(context.applicationInfo, it)
-            activity?.recreate()
+        onSetEnablePredictiveBack = { enabled ->
+            viewModel.setEnablePredictiveBack(enabled)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                OneuiXPApplication.applyEnableOnBackInvokedCallback(context, enabled)
+                activity?.recreate()
+            }
         },
+        onSetEnableSwipeBack = viewModel::setEnableSwipeBack,
+        onSetPagerGestureMode = viewModel::setPagerGestureMode,
         onSetPageScale = viewModel::setPageScale,
     )
 

@@ -13,5 +13,8 @@ interface SettingsRepository {
     var enableBlur: Boolean
     var enableFloatingBottomBar: Boolean
     var enableFloatingBottomBarBlur: Boolean
+    var navigationRailExpanded: Boolean
     var pageScale: Float
+    var enableSwipeBack: Boolean
+    var pagerGestureMode: Int
 }

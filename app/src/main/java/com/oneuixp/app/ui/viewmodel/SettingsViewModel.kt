@@ -34,6 +34,8 @@ class SettingsViewModel(
             val enableFloatingBottomBar = repo.enableFloatingBottomBar
             val enableFloatingBottomBarBlur = repo.enableFloatingBottomBarBlur
             val pageScale = repo.pageScale
+            val enableSwipeBack = repo.enableSwipeBack
+            val pagerGestureMode = repo.pagerGestureMode
             val colorStyle = repo.colorStyle
             val colorSpec = repo.colorSpec
             val uiMode = repo.uiMode
@@ -50,6 +52,8 @@ class SettingsViewModel(
                     enableFloatingBottomBar = enableFloatingBottomBar,
                     enableFloatingBottomBarBlur = enableFloatingBottomBarBlur,
                     pageScale = pageScale,
+                    enableSwipeBack = enableSwipeBack,
+                    pagerGestureMode = pagerGestureMode,
                     colorStyle = colorStyle,
                     colorSpec = colorSpec,
                 )
@@ -139,6 +143,17 @@ class SettingsViewModel(
     fun setEnablePredictiveBack(enabled: Boolean) {
         repo.enablePredictiveBack = enabled
         _uiState.update { it.copy(enablePredictiveBack = enabled) }
+    }
+
+    fun setEnableSwipeBack(enabled: Boolean) {
+        repo.enableSwipeBack = enabled
+        _uiState.update { it.copy(enableSwipeBack = enabled) }
+    }
+
+    fun setPagerGestureMode(mode: Int) {
+        val safeMode = mode.coerceIn(0, 2)
+        repo.pagerGestureMode = safeMode
+        _uiState.update { it.copy(pagerGestureMode = safeMode) }
     }
 
     fun setEnableBlur(enabled: Boolean) {

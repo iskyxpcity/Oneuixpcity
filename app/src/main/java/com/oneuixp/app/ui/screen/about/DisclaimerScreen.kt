@@ -42,7 +42,7 @@ import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
 import top.yukonga.miuix.kmp.basic.IconButton as MiuixIconButton
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.basic.Scaffold as MiuixScaffold
-import top.yukonga.miuix.kmp.basic.SmallTopAppBar as MiuixSmallTopAppBar
+import top.yukonga.miuix.kmp.basic.TopAppBar as MiuixTopAppBar
 import top.yukonga.miuix.kmp.blur.layerBackdrop
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Back
@@ -118,8 +118,9 @@ private fun DisclaimerMiuix(onBack: () -> Unit) {
     MiuixScaffold(
         topBar = {
             BlurredBar(backdrop) {
-                MiuixSmallTopAppBar(
+                MiuixTopAppBar(
                     title = stringResource(R.string.disclaimer_title),
+                    largeTitle = stringResource(R.string.disclaimer_title),
                     scrollBehavior = scrollBehavior,
                     color = barColor,
                     titleColor = colorScheme.onSurface,

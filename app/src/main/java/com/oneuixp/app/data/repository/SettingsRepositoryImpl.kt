@@ -38,7 +38,7 @@ class SettingsRepositoryImpl : SettingsRepository {
         set(value) = prefs.edit { putString("color_style", value) }
 
     override var colorSpec: String
-        get() = prefs.getString("color_spec", ColorSpec.SpecVersion.Default.name) ?: ColorSpec.SpecVersion.Default.name
+        get() = prefs.getString("color_spec", ColorSpec.SpecVersion.SPEC_2025.name) ?: ColorSpec.SpecVersion.SPEC_2025.name
         set(value) = prefs.edit { putString("color_spec", value) }
 
     override var enablePredictiveBack: Boolean
@@ -57,9 +57,19 @@ class SettingsRepositoryImpl : SettingsRepository {
         get() = prefs.getBoolean("enable_floating_bottom_bar_blur", false)
         set(value) = prefs.edit { putBoolean("enable_floating_bottom_bar_blur", value) }
 
+    override var navigationRailExpanded: Boolean
+        get() = prefs.getBoolean("nav_rail_expanded", false)
+        set(value) = prefs.edit { putBoolean("nav_rail_expanded", value) }
+
     override var pageScale: Float
         get() = prefs.getFloat("page_scale", 1.0f)
         set(value) = prefs.edit { putFloat("page_scale", value) }
 
+    override var enableSwipeBack: Boolean
+        get() = prefs.getBoolean("enable_swipe_back", false)
+        set(value) = prefs.edit { putBoolean("enable_swipe_back", value) }
 
+    override var pagerGestureMode: Int
+        get() = prefs.getInt("pager_gesture_mode", 0).coerceIn(0, 2)
+        set(value) = prefs.edit { putInt("pager_gesture_mode", value.coerceIn(0, 2)) }
 }

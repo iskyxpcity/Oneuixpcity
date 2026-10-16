@@ -1,0 +1,51 @@
+{
+  "upstream": "tiann/KernelSU",
+  "reviewedCommit": "9f5966b4d534869fd72a79b3c6ea602e5eae3022",
+  "reviewedAt": "2026-10-16",
+  "versions": {
+    "material3": "1.5.0-alpha28",
+    "miuix": "0.9.4"
+  },
+  "files": [
+    {
+      "path": "manager/gradle/libs.versions.toml",
+      "sha": "259591e4a36b017d24d4c0dca8fd462eb62be8b5"
+    },
+    {
+      "path": "manager/app/src/main/java/me/weishu/kernelsu/ui/component/bottombar/BottomBar.kt",
+      "sha": "c0997d59a6e4c0eae2dc262e807e81926d6cd652"
+    },
+    {
+      "path": "manager/app/src/main/java/me/weishu/kernelsu/ui/component/bottombar/BottomBarMaterial.kt",
+      "sha": "7e3690d1fb2f57c5b5ec83c4c5e4735c480a5be1"
+    },
+    {
+      "path": "manager/app/src/main/java/me/weishu/kernelsu/ui/component/bottombar/BottomBarMiuix.kt",
+      "sha": "2a5ad70c474ea04eaa7b94c2d067ef25f5905112"
+    },
+    {
+      "path": "manager/app/src/main/java/me/weishu/kernelsu/ui/component/bottombar/NavigationRailMaterial.kt",
+      "sha": "8561f7b9d214441e2daee5108d9994bd0b900c51"
+    },
+    {
+      "path": "manager/app/src/main/java/me/weishu/kernelsu/ui/component/bottombar/NavigationRailMiuix.kt",
+      "sha": "b64858d19b46d516b84037c23e3f2c307a63dfcb"
+    },
+    {
+      "path": "manager/app/src/main/java/me/weishu/kernelsu/ui/screen/colorpalette/ColorPaletteScreenMaterial.kt",
+      "sha": "35f89584e7e24ab5e94b179a83f60decd37efc1b"
+    },
+    {
+      "path": "manager/app/src/main/java/me/weishu/kernelsu/ui/screen/colorpalette/ColorPaletteScreenMiuix.kt",
+      "sha": "7d15806cba3e89c350123cd92563deec91cfabc2"
+    },
+    {
+      "path": "manager/app/src/main/java/me/weishu/kernelsu/ui/theme/Theme.kt",
+      "sha": "48409a56f3f94297363baababa09bae59db578c1"
+    },
+    {
+      "path": "manager/app/src/main/java/me/weishu/kernelsu/ui/theme/Type.kt",
+      "sha": "c20e735ac4f1d155cf9a1718d884b728e66c6245"
+    }
+  ]
+}
