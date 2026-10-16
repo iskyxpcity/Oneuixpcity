@@ -84,6 +84,7 @@ import com.oneuixp.app.ui.theme.OneuiXPTheme
 import com.oneuixp.app.ui.util.rememberBlurBackdrop
 import com.oneuixp.app.ui.util.rememberContentReady
 import com.oneuixp.app.ui.util.swipeBackToPop
+import com.oneuixp.app.ui.util.swipeToChangeMainPage
 import com.oneuixp.app.ui.viewmodel.MainActivityViewModel
 import com.oneuixp.app.ui.viewmodel.MainPagerConfig
 import top.yukonga.miuix.kmp.basic.Scaffold
@@ -153,14 +154,25 @@ class MainActivity : ComponentActivity() {
                         )
                     }
 
+                    val nestedBackEventState = rememberNavigationEventState(NavigationEventInfo.None)
                     val navDisplay = @Composable {
                         Box(
-                            modifier = Modifier.fillMaxSize().swipeBackToPop(
-                                enabled = uiState.enableSwipeBack && navigator.backStackSize() > 1,
-                                onBack = {
-                                    if (navigator.backStackSize() > 1) navigator.pop()
-                                },
-                            ),
+                            modifier = Modifier.fillMaxSize()
+                                .swipeBackToPop(
+                                    enabled = uiState.enableSwipeBack && navigator.backStackSize() > 1,
+                                    onBack = {
+                                        if (navigator.backStackSize() > 1) navigator.pop()
+                                    },
+                                )
+                                .swipeToChangeMainPage(
+                                    enabled = navigator.backStackSize() > 1,
+                                    currentPage = selectedMainPage,
+                                    pageCount = MainPagerConfig.PAGE_COUNT,
+                                    onPageChange = { page ->
+                                        viewModel.setSelectedMainPage(page)
+                                        navigator.popUntil { it == Route.Main }
+                                    },
+                                ),
                         ) {
                             // Navigation3 uses predictive callbacks when enabled. If the user
                             // turns predictive back off, retain ordinary back-stack navigation
@@ -170,6 +182,15 @@ class MainActivity : ComponentActivity() {
                             ) {
                                 navigator.pop()
                             }
+                            // Keep predictive back attached to the Activity-level navigator,
+                            // not only to MainScreen. It must pop any nested route depth.
+                            NavigationBackHandler(
+                                state = nestedBackEventState,
+                                isBackEnabled = uiState.enablePredictiveBack && navigator.backStackSize() > 1,
+                                onBackCompleted = {
+                                    if (navigator.backStackSize() > 1) navigator.pop()
+                                },
+                            )
                             NavDisplay(
                             backStack = navigator.backStack,
                             entryDecorators = listOf(
