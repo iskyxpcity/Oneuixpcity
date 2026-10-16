@@ -111,7 +111,6 @@ fun Modifier.swipeBackToPop(
         }
     }
 }
-}
 
 /**
  * Allows the four primary pages to remain gesture-reachable while a nested destination
