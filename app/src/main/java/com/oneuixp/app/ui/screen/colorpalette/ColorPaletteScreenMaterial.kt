@@ -184,6 +184,7 @@ fun ColorPaletteScreenMaterial(
                         color = Color(color),
                         isSelected = currentKeyColor == color,
                         isDark = isDark,
+                        isAmoled = isAmoled,
                         paletteStyle = colorStyle,
                         colorSpec = colorSpec,
                         onClick = {
