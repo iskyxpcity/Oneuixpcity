@@ -13,8 +13,11 @@ import androidx.compose.ui.unit.dp
 import kotlin.math.abs
 
 /**
- * Adds a horizontal swipe-to-return gesture to a nested navigation destination.
- * Vertical scrolling and swipes in the forward direction are left to page content.
+ * Adds a swipe-to-return gesture to a nested navigation destination.
+ *
+ * The gesture starts in an inner edge strip so Android's system gesture can keep its own
+ * outermost edge. Pointer handling runs in Main pass and yields whenever a child scrollable
+ * has already consumed the gesture; this protects horizontal color/preview lists.
  */
 @Composable
 fun Modifier.swipeBackToPop(
@@ -24,9 +27,17 @@ fun Modifier.swipeBackToPop(
     val layoutDirection = LocalLayoutDirection.current
     val density = LocalDensity.current
     val commitDistancePx = with(density) { 112.dp.toPx() }
-    val backEdgeWidthPx = with(density) { 32.dp.toPx() }
+    val innerEdgeStartPx = with(density) { 28.dp.toPx() }
+    val innerEdgeEndPx = with(density) { 84.dp.toPx() }
 
-    return pointerInput(enabled, onBack, layoutDirection, commitDistancePx, backEdgeWidthPx) {
+    return pointerInput(
+        enabled,
+        onBack,
+        layoutDirection,
+        commitDistancePx,
+        innerEdgeStartPx,
+        innerEdgeEndPx,
+    ) {
         if (!enabled) return@pointerInput
 
         awaitEachGesture {
@@ -35,12 +46,10 @@ fun Modifier.swipeBackToPop(
                 pass = PointerEventPass.Initial,
             )
             val startsAtBackEdge = if (layoutDirection == LayoutDirection.Ltr) {
-                down.position.x <= backEdgeWidthPx
+                down.position.x in innerEdgeStartPx..innerEdgeEndPx
             } else {
-                down.position.x >= size.width - backEdgeWidthPx
+                down.position.x in (size.width - innerEdgeEndPx)..(size.width - innerEdgeStartPx)
             }
-            // Only an edge-originated swipe may pop a page. Horizontal controls
-            // such as the theme palette row must keep working elsewhere on screen.
             if (!startsAtBackEdge) return@awaitEachGesture
 
             var previous = down.position
@@ -50,15 +59,26 @@ fun Modifier.swipeBackToPop(
             var rejected = false
 
             while (!rejected) {
-                val event = awaitPointerEvent(PointerEventPass.Initial)
+                val event = awaitPointerEvent(PointerEventPass.Main)
                 val change = event.changes.firstOrNull { it.id == down.id } ?: break
+
+                // Child scrollables run before this parent in Main pass. Yield to them instead
+                // of turning a horizontal child scroll into a page-pop gesture.
+                if (change.isConsumed && !horizontalBackDrag) {
+                    rejected = true
+                    continue
+                }
+
                 val delta = change.position - previous
                 totalX += delta.x
                 totalY += delta.y
                 previous = change.position
 
                 if (!change.pressed) {
-                    if (horizontalBackDrag && abs(totalX) >= maxOf(commitDistancePx, size.width * 0.22f)) {
+                    if (
+                        horizontalBackDrag &&
+                        abs(totalX) >= maxOf(commitDistancePx, size.width * 0.22f)
+                    ) {
                         onBack()
                     }
                     break

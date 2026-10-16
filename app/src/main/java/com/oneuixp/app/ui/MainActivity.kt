@@ -3,6 +3,7 @@ package com.oneuixp.app.ui
 import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -148,6 +149,7 @@ class MainActivity : ComponentActivity() {
                             initialPage = selectedMainPage,
                             onPageChanged = viewModel::setSelectedMainPage,
                             pagerGestureMode = uiState.pagerGestureMode,
+                            enablePredictiveBack = uiState.enablePredictiveBack,
                         )
                     }
 
@@ -160,6 +162,14 @@ class MainActivity : ComponentActivity() {
                                 },
                             ),
                         ) {
+                            // Navigation3 uses predictive callbacks when enabled. If the user
+                            // turns predictive back off, retain ordinary back-stack navigation
+                            // through the compatible OnBackPressed path.
+                            BackHandler(
+                                enabled = !uiState.enablePredictiveBack && navigator.backStackSize() > 1,
+                            ) {
+                                navigator.pop()
+                            }
                             NavDisplay(
                             backStack = navigator.backStack,
                             entryDecorators = listOf(
@@ -213,6 +223,7 @@ fun MainScreen(
     initialPage: Int = 0,
     onPageChanged: (Int) -> Unit = {},
     pagerGestureMode: Int = PagerInterceptionMode.Native.ordinal,
+    enablePredictiveBack: Boolean = false,
 ) {
     val navController = LocalNavigator.current
     val enableBlur = LocalEnableBlur.current
@@ -253,7 +264,7 @@ fun MainScreen(
         mainPagerState.syncPage()
     }
 
-    MainScreenBackHandler(mainPagerState, navController)
+    MainScreenBackHandler(mainPagerState, navController, enablePredictiveBack)
 
     CompositionLocalProvider(LocalMainPagerState provides mainPagerState) {
         val contentReady = rememberContentReady()
@@ -387,6 +398,7 @@ fun MainScreen(
 private fun MainScreenBackHandler(
     mainState: MainPagerState,
     navController: Navigator,
+    enablePredictiveBack: Boolean,
 ) {
     val isPagerBackHandlerEnabled by remember {
         derivedStateOf {
@@ -398,9 +410,15 @@ private fun MainScreenBackHandler(
 
     val navEventState = rememberNavigationEventState(NavigationEventInfo.None)
 
+    BackHandler(
+        enabled = !enablePredictiveBack && isPagerBackHandlerEnabled,
+    ) {
+        mainState.animateToPage(0)
+    }
+
     NavigationBackHandler(
         state = navEventState,
-        isBackEnabled = isPagerBackHandlerEnabled,
+        isBackEnabled = enablePredictiveBack && isPagerBackHandlerEnabled,
         onBackCompleted = {
             mainState.animateToPage(0)
         },

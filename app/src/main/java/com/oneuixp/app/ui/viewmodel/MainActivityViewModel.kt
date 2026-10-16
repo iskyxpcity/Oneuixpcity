@@ -46,7 +46,8 @@ class MainActivityViewModel(
         return MainActivityUiState(
             appSettings = ThemeController.getAppSettings(),
             pageScale = settingRepo.pageScale,
-          enableSwipeBack = settingRepo.enableSwipeBack,
+            enablePredictiveBack = settingRepo.enablePredictiveBack,
+            enableSwipeBack = settingRepo.enableSwipeBack,
           pagerGestureMode = settingRepo.pagerGestureMode,
             enableBlur = settingRepo.enableBlur,
             enableFloatingBottomBar = settingRepo.enableFloatingBottomBar,
@@ -62,6 +63,7 @@ class MainActivityViewModel(
             "color_style",
             "color_spec",
             "page_scale",
+            "enable_predictive_back",
             "enable_swipe_back",
             "pager_gesture_mode",
             "enable_blur",

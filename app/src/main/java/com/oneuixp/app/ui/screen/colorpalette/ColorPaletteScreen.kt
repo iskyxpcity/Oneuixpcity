@@ -1,5 +1,6 @@
 package com.oneuixp.app.ui.screen.colorpalette
 
+import android.os.Build
 import androidx.activity.compose.LocalActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -49,10 +50,12 @@ fun ColorPaletteScreen() {
         onSetEnableBlur = viewModel::setEnableBlur,
         onSetEnableFloatingBottomBar = viewModel::setEnableFloatingBottomBar,
         onSetEnableFloatingBottomBarBlur = viewModel::setEnableFloatingBottomBarBlur,
-        onSetEnablePredictiveBack = {
-            viewModel.setEnablePredictiveBack(it)
-            OneuiXPApplication.setEnableOnBackInvokedCallback(context.applicationInfo, it)
-            activity?.recreate()
+        onSetEnablePredictiveBack = { enabled ->
+            viewModel.setEnablePredictiveBack(enabled)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                OneuiXPApplication.applyEnableOnBackInvokedCallback(context, enabled)
+                activity?.recreate()
+            }
         },
         onSetEnableSwipeBack = viewModel::setEnableSwipeBack,
         onSetPagerGestureMode = viewModel::setPagerGestureMode,

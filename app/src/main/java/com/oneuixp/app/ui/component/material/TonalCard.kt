@@ -8,6 +8,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.contentColorFor
+import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -20,7 +21,7 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun TonalCard(
     modifier: Modifier = Modifier,
-    containerColor: Color = MaterialTheme.colorScheme.surfaceBright,
+    containerColor: Color = MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp),
     shape: Shape = MaterialTheme.shapes.large,
     enabled: Boolean = true,
     onClick: () -> Unit,
@@ -44,7 +45,7 @@ fun TonalCard(
 @Composable
 fun TonalCard(
     modifier: Modifier = Modifier,
-    containerColor: Color = MaterialTheme.colorScheme.surfaceBright,
+    containerColor: Color = MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp),
     shape: Shape = MaterialTheme.shapes.large,
     content: @Composable () -> Unit,
 ) {
