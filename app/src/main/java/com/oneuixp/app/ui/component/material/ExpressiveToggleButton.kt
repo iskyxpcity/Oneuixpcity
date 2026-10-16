@@ -41,7 +41,7 @@ fun expressiveToggleButtonColors(
     checkedContentColor: Color = MaterialTheme.colorScheme.onPrimary,
     containerColor: Color = MaterialTheme.colorScheme.surfaceContainerHighest,
     contentColor: Color = MaterialTheme.colorScheme.onSurface,
-): ToggleButtonColors = ToggleButtonDefaults.toggleButtonColors(
+): ToggleButtonColors = ToggleButtonDefaults.colors(
     checkedContainerColor = checkedContainerColor,
     checkedContentColor = checkedContentColor,
     containerColor = containerColor,
