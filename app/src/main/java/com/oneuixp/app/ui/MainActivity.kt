@@ -39,15 +39,13 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
-import androidx.navigation3.runtime.entryProvider
-import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
-import androidx.navigation3.ui.NavDisplay
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
@@ -83,14 +81,16 @@ import com.oneuixp.app.ui.theme.LocalEnableFloatingBottomBarBlur
 import com.oneuixp.app.ui.theme.OneuiXPTheme
 import com.oneuixp.app.ui.util.rememberBlurBackdrop
 import com.oneuixp.app.ui.util.rememberContentReady
-import com.oneuixp.app.ui.util.swipeBackToPop
-import com.oneuixp.app.ui.util.swipeToChangeMainPage
 import com.oneuixp.app.ui.viewmodel.MainActivityViewModel
 import com.oneuixp.app.ui.viewmodel.MainPagerConfig
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.blur.layerBackdrop
 import top.yukonga.miuix.kmp.blur.rememberLayerBackdrop
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.nav.core.NavDisplay
+import top.yukonga.miuix.kmp.nav.core.NavDisplayEffects
+import top.yukonga.miuix.kmp.nav.core.rememberNavSystemCornerRadius
+import top.yukonga.miuix.kmp.nav.transition.NavSwipeDirection
 import top.yukonga.miuix.kmp.utils.PagerGestureNestedScrollConnection
 import top.yukonga.miuix.kmp.utils.PagerInterceptionMode
 import top.yukonga.miuix.kmp.utils.PagerNavigationSpringSpec
@@ -154,67 +154,44 @@ class MainActivity : ComponentActivity() {
                         )
                     }
 
-                    val nestedBackEventState = rememberNavigationEventState(NavigationEventInfo.None)
+                    // Match KernelSU v3.3.1 navigation behavior while retaining
+                    // OneuiXP routes, its two visual themes, and its own page content.
+                    val swipeDismiss = if (uiState.enableSwipeBack) {
+                        if (LocalLayoutDirection.current == LayoutDirection.Rtl) {
+                            NavSwipeDirection.RightToLeft
+                        } else {
+                            NavSwipeDirection.LeftToRight
+                        }
+                    } else {
+                        NavSwipeDirection.None
+                    }
+
                     val navDisplay = @Composable {
-                        Box(
-                            modifier = Modifier.fillMaxSize()
-                                .swipeBackToPop(
-                                    enabled = uiState.enableSwipeBack && navigator.backStackSize() > 1,
-                                    onBack = {
-                                        if (navigator.backStackSize() > 1) navigator.pop()
-                                    },
-                                )
-                                .swipeToChangeMainPage(
-                                    enabled = navigator.backStackSize() > 1,
-                                    currentPage = selectedMainPage,
-                                    pageCount = MainPagerConfig.PAGE_COUNT,
-                                    onPageChange = { page ->
-                                        viewModel.setSelectedMainPage(page)
-                                        navigator.popUntil { it == Route.Main }
-                                    },
-                                ),
-                        ) {
-                            // Navigation3 uses predictive callbacks when enabled. If the user
-                            // turns predictive back off, retain ordinary back-stack navigation
-                            // through the compatible OnBackPressed path.
-                            BackHandler(
-                                enabled = !uiState.enablePredictiveBack && navigator.backStackSize() > 1,
-                            ) {
-                                navigator.pop()
-                            }
-                            // Keep predictive back attached to the Activity-level navigator,
-                            // not only to MainScreen. It must pop any nested route depth.
-                            NavigationBackHandler(
-                                state = nestedBackEventState,
-                                isBackEnabled = uiState.enablePredictiveBack && navigator.backStackSize() > 1,
-                                onBackCompleted = {
-                                    if (navigator.backStackSize() > 1) navigator.pop()
-                                },
-                            )
-                            NavDisplay(
+                        NavDisplay(
                             backStack = navigator.backStack,
-                            entryDecorators = listOf(
-                                rememberSaveableStateHolderNavEntryDecorator(),
-                                rememberViewModelStoreNavEntryDecorator(),
+                            effects = NavDisplayEffects(
+                                cornerClipRadius = rememberNavSystemCornerRadius(),
                             ),
                             onBack = { navigator.pop() },
-                            entryProvider = entryProvider {
-                                entry<Route.Main> { mainScreenEntry() }
-                                entry<Route.About> { AboutScreen() }
-                                entry<Route.Disclaimer> { DisclaimerScreen() }
-                                entry<Route.FeatureIntroduction> { FeatureIntroductionScreen() }
-                                entry<Route.VersionChangelog> { VersionChangelogScreen() }
-                                entry<Route.VersionChangelog261013> { VersionChangelog261013Screen() }
-                                entry<Route.VersionChangelog261016> { VersionChangelog261016Screen() }
-                                entry<Route.ColorPalette> { ColorPaletteScreen() }
-                                entry<Route.OneuiXCategory> { key -> OneuiXCategoryScreen(key.category) }
-                                entry<Route.StatusCategory> { key -> StatusCategoryScreen(key.category) }
-                                entry<Route.Home> { mainScreenEntry() }
-                                entry<Route.Tools> { mainScreenEntry() }
-                                entry<Route.Status> { mainScreenEntry() }
-                                entry<Route.Settings> { mainScreenEntry() }
-                            },
-                            )
+                        ) {
+                            entry<Route.Main>(swipeDismiss = swipeDismiss) { mainScreenEntry() }
+                            entry<Route.About>(swipeDismiss = swipeDismiss) { AboutScreen() }
+                            entry<Route.Disclaimer>(swipeDismiss = swipeDismiss) { DisclaimerScreen() }
+                            entry<Route.FeatureIntroduction>(swipeDismiss = swipeDismiss) { FeatureIntroductionScreen() }
+                            entry<Route.VersionChangelog>(swipeDismiss = swipeDismiss) { VersionChangelogScreen() }
+                            entry<Route.VersionChangelog261013>(swipeDismiss = swipeDismiss) { VersionChangelog261013Screen() }
+                            entry<Route.VersionChangelog261016>(swipeDismiss = swipeDismiss) { VersionChangelog261016Screen() }
+                            entry<Route.ColorPalette>(swipeDismiss = swipeDismiss) { ColorPaletteScreen() }
+                            entry<Route.OneuiXCategory>(swipeDismiss = swipeDismiss) { key ->
+                                OneuiXCategoryScreen(key.category)
+                            }
+                            entry<Route.StatusCategory>(swipeDismiss = swipeDismiss) { key ->
+                                StatusCategoryScreen(key.category)
+                            }
+                            entry<Route.Home>(swipeDismiss = swipeDismiss) { mainScreenEntry() }
+                            entry<Route.Tools>(swipeDismiss = swipeDismiss) { mainScreenEntry() }
+                            entry<Route.Status>(swipeDismiss = swipeDismiss) { mainScreenEntry() }
+                            entry<Route.Settings>(swipeDismiss = swipeDismiss) { mainScreenEntry() }
                         }
                     }
 
