@@ -54,6 +54,8 @@ import androidx.compose.material.icons.rounded.AspectRatio
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.DesignServices
 import androidx.compose.material.icons.rounded.Style
+import androidx.compose.material.icons.rounded.Swipe
+import androidx.compose.material.icons.rounded.ViewCarousel
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -275,35 +277,6 @@ fun ColorPaletteScreenMaterial(
                     )
                 )
 
-                SegmentedColumn(
-                    modifier = Modifier.padding(top = 4.dp),
-                    content = listOf(
-                        {
-                            SegmentedSwitchItem(
-                                icon = Icons.AutoMirrored.Rounded.MenuOpen,
-                                title = stringResource(R.string.settings_enable_swipe_back),
-                                summary = stringResource(R.string.settings_enable_swipe_back_summary),
-                                checked = uiState.enableSwipeBack,
-                                onCheckedChange = actions.onSetEnableSwipeBack,
-                            )
-                        },
-                        {
-                            val pagerGestureOptions = listOf(
-                                stringResource(R.string.settings_page_gesture_default),
-                                stringResource(R.string.settings_page_gesture_cross_axis),
-                                stringResource(R.string.settings_page_gesture_ios_like),
-                            )
-                            SegmentedDropdownItem(
-                                icon = Icons.Rounded.AspectRatio,
-                                title = stringResource(R.string.settings_page_gesture_mode),
-                                items = pagerGestureOptions,
-                                selectedIndex = uiState.pagerGestureMode.coerceIn(0, pagerGestureOptions.lastIndex),
-                                onItemSelected = actions.onSetPagerGestureMode,
-                            )
-                        },
-                    ),
-                )
-
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
                     SegmentedColumn(
                         modifier = Modifier.padding(top = 4.dp),
@@ -320,6 +293,35 @@ fun ColorPaletteScreenMaterial(
                         )
                     )
                 }
+
+                SegmentedColumn(
+                    modifier = Modifier.padding(top = 4.dp),
+                    content = listOf(
+                        {
+                            SegmentedSwitchItem(
+                                icon = Icons.Rounded.Swipe,
+                                title = stringResource(R.string.settings_enable_swipe_back),
+                                summary = stringResource(R.string.settings_enable_swipe_back_summary),
+                                checked = uiState.enableSwipeBack,
+                                onCheckedChange = actions.onSetEnableSwipeBack,
+                            )
+                        },
+                        {
+                            val pagerGestureOptions = listOf(
+                                stringResource(R.string.settings_page_gesture_default),
+                                stringResource(R.string.settings_page_gesture_cross_axis),
+                                stringResource(R.string.settings_page_gesture_ios_like),
+                            )
+                            SegmentedDropdownItem(
+                                icon = Icons.Rounded.ViewCarousel,
+                                title = stringResource(R.string.settings_page_gesture_mode),
+                                items = pagerGestureOptions,
+                                selectedIndex = uiState.pagerGestureMode.coerceIn(0, pagerGestureOptions.lastIndex),
+                                onItemSelected = actions.onSetPagerGestureMode,
+                            )
+                        },
+                    ),
+                )
 
                 TonalCard(modifier = Modifier.padding(top = 4.dp)) {
                     var sliderValue by remember(uiState.pageScale) { mutableFloatStateOf(uiState.pageScale) }

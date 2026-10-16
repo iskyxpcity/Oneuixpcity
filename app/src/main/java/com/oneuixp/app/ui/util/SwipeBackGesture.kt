@@ -24,8 +24,9 @@ fun Modifier.swipeBackToPop(
     val layoutDirection = LocalLayoutDirection.current
     val density = LocalDensity.current
     val commitDistancePx = with(density) { 112.dp.toPx() }
+    val backEdgeWidthPx = with(density) { 32.dp.toPx() }
 
-    return pointerInput(enabled, onBack, layoutDirection, commitDistancePx) {
+    return pointerInput(enabled, onBack, layoutDirection, commitDistancePx, backEdgeWidthPx) {
         if (!enabled) return@pointerInput
 
         awaitEachGesture {
@@ -33,6 +34,15 @@ fun Modifier.swipeBackToPop(
                 requireUnconsumed = false,
                 pass = PointerEventPass.Initial,
             )
+            val startsAtBackEdge = if (layoutDirection == LayoutDirection.Ltr) {
+                down.position.x <= backEdgeWidthPx
+            } else {
+                down.position.x >= size.width - backEdgeWidthPx
+            }
+            // Only an edge-originated swipe may pop a page. Horizontal controls
+            // such as the theme palette row must keep working elsewhere on screen.
+            if (!startsAtBackEdge) return@awaitEachGesture
+
             var previous = down.position
             var totalX = 0f
             var totalY = 0f

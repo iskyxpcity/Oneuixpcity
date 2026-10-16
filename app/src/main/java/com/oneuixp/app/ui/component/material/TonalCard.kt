@@ -1,6 +1,5 @@
 package com.oneuixp.app.ui.component.material
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.combinedClickable
@@ -36,7 +35,6 @@ fun TonalCard(
             contentColor = contentColorFor(containerColor),
         ),
         shape = shape,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
     ) {
         content()
     }
@@ -57,7 +55,6 @@ fun TonalCard(
             contentColor = contentColorFor(containerColor),
         ),
         shape = shape,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
     ) {
         content()
     }

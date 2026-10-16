@@ -41,6 +41,8 @@ import androidx.compose.material.icons.rounded.DesignServices
 import androidx.compose.material.icons.rounded.Style
 import androidx.compose.material.icons.rounded.Wallpaper
 import androidx.compose.material.icons.rounded.WaterDrop
+import androidx.compose.material.icons.rounded.Swipe
+import androidx.compose.material.icons.rounded.ViewCarousel
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -366,7 +368,7 @@ fun ColorPaletteScreenMiuix(
                             summary = stringResource(R.string.settings_enable_swipe_back_summary),
                             startAction = {
                                 Icon(
-                                    Icons.AutoMirrored.Rounded.MenuOpen,
+                                    Icons.Rounded.Swipe,
                                     modifier = Modifier.padding(end = 6.dp),
                                     contentDescription = stringResource(R.string.settings_enable_swipe_back),
                                     tint = colorScheme.onBackground
@@ -385,7 +387,7 @@ fun ColorPaletteScreenMiuix(
                             title = stringResource(R.string.settings_page_gesture_mode),
                             startAction = {
                                 Icon(
-                                    Icons.Rounded.AspectRatio,
+                                    Icons.Rounded.ViewCarousel,
                                     modifier = Modifier.padding(end = 6.dp),
                                     contentDescription = stringResource(R.string.settings_page_gesture_mode),
                                     tint = colorScheme.onBackground

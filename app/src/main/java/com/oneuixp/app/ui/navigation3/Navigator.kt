@@ -59,7 +59,10 @@ class Navigator(
      * Pop the top key if present.
      */
     fun pop() {
-        backStack.removeLastOrNull()
+        // Keep the root route alive; a back action must never leave NavDisplay empty.
+        if (backStack.size > 1) {
+            backStack.removeAt(backStack.lastIndex)
+        }
     }
 
     /**
