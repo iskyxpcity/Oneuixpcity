@@ -15,6 +15,7 @@ import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
 import com.oneuixp.app.ui.LocalUiMode
 import com.oneuixp.app.ui.UiMode
+import com.oneuixp.app.ui.theme.LocalEnableFloatingBottomBar
 import com.oneuixp.app.ui.util.shouldShowSplitPane
 import top.yukonga.miuix.kmp.blur.Backdrop
 import top.yukonga.miuix.kmp.blur.LayerBackdrop
@@ -97,6 +98,8 @@ fun BottomBar(
  * when that preference is enabled, including unfolded and landscape layouts.
  */
 @Composable
-fun useNavigationRail(enableFloatingBottomBar: Boolean): Boolean =
+fun useNavigationRail(
+    enableFloatingBottomBar: Boolean = LocalEnableFloatingBottomBar.current,
+): Boolean =
     shouldShowSplitPane() &&
         !(LocalUiMode.current == UiMode.Miuix && enableFloatingBottomBar)
