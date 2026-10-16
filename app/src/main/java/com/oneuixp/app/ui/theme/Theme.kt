@@ -53,9 +53,9 @@ data class AppSettings(
 
 val PaletteStyle.supportsSpec2025: Boolean
     get() = this == PaletteStyle.TonalSpot ||
-            this == PaletteStyle.Neutral ||
-            this == PaletteStyle.Vibrant ||
-            this == PaletteStyle.Expressive
+        this == PaletteStyle.Neutral ||
+        this == PaletteStyle.Vibrant ||
+        this == PaletteStyle.Expressive
 
 fun ColorSpec.SpecVersion.effectiveFor(style: PaletteStyle): ColorSpec.SpecVersion =
     if (this == ColorSpec.SpecVersion.SPEC_2025 && !style.supportsSpec2025) {
@@ -93,7 +93,7 @@ object ThemeController {
         val colorSpec = try {
             ColorSpec.SpecVersion.valueOf(colorSpecStr)
         } catch (_: Exception) {
-            ColorSpec.SpecVersion.Default
+            ColorSpec.SpecVersion.SPEC_2025
         }
 
         return AppSettings(colorMode, keyColor, paletteStyle, colorSpec)
@@ -106,7 +106,6 @@ fun OneuiXPTheme(
     uiMode: UiMode = LocalUiMode.current,
     content: @Composable () -> Unit
 ) {
-
     when (uiMode) {
         UiMode.Miuix -> MiuixOneuiXPTheme(
             appSettings = appSettings,
