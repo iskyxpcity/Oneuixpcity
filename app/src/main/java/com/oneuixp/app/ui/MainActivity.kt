@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.union
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.MaterialTheme
@@ -36,6 +37,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
@@ -229,7 +231,12 @@ fun MainScreen(
 
         // Re-read the actual window bounds so fold/unfold and freeform resizing adapt
         // without depending on a device model or requiring an Activity restart.
-        val useNavigationRail = shouldShowSplitPane()
+        val useWideLayout = shouldShowSplitPane()
+        // Keep the Miuix floating bottom bar when that option is enabled; its own
+        // selected pill is part of the Miuix style. Material uses the side rail in wide mode.
+        val enableFloatingBottomBar = LocalEnableFloatingBottomBar.current
+        val useNavigationRail = useWideLayout &&
+            !(uiMode == UiMode.Miuix && enableFloatingBottomBar)
 
         val pagerContent = @Composable { bottomInnerPadding: Dp ->
             Box(
@@ -239,12 +246,18 @@ fun MainScreen(
                     Modifier.fillMaxSize()
                 }),
             ) {
+                val responsivePagerModifier = if (useWideLayout) {
+                    Modifier
+                        .widthIn(max = 1280.dp)
+                        .fillMaxSize()
+                        .align(Alignment.Center)
+                } else {
+                    Modifier.fillMaxSize()
+                }
                 HorizontalPager(
-                    modifier = (if (enableFloatingBottomBarBlur) {
-                        Modifier.fillMaxSize().layerBackdrop(backdrop)
-                    } else {
-                        Modifier.fillMaxSize()
-                    }),
+                    modifier = responsivePagerModifier.then(
+                        if (enableFloatingBottomBarBlur) Modifier.layerBackdrop(backdrop) else Modifier
+                    ),
                     state = mainPagerState.pagerState,
                     beyondViewportPageCount = if (contentReady) 3 else 0,
                     userScrollEnabled = true,
