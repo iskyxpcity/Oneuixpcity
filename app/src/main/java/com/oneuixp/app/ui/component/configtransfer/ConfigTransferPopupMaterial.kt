@@ -36,7 +36,7 @@ fun ConfigTransferPopupMaterial(
         onDismissRequest = { expanded = false },
     ) {
         DropdownMenuGroup(shapes = MenuDefaults.groupShapes()) {
-            SelectableSelectableDropdownMenuItem(
+            SelectableDropdownMenuItem(
                 selected = false,
                 onClick = {
                     expanded = false
