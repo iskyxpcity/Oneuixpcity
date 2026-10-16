@@ -18,6 +18,7 @@ import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
 import com.oneuixp.app.ui.LocalUiMode
 import com.oneuixp.app.ui.UiMode
+import com.oneuixp.app.ui.util.shouldShowSplitPane
 import top.yukonga.miuix.kmp.blur.Backdrop
 import top.yukonga.miuix.kmp.blur.LayerBackdrop
 import kotlin.math.abs
@@ -95,3 +96,11 @@ fun BottomBar(
         UiMode.Material -> BottomBarMaterial()
     }
 }
+
+
+/**
+ * Wide/landscape windows prioritize a collapsible side rail in both themes.
+ * Floating bottom-bar preference remains effective on compact windows.
+ */
+@Composable
+fun useNavigationRail(): Boolean = shouldShowSplitPane()

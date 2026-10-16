@@ -166,4 +166,6 @@
     <string name="changelog_section_diagnostics_title">设置与运行诊断</string>
     <string name="changelog_section_diagnostics_body">应用各主要页面按功能分类组织设置。遇到模块运行或状态栏显示问题时，可通过「设置 → 发送日志」导出运行诊断信息，便于排查。</string>
 
+    <string name="nav_rail_expand">展开导航栏</string>
+    <string name="nav_rail_collapse">收起导航栏</string>
 </resources>

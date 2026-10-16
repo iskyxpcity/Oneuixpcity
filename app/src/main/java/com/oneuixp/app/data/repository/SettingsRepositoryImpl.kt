@@ -57,6 +57,10 @@ class SettingsRepositoryImpl : SettingsRepository {
         get() = prefs.getBoolean("enable_floating_bottom_bar_blur", false)
         set(value) = prefs.edit { putBoolean("enable_floating_bottom_bar_blur", value) }
 
+    override var navigationRailExpanded: Boolean
+        get() = prefs.getBoolean("nav_rail_expanded", false)
+        set(value) = prefs.edit { putBoolean("nav_rail_expanded", value) }
+
     override var pageScale: Float
         get() = prefs.getFloat("page_scale", 1.0f)
         set(value) = prefs.edit { putFloat("page_scale", value) }

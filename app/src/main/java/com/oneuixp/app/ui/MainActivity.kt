@@ -50,6 +50,7 @@ import androidx.navigationevent.compose.rememberNavigationEventState
 import com.oneuixp.app.oneuix.OneuiXPreferenceBridge
 import com.oneuixp.app.ui.component.bottombar.BottomBar
 import com.oneuixp.app.ui.component.bottombar.SideNavigationRail
+import com.oneuixp.app.ui.component.bottombar.useNavigationRail
 import com.oneuixp.app.ui.component.bottombar.MainPagerState
 import com.oneuixp.app.ui.component.bottombar.rememberMainPagerState
 import com.oneuixp.app.ui.navigation3.LocalNavigator
@@ -78,7 +79,6 @@ import com.oneuixp.app.ui.theme.LocalEnableFloatingBottomBarBlur
 import com.oneuixp.app.ui.theme.OneuiXPTheme
 import com.oneuixp.app.ui.util.rememberBlurBackdrop
 import com.oneuixp.app.ui.util.rememberContentReady
-import com.oneuixp.app.ui.util.shouldShowSplitPane
 import com.oneuixp.app.ui.viewmodel.MainActivityViewModel
 import com.oneuixp.app.ui.viewmodel.MainPagerConfig
 import top.yukonga.miuix.kmp.basic.Scaffold
@@ -231,12 +231,10 @@ fun MainScreen(
 
         // Re-read the actual window bounds so fold/unfold and freeform resizing adapt
         // without depending on a device model or requiring an Activity restart.
-        val useWideLayout = shouldShowSplitPane()
-        // Keep the Miuix floating bottom bar when that option is enabled; its own
-        // selected pill is part of the Miuix style. Material uses the side rail in wide mode.
-        val enableFloatingBottomBar = LocalEnableFloatingBottomBar.current
-        val useNavigationRail = useWideLayout &&
-            !(uiMode == UiMode.Miuix && enableFloatingBottomBar)
+        // In landscape, wide, and unfolded windows both themes use a collapsible side rail.
+        // The floating bottom-bar preference is still respected on compact windows.
+        val useWideLayout = useNavigationRail()
+        val showNavigationRail = useWideLayout
 
         val pagerContent = @Composable { bottomInnerPadding: Dp ->
             Box(
@@ -281,7 +279,7 @@ fun MainScreen(
             }
         }
 
-        if (useNavigationRail) {
+        if (showNavigationRail) {
             // A side rail is used for expanded windows and landscape layouts; the existing
             // four destinations and their theme-specific icons remain unchanged.
             val startInsets = WindowInsets.systemBars.union(WindowInsets.displayCutout)
