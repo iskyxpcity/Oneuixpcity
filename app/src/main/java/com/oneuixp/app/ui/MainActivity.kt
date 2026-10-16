@@ -254,6 +254,17 @@ fun MainScreen(
         pageCount = { MainPagerConfig.PAGE_COUNT },
     )
     val mainPagerState = rememberMainPagerState(pagerState)
+
+    // The main entry is saveable while a detail route is on top. If a page-switch
+    // gesture changes the selected tab from a nested route, restore the PagerState
+    // to that new selection when MainScreen becomes active again.
+    LaunchedEffect(initialPage) {
+        if (pagerState.currentPage != initialPage) {
+            pagerState.animateScrollToPage(initialPage)
+            mainPagerState.syncPage()
+        }
+    }
+
     val interceptPagerAxis = pagerGestureMode == PagerInterceptionMode.CrossAxisInterceptor.ordinal
     val pagerFlingBehavior = PagerDefaults.flingBehavior(
         state = mainPagerState.pagerState,
