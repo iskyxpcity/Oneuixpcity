@@ -50,7 +50,7 @@ import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
 import top.yukonga.miuix.kmp.basic.IconButton as MiuixIconButton
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.basic.Scaffold as MiuixScaffold
-import top.yukonga.miuix.kmp.basic.SmallTopAppBar as MiuixSmallTopAppBar
+import top.yukonga.miuix.kmp.basic.TopAppBar as MiuixTopAppBar
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
 import top.yukonga.miuix.kmp.blur.layerBackdrop
 import top.yukonga.miuix.kmp.icon.MiuixIcons
@@ -190,8 +190,9 @@ private fun FeatureIntroductionMiuix(
     MiuixScaffold(
         topBar = {
             BlurredBar(backdrop) {
-                MiuixSmallTopAppBar(
+                MiuixTopAppBar(
                     title = stringResource(R.string.feature_introduction),
+                    largeTitle = stringResource(R.string.feature_introduction),
                     scrollBehavior = scrollBehavior,
                     color = barColor,
                     titleColor = colorScheme.onSurface,
@@ -372,8 +373,9 @@ private fun VersionChangelogMiuix(onBack: () -> Unit, isLatestVersion: Boolean, 
     MiuixScaffold(
         topBar = {
             BlurredBar(backdrop) {
-                MiuixSmallTopAppBar(
+                MiuixTopAppBar(
                     title = stringResource(R.string.version_updates_title),
+                    largeTitle = stringResource(R.string.version_updates_title),
                     scrollBehavior = scrollBehavior,
                     color = barColor,
                     titleColor = colorScheme.onSurface,

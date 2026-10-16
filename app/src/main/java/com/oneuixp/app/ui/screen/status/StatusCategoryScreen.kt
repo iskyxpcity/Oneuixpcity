@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -50,6 +51,8 @@ import top.yukonga.miuix.kmp.blur.layerBackdrop
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Back
 import top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme
+import top.yukonga.miuix.kmp.utils.overScrollVertical
+import top.yukonga.miuix.kmp.utils.scrollEndHaptic
 
 @Composable
 fun StatusCategoryScreen(categoryName: String) {
@@ -68,6 +71,18 @@ fun StatusCategoryScreen(categoryName: String) {
     }
 }
 
+
+@Composable
+private fun Modifier.statusCategoryScroll(state: ScrollState): Modifier {
+    return when (LocalUiMode.current) {
+        UiMode.Miuix -> this
+            .overScrollVertical()
+            .scrollEndHaptic()
+            .verticalScroll(state)
+        UiMode.Material -> this.verticalScroll(state)
+    }
+}
+
 @Composable
 private fun StatusCategoryContent(
     category: StatusCategory,
@@ -80,7 +95,7 @@ private fun StatusCategoryContent(
             Column(
                 modifier = modifier
                     .fillMaxSize()
-                    .verticalScroll(rememberScrollState()),
+                    .statusCategoryScroll(rememberScrollState()),
             ) {
                 StatusPaddingCategoryControls(
                     uiState = preference.systemUI.statusBar,
@@ -94,7 +109,7 @@ private fun StatusCategoryContent(
             Column(
                 modifier = modifier
                     .fillMaxSize()
-                    .verticalScroll(rememberScrollState()),
+                    .statusCategoryScroll(rememberScrollState()),
             ) {
                 StatusTimeCategoryControls(
                     uiState = preference.systemUI.statusBar,
@@ -108,7 +123,7 @@ private fun StatusCategoryContent(
             Column(
                 modifier = modifier
                     .fillMaxSize()
-                    .verticalScroll(rememberScrollState()),
+                    .statusCategoryScroll(rememberScrollState()),
             ) {
                 StatusNotificationCategoryControls(
                     uiState = preference.systemUI.statusBar,
@@ -122,7 +137,7 @@ private fun StatusCategoryContent(
             Column(
                 modifier = modifier
                     .fillMaxSize()
-                    .verticalScroll(rememberScrollState()),
+                    .statusCategoryScroll(rememberScrollState()),
             ) {
                 StatusNetworkSpeedCategoryControls(
                     uiState = preference.systemUI.statusBar,
@@ -136,7 +151,7 @@ private fun StatusCategoryContent(
             Column(
                 modifier = modifier
                     .fillMaxSize()
-                    .verticalScroll(rememberScrollState()),
+                    .statusCategoryScroll(rememberScrollState()),
             ) {
                 StatusPowerCategoryControls(
                     uiState = preference.systemUI.statusBar,
@@ -172,7 +187,7 @@ private fun StatusCategoryContent(
             Column(
                 modifier = modifier
                     .fillMaxSize()
-                    .verticalScroll(rememberScrollState()),
+                    .statusCategoryScroll(rememberScrollState()),
             ) {
                 StatusComboStyleOneCategoryControls(
                     uiState = preference.systemUI.statusBar,
@@ -186,7 +201,7 @@ private fun StatusCategoryContent(
             Column(
                 modifier = modifier
                     .fillMaxSize()
-                    .verticalScroll(rememberScrollState()),
+                    .statusCategoryScroll(rememberScrollState()),
             ) {
                 StatusSignalCategoryControls(
                     uiState = preference.systemUI.statusBar,
@@ -200,7 +215,7 @@ private fun StatusCategoryContent(
             Column(
                 modifier = modifier
                     .fillMaxSize()
-                    .verticalScroll(rememberScrollState()),
+                    .statusCategoryScroll(rememberScrollState()),
             ) {
                 StatusWifiCategoryControls(
                     wifiRuntime = preference.systemUI.statusBar.wifiRuntime,
@@ -235,7 +250,7 @@ private fun StatusCategoryContent(
             Column(
                 modifier = modifier
                     .fillMaxSize()
-                    .verticalScroll(rememberScrollState()),
+                    .statusCategoryScroll(rememberScrollState()),
             ) {
                 StatusBluetoothCategoryControls(
                     uiState = preference.systemUI.statusBar,
@@ -249,7 +264,7 @@ private fun StatusCategoryContent(
             Column(
                 modifier = modifier
                     .fillMaxSize()
-                    .verticalScroll(rememberScrollState()),
+                    .statusCategoryScroll(rememberScrollState()),
             ) {
                 StatusLockscreenCategoryControls(
                     statusBar = preference.systemUI.statusBar,
@@ -264,7 +279,7 @@ private fun StatusCategoryContent(
             Column(
                 modifier = modifier
                     .fillMaxSize()
-                    .verticalScroll(rememberScrollState()),
+                    .statusCategoryScroll(rememberScrollState()),
             ) {
                 StatusNotificationCenterCategoryControls(
                     uiState = preference.systemUI.notification,
@@ -278,7 +293,7 @@ private fun StatusCategoryContent(
             Column(
                 modifier = modifier
                     .fillMaxSize()
-                    .verticalScroll(rememberScrollState()),
+                    .statusCategoryScroll(rememberScrollState()),
             ) {
                 StatusControlCenterCategoryControls(
                     uiState = preference.systemUI.qs,
@@ -292,7 +307,7 @@ private fun StatusCategoryContent(
             Column(
                 modifier = modifier
                     .fillMaxSize()
-                    .verticalScroll(rememberScrollState()),
+                    .statusCategoryScroll(rememberScrollState()),
             ) {
                 StatusOtherCategoryControls(
                     uiState = preference.systemUI.other,
@@ -368,6 +383,7 @@ private fun StatusCategoryMiuix(
                 TopAppBar(
                     color = barColor,
                     title = stringResource(category.titleRes),
+                    largeTitle = stringResource(category.titleRes),
                     actions = { RebootListPopup() },
                     navigationIcon = {
                         MiuixIconButton(onClick = onBack) {

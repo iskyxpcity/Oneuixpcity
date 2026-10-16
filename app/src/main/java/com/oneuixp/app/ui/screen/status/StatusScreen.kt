@@ -122,6 +122,7 @@ private fun StatusPagerMiuix(
                 TopAppBar(
                     color = barColor,
                     title = stringResource(R.string.oneuixp_status),
+                    largeTitle = stringResource(R.string.oneuixp_status),
                     navigationIcon = { ConfigTransferPopup() },
                     actions = { RebootListPopup() },
                     scrollBehavior = scrollBehavior,
