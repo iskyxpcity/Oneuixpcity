@@ -13,6 +13,8 @@ import android.provider.Settings
 import android.util.DisplayMetrics
 import android.view.WindowManager
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -132,8 +134,8 @@ fun HomeDeviceToolsCard() {
                     modifier = Modifier.weight(1f).padding(start = 12.dp, end = 10.dp),
                     verticalArrangement = Arrangement.spacedBy(3.dp),
                 ) {
-                    DeviceToolsText("设备信息", DeviceTextKind.Title)
-                    DeviceToolsText("系统监视器 · 屏幕信息 · 设备信息", DeviceTextKind.Caption)
+                    DeviceToolsText("设备状态信息", DeviceTextKind.Title)
+                    DeviceToolsText("系统监视器 · 屏幕信息 · 硬件参数", DeviceTextKind.Caption)
                 }
                 DeviceToolsIcon(
                     if (expanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
@@ -501,7 +503,7 @@ private fun readHomeDeviceSnapshot(context: Context, cpuPercent: Float?): HomeDe
         orientation = screen.orientation,
         model = listOf(Build.MANUFACTURER, Build.MODEL).filter { it.isNotBlank() }.joinToString(" ").ifBlank { "未知设备" },
         androidVersion = "Android ${Build.VERSION.RELEASE} / API ${Build.VERSION.SDK_INT}",
-        oneUiVersion = readSystemProperty("ro.build.version.oneui").ifBlank { "—" },
+        oneUiVersion = formatOneUiVersion(readSystemProperty("ro.build.version.oneui")).ifBlank { "—" },
         deviceCode = Build.DEVICE.ifBlank { Build.PRODUCT.ifBlank { "—" } },
         soc = soc.ifBlank { "—" },
         cpuArchitecture = Build.SUPPORTED_ABIS.joinToString(" / ").ifBlank { System.getProperty("os.arch") ?: "—" },
@@ -564,6 +566,15 @@ private fun readSystemProperty(name: String): String = runCatching {
     val getter = properties.getMethod("get", String::class.java, String::class.java)
     getter.invoke(null, name, "") as? String ?: ""
 }.getOrDefault("")
+
+private fun formatOneUiVersion(rawValue: String): String {
+    val raw = rawValue.trim()
+    if (raw.isBlank()) return ""
+    if (raw.contains('.')) return raw
+    val encoded = raw.toLongOrNull() ?: return raw
+    if (encoded >= 10_000L) return String.format(Locale.US, "%.1f", encoded / 10_000.0)
+    return raw
+}
 
 private fun usagePercent(used: Long, total: Long): Int =
     if (total > 0L) ((used.toDouble() / total.toDouble()) * 100.0).roundToInt().coerceIn(0, 100) else 0
