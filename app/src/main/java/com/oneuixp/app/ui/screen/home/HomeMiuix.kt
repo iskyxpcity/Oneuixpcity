@@ -103,7 +103,7 @@ fun HomePagerMiuix(state: HomeUiState, actions: HomeActions, bottomInnerPadding:
                     ) {
                         StatusCard()
                         if (state.checkUpdateEnabled) UpdateCard(state, actions)
-                        InfoCard()
+                        HomeDeviceToolsCard()
                         Spacer(Modifier.height(bottomInnerPadding))
                     }
                 }
