@@ -64,6 +64,7 @@ import com.oneuixp.app.ui.screen.about.DisclaimerScreen
 import com.oneuixp.app.ui.screen.about.FeatureIntroductionScreen
 import com.oneuixp.app.ui.screen.about.VersionChangelogScreen
 import com.oneuixp.app.ui.screen.about.VersionChangelog261013Screen
+import com.oneuixp.app.ui.screen.about.VersionChangelog261018Screen
 import com.oneuixp.app.ui.screen.about.VersionChangelog261016Screen
 import com.oneuixp.app.ui.screen.colorpalette.ColorPaletteScreen
 import com.oneuixp.app.ui.screen.home.HomePager
@@ -180,6 +181,7 @@ class MainActivity : ComponentActivity() {
                             entry<Route.FeatureIntroduction>(swipeDismiss = swipeDismiss) { FeatureIntroductionScreen() }
                             entry<Route.VersionChangelog>(swipeDismiss = swipeDismiss) { VersionChangelogScreen() }
                             entry<Route.VersionChangelog261013>(swipeDismiss = swipeDismiss) { VersionChangelog261013Screen() }
+                            entry<Route.VersionChangelog261018>(swipeDismiss = swipeDismiss) { VersionChangelog261018Screen() }
                             entry<Route.VersionChangelog261016>(swipeDismiss = swipeDismiss) { VersionChangelog261016Screen() }
                             entry<Route.ColorPalette>(swipeDismiss = swipeDismiss) { ColorPaletteScreen() }
                             entry<Route.OneuiXCategory>(swipeDismiss = swipeDismiss) { key ->
