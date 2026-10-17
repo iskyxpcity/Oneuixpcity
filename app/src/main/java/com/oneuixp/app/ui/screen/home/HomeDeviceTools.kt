@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.BatteryManager
-import android.os.Process
 import android.os.Build
 import android.os.Environment
 import android.os.StatFs
@@ -94,13 +93,31 @@ import kotlin.math.sin
 import kotlin.math.sqrt
 
 private enum class DeviceTextKind { Title, Section, Label, Value, Large, Caption }
-private data class CpuTicks(val total: Long, val idle: Long)
-private data class CpuSample(val systemTicks: CpuTicks?, val processCpuMillis: Long, val elapsedRealtimeMillis: Long)
-private data class CpuUsage(val percent: Float, val sourceLabel: String)
+private data class CpuFrequencyEntry(
+    val label: String,
+    val currentKHz: Long,
+    val maxKHz: Long?,
+)
+
+private data class CpuFrequencySnapshot(
+    val entries: List<CpuFrequencyEntry>,
+    val perCore: Boolean,
+) {
+    val averageKHz: Double
+        get() = entries.map { it.currentKHz.toDouble() }.average()
+
+    val maxSupportedKHz: Long?
+        get() = entries.mapNotNull { it.maxKHz }.maxOrNull()
+
+    val progress: Float
+        get() {
+            val denominator = maxSupportedKHz ?: entries.maxOfOrNull { it.currentKHz } ?: 0L
+            return if (denominator > 0L) (averageKHz / denominator).toFloat().coerceIn(0f, 1f) else 0f
+        }
+}
 
 private data class HomeDeviceSnapshot(
-    val cpuPercent: Float? = null,
-    val cpuSourceLabel: String = "CPU 使用率",
+    val cpuFrequency: CpuFrequencySnapshot? = null,
     val ramUsed: Long = 0L,
     val ramTotal: Long = 0L,
     val storageUsed: Long = 0L,
@@ -212,11 +229,27 @@ private fun DeviceSectionHeading(icon: ImageVector, title: String, subtitle: Str
 @Composable
 private fun SystemMonitorContent(snapshot: HomeDeviceSnapshot) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        val cpuFrequency = snapshot.cpuFrequency
+        val cpuFrequencyValue = cpuFrequency?.let { frequency ->
+            if (frequency.perCore) {
+                val average = formatCpuFrequency(frequency.averageKHz)
+                val max = frequency.maxSupportedKHz?.let { " · 上限 ${formatCpuFrequency(it)}" }.orEmpty()
+                "当前均值 $average$max"
+            } else {
+                frequency.entries.joinToString(" · ") { "${it.label} ${formatCpuFrequency(it.currentKHz)}" }
+            }
+        } ?: "系统未开放读取"
         DeviceProgressMetric(
-            snapshot.cpuSourceLabel,
-            snapshot.cpuPercent?.let { "${it.roundToInt()}%" } ?: "采样中…",
-            (snapshot.cpuPercent ?: 0f) / 100f,
+            "CPU 实时频率",
+            cpuFrequencyValue,
+            cpuFrequency?.progress ?: 0f,
         )
+        cpuFrequency?.let { frequency ->
+            DeviceDataRow(
+                if (frequency.perCore) "各核心频率" else "各簇频率",
+                frequency.entries.joinToString(" · ") { "${it.label} ${formatCpuFrequency(it.currentKHz)}" },
+            )
+        }
         val ramPercent = usagePercent(snapshot.ramUsed, snapshot.ramTotal)
         DeviceProgressMetric(
             "运行内存",
@@ -490,68 +523,86 @@ private fun rememberHomeDeviceSnapshot(expanded: Boolean): HomeDeviceSnapshot {
 
     LaunchedEffect(context, expanded) {
         if (!expanded) return@LaunchedEffect
-        var previousCpu: CpuSample? = null
         while (isActive) {
-            val (nextSnapshot, nextCpu) = withContext(Dispatchers.IO) {
-                val currentCpu = readCpuSample()
-                val usage = calculateCpuUsage(previousCpu, currentCpu)
-                readHomeDeviceSnapshot(context, usage) to currentCpu
+            snapshot = withContext(Dispatchers.IO) {
+                readHomeDeviceSnapshot(context, readCpuFrequency())
             }
-            snapshot = nextSnapshot
-            previousCpu = nextCpu
             delay(2_000)
         }
     }
     return snapshot
 }
 
-private fun readCpuSample(): CpuSample = CpuSample(
-    systemTicks = readCpuTicks(),
-    processCpuMillis = runCatching { Process.getElapsedCpuTime() }.getOrDefault(0L),
-    elapsedRealtimeMillis = SystemClock.elapsedRealtime(),
-)
+/**
+ * Reads live CPU clocks in kHz from the kernel CPUFreq sysfs interface.
+ * Prefer per-core values and use policy-level values only when per-core paths
+ * are unavailable on this device/kernel.
+ */
+private fun readCpuFrequency(): CpuFrequencySnapshot? {
+    val cpuRoot = File("/sys/devices/system/cpu")
+    val cpuDirectories = cpuRoot.listFiles()
+        .orEmpty()
+        .filter { it.isDirectory && it.name.matches(Regex("^cpu\\d+$")) }
+        .sortedBy { it.name.removePrefix("cpu").toIntOrNull() ?: Int.MAX_VALUE }
 
-private fun readCpuTicks(): CpuTicks? {
-    // Some Android builds restrict /proc/stat. Fall back to a labelled app-CPU metric
-    // so the monitor does not stay blank when global CPU counters are inaccessible.
-    return runCatching {
-        val line = File("/proc/stat").bufferedReader().use { it.readLine() } ?: return null
-        val fields = line.trim().split(Regex("\\s+"))
-        if (fields.firstOrNull() != "cpu" || fields.size < 5) return null
-        // Ignore guest/guest_nice fields because Linux already includes them in user/nice.
-        val ticks = fields.drop(1).take(8).map { it.toLong() }
-        val idle = (ticks.getOrNull(3) ?: 0L) + (ticks.getOrNull(4) ?: 0L)
-        CpuTicks(total = ticks.sum(), idle = idle)
-    }.getOrNull()
-}
-
-private fun calculateCpuUsage(previous: CpuSample?, current: CpuSample?): CpuUsage? {
-    if (previous == null || current == null) return null
-
-    val previousTicks = previous.systemTicks
-    val currentTicks = current.systemTicks
-    if (previousTicks != null && currentTicks != null) {
-        val total = currentTicks.total - previousTicks.total
-        val idle = currentTicks.idle - previousTicks.idle
-        if (total > 0L) {
-            val percent = (((total - idle).coerceAtLeast(0L).toFloat() / total) * 100f)
-                .coerceIn(0f, 100f)
-            return CpuUsage(percent, "CPU 使用率")
-        }
+    val coreFrequencies = cpuDirectories.mapNotNull { cpuDirectory ->
+        val cpuId = cpuDirectory.name.removePrefix("cpu")
+        val current = readFrequencyKHz(
+            File(cpuDirectory, "cpufreq/scaling_cur_freq"),
+            File(cpuDirectory, "cpufreq/cpuinfo_cur_freq"),
+        ) ?: return@mapNotNull null
+        val max = readFrequencyKHz(
+            File(cpuDirectory, "cpufreq/scaling_max_freq"),
+            File(cpuDirectory, "cpufreq/cpuinfo_max_freq"),
+        )
+        CpuFrequencyEntry(label = "核心$cpuId", currentKHz = current, maxKHz = max)
     }
+    if (coreFrequencies.isNotEmpty()) return CpuFrequencySnapshot(coreFrequencies, perCore = true)
 
-    // Restricted devices still get a valid, explicitly labelled fallback based on CPU
-    // time consumed by OneuiXP itself, normalized against all available cores.
-    val elapsed = current.elapsedRealtimeMillis - previous.elapsedRealtimeMillis
-    val processCpu = current.processCpuMillis - previous.processCpuMillis
-    if (elapsed <= 0L || processCpu < 0L) return null
-    val cores = Runtime.getRuntime().availableProcessors().coerceAtLeast(1)
-    val processPercent = (processCpu.toDouble() / (elapsed.toDouble() * cores) * 100.0)
-        .toFloat().coerceIn(0f, 100f)
-    return CpuUsage(processPercent, "本应用 CPU")
+    val policyRoot = File("/sys/devices/system/cpu/cpufreq")
+    val policyDirectories = policyRoot.listFiles()
+        .orEmpty()
+        .filter { it.isDirectory && it.name.matches(Regex("^policy\\d+$")) }
+        .sortedBy { it.name.removePrefix("policy").toIntOrNull() ?: Int.MAX_VALUE }
+
+    val policyFrequencies = policyDirectories.mapNotNull { policyDirectory ->
+        val current = readFrequencyKHz(
+            File(policyDirectory, "scaling_cur_freq"),
+            File(policyDirectory, "cpuinfo_cur_freq"),
+        ) ?: return@mapNotNull null
+        val max = readFrequencyKHz(
+            File(policyDirectory, "scaling_max_freq"),
+            File(policyDirectory, "cpuinfo_max_freq"),
+        )
+        CpuFrequencyEntry(
+            label = "簇${policyDirectory.name.removePrefix("policy")}",
+            currentKHz = current,
+            maxKHz = max,
+        )
+    }
+    return policyFrequencies.takeIf { it.isNotEmpty() }
+        ?.let { CpuFrequencySnapshot(it, perCore = false) }
 }
 
-private fun readHomeDeviceSnapshot(context: Context, cpuUsage: CpuUsage?): HomeDeviceSnapshot {
+private fun readFrequencyKHz(vararg candidates: File): Long? {
+    for (file in candidates) {
+        val value = runCatching { file.readText().trim().toLongOrNull() }.getOrNull()
+        if (value != null && value > 0L) return value
+    }
+    return null
+}
+
+private fun formatCpuFrequency(kHz: Double): String {
+    return if (kHz >= 1_000_000.0) {
+        String.format(Locale.getDefault(), "%.2f GHz", kHz / 1_000_000.0)
+    } else {
+        String.format(Locale.getDefault(), "%.0f MHz", kHz / 1_000.0)
+    }
+}
+
+private fun formatCpuFrequency(kHz: Long): String = formatCpuFrequency(kHz.toDouble())
+
+private fun readHomeDeviceSnapshot(context: Context, cpuFrequency: CpuFrequencySnapshot?): HomeDeviceSnapshot {
     val memoryInfo = ActivityManager.MemoryInfo()
     runCatching {
         (context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager).getMemoryInfo(memoryInfo)
@@ -588,8 +639,7 @@ private fun readHomeDeviceSnapshot(context: Context, cpuUsage: CpuUsage?): HomeD
     } else Build.HARDWARE
 
     return HomeDeviceSnapshot(
-        cpuPercent = cpuUsage?.percent,
-        cpuSourceLabel = cpuUsage?.sourceLabel ?: "CPU 使用率",
+        cpuFrequency = cpuFrequency,
         ramUsed = (ramTotal - ramAvailable).coerceAtLeast(0L),
         ramTotal = ramTotal,
         storageUsed = (storageTotal - storageAvailable).coerceAtLeast(0L),
