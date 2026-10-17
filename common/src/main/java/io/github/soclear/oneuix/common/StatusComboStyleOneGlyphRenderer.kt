@@ -681,8 +681,14 @@ object StatusComboStyleOneGlyphRenderer {
     ): Float = (baseDesignWidth(config, networkType) -
         outsideContentLeadingTrimUnits(config, networkType)).coerceAtLeast(20f)
 
+    /**
+     * Keep the existing preference value range (including the displayed 100% default), while
+     * rendering the complete three-in-one glyph at 80% of its former physical size.
+     */
+    private const val DEFAULT_GLYPH_SIZE_REDUCTION = 0.8f
+
     private fun baseGlyphHeightDp(config: StatusBarComboStyleOneRuntime): Int =
-        (36f * 0.9f * config.glyphScalePercent.coerceIn(70, 150) / 100f)
+        (36f * 0.9f * config.glyphScalePercent.coerceIn(70, 150) / 100f * DEFAULT_GLYPH_SIZE_REDUCTION)
             .roundToInt().coerceAtLeast(18)
 
     fun glyphWidthDp(config: StatusBarComboStyleOneRuntime, networkType: String = ""): Int =
