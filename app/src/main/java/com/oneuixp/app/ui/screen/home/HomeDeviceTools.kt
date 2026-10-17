@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.BatteryManager
+import android.os.Process
 import android.os.Build
 import android.os.Environment
 import android.os.StatFs
@@ -81,9 +82,12 @@ import kotlin.math.sqrt
 
 private enum class DeviceTextKind { Title, Section, Label, Value, Large, Caption }
 private data class CpuTicks(val total: Long, val idle: Long)
+private data class CpuSample(val systemTicks: CpuTicks?, val processCpuMillis: Long, val elapsedRealtimeMillis: Long)
+private data class CpuUsage(val percent: Float, val sourceLabel: String)
 
 private data class HomeDeviceSnapshot(
     val cpuPercent: Float? = null,
+    val cpuSourceLabel: String = "CPU 使用率",
     val ramUsed: Long = 0L,
     val ramTotal: Long = 0L,
     val storageUsed: Long = 0L,
@@ -425,38 +429,68 @@ private fun rememberHomeDeviceSnapshot(expanded: Boolean): HomeDeviceSnapshot {
 
     LaunchedEffect(context, expanded) {
         if (!expanded) return@LaunchedEffect
-        var previousCpu: CpuTicks? = null
+        var previousCpu: CpuSample? = null
         while (isActive) {
             val (nextSnapshot, nextCpu) = withContext(Dispatchers.IO) {
-                val currentCpu = readCpuTicks()
+                val currentCpu = readCpuSample()
                 val usage = calculateCpuUsage(previousCpu, currentCpu)
                 readHomeDeviceSnapshot(context, usage) to currentCpu
             }
             snapshot = nextSnapshot
-            if (nextCpu != null) previousCpu = nextCpu
+            previousCpu = nextCpu
             delay(2_000)
         }
     }
     return snapshot
 }
 
-private fun readCpuTicks(): CpuTicks? = runCatching {
-    val fields = File("/proc/stat").bufferedReader().use { it.readLine() }
-        ?.trim()?.split(Regex("\\s+")) ?: return null
-    if (fields.firstOrNull() != "cpu" || fields.size < 5) return null
-    val ticks = fields.drop(1).map { it.toLong() }
-    CpuTicks(ticks.sum(), (ticks.getOrNull(3) ?: 0L) + (ticks.getOrNull(4) ?: 0L))
-}.getOrNull()
+private fun readCpuSample(): CpuSample = CpuSample(
+    systemTicks = readCpuTicks(),
+    processCpuMillis = runCatching { Process.getElapsedCpuTime() }.getOrDefault(0L),
+    elapsedRealtimeMillis = SystemClock.elapsedRealtime(),
+)
 
-private fun calculateCpuUsage(previous: CpuTicks?, current: CpuTicks?): Float? {
-    if (previous == null || current == null) return null
-    val total = current.total - previous.total
-    val idle = current.idle - previous.idle
-    if (total <= 0L) return null
-    return (((total - idle).coerceAtLeast(0L).toFloat() / total) * 100f).coerceIn(0f, 100f)
+private fun readCpuTicks(): CpuTicks? {
+    // Some Android builds restrict /proc/stat. Fall back to a labelled app-CPU metric
+    // so the monitor does not stay blank when global CPU counters are inaccessible.
+    return runCatching {
+        val line = File("/proc/stat").bufferedReader().use { it.readLine() } ?: return null
+        val fields = line.trim().split(Regex("\\s+"))
+        if (fields.firstOrNull() != "cpu" || fields.size < 5) return null
+        // Ignore guest/guest_nice fields because Linux already includes them in user/nice.
+        val ticks = fields.drop(1).take(8).map { it.toLong() }
+        val idle = (ticks.getOrNull(3) ?: 0L) + (ticks.getOrNull(4) ?: 0L)
+        CpuTicks(total = ticks.sum(), idle = idle)
+    }.getOrNull()
 }
 
-private fun readHomeDeviceSnapshot(context: Context, cpuPercent: Float?): HomeDeviceSnapshot {
+private fun calculateCpuUsage(previous: CpuSample?, current: CpuSample?): CpuUsage? {
+    if (previous == null) return null
+
+    val previousTicks = previous.systemTicks
+    val currentTicks = current.systemTicks
+    if (previousTicks != null && currentTicks != null) {
+        val total = currentTicks.total - previousTicks.total
+        val idle = currentTicks.idle - previousTicks.idle
+        if (total > 0L) {
+            val percent = (((total - idle).coerceAtLeast(0L).toFloat() / total) * 100f)
+                .coerceIn(0f, 100f)
+            return CpuUsage(percent, "CPU 使用率")
+        }
+    }
+
+    // Restricted devices still get a valid, explicitly labelled fallback based on CPU
+    // time consumed by OneuiXP itself, normalized against all available cores.
+    val elapsed = current.elapsedRealtimeMillis - previous.elapsedRealtimeMillis
+    val processCpu = current.processCpuMillis - previous.processCpuMillis
+    if (elapsed <= 0L || processCpu < 0L) return null
+    val cores = Runtime.getRuntime().availableProcessors().coerceAtLeast(1)
+    val processPercent = (processCpu.toDouble() / (elapsed.toDouble() * cores) * 100.0)
+        .toFloat().coerceIn(0f, 100f)
+    return CpuUsage(processPercent, "本应用 CPU")
+}
+
+private fun readHomeDeviceSnapshot(context: Context, cpuUsage: CpuUsage?): HomeDeviceSnapshot {
     val memoryInfo = ActivityManager.MemoryInfo()
     runCatching {
         (context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager).getMemoryInfo(memoryInfo)
@@ -493,7 +527,8 @@ private fun readHomeDeviceSnapshot(context: Context, cpuPercent: Float?): HomeDe
     } else Build.HARDWARE
 
     return HomeDeviceSnapshot(
-        cpuPercent = cpuPercent,
+        cpuPercent = cpuUsage?.percent,
+        cpuSourceLabel = cpuUsage?.sourceLabel ?: "CPU 使用率",
         ramUsed = (ramTotal - ramAvailable).coerceAtLeast(0L),
         ramTotal = ramTotal,
         storageUsed = (storageTotal - storageAvailable).coerceAtLeast(0L),
