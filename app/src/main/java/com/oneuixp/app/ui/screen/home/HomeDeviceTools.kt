@@ -526,7 +526,7 @@ private fun readCpuTicks(): CpuTicks? {
 }
 
 private fun calculateCpuUsage(previous: CpuSample?, current: CpuSample?): CpuUsage? {
-    if (previous == null) return null
+    if (previous == null || current == null) return null
 
     val previousTicks = previous.systemTicks
     val currentTicks = current.systemTicks
