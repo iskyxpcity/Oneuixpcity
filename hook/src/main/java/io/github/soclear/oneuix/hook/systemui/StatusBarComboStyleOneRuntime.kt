@@ -72,6 +72,9 @@ object StatusBarComboStyleOneRuntime {
     private const val LEGACY_AOSP_ICONS = "com.android.systemui.statusbar.phone.StatusBarIconContainer"
     private const val GLYPH_WIDTH_DP = 78
     private const val GLYPH_HEIGHT_DP = 36
+    // Reserve a real right-side gutter inside the battery slot. Visible ink was anchored flush
+    // to this edge, leaving no room for stroke anti-aliasing or small SystemUI geometry variance.
+    private const val TRAILING_CONTENT_CLEARANCE_DP = 4
     // Keep independent-window rendering available. The global DisplayManager listener remains
     // disabled; this window confirms stable geometry before rebuilding its host.
     private const val INDEPENDENT_OVERLAY_RENDERING_ENABLED = true
@@ -636,7 +639,7 @@ object StatusBarComboStyleOneRuntime {
                 StatusComboStyleOneGlyphRenderer.glyphWidthDp(
                     StatusBarComboStyleOneRuntime.config,
                     StatusBarComboStyleOneRuntime.state.networkType,
-                ),
+                ) + StatusBarComboStyleOneRuntime.TRAILING_CONTENT_CLEARANCE_DP,
             ) + glyph.leadingCanvasPaddingPx()
 
         /**
@@ -860,12 +863,20 @@ object StatusBarComboStyleOneRuntime {
             val canvasLeftInsetPx = StatusComboStyleOneGlyphRenderer.glyphCanvasLeftInsetPx(
                 cfg, networkType, lp.width, lp.height, glyph.leadingCanvasPaddingPx().toFloat(),
             )
-            // The right edge of the full drawing canvas sits on the battery slot's right
-            // edge. The expanded transparent host reserves this same width in native layout,
-            // leaving the preceding Bluetooth/alarm/network icons to the left of our canvas.
+            // Keep a dedicated trailing gutter between glyph ink and the status-bar edge.
+            // The transparent battery host is expanded by the same amount, so the reserved slot
+            // grows left as we move the rendered group left without stealing native icon width.
+            val trailingClearancePx = StatusBarComboStyleOneRuntime.dpExact(
+                context, StatusBarComboStyleOneRuntime.TRAILING_CONTENT_CLEARANCE_DP,
+            )
+            val displayWidthPx = context.resources.displayMetrics.widthPixels
+            val safeSlotRightPx = (slotRightPx - trailingClearancePx).let { requested ->
+                if (displayWidthPx > 0) minOf(requested, displayWidthPx - trailingClearancePx)
+                else requested
+            }
             val horizontalOffsetPx = StatusBarComboStyleOneRuntime.dpExact(context, cfg.glyphOffsetXDp)
             val baseWindowX = (
-                slotRightPx - canvasLeftInsetPx - designWidthUnits * renderScale +
+                safeSlotRightPx - canvasLeftInsetPx - designWidthUnits * renderScale +
                     horizontalOffsetPx
                 ).roundToInt()
             val verticalOffsetPx = StatusBarComboStyleOneRuntime.dpExact(context, cfg.glyphOffsetYDp)
@@ -903,7 +914,9 @@ object StatusBarComboStyleOneRuntime {
                         "parentOrigin=${if (parentLocated) parentLocation.contentToString() else "unknown"} " +
                         "parentSize=${slotParent?.width}x${slotParent?.height} " +
                         "parentPaddingRight=${slotParent?.paddingRight} originalRightMargin=${originalRightMargin} " +
-                        "activeRightMargin=${activeRightMargin} slotRightPx=${slotRightPx} slotCenterY=${slotCenterY} " +
+                        "activeRightMargin=${activeRightMargin} slotRightPx=${slotRightPx} " +
+"safeSlotRightPx=${safeSlotRightPx} trailingClearanceDp=${TRAILING_CONTENT_CLEARANCE_DP} " +
+"slotCenterY=${slotCenterY} " +
                         "anchorSize=${anchor.width}x${anchor.height} measured=${anchor.measuredWidth}x${anchor.measuredHeight} " +
                         "anchorVisibility=${anchor.visibility} anchorAlpha=${anchor.alpha} " +
                         "requestedWindowX=${requestedWindowX} rightEdgeClamped=${rightEdgeClamped} " +
