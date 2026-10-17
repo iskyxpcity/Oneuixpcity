@@ -214,10 +214,18 @@ private fun SystemMonitorContent(snapshot: HomeDeviceSnapshot) {
             else "读取中…",
             storagePercent / 100f,
         )
+        val batteryPercent = snapshot.batteryPercent
+        DeviceProgressMetric(
+            label = "电池电量",
+            value = batteryPercent?.let { "$it%" } ?: "暂不可用",
+            progress = (batteryPercent ?: 0) / 100f,
+        )
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             DeviceValueTile(
-                title = "电池电量",
-                value = snapshot.batteryPercent?.let { "$it%" } ?: "暂不可用",
+                title = "电池电压",
+                value = snapshot.batteryVoltageMv?.takeIf { it > 0 }?.let {
+                    String.format(Locale.getDefault(), "%.2f V", it / 1000f)
+                } ?: "暂不可用",
                 modifier = Modifier.weight(1f),
             )
             DeviceValueTile(
@@ -232,10 +240,6 @@ private fun SystemMonitorContent(snapshot: HomeDeviceSnapshot) {
             "电池状态",
             buildString {
                 append(if (snapshot.charging) "充电中" else "未充电")
-                snapshot.batteryVoltageMv?.takeIf { it > 0 }?.let {
-                    append(" · ")
-                    append(String.format(Locale.getDefault(), "%.2f V", it / 1000f))
-                }
             },
         )
         DeviceDataRow("设备运行时间", snapshot.uptime)
@@ -279,13 +283,18 @@ private fun DeviceProgressMetric(label: String, value: String, progress: Float) 
             DeviceToolsText(label, DeviceTextKind.Label, Modifier.weight(1f))
             DeviceToolsText(value, DeviceTextKind.Value, Modifier.weight(2f), TextAlign.End)
         }
+        val animatedProgress by animateFloatAsState(
+            targetValue = progress.coerceIn(0f, 1f),
+            animationSpec = tween(durationMillis = 550),
+            label = "deviceMetricProgress",
+        )
         Box(
-            modifier = Modifier.fillMaxWidth().height(5.dp)
+            modifier = Modifier.fillMaxWidth().height(6.dp)
                 .clip(RoundedCornerShape(100))
                 .background(deviceSecondaryColor().copy(alpha = 0.14f)),
         ) {
             Box(
-                modifier = Modifier.fillMaxWidth(progress.coerceIn(0f, 1f))
+                modifier = Modifier.fillMaxWidth(animatedProgress)
                     .fillMaxHeight().background(deviceAccentColor()),
             )
         }
