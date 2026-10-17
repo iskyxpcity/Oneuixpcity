@@ -923,7 +923,16 @@ object StatusBarComboStyleOneRuntime {
             val screenX = if (hasScreenOrigin) actual[0] else lp.x
             val screenY = if (hasScreenOrigin) actual[1] else lp.y
             val density = context.resources.displayMetrics.density
+            val displayMetrics = context.resources.displayMetrics
+            val requestedBurnInX = burnInBaseXpx?.plus((burnInOffsetXDp * density).roundToInt())
+            val requestedBurnInY = burnInBaseYpx?.plus((burnInOffsetYDp * density).roundToInt())
             return buildString {
+                appendLine(
+                    "burnInBounds: display=${displayMetrics.widthPixels}x${displayMetrics.heightPixels}, " +
+                        "offsetDp=(${burnInOffsetXDp},${burnInOffsetYDp}), " +
+                        "requested=(${requestedBurnInX},${requestedBurnInY}), " +
+                        "applied=(${lp.x},${lp.y}), minimumTopY=${burnInMinimumWindowY}"
+                )
                 appendLine(
                     "windowType=${lp.type},title=${lp.title},flags=${lp.flags},gravity=${lp.gravity}," +
                         "lpOrigin=(${lp.x},${lp.y}),actualViewScreenOrigin=(${if (hasScreenOrigin) actual[0] else "unknown"}," +
