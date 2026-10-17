@@ -85,7 +85,7 @@ fun HomePagerMaterial(
             if (state.checkUpdateEnabled) {
                 UpdateCard(state = state, actions = actions)
             }
-            InfoCard()
+            HomeDeviceToolsCard()
             Spacer(Modifier.height(bottomInnerPadding))
         }
     }
