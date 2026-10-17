@@ -639,6 +639,33 @@ object StatusBarComboStyleOneRuntime {
                 ),
             ) + glyph.leadingCanvasPaddingPx()
 
+        /**
+         * The independent SystemUI window uses screen coordinates with LAYOUT_NO_LIMITS.
+         * Keep the entire glyph frame on the active display while micro-shifting it; otherwise
+         * positive X motion can push the right side off-screen and negative Y can clip the top.
+         */
+        private fun clampWindowX(requestedX: Int, lp: WindowManager.LayoutParams): Int {
+            val displayWidth = context.resources.displayMetrics.widthPixels
+            if (displayWidth <= 0 || lp.width <= 0) return requestedX
+            val inset = StatusBarComboStyleOneRuntime.dpExact(context, 1).coerceAtLeast(0)
+            val maximum = (displayWidth - lp.width - inset).coerceAtLeast(0)
+            val minimum = inset.coerceAtMost(maximum)
+            return requestedX.coerceIn(minimum, maximum)
+        }
+
+        private fun clampWindowY(
+            requestedY: Int,
+            lp: WindowManager.LayoutParams,
+            minimumY: Int = burnInMinimumWindowY,
+        ): Int {
+            val displayHeight = context.resources.displayMetrics.heightPixels
+            if (displayHeight <= 0 || lp.height <= 0) return requestedY.coerceAtLeast(minimumY)
+            val inset = StatusBarComboStyleOneRuntime.dpExact(context, 1).coerceAtLeast(0)
+            val minimum = maxOf(minimumY, inset).coerceAtLeast(0)
+            val maximum = (displayHeight - lp.height - inset).coerceAtLeast(minimum)
+            return requestedY.coerceIn(minimum, maximum)
+        }
+
         fun setBurnInOffsetDp(xDp: Float, yDp: Float) {
             if (burnInOffsetXDp == xDp && burnInOffsetYDp == yDp) return
             burnInOffsetXDp = xDp
@@ -647,8 +674,10 @@ object StatusBarComboStyleOneRuntime {
             val baseX = burnInBaseXpx ?: return
             val baseY = burnInBaseYpx ?: return
             val density = context.resources.displayMetrics.density.takeIf { it > 0f } ?: 1f
-            val nextX = baseX + (xDp * density).roundToInt()
-            val nextY = (baseY + (yDp * density).roundToInt()).coerceAtLeast(burnInMinimumWindowY)
+            val requestedX = baseX + (xDp * density).roundToInt()
+            val requestedY = baseY + (yDp * density).roundToInt()
+            val nextX = clampWindowX(requestedX, lp)
+            val nextY = clampWindowY(requestedY, lp)
             if (lp.x == nextX && lp.y == nextY) return
             lp.x = nextX
             lp.y = nextY
@@ -848,14 +877,18 @@ object StatusBarComboStyleOneRuntime {
             // status-bar anchor is closer to the top edge than the cover display, so large sizes
             // can produce a negative window Y only when unfolded. Preserve normal centering until
             // the top edge would cross the active display's top boundary, then pin the window there.
-            val minimumWindowY = if (rootLocated) rootLocation[1].coerceAtLeast(0) else 0
-            burnInBaseXpx = baseWindowX
-            burnInBaseYpx = requestedBaseWindowY.coerceAtLeast(minimumWindowY)
+            val edgeInsetPx = StatusBarComboStyleOneRuntime.dpExact(context, 1).coerceAtLeast(0)
+            val minimumWindowY = (if (rootLocated) rootLocation[1].coerceAtLeast(0) else 0) + edgeInsetPx
             burnInMinimumWindowY = minimumWindowY
             val density = context.resources.displayMetrics.density.takeIf { it > 0f } ?: 1f
-            lp.x = baseWindowX + (burnInOffsetXDp * density).roundToInt()
+            val clampedBaseX = clampWindowX(baseWindowX, lp)
+            burnInBaseXpx = clampedBaseX
+            burnInBaseYpx = clampWindowY(requestedBaseWindowY, lp, minimumWindowY)
+            val requestedWindowX = clampedBaseX + (burnInOffsetXDp * density).roundToInt()
             val requestedWindowY = requireNotNull(burnInBaseYpx) + (burnInOffsetYDp * density).roundToInt()
-            lp.y = requestedWindowY.coerceAtLeast(minimumWindowY)
+            lp.x = clampWindowX(requestedWindowX, lp)
+            lp.y = clampWindowY(requestedWindowY, lp, minimumWindowY)
+            val rightEdgeClamped = lp.x != requestedWindowX
             val topEdgeClamped = requireNotNull(burnInBaseYpx) != requestedBaseWindowY || lp.y != requestedWindowY
 
             val ringCenterXUnits = StatusComboStyleOneGlyphRenderer.glyphCenterX(cfg, networkType)
@@ -873,6 +906,7 @@ object StatusBarComboStyleOneRuntime {
                         "activeRightMargin=${activeRightMargin} slotRightPx=${slotRightPx} slotCenterY=${slotCenterY} " +
                         "anchorSize=${anchor.width}x${anchor.height} measured=${anchor.measuredWidth}x${anchor.measuredHeight} " +
                         "anchorVisibility=${anchor.visibility} anchorAlpha=${anchor.alpha} " +
+                        "requestedWindowX=${requestedWindowX} rightEdgeClamped=${rightEdgeClamped} " +
                         "requestedWindowY=${requestedWindowY} minimumTopY=${minimumWindowY} " +
                         "topEdgeClamped=${topEdgeClamped} window=(${lp.x},${lp.y}) size=${lp.width}x${lp.height} " +
                         "ringCenterScreen=(${ringCenterScreenPx},${lp.y + lp.height * centreRatioY}) placement=statusbar-right-slot"
@@ -923,8 +957,10 @@ object StatusBarComboStyleOneRuntime {
                 return
             }
             lp.width += deltaPx
-            lp.x -= deltaPx
-            burnInBaseXpx = burnInBaseXpx?.minus(deltaPx)
+            val expandedRequestedX = lp.x - deltaPx
+            val expandedBaseX = burnInBaseXpx?.minus(deltaPx)
+            lp.x = clampWindowX(expandedRequestedX, lp)
+            burnInBaseXpx = expandedBaseX?.let { clampWindowX(it, lp) }
             runCatching { wm?.updateViewLayout(glyph, lp) }
                 .onFailure { Log.w(TAG, "Cannot expand outside-signal canvas frame", it) }
             val expandedWidthPx = lp.width
