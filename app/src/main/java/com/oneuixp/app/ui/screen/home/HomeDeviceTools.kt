@@ -245,10 +245,11 @@ private fun SystemMonitorContent(snapshot: HomeDeviceSnapshot) {
             cpuFrequency?.progress ?: 0f,
         )
         cpuFrequency?.let { frequency ->
-            DeviceDataRow(
+            DeviceToolsText(
                 if (frequency.perCore) "各核心频率" else "各簇频率",
-                frequency.entries.joinToString(" · ") { "${it.label} ${formatCpuFrequency(it.currentKHz)}" },
+                DeviceTextKind.Label,
             )
+            CpuFrequencyGrid(frequency.entries)
         }
         val ramPercent = usagePercent(snapshot.ramUsed, snapshot.ramTotal)
         DeviceProgressMetric(
@@ -393,6 +394,50 @@ private fun DeviceProgressMetric(label: String, value: String, progress: Float) 
                         color = accent,
                         style = Stroke(width = strokeWidth, cap = StrokeCap.Round),
                     )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun CpuFrequencyGrid(entries: List<CpuFrequencyEntry>) {
+    // Keep a constant four-column grid so changing clock digits never shifts
+    // neighboring CPU frequencies horizontally.
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        entries.chunked(4).forEach { rowEntries ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                rowEntries.forEach { entry ->
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(58.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(deviceSecondaryColor().copy(alpha = 0.08f))
+                            .padding(horizontal = 3.dp, vertical = 8.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center,
+                    ) {
+                        DeviceToolsText(
+                            entry.label,
+                            DeviceTextKind.Caption,
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = TextAlign.Center,
+                        )
+                        Spacer(modifier = Modifier.height(3.dp))
+                        DeviceToolsText(
+                            formatCpuFrequency(entry.currentKHz),
+                            DeviceTextKind.Value,
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = TextAlign.Center,
+                        )
+                    }
+                }
+                repeat(4 - rowEntries.size) {
+                    Spacer(modifier = Modifier.weight(1f))
                 }
             }
         }
