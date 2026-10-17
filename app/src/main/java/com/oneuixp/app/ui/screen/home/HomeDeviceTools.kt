@@ -15,11 +15,17 @@ import android.util.DisplayMetrics
 import android.view.WindowManager
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -51,6 +57,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
@@ -77,7 +88,9 @@ import top.yukonga.miuix.kmp.basic.Text as MiuixText
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import java.io.File
 import java.util.Locale
+import kotlin.math.PI
 import kotlin.math.roundToInt
+import kotlin.math.sin
 import kotlin.math.sqrt
 
 private enum class DeviceTextKind { Title, Section, Label, Value, Large, Caption }
@@ -287,20 +300,68 @@ private fun DeviceProgressMetric(label: String, value: String, progress: Float) 
             DeviceToolsText(label, DeviceTextKind.Label, Modifier.weight(1f))
             DeviceToolsText(value, DeviceTextKind.Value, Modifier.weight(2f), TextAlign.End)
         }
+
         val animatedProgress by animateFloatAsState(
             targetValue = progress.coerceIn(0f, 1f),
             animationSpec = tween(durationMillis = 550),
             label = "deviceMetricProgress",
         )
-        Box(
-            modifier = Modifier.fillMaxWidth().height(6.dp)
-                .clip(RoundedCornerShape(100))
-                .background(deviceSecondaryColor().copy(alpha = 0.14f)),
-        ) {
-            Box(
-                modifier = Modifier.fillMaxWidth(animatedProgress)
-                    .fillMaxHeight().background(deviceAccentColor()),
+        val infiniteTransition = rememberInfiniteTransition(label = "deviceWavyProgress")
+        val wavePhase by infiniteTransition.animateFloat(
+            initialValue = 0f,
+            targetValue = (2.0 * PI).toFloat(),
+            animationSpec = infiniteRepeatable(
+                animation = tween(durationMillis = 1_700, easing = LinearEasing),
+                repeatMode = RepeatMode.Restart,
+            ),
+            label = "deviceWavyProgressPhase",
+        )
+        val accent = deviceAccentColor()
+        val track = deviceSecondaryColor().copy(alpha = 0.16f)
+
+        Canvas(modifier = Modifier.fillMaxWidth().height(12.dp)) {
+            val strokeWidth = 3.dp.toPx()
+            val centerY = size.height / 2f
+            drawLine(
+                color = track,
+                start = Offset(strokeWidth / 2f, centerY),
+                end = Offset(size.width - strokeWidth / 2f, centerY),
+                strokeWidth = strokeWidth,
+                cap = StrokeCap.Round,
             )
+
+            val progressEnd = size.width * animatedProgress
+            if (progressEnd > 0f) {
+                val wavelength = 20.dp.toPx()
+                val amplitude = 2.dp.toPx()
+                val step = 1.5.dp.toPx().coerceAtLeast(1f)
+                val path = Path()
+                var x = 0f
+                var isFirst = true
+                while (x < progressEnd) {
+                    val y = centerY + sin((x / wavelength * 2.0 * PI) + wavePhase) * amplitude
+                    if (isFirst) {
+                        path.moveTo(x, y.toFloat())
+                        isFirst = false
+                    } else {
+                        path.lineTo(x, y.toFloat())
+                    }
+                    x += step
+                }
+                val endY = centerY + sin((progressEnd / wavelength * 2.0 * PI) + wavePhase) * amplitude
+                if (isFirst) {
+                    path.moveTo(0f, endY.toFloat())
+                } else {
+                    path.lineTo(progressEnd, endY.toFloat())
+                }
+                clipRect(right = progressEnd) {
+                    drawPath(
+                        path = path,
+                        color = accent,
+                        style = Stroke(width = strokeWidth, cap = StrokeCap.Round),
+                    )
+                }
+            }
         }
     }
 }
