@@ -213,8 +213,8 @@ private fun DeviceSectionHeading(icon: ImageVector, title: String, subtitle: Str
 private fun SystemMonitorContent(snapshot: HomeDeviceSnapshot) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         DeviceProgressMetric(
-            "CPU 使用率",
-            snapshot.cpuPercent?.let { "${it.roundToInt()}%" } ?: "系统限制读取",
+            snapshot.cpuSourceLabel,
+            snapshot.cpuPercent?.let { "${it.roundToInt()}%" } ?: "采样中…",
             (snapshot.cpuPercent ?: 0f) / 100f,
         )
         val ramPercent = usagePercent(snapshot.ramUsed, snapshot.ramTotal)
