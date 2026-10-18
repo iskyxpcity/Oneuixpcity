@@ -87,7 +87,7 @@ suspend fun downloadAndVerifyUpdate(
 
     runCatching {
         val updateDir = File(context.cacheDir, "updates").apply { mkdirs() }
-        val apk = File(updateDir, "OneuiXP_${info.versionName}.apk")
+        val apk = File(updateDir, "OneUI_XP_${info.versionName}.apk")
         if (apk.exists()) apk.delete()
 
         val request = Request.Builder()
