@@ -198,12 +198,12 @@ class MainActivity : ComponentActivity() {
                         }
                     }
 
+                    val updateDialogSurfaceColor = when (uiMode) {
+                        UiMode.Material -> MaterialTheme.colorScheme.surface
+                        UiMode.Miuix -> MiuixTheme.colorScheme.surface
+                    }
                     val updateDialogBackdrop = rememberLayerBackdrop {
-                        val surfaceColor = when (uiMode) {
-                            UiMode.Material -> MaterialTheme.colorScheme.surface
-                            UiMode.Miuix -> MiuixTheme.colorScheme.surface
-                        }
-                        drawRect(surfaceColor)
+                        drawRect(updateDialogSurfaceColor)
                         drawContent()
                     }
                     Box(Modifier.fillMaxSize()) {
