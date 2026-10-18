@@ -48,12 +48,6 @@
         <meta-data android:name="xposeddescription" android:value="OneuiXP · OneUIX full migration" />
         <meta-data android:name="xposedminversion" android:value="93" />
         <meta-data android:name="xposedscope" android:resource="@array/xposed_scope" />
-        <activity
-            android:name=".ui.util.update.UpdateInstallStatusActivity"
-            android:excludeFromRecents="true"
-            android:exported="false"
-            android:noHistory="true"
-            android:theme="@style/Theme.OneuiXP" />
 
         <activity
             android:name=".ui.StartupActivity"
