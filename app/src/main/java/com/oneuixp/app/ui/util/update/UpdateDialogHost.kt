@@ -656,7 +656,14 @@ private fun UpdateDialogMiuix(
                 MiuixButton(
                     onClick = onDismiss,
                     enabled = !isBusy,
-                    modifier = Modifier.weight(1f).height(48.dp),
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(48.dp)
+                        .border(
+                            width = 1.dp,
+                            color = colors.primary,
+                            shape = RoundedCornerShape(MiuixButtonDefaults.CornerRadius),
+                        ),
                     colors = MiuixButtonDefaults.buttonColors(
                         color = colors.surfaceContainerHigh,
                         contentColor = colors.onSurfaceContainerHigh,
