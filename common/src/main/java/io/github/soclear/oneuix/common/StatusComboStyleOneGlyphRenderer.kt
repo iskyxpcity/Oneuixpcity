@@ -38,8 +38,8 @@ object StatusComboStyleOneGlyphRenderer {
     // The default 100% now maps to a 30.6dp glyph height instead of the previously oversized 36dp.
     const val GLYPH_SCALE_BASELINE_FACTOR = 1.0f
     const val BASE_GLYPH_HEIGHT_DP = 30.6f
-    // Keep modest transparent breathing room without changing the ring's trailing-slot anchor.
-    const val GLYPH_FRAME_BREATHING_DP = 1.5f
+    // Keep only 0.5dp transparent breathing room on each edge; reserve width drops by 2dp total.
+    const val GLYPH_FRAME_BREATHING_DP = 0.5f
     private const val DUAL_BOTTOM_HEIGHT = 150f
     // Row 1 sits inside the ring's bottom opening; row 2 hugs it directly underneath.
     // The first row sits slightly inside the bottom opening instead of hanging below the ring.
