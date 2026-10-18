@@ -1,4 +1,4 @@
-name: OneuiXP Android APK build
+name: OneUI XP Android APK build
 on:
   push:
     branches: [main, 'test/**', 'migration/**']
@@ -17,7 +17,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Read OneuiXP version
+      - name: Read OneUI XP version
         run: |
           set -euo pipefail
           VERSION_NAME=$(sed -n 's/^oneuixpVersionName=//p' gradle.properties)
@@ -49,7 +49,7 @@ jobs:
       - uses: android-actions/setup-android@v4
       - name: Install pinned Android SDK
         run: android sdk install platforms/android-37 build-tools/37.0.0
-      - name: Validate OneuiXP source
+      - name: Validate OneUI XP source
         run: |
           set -euo pipefail
           python3 ./verify_no_jni.py
@@ -89,7 +89,7 @@ jobs:
           test ! -e hook/src/main/resources/META-INF/xposed/java_init.list
           test ! -e hook/src/main/resources/META-INF/xposed/module.prop
           test ! -e hook/src/main/resources/META-INF/xposed/scope.list
-          echo "OneuiXP API101 Flux-style single-entry migration validated; full OneUIX functional hooks enabled"
+          echo "OneUI XP API101 Flux-style single-entry migration validated; full OneUIX functional hooks enabled"
 
       - name: Compile OneuiXP before the owner-signing gate
         run: |
@@ -195,9 +195,9 @@ jobs:
           grep -Eq 'hasFragileUserData.*0x0$' dist/APK_MANIFEST_CHECK.txt
           COMMIT_SUBJECT=$(git log -1 --pretty=%s)
           if [ "$GITHUB_REF" = "refs/heads/main" ] && [[ "$COMMIT_SUBJECT" == release:* ]]; then
-            OUTPUT_APK="OneuiXP_${VERSION_NAME}.apk"
+            OUTPUT_APK="OneUI_XP_${VERSION_NAME}.apk"
           else
-            OUTPUT_APK="OneuiXP_${VERSION_NAME}_BUILD_${GITHUB_RUN_NUMBER}.apk"
+            OUTPUT_APK="OneUI_XP_${VERSION_NAME}_BUILD_${GITHUB_RUN_NUMBER}.apk"
           fi
           echo "OUTPUT_APK=$OUTPUT_APK" >> "$GITHUB_ENV"
           cp "$APK" "dist/$OUTPUT_APK"
@@ -225,11 +225,13 @@ jobs:
           if [ "$GITHUB_REF" = "refs/heads/main" ] && [[ "$COMMIT_SUBJECT" == release:* ]]; then
             FORMAL_RELEASE=true
             TAG="v${VERSION_NAME}"
-            TITLE="OneuiXP ${VERSION_NAME}"
-            if [ "$VERSION_NAME" = "1.0.261018.1" ]; then
-              NOTES=$(printf 'OneuiXP %s 正式版。\n\n本次修复：\n- 修复状态栏组合图标的整体缩放问题。\n- 修正状态栏组合图标设置页预览图标整体偏上的问题。\n' "$VERSION_NAME")
+            TITLE="OneUI XP ${VERSION_NAME}"
+            if [ "$VERSION_NAME" = "1.0.261019" ]; then
+              NOTES=$(printf 'OneUI XP %s 正式版。\n\n本次修复：\n- 使用三段版本号作为过渡版本，恢复旧版更新器的识别兼容性。\n- 更新检查继续支持三段版本号与四段补丁版本号。\n- 确保 Release 版本名与 APK 内部版本号一致，避免“更新包版本不匹配”。\n' "$VERSION_NAME")
+            elif [ "$VERSION_NAME" = "1.0.261018.1" ]; then
+              NOTES=$(printf 'OneUI XP %s 正式版。\n\n本次修复：\n- 修复状态栏组合图标的整体缩放问题。\n- 修正状态栏组合图标设置页预览图标整体偏上的问题。\n' "$VERSION_NAME")
             else
-              NOTES="OneuiXP ${VERSION_NAME} 正式版。此 Release 提供正式版 APK 下载和更新说明。"
+              NOTES="OneUI XP ${VERSION_NAME} 正式版。此 Release 提供正式版 APK 下载和更新说明。"
             fi
 
             if ! gh release view "$TAG" --repo "$RELEASE_REPO" >/dev/null 2>&1; then
@@ -243,16 +245,16 @@ jobs:
           else
             if [ "$GITHUB_REF" = "refs/heads/main" ]; then
               TAG="main-build-${GITHUB_RUN_NUMBER}-$SHORT_SHA"
-              TITLE="OneuiXP main build #${GITHUB_RUN_NUMBER}"
+              TITLE="OneUI XP main build #${GITHUB_RUN_NUMBER}"
               NOTES="Automated signed main-branch test build. This is a prerelease, not a formal OneuiXP release."
             else
               if [[ "$GITHUB_REF" == refs/heads/test/* ]]; then
                 TAG="test-build-${GITHUB_RUN_NUMBER}-$SHORT_SHA"
-                TITLE="OneuiXP test build #${GITHUB_RUN_NUMBER}"
+                TITLE="OneUI XP test build #${GITHUB_RUN_NUMBER}"
                 NOTES="Signed test build. Validate on Samsung hardware before merging to main."
               else
                 TAG="migration-build-${GITHUB_RUN_NUMBER}-$SHORT_SHA"
-                TITLE="OneuiXP migration build #${GITHUB_RUN_NUMBER}"
+                TITLE="OneUI XP migration build #${GITHUB_RUN_NUMBER}"
                 NOTES="Signed migration test build. Validate on Samsung hardware before merging to main."
               fi
             fi
@@ -313,7 +315,7 @@ jobs:
         continue-on-error: true
         if: success() && github.ref == 'refs/heads/main'
         with:
-          name: OneuiXP-Owner-Signed
+          name: OneUI-XP-Owner-Signed
           path: dist/
           if-no-files-found: error
       - name: Optionally upload build diagnostics
@@ -321,6 +323,6 @@ jobs:
         continue-on-error: true
         if: failure()
         with:
-          name: OneuiXP-Build-Diagnostics
+          name: OneUI-XP-Build-Diagnostics
           path: diagnostics/
           if-no-files-found: warn
