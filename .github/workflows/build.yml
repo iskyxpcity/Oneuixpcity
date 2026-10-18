@@ -284,7 +284,7 @@ jobs:
               if gh release view "$TAG" --repo "$PUBLIC_RELEASE_REPO" >/dev/null 2>&1; then
                 gh release edit "$TAG" --repo "$PUBLIC_RELEASE_REPO" --title "$TITLE" --notes "$NOTES" --latest
               else
-                gh release create "$TAG" --repo "$PUBLIC_RELEASE_REPO" --target "$GITHUB_SHA" \
+                gh release create "$TAG" --repo "$PUBLIC_RELEASE_REPO" --target main \
                   --title "$TITLE" --notes "$NOTES" --latest
               fi
               gh release upload "$TAG" --repo "$PUBLIC_RELEASE_REPO" "dist/$OUTPUT_APK" --clobber
