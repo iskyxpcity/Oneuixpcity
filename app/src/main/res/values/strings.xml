@@ -9,6 +9,9 @@
     <string name="send_log">Send logs</string>
     <string name="app_update">Update</string>
     <string name="new_version_available">New version %s is available, click to upgrade!</string>
+    <string name="update_install_failed_message">The system installer could not complete the update. Details: %1$s</string>
+    <string name="update_install_confirmation_missing_message">Android did not provide an installation confirmation screen. Please return to OneUI XP and try the update again.</string>
+    <string name="update_install_confirmation_fallback_message">Android could not open the installation confirmation automatically. Tap Continue to try opening it again.</string>
     <string name="home_lsposed_manager_unavailable">LSPosed Manager was not found. Please install or enable LSPosed first.</string>
     <string name="app_changelog">Changelog</string>
     <string name="settings_check_update">Check for updates</string>
