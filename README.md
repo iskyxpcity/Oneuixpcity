@@ -1,11 +1,11 @@
-# OneuiXP
+# OneUI XP
 
 面向 Samsung One UI 的 LSPosed 应用，使用 KernelSU v3.2.5 双主题 UI 框架（Miuix / Material），但**不是 KernelSU Root 管理工具**。
 
 ## 当前状态
 
 - 应用 ID：`com.oneuixp.app`
-- 版本号格式：`1.0.YYMMDD`，当前基线 `1.0.260923`
+- 版本号支持三段格式 `1.0.YYMMDD` 与四段补丁格式 `1.0.YYMMDD.PATCH`；当前基线 `1.0.261019`
 - 现代 Xposed 模块：`app/src/main/resources/META-INF/xposed/`（API 101）
 - 兼容旧模块入口：`app/src/main/assets/xposed_init`
 - 唯一预设作用域：`com.android.systemui`
@@ -23,12 +23,12 @@
 
 ## 构建与签名
 
-正式分发 APK **只**使用 OneuiXP 专用的永久签名密钥。仓库 Actions Secrets 中应配置：
+正式分发 APK **只**使用 OneUI XP 专用的永久签名密钥。仓库 Actions Secrets 中应配置：
 `KEYSTORE_BASE64`、`KEYSTORE_PASSWORD`、`KEY_ALIAS`、`KEY_PASSWORD`。
 签名证书的公开 SHA-256 指纹在构建工作流中固定校验；签名私钥和密码不得提交到 Git。
 
-更新检查使用本仓库的 [Releases](https://github.com/iSkyJIE/OneuiXP/releases)。
-构建产物见 [GitHub Actions](https://github.com/iSkyJIE/OneuiXP/actions)。
+更新检查使用公开发行仓库的 [Releases](https://github.com/iSkyJIE/OneUIXP-Releases/releases)。
+构建产物见 [GitHub Actions](https://github.com/iskyxpcity/Oneuixpcity/actions)。
 
 ## 开发与历史记录
 
@@ -39,4 +39,4 @@
 
 ## UI 来源与许可证
 
-OneuiXP 是独立的 LSPosed/SystemUI 应用，不连接或调用 KernelSU 的 Root/模块功能。部分 Miuix / Material UI 框架及视觉组件改编自 [KernelSU v3.2.5](https://github.com/tiann/KernelSU/tree/v3.2.5)，保留原始作者署名与 GPL-3.0 许可证文本（见 `LICENSE`）。功能独立不等于抹除保留代码的来源或许可证义务。
+OneUI XP 是独立的 LSPosed/SystemUI 应用，不连接或调用 KernelSU 的 Root/模块功能。部分 Miuix / Material UI 框架及视觉组件改编自 [KernelSU v3.2.5](https://github.com/tiann/KernelSU/tree/v3.2.5)，保留原始作者署名与 GPL-3.0 许可证文本（见 `LICENSE`）。功能独立不等于抹除保留代码的来源或许可证义务。
