@@ -842,7 +842,7 @@ object StatusComboStyleOneGlyphRenderer {
         networkType: String = "",
     ): Int =
         (baseGlyphHeightDp(config).toFloat() * designHeight(config, networkType) / HEIGHT)
-            .roundToInt().coerceAtLeast(18)
+            .roundToInt().coerceAtLeast(1)
 
 
     /**
