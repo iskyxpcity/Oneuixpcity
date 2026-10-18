@@ -10,11 +10,19 @@ data class LatestVersionInfo(
 
 private fun parseOneuiXPVersion(value: String): List<Int>? {
     val parts = value.trim().removePrefix("v").split(".")
-    if (parts.size != 3) return null
+    if (parts.size !in 3..4) return null
     val numbers = parts.map { it.toIntOrNull() ?: return null }
-    val (major, minor, date) = numbers
-    if (major !in 0..20 || minor !in 0..99 || date !in 0..999999) return null
-    return numbers
+    val major = numbers[0]
+    val minor = numbers[1]
+    val date = numbers[2]
+    val patch = numbers.getOrElse(3) { 0 }
+    if (
+        major !in 0..20 ||
+        minor !in 0..99 ||
+        date !in 0..999999 ||
+        patch !in 0..999
+    ) return null
+    return listOf(major, minor, date, patch)
 }
 
 /**
