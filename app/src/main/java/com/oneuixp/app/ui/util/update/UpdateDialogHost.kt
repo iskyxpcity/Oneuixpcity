@@ -393,7 +393,7 @@ private fun UpdateDialogMaterial(
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = ButtonGroupDefaults.ConnectedSpaceBetween,
+                    horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     ExpressiveToggleButton(
