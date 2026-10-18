@@ -198,11 +198,30 @@ class MainActivity : ComponentActivity() {
                         }
                     }
 
-                    when (uiMode) {
-                        UiMode.Material -> androidx.compose.material3.Scaffold { navDisplay() }
-                        UiMode.Miuix -> Scaffold { navDisplay() }
+                    val updateDialogBackdrop = rememberLayerBackdrop {
+                        val surfaceColor = when (uiMode) {
+                            UiMode.Material -> MaterialTheme.colorScheme.surface
+                            UiMode.Miuix -> MiuixTheme.colorScheme.surface
+                        }
+                        drawRect(surfaceColor)
+                        drawContent()
                     }
-                    UpdateDialogHost(isMiuix = uiMode == UiMode.Miuix)
+                    Box(Modifier.fillMaxSize()) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .layerBackdrop(updateDialogBackdrop),
+                        ) {
+                            when (uiMode) {
+                                UiMode.Material -> androidx.compose.material3.Scaffold { navDisplay() }
+                                UiMode.Miuix -> Scaffold { navDisplay() }
+                            }
+                        }
+                        UpdateDialogHost(
+                            isMiuix = uiMode == UiMode.Miuix,
+                            glassBackdrop = updateDialogBackdrop,
+                        )
+                    }
                 }
             }
         }

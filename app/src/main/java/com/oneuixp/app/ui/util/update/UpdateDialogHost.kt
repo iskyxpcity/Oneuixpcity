@@ -1,6 +1,10 @@
 package com.oneuixp.app.ui.util.update
 
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,10 +19,13 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.SystemUpdateAlt
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -34,6 +41,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -51,17 +61,48 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.concurrent.atomic.AtomicLong
+import top.yukonga.miuix.kmp.basic.Button as MiuixButton
 import top.yukonga.miuix.kmp.basic.ButtonDefaults as MiuixButtonDefaults
+import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
 import top.yukonga.miuix.kmp.basic.InfiniteProgressIndicator
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
 import top.yukonga.miuix.kmp.basic.TextButton as MiuixTextButton
+import top.yukonga.miuix.kmp.blur.Backdrop
+import top.yukonga.miuix.kmp.blur.blur
+import top.yukonga.miuix.kmp.blur.drawBackdrop
+import top.yukonga.miuix.kmp.blur.highlight.BloomStroke
+import top.yukonga.miuix.kmp.blur.highlight.Highlight
+import top.yukonga.miuix.kmp.blur.highlight.LightPosition
+import top.yukonga.miuix.kmp.blur.highlight.LightSource
+import top.yukonga.miuix.kmp.blur.lens
+import top.yukonga.miuix.kmp.blur.vibrancy
+import top.yukonga.miuix.kmp.shader.isRenderEffectSupported
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.window.WindowDialog
 
 /**
  * A version request from the home update card reopens the same global update dialog.
  * The monotonically increasing sequence ensures tapping the same version emits again.
  */
+private val updateDialogGlassHighlight: Highlight = Highlight(
+    width = 1.dp,
+    alpha = 1f,
+    style = BloomStroke(
+        color = Color.White.copy(alpha = 0.12f),
+        innerBlurRadius = 2.dp,
+        primaryLight = LightSource(
+            position = LightPosition(0.5f, -0.3f, -0.05f),
+            color = Color.White,
+            intensity = 1f,
+        ),
+        secondaryLight = LightSource(
+            position = LightPosition(0.5f, 0.8f, -0.5f),
+            color = Color.White,
+            intensity = 0.4f,
+        ),
+        dualPeak = true,
+    ),
+)
+
 data class UpdateDialogRequest(val sequence: Long, val info: LatestVersionInfo)
 
 object UpdateDialogRequests {
@@ -89,7 +130,7 @@ fun requestUpdateDialog(info: LatestVersionInfo) {
  * A dialog is only shown when the release feed advertises a newer stable version.
  */
 @Composable
-fun UpdateDialogHost(isMiuix: Boolean) {
+fun UpdateDialogHost(isMiuix: Boolean, glassBackdrop: Backdrop) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var updateInfo by remember { mutableStateOf<LatestVersionInfo?>(null) }
@@ -120,6 +161,7 @@ fun UpdateDialogHost(isMiuix: Boolean) {
     if (dialogVisible && latest != null) {
         UpdateDialog(
             isMiuix = isMiuix,
+            glassBackdrop = glassBackdrop,
             info = latest,
             isBusy = busy,
             statusMessage = statusMessage,
@@ -180,6 +222,7 @@ fun UpdateDialogHost(isMiuix: Boolean) {
 @Composable
 private fun UpdateDialog(
     isMiuix: Boolean,
+    glassBackdrop: Backdrop,
     info: LatestVersionInfo,
     isBusy: Boolean,
     statusMessage: String?,
@@ -189,6 +232,7 @@ private fun UpdateDialog(
     if (isMiuix) {
         UpdateDialogMiuix(
             info = info,
+            glassBackdrop = glassBackdrop,
             isBusy = isBusy,
             statusMessage = statusMessage,
             onDismiss = onDismiss,
@@ -216,6 +260,9 @@ private fun UpdateDialogMaterial(
     val container = MaterialTheme.colorScheme.surface
     val onContainer = MaterialTheme.colorScheme.onSurface
     val accent = MaterialTheme.colorScheme.primary
+    val titleBrush = remember(accent, MaterialTheme.colorScheme.secondary) {
+        Brush.horizontalGradient(listOf(accent, MaterialTheme.colorScheme.secondary))
+    }
     val notes = remember(info.changelog) { normalizeReleaseNotes(info.changelog) }
 
     Dialog(
@@ -256,9 +303,10 @@ private fun UpdateDialogMaterial(
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = stringResource(R.string.update_dialog_title),
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.SemiBold,
-                            color = onContainer,
+                            style = MaterialTheme.typography.titleLarge.copy(
+                                brush = titleBrush,
+                                fontWeight = FontWeight.Bold,
+                            ),
                         )
                         Text(
                             text = "OneUI XP ${info.versionName}",
@@ -345,13 +393,36 @@ private fun UpdateDialogMaterial(
                         modifier = Modifier.weight(1f).height(48.dp),
                         enabled = !isBusy,
                         onClick = onDismiss,
+                        shape = MaterialTheme.shapes.large,
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = accent,
+                            disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        ),
+                        border = BorderStroke(1.dp, accent.copy(alpha = 0.58f)),
                     ) {
+                        Icon(
+                            imageVector = Icons.Filled.Close,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp),
+                        )
+                        Spacer(Modifier.width(8.dp))
                         Text(stringResource(R.string.update_dialog_cancel))
                     }
                     Button(
                         modifier = Modifier.weight(1f).height(48.dp),
                         enabled = !isBusy,
                         onClick = onUpdate,
+                        shape = MaterialTheme.shapes.large,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = accent,
+                            contentColor = MaterialTheme.colorScheme.onPrimary,
+                            disabledContainerColor = accent.copy(alpha = 0.62f),
+                            disabledContentColor = MaterialTheme.colorScheme.onPrimary,
+                        ),
+                        elevation = ButtonDefaults.buttonElevation(
+                            defaultElevation = 2.dp,
+                            pressedElevation = 4.dp,
+                        ),
                     ) {
                         if (isBusy) {
                             CircularProgressIndicator(
@@ -360,6 +431,12 @@ private fun UpdateDialogMaterial(
                                 strokeWidth = 2.dp,
                             )
                         } else {
+                            Icon(
+                                imageVector = Icons.Filled.SystemUpdateAlt,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp),
+                            )
+                            Spacer(Modifier.width(8.dp))
                             Text(stringResource(R.string.update_dialog_install))
                         }
                     }
@@ -372,6 +449,7 @@ private fun UpdateDialogMaterial(
 @Composable
 private fun UpdateDialogMiuix(
     info: LatestVersionInfo,
+    glassBackdrop: Backdrop,
     isBusy: Boolean,
     statusMessage: String?,
     onDismiss: () -> Unit,
@@ -379,110 +457,193 @@ private fun UpdateDialogMiuix(
 ) {
     val colors = MiuixTheme.colorScheme
     val notes = remember(info.changelog) { normalizeReleaseNotes(info.changelog) }
+    val cardShape = remember { RoundedCornerShape(30.dp) }
+    val titleBrush = remember(colors.primary, colors.secondary) {
+        Brush.horizontalGradient(listOf(colors.primary, colors.secondary))
+    }
+    val scrimInteraction = remember { MutableInteractionSource() }
+    val cardInteraction = remember { MutableInteractionSource() }
+    val supportsGlass = isRenderEffectSupported()
 
-    // Use the same native Miuix window dialog as the app's other settings dialogs.
-    WindowDialog(
-        show = true,
-        title = stringResource(R.string.update_dialog_title),
-        onDismissRequest = onDismiss,
-        content = {
-            Column(
-                modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                MiuixText(
-                    text = "OneUI XP ${info.versionName}",
-                    color = colors.onSurface,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = MiuixTheme.textStyles.title4.fontSize,
+    BackHandler(enabled = true) {
+        if (!isBusy) onDismiss()
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black.copy(alpha = 0.26f))
+            .clickable(
+                interactionSource = scrimInteraction,
+                indication = null,
+                onClick = { if (!isBusy) onDismiss() },
+            ),
+        contentAlignment = Alignment.Center,
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth(0.92f)
+                .widthIn(max = 440.dp)
+                .clip(cardShape)
+                .then(
+                    if (supportsGlass) {
+                        Modifier.drawBackdrop(
+                            backdrop = glassBackdrop,
+                            shape = { cardShape },
+                            effects = {
+                                vibrancy()
+                                blur(4.dp.toPx(), 4.dp.toPx())
+                                lens(
+                                    refractionHeight = 24.dp.toPx(),
+                                    refractionAmount = 24.dp.toPx(),
+                                )
+                            },
+                            highlight = { updateDialogGlassHighlight.copy(alpha = 0.75f) },
+                            onDrawSurface = { drawRect(colors.surfaceContainer.copy(alpha = 0.40f)) },
+                        )
+                    } else {
+                        Modifier.background(colors.surface, cardShape)
+                    }
                 )
-
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    MiuixText(
-                        text = stringResource(R.string.update_dialog_new_badge),
-                        color = colors.primary,
-                        fontSize = MiuixTheme.textStyles.body2.fontSize,
-                        fontWeight = FontWeight.SemiBold,
+                .border(1.dp, Color.White.copy(alpha = 0.24f), cardShape)
+                .clickable(
+                    interactionSource = cardInteraction,
+                    indication = null,
+                    onClick = {},
+                )
+                .padding(horizontal = 24.dp, vertical = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .size(56.dp)
+                        .clip(RoundedCornerShape(18.dp))
+                        .background(
+                            Brush.horizontalGradient(listOf(colors.primary, colors.secondary)),
+                        ),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    MiuixIcon(
+                        imageVector = Icons.Filled.SystemUpdateAlt,
+                        contentDescription = null,
+                        tint = colors.onPrimary,
+                        modifier = Modifier.size(28.dp),
                     )
-                    Spacer(Modifier.width(12.dp))
+                }
+                Spacer(Modifier.width(14.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    BasicText(
+                        text = stringResource(R.string.update_dialog_title),
+                        style = MiuixTheme.textStyles.title4.copy(
+                            brush = titleBrush,
+                            fontWeight = FontWeight.Bold,
+                        ),
+                    )
                     MiuixText(
-                        text = stringResource(R.string.update_dialog_current_version, BuildConfig.VERSION_NAME),
+                        text = "OneUI XP ${info.versionName}",
+                        color = colors.onSurface,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = MiuixTheme.textStyles.body2.fontSize,
+                    )
+                }
+                Spacer(Modifier.width(8.dp))
+                MiuixText(
+                    text = stringResource(R.string.update_dialog_new_badge),
+                    color = colors.primary,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = MiuixTheme.textStyles.body2.fontSize,
+                )
+            }
+
+            MiuixText(
+                text = stringResource(R.string.update_dialog_current_version, BuildConfig.VERSION_NAME),
+                color = colors.onSurfaceVariantSummary,
+                fontSize = MiuixTheme.textStyles.body2.fontSize,
+            )
+
+            MiuixText(
+                text = stringResource(R.string.update_dialog_changelog_title),
+                color = colors.onSurface,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = MiuixTheme.textStyles.title4.fontSize,
+            )
+
+            Column(
+                modifier = Modifier.fillMaxWidth().heightIn(max = 210.dp).verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                if (notes.isEmpty()) {
+                    MiuixText(
+                        text = stringResource(R.string.update_dialog_no_changelog),
+                        color = colors.onSurfaceVariantSummary,
+                        fontSize = MiuixTheme.textStyles.body2.fontSize,
+                    )
+                } else {
+                    notes.forEach { note ->
+                        Row(verticalAlignment = Alignment.Top) {
+                            MiuixText(text = "•", color = colors.primary, fontWeight = FontWeight.SemiBold)
+                            Spacer(Modifier.width(8.dp))
+                            MiuixText(
+                                text = note,
+                                color = colors.onSurface,
+                                fontSize = MiuixTheme.textStyles.body2.fontSize,
+                            )
+                        }
+                    }
+                }
+            }
+
+            if (isBusy) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    InfiniteProgressIndicator(color = colors.primary)
+                    Spacer(Modifier.width(10.dp))
+                    MiuixText(
+                        text = stringResource(R.string.update_dialog_downloading),
                         color = colors.onSurfaceVariantSummary,
                         fontSize = MiuixTheme.textStyles.body2.fontSize,
                     )
                 }
-
+            } else if (!statusMessage.isNullOrBlank()) {
                 MiuixText(
-                    text = stringResource(R.string.update_dialog_changelog_title),
-                    color = colors.onSurface,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = MiuixTheme.textStyles.title4.fontSize,
+                    text = statusMessage,
+                    color = colors.error,
+                    fontSize = MiuixTheme.textStyles.body2.fontSize,
                 )
+            }
 
-                Column(
-                    modifier = Modifier.fillMaxWidth().heightIn(max = 210.dp).verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                MiuixTextButton(
+                    text = stringResource(R.string.update_dialog_cancel),
+                    onClick = onDismiss,
+                    modifier = Modifier.weight(1f),
+                )
+                MiuixButton(
+                    onClick = { if (!isBusy) onUpdate() },
+                    enabled = !isBusy,
+                    modifier = Modifier.weight(1f),
+                    colors = MiuixButtonDefaults.buttonColorsPrimary(),
                 ) {
-                    if (notes.isEmpty()) {
-                        MiuixText(
-                            text = stringResource(R.string.update_dialog_no_changelog),
-                            color = colors.onSurfaceVariantSummary,
-                            fontSize = MiuixTheme.textStyles.body2.fontSize,
-                        )
+                    if (isBusy) {
+                        InfiniteProgressIndicator(color = colors.onPrimary)
                     } else {
-                        notes.forEach { note ->
-                            Row(verticalAlignment = Alignment.Top) {
-                                MiuixText(
-                                    text = "•",
-                                    color = colors.primary,
-                                    fontWeight = FontWeight.SemiBold,
-                                )
-                                Spacer(Modifier.width(8.dp))
-                                MiuixText(
-                                    text = note,
-                                    color = colors.onSurface,
-                                    fontSize = MiuixTheme.textStyles.body2.fontSize,
-                                )
-                            }
-                        }
-                    }
-                }
-
-                if (isBusy) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        InfiniteProgressIndicator(color = colors.primary)
-                        Spacer(Modifier.width(10.dp))
-                        MiuixText(
-                            text = stringResource(R.string.update_dialog_downloading),
-                            color = colors.onSurfaceVariantSummary,
-                            fontSize = MiuixTheme.textStyles.body2.fontSize,
+                        MiuixIcon(
+                            imageVector = Icons.Filled.SystemUpdateAlt,
+                            contentDescription = null,
+                            tint = colors.onPrimary,
+                            modifier = Modifier.size(18.dp),
                         )
                     }
-                } else if (!statusMessage.isNullOrBlank()) {
-                    MiuixText(
-                        text = statusMessage,
-                        color = colors.primary,
-                        fontSize = MiuixTheme.textStyles.body2.fontSize,
-                    )
-                }
-
-                Row(horizontalArrangement = Arrangement.SpaceBetween) {
-                    MiuixTextButton(
-                        text = stringResource(R.string.update_dialog_cancel),
-                        onClick = onDismiss,
-                        modifier = Modifier.weight(1f),
-                    )
-                    Spacer(Modifier.width(12.dp))
-                    MiuixTextButton(
-                        text = stringResource(R.string.update_dialog_install),
-                        onClick = { if (!isBusy) onUpdate() },
-                        modifier = Modifier.weight(1f),
-                        colors = MiuixButtonDefaults.textButtonColorsPrimary(),
-                    )
+                    Spacer(Modifier.width(8.dp))
+                    MiuixText(text = stringResource(R.string.update_dialog_install))
                 }
             }
-        },
-    )
+        }
+    }
 }
 
 private fun normalizeReleaseNotes(markdown: String): List<String> =
