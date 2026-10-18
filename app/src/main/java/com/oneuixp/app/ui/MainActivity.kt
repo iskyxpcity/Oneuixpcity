@@ -84,6 +84,7 @@ import com.oneuixp.app.ui.theme.OneuiXPTheme
 import com.oneuixp.app.ui.util.rememberBlurBackdrop
 import com.oneuixp.app.ui.util.rememberContentReady
 import com.oneuixp.app.ui.util.update.UpdateDialogHost
+import com.oneuixp.app.ui.util.update.handleUpdateInstallStatus
 import com.oneuixp.app.ui.viewmodel.MainActivityViewModel
 import com.oneuixp.app.ui.viewmodel.MainPagerConfig
 import top.yukonga.miuix.kmp.basic.Scaffold
