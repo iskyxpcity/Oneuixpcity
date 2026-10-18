@@ -11,6 +11,7 @@ import android.net.Uri
 import android.os.Build
 import android.provider.Settings
 import android.widget.Toast
+import com.oneuixp.app.R
 import com.oneuixp.app.oneuiXPApp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -248,12 +249,12 @@ class UpdateInstallReceiver : BroadcastReceiver() {
                         true
                     }.getOrDefault(false)
                 } == true
-                val message = if (relaunched) {
-                    "OneuiXP 更新安装完成，正在重新打开应用"
+                val messageRes = if (relaunched) {
+                    R.string.update_dialog_install_relaunched
                 } else {
-                    "OneuiXP 更新安装完成，请返回桌面重新打开应用"
+                    R.string.update_dialog_install_relaunch_fallback
                 }
-                Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+                Toast.makeText(context, context.getString(messageRes), Toast.LENGTH_LONG).show()
             }
 
             else -> {

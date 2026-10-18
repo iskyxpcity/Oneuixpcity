@@ -16,4 +16,8 @@
     <string name="update_dialog_unknown_error">未知错误</string>
     <string name="changelog_261018_update_dialog_title">应用内更新弹窗</string>
     <string name="changelog_261018_update_dialog_body">启动时检查公开发行版本；弹窗显示更新说明，支持取消、下载与 SHA-256/包名/版本/签名校验，并在系统安装完成后尝试重新打开 OneUI XP。</string>
+    <string name="update_dialog_install_relaunched">更新安装完成，正在重新打开 OneUI XP。</string>
+    <string name="update_dialog_install_relaunch_fallback">更新已安装，请返回桌面重新打开 OneUI XP。</string>
+    <string name="changelog_261018_update_dialog_title">应用内更新弹窗</string>
+    <string name="changelog_261018_update_dialog_body">启动时检查公开稳定版；通过主题弹窗展示更新说明；校验下载 APK 的摘要、包名、版本与签名；安装后尝试重新打开 OneUI XP。</string>
 </resources>

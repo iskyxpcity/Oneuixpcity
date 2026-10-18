@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -42,7 +41,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -153,7 +151,7 @@ private fun UpdateDialog(
     val container = if (isMiuix) MiuixTheme.colorScheme.surface else MaterialTheme.colorScheme.surface
     val onContainer = if (isMiuix) MiuixTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface
     val accent = if (isMiuix) MiuixTheme.colorScheme.primary else MaterialTheme.colorScheme.primary
-    val onAccent = if (isMiuix) MiuixTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onPrimary
+    val onAccent = if (isMiuix) Color.White else MaterialTheme.colorScheme.onPrimary
     val muted = onContainer.copy(alpha = 0.68f)
     val dialogShape = RoundedCornerShape(if (isMiuix) 32.dp else 26.dp)
     val actionShape = RoundedCornerShape(50.dp)
@@ -350,6 +348,5 @@ private fun normalizeReleaseNotes(markdown: String): List<String> =
         .replace(Regex("<[^>]+>"), "")
         .lines()
         .map { it.trim() }
-        .filter { it.isNotNotBlankCompat() }
+        .filter { it.isNotBlank() }
 
-private fun String.isNotNotBlankCompat(): Boolean = isNotBlank()
