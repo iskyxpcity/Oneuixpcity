@@ -10,7 +10,6 @@ import android.content.pm.PackageInstaller
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
-import android.os.Bundle
 import android.util.Log
 import android.provider.Settings
 import com.oneuixp.app.R
@@ -170,14 +169,20 @@ fun submitUpdateSession(context: Context, apk: File): UpdateInstallResult {
                 }
             }
 
-            // Use an Activity PendingIntent for the installer result. The system can
-            // bring this transparent trampoline to the foreground after installation;
-            // a background BroadcastReceiver calling startActivity() is restricted on
-            // modern Android versions.
-            val statusIntent = Intent(context, UpdateInstallStatusActivity::class.java).apply {
+            // Deliver the installer result to the real foreground UI instead of a
+            // transparent trampoline. MainActivity can then launch the system confirmation
+            // while it is foregrounded and is itself relaunched on install success.
+            val statusIntent = Intent(
+                context,
+                com.oneuixp.app.ui.MainActivity::class.java,
+            ).apply {
                 action = UPDATE_INSTALL_ACTION
                 putExtra(PackageInstaller.EXTRA_SESSION_ID, sessionId)
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                addFlags(
+                    Intent.FLAG_ACTIVITY_NEW_TASK or
+                        Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                        Intent.FLAG_ACTIVITY_SINGLE_TOP,
+                )
             }
             val pendingIntent = PendingIntent.getActivity(
                 context,
@@ -216,118 +221,93 @@ fun openUnknownSourcesSettings(context: Context): Boolean = runCatching {
  */
 private const val UPDATE_INSTALL_STATUS_TAG = "OneuiXP-UpdateInstall"
 
-class UpdateInstallStatusActivity : Activity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        handleInstallStatus(intent)
-    }
+/**
+ * Handles PackageInstaller's result on the real MainActivity. Avoid routing from a
+ * transparent background trampoline because Android 14+ can block the second activity
+ * launch that opens the native package-installer confirmation UI.
+ */
+fun handleUpdateInstallStatus(activity: Activity, resultIntent: Intent): Boolean {
+    if (resultIntent.action != UPDATE_INSTALL_ACTION) return false
 
-    private fun handleInstallStatus(resultIntent: Intent?) {
-        if (resultIntent?.action != UPDATE_INSTALL_ACTION) {
-            Log.w(UPDATE_INSTALL_STATUS_TAG, "Ignoring install callback with unexpected action")
-            finish()
-            return
-        }
+    // Consume the one-shot callback action, so returning from system installer doesn't
+    // re-process the same result and re-open the confirmation or update dialog.
+    activity.setIntent(Intent(activity, com.oneuixp.app.ui.MainActivity::class.java))
 
-        val status = resultIntent.getIntExtra(
-            PackageInstaller.EXTRA_STATUS,
-            PackageInstaller.STATUS_FAILURE,
-        )
-        val statusMessage = resultIntent.getStringExtra(PackageInstaller.EXTRA_STATUS_MESSAGE).orEmpty()
-        Log.i(UPDATE_INSTALL_STATUS_TAG, "Installer callback status=$status message=$statusMessage")
+    val status = resultIntent.getIntExtra(
+        PackageInstaller.EXTRA_STATUS,
+        PackageInstaller.STATUS_FAILURE,
+    )
+    val statusMessage = resultIntent.getStringExtra(PackageInstaller.EXTRA_STATUS_MESSAGE).orEmpty()
+    Log.i(UPDATE_INSTALL_STATUS_TAG, "Installer callback status=$status message=$statusMessage")
 
-        when (status) {
-            PackageInstaller.STATUS_PENDING_USER_ACTION -> {
-                val confirmation = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    resultIntent.getParcelableExtra(Intent.EXTRA_INTENT, Intent::class.java)
-                } else {
-                    @Suppress("DEPRECATION")
-                    resultIntent.getParcelableExtra(Intent.EXTRA_INTENT) as? Intent
-                }
-                launchConfirmation(confirmation)
+    when (status) {
+        PackageInstaller.STATUS_PENDING_USER_ACTION -> {
+            val confirmation = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                resultIntent.getParcelableExtra(Intent.EXTRA_INTENT, Intent::class.java)
+            } else {
+                @Suppress("DEPRECATION")
+                resultIntent.getParcelableExtra(Intent.EXTRA_INTENT) as? Intent
             }
 
-            PackageInstaller.STATUS_SUCCESS -> {
-                Log.i(UPDATE_INSTALL_STATUS_TAG, "Update installed successfully; relaunching OneuiXP")
-                packageManager.getLaunchIntentForPackage(packageName)?.let { launch ->
-                    launch.addFlags(
-                        Intent.FLAG_ACTIVITY_NEW_TASK or
-                            Intent.FLAG_ACTIVITY_CLEAR_TOP or
-                            Intent.FLAG_ACTIVITY_SINGLE_TOP,
-                    )
-                    runCatching { startActivity(launch) }
-                        .onFailure { Log.e(UPDATE_INSTALL_STATUS_TAG, "Could not relaunch OneuiXP", it) }
-                }
-                finish()
-            }
-
-            PackageInstaller.STATUS_FAILURE_ABORTED -> {
-                // This commonly represents user cancellation. Keep cancellation silent.
-                Log.i(UPDATE_INSTALL_STATUS_TAG, "Installer aborted; staying silent")
-                finish()
-            }
-
-            else -> {
-                // Don't silently strand the user on the home screen for an actual install
-                // failure. The transparent trampoline used previously could also be blocked
-                // from opening Android's confirmation UI by background-activity restrictions,
-                // so this result Activity now uses the normal non-translucent app theme.
-                val details = statusMessage.ifBlank {
-                    "安装器返回状态码：$status"
-                }
-                Log.e(UPDATE_INSTALL_STATUS_TAG, "Update failed: $details")
-                AlertDialog.Builder(this)
+            if (confirmation == null) {
+                Log.e(UPDATE_INSTALL_STATUS_TAG, "Installer returned no confirmation Intent")
+                AlertDialog.Builder(activity)
                     .setTitle(R.string.update_dialog_install)
-                    .setMessage(getString(R.string.update_install_failed_message, details))
-                    .setPositiveButton(android.R.string.ok) { _, _ -> finish() }
-                    .setOnCancelListener { finish() }
+                    .setMessage(R.string.update_install_confirmation_missing_message)
+                    .setPositiveButton(android.R.string.ok, null)
                     .show()
+            } else {
+                confirmation.addFlags(
+                    Intent.FLAG_ACTIVITY_NEW_TASK or
+                        Intent.FLAG_ACTIVITY_CLEAR_TOP,
+                )
+                // Post until MainActivity has attached its window and is foreground-ready.
+                activity.window.decorView.post {
+                    try {
+                        activity.startActivity(confirmation)
+                    } catch (throwable: Throwable) {
+                        Log.e(UPDATE_INSTALL_STATUS_TAG, "Could not open installer confirmation", throwable)
+                        AlertDialog.Builder(activity)
+                            .setTitle(R.string.update_dialog_install)
+                            .setMessage(R.string.update_install_confirmation_fallback_message)
+                            .setPositiveButton(R.string.confirm) { _, _ ->
+                                runCatching { activity.startActivity(confirmation) }
+                                    .onFailure {
+                                        Log.e(UPDATE_INSTALL_STATUS_TAG, "Retry opening installer confirmation failed", it)
+                                        AlertDialog.Builder(activity)
+                                            .setTitle(R.string.update_dialog_install)
+                                            .setMessage(R.string.update_install_confirmation_missing_message)
+                                            .setPositiveButton(android.R.string.ok, null)
+                                            .show()
+                                    }
+                            }
+                            .setNegativeButton(android.R.string.cancel, null)
+                            .show()
+                    }
+                }
             }
         }
-    }
 
-    private fun launchConfirmation(confirmation: Intent?) {
-        if (confirmation == null) {
-            Log.e(UPDATE_INSTALL_STATUS_TAG, "Installer requested user action without a confirmation Intent")
-            AlertDialog.Builder(this)
-                .setTitle(R.string.update_dialog_install)
-                .setMessage(R.string.update_install_confirmation_missing_message)
-                .setPositiveButton(android.R.string.ok) { _, _ -> finish() }
-                .setOnCancelListener { finish() }
-                .show()
-            return
+        PackageInstaller.STATUS_SUCCESS -> {
+            // The PendingIntent has already brought MainActivity to the foreground.
+            // That current activity is the post-install relaunch; do not start a second task.
+            Log.i(UPDATE_INSTALL_STATUS_TAG, "Update installed successfully; MainActivity is resumed")
         }
 
-        confirmation.addFlags(
-            Intent.FLAG_ACTIVITY_NEW_TASK or
-                Intent.FLAG_ACTIVITY_CLEAR_TOP,
-        )
-        try {
-            // This Activity is intentionally non-translucent: Android 14+ may deny
-            // a translucent background trampoline permission to launch the installer.
-            startActivity(confirmation)
-            finish()
-        } catch (throwable: Throwable) {
-            Log.e(UPDATE_INSTALL_STATUS_TAG, "Could not open installer confirmation", throwable)
-            AlertDialog.Builder(this)
+        PackageInstaller.STATUS_FAILURE_ABORTED -> {
+            // This commonly represents user cancellation. Keep cancellation silent.
+            Log.i(UPDATE_INSTALL_STATUS_TAG, "Installer aborted; staying silent")
+        }
+
+        else -> {
+            val details = statusMessage.ifBlank { "安装器返回状态码：$status" }
+            Log.e(UPDATE_INSTALL_STATUS_TAG, "Update failed: $details")
+            AlertDialog.Builder(activity)
                 .setTitle(R.string.update_dialog_install)
-                .setMessage(R.string.update_install_confirmation_fallback_message)
-                .setPositiveButton(R.string.confirm) { _, _ ->
-                    runCatching { startActivity(confirmation) }
-                        .onFailure {
-                            Log.e(UPDATE_INSTALL_STATUS_TAG, "Retry opening installer confirmation failed", it)
-                            AlertDialog.Builder(this)
-                                .setTitle(R.string.update_dialog_install)
-                                .setMessage(R.string.update_install_confirmation_missing_message)
-                                .setPositiveButton(android.R.string.ok) { _, _ -> finish() }
-                                .setOnCancelListener { finish() }
-                                .show()
-                        }
-                        .onSuccess { finish() }
-                }
-                .setNegativeButton(android.R.string.cancel) { _, _ -> finish() }
-                .setOnCancelListener { finish() }
+                .setMessage(activity.getString(R.string.update_install_failed_message, details))
+                .setPositiveButton(android.R.string.ok, null)
                 .show()
         }
     }
+    return true
 }
