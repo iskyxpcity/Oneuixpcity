@@ -72,6 +72,12 @@ object UpdateDialogRequests {
     fun open(info: LatestVersionInfo) {
         _requests.value = UpdateDialogRequest(sequence.incrementAndGet(), info)
     }
+
+    fun clear(requestSequence: Long) {
+        if (_requests.value?.sequence == requestSequence) {
+            _requests.value = null
+        }
+    }
 }
 
 fun requestUpdateDialog(info: LatestVersionInfo) {
@@ -94,6 +100,7 @@ fun UpdateDialogHost(isMiuix: Boolean) {
     LaunchedEffect(Unit) {
         UpdateDialogRequests.requests.collect { request ->
             if (request != null) {
+                UpdateDialogRequests.clear(request.sequence)
                 updateInfo = request.info
                 dialogVisible = true
                 statusMessage = null
@@ -449,7 +456,7 @@ private fun UpdateDialogMiuix(
                 } else if (!statusMessage.isNullOrBlank()) {
                     MiuixText(
                         text = statusMessage,
-                        color = colors.error,
+                        color = colors.primary,
                         fontSize = MiuixTheme.textStyles.body2.fontSize,
                     )
                 }
