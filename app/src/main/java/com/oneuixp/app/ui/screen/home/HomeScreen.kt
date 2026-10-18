@@ -1,6 +1,7 @@
 package com.oneuixp.app.ui.screen.home
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -33,9 +34,13 @@ fun HomePager(
         }
     }
 
+    val context = LocalContext.current
     val actions = HomeActions(
         onInstallUpdate = { version ->
             requestUpdateDialog(version)
+        },
+        onActivateLsposed = {
+            openLsposedModuleActivation(context)
         },
     )
 
