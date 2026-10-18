@@ -237,24 +237,14 @@ class UpdateInstallReceiver : BroadcastReceiver() {
             }
 
             PackageInstaller.STATUS_SUCCESS -> {
-                val launchIntent = context.packageManager.getLaunchIntentForPackage(context.packageName)
-                val relaunched = launchIntent?.let { launch ->
+                context.packageManager.getLaunchIntentForPackage(context.packageName)?.let { launch ->
                     launch.addFlags(
                         Intent.FLAG_ACTIVITY_NEW_TASK or
                             Intent.FLAG_ACTIVITY_CLEAR_TOP or
                             Intent.FLAG_ACTIVITY_SINGLE_TOP,
                     )
-                    runCatching {
-                        context.startActivity(launch)
-                        true
-                    }.getOrDefault(false)
-                } == true
-                val messageRes = if (relaunched) {
-                    R.string.update_dialog_install_relaunched
-                } else {
-                    R.string.update_dialog_install_relaunch_fallback
+                    runCatching { context.startActivity(launch) }
                 }
-                Toast.makeText(context, context.getString(messageRes), Toast.LENGTH_LONG).show()
             }
 
             else -> {
