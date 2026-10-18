@@ -42,12 +42,15 @@ fun checkNewVersion(): LatestVersionInfo {
                 return@use LatestVersionInfo()
             }
 
-            val expectedApkName = "OneuiXP_${versionName}.apk"
+            val expectedApkNames = setOf(
+                "OneUI_XP_${versionName}.apk",
+                "OneuiXP_${versionName}.apk", // Legacy release asset name; keep older uploads compatible.
+            )
             val assets = release.optJSONArray("assets") ?: return@use LatestVersionInfo()
             val apkAsset = (0 until assets.length())
                 .map { assets.getJSONObject(it) }
                 .firstOrNull { asset ->
-                    asset.optString("name") == expectedApkName &&
+                    asset.optString("name") in expectedApkNames &&
                         asset.optString("browser_download_url").isNotBlank()
                 } ?: return@use LatestVersionInfo()
 
