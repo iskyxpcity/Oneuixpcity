@@ -55,8 +55,8 @@ import top.yukonga.miuix.kmp.basic.ButtonDefaults as MiuixButtonDefaults
 import top.yukonga.miuix.kmp.basic.InfiniteProgressIndicator
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
 import top.yukonga.miuix.kmp.basic.TextButton as MiuixTextButton
-import top.yukonga.miuix.kmp.overlay.OverlayDialog
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.window.WindowDialog
 
 /**
  * A version request from the home update card reopens the same global update dialog.
@@ -380,18 +380,23 @@ private fun UpdateDialogMiuix(
     val colors = MiuixTheme.colorScheme
     val notes = remember(info.changelog) { normalizeReleaseNotes(info.changelog) }
 
-    // Use Miuix's native overlay dialog and native text actions so this isn't
-    // just a Material dialog recolored to resemble Miuix.
-    OverlayDialog(
+    // Use the same native Miuix window dialog as the app's other settings dialogs.
+    WindowDialog(
         show = true,
         title = stringResource(R.string.update_dialog_title),
-        summary = "OneUI XP ${info.versionName}",
         onDismissRequest = onDismiss,
         content = {
             Column(
                 modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
+                MiuixText(
+                    text = "OneUI XP ${info.versionName}",
+                    color = colors.onSurface,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = MiuixTheme.textStyles.title4.fontSize,
+                )
+
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     MiuixText(
                         text = stringResource(R.string.update_dialog_new_badge),
