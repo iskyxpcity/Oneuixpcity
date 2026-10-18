@@ -20,4 +20,7 @@ data class HomeUiState(
 }
 
 @Immutable
-data class HomeActions(val onInstallUpdate: (LatestVersionInfo) -> Unit)
+data class HomeActions(
+    val onInstallUpdate: (LatestVersionInfo) -> Unit,
+    val onActivateLsposed: () -> Unit,
+)
