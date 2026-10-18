@@ -5598,7 +5598,7 @@ object StatusBarComboStyleOneRuntime {
         signalMode = v.signalMode.coerceIn(0, 1), lowThreshold = v.lowThreshold.coerceIn(5, 50),
         // The upstream critical cutoff is a constant, not a user setting.
         criticalThreshold = 20,
-        glyphScalePercent = v.glyphScalePercent.coerceIn(30, 150),
+        glyphScalePercent = v.glyphScalePercent.coerceIn(50, 150),
         // Overall position and spacing remain user-adjustable; default zero preserves native slot anchoring.
         glyphOffsetXDp = v.glyphOffsetXDp.coerceIn(-16, 16),
         glyphOffsetYDp = v.glyphOffsetYDp.coerceIn(-16, 16),
