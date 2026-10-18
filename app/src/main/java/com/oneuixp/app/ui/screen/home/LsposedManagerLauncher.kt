@@ -1,12 +1,16 @@
 package com.oneuixp.app.ui.screen.home
 
+import android.app.ActivityOptions
+import android.app.PendingIntent
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.os.Process
+import android.os.SystemClock
 import android.widget.Toast
 import com.oneuixp.app.R
 
@@ -19,11 +23,10 @@ private val MODULE_DEEP_LINK_RETRY_DELAYS_MS = listOf(700L, 1_700L, 3_500L)
 /**
  * Opens LSPosed Manager directly on OneuiXP's own module detail/scope screen.
  *
- * LSPosed Manager currently only handles module:// intents once its service
- * Binder is alive. On a cold launch it may receive and ignore the first intent
- * before that connection is ready, leaving the user on the manager home page.
- * Re-deliver the same deep link a few times through singleTop/clearTop so the
- * existing MainActivity handles it via onNewIntent after startup settles.
+ * LSPosed Manager handles module:// intents only after its service Binder is
+ * alive. On a cold launch it can ignore the first intent before the connection
+ * is ready. Re-deliver the same deep link with a bounded PendingIntent retry so
+ * the existing MainActivity can handle it via onNewIntent after startup settles.
  */
 fun openLsposedModuleActivation(context: Context) {
     val appContext = context.applicationContext
@@ -69,17 +72,50 @@ fun openLsposedModuleActivation(context: Context) {
         return
     }
 
-    // MainActivity.handleIntent() in LSPosed only routes module:// when its
-    // Binder is already connected. These bounded re-deliveries cover cold start.
+    val deepLinkPendingIntent = runCatching {
+        PendingIntent.getActivity(
+            appContext,
+            SystemClock.uptimeMillis().toInt(),
+            intentToRetry,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+    }.getOrNull() ?: return
+
+    // Android 14+ requires the PendingIntent sender to explicitly opt in to
+    // background activity starts. These short retries are tied to the user's
+    // card tap and only re-deliver this exact LSPosed module deep link.
+    val retryOptions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+        val mode = if (Build.VERSION.SDK_INT >= 36) {
+            ActivityOptions.MODE_BACKGROUND_ACTIVITY_START_ALLOW_ALWAYS
+        } else {
+            @Suppress("DEPRECATION")
+            ActivityOptions.MODE_BACKGROUND_ACTIVITY_START_ALLOWED
+        }
+        ActivityOptions.makeBasic()
+            .setPendingIntentBackgroundActivityStartMode(mode)
+            .toBundle()
+    } else {
+        null
+    }
+
     val handler = Handler(Looper.getMainLooper())
     MODULE_DEEP_LINK_RETRY_DELAYS_MS.forEach { delayMs ->
         handler.postDelayed(
             {
                 runCatching {
-                    appContext.startActivity(Intent(intentToRetry).apply {
-                        data = moduleUri
-                        addFlags(flags)
-                    })
+                    if (retryOptions != null) {
+                        deepLinkPendingIntent.send(
+                            appContext,
+                            0,
+                            null,
+                            null,
+                            null,
+                            null,
+                            retryOptions,
+                        )
+                    } else {
+                        deepLinkPendingIntent.send()
+                    }
                 }
             },
             delayMs,
