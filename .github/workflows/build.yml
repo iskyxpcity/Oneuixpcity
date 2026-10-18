@@ -227,14 +227,7 @@ jobs:
             TAG="v${VERSION_NAME}"
             TITLE="OneuiXP ${VERSION_NAME}"
             if [ "$VERSION_NAME" = "1.0.261018.1" ]; then
-              NOTES=$(cat <<EOF
-OneuiXP ${VERSION_NAME} 正式版。
-
-本次修复：
-- 修复状态栏组合图标的整体缩放问题。
-- 修正状态栏组合图标设置页预览图标整体偏上的问题。
-EOF
-)
+              NOTES=$(printf 'OneuiXP %s 正式版。\n\n本次修复：\n- 修复状态栏组合图标的整体缩放问题。\n- 修正状态栏组合图标设置页预览图标整体偏上的问题。\n' "$VERSION_NAME")
             else
               NOTES="OneuiXP ${VERSION_NAME} 正式版。此 Release 提供正式版 APK 下载和更新说明。"
             fi
