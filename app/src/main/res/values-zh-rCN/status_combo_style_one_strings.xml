@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="status_combo_style_one_category">三合一图标</string>
+    <string name="status_combo_style_one_category">状态栏组合图标</string>
 <string name="status_combo_style_one_preview">效果预览</string>
 <string name="status_combo_style_one_preview_charging_dark">充电·深</string>
     <string name="status_combo_style_one_preview_charging_light">充电·浅</string>

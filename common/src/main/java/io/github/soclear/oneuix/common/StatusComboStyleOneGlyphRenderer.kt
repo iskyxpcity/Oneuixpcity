@@ -34,11 +34,12 @@ object StatusComboStyleOneGlyphRenderer {
     private const val COMPACT_WIDTH = 120f
     private const val WIDE_WIDTH = 260f
     private const val HEIGHT = 120f
-    // Keep the preference slider at 100 by default while drawing the combo glyph at 70%
-    // of the prior 36dp design baseline. The live renderer and preview share this factor.
-    const val GLYPH_SCALE_BASELINE_FACTOR = 0.7f
-    // Keep modest transparent breathing room without changing the ring's trailing-slot anchor.
-    const val GLYPH_FRAME_BREATHING_DP = 1.5f
+    // Keep the 1.0f scale baseline and correct the original physical design size itself.
+    // The default 100% now maps to a 30.6dp glyph height instead of the previously oversized 36dp.
+    const val GLYPH_SCALE_BASELINE_FACTOR = 1.0f
+    const val BASE_GLYPH_HEIGHT_DP = 30.6f
+    // Keep 2dp transparent breathing room on each edge, totaling 4dp in reserved width.
+    const val GLYPH_FRAME_BREATHING_DP = 2f
     private const val DUAL_BOTTOM_HEIGHT = 150f
     // Row 1 sits inside the ring's bottom opening; row 2 hugs it directly underneath.
     // The first row sits slightly inside the bottom opening instead of hanging below the ring.
@@ -687,8 +688,9 @@ object StatusComboStyleOneGlyphRenderer {
         outsideContentLeadingTrimUnits(config, networkType)).coerceAtLeast(20f)
 
     private fun baseGlyphHeightDp(config: StatusBarComboStyleOneRuntime): Int =
-        (36f * GLYPH_SCALE_BASELINE_FACTOR * config.glyphScalePercent.coerceIn(70, 150) / 100f)
-            .roundToInt().coerceAtLeast(18)
+        (BASE_GLYPH_HEIGHT_DP * GLYPH_SCALE_BASELINE_FACTOR *
+            config.glyphScalePercent.coerceIn(50, 150) / 100f)
+            .roundToInt().coerceAtLeast(1)
 
     fun glyphWidthDp(config: StatusBarComboStyleOneRuntime, networkType: String = ""): Int =
         (designWidth(config, networkType) * baseGlyphHeightDp(config).toFloat() / HEIGHT +
@@ -842,7 +844,7 @@ object StatusComboStyleOneGlyphRenderer {
         networkType: String = "",
     ): Int =
         (baseGlyphHeightDp(config).toFloat() * designHeight(config, networkType) / HEIGHT)
-            .roundToInt().coerceAtLeast(18)
+            .roundToInt().coerceAtLeast(1)
 
 
     /**
@@ -1481,7 +1483,8 @@ object StatusComboStyleOneGlyphRenderer {
     }
 
     private fun dotCoordinateScale(config: StatusBarComboStyleOneRuntime): Float =
-        HEIGHT / (36f * GLYPH_SCALE_BASELINE_FACTOR) / (config.glyphScalePercent.coerceIn(70, 150) / 100f)
+        HEIGHT / (BASE_GLYPH_HEIGHT_DP * GLYPH_SCALE_BASELINE_FACTOR) /
+            (config.glyphScalePercent.coerceIn(50, 150) / 100f)
 
     private fun dotHorizontalOffset(config: StatusBarComboStyleOneRuntime): Float =
         config.signalDotOffsetXDp.coerceIn(-8, 8) * dotCoordinateScale(config)
@@ -1719,11 +1722,11 @@ object StatusComboStyleOneGlyphRenderer {
     // offset stays optically stable when the overall icon scale changes.
     private fun boltOffsetX(config: StatusBarComboStyleOneRuntime): Float =
         BOLT_CX - BOLT_CX_REF * boltScale(config) +
-            config.chargingBoltXDp.coerceIn(-8, 8) / (config.glyphScalePercent.coerceIn(70, 150) / 100f)
+            config.chargingBoltXDp.coerceIn(-8, 8) / (config.glyphScalePercent.coerceIn(50, 150) / 100f)
 
     private fun boltOffsetY(config: StatusBarComboStyleOneRuntime): Float =
         BOLT_TOP - BOLT_TOP_REF * boltScale(config) +
-            config.chargingBoltYDp.coerceIn(-8, 8) / (config.glyphScalePercent.coerceIn(70, 150) / 100f)
+            config.chargingBoltYDp.coerceIn(-8, 8) / (config.glyphScalePercent.coerceIn(50, 150) / 100f)
 
     private fun buildBoltPath() = Path().apply {
         moveTo(62.1f, 2.2f)

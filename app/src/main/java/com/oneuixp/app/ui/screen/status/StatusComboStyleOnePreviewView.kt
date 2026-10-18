@@ -79,30 +79,19 @@ class StatusComboStyleOnePreviewView(context: Context) : View(context) {
             })
 
             val targetWidth = (cellWidth - 4f * density).toInt().coerceAtLeast(1)
-            val targetHeight = (glyphHeight - 2f * density).toInt().coerceAtLeast(1)
+            val targetHeight = ((glyphHeight - 2f * density) *
+                (StatusComboStyleOneGlyphRenderer.BASE_GLYPH_HEIGHT_DP / 36f)).toInt().coerceAtLeast(1)
             val save = canvas.save()
             canvas.clipRect(left, 0f, right, glyphHeight.toFloat())
             val targetLeft = left + (cellWidth - targetWidth) / 2f
-            val targetTop = config.glyphOffsetYDp * density
-            val scalePercent = config.glyphScalePercent.coerceIn(70, 150) / 100f *
-                StatusComboStyleOneGlyphRenderer.GLYPH_SCALE_BASELINE_FACTOR
-            val networkType = sample.third.second.networkType
-            val designHeight = StatusComboStyleOneGlyphRenderer
-                .glyphDesignHeight(config, networkType).coerceAtLeast(1f)
-            val rendererScale = targetHeight.toFloat() / designHeight
-            val canvasLeftInset = StatusComboStyleOneGlyphRenderer.glyphCanvasLeftInsetPx(
-                config, networkType, targetWidth, targetHeight,
-            )
-            // Scale the preview around the battery-ring centre, not the cell centre. This
-            // matches the live runtime's fixed-centre scaling when the glyph grows or shrinks.
-            val pivotX = canvasLeftInset +
-                StatusComboStyleOneGlyphRenderer.glyphCenterX(config, networkType) * rendererScale
-            val pivotY = targetHeight *
-                StatusComboStyleOneGlyphRenderer.glyphVerticalCenterRatio(config, networkType)
+            val targetTop = (glyphHeight - targetHeight) / 2f +
+                config.glyphOffsetYDp * density
+            val scalePercent = config.glyphScalePercent.coerceIn(50, 150) / 100f
+            // Keep the established preview transform centered on the complete glyph cell.
             canvas.translate(targetLeft + config.glyphOffsetXDp * density, targetTop)
-            canvas.translate(pivotX, pivotY)
+            canvas.translate(targetWidth / 2f, targetHeight / 2f)
             canvas.scale(scalePercent, scalePercent)
-            canvas.translate(-pivotX, -pivotY)
+            canvas.translate(-targetWidth / 2f, -targetHeight / 2f)
             StatusComboStyleOneGlyphRenderer.draw(
                 canvas, targetWidth, targetHeight, config, sample.third.second,
             )

@@ -161,7 +161,7 @@ fun StatusComboStyleOneCategoryControls(
     var outSignalOffsetX by remember(runtime.outSignalOffsetXDp) { mutableIntStateOf(runtime.outSignalOffsetXDp.coerceIn(-16, 16)) }
     var outSignalOffsetY by remember(runtime.outSignalOffsetYDp) { mutableIntStateOf(runtime.outSignalOffsetYDp.coerceIn(-16, 16)) }
     var lowThreshold by remember(runtime.lowThreshold) { mutableIntStateOf(runtime.lowThreshold.coerceIn(5, 50)) }
-    var glyphScale by remember(runtime.glyphScalePercent) { mutableIntStateOf(runtime.glyphScalePercent.coerceIn(70, 150)) }
+    var glyphScale by remember(runtime.glyphScalePercent) { mutableIntStateOf(runtime.glyphScalePercent.coerceIn(50, 150)) }
     var glyphOffsetX by remember(runtime.glyphOffsetXDp) { mutableIntStateOf(runtime.glyphOffsetXDp.coerceIn(-16, 16)) }
     var glyphOffsetY by remember(runtime.glyphOffsetYDp) { mutableIntStateOf(runtime.glyphOffsetYDp.coerceIn(-16, 16)) }
     var glyphLeftMargin by remember(runtime.glyphLeftMarginDp) { mutableIntStateOf(runtime.glyphLeftMarginDp.coerceIn(0, 16)) }
@@ -295,7 +295,7 @@ fun StatusComboStyleOneCategoryControls(
             // Element-specific offsets remain in their own groups; zero offsets preserve slot anchoring.
             val ringDotsEnabled = runtime.enabled && runtime.trioStyle == 0 && runtime.showMobile && runtime.signalMode == 0
             StatusThemeGroup(title = stringResource(R.string.status_combo_style_one_group_overall_size), titleAlignedToContent = true, items = listOf({
-                styleOneSlider(stringResource(R.string.status_combo_style_one_glyph_scale), stringResource(R.string.status_combo_style_one_percent_summary, glyphScale), glyphScale.toFloat(), 70f..150f, { glyphScale = it.roundToInt(); preview(runtime.copy(glyphScalePercent = glyphScale)) }, { final -> persist(runtime.copy(glyphScalePercent = final.roundToInt())) }, enabled = runtime.enabled)
+                styleOneSlider(stringResource(R.string.status_combo_style_one_glyph_scale), stringResource(R.string.status_combo_style_one_percent_summary, glyphScale), glyphScale.toFloat(), 50f..150f, { glyphScale = it.roundToInt(); preview(runtime.copy(glyphScalePercent = glyphScale)) }, { final -> persist(runtime.copy(glyphScalePercent = final.roundToInt())) }, enabled = runtime.enabled)
             }, {
                 styleOneSlider(stringResource(R.string.status_combo_style_one_glyph_offset_x), stringResource(R.string.status_combo_style_one_glyph_offset_x_summary, glyphOffsetX), glyphOffsetX.toFloat(), -16f..16f, { glyphOffsetX = it.roundToInt(); preview(runtime.copy(glyphOffsetXDp = glyphOffsetX)) }, { final -> persist(runtime.copy(glyphOffsetXDp = final.roundToInt())) }, enabled = runtime.enabled)
             }, {

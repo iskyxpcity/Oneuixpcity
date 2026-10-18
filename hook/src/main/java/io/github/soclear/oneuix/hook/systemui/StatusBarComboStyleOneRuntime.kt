@@ -835,22 +835,11 @@ object StatusBarComboStyleOneRuntime {
             // edge. The expanded transparent host reserves this same width in native layout,
             // leaving the preceding Bluetooth/alarm/network icons to the left of our canvas.
             val horizontalOffsetPx = StatusBarComboStyleOneRuntime.dpExact(context, cfg.glyphOffsetXDp)
-            val ringCenterXUnits = StatusComboStyleOneGlyphRenderer.glyphCenterX(cfg, networkType)
-            // Keep the ring's screen-space center fixed while the user scales the whole glyph.
-            // The WindowManager frame shrinks/grows, but its X origin compensates around the
-            // 100% reference center instead of pinning the canvas' right edge.
-            val referenceHeightPx = StatusBarComboStyleOneRuntime.dp(
-                context,
-                StatusComboStyleOneGlyphRenderer.glyphHeightDp(
-                    cfg.copy(glyphScalePercent = 100),
-                    networkType,
-                ),
-            ).toFloat()
-            val referenceScale = referenceHeightPx / designHeightUnits
-            val desiredRingCenterScreenX = slotRightPx -
-                (designWidthUnits - ringCenterXUnits) * referenceScale + horizontalOffsetPx
+            // Preserve the pre-regression anchor: the drawing canvas' right edge follows the
+            // native battery slot, while the complete glyph scales within that frame.
             val baseWindowX = (
-                desiredRingCenterScreenX - canvasLeftInsetPx - ringCenterXUnits * renderScale
+                slotRightPx - canvasLeftInsetPx - designWidthUnits * renderScale +
+                    horizontalOffsetPx
                 ).roundToInt()
             val verticalOffsetPx = StatusBarComboStyleOneRuntime.dpExact(context, cfg.glyphOffsetYDp)
             val requestedBaseWindowY = (
@@ -871,6 +860,7 @@ object StatusBarComboStyleOneRuntime {
             lp.y = requestedWindowY.coerceAtLeast(minimumWindowY)
             val topEdgeClamped = requireNotNull(burnInBaseYpx) != requestedBaseWindowY || lp.y != requestedWindowY
 
+            val ringCenterXUnits = StatusComboStyleOneGlyphRenderer.glyphCenterX(cfg, networkType)
             val ringCenterScreenPx = lp.x + canvasLeftInsetPx + ringCenterXUnits * renderScale
             val positionChanged = oldX != lp.x || oldY != lp.y || oldWidth != lp.width || oldHeight != lp.height
             if (positionChanged) {
@@ -2008,18 +1998,10 @@ object StatusBarComboStyleOneRuntime {
         } ?: nativeBatteryLayouts[anchor]?.rightMargin ?: 0
         val slotRightPx = parentLocation[0] + parent.width - parent.paddingRight - originalRightMargin
         val overallOffsetPx = dpExact(glyph.context, cfg.glyphOffsetXDp).toFloat()
-        // Use the 100% reference scale for the anchor so a scale-slider change expands or
-        // contracts the glyph around the battery-ring center rather than sliding it sideways.
-        val referenceHeightPx = dp(
-            glyph.context,
-            StatusComboStyleOneGlyphRenderer.glyphHeightDp(
-                cfg.copy(glyphScalePercent = 100),
-                networkType,
-            ),
-        ).toFloat()
-        val referenceScale = referenceHeightPx / designHeight
+        // Preserve the pre-regression calculation: anchoring follows the measured glyph scale,
+        // rather than introducing a separate 100% reference scale for the ring center.
         val desiredRingScreenX = slotRightPx -
-            (designWidth - ringCenterUnits) * referenceScale + overallOffsetPx
+            (designWidth - ringCenterUnits) * renderScale + overallOffsetPx
         // getLocationOnScreen includes the current translation; remove it to recover the layout
         // origin, then solve the translation required for the ring to remain at the slot anchor.
         val layoutOriginX = glyphLocation[0] - glyph.translationX
@@ -5616,7 +5598,7 @@ object StatusBarComboStyleOneRuntime {
         signalMode = v.signalMode.coerceIn(0, 1), lowThreshold = v.lowThreshold.coerceIn(5, 50),
         // The upstream critical cutoff is a constant, not a user setting.
         criticalThreshold = 20,
-        glyphScalePercent = v.glyphScalePercent.coerceIn(70, 150),
+        glyphScalePercent = v.glyphScalePercent.coerceIn(50, 150),
         // Overall position and spacing remain user-adjustable; default zero preserves native slot anchoring.
         glyphOffsetXDp = v.glyphOffsetXDp.coerceIn(-16, 16),
         glyphOffsetYDp = v.glyphOffsetYDp.coerceIn(-16, 16),

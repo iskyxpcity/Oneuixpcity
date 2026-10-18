@@ -22,10 +22,19 @@ fun checkNewVersion(): LatestVersionInfo {
             if (!response.isSuccessful) return@use LatestVersionInfo()
             val release = org.json.JSONObject(response.body.string())
             val versionName = release.optString("tag_name").removePrefix("v")
-            val components = versionName.split(".").mapNotNull { it.toIntOrNull() }
-            if (components.size != 3) return@use LatestVersionInfo()
-            val (major, minor, date) = components
-            if (major !in 0..20 || minor !in 0..99 || date !in 0..999999) {
+            val versionParts = versionName.split(".")
+            if (versionParts.size !in 3..4) return@use LatestVersionInfo()
+            val components = versionParts.map { it.toIntOrNull() ?: return@use LatestVersionInfo() }
+            val major = components[0]
+            val minor = components[1]
+            val date = components[2]
+            val patch = components.getOrElse(3) { 0 }
+            if (
+                major !in 0..20 ||
+                minor !in 0..99 ||
+                date !in 0..999999 ||
+                patch !in 0..999
+            ) {
                 return@use LatestVersionInfo()
             }
 

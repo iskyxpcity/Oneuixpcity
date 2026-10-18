@@ -212,6 +212,7 @@ jobs:
         if: success() && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/migration/') || startsWith(github.ref, 'refs/heads/test/'))
         env:
           SOURCE_REPO_TOKEN: ${{ github.token }}
+          PUBLIC_RELEASE_TOKEN: ${{ secrets.RELEASE_REPO_TOKEN }}
         run: |
           set -euo pipefail
           SHORT_SHA="${GITHUB_SHA::7}"
@@ -225,7 +226,11 @@ jobs:
             FORMAL_RELEASE=true
             TAG="v${VERSION_NAME}"
             TITLE="OneuiXP ${VERSION_NAME}"
-            NOTES="OneuiXP ${VERSION_NAME} 正式版。此 Release 提供正式版 APK 下载和更新说明。"
+            if [ "$VERSION_NAME" = "1.0.261018.1" ]; then
+              NOTES=$(printf 'OneuiXP %s 正式版。\n\n本次修复：\n- 修复状态栏组合图标的整体缩放问题。\n- 修正状态栏组合图标设置页预览图标整体偏上的问题。\n' "$VERSION_NAME")
+            else
+              NOTES="OneuiXP ${VERSION_NAME} 正式版。此 Release 提供正式版 APK 下载和更新说明。"
+            fi
 
             if ! gh release view "$TAG" --repo "$RELEASE_REPO" >/dev/null 2>&1; then
               gh release create "$TAG" \
@@ -269,6 +274,24 @@ jobs:
               "dist/$OUTPUT_APK" \
               --clobber
             echo "Published formal signed APK to source repository release: $RELEASE_REPO / $TAG"
+
+            # The in-app updater checks this public binary-release feed. Mirror the exact
+            # owner-signed APK and release notes when the optional cross-repo token is configured.
+            if [ -n "${PUBLIC_RELEASE_TOKEN:-}" ]; then
+              GH_TOKEN="$PUBLIC_RELEASE_TOKEN"
+              export GH_TOKEN
+              PUBLIC_RELEASE_REPO="iSkyJIE/OneUIXP-Releases"
+              if gh release view "$TAG" --repo "$PUBLIC_RELEASE_REPO" >/dev/null 2>&1; then
+                gh release edit "$TAG" --repo "$PUBLIC_RELEASE_REPO" --title "$TITLE" --notes "$NOTES" --latest
+              else
+                gh release create "$TAG" --repo "$PUBLIC_RELEASE_REPO" --target "$GITHUB_SHA" \
+                  --title "$TITLE" --notes "$NOTES" --latest
+              fi
+              gh release upload "$TAG" --repo "$PUBLIC_RELEASE_REPO" "dist/$OUTPUT_APK" --clobber
+              echo "Published signed APK and update notes to public update feed: $PUBLIC_RELEASE_REPO / $TAG"
+            else
+              echo "::warning::RELEASE_REPO_TOKEN is not configured; public in-app update feed was not updated."
+            fi
           else
             gh release upload "$TAG" \
               --repo "$RELEASE_REPO" \
