@@ -220,6 +220,7 @@ class MainActivity : ComponentActivity() {
                         UpdateDialogHost(
                             isMiuix = uiMode == UiMode.Miuix,
                             glassBackdrop = updateDialogBackdrop,
+                            enableLiquidGlass = uiState.enableFloatingBottomBarBlur,
                         )
                     }
                 }
