@@ -28,7 +28,11 @@ fun openLsposedModuleActivation(context: Context) {
     }
 
     launchIntent.data = Uri.parse("module://${context.packageName}:0")
-    launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    launchIntent.addFlags(
+        Intent.FLAG_ACTIVITY_NEW_TASK or
+            Intent.FLAG_ACTIVITY_CLEAR_TOP or
+            Intent.FLAG_ACTIVITY_SINGLE_TOP,
+    )
 
     runCatching {
         context.startActivity(launchIntent)
