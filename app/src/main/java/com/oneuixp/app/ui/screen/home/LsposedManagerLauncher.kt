@@ -1,69 +1,32 @@
 package com.oneuixp.app.ui.screen.home
 
-import android.app.ActivityOptions
-import android.app.PendingIntent
-import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
-import android.os.Handler
-import android.os.Looper
 import android.os.Process
-import android.os.SystemClock
 import android.widget.Toast
 import com.oneuixp.app.R
 
 private const val LSPOSED_MANAGER_PACKAGE = "org.lsposed.manager"
-private const val LSPOSED_MANAGER_MAIN_ACTIVITY =
-    "org.lsposed.manager.ui.activity.MainActivity"
 private const val ANDROID_PER_USER_RANGE = 100_000
-private val MODULE_DEEP_LINK_RETRY_DELAYS_MS = listOf(700L, 1_700L, 3_500L)
 
 /**
- * Opens LSPosed Manager directly on OneuiXP's own module detail/scope screen.
+ * Requests LSPosed Manager to open OneuiXP's own module detail/scope page.
  *
- * LSPosed Manager handles module:// intents only after its service Binder is
- * alive. On a cold launch it can ignore the first intent before the connection
- * is ready. Re-deliver the same deep link with a bounded PendingIntent retry so
- * the existing MainActivity can handle it via onNewIntent after startup settles.
+ * LSPosed exposes this navigation through MainActivity's module:// deep link
+ * and only routes it when its manager Binder is alive. Send the request once.
+ * Do not schedule delayed retries: they can relaunch LSPosed after the user has
+ * already returned to OneuiXP, creating an unwanted navigation loop.
  */
 fun openLsposedModuleActivation(context: Context) {
-    val appContext = context.applicationContext
     val moduleUri = Uri.parse(
         "module://${context.packageName}:${Process.myUid() / ANDROID_PER_USER_RANGE}",
     )
-    val flags = Intent.FLAG_ACTIVITY_NEW_TASK or
-        Intent.FLAG_ACTIVITY_CLEAR_TOP or
-        Intent.FLAG_ACTIVITY_SINGLE_TOP
-
-    val directIntent = Intent(Intent.ACTION_VIEW, moduleUri).apply {
-        component = ComponentName(
-            LSPOSED_MANAGER_PACKAGE,
-            LSPOSED_MANAGER_MAIN_ACTIVITY,
-        )
-        addFlags(flags)
-    }
-
-    val startedIntent = runCatching {
-        appContext.startActivity(directIntent)
-        directIntent
+    val launchIntent = runCatching {
+        context.packageManager.getLaunchIntentForPackage(LSPOSED_MANAGER_PACKAGE)
     }.getOrNull()
 
-    val intentToRetry = startedIntent ?: run {
-        val launcherIntent = runCatching {
-            appContext.packageManager.getLaunchIntentForPackage(LSPOSED_MANAGER_PACKAGE)
-        }.getOrNull()?.apply {
-            data = moduleUri
-            addFlags(flags)
-        }
-
-        launcherIntent?.takeIf { intent ->
-            runCatching { appContext.startActivity(intent) }.isSuccess
-        }
-    }
-
-    if (intentToRetry == null) {
+    if (launchIntent == null) {
         Toast.makeText(
             context,
             R.string.home_lsposed_manager_unavailable,
@@ -72,53 +35,20 @@ fun openLsposedModuleActivation(context: Context) {
         return
     }
 
-    val deepLinkPendingIntent = runCatching {
-        PendingIntent.getActivity(
-            appContext,
-            SystemClock.uptimeMillis().toInt(),
-            intentToRetry,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
-        )
-    }.getOrNull() ?: return
+    launchIntent.data = moduleUri
+    launchIntent.addFlags(
+        Intent.FLAG_ACTIVITY_NEW_TASK or
+            Intent.FLAG_ACTIVITY_CLEAR_TOP or
+            Intent.FLAG_ACTIVITY_SINGLE_TOP,
+    )
 
-    // Android 14+ requires the PendingIntent sender to explicitly opt in to
-    // background activity starts. These short retries are tied to the user's
-    // card tap and only re-deliver this exact LSPosed module deep link.
-    val retryOptions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-        val mode = if (Build.VERSION.SDK_INT >= 36) {
-            ActivityOptions.MODE_BACKGROUND_ACTIVITY_START_ALLOW_ALWAYS
-        } else {
-            @Suppress("DEPRECATION")
-            ActivityOptions.MODE_BACKGROUND_ACTIVITY_START_ALLOWED
-        }
-        ActivityOptions.makeBasic()
-            .setPendingIntentBackgroundActivityStartMode(mode)
-            .toBundle()
-    } else {
-        null
-    }
-
-    val handler = Handler(Looper.getMainLooper())
-    MODULE_DEEP_LINK_RETRY_DELAYS_MS.forEach { delayMs ->
-        handler.postDelayed(
-            {
-                runCatching {
-                    if (retryOptions != null) {
-                        deepLinkPendingIntent.send(
-                            appContext,
-                            0,
-                            null,
-                            null,
-                            null,
-                            null,
-                            retryOptions,
-                        )
-                    } else {
-                        deepLinkPendingIntent.send()
-                    }
-                }
-            },
-            delayMs,
-        )
+    runCatching {
+        context.startActivity(launchIntent)
+    }.onFailure {
+        Toast.makeText(
+            context,
+            R.string.home_lsposed_manager_unavailable,
+            Toast.LENGTH_LONG,
+        ).show()
     }
 }
