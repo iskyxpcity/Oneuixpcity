@@ -1486,7 +1486,11 @@ object StatusComboStyleOneGlyphRenderer {
         baseRadius * config.signalDotSizePercent.coerceIn(50, 150) / 100f
 
     private fun dotCenterX(config: StatusBarComboStyleOneRuntime, index: Int): Float {
-        val pitch = config.signalDotSpacingDp.coerceIn(3, 8) * (HEIGHT / (36f * GLYPH_SCALE_BASELINE_FACTOR))
+        // Treat spacing as part of the glyph geometry, not as a fixed physical-DP gap.
+        // The outer canvas scale already includes GLYPH_SCALE_BASELINE_FACTOR and the
+        // user-selected glyphScalePercent, so do not divide the pitch by either factor.
+        // This keeps the four signal dots proportionate when the complete glyph shrinks.
+        val pitch = config.signalDotSpacingDp.coerceIn(3, 8) * (HEIGHT / 36f)
         return B_CX + (index - 1.5f) * pitch + dotHorizontalOffset(config)
     }
 
