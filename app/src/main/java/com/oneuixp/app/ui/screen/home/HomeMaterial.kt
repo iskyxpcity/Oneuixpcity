@@ -137,13 +137,7 @@ private fun StatusCard(
 
     // Retained upstream v3.2.5 dashboard geometry; content is OneuiXP SystemUI state.
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        TonalCard(
-            containerColor = if (active) {
-                MaterialTheme.colorScheme.secondaryContainer
-            } else {
-                MaterialTheme.colorScheme.errorContainer
-            },
-        ) {
+        val statusCardContent: @Composable () -> Unit = {
             Row(
                 modifier = Modifier.fillMaxWidth().padding(24.dp),
                 verticalAlignment = Alignment.CenterVertically,
@@ -180,6 +174,18 @@ private fun StatusCard(
                     )
                 }
             }
+        }
+        if (!active) {
+            TonalCard(
+                containerColor = MaterialTheme.colorScheme.errorContainer,
+                onClick = actions.onActivateLsposed,
+                content = statusCardContent,
+            )
+        } else {
+            TonalCard(
+                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                content = statusCardContent,
+            )
         }
         Row(
             modifier = Modifier.fillMaxWidth(),
