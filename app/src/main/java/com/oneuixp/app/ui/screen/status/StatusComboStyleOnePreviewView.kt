@@ -79,14 +79,13 @@ class StatusComboStyleOnePreviewView(context: Context) : View(context) {
             })
 
             val targetWidth = (cellWidth - 4f * density).toInt().coerceAtLeast(1)
-            val targetHeight = (glyphHeight - 2f * density).toInt().coerceAtLeast(1)
+            val targetHeight = ((glyphHeight - 2f * density) *
+                (StatusComboStyleOneGlyphRenderer.BASE_GLYPH_HEIGHT_DP / 36f)).toInt().coerceAtLeast(1)
             val save = canvas.save()
             canvas.clipRect(left, 0f, right, glyphHeight.toFloat())
             val targetLeft = left + (cellWidth - targetWidth) / 2f
             val targetTop = config.glyphOffsetYDp * density
-            val scalePercent = config.glyphScalePercent.coerceIn(50, 150) / 100f *
-                StatusComboStyleOneGlyphRenderer.GLYPH_SCALE_BASELINE_FACTOR *
-                StatusComboStyleOneGlyphRenderer.GLYPH_OVERALL_SCALE_FACTOR
+            val scalePercent = config.glyphScalePercent.coerceIn(50, 150) / 100f
             // Keep the established preview transform centered on the complete glyph cell.
             canvas.translate(targetLeft + config.glyphOffsetXDp * density, targetTop)
             canvas.translate(targetWidth / 2f, targetHeight / 2f)

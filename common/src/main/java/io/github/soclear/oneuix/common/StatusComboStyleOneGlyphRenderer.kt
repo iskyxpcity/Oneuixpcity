@@ -34,10 +34,10 @@ object StatusComboStyleOneGlyphRenderer {
     private const val COMPACT_WIDTH = 120f
     private const val WIDE_WIDTH = 260f
     private const val HEIGHT = 120f
-    // Keep the canonical overall glyph baseline at 1.0; apply the requested 15% reduction separately.
-    // The live renderer and preview share both factors so their scale remains identical.
+    // Keep the 1.0f scale baseline and correct the original physical design size itself.
+    // The default 100% now maps to a 30.6dp glyph height instead of the previously oversized 36dp.
     const val GLYPH_SCALE_BASELINE_FACTOR = 1.0f
-    const val GLYPH_OVERALL_SCALE_FACTOR = 0.85f
+    const val BASE_GLYPH_HEIGHT_DP = 30.6f
     // Keep modest transparent breathing room without changing the ring's trailing-slot anchor.
     const val GLYPH_FRAME_BREATHING_DP = 1.5f
     private const val DUAL_BOTTOM_HEIGHT = 150f
@@ -688,7 +688,7 @@ object StatusComboStyleOneGlyphRenderer {
         outsideContentLeadingTrimUnits(config, networkType)).coerceAtLeast(20f)
 
     private fun baseGlyphHeightDp(config: StatusBarComboStyleOneRuntime): Int =
-        (36f * GLYPH_SCALE_BASELINE_FACTOR * GLYPH_OVERALL_SCALE_FACTOR *
+        (BASE_GLYPH_HEIGHT_DP * GLYPH_SCALE_BASELINE_FACTOR *
             config.glyphScalePercent.coerceIn(50, 150) / 100f)
             .roundToInt().coerceAtLeast(1)
 
@@ -1483,7 +1483,7 @@ object StatusComboStyleOneGlyphRenderer {
     }
 
     private fun dotCoordinateScale(config: StatusBarComboStyleOneRuntime): Float =
-        HEIGHT / (36f * GLYPH_SCALE_BASELINE_FACTOR * GLYPH_OVERALL_SCALE_FACTOR) /
+        HEIGHT / (BASE_GLYPH_HEIGHT_DP * GLYPH_SCALE_BASELINE_FACTOR) /
             (config.glyphScalePercent.coerceIn(50, 150) / 100f)
 
     private fun dotHorizontalOffset(config: StatusBarComboStyleOneRuntime): Float =
