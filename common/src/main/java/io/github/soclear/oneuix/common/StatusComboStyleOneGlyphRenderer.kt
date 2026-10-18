@@ -34,9 +34,9 @@ object StatusComboStyleOneGlyphRenderer {
     private const val COMPACT_WIDTH = 120f
     private const val WIDE_WIDTH = 260f
     private const val HEIGHT = 120f
-    // Preserve the established 90% physical baseline when the overall size slider is at 100%.
+    // The requested overall physical size baseline is 60% at a 100% slider value.
     // The live renderer and preview share this factor so preview scale matches runtime scale.
-    const val GLYPH_SCALE_BASELINE_FACTOR = 0.9f
+    const val GLYPH_SCALE_BASELINE_FACTOR = 0.6f
     // Keep modest transparent breathing room without changing the ring's trailing-slot anchor.
     const val GLYPH_FRAME_BREATHING_DP = 1.5f
     private const val DUAL_BOTTOM_HEIGHT = 150f
