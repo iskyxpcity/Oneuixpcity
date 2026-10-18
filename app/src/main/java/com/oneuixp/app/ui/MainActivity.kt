@@ -231,6 +231,12 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleUpdateInstallStatus(this, intent)
+    }
+
     override fun onResume() {
         super.onResume()
         OneuiXPreferenceBridge.ensureSynchronized(application)
