@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.oneuixp.app.BuildConfig
+import com.oneuixp.app.ui.util.checkNewVersion
 import com.oneuixp.app.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
