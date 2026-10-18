@@ -306,6 +306,7 @@ private fun VersionChangelogMaterial(onBack: () -> Unit, isLatestVersion: Boolea
             R.string.changelog_261018_cpu_frequency_title to R.string.changelog_261018_cpu_frequency_body,
             R.string.changelog_261018_live_metrics_title to R.string.changelog_261018_live_metrics_body,
             R.string.changelog_261018_version_statusbar_title to R.string.changelog_261018_version_statusbar_body,
+            R.string.changelog_261018_update_dialog_title to R.string.changelog_261018_update_dialog_body,
         )
         is261016 -> listOf(
             R.string.changelog_261016_statusbar_stability_title to R.string.changelog_261016_statusbar_stability_body,
@@ -401,6 +402,7 @@ private fun VersionChangelogMiuix(onBack: () -> Unit, isLatestVersion: Boolean, 
             R.string.changelog_261018_cpu_frequency_title to R.string.changelog_261018_cpu_frequency_body,
             R.string.changelog_261018_live_metrics_title to R.string.changelog_261018_live_metrics_body,
             R.string.changelog_261018_version_statusbar_title to R.string.changelog_261018_version_statusbar_body,
+            R.string.changelog_261018_update_dialog_title to R.string.changelog_261018_update_dialog_body,
         )
         is261016 -> listOf(
             R.string.changelog_261016_statusbar_stability_title to R.string.changelog_261016_statusbar_stability_body,

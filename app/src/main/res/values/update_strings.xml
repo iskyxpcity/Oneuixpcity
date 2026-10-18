@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="update_dialog_title">Discover a new version</string>
+    <string name="update_dialog_new_badge">NEW</string>
+    <string name="update_dialog_current_version">Current version %1$s</string>
+    <string name="update_dialog_changelog_title">What’s new</string>
+    <string name="update_dialog_no_changelog">This release includes improvements and bug fixes.</string>
+    <string name="update_dialog_auto_restart">After installation, OneUI XP will try to reopen automatically. Android may still ask you to confirm installation.</string>
+    <string name="update_dialog_cancel">Cancel</string>
+    <string name="update_dialog_install">Update now</string>
+    <string name="update_dialog_downloading">Downloading and verifying the APK…</string>
+    <string name="update_dialog_install_submitted">The system installer has been opened. Follow its prompts to finish updating.</string>
+    <string name="update_dialog_permission_needed">Allow OneUI XP to install unknown apps in system settings, then return and tap Update now.</string>
+    <string name="update_dialog_permission_open_failed">Unable to open the required system setting. Enable “Install unknown apps” for OneUI XP manually, then retry.</string>
+    <string name="update_dialog_failed_detail">Update failed: %1$s</string>
+    <string name="update_dialog_unknown_error">Unknown error</string>
+</resources>

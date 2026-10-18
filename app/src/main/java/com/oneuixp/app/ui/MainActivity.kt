@@ -82,6 +82,7 @@ import com.oneuixp.app.ui.theme.LocalEnableFloatingBottomBarBlur
 import com.oneuixp.app.ui.theme.OneuiXPTheme
 import com.oneuixp.app.ui.util.rememberBlurBackdrop
 import com.oneuixp.app.ui.util.rememberContentReady
+import com.oneuixp.app.ui.util.update.UpdateDialogHost
 import com.oneuixp.app.ui.viewmodel.MainActivityViewModel
 import com.oneuixp.app.ui.viewmodel.MainPagerConfig
 import top.yukonga.miuix.kmp.basic.Scaffold
@@ -201,6 +202,7 @@ class MainActivity : ComponentActivity() {
                         UiMode.Material -> androidx.compose.material3.Scaffold { navDisplay() }
                         UiMode.Miuix -> Scaffold { navDisplay() }
                     }
+                    UpdateDialogHost(isMiuix = uiMode == UiMode.Miuix)
                 }
             }
         }

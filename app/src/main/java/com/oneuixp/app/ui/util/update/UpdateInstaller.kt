@@ -236,7 +236,24 @@ class UpdateInstallReceiver : BroadcastReceiver() {
             }
 
             PackageInstaller.STATUS_SUCCESS -> {
-                Toast.makeText(context, "OneuiXP 更新安装完成", Toast.LENGTH_SHORT).show()
+                val launchIntent = context.packageManager.getLaunchIntentForPackage(context.packageName)
+                val relaunched = launchIntent?.let { launch ->
+                    launch.addFlags(
+                        Intent.FLAG_ACTIVITY_NEW_TASK or
+                            Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                            Intent.FLAG_ACTIVITY_SINGLE_TOP,
+                    )
+                    runCatching {
+                        context.startActivity(launch)
+                        true
+                    }.getOrDefault(false)
+                } == true
+                val message = if (relaunched) {
+                    "OneuiXP 更新安装完成，正在重新打开应用"
+                } else {
+                    "OneuiXP 更新安装完成，请返回桌面重新打开应用"
+                }
+                Toast.makeText(context, message, Toast.LENGTH_LONG).show()
             }
 
             else -> {
