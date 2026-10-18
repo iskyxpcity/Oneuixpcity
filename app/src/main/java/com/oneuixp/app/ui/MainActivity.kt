@@ -105,6 +105,8 @@ class MainActivity : ComponentActivity() {
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Keep PackageInstaller callbacks on the real app activity so system confirmation
+        // can be launched from the foreground without a background trampoline activity.
         handleUpdateInstallStatus(this, intent)
         OneuiXPreferenceBridge.ensureSynchronized(application)
 
