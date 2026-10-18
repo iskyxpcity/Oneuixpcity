@@ -91,7 +91,7 @@ jobs:
           test ! -e hook/src/main/resources/META-INF/xposed/scope.list
           echo "OneUI XP API101 Flux-style single-entry migration validated; full OneUIX functional hooks enabled"
 
-      - name: Compile OneuiXP before the owner-signing gate
+      - name: Compile OneUI XP before the owner-signing gate
         run: |
           set -euo pipefail
           mkdir -p diagnostics
@@ -112,7 +112,7 @@ jobs:
           set -euo pipefail
           for key in KEYSTORE_BASE64 KEYSTORE_PASSWORD KEY_ALIAS KEY_PASSWORD; do
             if [ -z "${!key}" ]; then
-              echo "::error::Missing OneuiXP repository Actions secret ${key}. Configure the NEW independent permanent OneuiXP keystore generated on 2026-09-23 in this repository's Actions secrets. Cannot release a stable-signed APK without them."
+              echo "::error::Missing OneUI XP repository Actions secret ${key}. Configure the NEW independent permanent OneUI XP keystore generated on 2026-09-23 in this repository's Actions secrets. Cannot release a stable-signed APK without them."
               exit 1
             fi
           done
@@ -120,7 +120,7 @@ jobs:
           printf '%s' "$KEYSTORE_BASE64" | base64 --decode > app/owner.keystore
           test -s app/owner.keystore
 
-      - name: Build owner-signed OneuiXP APK
+      - name: Build owner-signed OneUI XP APK
         env:
           ONEUIXP_KEYSTORE_PATH: ${{ github.workspace }}/app/owner.keystore
           ONEUIXP_KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
@@ -183,7 +183,7 @@ jobs:
           test -n "$CERT"
           EXPECTED=$(printf '%s' "$EXPECTED_CERT" | tr -d ': ' | tr '[:upper:]' '[:lower:]')
           if [ "$CERT" != "$EXPECTED" ]; then
-            echo '::error::OneuiXP certificate differs from the NEW permanent OneuiXP certificate.'
+            echo '::error::OneUI XP certificate differs from the NEW permanent OneUI XP certificate.'
             exit 1
           fi
           printf '%s\n' "$CERT" > dist/SIGNING_CERT_SHA256.txt
@@ -247,7 +247,7 @@ jobs:
             if [ "$GITHUB_REF" = "refs/heads/main" ]; then
               TAG="main-build-${GITHUB_RUN_NUMBER}-$SHORT_SHA"
               TITLE="OneUI XP main build #${GITHUB_RUN_NUMBER}"
-              NOTES="Automated signed main-branch test build. This is a prerelease, not a formal OneuiXP release."
+              NOTES="Automated signed main-branch test build. This is a prerelease, not a formal OneUI XP release."
             else
               if [[ "$GITHUB_REF" == refs/heads/test/* ]]; then
                 TAG="test-build-${GITHUB_RUN_NUMBER}-$SHORT_SHA"
