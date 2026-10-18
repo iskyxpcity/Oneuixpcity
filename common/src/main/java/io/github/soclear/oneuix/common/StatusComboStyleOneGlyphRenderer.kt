@@ -34,9 +34,9 @@ object StatusComboStyleOneGlyphRenderer {
     private const val COMPACT_WIDTH = 120f
     private const val WIDE_WIDTH = 260f
     private const val HEIGHT = 120f
-    // Keep the preference slider at 100 by default while drawing the combo glyph at 70%
-    // of the prior 36dp design baseline. The live renderer and preview share this factor.
-    const val GLYPH_SCALE_BASELINE_FACTOR = 0.7f
+    // Preserve the established 90% physical baseline when the overall size slider is at 100%.
+    // The live renderer and preview share this factor so preview scale matches runtime scale.
+    const val GLYPH_SCALE_BASELINE_FACTOR = 0.9f
     // Keep modest transparent breathing room without changing the ring's trailing-slot anchor.
     const val GLYPH_FRAME_BREATHING_DP = 1.5f
     private const val DUAL_BOTTOM_HEIGHT = 150f
