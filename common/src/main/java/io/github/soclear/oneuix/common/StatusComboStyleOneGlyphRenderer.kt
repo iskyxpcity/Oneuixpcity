@@ -95,7 +95,10 @@ object StatusComboStyleOneGlyphRenderer {
     private const val GAP_WIFI_SCALE = 0.8f
     private const val DOT_R = 5.5f
     private const val DUAL_DOT_R = 7f
-    private const val CENTER_CY = 64f
+    // Center the battery percentage and in-ring network label on the actual ring centre.
+    // Wi-Fi's original path geometry is designed around y=64f and is shifted at draw time.
+    private const val CENTER_CY = B_CY
+    private const val WIFI_REFERENCE_CENTER_Y = 64f
     private const val CAP_HEIGHT_RATIO = 0.71f
     private const val CAP_CENTER_RATIO = CAP_HEIGHT_RATIO / 2f
     private const val VALUE_X = 59.5f
@@ -1443,6 +1446,10 @@ object StatusComboStyleOneGlyphRenderer {
             canvas.scale(GAP_WIFI_SCALE, GAP_WIFI_SCALE)
             drawWifiArcs(canvas, 0f, color, level, stroke)
         } else {
+            // The complete Wi-Fi mark's original visual bounds are centered near y=64f.
+            // Shift it to the ring centre, while the gap-mode placement above remains anchored
+            // in the arc opening and is intentionally not centered in the ring interior.
+            canvas.translate(0f, B_CY - WIFI_REFERENCE_CENTER_Y)
             drawWifiArcs(canvas, offsetX, color, level, stroke)
         }
         canvas.restoreToCount(save)
