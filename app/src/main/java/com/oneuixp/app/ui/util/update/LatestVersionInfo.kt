@@ -26,7 +26,7 @@ private fun parseOneuiXPVersion(value: String): List<Int>? {
 }
 
 /**
- * Compare release names such as 1.0.260929.
+ * Compare both three-part names (1.0.261019) and four-part patch names (1.0.261019.1).
  * Android versionCode is only the monotonic installer code and intentionally
  * does not participate in the network release comparison.
  */
