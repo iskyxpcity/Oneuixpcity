@@ -9,6 +9,7 @@
     <uses-sdk tools:overrideLibrary="top.yukonga.miuix.kmp.blur" />
 
     <queries>
+        <package android:name="org.lsposed.manager" />
         <package android:name="com.android.settings" />
         <package android:name="com.android.systemui" />
         <package android:name="com.samsung.android.app.notes" />
@@ -47,9 +48,6 @@
         <meta-data android:name="xposeddescription" android:value="OneuiXP · OneUIX full migration" />
         <meta-data android:name="xposedminversion" android:value="93" />
         <meta-data android:name="xposedscope" android:resource="@array/xposed_scope" />
-        <receiver
-            android:name=".ui.util.update.UpdateInstallReceiver"
-            android:exported="false" />
 
         <activity
             android:name=".ui.StartupActivity"

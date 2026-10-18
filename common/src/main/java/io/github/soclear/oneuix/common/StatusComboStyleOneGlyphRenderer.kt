@@ -34,8 +34,10 @@ object StatusComboStyleOneGlyphRenderer {
     private const val COMPACT_WIDTH = 120f
     private const val WIDE_WIDTH = 260f
     private const val HEIGHT = 120f
-    // Keep modest transparent breathing room without shrinking or scaling the drawn glyph.
-    // The previous 3dp inset dominated the configured leading margin visually; use half.
+    // Keep the preference slider at 100 by default while drawing the combo glyph at 70%
+    // of the prior 36dp design baseline. The live renderer and preview share this factor.
+    const val GLYPH_SCALE_BASELINE_FACTOR = 0.7f
+    // Keep modest transparent breathing room without changing the ring's trailing-slot anchor.
     const val GLYPH_FRAME_BREATHING_DP = 1.5f
     private const val DUAL_BOTTOM_HEIGHT = 150f
     // Row 1 sits inside the ring's bottom opening; row 2 hugs it directly underneath.
@@ -93,7 +95,10 @@ object StatusComboStyleOneGlyphRenderer {
     private const val GAP_WIFI_SCALE = 0.8f
     private const val DOT_R = 5.5f
     private const val DUAL_DOT_R = 7f
-    private const val CENTER_CY = 64f
+    // Center the battery percentage and in-ring network label on the actual ring centre.
+    // Wi-Fi's original path geometry is designed around y=64f and is shifted at draw time.
+    private const val CENTER_CY = B_CY
+    private const val WIFI_REFERENCE_CENTER_Y = 64f
     private const val CAP_HEIGHT_RATIO = 0.71f
     private const val CAP_CENTER_RATIO = CAP_HEIGHT_RATIO / 2f
     private const val VALUE_X = 59.5f
@@ -682,7 +687,7 @@ object StatusComboStyleOneGlyphRenderer {
         outsideContentLeadingTrimUnits(config, networkType)).coerceAtLeast(20f)
 
     private fun baseGlyphHeightDp(config: StatusBarComboStyleOneRuntime): Int =
-        (36f * 0.9f * config.glyphScalePercent.coerceIn(70, 150) / 100f)
+        (36f * GLYPH_SCALE_BASELINE_FACTOR * config.glyphScalePercent.coerceIn(70, 150) / 100f)
             .roundToInt().coerceAtLeast(18)
 
     fun glyphWidthDp(config: StatusBarComboStyleOneRuntime, networkType: String = ""): Int =
@@ -1441,6 +1446,10 @@ object StatusComboStyleOneGlyphRenderer {
             canvas.scale(GAP_WIFI_SCALE, GAP_WIFI_SCALE)
             drawWifiArcs(canvas, 0f, color, level, stroke)
         } else {
+            // The complete Wi-Fi mark's original visual bounds are centered near y=64f.
+            // Shift it to the ring centre, while the gap-mode placement above remains anchored
+            // in the arc opening and is intentionally not centered in the ring interior.
+            canvas.translate(0f, B_CY - WIFI_REFERENCE_CENTER_Y)
             drawWifiArcs(canvas, offsetX, color, level, stroke)
         }
         canvas.restoreToCount(save)
@@ -1472,7 +1481,7 @@ object StatusComboStyleOneGlyphRenderer {
     }
 
     private fun dotCoordinateScale(config: StatusBarComboStyleOneRuntime): Float =
-        HEIGHT / (36f * 0.9f) / (config.glyphScalePercent.coerceIn(70, 150) / 100f)
+        HEIGHT / (36f * GLYPH_SCALE_BASELINE_FACTOR) / (config.glyphScalePercent.coerceIn(70, 150) / 100f)
 
     private fun dotHorizontalOffset(config: StatusBarComboStyleOneRuntime): Float =
         config.signalDotOffsetXDp.coerceIn(-8, 8) * dotCoordinateScale(config)
@@ -1484,7 +1493,11 @@ object StatusComboStyleOneGlyphRenderer {
         baseRadius * config.signalDotSizePercent.coerceIn(50, 150) / 100f
 
     private fun dotCenterX(config: StatusBarComboStyleOneRuntime, index: Int): Float {
-        val pitch = config.signalDotSpacingDp.coerceIn(3, 8) * (HEIGHT / (36f * 0.9f))
+        // Treat spacing as part of the glyph geometry, not as a fixed physical-DP gap.
+        // The outer canvas scale already includes GLYPH_SCALE_BASELINE_FACTOR and the
+        // user-selected glyphScalePercent, so do not divide the pitch by either factor.
+        // This keeps the four signal dots proportionate when the complete glyph shrinks.
+        val pitch = config.signalDotSpacingDp.coerceIn(3, 8) * (HEIGHT / 36f)
         return B_CX + (index - 1.5f) * pitch + dotHorizontalOffset(config)
     }
 

@@ -101,9 +101,9 @@ fun HomePagerMiuix(state: HomeUiState, actions: HomeActions, bottomInnerPadding:
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
-                        StatusCard()
+                        StatusCard(onActivateLsposed = actions.onActivateLsposed)
                         if (state.checkUpdateEnabled) UpdateCard(state, actions)
-                        InfoCard()
+                        HomeDeviceToolsCard()
                         Spacer(Modifier.height(bottomInnerPadding))
                     }
                 }
@@ -128,7 +128,7 @@ private fun UpdateCard(state: HomeUiState, actions: HomeActions) {
 }
 
 @Composable
-private fun StatusCard() {
+private fun StatusCard(onActivateLsposed: () -> Unit) {
     val status = LocalLsposedHomeStatus.current
     val active = status.active
     val mainCardColor = if (active) {
@@ -149,6 +149,8 @@ private fun StatusCard() {
             modifier = Modifier.weight(1f).fillMaxHeight(),
             colors = CardDefaults.defaultColors(color = mainCardColor),
             pressFeedbackType = PressFeedbackType.Tilt,
+            showIndication = !active,
+            onClick = if (!active) onActivateLsposed else null,
         ) {
             Box(modifier = Modifier.fillMaxSize()) {
                 Box(

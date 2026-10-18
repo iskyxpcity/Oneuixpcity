@@ -1,6 +1,7 @@
 package com.oneuixp.app.ui
 
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
@@ -64,6 +65,7 @@ import com.oneuixp.app.ui.screen.about.DisclaimerScreen
 import com.oneuixp.app.ui.screen.about.FeatureIntroductionScreen
 import com.oneuixp.app.ui.screen.about.VersionChangelogScreen
 import com.oneuixp.app.ui.screen.about.VersionChangelog261013Screen
+import com.oneuixp.app.ui.screen.about.VersionChangelog261018Screen
 import com.oneuixp.app.ui.screen.about.VersionChangelog261016Screen
 import com.oneuixp.app.ui.screen.colorpalette.ColorPaletteScreen
 import com.oneuixp.app.ui.screen.home.HomePager
@@ -81,6 +83,8 @@ import com.oneuixp.app.ui.theme.LocalEnableFloatingBottomBarBlur
 import com.oneuixp.app.ui.theme.OneuiXPTheme
 import com.oneuixp.app.ui.util.rememberBlurBackdrop
 import com.oneuixp.app.ui.util.rememberContentReady
+import com.oneuixp.app.ui.util.update.UpdateDialogHost
+import com.oneuixp.app.ui.util.update.handleUpdateInstallStatus
 import com.oneuixp.app.ui.viewmodel.MainActivityViewModel
 import com.oneuixp.app.ui.viewmodel.MainPagerConfig
 import top.yukonga.miuix.kmp.basic.Scaffold
@@ -101,6 +105,9 @@ class MainActivity : ComponentActivity() {
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Keep PackageInstaller callbacks on the real app activity so system confirmation
+        // can be launched from the foreground without a background trampoline activity.
+        handleUpdateInstallStatus(this, intent)
         OneuiXPreferenceBridge.ensureSynchronized(application)
 
         setContent {
@@ -180,6 +187,7 @@ class MainActivity : ComponentActivity() {
                             entry<Route.FeatureIntroduction>(swipeDismiss = swipeDismiss) { FeatureIntroductionScreen() }
                             entry<Route.VersionChangelog>(swipeDismiss = swipeDismiss) { VersionChangelogScreen() }
                             entry<Route.VersionChangelog261013>(swipeDismiss = swipeDismiss) { VersionChangelog261013Screen() }
+                            entry<Route.VersionChangelog261018>(swipeDismiss = swipeDismiss) { VersionChangelog261018Screen() }
                             entry<Route.VersionChangelog261016>(swipeDismiss = swipeDismiss) { VersionChangelog261016Screen() }
                             entry<Route.ColorPalette>(swipeDismiss = swipeDismiss) { ColorPaletteScreen() }
                             entry<Route.OneuiXCategory>(swipeDismiss = swipeDismiss) { key ->
@@ -195,13 +203,40 @@ class MainActivity : ComponentActivity() {
                         }
                     }
 
-                    when (uiMode) {
-                        UiMode.Material -> androidx.compose.material3.Scaffold { navDisplay() }
-                        UiMode.Miuix -> Scaffold { navDisplay() }
+                    val updateDialogSurfaceColor = when (uiMode) {
+                        UiMode.Material -> MaterialTheme.colorScheme.surface
+                        UiMode.Miuix -> MiuixTheme.colorScheme.surface
+                    }
+                    val updateDialogBackdrop = rememberLayerBackdrop {
+                        drawRect(updateDialogSurfaceColor)
+                        drawContent()
+                    }
+                    Box(Modifier.fillMaxSize()) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .layerBackdrop(updateDialogBackdrop),
+                        ) {
+                            when (uiMode) {
+                                UiMode.Material -> androidx.compose.material3.Scaffold { navDisplay() }
+                                UiMode.Miuix -> Scaffold { navDisplay() }
+                            }
+                        }
+                        UpdateDialogHost(
+                            isMiuix = uiMode == UiMode.Miuix,
+                            glassBackdrop = updateDialogBackdrop,
+                            enableLiquidGlass = uiState.enableFloatingBottomBarBlur,
+                        )
                     }
                 }
             }
         }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleUpdateInstallStatus(this, intent)
     }
 
     override fun onResume() {
