@@ -128,7 +128,11 @@ fun requestUpdateDialog(info: LatestVersionInfo) {
  * A dialog is only shown when the release feed advertises a newer stable version.
  */
 @Composable
-fun UpdateDialogHost(isMiuix: Boolean, glassBackdrop: Backdrop) {
+fun UpdateDialogHost(
+    isMiuix: Boolean,
+    glassBackdrop: Backdrop,
+    enableLiquidGlass: Boolean,
+) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var updateInfo by remember { mutableStateOf<LatestVersionInfo?>(null) }
@@ -160,6 +164,7 @@ fun UpdateDialogHost(isMiuix: Boolean, glassBackdrop: Backdrop) {
         UpdateDialog(
             isMiuix = isMiuix,
             glassBackdrop = glassBackdrop,
+            enableLiquidGlass = enableLiquidGlass,
             info = latest,
             isBusy = busy,
             statusMessage = statusMessage,
@@ -221,6 +226,7 @@ fun UpdateDialogHost(isMiuix: Boolean, glassBackdrop: Backdrop) {
 private fun UpdateDialog(
     isMiuix: Boolean,
     glassBackdrop: Backdrop,
+    enableLiquidGlass: Boolean,
     info: LatestVersionInfo,
     isBusy: Boolean,
     statusMessage: String?,
@@ -231,6 +237,7 @@ private fun UpdateDialog(
         UpdateDialogMiuix(
             info = info,
             glassBackdrop = glassBackdrop,
+            enableLiquidGlass = enableLiquidGlass,
             isBusy = isBusy,
             statusMessage = statusMessage,
             onDismiss = onDismiss,
@@ -259,7 +266,7 @@ private fun UpdateDialogMaterial(
     val onContainer = MaterialTheme.colorScheme.onSurface
     val accent = MaterialTheme.colorScheme.primary
     val gradientTop = remember(accent, container) {
-        accent.copy(alpha = 0.28f).compositeOver(container)
+        accent.copy(alpha = 0.45f).compositeOver(container)
     }
     val dialogShape = remember { RoundedCornerShape(28.dp) }
     val notes = remember(info.changelog) { normalizeReleaseNotes(info.changelog) }
@@ -438,6 +445,7 @@ private fun UpdateDialogMaterial(
 private fun UpdateDialogMiuix(
     info: LatestVersionInfo,
     glassBackdrop: Backdrop,
+    enableLiquidGlass: Boolean,
     isBusy: Boolean,
     statusMessage: String?,
     onDismiss: () -> Unit,
@@ -449,7 +457,7 @@ private fun UpdateDialogMiuix(
     val gradientTop = colors.primary.copy(alpha = 0.32f)
     val scrimInteraction = remember { MutableInteractionSource() }
     val cardInteraction = remember { MutableInteractionSource() }
-    val supportsGlass = isRenderEffectSupported()
+    val supportsGlass = enableLiquidGlass && isRenderEffectSupported()
 
     BackHandler(enabled = true) {
         if (!isBusy) onDismiss()
@@ -510,7 +518,13 @@ private fun UpdateDialogMiuix(
                         )
                     }
                 )
-                .border(1.dp, Color.White.copy(alpha = 0.24f), cardShape)
+                .then(
+                    if (supportsGlass) {
+                        Modifier.border(1.dp, Color.White.copy(alpha = 0.24f), cardShape)
+                    } else {
+                        Modifier
+                    },
+                )
                 .clickable(
                     interactionSource = cardInteraction,
                     indication = null,
