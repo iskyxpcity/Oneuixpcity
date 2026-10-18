@@ -195,9 +195,10 @@ jobs:
           grep -Eq 'hasFragileUserData.*0x0$' dist/APK_MANIFEST_CHECK.txt
           COMMIT_SUBJECT=$(git log -1 --pretty=%s)
           if [ "$GITHUB_REF" = "refs/heads/main" ] && [[ "$COMMIT_SUBJECT" == release:* ]]; then
-            OUTPUT_APK="OneUI_XP_${VERSION_NAME}.apk"
+            # Keep the legacy asset name so already-installed older updaters can find this transition release.
+            OUTPUT_APK="OneuiXP_${VERSION_NAME}.apk"
           else
-            OUTPUT_APK="OneUI_XP_${VERSION_NAME}_BUILD_${GITHUB_RUN_NUMBER}.apk"
+            OUTPUT_APK="OneuiXP_${VERSION_NAME}_BUILD_${GITHUB_RUN_NUMBER}.apk"
           fi
           echo "OUTPUT_APK=$OUTPUT_APK" >> "$GITHUB_ENV"
           cp "$APK" "dist/$OUTPUT_APK"
