@@ -9,6 +9,7 @@
     <string name="send_log">Send logs</string>
     <string name="app_update">Update</string>
     <string name="new_version_available">New version %s is available, click to upgrade!</string>
+    <string name="home_lsposed_manager_unavailable">LSPosed Manager was not found. Please install or enable LSPosed first.</string>
     <string name="app_changelog">Changelog</string>
     <string name="settings_check_update">Check for updates</string>
     <string name="settings_check_update_summary">Automatically check for updates when opening the app.</string>
