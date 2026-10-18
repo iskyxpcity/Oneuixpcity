@@ -10,7 +10,6 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
-import android.widget.Toast
 import com.oneuixp.app.R
 import com.oneuixp.app.oneuiXPApp
 import kotlinx.coroutines.Dispatchers
@@ -216,24 +215,12 @@ class UpdateInstallReceiver : BroadcastReceiver() {
                     intent.getParcelableExtra(Intent.EXTRA_INTENT) as? Intent
                 }
 
-                if (confirmation == null) {
-                    Toast.makeText(
-                        context,
-                        "系统没有返回安装确认界面",
-                        Toast.LENGTH_LONG,
-                    ).show()
-                    return
-                }
+                if (confirmation == null) return
 
+                // Installer cancellation/failure must remain silent; do not emit a toast
+                // over the system confirmation flow or when returning to OneuiXP.
                 confirmation.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                val opened = runCatching { context.startActivity(confirmation) }.isSuccess
-                if (!opened) {
-                    Toast.makeText(
-                        context,
-                        "无法打开 Samsung 系统安装确认界面",
-                        Toast.LENGTH_LONG,
-                    ).show()
-                }
+                runCatching { context.startActivity(confirmation) }
             }
 
             PackageInstaller.STATUS_SUCCESS -> {
@@ -248,10 +235,8 @@ class UpdateInstallReceiver : BroadcastReceiver() {
             }
 
             else -> {
-                val message = intent.getStringExtra(PackageInstaller.EXTRA_STATUS_MESSAGE)
-                    ?.takeIf { it.isNotBlank() }
-                    ?: "安装失败（状态码：$status）"
-                Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+                // Deliberately silent, including STATUS_FAILURE_ABORTED when the user cancels
+                // Android's installer UI. The update dialog is not reopened automatically.
             }
         }
     }
