@@ -146,6 +146,22 @@ object ProductionPreferenceMigration {
                     comboRuntimeChanged = true
                 }
 
+                // Remove the remaining 1dp default left gap for the composite glyph.
+                // Migrate the former baseline of 1dp to 0dp once, but preserve larger
+                // values that users deliberately selected in the left-margin slider.
+                val glyphLeftMarginZeroFinalMigrationDone =
+                    (updatedComboRuntime["glyphLeftMarginZeroFinalMigrationDone"] as? JsonPrimitive)
+                        ?.content?.toBooleanStrictOrNull() == true
+                if (!glyphLeftMarginZeroFinalMigrationDone) {
+                    val oldLeftMargin =
+                        updatedComboRuntime["glyphLeftMarginDp"]?.toString()?.toIntOrNull() ?: 0
+                    if (oldLeftMargin == 1) {
+                        updatedComboRuntime["glyphLeftMarginDp"] = JsonPrimitive(0)
+                    }
+                    updatedComboRuntime["glyphLeftMarginZeroFinalMigrationDone"] = JsonPrimitive(true)
+                    comboRuntimeChanged = true
+                }
+
                 val marginResetTo2MigrationDone =
                     (updatedComboRuntime["outSignalMarginReset2MigrationDone"] as? JsonPrimitive)
                         ?.content?.toBooleanStrictOrNull() == true
