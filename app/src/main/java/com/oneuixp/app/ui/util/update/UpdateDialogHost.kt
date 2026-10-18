@@ -1,7 +1,6 @@
 package com.oneuixp.app.ui.util.update
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.border
@@ -21,17 +20,13 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.SystemUpdateAlt
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -46,6 +41,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -55,6 +51,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.oneuixp.app.BuildConfig
 import com.oneuixp.app.R
+import com.oneuixp.app.ui.component.material.ExpressiveToggleButton
 import com.oneuixp.app.ui.util.checkNewVersion
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -68,7 +65,6 @@ import top.yukonga.miuix.kmp.basic.ButtonDefaults as MiuixButtonDefaults
 import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
 import top.yukonga.miuix.kmp.basic.InfiniteProgressIndicator
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
-import top.yukonga.miuix.kmp.basic.TextButton as MiuixTextButton
 import top.yukonga.miuix.kmp.blur.Backdrop
 import top.yukonga.miuix.kmp.blur.blur
 import top.yukonga.miuix.kmp.blur.drawBackdrop
@@ -262,10 +258,10 @@ private fun UpdateDialogMaterial(
     val container = MaterialTheme.colorScheme.surface
     val onContainer = MaterialTheme.colorScheme.onSurface
     val accent = MaterialTheme.colorScheme.primary
-    val secondaryAccent = MaterialTheme.colorScheme.secondary
-    val titleBrush = remember(accent, secondaryAccent) {
-        Brush.horizontalGradient(listOf(accent, secondaryAccent))
+    val gradientTop = remember(accent, container) {
+        accent.copy(alpha = 0.28f).compositeOver(container)
     }
+    val dialogShape = remember { RoundedCornerShape(28.dp) }
     val notes = remember(info.changelog) { normalizeReleaseNotes(info.changelog) }
 
     Dialog(
@@ -278,14 +274,22 @@ private fun UpdateDialogMaterial(
     ) {
         Surface(
             modifier = Modifier.fillMaxWidth(0.92f).widthIn(max = 440.dp),
-            shape = RoundedCornerShape(28.dp),
-            color = container,
+            shape = dialogShape,
+            color = Color.Transparent,
             contentColor = onContainer,
             shadowElevation = 10.dp,
             tonalElevation = 4.dp,
         ) {
             Column(
-                modifier = Modifier.padding(horizontal = 24.dp, vertical = 24.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(gradientTop, container, container),
+                        ),
+                        shape = dialogShape,
+                    )
+                    .padding(horizontal = 24.dp, vertical = 24.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp),
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -306,10 +310,9 @@ private fun UpdateDialogMaterial(
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = stringResource(R.string.update_dialog_title),
-                            style = MaterialTheme.typography.titleLarge.copy(
-                                brush = titleBrush,
-                                fontWeight = FontWeight.Bold,
-                            ),
+                            style = MaterialTheme.typography.titleLarge,
+                            color = onContainer,
+                            fontWeight = FontWeight.Bold,
                         )
                         Text(
                             text = "OneUI XP ${info.versionName}",
@@ -390,42 +393,24 @@ private fun UpdateDialogMaterial(
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    horizontalArrangement = ButtonGroupDefaults.ConnectedSpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    OutlinedButton(
+                    ExpressiveToggleButton(
+                        checked = false,
+                        onCheckedChange = { onDismiss() },
                         modifier = Modifier.weight(1f).height(48.dp),
                         enabled = !isBusy,
-                        onClick = onDismiss,
-                        shape = MaterialTheme.shapes.large,
-                        colors = ButtonDefaults.outlinedButtonColors(
-                            contentColor = accent,
-                            disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                        ),
-                        border = BorderStroke(1.dp, accent.copy(alpha = 0.58f)),
+                        shapes = ButtonGroupDefaults.connectedLeadingButtonShapes(),
                     ) {
-                        Icon(
-                            imageVector = Icons.Filled.Close,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp),
-                        )
-                        Spacer(Modifier.width(8.dp))
                         Text(stringResource(R.string.update_dialog_cancel))
                     }
-                    Button(
+                    ExpressiveToggleButton(
+                        checked = true,
+                        onCheckedChange = { onUpdate() },
                         modifier = Modifier.weight(1f).height(48.dp),
                         enabled = !isBusy,
-                        onClick = onUpdate,
-                        shape = MaterialTheme.shapes.large,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = accent,
-                            contentColor = MaterialTheme.colorScheme.onPrimary,
-                            disabledContainerColor = accent.copy(alpha = 0.62f),
-                            disabledContentColor = MaterialTheme.colorScheme.onPrimary,
-                        ),
-                        elevation = ButtonDefaults.buttonElevation(
-                            defaultElevation = 2.dp,
-                            pressedElevation = 4.dp,
-                        ),
+                        shapes = ButtonGroupDefaults.connectedTrailingButtonShapes(),
                     ) {
                         if (isBusy) {
                             CircularProgressIndicator(
@@ -461,9 +446,7 @@ private fun UpdateDialogMiuix(
     val colors = MiuixTheme.colorScheme
     val notes = remember(info.changelog) { normalizeReleaseNotes(info.changelog) }
     val cardShape = remember { RoundedCornerShape(30.dp) }
-    val titleBrush = remember(colors.primary, colors.secondary) {
-        Brush.horizontalGradient(listOf(colors.primary, colors.secondary))
-    }
+    val gradientTop = colors.primary.copy(alpha = 0.32f)
     val scrimInteraction = remember { MutableInteractionSource() }
     val cardInteraction = remember { MutableInteractionSource() }
     val supportsGlass = isRenderEffectSupported()
@@ -502,10 +485,29 @@ private fun UpdateDialogMiuix(
                                 )
                             },
                             highlight = { updateDialogGlassHighlight.copy(alpha = 0.75f) },
-                            onDrawSurface = { drawRect(colors.surfaceContainer.copy(alpha = 0.40f)) },
+                            onDrawSurface = {
+                                drawRect(
+                                    Brush.verticalGradient(
+                                        colors = listOf(
+                                            gradientTop,
+                                            colors.surfaceContainer.copy(alpha = 0.46f),
+                                            colors.surfaceContainer.copy(alpha = 0.42f),
+                                        ),
+                                    ),
+                                )
+                            },
                         )
                     } else {
-                        Modifier.background(colors.surface, cardShape)
+                        Modifier.background(
+                            Brush.verticalGradient(
+                                colors = listOf(
+                                    colors.primary.copy(alpha = 0.26f).compositeOver(colors.surface),
+                                    colors.surface,
+                                    colors.surface,
+                                ),
+                            ),
+                            cardShape,
+                        )
                     }
                 )
                 .border(1.dp, Color.White.copy(alpha = 0.24f), cardShape)
@@ -522,9 +524,7 @@ private fun UpdateDialogMiuix(
                     modifier = Modifier
                         .size(56.dp)
                         .clip(RoundedCornerShape(18.dp))
-                        .background(
-                            Brush.horizontalGradient(listOf(colors.primary, colors.secondary)),
-                        ),
+                        .background(colors.primary),
                     contentAlignment = Alignment.Center,
                 ) {
                     MiuixIcon(
@@ -536,12 +536,11 @@ private fun UpdateDialogMiuix(
                 }
                 Spacer(Modifier.width(14.dp))
                 Column(modifier = Modifier.weight(1f)) {
-                    BasicText(
+                    MiuixText(
                         text = stringResource(R.string.update_dialog_title),
-                        style = MiuixTheme.textStyles.title4.copy(
-                            brush = titleBrush,
-                            fontWeight = FontWeight.Bold,
-                        ),
+                        color = colors.onSurface,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = MiuixTheme.textStyles.title4.fontSize,
                     )
                     MiuixText(
                         text = "OneUI XP ${info.versionName}",
@@ -617,18 +616,24 @@ private fun UpdateDialogMiuix(
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                MiuixTextButton(
-                    text = stringResource(R.string.update_dialog_cancel),
+                MiuixButton(
                     onClick = onDismiss,
-                    modifier = Modifier.weight(1f),
-                )
+                    enabled = !isBusy,
+                    modifier = Modifier.weight(1f).height(48.dp),
+                    colors = MiuixButtonDefaults.buttonColors(
+                        color = colors.surfaceContainerHigh,
+                        contentColor = colors.onSurfaceContainerHigh,
+                    ),
+                ) {
+                    MiuixText(text = stringResource(R.string.update_dialog_cancel))
+                }
                 MiuixButton(
                     onClick = { if (!isBusy) onUpdate() },
                     enabled = !isBusy,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(1f).height(48.dp),
                     colors = MiuixButtonDefaults.buttonColorsPrimary(),
                 ) {
                     if (isBusy) {
