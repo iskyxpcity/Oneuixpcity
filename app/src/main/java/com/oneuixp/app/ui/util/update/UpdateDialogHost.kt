@@ -3,6 +3,7 @@ package com.oneuixp.app.ui.util.update
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -74,8 +76,8 @@ import top.yukonga.miuix.kmp.blur.highlight.BloomStroke
 import top.yukonga.miuix.kmp.blur.highlight.Highlight
 import top.yukonga.miuix.kmp.blur.highlight.LightPosition
 import top.yukonga.miuix.kmp.blur.highlight.LightSource
-import top.yukonga.miuix.kmp.blur.lens
-import top.yukonga.miuix.kmp.blur.vibrancy
+import com.oneuixp.app.ui.component.liquid.lens
+import com.oneuixp.app.ui.component.liquid.vibrancy
 import top.yukonga.miuix.kmp.shader.isRenderEffectSupported
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
@@ -260,8 +262,9 @@ private fun UpdateDialogMaterial(
     val container = MaterialTheme.colorScheme.surface
     val onContainer = MaterialTheme.colorScheme.onSurface
     val accent = MaterialTheme.colorScheme.primary
-    val titleBrush = remember(accent, MaterialTheme.colorScheme.secondary) {
-        Brush.horizontalGradient(listOf(accent, MaterialTheme.colorScheme.secondary))
+    val secondaryAccent = MaterialTheme.colorScheme.secondary
+    val titleBrush = remember(accent, secondaryAccent) {
+        Brush.horizontalGradient(listOf(accent, secondaryAccent))
     }
     val notes = remember(info.changelog) { normalizeReleaseNotes(info.changelog) }
 
