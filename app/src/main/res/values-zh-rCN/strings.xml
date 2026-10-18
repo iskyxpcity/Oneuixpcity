@@ -190,9 +190,4 @@
 
     <string name="nav_rail_expand">展开导航栏</string>
     <string name="nav_rail_collapse">收起导航栏</string>
-    <string name="lsposed_notification_access_title">使用 LSPosed 模块通知打开模块页</string>
-    <string name="lsposed_notification_access_message">要尝试直接打开 OneUI XP 的模块页面，可以复用 LSPosed 中现有的 OneUI XP 模块通知动作。Android 要求授予“通知使用权”才能查找这条通知。此权限可能让应用读取设备上的其他通知；OneUI XP 只会查找自己的 LSPosed 模块通知，不会保存或上传通知内容。若不授予权限或找不到对应通知，将正常打开 LSPosed 管理器首页。</string>
-    <string name="lsposed_notification_access_open_settings">前往通知使用权设置</string>
-    <string name="lsposed_open_manager_home">打开 LSPosed 管理器</string>
-    <string name="lsposed_notification_access_service_label">OneUI XP · LSPosed 模块快捷跳转</string>
 </resources>

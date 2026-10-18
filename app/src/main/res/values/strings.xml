@@ -191,9 +191,4 @@
 
     <string name="nav_rail_expand">Expand navigation rail</string>
     <string name="nav_rail_collapse">Collapse navigation rail</string>
-    <string name="lsposed_notification_access_title">Use LSPosed module notification</string>
-    <string name="lsposed_notification_access_message">To try opening OneUI XP\'s module page directly, OneUI XP can reuse the action from its existing LSPosed module notification. Android requires Notification access to find that notification. This permission can expose other notifications to the app; OneUI XP only looks for its own LSPosed module notification and does not store or upload notification content. If you do not grant access or the notification is unavailable, LSPosed Manager will open normally.</string>
-    <string name="lsposed_notification_access_open_settings">Open notification access settings</string>
-    <string name="lsposed_open_manager_home">Open LSPosed Manager</string>
-    <string name="lsposed_notification_access_service_label">OneUI XP LSPosed module shortcut</string>
 </resources>

@@ -64,16 +64,6 @@
             android:theme="@style/Theme.OneuiXP"
             android:windowSoftInputMode="adjustResize" />
 
-        <service
-            android:name=".ui.screen.home.LsposedNotificationListenerService"
-            android:label="@string/lsposed_notification_access_service_label"
-            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.service.notification.NotificationListenerService" />
-            </intent-filter>
-        </service>
-
     </application>
 
 </manifest>
