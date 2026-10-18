@@ -138,12 +138,18 @@ fun UpdateDialogHost(
     var updateInfo by remember { mutableStateOf<LatestVersionInfo?>(null) }
     var dialogVisible by remember { mutableStateOf(false) }
     var busy by remember { mutableStateOf(false) }
+    // One automatic prompt per activity launch. Keep this holder stable for the startup
+    // coroutine so dismissing while the release check is still running cannot reopen it.
+    val automaticDialogSuppressed = remember { mutableStateOf(false) }
     var statusMessage by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(Unit) {
         UpdateDialogRequests.requests.collect { request ->
             if (request != null) {
                 UpdateDialogRequests.clear(request.sequence)
+                // A manual click may open the dialog again, but it also wins any race with
+                // the initial automatic version check.
+                automaticDialogSuppressed.value = true
                 updateInfo = request.info
                 dialogVisible = true
                 statusMessage = null
@@ -153,7 +159,12 @@ fun UpdateDialogHost(
 
     LaunchedEffect(Unit) {
         val candidate = withContext(Dispatchers.IO) { checkNewVersion() }
-        if (candidate.versionName.isNotBlank() && candidate.downloadUrl.isNotBlank()) {
+        if (
+            !automaticDialogSuppressed.value &&
+            candidate.versionName.isNotBlank() &&
+            candidate.downloadUrl.isNotBlank()
+        ) {
+            automaticDialogSuppressed.value = true
             updateInfo = candidate
             dialogVisible = true
         }
@@ -168,7 +179,12 @@ fun UpdateDialogHost(
             info = latest,
             isBusy = busy,
             statusMessage = statusMessage,
-            onDismiss = { if (!busy) dialogVisible = false },
+            onDismiss = {
+                if (!busy) {
+                    automaticDialogSuppressed.value = true
+                    dialogVisible = false
+                }
+            },
             onUpdate = {
                 if (!busy) {
                     scope.launch {
@@ -183,6 +199,10 @@ fun UpdateDialogHost(
                                         submitUpdateSession(context, downloaded.apk)
                                     }) {
                                         UpdateInstallResult.Submitted -> {
+                                            // Android's installer now owns the confirmation UI.
+                                            // If the user cancels there, stay silent and do not
+                                            // reopen the release prompt during this app launch.
+                                            automaticDialogSuppressed.value = true
                                             dialogVisible = false
                                         }
                                         UpdateInstallResult.PermissionRequired -> {
