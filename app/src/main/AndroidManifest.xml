@@ -53,7 +53,7 @@
             android:excludeFromRecents="true"
             android:exported="false"
             android:noHistory="true"
-            android:theme="@style/Theme.OneuiXP.Startup" />
+            android:theme="@style/Theme.OneuiXP" />
 
         <activity
             android:name=".ui.StartupActivity"
