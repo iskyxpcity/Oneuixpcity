@@ -359,7 +359,7 @@
     <string name="oneuix_clockFormatPreset_zodiac">Zodiac</string>
     <string name="oneuix_clockFormatPreset_season">Season</string>
 
-    <string name="oneuix_callReturnDelay_title">Call return delay</string>
+    <string name="oneuix_callReturnDelay_title">Call return</string>
     <string name="oneuix_callReturnDelaySeconds_title">Return delay</string>
     <string name="oneuix_callReturnDelaySeconds_summary">%1$d seconds</string>
     <string name="oneuix_settingsTwoPane_title">Two-column Settings</string>
@@ -368,7 +368,7 @@
     <string name="oneuix_hidePackageInstallerRecommendation_title">Hide post-install recommendations</string>
     <string name="oneuix_customPowerMenu_summary">Choose which actions appear in the power menu and change their order.</string>
     <string name="oneuix_disableScreenshotCaptureSound_summary">Mute the sound played when taking a screenshot.</string>
-    <string name="oneuix_callReturnDelay_summary">Delay returning from the call screen after a call ends; adjust the delay below.</string>
+    <string name="oneuix_callReturnDelay_summary">Delay before automatically returning/collapsing the call screen after a call ends; 0–5 seconds.</string>
     <string name="oneuix_settingsTwoPane_summary">Try a tablet-style two-column layout in Settings. Reopen Settings after changing this option.</string>
     <string name="oneuix_allowAppDowngrade_summary">Skip version downgrade checks so an older APK can be installed over a newer app version.</string>
     <string name="oneuix_disableSecureScreenshotRestriction_summary">Allow screenshots in secure windows that normally block capture; some protected apps may still restrict screenshots.</string>
@@ -377,16 +377,18 @@
     <string name="oneuix_softRebootFailed">Could not start the soft restart. Check root permission.</string>
     <!-- Other functions: native theme actions and Call Return apply flow -->
     <string name="oneuix_rebootSystemUI_menu">Restart System UI</string>
-    <string name="oneuix_softRebootRuntime_menu">Soft restart Android Runtime</string>
-    <string name="oneuix_callReturnStateEnabled">Enabled · current delay: %1$d seconds</string>
-    <string name="oneuix_callReturnStateDisabled">Disabled · the original system behavior is used.</string>
-    <string name="oneuix_callReturnApplyTitle">Apply call return settings now?</string>
-    <string name="oneuix_callReturnApplyMessage">Settings are saved. Apply now to restart Samsung InCallUI so it reloads the latest OneUI XP configuration.</string>
+    <string name="oneuix_softRebootRuntime_menu">Soft reboot</string>
+    <string name="oneuix_callReturnEntryStateEnabled">%1$d seconds</string>
+    <string name="oneuix_callReturnStateEnabled">Enabled, current %1$d seconds</string>
+    <string name="oneuix_callReturnStateDisabled">Not enabled</string>
+    <string name="oneuix_callReturnApplyTitle">Apply now?</string>
+    <string name="oneuix_callReturnApplyMessage">Settings are saved. Applying now syncs the configuration and restarts the call UI process so SamsungInCallUI reloads the module.</string>
     <string name="oneuix_callReturnApplyNow">Apply now</string>
     <string name="oneuix_callReturnApplyLater">Later</string>
-    <string name="oneuix_callReturnApplyStarted">Applying call return settings…</string>
-    <string name="oneuix_callReturnApplied">Applied; Samsung InCallUI was restarted.</string>
-    <string name="oneuix_callReturnApplyFailed">Could not restart Samsung InCallUI. Check root access.</string>
-    <string name="oneuix_callReturnDelayControlHint">Choose 0–5 seconds. Changes are saved immediately; choose Apply now to restart Samsung InCallUI and load them right away.</string>
+    <string name="oneuix_callReturnRootRequired">Root access is required to sync module settings.</string>
+    <string name="oneuix_callReturnApplyStarted">Applying</string>
+    <string name="oneuix_callReturnApplied">Applied</string>
+    <string name="oneuix_callReturnApplyFailed">Application failed. Confirm root access.</string>
+    <string name="oneuix_callReturnDelayControlHint">Waiting time for the call screen after a call ends.</string>
 
 </resources>
