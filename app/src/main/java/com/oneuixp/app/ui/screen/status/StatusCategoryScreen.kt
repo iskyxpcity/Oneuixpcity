@@ -310,7 +310,6 @@ private fun StatusCategoryContent(
                     .statusCategoryScroll(rememberScrollState()),
             ) {
                 StatusOtherCategoryControls(
-                    uiState = preference.systemUI.other,
                     statusBarState = preference.systemUI.statusBar,
                     onEvent = toolsViewModel::onSystemUIEvent,
                 )

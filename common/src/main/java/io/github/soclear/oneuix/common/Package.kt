@@ -2,6 +2,8 @@ package io.github.soclear.oneuix.common
 
 object Package {
     const val ANDROID = "android"
+    const val AOSP_PACKAGE_INSTALLER = "com.android.packageinstaller"
+    const val PACKAGE_INSTALLER = "com.samsung.android.packageinstaller"
     const val BROWSER = "com.sec.android.app.sbrowser"
     const val CALENDAR = "com.samsung.android.calendar"
     const val CAMERA = "com.sec.android.app.camera"

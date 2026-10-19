@@ -4,6 +4,7 @@
     <string name="oneuix_module_disabled_tip">Please enable this module in LSPosed</string>
     <string name="oneuix_confirm">Confirm</string>
     <string name="oneuix_other">Other</string>
+    <string name="oneuix_other_functions_title">Other functions</string>
     <string name="oneuix_notification">Notification</string>
     <string name="oneuix_status_bar">Status Bar</string>
     <string name="oneuix_qs">Quick Settings</string>
@@ -357,4 +358,18 @@
     <string name="oneuix_clockFormatPreset_lunarYear">Lunar year</string>
     <string name="oneuix_clockFormatPreset_zodiac">Zodiac</string>
     <string name="oneuix_clockFormatPreset_season">Season</string>
+
+    <string name="oneuix_callReturnDelay_title">Call return</string>
+    <string name="oneuix_callReturnDelay_summary">Control the delay before the Samsung in-call screen closes after a call. Restart the in-call UI for changes to take effect.</string>
+    <string name="oneuix_callReturnDelaySeconds_title">Return delay</string>
+    <string name="oneuix_callReturnDelaySeconds_summary">%1$d seconds (0–5 seconds)</string>
+    <string name="oneuix_settingsTwoPane_title">Two-pane Settings</string>
+    <string name="oneuix_settingsTwoPane_summary">Try the tablet-style side-by-side layout in Settings. Restart the Settings app to apply.</string>
+    <string name="oneuix_allowAppDowngrade_title">Allow app downgrade</string>
+    <string name="oneuix_allowAppDowngrade_summary">Skip the system version downgrade check when installing an older APK over an installed app. Reboot to apply in system_server.</string>
+    <string name="oneuix_disableSecureScreenshotRestriction_title">Disable secure screenshot restriction</string>
+    <string name="oneuix_disableSecureScreenshotRestriction_summary">Allow screenshots on some screens that are normally marked as secure. Reboot to apply in system_server.</string>
+    <string name="oneuix_hidePackageInstallerRecommendation_title">Hide post-install app recommendations</string>
+    <string name="oneuix_hidePackageInstallerRecommendation_summary">Hide the recommended-app section shown by the package installer after installation. Restart the installer process to apply.</string>
+
 </resources>
