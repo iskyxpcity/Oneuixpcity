@@ -320,7 +320,6 @@
     <string name="oneuix_hidePackageInstallerRecommendation_summary">隐藏受支持的三星或 Android 安装器在安装完成后显示的应用推荐区域。</string>
     <string name="oneuix_softRebootStarted">正在执行 Android Runtime 软重启。</string>
     <string name="oneuix_softRebootFailed">无法启动软重启，请检查 Root 权限。</string>
-    <!-- Other functions: native theme actions and Call Return apply flow -->
     <string name="oneuix_rebootSystemUI_menu">重启 SystemUI</string>
     <string name="oneuix_softRebootRuntime_menu">软重启</string>
     <string name="oneuix_callReturnEntryStateEnabled">%1$d 秒</string>
