@@ -2804,6 +2804,32 @@ object StatusBarComboStyleOneRuntime {
         )
     }
 
+    /** Restore the saved parent slot while keeping its baseline snapshot for a later reconnect. */
+    private fun restoreNativeStatusIconParentSlot(cluster: ViewGroup) {
+        val baseline = synchronized(nativeWifiClusterBaselineParentLayoutParams) {
+            nativeWifiClusterBaselineParentLayoutParams[cluster]
+        } ?: return
+        val current = cluster.layoutParams as? LinearLayout.LayoutParams
+        if (current != null && current.width == baseline.width && current.weight == baseline.weight &&
+            current.gravity == baseline.gravity && current.leftMargin == baseline.leftMargin &&
+            current.rightMargin == baseline.rightMargin
+        ) return
+        runCatching { cluster.layoutParams = LinearLayout.LayoutParams(baseline) }
+        cluster.requestLayout()
+        (cluster.parent as? View)?.requestLayout()
+        diagnostic(
+            "Native status-icon parent slot restored for disconnected Wi-Fi: " +
+                "width=${baseline.width}|weight=${baseline.weight}"
+        )
+    }
+
+    private fun scheduleKnownNativeWifiClusterReconciliations() {
+        val clusters = synchronized(nativeWifiClusterBaselinePadding) {
+            nativeWifiClusterBaselinePadding.keys.toList()
+        }
+        clusters.forEach { scheduleNativeWifiClusterReconciliation(it) }
+    }
+
     private fun scheduleNativeWifiClusterReconciliation(
         cluster: ViewGroup?,
         triggeringChild: View? = null,
@@ -2827,7 +2853,14 @@ object StatusBarComboStyleOneRuntime {
         }
         cluster.post {
             try {
-                compactNativeStatusIconParentSlot(cluster)
+                // The composite Wi-Fi glyph only replaces the native Wi-Fi slot while associated
+                // with a Wi-Fi network. If disconnected, retain the original native row spacing.
+                val wifiConnected = isWifiTransportConnected(cluster.context)
+                if (wifiConnected == false) {
+                    restoreNativeStatusIconParentSlot(cluster)
+                } else {
+                    compactNativeStatusIconParentSlot(cluster)
+                }
                 val baselinePadding = synchronized(nativeWifiClusterBaselinePadding) {
                     nativeWifiClusterBaselinePadding[cluster] ?: intArrayOf(
                         cluster.paddingLeft, cluster.paddingTop, cluster.paddingRight, cluster.paddingBottom,
@@ -2856,12 +2889,15 @@ object StatusBarComboStyleOneRuntime {
                             "${child.measuredWidth}x${child.measuredHeight}"
                     } else null
                 }.take(8).joinToString(",")
-                // The combo glyph follows this container in the same trailing status-bar row.
-                // Keep native icons and their leading inset, while releasing trailing padding and
-                // minimum-width residue that adds empty space immediately before the glyph.
-                val targetLeft = if (hasVisibleNativeIcon) baselinePadding[0] else 0
-                val targetRight = 0
-                val targetMinimumWidth = 0
+                // Only trim the native row's horizontal insets when the composite glyph is
+                // replacing a connected native Wi-Fi slot. With Wi-Fi disconnected, the native
+                // Wi-Fi icon may be absent, so preserve the original left/right spacing and width.
+                val preserveBaselineSpacing = wifiConnected == false
+                val targetLeft = if (preserveBaselineSpacing || hasVisibleNativeIcon) {
+                    baselinePadding[0]
+                } else 0
+                val targetRight = if (preserveBaselineSpacing) baselinePadding[2] else 0
+                val targetMinimumWidth = if (preserveBaselineSpacing) baselineMinimumWidth else 0
                 val paddingChanged = cluster.paddingLeft != targetLeft ||
                     cluster.paddingRight != targetRight ||
                     cluster.paddingTop != baselinePadding[1] ||
@@ -2880,6 +2916,7 @@ object StatusBarComboStyleOneRuntime {
                 val lp = cluster.layoutParams
                 val row = cluster.parent as? View
                 val stage = when {
+                    preserveBaselineSpacing -> "wifi-disconnected-preserve-native-spacing"
                     nativeMobileSlotExpected -> "native-mobile-slot-expected-trim-trailing-space"
                     hasVisibleNativeIcon -> "native-icon-present-trim-trailing-space"
                     else -> "empty-native-signal-cluster-release-width"
@@ -4330,7 +4367,10 @@ object StatusBarComboStyleOneRuntime {
                         PowerManager.ACTION_POWER_SAVE_MODE_CHANGED -> updatePowerSave(app)
                         WifiManager.RSSI_CHANGED_ACTION,
                         WifiManager.NETWORK_STATE_CHANGED_ACTION,
-                        WifiManager.WIFI_STATE_CHANGED_ACTION -> updateWifi(app, intent)
+                        WifiManager.WIFI_STATE_CHANGED_ACTION -> {
+                            updateWifi(app, intent)
+                            scheduleKnownNativeWifiClusterReconciliations()
+                        }
                         else -> refreshTelephony(app)
                     }
                     invalidateGlyphs()

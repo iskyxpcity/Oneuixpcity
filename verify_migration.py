@@ -74,11 +74,14 @@ checks = {
      and 'nativeWifiClusterBaselineParentLayoutParams' in combo_runtime_source
      and 'baselineParentLayoutParams != null' in combo_runtime_source
  ),
- 'Status icon row trims trailing residue but preserves visible native icons': (
-     'val targetRight = 0' in combo_runtime_source
-     and 'val targetMinimumWidth = 0' in combo_runtime_source
-     and 'native-icon-present-trim-trailing-space' in combo_runtime_source
-     and 'baselineParentLayoutParams != null' in combo_runtime_source
+ 'Status icon row preserves baseline spacing when Wi-Fi is disconnected': (
+     'val wifiConnected = isWifiTransportConnected(cluster.context)' in combo_runtime_source
+     and 'val preserveBaselineSpacing = wifiConnected == false' in combo_runtime_source
+     and 'val targetRight = if (preserveBaselineSpacing) baselinePadding[2] else 0' in combo_runtime_source
+     and 'val targetMinimumWidth = if (preserveBaselineSpacing) baselineMinimumWidth else 0' in combo_runtime_source
+     and 'restoreNativeStatusIconParentSlot(cluster)' in combo_runtime_source
+     and 'scheduleKnownNativeWifiClusterReconciliations()' in combo_runtime_source
+     and 'wifi-disconnected-preserve-native-spacing' in combo_runtime_source
  ),
  'Network speed leaves native horizontal margins to Samsung SystemUI': (
      'NETWORK_SPEED_TRAILING_GAP_DP' not in network_speed_runtime_source
