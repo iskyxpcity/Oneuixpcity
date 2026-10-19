@@ -1639,17 +1639,14 @@ object StatusBarComboStyleOneRuntime {
                     val height = dp(glyph.context, StatusComboStyleOneGlyphRenderer.glyphHeightDp(config, state.networkType))
                     val lp = glyph.layoutParams
                     if (lp != null) {
-                        val margins = lp as? ViewGroup.MarginLayoutParams
                         // Keep the canvas's extra leading lane out of native row measurement.
                         val left = dpExact(glyph.context, config.glyphLeftMarginDp) - leadingPad
                         val right = dpExact(glyph.context, config.glyphRightMarginDp)
-                        val changed = lp.width != width || lp.height != height || margins?.let {
-                            it.leftMargin != left || it.rightMargin != right || it.topMargin != 0 || it.bottomMargin != 0
-                        } == true
+                        val marginsChanged = setAbsoluteMargins(lp, left, 0, right, 0)
+                        val changed = lp.width != width || lp.height != height || marginsChanged
                         if (changed) {
                             lp.width = width
                             lp.height = height
-                            margins?.setMargins(left, 0, right, 0)
                             glyph.layoutParams = lp
                         }
                     }
@@ -2048,17 +2045,13 @@ object StatusBarComboStyleOneRuntime {
             glyph.setInlineTrailingAnchor(anchor)
             val lp = glyph.layoutParams
             if (lp != null) {
-                val margins = lp as? ViewGroup.MarginLayoutParams
                 val left = dpExact(parent.context, config.glyphLeftMarginDp) - leadingPad
                 val right = dpExact(parent.context, config.glyphRightMarginDp)
-                val changed = lp.width != width || lp.height != height || margins?.let {
-                    it.leftMargin != left || it.rightMargin != right ||
-                        it.topMargin != 0 || it.bottomMargin != 0
-                } == true
+                val marginsChanged = setAbsoluteMargins(lp, left, 0, right, 0)
+                val changed = lp.width != width || lp.height != height || marginsChanged
                 if (changed) {
                     lp.width = width
                     lp.height = height
-                    margins?.setMargins(left, 0, right, 0)
                     glyph.layoutParams = lp
                 }
             }
@@ -2080,8 +2073,8 @@ object StatusBarComboStyleOneRuntime {
             is ViewGroup.MarginLayoutParams -> ViewGroup.MarginLayoutParams(old).apply { this.width = width; this.height = height }
             else -> ViewGroup.LayoutParams(width, height)
         }
-        val margins = lp as? ViewGroup.MarginLayoutParams
-        margins?.setMargins(
+        setAbsoluteMargins(
+            lp,
             dpExact(parent.context, config.glyphLeftMarginDp) - leadingPad,
             0,
             dpExact(parent.context, config.glyphRightMarginDp),
@@ -2866,6 +2859,31 @@ object StatusBarComboStyleOneRuntime {
      * Like HyperDuo, the overlay is anchored to that measured slot; reserving the complete
      * canvas width lets SystemUI move other icons left instead of letting the overlay cover them.
      */
+    /**
+     * Apply configured physical margins and discard inherited start/end margins.
+     * Samsung's status-bar LayoutParams can carry relative margins; setMargins() alone
+     * does not clear them, so they can override the requested spacing during RTL resolution.
+     */
+    private fun setAbsoluteMargins(
+        params: ViewGroup.LayoutParams,
+        left: Int,
+        top: Int,
+        right: Int,
+        bottom: Int,
+    ): Boolean {
+        val margins = params as? ViewGroup.MarginLayoutParams ?: return false
+        val hasRelativeMargins = Build.VERSION.SDK_INT >= 17 && margins.isMarginRelative
+        val changed = margins.leftMargin != left || margins.topMargin != top ||
+            margins.rightMargin != right || margins.bottomMargin != bottom || hasRelativeMargins
+        if (!changed) return false
+        margins.setMargins(left, top, right, bottom)
+        if (Build.VERSION.SDK_INT >= 17) {
+            margins.setMarginStart(Int.MIN_VALUE)
+            margins.setMarginEnd(Int.MIN_VALUE)
+        }
+        return true
+    }
+
     private fun updateOverlayHostSlot(
         host: Host,
         view: View,
@@ -2890,19 +2908,19 @@ object StatusBarComboStyleOneRuntime {
         val height = originalLayout?.height?.takeIf { it != 0 } ?: dp(view.context, 24)
         val left = dpExact(view.context, config.glyphLeftMarginDp)
         val right = dpExact(view.context, config.glyphRightMarginDp)
-        val changed = lp.width != width || lp.height != height || margins?.let {
-            it.leftMargin != left || it.topMargin != 0 || it.rightMargin != right || it.bottomMargin != 0
-        } == true
+        // The battery slot remains as the combo glyph's transparent placeholder. Its margins
+        // must be exactly the configured physical margins, not inherited SystemUI start/end.
+        val marginsChanged = setAbsoluteMargins(lp, left, 0, right, 0)
+        val changed = lp.width != width || lp.height != height || marginsChanged
         if (changed) {
             lp.width = width
             lp.height = height
-            margins?.setMargins(left, 0, right, 0)
             view.layoutParams = lp
             val parent = view.parent as? View
             diagnostic(
                 "Dynamic battery slot expansion: reservedWidthPx=${width} " +
                     "height=${height} measuredNowPx=${view.width} parent=${parent?.javaClass?.simpleName} " +
-                    "parentWidthPx=${parent?.width ?: -1} marginsPx=(${left},${right}) " +
+                    "parentWidthPx=${parent?.width ?: -1} marginsPx=(${left},${right}) absoluteMargins=true " +
                     "shadeBusy=${shadeBusy}"
             )
         }
