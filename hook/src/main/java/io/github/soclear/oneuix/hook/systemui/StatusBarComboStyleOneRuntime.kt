@@ -2894,7 +2894,7 @@ object StatusBarComboStyleOneRuntime {
                 // composite ring owns that glyph; remove the old horizontal insets/width.
                 // When OFF, the native Wi-Fi icon is independently visible, so restore baseline
                 // padding and minimum width instead of treating its slot as empty.
-                val targetLeft = if (nativeWifiSuppressed && hasVisibleNativeIcon) baselinePadding[0] else if (nativeWifiSuppressed) 0 else baselinePadding[0]
+                val targetLeft = if (nativeWifiSuppressed && !hasVisibleNativeIcon) 0 else baselinePadding[0]
                 val targetRight = if (nativeWifiSuppressed) 0 else baselinePadding[2]
                 val targetMinimumWidth = if (nativeWifiSuppressed) 0 else baselineMinimumWidth
                 val paddingChanged = cluster.paddingLeft != targetLeft ||
