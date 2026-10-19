@@ -30,6 +30,11 @@ checks = {
      and 'if (!foldMobile) StatusBarSignalIndependentRuntime.restoreNativeSignalViewsForCombo(root)' in combo_runtime_source
      and 'internal fun restoreNativeSignalViewsForCombo(statusBarRoot: ViewGroup)' in independent_signal_runtime_source
  ),
+ 'Native mobile release does not reapply a stale transparent alpha snapshot': (
+     'preserveCurrentAlpha: Boolean = false' in combo_runtime_source
+     and 'snapshot.copy(alpha = view.alpha)' in combo_runtime_source
+     and 'preserveCurrentAlpha = !foldMobile && isMobileIcon(view)' in combo_runtime_source
+ ),
 }
 for name, ok in checks.items(): print(('PASS' if ok else 'FAIL') + ': ' + name)
 if not all(checks.values()):

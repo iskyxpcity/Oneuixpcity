@@ -1905,7 +1905,16 @@ object StatusBarComboStyleOneRuntime {
                 val preserveWifiDot = config.enabled && !config.showWifi &&
                     isNativeWifiStatusBarDot(view) && hasVisibleNativeWifiSignal(view)
                 if (hide) collapseHostView(host, view)
-                else if (!preserveWifiDot) restoreHostView(host, view)
+                else if (!preserveWifiDot) {
+                    // When native mobile ownership is released, restore its saved bounds and
+                    // visibility but keep the live alpha. The previous snapshot may have been
+                    // captured after the independent renderer temporarily set alpha=0.
+                    restoreHostView(
+                        host,
+                        view,
+                        preserveCurrentAlpha = !foldMobile && isMobileIcon(view),
+                    )
+                }
                 if (wifiCandidate) {
                     val action = when {
                         hide -> "apply-collapse"
@@ -2852,8 +2861,22 @@ object StatusBarComboStyleOneRuntime {
         if (view.visibility != View.VISIBLE) view.visibility = View.VISIBLE
         if (view.alpha != 0f) view.alpha = 0f
     }
-    private fun restoreHostView(host: Host, view: View) {
-        host.layouts.remove(view)?.let { runCatching { restoreLayout(view, it) } }
+    private fun restoreHostView(
+        host: Host,
+        view: View,
+        preserveCurrentAlpha: Boolean = false,
+    ) {
+        host.layouts.remove(view)?.let { snapshot ->
+            // The independent SIM renderer can restore this view before Style One
+            // releases its own stale snapshot. Do not reapply an old alpha=0 snapshot
+            // when native mobile signal ownership is being released.
+            val effectiveSnapshot = if (preserveCurrentAlpha) {
+                snapshot.copy(alpha = view.alpha)
+            } else {
+                snapshot
+            }
+            runCatching { restoreLayout(view, effectiveSnapshot) }
+        }
         host.original.remove(view)?.let { old -> runCatching { view.visibility = old } }
     }
 
