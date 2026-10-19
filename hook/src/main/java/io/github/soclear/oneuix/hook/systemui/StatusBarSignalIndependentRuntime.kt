@@ -85,6 +85,15 @@ internal object StatusBarSignalIndependentRuntime {
     private data class NativeHiddenState(
         val alpha: Float,
         val visibility: Int,
+        val width: Int?,
+        val height: Int?,
+        val leftMargin: Int?,
+        val topMargin: Int?,
+        val rightMargin: Int?,
+        val bottomMargin: Int?,
+        val hasRelativeMargins: Boolean,
+        val marginStart: Int?,
+        val marginEnd: Int?,
     )
 
     private data class Holder(
@@ -699,11 +708,50 @@ internal object StatusBarSignalIndependentRuntime {
                 normalized.contains("battery") || normalized.contains("networkspeed") ||
                 normalized.contains("netspeed") || normalized.contains("clock")
             if (!positive || negative) return@forEach
+            // The composite renderer owns any slot it has already collapsed. Do not
+            // snapshot that zero-sized state as the independent renderer's baseline.
+            if (StatusBarComboStyleOneRuntime.isNativeLayoutOwned(view)) return@forEach
             if (!holder.hiddenNative.containsKey(view)) {
-                holder.hiddenNative[view] = NativeHiddenState(view.alpha, view.visibility)
+                val params = view.layoutParams
+                val margins = params as? ViewGroup.MarginLayoutParams
+                val hasRelativeMargins = Build.VERSION.SDK_INT >= 17 && margins?.isMarginRelative == true
+                holder.hiddenNative[view] = NativeHiddenState(
+                    alpha = view.alpha,
+                    visibility = view.visibility,
+                    width = params?.width,
+                    height = params?.height,
+                    leftMargin = margins?.leftMargin,
+                    topMargin = margins?.topMargin,
+                    rightMargin = margins?.rightMargin,
+                    bottomMargin = margins?.bottomMargin,
+                    hasRelativeMargins = hasRelativeMargins,
+                    marginStart = if (hasRelativeMargins) margins!!.marginStart else null,
+                    marginEnd = if (hasRelativeMargins) margins!!.marginEnd else null,
+                )
             }
-            view.alpha = 0f
+            collapseNativeSignalSlot(view)
         }
+    }
+
+    private fun collapseNativeSignalSlot(view: View) {
+        val params = view.layoutParams
+        if (params != null) {
+            params.width = 0
+            params.height = 0
+            val margins = params as? ViewGroup.MarginLayoutParams
+            if (margins != null) {
+                margins.setMargins(0, 0, 0, 0)
+                if (Build.VERSION.SDK_INT >= 17) {
+                    margins.setMarginStart(Int.MIN_VALUE)
+                    margins.setMarginEnd(Int.MIN_VALUE)
+                }
+            }
+            view.layoutParams = params
+        }
+        view.alpha = 0f
+        view.visibility = View.GONE
+        view.requestLayout()
+        (view.parent as? View)?.requestLayout()
     }
 
     private fun isSharedSignalWifiContainer(view: View): Boolean {
@@ -716,8 +764,35 @@ internal object StatusBarSignalIndependentRuntime {
     private fun restoreHiddenNativeView(holder: Holder, view: View) {
         val original = holder.hiddenNative.remove(view) ?: return
         if (view.parent != null) {
+            val params = view.layoutParams
+            if (params != null) {
+                original.width?.let { params.width = it }
+                original.height?.let { params.height = it }
+                val margins = params as? ViewGroup.MarginLayoutParams
+                if (margins != null && original.leftMargin != null &&
+                    original.topMargin != null && original.rightMargin != null &&
+                    original.bottomMargin != null
+                ) {
+                    if (Build.VERSION.SDK_INT >= 17) {
+                        margins.setMarginStart(Int.MIN_VALUE)
+                        margins.setMarginEnd(Int.MIN_VALUE)
+                    }
+                    margins.setMargins(
+                        original.leftMargin,
+                        original.topMargin,
+                        original.rightMargin,
+                        original.bottomMargin,
+                    )
+                    if (Build.VERSION.SDK_INT >= 17 && original.hasRelativeMargins) {
+                        margins.setMarginStart(original.marginStart ?: original.leftMargin)
+                        margins.setMarginEnd(original.marginEnd ?: original.rightMargin)
+                    }
+                }
+                view.layoutParams = params
+            }
             view.alpha = original.alpha
             view.visibility = original.visibility
+            view.requestLayout()
             (view.parent as? View)?.requestLayout()
         }
     }

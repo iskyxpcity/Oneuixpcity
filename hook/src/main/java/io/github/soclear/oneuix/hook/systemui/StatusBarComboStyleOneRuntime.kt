@@ -262,6 +262,7 @@ object StatusBarComboStyleOneRuntime {
     private data class LayoutSnapshot(
         val width: Int, val height: Int,
         val leftMargin: Int, val topMargin: Int, val rightMargin: Int, val bottomMargin: Int,
+        val hasRelativeMargins: Boolean, val marginStart: Int, val marginEnd: Int,
         val visibility: Int, val alpha: Float,
     )
 
@@ -2405,6 +2406,15 @@ object StatusBarComboStyleOneRuntime {
         }
     }
 
+    /**
+     * True while the composite renderer has captured and taken ownership of a native
+     * view's layout. The independent SIM-signal renderer must not capture the already
+     * collapsed LayoutParams as its own restoration baseline.
+     */
+    internal fun isNativeLayoutOwned(view: View): Boolean = synchronized(hosts) {
+        hosts.values.any { host -> host.layouts.containsKey(view) }
+    }
+
     private fun isMobileIcon(v: View): Boolean {
         if (v is GlyphView || isMobileTypeView(v) || isWifiIcon(v)) return false
         val slot = (slotOf(v) ?: knownIconSlots[v]).orEmpty().lowercase()
@@ -2418,7 +2428,7 @@ object StatusBarComboStyleOneRuntime {
         // airplane and other icons. Never collapse that whole group as a signal icon.
         return name.contains("mobile") || name.contains("cellular") || name.contains("signalmobile") ||
             name.contains("slotmobile") || name.contains("signalstrength") ||
-            (name.contains("signalcluster") && v !is ViewGroup)
+            (name.contains("signal") && v !is ViewGroup)
     }
 
     private fun isWithin(root: View, candidate: View): Boolean {
@@ -2511,9 +2521,19 @@ object StatusBarComboStyleOneRuntime {
     private fun snapshotLayout(view: View): LayoutSnapshot? {
         val lp = view.layoutParams ?: return null
         val margin = lp as? ViewGroup.MarginLayoutParams
+        val hasRelativeMargins = Build.VERSION.SDK_INT >= 17 && margin?.isMarginRelative == true
         return LayoutSnapshot(
-            lp.width, lp.height, margin?.leftMargin ?: 0, margin?.topMargin ?: 0,
-            margin?.rightMargin ?: 0, margin?.bottomMargin ?: 0, view.visibility, view.alpha,
+            width = lp.width,
+            height = lp.height,
+            leftMargin = margin?.leftMargin ?: 0,
+            topMargin = margin?.topMargin ?: 0,
+            rightMargin = margin?.rightMargin ?: 0,
+            bottomMargin = margin?.bottomMargin ?: 0,
+            hasRelativeMargins = hasRelativeMargins,
+            marginStart = if (hasRelativeMargins) margin!!.marginStart else 0,
+            marginEnd = if (hasRelativeMargins) margin!!.marginEnd else 0,
+            visibility = view.visibility,
+            alpha = view.alpha,
         )
     }
 
@@ -2522,15 +2542,28 @@ object StatusBarComboStyleOneRuntime {
         if (lp != null) {
             lp.width = snapshot.width
             lp.height = snapshot.height
-            (lp as? ViewGroup.MarginLayoutParams)?.setMargins(
-                snapshot.leftMargin, snapshot.topMargin, snapshot.rightMargin, snapshot.bottomMargin,
-            )
+            val margins = lp as? ViewGroup.MarginLayoutParams
+            if (margins != null) {
+                if (Build.VERSION.SDK_INT >= 17) {
+                    margins.setMarginStart(Int.MIN_VALUE)
+                    margins.setMarginEnd(Int.MIN_VALUE)
+                }
+                margins.setMargins(
+                    snapshot.leftMargin, snapshot.topMargin,
+                    snapshot.rightMargin, snapshot.bottomMargin,
+                )
+                if (Build.VERSION.SDK_INT >= 17 && snapshot.hasRelativeMargins) {
+                    margins.setMarginStart(snapshot.marginStart)
+                    margins.setMarginEnd(snapshot.marginEnd)
+                }
+            }
             view.layoutParams = lp
         }
         view.visibility = snapshot.visibility
         view.alpha = snapshot.alpha
         // Modern status-bar icon containers can cache child placement until the
         // parent is asked to lay out again after GONE/0x0 folding is reversed.
+        view.requestLayout()
         (view.parent as? View)?.requestLayout()
     }
 
@@ -2538,12 +2571,22 @@ object StatusBarComboStyleOneRuntime {
         val lp = view.layoutParams
         if (lp != null) {
             val margins = lp as? ViewGroup.MarginLayoutParams
+            val hasRelativeMargins = Build.VERSION.SDK_INT >= 17 && margins?.isMarginRelative == true
             val changed = lp.width != 0 || lp.height != 0 ||
-                margins?.let { it.leftMargin != 0 || it.topMargin != 0 || it.rightMargin != 0 || it.bottomMargin != 0 } == true
+                margins?.let {
+                    it.leftMargin != 0 || it.topMargin != 0 ||
+                        it.rightMargin != 0 || it.bottomMargin != 0
+                } == true || hasRelativeMargins
             if (changed) {
                 lp.width = 0
                 lp.height = 0
-                margins?.setMargins(0, 0, 0, 0)
+                if (margins != null) {
+                    margins.setMargins(0, 0, 0, 0)
+                    if (Build.VERSION.SDK_INT >= 17) {
+                        margins.setMarginStart(Int.MIN_VALUE)
+                        margins.setMarginEnd(Int.MIN_VALUE)
+                    }
+                }
                 view.layoutParams = lp
             }
         }

@@ -44,6 +44,29 @@ checks = {
  'Container relayout returns native mobile ownership when unsuppressed': (
      'preserveCurrentAlpha: Boolean = !isMobileNativeSuppressed() && isMobileIcon(view)' in combo_runtime_source
  ),
+ 'Hidden native signal slots clear all margins and restore exact layout': (
+     'collapseNativeSignalSlot(view)' in independent_signal_runtime_source
+     and 'params.width = 0' in independent_signal_runtime_source
+     and 'params.height = 0' in independent_signal_runtime_source
+     and 'margins.setMargins(0, 0, 0, 0)' in independent_signal_runtime_source
+     and 'margins.setMarginStart(Int.MIN_VALUE)' in independent_signal_runtime_source
+     and 'margins.setMarginEnd(Int.MIN_VALUE)' in independent_signal_runtime_source
+     and 'original.hasRelativeMargins' in independent_signal_runtime_source
+     and 'view.visibility = View.GONE' in independent_signal_runtime_source
+ ),
+ 'Independent signal runtime defers layout slots already owned by composite glyph': (
+     'StatusBarComboStyleOneRuntime.isNativeLayoutOwned(view)' in independent_signal_runtime_source
+     and 'internal fun isNativeLayoutOwned(view: View)' in combo_runtime_source
+     and 'host.layouts.containsKey(view)' in combo_runtime_source
+ ),
+ 'Composite hidden native slots clear relative margins and restore their baseline': (
+     'margins.setMarginStart(Int.MIN_VALUE)' in combo_runtime_source
+     and 'margins.setMarginEnd(Int.MIN_VALUE)' in combo_runtime_source
+     and 'snapshot.hasRelativeMargins' in combo_runtime_source
+ ),
+ 'Composite renderer collapses standalone native signal leaves': (
+     '(name.contains("signal") && v !is ViewGroup)' in combo_runtime_source
+ ),
  'Network speed leaves native horizontal margins to Samsung SystemUI': (
      'NETWORK_SPEED_TRAILING_GAP_DP' not in network_speed_runtime_source
      and 'bindTrailingGapHost' not in network_speed_runtime_source
