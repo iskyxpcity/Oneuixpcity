@@ -366,4 +366,13 @@
     <string name="oneuix_allowAppDowngrade_title">Allow app downgrade</string>
     <string name="oneuix_disableSecureScreenshotRestriction_title">Remove secure screenshot restriction</string>
     <string name="oneuix_hidePackageInstallerRecommendation_title">Hide post-install recommendations</string>
+    <string name="oneuix_customPowerMenu_summary">Choose which actions appear in the power menu and change their order.</string>
+    <string name="oneuix_disableScreenshotCaptureSound_summary">Mute the sound played when taking a screenshot.</string>
+    <string name="oneuix_callReturnDelay_summary">Delay returning from the call screen after a call ends; adjust the delay below.</string>
+    <string name="oneuix_settingsTwoPane_summary">Try a tablet-style two-column layout in Settings. Reopen Settings after changing this option.</string>
+    <string name="oneuix_allowAppDowngrade_summary">Skip version downgrade checks so an older APK can be installed over a newer app version.</string>
+    <string name="oneuix_disableSecureScreenshotRestriction_summary">Allow screenshots in secure windows that normally block capture; some protected apps may still restrict screenshots.</string>
+    <string name="oneuix_hidePackageInstallerRecommendation_summary">Hide post-install app recommendations in supported Samsung and Android installer screens.</string>
+    <string name="oneuix_softRebootStarted">Soft-restarting Android Runtime.</string>
+    <string name="oneuix_softRebootFailed">Could not start the soft restart. Check root permission.</string>
 </resources>

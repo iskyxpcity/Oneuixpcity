@@ -46,6 +46,7 @@ fun OtherFunctionsControls(
                 SwitchItem(
                     icon = ImageVector.vectorResource(id = R.drawable.power_settings_new),
                     title = stringResource(id = R.string.oneuix_customPowerMenu_title),
+                    summary = stringResource(id = R.string.oneuix_customPowerMenu_summary),
                     clickable = true,
                     onClick = { powerMenuExpanded = !powerMenuExpanded },
                     checked = uiState.customPowerMenu,
@@ -124,6 +125,7 @@ fun OtherFunctionsControls(
                 SwitchItem(
                     icon = ImageVector.vectorResource(id = R.drawable.screenshot),
                     title = stringResource(id = R.string.oneuix_disableScreenshotCaptureSound_title),
+                    summary = stringResource(id = R.string.oneuix_disableScreenshotCaptureSound_summary),
                     checked = uiState.disableScreenshotCaptureSound,
                     onCheckedChange = {
                         onEvent(SystemUIEvent.Other.DisableScreenshotCaptureSound(it))
@@ -140,6 +142,7 @@ fun OtherFunctionsControls(
                 SwitchItem(
                     icon = ImageVector.vectorResource(id = R.drawable.phone_forwarded),
                     title = stringResource(id = R.string.oneuix_callReturnDelay_title),
+                    summary = stringResource(id = R.string.oneuix_callReturnDelay_summary),
                     checked = otherState.callReturnDelayEnabled,
                     onCheckedChange = { checked ->
                         onOtherChange { current -> current.copy(callReturnDelayEnabled = checked) }
@@ -195,6 +198,7 @@ fun OtherFunctionsControls(
                 SwitchItem(
                     icon = ImageVector.vectorResource(id = R.drawable.expand),
                     title = stringResource(id = R.string.oneuix_settingsTwoPane_title),
+                    summary = stringResource(id = R.string.oneuix_settingsTwoPane_summary),
                     checked = otherState.settingsTwoPaneEnabled,
                     onCheckedChange = { checked ->
                         onOtherChange { current -> current.copy(settingsTwoPaneEnabled = checked) }
@@ -210,6 +214,7 @@ fun OtherFunctionsControls(
                 SwitchItem(
                     icon = ImageVector.vectorResource(id = R.drawable.apk_document),
                     title = stringResource(id = R.string.oneuix_allowAppDowngrade_title),
+                    summary = stringResource(id = R.string.oneuix_allowAppDowngrade_summary),
                     checked = otherState.allowAppDowngradeEnabled,
                     onCheckedChange = { checked ->
                         onOtherChange { current -> current.copy(allowAppDowngradeEnabled = checked) }
@@ -225,6 +230,7 @@ fun OtherFunctionsControls(
                 SwitchItem(
                     icon = ImageVector.vectorResource(id = R.drawable.screenshot),
                     title = stringResource(id = R.string.oneuix_disableSecureScreenshotRestriction_title),
+                    summary = stringResource(id = R.string.oneuix_disableSecureScreenshotRestriction_summary),
                     checked = otherState.disableSecureScreenshotRestrictionEnabled,
                     onCheckedChange = { checked ->
                         onOtherChange { current ->
@@ -242,6 +248,7 @@ fun OtherFunctionsControls(
                 SwitchItem(
                     icon = ImageVector.vectorResource(id = R.drawable.ad_off),
                     title = stringResource(id = R.string.oneuix_hidePackageInstallerRecommendation_title),
+                    summary = stringResource(id = R.string.oneuix_hidePackageInstallerRecommendation_summary),
                     checked = otherState.hidePackageInstallerRecommendationEnabled,
                     onCheckedChange = { checked ->
                         onOtherChange { current ->
