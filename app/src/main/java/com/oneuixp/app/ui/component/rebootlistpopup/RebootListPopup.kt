@@ -3,7 +3,7 @@ package com.oneuixp.app.ui.component.rebootlistpopup
 import android.widget.Toast
 import androidx.compose.runtime.rememberCoroutineScope
 import com.oneuixp.app.oneuiXPApp
-import com.oneuixp.app.oneuixp.OneuiXPPPreferenceBridge
+import com.oneuixp.app.oneuixp.OneuiXPPreferenceBridge
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -28,7 +28,7 @@ fun rememberRebootAction(): (String) -> Unit {
     return { reason ->
         if (reason == "statusbar_xp_systemui") {
             scope.launch {
-                val synchronized = OneuiXPPPreferenceBridge.synchronizeNow(oneuiXPApp)
+                val synchronized = OneuiXPPreferenceBridge.synchronizeNow(oneuiXPApp)
                 if (!synchronized) {
                     Toast.makeText(
                         oneuiXPApp,

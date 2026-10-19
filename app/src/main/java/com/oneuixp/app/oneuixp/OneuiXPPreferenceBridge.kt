@@ -276,7 +276,7 @@ val Context.oneuiXPDataStore: DataStore<Preference> by dataStore(
     serializer = OneuiXPPPreferenceSerializer,
 )
 
-object OneuiXPPPreferenceBridge {
+object OneuiXPPreferenceBridge {
     fun initialize(application: Application) {
         OneuiXPXposedService.initialize(application)
     }
