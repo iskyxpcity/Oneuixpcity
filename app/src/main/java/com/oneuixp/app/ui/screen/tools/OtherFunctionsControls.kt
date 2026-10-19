@@ -73,8 +73,8 @@ fun OtherFunctionsControls(
     } else {
         stringResource(R.string.oneuix_callReturnStateDisabled)
     }
-    val callReturnDelaySummary = stringResource(R.string.oneuix_callReturnDelay_summary) +
-        "\n" + callReturnDelayStatus
+    val callReturnDelaySummary = callReturnDelayStatus +
+        "\n" + stringResource(R.string.oneuix_callReturnDelay_summary)
 
     var powerMenuExpanded by rememberSaveable { mutableStateOf(false) }
 
