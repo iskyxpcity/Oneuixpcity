@@ -32,6 +32,7 @@ object SettingsTwoPane {
         hookSplitRuleConstructors(xposedModule, loader)
     }
 
+    context(xposedModule: XposedModule)
     private fun hookSystemProperties(module: XposedModule, loader: ClassLoader, className: String) {
         runCatching {
             loader.loadClass(className).declaredMethods
@@ -46,6 +47,7 @@ object SettingsTwoPane {
         }.onFailure { xlog(it) }
     }
 
+    context(xposedModule: XposedModule)
     private fun hookFeatureFlagUtils(module: XposedModule, loader: ClassLoader) {
         runCatching {
             loader.loadClass("android.util.FeatureFlagUtils").declaredMethods
@@ -59,6 +61,7 @@ object SettingsTwoPane {
         }.onFailure { xlog(it) }
     }
 
+    context(xposedModule: XposedModule)
     private fun hookTopLevelFeature(module: XposedModule, loader: ClassLoader) {
         runCatching {
             loader.loadClass("com.samsung.android.settings.homepage.SecTopLevelFeature").declaredMethods
@@ -72,6 +75,7 @@ object SettingsTwoPane {
         }.onFailure { xlog(it) }
     }
 
+    context(xposedModule: XposedModule)
     private fun hookSettingsApplication(module: XposedModule, loader: ClassLoader) {
         runCatching {
             loader.loadClass("com.android.settings.SettingsApplication").declaredMethods
@@ -92,6 +96,7 @@ object SettingsTwoPane {
         }.onFailure { xlog(it) }
     }
 
+    context(xposedModule: XposedModule)
     private fun hookActivityEmbeddingUtils(module: XposedModule, loader: ClassLoader) {
         runCatching {
             loader.loadClass("com.android.settings.activityembedding.ActivityEmbeddingUtils").declaredMethods
@@ -100,6 +105,7 @@ object SettingsTwoPane {
         }.onFailure { xlog(it) }
     }
 
+    context(xposedModule: XposedModule)
     private fun hookSplitRuleConstructors(module: XposedModule, loader: ClassLoader) {
         runCatching {
             loader.loadClass("androidx.window.embedding.SplitRule").declaredConstructors
