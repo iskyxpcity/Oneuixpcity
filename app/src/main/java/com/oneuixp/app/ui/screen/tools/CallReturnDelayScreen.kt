@@ -55,10 +55,6 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme
 import top.yukonga.miuix.kmp.utils.overScrollVertical
 import top.yukonga.miuix.kmp.utils.scrollEndHaptic
 
-/**
- * Source-ported Call Return controls. State, persistence and hook configuration are shared;
- * only presentation components differ between Material and Miuix.
- */
 @Composable
 fun CallReturnDelayScreen() {
     val navigator = LocalNavigator.current
@@ -75,7 +71,7 @@ fun CallReturnDelayScreen() {
             scope.launch {
                 Toast.makeText(context, context.getString(R.string.oneuix_callReturnApplyStarted), Toast.LENGTH_SHORT).show()
                 if (!OneuiXPreferenceBridge.synchronizeNow(oneuiXPApp)) {
-                    Toast.makeText(context, context.getString(R.string.oneuix_preferenceSync_failed), Toast.LENGTH_LONG).show()
+                    Toast.makeText(context, context.getString(R.string.oneuix_callReturnRootRequired), Toast.LENGTH_LONG).show()
                     return@launch
                 }
                 val restarted = withContext(Dispatchers.IO) {
@@ -187,7 +183,6 @@ private fun CallReturnDelayMaterial(
                             SwitchItem(
                                 icon = ImageVector.vectorResource(R.drawable.phone_forwarded),
                                 title = stringResource(R.string.oneuix_callReturnDelay_title),
-                                summary = stringResource(R.string.oneuix_callReturnDelay_summary),
                                 checked = enabled,
                                 onCheckedChange = onEnabledChange,
                             )
@@ -253,7 +248,6 @@ private fun CallReturnDelayMiuix(
                             SwitchItem(
                                 icon = ImageVector.vectorResource(R.drawable.phone_forwarded),
                                 title = stringResource(R.string.oneuix_callReturnDelay_title),
-                                summary = stringResource(R.string.oneuix_callReturnDelay_summary),
                                 checked = enabled,
                                 onCheckedChange = onEnabledChange,
                             )
