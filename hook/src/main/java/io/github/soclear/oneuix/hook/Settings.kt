@@ -17,8 +17,8 @@ import io.github.soclear.oneuix.hook.util.xlog
 object Settings {
 
     /**
-     * Enables the large-screen/activity-embedding path in Samsung Settings. The hooks stay
-     * installed and consult the shared preference at call time.
+     * Enables the large-screen/activity-embedding path in Samsung Settings.
+     * The hooks are installed when this feature is enabled for the Settings process.
      */
     context(xposedModule: XposedModule, param: XposedModuleInterface.PackageReadyParam)
     fun enableSettingsTwoPane() {
