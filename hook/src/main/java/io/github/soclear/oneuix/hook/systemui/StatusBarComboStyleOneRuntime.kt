@@ -1152,7 +1152,16 @@ object StatusBarComboStyleOneRuntime {
     }
 
     fun isEnabled(): Boolean = config.enabled
-    fun isNativeWifiSuppressed(): Boolean = config.enabled && config.showWifi
+
+    /**
+     * Compact the native Wi-Fi slot only after both gates pass, in order:
+     * the composite Wi-Fi arc is enabled, then Wi-Fi transport is connected.
+     * Unknown/disconnected transport keeps the native baseline spacing.
+     */
+    fun isNativeWifiSuppressed(context: Context): Boolean {
+        if (!config.enabled || !config.showWifi) return false
+        return isWifiTransportConnected(context) == true
+    }
     fun isMobileNativeSuppressed(): Boolean =
         config.enabled && config.showMobile &&
             (config.signalMode == 0 || (config.signalMode == 1 && config.stackedSignal))
@@ -2853,10 +2862,10 @@ object StatusBarComboStyleOneRuntime {
         }
         cluster.post {
             try {
-                // The "show Wi-Fi arc" setting decides whether the native Wi-Fi icon is
-                // folded into the composite ring. Compact the native slot only while it is
-                // suppressed; when the setting is off, restore the native slot and its spacing.
-                val nativeWifiSuppressed = isNativeWifiSuppressed()
+                // First require the "show Wi-Fi arc" toggle; then require a connected Wi-Fi
+                // transport. Only both true compact the native slot; otherwise restore spacing.
+                // Check the arc toggle first; only then query live Wi-Fi transport state.
+                val nativeWifiSuppressed = isNativeWifiSuppressed(cluster.context)
                 if (nativeWifiSuppressed) {
                     compactNativeStatusIconParentSlot(cluster)
                 } else {
