@@ -76,6 +76,7 @@ import com.oneuixp.app.ui.screen.status.StatusCategoryScreen
 import com.oneuixp.app.ui.screen.settings.SettingPager
 import com.oneuixp.app.ui.screen.tools.ToolsPager
 import com.oneuixp.app.ui.screen.tools.OneuiXCategoryScreen
+import com.oneuixp.app.ui.screen.tools.OtherFunctionsScreen
 import com.oneuixp.app.ui.theme.LocalColorMode
 import com.oneuixp.app.ui.theme.LocalEnableBlur
 import com.oneuixp.app.ui.theme.LocalEnableFloatingBottomBar
@@ -196,6 +197,7 @@ class MainActivity : ComponentActivity() {
                             entry<Route.StatusCategory>(swipeDismiss = swipeDismiss) { key ->
                                 StatusCategoryScreen(key.category)
                             }
+                            entry<Route.OtherFunctions>(swipeDismiss = swipeDismiss) { OtherFunctionsScreen() }
                             entry<Route.Home>(swipeDismiss = swipeDismiss) { mainScreenEntry() }
                             entry<Route.Tools>(swipeDismiss = swipeDismiss) { mainScreenEntry() }
                             entry<Route.Status>(swipeDismiss = swipeDismiss) { mainScreenEntry() }
