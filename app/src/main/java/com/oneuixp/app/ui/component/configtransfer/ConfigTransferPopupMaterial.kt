@@ -27,7 +27,7 @@ fun ConfigTransferPopupMaterial(
     IconButton(onClick = { expanded = true }) {
         Icon(
             imageVector = Icons.AutoMirrored.Outlined.Article,
-            contentDescription = stringResource(R.string.oneuix_backup_config),
+            contentDescription = stringResource(R.string.oneuixp_backup_config),
         )
     }
 
@@ -42,7 +42,7 @@ fun ConfigTransferPopupMaterial(
                     expanded = false
                     onBackup()
                 },
-                text = { Text(stringResource(R.string.oneuix_backup_config)) },
+                text = { Text(stringResource(R.string.oneuixp_backup_config)) },
                 shapes = MenuDefaults.itemShape(index = 0, count = 2),
             )
             SelectableDropdownMenuItem(
@@ -51,7 +51,7 @@ fun ConfigTransferPopupMaterial(
                     expanded = false
                     onRestore()
                 },
-                text = { Text(stringResource(R.string.oneuix_restore_config)) },
+                text = { Text(stringResource(R.string.oneuixp_restore_config)) },
                 shapes = MenuDefaults.itemShape(index = 1, count = 2),
             )
         }

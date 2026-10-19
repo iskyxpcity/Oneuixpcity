@@ -13,12 +13,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.oneuixp.app.R
-import io.github.soclear.oneuix.common.Preference
-import io.github.soclear.oneuix.ui.component.OneuiXInfoItem
-import io.github.soclear.oneuix.ui.component.OneuiXInlineTextField
-import io.github.soclear.oneuix.ui.component.OneuiXSlider
-import io.github.soclear.oneuix.ui.component.SelectItem
-import io.github.soclear.oneuix.ui.component.SwitchItem
+import io.github.oneuixp.common.Preference
+import io.github.oneuixp.ui.component.OneuiXPInfoItem
+import io.github.oneuixp.ui.component.OneuiXPInlineTextField
+import io.github.oneuixp.ui.component.OneuiXPSlider
+import io.github.oneuixp.ui.component.SelectItem
+import io.github.oneuixp.ui.component.SwitchItem
 import kotlin.math.roundToInt
 
 private fun richArgbText(color: Int): String =
@@ -44,10 +44,10 @@ fun StatusClockRichBlockEditor(
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
         SwitchItem(
-            title = stringResource(id = R.string.oneuix_clockRichTextSize_title),
+            title = stringResource(id = R.string.oneuixp_clockRichTextSize_title),
             summary = if (style.overrideTextSize) {
                 stringResource(
-                    id = R.string.oneuix_clockRichTextSize_summary,
+                    id = R.string.oneuixp_clockRichTextSize_summary,
                     style.textSizeSp,
                 )
             } else {
@@ -63,14 +63,14 @@ fun StatusClockRichBlockEditor(
             var textSize by remember(style.textSizeSp) {
                 mutableFloatStateOf(style.textSizeSp)
             }
-            OneuiXInfoItem(
-                title = stringResource(id = R.string.oneuix_clockRichTextSize_title),
+            OneuiXPInfoItem(
+                title = stringResource(id = R.string.oneuixp_clockRichTextSize_title),
                 summary = stringResource(
-                    id = R.string.oneuix_clockRichTextSize_summary,
+                    id = R.string.oneuixp_clockRichTextSize_summary,
                     textSize,
                 ),
             )
-            OneuiXSlider( 
+            OneuiXPSlider(
                 stepSize = 1f,
                 value = textSize,
                 onValueChange = { raw ->
@@ -91,14 +91,14 @@ fun StatusClockRichBlockEditor(
         var horizontalOffset by remember(style.horizontalOffsetDp) {
             mutableFloatStateOf(style.horizontalOffsetDp.coerceIn(-20f, 20f))
         }
-        OneuiXInfoItem(
-            title = stringResource(id = R.string.oneuix_clockRichHorizontalOffset_title),
+        OneuiXPInfoItem(
+            title = stringResource(id = R.string.oneuixp_clockRichHorizontalOffset_title),
             summary = stringResource(
-                id = R.string.oneuix_clockRichOffset_summary,
+                id = R.string.oneuixp_clockRichOffset_summary,
                 horizontalOffset,
             ),
         )
-        OneuiXSlider(
+        OneuiXPSlider(
             value = horizontalOffset,
             stepSize = 1f,
             onValueChange = { raw ->
@@ -118,14 +118,14 @@ fun StatusClockRichBlockEditor(
         var verticalOffset by remember(style.verticalOffsetDp) {
             mutableFloatStateOf(style.verticalOffsetDp.coerceIn(-20f, 20f))
         }
-        OneuiXInfoItem(
-            title = stringResource(id = R.string.oneuix_clockRichVerticalOffset_title),
+        OneuiXPInfoItem(
+            title = stringResource(id = R.string.oneuixp_clockRichVerticalOffset_title),
             summary = stringResource(
-                id = R.string.oneuix_clockRichOffset_summary,
+                id = R.string.oneuixp_clockRichOffset_summary,
                 verticalOffset,
             ),
         )
-        OneuiXSlider(
+        OneuiXPSlider(
             value = verticalOffset,
             stepSize = 1f,
             onValueChange = { raw ->
@@ -159,7 +159,7 @@ fun StatusClockRichBlockEditor(
             0
         }
         SelectItem(
-            title = stringResource(id = R.string.oneuix_clockRichFontWeight_title),
+            title = stringResource(id = R.string.oneuixp_clockRichFontWeight_title),
             entries = weightLabels,
             selectedIndex = weightIndex,
             onSelectedIndexChange = { selected ->
@@ -177,7 +177,7 @@ fun StatusClockRichBlockEditor(
         )
 
         SwitchItem(
-            title = stringResource(id = R.string.oneuix_clockRichTextColor_title),
+            title = stringResource(id = R.string.oneuixp_clockRichTextColor_title),
             summary = if (style.overrideTextColor) {
                 richArgbText(style.textColorArgb)
             } else {
@@ -202,7 +202,7 @@ fun StatusClockRichBlockEditor(
         }
 
         SwitchItem(
-            title = stringResource(id = R.string.oneuix_clockRichBackground_title),
+            title = stringResource(id = R.string.oneuixp_clockRichBackground_title),
             summary = if (style.backgroundEnabled) {
                 richArgbText(style.backgroundColorArgb)
             } else {
@@ -228,14 +228,14 @@ fun StatusClockRichBlockEditor(
             var alpha by remember(style.backgroundAlpha) {
                 mutableFloatStateOf(style.backgroundAlpha)
             }
-            OneuiXInfoItem(
-                title = stringResource(id = R.string.oneuix_clockRichBackgroundAlpha_title),
+            OneuiXPInfoItem(
+                title = stringResource(id = R.string.oneuixp_clockRichBackgroundAlpha_title),
                 summary = stringResource(
-                    id = R.string.oneuix_clockRichBackgroundAlpha_summary,
+                    id = R.string.oneuixp_clockRichBackgroundAlpha_summary,
                     (alpha * 100f).roundToInt(),
                 ),
             )
-            OneuiXSlider(
+            OneuiXPSlider(
                 value = alpha * 100f,
                 stepSize = 1f,
                 onValueChange = { raw ->
@@ -253,7 +253,7 @@ fun StatusClockRichBlockEditor(
             )
 
             SwitchItem(
-                title = stringResource(id = R.string.oneuix_clockRichBorder_title),
+                title = stringResource(id = R.string.oneuixp_clockRichBorder_title),
                 summary = if (style.backgroundBorderEnabled) {
                     richArgbText(style.backgroundBorderColorArgb)
                 } else {
@@ -279,14 +279,14 @@ fun StatusClockRichBlockEditor(
                 var borderWidth by remember(style.backgroundBorderWidthDp) {
                     mutableFloatStateOf(style.backgroundBorderWidthDp)
                 }
-                OneuiXInfoItem(
-                    title = stringResource(id = R.string.oneuix_clockRichBorderWidth_title),
+                OneuiXPInfoItem(
+                    title = stringResource(id = R.string.oneuixp_clockRichBorderWidth_title),
                     summary = stringResource(
-                        id = R.string.oneuix_clockRichBorderWidth_summary,
+                        id = R.string.oneuixp_clockRichBorderWidth_summary,
                         borderWidth,
                     ),
                 )
-                OneuiXSlider(
+                OneuiXPSlider(
                     value = borderWidth,
                     onValueChange = { raw ->
                         val value = (raw * 2f).roundToInt() / 2f
@@ -306,14 +306,14 @@ fun StatusClockRichBlockEditor(
             var radius by remember(style.cornerRadiusDp) {
                 mutableFloatStateOf(style.cornerRadiusDp)
             }
-            OneuiXInfoItem(
-                title = stringResource(id = R.string.oneuix_clockRichCornerRadius_title),
+            OneuiXPInfoItem(
+                title = stringResource(id = R.string.oneuixp_clockRichCornerRadius_title),
                 summary = stringResource(
-                    id = R.string.oneuix_clockRichCornerRadius_summary,
+                    id = R.string.oneuixp_clockRichCornerRadius_summary,
                     radius,
                 ),
             )
-            OneuiXSlider( 
+            OneuiXPSlider(
                 stepSize = 1f,
                 value = radius,
                 onValueChange = { raw ->
@@ -333,14 +333,14 @@ fun StatusClockRichBlockEditor(
             var horizontalPadding by remember(style.horizontalPaddingDp) {
                 mutableFloatStateOf(style.horizontalPaddingDp)
             }
-            OneuiXInfoItem(
-                title = stringResource(id = R.string.oneuix_clockRichHorizontalPadding_title),
+            OneuiXPInfoItem(
+                title = stringResource(id = R.string.oneuixp_clockRichHorizontalPadding_title),
                 summary = stringResource(
-                    id = R.string.oneuix_clockRichPadding_summary,
+                    id = R.string.oneuixp_clockRichPadding_summary,
                     horizontalPadding,
                 ),
             )
-            OneuiXSlider( 
+            OneuiXPSlider(
                 stepSize = 1f,
                 value = horizontalPadding,
                 onValueChange = { raw ->
@@ -360,14 +360,14 @@ fun StatusClockRichBlockEditor(
             var verticalPadding by remember(style.verticalPaddingDp) {
                 mutableFloatStateOf(style.verticalPaddingDp)
             }
-            OneuiXInfoItem(
-                title = stringResource(id = R.string.oneuix_clockRichVerticalPadding_title),
+            OneuiXPInfoItem(
+                title = stringResource(id = R.string.oneuixp_clockRichVerticalPadding_title),
                 summary = stringResource(
-                    id = R.string.oneuix_clockRichPadding_summary,
+                    id = R.string.oneuixp_clockRichPadding_summary,
                     verticalPadding,
                 ),
             )
-            OneuiXSlider( 
+            OneuiXPSlider(
                 stepSize = 1f,
                 value = verticalPadding,
                 onValueChange = { raw ->

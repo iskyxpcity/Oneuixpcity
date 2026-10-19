@@ -40,8 +40,8 @@ import com.oneuixp.app.ui.navigation3.LocalNavigator
 import com.oneuixp.app.ui.theme.LocalEnableBlur
 import com.oneuixp.app.ui.util.BlurredBar
 import com.oneuixp.app.ui.util.rememberBlurBackdrop
-import com.oneuixp.app.ui.viewmodel.OneuiXToolsViewModel
-import io.github.soclear.oneuix.ui.category.onSystemUIEvent
+import com.oneuixp.app.ui.viewmodel.OneuiXPToolsViewModel
+import io.github.oneuixp.ui.category.onSystemUIEvent
 import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
 import top.yukonga.miuix.kmp.basic.IconButton as MiuixIconButton
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
@@ -90,7 +90,7 @@ private fun StatusCategoryContent(
 ) {
     when (category) {
         StatusCategory.Padding -> {
-            val toolsViewModel = viewModel<OneuiXToolsViewModel>()
+            val toolsViewModel = viewModel<OneuiXPToolsViewModel>()
             val preference = toolsViewModel.preference.collectAsStateWithLifecycle().value
             Column(
                 modifier = modifier
@@ -104,7 +104,7 @@ private fun StatusCategoryContent(
             }
         }
         StatusCategory.Time -> {
-            val toolsViewModel = viewModel<OneuiXToolsViewModel>()
+            val toolsViewModel = viewModel<OneuiXPToolsViewModel>()
             val preference = toolsViewModel.preference.collectAsStateWithLifecycle().value
             Column(
                 modifier = modifier
@@ -118,7 +118,7 @@ private fun StatusCategoryContent(
             }
         }
         StatusCategory.Notification -> {
-            val toolsViewModel = viewModel<OneuiXToolsViewModel>()
+            val toolsViewModel = viewModel<OneuiXPToolsViewModel>()
             val preference = toolsViewModel.preference.collectAsStateWithLifecycle().value
             Column(
                 modifier = modifier
@@ -132,7 +132,7 @@ private fun StatusCategoryContent(
             }
         }
         StatusCategory.NetworkSpeed -> {
-            val toolsViewModel = viewModel<OneuiXToolsViewModel>()
+            val toolsViewModel = viewModel<OneuiXPToolsViewModel>()
             val preference = toolsViewModel.preference.collectAsStateWithLifecycle().value
             Column(
                 modifier = modifier
@@ -146,7 +146,7 @@ private fun StatusCategoryContent(
             }
         }
         StatusCategory.Power -> {
-            val toolsViewModel = viewModel<OneuiXToolsViewModel>()
+            val toolsViewModel = viewModel<OneuiXPToolsViewModel>()
             val preference = toolsViewModel.preference.collectAsStateWithLifecycle().value
             Column(
                 modifier = modifier
@@ -182,7 +182,7 @@ private fun StatusCategoryContent(
             }
         }
         StatusCategory.ComboStyleOne -> {
-            val toolsViewModel = viewModel<OneuiXToolsViewModel>()
+            val toolsViewModel = viewModel<OneuiXPToolsViewModel>()
             val preference = toolsViewModel.preference.collectAsStateWithLifecycle().value
             Column(
                 modifier = modifier
@@ -196,7 +196,7 @@ private fun StatusCategoryContent(
             }
         }
         StatusCategory.Signal -> {
-            val toolsViewModel = viewModel<OneuiXToolsViewModel>()
+            val toolsViewModel = viewModel<OneuiXPToolsViewModel>()
             val preference = toolsViewModel.preference.collectAsStateWithLifecycle().value
             Column(
                 modifier = modifier
@@ -210,7 +210,7 @@ private fun StatusCategoryContent(
             }
         }
         StatusCategory.Wifi -> {
-            val toolsViewModel = viewModel<OneuiXToolsViewModel>()
+            val toolsViewModel = viewModel<OneuiXPToolsViewModel>()
             val preference = toolsViewModel.preference.collectAsStateWithLifecycle().value
             Column(
                 modifier = modifier
@@ -245,7 +245,7 @@ private fun StatusCategoryContent(
             }
         }
         StatusCategory.Bluetooth -> {
-            val toolsViewModel = viewModel<OneuiXToolsViewModel>()
+            val toolsViewModel = viewModel<OneuiXPToolsViewModel>()
             val preference = toolsViewModel.preference.collectAsStateWithLifecycle().value
             Column(
                 modifier = modifier
@@ -259,7 +259,7 @@ private fun StatusCategoryContent(
             }
         }
         StatusCategory.Lockscreen -> {
-            val toolsViewModel = viewModel<OneuiXToolsViewModel>()
+            val toolsViewModel = viewModel<OneuiXPToolsViewModel>()
             val preference = toolsViewModel.preference.collectAsStateWithLifecycle().value
             Column(
                 modifier = modifier
@@ -274,7 +274,7 @@ private fun StatusCategoryContent(
             }
         }
         StatusCategory.NotificationCenter -> {
-            val toolsViewModel = viewModel<OneuiXToolsViewModel>()
+            val toolsViewModel = viewModel<OneuiXPToolsViewModel>()
             val preference = toolsViewModel.preference.collectAsStateWithLifecycle().value
             Column(
                 modifier = modifier
@@ -288,7 +288,7 @@ private fun StatusCategoryContent(
             }
         }
         StatusCategory.ControlCenter -> {
-            val toolsViewModel = viewModel<OneuiXToolsViewModel>()
+            val toolsViewModel = viewModel<OneuiXPToolsViewModel>()
             val preference = toolsViewModel.preference.collectAsStateWithLifecycle().value
             Column(
                 modifier = modifier
@@ -302,7 +302,7 @@ private fun StatusCategoryContent(
             }
         }
         StatusCategory.Other -> {
-            val toolsViewModel = viewModel<OneuiXToolsViewModel>()
+            val toolsViewModel = viewModel<OneuiXPToolsViewModel>()
             val preference = toolsViewModel.preference.collectAsStateWithLifecycle().value
             Column(
                 modifier = modifier

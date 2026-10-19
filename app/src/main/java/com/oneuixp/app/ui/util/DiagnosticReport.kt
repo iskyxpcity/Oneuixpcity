@@ -9,8 +9,8 @@ import android.net.Uri
 import android.os.Build
 import com.oneuixp.app.BuildConfig
 import com.oneuixp.app.statusbar.LsposedFrameworkStatus
-import io.github.soclear.oneuix.common.Package
-import io.github.soclear.oneuix.common.StatusBarRuntimeBridge
+import io.github.oneuixp.common.Package
+import io.github.oneuixp.common.StatusBarRuntimeBridge
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter

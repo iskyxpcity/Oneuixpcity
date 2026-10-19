@@ -16,10 +16,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import com.oneuixp.app.R
-import io.github.soclear.oneuix.common.Preference
-import io.github.soclear.oneuix.ui.category.SystemUIEvent
-import io.github.soclear.oneuix.ui.component.OneuiXSlider
-import io.github.soclear.oneuix.ui.component.SwitchItem
+import io.github.oneuixp.common.Preference
+import io.github.oneuixp.ui.category.SystemUIEvent
+import io.github.oneuixp.ui.component.OneuiXPSlider
+import io.github.oneuixp.ui.component.SwitchItem
 import kotlin.math.roundToInt
 
 @Composable
@@ -36,7 +36,7 @@ fun StatusNotificationCategoryControls(
         items = buildList {
             add {
                 SwitchItem(
-                    title = stringResource(id = R.string.oneuix_setStatusBarMaxNotificationIcons_title),
+                    title = stringResource(id = R.string.oneuixp_setStatusBarMaxNotificationIcons_title),
                     modifier = Modifier.animateContentSize(),
                     summary = if (uiState.modifyStatusBarMaxNotificationIcons) " $max" else null,
                     icon = ImageVector.vectorResource(id = R.drawable.notifications),
@@ -56,7 +56,7 @@ fun StatusNotificationCategoryControls(
             if (expanded && uiState.modifyStatusBarMaxNotificationIcons) {
                 add {
                     StatusThemeChildItem {
-                        OneuiXSlider(
+                        OneuiXPSlider(
                             value = max.toFloat(),
                             onValueChange = { max = it.roundToInt() },
                             modifier = Modifier

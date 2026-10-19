@@ -3,11 +3,11 @@
 from pathlib import Path
 import sys
 root = Path(__file__).resolve().parent
-migration_source = (root/'common/src/main/java/io/github/soclear/oneuix/common/ProductionPreferenceMigration.kt').read_text()
-preference_source = (root/'common/src/main/java/io/github/soclear/oneuix/common/Preference.kt').read_text()
-combo_runtime_source = (root/'hook/src/main/java/io/github/soclear/oneuix/hook/systemui/StatusBarComboStyleOneRuntime.kt').read_text()
-network_speed_runtime_source = (root/'hook/src/main/java/io/github/soclear/oneuix/hook/systemui/StatusBarNetworkSpeedRuntime.kt').read_text()
-independent_signal_runtime_source = (root/'hook/src/main/java/io/github/soclear/oneuix/hook/systemui/StatusBarSignalIndependentRuntime.kt').read_text()
+migration_source = (root/'common/src/main/java/io/github/oneuixp/common/ProductionPreferenceMigration.kt').read_text()
+preference_source = (root/'common/src/main/java/io/github/oneuixp/common/Preference.kt').read_text()
+combo_runtime_source = (root/'hook/src/main/java/io/github/oneuixp/hook/systemui/StatusBarComboStyleOneRuntime.kt').read_text()
+network_speed_runtime_source = (root/'hook/src/main/java/io/github/oneuixp/hook/systemui/StatusBarNetworkSpeedRuntime.kt').read_text()
+independent_signal_runtime_source = (root/'hook/src/main/java/io/github/oneuixp/hook/systemui/StatusBarSignalIndependentRuntime.kt').read_text()
 legacy_combo_markers = (
     'glyphScaleDefaultMigrationDone', 'glyphScaleDefault100MigrationDone',
     'glyphLeftMarginOneDpMigrationDone', 'glyphLeftMarginZeroDpMigrationDone',
@@ -23,7 +23,7 @@ checks = {
  'Original Miuix bottom bar': (root/'app/src/main/java/com/oneuixp/app/ui/component/bottombar/BottomBarMiuix.kt').is_file(),
  'Legacy native build disabled': 'externalNativeBuild' not in (root/'app/build.gradle.kts').read_text(),
  'Original LSPosed hook': (root/'app/src/main/java/com/oneuixp/app/statusbar/SystemUiEntry.java').is_file(),
- 'Flux-style no heartbeat bridge': not (root/'app/src/main/java/com/oneuixp/app/statusbar/StatusBridge.java').exists() and '${applicationId}.statusbridge' not in (root/'app/src/main/AndroidManifest.xml').read_text() and 'startHeartbeat(' not in (root/'hook/src/main/java/io/github/soclear/oneuix/hook/util/OneuiXPStatusReporter.kt').read_text(),
+ 'Flux-style no heartbeat bridge': not (root/'app/src/main/java/com/oneuixp/app/statusbar/StatusBridge.java').exists() and '${applicationId}.statusbridge' not in (root/'app/src/main/AndroidManifest.xml').read_text() and 'startHeartbeat(' not in (root/'hook/src/main/java/io/github/oneuixp/hook/util/OneuiXPStatusReporter.kt').read_text(),
  'OneuiXP application ID': 'com.oneuixp.app' in (root/'app/build.gradle.kts').read_text(),
  'Composite glyph is isolated from legacy preference migration': 'comboStyleOneRuntime' not in migration_source and not any(marker in migration_source or marker in preference_source for marker in legacy_combo_markers),
  'Native mobile signal is restored when outside stacking is off': (

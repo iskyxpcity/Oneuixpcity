@@ -7,9 +7,9 @@ import android.graphics.Paint
 import android.graphics.Typeface
 import android.view.View
 import com.oneuixp.app.R
-import io.github.soclear.oneuix.common.Preference
-import io.github.soclear.oneuix.common.StatusComboStyleOneGlyphRenderer
-import io.github.soclear.oneuix.common.StatusComboStyleOneGlyphState
+import io.github.oneuixp.common.Preference
+import io.github.oneuixp.common.StatusComboStyleOneGlyphRenderer
+import io.github.oneuixp.common.StatusComboStyleOneGlyphState
 
 /** Preview surface using the same renderer as the status-bar icon. */
 class StatusComboStyleOnePreviewView(context: Context) : View(context) {

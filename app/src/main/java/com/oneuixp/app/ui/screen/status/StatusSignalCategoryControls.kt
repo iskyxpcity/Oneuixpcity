@@ -27,18 +27,18 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.oneuixp.app.R
-import com.oneuixp.app.ui.viewmodel.OneuiXToolsViewModel
-import io.github.soclear.oneuix.common.IgnoreUnknownKeysJson
-import io.github.soclear.oneuix.common.Package
-import io.github.soclear.oneuix.common.Preference
-import io.github.soclear.oneuix.common.StatusBarRuntimeBridge
-import io.github.soclear.oneuix.ui.category.SystemUIEvent
-import io.github.soclear.oneuix.ui.component.OneuiXActionButton
-import io.github.soclear.oneuix.ui.component.OneuiXInfoItem
-import io.github.soclear.oneuix.ui.component.OneuiXInlineTextField
-import io.github.soclear.oneuix.ui.component.OneuiXSlider
-import io.github.soclear.oneuix.ui.component.SelectItem
-import io.github.soclear.oneuix.ui.component.SwitchItem
+import com.oneuixp.app.ui.viewmodel.OneuiXPToolsViewModel
+import io.github.oneuixp.common.IgnoreUnknownKeysJson
+import io.github.oneuixp.common.Package
+import io.github.oneuixp.common.Preference
+import io.github.oneuixp.common.StatusBarRuntimeBridge
+import io.github.oneuixp.ui.category.SystemUIEvent
+import io.github.oneuixp.ui.component.OneuiXPActionButton
+import io.github.oneuixp.ui.component.OneuiXPInfoItem
+import io.github.oneuixp.ui.component.OneuiXPInlineTextField
+import io.github.oneuixp.ui.component.OneuiXPSlider
+import io.github.oneuixp.ui.component.SelectItem
+import io.github.oneuixp.ui.component.SwitchItem
 import kotlin.math.roundToInt
 
 private const val STATUS_SIGNAL_ESIM_BOTH = 2
@@ -49,7 +49,7 @@ fun StatusSignalCategoryControls(
     onEvent: (SystemUIEvent) -> Unit,
 ) {
     val signalIcon = ImageVector.vectorResource(id = R.drawable.flux_status_signal)
-    val toolsViewModel = viewModel<OneuiXToolsViewModel>()
+    val toolsViewModel = viewModel<OneuiXPToolsViewModel>()
     val context = LocalContext.current
     val runtime = uiState.signalRuntime
 
@@ -222,7 +222,7 @@ fun StatusSignalCategoryControls(
             add {
                 SwitchItem(
                     icon = ImageVector.vectorResource(id = R.drawable.folder_managed),
-                    title = stringResource(id = R.string.oneuix_hideSecureFolderStatusBarIcon_title),
+                    title = stringResource(id = R.string.oneuixp_hideSecureFolderStatusBarIcon_title),
                     checked = uiState.hideSecureFolderStatusBarIcon,
                     onCheckedChange = {
                         onEvent(SystemUIEvent.StatusBar.HideSecureFolderStatusBarIcon(it))
@@ -232,8 +232,8 @@ fun StatusSignalCategoryControls(
             add {
                 SwitchItem(
                     icon = ImageVector.vectorResource(id = R.drawable.sim_card),
-                    title = stringResource(id = R.string.oneuix_physicalEsimAdapterWorkaround_title),
-                    summary = stringResource(id = R.string.oneuix_physicalEsimAdapterWorkaround_summary),
+                    title = stringResource(id = R.string.oneuixp_physicalEsimAdapterWorkaround_title),
+                    summary = stringResource(id = R.string.oneuixp_physicalEsimAdapterWorkaround_summary),
                     showChildIndicator = true,
                     checked = uiState.physicalEsimAdapterWorkaround,
                     onCheckedChange = {
@@ -245,11 +245,11 @@ fun StatusSignalCategoryControls(
                 add {
                     SelectItem(
                         icon = ImageVector.vectorResource(id = R.drawable.sim_card),
-                        title = stringResource(id = R.string.oneuix_physicalEsimAdapterSimSlot_title),
+                        title = stringResource(id = R.string.oneuixp_physicalEsimAdapterSimSlot_title),
                         entries = listOf(
-                            stringResource(id = R.string.oneuix_sim_slot_1),
-                            stringResource(id = R.string.oneuix_sim_slot_2),
-                            stringResource(id = R.string.oneuix_sim_slot_both),
+                            stringResource(id = R.string.oneuixp_sim_slot_1),
+                            stringResource(id = R.string.oneuixp_sim_slot_2),
+                            stringResource(id = R.string.oneuixp_sim_slot_both),
                         ),
                         selectedIndex = uiState.physicalEsimAdapterSimSlot.coerceIn(
                             0,
@@ -263,7 +263,7 @@ fun StatusSignalCategoryControls(
             }
             add {
                 SwitchItem(
-                    title = stringResource(id = R.string.oneuix_setCustomCarrierName_title),
+                    title = stringResource(id = R.string.oneuixp_setCustomCarrierName_title),
                     summary = if (uiState.setCustomCarrierName) uiState.customCarrierName else null,
                     icon = ImageVector.vectorResource(id = R.drawable.sim_card),
                     modifier = Modifier.animateContentSize(),
@@ -284,15 +284,15 @@ fun StatusSignalCategoryControls(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
                         ) {
-                            OneuiXInlineTextField(
+                            OneuiXPInlineTextField(
                                 value = carrier,
                                 onValueChange = { carrier = it },
                                 modifier = Modifier.weight(1f),
                                 singleLine = true,
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            OneuiXActionButton(
-                                text = stringResource(id = R.string.oneuix_confirm),
+                            OneuiXPActionButton(
+                                text = stringResource(id = R.string.oneuixp_confirm),
                                 primary = true,
                                 onClick = {
                                     onEvent(SystemUIEvent.StatusBar.CustomCarrierName(carrier))
@@ -320,9 +320,9 @@ private fun SignalSliderSetting(
     var lastHapticStep by remember { mutableIntStateOf(value.roundToInt()) }
 
     Column {
-        OneuiXInfoItem(icon = icon, title = title, summary = summary)
+        OneuiXPInfoItem(icon = icon, title = title, summary = summary)
         StatusThemeChildItem {
-            OneuiXSlider(
+            OneuiXPSlider(
                 value = value,
                 onValueChange = { raw ->
                     val quantized = raw.roundToInt().toFloat().coerceIn(

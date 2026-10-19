@@ -49,7 +49,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.oneuixp.app.R
-import com.oneuixp.app.oneuix.OneuiXCategory
+import com.oneuixp.app.oneuixp.OneuiXPCategory
 import com.oneuixp.app.ui.LocalUiMode
 import com.oneuixp.app.ui.UiMode
 import com.oneuixp.app.ui.component.configtransfer.ConfigTransferPopup
@@ -100,7 +100,7 @@ private fun OtherFunctionsCategoryIcon(size: Dp) {
     ) {
         Icon(
             imageVector = ImageVector.vectorResource(R.drawable.other_functions),
-            contentDescription = stringResource(R.string.oneuix_other_functions_title),
+            contentDescription = stringResource(R.string.oneuixp_other_functions_title),
             tint = Color.White,
             modifier = Modifier.size(26.dp),
         )
@@ -109,12 +109,12 @@ private fun OtherFunctionsCategoryIcon(size: Dp) {
 
 @Composable
 private fun CategoryIcon(
-    category: OneuiXCategory,
+    category: OneuiXPCategory,
     size: Dp,
 ) {
     Image(
-        bitmap = rememberOneuiXCategoryIcon(category),
-        contentDescription = oneuiXCategoryTitle(category),
+        bitmap = rememberOneuiXPCategoryIcon(category),
+        contentDescription = oneuiXPCategoryTitle(category),
         modifier = Modifier.size(size),
         contentScale = ContentScale.Fit,
     )
@@ -129,8 +129,8 @@ private fun ToolsPagerMiuix(
     val scrollBehavior = MiuixScrollBehavior()
     val backdrop = rememberBlurBackdrop(LocalEnableBlur.current)
     val barColor = if (backdrop != null) Color.Transparent else colorScheme.surface
-    val categories = OneuiXCategory.entries
-        .filterNot { it == OneuiXCategory.SystemUI }
+    val categories = OneuiXPCategory.entries
+        .filterNot { it == OneuiXPCategory.SystemUI }
 
     Scaffold(
         topBar = {
@@ -172,7 +172,7 @@ private fun ToolsPagerMiuix(
                                 },
                             onClick = {
                                 if (lsposedActive) {
-                                    navigator.push(Route.OneuiXCategory(category.name))
+                                    navigator.push(Route.OneuiXPCategory(category.name))
                                 }
                             },
                             showIndication = lsposedActive,
@@ -188,7 +188,7 @@ private fun ToolsPagerMiuix(
                             ) {
                                 CategoryIcon(category = category, size = 48.dp)
                                 MiuixText(
-                                    text = oneuiXCategoryTitle(category),
+                                    text = oneuiXPCategoryTitle(category),
                                     modifier = Modifier
                                         .weight(1f)
                                         .padding(start = 10.dp),
@@ -235,7 +235,7 @@ private fun ToolsPagerMiuix(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             OtherFunctionsCategoryIcon(size = 48.dp)
                             MiuixText(
-                                text = stringResource(R.string.oneuix_other_functions_title),
+                                text = stringResource(R.string.oneuixp_other_functions_title),
                                 modifier = Modifier
                                     .weight(1f)
                                     .padding(start = 10.dp),
@@ -273,10 +273,10 @@ private fun ToolsPagerMaterial(
 ) {
     val scrollBehavior =
         TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
-    val coreCategories = OneuiXCategory.entries
+    val coreCategories = OneuiXPCategory.entries
         .take(5)
-        .filterNot { it == OneuiXCategory.SystemUI }
-    val appCategories = OneuiXCategory.entries.drop(5)
+        .filterNot { it == OneuiXPCategory.SystemUI }
+    val appCategories = OneuiXPCategory.entries.drop(5)
 
     androidx.compose.material3.Scaffold(
         topBar = {
@@ -311,18 +311,18 @@ private fun ToolsPagerMaterial(
                     .graphicsLayer {
                         alpha = if (lsposedActive) 1f else 0.38f
                     },
-                title = stringResource(R.string.oneuix_core_features),
+                title = stringResource(R.string.oneuixp_core_features),
                 content = coreCategories.map { category ->
                     {
                         SegmentedListItem(
                             enabled = lsposedActive,
                             onClick = {
                                 if (lsposedActive) {
-                                    navigator.push(Route.OneuiXCategory(category.name))
+                                    navigator.push(Route.OneuiXPCategory(category.name))
                                 }
                             },
                             headlineContent = {
-                                Text(oneuiXCategoryTitle(category))
+                                Text(oneuiXPCategoryTitle(category))
                             },
                             leadingContent = {
                                 CategoryIcon(category = category, size = 48.dp)
@@ -344,18 +344,18 @@ private fun ToolsPagerMaterial(
                     .graphicsLayer {
                         alpha = if (lsposedActive) 1f else 0.38f
                     },
-                title = stringResource(R.string.oneuix_app_features),
+                title = stringResource(R.string.oneuixp_app_features),
                 content = appCategories.map { category ->
                     {
                         SegmentedListItem(
                             enabled = lsposedActive,
                             onClick = {
                                 if (lsposedActive) {
-                                    navigator.push(Route.OneuiXCategory(category.name))
+                                    navigator.push(Route.OneuiXPCategory(category.name))
                                 }
                             },
                             headlineContent = {
-                                Text(oneuiXCategoryTitle(category))
+                                Text(oneuiXPCategoryTitle(category))
                             },
                             leadingContent = {
                                 CategoryIcon(category = category, size = 48.dp)
@@ -384,7 +384,7 @@ private fun ToolsPagerMaterial(
                             if (lsposedActive) navigator.push(Route.OtherFunctions)
                         },
                         headlineContent = {
-                            Text(stringResource(R.string.oneuix_other_functions_title))
+                            Text(stringResource(R.string.oneuixp_other_functions_title))
                         },
                         leadingContent = {
                             OtherFunctionsCategoryIcon(size = 48.dp)
