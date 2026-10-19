@@ -68,12 +68,16 @@ fun OtherFunctionsScreen() {
     when (LocalUiMode.current) {
         UiMode.Material -> OtherFunctionsMaterial(
             uiState = preference.systemUI.other,
+            otherState = preference.other,
             onEvent = toolsViewModel::onSystemUIEvent,
+            onOtherChange = { transform -> toolsViewModel.updateData { current -> current.copy(other = transform(current.other)) } },
             onBack = navigator::pop,
         )
         UiMode.Miuix -> OtherFunctionsMiuix(
             uiState = preference.systemUI.other,
+            otherState = preference.other,
             onEvent = toolsViewModel::onSystemUIEvent,
+            onOtherChange = { transform -> toolsViewModel.updateData { current -> current.copy(other = transform(current.other)) } },
             onBack = navigator::pop,
         )
     }
@@ -82,7 +86,9 @@ fun OtherFunctionsScreen() {
 @Composable
 private fun OtherFunctionsMaterial(
     uiState: Preference.SystemUI.Other,
+    otherState: Preference.Other,
     onEvent: (SystemUIEvent) -> Unit,
+    onOtherChange: ((Preference.Other) -> Preference.Other) -> Unit,
     onBack: () -> Unit,
 ) {
     val scrollBehavior =
@@ -126,7 +132,12 @@ private fun OtherFunctionsMaterial(
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState()),
             ) {
-                OtherFunctionsControls(uiState = uiState, onEvent = onEvent)
+                OtherFunctionsControls(
+                    uiState = uiState,
+                    otherState = otherState,
+                    onEvent = onEvent,
+                    onOtherChange = onOtherChange,
+                )
                 Spacer(Modifier.height(24.dp))
             }
         }
@@ -136,7 +147,9 @@ private fun OtherFunctionsMaterial(
 @Composable
 private fun OtherFunctionsMiuix(
     uiState: Preference.SystemUI.Other,
+    otherState: Preference.Other,
     onEvent: (SystemUIEvent) -> Unit,
+    onOtherChange: ((Preference.Other) -> Preference.Other) -> Unit,
     onBack: () -> Unit,
 ) {
     val scrollBehavior = MiuixScrollBehavior()
@@ -187,7 +200,12 @@ private fun OtherFunctionsMiuix(
                     .scrollEndHaptic()
                     .verticalScroll(rememberScrollState()),
             ) {
-                OtherFunctionsControls(uiState = uiState, onEvent = onEvent)
+                OtherFunctionsControls(
+                    uiState = uiState,
+                    otherState = otherState,
+                    onEvent = onEvent,
+                    onOtherChange = onOtherChange,
+                )
                 Spacer(Modifier.height(24.dp))
             }
         }

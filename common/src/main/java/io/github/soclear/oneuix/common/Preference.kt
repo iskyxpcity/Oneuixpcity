@@ -441,6 +441,13 @@ data class Preference(
         val bypassWatchPairingRegionCheck: Boolean = false,
         val watchPairingConnectionMode: Int = 0,
         val supplementChinaWearOsGms: Boolean = false,
+        // Imported from App20261018Aloha > Other functions.
+        val callReturnDelayEnabled: Boolean = false,
+        val callReturnDelaySeconds: Int = 3,
+        val settingsTwoPaneEnabled: Boolean = false,
+        val allowAppDowngradeEnabled: Boolean = false,
+        val disableSecureScreenshotRestrictionEnabled: Boolean = false,
+        val hidePackageInstallerRecommendationEnabled: Boolean = false,
     )
 
     companion object {

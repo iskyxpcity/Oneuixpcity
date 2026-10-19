@@ -302,4 +302,18 @@
     <string name="oneuix_clockRichBorderColor_title">描边颜色</string>
     <string name="oneuix_clockRichBorderWidth_title">描边粗细</string>
     <string name="oneuix_clockRichBorderWidth_summary">%1$.1f dp</string>
+
+    <string name="oneuix_callReturnDelay_title">通话返回</string>
+    <string name="oneuix_callReturnDelay_summary">控制通话结束后三星通话界面自动返回或收起的延时；修改后需重启通话界面生效。</string>
+    <string name="oneuix_callReturnDelaySeconds_title">返回延时</string>
+    <string name="oneuix_callReturnDelaySeconds_summary">当前 %1$d 秒（范围 0–5 秒）</string>
+    <string name="oneuix_settingsTwoPane_title">设置双栏</string>
+    <string name="oneuix_settingsTwoPane_summary">让系统设置尝试使用平板式左右双栏页面；需要重启系统设置应用后生效。</string>
+    <string name="oneuix_allowAppDowngrade_title">允许低版本安装</string>
+    <string name="oneuix_allowAppDowngrade_summary">跳过系统安装时的降级版本检查，用旧版本 APK 覆盖安装；需要重启手机以让 system_server 重新加载。</string>
+    <string name="oneuix_disableSecureScreenshotRestriction_title">解除截图限制</string>
+    <string name="oneuix_disableSecureScreenshotRestriction_summary">允许对部分被系统标记为禁止截屏的页面进行截图；需要重启手机以让 system_server 重新加载。</string>
+    <string name="oneuix_hidePackageInstallerRecommendation_title">关闭安装后应用推荐</string>
+    <string name="oneuix_hidePackageInstallerRecommendation_summary">隐藏软件包安装程序在安装成功后显示的推荐应用区域；需要重启安装器进程后生效。</string>
+
 </resources>

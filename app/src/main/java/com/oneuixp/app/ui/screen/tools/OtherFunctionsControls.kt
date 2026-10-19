@@ -33,7 +33,9 @@ import io.github.soclear.oneuix.common.R as CommonR
 @Composable
 fun OtherFunctionsControls(
     uiState: Preference.SystemUI.Other,
+    otherState: Preference.Other,
     onEvent: (SystemUIEvent) -> Unit,
+    onOtherChange: ((Preference.Other) -> Preference.Other) -> Unit,
 ) {
     var powerMenuExpanded by rememberSaveable { mutableStateOf(false) }
 
@@ -120,20 +122,98 @@ fun OtherFunctionsControls(
                 }
             }
 
-            add {
-                SwitchItem(
-                    icon = ImageVector.vectorResource(id = R.drawable.screenshot),
-                    title = stringResource(
-                        id = R.string.oneuix_disableScreenshotCaptureSound_title
-                    ),
-                    checked = uiState.disableScreenshotCaptureSound,
-                    onCheckedChange = {
-                        onEvent(SystemUIEvent.Other.DisableScreenshotCaptureSound(it))
-                    },
-                )
-            }
         },
     )
+        Spacer(Modifier.height(8.dp))
+        StatusThemeGroup(items = listOf({
+            SwitchItem(
+                icon = ImageVector.vectorResource(id = R.drawable.screenshot),
+                title = stringResource(R.string.oneuix_disableScreenshotCaptureSound_title),
+                checked = uiState.disableScreenshotCaptureSound,
+                onCheckedChange = { onEvent(SystemUIEvent.Other.DisableScreenshotCaptureSound(it)) },
+            )
+        }))
+
+        Spacer(Modifier.height(8.dp))
+        StatusThemeGroup(items = buildList {
+            add {
+                SwitchItem(
+                    icon = ImageVector.vectorResource(id = R.drawable.phone_forwarded),
+                    title = stringResource(R.string.oneuix_callReturnDelay_title),
+                    summary = stringResource(R.string.oneuix_callReturnDelay_summary),
+                    checked = otherState.callReturnDelayEnabled,
+                    onCheckedChange = { enabled -> onOtherChange { it.copy(callReturnDelayEnabled = enabled) } },
+                )
+            }
+            if (otherState.callReturnDelayEnabled) {
+                add {
+                    OneuiXInfoItem(
+                        title = stringResource(R.string.oneuix_callReturnDelaySeconds_title),
+                        summary = stringResource(R.string.oneuix_callReturnDelaySeconds_summary, otherState.callReturnDelaySeconds.coerceIn(0, 5)),
+                        trailingContent = {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                OneuiXActionButton(
+                                    text = "−",
+                                    enabled = otherState.callReturnDelaySeconds > 0,
+                                    onClick = { onOtherChange { v -> v.copy(callReturnDelaySeconds = (v.callReturnDelaySeconds - 1).coerceAtLeast(0)) } },
+                                )
+                                Spacer(Modifier.width(8.dp))
+                                OneuiXActionButton(
+                                    text = "+",
+                                    enabled = otherState.callReturnDelaySeconds < 5,
+                                    onClick = { onOtherChange { v -> v.copy(callReturnDelaySeconds = (v.callReturnDelaySeconds + 1).coerceAtMost(5)) } },
+                                )
+                            }
+                        },
+                    )
+                }
+            }
+        })
+
+        Spacer(Modifier.height(8.dp))
+        StatusThemeGroup(items = listOf({
+            SwitchItem(
+                icon = ImageVector.vectorResource(id = R.drawable.tile_medium),
+                title = stringResource(R.string.oneuix_settingsTwoPane_title),
+                summary = stringResource(R.string.oneuix_settingsTwoPane_summary),
+                checked = otherState.settingsTwoPaneEnabled,
+                onCheckedChange = { enabled -> onOtherChange { it.copy(settingsTwoPaneEnabled = enabled) } },
+            )
+        }))
+        Spacer(Modifier.height(8.dp))
+
+        StatusThemeGroup(items = listOf({
+            SwitchItem(
+                icon = ImageVector.vectorResource(id = R.drawable.apk_document),
+                title = stringResource(R.string.oneuix_allowAppDowngrade_title),
+                summary = stringResource(R.string.oneuix_allowAppDowngrade_summary),
+                checked = otherState.allowAppDowngradeEnabled,
+                onCheckedChange = { enabled -> onOtherChange { it.copy(allowAppDowngradeEnabled = enabled) } },
+            )
+        }))
+        Spacer(Modifier.height(8.dp))
+
+        StatusThemeGroup(items = listOf({
+            SwitchItem(
+                icon = ImageVector.vectorResource(id = R.drawable.screenshot),
+                title = stringResource(R.string.oneuix_disableSecureScreenshotRestriction_title),
+                summary = stringResource(R.string.oneuix_disableSecureScreenshotRestriction_summary),
+                checked = otherState.disableSecureScreenshotRestrictionEnabled,
+                onCheckedChange = { enabled -> onOtherChange { it.copy(disableSecureScreenshotRestrictionEnabled = enabled) } },
+            )
+        }))
+        Spacer(Modifier.height(8.dp))
+
+        StatusThemeGroup(items = listOf({
+            SwitchItem(
+                icon = ImageVector.vectorResource(id = R.drawable.apps_outlined),
+                title = stringResource(R.string.oneuix_hidePackageInstallerRecommendation_title),
+                summary = stringResource(R.string.oneuix_hidePackageInstallerRecommendation_summary),
+                checked = otherState.hidePackageInstallerRecommendationEnabled,
+                onCheckedChange = { enabled -> onOtherChange { it.copy(hidePackageInstallerRecommendationEnabled = enabled) } },
+            )
+        }))
+
 }
 
 private fun List<PowerMenuAction>.move(

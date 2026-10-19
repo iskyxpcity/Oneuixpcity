@@ -69,6 +69,17 @@ class Main : XposedModule() {
         }
 
         when (packageName) {
+            Package.ANDROID -> {
+                if (preference.other.allowAppDowngradeEnabled) SystemTweaks.hookAllowAppDowngrade(true)
+                if (preference.other.disableSecureScreenshotRestrictionEnabled) {
+                    SystemTweaks.hookSecureScreenshotRestriction(true)
+                }
+            }
+            Package.AOSP_PACKAGE_INSTALLER, Package.PACKAGE_INSTALLER -> {
+                if (preference.other.hidePackageInstallerRecommendationEnabled) {
+                    PackageInstallerRecommendation.hideRecommendations(true)
+                }
+            }
             Package.BROWSER -> {
                 if (preference.other.showMorePlaybackSpeeds) {
                     Browser.showMorePlaybackSpeeds()
@@ -144,6 +155,12 @@ class Main : XposedModule() {
                         preference.call.preferRecordingButton
                     )
                 }
+                if (preference.other.callReturnDelayEnabled) {
+                    CallReturnDelay.install(
+                        enabled = true,
+                        seconds = preference.other.callReturnDelaySeconds,
+                    )
+                }
             }
 
             Package.LAUNCHER -> {
@@ -193,6 +210,7 @@ class Main : XposedModule() {
             }
 
             Package.SETTINGS -> {
+                if (preference.other.settingsTwoPaneEnabled) SettingsTwoPane.install(enabled = true)
                 if (preference.android.setBlockableNotificationChannel) {
                     Android.setBlockableNotificationChannel()
                 }
