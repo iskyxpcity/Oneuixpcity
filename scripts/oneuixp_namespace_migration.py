@@ -47,6 +47,7 @@ def rename_path(value: str) -> str:
     return rename_token(value)
 
 def rename_content(value: str) -> str:
+    original_lines = value.splitlines(keepends=True)
     value = value.replace(
         "io.github.soclear.oneuix",
         "io.github.oneuixp",
@@ -62,6 +63,25 @@ def rename_content(value: str) -> str:
         "OneuiXP · OneUIXP full migration",
         "OneuiXP · Independent One UI features",
     )
+
+    # A rename can expose pre-existing trailing spaces to git diff --check.
+    # Trim horizontal whitespace only on lines changed by this transformation;
+    # leave unrelated original formatting byte-for-byte intact.
+    updated_lines = value.splitlines(keepends=True)
+    if len(original_lines) == len(updated_lines):
+        for index, (old_line, new_line) in enumerate(zip(original_lines, updated_lines)):
+            if old_line == new_line:
+                continue
+            if new_line.endswith("\r\n"):
+                ending, body = "\r\n", new_line[:-2]
+            elif new_line.endswith("\n"):
+                ending, body = "\n", new_line[:-1]
+            elif new_line.endswith("\r"):
+                ending, body = "\r", new_line[:-1]
+            else:
+                ending, body = "", new_line
+            updated_lines[index] = body.rstrip(" \t") + ending
+        value = "".join(updated_lines)
     return value
 
 def run_git(*args: str, capture: bool = False) -> bytes | None:
