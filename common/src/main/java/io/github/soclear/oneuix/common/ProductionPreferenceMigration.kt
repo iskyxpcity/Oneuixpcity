@@ -50,8 +50,8 @@ object ProductionPreferenceMigration {
                 val oldGap = statusBar["doubleLineClockGapDp"]?.toString()?.toFloatOrNull() ?: 1f
                 updatedStatusBar["modifyDoubleLineClockGap"] = JsonPrimitive(oldGap != 1f)
             }
-            // The composite glyph owns its defaults and stored values. Do not run legacy
-            // comboStyleOneRuntime migrations from this shared preference decoder.
+            // The composite glyph owns its defaults and stored values. Do not run component-specific
+            // migrations from this shared preference decoder.
             if (updatedStatusBar != statusBar) {
                 updatedSystemUI["statusBar"] = JsonObject(updatedStatusBar)
                 changed = true
