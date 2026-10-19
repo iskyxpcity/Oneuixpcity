@@ -74,6 +74,12 @@ checks = {
      and 'nativeWifiClusterBaselineParentLayoutParams' in combo_runtime_source
      and 'baselineParentLayoutParams != null' in combo_runtime_source
  ),
+ 'Status icon row trims trailing residue but preserves visible native icons': (
+     'val targetRight = 0' in combo_runtime_source
+     and 'val targetMinimumWidth = 0' in combo_runtime_source
+     and 'native-icon-present-trim-trailing-space' in combo_runtime_source
+     and 'baselineParentLayoutParams != null' in combo_runtime_source
+ ),
  'Network speed leaves native horizontal margins to Samsung SystemUI': (
      'NETWORK_SPEED_TRAILING_GAP_DP' not in network_speed_runtime_source
      and 'bindTrailingGapHost' not in network_speed_runtime_source
