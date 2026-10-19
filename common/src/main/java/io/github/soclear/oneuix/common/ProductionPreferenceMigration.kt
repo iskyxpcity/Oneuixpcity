@@ -60,13 +60,9 @@ object ProductionPreferenceMigration {
                     (updatedComboRuntime["glyphScaleDefault100MigrationDone"] as? JsonPrimitive)
                         ?.content?.toBooleanStrictOrNull() == true
                 if (!newDefaultMigrationDone) {
-                    val priorMigrationDone =
-                        (updatedComboRuntime["glyphScaleDefaultMigrationDone"] as? JsonPrimitive)
-                            ?.content?.toBooleanStrictOrNull() == true
-                    val oldScale = updatedComboRuntime["glyphScalePercent"]?.toString()?.toIntOrNull()
-                    if (priorMigrationDone && oldScale == 90) {
-                        updatedComboRuntime["glyphScalePercent"] = JsonPrimitive(100)
-                    }
+                    // Mark the new default policy as seen without rewriting a saved scale value.
+                    // A stored 90% may be an intentional user choice; the old schema cannot
+                    // distinguish it from a value written by the previous default migration.
                     updatedComboRuntime["glyphScaleDefaultMigrationDone"] = JsonPrimitive(true)
                     updatedComboRuntime["glyphScaleDefault100MigrationDone"] = JsonPrimitive(true)
                     comboRuntimeChanged = true
