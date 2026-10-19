@@ -97,12 +97,16 @@ fun CallReturnDelayScreen() {
             }
         },
     )
+    val applyTitle = stringResource(R.string.oneuix_callReturnApplyTitle)
+    val applyMessage = stringResource(R.string.oneuix_callReturnApplyMessage)
+    val applyNow = stringResource(R.string.oneuix_callReturnApplyNow)
+    val applyLater = stringResource(R.string.oneuix_callReturnApplyLater)
     val askApplyNow = {
         applyDialog.showConfirm(
-            title = stringResource(R.string.oneuix_callReturnApplyTitle),
-            content = stringResource(R.string.oneuix_callReturnApplyMessage),
-            confirm = stringResource(R.string.oneuix_callReturnApplyNow),
-            dismiss = stringResource(R.string.oneuix_callReturnApplyLater),
+            title = applyTitle,
+            content = applyMessage,
+            confirm = applyNow,
+            dismiss = applyLater,
         )
     }
     val status = if (settings.callReturnDelayEnabled) {
