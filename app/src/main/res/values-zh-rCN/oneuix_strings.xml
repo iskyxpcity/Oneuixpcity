@@ -304,7 +304,7 @@
     <string name="oneuix_clockRichBorderWidth_summary">%1$.1f dp</string>
 
     <string name="oneuix_callReturnDelay_title">通话返回</string>
-    <string name="oneuix_callReturnDelaySeconds_title">返回延迟时间</string>
+    <string name="oneuix_callReturnDelaySeconds_title">返回延时</string>
     <string name="oneuix_callReturnDelaySeconds_summary">%1$d 秒</string>
     <string name="oneuix_settingsTwoPane_title">设置双栏</string>
     <string name="oneuix_allowAppDowngrade_title">允许低版本安装</string>
@@ -312,7 +312,7 @@
     <string name="oneuix_hidePackageInstallerRecommendation_title">关闭安装后应用推荐</string>
     <string name="oneuix_customPowerMenu_summary">设置关机菜单中显示哪些操作，并调整按钮顺序。</string>
     <string name="oneuix_disableScreenshotCaptureSound_summary">截屏时静音，拦截系统播放的截图提示音。</string>
-    <string name="oneuix_callReturnDelay_summary">通话结束后延迟返回或收起通话界面；具体秒数可在下方调整。</string>
+    <string name="oneuix_callReturnDelay_summary">通话结束后自动返回/收起通话界面的延时，可设置 0–5 秒。</string>
     <string name="oneuix_settingsTwoPane_summary">尝试让系统设置使用平板式左右双栏布局；切换后请重新打开设置应用。</string>
     <string name="oneuix_allowAppDowngrade_summary">跳过应用版本降级检查，允许用较旧 APK 覆盖安装较新版本。</string>
     <string name="oneuix_disableSecureScreenshotRestriction_summary">尝试允许对默认禁止截屏的安全窗口进行截图；部分受保护应用仍可能自行限制截屏。</string>
@@ -321,16 +321,18 @@
     <string name="oneuix_softRebootFailed">无法启动软重启，请检查 Root 权限。</string>
     <!-- Other functions: native theme actions and Call Return apply flow -->
     <string name="oneuix_rebootSystemUI_menu">重启 SystemUI</string>
-    <string name="oneuix_softRebootRuntime_menu">软重启 Android 运行时</string>
-    <string name="oneuix_callReturnStateEnabled">已启用，当前延迟：%1$d 秒</string>
-    <string name="oneuix_callReturnStateDisabled">未启用，将使用系统原版通话返回逻辑。</string>
-    <string name="oneuix_callReturnApplyTitle">是否立即应用通话返回设置？</string>
-    <string name="oneuix_callReturnApplyMessage">设置已保存。立即应用将重启 Samsung InCallUI 通话界面进程，使其重新加载 OneUI XP 的最新配置。</string>
+    <string name="oneuix_softRebootRuntime_menu">软重启</string>
+    <string name="oneuix_callReturnEntryStateEnabled">%1$d 秒</string>
+    <string name="oneuix_callReturnStateEnabled">已启用，当前 %1$d 秒</string>
+    <string name="oneuix_callReturnStateDisabled">未启用</string>
+    <string name="oneuix_callReturnApplyTitle">是否立即应用？</string>
+    <string name="oneuix_callReturnApplyMessage">设置已经保存。立即应用会同步配置并重启通话界面进程，让 SamsungInCallUI 重新加载模块。</string>
     <string name="oneuix_callReturnApplyNow">立即应用</string>
     <string name="oneuix_callReturnApplyLater">稍后</string>
-    <string name="oneuix_callReturnApplyStarted">正在应用通话返回设置…</string>
-    <string name="oneuix_callReturnApplied">已应用，并已重启 Samsung InCallUI。</string>
-    <string name="oneuix_callReturnApplyFailed">无法重启 Samsung InCallUI，请检查 Root 权限。</string>
-    <string name="oneuix_callReturnDelayControlHint">可设置 0–5 秒。修改会立即保存；点击“立即应用”可重启 Samsung InCallUI，让新设置马上生效。</string>
+    <string name="oneuix_callReturnRootRequired">需要 root 同步模块配置</string>
+    <string name="oneuix_callReturnApplyStarted">正在应用</string>
+    <string name="oneuix_callReturnApplied">已应用</string>
+    <string name="oneuix_callReturnApplyFailed">应用失败，请确认已获取 root 权限</string>
+    <string name="oneuix_callReturnDelayControlHint">通话结束后的等待返回画面。</string>
 
 </resources>
