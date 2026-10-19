@@ -2857,13 +2857,11 @@ object StatusBarComboStyleOneRuntime {
                     } else null
                 }.take(8).joinToString(",")
                 // The combo glyph follows this container in the same trailing status-bar row.
-                // Keep native icons and their leading inset, while releasing trailing padding and
+                // Preserve the native row's leading inset while releasing trailing padding and
                 // minimum-width residue that adds empty space immediately before the glyph.
-                // The native Mode/Volume icons remain visible, but the container's
-                // baseline horizontal insets are not part of the icon content. Clear both sides
-                // while the composite glyph replaces the Wi-Fi/mobile slots; restore the exact
-                // original padding in restoreNativeWifiClusters() when the feature is disabled.
-                val targetLeft = 0
+                // Keep visible native Mode/Volume icons and trim only the trailing inset;
+                // restore the exact original padding in restoreNativeWifiClusters() when disabled.
+                val targetLeft = if (hasVisibleNativeIcon) baselinePadding[0] else 0
                 val targetRight = 0
                 val targetMinimumWidth = 0
                 val paddingChanged = cluster.paddingLeft != targetLeft ||
