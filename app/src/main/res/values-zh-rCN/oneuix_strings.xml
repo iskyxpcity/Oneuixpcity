@@ -302,4 +302,12 @@
     <string name="oneuix_clockRichBorderColor_title">描边颜色</string>
     <string name="oneuix_clockRichBorderWidth_title">描边粗细</string>
     <string name="oneuix_clockRichBorderWidth_summary">%1$.1f dp</string>
+
+    <string name="oneuix_callReturnDelay_title">通话返回</string>
+    <string name="oneuix_callReturnDelaySeconds_title">返回延迟时间</string>
+    <string name="oneuix_callReturnDelaySeconds_summary">%1$d 秒</string>
+    <string name="oneuix_settingsTwoPane_title">设置双栏</string>
+    <string name="oneuix_allowAppDowngrade_title">允许低版本安装</string>
+    <string name="oneuix_disableSecureScreenshotRestriction_title">解除截图限制</string>
+    <string name="oneuix_hidePackageInstallerRecommendation_title">关闭安装后应用推荐</string>
 </resources>

@@ -27,16 +27,19 @@ import io.github.soclear.oneuix.ui.component.SwitchItem
 import io.github.soclear.oneuix.common.R as CommonR
 
 /**
- * Controls relocated from Status bar > Other into Tools > Other functions.
- * Preference and runtime event handling are unchanged.
+ * Each option uses its own card group. The migrated system features are stored under
+ * Preference.Other and handled by OneuiXP's libxposed module.
  */
 @Composable
 fun OtherFunctionsControls(
     uiState: Preference.SystemUI.Other,
+    otherState: Preference.Other,
     onEvent: (SystemUIEvent) -> Unit,
+    onOtherChange: ((Preference.Other) -> Preference.Other) -> Unit,
 ) {
     var powerMenuExpanded by rememberSaveable { mutableStateOf(false) }
 
+    // Power menu stays separate from screenshot sound.
     StatusThemeGroup(
         items = buildList {
             add {
@@ -57,10 +60,7 @@ fun OtherFunctionsControls(
                 val actions = PowerMenuAction.normalize(uiState.powerMenuActions)
                 actions.forEachIndexed { index, action ->
                     add {
-                        val visiblePosition = actions
-                            .take(index + 1)
-                            .count { it.visible }
-
+                        val visiblePosition = actions.take(index + 1).count { it.visible }
                         OneuiXInfoItem(
                             title = stringResource(id = powerMenuActionTitle(action.name)),
                             summary = if (action.visible) {
@@ -84,7 +84,7 @@ fun OtherFunctionsControls(
                                             )
                                         },
                                     )
-                                    Spacer(modifier = androidx.compose.ui.Modifier.width(8.dp))
+                                    Spacer(Modifier.width(8.dp))
                                     OneuiXActionButton(
                                         text = stringResource(id = R.string.oneuix_moveDown),
                                         enabled = index < actions.lastIndex,
@@ -96,18 +96,14 @@ fun OtherFunctionsControls(
                                             )
                                         },
                                     )
-                                    Spacer(modifier = androidx.compose.ui.Modifier.width(8.dp))
+                                    Spacer(Modifier.width(8.dp))
                                     OneuiXSwitch(
                                         checked = action.visible,
                                         onCheckedChange = { visible ->
                                             onEvent(
                                                 SystemUIEvent.Other.PowerMenuActions(
                                                     actions.mapIndexed { actionIndex, item ->
-                                                        if (actionIndex == index) {
-                                                            item.copy(visible = visible)
-                                                        } else {
-                                                            item
-                                                        }
+                                                        if (actionIndex == index) item.copy(visible = visible) else item
                                                     }
                                                 )
                                             )
@@ -119,13 +115,15 @@ fun OtherFunctionsControls(
                     }
                 }
             }
+        },
+    )
 
+    StatusThemeGroup(
+        items = buildList {
             add {
                 SwitchItem(
                     icon = ImageVector.vectorResource(id = R.drawable.screenshot),
-                    title = stringResource(
-                        id = R.string.oneuix_disableScreenshotCaptureSound_title
-                    ),
+                    title = stringResource(id = R.string.oneuix_disableScreenshotCaptureSound_title),
                     checked = uiState.disableScreenshotCaptureSound,
                     onCheckedChange = {
                         onEvent(SystemUIEvent.Other.DisableScreenshotCaptureSound(it))
@@ -134,14 +132,130 @@ fun OtherFunctionsControls(
             }
         },
     )
+
+    // Call return combines the enable switch and delay selector in one feature card.
+    StatusThemeGroup(
+        items = buildList {
+            add {
+                SwitchItem(
+                    icon = ImageVector.vectorResource(id = R.drawable.phone_forwarded),
+                    title = stringResource(id = R.string.oneuix_callReturnDelay_title),
+                    checked = otherState.callReturnDelayEnabled,
+                    onCheckedChange = { checked ->
+                        onOtherChange { current -> current.copy(callReturnDelayEnabled = checked) }
+                    },
+                )
+            }
+            if (otherState.callReturnDelayEnabled) {
+                add {
+                    OneuiXInfoItem(
+                        title = stringResource(id = R.string.oneuix_callReturnDelaySeconds_title),
+                        summary = stringResource(
+                            id = R.string.oneuix_callReturnDelaySeconds_summary,
+                            otherState.callReturnDelaySeconds.coerceIn(0, 5),
+                        ),
+                        trailingContent = {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                OneuiXActionButton(
+                                    text = "−",
+                                    enabled = otherState.callReturnDelaySeconds > 0,
+                                    onClick = {
+                                        onOtherChange { current ->
+                                            current.copy(
+                                                callReturnDelaySeconds =
+                                                    (current.callReturnDelaySeconds - 1).coerceAtLeast(0)
+                                            )
+                                        }
+                                    },
+                                )
+                                Spacer(Modifier.width(8.dp))
+                                OneuiXActionButton(
+                                    text = "+",
+                                    enabled = otherState.callReturnDelaySeconds < 5,
+                                    onClick = {
+                                        onOtherChange { current ->
+                                            current.copy(
+                                                callReturnDelaySeconds =
+                                                    (current.callReturnDelaySeconds + 1).coerceAtMost(5)
+                                            )
+                                        }
+                                    },
+                                )
+                            }
+                        },
+                    )
+                }
+            }
+        },
+    )
+
+    StatusThemeGroup(
+        items = buildList {
+            add {
+                SwitchItem(
+                    icon = ImageVector.vectorResource(id = R.drawable.expand),
+                    title = stringResource(id = R.string.oneuix_settingsTwoPane_title),
+                    checked = otherState.settingsTwoPaneEnabled,
+                    onCheckedChange = { checked ->
+                        onOtherChange { current -> current.copy(settingsTwoPaneEnabled = checked) }
+                    },
+                )
+            }
+        },
+    )
+
+    StatusThemeGroup(
+        items = buildList {
+            add {
+                SwitchItem(
+                    icon = ImageVector.vectorResource(id = R.drawable.apk_document),
+                    title = stringResource(id = R.string.oneuix_allowAppDowngrade_title),
+                    checked = otherState.allowAppDowngradeEnabled,
+                    onCheckedChange = { checked ->
+                        onOtherChange { current -> current.copy(allowAppDowngradeEnabled = checked) }
+                    },
+                )
+            }
+        },
+    )
+
+    StatusThemeGroup(
+        items = buildList {
+            add {
+                SwitchItem(
+                    icon = ImageVector.vectorResource(id = R.drawable.screenshot),
+                    title = stringResource(id = R.string.oneuix_disableSecureScreenshotRestriction_title),
+                    checked = otherState.disableSecureScreenshotRestrictionEnabled,
+                    onCheckedChange = { checked ->
+                        onOtherChange { current ->
+                            current.copy(disableSecureScreenshotRestrictionEnabled = checked)
+                        }
+                    },
+                )
+            }
+        },
+    )
+
+    StatusThemeGroup(
+        items = buildList {
+            add {
+                SwitchItem(
+                    icon = ImageVector.vectorResource(id = R.drawable.ad_off),
+                    title = stringResource(id = R.string.oneuix_hidePackageInstallerRecommendation_title),
+                    checked = otherState.hidePackageInstallerRecommendationEnabled,
+                    onCheckedChange = { checked ->
+                        onOtherChange { current ->
+                            current.copy(hidePackageInstallerRecommendationEnabled = checked)
+                        }
+                    },
+                )
+            }
+        },
+    )
 }
 
-private fun List<PowerMenuAction>.move(
-    fromIndex: Int,
-    toIndex: Int,
-): List<PowerMenuAction> = toMutableList().apply {
-    add(toIndex, removeAt(fromIndex))
-}
+private fun List<PowerMenuAction>.move(fromIndex: Int, toIndex: Int): List<PowerMenuAction> =
+    toMutableList().apply { add(toIndex, removeAt(fromIndex)) }
 
 @StringRes
 private fun powerMenuActionTitle(actionName: String): Int = when (actionName) {
@@ -152,7 +266,6 @@ private fun powerMenuActionTitle(actionName: String): Int = when (actionName) {
     PowerMenuAction.LOCK_DOWN_MODE -> R.string.oneuix_powerMenuAction_lockDownMode
     PowerMenuAction.EMERGENCY_CALL -> R.string.oneuix_powerMenuAction_emergencyCall
     PowerMenuAction.MEDICAL_INFO -> R.string.oneuix_powerMenuAction_medicalInfo
-    PowerMenuAction.SIDE_KEY_SETTINGS -> R.string.oneuix_sideKeySettings
     PowerMenuAction.FORCE_RESTART_MESSAGE -> R.string.oneuix_powerMenuAction_forceRestartMessage
     PowerMenuAction.RESTART_SYSTEMUI -> CommonR.string.restartSystemUI
     PowerMenuAction.RESTART_RECOVERY -> CommonR.string.restartRecovery

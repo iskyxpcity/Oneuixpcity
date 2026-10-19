@@ -418,6 +418,12 @@ data class Preference(
     @Serializable
     data class Other(
         val blockGalaxyStoreAds: Boolean = true,
+        val callReturnDelayEnabled: Boolean = false,
+        val callReturnDelaySeconds: Int = 2,
+        val settingsTwoPaneEnabled: Boolean = false,
+        val allowAppDowngradeEnabled: Boolean = false,
+        val disableSecureScreenshotRestrictionEnabled: Boolean = false,
+        val hidePackageInstallerRecommendationEnabled: Boolean = false,
         val makeAllUserAppsAvailable: Boolean = true,
         val setWeatherProviderCN: Boolean = false,
         val showMemoryUsageInRecents: Boolean = false,

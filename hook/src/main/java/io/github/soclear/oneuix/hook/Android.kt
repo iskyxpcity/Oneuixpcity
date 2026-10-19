@@ -5,6 +5,7 @@ import android.app.NotificationChannel
 import android.os.Bundle
 import io.github.libxposed.api.XposedModule
 import io.github.libxposed.api.XposedModuleInterface
+import io.github.soclear.oneuix.hook.util.PreferenceProvider
 import io.github.soclear.oneuix.hook.util.reflect
 import io.github.soclear.oneuix.hook.util.xlog
 
@@ -131,6 +132,42 @@ object Android {
                 .forEach {
                     xposedModule.hook(it).intercept { null }
                 }
+        } catch (t: Throwable) {
+            xlog(t)
+        }
+    }
+
+
+    // Allow installing a lower version of an already-installed app.
+    context(xposedModule: XposedModule, param: XposedModuleInterface.SystemServerStartingParam)
+    fun hookAllowAppDowngrade() {
+        try {
+            val clazz = param.classLoader.loadClass("com.android.server.pm.PackageManagerServiceUtils")
+            clazz.declaredMethods.filter { it.name == "checkDowngrade" }.forEach { method ->
+                xposedModule.hook(method).intercept { chain ->
+                    val enabled = with(xposedModule) {
+                        PreferenceProvider.loadPreference()?.other?.allowAppDowngradeEnabled == true
+                    }
+                    if (enabled) null else chain.proceed()
+                }
+            }
+        } catch (t: Throwable) {
+            xlog(t)
+        }
+    }
+
+    // Disable the secure-window screenshot restriction only when the preference is enabled.
+    context(xposedModule: XposedModule, param: XposedModuleInterface.SystemServerStartingParam)
+    fun hookDisableSecureScreenshotRestriction() {
+        try {
+            val clazz = param.classLoader.loadClass("com.android.server.wm.WindowState")
+            val method = clazz.getDeclaredMethod("isSecureLocked")
+            xposedModule.hook(method).intercept { chain ->
+                val enabled = with(xposedModule) {
+                    PreferenceProvider.loadPreference()?.other?.disableSecureScreenshotRestrictionEnabled == true
+                }
+                if (enabled) false else chain.proceed()
+            }
         } catch (t: Throwable) {
             xlog(t)
         }

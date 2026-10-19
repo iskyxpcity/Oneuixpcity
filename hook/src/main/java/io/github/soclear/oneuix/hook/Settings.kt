@@ -9,12 +9,130 @@ import android.widget.TextView
 import io.github.libxposed.api.XposedModule
 import io.github.libxposed.api.XposedModuleInterface
 import io.github.soclear.oneuix.common.Package
+import io.github.soclear.oneuix.hook.util.PreferenceProvider
 import io.github.soclear.oneuix.hook.util.afterAttach
 import io.github.soclear.oneuix.hook.util.reflect
 import io.github.soclear.oneuix.hook.util.xlog
 
 @SuppressLint("PrivateApi")
 object Settings {
+
+    /**
+     * Enables the large-screen/activity-embedding path in Samsung Settings. The hooks stay
+     * installed and consult the shared preference at call time.
+     */
+    context(xposedModule: XposedModule, param: XposedModuleInterface.PackageReadyParam)
+    fun enableSettingsTwoPane() {
+        if (param.packageName != Package.SETTINGS) return
+
+        fun enabled(): Boolean = with(xposedModule) {
+            PreferenceProvider.loadPreference()?.other?.settingsTwoPaneEnabled == true
+        }
+
+        val largeScreenProperties = setOf(
+            "persist.settings.large_screen_opt.enabled",
+            "persist.settings.large_screen_opt_for_dp.enabled",
+        )
+
+        listOf("android.os.SystemProperties", "android.os.SemSystemProperties").forEach { className ->
+            runCatching {
+                val clazz = param.classLoader.loadClass(className)
+                val method = clazz.getDeclaredMethod(
+                    "getBoolean",
+                    String::class.java,
+                    Boolean::class.javaPrimitiveType,
+                )
+                xposedModule.hook(method).intercept { chain ->
+                    val key = chain.args.getOrNull(0) as? String
+                    if (enabled() && key in largeScreenProperties) true else chain.proceed()
+                }
+            }.onFailure { xlog(it) }
+        }
+
+        runCatching {
+            val clazz = param.classLoader.loadClass("android.util.FeatureFlagUtils")
+            val method = clazz.getDeclaredMethod("isEnabled", Context::class.java, String::class.java)
+            xposedModule.hook(method).intercept { chain ->
+                val key = chain.args.getOrNull(1) as? String
+                if (enabled() && key in setOf("settings_support_large_screen", "flag_settings_support_large_screen")) {
+                    true
+                } else {
+                    chain.proceed()
+                }
+            }
+        }.onFailure { xlog(it) }
+
+        runCatching {
+            val clazz = param.classLoader.loadClass("com.samsung.android.settings.homepage.SecTopLevelFeature")
+            val method = clazz.getDeclaredMethod("getBoolean", String::class.java)
+            val topLevelKeys = setOf(
+                "flag_settings_support_large_screen",
+                "feature_is_embedding_activity_enabled",
+                "isSettingsSplitEnabled",
+                "flag_user_setup_complete",
+                "flag_force_single_view",
+            )
+            xposedModule.hook(method).intercept { chain ->
+                val key = chain.args.getOrNull(0) as? String
+                if (enabled() && key in topLevelKeys) key != "flag_force_single_view" else chain.proceed()
+            }
+        }.onFailure { xlog(it) }
+
+        runCatching {
+            val clazz = param.classLoader.loadClass("com.android.settings.SettingsApplication")
+            val method = clazz.getDeclaredMethod("onCreate")
+            xposedModule.hook(method).intercept { chain ->
+                val result = chain.proceed()
+                if (enabled()) {
+                    runCatching {
+                        val embedding = param.classLoader.loadClass(
+                            "com.android.settings.activityembedding.ActivityEmbeddingUtils"
+                        )
+                        embedding.getDeclaredField("SHOULD_ENABLE_LARGE_SCREEN_OPTIMIZATION").apply {
+                            isAccessible = true
+                            setBoolean(null, true)
+                        }
+                    }.onFailure { xlog(it) }
+                }
+                result
+            }
+        }.onFailure { xlog(it) }
+
+        runCatching {
+            val clazz = param.classLoader.loadClass("com.android.settings.activityembedding.ActivityEmbeddingUtils")
+            clazz.declaredMethods
+                .filter { it.name == "isSettingsSplitEnabled" || it.name == "isEmbeddingActivityEnabled" }
+                .forEach { method ->
+                    xposedModule.hook(method).intercept { chain ->
+                        if (enabled()) true else chain.proceed()
+                    }
+                }
+        }.onFailure { xlog(it) }
+
+        runCatching {
+            val clazz = param.classLoader.loadClass("androidx.window.embedding.SplitRule")
+            clazz.declaredConstructors
+                .filter {
+                    it.parameterTypes.size == 3 &&
+                        it.parameterTypes[0] == Int::class.javaPrimitiveType &&
+                        it.parameterTypes[1] == Int::class.javaPrimitiveType &&
+                        it.parameterTypes[2].name == "androidx.window.embedding.SplitAttributes"
+                }
+                .forEach { constructor ->
+                    xposedModule.hook(constructor).intercept { chain ->
+                        if (!enabled()) {
+                            chain.proceed()
+                        } else {
+                            val args = chain.args.toMutableList()
+                            args[0] = 0
+                            args[1] = 0
+                            chain.proceed(args.toTypedArray())
+                        }
+                    }
+                }
+        }.onFailure { xlog(it) }
+    }
+
     context(xposedModule: XposedModule, param: XposedModuleInterface.PackageReadyParam)
     fun showPackageInfo() {
         if (param.packageName != Package.SETTINGS) return

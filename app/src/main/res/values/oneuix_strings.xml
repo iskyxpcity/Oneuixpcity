@@ -358,4 +358,12 @@
     <string name="oneuix_clockFormatPreset_lunarYear">Lunar year</string>
     <string name="oneuix_clockFormatPreset_zodiac">Zodiac</string>
     <string name="oneuix_clockFormatPreset_season">Season</string>
+
+    <string name="oneuix_callReturnDelay_title">Call return delay</string>
+    <string name="oneuix_callReturnDelaySeconds_title">Return delay</string>
+    <string name="oneuix_callReturnDelaySeconds_summary">%1$d seconds</string>
+    <string name="oneuix_settingsTwoPane_title">Two-column Settings</string>
+    <string name="oneuix_allowAppDowngrade_title">Allow app downgrade</string>
+    <string name="oneuix_disableSecureScreenshotRestriction_title">Remove secure screenshot restriction</string>
+    <string name="oneuix_hidePackageInstallerRecommendation_title">Hide post-install recommendations</string>
 </resources>

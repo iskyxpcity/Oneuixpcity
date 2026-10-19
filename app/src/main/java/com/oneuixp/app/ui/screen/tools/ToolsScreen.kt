@@ -99,7 +99,7 @@ private fun OtherFunctionsCategoryIcon(size: Dp) {
         contentAlignment = Alignment.Center,
     ) {
         Icon(
-            imageVector = ImageVector.vectorResource(R.drawable.power_settings_new),
+            imageVector = ImageVector.vectorResource(R.drawable.other_functions),
             contentDescription = stringResource(R.string.oneuix_other_functions_title),
             tint = Color.White,
             modifier = Modifier.size(26.dp),
