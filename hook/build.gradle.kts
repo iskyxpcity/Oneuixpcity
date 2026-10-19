@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "io.github.soclear.oneuix.hook"
+    namespace = "com.oneuixp.hook"
     compileSdk {
         version = release(37)
     }

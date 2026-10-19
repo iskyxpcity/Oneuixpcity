@@ -3,7 +3,7 @@
 -keep,allowoptimization public class * extends io.github.libxposed.api.XposedModule {
     public <init>();
 }
--keepnames class io.github.soclear.oneuix.hook.Main
+-keepnames class com.oneuixp.hook.Main
 
 # Preserve the component name across APK updates.
--keepnames class io.github.soclear.oneuix.RebootActivity
+-keepnames class com.oneuixp.hook.RebootActivity

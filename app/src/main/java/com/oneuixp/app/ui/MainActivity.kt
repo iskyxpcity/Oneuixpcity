@@ -50,7 +50,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
-import com.oneuixp.app.oneuix.OneuiXPreferenceBridge
+import com.oneuixp.app.oneuixp.OneuiXPreferenceBridge
 import com.oneuixp.app.ui.component.bottombar.BottomBar
 import com.oneuixp.app.ui.component.bottombar.SideNavigationRail
 import com.oneuixp.app.ui.component.bottombar.useNavigationRail
@@ -76,7 +76,7 @@ import com.oneuixp.app.ui.screen.status.StatusPager
 import com.oneuixp.app.ui.screen.status.StatusCategoryScreen
 import com.oneuixp.app.ui.screen.settings.SettingPager
 import com.oneuixp.app.ui.screen.tools.ToolsPager
-import com.oneuixp.app.ui.screen.tools.OneuiXCategoryScreen
+import com.oneuixp.app.ui.screen.tools.OneuiXPCategoryScreen
 import com.oneuixp.app.ui.theme.LocalColorMode
 import com.oneuixp.app.ui.theme.LocalEnableBlur
 import com.oneuixp.app.ui.theme.LocalEnableFloatingBottomBar
@@ -192,8 +192,8 @@ class MainActivity : ComponentActivity() {
                             entry<Route.VersionChangelog261018>(swipeDismiss = swipeDismiss) { VersionChangelog261018Screen() }
                             entry<Route.VersionChangelog261016>(swipeDismiss = swipeDismiss) { VersionChangelog261016Screen() }
                             entry<Route.ColorPalette>(swipeDismiss = swipeDismiss) { ColorPaletteScreen() }
-                            entry<Route.OneuiXCategory>(swipeDismiss = swipeDismiss) { key ->
-                                OneuiXCategoryScreen(key.category)
+                            entry<Route.OneuiXPCategory>(swipeDismiss = swipeDismiss) { key ->
+                                OneuiXPCategoryScreen(key.category)
                             }
                             entry<Route.StatusCategory>(swipeDismiss = swipeDismiss) { key ->
                                 StatusCategoryScreen(key.category)
