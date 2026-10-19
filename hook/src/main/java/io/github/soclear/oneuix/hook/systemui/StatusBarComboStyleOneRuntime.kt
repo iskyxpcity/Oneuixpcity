@@ -2853,14 +2853,11 @@ object StatusBarComboStyleOneRuntime {
         }
         cluster.post {
             try {
-                // The composite Wi-Fi glyph only replaces the native Wi-Fi slot while associated
-                // with a Wi-Fi network. If disconnected, retain the original native row spacing.
+                // Keep the native status-icon slot compact in both states. When Wi-Fi is
+                // disconnected, the native Wi-Fi glyph may disappear, so its old insets must
+                // not remain as an empty gap.
                 val wifiConnected = isWifiTransportConnected(cluster.context)
-                if (wifiConnected == false) {
-                    restoreNativeStatusIconParentSlot(cluster)
-                } else {
-                    compactNativeStatusIconParentSlot(cluster)
-                }
+                compactNativeStatusIconParentSlot(cluster)
                 val baselinePadding = synchronized(nativeWifiClusterBaselinePadding) {
                     nativeWifiClusterBaselinePadding[cluster] ?: intArrayOf(
                         cluster.paddingLeft, cluster.paddingTop, cluster.paddingRight, cluster.paddingBottom,
@@ -2889,15 +2886,13 @@ object StatusBarComboStyleOneRuntime {
                             "${child.measuredWidth}x${child.measuredHeight}"
                     } else null
                 }.take(8).joinToString(",")
-                // Only trim the native row's horizontal insets when the composite glyph is
-                // replacing a connected native Wi-Fi slot. With Wi-Fi disconnected, the native
-                // Wi-Fi icon may be absent, so preserve the original left/right spacing and width.
-                val preserveBaselineSpacing = wifiConnected == false
-                val targetLeft = if (preserveBaselineSpacing || hasVisibleNativeIcon) {
-                    baselinePadding[0]
-                } else 0
-                val targetRight = if (preserveBaselineSpacing) baselinePadding[2] else 0
-                val targetMinimumWidth = if (preserveBaselineSpacing) baselineMinimumWidth else 0
+                // If Wi-Fi is disconnected, the native Wi-Fi icon can be absent. Remove the
+                // original horizontal insets and minimum width so they do not leave a blank gap.
+                // When connected, retain #516 behavior for the left inset if a native icon exists.
+                val wifiDisconnected = wifiConnected == false
+                val targetLeft = if (!wifiDisconnected && hasVisibleNativeIcon) baselinePadding[0] else 0
+                val targetRight = 0
+                val targetMinimumWidth = 0
                 val paddingChanged = cluster.paddingLeft != targetLeft ||
                     cluster.paddingRight != targetRight ||
                     cluster.paddingTop != baselinePadding[1] ||
@@ -2916,7 +2911,7 @@ object StatusBarComboStyleOneRuntime {
                 val lp = cluster.layoutParams
                 val row = cluster.parent as? View
                 val stage = when {
-                    preserveBaselineSpacing -> "wifi-disconnected-preserve-native-spacing"
+                    wifiDisconnected -> "wifi-disconnected-trim-native-spacing"
                     nativeMobileSlotExpected -> "native-mobile-slot-expected-trim-trailing-space"
                     hasVisibleNativeIcon -> "native-icon-present-trim-trailing-space"
                     else -> "empty-native-signal-cluster-release-width"
