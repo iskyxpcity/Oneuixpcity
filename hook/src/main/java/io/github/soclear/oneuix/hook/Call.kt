@@ -21,10 +21,6 @@ import java.lang.reflect.Modifier
 
 object Call {
 
-    /**
-     * Port of the source module's Samsung InCallUI return-delay hook. The switch and delay
-     * are read from the shared preference file each time the timer is invoked.
-     */
     context(xposedModule: XposedModule, param: XposedModuleInterface.PackageReadyParam)
     fun hookCallReturnDelay() {
         if (param.packageName != Package.INCALLUI) return
