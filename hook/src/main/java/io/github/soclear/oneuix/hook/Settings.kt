@@ -44,7 +44,7 @@ object Settings {
                 )
                 xposedModule.hook(method).intercept { chain ->
                     val key = chain.args.getOrNull(0) as? String
-                    if (enabled() && key in largeScreenProperties) true else chain.proceed()
+                    if (enabled() && key != null && key in largeScreenProperties) true else chain.proceed()
                 }
             }.onFailure { xlog(it) }
         }
@@ -54,7 +54,7 @@ object Settings {
             val method = clazz.getDeclaredMethod("isEnabled", Context::class.java, String::class.java)
             xposedModule.hook(method).intercept { chain ->
                 val key = chain.args.getOrNull(1) as? String
-                if (enabled() && key in setOf("settings_support_large_screen", "flag_settings_support_large_screen")) {
+                if (enabled() && key != null && key in setOf("settings_support_large_screen", "flag_settings_support_large_screen")) {
                     true
                 } else {
                     chain.proceed()
@@ -74,7 +74,7 @@ object Settings {
             )
             xposedModule.hook(method).intercept { chain ->
                 val key = chain.args.getOrNull(0) as? String
-                if (enabled() && key in topLevelKeys) key != "flag_force_single_view" else chain.proceed()
+                if (enabled() && key != null && key in topLevelKeys) key != "flag_force_single_view" else chain.proceed()
             }
         }.onFailure { xlog(it) }
 
