@@ -227,7 +227,9 @@ jobs:
             FORMAL_RELEASE=true
             TAG="v${VERSION_NAME}"
             TITLE="OneUI XP ${VERSION_NAME}"
-            if [ "$VERSION_NAME" = "1.0.261019" ]; then
+            if [ "$VERSION_NAME" = "1.0.261019.1" ]; then
+              NOTES=$(printf 'OneUI XP %s 正式版。\n\n主要更新：\n- 新增多项系统设置与重启选项。\n- 优化状态栏图标布局、信号图标恢复及主题适配。\n- 修复图标缩放和原生图标空白残留问题。\n' "$VERSION_NAME")
+            elif [ "$VERSION_NAME" = "1.0.261019" ]; then
               NOTES=$(printf 'OneUI XP %s 正式版。\n\n本次修复：\n- 使用三段版本号作为过渡版本，恢复旧版更新器的识别兼容性。\n- 更新检查继续支持三段版本号与四段补丁版本号。\n- 确保 Release 版本名与 APK 内部版本号一致，避免“更新包版本不匹配”。\n' "$VERSION_NAME")
             elif [ "$VERSION_NAME" = "1.0.261018.1" ]; then
               NOTES=$(printf 'OneUI XP %s 正式版。\n\n本次修复：\n- 修复状态栏组合图标的整体缩放问题。\n- 修正状态栏组合图标设置页预览图标整体偏上的问题。\n' "$VERSION_NAME")
