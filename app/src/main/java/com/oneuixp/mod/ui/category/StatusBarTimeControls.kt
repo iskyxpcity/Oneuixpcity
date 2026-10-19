@@ -27,7 +27,7 @@ import com.oneuixp.mod.ui.component.OneuiXPActionButton
 import com.oneuixp.mod.ui.component.OneuiXPChildVisibility
 import com.oneuixp.mod.ui.component.OneuiXPInfoItem
 import com.oneuixp.mod.ui.component.OneuiXPInlineTextField
-import com.oneuixp.mod.ui.component.OneuiXPreferenceGroup
+import com.oneuixp.mod.ui.component.OneuiXPPPreferenceGroup
 import com.oneuixp.mod.ui.component.OneuiXPSlider
 import com.oneuixp.mod.ui.component.OneuiXPSupportingText
 import com.oneuixp.mod.ui.component.SelectItem
@@ -65,7 +65,7 @@ fun StatusBarTimeControls(
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier) {
-        OneuiXPreferenceGroup {
+        OneuiXPPPreferenceGroup {
         Column {
             var expanded by rememberSaveable { mutableStateOf(false) }
 
@@ -293,7 +293,7 @@ fun StatusBarTimeControls(
                     mutableFloatStateOf(uiState.doubleLineClockGapDp)
                 }
                 var gapExpanded by rememberSaveable { mutableStateOf(false) }
-                OneuiXPreferenceGroup {
+                OneuiXPPPreferenceGroup {
                     SwitchItem(
                         title = stringResource(id = R.string.oneuixp_statusBarDoubleLineClockGap_title),
                         summary = if (uiState.modifyDoubleLineClockGap) {

@@ -25,7 +25,7 @@ import com.oneuixp.common.Preference
 import com.oneuixp.app.ui.viewmodel.OneuiXPToolsViewModel
 import com.oneuixp.mod.ui.component.SwitchItem
 import com.oneuixp.mod.ui.component.OneuiXPSlider
-import com.oneuixp.mod.ui.component.OneuiXPreferenceGroup
+import com.oneuixp.mod.ui.component.OneuiXPPPreferenceGroup
 import com.oneuixp.mod.ui.component.OneuiXPDetailGroup
 import kotlin.math.roundToInt
 
@@ -47,7 +47,7 @@ fun DetailPaneAndroid(
             checked = uiState.disablePinVerifyPer72h,
             onCheckedChange = { onEvent(AndroidEvent.DisablePinVerifyPer72h(it)) }
         )
-        OneuiXPreferenceGroup {
+        OneuiXPPPreferenceGroup {
             var max by remember { mutableIntStateOf(uiState.maxNeverKilledAppNum) }
             var expanded by rememberSaveable { mutableStateOf(false) }
 

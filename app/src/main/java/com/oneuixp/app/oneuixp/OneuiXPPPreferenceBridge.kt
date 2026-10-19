@@ -191,7 +191,7 @@ private object OneuiXPXposedService {
 }
 
 object OneuiXPPPreferenceSerializer : Serializer<Preference> {
-    private const val TAG = "OneuiXP-OneUIXPrefs"
+    private const val TAG = "OneuiXP-OneUIXP-Prefs"
     private const val SYNC_MARKER = "_oneuiXpRemoteSynced"
 
     override val defaultValue: Preference = Preference()

@@ -45,7 +45,7 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme
 val LocalOneuiXPGroupedPreference = compositionLocalOf { false }
 
 @Composable
-fun OneuiXPreferenceGroup(
+fun OneuiXPPPreferenceGroup(
     modifier: Modifier = Modifier,
     content: @Composable ColumnScope.() -> Unit,
 ) {
@@ -109,7 +109,7 @@ fun OneuiXPDetailGroup(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     when (LocalUiMode.current) {
-        UiMode.Material -> OneuiXPreferenceGroup(modifier = modifier, content = content)
+        UiMode.Material -> OneuiXPPPreferenceGroup(modifier = modifier, content = content)
         UiMode.Miuix -> Column(modifier = modifier, content = content)
     }
 }

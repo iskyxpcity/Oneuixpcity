@@ -20,7 +20,7 @@ import com.oneuixp.app.R
 import com.oneuixp.common.ONE_UI_VERSION
 import com.oneuixp.common.Preference
 import com.oneuixp.mod.ui.component.OneuiXPChildVisibility
-import com.oneuixp.mod.ui.component.OneuiXPreferenceGroup
+import com.oneuixp.mod.ui.component.OneuiXPPPreferenceGroup
 import com.oneuixp.mod.ui.component.OneuiXPSlider
 import com.oneuixp.mod.ui.component.SwitchItem
 
@@ -34,7 +34,7 @@ fun StatusBarPowerControls(
     uiState: Preference.SystemUI.StatusBar,
     onEvent: (SystemUIEvent) -> Unit,
 ) {
-    OneuiXPreferenceGroup {
+    OneuiXPPPreferenceGroup {
         var widthScale by remember(uiState.batteryIconWidthScale) {
             mutableFloatStateOf(uiState.batteryIconWidthScale)
         }
@@ -74,7 +74,7 @@ fun StatusBarPowerControls(
         }
     }
 
-    OneuiXPreferenceGroup {
+    OneuiXPPPreferenceGroup {
         var heightScale by remember(uiState.batteryIconHeightScale) {
             mutableFloatStateOf(uiState.batteryIconHeightScale)
         }
@@ -137,7 +137,7 @@ fun StatusBarPowerControls(
     )
 
     if (ONE_UI_VERSION >= 70000) {
-        OneuiXPreferenceGroup {
+        OneuiXPPPreferenceGroup {
             SwitchItem(
                 icon = ImageVector.vectorResource(id = R.drawable.battery),
                 title = stringResource(id = R.string.oneuixp_addBatteryLevelText_title),

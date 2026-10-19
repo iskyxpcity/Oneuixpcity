@@ -35,7 +35,7 @@ import com.oneuixp.app.ui.viewmodel.OneuiXPToolsViewModel
 import com.oneuixp.mod.ui.component.SelectItem
 import com.oneuixp.mod.ui.component.SwitchItem
 import com.oneuixp.mod.ui.component.OneuiXPSlider
-import com.oneuixp.mod.ui.component.OneuiXPreferenceGroup
+import com.oneuixp.mod.ui.component.OneuiXPPPreferenceGroup
 import com.oneuixp.mod.ui.component.OneuiXPDetailGroup
 import com.oneuixp.mod.ui.component.OneuiXPChildVisibility
 import com.oneuixp.mod.ui.component.OneuiXPActionButton
@@ -80,7 +80,7 @@ fun DetailPaneSystemUI(
     ) {
         DividerText(R.string.oneuixp_status_bar)
         OneuiXPDetailGroup {
-        OneuiXPreferenceGroup {
+        OneuiXPPPreferenceGroup {
             var padding by remember {
                 mutableFloatStateOf(uiState.statusBar.statusBarLeftPaddingDp)
             }
@@ -117,7 +117,7 @@ fun DetailPaneSystemUI(
                 )
             }
         }
-        OneuiXPreferenceGroup {
+        OneuiXPPPreferenceGroup {
             var padding by remember {
                 mutableFloatStateOf(uiState.statusBar.statusBarRightPaddingDp)
             }
@@ -206,7 +206,7 @@ fun DetailPaneSystemUI(
                 onEvent(SystemUIEvent.StatusBar.RestoreBluetoothStatusBarIcon(it))
             }
         )
-        OneuiXPreferenceGroup {
+        OneuiXPPPreferenceGroup {
         SwitchItem(
             icon = ImageVector.vectorResource(id = R.drawable.sim_card),
             title = stringResource(id = R.string.oneuixp_physicalEsimAdapterWorkaround_title),
@@ -248,7 +248,7 @@ fun DetailPaneSystemUI(
             uiState = uiState.statusBar,
             onEvent = onEvent,
         )
-        OneuiXPreferenceGroup {
+        OneuiXPPPreferenceGroup {
             var expanded by rememberSaveable { mutableStateOf(false) }
 
             SwitchItem(
@@ -454,7 +454,7 @@ fun DetailPaneSystemUI(
                     onEvent(SystemUIEvent.QS.ShowTraditionalChineseDateOnQS(it))
                 }
             )
-            OneuiXPreferenceGroup {
+            OneuiXPPPreferenceGroup {
                 var textSize by remember { mutableFloatStateOf(uiState.qs.qsClockTextSize) }
                 var expanded by rememberSaveable { mutableStateOf(false) }
 
@@ -517,7 +517,7 @@ fun DetailPaneSystemUI(
 
         DividerText(R.string.oneuixp_notification)
         OneuiXPDetailGroup {
-        OneuiXPreferenceGroup {
+        OneuiXPPPreferenceGroup {
             var expanded by rememberSaveable { mutableStateOf(false) }
             SwitchItem(
                 icon = ImageVector.vectorResource(id = R.drawable.music_note),
@@ -586,7 +586,7 @@ fun DetailPaneSystemUI(
         }
         DividerText(R.string.oneuixp_other)
         OneuiXPDetailGroup {
-        OneuiXPreferenceGroup {
+        OneuiXPPPreferenceGroup {
             var expanded by rememberSaveable { mutableStateOf(false) }
             SwitchItem(
                 icon = ImageVector.vectorResource(id = R.drawable.power_settings_new),
@@ -692,7 +692,7 @@ private fun StatusBarVerticalPaddingControl(
     var value by remember(currentValue) { mutableFloatStateOf(currentValue) }
     var expanded by rememberSaveable { mutableStateOf(false) }
 
-    OneuiXPreferenceGroup {
+    OneuiXPPPreferenceGroup {
         SwitchItem(
             title = title,
             summary = if (enabled) {

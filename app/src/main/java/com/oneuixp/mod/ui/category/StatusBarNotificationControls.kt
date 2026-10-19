@@ -17,7 +17,7 @@ import androidx.compose.ui.unit.dp
 import com.oneuixp.app.R
 import com.oneuixp.common.Preference
 import com.oneuixp.mod.ui.component.OneuiXPChildVisibility
-import com.oneuixp.mod.ui.component.OneuiXPreferenceGroup
+import com.oneuixp.mod.ui.component.OneuiXPPPreferenceGroup
 import com.oneuixp.mod.ui.component.OneuiXPSlider
 import com.oneuixp.mod.ui.component.SwitchItem
 import kotlin.math.roundToInt
@@ -32,7 +32,7 @@ fun StatusBarNotificationControls(
     uiState: Preference.SystemUI.StatusBar,
     onEvent: (SystemUIEvent) -> Unit,
 ) {
-    OneuiXPreferenceGroup {
+    OneuiXPPPreferenceGroup {
         var max by remember(uiState.statusBarMaxNotificationIcons) {
             mutableIntStateOf(uiState.statusBarMaxNotificationIcons)
         }

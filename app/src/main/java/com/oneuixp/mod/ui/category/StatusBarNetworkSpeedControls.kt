@@ -25,7 +25,7 @@ import com.oneuixp.common.Preference
 import com.oneuixp.mod.ui.component.OneuiXPActionButton
 import com.oneuixp.mod.ui.component.OneuiXPChildVisibility
 import com.oneuixp.mod.ui.component.OneuiXPInlineTextField
-import com.oneuixp.mod.ui.component.OneuiXPreferenceGroup
+import com.oneuixp.mod.ui.component.OneuiXPPPreferenceGroup
 import com.oneuixp.mod.ui.component.OneuiXPSlider
 import com.oneuixp.mod.ui.component.SwitchItem
 import kotlin.math.roundToInt
@@ -60,7 +60,7 @@ fun StatusBarNetworkSpeedControls(
     )
 
     if (uiState.supportRealTimeNetworkSpeed || uiState.showSeparateUpDownNetworkSpeeds) {
-        OneuiXPreferenceGroup {
+        OneuiXPPPreferenceGroup {
             var expanded by rememberSaveable { mutableStateOf(false) }
             var lineGapDp by remember(uiState.networkSpeedLineGapDp) {
             mutableFloatStateOf(uiState.networkSpeedLineGapDp)
@@ -95,7 +95,7 @@ fun StatusBarNetworkSpeedControls(
         }
     }
 
-    OneuiXPreferenceGroup {
+    OneuiXPPPreferenceGroup {
         var expanded by rememberSaveable { mutableStateOf(false) }
         var uploadScale by remember(uiState.networkSpeedUploadTextScale) {
             mutableFloatStateOf(uiState.networkSpeedUploadTextScale)
@@ -130,7 +130,7 @@ fun StatusBarNetworkSpeedControls(
         }
     }
 
-    OneuiXPreferenceGroup {
+    OneuiXPPPreferenceGroup {
         var expanded by rememberSaveable { mutableStateOf(false) }
         var downloadScale by remember(uiState.networkSpeedDownloadTextScale) {
             mutableFloatStateOf(uiState.networkSpeedDownloadTextScale)
@@ -167,7 +167,7 @@ fun StatusBarNetworkSpeedControls(
 
     }
 
-    OneuiXPreferenceGroup {
+    OneuiXPPPreferenceGroup {
         var expanded by rememberSaveable { mutableStateOf(false) }
         var threshold by remember(uiState.networkSpeedThresholdKb) {
             mutableIntStateOf(uiState.networkSpeedThresholdKb)
