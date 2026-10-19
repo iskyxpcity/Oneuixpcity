@@ -181,6 +181,8 @@ object StatusBarComboStyleOneRuntime {
     // SystemUI's true Visible/Hidden state when the custom arc is switched off.
     private val modernWifiViewModels = Collections.synchronizedMap(WeakHashMap<View, WeakReference<Any>>())
     private val lastNativeWifiDiagnostics = Collections.synchronizedMap(WeakHashMap<View, String>())
+    // Deduplicate diagnostics for exclusive wrappers collapsed around already-hidden native icons.
+    private val lastNativeIconWrapperDiagnostics = Collections.synchronizedMap(WeakHashMap<View, String>())
     // AOSP/Samsung can keep a measured width after native Wi-Fi is collapsed.
     private val nativeWifiClusterBaselineVisibility = Collections.synchronizedMap(WeakHashMap<ViewGroup, Int>())
     // Only remove horizontal padding while the Wi-Fi-replaced cluster has no visible native
@@ -1881,8 +1883,15 @@ object StatusBarComboStyleOneRuntime {
             }
 
             val foldMobile = isMobileNativeSuppressed()
+            // A native icon may be nested in a dedicated FrameLayout/LinearLayout whose own
+            // width, minimumWidth, padding or margins survive after the inner icon is GONE.
+            // Only collect ancestors with no visible/laid-out sibling content; never include
+            // the shared StatusIconContainer, SignalClusterView, or any container owning the
+            // composite battery anchor / glyph.
+            val suppressedNativeWrappers = findDedicatedSuppressedNativeIconWrappers(host, views, foldMobile)
 
             views.forEach { view ->
+                if (suppressedNativeWrappers.contains(view)) return@forEach
                 val nativeBatteryIndicator = isBatteryIcon(view) ||
                     (slotOf(view) ?: knownIconSlots[view])?.contains("battery", ignoreCase = true) == true
                 if (view === battery || view is GlyphView || nativeBatteryIndicator) return@forEach
@@ -1922,6 +1931,25 @@ object StatusBarComboStyleOneRuntime {
                     diagnoseNativeWifiView(view, action)
                 }
             }
+            // Inner native views are collapsed first. Then release only the dedicated,
+            // content-empty wrapper ancestors that could otherwise retain a transparent slot.
+            suppressedNativeWrappers
+                .sortedByDescending(::viewTreeDepth)
+                .forEach { wrapper ->
+                    val lp = wrapper.layoutParams
+                    val margins = lp as? ViewGroup.MarginLayoutParams
+                    val before = "class=${wrapper.javaClass.name}|resource=${resourceName(wrapper)}|" +
+                        "vis=${wrapper.visibility}|size=${wrapper.width}x${wrapper.height}|" +
+                        "measured=${wrapper.measuredWidth}x${wrapper.measuredHeight}|" +
+                        "lp=${lp?.width}x${lp?.height}|margins=${margins?.leftMargin},${margins?.rightMargin}|" +
+                        "relative=${margins?.isMarginRelative == true}|padding=${wrapper.paddingLeft},${wrapper.paddingRight}|" +
+                        "minWidth=${wrapper.minimumWidth}|children=${(wrapper as? ViewGroup)?.childCount ?: 0}"
+                    collapseHostView(host, wrapper)
+                    if (lastNativeIconWrapperDiagnostics.put(wrapper, before) != before) {
+                        diagnostic("Dedicated hidden-native wrapper collapsed: ${before}")
+                    }
+                }
+
             // Hide only the overlaid status_bar_dot while the native Wi-Fi signal itself is
             // visible. If SystemUI switches to dot-only mode, restore the captured native state.
             reconcileNativeWifiStatusBarDots(root)
@@ -2624,6 +2652,102 @@ object StatusBarComboStyleOneRuntime {
         (config.enabled && config.showWifi && isWifiIcon(view)) ||
             (isMobileNativeSuppressed() && isMobileIcon(view)) ||
             (config.showMobile && config.mobileTypeMode == 2 && isMobileTypeView(view))
+
+    /**
+     * Find only wrapper ancestors that contain exclusively native status-icon views this
+     * configuration suppresses. LayoutParams on those wrappers are otherwise invisible to
+     * isWifiIcon()/isMobileIcon(), so GONE leaves can still leave a transparent row-width gap.
+     */
+    private fun findDedicatedSuppressedNativeIconWrappers(
+        host: Host,
+        views: List<View>,
+        foldMobile: Boolean,
+    ): Set<ViewGroup> {
+        val targetRoots = Collections.newSetFromMap(IdentityHashMap<View, Boolean>())
+        views.forEach { view ->
+            val nativeBatteryIndicator = isBatteryIcon(view) ||
+                (slotOf(view) ?: knownIconSlots[view])?.contains("battery", ignoreCase = true) == true
+            if (view === host.battery || view is GlyphView || nativeBatteryIndicator) return@forEach
+            val hide = (config.showWifi && isWifiIcon(view)) ||
+                (foldMobile && isMobileIcon(view)) ||
+                (config.showMobile && config.mobileTypeMode == 2 && isMobileTypeView(view))
+            if (hide) targetRoots.add(view)
+        }
+        if (targetRoots.isEmpty()) return emptySet()
+
+        val wrappers = Collections.newSetFromMap(IdentityHashMap<ViewGroup, Boolean>())
+        targetRoots.forEach { target ->
+            var ancestor = target.parent as? ViewGroup
+            while (ancestor != null) {
+                // These containers own other status icons or the composite glyph's reserved
+                // battery slot. Their layout is not a dedicated hidden-icon placeholder.
+                if (ancestor === host.root || isStatusIconsCluster(ancestor) ||
+                    viewSignature(ancestor).contains("signalcluster") ||
+                    host.battery?.let { isWithin(ancestor, it) } == true ||
+                    host.inline?.let { isWithin(ancestor, it) } == true
+                ) break
+
+                if (targetRoots.contains(ancestor)) {
+                    ancestor = ancestor.parent as? ViewGroup
+                    continue
+                }
+                if (hasUnsuppressedNativeLayoutFootprint(ancestor, targetRoots)) break
+                if (hasNativeLayoutResidue(ancestor)) wrappers.add(ancestor)
+                ancestor = ancestor.parent as? ViewGroup
+            }
+        }
+        return wrappers
+    }
+
+    /**
+     * The candidate wrapper's own padding/width is precisely the residue we want to clear.
+     * Ignore that root footprint, but veto collapse when any branch outside the suppressed
+     * icon roots still contributes layout space (including INVISIBLE and alpha-zero siblings).
+     */
+    private fun hasUnsuppressedNativeLayoutFootprint(
+        view: View,
+        targetRoots: Set<View>,
+        candidateRoot: View = view,
+    ): Boolean {
+        if (targetRoots.any { target -> isWithin(target, view) }) return false
+        val isCandidateRoot = view === candidateRoot
+        if (!isCandidateRoot && view.visibility == View.GONE) return false
+        val containsSuppressedTarget = targetRoots.any { target -> isWithin(view, target) }
+        if (view is ViewGroup && view.childCount > 0) {
+            for (index in 0 until view.childCount) {
+                if (hasUnsuppressedNativeLayoutFootprint(view.getChildAt(index), targetRoots, candidateRoot)) {
+                    return true
+                }
+            }
+            if (containsSuppressedTarget || isCandidateRoot) return false
+        }
+        if (containsSuppressedTarget || isCandidateRoot) return false
+        return hasNativeLayoutResidue(view)
+    }
+
+    /** True for physical or cached width/margins/padding that could occupy a blank slot. */
+    private fun hasNativeLayoutResidue(view: View): Boolean {
+        val lp = view.layoutParams
+        val margins = lp as? ViewGroup.MarginLayoutParams
+        val hasRelativeMargins = Build.VERSION.SDK_INT >= 17 && margins?.isMarginRelative == true
+        return view.width != 0 || view.measuredWidth != 0 ||
+            view.minimumWidth != 0 || view.paddingLeft != 0 || view.paddingRight != 0 ||
+            (lp != null && (lp.width != 0 || lp.height != 0)) ||
+            margins?.let {
+                it.leftMargin != 0 || it.rightMargin != 0 || it.topMargin != 0 ||
+                    it.bottomMargin != 0 || hasRelativeMargins
+            } == true
+    }
+
+    private fun viewTreeDepth(view: View): Int {
+        var depth = 0
+        var current: View? = view
+        while (current != null) {
+            depth++
+            current = current.parent as? View
+        }
+        return depth
+    }
 
     /**
      * Re-measure only the Wi-Fi icon's parent row. Never change StatusIconContainer visibility:
