@@ -360,6 +360,7 @@
     <string name="oneuix_clockFormatPreset_season">Season</string>
 
     <string name="oneuix_callReturnDelay_title">Call return</string>
+    <string name="oneuix_callReturnEnable_title">Enable call return</string>
     <string name="oneuix_callReturnDelaySeconds_title">Return delay</string>
     <string name="oneuix_callReturnDelaySeconds_summary">%1$d seconds</string>
     <string name="oneuix_settingsTwoPane_title">Two-column Settings</string>
