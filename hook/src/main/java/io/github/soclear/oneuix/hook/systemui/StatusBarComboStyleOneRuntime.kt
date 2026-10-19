@@ -1154,13 +1154,14 @@ object StatusBarComboStyleOneRuntime {
     fun isEnabled(): Boolean = config.enabled
 
     /**
-     * Compact the native Wi-Fi slot only after both gates pass, in order:
-     * the composite Wi-Fi arc is enabled, then Wi-Fi transport is connected.
-     * Unknown/disconnected transport keeps the native baseline spacing.
+     * Spacing rule: restore the native baseline only when the arc toggle is OFF
+     * and Wi-Fi is connected. All other combinations clear the native spacing.
+     * Read the toggle first, then query the live Wi-Fi connection state.
      */
-    fun isNativeWifiSuppressed(context: Context): Boolean {
-        if (!config.enabled || !config.showWifi) return false
-        return isWifiTransportConnected(context) == true
+    fun shouldClearNativeWifiSpacing(context: Context): Boolean {
+        val arcEnabled = config.enabled && config.showWifi
+        val wifiConnected = isWifiTransportConnected(context) == true
+        return arcEnabled || !wifiConnected
     }
     fun isMobileNativeSuppressed(): Boolean =
         config.enabled && config.showMobile &&
@@ -2862,11 +2863,10 @@ object StatusBarComboStyleOneRuntime {
         }
         cluster.post {
             try {
-                // First require the "show Wi-Fi arc" toggle; then require a connected Wi-Fi
-                // transport. Only both true compact the native slot; otherwise restore spacing.
-                // Check the arc toggle first; only then query live Wi-Fi transport state.
-                val nativeWifiSuppressed = isNativeWifiSuppressed(cluster.context)
-                if (nativeWifiSuppressed) {
+                // Restore baseline spacing only for toggle OFF + Wi-Fi connected.
+                // The toggle is read first; connection state determines the second gate.
+                val clearNativeWifiSpacing = shouldClearNativeWifiSpacing(cluster.context)
+                if (clearNativeWifiSpacing) {
                     compactNativeStatusIconParentSlot(cluster)
                 } else {
                     restoreNativeStatusIconParentSlot(cluster)
@@ -2899,13 +2899,11 @@ object StatusBarComboStyleOneRuntime {
                             "${child.measuredWidth}x${child.measuredHeight}"
                     } else null
                 }.take(8).joinToString(",")
-                // When the arc setting is ON, the native Wi-Fi icon is suppressed and the
-                // composite ring owns that glyph; remove the old horizontal insets/width.
-                // When OFF, the native Wi-Fi icon is independently visible, so restore baseline
-                // padding and minimum width instead of treating its slot as empty.
-                val targetLeft = if (nativeWifiSuppressed && !hasVisibleNativeIcon) 0 else baselinePadding[0]
-                val targetRight = if (nativeWifiSuppressed) 0 else baselinePadding[2]
-                val targetMinimumWidth = if (nativeWifiSuppressed) 0 else baselineMinimumWidth
+                // Clear horizontal spacing for all combinations except toggle OFF + connected Wi-Fi.
+                // This applies to the whole native icon cluster, independent of child visibility.
+                val targetLeft = if (clearNativeWifiSpacing) 0 else baselinePadding[0]
+                val targetRight = if (clearNativeWifiSpacing) 0 else baselinePadding[2]
+                val targetMinimumWidth = if (clearNativeWifiSpacing) 0 else baselineMinimumWidth
                 val paddingChanged = cluster.paddingLeft != targetLeft ||
                     cluster.paddingRight != targetRight ||
                     cluster.paddingTop != baselinePadding[1] ||
