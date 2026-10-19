@@ -6,6 +6,7 @@ root = Path(__file__).resolve().parent
 migration_source = (root/'common/src/main/java/io/github/soclear/oneuix/common/ProductionPreferenceMigration.kt').read_text()
 preference_source = (root/'common/src/main/java/io/github/soclear/oneuix/common/Preference.kt').read_text()
 combo_runtime_source = (root/'hook/src/main/java/io/github/soclear/oneuix/hook/systemui/StatusBarComboStyleOneRuntime.kt').read_text()
+network_speed_runtime_source = (root/'hook/src/main/java/io/github/soclear/oneuix/hook/systemui/StatusBarNetworkSpeedRuntime.kt').read_text()
 independent_signal_runtime_source = (root/'hook/src/main/java/io/github/soclear/oneuix/hook/systemui/StatusBarSignalIndependentRuntime.kt').read_text()
 legacy_combo_markers = (
     'glyphScaleDefaultMigrationDone', 'glyphScaleDefault100MigrationDone',
@@ -42,6 +43,14 @@ checks = {
  ),
  'Container relayout returns native mobile ownership when unsuppressed': (
      'preserveCurrentAlpha: Boolean = !isMobileNativeSuppressed() && isMobileIcon(view)' in combo_runtime_source
+ ),
+ 'Network speed leaves native horizontal margins to Samsung SystemUI': (
+     'NETWORK_SPEED_TRAILING_GAP_DP' not in network_speed_runtime_source
+     and 'bindTrailingGapHost' not in network_speed_runtime_source
+     and 'applyHostTrailingGap' not in network_speed_runtime_source
+     and 'reapplyHostTrailingGap' not in network_speed_runtime_source
+     and 'params.marginEnd = targetEnd' not in network_speed_runtime_source
+     and 'params.marginStart = baseStart' not in network_speed_runtime_source
  )
 }
 for name, ok in checks.items(): print(('PASS' if ok else 'FAIL') + ': ' + name)
