@@ -59,10 +59,6 @@ import top.yukonga.miuix.kmp.icon.basic.ArrowRight
 import io.github.soclear.oneuix.ui.component.SwitchItem
 import io.github.soclear.oneuix.common.R as CommonR
 
-/**
- * Each option uses its own card group. The migrated system features are stored under
- * Preference.Other and handled by OneuiXP's libxposed module.
- */
 @Composable
 fun OtherFunctionsControls(
     uiState: Preference.SystemUI.Other,
@@ -73,7 +69,7 @@ fun OtherFunctionsControls(
     val navigator = LocalNavigator.current
     val persistedCallReturnDelay = otherState.callReturnDelaySeconds.coerceIn(0, 5)
     val callReturnDelayStatus = if (otherState.callReturnDelayEnabled) {
-        stringResource(R.string.oneuix_callReturnStateEnabled, persistedCallReturnDelay)
+        stringResource(R.string.oneuix_callReturnEntryStateEnabled, persistedCallReturnDelay)
     } else {
         stringResource(R.string.oneuix_callReturnStateDisabled)
     }
@@ -82,7 +78,6 @@ fun OtherFunctionsControls(
 
     var powerMenuExpanded by rememberSaveable { mutableStateOf(false) }
 
-    // Power menu stays separate from screenshot sound.
     OtherFunctionsThemeGroup(
         items = buildList {
             add {
@@ -178,7 +173,7 @@ fun OtherFunctionsControls(
         },
     )
 
-    // Source-compatible entry row: control lives on a dedicated page.
+    // 「通话返回」只在独立页里实现，这里只做入口，避免两份逻辑各改各的。
     OtherFunctionsThemeGroup(
         items = buildList {
             add {
