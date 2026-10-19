@@ -64,16 +64,25 @@ fun OtherFunctionsScreen() {
     val navigator = LocalNavigator.current
     val toolsViewModel = viewModel<OneuiXToolsViewModel>()
     val preference by toolsViewModel.preference.collectAsStateWithLifecycle()
+    val onGalaxyStoreAdsChanged: (Boolean) -> Unit = { enabled ->
+        toolsViewModel.updateData { current ->
+            current.copy(other = current.other.copy(blockGalaxyStoreAds = enabled))
+        }
+    }
 
     when (LocalUiMode.current) {
         UiMode.Material -> OtherFunctionsMaterial(
             uiState = preference.systemUI.other,
             onEvent = toolsViewModel::onSystemUIEvent,
+            galaxyStoreAdsEnabled = preference.other.blockGalaxyStoreAds,
+            onGalaxyStoreAdsChanged = onGalaxyStoreAdsChanged,
             onBack = navigator::pop,
         )
         UiMode.Miuix -> OtherFunctionsMiuix(
             uiState = preference.systemUI.other,
             onEvent = toolsViewModel::onSystemUIEvent,
+            galaxyStoreAdsEnabled = preference.other.blockGalaxyStoreAds,
+            onGalaxyStoreAdsChanged = onGalaxyStoreAdsChanged,
             onBack = navigator::pop,
         )
     }
@@ -83,6 +92,8 @@ fun OtherFunctionsScreen() {
 private fun OtherFunctionsMaterial(
     uiState: Preference.SystemUI.Other,
     onEvent: (SystemUIEvent) -> Unit,
+    galaxyStoreAdsEnabled: Boolean,
+    onGalaxyStoreAdsChanged: (Boolean) -> Unit,
     onBack: () -> Unit,
 ) {
     val scrollBehavior =
@@ -126,7 +137,12 @@ private fun OtherFunctionsMaterial(
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState()),
             ) {
-                OtherFunctionsControls(uiState = uiState, onEvent = onEvent)
+                OtherFunctionsControls(
+                    uiState = uiState,
+                    onEvent = onEvent,
+                    galaxyStoreAdsEnabled = galaxyStoreAdsEnabled,
+                    onGalaxyStoreAdsChanged = onGalaxyStoreAdsChanged,
+                )
                 Spacer(Modifier.height(24.dp))
             }
         }
@@ -137,6 +153,8 @@ private fun OtherFunctionsMaterial(
 private fun OtherFunctionsMiuix(
     uiState: Preference.SystemUI.Other,
     onEvent: (SystemUIEvent) -> Unit,
+    galaxyStoreAdsEnabled: Boolean,
+    onGalaxyStoreAdsChanged: (Boolean) -> Unit,
     onBack: () -> Unit,
 ) {
     val scrollBehavior = MiuixScrollBehavior()
@@ -187,7 +205,12 @@ private fun OtherFunctionsMiuix(
                     .scrollEndHaptic()
                     .verticalScroll(rememberScrollState()),
             ) {
-                OtherFunctionsControls(uiState = uiState, onEvent = onEvent)
+                OtherFunctionsControls(
+                    uiState = uiState,
+                    onEvent = onEvent,
+                    galaxyStoreAdsEnabled = galaxyStoreAdsEnabled,
+                    onGalaxyStoreAdsChanged = onGalaxyStoreAdsChanged,
+                )
                 Spacer(Modifier.height(24.dp))
             }
         }

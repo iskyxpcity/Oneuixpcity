@@ -107,6 +107,10 @@
     <string name="oneuix_redirect_custom_tab_summary">When Samsung Internet is set as the default browser, many apps open links in a limited in-app Samsung Internet Custom Tab. Enable this to force links out of the app and open them in the full Samsung Internet browser.</string>
     <string name="oneuix_blockGalaxyStoreAds_title">Remove ads in Galaxy Store</string>
     <string name="oneuix_blockGalaxyStoreAds_summary">Remove splash screen ads, recommended ads/pop-ups, and installation age restriction pop-ups</string>
+    <string name="oneuix_disableGalaxyStoreRecommendations_title">Disable post-install recommendations and Galaxy Store ads</string>
+    <string name="oneuix_disableGalaxyStoreRecommendations_summary">Suppresses Galaxy Store post-install recommendations, splash ads, and age-restriction pop-ups. Reopen Galaxy Store after changing this setting.</string>
+    <string name="oneuix_disableGalaxyStoreRecommendations_moved_title">Moved to Other functions</string>
+    <string name="oneuix_disableGalaxyStoreRecommendations_moved_summary">This control has moved to Features → Other functions. Open that page to change it.</string>
     <string name="oneuix_supportAllCameraMenu_title">Show all camera menus</string>
     <string name="oneuix_supportAllCameraMenu_summary">Shutter sound, Auto HDR, Log, Frame watermark</string>
     <string name="oneuix_disableCameraTemperatureCheck_title">Disable camera temperature check</string>

@@ -107,6 +107,10 @@
     <string name="oneuix_redirect_custom_tab_summary">当三星浏览器被设置为默认浏览器后，很多应用在点击链接时，会在应用内部弹出一个受限的简易三星浏览器网页窗口。开启此功能后，会强制跳出应用并交由外部三星浏览器打开，让你能使用完整的三星浏览器功能</string>
     <string name="oneuix_blockGalaxyStoreAds_title">去除应用商店的广告</string>
     <string name="oneuix_blockGalaxyStoreAds_summary">去除开屏广告、推荐广告和推荐弹窗，去除安装年龄限制弹窗</string>
+    <string name="oneuix_disableGalaxyStoreRecommendations_title">关闭安装后应用推荐及商店广告</string>
+    <string name="oneuix_disableGalaxyStoreRecommendations_summary">同时抑制 Galaxy Store 安装后推荐、开屏广告和安装年龄限制弹窗。修改后请重新打开 Galaxy Store。</string>
+    <string name="oneuix_disableGalaxyStoreRecommendations_moved_title">已移至其他功能</string>
+    <string name="oneuix_disableGalaxyStoreRecommendations_moved_summary">此开关已移至「功能」→「其他功能」，请前往该处调整。</string>
     <string name="oneuix_supportAllCameraMenu_title">显示相机的所有菜单</string>
     <string name="oneuix_supportAllCameraMenu_summary">快门音、自动 HDR、Log、边框叠加水印</string>
     <string name="oneuix_disableCameraTemperatureCheck_title">禁用相机过热检查</string>

@@ -34,6 +34,8 @@ import io.github.soclear.oneuix.common.R as CommonR
 fun OtherFunctionsControls(
     uiState: Preference.SystemUI.Other,
     onEvent: (SystemUIEvent) -> Unit,
+    galaxyStoreAdsEnabled: Boolean,
+    onGalaxyStoreAdsChanged: (Boolean) -> Unit,
 ) {
     var powerMenuExpanded by rememberSaveable { mutableStateOf(false) }
 
@@ -120,6 +122,11 @@ fun OtherFunctionsControls(
                 }
             }
 
+        },
+    )
+
+    StatusThemeGroup(
+        items = buildList {
             add {
                 SwitchItem(
                     icon = ImageVector.vectorResource(id = R.drawable.screenshot),
@@ -130,6 +137,24 @@ fun OtherFunctionsControls(
                     onCheckedChange = {
                         onEvent(SystemUIEvent.Other.DisableScreenshotCaptureSound(it))
                     },
+                )
+            }
+        },
+    )
+
+    StatusThemeGroup(
+        items = buildList {
+            add {
+                SwitchItem(
+                    icon = ImageVector.vectorResource(id = R.drawable.ad_off),
+                    title = stringResource(
+                        id = R.string.oneuix_disableGalaxyStoreRecommendations_title
+                    ),
+                    summary = stringResource(
+                        id = R.string.oneuix_disableGalaxyStoreRecommendations_summary
+                    ),
+                    checked = galaxyStoreAdsEnabled,
+                    onCheckedChange = onGalaxyStoreAdsChanged,
                 )
             }
         },
