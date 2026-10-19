@@ -375,4 +375,18 @@
     <string name="oneuix_hidePackageInstallerRecommendation_summary">Hide post-install app recommendations in supported Samsung and Android installer screens.</string>
     <string name="oneuix_softRebootStarted">Soft-restarting Android Runtime.</string>
     <string name="oneuix_softRebootFailed">Could not start the soft restart. Check root permission.</string>
+    <!-- Other functions: native theme actions and Call Return apply flow -->
+    <string name="oneuix_rebootSystemUI_menu">Restart System UI</string>
+    <string name="oneuix_softRebootRuntime_menu">Soft restart Android Runtime</string>
+    <string name="oneuix_callReturnStateEnabled">Enabled · current delay: %1$d seconds</string>
+    <string name="oneuix_callReturnStateDisabled">Disabled · the original system behavior is used.</string>
+    <string name="oneuix_callReturnApplyTitle">Apply call return settings now?</string>
+    <string name="oneuix_callReturnApplyMessage">Settings are saved. Apply now to restart Samsung InCallUI so it reloads the latest OneUI XP configuration.</string>
+    <string name="oneuix_callReturnApplyNow">Apply now</string>
+    <string name="oneuix_callReturnApplyLater">Later</string>
+    <string name="oneuix_callReturnApplyStarted">Applying call return settings…</string>
+    <string name="oneuix_callReturnApplied">Applied; Samsung InCallUI was restarted.</string>
+    <string name="oneuix_callReturnApplyFailed">Could not restart Samsung InCallUI. Check root access.</string>
+    <string name="oneuix_callReturnDelayControlHint">Choose 0–5 seconds. Changes are saved immediately; choose Apply now to restart Samsung InCallUI and load them right away.</string>
+
 </resources>

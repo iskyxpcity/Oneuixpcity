@@ -1,22 +1,44 @@
 package com.oneuixp.app.ui.screen.tools
 
 import androidx.annotation.StringRes
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalContext
+import android.widget.Toast
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text as MaterialText
+import com.oneuixp.app.oneuiXPApp
+import com.oneuixp.app.oneuix.OneuiXPreferenceBridge
+import com.oneuixp.app.ui.LocalUiMode
+import com.oneuixp.app.ui.UiMode
+import com.oneuixp.app.ui.component.dialog.rememberConfirmDialog
+import io.github.soclear.oneuix.ui.component.OneuiXSlider
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import top.yukonga.miuix.kmp.basic.Text as MiuixText
+import top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme
+import kotlin.math.roundToInt
 import com.oneuixp.app.R
-import com.oneuixp.app.ui.screen.status.StatusThemeGroup
 import io.github.soclear.oneuix.common.PowerMenuAction
 import io.github.soclear.oneuix.common.Preference
 import io.github.soclear.oneuix.ui.category.SystemUIEvent
@@ -37,10 +59,64 @@ fun OtherFunctionsControls(
     onEvent: (SystemUIEvent) -> Unit,
     onOtherChange: ((Preference.Other) -> Preference.Other) -> Unit,
 ) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val applyCallReturnDialog = rememberConfirmDialog(
+        onConfirm = {
+            scope.launch {
+                Toast.makeText(
+                    context,
+                    context.getString(R.string.oneuix_callReturnApplyStarted),
+                    Toast.LENGTH_SHORT,
+                ).show()
+                val synchronized = OneuiXPreferenceBridge.synchronizeNow(oneuiXPApp)
+                if (!synchronized) {
+                    Toast.makeText(
+                        context,
+                        context.getString(R.string.oneuix_preferenceSync_failed),
+                        Toast.LENGTH_LONG,
+                    ).show()
+                    return@launch
+                }
+                val restarted = withContext(Dispatchers.IO) {
+                    runCatching {
+                        val process = ProcessBuilder(
+                            "su",
+                            "-c",
+                            "am force-stop com.samsung.android.incallui",
+                        ).redirectErrorStream(true).start()
+                        process.inputStream.use { it.readBytes() }
+                        process.waitFor() == 0
+                    }.getOrDefault(false)
+                }
+                Toast.makeText(
+                    context,
+                    context.getString(
+                        if (restarted) R.string.oneuix_callReturnApplied
+                        else R.string.oneuix_callReturnApplyFailed
+                    ),
+                    Toast.LENGTH_LONG,
+                ).show()
+            }
+        },
+    )
+    val callReturnApplyTitle = stringResource(R.string.oneuix_callReturnApplyTitle)
+    val callReturnApplyMessage = stringResource(R.string.oneuix_callReturnApplyMessage)
+    val callReturnApplyNow = stringResource(R.string.oneuix_callReturnApplyNow)
+    val callReturnApplyLater = stringResource(R.string.oneuix_callReturnApplyLater)
+    val askApplyCallReturnNow = {
+        applyCallReturnDialog.showConfirm(
+            title = callReturnApplyTitle,
+            content = callReturnApplyMessage,
+            confirm = callReturnApplyNow,
+            dismiss = callReturnApplyLater,
+        )
+    }
+
     var powerMenuExpanded by rememberSaveable { mutableStateOf(false) }
 
     // Power menu stays separate from screenshot sound.
-    StatusThemeGroup(
+    OtherFunctionsThemeGroup(
         items = buildList {
             add {
                 SwitchItem(
@@ -119,7 +195,7 @@ fun OtherFunctionsControls(
         },
     )
 
-    StatusThemeGroup(
+    OtherFunctionsThemeGroup(
         items = buildList {
             add {
                 SwitchItem(
@@ -135,8 +211,21 @@ fun OtherFunctionsControls(
         },
     )
 
-    // Call return combines the enable switch and delay selector in one feature card.
-    StatusThemeGroup(
+    // This setting is a single native Material segmented group / Miuix Card.
+    val persistedCallReturnDelay = otherState.callReturnDelaySeconds.coerceIn(0, 5)
+    var callReturnDelaySeconds by remember(persistedCallReturnDelay) {
+        mutableFloatStateOf(persistedCallReturnDelay.toFloat())
+    }
+    val callReturnDelayStatus = if (otherState.callReturnDelayEnabled) {
+        stringResource(
+            id = R.string.oneuix_callReturnStateEnabled,
+            callReturnDelaySeconds.roundToInt().coerceIn(0, 5),
+        )
+    } else {
+        stringResource(id = R.string.oneuix_callReturnStateDisabled)
+    }
+
+    OtherFunctionsThemeGroup(
         items = buildList {
             add {
                 SwitchItem(
@@ -146,53 +235,119 @@ fun OtherFunctionsControls(
                     checked = otherState.callReturnDelayEnabled,
                     onCheckedChange = { checked ->
                         onOtherChange { current -> current.copy(callReturnDelayEnabled = checked) }
+                        askApplyCallReturnNow()
                     },
                 )
             }
-            if (otherState.callReturnDelayEnabled) {
-                add {
-                    OneuiXInfoItem(
-                        title = stringResource(id = R.string.oneuix_callReturnDelaySeconds_title),
-                        summary = stringResource(
-                            id = R.string.oneuix_callReturnDelaySeconds_summary,
-                            otherState.callReturnDelaySeconds.coerceIn(0, 5),
-                        ),
-                        trailingContent = {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                OneuiXActionButton(
-                                    text = "−",
-                                    enabled = otherState.callReturnDelaySeconds > 0,
-                                    onClick = {
-                                        onOtherChange { current ->
-                                            current.copy(
-                                                callReturnDelaySeconds =
-                                                    (current.callReturnDelaySeconds - 1).coerceAtLeast(0)
-                                            )
-                                        }
-                                    },
+            add {
+                OtherFunctionsThemeChildItem {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 12.dp),
+                    ) {
+                        when (LocalUiMode.current) {
+                            UiMode.Material -> MaterialText(
+                                text = callReturnDelayStatus,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface,
+                            )
+                            UiMode.Miuix -> MiuixText(
+                                text = callReturnDelayStatus,
+                                color = colorScheme.onBackground,
+                            )
+                        }
+                        Spacer(Modifier.height(12.dp))
+                        when (LocalUiMode.current) {
+                            UiMode.Material -> MaterialText(
+                                text = stringResource(R.string.oneuix_callReturnDelaySeconds_title),
+                                style = MaterialTheme.typography.titleSmall,
+                                color = MaterialTheme.colorScheme.onSurface,
+                            )
+                            UiMode.Miuix -> MiuixText(
+                                text = stringResource(R.string.oneuix_callReturnDelaySeconds_title),
+                                color = colorScheme.onBackground,
+                            )
+                        }
+                        Spacer(Modifier.height(4.dp))
+                        when (LocalUiMode.current) {
+                            UiMode.Material -> MaterialText(
+                                text = stringResource(
+                                    R.string.oneuix_callReturnDelaySeconds_summary,
+                                    callReturnDelaySeconds.roundToInt().coerceIn(0, 5),
+                                ),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.outline,
+                            )
+                            UiMode.Miuix -> MiuixText(
+                                text = stringResource(
+                                    R.string.oneuix_callReturnDelaySeconds_summary,
+                                    callReturnDelaySeconds.roundToInt().coerceIn(0, 5),
+                                ),
+                                color = colorScheme.onBackground,
+                            )
+                        }
+                        Spacer(Modifier.height(8.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            when (LocalUiMode.current) {
+                                UiMode.Material -> MaterialText(
+                                    text = "0",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.outline,
                                 )
-                                Spacer(Modifier.width(8.dp))
-                                OneuiXActionButton(
-                                    text = "+",
-                                    enabled = otherState.callReturnDelaySeconds < 5,
-                                    onClick = {
-                                        onOtherChange { current ->
-                                            current.copy(
-                                                callReturnDelaySeconds =
-                                                    (current.callReturnDelaySeconds + 1).coerceAtMost(5)
-                                            )
-                                        }
-                                    },
+                                UiMode.Miuix -> MiuixText(
+                                    text = "0",
+                                    color = colorScheme.onBackground,
                                 )
                             }
-                        },
-                    )
+                            Spacer(Modifier.width(8.dp))
+                            OneuiXSlider(
+                                value = callReturnDelaySeconds,
+                                onValueChange = { callReturnDelaySeconds = it },
+                                modifier = Modifier.weight(1f),
+                                valueRange = 0f..5f,
+                                stepSize = 1f,
+                                enabled = otherState.callReturnDelayEnabled,
+                                onValueChangeFinished = {
+                                    val finalSeconds = callReturnDelaySeconds.roundToInt().coerceIn(0, 5)
+                                    onOtherChange { current ->
+                                        current.copy(callReturnDelaySeconds = finalSeconds)
+                                    }
+                                    askApplyCallReturnNow()
+                                },
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            when (LocalUiMode.current) {
+                                UiMode.Material -> MaterialText(
+                                    text = "5",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.outline,
+                                )
+                                UiMode.Miuix -> MiuixText(
+                                    text = "5",
+                                    color = colorScheme.onBackground,
+                                )
+                            }
+                        }
+                        Spacer(Modifier.height(4.dp))
+                        when (LocalUiMode.current) {
+                            UiMode.Material -> MaterialText(
+                                text = stringResource(R.string.oneuix_callReturnDelayControlHint),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.outline,
+                            )
+                            UiMode.Miuix -> MiuixText(
+                                text = stringResource(R.string.oneuix_callReturnDelayControlHint),
+                                color = colorScheme.onBackground,
+                            )
+                        }
+                    }
                 }
             }
         },
     )
 
-    StatusThemeGroup(
+    OtherFunctionsThemeGroup(
         items = buildList {
             add {
                 SwitchItem(
@@ -208,7 +363,7 @@ fun OtherFunctionsControls(
         },
     )
 
-    StatusThemeGroup(
+    OtherFunctionsThemeGroup(
         items = buildList {
             add {
                 SwitchItem(
@@ -224,7 +379,7 @@ fun OtherFunctionsControls(
         },
     )
 
-    StatusThemeGroup(
+    OtherFunctionsThemeGroup(
         items = buildList {
             add {
                 SwitchItem(
@@ -242,7 +397,7 @@ fun OtherFunctionsControls(
         },
     )
 
-    StatusThemeGroup(
+    OtherFunctionsThemeGroup(
         items = buildList {
             add {
                 SwitchItem(

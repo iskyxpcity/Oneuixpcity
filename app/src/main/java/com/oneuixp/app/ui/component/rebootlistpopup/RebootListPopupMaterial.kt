@@ -24,7 +24,7 @@ fun RebootDropdownItems(onItemClick: (String) -> Unit) {
         SelectableDropdownMenuItem(
             selected = false,
             onClick = { onItemClick(option.reason) },
-            text = { Text("  " + if (option.reason == "statusbar_xp_systemui") "重启 SystemUI" else stringResource(option.labelRes)) },
+            text = { Text("  " + stringResource(option.labelRes)) },
             shapes = MenuDefaults.itemShape(index = index, count = options.size),
         )
     }

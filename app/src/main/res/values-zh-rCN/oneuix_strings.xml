@@ -319,4 +319,18 @@
     <string name="oneuix_hidePackageInstallerRecommendation_summary">隐藏受支持的三星或 Android 安装器在安装完成后显示的应用推荐区域。</string>
     <string name="oneuix_softRebootStarted">正在执行 Android Runtime 软重启。</string>
     <string name="oneuix_softRebootFailed">无法启动软重启，请检查 Root 权限。</string>
+    <!-- Other functions: native theme actions and Call Return apply flow -->
+    <string name="oneuix_rebootSystemUI_menu">重启 SystemUI</string>
+    <string name="oneuix_softRebootRuntime_menu">软重启 Android 运行时</string>
+    <string name="oneuix_callReturnStateEnabled">已启用，当前延迟：%1$d 秒</string>
+    <string name="oneuix_callReturnStateDisabled">未启用，将使用系统原版通话返回逻辑。</string>
+    <string name="oneuix_callReturnApplyTitle">是否立即应用通话返回设置？</string>
+    <string name="oneuix_callReturnApplyMessage">设置已保存。立即应用将重启 Samsung InCallUI 通话界面进程，使其重新加载 OneUI XP 的最新配置。</string>
+    <string name="oneuix_callReturnApplyNow">立即应用</string>
+    <string name="oneuix_callReturnApplyLater">稍后</string>
+    <string name="oneuix_callReturnApplyStarted">正在应用通话返回设置…</string>
+    <string name="oneuix_callReturnApplied">已应用，并已重启 Samsung InCallUI。</string>
+    <string name="oneuix_callReturnApplyFailed">无法重启 Samsung InCallUI，请检查 Root 权限。</string>
+    <string name="oneuix_callReturnDelayControlHint">可设置 0–5 秒。修改会立即保存；点击“立即应用”可重启 Samsung InCallUI，让新设置马上生效。</string>
+
 </resources>

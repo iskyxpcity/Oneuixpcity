@@ -419,7 +419,7 @@ data class Preference(
     data class Other(
         val blockGalaxyStoreAds: Boolean = true,
         val callReturnDelayEnabled: Boolean = false,
-        val callReturnDelaySeconds: Int = 2,
+        val callReturnDelaySeconds: Int = 3,
         val settingsTwoPaneEnabled: Boolean = false,
         val allowAppDowngradeEnabled: Boolean = false,
         val disableSecureScreenshotRestrictionEnabled: Boolean = false,

@@ -21,8 +21,8 @@ data class RebootListOption(
 @Composable
 fun getRebootListOption(): List<RebootListOption> =
     listOf(
-        RebootListOption(R.string.reboot_soft, "statusbar_xp_systemui"),
-        RebootListOption(R.string.reboot_soft, "soft_reboot_android_runtime"),
+        RebootListOption(R.string.oneuix_rebootSystemUI_menu, "statusbar_xp_systemui"),
+        RebootListOption(R.string.oneuix_softRebootRuntime_menu, "soft_reboot_android_runtime"),
     )
 
 @Composable
