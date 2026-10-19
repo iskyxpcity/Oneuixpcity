@@ -17,12 +17,12 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.oneuixp.app.R
-import com.oneuixp.app.ui.viewmodel.OneuiXToolsViewModel
-import io.github.soclear.oneuix.common.Preference
-import io.github.soclear.oneuix.ui.category.SystemUIEvent
-import io.github.soclear.oneuix.ui.component.OneuiXInfoItem
-import io.github.soclear.oneuix.ui.component.OneuiXSlider
-import io.github.soclear.oneuix.ui.component.SwitchItem
+import com.oneuixp.app.ui.viewmodel.OneuiXPToolsViewModel
+import com.oneuixp.common.Preference
+import com.oneuixp.mod.ui.category.SystemUIEvent
+import com.oneuixp.mod.ui.component.OneuiXPInfoItem
+import com.oneuixp.mod.ui.component.OneuiXPSlider
+import com.oneuixp.mod.ui.component.SwitchItem
 import kotlin.math.roundToInt
 
 @Composable
@@ -31,7 +31,7 @@ fun StatusBluetoothCategoryControls(
     onEvent: (SystemUIEvent) -> Unit,
 ) {
     val bluetoothIcon = ImageVector.vectorResource(id = R.drawable.bluetooth)
-    val toolsViewModel = viewModel<OneuiXToolsViewModel>()
+    val toolsViewModel = viewModel<OneuiXPToolsViewModel>()
     val runtime = uiState.bluetoothRuntime
 
     var expanded by rememberSaveable { mutableStateOf(runtime.enabled) }
@@ -84,7 +84,7 @@ fun StatusBluetoothCategoryControls(
             {
                 SwitchItem(
                     icon = bluetoothIcon,
-                    title = stringResource(id = R.string.oneuix_restoreBluetoothStatusBarIcon_title),
+                    title = stringResource(id = R.string.oneuixp_restoreBluetoothStatusBarIcon_title),
                     checked = uiState.restoreBluetoothStatusBarIcon,
                     onCheckedChange = {
                         onEvent(SystemUIEvent.StatusBar.RestoreBluetoothStatusBarIcon(it))
@@ -269,13 +269,13 @@ private fun BluetoothSliderSetting(
     onFinished: () -> Unit,
 ) {
     Column {
-        OneuiXInfoItem(
+        OneuiXPInfoItem(
             icon = icon,
             title = title,
             summary = summary,
         )
         StatusThemeChildItem {
-            OneuiXSlider(
+            OneuiXPSlider(
                 value = value,
                 onValueChange = onValueChange,
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),

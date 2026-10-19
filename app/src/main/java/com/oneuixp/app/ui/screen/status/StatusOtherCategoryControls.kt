@@ -28,15 +28,15 @@ import androidx.compose.material3.Text as MaterialText
 import com.oneuixp.app.R
 import com.oneuixp.app.ui.LocalUiMode
 import com.oneuixp.app.ui.UiMode
-import io.github.soclear.oneuix.common.PowerMenuAction
-import io.github.soclear.oneuix.common.Preference
-import io.github.soclear.oneuix.ui.category.SystemUIEvent
-import io.github.soclear.oneuix.ui.component.OneuiXActionButton
-import io.github.soclear.oneuix.ui.component.OneuiXInfoItem
-import io.github.soclear.oneuix.ui.component.OneuiXSlider
-import io.github.soclear.oneuix.ui.component.OneuiXSwitch
-import io.github.soclear.oneuix.ui.component.SwitchItem
-import io.github.soclear.oneuix.common.R as CommonR
+import com.oneuixp.common.PowerMenuAction
+import com.oneuixp.common.Preference
+import com.oneuixp.mod.ui.category.SystemUIEvent
+import com.oneuixp.mod.ui.component.OneuiXPActionButton
+import com.oneuixp.mod.ui.component.OneuiXPInfoItem
+import com.oneuixp.mod.ui.component.OneuiXPSlider
+import com.oneuixp.mod.ui.component.OneuiXPSwitch
+import com.oneuixp.mod.ui.component.SwitchItem
+import com.oneuixp.common.R as CommonR
 import kotlin.math.roundToInt
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -66,7 +66,7 @@ fun StatusOtherCategoryControls(
             add {
                 SwitchItem(
                     icon = ImageVector.vectorResource(id = R.drawable.power_settings_new),
-                    title = stringResource(id = R.string.oneuix_customPowerMenu_title),
+                    title = stringResource(id = R.string.oneuixp_customPowerMenu_title),
                     clickable = true,
                     onClick = { powerMenuExpanded = !powerMenuExpanded },
                     checked = uiState.customPowerMenu,
@@ -85,20 +85,20 @@ fun StatusOtherCategoryControls(
                             .take(index + 1)
                             .count { it.visible }
 
-                        OneuiXInfoItem(
+                        OneuiXPInfoItem(
                             title = stringResource(id = powerMenuActionTitle(action.name)),
                             summary = if (action.visible) {
                                 stringResource(
-                                    id = R.string.oneuix_powerMenuActionVisible_summary,
+                                    id = R.string.oneuixp_powerMenuActionVisible_summary,
                                     visiblePosition,
                                 )
                             } else {
-                                stringResource(id = R.string.oneuix_powerMenuActionHidden_summary)
+                                stringResource(id = R.string.oneuixp_powerMenuActionHidden_summary)
                             },
                             trailingContent = {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
-                                    OneuiXActionButton(
-                                        text = stringResource(id = R.string.oneuix_moveUp),
+                                    OneuiXPActionButton(
+                                        text = stringResource(id = R.string.oneuixp_moveUp),
                                         enabled = index > 0,
                                         onClick = {
                                             onEvent(
@@ -109,8 +109,8 @@ fun StatusOtherCategoryControls(
                                         },
                                     )
                                     Spacer(modifier = androidx.compose.ui.Modifier.width(8.dp))
-                                    OneuiXActionButton(
-                                        text = stringResource(id = R.string.oneuix_moveDown),
+                                    OneuiXPActionButton(
+                                        text = stringResource(id = R.string.oneuixp_moveDown),
                                         enabled = index < actions.lastIndex,
                                         onClick = {
                                             onEvent(
@@ -121,7 +121,7 @@ fun StatusOtherCategoryControls(
                                         },
                                     )
                                     Spacer(modifier = androidx.compose.ui.Modifier.width(8.dp))
-                                    OneuiXSwitch(
+                                    OneuiXPSwitch(
                                         checked = action.visible,
                                         onCheckedChange = { visible ->
                                             onEvent(
@@ -148,7 +148,7 @@ fun StatusOtherCategoryControls(
                 SwitchItem(
                     icon = ImageVector.vectorResource(id = R.drawable.screenshot),
                     title = stringResource(
-                        id = R.string.oneuix_disableScreenshotCaptureSound_title
+                        id = R.string.oneuixp_disableScreenshotCaptureSound_title
                     ),
                     checked = uiState.disableScreenshotCaptureSound,
                     onCheckedChange = {
@@ -180,8 +180,8 @@ private fun StatusBurnInProtectionControls(
             add {
                 SwitchItem(
                     icon = ImageVector.vectorResource(id = R.drawable.mobile_screensaver),
-                    title = stringResource(id = R.string.oneuix_statusBarBurnInProtection_title),
-                    summary = stringResource(id = R.string.oneuix_statusBarBurnInProtection_summary),
+                    title = stringResource(id = R.string.oneuixp_statusBarBurnInProtection_title),
+                    summary = stringResource(id = R.string.oneuixp_statusBarBurnInProtection_summary),
                     modifier = Modifier.animateContentSize(),
                     clickable = true,
                     onClick = { expanded = !expanded },
@@ -196,10 +196,10 @@ private fun StatusBurnInProtectionControls(
             if (enabled && expanded) {
                 add {
                     BurnInSliderSetting(
-                        title = stringResource(id = R.string.oneuix_statusBarBurnInProtectionAmplitude_title),
-                        summary = stringResource(id = R.string.oneuix_statusBarBurnInProtectionAmplitude_summary) +
+                        title = stringResource(id = R.string.oneuixp_statusBarBurnInProtectionAmplitude_title),
+                        summary = stringResource(id = R.string.oneuixp_statusBarBurnInProtectionAmplitude_summary) +
                             "\n" + stringResource(
-                                id = R.string.oneuix_statusBarBurnInProtectionAmplitude_value,
+                                id = R.string.oneuixp_statusBarBurnInProtectionAmplitude_value,
                                 amplitude,
                             ),
                         value = amplitude,
@@ -220,10 +220,10 @@ private fun StatusBurnInProtectionControls(
                 }
                 add {
                     BurnInSliderSetting(
-                        title = stringResource(id = R.string.oneuix_statusBarBurnInProtectionPeriod_title),
-                        summary = stringResource(id = R.string.oneuix_statusBarBurnInProtectionPeriod_summary) +
+                        title = stringResource(id = R.string.oneuixp_statusBarBurnInProtectionPeriod_title),
+                        summary = stringResource(id = R.string.oneuixp_statusBarBurnInProtectionPeriod_summary) +
                             "\n" + stringResource(
-                                id = R.string.oneuix_statusBarBurnInProtectionPeriod_value,
+                                id = R.string.oneuixp_statusBarBurnInProtectionPeriod_value,
                                 period.roundToInt(),
                             ),
                         value = period,
@@ -264,7 +264,7 @@ private fun BurnInSliderSetting(
     onValueChangeFinished: () -> Unit,
 ) {
     // Keep the title, explanation and slider inside one native grouped row.
-    // Previously OneuiXInfoItem and StatusThemeChildItem each drew their own
+    // Previously OneuiXPInfoItem and StatusThemeChildItem each drew their own
     // Material segmented surface, visually splitting the same setting.
     StatusThemeChildItem {
         Column(
@@ -305,7 +305,7 @@ private fun BurnInSliderSetting(
                 }
             }
             Spacer(modifier = Modifier.height(8.dp))
-            OneuiXSlider(
+            OneuiXPSlider(
                 value = value,
                 onValueChange = onValueChange,
                 modifier = Modifier.fillMaxWidth(),
@@ -326,17 +326,17 @@ private fun List<PowerMenuAction>.move(
 
 @StringRes
 private fun powerMenuActionTitle(actionName: String): Int = when (actionName) {
-    PowerMenuAction.POWER -> R.string.oneuix_powerMenuAction_power
-    PowerMenuAction.DATA_MODE -> R.string.oneuix_powerMenuAction_dataMode
-    PowerMenuAction.RESTART -> R.string.oneuix_powerMenuAction_restart
-    PowerMenuAction.SAFE_MODE -> R.string.oneuix_powerMenuAction_safeMode
-    PowerMenuAction.LOCK_DOWN_MODE -> R.string.oneuix_powerMenuAction_lockDownMode
-    PowerMenuAction.EMERGENCY_CALL -> R.string.oneuix_powerMenuAction_emergencyCall
-    PowerMenuAction.MEDICAL_INFO -> R.string.oneuix_powerMenuAction_medicalInfo
-    PowerMenuAction.SIDE_KEY_SETTINGS -> R.string.oneuix_sideKeySettings
-    PowerMenuAction.FORCE_RESTART_MESSAGE -> R.string.oneuix_powerMenuAction_forceRestartMessage
+    PowerMenuAction.POWER -> R.string.oneuixp_powerMenuAction_power
+    PowerMenuAction.DATA_MODE -> R.string.oneuixp_powerMenuAction_dataMode
+    PowerMenuAction.RESTART -> R.string.oneuixp_powerMenuAction_restart
+    PowerMenuAction.SAFE_MODE -> R.string.oneuixp_powerMenuAction_safeMode
+    PowerMenuAction.LOCK_DOWN_MODE -> R.string.oneuixp_powerMenuAction_lockDownMode
+    PowerMenuAction.EMERGENCY_CALL -> R.string.oneuixp_powerMenuAction_emergencyCall
+    PowerMenuAction.MEDICAL_INFO -> R.string.oneuixp_powerMenuAction_medicalInfo
+    PowerMenuAction.SIDE_KEY_SETTINGS -> R.string.oneuixp_sideKeySettings
+    PowerMenuAction.FORCE_RESTART_MESSAGE -> R.string.oneuixp_powerMenuAction_forceRestartMessage
     PowerMenuAction.RESTART_SYSTEMUI -> CommonR.string.restartSystemUI
     PowerMenuAction.RESTART_RECOVERY -> CommonR.string.restartRecovery
     PowerMenuAction.RESTART_DOWNLOAD -> CommonR.string.restartDownload
-    else -> R.string.oneuix_other
+    else -> R.string.oneuixp_other
 }
