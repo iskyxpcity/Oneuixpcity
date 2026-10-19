@@ -100,7 +100,7 @@ def tracked_paths() -> list[Path]:
 
 def main() -> int:
     tracked = tracked_paths()
-    protected = {SELF.as_posix(), WORKFLOW.as_posix()}
+    protected = {SELF.as_posix(), WORKFLOW.as_posix(), ".github/workflows/build.yml"}
     plans = []
     for src in tracked:
         rel = src.as_posix()
