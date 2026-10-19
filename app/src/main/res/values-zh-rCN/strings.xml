@@ -140,6 +140,17 @@
     <string name="disclaimer_style_body">本应用部分界面采用了 KernelSU 的界面风格。</string>
     <string name="disclaimer_risk_title">玩机风险提示</string>
     <string name="disclaimer_risk_body">玩机有风险。本模块应用可能导致系统异常、数据丢失、无法开机甚至设备损坏。使用本模块所产生的一切风险与损失由用户自行承担。</string>
+
+    <string name="feature_intro_version_updates_2610191">OneUI XP 1.0.261019.1 主要更新</string>
+    <string name="feature_intro_version_updates_2610191_summary">2026-10-19</string>
+    <string name="version_1_0_261019_1_title">OneUI XP 1.0.261019.1 主要更新</string>
+    <string name="version_1_0_261019_1_summary">2026-10-19</string>
+    <string name="changelog_2610191_features_title">新增功能</string>
+    <string name="changelog_2610191_features_body">新增自定义关机菜单、禁用截图声音、通话返回延时（0–5 秒）、系统设置双栏布局、允许低版本应用安装、解除安全窗口截图限制、关闭安装后应用推荐，以及 SystemUI / Android Runtime 软重启选项。</string>
+    <string name="changelog_2610191_improvements_title">优化改进</string>
+    <string name="changelog_2610191_improvements_body">优化状态栏组合图标布局及原生图标间距；改进原生信号图标显示与恢复逻辑；优化图标缩放设置保存与迁移，并改善 Material、Miuix 主题及宽屏适配。</string>
+    <string name="changelog_2610191_fixes_title">问题修复</string>
+    <string name="changelog_2610191_fixes_body">修复部分设置迁移后图标缩放比例异常、隐藏原生图标后残留空白等问题，并优化系统功能配置读取与兼容性。</string>
     <string name="feature_intro_version_updates">OneUI XP 1.0.260930 主要更新</string>
     <string name="feature_intro_version_updates_summary">2026-09-30</string>
     <string name="feature_intro_version_updates_261013">OneUI XP 1.0.261013 主要更新</string>
