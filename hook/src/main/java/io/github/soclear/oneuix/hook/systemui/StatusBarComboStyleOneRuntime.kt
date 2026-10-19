@@ -2631,7 +2631,12 @@ object StatusBarComboStyleOneRuntime {
                     nativeWifiClusterBaselineMinimumWidth[cluster]
                         ?: cluster.minimumWidth.also { nativeWifiClusterBaselineMinimumWidth[cluster] = it }
                 }
-                val hasVisibleNativeIcon = hasVisibleNativeClusterIconFootprint(cluster)
+                // In outside + stacking OFF (and when mobile display is disabled), the native
+                // cellular slot remains SystemUI-owned. Do not treat a transient zero-sized
+                // bind/restore frame as an empty cluster and strip its baseline spacing.
+                val nativeMobileSlotExpected = config.enabled && !isMobileNativeSuppressed()
+                val hasVisibleNativeIcon =
+                    nativeMobileSlotExpected || hasVisibleNativeClusterIconFootprint(cluster)
                 val zeroFootprintVisibleChildren = (0 until cluster.childCount).mapNotNull { index ->
                     val child = cluster.getChildAt(index)
                     if (child.visibility == View.VISIBLE && child.alpha > 0f &&
@@ -2665,8 +2670,11 @@ object StatusBarComboStyleOneRuntime {
                 }
                 val lp = cluster.layoutParams
                 val row = cluster.parent as? View
-                val stage = if (hasVisibleNativeIcon) "native-icon-present-restore-baseline"
-                    else "empty-native-signal-cluster-release-width"
+                val stage = when {
+                    nativeMobileSlotExpected -> "native-mobile-slot-expected-restore-baseline"
+                    hasVisibleNativeIcon -> "native-icon-present-restore-baseline"
+                    else -> "empty-native-signal-cluster-release-width"
+                }
                 val snapshot = "stage=" + stage + "|visibility=" + cluster.visibility +
                     "|size=" + cluster.width + "x" + cluster.height +
                     "|measured=" + cluster.measuredWidth + "x" + cluster.measuredHeight +
@@ -2864,7 +2872,7 @@ object StatusBarComboStyleOneRuntime {
     private fun restoreHostView(
         host: Host,
         view: View,
-        preserveCurrentAlpha: Boolean = false,
+        preserveCurrentAlpha: Boolean = !isMobileNativeSuppressed() && isMobileIcon(view),
     ) {
         host.layouts.remove(view)?.let { snapshot ->
             // The independent SIM renderer can restore this view before Style One
@@ -5086,6 +5094,11 @@ object StatusBarComboStyleOneRuntime {
 
     private fun clampEmptyNativeClusterMeasuredWidth(cluster: ViewGroup) {
         if (!config.enabled || !(config.showWifi || isMobileNativeSuppressed())) return
+        // This view owns the native signal whenever the current mode does not suppress it.
+        // A transiently zero-sized child must not cause the whole status-icon cluster to be
+        // measured as zero; that prevents the native signal from returning until another icon
+        // happens to expand the cluster.
+        val nativeMobileSlotExpected = !isMobileNativeSuppressed()
         // Keep the hot onMeasure hook dormant for unrelated clusters until our established
         // Wi-Fi reconciliation path has armed this exact status-icon container.
         val reconciliationArmed = synchronized(nativeWifiClusterLayoutListeners) {
@@ -5094,11 +5107,16 @@ object StatusBarComboStyleOneRuntime {
         if (!reconciliationArmed) return
         val before = cluster.measuredWidth
         if (before <= 0) return
-        if (hostFor(cluster) == null || hasVisibleNativeClusterIconFootprint(cluster)) {
+        if (hostFor(cluster) == null || nativeMobileSlotExpected ||
+            hasVisibleNativeClusterIconFootprint(cluster)
+        ) {
             val previous = lastNativeClusterMeasuredWidthDiagnostics[cluster]
             if (previous == "clamped-to-zero") {
                 lastNativeClusterMeasuredWidthDiagnostics[cluster] = "native-icon-present"
-                diagnostic("Native status-icon cluster width restored: visible native icon footprint present")
+                diagnostic(
+                    "Native status-icon cluster width restored: native mobile slot expected or " +
+                        "visible native icon footprint present"
+                )
             }
             return
         }

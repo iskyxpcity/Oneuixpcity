@@ -35,6 +35,14 @@ checks = {
      and 'snapshot.copy(alpha = view.alpha)' in combo_runtime_source
      and 'preserveCurrentAlpha = !foldMobile && isMobileIcon(view)' in combo_runtime_source
  ),
+ 'Native mobile slot prevents empty status-icon cluster width clamping': (
+     'nativeMobileSlotExpected || hasVisibleNativeClusterIconFootprint(cluster)' in combo_runtime_source
+     and 'hostFor(cluster) == null || nativeMobileSlotExpected ||' in combo_runtime_source
+     and 'val nativeMobileSlotExpected = !isMobileNativeSuppressed()' in combo_runtime_source
+ ),
+ 'Container relayout returns native mobile ownership when unsuppressed': (
+     'preserveCurrentAlpha: Boolean = !isMobileNativeSuppressed() && isMobileIcon(view)' in combo_runtime_source
+ )
 }
 for name, ok in checks.items(): print(('PASS' if ok else 'FAIL') + ': ' + name)
 if not all(checks.values()):
