@@ -74,10 +74,13 @@ checks = {
      and 'nativeWifiClusterBaselineParentLayoutParams' in combo_runtime_source
      and 'baselineParentLayoutParams != null' in combo_runtime_source
  ),
- 'Status icon row spacing follows the show-Wi-Fi-arc setting': (
-     'fun isNativeWifiSuppressed(): Boolean = config.enabled && config.showWifi' in combo_runtime_source
-     and 'val nativeWifiSuppressed = isNativeWifiSuppressed()' in combo_runtime_source
-     and 'if (nativeWifiSuppressed) {\\n                    compactNativeStatusIconParentSlot(cluster)' in combo_runtime_source
+ 'Status icon row spacing requires arc toggle and connected Wi-Fi': (
+     'fun isNativeWifiSuppressed(context: Context): Boolean {' in combo_runtime_source
+     and 'if (!config.enabled || !config.showWifi) return false' in combo_runtime_source
+     and 'return isWifiTransportConnected(context) == true' in combo_runtime_source
+     and 'val nativeWifiSuppressed = isNativeWifiSuppressed(cluster.context)' in combo_runtime_source
+     and 'if (nativeWifiSuppressed) {' in combo_runtime_source
+     and 'compactNativeStatusIconParentSlot(cluster)' in combo_runtime_source
      and 'restoreNativeStatusIconParentSlot(cluster)' in combo_runtime_source
      and 'val targetLeft = if (nativeWifiSuppressed && !hasVisibleNativeIcon) 0 else baselinePadding[0]' in combo_runtime_source
      and 'val targetRight = if (nativeWifiSuppressed) 0 else baselinePadding[2]' in combo_runtime_source
