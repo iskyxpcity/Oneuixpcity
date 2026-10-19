@@ -185,8 +185,8 @@ object StatusBarComboStyleOneRuntime {
     private val lastNativeIconWrapperDiagnostics = Collections.synchronizedMap(WeakHashMap<View, String>())
     // AOSP/Samsung can keep a measured width after native Wi-Fi is collapsed.
     private val nativeWifiClusterBaselineVisibility = Collections.synchronizedMap(WeakHashMap<ViewGroup, Int>())
-    // Only remove horizontal padding while the Wi-Fi-replaced cluster has no visible native
-    // status icons. Keep the cluster visible and restore its exact padding as soon as an icon returns.
+    // Keep the leading inset for unrelated native icons, but trim the trailing inset next to the
+    // replacement glyph. Original padding is restored when Style One releases the status-bar row.
     private val nativeWifiClusterBaselinePadding =
         Collections.synchronizedMap(WeakHashMap<ViewGroup, IntArray>())
     // Some Samsung builds measure StatusIconContainer wider than its width=0 LayoutParams.
@@ -2759,9 +2759,10 @@ object StatusBarComboStyleOneRuntime {
      * empty-cluster collapse heuristic misclassified these children on Samsung and hid them all.
      */
     /**
-     * Release the empty native signal cluster's horizontal padding/minimum width after
-     * replacing native signals with the trio. Restore the exact baseline when any native
-     * icon has a real visible footprint; never hide the shared container itself.
+     * Remove only trailing empty width from the shared native icon row while the combo glyph
+     * occupies the battery slot. Keep the leading inset for native icons that remain visible,
+     * but do not preserve minimumWidth or trailing padding that separates the last icon from
+     * the replacement glyph. Never hide the shared container or its valid children.
      */
     /**
      * Samsung places StatusIconContainer in system_icons as a zero-width weighted child.
@@ -2855,9 +2856,12 @@ object StatusBarComboStyleOneRuntime {
                             "${child.measuredWidth}x${child.measuredHeight}"
                     } else null
                 }.take(8).joinToString(",")
+                // The combo glyph follows this container in the same trailing status-bar row.
+                // Keep native icons and their leading inset, while releasing trailing padding and
+                // minimum-width residue that adds empty space immediately before the glyph.
                 val targetLeft = if (hasVisibleNativeIcon) baselinePadding[0] else 0
-                val targetRight = if (hasVisibleNativeIcon) baselinePadding[2] else 0
-                val targetMinimumWidth = if (hasVisibleNativeIcon) baselineMinimumWidth else 0
+                val targetRight = 0
+                val targetMinimumWidth = 0
                 val paddingChanged = cluster.paddingLeft != targetLeft ||
                     cluster.paddingRight != targetRight ||
                     cluster.paddingTop != baselinePadding[1] ||
@@ -2876,8 +2880,8 @@ object StatusBarComboStyleOneRuntime {
                 val lp = cluster.layoutParams
                 val row = cluster.parent as? View
                 val stage = when {
-                    nativeMobileSlotExpected -> "native-mobile-slot-expected-restore-baseline"
-                    hasVisibleNativeIcon -> "native-icon-present-restore-baseline"
+                    nativeMobileSlotExpected -> "native-mobile-slot-expected-trim-trailing-space"
+                    hasVisibleNativeIcon -> "native-icon-present-trim-trailing-space"
                     else -> "empty-native-signal-cluster-release-width"
                 }
                 val snapshot = "stage=" + stage + "|visibility=" + cluster.visibility +
@@ -2886,6 +2890,7 @@ object StatusBarComboStyleOneRuntime {
                     "|padding=${cluster.paddingLeft},${cluster.paddingTop},${cluster.paddingRight},${cluster.paddingBottom}" +
                     "|baselinePadding=${baselinePadding.contentToString()}|paddingChanged=${paddingChanged}" +
                     "|minimumWidth=${cluster.minimumWidth}|baselineMinimumWidth=${baselineMinimumWidth}" +
+                    "|targetMinimumWidth=${targetMinimumWidth}|targetRightPadding=${targetRight}" +
                     "|minimumWidthChanged=${minimumWidthChanged}|zeroFootprintVisible=$zeroFootprintVisibleChildren" +
                     "|lp=" + lp?.width + "x" + lp?.height +
                     "|lpClass=" + lp?.javaClass?.simpleName +
