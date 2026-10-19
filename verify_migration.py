@@ -74,15 +74,15 @@ checks = {
      and 'nativeWifiClusterBaselineParentLayoutParams' in combo_runtime_source
      and 'baselineParentLayoutParams != null' in combo_runtime_source
  ),
- 'Status icon row removes stale horizontal spacing when Wi-Fi is disconnected': (
-     'val wifiConnected = isWifiTransportConnected(cluster.context)' in combo_runtime_source
-     and 'val wifiDisconnected = wifiConnected == false' in combo_runtime_source
-     and 'val targetLeft = if (!wifiDisconnected && hasVisibleNativeIcon) baselinePadding[0] else 0' in combo_runtime_source
-     and 'val targetRight = 0' in combo_runtime_source
-     and 'val targetMinimumWidth = 0' in combo_runtime_source
-     and 'compactNativeStatusIconParentSlot(cluster)' in combo_runtime_source
+ 'Status icon row spacing follows the show-Wi-Fi-arc setting': (
+     'fun isNativeWifiSuppressed(): Boolean = config.enabled && config.showWifi' in combo_runtime_source
+     and 'val nativeWifiSuppressed = isNativeWifiSuppressed()' in combo_runtime_source
+     and 'if (nativeWifiSuppressed) {\\n                    compactNativeStatusIconParentSlot(cluster)' in combo_runtime_source
+     and 'restoreNativeStatusIconParentSlot(cluster)' in combo_runtime_source
+     and 'val targetLeft = if (nativeWifiSuppressed && !hasVisibleNativeIcon) 0 else baselinePadding[0]' in combo_runtime_source
+     and 'val targetRight = if (nativeWifiSuppressed) 0 else baselinePadding[2]' in combo_runtime_source
+     and 'val targetMinimumWidth = if (nativeWifiSuppressed) 0 else baselineMinimumWidth' in combo_runtime_source
      and 'scheduleKnownNativeWifiClusterReconciliations()' in combo_runtime_source
-     and 'wifi-disconnected-trim-native-spacing' in combo_runtime_source
  ),
  'Network speed leaves native horizontal margins to Samsung SystemUI': (
      'NETWORK_SPEED_TRAILING_GAP_DP' not in network_speed_runtime_source
