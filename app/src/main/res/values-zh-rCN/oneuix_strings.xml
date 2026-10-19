@@ -4,6 +4,7 @@
     <string name="oneuix_module_disabled_tip">请在 LSPosed 中启用本模块</string>
     <string name="oneuix_confirm">确认</string>
     <string name="oneuix_other">其他</string>
+    <string name="oneuix_other_functions_title">其他功能</string>
     <string name="oneuix_notification">通知</string>
     <string name="oneuix_status_bar">状态栏</string>
     <string name="oneuix_qs">快捷设置</string>
