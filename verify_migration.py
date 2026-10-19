@@ -5,6 +5,8 @@ import sys
 root = Path(__file__).resolve().parent
 migration_source = (root/'common/src/main/java/io/github/soclear/oneuix/common/ProductionPreferenceMigration.kt').read_text()
 preference_source = (root/'common/src/main/java/io/github/soclear/oneuix/common/Preference.kt').read_text()
+combo_runtime_source = (root/'hook/src/main/java/io/github/soclear/oneuix/hook/systemui/StatusBarComboStyleOneRuntime.kt').read_text()
+independent_signal_runtime_source = (root/'hook/src/main/java/io/github/soclear/oneuix/hook/systemui/StatusBarSignalIndependentRuntime.kt').read_text()
 legacy_combo_markers = (
     'glyphScaleDefaultMigrationDone', 'glyphScaleDefault100MigrationDone',
     'glyphLeftMarginOneDpMigrationDone', 'glyphLeftMarginZeroDpMigrationDone',
@@ -23,6 +25,11 @@ checks = {
  'Flux-style no heartbeat bridge': not (root/'app/src/main/java/com/oneuixp/app/statusbar/StatusBridge.java').exists() and '${applicationId}.statusbridge' not in (root/'app/src/main/AndroidManifest.xml').read_text() and 'startHeartbeat(' not in (root/'hook/src/main/java/io/github/soclear/oneuix/hook/util/OneuiXPStatusReporter.kt').read_text(),
  'OneuiXP application ID': 'com.oneuixp.app' in (root/'app/build.gradle.kts').read_text(),
  'Composite glyph is isolated from legacy preference migration': 'comboStyleOneRuntime' not in migration_source and not any(marker in migration_source or marker in preference_source for marker in legacy_combo_markers),
+ 'Native mobile signal is restored when outside stacking is off': (
+     'config.signalMode == 0 || (config.signalMode == 1 && config.stackedSignal)' in combo_runtime_source
+     and 'if (!foldMobile) StatusBarSignalIndependentRuntime.restoreNativeSignalViewsForCombo(root)' in combo_runtime_source
+     and 'internal fun restoreNativeSignalViewsForCombo(statusBarRoot: ViewGroup)' in independent_signal_runtime_source
+ ),
 }
 for name, ok in checks.items(): print(('PASS' if ok else 'FAIL') + ': ' + name)
 if not all(checks.values()):

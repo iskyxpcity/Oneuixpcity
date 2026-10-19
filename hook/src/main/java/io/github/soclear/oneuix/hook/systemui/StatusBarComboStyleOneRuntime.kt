@@ -1952,6 +1952,12 @@ object StatusBarComboStyleOneRuntime {
                 collapseHostView(host, battery)
                 insertInline(host, battery)
             }
+            // The independent SIM-signal runtime may have hidden the native view before
+            // Combo took ownership, leaving alpha=0 in Combo's own layout snapshot. When
+            // Combo releases native mobile ownership (outside + stacking off, or mobile off),
+            // hand back its original native state after our layout pass to avoid restoring
+            // that stale transparent snapshot as the final state.
+            if (!foldMobile) StatusBarSignalIndependentRuntime.restoreNativeSignalViewsForCombo(root)
         } catch (t: Throwable) {
             Log.w(TAG, "Cannot apply Style One", t)
         } finally {

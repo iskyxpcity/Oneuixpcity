@@ -734,6 +734,14 @@ internal object StatusBarSignalIndependentRuntime {
         wifiViews.forEach { restoreHiddenNativeView(holder, it) }
     }
 
+    /** Restore native SIM icons after Combo has finished a pass that releases them. */
+    internal fun restoreNativeSignalViewsForCombo(statusBarRoot: ViewGroup) {
+        val matching = synchronized(holders) {
+            holders.values.filter { it.statusBarView === statusBarRoot }
+        }
+        matching.forEach(::restoreNativeSignalViews)
+    }
+
     private fun restoreNativeSignalViews(holder: Holder) {
         holder.hiddenNative.forEach { (view, state) ->
             if (view.parent != null) {
