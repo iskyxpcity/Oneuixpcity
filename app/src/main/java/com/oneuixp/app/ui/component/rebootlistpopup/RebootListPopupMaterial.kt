@@ -3,7 +3,7 @@ package com.oneuixp.app.ui.component.rebootlistpopup
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PowerSettingsNew
 import androidx.compose.material3.DropdownMenuGroup
-import androidx.compose.material3.SelectableDropdownMenuItem
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.DropdownMenuPopup
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -21,8 +21,7 @@ import com.oneuixp.app.R
 fun RebootDropdownItems(onItemClick: (String) -> Unit) {
     val options = getRebootListOption()
     options.forEachIndexed { index, option ->
-        SelectableDropdownMenuItem(
-            selected = false,
+        DropdownMenuItem(
             onClick = { onItemClick(option.reason) },
             text = { Text("  " + stringResource(option.labelRes)) },
             shapes = MenuDefaults.itemShape(index = index, count = options.size),

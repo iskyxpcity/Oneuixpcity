@@ -24,11 +24,16 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalContext
 import android.widget.Toast
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material3.Icon as MaterialIcon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text as MaterialText
 import com.oneuixp.app.oneuiXPApp
 import com.oneuixp.app.oneuix.OneuiXPreferenceBridge
 import com.oneuixp.app.ui.LocalUiMode
+import com.oneuixp.app.ui.navigation3.LocalNavigator
+import com.oneuixp.app.ui.navigation3.Route
 import com.oneuixp.app.ui.UiMode
 import com.oneuixp.app.ui.component.dialog.rememberConfirmDialog
 import io.github.soclear.oneuix.ui.component.OneuiXSlider
@@ -45,6 +50,12 @@ import io.github.soclear.oneuix.ui.category.SystemUIEvent
 import io.github.soclear.oneuix.ui.component.OneuiXActionButton
 import io.github.soclear.oneuix.ui.component.OneuiXInfoItem
 import io.github.soclear.oneuix.ui.component.OneuiXSwitch
+import io.github.soclear.oneuix.ui.component.material.SegmentedListItem
+import io.github.soclear.oneuix.ui.component.material.oneuiXSegmentedColors
+import top.yukonga.miuix.kmp.basic.BasicComponent
+import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
+import top.yukonga.miuix.kmp.icon.MiuixIcons
+import top.yukonga.miuix.kmp.icon.basic.ArrowRight
 import io.github.soclear.oneuix.ui.component.SwitchItem
 import io.github.soclear.oneuix.common.R as CommonR
 
@@ -59,59 +70,15 @@ fun OtherFunctionsControls(
     onEvent: (SystemUIEvent) -> Unit,
     onOtherChange: ((Preference.Other) -> Preference.Other) -> Unit,
 ) {
-    val context = LocalContext.current
-    val scope = rememberCoroutineScope()
-    val applyCallReturnDialog = rememberConfirmDialog(
-        onConfirm = {
-            scope.launch {
-                Toast.makeText(
-                    context,
-                    context.getString(R.string.oneuix_callReturnApplyStarted),
-                    Toast.LENGTH_SHORT,
-                ).show()
-                val synchronized = OneuiXPreferenceBridge.synchronizeNow(oneuiXPApp)
-                if (!synchronized) {
-                    Toast.makeText(
-                        context,
-                        context.getString(R.string.oneuix_preferenceSync_failed),
-                        Toast.LENGTH_LONG,
-                    ).show()
-                    return@launch
-                }
-                val restarted = withContext(Dispatchers.IO) {
-                    runCatching {
-                        val process = ProcessBuilder(
-                            "su",
-                            "-c",
-                            "am force-stop com.samsung.android.incallui",
-                        ).redirectErrorStream(true).start()
-                        process.inputStream.use { it.readBytes() }
-                        process.waitFor() == 0
-                    }.getOrDefault(false)
-                }
-                Toast.makeText(
-                    context,
-                    context.getString(
-                        if (restarted) R.string.oneuix_callReturnApplied
-                        else R.string.oneuix_callReturnApplyFailed
-                    ),
-                    Toast.LENGTH_LONG,
-                ).show()
-            }
-        },
-    )
-    val callReturnApplyTitle = stringResource(R.string.oneuix_callReturnApplyTitle)
-    val callReturnApplyMessage = stringResource(R.string.oneuix_callReturnApplyMessage)
-    val callReturnApplyNow = stringResource(R.string.oneuix_callReturnApplyNow)
-    val callReturnApplyLater = stringResource(R.string.oneuix_callReturnApplyLater)
-    val askApplyCallReturnNow = {
-        applyCallReturnDialog.showConfirm(
-            title = callReturnApplyTitle,
-            content = callReturnApplyMessage,
-            confirm = callReturnApplyNow,
-            dismiss = callReturnApplyLater,
-        )
+    val navigator = LocalNavigator.current
+    val persistedCallReturnDelay = otherState.callReturnDelaySeconds.coerceIn(0, 5)
+    val callReturnDelayStatus = if (otherState.callReturnDelayEnabled) {
+        stringResource(R.string.oneuix_callReturnStateEnabled, persistedCallReturnDelay)
+    } else {
+        stringResource(R.string.oneuix_callReturnStateDisabled)
     }
+    val callReturnDelaySummary = stringResource(R.string.oneuix_callReturnDelay_summary) +
+        "\n" + callReturnDelayStatus
 
     var powerMenuExpanded by rememberSaveable { mutableStateOf(false) }
 
@@ -211,137 +178,52 @@ fun OtherFunctionsControls(
         },
     )
 
-    // This setting is a single native Material segmented group / Miuix Card.
-    val persistedCallReturnDelay = otherState.callReturnDelaySeconds.coerceIn(0, 5)
-    var callReturnDelaySeconds by remember(persistedCallReturnDelay) {
-        mutableFloatStateOf(persistedCallReturnDelay.toFloat())
-    }
-    val callReturnDelayStatus = if (otherState.callReturnDelayEnabled) {
-        stringResource(
-            id = R.string.oneuix_callReturnStateEnabled,
-            callReturnDelaySeconds.roundToInt().coerceIn(0, 5),
-        )
-    } else {
-        stringResource(id = R.string.oneuix_callReturnStateDisabled)
-    }
-
+    // Source-compatible entry row: control lives on a dedicated page.
     OtherFunctionsThemeGroup(
         items = buildList {
             add {
-                SwitchItem(
-                    icon = ImageVector.vectorResource(id = R.drawable.phone_forwarded),
-                    title = stringResource(id = R.string.oneuix_callReturnDelay_title),
-                    summary = stringResource(id = R.string.oneuix_callReturnDelay_summary),
-                    checked = otherState.callReturnDelayEnabled,
-                    onCheckedChange = { checked ->
-                        onOtherChange { current -> current.copy(callReturnDelayEnabled = checked) }
-                        askApplyCallReturnNow()
-                    },
-                )
-            }
-            add {
-                OtherFunctionsThemeChildItem {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 12.dp),
-                    ) {
-                        when (LocalUiMode.current) {
-                            UiMode.Material -> MaterialText(
-                                text = callReturnDelayStatus,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurface,
+                when (LocalUiMode.current) {
+                    UiMode.Material -> SegmentedListItem(
+                        onClick = { navigator.push(Route.CallReturnDelay) },
+                        colors = oneuiXSegmentedColors(),
+                        headlineContent = {
+                            MaterialText(text = stringResource(R.string.oneuix_callReturnDelay_title))
+                        },
+                        supportingContent = {
+                            MaterialText(text = callReturnDelaySummary)
+                        },
+                        leadingContent = {
+                            MaterialIcon(
+                                imageVector = ImageVector.vectorResource(id = R.drawable.phone_forwarded),
+                                contentDescription = stringResource(R.string.oneuix_callReturnDelay_title),
                             )
-                            UiMode.Miuix -> MiuixText(
-                                text = callReturnDelayStatus,
-                                color = colorScheme.onBackground,
+                        },
+                        trailingContent = {
+                            MaterialIcon(
+                                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                contentDescription = null,
                             )
-                        }
-                        Spacer(Modifier.height(12.dp))
-                        when (LocalUiMode.current) {
-                            UiMode.Material -> MaterialText(
-                                text = stringResource(R.string.oneuix_callReturnDelaySeconds_title),
-                                style = MaterialTheme.typography.titleSmall,
-                                color = MaterialTheme.colorScheme.onSurface,
+                        },
+                    )
+                    UiMode.Miuix -> BasicComponent(
+                        title = stringResource(R.string.oneuix_callReturnDelay_title),
+                        summary = callReturnDelaySummary,
+                        startAction = {
+                            MiuixIcon(
+                                imageVector = ImageVector.vectorResource(id = R.drawable.phone_forwarded),
+                                contentDescription = stringResource(R.string.oneuix_callReturnDelay_title),
+                                tint = colorScheme.onSurface,
                             )
-                            UiMode.Miuix -> MiuixText(
-                                text = stringResource(R.string.oneuix_callReturnDelaySeconds_title),
-                                color = colorScheme.onBackground,
+                        },
+                        endActions = {
+                            MiuixIcon(
+                                imageVector = MiuixIcons.Basic.ArrowRight,
+                                contentDescription = null,
+                                tint = colorScheme.onSurfaceVariantActions,
                             )
-                        }
-                        Spacer(Modifier.height(4.dp))
-                        when (LocalUiMode.current) {
-                            UiMode.Material -> MaterialText(
-                                text = stringResource(
-                                    R.string.oneuix_callReturnDelaySeconds_summary,
-                                    callReturnDelaySeconds.roundToInt().coerceIn(0, 5),
-                                ),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.outline,
-                            )
-                            UiMode.Miuix -> MiuixText(
-                                text = stringResource(
-                                    R.string.oneuix_callReturnDelaySeconds_summary,
-                                    callReturnDelaySeconds.roundToInt().coerceIn(0, 5),
-                                ),
-                                color = colorScheme.onBackground,
-                            )
-                        }
-                        Spacer(Modifier.height(8.dp))
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            when (LocalUiMode.current) {
-                                UiMode.Material -> MaterialText(
-                                    text = "0",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.outline,
-                                )
-                                UiMode.Miuix -> MiuixText(
-                                    text = "0",
-                                    color = colorScheme.onBackground,
-                                )
-                            }
-                            Spacer(Modifier.width(8.dp))
-                            OneuiXSlider(
-                                value = callReturnDelaySeconds,
-                                onValueChange = { callReturnDelaySeconds = it },
-                                modifier = Modifier.weight(1f),
-                                valueRange = 0f..5f,
-                                stepSize = 1f,
-                                enabled = otherState.callReturnDelayEnabled,
-                                onValueChangeFinished = {
-                                    val finalSeconds = callReturnDelaySeconds.roundToInt().coerceIn(0, 5)
-                                    onOtherChange { current ->
-                                        current.copy(callReturnDelaySeconds = finalSeconds)
-                                    }
-                                    askApplyCallReturnNow()
-                                },
-                            )
-                            Spacer(Modifier.width(8.dp))
-                            when (LocalUiMode.current) {
-                                UiMode.Material -> MaterialText(
-                                    text = "5",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.outline,
-                                )
-                                UiMode.Miuix -> MiuixText(
-                                    text = "5",
-                                    color = colorScheme.onBackground,
-                                )
-                            }
-                        }
-                        Spacer(Modifier.height(4.dp))
-                        when (LocalUiMode.current) {
-                            UiMode.Material -> MaterialText(
-                                text = stringResource(R.string.oneuix_callReturnDelayControlHint),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.outline,
-                            )
-                            UiMode.Miuix -> MiuixText(
-                                text = stringResource(R.string.oneuix_callReturnDelayControlHint),
-                                color = colorScheme.onBackground,
-                            )
-                        }
-                    }
+                        },
+                        onClick = { navigator.push(Route.CallReturnDelay) },
+                    )
                 }
             }
         },
