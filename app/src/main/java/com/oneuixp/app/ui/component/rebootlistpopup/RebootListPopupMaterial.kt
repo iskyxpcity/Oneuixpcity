@@ -24,7 +24,6 @@ fun RebootDropdownItems(onItemClick: (String) -> Unit) {
         DropdownMenuItem(
             onClick = { onItemClick(option.reason) },
             text = { Text("  " + stringResource(option.labelRes)) },
-            shapes = MenuDefaults.itemShape(index = index, count = options.size),
         )
     }
 }

@@ -50,8 +50,8 @@ import io.github.soclear.oneuix.ui.category.SystemUIEvent
 import io.github.soclear.oneuix.ui.component.OneuiXActionButton
 import io.github.soclear.oneuix.ui.component.OneuiXInfoItem
 import io.github.soclear.oneuix.ui.component.OneuiXSwitch
-import io.github.soclear.oneuix.ui.component.material.SegmentedListItem
-import io.github.soclear.oneuix.ui.component.material.oneuiXSegmentedColors
+import com.oneuixp.app.ui.component.material.SegmentedListItem
+import com.oneuixp.app.ui.component.material.oneuiXSegmentedColors
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
 import top.yukonga.miuix.kmp.icon.MiuixIcons

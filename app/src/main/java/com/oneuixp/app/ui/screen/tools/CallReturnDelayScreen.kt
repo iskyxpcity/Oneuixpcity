@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -34,9 +35,9 @@ import com.oneuixp.app.ui.viewmodel.OneuiXToolsViewModel
 import io.github.soclear.oneuix.ui.component.LocalOneuiXGroupedPreference
 import io.github.soclear.oneuix.ui.component.OneuiXSlider
 import io.github.soclear.oneuix.ui.component.SwitchItem
-import io.github.soclear.oneuix.ui.component.material.SegmentedColumn
-import io.github.soclear.oneuix.ui.component.material.SegmentedListItem
-import io.github.soclear.oneuix.ui.component.material.oneuiXSegmentedColors
+import com.oneuixp.app.ui.component.material.SegmentedColumn
+import com.oneuixp.app.ui.component.material.SegmentedListItem
+import com.oneuixp.app.ui.component.material.oneuiXSegmentedColors
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
