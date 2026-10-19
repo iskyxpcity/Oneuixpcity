@@ -9,7 +9,6 @@ import android.widget.TextView
 import io.github.libxposed.api.XposedModule
 import io.github.libxposed.api.XposedModuleInterface
 import io.github.soclear.oneuix.common.Package
-import io.github.soclear.oneuix.hook.util.PreferenceProvider
 import io.github.soclear.oneuix.hook.util.afterAttach
 import io.github.soclear.oneuix.hook.util.reflect
 import io.github.soclear.oneuix.hook.util.xlog
@@ -24,10 +23,6 @@ object Settings {
     context(xposedModule: XposedModule, param: XposedModuleInterface.PackageReadyParam)
     fun enableSettingsTwoPane() {
         if (param.packageName != Package.SETTINGS) return
-
-        fun enabled(): Boolean = with(xposedModule) {
-            PreferenceProvider.loadPreference()?.other?.settingsTwoPaneEnabled == true
-        }
 
         val largeScreenProperties = setOf(
             "persist.settings.large_screen_opt.enabled",
@@ -44,7 +39,7 @@ object Settings {
                 )
                 xposedModule.hook(method).intercept { chain ->
                     val key = chain.args.getOrNull(0) as? String
-                    if (enabled() && key != null && key in largeScreenProperties) true else chain.proceed()
+                    if (key != null && key in largeScreenProperties) true else chain.proceed()
                 }
             }.onFailure { xlog(it) }
         }
@@ -54,7 +49,7 @@ object Settings {
             val method = clazz.getDeclaredMethod("isEnabled", Context::class.java, String::class.java)
             xposedModule.hook(method).intercept { chain ->
                 val key = chain.args.getOrNull(1) as? String
-                if (enabled() && key != null && key in setOf("settings_support_large_screen", "flag_settings_support_large_screen")) {
+                if (key != null && key in setOf("settings_support_large_screen", "flag_settings_support_large_screen")) {
                     true
                 } else {
                     chain.proceed()
@@ -74,7 +69,7 @@ object Settings {
             )
             xposedModule.hook(method).intercept { chain ->
                 val key = chain.args.getOrNull(0) as? String
-                if (enabled() && key != null && key in topLevelKeys) key != "flag_force_single_view" else chain.proceed()
+                if (key != null && key in topLevelKeys) key != "flag_force_single_view" else chain.proceed()
             }
         }.onFailure { xlog(it) }
 
@@ -83,17 +78,15 @@ object Settings {
             val method = clazz.getDeclaredMethod("onCreate")
             xposedModule.hook(method).intercept { chain ->
                 val result = chain.proceed()
-                if (enabled()) {
-                    runCatching {
-                        val embedding = param.classLoader.loadClass(
-                            "com.android.settings.activityembedding.ActivityEmbeddingUtils"
-                        )
-                        embedding.getDeclaredField("SHOULD_ENABLE_LARGE_SCREEN_OPTIMIZATION").apply {
-                            isAccessible = true
-                            setBoolean(null, true)
-                        }
-                    }.onFailure { xlog(it) }
-                }
+                runCatching {
+                    val embedding = param.classLoader.loadClass(
+                        "com.android.settings.activityembedding.ActivityEmbeddingUtils"
+                    )
+                    embedding.getDeclaredField("SHOULD_ENABLE_LARGE_SCREEN_OPTIMIZATION").apply {
+                        isAccessible = true
+                        setBoolean(null, true)
+                    }
+                }.onFailure { xlog(it) }
                 result
             }
         }.onFailure { xlog(it) }
@@ -104,7 +97,7 @@ object Settings {
                 .filter { it.name == "isSettingsSplitEnabled" || it.name == "isEmbeddingActivityEnabled" }
                 .forEach { method ->
                     xposedModule.hook(method).intercept { chain ->
-                        if (enabled()) true else chain.proceed()
+                        true
                     }
                 }
         }.onFailure { xlog(it) }
@@ -120,14 +113,10 @@ object Settings {
                 }
                 .forEach { constructor ->
                     xposedModule.hook(constructor).intercept { chain ->
-                        if (!enabled()) {
-                            chain.proceed()
-                        } else {
-                            val args = chain.args.toMutableList()
-                            args[0] = 0
-                            args[1] = 0
-                            chain.proceed(args.toTypedArray())
-                        }
+                        val args = chain.args.toMutableList()
+                        args[0] = 0
+                        args[1] = 0
+                        chain.proceed(args.toTypedArray())
                     }
                 }
         }.onFailure { xlog(it) }

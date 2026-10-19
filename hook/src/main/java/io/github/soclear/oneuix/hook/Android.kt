@@ -5,7 +5,6 @@ import android.app.NotificationChannel
 import android.os.Bundle
 import io.github.libxposed.api.XposedModule
 import io.github.libxposed.api.XposedModuleInterface
-import io.github.soclear.oneuix.hook.util.PreferenceProvider
 import io.github.soclear.oneuix.hook.util.reflect
 import io.github.soclear.oneuix.hook.util.xlog
 
@@ -144,12 +143,7 @@ object Android {
         try {
             val clazz = param.classLoader.loadClass("com.android.server.pm.PackageManagerServiceUtils")
             clazz.declaredMethods.filter { it.name == "checkDowngrade" }.forEach { method ->
-                xposedModule.hook(method).intercept { chain ->
-                    val enabled = with(xposedModule) {
-                        PreferenceProvider.loadPreference()?.other?.allowAppDowngradeEnabled == true
-                    }
-                    if (enabled) null else chain.proceed()
-                }
+                xposedModule.hook(method).intercept { null }
             }
         } catch (t: Throwable) {
             xlog(t)
@@ -162,12 +156,7 @@ object Android {
         try {
             val clazz = param.classLoader.loadClass("com.android.server.wm.WindowState")
             val method = clazz.getDeclaredMethod("isSecureLocked")
-            xposedModule.hook(method).intercept { chain ->
-                val enabled = with(xposedModule) {
-                    PreferenceProvider.loadPreference()?.other?.disableSecureScreenshotRestrictionEnabled == true
-                }
-                if (enabled) false else chain.proceed()
-            }
+            xposedModule.hook(method).intercept { false }
         } catch (t: Throwable) {
             xlog(t)
         }

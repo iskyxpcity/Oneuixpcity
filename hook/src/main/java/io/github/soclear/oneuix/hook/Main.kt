@@ -194,7 +194,9 @@ class Main : XposedModule() {
             }
 
             Package.SETTINGS -> {
-                Settings.enableSettingsTwoPane()
+                if (preference.other.settingsTwoPaneEnabled) {
+                    Settings.enableSettingsTwoPane()
+                }
 
                 if (preference.android.setBlockableNotificationChannel) {
                     Android.setBlockableNotificationChannel()
@@ -575,7 +577,11 @@ class Main : XposedModule() {
             Android.disableScreenWakeOnPowerUnplugged()
         }
 
-        Android.hookAllowAppDowngrade()
-        Android.hookDisableSecureScreenshotRestriction()
+        if (preference.other.allowAppDowngradeEnabled) {
+            Android.hookAllowAppDowngrade()
+        }
+        if (preference.other.disableSecureScreenshotRestrictionEnabled) {
+            Android.hookDisableSecureScreenshotRestriction()
+        }
     }
 }
