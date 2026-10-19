@@ -182,7 +182,7 @@ private fun CallReturnDelayMaterial(
                         CompositionLocalProvider(LocalOneuiXGroupedPreference provides true) {
                             SwitchItem(
                                 icon = ImageVector.vectorResource(R.drawable.phone_forwarded),
-                                title = stringResource(R.string.oneuix_callReturnDelay_title),
+                                title = stringResource(R.string.oneuix_callReturnEnable_title),
                                 checked = enabled,
                                 onCheckedChange = onEnabledChange,
                             )
@@ -247,7 +247,7 @@ private fun CallReturnDelayMiuix(
                         Column {
                             SwitchItem(
                                 icon = ImageVector.vectorResource(R.drawable.phone_forwarded),
-                                title = stringResource(R.string.oneuix_callReturnDelay_title),
+                                title = stringResource(R.string.oneuix_callReturnEnable_title),
                                 checked = enabled,
                                 onCheckedChange = onEnabledChange,
                             )
