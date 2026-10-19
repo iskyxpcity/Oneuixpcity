@@ -34,10 +34,11 @@ object StatusComboStyleOneGlyphRenderer {
     private const val COMPACT_WIDTH = 120f
     private const val WIDE_WIDTH = 260f
     private const val HEIGHT = 120f
-    // Keep the 1.0f scale baseline and correct the original physical design size itself.
-    // The default 100% now maps to a 30.6dp glyph height instead of the previously oversized 36dp.
+    // Keep the 1.0f baseline and 100% slider default. The earlier 30.6dp baseline was
+    // already present in main and produced no new visible change in the latest test build.
+    // Use a 26dp physical design height so the complete composite is materially smaller.
     const val GLYPH_SCALE_BASELINE_FACTOR = 1.0f
-    const val BASE_GLYPH_HEIGHT_DP = 30.6f
+    const val BASE_GLYPH_HEIGHT_DP = 26f
     // Keep 2dp transparent breathing room on each edge, totaling 4dp in reserved width.
     const val GLYPH_FRAME_BREATHING_DP = 2f
     private const val DUAL_BOTTOM_HEIGHT = 150f

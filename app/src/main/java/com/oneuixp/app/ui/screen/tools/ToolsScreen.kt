@@ -1,6 +1,9 @@
 package com.oneuixp.app.ui.screen.tools
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -35,10 +38,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
@@ -80,6 +85,25 @@ fun ToolsPager(
     when (LocalUiMode.current) {
         UiMode.Miuix -> ToolsPagerMiuix(navigator, bottomInnerPadding, lsposedActive)
         UiMode.Material -> ToolsPagerMaterial(navigator, bottomInnerPadding, lsposedActive)
+    }
+}
+
+
+@Composable
+private fun OtherFunctionsCategoryIcon(size: Dp) {
+    Box(
+        modifier = Modifier
+            .size(size)
+            .clip(RoundedCornerShape(14.dp))
+            .background(Color(0xFF607D8B)),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            imageVector = ImageVector.vectorResource(R.drawable.other_functions),
+            contentDescription = stringResource(R.string.oneuix_other_functions_title),
+            tint = Color.White,
+            modifier = Modifier.size(26.dp),
+        )
     }
 }
 
@@ -185,6 +209,52 @@ private fun ToolsPagerMiuix(
                                     tint = colorScheme.onSurfaceVariantActions,
                                 )
                             }
+                        }
+                    }
+                }
+
+                item {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 12.dp)
+                            .graphicsLayer {
+                                alpha = if (lsposedActive) 1f else 0.38f
+                            },
+                        onClick = {
+                            if (lsposedActive) navigator.push(Route.OtherFunctions)
+                        },
+                        showIndication = lsposedActive,
+                        insideMargin = PaddingValues(
+                            start = 10.dp,
+                            end = 16.dp,
+                            top = 8.dp,
+                            bottom = 8.dp,
+                        ),
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            OtherFunctionsCategoryIcon(size = 48.dp)
+                            MiuixText(
+                                text = stringResource(R.string.oneuix_other_functions_title),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(start = 10.dp),
+                                fontWeight = FontWeight(550),
+                                color = colorScheme.onSurface,
+                                maxLines = 1,
+                            )
+                            val layoutDirection = LocalLayoutDirection.current
+                            MiuixIcon(
+                                modifier = Modifier
+                                    .graphicsLayer {
+                                        if (layoutDirection == LayoutDirection.Rtl) scaleX = -1f
+                                    }
+                                    .padding(start = 8.dp)
+                                    .size(width = 10.dp, height = 16.dp),
+                                imageVector = MiuixIcons.Basic.ArrowRight,
+                                contentDescription = null,
+                                tint = colorScheme.onSurfaceVariantActions,
+                            )
                         }
                     }
                 }
@@ -299,6 +369,34 @@ private fun ToolsPagerMaterial(
                         )
                     }
                 },
+            )
+
+            SegmentedColumn(
+                modifier = Modifier
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .graphicsLayer {
+                        alpha = if (lsposedActive) 1f else 0.38f
+                    },
+                content = listOf({
+                    SegmentedListItem(
+                        enabled = lsposedActive,
+                        onClick = {
+                            if (lsposedActive) navigator.push(Route.OtherFunctions)
+                        },
+                        headlineContent = {
+                            Text(stringResource(R.string.oneuix_other_functions_title))
+                        },
+                        leadingContent = {
+                            OtherFunctionsCategoryIcon(size = 48.dp)
+                        },
+                        trailingContent = {
+                            Icon(
+                                Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                contentDescription = null,
+                            )
+                        },
+                    )
+                }),
             )
 
             Spacer(Modifier.height(bottomInnerPadding))

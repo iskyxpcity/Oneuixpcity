@@ -144,6 +144,7 @@ class Main : XposedModule() {
                         preference.call.preferRecordingButton
                     )
                 }
+                Call.hookCallReturnDelay()
             }
 
             Package.LAUNCHER -> {
@@ -193,6 +194,10 @@ class Main : XposedModule() {
             }
 
             Package.SETTINGS -> {
+                if (preference.other.settingsTwoPaneEnabled) {
+                    Settings.enableSettingsTwoPane()
+                }
+
                 if (preference.android.setBlockableNotificationChannel) {
                     Android.setBlockableNotificationChannel()
                 }
@@ -254,6 +259,10 @@ class Main : XposedModule() {
                 if (preference.other.blockGalaxyStoreAds) {
                     GalaxyStore.blockGalaxyStoreAds()
                 }
+            }
+
+            Package.PACKAGE_INSTALLER, Package.SAMSUNG_PACKAGE_INSTALLER -> {
+                PackageInstallerHooks.hideRecommendations()
             }
 
             Package.SYSTEMUI if (processName == Package.SYSTEMUI) -> {
@@ -566,6 +575,13 @@ class Main : XposedModule() {
 
         if (preference.android.disableScreenWakeOnPowerUnplugged) {
             Android.disableScreenWakeOnPowerUnplugged()
+        }
+
+        if (preference.other.allowAppDowngradeEnabled) {
+            Android.hookAllowAppDowngrade()
+        }
+        if (preference.other.disableSecureScreenshotRestrictionEnabled) {
+            Android.hookDisableSecureScreenshotRestriction()
         }
     }
 }

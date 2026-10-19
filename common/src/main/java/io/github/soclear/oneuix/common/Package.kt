@@ -10,6 +10,8 @@ object Package {
     const val GALLERY = "com.sec.android.gallery3d"
     const val HEALTH_MONITOR = "com.samsung.android.shealthmonitor"
     const val INCALLUI = "com.samsung.android.incallui"
+    const val PACKAGE_INSTALLER = "com.android.packageinstaller"
+    const val SAMSUNG_PACKAGE_INSTALLER = "com.samsung.android.packageinstaller"
     const val LAUNCHER = "com.sec.android.app.launcher"
     const val MDEC_SERVICE = "com.samsung.android.mdecservice"
     const val MESSAGING = "com.samsung.android.messaging"

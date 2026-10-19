@@ -181,16 +181,22 @@ object StatusBarComboStyleOneRuntime {
     // SystemUI's true Visible/Hidden state when the custom arc is switched off.
     private val modernWifiViewModels = Collections.synchronizedMap(WeakHashMap<View, WeakReference<Any>>())
     private val lastNativeWifiDiagnostics = Collections.synchronizedMap(WeakHashMap<View, String>())
+    // Deduplicate diagnostics for exclusive wrappers collapsed around already-hidden native icons.
+    private val lastNativeIconWrapperDiagnostics = Collections.synchronizedMap(WeakHashMap<View, String>())
     // AOSP/Samsung can keep a measured width after native Wi-Fi is collapsed.
     private val nativeWifiClusterBaselineVisibility = Collections.synchronizedMap(WeakHashMap<ViewGroup, Int>())
-    // Only remove horizontal padding while the Wi-Fi-replaced cluster has no visible native
-    // status icons. Keep the cluster visible and restore its exact padding as soon as an icon returns.
+    // Keep the leading inset for unrelated native icons, but trim the trailing inset next to the
+    // replacement glyph. Original padding is restored when Style One releases the status-bar row.
     private val nativeWifiClusterBaselinePadding =
         Collections.synchronizedMap(WeakHashMap<ViewGroup, IntArray>())
     // Some Samsung builds measure StatusIconContainer wider than its width=0 LayoutParams.
     // Preserve its native minimum width so the empty signal cluster can release the residue.
     private val nativeWifiClusterBaselineMinimumWidth =
         Collections.synchronizedMap(WeakHashMap<ViewGroup, Int>())
+    // Preserve the parent LinearLayout slot parameters so the weighted empty area can be
+    // removed while the combo glyph is active and restored byte-for-byte when disabled.
+    private val nativeWifiClusterBaselineParentLayoutParams =
+        Collections.synchronizedMap(WeakHashMap<ViewGroup, LinearLayout.LayoutParams>())
     // One per-cluster listener; its value must not capture the WeakHashMap key.
     private val nativeWifiClusterLayoutListeners =
         Collections.synchronizedMap(WeakHashMap<ViewGroup, View.OnLayoutChangeListener>())
@@ -199,6 +205,8 @@ object StatusBarComboStyleOneRuntime {
     private val pendingNativeWifiClusterCandidates = Collections.synchronizedMap(WeakHashMap<ViewGroup, View>())
     private val lastNativeWifiClusterDiagnostics = Collections.synchronizedMap(WeakHashMap<ViewGroup, String>())
     private val lastNativeClusterMeasuredWidthDiagnostics =
+        Collections.synchronizedMap(WeakHashMap<View, String>())
+    private val lastNativeClusterTrailingTrimDiagnostics =
         Collections.synchronizedMap(WeakHashMap<View, String>())
     private val setMeasuredDimensionMethod: java.lang.reflect.Method? by lazy {
         runCatching {
@@ -262,6 +270,7 @@ object StatusBarComboStyleOneRuntime {
     private data class LayoutSnapshot(
         val width: Int, val height: Int,
         val leftMargin: Int, val topMargin: Int, val rightMargin: Int, val bottomMargin: Int,
+        val hasRelativeMargins: Boolean, val marginStart: Int, val marginEnd: Int,
         val visibility: Int, val alpha: Float,
     )
 
@@ -1638,17 +1647,14 @@ object StatusBarComboStyleOneRuntime {
                     val height = dp(glyph.context, StatusComboStyleOneGlyphRenderer.glyphHeightDp(config, state.networkType))
                     val lp = glyph.layoutParams
                     if (lp != null) {
-                        val margins = lp as? ViewGroup.MarginLayoutParams
                         // Keep the canvas's extra leading lane out of native row measurement.
                         val left = dpExact(glyph.context, config.glyphLeftMarginDp) - leadingPad
                         val right = dpExact(glyph.context, config.glyphRightMarginDp)
-                        val changed = lp.width != width || lp.height != height || margins?.let {
-                            it.leftMargin != left || it.rightMargin != right || it.topMargin != 0 || it.bottomMargin != 0
-                        } == true
+                        val marginsChanged = setAbsoluteMargins(lp, left, 0, right, 0)
+                        val changed = lp.width != width || lp.height != height || marginsChanged
                         if (changed) {
                             lp.width = width
                             lp.height = height
-                            margins?.setMargins(left, 0, right, 0)
                             glyph.layoutParams = lp
                         }
                     }
@@ -1883,8 +1889,15 @@ object StatusBarComboStyleOneRuntime {
             }
 
             val foldMobile = isMobileNativeSuppressed()
+            // A native icon may be nested in a dedicated FrameLayout/LinearLayout whose own
+            // width, minimumWidth, padding or margins survive after the inner icon is GONE.
+            // Only collect ancestors with no visible/laid-out sibling content; never include
+            // the shared StatusIconContainer, SignalClusterView, or any container owning the
+            // composite battery anchor / glyph.
+            val suppressedNativeWrappers = findDedicatedSuppressedNativeIconWrappers(host, views, foldMobile)
 
             views.forEach { view ->
+                if (suppressedNativeWrappers.contains(view)) return@forEach
                 val nativeBatteryIndicator = isBatteryIcon(view) ||
                     (slotOf(view) ?: knownIconSlots[view])?.contains("battery", ignoreCase = true) == true
                 if (view === battery || view is GlyphView || nativeBatteryIndicator) return@forEach
@@ -1905,7 +1918,16 @@ object StatusBarComboStyleOneRuntime {
                 val preserveWifiDot = config.enabled && !config.showWifi &&
                     isNativeWifiStatusBarDot(view) && hasVisibleNativeWifiSignal(view)
                 if (hide) collapseHostView(host, view)
-                else if (!preserveWifiDot) restoreHostView(host, view)
+                else if (!preserveWifiDot) {
+                    // When native mobile ownership is released, restore its saved bounds and
+                    // visibility but keep the live alpha. The previous snapshot may have been
+                    // captured after the independent renderer temporarily set alpha=0.
+                    restoreHostView(
+                        host,
+                        view,
+                        preserveCurrentAlpha = !foldMobile && isMobileIcon(view),
+                    )
+                }
                 if (wifiCandidate) {
                     val action = when {
                         hide -> "apply-collapse"
@@ -1915,6 +1937,25 @@ object StatusBarComboStyleOneRuntime {
                     diagnoseNativeWifiView(view, action)
                 }
             }
+            // Inner native views are collapsed first. Then release only the dedicated,
+            // content-empty wrapper ancestors that could otherwise retain a transparent slot.
+            suppressedNativeWrappers
+                .sortedByDescending(::viewTreeDepth)
+                .forEach { wrapper ->
+                    val lp = wrapper.layoutParams
+                    val margins = lp as? ViewGroup.MarginLayoutParams
+                    val before = "class=${wrapper.javaClass.name}|resource=${resourceName(wrapper)}|" +
+                        "vis=${wrapper.visibility}|size=${wrapper.width}x${wrapper.height}|" +
+                        "measured=${wrapper.measuredWidth}x${wrapper.measuredHeight}|" +
+                        "lp=${lp?.width}x${lp?.height}|margins=${margins?.leftMargin},${margins?.rightMargin}|" +
+                        "relative=${margins?.isMarginRelative == true}|padding=${wrapper.paddingLeft},${wrapper.paddingRight}|" +
+                        "minWidth=${wrapper.minimumWidth}|children=${(wrapper as? ViewGroup)?.childCount ?: 0}"
+                    collapseHostView(host, wrapper)
+                    if (lastNativeIconWrapperDiagnostics.put(wrapper, before) != before) {
+                        diagnostic("Dedicated hidden-native wrapper collapsed: ${before}")
+                    }
+                }
+
             // Hide only the overlaid status_bar_dot while the native Wi-Fi signal itself is
             // visible. If SystemUI switches to dot-only mode, restore the captured native state.
             reconcileNativeWifiStatusBarDots(root)
@@ -1952,6 +1993,12 @@ object StatusBarComboStyleOneRuntime {
                 collapseHostView(host, battery)
                 insertInline(host, battery)
             }
+            // The independent SIM-signal runtime may have hidden the native view before
+            // Combo took ownership, leaving alpha=0 in Combo's own layout snapshot. When
+            // Combo releases native mobile ownership (outside + stacking off, or mobile off),
+            // hand back its original native state after our layout pass to avoid restoring
+            // that stale transparent snapshot as the final state.
+            if (!foldMobile) StatusBarSignalIndependentRuntime.restoreNativeSignalViewsForCombo(root)
         } catch (t: Throwable) {
             Log.w(TAG, "Cannot apply Style One", t)
         } finally {
@@ -2032,17 +2079,13 @@ object StatusBarComboStyleOneRuntime {
             glyph.setInlineTrailingAnchor(anchor)
             val lp = glyph.layoutParams
             if (lp != null) {
-                val margins = lp as? ViewGroup.MarginLayoutParams
                 val left = dpExact(parent.context, config.glyphLeftMarginDp) - leadingPad
                 val right = dpExact(parent.context, config.glyphRightMarginDp)
-                val changed = lp.width != width || lp.height != height || margins?.let {
-                    it.leftMargin != left || it.rightMargin != right ||
-                        it.topMargin != 0 || it.bottomMargin != 0
-                } == true
+                val marginsChanged = setAbsoluteMargins(lp, left, 0, right, 0)
+                val changed = lp.width != width || lp.height != height || marginsChanged
                 if (changed) {
                     lp.width = width
                     lp.height = height
-                    margins?.setMargins(left, 0, right, 0)
                     glyph.layoutParams = lp
                 }
             }
@@ -2064,8 +2107,8 @@ object StatusBarComboStyleOneRuntime {
             is ViewGroup.MarginLayoutParams -> ViewGroup.MarginLayoutParams(old).apply { this.width = width; this.height = height }
             else -> ViewGroup.LayoutParams(width, height)
         }
-        val margins = lp as? ViewGroup.MarginLayoutParams
-        margins?.setMargins(
+        setAbsoluteMargins(
+            lp,
             dpExact(parent.context, config.glyphLeftMarginDp) - leadingPad,
             0,
             dpExact(parent.context, config.glyphRightMarginDp),
@@ -2390,6 +2433,15 @@ object StatusBarComboStyleOneRuntime {
         }
     }
 
+    /**
+     * True while the composite renderer has captured and taken ownership of a native
+     * view's layout. The independent SIM-signal renderer must not capture the already
+     * collapsed LayoutParams as its own restoration baseline.
+     */
+    internal fun isNativeLayoutOwned(view: View): Boolean = synchronized(hosts) {
+        hosts.values.any { host -> host.layouts.containsKey(view) }
+    }
+
     private fun isMobileIcon(v: View): Boolean {
         if (v is GlyphView || isMobileTypeView(v) || isWifiIcon(v)) return false
         val slot = (slotOf(v) ?: knownIconSlots[v]).orEmpty().lowercase()
@@ -2403,7 +2455,7 @@ object StatusBarComboStyleOneRuntime {
         // airplane and other icons. Never collapse that whole group as a signal icon.
         return name.contains("mobile") || name.contains("cellular") || name.contains("signalmobile") ||
             name.contains("slotmobile") || name.contains("signalstrength") ||
-            (name.contains("signalcluster") && v !is ViewGroup)
+            (name.contains("signal") && v !is ViewGroup)
     }
 
     private fun isWithin(root: View, candidate: View): Boolean {
@@ -2496,9 +2548,19 @@ object StatusBarComboStyleOneRuntime {
     private fun snapshotLayout(view: View): LayoutSnapshot? {
         val lp = view.layoutParams ?: return null
         val margin = lp as? ViewGroup.MarginLayoutParams
+        val hasRelativeMargins = Build.VERSION.SDK_INT >= 17 && margin?.isMarginRelative == true
         return LayoutSnapshot(
-            lp.width, lp.height, margin?.leftMargin ?: 0, margin?.topMargin ?: 0,
-            margin?.rightMargin ?: 0, margin?.bottomMargin ?: 0, view.visibility, view.alpha,
+            width = lp.width,
+            height = lp.height,
+            leftMargin = margin?.leftMargin ?: 0,
+            topMargin = margin?.topMargin ?: 0,
+            rightMargin = margin?.rightMargin ?: 0,
+            bottomMargin = margin?.bottomMargin ?: 0,
+            hasRelativeMargins = hasRelativeMargins,
+            marginStart = if (hasRelativeMargins) margin!!.marginStart else 0,
+            marginEnd = if (hasRelativeMargins) margin!!.marginEnd else 0,
+            visibility = view.visibility,
+            alpha = view.alpha,
         )
     }
 
@@ -2507,15 +2569,28 @@ object StatusBarComboStyleOneRuntime {
         if (lp != null) {
             lp.width = snapshot.width
             lp.height = snapshot.height
-            (lp as? ViewGroup.MarginLayoutParams)?.setMargins(
-                snapshot.leftMargin, snapshot.topMargin, snapshot.rightMargin, snapshot.bottomMargin,
-            )
+            val margins = lp as? ViewGroup.MarginLayoutParams
+            if (margins != null) {
+                if (Build.VERSION.SDK_INT >= 17) {
+                    margins.setMarginStart(Int.MIN_VALUE)
+                    margins.setMarginEnd(Int.MIN_VALUE)
+                }
+                margins.setMargins(
+                    snapshot.leftMargin, snapshot.topMargin,
+                    snapshot.rightMargin, snapshot.bottomMargin,
+                )
+                if (Build.VERSION.SDK_INT >= 17 && snapshot.hasRelativeMargins) {
+                    margins.setMarginStart(snapshot.marginStart)
+                    margins.setMarginEnd(snapshot.marginEnd)
+                }
+            }
             view.layoutParams = lp
         }
         view.visibility = snapshot.visibility
         view.alpha = snapshot.alpha
         // Modern status-bar icon containers can cache child placement until the
         // parent is asked to lay out again after GONE/0x0 folding is reversed.
+        view.requestLayout()
         (view.parent as? View)?.requestLayout()
     }
 
@@ -2523,12 +2598,22 @@ object StatusBarComboStyleOneRuntime {
         val lp = view.layoutParams
         if (lp != null) {
             val margins = lp as? ViewGroup.MarginLayoutParams
+            val hasRelativeMargins = Build.VERSION.SDK_INT >= 17 && margins?.isMarginRelative == true
             val changed = lp.width != 0 || lp.height != 0 ||
-                margins?.let { it.leftMargin != 0 || it.topMargin != 0 || it.rightMargin != 0 || it.bottomMargin != 0 } == true
+                margins?.let {
+                    it.leftMargin != 0 || it.topMargin != 0 ||
+                        it.rightMargin != 0 || it.bottomMargin != 0
+                } == true || hasRelativeMargins
             if (changed) {
                 lp.width = 0
                 lp.height = 0
-                margins?.setMargins(0, 0, 0, 0)
+                if (margins != null) {
+                    margins.setMargins(0, 0, 0, 0)
+                    if (Build.VERSION.SDK_INT >= 17) {
+                        margins.setMarginStart(Int.MIN_VALUE)
+                        margins.setMarginEnd(Int.MIN_VALUE)
+                    }
+                }
                 view.layoutParams = lp
             }
         }
@@ -2575,15 +2660,152 @@ object StatusBarComboStyleOneRuntime {
             (config.showMobile && config.mobileTypeMode == 2 && isMobileTypeView(view))
 
     /**
+     * Find only wrapper ancestors that contain exclusively native status-icon views this
+     * configuration suppresses. LayoutParams on those wrappers are otherwise invisible to
+     * isWifiIcon()/isMobileIcon(), so GONE leaves can still leave a transparent row-width gap.
+     */
+    private fun findDedicatedSuppressedNativeIconWrappers(
+        host: Host,
+        views: List<View>,
+        foldMobile: Boolean,
+    ): Set<ViewGroup> {
+        val targetRoots = Collections.newSetFromMap(IdentityHashMap<View, Boolean>())
+        views.forEach { view ->
+            val nativeBatteryIndicator = isBatteryIcon(view) ||
+                (slotOf(view) ?: knownIconSlots[view])?.contains("battery", ignoreCase = true) == true
+            if (view === host.battery || view is GlyphView || nativeBatteryIndicator) return@forEach
+            val hide = (config.showWifi && isWifiIcon(view)) ||
+                (foldMobile && isMobileIcon(view)) ||
+                (config.showMobile && config.mobileTypeMode == 2 && isMobileTypeView(view))
+            if (hide) targetRoots.add(view)
+        }
+        if (targetRoots.isEmpty()) return emptySet()
+
+        val wrappers = Collections.newSetFromMap(IdentityHashMap<ViewGroup, Boolean>())
+        targetRoots.forEach { target ->
+            var ancestor = target.parent as? ViewGroup
+            while (ancestor != null) {
+                // These containers own other status icons or the composite glyph's reserved
+                // battery slot. Their layout is not a dedicated hidden-icon placeholder.
+                if (ancestor === host.root || isStatusIconsCluster(ancestor) ||
+                    viewSignature(ancestor).contains("signalcluster") ||
+                    host.battery?.let { isWithin(ancestor, it) } == true ||
+                    host.inline?.let { isWithin(ancestor, it) } == true
+                ) break
+
+                if (targetRoots.contains(ancestor)) {
+                    ancestor = ancestor.parent as? ViewGroup
+                    continue
+                }
+                if (hasUnsuppressedNativeLayoutFootprint(ancestor, targetRoots)) break
+                if (hasNativeLayoutResidue(ancestor)) wrappers.add(ancestor)
+                ancestor = ancestor.parent as? ViewGroup
+            }
+        }
+        return wrappers
+    }
+
+    /**
+     * The candidate wrapper's own padding/width is precisely the residue we want to clear.
+     * Ignore that root footprint, but veto collapse when any branch outside the suppressed
+     * icon roots still contributes layout space (including INVISIBLE and alpha-zero siblings).
+     */
+    private fun hasUnsuppressedNativeLayoutFootprint(
+        view: View,
+        targetRoots: Set<View>,
+        candidateRoot: View = view,
+    ): Boolean {
+        if (targetRoots.any { target -> isWithin(target, view) }) return false
+        val isCandidateRoot = view === candidateRoot
+        if (!isCandidateRoot && view.visibility == View.GONE) return false
+        val containsSuppressedTarget = targetRoots.any { target -> isWithin(view, target) }
+        if (view is ViewGroup && view.childCount > 0) {
+            for (index in 0 until view.childCount) {
+                if (hasUnsuppressedNativeLayoutFootprint(view.getChildAt(index), targetRoots, candidateRoot)) {
+                    return true
+                }
+            }
+            if (containsSuppressedTarget || isCandidateRoot) return false
+        }
+        if (containsSuppressedTarget || isCandidateRoot) return false
+        return hasNativeLayoutResidue(view)
+    }
+
+    /** True for physical or cached width/margins/padding that could occupy a blank slot. */
+    private fun hasNativeLayoutResidue(view: View): Boolean {
+        val lp = view.layoutParams
+        val margins = lp as? ViewGroup.MarginLayoutParams
+        val hasRelativeMargins = Build.VERSION.SDK_INT >= 17 && margins?.isMarginRelative == true
+        return view.width != 0 || view.measuredWidth != 0 ||
+            view.minimumWidth != 0 || view.paddingLeft != 0 || view.paddingRight != 0 ||
+            (lp != null && (lp.width != 0 || lp.height != 0)) ||
+            margins?.let {
+                it.leftMargin != 0 || it.rightMargin != 0 || it.topMargin != 0 ||
+                    it.bottomMargin != 0 || hasRelativeMargins
+            } == true
+    }
+
+    private fun viewTreeDepth(view: View): Int {
+        var depth = 0
+        var current: View? = view
+        while (current != null) {
+            depth++
+            current = current.parent as? View
+        }
+        return depth
+    }
+
+    /**
      * Re-measure only the Wi-Fi icon's parent row. Never change StatusIconContainer visibility:
      * that container also owns Bluetooth, alarm and other native status-bar icons. The old
      * empty-cluster collapse heuristic misclassified these children on Samsung and hid them all.
      */
     /**
-     * Release the empty native signal cluster's horizontal padding/minimum width after
-     * replacing native signals with the trio. Restore the exact baseline when any native
-     * icon has a real visible footprint; never hide the shared container itself.
+     * Remove only trailing empty width from the shared native icon row while the combo glyph
+     * occupies the battery slot. Keep the leading inset for native icons that remain visible,
+     * but do not preserve minimumWidth or trailing padding that separates the last icon from
+     * the replacement glyph. Never hide the shared container or its valid children.
      */
+    /**
+     * Samsung places StatusIconContainer in system_icons as a zero-width weighted child.
+     * With Wi-Fi/mobile replaced, that weight can absorb the otherwise-empty gap between
+     * networkSpeed and the combo GlyphView. Keep the container's real native icon children,
+     * but let it measure to content instead of consuming all remaining row width.
+     *
+     * Only act on the observed system_icons row. Preserve the original LinearLayout.LayoutParams
+     * (including weight, gravity and margins) so feature disable restores Samsung's baseline.
+     */
+    private fun compactNativeStatusIconParentSlot(cluster: ViewGroup) {
+        if (!config.enabled || !config.showWifi || !isStatusIconsCluster(cluster)) return
+        val parent = cluster.parent as? LinearLayout ?: return
+        if (resourceName(parent) != "system_icons") return
+        val current = cluster.layoutParams as? LinearLayout.LayoutParams ?: return
+
+        synchronized(nativeWifiClusterBaselineParentLayoutParams) {
+            if (!nativeWifiClusterBaselineParentLayoutParams.containsKey(cluster)) {
+                nativeWifiClusterBaselineParentLayoutParams[cluster] = LinearLayout.LayoutParams(current)
+            }
+        }
+
+        val oldWidth = current.width
+        val oldWeight = current.weight
+        if (oldWidth == ViewGroup.LayoutParams.WRAP_CONTENT && oldWeight == 0f) return
+
+        val compact = LinearLayout.LayoutParams(current).apply {
+            width = ViewGroup.LayoutParams.WRAP_CONTENT
+            weight = 0f
+        }
+        cluster.layoutParams = compact
+        parent.requestLayout()
+        parent.invalidate()
+        diagnostic(
+            "Native status-icon parent slot compacted: parent=system_icons|" +
+                "oldWidth=${oldWidth}|oldWeight=${oldWeight}|" +
+                "newWidth=${compact.width}|newWeight=${compact.weight}|" +
+                "clusterChildren=${cluster.childCount}|clusterPadding=${cluster.paddingLeft},${cluster.paddingRight}"
+        )
+    }
+
     private fun scheduleNativeWifiClusterReconciliation(
         cluster: ViewGroup?,
         triggeringChild: View? = null,
@@ -2607,6 +2829,7 @@ object StatusBarComboStyleOneRuntime {
         }
         cluster.post {
             try {
+                compactNativeStatusIconParentSlot(cluster)
                 val baselinePadding = synchronized(nativeWifiClusterBaselinePadding) {
                     nativeWifiClusterBaselinePadding[cluster] ?: intArrayOf(
                         cluster.paddingLeft, cluster.paddingTop, cluster.paddingRight, cluster.paddingBottom,
@@ -2616,7 +2839,12 @@ object StatusBarComboStyleOneRuntime {
                     nativeWifiClusterBaselineMinimumWidth[cluster]
                         ?: cluster.minimumWidth.also { nativeWifiClusterBaselineMinimumWidth[cluster] = it }
                 }
-                val hasVisibleNativeIcon = hasVisibleNativeClusterIconFootprint(cluster)
+                // In outside + stacking OFF (and when mobile display is disabled), the native
+                // cellular slot remains SystemUI-owned. Do not treat a transient zero-sized
+                // bind/restore frame as an empty cluster and strip its baseline spacing.
+                val nativeMobileSlotExpected = config.enabled && !isMobileNativeSuppressed()
+                val hasVisibleNativeIcon =
+                    nativeMobileSlotExpected || hasVisibleNativeClusterIconFootprint(cluster)
                 val zeroFootprintVisibleChildren = (0 until cluster.childCount).mapNotNull { index ->
                     val child = cluster.getChildAt(index)
                     if (child.visibility == View.VISIBLE && child.alpha > 0f &&
@@ -2630,9 +2858,14 @@ object StatusBarComboStyleOneRuntime {
                             "${child.measuredWidth}x${child.measuredHeight}"
                     } else null
                 }.take(8).joinToString(",")
+                // The combo glyph follows this container in the same trailing status-bar row.
+                // Preserve the native row's leading inset while releasing trailing padding and
+                // minimum-width residue that adds empty space immediately before the glyph.
+                // Keep visible native Mode/Volume icons and trim only the trailing inset;
+                // restore the exact original padding in restoreNativeWifiClusters() when disabled.
                 val targetLeft = if (hasVisibleNativeIcon) baselinePadding[0] else 0
-                val targetRight = if (hasVisibleNativeIcon) baselinePadding[2] else 0
-                val targetMinimumWidth = if (hasVisibleNativeIcon) baselineMinimumWidth else 0
+                val targetRight = 0
+                val targetMinimumWidth = 0
                 val paddingChanged = cluster.paddingLeft != targetLeft ||
                     cluster.paddingRight != targetRight ||
                     cluster.paddingTop != baselinePadding[1] ||
@@ -2650,16 +2883,25 @@ object StatusBarComboStyleOneRuntime {
                 }
                 val lp = cluster.layoutParams
                 val row = cluster.parent as? View
-                val stage = if (hasVisibleNativeIcon) "native-icon-present-restore-baseline"
-                    else "empty-native-signal-cluster-release-width"
+                val stage = when {
+                    nativeMobileSlotExpected -> "native-mobile-slot-expected-trim-trailing-space"
+                    hasVisibleNativeIcon -> "native-icon-present-trim-trailing-space"
+                    else -> "empty-native-signal-cluster-release-width"
+                }
                 val snapshot = "stage=" + stage + "|visibility=" + cluster.visibility +
                     "|size=" + cluster.width + "x" + cluster.height +
                     "|measured=" + cluster.measuredWidth + "x" + cluster.measuredHeight +
                     "|padding=${cluster.paddingLeft},${cluster.paddingTop},${cluster.paddingRight},${cluster.paddingBottom}" +
                     "|baselinePadding=${baselinePadding.contentToString()}|paddingChanged=${paddingChanged}" +
                     "|minimumWidth=${cluster.minimumWidth}|baselineMinimumWidth=${baselineMinimumWidth}" +
+                    "|targetMinimumWidth=${targetMinimumWidth}|targetRightPadding=${targetRight}" +
                     "|minimumWidthChanged=${minimumWidthChanged}|zeroFootprintVisible=$zeroFootprintVisibleChildren" +
-                    "|lp=" + lp?.width + "x" + lp?.height + "|childCount=" + cluster.childCount +
+                    "|lp=" + lp?.width + "x" + lp?.height +
+                    "|lpClass=" + lp?.javaClass?.simpleName +
+                    "|parentWeight=" + (lp as? LinearLayout.LayoutParams)?.weight +
+                    "|parentGravity=" + (lp as? LinearLayout.LayoutParams)?.gravity +
+                    "|parentResource=" + resourceName(row ?: cluster) +
+                    "|childCount=" + cluster.childCount +
                     "|row=" + row?.javaClass?.simpleName + ":" + row?.width + "x" + row?.height
                 if (lastNativeWifiClusterDiagnostics.put(cluster, snapshot) != snapshot) {
                     diagnostic("Native Wi-Fi parent layout: " + snapshot)
@@ -2707,6 +2949,9 @@ object StatusBarComboStyleOneRuntime {
             val baselineMinimumWidth = synchronized(nativeWifiClusterBaselineMinimumWidth) {
                 nativeWifiClusterBaselineMinimumWidth.remove(cluster)
             }
+            val baselineParentLayoutParams = synchronized(nativeWifiClusterBaselineParentLayoutParams) {
+                nativeWifiClusterBaselineParentLayoutParams.remove(cluster)
+            }
             val listener = synchronized(nativeWifiClusterLayoutListeners) {
                 nativeWifiClusterLayoutListeners.remove(cluster)
             }
@@ -2719,13 +2964,20 @@ object StatusBarComboStyleOneRuntime {
                 )
             }
             if (baselineMinimumWidth != null) cluster.setMinimumWidth(baselineMinimumWidth)
-            if (baselineVisibility != null || baselinePadding != null || baselineMinimumWidth != null) {
+            baselineParentLayoutParams?.let { baseline ->
+                runCatching { cluster.layoutParams = LinearLayout.LayoutParams(baseline) }
+            }
+            if (baselineVisibility != null || baselinePadding != null || baselineMinimumWidth != null ||
+                baselineParentLayoutParams != null
+            ) {
                 cluster.requestLayout()
                 (cluster.parent as? View)?.requestLayout()
+                val restoredLp = cluster.layoutParams as? LinearLayout.LayoutParams
                 diagnostic("Native Wi-Fi parent layout: stage=restore-native-state visibility=" +
                     cluster.visibility + " size=" + cluster.width + "x" + cluster.height +
                     " padding=${cluster.paddingLeft},${cluster.paddingTop},${cluster.paddingRight},${cluster.paddingBottom}" +
-                    " minimumWidth=${cluster.minimumWidth}")
+                    " minimumWidth=${cluster.minimumWidth}" +
+                    " parentWidth=${restoredLp?.width}|parentWeight=${restoredLp?.weight}")
             }
         }
     }
@@ -2800,6 +3052,31 @@ object StatusBarComboStyleOneRuntime {
      * Like HyperDuo, the overlay is anchored to that measured slot; reserving the complete
      * canvas width lets SystemUI move other icons left instead of letting the overlay cover them.
      */
+    /**
+     * Apply configured physical margins and discard inherited start/end margins.
+     * Samsung's status-bar LayoutParams can carry relative margins; setMargins() alone
+     * does not clear them, so they can override the requested spacing during RTL resolution.
+     */
+    private fun setAbsoluteMargins(
+        params: ViewGroup.LayoutParams,
+        left: Int,
+        top: Int,
+        right: Int,
+        bottom: Int,
+    ): Boolean {
+        val margins = params as? ViewGroup.MarginLayoutParams ?: return false
+        val hasRelativeMargins = Build.VERSION.SDK_INT >= 17 && margins.isMarginRelative
+        val changed = margins.leftMargin != left || margins.topMargin != top ||
+            margins.rightMargin != right || margins.bottomMargin != bottom || hasRelativeMargins
+        if (!changed) return false
+        margins.setMargins(left, top, right, bottom)
+        if (Build.VERSION.SDK_INT >= 17) {
+            margins.setMarginStart(Int.MIN_VALUE)
+            margins.setMarginEnd(Int.MIN_VALUE)
+        }
+        return true
+    }
+
     private fun updateOverlayHostSlot(
         host: Host,
         view: View,
@@ -2824,19 +3101,19 @@ object StatusBarComboStyleOneRuntime {
         val height = originalLayout?.height?.takeIf { it != 0 } ?: dp(view.context, 24)
         val left = dpExact(view.context, config.glyphLeftMarginDp)
         val right = dpExact(view.context, config.glyphRightMarginDp)
-        val changed = lp.width != width || lp.height != height || margins?.let {
-            it.leftMargin != left || it.topMargin != 0 || it.rightMargin != right || it.bottomMargin != 0
-        } == true
+        // The battery slot remains as the combo glyph's transparent placeholder. Its margins
+        // must be exactly the configured physical margins, not inherited SystemUI start/end.
+        val marginsChanged = setAbsoluteMargins(lp, left, 0, right, 0)
+        val changed = lp.width != width || lp.height != height || marginsChanged
         if (changed) {
             lp.width = width
             lp.height = height
-            margins?.setMargins(left, 0, right, 0)
             view.layoutParams = lp
             val parent = view.parent as? View
             diagnostic(
                 "Dynamic battery slot expansion: reservedWidthPx=${width} " +
                     "height=${height} measuredNowPx=${view.width} parent=${parent?.javaClass?.simpleName} " +
-                    "parentWidthPx=${parent?.width ?: -1} marginsPx=(${left},${right}) " +
+                    "parentWidthPx=${parent?.width ?: -1} marginsPx=(${left},${right}) absoluteMargins=true " +
                     "shadeBusy=${shadeBusy}"
             )
         }
@@ -2846,8 +3123,22 @@ object StatusBarComboStyleOneRuntime {
         if (view.visibility != View.VISIBLE) view.visibility = View.VISIBLE
         if (view.alpha != 0f) view.alpha = 0f
     }
-    private fun restoreHostView(host: Host, view: View) {
-        host.layouts.remove(view)?.let { runCatching { restoreLayout(view, it) } }
+    private fun restoreHostView(
+        host: Host,
+        view: View,
+        preserveCurrentAlpha: Boolean = !isMobileNativeSuppressed() && isMobileIcon(view),
+    ) {
+        host.layouts.remove(view)?.let { snapshot ->
+            // The independent SIM renderer can restore this view before Style One
+            // releases its own stale snapshot. Do not reapply an old alpha=0 snapshot
+            // when native mobile signal ownership is being released.
+            val effectiveSnapshot = if (preserveCurrentAlpha) {
+                snapshot.copy(alpha = view.alpha)
+            } else {
+                snapshot
+            }
+            runCatching { restoreLayout(view, effectiveSnapshot) }
+        }
         host.original.remove(view)?.let { old -> runCatching { view.visibility = old } }
     }
 
@@ -5043,6 +5334,11 @@ object StatusBarComboStyleOneRuntime {
                         val result = chain.proceed()
                         val cluster = chain.thisObject as? ViewGroup
                         if (cluster != null && isStatusIconsCluster(cluster)) {
+                            // Preserve visible native icons, but do not let hidden Wi-Fi/mobile
+                            // slots keep the StatusIconContainer measured wider than its last
+                            // visible native icon. This trims the gap before the combo glyph
+                            // without shifting the leading Mode/Volume icon away from networkSpeed.
+                            trimVisibleNativeStatusIconTrailingWidth(cluster)
                             clampEmptyNativeClusterMeasuredWidth(cluster)
                         }
                         result
@@ -5055,8 +5351,77 @@ object StatusBarComboStyleOneRuntime {
         }
     }
 
+    /**
+     * Samsung can retain a trailing measured slot in StatusIconContainer after native Wi-Fi/mobile
+     * views are collapsed. Padding/WRAP_CONTENT alone does not remove it: diagnostics show the
+     * container ending well after the last visible Mode/Volume icon. Clamp only the measured
+     * width to the right edge of the last visible, unsuppressed native icon. This preserves the
+     * container's leading inset and the positions/visibility of real native icons while allowing
+     * the following combo glyph to sit close to Volume. The empty-cluster guard remains separate.
+     */
+    private fun trimVisibleNativeStatusIconTrailingWidth(cluster: ViewGroup) {
+        if (!config.enabled || !config.showWifi || !isStatusIconsCluster(cluster)) return
+        val parent = cluster.parent as? LinearLayout ?: return
+        if (resourceName(parent) != "system_icons") return
+        val reconciliationArmed = synchronized(nativeWifiClusterLayoutListeners) {
+            nativeWifiClusterLayoutListeners.containsKey(cluster)
+        }
+        if (!reconciliationArmed || hostFor(cluster) == null ||
+            !hasVisibleNativeClusterIconFootprint(cluster)
+        ) return
+
+        val clusterLocation = IntArray(2)
+        if (runCatching { cluster.getLocationOnScreen(clusterLocation) }.isFailure) return
+        val rightmostScreenPx = rightmostVisibleNativeChildRightScreenPx(cluster) ?: return
+        val targetWidth = rightmostScreenPx - clusterLocation[0]
+        val before = cluster.measuredWidth
+        if (targetWidth <= 0 || targetWidth >= before) return
+
+        val setter = setMeasuredDimensionMethod ?: return
+        val height = cluster.measuredHeight
+        val success = runCatching { setter.invoke(cluster, targetWidth, height); true }.getOrDefault(false)
+        if (!success) return
+
+        val snapshot = "${before}->${cluster.measuredWidth}|rightmost=${targetWidth}|height=${height}"
+        if (lastNativeClusterTrailingTrimDiagnostics.put(cluster, snapshot) != snapshot) {
+            diagnostic(
+                "Native status-icon trailing footprint trimmed: measuredWidth=${before}->${cluster.measuredWidth}" +
+                    "|rightmostVisibleIconEdge=${targetWidth}|height=${height}|padding=" +
+                    "${cluster.paddingLeft},${cluster.paddingRight}|parent=system_icons"
+            )
+        }
+    }
+
+    /** Right edge of actual visible native leaves, relative to screen coordinates. */
+    private fun rightmostVisibleNativeChildRightScreenPx(cluster: ViewGroup): Int? {
+        return descendants(cluster).drop(1).asSequence().filter { candidate ->
+            if (candidate is GlyphView || isSuppressedNativeStatusChild(candidate)) return@filter false
+            val isLeaf = candidate !is ViewGroup || candidate.childCount == 0
+            if (!isLeaf || candidate.width <= 0 || candidate.height <= 0) return@filter false
+
+            var current: View? = candidate
+            while (current != null) {
+                if (current.visibility != View.VISIBLE || current.alpha <= 0f) return@filter false
+                if (current === cluster) return@filter true
+                current = current.parent as? View
+            }
+            false
+        }.mapNotNull { candidate ->
+            runCatching {
+                val location = IntArray(2)
+                candidate.getLocationOnScreen(location)
+                location[0] + candidate.width
+            }.getOrNull()
+        }.maxOrNull()
+    }
+
     private fun clampEmptyNativeClusterMeasuredWidth(cluster: ViewGroup) {
         if (!config.enabled || !(config.showWifi || isMobileNativeSuppressed())) return
+        // This view owns the native signal whenever the current mode does not suppress it.
+        // A transiently zero-sized child must not cause the whole status-icon cluster to be
+        // measured as zero; that prevents the native signal from returning until another icon
+        // happens to expand the cluster.
+        val nativeMobileSlotExpected = !isMobileNativeSuppressed()
         // Keep the hot onMeasure hook dormant for unrelated clusters until our established
         // Wi-Fi reconciliation path has armed this exact status-icon container.
         val reconciliationArmed = synchronized(nativeWifiClusterLayoutListeners) {
@@ -5065,11 +5430,16 @@ object StatusBarComboStyleOneRuntime {
         if (!reconciliationArmed) return
         val before = cluster.measuredWidth
         if (before <= 0) return
-        if (hostFor(cluster) == null || hasVisibleNativeClusterIconFootprint(cluster)) {
+        if (hostFor(cluster) == null || nativeMobileSlotExpected ||
+            hasVisibleNativeClusterIconFootprint(cluster)
+        ) {
             val previous = lastNativeClusterMeasuredWidthDiagnostics[cluster]
             if (previous == "clamped-to-zero") {
                 lastNativeClusterMeasuredWidthDiagnostics[cluster] = "native-icon-present"
-                diagnostic("Native status-icon cluster width restored: visible native icon footprint present")
+                diagnostic(
+                    "Native status-icon cluster width restored: native mobile slot expected or " +
+                        "visible native icon footprint present"
+                )
             }
             return
         }

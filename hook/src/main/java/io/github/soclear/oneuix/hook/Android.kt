@@ -136,6 +136,32 @@ object Android {
         }
     }
 
+
+    // Allow installing a lower version of an already-installed app.
+    context(xposedModule: XposedModule, param: XposedModuleInterface.SystemServerStartingParam)
+    fun hookAllowAppDowngrade() {
+        try {
+            val clazz = param.classLoader.loadClass("com.android.server.pm.PackageManagerServiceUtils")
+            clazz.declaredMethods.filter { it.name == "checkDowngrade" }.forEach { method ->
+                xposedModule.hook(method).intercept { null }
+            }
+        } catch (t: Throwable) {
+            xlog(t)
+        }
+    }
+
+    // Disable the secure-window screenshot restriction only when the preference is enabled.
+    context(xposedModule: XposedModule, param: XposedModuleInterface.SystemServerStartingParam)
+    fun hookDisableSecureScreenshotRestriction() {
+        try {
+            val clazz = param.classLoader.loadClass("com.android.server.wm.WindowState")
+            val method = clazz.getDeclaredMethod("isSecureLocked")
+            xposedModule.hook(method).intercept { false }
+        } catch (t: Throwable) {
+            xlog(t)
+        }
+    }
+
     // 移除充电器时禁止亮屏
     // PowerManagerService.updateIsPoweredLocked 在插拔充电器时会调用 wakePowerGroupLocked 点亮屏幕，
     // 唤醒理由字符串为 "android.server.power:PLUGGED:" + mIsPowered。

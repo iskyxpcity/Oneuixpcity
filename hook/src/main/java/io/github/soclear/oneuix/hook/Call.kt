@@ -8,6 +8,7 @@ import io.github.soclear.oneuix.hook.util.HookConfig
 import io.github.soclear.oneuix.hook.util.afterAttach
 import io.github.soclear.oneuix.hook.util.getHookConfig
 import io.github.soclear.oneuix.hook.util.longVersionCode
+import io.github.soclear.oneuix.hook.util.PreferenceProvider
 import io.github.soclear.oneuix.hook.util.reflect
 import io.github.soclear.oneuix.hook.util.xlog
 import kotlinx.serialization.Serializable
@@ -19,6 +20,48 @@ import java.lang.reflect.Field
 import java.lang.reflect.Modifier
 
 object Call {
+
+    context(xposedModule: XposedModule, param: XposedModuleInterface.PackageReadyParam)
+    fun hookCallReturnDelay() {
+        if (param.packageName != Package.INCALLUI) return
+        val inCallScope = ThreadLocal.withInitial { false }
+        val finishClass = runCatching { param.classLoader.loadClass("Ab.e") }
+            .onFailure { xlog(it) }
+            .getOrNull() ?: return
+
+        listOf("y", "e").forEach { methodName ->
+            runCatching {
+                val method = finishClass.getDeclaredMethod(methodName)
+                xposedModule.hook(method).intercept { chain ->
+                    val previous = inCallScope.get()
+                    inCallScope.set(true)
+                    try {
+                        chain.proceed()
+                    } finally {
+                        inCallScope.set(previous)
+                    }
+                }
+            }.onFailure { xlog(it) }
+        }
+
+        runCatching {
+            val timerClass = param.classLoader.loadClass("Hd.a")
+            val method = timerClass.getDeclaredMethod("T", java.lang.Long.TYPE)
+            xposedModule.hook(method).intercept { chain ->
+                val originalDelay = chain.args.getOrNull(0) as? Long
+                if (!inCallScope.get() || (originalDelay != 3500L && originalDelay != 10000L)) {
+                    return@intercept chain.proceed()
+                }
+                val other = with(xposedModule) { PreferenceProvider.loadPreference()?.other }
+                if (other?.callReturnDelayEnabled != true) return@intercept chain.proceed()
+                val delayMillis = other.callReturnDelaySeconds.coerceIn(0, 5) * 1000L
+                val args = chain.args.toMutableList()
+                args[0] = delayMillis
+                chain.proceed(args.toTypedArray())
+            }
+        }.onFailure { xlog(it) }
+    }
+
     context(xposedModule: XposedModule, param: XposedModuleInterface.PackageReadyParam)
     fun supportVoiceCallRecording(preferRecordingButton: Boolean) {
         if (param.packageName != Package.TELEPHONYUI &&
