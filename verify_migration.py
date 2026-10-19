@@ -81,6 +81,13 @@ checks = {
      and 'native-icon-present-trim-trailing-space' in combo_runtime_source
      and 'baselineParentLayoutParams != null' in combo_runtime_source
  ),
+ 'Status icon row trims trailing measured width to last visible native icon': (
+     'trimVisibleNativeStatusIconTrailingWidth(cluster)' in combo_runtime_source
+     and 'rightmostVisibleNativeChildRightScreenPx(cluster)' in combo_runtime_source
+     and 'val targetWidth = rightmostScreenPx - clusterLocation[0]' in combo_runtime_source
+     and 'Native status-icon trailing footprint trimmed' in combo_runtime_source
+     and 'hasVisibleNativeClusterIconFootprint(cluster)' in combo_runtime_source
+ ),
  'Network speed leaves native horizontal margins to Samsung SystemUI': (
      'NETWORK_SPEED_TRAILING_GAP_DP' not in network_speed_runtime_source
      and 'bindTrailingGapHost' not in network_speed_runtime_source

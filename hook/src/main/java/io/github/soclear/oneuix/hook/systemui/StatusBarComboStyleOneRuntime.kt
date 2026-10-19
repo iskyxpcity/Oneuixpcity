@@ -206,6 +206,8 @@ object StatusBarComboStyleOneRuntime {
     private val lastNativeWifiClusterDiagnostics = Collections.synchronizedMap(WeakHashMap<ViewGroup, String>())
     private val lastNativeClusterMeasuredWidthDiagnostics =
         Collections.synchronizedMap(WeakHashMap<View, String>())
+    private val lastNativeClusterTrailingTrimDiagnostics =
+        Collections.synchronizedMap(WeakHashMap<View, String>())
     private val setMeasuredDimensionMethod: java.lang.reflect.Method? by lazy {
         runCatching {
             View::class.java.getDeclaredMethod(
@@ -5332,6 +5334,11 @@ object StatusBarComboStyleOneRuntime {
                         val result = chain.proceed()
                         val cluster = chain.thisObject as? ViewGroup
                         if (cluster != null && isStatusIconsCluster(cluster)) {
+                            // Preserve visible native icons, but do not let hidden Wi-Fi/mobile
+                            // slots keep the StatusIconContainer measured wider than its last
+                            // visible native icon. This trims the gap before the combo glyph
+                            // without shifting the leading Mode/Volume icon away from networkSpeed.
+                            trimVisibleNativeStatusIconTrailingWidth(cluster)
                             clampEmptyNativeClusterMeasuredWidth(cluster)
                         }
                         result
@@ -5342,6 +5349,70 @@ object StatusBarComboStyleOneRuntime {
                 diagnostic("Native status-icon width guard unavailable: $className: $it")
             }
         }
+    }
+
+    /**
+     * Samsung can retain a trailing measured slot in StatusIconContainer after native Wi-Fi/mobile
+     * views are collapsed. Padding/WRAP_CONTENT alone does not remove it: diagnostics show the
+     * container ending well after the last visible Mode/Volume icon. Clamp only the measured
+     * width to the right edge of the last visible, unsuppressed native icon. This preserves the
+     * container's leading inset and the positions/visibility of real native icons while allowing
+     * the following combo glyph to sit close to Volume. The empty-cluster guard remains separate.
+     */
+    private fun trimVisibleNativeStatusIconTrailingWidth(cluster: ViewGroup) {
+        if (!config.enabled || !config.showWifi || !isStatusIconsCluster(cluster)) return
+        val parent = cluster.parent as? LinearLayout ?: return
+        if (resourceName(parent) != "system_icons") return
+        val reconciliationArmed = synchronized(nativeWifiClusterLayoutListeners) {
+            nativeWifiClusterLayoutListeners.containsKey(cluster)
+        }
+        if (!reconciliationArmed || hostFor(cluster) == null ||
+            !hasVisibleNativeClusterIconFootprint(cluster)
+        ) return
+
+        val clusterLocation = IntArray(2)
+        if (runCatching { cluster.getLocationOnScreen(clusterLocation) }.isFailure) return
+        val rightmostScreenPx = rightmostVisibleNativeChildRightScreenPx(cluster) ?: return
+        val targetWidth = rightmostScreenPx - clusterLocation[0]
+        val before = cluster.measuredWidth
+        if (targetWidth <= 0 || targetWidth >= before) return
+
+        val setter = setMeasuredDimensionMethod ?: return
+        val height = cluster.measuredHeight
+        val success = runCatching { setter.invoke(cluster, targetWidth, height); true }.getOrDefault(false)
+        if (!success) return
+
+        val snapshot = "${before}->${cluster.measuredWidth}|rightmost=${targetWidth}|height=${height}"
+        if (lastNativeClusterTrailingTrimDiagnostics.put(cluster, snapshot) != snapshot) {
+            diagnostic(
+                "Native status-icon trailing footprint trimmed: measuredWidth=${before}->${cluster.measuredWidth}" +
+                    "|rightmostVisibleIconEdge=${targetWidth}|height=${height}|padding=" +
+                    "${cluster.paddingLeft},${cluster.paddingRight}|parent=system_icons"
+            )
+        }
+    }
+
+    /** Right edge of actual visible native leaves, relative to screen coordinates. */
+    private fun rightmostVisibleNativeChildRightScreenPx(cluster: ViewGroup): Int? {
+        return descendants(cluster).drop(1).asSequence().filter { candidate ->
+            if (candidate is GlyphView || isSuppressedNativeStatusChild(candidate)) return@filter false
+            val isLeaf = candidate !is ViewGroup || candidate.childCount == 0
+            if (!isLeaf || candidate.width <= 0 || candidate.height <= 0) return@filter false
+
+            var current: View? = candidate
+            while (current != null) {
+                if (current.visibility != View.VISIBLE || current.alpha <= 0f) return@filter false
+                if (current === cluster) return@filter true
+                current = current.parent as? View
+            }
+            false
+        }.mapNotNull { candidate ->
+            runCatching {
+                val location = IntArray(2)
+                candidate.getLocationOnScreen(location)
+                location[0] + candidate.width
+            }.getOrNull()
+        }.maxOrNull()
     }
 
     private fun clampEmptyNativeClusterMeasuredWidth(cluster: ViewGroup) {
