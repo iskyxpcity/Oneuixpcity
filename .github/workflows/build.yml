@@ -64,12 +64,12 @@ jobs:
           grep -Fq 'include(":common")' settings.gradle.kts
           grep -Fq 'include(":hook")' settings.gradle.kts
           grep -Fq 'include(":stub")' settings.gradle.kts
-          test -f common/src/main/java/io/github/soclear/oneuix/common/Preference.kt
-          test -f hook/src/main/java/io/github/soclear/oneuix/hook/Main.kt
+          test -f common/src/main/java/com/oneuixp/common/Preference.kt
+          test -f hook/src/main/java/com/oneuixp/hook/Main.kt
           test -f stub/src/main/java/android/os/SystemProperties.java
           grep -Fq 'implementation(project(":hook"))' app/build.gradle.kts
           grep -Fq 'implementation(project(":common"))' app/build.gradle.kts
-          grep -Fxq 'io.github.soclear.oneuix.hook.Main' app/src/main/resources/META-INF/xposed/java_init.list
+          grep -Fxq 'com.oneuixp.hook.Main' app/src/main/resources/META-INF/xposed/java_init.list
           grep -Fq 'minApiVersion=101' app/src/main/resources/META-INF/xposed/module.prop
           grep -Fq 'targetApiVersion=101' app/src/main/resources/META-INF/xposed/module.prop
           SCOPE_COUNT=$(grep -cve '^[[:space:]]*$' app/src/main/resources/META-INF/xposed/scope.list)
@@ -77,19 +77,19 @@ jobs:
           diff -u hook/src/main/resources/META-INF/xposed/scope.list app/src/main/resources/META-INF/xposed/scope.list 2>/dev/null || {
             printf '%s\n'               com.oneuixp.app               system               com.android.settings               com.android.systemui               com.samsung.android.app.notes               com.samsung.android.app.sketchbook               com.samsung.android.app.telephonyui               com.samsung.android.calendar               com.samsung.android.da.daagent               com.samsung.android.dialer               com.samsung.android.incallui               com.samsung.android.mdecservice               com.samsung.android.messaging               com.samsung.android.service.airviewdictionary               com.samsung.android.shealthmonitor               com.samsung.android.sm_cn               com.samsung.android.themecenter               com.samsung.android.video               com.samsung.android.app.watchmanager               com.sec.android.app.camera               com.sec.android.app.launcher               com.sec.android.app.samsungapps               com.sec.android.app.sbrowser               com.sec.android.daemonapp               com.sec.android.gallery3d               com.sec.android.mimage.photoretouching               | diff -u - app/src/main/resources/META-INF/xposed/scope.list
           }
-          grep -Fq 'ENABLE_ONEUIX_FUNCTIONS = true' hook/src/main/java/io/github/soclear/oneuix/hook/Main.kt
-          test -f hook/src/main/java/io/github/soclear/oneuix/hook/util/OneuiXPStatusReporter.kt
-          test -f app/src/main/java/com/oneuixp/app/oneuix/OneuiXPreferenceBridge.kt
-          test -f app/src/main/java/com/oneuixp/app/oneuix/OneuiXFeatureCatalog.kt
-          test -f app/src/main/java/com/oneuixp/app/ui/viewmodel/OneuiXToolsViewModel.kt
-          test -f app/src/main/java/com/oneuixp/app/ui/screen/tools/OneuiXCategoryScreen.kt
-          grep -Fq 'data class OneuiXCategory' app/src/main/java/com/oneuixp/app/ui/navigation3/Routes.kt
-          grep -Fq 'OneuiXCategory.entries' app/src/main/java/com/oneuixp/app/ui/screen/tools/ToolsScreen.kt
-          grep -Fq 'ENABLE_ONEUIX_FUNCTIONS = true' hook/src/main/java/io/github/soclear/oneuix/hook/Main.kt
+          grep -Fq 'ENABLE_ONEUIXP_FUNCTIONS = true' hook/src/main/java/com/oneuixp/hook/Main.kt
+          test -f hook/src/main/java/com/oneuixp/hook/util/OneuiXPStatusReporter.kt
+          test -f app/src/main/java/com/oneuixp/app/oneuixp/OneuiXPreferenceBridge.kt
+          test -f app/src/main/java/com/oneuixp/app/oneuixp/OneuiXPFeatureCatalog.kt
+          test -f app/src/main/java/com/oneuixp/app/ui/viewmodel/OneuiXPToolsViewModel.kt
+          test -f app/src/main/java/com/oneuixp/app/ui/screen/tools/OneuiXPCategoryScreen.kt
+          grep -Fq 'data class OneuiXPCategory' app/src/main/java/com/oneuixp/app/ui/navigation3/Routes.kt
+          grep -Fq 'OneuiXPCategory.entries' app/src/main/java/com/oneuixp/app/ui/screen/tools/ToolsScreen.kt
+          grep -Fq 'ENABLE_ONEUIXP_FUNCTIONS = true' hook/src/main/java/com/oneuixp/hook/Main.kt
           test ! -e hook/src/main/resources/META-INF/xposed/java_init.list
           test ! -e hook/src/main/resources/META-INF/xposed/module.prop
           test ! -e hook/src/main/resources/META-INF/xposed/scope.list
-          echo "OneUI XP API101 Flux-style single-entry migration validated; full OneUIX functional hooks enabled"
+          echo "OneUI XP API101 Flux-style single-entry migration validated; full OneUIXP functional hooks enabled"
 
       - name: Compile OneUI XP before the owner-signing gate
         run: |
@@ -160,7 +160,7 @@ jobs:
           grep -q "versionName='$VERSION_NAME'" diagnostics/release-validation/APK_PACKAGE_INFO.txt
           grep -q "versionCode='$VERSION_CODE'" diagnostics/release-validation/APK_PACKAGE_INFO.txt
 
-          unzip -p "$RELEASE_APK" META-INF/xposed/java_init.list | grep -Fxq 'io.github.soclear.oneuix.hook.Main'
+          unzip -p "$RELEASE_APK" META-INF/xposed/java_init.list | grep -Fxq 'com.oneuixp.hook.Main'
           unzip -p "$RELEASE_APK" META-INF/xposed/module.prop | grep -Fq 'targetApiVersion=101'
           unzip -p "$RELEASE_APK" META-INF/xposed/scope.list | grep -Fxq 'com.android.systemui'
 
@@ -203,7 +203,7 @@ jobs:
           echo "OUTPUT_APK=$OUTPUT_APK" >> "$GITHUB_ENV"
           cp "$APK" "dist/$OUTPUT_APK"
           unzip -t "dist/$OUTPUT_APK"
-          unzip -p "$APK" META-INF/xposed/java_init.list | grep -Fxq 'io.github.soclear.oneuix.hook.Main'
+          unzip -p "$APK" META-INF/xposed/java_init.list | grep -Fxq 'com.oneuixp.hook.Main'
           unzip -p "$APK" META-INF/xposed/module.prop | grep -Fq 'targetApiVersion=101'
           unzip -p "$APK" META-INF/xposed/scope.list | grep -Fxq 'com.oneuixp.app'
           unzip -p "$APK" META-INF/xposed/scope.list | grep -Fxq 'com.android.systemui'
@@ -213,7 +213,6 @@ jobs:
         if: success() && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/migration/') || startsWith(github.ref, 'refs/heads/test/'))
         env:
           SOURCE_REPO_TOKEN: ${{ github.token }}
-          PUBLIC_RELEASE_TOKEN: ${{ secrets.RELEASE_REPO_TOKEN }}
         run: |
           set -euo pipefail
           SHORT_SHA="${GITHUB_SHA::7}"
@@ -280,23 +279,6 @@ jobs:
               --clobber
             echo "Published formal signed APK to source repository release: $RELEASE_REPO / $TAG"
 
-            # The in-app updater checks this public binary-release feed. Mirror the exact
-            # owner-signed APK and release notes when the optional cross-repo token is configured.
-            if [ -n "${PUBLIC_RELEASE_TOKEN:-}" ]; then
-              GH_TOKEN="$PUBLIC_RELEASE_TOKEN"
-              export GH_TOKEN
-              PUBLIC_RELEASE_REPO="iSkyJIE/OneUIXP-Releases"
-              if gh release view "$TAG" --repo "$PUBLIC_RELEASE_REPO" >/dev/null 2>&1; then
-                gh release edit "$TAG" --repo "$PUBLIC_RELEASE_REPO" --title "$TITLE" --notes "$NOTES" --latest
-              else
-                gh release create "$TAG" --repo "$PUBLIC_RELEASE_REPO" --target main \
-                  --title "$TITLE" --notes "$NOTES" --latest
-              fi
-              gh release upload "$TAG" --repo "$PUBLIC_RELEASE_REPO" "dist/$OUTPUT_APK" --clobber
-              echo "Published signed APK and update notes to public update feed: $PUBLIC_RELEASE_REPO / $TAG"
-            else
-              echo "::warning::RELEASE_REPO_TOKEN is not configured; public in-app update feed was not updated."
-            fi
           else
             gh release upload "$TAG" \
               --repo "$RELEASE_REPO" \
