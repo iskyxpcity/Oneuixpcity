@@ -74,17 +74,18 @@ checks = {
      and 'nativeWifiClusterBaselineParentLayoutParams' in combo_runtime_source
      and 'baselineParentLayoutParams != null' in combo_runtime_source
  ),
- 'Status icon row spacing requires arc toggle and connected Wi-Fi': (
-     'fun isNativeWifiSuppressed(context: Context): Boolean {' in combo_runtime_source
-     and 'if (!config.enabled || !config.showWifi) return false' in combo_runtime_source
-     and 'return isWifiTransportConnected(context) == true' in combo_runtime_source
-     and 'val nativeWifiSuppressed = isNativeWifiSuppressed(cluster.context)' in combo_runtime_source
-     and 'if (nativeWifiSuppressed) {' in combo_runtime_source
+ 'Status icon row spacing follows four Wi-Fi states': (
+     'fun shouldClearNativeWifiSpacing(context: Context): Boolean {' in combo_runtime_source
+     and 'val arcEnabled = config.enabled && config.showWifi' in combo_runtime_source
+     and 'val wifiConnected = isWifiTransportConnected(context) == true' in combo_runtime_source
+     and 'return arcEnabled || !wifiConnected' in combo_runtime_source
+     and 'val clearNativeWifiSpacing = shouldClearNativeWifiSpacing(cluster.context)' in combo_runtime_source
+     and 'if (clearNativeWifiSpacing) {' in combo_runtime_source
      and 'compactNativeStatusIconParentSlot(cluster)' in combo_runtime_source
      and 'restoreNativeStatusIconParentSlot(cluster)' in combo_runtime_source
-     and 'val targetLeft = if (nativeWifiSuppressed && !hasVisibleNativeIcon) 0 else baselinePadding[0]' in combo_runtime_source
-     and 'val targetRight = if (nativeWifiSuppressed) 0 else baselinePadding[2]' in combo_runtime_source
-     and 'val targetMinimumWidth = if (nativeWifiSuppressed) 0 else baselineMinimumWidth' in combo_runtime_source
+     and 'val targetLeft = if (clearNativeWifiSpacing) 0 else baselinePadding[0]' in combo_runtime_source
+     and 'val targetRight = if (clearNativeWifiSpacing) 0 else baselinePadding[2]' in combo_runtime_source
+     and 'val targetMinimumWidth = if (clearNativeWifiSpacing) 0 else baselineMinimumWidth' in combo_runtime_source
      and 'scheduleKnownNativeWifiClusterReconciliations()' in combo_runtime_source
  ),
  'Network speed leaves native horizontal margins to Samsung SystemUI': (
