@@ -50,7 +50,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
-import com.oneuixp.app.oneuixp.OneuiXPreferenceBridge
+import com.oneuixp.app.oneuixp.OneuiXPPPreferenceBridge
 import com.oneuixp.app.ui.component.bottombar.BottomBar
 import com.oneuixp.app.ui.component.bottombar.SideNavigationRail
 import com.oneuixp.app.ui.component.bottombar.useNavigationRail
@@ -109,7 +109,7 @@ class MainActivity : ComponentActivity() {
         // Keep PackageInstaller callbacks on the real app activity so system confirmation
         // can be launched from the foreground without a background trampoline activity.
         handleUpdateInstallStatus(this, intent)
-        OneuiXPreferenceBridge.ensureSynchronized(application)
+        OneuiXPPPreferenceBridge.ensureSynchronized(application)
 
         setContent {
             val viewModel = viewModel<MainActivityViewModel>()
@@ -243,7 +243,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        OneuiXPreferenceBridge.ensureSynchronized(application)
+        OneuiXPPPreferenceBridge.ensureSynchronized(application)
     }
 }
 
