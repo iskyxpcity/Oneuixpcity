@@ -4,7 +4,7 @@ import android.os.Build
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.oneuixp.app.oneuiXPApp
-import com.oneuixp.app.oneuixp.OneuiXPreferenceBridge
+import com.oneuixp.app.oneuixp.OneuiXPPPreferenceBridge
 import com.oneuixp.app.oneuixp.OneuiXPSettingSpec
 import com.oneuixp.app.oneuixp.OneuiXPSettingType
 import com.oneuixp.app.oneuixp.OneuiXPVisibility
@@ -65,7 +65,7 @@ class OneuiXPToolsViewModel : ViewModel() {
      * The final value is persisted by the normal event on drag release.
      */
     fun previewData(nextPreference: (Preference) -> Preference) {
-        OneuiXPreferenceBridge.preview(
+        OneuiXPPPreferenceBridge.preview(
             oneuiXPApp,
             nextPreference(preference.value),
         )
@@ -94,7 +94,7 @@ class OneuiXPToolsViewModel : ViewModel() {
             input.readBytes().decodeToString()
         )
         dataStore.updateData { restored }
-        OneuiXPreferenceBridge.synchronizeNow(oneuiXPApp)
+        OneuiXPPPreferenceBridge.synchronizeNow(oneuiXPApp)
     }
 
 
@@ -181,7 +181,7 @@ class OneuiXPToolsViewModel : ViewModel() {
                     current.withJsonValue(spec.path, JsonPrimitive(checked))
                 }
             }
-            OneuiXPreferenceBridge.ensureSynchronized(oneuiXPApp)
+            OneuiXPPPreferenceBridge.ensureSynchronized(oneuiXPApp)
         }
     }
 
@@ -214,7 +214,7 @@ class OneuiXPToolsViewModel : ViewModel() {
                 }
                 updated
             }
-            OneuiXPreferenceBridge.ensureSynchronized(oneuiXPApp)
+            OneuiXPPPreferenceBridge.ensureSynchronized(oneuiXPApp)
         }
     }
 

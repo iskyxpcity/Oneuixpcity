@@ -154,7 +154,7 @@ private object OneuiXPXposedService {
             runCatching {
                 val current = application.oneuiXPDataStore.data.first()
                 Log.i(TAG, "CHAIN_PROBE local DataStore " + current.probeSummary())
-                if (!OneuiXPreferenceSerializer.synchronizeRemote(current)) {
+                if (!OneuiXPPPreferenceSerializer.synchronizeRemote(current)) {
                     error("libxposed remote preference service unavailable")
                 }
             }.onFailure {
@@ -183,14 +183,14 @@ private object OneuiXPXposedService {
             // can never flush an older snapshot just because the last UI write is pending.
             val current = application.oneuiXPDataStore.updateData { it }
             Log.i(TAG, "CHAIN_PROBE synchronous local DataStore " + current.probeSummary())
-            OneuiXPreferenceSerializer.synchronizeRemote(current)
+            OneuiXPPPreferenceSerializer.synchronizeRemote(current)
         }.onFailure {
             Log.w(TAG, "Synchronous remote preference flush failed", it)
         }.getOrDefault(false)
     }
 }
 
-object OneuiXPreferenceSerializer : Serializer<Preference> {
+object OneuiXPPPreferenceSerializer : Serializer<Preference> {
     private const val TAG = "OneuiXP-OneUIXPrefs"
     private const val SYNC_MARKER = "_oneuiXpRemoteSynced"
 
@@ -273,10 +273,10 @@ object OneuiXPreferenceSerializer : Serializer<Preference> {
 
 val Context.oneuiXPDataStore: DataStore<Preference> by dataStore(
     fileName = "oneuixp_features.json",
-    serializer = OneuiXPreferenceSerializer,
+    serializer = OneuiXPPPreferenceSerializer,
 )
 
-object OneuiXPreferenceBridge {
+object OneuiXPPPreferenceBridge {
     fun initialize(application: Application) {
         OneuiXPXposedService.initialize(application)
     }

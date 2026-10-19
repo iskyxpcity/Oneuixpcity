@@ -62,7 +62,7 @@ import kotlin.math.roundToInt
 import android.widget.Toast
 import com.oneuixp.app.R
 import com.oneuixp.app.oneuiXPApp
-import com.oneuixp.app.oneuixp.OneuiXPreferenceBridge
+import com.oneuixp.app.oneuixp.OneuiXPPPreferenceBridge
 import com.oneuixp.app.oneuixp.OneuiXPCategory
 import com.oneuixp.app.oneuixp.OneuiXPFeatureCatalog
 import com.oneuixp.app.oneuixp.OneuiXPLayoutRules
@@ -443,7 +443,7 @@ private fun OneuiXPCategoryMaterial(
                         onClick = {
                             coroutineScope.launch {
                                 val synchronized =
-                                    OneuiXPreferenceBridge.synchronizeNow(oneuiXPApp)
+                                    OneuiXPPPreferenceBridge.synchronizeNow(oneuiXPApp)
                                 if (!synchronized) {
                                     Toast.makeText(
                                         context,
