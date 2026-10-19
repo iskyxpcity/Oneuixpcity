@@ -67,6 +67,13 @@ checks = {
  'Composite renderer collapses standalone native signal leaves': (
      '(name.contains("signal") && v !is ViewGroup)' in combo_runtime_source
  ),
+ 'Status icon row releases weighted empty space and restores original parent params': (
+     'compactNativeStatusIconParentSlot(cluster)' in combo_runtime_source
+     and 'width = ViewGroup.LayoutParams.WRAP_CONTENT' in combo_runtime_source
+     and 'weight = 0f' in combo_runtime_source
+     and 'nativeWifiClusterBaselineParentLayoutParams' in combo_runtime_source
+     and 'baselineParentLayoutParams != null' in combo_runtime_source
+ ),
  'Network speed leaves native horizontal margins to Samsung SystemUI': (
      'NETWORK_SPEED_TRAILING_GAP_DP' not in network_speed_runtime_source
      and 'bindTrailingGapHost' not in network_speed_runtime_source

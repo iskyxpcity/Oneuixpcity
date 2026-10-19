@@ -193,6 +193,10 @@ object StatusBarComboStyleOneRuntime {
     // Preserve its native minimum width so the empty signal cluster can release the residue.
     private val nativeWifiClusterBaselineMinimumWidth =
         Collections.synchronizedMap(WeakHashMap<ViewGroup, Int>())
+    // Preserve the parent LinearLayout slot parameters so the weighted empty area can be
+    // removed while the combo glyph is active and restored byte-for-byte when disabled.
+    private val nativeWifiClusterBaselineParentLayoutParams =
+        Collections.synchronizedMap(WeakHashMap<ViewGroup, LinearLayout.LayoutParams>())
     // One per-cluster listener; its value must not capture the WeakHashMap key.
     private val nativeWifiClusterLayoutListeners =
         Collections.synchronizedMap(WeakHashMap<ViewGroup, View.OnLayoutChangeListener>())
@@ -2759,6 +2763,46 @@ object StatusBarComboStyleOneRuntime {
      * replacing native signals with the trio. Restore the exact baseline when any native
      * icon has a real visible footprint; never hide the shared container itself.
      */
+    /**
+     * Samsung places StatusIconContainer in system_icons as a zero-width weighted child.
+     * With Wi-Fi/mobile replaced, that weight can absorb the otherwise-empty gap between
+     * networkSpeed and the combo GlyphView. Keep the container's real native icon children,
+     * but let it measure to content instead of consuming all remaining row width.
+     *
+     * Only act on the observed system_icons row. Preserve the original LinearLayout.LayoutParams
+     * (including weight, gravity and margins) so feature disable restores Samsung's baseline.
+     */
+    private fun compactNativeStatusIconParentSlot(cluster: ViewGroup) {
+        if (!config.enabled || !config.showWifi || !isStatusIconsCluster(cluster)) return
+        val parent = cluster.parent as? LinearLayout ?: return
+        if (resourceName(parent) != "system_icons") return
+        val current = cluster.layoutParams as? LinearLayout.LayoutParams ?: return
+
+        synchronized(nativeWifiClusterBaselineParentLayoutParams) {
+            if (!nativeWifiClusterBaselineParentLayoutParams.containsKey(cluster)) {
+                nativeWifiClusterBaselineParentLayoutParams[cluster] = LinearLayout.LayoutParams(current)
+            }
+        }
+
+        val oldWidth = current.width
+        val oldWeight = current.weight
+        if (oldWidth == ViewGroup.LayoutParams.WRAP_CONTENT && oldWeight == 0f) return
+
+        val compact = LinearLayout.LayoutParams(current).apply {
+            width = ViewGroup.LayoutParams.WRAP_CONTENT
+            weight = 0f
+        }
+        cluster.layoutParams = compact
+        parent.requestLayout()
+        parent.invalidate()
+        diagnostic(
+            "Native status-icon parent slot compacted: parent=system_icons|" +
+                "oldWidth=${oldWidth}|oldWeight=${oldWeight}|" +
+                "newWidth=${compact.width}|newWeight=${compact.weight}|" +
+                "clusterChildren=${cluster.childCount}|clusterPadding=${cluster.paddingLeft},${cluster.paddingRight}"
+        )
+    }
+
     private fun scheduleNativeWifiClusterReconciliation(
         cluster: ViewGroup?,
         triggeringChild: View? = null,
@@ -2782,6 +2826,7 @@ object StatusBarComboStyleOneRuntime {
         }
         cluster.post {
             try {
+                compactNativeStatusIconParentSlot(cluster)
                 val baselinePadding = synchronized(nativeWifiClusterBaselinePadding) {
                     nativeWifiClusterBaselinePadding[cluster] ?: intArrayOf(
                         cluster.paddingLeft, cluster.paddingTop, cluster.paddingRight, cluster.paddingBottom,
@@ -2842,7 +2887,12 @@ object StatusBarComboStyleOneRuntime {
                     "|baselinePadding=${baselinePadding.contentToString()}|paddingChanged=${paddingChanged}" +
                     "|minimumWidth=${cluster.minimumWidth}|baselineMinimumWidth=${baselineMinimumWidth}" +
                     "|minimumWidthChanged=${minimumWidthChanged}|zeroFootprintVisible=$zeroFootprintVisibleChildren" +
-                    "|lp=" + lp?.width + "x" + lp?.height + "|childCount=" + cluster.childCount +
+                    "|lp=" + lp?.width + "x" + lp?.height +
+                    "|lpClass=" + lp?.javaClass?.simpleName +
+                    "|parentWeight=" + (lp as? LinearLayout.LayoutParams)?.weight +
+                    "|parentGravity=" + (lp as? LinearLayout.LayoutParams)?.gravity +
+                    "|parentResource=" + resourceName(row ?: cluster) +
+                    "|childCount=" + cluster.childCount +
                     "|row=" + row?.javaClass?.simpleName + ":" + row?.width + "x" + row?.height
                 if (lastNativeWifiClusterDiagnostics.put(cluster, snapshot) != snapshot) {
                     diagnostic("Native Wi-Fi parent layout: " + snapshot)
@@ -2890,6 +2940,9 @@ object StatusBarComboStyleOneRuntime {
             val baselineMinimumWidth = synchronized(nativeWifiClusterBaselineMinimumWidth) {
                 nativeWifiClusterBaselineMinimumWidth.remove(cluster)
             }
+            val baselineParentLayoutParams = synchronized(nativeWifiClusterBaselineParentLayoutParams) {
+                nativeWifiClusterBaselineParentLayoutParams.remove(cluster)
+            }
             val listener = synchronized(nativeWifiClusterLayoutListeners) {
                 nativeWifiClusterLayoutListeners.remove(cluster)
             }
@@ -2902,13 +2955,20 @@ object StatusBarComboStyleOneRuntime {
                 )
             }
             if (baselineMinimumWidth != null) cluster.setMinimumWidth(baselineMinimumWidth)
-            if (baselineVisibility != null || baselinePadding != null || baselineMinimumWidth != null) {
+            baselineParentLayoutParams?.let { baseline ->
+                runCatching { cluster.layoutParams = LinearLayout.LayoutParams(baseline) }
+            }
+            if (baselineVisibility != null || baselinePadding != null || baselineMinimumWidth != null ||
+                baselineParentLayoutParams != null
+            ) {
                 cluster.requestLayout()
                 (cluster.parent as? View)?.requestLayout()
+                val restoredLp = cluster.layoutParams as? LinearLayout.LayoutParams
                 diagnostic("Native Wi-Fi parent layout: stage=restore-native-state visibility=" +
                     cluster.visibility + " size=" + cluster.width + "x" + cluster.height +
                     " padding=${cluster.paddingLeft},${cluster.paddingTop},${cluster.paddingRight},${cluster.paddingBottom}" +
-                    " minimumWidth=${cluster.minimumWidth}")
+                    " minimumWidth=${cluster.minimumWidth}" +
+                    " parentWidth=${restoredLp?.width}|parentWeight=${restoredLp?.weight}")
             }
         }
     }
