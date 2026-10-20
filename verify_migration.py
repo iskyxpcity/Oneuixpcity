@@ -145,8 +145,8 @@ legacy_owner_token = _chars((115, 111, 99, 108, 101, 97, 114))
 legacy_project_segment = _chars((111, 110, 101, 117, 105, 120))
 old_namespace = "io.github." + legacy_owner_token
 old_token = "RELEASE_REPO_" + _chars((84, 79, 75, 69, 78))
-# Distinguish the old standalone project token from OneUI Aloha's accepted
-# casing variants, all of which add the project-specific trailing "p".
+# Keep detecting the retired standalone upstream namespace token, which differs from
+# the current OneUI Aloha identity and must not reappear in source paths or content.
 old_brand = re.compile(
     r"(?i)(?<![a-z0-9])" + legacy_project_segment + r"(?!p)(?![a-z0-9])"
 )
@@ -216,7 +216,7 @@ checks["No former project naming token outside license texts"] = not legacy_name
 checks["Former standalone project token remains detectable"] = bool(legacy_name_pattern.search(legacy_project_segment))
 checks["Supported OneUI Aloha casing variants do not match the retired namespace token"] = not any(
     old_brand.search(variant) or legacy_name_pattern.search(variant)
-    for variant in ("OneUIAloha", "OneUIAloha", "oneuixp", "OneUIAloha")
+    for variant in ("OneUIAloha", "oneuialoha", "ONEUIALOHA", "oneUiAloha")
 )
 checks["No cross-repository release token reference"] = not token_hits
 checks["No malformed duplicated OneUI Aloha symbols"] = not malformed_symbol_hits
