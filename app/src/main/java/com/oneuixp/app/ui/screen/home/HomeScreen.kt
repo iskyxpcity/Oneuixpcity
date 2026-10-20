@@ -1,4 +1,4 @@
-package com.oneuixp.app.ui.screen.home
+package com.oneuialoha.app.ui.screen.home
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
@@ -10,11 +10,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.unit.Dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.oneuixp.app.ui.LocalUiMode
-import com.oneuixp.app.ui.UiMode
-import com.oneuixp.app.ui.navigation3.Navigator
-import com.oneuixp.app.ui.util.update.requestUpdateDialog
-import com.oneuixp.app.ui.viewmodel.HomeViewModel
+import com.oneuialoha.app.ui.LocalUiMode
+import com.oneuialoha.app.ui.UiMode
+import com.oneuialoha.app.ui.navigation3.Navigator
+import com.oneuialoha.app.ui.util.update.requestUpdateDialog
+import com.oneuialoha.app.ui.viewmodel.HomeViewModel
 
 @Composable
 fun HomePager(

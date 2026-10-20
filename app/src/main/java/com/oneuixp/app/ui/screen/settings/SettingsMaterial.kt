@@ -1,4 +1,4 @@
-package com.oneuixp.app.ui.screen.settings
+package com.oneuialoha.app.ui.screen.settings
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -53,14 +53,14 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.oneuixp.app.R
-import com.oneuixp.app.ui.UiMode
-import com.oneuixp.app.ui.component.material.SegmentedColumn
-import com.oneuixp.app.ui.component.material.SegmentedDropdownItem
-import com.oneuixp.app.ui.component.material.SegmentedListItem
-import com.oneuixp.app.ui.component.material.SegmentedSwitchItem
-import com.oneuixp.app.ui.component.material.SendLogBottomSheet
-import com.oneuixp.app.ui.component.material.SnackBarHost
+import com.oneuialoha.app.R
+import com.oneuialoha.app.ui.UiMode
+import com.oneuialoha.app.ui.component.material.SegmentedColumn
+import com.oneuialoha.app.ui.component.material.SegmentedDropdownItem
+import com.oneuialoha.app.ui.component.material.SegmentedListItem
+import com.oneuialoha.app.ui.component.material.SegmentedSwitchItem
+import com.oneuialoha.app.ui.component.material.SendLogBottomSheet
+import com.oneuialoha.app.ui.component.material.SnackBarHost
 
 /**
  * @author weishu

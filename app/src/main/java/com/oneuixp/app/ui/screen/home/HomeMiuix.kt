@@ -1,4 +1,4 @@
-package com.oneuixp.app.ui.screen.home
+package com.oneuialoha.app.ui.screen.home
 
 import android.app.ActivityManager
 import android.content.Context
@@ -45,14 +45,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.oneuixp.app.BuildConfig
-import com.oneuixp.app.R
-import com.oneuixp.app.ui.component.miuix.WarningCard
-import com.oneuixp.app.ui.component.rebootlistpopup.RebootListPopupMiuix
-import com.oneuixp.app.ui.theme.LocalEnableBlur
-import com.oneuixp.app.ui.theme.isInDarkTheme
-import com.oneuixp.app.ui.util.BlurredBar
-import com.oneuixp.app.ui.util.rememberBlurBackdrop
+import com.oneuialoha.app.BuildConfig
+import com.oneuialoha.app.R
+import com.oneuialoha.app.ui.component.miuix.WarningCard
+import com.oneuialoha.app.ui.component.rebootlistpopup.RebootListPopupMiuix
+import com.oneuialoha.app.ui.theme.LocalEnableBlur
+import com.oneuialoha.app.ui.theme.isInDarkTheme
+import com.oneuialoha.app.ui.util.BlurredBar
+import com.oneuialoha.app.ui.util.rememberBlurBackdrop
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.CardDefaults
 import top.yukonga.miuix.kmp.basic.Icon
@@ -195,7 +195,7 @@ private fun StatusCard(onActivateLsposed: () -> Unit) {
             modifier = Modifier.weight(1f).fillMaxHeight(),
         ) {
             DashboardSmallCardMiuix(
-                title = stringResource(R.string.oneuixp_feature_injection_count),
+                title = stringResource(R.string.oneuialoha_feature_injection_count),
                 value = status.injectionCount.toString(),
                 modifier = Modifier.weight(1f),
             )
@@ -237,7 +237,7 @@ private fun DashboardSmallCardMiuix(title: String, value: String, modifier: Modi
 
 @Composable
 private fun InfoCard() {
-    val info = rememberOneuiXPDeviceInfo()
+    val info = rememberOneUIAlohaDeviceInfo()
 
     @Composable
     fun Item(title: String, content: String, bottom: Dp = 20.dp) {

@@ -1,4 +1,4 @@
-package com.oneuixp.app.ui.screen.home
+package com.oneuialoha.app.ui.screen.home
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
@@ -51,12 +51,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.oneuixp.app.BuildConfig
-import com.oneuixp.app.R
-import com.oneuixp.app.ui.component.WarningLevel
-import com.oneuixp.app.ui.component.material.TonalCard
-import com.oneuixp.app.ui.component.rebootlistpopup.RebootListPopup
-import com.oneuixp.app.ui.component.statustag.StatusTag
+import com.oneuialoha.app.BuildConfig
+import com.oneuialoha.app.R
+import com.oneuialoha.app.ui.component.WarningLevel
+import com.oneuialoha.app.ui.component.material.TonalCard
+import com.oneuialoha.app.ui.component.rebootlistpopup.RebootListPopup
+import com.oneuialoha.app.ui.component.statustag.StatusTag
 
 @Composable
 fun HomePagerMaterial(
@@ -135,7 +135,7 @@ private fun StatusCard(
     val status = LocalLsposedHomeStatus.current
     val active = status.active
 
-    // Retained upstream v3.2.5 dashboard geometry; content is OneuiXP SystemUI state.
+    // Retained upstream v3.2.5 dashboard geometry; content is OneUIAloha SystemUI state.
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         val statusCardContent: @Composable () -> Unit = {
             Row(
@@ -192,7 +192,7 @@ private fun StatusCard(
             horizontalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             DashboardSmallCardMaterial(
-                title = stringResource(R.string.oneuixp_feature_injection_count),
+                title = stringResource(R.string.oneuialoha_feature_injection_count),
                 value = status.injectionCount.toString(),
                 modifier = Modifier.weight(1f),
             )
@@ -264,7 +264,7 @@ private fun WarningCard(
 
 @Composable
 private fun InfoCard() {
-    val info = rememberOneuiXPDeviceInfo()
+    val info = rememberOneUIAlohaDeviceInfo()
 
     TonalCard {
         Column(

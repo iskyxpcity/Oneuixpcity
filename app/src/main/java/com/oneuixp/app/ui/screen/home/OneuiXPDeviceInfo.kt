@@ -1,4 +1,4 @@
-package com.oneuixp.app.ui.screen.home
+package com.oneuialoha.app.ui.screen.home
 
 import android.app.ActivityManager
 import android.content.Context
@@ -11,7 +11,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 
 @Immutable
-data class OneuiXPDeviceInfo(
+data class OneUIAlohaDeviceInfo(
     val model: String,
     val androidApi: String,
     val oneUi: String,
@@ -24,7 +24,7 @@ data class OneuiXPDeviceInfo(
 )
 
 @Composable
-fun rememberOneuiXPDeviceInfo(): OneuiXPDeviceInfo {
+fun rememberOneUIAlohaDeviceInfo(): OneUIAlohaDeviceInfo {
     val context = LocalContext.current.applicationContext
     val configuration = LocalContext.current.resources.configuration
     return remember(
@@ -53,7 +53,7 @@ fun rememberOneuiXPDeviceInfo(): OneuiXPDeviceInfo {
         }
         val architecture = System.getProperty("os.arch") ?: "-"
 
-        OneuiXPDeviceInfo(
+        OneUIAlohaDeviceInfo(
             model = "${Build.MANUFACTURER} ${Build.MODEL}",
             androidApi = "Android ${Build.VERSION.RELEASE} / API ${Build.VERSION.SDK_INT}",
             oneUi = oneUi,

@@ -1,4 +1,4 @@
-package com.oneuixp.app.ui.screen.settings
+package com.oneuialoha.app.ui.screen.settings
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
@@ -44,13 +44,13 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.oneuixp.app.R
-import com.oneuixp.app.ui.UiMode
-import com.oneuixp.app.ui.component.dialog.rememberLoadingDialog
-import com.oneuixp.app.ui.component.miuix.SendLogDialog
-import com.oneuixp.app.ui.theme.LocalEnableBlur
-import com.oneuixp.app.ui.util.BlurredBar
-import com.oneuixp.app.ui.util.rememberBlurBackdrop
+import com.oneuialoha.app.R
+import com.oneuialoha.app.ui.UiMode
+import com.oneuialoha.app.ui.component.dialog.rememberLoadingDialog
+import com.oneuialoha.app.ui.component.miuix.SendLogDialog
+import com.oneuialoha.app.ui.theme.LocalEnableBlur
+import com.oneuialoha.app.ui.util.BlurredBar
+import com.oneuialoha.app.ui.util.rememberBlurBackdrop
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior

@@ -1,10 +1,10 @@
-package com.oneuixp.app.ui.screen.home
+package com.oneuialoha.app.ui.screen.home
 
 import androidx.compose.runtime.Immutable
-import com.oneuixp.app.ui.util.update.LatestVersionInfo
-import com.oneuixp.app.ui.util.update.compareOneuiXPVersions
+import com.oneuialoha.app.ui.util.update.LatestVersionInfo
+import com.oneuialoha.app.ui.util.update.compareOneUIAlohaVersions
 
-/** Only actual OneuiXP self-update information; device details are read by UI directly. */
+/** Only actual OneUIAloha self-update information; device details are read by UI directly. */
 @Immutable
 data class HomeUiState(
     val checkUpdateEnabled: Boolean,
@@ -13,7 +13,7 @@ data class HomeUiState(
 ) {
     val hasUpdate: Boolean
         get() = latestVersionInfo.versionName.isNotBlank() &&
-            compareOneuiXPVersions(
+            compareOneUIAlohaVersions(
                 latestVersionInfo.versionName,
                 currentManagerVersionName,
             ) > 0

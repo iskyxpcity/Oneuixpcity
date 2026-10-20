@@ -1,9 +1,9 @@
-package com.oneuixp.app.ui.screen.home
+package com.oneuialoha.app.ui.screen.home
 
 import android.content.Context
 import android.content.Intent
 import android.widget.Toast
-import com.oneuixp.app.R
+import com.oneuialoha.app.R
 
 private const val LSPOSED_MANAGER_PACKAGE = "org.lsposed.manager"
 
