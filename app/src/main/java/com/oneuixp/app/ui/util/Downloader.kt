@@ -9,7 +9,7 @@ import org.json.JSONObject
 import java.net.URI
 import java.util.Locale
 
-private const val LEGACY_RELEASE_REPO = "iSkyJIE/OneUIAloha-Releases"
+private const val LEGACY_RELEASE_REPO = "iSkyJIE/OneuiXP-Releases"
 private const val ALOHA_RELEASE_REPO = "iSkyJIE/OneUIAloha-Releases"
 private const val LEGACY_PACKAGE_NAME = "com.oneuixp.app"
 private val oneUiAlohaApkPrefix = Regex("""(?i)^OneUIAloha(?:[_ -][A-Za-z0-9][A-Za-z0-9._ -]*)?\.apk$""")
