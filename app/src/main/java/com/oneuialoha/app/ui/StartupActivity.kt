@@ -194,7 +194,7 @@ private class NativeOneUIAlohaStartupView(
         val scale = 0.92f + 0.08f * settle
         val size = dp(200f)
         val cx = width / 2f
-        val cy = height * 0.37f
+        val cy = height * 0.40f
 
         val half = size / 2f
         val dst = RectF(cx - half, cy - half, cx + half, cy + half)
