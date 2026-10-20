@@ -20,10 +20,10 @@ val managerVersionCode = rootProject.extra["managerVersionCode"] as Int
 val managerVersionName = rootProject.extra["managerVersionName"] as String
 
 val isPrBuild = project.findProperty("IS_PR_BUILD")?.toString()?.toBoolean() ?: false
-val defaultManagerPackageName = "com.oneuixp.app"
-val defaultManagerName = "OneUI XP"
-val managerPackageName = project.findProperty("ONEUIXP_PACKAGE_NAME")?.toString() ?: defaultManagerPackageName
-val managerName = project.findProperty("ONEUIXP_NAME")?.toString() ?: defaultManagerName
+val defaultManagerPackageName = "com.oneuialoha.app"
+val defaultManagerName = "OneUI Aloha"
+val managerPackageName = project.findProperty("ONEUIALOHA_PACKAGE_NAME")?.toString() ?: defaultManagerPackageName
+val managerName = project.findProperty("ONEUIALOHA_NAME")?.toString() ?: defaultManagerName
 
 
 android {
@@ -31,10 +31,10 @@ android {
 
     // The same owner keystore must sign EVERY distributable APK.
     // CI supplies credentials via GitHub Actions secrets; never commit keys.
-    val ownerKeystore = System.getenv("ONEUIXP_KEYSTORE_PATH")?.takeIf { it.isNotBlank() }
-    val ownerStorePassword = System.getenv("ONEUIXP_KEYSTORE_PASSWORD")
-    val ownerKeyAlias = System.getenv("ONEUIXP_KEY_ALIAS")
-    val ownerKeyPassword = System.getenv("ONEUIXP_KEY_PASSWORD")
+    val ownerKeystore = System.getenv("ONEUIALOHA_KEYSTORE_PATH")?.takeIf { it.isNotBlank() }
+    val ownerStorePassword = System.getenv("ONEUIALOHA_KEYSTORE_PASSWORD")
+    val ownerKeyAlias = System.getenv("ONEUIALOHA_KEY_ALIAS")
+    val ownerKeyPassword = System.getenv("ONEUIALOHA_KEY_PASSWORD")
     val ownerSigningReady = !ownerKeystore.isNullOrBlank() &&
         !ownerStorePassword.isNullOrBlank() &&
         !ownerKeyAlias.isNullOrBlank() &&
