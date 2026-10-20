@@ -302,7 +302,7 @@ private fun AboutContent(
             }
             Text(
                 modifier = Modifier
-                    .padding(top = 12.dp, bottom = 5.dp)
+                    .padding(top = 4.dp, bottom = 5.dp)
                     .onGloballyPositioned { coordinates ->
                         if (projectNameY != 0f) return@onGloballyPositioned
                         val y = coordinates.positionInWindow().y
