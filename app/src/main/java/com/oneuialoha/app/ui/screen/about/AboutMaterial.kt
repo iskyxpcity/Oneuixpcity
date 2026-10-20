@@ -85,7 +85,7 @@ fun AboutScreenMaterial(
                         )
                     }
                     Text(
-                        modifier = Modifier.padding(top = 12.dp),
+                        modifier = Modifier.padding(top = 4.dp),
                         text = state.appName,
                         fontWeight = FontWeight.Medium,
                         fontSize = MaterialTheme.typography.headlineMedium.fontSize
