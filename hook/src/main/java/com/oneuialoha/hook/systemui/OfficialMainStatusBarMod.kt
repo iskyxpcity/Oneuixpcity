@@ -1,4 +1,4 @@
-package com.oneuixp.hook.systemui
+package com.oneuialoha.hook.systemui
 
 import android.annotation.SuppressLint
 import android.content.BroadcastReceiver
@@ -22,14 +22,14 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import io.github.libxposed.api.XposedModule
 import io.github.libxposed.api.XposedModuleInterface
-import com.oneuixp.common.IgnoreUnknownKeysJson
-import com.oneuixp.common.Package
-import com.oneuixp.common.Preference
-import com.oneuixp.common.StatusBarRuntimeBridge
-import com.oneuixp.hook.util.PreferenceProvider
-import com.oneuixp.hook.util.afterAttach
-import com.oneuixp.hook.util.HookInstallTracker
-import com.oneuixp.hook.util.xlog
+import com.oneuialoha.common.IgnoreUnknownKeysJson
+import com.oneuialoha.common.Package
+import com.oneuialoha.common.Preference
+import com.oneuialoha.common.StatusBarRuntimeBridge
+import com.oneuialoha.hook.util.PreferenceProvider
+import com.oneuialoha.hook.util.afterAttach
+import com.oneuialoha.hook.util.HookInstallTracker
+import com.oneuialoha.hook.util.xlog
 import java.util.WeakHashMap
 import kotlin.math.roundToInt
 
@@ -876,7 +876,7 @@ object OfficialMainStatusBarMod {
 
     /** Event-driven preference refresh. No permanent timer runs while settings are idle. */
     private const val PREFERENCE_CHANGED_URI =
-        "content://com.oneuixp.app.statusbridge/preferences"
+        "content://com.oneuialoha.app.statusbridge/preferences"
     private var refreshStarted = false
     private var preferenceObserver: ContentObserver? = null
     private var runtimeReceiver: BroadcastReceiver? = null
@@ -915,7 +915,7 @@ object OfficialMainStatusBarMod {
         if (refreshStarted) return
         refreshStarted = true
 
-        val worker = HandlerThread("OneuiXPStatusBarPrefs").apply { start() }
+        val worker = HandlerThread("OneUIAlohaStatusBarPrefs").apply { start() }
         val background = Handler(worker.looper)
         val main = Handler(Looper.getMainLooper())
         var previous: Preference.SystemUI.StatusBar? = null

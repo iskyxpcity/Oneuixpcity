@@ -1,4 +1,4 @@
-package com.oneuixp.hook.systemui
+package com.oneuialoha.hook.systemui
 
 import android.annotation.SuppressLint
 import android.app.NotificationManager
@@ -6,13 +6,13 @@ import android.content.Context
 import android.os.Build
 import io.github.libxposed.api.XposedModule
 import io.github.libxposed.api.XposedModuleInterface
-import com.oneuixp.common.ONE_UI_VERSION
-import com.oneuixp.common.Package
-import com.oneuixp.hook.util.HookInstallTracker
-import com.oneuixp.hook.util.afterAttach
-import com.oneuixp.hook.util.afterAttachTry
-import com.oneuixp.hook.util.reflect
-import com.oneuixp.hook.util.xlog
+import com.oneuialoha.common.ONE_UI_VERSION
+import com.oneuialoha.common.Package
+import com.oneuialoha.hook.util.HookInstallTracker
+import com.oneuialoha.hook.util.afterAttach
+import com.oneuialoha.hook.util.afterAttachTry
+import com.oneuialoha.hook.util.reflect
+import com.oneuialoha.hook.util.xlog
 
 @SuppressLint("PrivateApi")
 object Notification {

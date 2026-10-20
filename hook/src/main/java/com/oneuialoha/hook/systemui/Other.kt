@@ -1,8 +1,8 @@
-package com.oneuixp.hook.systemui
+package com.oneuialoha.hook.systemui
 
 import android.os.Build
 import io.github.libxposed.api.XposedModule
-import com.oneuixp.hook.util.afterAttachTry
+import com.oneuialoha.hook.util.afterAttachTry
 
 object Other {
     context(xposedModule: XposedModule)
