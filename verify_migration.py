@@ -155,9 +155,9 @@ old_brand = re.compile(
     + r")P[a-z]"
 )
 legacy_brand_fragments = (
-    _chars((79, 110, 101, 85, 73, 88)),       # Mixed-case historical OneUIX token.
-    _chars((111, 110, 101, 117, 105, 88)),    # Wrong-case lowercase-leading OneuiX token.
-    _chars((79, 110, 101, 117, 105, 88, 112)), # Wrong-case lowercase-p OneuiXp token.
+    _chars((79, 110, 101, 85, 73, 88)),       # Historical uppercase-UI form.
+    _chars((111, 110, 101, 117, 105, 88)),    # Lowercase-leading uppercase-X form.
+    _chars((79, 110, 101, 117, 105, 88, 112)), # Uppercase-leading lowercase-p form.
 )
 legacy_name_pattern = re.compile(r"(?i)" + legacy_project_segment + r"(?!p)")
 ignored_dirs = {".git", ".gradle", "build"}
