@@ -6,35 +6,28 @@ data class LatestVersionInfo(
     val changelog: String = "",
     val versionName: String = "",
     val sha256: String = "",
+    /** True when the URL installs a different package and must be opened externally. */
+    val isMigration: Boolean = false,
 )
 
-private fun parseOneuiXPVersion(value: String): List<Int>? {
-    val parts = value.trim().removePrefix("v").split(".")
+private fun parseVersion(value: String): List<Int>? {
+    val normalized = value.trim().removePrefix("v").removePrefix("V")
+    val parts = normalized.split(".")
     if (parts.size !in 3..4) return null
-    val numbers = parts.map { it.toIntOrNull() ?: return null }
-    val major = numbers[0]
-    val minor = numbers[1]
-    val date = numbers[2]
-    val patch = numbers.getOrElse(3) { 0 }
-    if (
-        major !in 0..20 ||
-        minor !in 0..99 ||
-        date !in 0..999999 ||
-        patch !in 0..999
-    ) return null
-    return listOf(major, minor, date, patch)
+    return parts.map { it.toIntOrNull() ?: return null }
 }
 
 /**
- * Compare both three-part names (1.0.261019) and four-part patch names (1.0.261019.1).
- * Android versionCode is only the monotonic installer code and intentionally
- * does not participate in the network release comparison.
+ * Compare numeric three- or four-part versions. Supports the legacy date-based
+ * names (1.0.261019[.1]) and standard names such as 2.0.0 after a product rename.
+ * Android versionCode remains independent from the network release comparison.
  */
 fun compareOneuiXPVersions(left: String, right: String): Int {
-    val lhs = parseOneuiXPVersion(left) ?: return 0
-    val rhs = parseOneuiXPVersion(right) ?: return 0
-    for (index in lhs.indices) {
-        val compared = lhs[index].compareTo(rhs[index])
+    val lhs = parseVersion(left) ?: return 0
+    val rhs = parseVersion(right) ?: return 0
+    val length = maxOf(lhs.size, rhs.size)
+    for (index in 0 until length) {
+        val compared = lhs.getOrElse(index) { 0 }.compareTo(rhs.getOrElse(index) { 0 })
         if (compared != 0) return compared
     }
     return 0

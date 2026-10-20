@@ -1,5 +1,7 @@
 package com.oneuixp.app.ui.util.update
 
+import android.content.Intent
+import android.net.Uri
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -21,6 +23,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.SystemUpdateAlt
 import androidx.compose.material3.ButtonGroupDefaults
@@ -186,7 +189,28 @@ fun UpdateDialogHost(
                 }
             },
             onUpdate = {
-                if (!busy) {
+                if (!busy && latest.isMigration) {
+                    try {
+                        val uri = Uri.parse(latest.downloadUrl)
+                        val path = uri.path.orEmpty().lowercase()
+                        val isOfficialAsset = uri.scheme?.equals("https", ignoreCase = true) == true &&
+                            uri.host?.equals("github.com", ignoreCase = true) == true &&
+                            path.startsWith("/iskyjie/oneuixp-releases/releases/download/")
+                        if (!isOfficialAsset) {
+                            statusMessage = context.getString(R.string.update_dialog_migration_url_invalid)
+                        } else {
+                            context.startActivity(Intent(Intent.ACTION_VIEW, uri))
+                            automaticDialogSuppressed.value = true
+                            dialogVisible = false
+                            statusMessage = null
+                        }
+                    } catch (throwable: Throwable) {
+                        statusMessage = context.getString(
+                            R.string.update_dialog_failed_detail,
+                            throwable.message ?: context.getString(R.string.update_dialog_unknown_error),
+                        )
+                    }
+                } else if (!busy) {
                     scope.launch {
                         busy = true
                         statusMessage = null
@@ -199,17 +223,16 @@ fun UpdateDialogHost(
                                         submitUpdateSession(context, downloaded.apk)
                                     }) {
                                         UpdateInstallResult.Submitted -> {
-                                            // Android's installer now owns the confirmation UI.
-                                            // If the user cancels there, stay silent and do not
-                                            // reopen the release prompt during this app launch.
                                             automaticDialogSuppressed.value = true
                                             dialogVisible = false
                                         }
                                         UpdateInstallResult.PermissionRequired -> {
                                             val opened = openUnknownSourcesSettings(context)
+                                            val appName = context.getString(R.string.app_name)
                                             statusMessage = context.getString(
                                                 if (opened) R.string.update_dialog_permission_needed
-                                                else R.string.update_dialog_permission_open_failed
+                                                else R.string.update_dialog_permission_open_failed,
+                                                appName,
                                             )
                                         }
                                         is UpdateInstallResult.Error -> {
@@ -290,6 +313,11 @@ private fun UpdateDialogMaterial(
     }
     val dialogShape = remember { RoundedCornerShape(28.dp) }
     val notes = remember(info.changelog) { normalizeReleaseNotes(info.changelog) }
+    val targetAppName = if (info.isMigration) {
+        stringResource(R.string.update_dialog_migration_app_name)
+    } else {
+        stringResource(R.string.app_name)
+    }
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -336,13 +364,16 @@ private fun UpdateDialogMaterial(
                     Spacer(Modifier.width(14.dp))
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = stringResource(R.string.update_dialog_title),
+                            text = stringResource(
+                                if (info.isMigration) R.string.update_dialog_migration_title
+                                else R.string.update_dialog_title,
+                            ),
                             style = MaterialTheme.typography.titleLarge,
                             color = onContainer,
                             fontWeight = FontWeight.Bold,
                         )
                         Text(
-                            text = "OneUI XP ${info.versionName}",
+                            text = "$targetAppName ${info.versionName}",
                             style = MaterialTheme.typography.titleMedium,
                             color = onContainer,
                         )
@@ -367,8 +398,32 @@ private fun UpdateDialogMaterial(
                     style = MaterialTheme.typography.bodySmall,
                 )
 
+                if (info.isMigration) {
+                    Text(
+                        text = stringResource(R.string.update_dialog_migration_notice),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                    Text(
+                        text = stringResource(R.string.update_dialog_download_address),
+                        color = onContainer,
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                    SelectionContainer {
+                        Text(
+                            text = info.downloadUrl,
+                            color = accent,
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                    }
+                }
+
                 Text(
-                    text = stringResource(R.string.update_dialog_changelog_title),
+                    text = stringResource(
+                        if (info.isMigration) R.string.update_dialog_migration_section
+                        else R.string.update_dialog_changelog_title,
+                    ),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
                 )
@@ -452,7 +507,10 @@ private fun UpdateDialogMaterial(
                                 modifier = Modifier.size(18.dp),
                             )
                             Spacer(Modifier.width(8.dp))
-                            Text(stringResource(R.string.update_dialog_install))
+                            Text(stringResource(
+                                if (info.isMigration) R.string.update_dialog_download
+                                else R.string.update_dialog_install,
+                            ))
                         }
                     }
                 }
@@ -473,6 +531,11 @@ private fun UpdateDialogMiuix(
 ) {
     val colors = MiuixTheme.colorScheme
     val notes = remember(info.changelog) { normalizeReleaseNotes(info.changelog) }
+    val targetAppName = if (info.isMigration) {
+        stringResource(R.string.update_dialog_migration_app_name)
+    } else {
+        stringResource(R.string.app_name)
+    }
     val cardShape = remember { RoundedCornerShape(30.dp) }
     val gradientTop = colors.primary.copy(alpha = 0.32f)
     val scrimInteraction = remember { MutableInteractionSource() }
@@ -571,13 +634,16 @@ private fun UpdateDialogMiuix(
                 Spacer(Modifier.width(14.dp))
                 Column(modifier = Modifier.weight(1f)) {
                     MiuixText(
-                        text = stringResource(R.string.update_dialog_title),
+                        text = stringResource(
+                                if (info.isMigration) R.string.update_dialog_migration_title
+                                else R.string.update_dialog_title,
+                            ),
                         color = colors.onSurface,
                         fontWeight = FontWeight.Bold,
                         fontSize = MiuixTheme.textStyles.title4.fontSize,
                     )
                     MiuixText(
-                        text = "OneUI XP ${info.versionName}",
+                        text = "$targetAppName ${info.versionName}",
                         color = colors.onSurface,
                         fontWeight = FontWeight.Medium,
                         fontSize = MiuixTheme.textStyles.body2.fontSize,
@@ -598,8 +664,32 @@ private fun UpdateDialogMiuix(
                 fontSize = MiuixTheme.textStyles.body2.fontSize,
             )
 
+            if (info.isMigration) {
+                MiuixText(
+                    text = stringResource(R.string.update_dialog_migration_notice),
+                    color = colors.onSurfaceVariantSummary,
+                    fontSize = MiuixTheme.textStyles.body2.fontSize,
+                )
+                MiuixText(
+                    text = stringResource(R.string.update_dialog_download_address),
+                    color = colors.onSurface,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = MiuixTheme.textStyles.body2.fontSize,
+                )
+                SelectionContainer {
+                    MiuixText(
+                        text = info.downloadUrl,
+                        color = colors.primary,
+                        fontSize = MiuixTheme.textStyles.body2.fontSize,
+                    )
+                }
+            }
+
             MiuixText(
-                text = stringResource(R.string.update_dialog_changelog_title),
+                text = stringResource(
+                        if (info.isMigration) R.string.update_dialog_migration_section
+                        else R.string.update_dialog_changelog_title,
+                    ),
                 color = colors.onSurface,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = MiuixTheme.textStyles.title4.fontSize,
@@ -688,7 +778,10 @@ private fun UpdateDialogMiuix(
                         )
                     }
                     Spacer(Modifier.width(8.dp))
-                    MiuixText(text = stringResource(R.string.update_dialog_install))
+                    MiuixText(text = stringResource(
+                        if (info.isMigration) R.string.update_dialog_download
+                        else R.string.update_dialog_install,
+                    ))
                 }
             }
         }
