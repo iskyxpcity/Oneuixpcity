@@ -1,4 +1,4 @@
-package com.oneuixp.common
+package com.oneuialoha.common
 
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive

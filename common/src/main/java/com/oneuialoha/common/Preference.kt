@@ -1,4 +1,4 @@
-package com.oneuixp.common
+package com.oneuialoha.common
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
