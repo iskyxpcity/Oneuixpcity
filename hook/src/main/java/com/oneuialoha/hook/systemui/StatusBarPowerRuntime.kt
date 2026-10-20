@@ -1,4 +1,4 @@
-package com.oneuixp.hook.systemui
+package com.oneuialoha.hook.systemui
 
 import android.app.KeyguardManager
 import android.content.BroadcastReceiver
@@ -22,11 +22,11 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import io.github.libxposed.api.XposedModule
 import io.github.libxposed.api.XposedModuleInterface
-import com.oneuixp.common.IgnoreUnknownKeysJson
-import com.oneuixp.common.Package
-import com.oneuixp.common.Preference
-import com.oneuixp.common.StatusBarRuntimeBridge
-import com.oneuixp.hook.util.PreferenceProvider
+import com.oneuialoha.common.IgnoreUnknownKeysJson
+import com.oneuialoha.common.Package
+import com.oneuialoha.common.Preference
+import com.oneuialoha.common.StatusBarRuntimeBridge
+import com.oneuialoha.hook.util.PreferenceProvider
 import java.io.File
 import java.util.Locale
 import java.util.WeakHashMap
@@ -34,10 +34,10 @@ import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
-/** Samsung SystemUI runtime for OneuiXP status-bar power and thermal information. */
+/** Samsung SystemUI runtime for OneUIAloha status-bar power and thermal information. */
 internal object StatusBarPowerRuntime {
     private const val PREFERENCE_CHANGED_URI =
-        "content://com.oneuixp.app.statusbridge/preferences"
+        "content://com.oneuialoha.app.statusbridge/preferences"
 
     private data class Holder(
         val statusBarView: ViewGroup,
@@ -151,7 +151,7 @@ internal object StatusBarPowerRuntime {
 
     private fun ensurePreferenceWatcher(module: XposedModule, context: Context) {
         if (!watcherStarted.compareAndSet(false, true)) return
-        val worker = HandlerThread("OneuiXPStatusPowerPrefs").apply { start() }
+        val worker = HandlerThread("OneUIAlohaStatusPowerPrefs").apply { start() }
         preferenceThread = worker
         val background = Handler(worker.looper)
         var previousPersisted: Preference.SystemUI.StatusBarPowerRuntime? = null
@@ -781,7 +781,7 @@ internal object StatusBarPowerRuntime {
 
     private fun ensureWorker(): Handler {
         workerHandler?.let { return it }
-        val thread = HandlerThread("OneuiXPStatusPower").apply { start() }
+        val thread = HandlerThread("OneUIAlohaStatusPower").apply { start() }
         workerThread = thread
         return Handler(thread.looper).also { workerHandler = it }
     }

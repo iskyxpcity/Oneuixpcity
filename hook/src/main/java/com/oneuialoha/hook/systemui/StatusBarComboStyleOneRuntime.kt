@@ -1,4 +1,4 @@
-package com.oneuixp.hook.systemui
+package com.oneuialoha.hook.systemui
 
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -36,15 +36,15 @@ import android.widget.LinearLayout
 import android.widget.RelativeLayout
 import io.github.libxposed.api.XposedModule
 import io.github.libxposed.api.XposedModuleInterface
-import com.oneuixp.common.IgnoreUnknownKeysJson
-import com.oneuixp.common.Package
-import com.oneuixp.common.Preference
-import com.oneuixp.common.StatusBarRuntimeBridge
-import com.oneuixp.common.StatusComboStyleOneGlyphRenderer
-import com.oneuixp.common.StatusComboStyleOneGlyphState
-import com.oneuixp.hook.util.PreferenceProvider
-import com.oneuixp.hook.systemui.StatusBarBurnInProtectionRuntime
-import com.oneuixp.hook.util.OneuiXPDiagnosticLog
+import com.oneuialoha.common.IgnoreUnknownKeysJson
+import com.oneuialoha.common.Package
+import com.oneuialoha.common.Preference
+import com.oneuialoha.common.StatusBarRuntimeBridge
+import com.oneuialoha.common.StatusComboStyleOneGlyphRenderer
+import com.oneuialoha.common.StatusComboStyleOneGlyphState
+import com.oneuialoha.hook.util.PreferenceProvider
+import com.oneuialoha.hook.systemui.StatusBarBurnInProtectionRuntime
+import com.oneuialoha.hook.util.OneUIAlohaDiagnosticLog
 import java.lang.ref.WeakReference
 import java.util.Collections
 import java.util.IdentityHashMap
@@ -63,7 +63,7 @@ import kotlin.math.roundToInt
  */
 @Suppress("DEPRECATION")
 object StatusBarComboStyleOneRuntime {
-    private const val TAG = "OneuiXPStyleOne"
+    private const val TAG = "OneUIAlohaStyleOne"
     private const val PHONE_BAR = "com.android.systemui.statusbar.phone.PhoneStatusBarView"
     private const val MIUI_PHONE_BAR = "com.android.systemui.statusbar.phone.MiuiPhoneStatusBarView"
     private const val WINDOW_BAR = "com.android.systemui.statusbar.phone.StatusBarWindowView"
@@ -686,7 +686,7 @@ object StatusBarComboStyleOneRuntime {
                     width, height, type, flags, PixelFormat.TRANSLUCENT,
                 ).apply {
                     gravity = Gravity.TOP or Gravity.LEFT
-                    title = "OneuiXP Style One"
+                    title = "OneUIAloha Style One"
                     // Status-bar-owned window types are system windows. Do not pass
                     // the context-window token: Samsung may reject the type/token pair
                     // and the old fallback then silently shifted the glyph down.
@@ -765,7 +765,7 @@ object StatusBarComboStyleOneRuntime {
             val centreRatioY = StatusComboStyleOneGlyphRenderer.glyphVerticalCenterRatio(cfg, networkType)
 
             // Match TrioOverlay.sync(): the separate window follows the native battery host's
-            // real status-bar slot. If OneuiXP has already zero-sized the child, use its parent
+            // real status-bar slot. If OneUIAloha has already zero-sized the child, use its parent
             // trailing edge and saved original margins, never the collapsed child's stale X.
             val slotParent = anchor.parent as? ViewGroup
             val parentLocation = IntArray(2)
@@ -1526,8 +1526,8 @@ object StatusBarComboStyleOneRuntime {
 
     private fun scheduleRegister(root: ViewGroup) {
         // Register the shared, on-demand diagnostics reply channel with the first live SystemUI context.
-        OneuiXPDiagnosticLog.setLiveSnapshotProvider { buildLiveDiagnosticSnapshot() }
-        OneuiXPDiagnosticLog.install(root.context)
+        OneUIAlohaDiagnosticLog.setLiveSnapshotProvider { buildLiveDiagnosticSnapshot() }
+        OneUIAlohaDiagnosticLog.install(root.context)
         root.post { register(root) }
         // One bounded retry for SystemUI's deferred icon inflation. Do not keep
         // repeating whole-root discovery during status-bar/Quick Panel animation.
@@ -3984,11 +3984,11 @@ object StatusBarComboStyleOneRuntime {
                             val previousNativeState = synchronized(nativeBatterySlotVisibility) {
                                 nativeBatterySlotVisibility[controller]?.get(key)
                             }
-                            // While OneuiXP owns a slot, SystemUI can repeatedly submit
+                            // While OneUIAloha owns a slot, SystemUI can repeatedly submit
                             // false because the slot is currently hidden. Do not mistake
                             // that enforced state for QuickStar's saved preference. Still
                             // accept true updates so a newly-active Wi-Fi holder is cached.
-                            // Once OneuiXP stops suppressing it, accept both true and false
+                            // Once OneUIAloha stops suppressing it, accept both true and false
                             // from SystemUI so the user's QuickStar preference is respected.
                             if (!styleSuppressesSlot || requestedVisible || previousNativeState == null) {
                                 rememberNativeBatterySlotVisibility(
@@ -5426,7 +5426,7 @@ object StatusBarComboStyleOneRuntime {
                 val wifiClass = modernWifiViewClass
                 // ModernStatusBarWifiView is also used by demo/secondary SystemUI
                 // icon hosts. Only modify the instance inside the PhoneStatusBarView
-                // host that OneuiXP has explicitly registered for the collapsed bar.
+                // host that OneUIAloha has explicitly registered for the collapsed bar.
                 val host = view?.let(::hostFor)
                 val requestedBefore = chain.args.getOrNull(0) as? Int ?: view?.visibility ?: View.VISIBLE
                 val hookResult = if (view != null && wifiClass != null && wifiClass.isInstance(view) &&
@@ -5866,7 +5866,7 @@ object StatusBarComboStyleOneRuntime {
                 else -> -1
             }
         // Samsung resource packs may expose five visible strength steps (0..5),
-        // while the OneuiXP renderer uses four dots (0..4).
+        // while the OneUIAloha renderer uses four dots (0..4).
         return namedLevel.coerceAtMost(4)
     }
 
@@ -5921,7 +5921,7 @@ object StatusBarComboStyleOneRuntime {
 
     private fun diagnostic(message: String) {
         // Bounded in-memory history for Settings → Send logs, without a feature-owned switch or Logcat flood.
-        OneuiXPDiagnosticLog.record(TAG, message)
+        OneUIAlohaDiagnosticLog.record(TAG, message)
     }
     private fun dp(context: Context, value: Int): Int =
         (value * context.resources.displayMetrics.density + 0.5f).toInt().coerceAtLeast(1)

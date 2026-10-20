@@ -1,4 +1,4 @@
-package com.oneuixp.hook.systemui
+package com.oneuialoha.hook.systemui
 
 import android.app.KeyguardManager
 import android.content.BroadcastReceiver
@@ -27,14 +27,14 @@ import android.view.View
 import android.widget.TextView
 import io.github.libxposed.api.XposedModule
 import io.github.libxposed.api.XposedModuleInterface
-import com.oneuixp.common.IgnoreUnknownKeysJson
-import com.oneuixp.common.Package
-import com.oneuixp.common.Preference
-import com.oneuixp.common.StatusBarRuntimeBridge
-import com.oneuixp.hook.util.PreferenceProvider
-import com.oneuixp.hook.util.StatusBarClockDrawPaintBridge
-import com.oneuixp.hook.util.OneuiXPDiagnosticLog
-import com.oneuixp.hook.util.reflect
+import com.oneuialoha.common.IgnoreUnknownKeysJson
+import com.oneuialoha.common.Package
+import com.oneuialoha.common.Preference
+import com.oneuialoha.common.StatusBarRuntimeBridge
+import com.oneuialoha.hook.util.PreferenceProvider
+import com.oneuialoha.hook.util.StatusBarClockDrawPaintBridge
+import com.oneuialoha.hook.util.OneUIAlohaDiagnosticLog
+import com.oneuialoha.hook.util.reflect
 import java.net.NetworkInterface
 import java.util.WeakHashMap
 import java.util.concurrent.atomic.AtomicBoolean
@@ -45,14 +45,14 @@ import kotlin.math.roundToInt
  * Event-driven presentation and data layer for Samsung's native NetspeedView.
  *
  * Samsung supplies the stock aggregate network-speed value and owns the native view
- * lifecycle. OneuiXP is the only SystemUI presentation owner when this runtime is
+ * lifecycle. OneUIAloha is the only SystemUI presentation owner when this runtime is
  * installed. Separate upload/download mode uses a dedicated data-source hook, while
  * this runtime remains the sole owner of NetspeedView presentation.
  */
 internal object StatusBarNetworkSpeedRuntime {
-    private const val TAG = "OneuiXPNetworkSpeed"
+    private const val TAG = "OneUIAlohaNetworkSpeed"
     private const val PREFERENCE_CHANGED_URI =
-        "content://com.oneuixp.app.statusbridge/preferences"
+        "content://com.oneuialoha.app.statusbridge/preferences"
     private const val NETSPEED_VIEW_CLASS =
         "com.android.systemui.statusbar.policy.NetspeedView"
     private const val NETWORK_SPEED_INTERVAL_MS = 3000L
@@ -732,7 +732,7 @@ internal object StatusBarNetworkSpeedRuntime {
         val appContext = context.applicationContext ?: context
         keyguardManager = appContext.getSystemService(KeyguardManager::class.java)
 
-        val worker = HandlerThread("OneuiXPStatusNetworkSpeedPrefs").apply { start() }
+        val worker = HandlerThread("OneUIAlohaStatusNetworkSpeedPrefs").apply { start() }
         preferenceThread = worker
         val background = Handler(worker.looper)
         var previous: Preference.SystemUI.StatusBar? = null

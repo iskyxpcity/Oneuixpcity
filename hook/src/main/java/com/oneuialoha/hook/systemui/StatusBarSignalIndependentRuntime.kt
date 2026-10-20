@@ -1,4 +1,4 @@
-package com.oneuixp.hook.systemui
+package com.oneuialoha.hook.systemui
 
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -28,11 +28,11 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import io.github.libxposed.api.XposedModule
 import io.github.libxposed.api.XposedModuleInterface
-import com.oneuixp.common.IgnoreUnknownKeysJson
-import com.oneuixp.common.Package
-import com.oneuixp.common.Preference
-import com.oneuixp.common.StatusBarRuntimeBridge
-import com.oneuixp.hook.util.PreferenceProvider
+import com.oneuialoha.common.IgnoreUnknownKeysJson
+import com.oneuialoha.common.Package
+import com.oneuialoha.common.Preference
+import com.oneuialoha.common.StatusBarRuntimeBridge
+import com.oneuialoha.hook.util.PreferenceProvider
 import java.util.Collections
 import java.util.WeakHashMap
 import java.util.concurrent.atomic.AtomicBoolean
@@ -43,7 +43,7 @@ import kotlin.math.roundToInt
 /**
  * Independent collapsed-status-bar mobile signal renderer.
  *
- * Presentation is owned entirely by OneuiXP. Signal level comes from Android's
+ * Presentation is owned entirely by OneUIAloha. Signal level comes from Android's
  * public Telephony / Subscription state inside the privileged SystemUI process;
  * no Samsung MobileIconBinder/HomeStatusBarSignalPolicy/Compose rendering hook
  * is used. Samsung's native signal presentation is only hidden after a compact,
@@ -52,7 +52,7 @@ import kotlin.math.roundToInt
  */
 internal object StatusBarSignalIndependentRuntime {
     /**
-     * Current strongest/default-data cellular level for other OneuiXP-owned
+     * Current strongest/default-data cellular level for other OneUIAloha-owned
      * status-bar renderers. Keeps all cellular presentations on one live source.
      */
     internal fun currentDefaultDataSignalLevel(): Int {
@@ -67,7 +67,7 @@ internal object StatusBarSignalIndependentRuntime {
         }
     }
     private const val PREFERENCE_CHANGED_URI =
-        "content://com.oneuixp.app.statusbridge/preferences"
+        "content://com.oneuialoha.app.statusbridge/preferences"
     private const val PHONE_STATUS_BAR_VIEW =
         "com.android.systemui.statusbar.phone.PhoneStatusBarView"
     private const val MIUI_PHONE_STATUS_BAR_VIEW =
@@ -339,7 +339,7 @@ internal object StatusBarSignalIndependentRuntime {
                         result
                     }
                 }
-        }.onFailure { Log.w("OneuiXPStatusSignal", "Status bar tint hook unavailable", it) }
+        }.onFailure { Log.w("OneUIAlohaStatusSignal", "Status bar tint hook unavailable", it) }
     }
 
     private fun collapsedStatusBarRoot(view: View): ViewGroup? {
@@ -556,7 +556,7 @@ internal object StatusBarSignalIndependentRuntime {
     private fun ensurePreferenceWatcher(module: XposedModule, context: Context) {
         if (!watcherStarted.compareAndSet(false, true)) return
         val appContext = context.applicationContext ?: context
-        val worker = HandlerThread("OneuiXPStatusSignalPrefs").apply { start() }
+        val worker = HandlerThread("OneUIAlohaStatusSignalPrefs").apply { start() }
         preferenceThread = worker
         val background = Handler(worker.looper)
         var previous: Preference.SystemUI.StatusBarSignalRuntime? = null
