@@ -1,4 +1,4 @@
-package com.oneuixp.hook.systemui
+package com.oneuialoha.hook.systemui
 
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -13,12 +13,12 @@ import android.view.View
 import android.view.ViewGroup
 import io.github.libxposed.api.XposedModule
 import io.github.libxposed.api.XposedModuleInterface
-import com.oneuixp.common.IgnoreUnknownKeysJson
-import com.oneuixp.common.Package
-import com.oneuixp.common.Preference
-import com.oneuixp.common.StatusBarRuntimeBridge
-import com.oneuixp.hook.util.PreferenceProvider
-import com.oneuixp.hook.util.OneuiXPDiagnosticLog
+import com.oneuialoha.common.IgnoreUnknownKeysJson
+import com.oneuialoha.common.Package
+import com.oneuialoha.common.Preference
+import com.oneuialoha.common.StatusBarRuntimeBridge
+import com.oneuialoha.hook.util.PreferenceProvider
+import com.oneuialoha.hook.util.OneUIAlohaDiagnosticLog
 import kotlinx.serialization.decodeFromString
 import java.lang.ref.WeakReference
 import java.util.Collections
@@ -30,11 +30,11 @@ import kotlin.math.sin
 import kotlin.math.sqrt
 
 /**
- * Micro-shift only views/overlays owned by OneuiXP. Samsung-native status-bar views are never
+ * Micro-shift only views/overlays owned by OneUIAloha. Samsung-native status-bar views are never
  * registered: their built-in burn-in behavior cannot be inferred safely from a One UI version.
  */
 internal object StatusBarBurnInProtectionRuntime {
-    private const val TAG = "OneuiXPBurnIn"
+    private const val TAG = "OneUIAlohaBurnIn"
     private const val PHONE_BAR = "com.android.systemui.statusbar.phone.PhoneStatusBarView"
     private const val MIUI_PHONE_BAR = "com.android.systemui.statusbar.phone.MiuiPhoneStatusBarView"
 
@@ -51,7 +51,7 @@ internal object StatusBarBurnInProtectionRuntime {
     )
 
     /**
-     * Watches native layout/attachment lifecycle for translated OneuiXP TextViews.
+     * Watches native layout/attachment lifecycle for translated OneUIAloha TextViews.
      * All View references reachable from this WeakHashMap's values are weak.
      */
     private data class ViewGeometryWatch(
@@ -289,7 +289,7 @@ internal object StatusBarBurnInProtectionRuntime {
         snapshot.forEach { target ->
             target.owner.get()?.let { owner ->
                 runCatching { target.apply(owner, x, y) }
-                    .onFailure { Log.d(TAG, "Cannot move OneuiXP status-bar element", it) }
+                    .onFailure { Log.d(TAG, "Cannot move OneUIAloha status-bar element", it) }
             }
         }
     }
@@ -387,7 +387,7 @@ internal object StatusBarBurnInProtectionRuntime {
     /**
      * Unlike applyViewOffset(), this deliberately does not infer a new baseline from the
      * current translation. On fold/unfold, SystemUI may reset the native View translation
-     * to zero; treating that reset as an intentional OneuiXP position change makes the
+     * to zero; treating that reset as an intentional OneUIAloha position change makes the
      * element jump back to its original location. The last known custom baseline is retained.
      */
     private fun reapplyViewOffsetPreservingBaseline(view: View, source: String) {
@@ -409,7 +409,7 @@ internal object StatusBarBurnInProtectionRuntime {
         baseline.lastWrittenY = targetY
 
         if (abs(beforeX - targetX) > 0.5f || abs(beforeY - targetY) > 0.5f) {
-            OneuiXPDiagnosticLog.record(
+            OneUIAlohaDiagnosticLog.record(
                 TAG,
                 "Restored custom View micro-offset after $source: " +
                     "before=($beforeX,$beforeY),target=($targetX,$targetY)," +
@@ -424,7 +424,7 @@ internal object StatusBarBurnInProtectionRuntime {
                 ViewBaseline(view.translationX, view.translationY)
             }
         }
-        // Custom OneuiXP layout code writes its intended translation without our micro-shift.
+        // Custom OneUIAloha layout code writes its intended translation without our micro-shift.
         // Detect that change and accept it as the new base before applying the offset again.
         if (abs(view.translationX - base.lastWrittenX) > 0.01f) base.x = view.translationX
         if (abs(view.translationY - base.lastWrittenY) > 0.01f) base.y = view.translationY

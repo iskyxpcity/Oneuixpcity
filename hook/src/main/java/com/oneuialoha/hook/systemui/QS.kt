@@ -1,4 +1,4 @@
-package com.oneuixp.hook.systemui
+package com.oneuialoha.hook.systemui
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -15,12 +15,12 @@ import android.widget.SeekBar
 import android.widget.TextView
 import io.github.libxposed.api.XposedInterface
 import io.github.libxposed.api.XposedModule
-import com.oneuixp.common.ONE_UI_VERSION
-import com.oneuixp.common.Package
-import com.oneuixp.hook.util.TraditionalChineseCalendar
-import com.oneuixp.hook.util.afterAttachTry
-import com.oneuixp.hook.util.reflect
-import com.oneuixp.hook.util.xlog
+import com.oneuialoha.common.ONE_UI_VERSION
+import com.oneuialoha.common.Package
+import com.oneuialoha.hook.util.TraditionalChineseCalendar
+import com.oneuialoha.hook.util.afterAttachTry
+import com.oneuialoha.hook.util.reflect
+import com.oneuialoha.hook.util.xlog
 import kotlin.math.roundToInt
 
 @SuppressLint("PrivateApi")
@@ -401,7 +401,7 @@ object QS {
 
     context(xposedModule: XposedModule)
     fun supportOutdoorMode() {
-        val outdoorModeRowTag = "com.oneuixp.hook.outdoor_mode_row"
+        val outdoorModeRowTag = "com.oneuialoha.hook.outdoor_mode_row"
 
         fun isOutdoorModeEnabled(context: Context): Boolean {
             return (android.provider.Settings.System::class.java.reflect.call(

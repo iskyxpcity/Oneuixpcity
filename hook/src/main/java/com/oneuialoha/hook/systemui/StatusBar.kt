@@ -1,4 +1,4 @@
-package com.oneuixp.hook.systemui
+package com.oneuialoha.hook.systemui
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -18,14 +18,14 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import io.github.libxposed.api.XposedModule
-import com.oneuixp.common.ONE_UI_VERSION
-import com.oneuixp.common.Package
-import com.oneuixp.common.Preference
-import com.oneuixp.hook.util.afterAttachTry
-import com.oneuixp.hook.util.StatusBarClockFormatter
-import com.oneuixp.hook.util.StatusBarClockRichFormatter
-import com.oneuixp.hook.util.reflect
-import com.oneuixp.hook.util.xlog
+import com.oneuialoha.common.ONE_UI_VERSION
+import com.oneuialoha.common.Package
+import com.oneuialoha.common.Preference
+import com.oneuialoha.hook.util.afterAttachTry
+import com.oneuialoha.hook.util.StatusBarClockFormatter
+import com.oneuialoha.hook.util.StatusBarClockRichFormatter
+import com.oneuialoha.hook.util.reflect
+import com.oneuialoha.hook.util.xlog
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Collections

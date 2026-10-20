@@ -1,4 +1,4 @@
-package com.oneuixp.hook.systemui
+package com.oneuialoha.hook.systemui
 
 import android.bluetooth.BluetoothAdapter
 import android.content.BroadcastReceiver
@@ -22,19 +22,19 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import io.github.libxposed.api.XposedModule
 import io.github.libxposed.api.XposedModuleInterface
-import com.oneuixp.common.IgnoreUnknownKeysJson
-import com.oneuixp.common.Package
-import com.oneuixp.common.Preference
-import com.oneuixp.common.StatusBarRuntimeBridge
-import com.oneuixp.hook.util.PreferenceProvider
+import com.oneuialoha.common.IgnoreUnknownKeysJson
+import com.oneuialoha.common.Package
+import com.oneuialoha.common.Preference
+import com.oneuialoha.common.StatusBarRuntimeBridge
+import com.oneuialoha.hook.util.PreferenceProvider
 import java.util.WeakHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.max
 
-/** OneuiXP Bluetooth status icon controls for Samsung SystemUI. */
+/** OneUIAloha Bluetooth status icon controls for Samsung SystemUI. */
 internal object StatusBarBluetoothRuntime {
     private const val PREFERENCE_CHANGED_URI =
-        "content://com.oneuixp.app.statusbridge/preferences"
+        "content://com.oneuialoha.app.statusbridge/preferences"
 
     private data class NativeState(
         val alpha: Float,
@@ -97,7 +97,7 @@ internal object StatusBarBluetoothRuntime {
 
     private fun ensurePreferenceWatcher(module: XposedModule, context: Context) {
         if (!watcherStarted.compareAndSet(false, true)) return
-        val worker = HandlerThread("OneuiXPStatusBluetoothPrefs").apply { start() }
+        val worker = HandlerThread("OneUIAlohaStatusBluetoothPrefs").apply { start() }
         preferenceThread = worker
         val background = Handler(worker.looper)
         var previous: Preference.SystemUI.StatusBarBluetoothRuntime? = null
