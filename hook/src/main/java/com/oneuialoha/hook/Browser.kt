@@ -1,4 +1,4 @@
-package com.oneuixp.hook
+package com.oneuialoha.hook
 
 import android.app.Activity
 import android.content.Context
@@ -9,10 +9,10 @@ import android.widget.LinearLayout
 import android.widget.RadioButton
 import android.widget.RadioGroup
 import io.github.libxposed.api.XposedModule
-import com.oneuixp.common.Package
-import com.oneuixp.hook.util.afterAttachTry
-import com.oneuixp.hook.util.reflect
-import com.oneuixp.hook.util.xlog
+import com.oneuialoha.common.Package
+import com.oneuialoha.hook.util.afterAttachTry
+import com.oneuialoha.hook.util.reflect
+import com.oneuialoha.hook.util.xlog
 
 object Browser {
     context(xposedModule: XposedModule)
