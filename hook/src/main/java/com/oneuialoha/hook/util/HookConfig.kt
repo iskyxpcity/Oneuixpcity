@@ -1,4 +1,4 @@
-package com.oneuixp.hook.util
+package com.oneuialoha.hook.util
 
 import android.content.Context
 import kotlinx.serialization.json.Json

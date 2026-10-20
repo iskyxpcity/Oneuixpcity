@@ -1,9 +1,9 @@
-package com.oneuixp.hook.util
+package com.oneuialoha.hook.util
 
 import java.util.concurrent.ConcurrentHashMap
 
 /**
- * Process-local count of successful OneuiXP hook installer blocks.
+ * Process-local count of successful OneUIAloha hook installer blocks.
  *
  * A key identifies one installer call site. Repeated attach callbacks or
  * duplicate invocations do not inflate the count.

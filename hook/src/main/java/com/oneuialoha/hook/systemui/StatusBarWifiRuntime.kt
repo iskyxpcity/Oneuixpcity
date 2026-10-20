@@ -1,4 +1,4 @@
-package com.oneuixp.hook.systemui
+package com.oneuialoha.hook.systemui
 
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -21,21 +21,21 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import io.github.libxposed.api.XposedModule
 import io.github.libxposed.api.XposedModuleInterface
-import com.oneuixp.common.IgnoreUnknownKeysJson
-import com.oneuixp.common.Package
-import com.oneuixp.common.Preference
-import com.oneuixp.common.StatusBarRuntimeBridge
-import com.oneuixp.hook.util.PreferenceProvider
+import com.oneuialoha.common.IgnoreUnknownKeysJson
+import com.oneuialoha.common.Package
+import com.oneuialoha.common.Preference
+import com.oneuialoha.common.StatusBarRuntimeBridge
+import com.oneuialoha.hook.util.PreferenceProvider
 import java.util.WeakHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.tan
 
-/** Samsung SystemUI runtime for the OneuiXP Wi-Fi icon editor. */
+/** Samsung SystemUI runtime for the OneUIAloha Wi-Fi icon editor. */
 internal object StatusBarWifiRuntime {
     private const val PREFERENCE_CHANGED_URI =
-        "content://com.oneuixp.app.statusbridge/preferences"
+        "content://com.oneuialoha.app.statusbridge/preferences"
 
     private data class NativeState(
         val alpha: Float,
@@ -129,7 +129,7 @@ internal object StatusBarWifiRuntime {
 
     private fun ensurePreferenceWatcher(module: XposedModule, context: Context) {
         if (!watcherStarted.compareAndSet(false, true)) return
-        val worker = HandlerThread("OneuiXPStatusWifiPrefs").apply { start() }
+        val worker = HandlerThread("OneUIAlohaStatusWifiPrefs").apply { start() }
         preferenceThread = worker
         val background = Handler(worker.looper)
         var previous: Preference.SystemUI.StatusBarWifiRuntime? = null
@@ -587,7 +587,7 @@ internal object StatusBarWifiRuntime {
             return
         }
         if (activityThread == null) {
-            activityThread = HandlerThread("OneuiXPStatusWifiActivity").apply { start() }
+            activityThread = HandlerThread("OneUIAlohaStatusWifiActivity").apply { start() }
             activityHandler = Handler(activityThread!!.looper)
         }
         lastTxBytes = TrafficStats.getTotalTxBytes().coerceAtLeast(0L)
