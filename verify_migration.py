@@ -151,13 +151,14 @@ old_brand = re.compile(
     + "|"
     + _chars((79, 110, 101, 85, 73, 88))
     + "|"
-    + legacy_project_segment
+    + "|"
+    + _chars((111, 110, 101, 117, 105, 88))
     + r")P[a-z]"
 )
 legacy_brand_fragments = (
-    _chars((79, 110, 101, 85, 73, 88)),       # Historical uppercase-UI form.
-    _chars((111, 110, 101, 117, 105, 88)),    # Lowercase-leading uppercase-X form.
+    _chars((79, 110, 101, 85, 73, 88)),        # Historical uppercase-UI form.
     _chars((79, 110, 101, 117, 105, 88, 112)), # Uppercase-leading lowercase-p form.
+    _chars((111, 110, 101, 117, 105, 88, 112)), # Lowercase-leading mixed-case lowercase-p form.
 )
 legacy_name_pattern = re.compile(r"(?i)" + legacy_project_segment + r"(?!p)")
 ignored_dirs = {".git", ".gradle", "build"}
