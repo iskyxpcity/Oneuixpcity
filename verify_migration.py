@@ -150,6 +150,7 @@ old_brand = re.compile(
     + _chars((79, 110, 101, 117, 105, 88))
     + "|"
     + _chars((79, 110, 101, 85, 73, 88))
+    + "|"
     + legacy_project_segment
     + "|"
     + _chars((111, 110, 101, 117, 105, 88))
