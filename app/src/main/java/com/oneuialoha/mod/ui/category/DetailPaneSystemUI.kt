@@ -1,4 +1,4 @@
-package com.oneuixp.mod.ui.category
+package com.oneuialoha.mod.ui.category
 
 import android.os.Build
 import androidx.annotation.StringRes
@@ -27,28 +27,28 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
-import com.oneuixp.app.R
-import com.oneuixp.common.ONE_UI_VERSION
-import com.oneuixp.common.PowerMenuAction
-import com.oneuixp.common.Preference
-import com.oneuixp.app.ui.viewmodel.OneuiXPToolsViewModel
-import com.oneuixp.mod.ui.component.SelectItem
-import com.oneuixp.mod.ui.component.SwitchItem
-import com.oneuixp.mod.ui.component.OneuiXPSlider
-import com.oneuixp.mod.ui.component.OneuiXPPPreferenceGroup
-import com.oneuixp.mod.ui.component.OneuiXPDetailGroup
-import com.oneuixp.mod.ui.component.OneuiXPChildVisibility
-import com.oneuixp.mod.ui.component.OneuiXPActionButton
-import com.oneuixp.mod.ui.component.OneuiXPInfoItem
-import com.oneuixp.mod.ui.component.OneuiXPInlineTextField
-import com.oneuixp.mod.ui.component.OneuiXPSectionLabel
-import com.oneuixp.mod.ui.component.OneuiXPSupportingText
-import com.oneuixp.mod.ui.component.OneuiXPSwitch
-import com.oneuixp.hook.util.StatusBarClockFormatter
+import com.oneuialoha.app.R
+import com.oneuialoha.common.ONE_UI_VERSION
+import com.oneuialoha.common.PowerMenuAction
+import com.oneuialoha.common.Preference
+import com.oneuialoha.app.ui.viewmodel.OneUIAlohaToolsViewModel
+import com.oneuialoha.mod.ui.component.SelectItem
+import com.oneuialoha.mod.ui.component.SwitchItem
+import com.oneuialoha.mod.ui.component.OneUIAlohaSlider
+import com.oneuialoha.mod.ui.component.OneUIAlohaPPreferenceGroup
+import com.oneuialoha.mod.ui.component.OneUIAlohaDetailGroup
+import com.oneuialoha.mod.ui.component.OneUIAlohaChildVisibility
+import com.oneuialoha.mod.ui.component.OneUIAlohaActionButton
+import com.oneuialoha.mod.ui.component.OneUIAlohaInfoItem
+import com.oneuialoha.mod.ui.component.OneUIAlohaInlineTextField
+import com.oneuialoha.mod.ui.component.OneUIAlohaSectionLabel
+import com.oneuialoha.mod.ui.component.OneUIAlohaSupportingText
+import com.oneuialoha.mod.ui.component.OneUIAlohaSwitch
+import com.oneuialoha.hook.util.StatusBarClockFormatter
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import kotlin.math.roundToInt
-import com.oneuixp.common.R as CommonR
+import com.oneuialoha.common.R as CommonR
 
 private const val ESIM_ADAPTER_SIM_BOTH = 2
 private val DOUBLE_LINE_CLOCK_SIZE_VALUES = listOf(
@@ -78,16 +78,16 @@ fun DetailPaneSystemUI(
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
     ) {
-        DividerText(R.string.oneuixp_status_bar)
-        OneuiXPDetailGroup {
-        OneuiXPPPreferenceGroup {
+        DividerText(R.string.oneuialoha_status_bar)
+        OneUIAlohaDetailGroup {
+        OneUIAlohaPPreferenceGroup {
             var padding by remember {
                 mutableFloatStateOf(uiState.statusBar.statusBarLeftPaddingDp)
             }
             var expanded by rememberSaveable { mutableStateOf(false) }
 
             SwitchItem(
-                title = stringResource(id = R.string.oneuixp_statusBarLeftPaddingDp_title),
+                title = stringResource(id = R.string.oneuialoha_statusBarLeftPaddingDp_title),
                 modifier = Modifier.animateContentSize(),
                 summary = if (uiState.statusBar.modifyStatusBarLeftPadding) {
                     "%.1fdp".format(padding)
@@ -105,8 +105,8 @@ fun DetailPaneSystemUI(
                     onEvent(SystemUIEvent.StatusBar.ModifyStatusBarLeftPadding(it))
                 }
             )
-            OneuiXPChildVisibility(expanded && uiState.statusBar.modifyStatusBarLeftPadding) {
-                OneuiXPSlider(
+            OneUIAlohaChildVisibility(expanded && uiState.statusBar.modifyStatusBarLeftPadding) {
+                OneUIAlohaSlider(
                     value = padding,
                     onValueChange = { padding = it },
                     modifier = Modifier.padding(horizontal = 16.dp),
@@ -117,14 +117,14 @@ fun DetailPaneSystemUI(
                 )
             }
         }
-        OneuiXPPPreferenceGroup {
+        OneUIAlohaPPreferenceGroup {
             var padding by remember {
                 mutableFloatStateOf(uiState.statusBar.statusBarRightPaddingDp)
             }
             var expanded by rememberSaveable { mutableStateOf(false) }
 
             SwitchItem(
-                title = stringResource(id = R.string.oneuixp_statusBarRightPaddingDp_title),
+                title = stringResource(id = R.string.oneuialoha_statusBarRightPaddingDp_title),
                 modifier = Modifier.animateContentSize(),
                 summary = if (uiState.statusBar.modifyStatusBarRightPadding) {
                     "%.1fdp".format(padding)
@@ -142,8 +142,8 @@ fun DetailPaneSystemUI(
                     onEvent(SystemUIEvent.StatusBar.ModifyStatusBarRightPadding(it))
                 }
             )
-            OneuiXPChildVisibility(expanded && uiState.statusBar.modifyStatusBarRightPadding) {
-                OneuiXPSlider(
+            OneUIAlohaChildVisibility(expanded && uiState.statusBar.modifyStatusBarRightPadding) {
+                OneUIAlohaSlider(
                     value = padding,
                     onValueChange = { padding = it },
                     modifier = Modifier.padding(horizontal = 16.dp),
@@ -155,8 +155,8 @@ fun DetailPaneSystemUI(
             }
         }
         StatusBarVerticalPaddingControl(
-            title = stringResource(id = R.string.oneuixp_statusBarTopPaddingDp_title),
-            summaryRes = R.string.oneuixp_statusBarTopPaddingDp_summary,
+            title = stringResource(id = R.string.oneuialoha_statusBarTopPaddingDp_title),
+            summaryRes = R.string.oneuialoha_statusBarTopPaddingDp_summary,
             enabled = uiState.statusBar.modifyStatusBarTopPadding,
             currentValue = uiState.statusBar.statusBarTopPaddingDp,
             onEnabledChange = {
@@ -167,8 +167,8 @@ fun DetailPaneSystemUI(
             }
         )
         StatusBarVerticalPaddingControl(
-            title = stringResource(id = R.string.oneuixp_statusBarBottomPaddingDp_title),
-            summaryRes = R.string.oneuixp_statusBarBottomPaddingDp_summary,
+            title = stringResource(id = R.string.oneuialoha_statusBarBottomPaddingDp_title),
+            summaryRes = R.string.oneuialoha_statusBarBottomPaddingDp_summary,
             enabled = uiState.statusBar.modifyStatusBarBottomPadding,
             currentValue = uiState.statusBar.statusBarBottomPaddingDp,
             onEnabledChange = {
@@ -192,7 +192,7 @@ fun DetailPaneSystemUI(
         )
         SwitchItem(
             icon = ImageVector.vectorResource(id = R.drawable.folder_managed),
-            title = stringResource(id = R.string.oneuixp_hideSecureFolderStatusBarIcon_title),
+            title = stringResource(id = R.string.oneuialoha_hideSecureFolderStatusBarIcon_title),
             checked = uiState.statusBar.hideSecureFolderStatusBarIcon,
             onCheckedChange = {
                 onEvent(SystemUIEvent.StatusBar.HideSecureFolderStatusBarIcon(it))
@@ -200,31 +200,31 @@ fun DetailPaneSystemUI(
         )
         SwitchItem(
             icon = ImageVector.vectorResource(id = R.drawable.bluetooth),
-            title = stringResource(id = R.string.oneuixp_restoreBluetoothStatusBarIcon_title),
+            title = stringResource(id = R.string.oneuialoha_restoreBluetoothStatusBarIcon_title),
             checked = uiState.statusBar.restoreBluetoothStatusBarIcon,
             onCheckedChange = {
                 onEvent(SystemUIEvent.StatusBar.RestoreBluetoothStatusBarIcon(it))
             }
         )
-        OneuiXPPPreferenceGroup {
+        OneUIAlohaPPreferenceGroup {
         SwitchItem(
             icon = ImageVector.vectorResource(id = R.drawable.sim_card),
-            title = stringResource(id = R.string.oneuixp_physicalEsimAdapterWorkaround_title),
-            summary = stringResource(id = R.string.oneuixp_physicalEsimAdapterWorkaround_summary),
+            title = stringResource(id = R.string.oneuialoha_physicalEsimAdapterWorkaround_title),
+            summary = stringResource(id = R.string.oneuialoha_physicalEsimAdapterWorkaround_summary),
             showChildIndicator = true,
                 checked = uiState.statusBar.physicalEsimAdapterWorkaround,
             onCheckedChange = {
                 onEvent(SystemUIEvent.StatusBar.PhysicalEsimAdapterWorkaround(it))
             }
         )
-        OneuiXPChildVisibility(uiState.statusBar.physicalEsimAdapterWorkaround) {
+        OneUIAlohaChildVisibility(uiState.statusBar.physicalEsimAdapterWorkaround) {
             SelectItem(
                 icon = ImageVector.vectorResource(id = R.drawable.sim_card),
-                title = stringResource(id = R.string.oneuixp_physicalEsimAdapterSimSlot_title),
+                title = stringResource(id = R.string.oneuialoha_physicalEsimAdapterSimSlot_title),
                 entries = listOf(
-                    stringResource(id = R.string.oneuixp_sim_slot_1),
-                    stringResource(id = R.string.oneuixp_sim_slot_2),
-                    stringResource(id = R.string.oneuixp_sim_slot_both)
+                    stringResource(id = R.string.oneuialoha_sim_slot_1),
+                    stringResource(id = R.string.oneuialoha_sim_slot_2),
+                    stringResource(id = R.string.oneuialoha_sim_slot_both)
                 ),
                 selectedIndex = uiState.statusBar.physicalEsimAdapterSimSlot.coerceIn(
                     0,
@@ -238,7 +238,7 @@ fun DetailPaneSystemUI(
         }
         SwitchItem(
             icon = ImageVector.vectorResource(id = R.drawable.mobile_screensaver),
-            title = stringResource(id = R.string.oneuixp_doubleTapStatusBarToSleep_title),
+            title = stringResource(id = R.string.oneuialoha_doubleTapStatusBarToSleep_title),
             checked = uiState.statusBar.doubleTapStatusBarToSleep,
             onCheckedChange = {
                 onEvent(SystemUIEvent.StatusBar.DoubleTapStatusBarToSleep(it))
@@ -248,11 +248,11 @@ fun DetailPaneSystemUI(
             uiState = uiState.statusBar,
             onEvent = onEvent,
         )
-        OneuiXPPPreferenceGroup {
+        OneUIAlohaPPreferenceGroup {
             var expanded by rememberSaveable { mutableStateOf(false) }
 
             SwitchItem(
-                title = stringResource(id = R.string.oneuixp_setCustomCarrierName_title),
+                title = stringResource(id = R.string.oneuialoha_setCustomCarrierName_title),
                 modifier = Modifier.animateContentSize(),
                 summary = if (uiState.statusBar.setCustomCarrierName) {
                     uiState.statusBar.customCarrierName
@@ -271,7 +271,7 @@ fun DetailPaneSystemUI(
                 }
             )
 
-            OneuiXPChildVisibility(expanded && uiState.statusBar.setCustomCarrierName) {
+            OneUIAlohaChildVisibility(expanded && uiState.statusBar.setCustomCarrierName) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.padding(horizontal = 16.dp),
@@ -280,15 +280,15 @@ fun DetailPaneSystemUI(
                         mutableStateOf(uiState.statusBar.customCarrierName)
                     }
 
-                    OneuiXPInlineTextField(
+                    OneUIAlohaInlineTextField(
                         value = tempCustomCarrierName,
                         onValueChange = { tempCustomCarrierName = it },
                         modifier = Modifier.weight(1f),
                         singleLine = true,
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    OneuiXPActionButton(
-                        text = stringResource(id = R.string.oneuixp_confirm),
+                    OneUIAlohaActionButton(
+                        text = stringResource(id = R.string.oneuialoha_confirm),
                         primary = true,
                         onClick = {
                             onEvent(
@@ -303,7 +303,7 @@ fun DetailPaneSystemUI(
         }
         SwitchItem(
             icon = ImageVector.vectorResource(id = R.drawable.mobile_screensaver),
-            title = stringResource(id = R.string.oneuixp_hideLockscreenStatusBar_title),
+            title = stringResource(id = R.string.oneuialoha_hideLockscreenStatusBar_title),
             checked = uiState.statusBar.hideLockscreenStatusBar,
             onCheckedChange = {
                 onEvent(SystemUIEvent.StatusBar.HideLockscreenStatusBar(it))
@@ -311,11 +311,11 @@ fun DetailPaneSystemUI(
         )
 
         }
-        DividerText(R.string.oneuixp_qs)
-        OneuiXPDetailGroup {
+        DividerText(R.string.oneuialoha_qs)
+        OneUIAlohaDetailGroup {
         SwitchItem(
             icon = ImageVector.vectorResource(id = R.drawable.format_letter_spacing),
-            title = stringResource(id = R.string.oneuixp_setQsClockMonospaced_title),
+            title = stringResource(id = R.string.oneuialoha_setQsClockMonospaced_title),
             checked = uiState.qs.setQsClockMonospaced,
             onCheckedChange = {
                 onEvent(SystemUIEvent.QS.SetQsClockMonospaced(it))
@@ -324,7 +324,7 @@ fun DetailPaneSystemUI(
         if (Build.VERSION.SDK_INT == Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             SwitchItem(
                 icon = ImageVector.vectorResource(id = R.drawable.tile_medium),
-                title = stringResource(id = R.string.oneuixp_hideDeviceControlQsTile_title),
+                title = stringResource(id = R.string.oneuialoha_hideDeviceControlQsTile_title),
                 checked = uiState.qs.hideDeviceControlQsTile,
                 onCheckedChange = {
                     onEvent(SystemUIEvent.QS.HideDeviceControlQsTile(it))
@@ -332,7 +332,7 @@ fun DetailPaneSystemUI(
             )
             SwitchItem(
                 icon = ImageVector.vectorResource(id = R.drawable.tile_medium),
-                title = stringResource(id = R.string.oneuixp_hideSmartViewQsTile_title),
+                title = stringResource(id = R.string.oneuialoha_hideSmartViewQsTile_title),
                 checked = uiState.qs.hideSmartViewQsTile,
                 onCheckedChange = {
                     onEvent(SystemUIEvent.QS.HideSmartViewQsTile(it))
@@ -340,8 +340,8 @@ fun DetailPaneSystemUI(
             )
             SwitchItem(
                 icon = ImageVector.vectorResource(id = R.drawable.five_g),
-                title = stringResource(id = R.string.oneuixp_turnOn5gQsTile_title),
-                summary = stringResource(id = R.string.oneuixp_turnOn5gQsTile_summary),
+                title = stringResource(id = R.string.oneuialoha_turnOn5gQsTile_title),
+                summary = stringResource(id = R.string.oneuialoha_turnOn5gQsTile_summary),
                 checked = uiState.qs.turnOn5gQsTile,
                 onCheckedChange = {
                     onEvent(SystemUIEvent.QS.TurnOn5gQsTile(it))
@@ -349,20 +349,20 @@ fun DetailPaneSystemUI(
             )
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
-            OneuiXPInfoItem(
-                title = stringResource(id = R.string.oneuixp_turnOn5gQsTile_title),
-                summary = stringResource(id = R.string.oneuixp_root5gQsTile_summary),
+            OneUIAlohaInfoItem(
+                title = stringResource(id = R.string.oneuialoha_turnOn5gQsTile_title),
+                summary = stringResource(id = R.string.oneuialoha_root5gQsTile_summary),
                 icon = ImageVector.vectorResource(id = R.drawable.five_g),
             )
-            OneuiXPInfoItem(
-                title = stringResource(id = R.string.oneuixp_immersiveModeQsTile_title),
-                summary = stringResource(id = R.string.oneuixp_rootImmersiveModeQsTile_summary),
+            OneUIAlohaInfoItem(
+                title = stringResource(id = R.string.oneuialoha_immersiveModeQsTile_title),
+                summary = stringResource(id = R.string.oneuialoha_rootImmersiveModeQsTile_summary),
                 icon = ImageVector.vectorResource(id = R.drawable.immersive_mode),
             )
             if (ONE_UI_VERSION < 80500) {
                 SwitchItem(
                     icon = ImageVector.vectorResource(id = R.drawable.tile_medium),
-                    title = stringResource(id = R.string.oneuixp_hideQsBarMediaPlayer_title),
+                    title = stringResource(id = R.string.oneuialoha_hideQsBarMediaPlayer_title),
                     checked = uiState.qs.hideQsBarMediaPlayer,
                     onCheckedChange = {
                         onEvent(SystemUIEvent.QS.HideQsBarMediaPlayer(it))
@@ -372,7 +372,7 @@ fun DetailPaneSystemUI(
             if (ONE_UI_VERSION < 80500) {
                 SwitchItem(
                     icon = ImageVector.vectorResource(id = R.drawable.tile_medium),
-                    title = stringResource(id = R.string.oneuixp_hideQsBarNearbyDevicesAndDeviceControl_title),
+                    title = stringResource(id = R.string.oneuialoha_hideQsBarNearbyDevicesAndDeviceControl_title),
                     checked = uiState.qs.hideQsBarNearbyDevicesAndDeviceControl,
                     onCheckedChange = {
                         onEvent(SystemUIEvent.QS.HideQsBarNearbyDevicesAndDeviceControl(it))
@@ -381,8 +381,8 @@ fun DetailPaneSystemUI(
             }
             SwitchItem(
                 icon = ImageVector.vectorResource(id = R.drawable.tile_medium),
-                title = stringResource(id = R.string.oneuixp_hideQsBarSecurityFooter_title),
-                summary = stringResource(id = R.string.oneuixp_hideQsBarSecurityFooter_summary),
+                title = stringResource(id = R.string.oneuialoha_hideQsBarSecurityFooter_title),
+                summary = stringResource(id = R.string.oneuialoha_hideQsBarSecurityFooter_summary),
                 checked = uiState.qs.hideQsBarSecurityFooter,
                 onCheckedChange = {
                     onEvent(SystemUIEvent.QS.HideQsBarSecurityFooter(it))
@@ -390,7 +390,7 @@ fun DetailPaneSystemUI(
             )
             SwitchItem(
                 icon = ImageVector.vectorResource(id = R.drawable.tile_medium),
-                title = stringResource(id = R.string.oneuixp_hideQsBarDataUsage_title),
+                title = stringResource(id = R.string.oneuialoha_hideQsBarDataUsage_title),
                 checked = uiState.qs.hideQsBarDataUsage,
                 onCheckedChange = {
                     onEvent(SystemUIEvent.QS.HideQsBarDataUsage(it))
@@ -399,7 +399,7 @@ fun DetailPaneSystemUI(
             if (ONE_UI_VERSION < 80500) {
                 SwitchItem(
                     icon = ImageVector.vectorResource(id = R.drawable.tile_medium),
-                    title = stringResource(id = R.string.oneuixp_hideQsBarSmartViewAndModes_title),
+                    title = stringResource(id = R.string.oneuialoha_hideQsBarSmartViewAndModes_title),
                     checked = uiState.qs.hideQsBarSmartViewAndModes,
                     onCheckedChange = {
                         onEvent(SystemUIEvent.QS.HideQsBarSmartViewAndModes(it))
@@ -409,7 +409,7 @@ fun DetailPaneSystemUI(
             if (ONE_UI_VERSION < 80500) {
                 SwitchItem(
                     icon = ImageVector.vectorResource(id = R.drawable.expand),
-                    title = stringResource(id = R.string.oneuixp_alwaysExpandQsTileChunk_title),
+                    title = stringResource(id = R.string.oneuialoha_alwaysExpandQsTileChunk_title),
                     checked = uiState.qs.alwaysExpandQsTileChunk,
                     onCheckedChange = {
                         onEvent(SystemUIEvent.QS.AlwaysExpandQsTileChunk(it))
@@ -418,7 +418,7 @@ fun DetailPaneSystemUI(
             }
             if (ONE_UI_VERSION < 80500) {
                 SwitchItem(
-                    title = stringResource(id = R.string.oneuixp_alwaysShowTimeDateOnQs_title),
+                    title = stringResource(id = R.string.oneuialoha_alwaysShowTimeDateOnQs_title),
                     icon = ImageVector.vectorResource(id = R.drawable.nest_clock_farsight_digital),
                     checked = uiState.qs.alwaysShowTimeDateOnQs,
                     onCheckedChange = {
@@ -429,7 +429,7 @@ fun DetailPaneSystemUI(
             if (ONE_UI_VERSION < 80500) {
                 SwitchItem(
                     icon = ImageVector.vectorResource(id = R.drawable.light_mode),
-                    title = stringResource(id = R.string.oneuixp_addBrightnessProgressToQsBar_title),
+                    title = stringResource(id = R.string.oneuialoha_addBrightnessProgressToQsBar_title),
                     checked = uiState.qs.addBrightnessProgressToQsBar,
                     onCheckedChange = {
                         onEvent(SystemUIEvent.QS.AddBrightnessProgressToQsBar(it))
@@ -439,7 +439,7 @@ fun DetailPaneSystemUI(
             if (ONE_UI_VERSION < 80500) {
                 SwitchItem(
                     icon = ImageVector.vectorResource(id = R.drawable.music_note),
-                    title = stringResource(id = R.string.oneuixp_addVolumeProgressToQsBar_title),
+                    title = stringResource(id = R.string.oneuialoha_addVolumeProgressToQsBar_title),
                     checked = uiState.qs.addVolumeProgressToQsBar,
                     onCheckedChange = {
                         onEvent(SystemUIEvent.QS.AddVolumeProgressToQsBar(it))
@@ -448,18 +448,18 @@ fun DetailPaneSystemUI(
             }
             SwitchItem(
                 icon = ImageVector.vectorResource(id = R.drawable.today),
-                title = stringResource(id = R.string.oneuixp_showTraditionalChineseDateOnQS_title),
+                title = stringResource(id = R.string.oneuialoha_showTraditionalChineseDateOnQS_title),
                 checked = uiState.qs.showTraditionalChineseDateOnQS,
                 onCheckedChange = {
                     onEvent(SystemUIEvent.QS.ShowTraditionalChineseDateOnQS(it))
                 }
             )
-            OneuiXPPPreferenceGroup {
+            OneUIAlohaPPreferenceGroup {
                 var textSize by remember { mutableFloatStateOf(uiState.qs.qsClockTextSize) }
                 var expanded by rememberSaveable { mutableStateOf(false) }
 
                 SwitchItem(
-                    title = stringResource(id = R.string.oneuixp_modifyQSClockTextSize_title),
+                    title = stringResource(id = R.string.oneuialoha_modifyQSClockTextSize_title),
                     modifier = Modifier.animateContentSize(),
                     summary = if (uiState.qs.modifyQSClockTextSize) {
                         " %.1fsp".format(textSize)
@@ -478,8 +478,8 @@ fun DetailPaneSystemUI(
                     }
                 )
 
-                OneuiXPChildVisibility(expanded && uiState.qs.modifyQSClockTextSize) {
-                    OneuiXPSlider(
+                OneUIAlohaChildVisibility(expanded && uiState.qs.modifyQSClockTextSize) {
+                    OneUIAlohaSlider(
                         value = textSize,
                         onValueChange = { textSize = it },
                         modifier = Modifier.padding(horizontal = 16.dp),
@@ -494,11 +494,11 @@ fun DetailPaneSystemUI(
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
-            DividerText(R.string.oneuixp_aod)
-            OneuiXPDetailGroup {
+            DividerText(R.string.oneuialoha_aod)
+            OneUIAlohaDetailGroup {
             SwitchItem(
                 icon = ImageVector.vectorResource(id = R.drawable.battery),
-                title = stringResource(id = R.string.oneuixp_hideAODStatusBar_title),
+                title = stringResource(id = R.string.oneuialoha_hideAODStatusBar_title),
                 checked = uiState.aod.hideAODStatusBar,
                 onCheckedChange = {
                     onEvent(SystemUIEvent.AOD.HideAODStatusBar(it))
@@ -506,7 +506,7 @@ fun DetailPaneSystemUI(
             )
             SwitchItem(
                 icon = ImageVector.vectorResource(id = R.drawable.today),
-                title = stringResource(id = R.string.oneuixp_aodLockSupportLunar_title),
+                title = stringResource(id = R.string.oneuialoha_aodLockSupportLunar_title),
                 checked = uiState.aod.aodLockSupportLunar,
                 onCheckedChange = {
                     onEvent(SystemUIEvent.AOD.AODLockSupportLunar(it))
@@ -515,17 +515,17 @@ fun DetailPaneSystemUI(
             }
         }
 
-        DividerText(R.string.oneuixp_notification)
-        OneuiXPDetailGroup {
-        OneuiXPPPreferenceGroup {
+        DividerText(R.string.oneuialoha_notification)
+        OneUIAlohaDetailGroup {
+        OneUIAlohaPPreferenceGroup {
             var expanded by rememberSaveable { mutableStateOf(false) }
             SwitchItem(
                 icon = ImageVector.vectorResource(id = R.drawable.music_note),
-                title = stringResource(id = R.string.oneuixp_hideOngoingActivityMedia_title),
+                title = stringResource(id = R.string.oneuialoha_hideOngoingActivityMedia_title),
                 summary = if (uiState.notification.hideOngoingActivityMedia && uiState.notification.hideOngoingActivityMediaPackages.isNotEmpty()) {
                     uiState.notification.hideOngoingActivityMediaPackages
                 } else {
-                    stringResource(id = R.string.oneuixp_hideOngoingActivityMedia_summary)
+                    stringResource(id = R.string.oneuialoha_hideOngoingActivityMedia_summary)
                 },
                 clickable = true,
                 onClick = { expanded = !expanded },
@@ -539,7 +539,7 @@ fun DetailPaneSystemUI(
                     onEvent(SystemUIEvent.Notification.HideOngoingActivityMedia(it))
                 }
             )
-            OneuiXPChildVisibility(expanded && uiState.notification.hideOngoingActivityMedia) {
+            OneUIAlohaChildVisibility(expanded && uiState.notification.hideOngoingActivityMedia) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
@@ -547,16 +547,16 @@ fun DetailPaneSystemUI(
                     var tempPackages by remember {
                         mutableStateOf(uiState.notification.hideOngoingActivityMediaPackages)
                     }
-                    OneuiXPInlineTextField(
+                    OneUIAlohaInlineTextField(
                         value = tempPackages,
                         onValueChange = { tempPackages = it },
                         modifier = Modifier.weight(1f),
-                        labelText = stringResource(id = R.string.oneuixp_hideOngoingActivityMedia_packages_hint),
+                        labelText = stringResource(id = R.string.oneuialoha_hideOngoingActivityMedia_packages_hint),
                         singleLine = true,
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    OneuiXPActionButton(
-                        text = stringResource(id = R.string.oneuixp_confirm),
+                    OneUIAlohaActionButton(
+                        text = stringResource(id = R.string.oneuialoha_confirm),
                         primary = true,
                         onClick = {
                             onEvent(SystemUIEvent.Notification.HideOngoingActivityMediaPackages(tempPackages))
@@ -567,8 +567,8 @@ fun DetailPaneSystemUI(
         }
         SwitchItem(
             icon = ImageVector.vectorResource(id = R.drawable.notifications),
-            title = stringResource(id = R.string.oneuixp_disableNotificationGrouping_title),
-            summary = stringResource(id = R.string.oneuixp_disableNotificationGrouping_summary),
+            title = stringResource(id = R.string.oneuialoha_disableNotificationGrouping_title),
+            summary = stringResource(id = R.string.oneuialoha_disableNotificationGrouping_summary),
             checked = uiState.notification.disableNotificationGrouping,
             onCheckedChange = {
                 onEvent(SystemUIEvent.Notification.DisableNotificationGrouping(it))
@@ -576,7 +576,7 @@ fun DetailPaneSystemUI(
         )
         SwitchItem(
             icon = ImageVector.vectorResource(id = R.drawable.notifications),
-            title = stringResource(id = R.string.oneuixp_autoExpandNotifications_title),
+            title = stringResource(id = R.string.oneuialoha_autoExpandNotifications_title),
             checked = uiState.notification.autoExpandNotifications,
             onCheckedChange = {
                 onEvent(SystemUIEvent.Notification.AutoExpandNotifications(it))
@@ -584,13 +584,13 @@ fun DetailPaneSystemUI(
         )
 
         }
-        DividerText(R.string.oneuixp_other)
-        OneuiXPDetailGroup {
-        OneuiXPPPreferenceGroup {
+        DividerText(R.string.oneuialoha_other)
+        OneUIAlohaDetailGroup {
+        OneUIAlohaPPreferenceGroup {
             var expanded by rememberSaveable { mutableStateOf(false) }
             SwitchItem(
                 icon = ImageVector.vectorResource(id = R.drawable.power_settings_new),
-                title = stringResource(id = R.string.oneuixp_customPowerMenu_title),
+                title = stringResource(id = R.string.oneuialoha_customPowerMenu_title),
                 clickable = true,
                 onClick = { expanded = !expanded },
                 checked = uiState.other.customPowerMenu,
@@ -610,7 +610,7 @@ fun DetailPaneSystemUI(
         }
         SwitchItem(
             icon = ImageVector.vectorResource(id = R.drawable.screenshot),
-            title = stringResource(id = R.string.oneuixp_disableScreenshotCaptureSound_title),
+            title = stringResource(id = R.string.oneuialoha_disableScreenshotCaptureSound_title),
             checked = uiState.other.disableScreenshotCaptureSound,
             onCheckedChange = {
                 onEvent(SystemUIEvent.Other.DisableScreenshotCaptureSound(it))
@@ -621,7 +621,7 @@ fun DetailPaneSystemUI(
 }
 
 @Composable
-private fun DividerText(@StringRes id: Int) = OneuiXPSectionLabel(
+private fun DividerText(@StringRes id: Int) = OneUIAlohaSectionLabel(
     text = stringResource(id),
     modifier = Modifier.padding(start = 16.dp, top = 32.dp, end = 16.dp),
 )
@@ -635,35 +635,35 @@ private fun PowerMenuActionEditor(
     Column {
         normalizedActions.forEachIndexed { index, action ->
             val visiblePosition = normalizedActions.take(index + 1).count { it.visible }
-            OneuiXPInfoItem(
+            OneUIAlohaInfoItem(
                 title = stringResource(id = powerMenuActionTitle(action.name)),
                 summary = if (action.visible) {
                     stringResource(
-                        id = R.string.oneuixp_powerMenuActionVisible_summary,
+                        id = R.string.oneuialoha_powerMenuActionVisible_summary,
                         visiblePosition
                     )
                 } else {
-                    stringResource(id = R.string.oneuixp_powerMenuActionHidden_summary)
+                    stringResource(id = R.string.oneuialoha_powerMenuActionHidden_summary)
                 },
                 trailingContent = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        OneuiXPActionButton(
-                            text = stringResource(id = R.string.oneuixp_moveUp),
+                        OneUIAlohaActionButton(
+                            text = stringResource(id = R.string.oneuialoha_moveUp),
                             enabled = index > 0,
                             onClick = {
                                 onActionsChange(normalizedActions.move(index, index - 1))
                             },
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        OneuiXPActionButton(
-                            text = stringResource(id = R.string.oneuixp_moveDown),
+                        OneUIAlohaActionButton(
+                            text = stringResource(id = R.string.oneuialoha_moveDown),
                             enabled = index < normalizedActions.lastIndex,
                             onClick = {
                                 onActionsChange(normalizedActions.move(index, index + 1))
                             },
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        OneuiXPSwitch(
+                        OneUIAlohaSwitch(
                             checked = action.visible,
                             onCheckedChange = { visible ->
                                 onActionsChange(
@@ -692,7 +692,7 @@ private fun StatusBarVerticalPaddingControl(
     var value by remember(currentValue) { mutableFloatStateOf(currentValue) }
     var expanded by rememberSaveable { mutableStateOf(false) }
 
-    OneuiXPPPreferenceGroup {
+    OneUIAlohaPPreferenceGroup {
         SwitchItem(
             title = title,
             summary = if (enabled) {
@@ -708,8 +708,8 @@ private fun StatusBarVerticalPaddingControl(
                 onEnabledChange(it)
             },
         )
-        OneuiXPChildVisibility(expanded && enabled) {
-            OneuiXPSlider(
+        OneUIAlohaChildVisibility(expanded && enabled) {
+            OneUIAlohaSlider(
                 value = value,
                 onValueChange = { value = it },
                 modifier = Modifier.padding(horizontal = 16.dp),
@@ -730,19 +730,19 @@ private fun List<PowerMenuAction>.move(fromIndex: Int, toIndex: Int): List<Power
 
 @StringRes
 private fun powerMenuActionTitle(actionName: String): Int = when (actionName) {
-    PowerMenuAction.POWER -> R.string.oneuixp_powerMenuAction_power
-    PowerMenuAction.DATA_MODE -> R.string.oneuixp_powerMenuAction_dataMode
-    PowerMenuAction.RESTART -> R.string.oneuixp_powerMenuAction_restart
-    PowerMenuAction.SAFE_MODE -> R.string.oneuixp_powerMenuAction_safeMode
-    PowerMenuAction.LOCK_DOWN_MODE -> R.string.oneuixp_powerMenuAction_lockDownMode
-    PowerMenuAction.EMERGENCY_CALL -> R.string.oneuixp_powerMenuAction_emergencyCall
-    PowerMenuAction.MEDICAL_INFO -> R.string.oneuixp_powerMenuAction_medicalInfo
-    PowerMenuAction.SIDE_KEY_SETTINGS -> R.string.oneuixp_sideKeySettings
-    PowerMenuAction.FORCE_RESTART_MESSAGE -> R.string.oneuixp_powerMenuAction_forceRestartMessage
+    PowerMenuAction.POWER -> R.string.oneuialoha_powerMenuAction_power
+    PowerMenuAction.DATA_MODE -> R.string.oneuialoha_powerMenuAction_dataMode
+    PowerMenuAction.RESTART -> R.string.oneuialoha_powerMenuAction_restart
+    PowerMenuAction.SAFE_MODE -> R.string.oneuialoha_powerMenuAction_safeMode
+    PowerMenuAction.LOCK_DOWN_MODE -> R.string.oneuialoha_powerMenuAction_lockDownMode
+    PowerMenuAction.EMERGENCY_CALL -> R.string.oneuialoha_powerMenuAction_emergencyCall
+    PowerMenuAction.MEDICAL_INFO -> R.string.oneuialoha_powerMenuAction_medicalInfo
+    PowerMenuAction.SIDE_KEY_SETTINGS -> R.string.oneuialoha_sideKeySettings
+    PowerMenuAction.FORCE_RESTART_MESSAGE -> R.string.oneuialoha_powerMenuAction_forceRestartMessage
     PowerMenuAction.RESTART_SYSTEMUI -> CommonR.string.restartSystemUI
     PowerMenuAction.RESTART_RECOVERY -> CommonR.string.restartRecovery
     PowerMenuAction.RESTART_DOWNLOAD -> CommonR.string.restartDownload
-    else -> R.string.oneuixp_other
+    else -> R.string.oneuialoha_other
 }
 
 sealed interface SystemUIEvent {
@@ -1021,7 +1021,7 @@ sealed interface SystemUIEvent {
     }
 }
 
-fun OneuiXPToolsViewModel.onSystemUIEvent(event: SystemUIEvent) {
+fun OneUIAlohaToolsViewModel.onSystemUIEvent(event: SystemUIEvent) {
     when (event) {
         is SystemUIEvent.StatusBar -> onStatusBarEvent(event)
         is SystemUIEvent.StatusBarPreview -> previewStatusBarEvent(event.value)
@@ -1032,7 +1032,7 @@ fun OneuiXPToolsViewModel.onSystemUIEvent(event: SystemUIEvent) {
     }
 }
 
-private fun OneuiXPToolsViewModel.previewStatusBarEvent(event: SystemUIEvent.StatusBar) {
+private fun OneUIAlohaToolsViewModel.previewStatusBarEvent(event: SystemUIEvent.StatusBar) {
     previewData { preference ->
         val statusBar = preference.systemUI.statusBar
         val preview = when (event) {
@@ -1113,7 +1113,7 @@ private fun OneuiXPToolsViewModel.previewStatusBarEvent(event: SystemUIEvent.Sta
     }
 }
 
-private fun OneuiXPToolsViewModel.onStatusBarEvent(event: SystemUIEvent.StatusBar) {
+private fun OneUIAlohaToolsViewModel.onStatusBarEvent(event: SystemUIEvent.StatusBar) {
     updateData { preference ->
         when (event) {
             is SystemUIEvent.StatusBar.ModifyStatusBarLeftPadding -> {
@@ -1758,7 +1758,7 @@ private fun OneuiXPToolsViewModel.onStatusBarEvent(event: SystemUIEvent.StatusBa
     }
 }
 
-private fun OneuiXPToolsViewModel.onQSEvent(event: SystemUIEvent.QS) {
+private fun OneUIAlohaToolsViewModel.onQSEvent(event: SystemUIEvent.QS) {
     updateData { preference ->
         when (event) {
             is SystemUIEvent.QS.SetQsClockMonospaced -> {
@@ -1924,7 +1924,7 @@ private fun OneuiXPToolsViewModel.onQSEvent(event: SystemUIEvent.QS) {
     }
 }
 
-private fun OneuiXPToolsViewModel.onAODEvent(event: SystemUIEvent.AOD) {
+private fun OneUIAlohaToolsViewModel.onAODEvent(event: SystemUIEvent.AOD) {
     updateData { preference ->
         when (event) {
             is SystemUIEvent.AOD.HideAODStatusBar -> {
@@ -1950,7 +1950,7 @@ private fun OneuiXPToolsViewModel.onAODEvent(event: SystemUIEvent.AOD) {
     }
 }
 
-private fun OneuiXPToolsViewModel.onNotification(event: SystemUIEvent.Notification) {
+private fun OneUIAlohaToolsViewModel.onNotification(event: SystemUIEvent.Notification) {
     updateData { preference ->
         when (event) {
             is SystemUIEvent.Notification.HideOngoingActivityMedia -> {
@@ -1996,7 +1996,7 @@ private fun OneuiXPToolsViewModel.onNotification(event: SystemUIEvent.Notificati
     }
 }
 
-private fun OneuiXPToolsViewModel.onOtherEvent(event: SystemUIEvent.Other) {
+private fun OneUIAlohaToolsViewModel.onOtherEvent(event: SystemUIEvent.Other) {
     updateData { preference ->
         when (event) {
             is SystemUIEvent.Other.CustomPowerMenu -> {
