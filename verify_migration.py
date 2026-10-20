@@ -145,7 +145,7 @@ legacy_owner_token = _chars((115, 111, 99, 108, 101, 97, 114))
 legacy_project_segment = _chars((111, 110, 101, 117, 105, 120))
 old_namespace = "io.github." + legacy_owner_token
 old_token = "RELEASE_REPO_" + _chars((84, 79, 75, 69, 78))
-# Distinguish the old standalone "oneuix" token from OneUI XP's accepted
+# Distinguish the old standalone project token from OneUI XP's accepted
 # casing variants, all of which add the project-specific trailing "p".
 old_brand = re.compile(
     r"(?i)(?<![a-z0-9])" + legacy_project_segment + r"(?!p)(?![a-z0-9])"
