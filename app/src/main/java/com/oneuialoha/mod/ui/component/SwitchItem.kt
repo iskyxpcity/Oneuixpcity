@@ -1,4 +1,4 @@
-package com.oneuixp.mod.ui.component
+package com.oneuialoha.mod.ui.component
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -18,12 +18,12 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
-import com.oneuixp.app.ui.LocalUiMode
-import com.oneuixp.app.ui.UiMode
-import com.oneuixp.app.ui.component.material.ExpressiveSwitch
-import com.oneuixp.app.ui.component.material.SegmentedListItem
-import com.oneuixp.app.ui.component.material.SegmentedSwitchItem
-import com.oneuixp.app.ui.component.material.oneuiXPSegmentedColors
+import com.oneuialoha.app.ui.LocalUiMode
+import com.oneuialoha.app.ui.UiMode
+import com.oneuialoha.app.ui.component.material.ExpressiveSwitch
+import com.oneuialoha.app.ui.component.material.SegmentedListItem
+import com.oneuialoha.app.ui.component.material.SegmentedSwitchItem
+import com.oneuialoha.app.ui.component.material.oneuiXPSegmentedColors
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
@@ -33,7 +33,7 @@ import top.yukonga.miuix.kmp.preference.SwitchPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme
 
 /**
- * Canonical OneuiXP switch semantics rendered by the active OneuiXP theme.
+ * Canonical OneUIAloha switch semantics rendered by the active OneUIAloha theme.
  * The source DetailPane keeps ownership of ordering, strings, state and events;
  * this adapter only decides how the row is drawn.
  */
@@ -50,7 +50,7 @@ fun SwitchItem(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit
 ) {
-    val grouped = LocalOneuiXPGroupedPreference.current
+    val grouped = LocalOneUIAlohaGroupedPreference.current
 
     when (LocalUiMode.current) {
         UiMode.Material -> {

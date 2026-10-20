@@ -1,4 +1,4 @@
-package com.oneuixp.mod.ui.component
+package com.oneuialoha.mod.ui.component
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
@@ -25,12 +25,12 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
-import com.oneuixp.app.ui.LocalUiMode
-import com.oneuixp.app.ui.UiMode
-import com.oneuixp.app.ui.component.material.ExpressiveSwitch
-import com.oneuixp.app.ui.component.material.LocalListItemShapes
-import com.oneuixp.app.ui.component.material.SegmentedListItem
-import com.oneuixp.app.ui.component.material.oneuiXPSegmentedColors
+import com.oneuialoha.app.ui.LocalUiMode
+import com.oneuialoha.app.ui.UiMode
+import com.oneuialoha.app.ui.component.material.ExpressiveSwitch
+import com.oneuialoha.app.ui.component.material.LocalListItemShapes
+import com.oneuialoha.app.ui.component.material.SegmentedListItem
+import com.oneuialoha.app.ui.component.material.oneuiXPSegmentedColors
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.Button as MiuixButton
 import top.yukonga.miuix.kmp.basic.ButtonDefaults as MiuixButtonDefaults
@@ -42,16 +42,16 @@ import top.yukonga.miuix.kmp.basic.TextField as MiuixTextField
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme
 
-val LocalOneuiXPGroupedPreference = compositionLocalOf { false }
+val LocalOneUIAlohaGroupedPreference = compositionLocalOf { false }
 
 @Composable
-fun OneuiXPPPreferenceGroup(
+fun OneUIAlohaPPreferenceGroup(
     modifier: Modifier = Modifier,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     when (LocalUiMode.current) {
         UiMode.Material -> {
-            if (LocalOneuiXPGroupedPreference.current) {
+            if (LocalOneUIAlohaGroupedPreference.current) {
                 // A nested functional subgroup inside an already segmented
                 // detail card should keep its behavior but not draw another
                 // card inside the parent card.
@@ -77,7 +77,7 @@ fun OneuiXPPPreferenceGroup(
                     verticalArrangement = Arrangement.spacedBy(2.dp),
                 ) {
                     CompositionLocalProvider(
-                        LocalOneuiXPGroupedPreference provides true,
+                        LocalOneUIAlohaGroupedPreference provides true,
                         LocalListItemShapes provides flatShapes,
                     ) {
                         Column(
@@ -92,7 +92,7 @@ fun OneuiXPPPreferenceGroup(
         UiMode.Miuix -> Card(
             modifier = modifier.padding(horizontal = 12.dp, vertical = 4.dp),
         ) {
-            CompositionLocalProvider(LocalOneuiXPGroupedPreference provides true) {
+            CompositionLocalProvider(LocalOneUIAlohaGroupedPreference provides true) {
                 Column(content = content)
             }
         }
@@ -104,19 +104,19 @@ fun OneuiXPPPreferenceGroup(
  * by the four main option pages. Miuix keeps its existing layout unchanged.
  */
 @Composable
-fun OneuiXPDetailGroup(
+fun OneUIAlohaDetailGroup(
     modifier: Modifier = Modifier,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     when (LocalUiMode.current) {
-        UiMode.Material -> OneuiXPPPreferenceGroup(modifier = modifier, content = content)
+        UiMode.Material -> OneUIAlohaPPreferenceGroup(modifier = modifier, content = content)
         UiMode.Miuix -> Column(modifier = modifier, content = content)
     }
 }
 
 
 @Composable
-fun OneuiXPChildOptionSurface(
+fun OneUIAlohaChildOptionSurface(
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit,
 ) {
@@ -138,19 +138,19 @@ fun OneuiXPChildOptionSurface(
 
 
 @Composable
-fun OneuiXPChildVisibility(
+fun OneUIAlohaChildVisibility(
     visible: Boolean,
     content: @Composable () -> Unit,
 ) {
     AnimatedVisibility(visible = visible) {
-        OneuiXPChildOptionSurface {
+        OneUIAlohaChildOptionSurface {
             content()
         }
     }
 }
 
 @Composable
-fun OneuiXPActionButton(
+fun OneUIAlohaActionButton(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -178,7 +178,7 @@ fun OneuiXPActionButton(
 }
 
 @Composable
-fun OneuiXPSwitch(
+fun OneUIAlohaSwitch(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
@@ -202,14 +202,14 @@ fun OneuiXPSwitch(
 }
 
 @Composable
-fun OneuiXPInlineTextField(
+fun OneUIAlohaInlineTextField(
     value: String,
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
     labelText: String? = null,
     singleLine: Boolean = false,
 ) {
-    val grouped = LocalOneuiXPGroupedPreference.current
+    val grouped = LocalOneUIAlohaGroupedPreference.current
     when (LocalUiMode.current) {
         UiMode.Material -> OutlinedTextField(
             value = value,
@@ -260,14 +260,14 @@ fun OneuiXPInlineTextField(
 }
 
 @Composable
-fun OneuiXPInlineTextField(
+fun OneUIAlohaInlineTextField(
     value: TextFieldValue,
     onValueChange: (TextFieldValue) -> Unit,
     modifier: Modifier = Modifier,
     labelText: String? = null,
     singleLine: Boolean = false,
 ) {
-    val grouped = LocalOneuiXPGroupedPreference.current
+    val grouped = LocalOneUIAlohaGroupedPreference.current
     when (LocalUiMode.current) {
         UiMode.Material -> OutlinedTextField(
             value = value,
@@ -319,14 +319,14 @@ fun OneuiXPInlineTextField(
 
 
 @Composable
-fun OneuiXPInfoItem(
+fun OneUIAlohaInfoItem(
     title: String,
     summary: String? = null,
     icon: ImageVector? = null,
     modifier: Modifier = Modifier,
     trailingContent: (@Composable () -> Unit)? = null,
 ) {
-    val grouped = LocalOneuiXPGroupedPreference.current
+    val grouped = LocalOneUIAlohaGroupedPreference.current
     when (LocalUiMode.current) {
         UiMode.Material -> SegmentedListItem(
             modifier = if (grouped) modifier else modifier.padding(horizontal = 16.dp, vertical = 4.dp),
@@ -374,7 +374,7 @@ fun OneuiXPInfoItem(
 }
 
 @Composable
-fun OneuiXPSectionLabel(
+fun OneUIAlohaSectionLabel(
     text: String,
     modifier: Modifier = Modifier,
 ) {
@@ -396,7 +396,7 @@ fun OneuiXPSectionLabel(
 }
 
 @Composable
-fun OneuiXPSupportingText(
+fun OneUIAlohaSupportingText(
     text: String,
     modifier: Modifier = Modifier,
 ) {

@@ -1,4 +1,4 @@
-package com.oneuixp.common
+package com.oneuialoha.common
 
 object Package {
     const val ANDROID = "android"

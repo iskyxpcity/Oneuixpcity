@@ -1,4 +1,4 @@
-package com.oneuixp.mod.ui.component
+package com.oneuialoha.mod.ui.component
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -7,16 +7,16 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
-import com.oneuixp.app.ui.LocalUiMode
-import com.oneuixp.app.ui.UiMode
-import com.oneuixp.app.ui.component.material.SegmentedDropdownItem
-import com.oneuixp.app.ui.component.material.oneuiXPSegmentedColors
+import com.oneuialoha.app.ui.LocalUiMode
+import com.oneuialoha.app.ui.UiMode
+import com.oneuialoha.app.ui.component.material.SegmentedDropdownItem
+import com.oneuialoha.app.ui.component.material.oneuiXPSegmentedColors
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
 import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme
 
-/** OneuiXP selection semantics rendered with the active OneuiXP theme. */
+/** OneUIAloha selection semantics rendered with the active OneUIAloha theme. */
 @Composable
 fun SelectItem(
     title: String,
@@ -29,7 +29,7 @@ fun SelectItem(
     onSelectedIndexChange: (Int) -> Unit
 ) {
     val safeIndex = if (entries.isEmpty()) 0 else selectedIndex.coerceIn(0, entries.lastIndex)
-    val grouped = LocalOneuiXPGroupedPreference.current
+    val grouped = LocalOneUIAlohaGroupedPreference.current
 
     when (LocalUiMode.current) {
         UiMode.Material -> {
