@@ -156,6 +156,7 @@ old_brand = re.compile(
 )
 legacy_name_pattern = re.compile(r"(?i)" + legacy_project_segment + r"(?!p)")
 ignored_dirs = {".git", ".gradle", "build"}
+allowed_license_paths = {"LICENSE", "third_party/THIRD_PARTY_MOD_LICENSE.txt"}
 namespace_hits = []
 brand_hits = []
 legacy_name_hits = []
@@ -174,7 +175,7 @@ for path in root.rglob("*"):
     rel = path.relative_to(root).as_posix()
     if any(part in ignored_dirs for part in path.parts):
         continue
-    if "LICENSE" in path.name.upper():
+    if rel in allowed_license_paths:
         continue
     if old_namespace.lower() in rel.lower() or old_namespace.replace(".", "/").lower() in rel.lower():
         namespace_hits.append(rel)
