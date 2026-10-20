@@ -279,7 +279,7 @@ private fun AboutContent(
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
-                    .size(100.dp)
+                    .size(88.dp)
                     .clipToBounds()
                     .graphicsLayer {
                         alpha = 1 - iconProgress
@@ -295,7 +295,7 @@ private fun AboutContent(
             ) {
                 Image(
                     modifier = Modifier.fillMaxSize(),
-                    painter = painterResource(id = R.mipmap.ic_launcher),
+                    painter = painterResource(id = R.drawable.logo002),
                     contentDescription = null,
                     contentScale = ContentScale.Fit,
                 )

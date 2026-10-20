@@ -100,7 +100,7 @@ private class NativeOneUIAlohaStartupView(
     private val density = resources.displayMetrics.density
     private val scaledDensity = resources.displayMetrics.scaledDensity
 
-    private val logo: Bitmap = BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher)
+    private val logo: Bitmap = BitmapFactory.decodeResource(resources, R.drawable.logo002)
     private val imagePaint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
     private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         textAlign = Paint.Align.LEFT
@@ -192,7 +192,7 @@ private class NativeOneUIAlohaStartupView(
         // starting surface can hand off without a visible icon disappearance.
         val settle = easeOutBack(segment(timeline, 0f, 0.18f))
         val scale = 0.92f + 0.08f * settle
-        val size = dp(108f)
+        val size = dp(96f)
         val cx = width / 2f
         val cy = height * 0.37f
 

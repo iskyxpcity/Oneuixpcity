@@ -79,7 +79,7 @@ fun AboutScreenMaterial(
                     ) {
                         Image(
                             modifier = Modifier.fillMaxSize(),
-                            painter = painterResource(id = R.mipmap.ic_launcher),
+                            painter = painterResource(id = R.drawable.logo002),
                             contentDescription = null,
                             contentScale = ContentScale.Fit
                         )
