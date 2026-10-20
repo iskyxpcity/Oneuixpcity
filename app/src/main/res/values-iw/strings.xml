@@ -9,5 +9,5 @@
     <string name="settings">הגדרות</string>
     <string name="new_version_available">גרסה חדשה עבור: %s זמינה, לחץ כדי לשדרג</string>
     <string name="save_log">שמור יומנים</string>
-    <string name="oneuixp_tools">Tools</string>
+    <string name="oneuialoha_tools">Tools</string>
 </resources>
