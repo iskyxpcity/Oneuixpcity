@@ -118,6 +118,10 @@ check("No old source namespace directories remain",
 bad_source_refs = []
 for path in source_files:
     text = path.read_text(encoding="utf-8")
+    # Preserve just the intentional XP updater fallback; no current package/path/resource
+    # declarations may reuse the legacy identity.
+    if path == (ROOT / "app/src/main/java/com/oneuialoha/app/ui/util/Downloader.kt"):
+        text = text.replace('com.oneuixp.app', '').replace('iSkyJIE/OneuiXP-Releases', '')
     if "com.oneuixp" in text or "com/oneuixp" in text or "oneuixp_" in text.lower():
         bad_source_refs.append(str(path.relative_to(ROOT)))
 # The sole app-package compatibility package literal belongs in the updater, outside this
