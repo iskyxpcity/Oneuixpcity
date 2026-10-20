@@ -232,7 +232,7 @@ private object OneuiXPXposedService {
 
 object OneuiXPPreferenceSerializer : Serializer<Preference> {
     private const val TAG = "OneuiXP-PreferenceSerializer"
-    private const val SYNC_MARKER = "_oneuiXPRemoteSynced"
+    private const val SYNC_MARKER = "_oneuixp_remote_synced"
 
     override val defaultValue: Preference = Preference()
 
