@@ -1,0 +1,206 @@
+name: Temporary OneUI launcher icon and layout repair
+on:
+  push:
+    branches:
+      - migration/oneui-aloha-full-identity-20261020
+permissions:
+  contents: write
+  actions: write
+jobs:
+  repair:
+    if: contains(github.event.head_commit.message, '[oneui-icon-layout-source]')
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: migration/oneui-aloha-full-identity-20261020
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Prepare icon and adjust logo layout
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check Pillow
+          python <<'PY'
+          from pathlib import Path
+          from PIL import Image, ImageDraw
+
+          root = Path(".")
+          fg_path = root / "app/src/main/res/drawable-nodpi/ic_launcher_foreground_logo001.webp"
+          fallback_path = root / "app/src/main/res/mipmap-nodpi/ic_launcher.webp"
+          colors_path = root / "app/src/main/res/values/ic_launcher_colors.xml"
+          manifest_path = root / "app/src/main/AndroidManifest.xml"
+          startup_path = root / "app/src/main/java/com/oneuialoha/app/ui/StartupActivity.kt"
+          material_path = root / "app/src/main/java/com/oneuialoha/app/ui/screen/about/AboutMaterial.kt"
+          miuix_path = root / "app/src/main/java/com/oneuialoha/app/ui/screen/about/AboutMiuix.kt"
+          structure_path = root / "docs/PROJECT_STRUCTURE.md"
+
+          for path in (fg_path, fallback_path, colors_path, manifest_path, startup_path,
+                       material_path, miuix_path, structure_path):
+              if not path.is_file():
+                  raise SystemExit(f"Required file missing: {path}")
+
+          source = Image.open(fg_path).convert("RGBA")
+          source_alpha = source.getchannel("A")
+          visible_mask = source_alpha.point(lambda a: 255 if a > 8 else 0)
+          bbox = visible_mask.getbbox()
+          if bbox is None:
+              raise SystemExit("Logo001 foreground has no visible pixels")
+          artwork = source.crop(bbox)
+          source_size = source.size
+          canvas_size = 512
+          bg_rgb = (231, 232, 230)
+
+          def fit_into(image, max_edge):
+              scale = min(max_edge / image.width, max_edge / image.height)
+              size = (max(1, round(image.width * scale)), max(1, round(image.height * scale)))
+              return image.resize(size, Image.Resampling.LANCZOS)
+
+          # Android adaptive-icon foreground: keep every visible Logo001 pixel inside
+          # the central 60% safe zone so Samsung's One UI launcher mask cannot cut it.
+          foreground = Image.new("RGBA", (canvas_size, canvas_size), (0, 0, 0, 0))
+          safe_art = fit_into(artwork, round(canvas_size * 0.60))
+          foreground.alpha_composite(safe_art, ((canvas_size-safe_art.width)//2, (canvas_size-safe_art.height)//2))
+          foreground.save(fg_path, "WEBP", lossless=True, quality=100, method=6, exact=True)
+
+          # Android versions without adaptive icons use a pre-rounded One UI-style
+          # squircle icon. Transparent pixels remain outside the squircle itself.
+          scale_factor = 4
+          large = canvas_size * scale_factor
+          mask_large = Image.new("L", (large, large), 0)
+          draw = ImageDraw.Draw(mask_large)
+          draw.rounded_rectangle(
+              (0, 0, large-1, large-1),
+              radius=round(large * 0.225),
+              fill=255,
+          )
+          mask = mask_large.resize((canvas_size, canvas_size), Image.Resampling.LANCZOS)
+          legacy = Image.new("RGBA", (canvas_size, canvas_size), (0, 0, 0, 0))
+          face = Image.new("RGBA", (canvas_size, canvas_size), (*bg_rgb, 255))
+          face.putalpha(mask)
+          legacy.alpha_composite(face)
+          legacy_art = fit_into(artwork, round(canvas_size * 0.74))
+          legacy.alpha_composite(legacy_art, ((canvas_size-legacy_art.width)//2, (canvas_size-legacy_art.height)//2))
+          # Clip the artwork to the same One UI-style squircle so no antialiased
+          # opaque pixels leak into transparent outer corners.
+          legacy_alpha = legacy.getchannel("A")
+          legacy_alpha = Image.composite(legacy_alpha, Image.new("L", legacy.size, 0), mask)
+          legacy.putalpha(legacy_alpha)
+          legacy.save(fallback_path, "WEBP", lossless=True, quality=100, method=6, exact=True)
+
+          colors_path.write_text(
+              '<?xml version="1.0" encoding="utf-8"?>\n'
+              '<resources>\n'
+              '    <color name="oneui_aloha_icon_background">#E7E8E6</color>\n'
+              '</resources>\n',
+              encoding="utf-8"
+          )
+
+          manifest = manifest_path.read_text(encoding="utf-8")
+          icon_line = '        android:icon="@mipmap/ic_launcher"\n'
+          if manifest.count(icon_line) != 1:
+              raise SystemExit("Could not uniquely find application icon attribute")
+          if 'android:roundIcon="@mipmap/ic_launcher"' not in manifest:
+              manifest = manifest.replace(icon_line, icon_line + '        android:roundIcon="@mipmap/ic_launcher"\n', 1)
+          manifest_path.write_text(manifest, encoding="utf-8")
+
+          def replace_once(path, old, new):
+              text = path.read_text(encoding="utf-8")
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f"{path}: expected exactly one match, found {count}: {old!r}")
+              path.write_text(text.replace(old, new, 1), encoding="utf-8")
+
+          replace_once(startup_path, "val cy = height * 0.37f", "val cy = height * 0.40f")
+          replace_once(
+              startup_path,
+              "val y = height * 0.37f + dp(200f) / 2f + dp(61f) + dp(10f) * (1f - progress)",
+              "val y = height * 0.40f + dp(200f) / 2f + dp(31f) + dp(8f) * (1f - progress)",
+          )
+          replace_once(
+              startup_path,
+              "val baseline = height * 0.37f + dp(200f) / 2f + dp(113f)",
+              "val baseline = height * 0.40f + dp(200f) / 2f + dp(73f)",
+          )
+
+          replace_once(
+              material_path,
+              ".padding(vertical = 48.dp),",
+              ".padding(top = 64.dp, bottom = 20.dp),",
+          )
+          replace_once(
+              material_path,
+              "modifier = Modifier.padding(top = 12.dp),",
+              "modifier = Modifier.padding(top = 4.dp),",
+          )
+          replace_once(
+              miuix_path,
+              "top = logoPadding.calculateTopPadding() + 52.dp,",
+              "top = logoPadding.calculateTopPadding() + 68.dp,",
+          )
+          replace_once(
+              miuix_path,
+              "Modifier.padding(top = 12.dp, bottom = 5.dp)",
+              "Modifier.padding(top = 4.dp, bottom = 5.dp)",
+          )
+          replace_once(
+              miuix_path,
+              "logoHeightDp + 52.dp + logoPadding.calculateTopPadding() - scrollPadding.calculateTopPadding() + 126.dp,",
+              "logoHeightDp + 68.dp + logoPadding.calculateTopPadding() - scrollPadding.calculateTopPadding() + 126.dp,",
+          )
+
+          structure = structure_path.read_text(encoding="utf-8")
+          old_icon_note = (
+              "- 应用启动器图标在 Android 8.0+ 使用 `app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml`，以前景 `drawable-nodpi/ic_launcher_foreground_logo001.webp` 和颜色资源 `values/ic_launcher_colors.xml` 构成自适应图标；`mipmap-nodpi/ic_launcher.webp` 为旧版 Android 回退图标。Manifest 继续引用 `@mipmap/ic_launcher`。"
+          )
+          new_icon_note = (
+              "- 应用启动器图标在 Android 8.0+ 使用 `app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml`，以前景 `drawable-nodpi/ic_launcher_foreground_logo001.webp` 和 `#E7E8E6` 背景色构成自适应图标；Logo001 可见内容被完整缩放到中央 60% 安全区，由 Samsung One UI 启动器应用系统圆角蒙版。Manifest 同时声明 `android:icon` 与 `android:roundIcon` 指向 `@mipmap/ic_launcher`。旧版 Android 使用透明圆角方形外框的 `mipmap-nodpi/ic_launcher.webp`。"
+          )
+          if structure.count(old_icon_note) != 1:
+              raise SystemExit("Could not uniquely find launcher icon documentation")
+          structure = structure.replace(old_icon_note, new_icon_note, 1)
+          structure = structure.replace(
+              "- Logo001 外围的棋盘背景像素在运行时前景资源中已移除并转为真正透明的 Alpha；桌面自适应图标与旧版回退图标共用同一份清理后的图案。\n- 开屏动画和 Material / Miuix 两套「关于」页面均以 200dp 绘制同一份 R.drawable.logo002；该图案只打包一份 640×640 WebP 资源。",
+              "- Logo001 的可见图案保留透明 Alpha，并完整放入自适应图标安全区，避免 One UI 9.0 启动器蒙版裁切边缘；旧版回退图标使用同一图案，预制 One UI 风格圆角外形且圆角外部透明。\n- 开屏动画和 Material / Miuix 两套「关于」页面继续统一以 200dp 使用同一份 R.drawable.logo002。开屏图案整体下移并收紧两行标题的间距；两套关于页减少图案与应用名称的间隔，并微调图案组的垂直位置。"
+          )
+          structure_path.write_text(structure, encoding="utf-8")
+
+          # Hard checks before committing.
+          assert Image.open(fg_path).size == (512, 512)
+          assert Image.open(fg_path).mode in ("RGB", "RGBA")
+          check = Image.open(fallback_path).convert("RGBA")
+          assert check.size == (512, 512)
+          alpha = check.getchannel("A")
+          assert alpha.getpixel((0, 0)) == 0 and alpha.getpixel((511, 0)) == 0
+          assert alpha.getpixel((0, 511)) == 0 and alpha.getpixel((511, 511)) == 0
+          assert alpha.getextrema()[0] == 0
+          print(f"Logo001 original foreground size: {source_size}; visible bbox: {bbox}; source artwork bytes: {fg_path.stat().st_size}")
+          print(f"Adaptive icon foreground: {Image.open(fg_path).size}, max visible artwork side <= 60% canvas")
+          print(f"Legacy fallback: {fallback_path.stat().st_size} bytes; corner alpha=0; One UI-style squircle mask applied")
+          print("Startup and both About layouts updated; dimensions remain 200dp; logo-to-text spacing reduced.")
+          PY
+      - name: Validate source changes
+        run: |
+          set -euo pipefail
+          grep -Fq 'android:roundIcon="@mipmap/ic_launcher"' app/src/main/AndroidManifest.xml
+          grep -Fq 'val cy = height * 0.40f' app/src/main/java/com/oneuialoha/app/ui/StartupActivity.kt
+          grep -Fq 'dp(31f)' app/src/main/java/com/oneuialoha/app/ui/StartupActivity.kt
+          grep -Fq 'dp(73f)' app/src/main/java/com/oneuialoha/app/ui/StartupActivity.kt
+          grep -Fq '.padding(top = 64.dp, bottom = 20.dp)' app/src/main/java/com/oneuialoha/app/ui/screen/about/AboutMaterial.kt
+          grep -Fq 'Modifier.padding(top = 4.dp, bottom = 5.dp)' app/src/main/java/com/oneuialoha/app/ui/screen/about/AboutMiuix.kt
+          test ! -e .github/workflows/temporary-oneui-icon-layout.yml
+      - name: Commit generated icon and layout
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/temporary-oneui-icon-layout.yml
+          git add app/src/main/res/drawable-nodpi/ic_launcher_foreground_logo001.webp app/src/main/res/mipmap-nodpi/ic_launcher.webp app/src/main/res/values/ic_launcher_colors.xml app/src/main/AndroidManifest.xml app/src/main/java/com/oneuialoha/app/ui/StartupActivity.kt app/src/main/java/com/oneuialoha/app/ui/screen/about/AboutMaterial.kt app/src/main/java/com/oneuialoha/app/ui/screen/about/AboutMiuix.kt docs/PROJECT_STRUCTURE.md
+          git diff --cached --check
+          git commit -m "fix: fit OneUI launcher icon and tighten logo spacing [generated-oneui-assets]"
+          git push origin HEAD:refs/heads/migration/oneui-aloha-full-identity-20261020
+          gh workflow run build.yml --ref migration/oneui-aloha-full-identity-20261020
+          echo "Committed OneUI launcher safe-zone and layout fixes; dispatched the signed migration build."
