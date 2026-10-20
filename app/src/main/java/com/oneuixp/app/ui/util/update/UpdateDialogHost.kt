@@ -467,7 +467,7 @@ private fun UpdateDialogMaterial(
                     ExpressiveToggleButton(
                         checked = false,
                         onCheckedChange = { onDismiss() },
-                        modifier = Modifier.weight(1f).height(48.dp),
+                        modifier = Modifier.weight(if (info.isMigration) 0.8f else 1f).height(48.dp),
                         enabled = !isBusy,
                         shapes = ButtonGroupDefaults.connectedLeadingButtonShapes(),
                     ) {
@@ -476,7 +476,7 @@ private fun UpdateDialogMaterial(
                     ExpressiveToggleButton(
                         checked = true,
                         onCheckedChange = { onUpdate() },
-                        modifier = Modifier.weight(1f).height(48.dp),
+                        modifier = Modifier.weight(if (info.isMigration) 1.2f else 1f).height(48.dp),
                         enabled = !isBusy,
                         shapes = ButtonGroupDefaults.connectedTrailingButtonShapes(),
                     ) {
@@ -487,12 +487,14 @@ private fun UpdateDialogMaterial(
                                 strokeWidth = 2.dp,
                             )
                         } else {
-                            Icon(
-                                imageVector = Icons.Filled.SystemUpdateAlt,
-                                contentDescription = null,
-                                modifier = Modifier.size(18.dp),
-                            )
-                            Spacer(Modifier.width(8.dp))
+                            if (!info.isMigration) {
+                                Icon(
+                                    imageVector = Icons.Filled.SystemUpdateAlt,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp),
+                                )
+                                Spacer(Modifier.width(8.dp))
+                            }
                             Text(
                                 text = if (info.isMigration) {
                                     stringResource(R.string.update_dialog_download, targetAppName)
@@ -723,7 +725,7 @@ private fun UpdateDialogMiuix(
                     onClick = onDismiss,
                     enabled = !isBusy,
                     modifier = Modifier
-                        .weight(1f)
+                        .weight(if (info.isMigration) 0.8f else 1f)
                         .height(48.dp)
                         .border(
                             width = 1.dp,
@@ -740,12 +742,12 @@ private fun UpdateDialogMiuix(
                 MiuixButton(
                     onClick = { if (!isBusy) onUpdate() },
                     enabled = !isBusy,
-                    modifier = Modifier.weight(1f).height(48.dp),
+                    modifier = Modifier.weight(if (info.isMigration) 1.2f else 1f).height(48.dp),
                     colors = MiuixButtonDefaults.buttonColorsPrimary(),
                 ) {
                     if (isBusy) {
                         InfiniteProgressIndicator(color = colors.onPrimary)
-                    } else {
+                    } else if (!info.isMigration) {
                         MiuixIcon(
                             imageVector = Icons.Filled.SystemUpdateAlt,
                             contentDescription = null,
@@ -753,7 +755,7 @@ private fun UpdateDialogMiuix(
                             modifier = Modifier.size(18.dp),
                         )
                     }
-                    Spacer(Modifier.width(8.dp))
+                    if (!info.isMigration) Spacer(Modifier.width(8.dp))
                     MiuixText(
                         text = if (info.isMigration) {
                             stringResource(R.string.update_dialog_download, targetAppName)
