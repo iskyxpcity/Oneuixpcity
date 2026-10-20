@@ -1,4 +1,4 @@
-package com.oneuixp.hook
+package com.oneuialoha.hook
 
 import android.annotation.SuppressLint
 import android.content.pm.ApplicationInfo
@@ -6,9 +6,9 @@ import android.content.pm.PackageManager
 import android.icu.text.Collator
 import io.github.libxposed.api.XposedModule
 import io.github.libxposed.api.XposedModuleInterface
-import com.oneuixp.common.Package
-import com.oneuixp.hook.util.getSystemContext
-import com.oneuixp.hook.util.xlog
+import com.oneuialoha.common.Package
+import com.oneuialoha.hook.util.getSystemContext
+import com.oneuialoha.hook.util.xlog
 
 object DualApp {
     context(xposedModule: XposedModule, param: XposedModuleInterface.PackageReadyParam)
