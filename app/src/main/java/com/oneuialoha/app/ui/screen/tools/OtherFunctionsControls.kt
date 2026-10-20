@@ -30,7 +30,7 @@ import androidx.compose.material3.Icon as MaterialIcon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text as MaterialText
 import com.oneuialoha.app.oneUIAlohaApp
-import com.oneuialoha.app.oneuixp.OneUIAlohaPreferenceBridge
+import com.oneuialoha.app.oneuialoha.OneUIAlohaPreferenceBridge
 import com.oneuialoha.app.ui.LocalUiMode
 import com.oneuialoha.app.ui.navigation3.LocalNavigator
 import com.oneuialoha.app.ui.navigation3.Route

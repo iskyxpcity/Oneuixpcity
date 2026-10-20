@@ -23,7 +23,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.oneuialoha.app.R
 import com.oneuialoha.app.oneUIAlohaApp
-import com.oneuialoha.app.oneuixp.OneUIAlohaPreferenceBridge
+import com.oneuialoha.app.oneuialoha.OneUIAlohaPreferenceBridge
 import com.oneuialoha.app.ui.LocalUiMode
 import com.oneuialoha.app.ui.UiMode
 import com.oneuialoha.app.ui.component.dialog.rememberConfirmDialog

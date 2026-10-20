@@ -9,9 +9,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.vectorResource
 import androidx.core.graphics.drawable.toBitmap
 import com.oneuialoha.app.R
-import com.oneuialoha.app.oneuixp.OneUIAlohaCategory
-import com.oneuialoha.app.oneuixp.OneUIAlohaSettingSpec
-import com.oneuialoha.app.oneuixp.OneUIAlohaSettingType
+import com.oneuialoha.app.oneuialoha.OneUIAlohaCategory
+import com.oneuialoha.app.oneuialoha.OneUIAlohaSettingSpec
+import com.oneuialoha.app.oneuialoha.OneUIAlohaSettingType
 
 @Composable
 internal fun oneUIAlohaCategoryTitle(category: OneUIAlohaCategory): String {
