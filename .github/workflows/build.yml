@@ -30,11 +30,15 @@ jobs:
         run: |
           set -euo pipefail
           COMMIT_SUBJECT=$(git log -1 --pretty=%s)
-          if [ "$GITHUB_REF" = "refs/heads/main" ] && [[ "$COMMIT_SUBJECT" == release:* ]]; then
+          if [ "$GITHUB_REF" = "refs/heads/migration/oneui-aloha-full-identity-20261020" ] || { [ "$GITHUB_REF" = "refs/heads/main" ] && [[ "$COMMIT_SUBJECT" == release:* ]]; }; then
             echo "BUILD_VARIANT=release" >> "$GITHUB_ENV"
             echo "APP_ASSEMBLE_TASK=:app:assembleRelease" >> "$GITHUB_ENV"
             echo "APK_OUTPUT_DIR=release" >> "$GITHUB_ENV"
-            echo "FORMAL_RELEASE_BUILD=true" >> "$GITHUB_ENV"
+            if [ "$GITHUB_REF" = "refs/heads/main" ]; then
+              echo "FORMAL_RELEASE_BUILD=true" >> "$GITHUB_ENV"
+            else
+              echo "FORMAL_RELEASE_BUILD=false" >> "$GITHUB_ENV"
+            fi
           else
             echo "BUILD_VARIANT=debug" >> "$GITHUB_ENV"
             echo "APP_ASSEMBLE_TASK=:app:assembleDebug" >> "$GITHUB_ENV"
@@ -56,11 +60,20 @@ jobs:
           python3 ./verify_migration.py
           grep -q 'android:hasFragileUserData="false"' app/src/main/AndroidManifest.xml
           grep -q 'val defaultManagerPackageName = "com.oneuialoha.app"' app/build.gradle.kts
+          grep -q 'namespace = "com.oneuialoha.app"' app/build.gradle.kts
+          grep -q 'namespace = "com.oneuialoha.common"' common/build.gradle.kts
+          grep -q 'namespace = "com.oneuialoha.hook"' hook/build.gradle.kts
+          grep -q 'namespace = "com.oneuialoha.stub"' stub/build.gradle.kts
+          grep -q 'description=OneUI Aloha' app/src/main/resources/META-INF/xposed/module.prop
           test ! -e app/src/main/assets/xposed_init
           grep -q 'sealed interface Route : NavKey, Parcelable' app/src/main/java/com/oneuialoha/app/ui/navigation3/Routes.kt
           grep -q 'iSkyJIE/OneuiXP-Releases' app/src/main/java/com/oneuialoha/app/ui/util/Downloader.kt
           test -f app/src/main/resources/META-INF/xposed/java_init.list
           test -f app/src/main/resources/META-INF/xposed/scope.list
+          diff -u app/src/main/assets/xposed_scope app/src/main/resources/META-INF/xposed/scope.list
+          grep -Fxq 'package com.oneuialoha.hook' hook/src/main/java/com/oneuialoha/hook/Main.kt
+          grep -Fq 'applicationId = managerPackageName' app/build.gradle.kts
+          grep -Fq 'oneuiAloha.applicationId=com.oneuialoha.app' gradle.properties
           grep -Fq 'include(":common")' settings.gradle.kts
           grep -Fq 'include(":hook")' settings.gradle.kts
           grep -Fq 'include(":stub")' settings.gradle.kts
@@ -159,6 +172,7 @@ jobs:
 
           "$AAPT" dump badging "$RELEASE_APK" | tee diagnostics/release-validation/APK_PACKAGE_INFO.txt
           grep -q "^package: name='com.oneuialoha.app'" diagnostics/release-validation/APK_PACKAGE_INFO.txt
+          grep -q "application: label='OneUI Aloha'" diagnostics/release-validation/APK_PACKAGE_INFO.txt
           grep -q "application: label='OneUI Aloha'" diagnostics/release-validation/APK_PACKAGE_INFO.txt
           grep -q "versionName='$VERSION_NAME'" diagnostics/release-validation/APK_PACKAGE_INFO.txt
           grep -q "versionCode='$VERSION_CODE'" diagnostics/release-validation/APK_PACKAGE_INFO.txt
