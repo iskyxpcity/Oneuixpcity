@@ -30,7 +30,7 @@ import com.oneuialoha.app.ui.UiMode
 import com.oneuialoha.app.ui.component.material.ExpressiveSwitch
 import com.oneuialoha.app.ui.component.material.LocalListItemShapes
 import com.oneuialoha.app.ui.component.material.SegmentedListItem
-import com.oneuialoha.app.ui.component.material.oneuiXPSegmentedColors
+import com.oneuialoha.app.ui.component.material.oneUIAlohaSegmentedColors
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.Button as MiuixButton
 import top.yukonga.miuix.kmp.basic.ButtonDefaults as MiuixButtonDefaults
@@ -330,7 +330,7 @@ fun OneUIAlohaInfoItem(
     when (LocalUiMode.current) {
         UiMode.Material -> SegmentedListItem(
             modifier = if (grouped) modifier else modifier.padding(horizontal = 16.dp, vertical = 4.dp),
-            colors = oneuiXPSegmentedColors(),
+            colors = oneUIAlohaSegmentedColors(),
             headlineContent = { MaterialText(title) },
             supportingContent = summary?.let { { MaterialText(it) } },
             leadingContent = icon?.let { imageVector ->

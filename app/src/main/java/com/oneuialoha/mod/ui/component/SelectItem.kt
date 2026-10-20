@@ -10,7 +10,7 @@ import androidx.compose.foundation.layout.padding
 import com.oneuialoha.app.ui.LocalUiMode
 import com.oneuialoha.app.ui.UiMode
 import com.oneuialoha.app.ui.component.material.SegmentedDropdownItem
-import com.oneuialoha.app.ui.component.material.oneuiXPSegmentedColors
+import com.oneuialoha.app.ui.component.material.oneUIAlohaSegmentedColors
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
 import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
@@ -39,7 +39,7 @@ fun SelectItem(
                 SegmentedDropdownItem(
                     enabled = enabled,
                     icon = icon,
-                    colors = oneuiXPSegmentedColors(),
+                    colors = oneUIAlohaSegmentedColors(),
                     title = title,
                     summary = summary,
                     items = entries,

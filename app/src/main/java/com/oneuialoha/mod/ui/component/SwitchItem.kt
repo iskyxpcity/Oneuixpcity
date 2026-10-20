@@ -23,7 +23,7 @@ import com.oneuialoha.app.ui.UiMode
 import com.oneuialoha.app.ui.component.material.ExpressiveSwitch
 import com.oneuialoha.app.ui.component.material.SegmentedListItem
 import com.oneuialoha.app.ui.component.material.SegmentedSwitchItem
-import com.oneuialoha.app.ui.component.material.oneuiXPSegmentedColors
+import com.oneuialoha.app.ui.component.material.oneUIAlohaSegmentedColors
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
@@ -59,7 +59,7 @@ fun SwitchItem(
                     modifier = (if (grouped) modifier else modifier.padding(horizontal = 16.dp, vertical = 4.dp)).alpha(if (enabled) 1f else 0.45f),
                     enabled = enabled,
                     onClick = { if (enabled) onClick() },
-                    colors = oneuiXPSegmentedColors(),
+                    colors = oneUIAlohaSegmentedColors(),
                     headlineContent = { Text(title) },
                     supportingContent = summary?.let { { Text(it) } },
                     leadingContent = icon?.let { imageVector ->
@@ -91,7 +91,7 @@ fun SwitchItem(
                 ) {
                     SegmentedSwitchItem(
                         icon = icon,
-                        colors = oneuiXPSegmentedColors(),
+                        colors = oneUIAlohaSegmentedColors(),
                         title = title,
                         summary = summary,
                         checked = checked,

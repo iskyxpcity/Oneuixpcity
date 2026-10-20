@@ -131,6 +131,16 @@ for path in source_files:
 check("Current Aloha source has no retired package/resource-ID references",
       not bad_source_refs, ", ".join(bad_source_refs[:20]))
 
+legacy_identifier_hits = []
+for path in source_files:
+    text = path.read_text(encoding="utf-8")
+    # A historical storage key is all-lowercase; old class/function identifiers use
+    # the mixed-case XP token followed by another CamelCase segment.
+    if re.search(r"(?i:oneuixp)(?=[A-Z])[A-Za-z0-9_]*", text):
+        legacy_identifier_hits.append(str(path.relative_to(ROOT)))
+check("No retired XP identifiers remain in current Kotlin/Java source",
+      not legacy_identifier_hits, ", ".join(legacy_identifier_hits[:20]))
+
 # Persisted preference and DataStore keys are intentionally retained for backwards
 # compatibility; they are not Android resource IDs and must not be blanket-renamed.
 preference_bridge = (ROOT / "app/src/main/java/com/oneuialoha/app/oneuialoha/OneUIAlohaPreferenceBridge.kt").read_text()

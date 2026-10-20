@@ -118,13 +118,13 @@
     <string name="status_power_dp_summary">%1$.1f dp</string>
 
     <string name="status_wifi_no_migrated_feature_title">No status bar Wi-Fi option to migrate</string>
-    <string name="status_wifi_no_migrated_feature_summary">The current upstream Function page does not provide a status bar Wi-Fi feature. This category is reserved for OneUIAloha Wi-Fi icon features added later.</string>
+    <string name="status_wifi_no_migrated_feature_summary">The current upstream Function page does not provide a status bar Wi-Fi feature. This category is reserved for OneUI Aloha Wi-Fi icon features added later.</string>
 
     <string name="status_padding_top_summary">Moves the status bar down: %1$.1f dp</string>
     <string name="status_padding_bottom_summary">Moves the status bar up: %1$.1f dp</string>
 
     <string name="status_signal_runtime_enable">Independent status bar signal</string>
-    <string name="status_signal_runtime_enable_summary">Hide Samsung signal presentation and let OneUIAloha draw signal bars from Android mobile-network state.</string>
+    <string name="status_signal_runtime_enable_summary">Hide Samsung signal presentation and let OneUI Aloha draw signal bars from Android mobile-network state.</string>
     <string name="status_signal_show_sim1">Show SIM 1</string>
     <string name="status_signal_show_sim2">Show SIM 2</string>
     <string name="status_signal_portrait_size">Portrait size</string>
@@ -169,7 +169,7 @@
     <string name="changelog_261016_statusbar_stability_title">Status bar layout stability</string>
     <string name="changelog_261016_statusbar_stability_body">Fixed a Samsung One UI fold/unfold issue where the empty native status-icon container reported fluctuating widths, making the network-speed text jump left briefly and return.</string>
     <string name="changelog_261016_burnin_title">Status bar burn-in protection</string>
-    <string name="changelog_261016_burnin_body">Added burn-in protection for status-bar elements drawn by OneUIAloha. It applies a gentle, slow X/Y micro-shift to reduce the risk of the same pixels displaying static content for long periods. Open Status bar → Other → Status bar burn-in protection to enable or disable it and adjust the movement amplitude (0–2 dp) and cycle period (10–300 seconds).</string>
+    <string name="changelog_261016_burnin_body">Added burn-in protection for status-bar elements drawn by OneUI Aloha. It applies a gentle, slow X/Y micro-shift to reduce the risk of the same pixels displaying static content for long periods. Open Status bar → Other → Status bar burn-in protection to enable or disable it and adjust the movement amplitude (0–2 dp) and cycle period (10–300 seconds).</string>
     <string name="changelog_261013_feature_intro_title">Feature introduction</string>
     <string name="changelog_261013_feature_intro_body">Added the Feature Introduction entry and version update pages.</string>
     <string name="changelog_261013_dual_ui_title">Two interface styles</string>

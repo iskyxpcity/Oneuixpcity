@@ -117,13 +117,13 @@
     <string name="status_power_dp_summary">%1$.1f dp</string>
 
     <string name="status_wifi_no_migrated_feature_title">暂无可迁移的状态栏 Wi-Fi 功能</string>
-    <string name="status_wifi_no_migrated_feature_summary">当前上游“功能”页没有独立的状态栏 Wi-Fi 设置。此分类保留给 OneUIAloha 后续新增的 Wi-Fi 图标功能。</string>
+    <string name="status_wifi_no_migrated_feature_summary">当前上游“功能”页没有独立的状态栏 Wi-Fi 设置。此分类保留给 OneUI Aloha 后续新增的 Wi-Fi 图标功能。</string>
 
     <string name="status_padding_top_summary">向下移动状态栏：%1$.1f dp</string>
     <string name="status_padding_bottom_summary">向上移动状态栏：%1$.1f dp</string>
 
     <string name="status_signal_runtime_enable">独立状态栏信号</string>
-    <string name="status_signal_runtime_enable_summary">隐藏三星原生信号显示，由 OneUIAloha 根据系统移动网络状态独立绘制信号格。</string>
+    <string name="status_signal_runtime_enable_summary">隐藏三星原生信号显示，由 OneUI Aloha 根据系统移动网络状态独立绘制信号格。</string>
     <string name="status_signal_show_sim1">显示 SIM 1</string>
     <string name="status_signal_show_sim2">显示 SIM 2</string>
     <string name="status_signal_portrait_size">竖屏大小</string>
@@ -168,7 +168,7 @@
     <string name="changelog_261016_statusbar_stability_title">状态栏布局稳定性</string>
     <string name="changelog_261016_statusbar_stability_body">修复三星 One UI 折叠/展开屏幕时，空的原生状态栏图标容器测量宽度异常波动，导致网速文字短暂向左跳动后回位的问题。</string>
     <string name="changelog_261016_burnin_title">状态栏防烧屏保护</string>
-    <string name="changelog_261016_burnin_body">新增状态栏防烧屏保护，对 OneUIAloha 绘制的状态栏元素进行缓慢、轻微的 X/Y 微位移，降低固定像素长期显示同一内容的风险。可在「状态栏 → 其他 → 状态栏防烧屏保护」中开启或关闭，并调整微位移幅度（0–2 dp）和位移周期（10–300 秒）。</string>
+    <string name="changelog_261016_burnin_body">新增状态栏防烧屏保护，对 OneUI Aloha 绘制的状态栏元素进行缓慢、轻微的 X/Y 微位移，降低固定像素长期显示同一内容的风险。可在「状态栏 → 其他 → 状态栏防烧屏保护」中开启或关闭，并调整微位移幅度（0–2 dp）和位移周期（10–300 秒）。</string>
     <string name="changelog_261013_feature_intro_title">功能入口</string>
     <string name="changelog_261013_feature_intro_body">新增「功能介绍」入口与版本更新页面。</string>
     <string name="changelog_261013_dual_ui_title">双主题适配</string>
