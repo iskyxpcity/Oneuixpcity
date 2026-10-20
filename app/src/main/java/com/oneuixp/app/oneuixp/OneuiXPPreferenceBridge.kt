@@ -83,7 +83,7 @@ private fun migrateLegacyPreferenceStore(application: Application) {
 }
 
 private object OneuiXPXposedService {
-    private const val TAG = "OneuiXP-OneUIXPBridge"
+    private const val TAG = "OneuiXP-PreferenceBridge"
     private const val PREFERENCE_CHANGED_PATH = "preferences"
     private val initialized = AtomicBoolean(false)
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -231,8 +231,8 @@ private object OneuiXPXposedService {
 }
 
 object OneuiXPPreferenceSerializer : Serializer<Preference> {
-    private const val TAG = "OneuiXP-OneUIXPPrefs"
-    private const val SYNC_MARKER = "_oneuiXPpRemoteSynced"
+    private const val TAG = "OneuiXP-PreferenceSerializer"
+    private const val SYNC_MARKER = "_oneuiXPRemoteSynced"
 
     override val defaultValue: Preference = Preference()
 
@@ -278,8 +278,19 @@ object OneuiXPPreferenceSerializer : Serializer<Preference> {
         }
         val syncMarker = localRaw?.let { raw ->
             runCatching {
-                (IgnoreUnknownKeysJson.parseToJsonElement(raw) as? JsonObject)
-                    ?.get(SYNC_MARKER)?.jsonPrimitive?.booleanOrNull
+                (IgnoreUnknownKeysJson.parseToJsonElement(raw) as? JsonObject)?.let { root ->
+                    val currentMarker = (root[SYNC_MARKER] as? JsonPrimitive)?.booleanOrNull
+                    currentMarker ?: root.entries
+                        .filter { (key, value) ->
+                            key != SYNC_MARKER &&
+                                key.startsWith("_") &&
+                                key.endsWith("RemoteSynced") &&
+                                (value as? JsonPrimitive)?.booleanOrNull != null
+                        }
+                        .singleOrNull()
+                        ?.value
+                        ?.let { (it as? JsonPrimitive)?.booleanOrNull }
+                }
             }.getOrNull()
         }
         val unsynced = syncMarker == false

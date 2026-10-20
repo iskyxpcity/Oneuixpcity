@@ -152,8 +152,12 @@ old_brand = re.compile(
     + _chars((79, 110, 101, 85, 73, 88))
     + "|"
     + legacy_project_segment
-    + r")P[a-z]",
-    re.IGNORECASE,
+    + r")P[a-z]"
+)
+legacy_brand_fragments = (
+    _chars((79, 110, 101, 85, 73, 88)),       # Mixed-case historical OneUIX token.
+    _chars((111, 110, 101, 117, 105, 88)),    # Wrong-case lowercase-leading OneuiX token.
+    _chars((79, 110, 101, 117, 105, 88, 112)), # Wrong-case lowercase-p OneuiXp token.
 )
 legacy_name_pattern = re.compile(r"(?i)" + legacy_project_segment + r"(?!p)")
 ignored_dirs = {".git", ".gradle", "build"}
@@ -184,7 +188,7 @@ for path in root.rglob("*"):
         owner_hits.append(rel)
     if re.search(r"(?:^|/)" + legacy_project_segment + r"(?:/|$)", rel, re.IGNORECASE):
         legacy_segment_hits.append(rel)
-    if old_brand.search(rel):
+    if old_brand.search(rel) or any(fragment in rel for fragment in legacy_brand_fragments):
         brand_hits.append(rel)
     if legacy_name_pattern.search(rel):
         legacy_name_hits.append(rel)
@@ -203,7 +207,7 @@ for path in root.rglob("*"):
         owner_hits.append(rel)
     if re.search(r"(?i)(?:^|[./\\])" + legacy_project_segment + r"(?:$|[./\\])", text):
         legacy_segment_hits.append(rel)
-    if old_brand.search(text):
+    if old_brand.search(text) or any(fragment in text for fragment in legacy_brand_fragments):
         brand_hits.append(rel)
     if legacy_name_pattern.search(text):
         legacy_name_hits.append(rel)
