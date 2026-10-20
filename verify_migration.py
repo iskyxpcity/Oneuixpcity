@@ -11,6 +11,7 @@ network_speed_runtime_source = (root/'hook/src/main/java/com/oneuixp/hook/system
 independent_signal_runtime_source = (root/'hook/src/main/java/com/oneuixp/hook/systemui/StatusBarSignalIndependentRuntime.kt').read_text()
 feature_intro_source = (root/'app/src/main/java/com/oneuixp/app/ui/screen/about/FeatureIntroductionScreens.kt').read_text()
 feature_routes_source = (root/'app/src/main/java/com/oneuixp/app/ui/navigation3/Routes.kt').read_text()
+preference_bridge_source = (root/'app/src/main/java/com/oneuixp/app/oneuixp/OneuiXPPreferenceBridge.kt').read_text()
 main_activity_source = (root/'app/src/main/java/com/oneuixp/app/ui/MainActivity.kt').read_text()
 release_note_resources = [
     (root/'app/src/main/res/values/strings.xml').read_text(),
@@ -35,6 +36,7 @@ checks = {
  'Original LSPosed hook': (root/'app/src/main/java/com/oneuixp/app/statusbar/SystemUiEntry.java').is_file(),
  'Flux-style no heartbeat bridge': not (root/'app/src/main/java/com/oneuixp/app/statusbar/StatusBridge.java').exists() and '${applicationId}.statusbridge' not in (root/'app/src/main/AndroidManifest.xml').read_text() and 'startHeartbeat(' not in (root/'hook/src/main/java/com/oneuixp/hook/util/OneuiXPStatusReporter.kt').read_text(),
  'OneuiXP application ID': 'com.oneuixp.app' in (root/'app/build.gradle.kts').read_text(),
+ 'Preference bridge uses canonical OneUI XP symbol': 'object OneuiXPPreferenceBridge' in preference_bridge_source,
  'Composite glyph is isolated from legacy preference migration': 'comboStyleOneRuntime' not in migration_source and not any(marker in migration_source or marker in preference_source for marker in legacy_combo_markers),
  'Native mobile signal is restored when outside stacking is off': (
      'config.signalMode == 0 || (config.signalMode == 1 && config.stackedSignal)' in combo_runtime_source
@@ -144,6 +146,8 @@ legacy_name_hits = []
 owner_hits = []
 legacy_segment_hits = []
 token_hits = []
+malformed_symbol_markers = ('oneuiXPPApp', 'OneuiXPPPreferenceBridge')
+malformed_symbol_hits = []
 
 for path in root.rglob("*"):
     if not path.is_file():
@@ -187,6 +191,8 @@ for path in root.rglob("*"):
         legacy_name_hits.append(rel)
     if old_token in text:
         token_hits.append(rel)
+    if any(marker in text for marker in malformed_symbol_markers):
+        malformed_symbol_hits.append(rel)
 
 checks["No legacy namespace outside license texts"] = not namespace_hits
 checks["No legacy soclear ownership token outside license texts"] = not owner_hits
@@ -194,10 +200,11 @@ checks["No standalone legacy oneuix namespace/path segment outside license texts
 checks["No old OneUIX token outside license texts"] = not brand_hits
 checks["No legacy oneuix naming token outside license texts"] = not legacy_name_hits
 checks["No cross-repository release token reference"] = not token_hits
+checks["No malformed duplicated OneUI XP symbols"] = not malformed_symbol_hits
 
 for name, ok in checks.items(): print(('PASS' if ok else 'FAIL') + ': ' + name)
 if not all(checks.values()):
- for label, items in (("namespace", namespace_hits), ("socl-ear", owner_hits), ("oneuix path segment", legacy_segment_hits), ("old oneuix name", legacy_name_hits), ("brand", brand_hits), ("release token", token_hits)):
+ for label, items in (("namespace", namespace_hits), ("socl-ear", owner_hits), ("oneuix path segment", legacy_segment_hits), ("old oneuix name", legacy_name_hits), ("brand", brand_hits), ("release token", token_hits), ("malformed symbols", malformed_symbol_hits)):
   if items: print(f"Residual {label} references: " + ", ".join(sorted(set(items))), file=sys.stderr)
  print('BLOCKED: source preflight failed; do not claim APK build success.', file=sys.stderr)
  sys.exit(1)

@@ -29,7 +29,7 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.Icon as MaterialIcon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text as MaterialText
-import com.oneuixp.app.oneuiXPPApp
+import com.oneuixp.app.oneuiXPApp
 import com.oneuixp.app.oneuixp.OneuiXPPreferenceBridge
 import com.oneuixp.app.ui.LocalUiMode
 import com.oneuixp.app.ui.navigation3.LocalNavigator

@@ -22,7 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.oneuixp.app.R
-import com.oneuixp.app.oneuiXPPApp
+import com.oneuixp.app.oneuiXPApp
 import com.oneuixp.app.oneuixp.OneuiXPPreferenceBridge
 import com.oneuixp.app.ui.LocalUiMode
 import com.oneuixp.app.ui.UiMode
@@ -70,7 +70,7 @@ fun CallReturnDelayScreen() {
         onConfirm = {
             scope.launch {
                 Toast.makeText(context, context.getString(R.string.oneuixp_callReturnApplyStarted), Toast.LENGTH_SHORT).show()
-                if (!OneuiXPPreferenceBridge.synchronizeNow(oneuiXPPApp)) {
+                if (!OneuiXPPreferenceBridge.synchronizeNow(oneuiXPApp)) {
                     Toast.makeText(context, context.getString(R.string.oneuixp_callReturnRootRequired), Toast.LENGTH_LONG).show()
                     return@launch
                 }

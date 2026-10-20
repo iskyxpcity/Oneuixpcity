@@ -80,6 +80,7 @@ jobs:
           grep -Fq 'ENABLE_ONEUIXP_FUNCTIONS = true' hook/src/main/java/com/oneuixp/hook/Main.kt
           test -f hook/src/main/java/com/oneuixp/hook/util/OneuiXPStatusReporter.kt
           test -f app/src/main/java/com/oneuixp/app/oneuixp/OneuiXPPreferenceBridge.kt
+          grep -Fq 'object OneuiXPPreferenceBridge' app/src/main/java/com/oneuixp/app/oneuixp/OneuiXPPreferenceBridge.kt
           test -f app/src/main/java/com/oneuixp/app/oneuixp/OneuiXPFeatureCatalog.kt
           test -f app/src/main/java/com/oneuixp/app/ui/viewmodel/OneuiXPToolsViewModel.kt
           test -f app/src/main/java/com/oneuixp/app/ui/screen/tools/OneuiXPCategoryScreen.kt
