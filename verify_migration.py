@@ -214,7 +214,7 @@ checks["No standalone former namespace/path segment outside license texts"] = no
 checks["No former project brand token outside license texts"] = not brand_hits
 checks["No former project naming token outside license texts"] = not legacy_name_hits
 checks["Former standalone project token remains detectable"] = bool(legacy_name_pattern.search(legacy_project_segment))
-checks["Supported OneUI Aloha casing variants do not match the retired namespace token"] = not any(
+checks["XP compatibility spellings are not mistaken for the retired standalone namespace token"] = not any(
     old_brand.search(variant) or legacy_name_pattern.search(variant)
     for variant in ("OneUIAloha", "oneuialoha", "ONEUIALOHA", "oneUiAloha")
 )
