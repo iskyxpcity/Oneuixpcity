@@ -145,22 +145,12 @@ legacy_owner_token = _chars((115, 111, 99, 108, 101, 97, 114))
 legacy_project_segment = _chars((111, 110, 101, 117, 105, 120))
 old_namespace = "io.github." + legacy_owner_token
 old_token = "RELEASE_REPO_" + _chars((84, 79, 75, 69, 78))
+# Distinguish the old standalone "oneuix" token from OneUI XP's accepted
+# casing variants, all of which add the project-specific trailing "p".
 old_brand = re.compile(
-    r"(?:"
-    + _chars((79, 110, 101, 117, 105, 88))
-    + "|"
-    + _chars((79, 110, 101, 85, 73, 88))
-    + "|"
-    + legacy_project_segment
-    + "|"
-    + _chars((111, 110, 101, 117, 105, 88))
-    + r")P[a-z]"
+    r"(?i)(?<![a-z0-9])" + legacy_project_segment + r"(?!p)(?![a-z0-9])"
 )
-legacy_brand_fragments = (
-    _chars((79, 110, 101, 85, 73, 88)),        # Historical uppercase-UI form.
-    _chars((79, 110, 101, 117, 105, 88, 112)), # Uppercase-leading lowercase-p form.
-    _chars((111, 110, 101, 117, 105, 88, 112)), # Lowercase-leading mixed-case lowercase-p form.
-)
+legacy_brand_fragments = ()
 legacy_name_pattern = re.compile(r"(?i)" + legacy_project_segment + r"(?!p)")
 ignored_dirs = {".git", ".gradle", "build"}
 allowed_license_paths = {"LICENSE", "third_party/THIRD_PARTY_MOD_LICENSE.txt"}
@@ -223,6 +213,11 @@ checks["No legacy owner token outside license texts"] = not owner_hits
 checks["No standalone former namespace/path segment outside license texts"] = not legacy_segment_hits
 checks["No former project brand token outside license texts"] = not brand_hits
 checks["No former project naming token outside license texts"] = not legacy_name_hits
+checks["Former standalone project token remains detectable"] = bool(legacy_name_pattern.search(legacy_project_segment))
+checks["Supported OneUI XP casing variants are accepted"] = not any(
+    old_brand.search(variant) or legacy_name_pattern.search(variant)
+    for variant in ("OneuiXP", "OneUIXP", "oneuixp", "OneuiXp")
+)
 checks["No cross-repository release token reference"] = not token_hits
 checks["No malformed duplicated OneUI XP symbols"] = not malformed_symbol_hits
 
