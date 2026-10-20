@@ -11,6 +11,52 @@ permissions:
   contents: write
 
 jobs:
+  export-logo-assets:
+    if: github.event.head_commit.message == 'chore(temp): export Logo001 and Logo002 via CI'
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch and prepare requested source images
+        env:
+          LOGO001_URL: 'https://raw.githubusercontent.com/iskyxpcity/Photo-Design/main/Logo001.jpg?token=CRIMNUIOJPM5HSOOC76UKVDK266ZJAA'
+          LOGO002_URL: 'https://raw.githubusercontent.com/iskyxpcity/Photo-Design/main/Logo002.png?token=CRIMNUJ2BIGONGCYCENOEQ3K266ZJAA'
+        run: |
+          set -euo pipefail
+          python3 -m pip install --quiet Pillow
+          curl --fail --location --retry 2 "$LOGO001_URL" --output /tmp/Logo001.jpg
+          curl --fail --location --retry 2 "$LOGO002_URL" --output /tmp/Logo002.png
+          python3 - <<'PY'
+          from pathlib import Path
+          from PIL import Image
+          import base64, io
+
+          tasks = [
+              (Path("/tmp/Logo001.jpg"), "ic_launcher.webp", "WEBP"),
+              (Path("/tmp/Logo002.png"), "logo002.png", "PNG"),
+          ]
+          for source, output_name, fmt in tasks:
+              with Image.open(source) as im:
+                  original_size = im.size
+                  original_mode = im.mode
+                  image = im.copy()
+              image.thumbnail((1024, 1024), Image.Resampling.LANCZOS)
+              buffer = io.BytesIO()
+              if fmt == "WEBP":
+                  if image.mode not in ("RGB", "RGBA"):
+                      image = image.convert("RGB")
+                  image.save(buffer, format="WEBP", quality=94, method=6)
+              else:
+                  if image.mode not in ("RGB", "RGBA", "L", "LA", "P"):
+                      image = image.convert("RGBA")
+                  image.save(buffer, format="PNG", optimize=True, compress_level=9)
+              data = buffer.getvalue()
+              encoded = base64.b64encode(data).decode("ascii")
+              print(f"ASSET_INFO:{output_name}:source={source.name}:original={original_size[0]}x{original_size[1]}:mode={original_mode}:output={image.size[0]}x{image.size[1]}:mode={image.mode}:bytes={len(data)}:b64={len(encoded)}")
+              print(f"ASSET_BEGIN:{output_name}")
+              for index in range(0, len(encoded), 10000):
+                  print(f"ASSET_CHUNK:{output_name}:{index // 10000:05d}:{encoded[index:index + 10000]}")
+              print(f"ASSET_END:{output_name}")
+          PY
   build:
     runs-on: ubuntu-22.04
     steps:
