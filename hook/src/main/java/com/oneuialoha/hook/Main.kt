@@ -1,30 +1,30 @@
-package com.oneuixp.hook
+package com.oneuialoha.hook
 
 import android.util.Log
 import io.github.libxposed.api.XposedModule
 import io.github.libxposed.api.XposedModuleInterface
-import com.oneuixp.common.Package
-import com.oneuixp.hook.systemui.AOD
-import com.oneuixp.hook.systemui.ESIM
-import com.oneuixp.hook.systemui.HideBatteryIcon
-import com.oneuixp.hook.systemui.Notification
-import com.oneuixp.hook.systemui.Other
-import com.oneuixp.hook.systemui.QS
-import com.oneuixp.hook.systemui.StatusBar
-import com.oneuixp.hook.systemui.StatusBarComboStyleOneRuntime
-import com.oneuixp.hook.systemui.StatusBarSignalIndependentRuntime
-import com.oneuixp.hook.systemui.StatusBarBurnInProtectionRuntime
-import com.oneuixp.hook.systemui.OfficialMainStatusBarMod
-import com.oneuixp.hook.systemui.powermenu.PowerMenu
-import com.oneuixp.hook.util.OneuiXPStatusReporter
-import com.oneuixp.hook.util.PreferenceProvider
-import com.oneuixp.hook.util.addAssetPath
-import com.oneuixp.hook.util.xlog
+import com.oneuialoha.common.Package
+import com.oneuialoha.hook.systemui.AOD
+import com.oneuialoha.hook.systemui.ESIM
+import com.oneuialoha.hook.systemui.HideBatteryIcon
+import com.oneuialoha.hook.systemui.Notification
+import com.oneuialoha.hook.systemui.Other
+import com.oneuialoha.hook.systemui.QS
+import com.oneuialoha.hook.systemui.StatusBar
+import com.oneuialoha.hook.systemui.StatusBarComboStyleOneRuntime
+import com.oneuialoha.hook.systemui.StatusBarSignalIndependentRuntime
+import com.oneuialoha.hook.systemui.StatusBarBurnInProtectionRuntime
+import com.oneuialoha.hook.systemui.OfficialMainStatusBarMod
+import com.oneuialoha.hook.systemui.powermenu.PowerMenu
+import com.oneuialoha.hook.util.OneUIAlohaStatusReporter
+import com.oneuialoha.hook.util.PreferenceProvider
+import com.oneuialoha.hook.util.addAssetPath
+import com.oneuialoha.hook.util.xlog
 
 class Main : XposedModule() {
     private companion object {
-        // OneuiXP migration: imported feature hooks are active.
-        const val ENABLE_ONEUIXP_FUNCTIONS = true
+        // OneUIAloha migration: imported feature hooks are active.
+        const val ENABLE_ONEUIALOHA_FUNCTIONS = true
     }
 
     private var processName = ""
@@ -34,18 +34,18 @@ class Main : XposedModule() {
     }
 
     override fun onPackageReady(param: XposedModuleInterface.PackageReadyParam) = with(param) {
-        if (packageName == "com.oneuixp.app" && processName == "com.oneuixp.app") {
+        if (packageName == "com.oneuialoha.app" && processName == "com.oneuialoha.app") {
             runCatching {
                 val method = classLoader
-                    .loadClass("com.oneuixp.app.statusbar.ModuleStatus")
+                    .loadClass("com.oneuialoha.app.statusbar.ModuleStatus")
                     .getDeclaredMethod("isActive")
                 this@Main.hook(method).intercept { true }
             }
             return@with
         }
 
-        OneuiXPStatusReporter.installIfSystemUi(this@Main, param, processName)
-        if (!ENABLE_ONEUIXP_FUNCTIONS) return@with
+        OneUIAlohaStatusReporter.installIfSystemUi(this@Main, param, processName)
+        if (!ENABLE_ONEUIALOHA_FUNCTIONS) return@with
 
         val preference = PreferenceProvider.loadPreference() ?: return@with
 
@@ -538,7 +538,7 @@ class Main : XposedModule() {
     }
 
     override fun onSystemServerStarting(param: XposedModuleInterface.SystemServerStartingParam) = with(param) {
-        if (!ENABLE_ONEUIXP_FUNCTIONS) return@with
+        if (!ENABLE_ONEUIALOHA_FUNCTIONS) return@with
 
         val preference = PreferenceProvider.loadPreference() ?: return@with
 
