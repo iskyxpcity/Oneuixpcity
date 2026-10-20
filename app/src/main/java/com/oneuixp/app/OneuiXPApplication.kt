@@ -8,7 +8,7 @@ import android.os.UserManager
 import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelStoreOwner
 import com.oneuixp.app.data.repository.SettingsRepositoryImpl
-import com.oneuixp.app.oneuix.OneuiXPreferenceBridge
+import com.oneuixp.app.oneuixp.OneuiXPPreferenceBridge
 import com.oneuixp.app.statusbar.LsposedFrameworkStatus
 import okhttp3.Cache
 import okhttp3.OkHttpClient
@@ -53,13 +53,13 @@ class OneuiXPApplication : Application(), ViewModelStoreOwner {
         super.onCreate()
         oneuiXPApp = this
         LsposedFrameworkStatus.initialize()
-        OneuiXPreferenceBridge.initialize(this)
+        OneuiXPPreferenceBridge.initialize(this)
 
         if (!isUserUnlocked()) {
             return
         }
 
-        OneuiXPreferenceBridge.ensureSynchronized(this)
+        OneuiXPPreferenceBridge.ensureSynchronized(this)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             applyEnableOnBackInvokedCallback(this, SettingsRepositoryImpl().enablePredictiveBack)

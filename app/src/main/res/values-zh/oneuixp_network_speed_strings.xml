@@ -1,0 +1,12 @@
+<resources>
+    <string name="oneuixp_networkSpeedThreshold_title">网速显示阈值</string>
+    <string name="oneuixp_networkSpeedThreshold_label">阈值（KB/s）</string>
+    <string name="oneuixp_networkSpeedThreshold_scope_summary">同时作用于三星实时网速和上传/下载网速</string>
+    <string name="oneuixp_networkSpeedLineGap_title">上行下行间距</string>
+    <string name="oneuixp_networkSpeedLineGap_summary">相对三星原始间距：%1$.1f dp</string>
+    <string name="oneuixp_networkSpeedDoubleLineOnly_summary">实时网速：数值/单位；上传下载：上传/下载</string>
+    <string name="oneuixp_networkSpeedUploadTextScale_title">上行文字大小</string>
+    <string name="oneuixp_networkSpeedUploadTextScale_summary">上行：%1$.2f×；实时网速为数值，上传下载为上传速度</string>
+    <string name="oneuixp_networkSpeedDownloadTextScale_title">下行文字大小</string>
+    <string name="oneuixp_networkSpeedDownloadTextScale_summary">下行：%1$.2f×；实时网速为单位，上传下载为下载速度</string>
+</resources>

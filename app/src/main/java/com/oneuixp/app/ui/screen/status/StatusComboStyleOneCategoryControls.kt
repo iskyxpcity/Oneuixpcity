@@ -59,17 +59,17 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.oneuixp.app.R
-import com.oneuixp.app.ui.viewmodel.OneuiXToolsViewModel
-import io.github.soclear.oneuix.common.IgnoreUnknownKeysJson
-import io.github.soclear.oneuix.common.Package
-import io.github.soclear.oneuix.common.Preference
-import io.github.soclear.oneuix.common.StatusBarRuntimeBridge
-import io.github.soclear.oneuix.ui.category.SystemUIEvent
-import io.github.soclear.oneuix.ui.component.OneuiXSlider
-import io.github.soclear.oneuix.ui.component.OneuiXActionButton
+import com.oneuixp.app.ui.viewmodel.OneuiXPToolsViewModel
+import com.oneuixp.common.IgnoreUnknownKeysJson
+import com.oneuixp.common.Package
+import com.oneuixp.common.Preference
+import com.oneuixp.common.StatusBarRuntimeBridge
+import com.oneuixp.mod.ui.category.SystemUIEvent
+import com.oneuixp.mod.ui.component.OneuiXPSlider
+import com.oneuixp.mod.ui.component.OneuiXPActionButton
 import com.oneuixp.app.ui.component.material.ExpressiveConfirmDialog
-import io.github.soclear.oneuix.ui.component.SwitchItem
-import io.github.soclear.oneuix.ui.component.SelectItem
+import com.oneuixp.mod.ui.component.SwitchItem
+import com.oneuixp.mod.ui.component.SelectItem
 import com.oneuixp.app.ui.LocalUiMode
 import com.oneuixp.app.ui.UiMode
 import top.yukonga.miuix.kmp.basic.Button as MiuixButton
@@ -89,7 +89,7 @@ fun StatusComboStyleOneCategoryControls(
     uiState: Preference.SystemUI.StatusBar,
     onEvent: (SystemUIEvent) -> Unit,
 ) {
-    val viewModel = viewModel<OneuiXToolsViewModel>()
+    val viewModel = viewModel<OneuiXPToolsViewModel>()
     val context = LocalContext.current
     // Match the upstream threshold rule: critical battery uses a fixed 20% cutoff.
     // Normalize legacy saved values so preview and live SystemUI share the rule.
@@ -713,12 +713,12 @@ private fun StyleOneRoleColorDialog(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                OneuiXActionButton(
+                OneuiXPActionButton(
                     text = stringResource(R.string.status_combo_style_one_color_cancel),
                     onClick = onCancel,
                     modifier = Modifier.weight(1f),
                 )
-                OneuiXActionButton(
+                OneuiXPActionButton(
                     text = stringResource(R.string.status_combo_style_one_color_apply),
                     onClick = { onApply(draftDarkColor, draftLightColor) },
                     modifier = Modifier.weight(1f),
@@ -1051,7 +1051,7 @@ private fun styleOneSlider(
                     }
                 }
             }
-            OneuiXSlider(
+            OneuiXPSlider(
                 value = value,
                 modifier = Modifier.fillMaxWidth().alpha(if (enabled) 1f else 0.45f),
                 valueRange = range, steps = 0,

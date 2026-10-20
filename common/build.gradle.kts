@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "io.github.soclear.oneuix.common"
+    namespace = "com.oneuixp.common"
     compileSdk {
         version = release(37)
     }
@@ -14,7 +14,7 @@ android {
         buildConfigField(
             "String",
             "MODULE_APPLICATION_ID",
-            "\"${providers.gradleProperty("oneuix.applicationId").get()}\"",
+            "\"${providers.gradleProperty("oneuixp.applicationId").get()}\"",
         )
     }
 

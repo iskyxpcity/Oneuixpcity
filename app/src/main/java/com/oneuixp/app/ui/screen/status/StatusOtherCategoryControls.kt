@@ -26,10 +26,10 @@ import androidx.compose.material3.Text as MaterialText
 import com.oneuixp.app.R
 import com.oneuixp.app.ui.LocalUiMode
 import com.oneuixp.app.ui.UiMode
-import io.github.soclear.oneuix.common.Preference
-import io.github.soclear.oneuix.ui.category.SystemUIEvent
-import io.github.soclear.oneuix.ui.component.OneuiXSlider
-import io.github.soclear.oneuix.ui.component.SwitchItem
+import com.oneuixp.common.Preference
+import com.oneuixp.mod.ui.category.SystemUIEvent
+import com.oneuixp.mod.ui.component.OneuiXPSlider
+import com.oneuixp.mod.ui.component.SwitchItem
 import kotlin.math.roundToInt
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -69,8 +69,8 @@ private fun StatusBurnInProtectionControls(
             add {
                 SwitchItem(
                     icon = ImageVector.vectorResource(id = R.drawable.mobile_screensaver),
-                    title = stringResource(id = R.string.oneuix_statusBarBurnInProtection_title),
-                    summary = stringResource(id = R.string.oneuix_statusBarBurnInProtection_summary),
+                    title = stringResource(id = R.string.oneuixp_statusBarBurnInProtection_title),
+                    summary = stringResource(id = R.string.oneuixp_statusBarBurnInProtection_summary),
                     modifier = Modifier.animateContentSize(),
                     clickable = true,
                     onClick = { expanded = !expanded },
@@ -85,10 +85,10 @@ private fun StatusBurnInProtectionControls(
             if (enabled && expanded) {
                 add {
                     BurnInSliderSetting(
-                        title = stringResource(id = R.string.oneuix_statusBarBurnInProtectionAmplitude_title),
-                        summary = stringResource(id = R.string.oneuix_statusBarBurnInProtectionAmplitude_summary) +
+                        title = stringResource(id = R.string.oneuixp_statusBarBurnInProtectionAmplitude_title),
+                        summary = stringResource(id = R.string.oneuixp_statusBarBurnInProtectionAmplitude_summary) +
                             "\n" + stringResource(
-                                id = R.string.oneuix_statusBarBurnInProtectionAmplitude_value,
+                                id = R.string.oneuixp_statusBarBurnInProtectionAmplitude_value,
                                 amplitude,
                             ),
                         value = amplitude,
@@ -109,10 +109,10 @@ private fun StatusBurnInProtectionControls(
                 }
                 add {
                     BurnInSliderSetting(
-                        title = stringResource(id = R.string.oneuix_statusBarBurnInProtectionPeriod_title),
-                        summary = stringResource(id = R.string.oneuix_statusBarBurnInProtectionPeriod_summary) +
+                        title = stringResource(id = R.string.oneuixp_statusBarBurnInProtectionPeriod_title),
+                        summary = stringResource(id = R.string.oneuixp_statusBarBurnInProtectionPeriod_summary) +
                             "\n" + stringResource(
-                                id = R.string.oneuix_statusBarBurnInProtectionPeriod_value,
+                                id = R.string.oneuixp_statusBarBurnInProtectionPeriod_value,
                                 period.roundToInt(),
                             ),
                         value = period,
@@ -153,7 +153,7 @@ private fun BurnInSliderSetting(
     onValueChangeFinished: () -> Unit,
 ) {
     // Keep the title, explanation and slider inside one native grouped row.
-    // Previously OneuiXInfoItem and StatusThemeChildItem each drew their own
+    // Previously OneuiXPInfoItem and StatusThemeChildItem each drew their own
     // Material segmented surface, visually splitting the same setting.
     StatusThemeChildItem {
         Column(
@@ -194,7 +194,7 @@ private fun BurnInSliderSetting(
                 }
             }
             Spacer(modifier = Modifier.height(8.dp))
-            OneuiXSlider(
+            OneuiXPSlider(
                 value = value,
                 onValueChange = onValueChange,
                 modifier = Modifier.fillMaxWidth(),

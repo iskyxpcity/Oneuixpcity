@@ -3,11 +3,11 @@ package com.oneuixp.app.ui.screen.status
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.oneuixp.app.ui.viewmodel.OneuiXToolsViewModel
+import com.oneuixp.app.ui.viewmodel.OneuiXPToolsViewModel
 
 @Composable
 fun StatusWifiCategoryControls() {
-    val toolsViewModel = viewModel<OneuiXToolsViewModel>()
+    val toolsViewModel = viewModel<OneuiXPToolsViewModel>()
     val preference = toolsViewModel.preference.collectAsStateWithLifecycle().value
 
     StatusWifiCategoryControls(
