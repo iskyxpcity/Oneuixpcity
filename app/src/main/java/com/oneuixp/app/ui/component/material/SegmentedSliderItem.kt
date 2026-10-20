@@ -1,4 +1,4 @@
-package com.oneuixp.app.ui.component.material
+package com.oneuialoha.app.ui.component.material
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -13,7 +13,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 
 /**
- * OneuiXP Material slider row. It participates in SegmentedColumn shaping just
+ * OneUIAloha Material slider row. It participates in SegmentedColumn shaping just
  * like switches/dropdowns/text fields and keeps the current-value hint above
  * the slider so numeric settings are never blind.
  */

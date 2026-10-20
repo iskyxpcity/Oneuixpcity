@@ -1,4 +1,4 @@
-package com.oneuixp.app.ui.component
+package com.oneuialoha.app.ui.component
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.ui.unit.IntOffset
