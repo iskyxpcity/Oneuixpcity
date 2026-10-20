@@ -58,6 +58,7 @@ jobs:
           set -euo pipefail
           python3 ./verify_no_jni.py
           python3 ./verify_migration.py
+          python3 ./verify_oneuialoha_identity.py
           grep -q 'android:hasFragileUserData="false"' app/src/main/AndroidManifest.xml
           grep -q 'val defaultManagerPackageName = "com.oneuialoha.app"' app/build.gradle.kts
           grep -q 'namespace = "com.oneuialoha.app"' app/build.gradle.kts
