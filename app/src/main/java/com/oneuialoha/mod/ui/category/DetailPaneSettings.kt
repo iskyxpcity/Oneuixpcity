@@ -1,4 +1,4 @@
-package com.oneuixp.mod.ui.category
+package com.oneuialoha.mod.ui.category
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -9,11 +9,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
-import com.oneuixp.app.R
-import com.oneuixp.common.Preference
-import com.oneuixp.app.ui.viewmodel.OneuiXPToolsViewModel
-import com.oneuixp.mod.ui.component.SwitchItem
-import com.oneuixp.mod.ui.component.OneuiXPDetailGroup
+import com.oneuialoha.app.R
+import com.oneuialoha.common.Preference
+import com.oneuialoha.app.ui.viewmodel.OneUIAlohaToolsViewModel
+import com.oneuialoha.mod.ui.component.SwitchItem
+import com.oneuialoha.mod.ui.component.OneUIAlohaDetailGroup
 
 @Composable
 fun DetailPaneSettings(
@@ -26,58 +26,58 @@ fun DetailPaneSettings(
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
     ) {
-        OneuiXPDetailGroup {
+        OneUIAlohaDetailGroup {
         SwitchItem(
-            title = stringResource(id = R.string.oneuixp_showForcePeakRefreshRatePreference_title),
-            summary = stringResource(id = R.string.oneuixp_showForcePeakRefreshRatePreference_summary),
+            title = stringResource(id = R.string.oneuialoha_showForcePeakRefreshRatePreference_title),
+            summary = stringResource(id = R.string.oneuialoha_showForcePeakRefreshRatePreference_summary),
             icon = ImageVector.vectorResource(id = R.drawable.logo_dev),
             checked = uiState.showForcePeakRefreshRatePreference,
             onCheckedChange = { onEvent(SettingsEvent.ShowForcePeakRefreshRatePreference(it)) },
         )
         SwitchItem(
             icon = ImageVector.vectorResource(id = R.drawable.light_mode),
-            title = stringResource(id = R.string.oneuixp_supportOutdoorMode_title),
+            title = stringResource(id = R.string.oneuialoha_supportOutdoorMode_title),
             checked = uiState.supportOutdoorMode,
             onCheckedChange = { onEvent(SettingsEvent.SupportOutdoorMode(it)) }
         )
         SwitchItem(
             icon = ImageVector.vectorResource(id = R.drawable.battery),
-            title = stringResource(id = R.string.oneuixp_showMoreBatteryInfo_title),
-            summary = stringResource(id = R.string.oneuixp_showMoreBatteryInfo_summary),
+            title = stringResource(id = R.string.oneuialoha_showMoreBatteryInfo_title),
+            summary = stringResource(id = R.string.oneuialoha_showMoreBatteryInfo_summary),
             checked = uiState.showMoreBatteryInfo,
             onCheckedChange = { onEvent(SettingsEvent.ShowMoreBatteryInfo(it)) }
         )
         SwitchItem(
             icon = ImageVector.vectorResource(id = R.drawable.apk_document),
-            title = stringResource(id = R.string.oneuixp_showPackageInfo_title),
-            summary = stringResource(id = R.string.oneuixp_showPackageInfo_summary),
+            title = stringResource(id = R.string.oneuialoha_showPackageInfo_title),
+            summary = stringResource(id = R.string.oneuialoha_showPackageInfo_summary),
             checked = uiState.showPackageInfo,
             onCheckedChange = { onEvent(SettingsEvent.ShowPackageInfo(it)) }
         )
         SwitchItem(
             icon = ImageVector.vectorResource(id = R.drawable.wifi_link_speed),
-            title = stringResource(id = R.string.oneuixp_showWiFiLinkSpeed_title),
-            summary = stringResource(id = R.string.oneuixp_showWiFiLinkSpeed_summary),
+            title = stringResource(id = R.string.oneuialoha_showWiFiLinkSpeed_title),
+            summary = stringResource(id = R.string.oneuialoha_showWiFiLinkSpeed_summary),
             checked = uiState.showWiFiLinkSpeed,
             onCheckedChange = { onEvent(SettingsEvent.ShowWiFiLinkSpeed(it)) }
         )
         SwitchItem(
             icon = ImageVector.vectorResource(id = R.drawable.font),
-            title = stringResource(id = R.string.oneuixp_supportAnyFont_title),
+            title = stringResource(id = R.string.oneuialoha_supportAnyFont_title),
             checked = uiState.supportAnyFont,
             onCheckedChange = { onEvent(SettingsEvent.SupportAnyFont(it)) }
         )
         SwitchItem(
             icon = ImageVector.vectorResource(id = R.drawable.power_settings_new),
-            title = stringResource(id = R.string.oneuixp_supportAutoPowerOnOff_title),
-            summary = stringResource(id = R.string.oneuixp_supportAutoPowerOnOff_summary),
+            title = stringResource(id = R.string.oneuialoha_supportAutoPowerOnOff_title),
+            summary = stringResource(id = R.string.oneuialoha_supportAutoPowerOnOff_summary),
             checked = uiState.supportAutoPowerOnOff,
             onCheckedChange = { onEvent(SettingsEvent.SupportAutoPowerOnOff(it)) }
         )
         SwitchItem(
             icon = ImageVector.vectorResource(id = R.drawable.mobile_screensaver),
-            title = stringResource(id = R.string.oneuixp_spoofPhoneStatusAsOfficial_title),
-            summary = stringResource(id = R.string.oneuixp_spoofPhoneStatusAsOfficial_summary),
+            title = stringResource(id = R.string.oneuialoha_spoofPhoneStatusAsOfficial_title),
+            summary = stringResource(id = R.string.oneuialoha_spoofPhoneStatusAsOfficial_summary),
             checked = uiState.spoofPhoneStatusAsOfficial,
             onCheckedChange = { onEvent(SettingsEvent.SpoofPhoneStatusAsOfficial(it)) }
         )
@@ -111,7 +111,7 @@ sealed interface SettingsEvent {
     value class SpoofPhoneStatusAsOfficial(val value: Boolean) : SettingsEvent
 }
 
-fun OneuiXPToolsViewModel.onSettingsEvent(event: SettingsEvent) {
+fun OneUIAlohaToolsViewModel.onSettingsEvent(event: SettingsEvent) {
     updateData { preference ->
         when (event) {
             is SettingsEvent.ShowForcePeakRefreshRatePreference -> preference.copy(
