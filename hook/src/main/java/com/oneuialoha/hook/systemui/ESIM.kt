@@ -1,4 +1,4 @@
-package com.oneuixp.hook.systemui
+package com.oneuialoha.hook.systemui
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -9,10 +9,10 @@ import android.telephony.TelephonyManager
 import android.view.View
 import io.github.libxposed.api.XposedModule
 import io.github.libxposed.api.XposedModuleInterface
-import com.oneuixp.common.Package
-import com.oneuixp.hook.util.afterAttachTry
-import com.oneuixp.hook.util.reflect
-import com.oneuixp.hook.util.xlog
+import com.oneuialoha.common.Package
+import com.oneuialoha.hook.util.afterAttachTry
+import com.oneuialoha.hook.util.reflect
+import com.oneuialoha.hook.util.xlog
 import java.lang.reflect.Field
 import java.util.Collections
 import java.util.WeakHashMap

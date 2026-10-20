@@ -1,9 +1,9 @@
-package com.oneuixp.hook
+package com.oneuialoha.hook
 
 import io.github.libxposed.api.XposedModule
 import io.github.libxposed.api.XposedModuleInterface
-import com.oneuixp.common.Package
-import com.oneuixp.hook.util.xlog
+import com.oneuialoha.common.Package
+import com.oneuialoha.hook.util.xlog
 
 object SPen {
     context(xposedModule: XposedModule, param: XposedModuleInterface.PackageReadyParam)
