@@ -30,10 +30,13 @@ OneUI XP 是面向 Samsung One UI 的独立 Android / LSPosed 项目，提供系
 
 签名证书指纹由构建工作流固定校验；私钥和密码不得提交到 Git。
 
-正式版与测试预发布的构建和 APK 资产均发布在本项目自有仓库，发行记录以本仓库 Releases 为准。构建流程不依赖跨仓库发布 Token，也不将外部发行仓库作为交付条件。
+私有源码仓库 `iskyxpcity/Oneuixpcity` 保存源代码、Actions 构建记录与 CI 测试预发布。面向用户的公开正式 APK Release 及应用内更新 feed 位于项目专用的公开仓库 `iSkyJIE/OneuiXP-Releases`；更新器从该仓库读取最新 Release。两者都是 OneUI XP 自有项目的一部分，不是第三方仓库或需要移除的外部镜像。
 
-- [GitHub Actions 构建记录](https://github.com/iskyxpcity/Oneuixpcity/actions)
-- [OneUI XP Releases（正式版与测试预发布）](https://github.com/iskyxpcity/Oneuixpcity/releases)
+源码仓库 CI 成功或其中存在测试预发布，并不自动证明公开 Release 已同步发布。正式用户发行须单独核对公开 Release 的标签、APK 文件名、包名与版本、固定签名证书及 APK SHA-256。构建流程不要求配置跨仓库发布 Token，也不会将跨仓库自动镜像作为 CI 成功条件。
+
+- [私有源码仓库 GitHub Actions](https://github.com/iskyxpcity/Oneuixpcity/actions)
+- [私有源码仓库 Releases（CI / 测试预发布）](https://github.com/iskyxpcity/Oneuixpcity/releases)
+- [公开正式 Release 与应用内更新源](https://github.com/iSkyJIE/OneUIXP-Releases/releases)
 
 ## 独立性与许可证
 
