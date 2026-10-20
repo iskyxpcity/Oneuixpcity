@@ -190,4 +190,14 @@
 
     <string name="nav_rail_expand">展开导航栏</string>
     <string name="nav_rail_collapse">收起导航栏</string>
+    <string name="feature_intro_version_updates_2610191">OneUI XP 1.0.261019.1 主要更新</string>
+    <string name="feature_intro_version_updates_2610191_summary">2026-10-19</string>
+    <string name="version_1_0_2610191_title">OneUI XP 1.0.261019.1 主要更新</string>
+    <string name="version_1_0_2610191_summary">2026-10-19</string>
+    <string name="changelog_2610191_new_features_title">新增功能</string>
+    <string name="changelog_2610191_new_features_body">• 新增自定义关机菜单，可调整操作项目及排列顺序。\n• 新增禁用截图声音。\n• 新增通话返回延时设置，支持 0–5 秒。\n• 新增系统设置双栏布局选项。\n• 新增允许低版本应用安装。\n• 新增解除安全窗口截图限制。\n• 新增关闭安装后应用推荐。\n• 新增重启 SystemUI 和 Android Runtime 软重启选项。</string>
+    <string name="changelog_2610191_optimizations_title">优化改进</string>
+    <string name="changelog_2610191_optimizations_body">• 优化状态栏组合图标布局及原生图标间距。\n• 优化原生信号图标的显示与恢复逻辑。\n• 优化图标缩放设置的保存与迁移。\n• 改进 Material、Miuix 主题及宽屏界面的适配。</string>
+    <string name="changelog_2610191_fixes_title">问题修复</string>
+    <string name="changelog_2610191_fixes_body">• 修复部分设置迁移时图标缩放比例异常的问题。\n• 修复隐藏原生图标后可能残留空白的问题。\n• 优化部分系统功能的配置读取与兼容性。</string>
 </resources>
