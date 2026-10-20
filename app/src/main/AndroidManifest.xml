@@ -52,7 +52,7 @@
         <activity
             android:name=".ui.StartupActivity"
             android:exported="true"
-            android:theme="@style/Theme.OneuiXP.Startup">
+            android:theme="@style/Theme.OneUIAloha.Startup">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -61,7 +61,7 @@
         <activity
             android:name=".ui.MainActivity"
             android:exported="true"
-            android:theme="@style/Theme.OneuiXP"
+            android:theme="@style/Theme.OneUIAloha"
             android:windowSoftInputMode="adjustResize" />
 
     </application>
