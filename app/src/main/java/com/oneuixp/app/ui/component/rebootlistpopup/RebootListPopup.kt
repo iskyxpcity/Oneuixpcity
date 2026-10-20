@@ -1,17 +1,17 @@
-package com.oneuixp.app.ui.component.rebootlistpopup
+package com.oneuialoha.app.ui.component.rebootlistpopup
 
 import android.widget.Toast
 import androidx.compose.runtime.rememberCoroutineScope
-import com.oneuixp.app.oneuiXPApp
-import com.oneuixp.app.oneuixp.OneuiXPPreferenceBridge
+import com.oneuialoha.app.oneUIAlohaApp
+import com.oneuialoha.app.oneuixp.OneUIAlohaPreferenceBridge
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
-import com.oneuixp.app.R
-import com.oneuixp.app.ui.LocalUiMode
-import com.oneuixp.app.ui.UiMode
+import com.oneuialoha.app.R
+import com.oneuialoha.app.ui.LocalUiMode
+import com.oneuialoha.app.ui.UiMode
 
 data class RebootListOption(
     @param:StringRes val labelRes: Int,
@@ -21,8 +21,8 @@ data class RebootListOption(
 @Composable
 fun getRebootListOption(): List<RebootListOption> =
     listOf(
-        RebootListOption(R.string.oneuixp_rebootSystemUI_menu, "statusbar_xp_systemui"),
-        RebootListOption(R.string.oneuixp_softRebootRuntime_menu, "soft_reboot_android_runtime"),
+        RebootListOption(R.string.oneuialoha_rebootSystemUI_menu, "statusbar_xp_systemui"),
+        RebootListOption(R.string.oneuialoha_softRebootRuntime_menu, "soft_reboot_android_runtime"),
     )
 
 @Composable
@@ -31,11 +31,11 @@ fun rememberRebootAction(): (String) -> Unit {
     return { reason ->
         if (reason == "statusbar_xp_systemui" || reason == "soft_reboot_android_runtime") {
             scope.launch {
-                val synchronized = OneuiXPPreferenceBridge.synchronizeNow(oneuiXPApp)
+                val synchronized = OneUIAlohaPreferenceBridge.synchronizeNow(oneUIAlohaApp)
                 if (!synchronized) {
                     Toast.makeText(
-                        oneuiXPApp,
-                        R.string.oneuixp_preferenceSync_failed,
+                        oneUIAlohaApp,
+                        R.string.oneuialoha_preferenceSync_failed,
                         Toast.LENGTH_SHORT,
                     ).show()
                     return@launch
@@ -55,8 +55,8 @@ fun rememberRebootAction(): (String) -> Unit {
                         }
                         if (!restarted) {
                             Toast.makeText(
-                                oneuiXPApp,
-                                R.string.oneuixp_restartSystemUI_failed,
+                                oneUIAlohaApp,
+                                R.string.oneuialoha_restartSystemUI_failed,
                                 Toast.LENGTH_SHORT,
                             ).show()
                         }
@@ -64,8 +64,8 @@ fun rememberRebootAction(): (String) -> Unit {
 
                     "soft_reboot_android_runtime" -> {
                         Toast.makeText(
-                            oneuiXPApp,
-                            R.string.oneuixp_softRebootStarted,
+                            oneUIAlohaApp,
+                            R.string.oneuialoha_softRebootStarted,
                             Toast.LENGTH_SHORT,
                         ).show()
                         val started = withContext(Dispatchers.IO) {
@@ -80,8 +80,8 @@ fun rememberRebootAction(): (String) -> Unit {
                         }
                         if (!started) {
                             Toast.makeText(
-                                oneuiXPApp,
-                                R.string.oneuixp_softRebootFailed,
+                                oneUIAlohaApp,
+                                R.string.oneuialoha_softRebootFailed,
                                 Toast.LENGTH_SHORT,
                             ).show()
                         }

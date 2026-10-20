@@ -1,4 +1,4 @@
-package com.oneuixp.app.ui.component.rebootlistpopup
+package com.oneuialoha.app.ui.component.rebootlistpopup
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PowerSettingsNew
@@ -15,7 +15,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.stringResource
-import com.oneuixp.app.R
+import com.oneuialoha.app.R
 
 @Composable
 fun RebootDropdownItems(onItemClick: (String) -> Unit) {

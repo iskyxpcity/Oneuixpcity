@@ -1,4 +1,4 @@
-package com.oneuixp.app.ui.component
+package com.oneuialoha.app.ui.component
 
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Composable

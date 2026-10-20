@@ -1,4 +1,4 @@
-package com.oneuixp.app.ui.component.rebootlistpopup
+package com.oneuialoha.app.ui.component.rebootlistpopup
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
@@ -8,8 +8,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.graphics.vector.ImageVector
-import com.oneuixp.app.R
-import com.oneuixp.app.ui.component.ListPopupDefaults
+import com.oneuialoha.app.R
+import com.oneuialoha.app.ui.component.ListPopupDefaults
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.ListPopupColumn
@@ -70,7 +70,7 @@ fun RebootDropdownItem(
     index: Int,
     onReboot: (String) -> Unit,
 ) {
-    com.oneuixp.app.ui.component.miuix.DropdownItem(
+    com.oneuialoha.app.ui.component.miuix.DropdownItem(
         text = stringResource(option.labelRes),
         optionSize = optionSize,
         onSelectedIndexChange = {

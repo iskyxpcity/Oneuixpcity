@@ -1,10 +1,10 @@
-package com.oneuixp.app.ui.component.statustag
+package com.oneuialoha.app.ui.component.statustag
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import com.oneuixp.app.ui.LocalUiMode
-import com.oneuixp.app.ui.UiMode
+import com.oneuialoha.app.ui.LocalUiMode
+import com.oneuialoha.app.ui.UiMode
 
 @Composable
 fun StatusTag(
