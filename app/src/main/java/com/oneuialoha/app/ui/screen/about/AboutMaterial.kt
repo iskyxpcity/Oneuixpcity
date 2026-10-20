@@ -74,7 +74,7 @@ fun AboutScreenMaterial(
                     Box(
                         contentAlignment = Alignment.Center,
                         modifier = Modifier
-                            .size(80.dp)
+                            .size(120.dp)
                             .clip(RoundedCornerShape(16.dp))
                     ) {
                         Image(

@@ -279,7 +279,7 @@ private fun AboutContent(
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
-                    .size(88.dp)
+                    .size(132.dp)
                     .clipToBounds()
                     .graphicsLayer {
                         alpha = 1 - iconProgress

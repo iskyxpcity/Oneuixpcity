@@ -31,9 +31,11 @@
 
 ## 品牌图案与 Android 图标资源
 
+启动器、开屏和关于页使用经过压缩的 WebP 资源；启动器自适应背景层透明，源图稿保持原样供后续编辑。
+
 - `artwork/Logo001.jpg`、`artwork/Logo002.png` 保存用户提供的原始图稿，作为后续维护的源文件。
-- 应用启动器图标在 Android 8.0+ 使用 `app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml`，以前景 `drawable-nodpi/ic_launcher_foreground_logo001.png` 和颜色资源 `values/ic_launcher_colors.xml` 构成自适应图标；`mipmap-nodpi/ic_launcher.png` 为旧版 Android 回退图标。Manifest 继续引用 `@mipmap/ic_launcher`。
-- `Logo002` 的应用内绘制资源为 `drawable-nodpi/logo002.png`。原生开屏动画和 Material / Miuix 两套「关于」页面统一引用该资源，并分别控制显示尺寸。
+- 应用启动器图标在 Android 8.0+ 使用 `app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml`，以前景 `drawable-nodpi/ic_launcher_foreground_logo001.webp` 和颜色资源 `values/ic_launcher_colors.xml` 构成自适应图标；`mipmap-nodpi/ic_launcher.webp` 为旧版 Android 回退图标。Manifest 继续引用 `@mipmap/ic_launcher`。
+- `Logo002` 的应用内绘制资源为 `drawable-nodpi/logo002.webp`。原生开屏动画和 Material / Miuix 两套「关于」页面统一引用该资源，并分别控制显示尺寸。
 - 不要把开屏/关于页图案与启动器图标资源混用；变更时须同时验证两类显示位置。
 - 当前应用身份、`versionCode=11` 与 Owner 签名基线不因图标更新而改变。
 
