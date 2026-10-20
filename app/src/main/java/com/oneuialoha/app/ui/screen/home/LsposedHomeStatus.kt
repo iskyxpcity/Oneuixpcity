@@ -12,8 +12,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
-import com.oneuialoha.app.oneuixp.OneUIAlohaFeatureCatalog
-import com.oneuialoha.app.oneuixp.oneUIAlohaDataStore
+import com.oneuialoha.app.oneuialoha.OneUIAlohaFeatureCatalog
+import com.oneuialoha.app.oneuialoha.oneUIAlohaDataStore
 import com.oneuialoha.app.statusbar.LsposedFrameworkStatus
 import com.oneuialoha.app.statusbar.SystemUiPingProbe
 import com.oneuialoha.common.Preference
