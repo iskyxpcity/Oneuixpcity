@@ -1,4 +1,4 @@
-package com.oneuixp.app.ui.component.configtransfer
+package com.oneuialoha.app.ui.component.configtransfer
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Article
@@ -15,7 +15,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.stringResource
-import com.oneuixp.app.R
+import com.oneuialoha.app.R
 
 @Composable
 fun ConfigTransferPopupMaterial(
@@ -27,7 +27,7 @@ fun ConfigTransferPopupMaterial(
     IconButton(onClick = { expanded = true }) {
         Icon(
             imageVector = Icons.AutoMirrored.Outlined.Article,
-            contentDescription = stringResource(R.string.oneuixp_backup_config),
+            contentDescription = stringResource(R.string.oneuialoha_backup_config),
         )
     }
 
@@ -42,7 +42,7 @@ fun ConfigTransferPopupMaterial(
                     expanded = false
                     onBackup()
                 },
-                text = { Text(stringResource(R.string.oneuixp_backup_config)) },
+                text = { Text(stringResource(R.string.oneuialoha_backup_config)) },
                 shapes = MenuDefaults.itemShape(index = 0, count = 2),
             )
             SelectableDropdownMenuItem(
@@ -51,7 +51,7 @@ fun ConfigTransferPopupMaterial(
                     expanded = false
                     onRestore()
                 },
-                text = { Text(stringResource(R.string.oneuixp_restore_config)) },
+                text = { Text(stringResource(R.string.oneuialoha_restore_config)) },
                 shapes = MenuDefaults.itemShape(index = 1, count = 2),
             )
         }

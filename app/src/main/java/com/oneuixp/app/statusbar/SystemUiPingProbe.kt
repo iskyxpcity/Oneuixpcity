@@ -1,4 +1,4 @@
-package com.oneuixp.app.statusbar
+package com.oneuialoha.app.statusbar
 
 import android.app.Activity
 import android.content.BroadcastReceiver
@@ -20,8 +20,8 @@ import kotlin.coroutines.resume
  * look active after the LSPosed module has been disabled.
  */
 object SystemUiPingProbe {
-    const val ACTION_PING = "com.oneuixp.app.PING.V2"
-    const val EXTRA_PROTOCOL = "com.oneuixp.app.PING_PROTOCOL"
+    const val ACTION_PING = "com.oneuialoha.app.PING.V2"
+    const val EXTRA_PROTOCOL = "com.oneuialoha.app.PING_PROTOCOL"
     const val PROTOCOL = "oneuixp-flux-v2"
     private const val SYSTEM_UI = "com.android.systemui"
 

@@ -1,4 +1,4 @@
-package com.oneuixp.app.ui.component.bottombar
+package com.oneuialoha.app.ui.component.bottombar
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
@@ -36,9 +36,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
-import com.oneuixp.app.R
-import com.oneuixp.app.data.repository.SettingsRepositoryImpl
-import com.oneuixp.app.ui.LocalMainPagerState
+import com.oneuialoha.app.R
+import com.oneuialoha.app.data.repository.SettingsRepositoryImpl
+import com.oneuialoha.app.ui.LocalMainPagerState
 import kotlinx.coroutines.launch
 
 /**
@@ -68,8 +68,8 @@ fun SideNavigationRailMaterial(modifier: Modifier = Modifier) {
     val toolsOutlinedIcon = ImageVector.vectorResource(id = R.drawable.apps_outlined)
     val items = listOf(
         Triple(R.string.home, Icons.Filled.Home, Icons.Outlined.Home),
-        Triple(R.string.oneuixp_tools, toolsFilledIcon, toolsOutlinedIcon),
-        Triple(R.string.oneuixp_status, Icons.Filled.Extension, Icons.Outlined.Extension),
+        Triple(R.string.oneuialoha_tools, toolsFilledIcon, toolsOutlinedIcon),
+        Triple(R.string.oneuialoha_status, Icons.Filled.Extension, Icons.Outlined.Extension),
         Triple(R.string.settings, Icons.Filled.Settings, Icons.Outlined.Settings),
     )
 

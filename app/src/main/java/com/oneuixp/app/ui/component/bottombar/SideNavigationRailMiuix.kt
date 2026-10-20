@@ -1,4 +1,4 @@
-package com.oneuixp.app.ui.component.bottombar
+package com.oneuialoha.app.ui.component.bottombar
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -7,9 +7,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.graphics.vector.ImageVector
-import com.oneuixp.app.R
-import com.oneuixp.app.data.repository.SettingsRepositoryImpl
-import com.oneuixp.app.ui.LocalMainPagerState
+import com.oneuialoha.app.R
+import com.oneuialoha.app.data.repository.SettingsRepositoryImpl
+import com.oneuialoha.app.ui.LocalMainPagerState
 import top.yukonga.miuix.kmp.basic.NavigationRail
 import top.yukonga.miuix.kmp.basic.NavigationRailItem
 import top.yukonga.miuix.kmp.basic.NavigationRailValue

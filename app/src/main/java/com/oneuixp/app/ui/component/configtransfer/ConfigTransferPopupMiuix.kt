@@ -1,12 +1,12 @@
-package com.oneuixp.app.ui.component.configtransfer
+package com.oneuialoha.app.ui.component.configtransfer
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.res.stringResource
-import com.oneuixp.app.R
-import com.oneuixp.app.ui.component.ListPopupDefaults
-import com.oneuixp.app.ui.component.miuix.DropdownItem
+import com.oneuialoha.app.R
+import com.oneuialoha.app.ui.component.ListPopupDefaults
+import com.oneuialoha.app.ui.component.miuix.DropdownItem
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.ListPopupColumn
@@ -29,7 +29,7 @@ fun ConfigTransferPopupMiuix(
     ) {
         Icon(
             imageVector = MiuixIcons.Notes,
-            contentDescription = stringResource(R.string.oneuixp_backup_config),
+            contentDescription = stringResource(R.string.oneuialoha_backup_config),
             tint = colorScheme.onSurface,
         )
     }
@@ -42,7 +42,7 @@ fun ConfigTransferPopupMiuix(
         content = {
             ListPopupColumn {
                 DropdownItem(
-                    text = stringResource(R.string.oneuixp_backup_config),
+                    text = stringResource(R.string.oneuialoha_backup_config),
                     optionSize = 2,
                     index = 0,
                     onSelectedIndexChange = {
@@ -51,7 +51,7 @@ fun ConfigTransferPopupMiuix(
                     },
                 )
                 DropdownItem(
-                    text = stringResource(R.string.oneuixp_restore_config),
+                    text = stringResource(R.string.oneuialoha_restore_config),
                     optionSize = 2,
                     index = 1,
                     onSelectedIndexChange = {

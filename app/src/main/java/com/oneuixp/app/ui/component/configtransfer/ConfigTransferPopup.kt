@@ -1,4 +1,4 @@
-package com.oneuixp.app.ui.component.configtransfer
+package com.oneuialoha.app.ui.component.configtransfer
 
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -7,16 +7,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.oneuixp.app.R
-import com.oneuixp.app.ui.LocalUiMode
-import com.oneuixp.app.ui.UiMode
-import com.oneuixp.app.ui.viewmodel.OneuiXPToolsViewModel
+import com.oneuialoha.app.R
+import com.oneuialoha.app.ui.LocalUiMode
+import com.oneuialoha.app.ui.UiMode
+import com.oneuialoha.app.ui.viewmodel.OneUIAlohaToolsViewModel
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 /**
- * Top-left OneuiXP configuration transfer menu.
+ * Top-left OneUIAloha configuration transfer menu.
  *
  * Keeps KernelSU 3.2.5's navigation-icon position while replacing the original
  * destination action with the application's full Preference backup/restore.
@@ -25,7 +25,7 @@ import java.time.format.DateTimeFormatter
 fun ConfigTransferPopup() {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val viewModel = viewModel<OneuiXPToolsViewModel>()
+    val viewModel = viewModel<OneUIAlohaToolsViewModel>()
 
     val backupLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument("application/json")
@@ -51,7 +51,7 @@ fun ConfigTransferPopup() {
                 } catch (_: Throwable) {
                     Toast.makeText(
                         context,
-                        R.string.oneuixp_restore_failed,
+                        R.string.oneuialoha_restore_failed,
                         Toast.LENGTH_SHORT,
                     ).show()
                 }
@@ -60,7 +60,7 @@ fun ConfigTransferPopup() {
     }
 
     val onBackup = {
-        val name = "OneuiXP_backup_${
+        val name = "OneUIAloha_backup_${
             LocalDateTime.now().format(
                 DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")
             )

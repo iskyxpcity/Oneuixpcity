@@ -1,4 +1,4 @@
-package com.oneuixp.app.ui.component.bottombar
+package com.oneuialoha.app.ui.component.bottombar
 
 import androidx.annotation.StringRes
 import androidx.compose.foundation.clickable
@@ -22,13 +22,13 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.oneuixp.app.R
-import com.oneuixp.app.ui.LocalMainPagerState
-import com.oneuixp.app.ui.component.FloatingBottomBar
-import com.oneuixp.app.ui.component.FloatingBottomBarItem
-import com.oneuixp.app.ui.theme.LocalEnableFloatingBottomBar
-import com.oneuixp.app.ui.theme.LocalEnableFloatingBottomBarBlur
-import com.oneuixp.app.ui.util.BlurredBar
+import com.oneuialoha.app.R
+import com.oneuialoha.app.ui.LocalMainPagerState
+import com.oneuialoha.app.ui.component.FloatingBottomBar
+import com.oneuialoha.app.ui.component.FloatingBottomBarItem
+import com.oneuialoha.app.ui.theme.LocalEnableFloatingBottomBar
+import com.oneuialoha.app.ui.theme.LocalEnableFloatingBottomBarBlur
+import com.oneuialoha.app.ui.util.BlurredBar
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.NavigationBar
 import top.yukonga.miuix.kmp.basic.NavigationBarItem
@@ -122,7 +122,7 @@ enum class BottomBarDestination(
     val icon: ImageVector,
 ) {
     Home(R.string.home, Icons.Rounded.Cottage),
-    Tools(R.string.oneuixp_tools, Icons.Rounded.Extension),
-    Status(R.string.oneuixp_status, Icons.Rounded.Extension),
+    Tools(R.string.oneuialoha_tools, Icons.Rounded.Extension),
+    Status(R.string.oneuialoha_status, Icons.Rounded.Extension),
     Setting(R.string.settings, Icons.Rounded.Settings)
 }

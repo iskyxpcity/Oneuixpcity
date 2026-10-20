@@ -1,4 +1,4 @@
-package com.oneuixp.app.statusbar;
+package com.oneuialoha.app.statusbar;
 
 import android.app.Application;
 import android.content.Context;
@@ -25,13 +25,13 @@ public final class SystemUiHeartbeat implements IXposedHookLoadPackage {
         final Context appContext = context.getApplicationContext() != null
             ? context.getApplicationContext() : context;
         ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor(runnable -> {
-            Thread thread = new Thread(runnable, "OneuiXP-SystemUI-heartbeat");
+            Thread thread = new Thread(runnable, "OneUIAloha-SystemUI-heartbeat");
             thread.setDaemon(true);
             return thread;
         });
         executor.scheduleWithFixedDelay(() -> {
             try {
-                Uri uri = Uri.parse("content://" + com.oneuixp.app.BuildConfig.APPLICATION_ID + ".statusbridge");
+                Uri uri = Uri.parse("content://" + com.oneuialoha.app.BuildConfig.APPLICATION_ID + ".statusbridge");
                 Bundle result = appContext.getContentResolver().call(uri, "heartbeat", null, null);
                 if (result == null || !result.getBoolean("accepted", false)) {
                     Bundle retry = new Bundle();

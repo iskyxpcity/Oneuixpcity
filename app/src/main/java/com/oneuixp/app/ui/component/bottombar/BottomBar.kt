@@ -1,4 +1,4 @@
-package com.oneuixp.app.ui.component.bottombar
+package com.oneuialoha.app.ui.component.bottombar
 
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.runtime.Composable
@@ -13,10 +13,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
-import com.oneuixp.app.ui.LocalUiMode
-import com.oneuixp.app.ui.UiMode
-import com.oneuixp.app.ui.theme.LocalEnableFloatingBottomBar
-import com.oneuixp.app.ui.util.shouldShowSplitPane
+import com.oneuialoha.app.ui.LocalUiMode
+import com.oneuialoha.app.ui.UiMode
+import com.oneuialoha.app.ui.theme.LocalEnableFloatingBottomBar
+import com.oneuialoha.app.ui.util.shouldShowSplitPane
 import top.yukonga.miuix.kmp.blur.Backdrop
 import top.yukonga.miuix.kmp.blur.LayerBackdrop
 import top.yukonga.miuix.kmp.utils.springAnimateToPage
