@@ -1,4 +1,4 @@
-package com.oneuixp.app.ui.util
+package com.oneuialoha.app.ui.util
 
 import android.content.Context
 import android.net.ConnectivityManager

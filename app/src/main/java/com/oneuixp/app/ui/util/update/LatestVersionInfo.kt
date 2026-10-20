@@ -1,4 +1,4 @@
-package com.oneuixp.app.ui.util.update
+package com.oneuialoha.app.ui.util.update
 
 data class LatestVersionInfo(
     val versionCode: Int = 0,
@@ -22,7 +22,7 @@ private fun parseVersion(value: String): List<Int>? {
  * names (1.0.261019[.1]) and standard names such as 2.0.0 after a product rename.
  * Android versionCode remains independent from the network release comparison.
  */
-fun compareOneuiXPVersions(left: String, right: String): Int {
+fun compareOneUIAlohaVersions(left: String, right: String): Int {
     val lhs = parseVersion(left) ?: return 0
     val rhs = parseVersion(right) ?: return 0
     val length = maxOf(lhs.size, rhs.size)

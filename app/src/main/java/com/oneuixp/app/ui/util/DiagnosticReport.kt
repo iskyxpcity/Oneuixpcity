@@ -1,4 +1,4 @@
-package com.oneuixp.app.ui.util
+package com.oneuialoha.app.ui.util
 
 import android.Manifest
 import android.content.BroadcastReceiver
@@ -7,10 +7,10 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.net.Uri
 import android.os.Build
-import com.oneuixp.app.BuildConfig
-import com.oneuixp.app.statusbar.LsposedFrameworkStatus
-import com.oneuixp.common.Package
-import com.oneuixp.common.StatusBarRuntimeBridge
+import com.oneuialoha.app.BuildConfig
+import com.oneuialoha.app.statusbar.LsposedFrameworkStatus
+import com.oneuialoha.common.Package
+import com.oneuialoha.common.StatusBarRuntimeBridge
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
@@ -19,10 +19,10 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.withTimeoutOrNull
 
-fun buildOneuiXPDiagnosticReport(context: Context): String {
+fun buildOneUIAlohaDiagnosticReport(context: Context): String {
     val framework = LsposedFrameworkStatus.state.value
     return buildString {
-        appendLine("OneuiXP diagnostic")
+        appendLine("OneUIAloha diagnostic")
         appendLine("Generated: ${OffsetDateTime.now().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)}")
         appendLine("Package: ${BuildConfig.APPLICATION_ID}")
         appendLine("Version: ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})")
@@ -47,8 +47,8 @@ fun buildOneuiXPDiagnosticReport(context: Context): String {
  * SystemUI records bounded events in memory and replies only to an explicit export
  * request. This adds no polling, restart, or background heartbeat.
  */
-suspend fun buildOneuiXPDiagnosticReportForExport(context: Context): String {
-    val appReport = buildOneuiXPDiagnosticReport(context)
+suspend fun buildOneUIAlohaDiagnosticReportForExport(context: Context): String {
+    val appReport = buildOneUIAlohaDiagnosticReport(context)
     val runtimeLog = requestSystemUiDiagnosticLog(context)
     return buildString {
         append(appReport)
@@ -104,27 +104,27 @@ private suspend fun requestSystemUiDiagnosticLog(context: Context): String {
     }
 }
 
-fun oneuiXPDiagnosticFileName(): String {
+fun oneUIAlohaDiagnosticFileName(): String {
     val stamp = LocalDateTime.now()
         .format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss"))
-    return "OneuiXP_diagnostic_${stamp}.txt"
+    return "OneUIAloha_diagnostic_${stamp}.txt"
 }
 
-fun writeOneuiXPDiagnosticReport(
+fun writeOneUIAlohaDiagnosticReport(
     context: Context,
     uri: Uri,
-    reportText: String = buildOneuiXPDiagnosticReport(context),
+    reportText: String = buildOneUIAlohaDiagnosticReport(context),
 ) {
     context.contentResolver.openOutputStream(uri)?.use { stream ->
         stream.write(reportText.toByteArray(Charsets.UTF_8))
     } ?: error("Could not open diagnostic output")
 }
 
-fun createOneuiXPDiagnosticShareIntent(
+fun createOneUIAlohaDiagnosticShareIntent(
     context: Context,
-    reportText: String = buildOneuiXPDiagnosticReport(context),
+    reportText: String = buildOneUIAlohaDiagnosticReport(context),
 ): Intent = Intent(Intent.ACTION_SEND).apply {
     type = "text/plain"
-    putExtra(Intent.EXTRA_SUBJECT, "OneuiXP diagnostic")
+    putExtra(Intent.EXTRA_SUBJECT, "OneUIAloha diagnostic")
     putExtra(Intent.EXTRA_TEXT, reportText)
 }

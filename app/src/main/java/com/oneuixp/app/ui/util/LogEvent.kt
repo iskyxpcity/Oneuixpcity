@@ -1,11 +1,11 @@
-package com.oneuixp.app.ui.util
+package com.oneuialoha.app.ui.util
 
 import android.content.Context
 import java.io.File
 
-/** On-demand, non-root OneuiXP diagnostic export. */
+/** On-demand, non-root OneUIAloha diagnostic export. */
 fun getBugreportFile(context: Context): File {
-    val destination = File(context.cacheDir, "OneuiXP_diagnostic.txt")
-    destination.writeText(buildOneuiXPDiagnosticReport(context))
+    val destination = File(context.cacheDir, "OneUIAloha_diagnostic.txt")
+    destination.writeText(buildOneUIAlohaDiagnosticReport(context))
     return destination
 }

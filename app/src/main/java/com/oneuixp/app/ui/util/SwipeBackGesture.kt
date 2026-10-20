@@ -1,4 +1,4 @@
-package com.oneuixp.app.ui.util
+package com.oneuialoha.app.ui.util
 
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
