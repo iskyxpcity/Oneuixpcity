@@ -58,7 +58,7 @@ check("App Manifest points at the Aloha Application and themes",
       'android:name=".OneUIAlohaApplication"' in manifest
       and '@style/Theme.OneUIAloha' in manifest
       and '@style/Theme.OneUIAloha.Startup' in manifest
-      and 'xposeddescription" android:value="OneUIAloha' in manifest)
+      and 'xposeddescription" android:value="OneUI Aloha' in manifest)
 check("Hook Manifest uses Aloha component package",
       "com.oneuialoha.hook.RebootActivity" in hook_manifest)
 check("Xposed initialization entry matches renamed Hook class",
@@ -67,7 +67,7 @@ module_text = module_file.read_text()
 check("Xposed module metadata retains API 101 and Aloha identity",
       "minApiVersion=101" in module_text
       and "targetApiVersion=101" in module_text
-      and "description=OneUIAloha" in module_text)
+      and "description=OneUI Aloha" in module_text)
 scope_text = scope_file.read_text()
 asset_scope_text = asset_scope_file.read_text()
 check("Xposed scope manifests are byte-identical",
