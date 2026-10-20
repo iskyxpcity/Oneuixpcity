@@ -1,18 +1,18 @@
-package com.oneuixp.app.ui.viewmodel
+package com.oneuialoha.app.ui.viewmodel
 
 import android.os.Build
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.oneuixp.app.oneuiXPApp
-import com.oneuixp.app.oneuixp.OneuiXPPreferenceBridge
-import com.oneuixp.app.oneuixp.OneuiXPSettingSpec
-import com.oneuixp.app.oneuixp.OneuiXPSettingType
-import com.oneuixp.app.oneuixp.OneuiXPVisibility
-import com.oneuixp.app.oneuixp.oneuiXPDataStore
-import com.oneuixp.common.IgnoreUnknownKeysJson
-import com.oneuixp.common.ONE_UI_VERSION
-import com.oneuixp.common.PowerMenuAction
-import com.oneuixp.common.Preference
+import com.oneuialoha.app.oneUIAlohaApp
+import com.oneuialoha.app.oneuixp.OneUIAlohaPreferenceBridge
+import com.oneuialoha.app.oneuixp.OneUIAlohaSettingSpec
+import com.oneuialoha.app.oneuixp.OneUIAlohaSettingType
+import com.oneuialoha.app.oneuixp.OneUIAlohaVisibility
+import com.oneuialoha.app.oneuixp.oneUIAlohaDataStore
+import com.oneuialoha.common.IgnoreUnknownKeysJson
+import com.oneuialoha.common.ONE_UI_VERSION
+import com.oneuialoha.common.PowerMenuAction
+import com.oneuialoha.common.Preference
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.Dispatchers
@@ -26,12 +26,12 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import com.oneuixp.common.ProductionPreferenceMigration
+import com.oneuialoha.common.ProductionPreferenceMigration
 import java.io.InputStream
 import java.io.OutputStream
 
-class OneuiXPToolsViewModel : ViewModel() {
-    private val dataStore = oneuiXPApp.oneuiXPDataStore
+class OneUIAlohaToolsViewModel : ViewModel() {
+    private val dataStore = oneUIAlohaApp.oneUIAlohaDataStore
 
     /**
      * Material pages read generic settings by serialized property path. The
@@ -65,8 +65,8 @@ class OneuiXPToolsViewModel : ViewModel() {
      * The final value is persisted by the normal event on drag release.
      */
     fun previewData(nextPreference: (Preference) -> Preference) {
-        OneuiXPPreferenceBridge.preview(
-            oneuiXPApp,
+        OneUIAlohaPreferenceBridge.preview(
+            oneUIAlohaApp,
             nextPreference(preference.value),
         )
     }
@@ -74,7 +74,7 @@ class OneuiXPToolsViewModel : ViewModel() {
     /**
      * Compatible full preference backup.
      * The exported JSON deliberately contains only the Preference payload, not
-     * OneuiXP's local synchronization marker.
+     * OneUIAloha's local synchronization marker.
      */
     suspend fun backupTo(output: OutputStream) = withContext(Dispatchers.IO) {
         output.write(
@@ -94,12 +94,12 @@ class OneuiXPToolsViewModel : ViewModel() {
             input.readBytes().decodeToString()
         )
         dataStore.updateData { restored }
-        OneuiXPPreferenceBridge.synchronizeNow(oneuiXPApp)
+        OneUIAlohaPreferenceBridge.synchronizeNow(oneUIAlohaApp)
     }
 
 
-    fun checked(preference: Preference, spec: OneuiXPSettingSpec): Boolean {
-        if (spec.type == OneuiXPSettingType.PowerAction) {
+    fun checked(preference: Preference, spec: OneUIAlohaSettingSpec): Boolean {
+        if (spec.type == OneUIAlohaSettingType.PowerAction) {
             val name = spec.powerActionName ?: return false
             return PowerMenuAction.normalize(preference.systemUI.other.powerMenuActions)
                 .firstOrNull { it.name == name }
@@ -109,8 +109,8 @@ class OneuiXPToolsViewModel : ViewModel() {
         return value(preference, spec).toBooleanStrictOrNull() ?: false
     }
 
-    fun value(preference: Preference, spec: OneuiXPSettingSpec): String {
-        if (spec.type == OneuiXPSettingType.PowerAction) {
+    fun value(preference: Preference, spec: OneUIAlohaSettingSpec): String {
+        if (spec.type == OneUIAlohaSettingType.PowerAction) {
             return checked(preference, spec).toString()
         }
         return valueAt(preference, spec.path)
@@ -118,30 +118,30 @@ class OneuiXPToolsViewModel : ViewModel() {
 
     fun isVisible(
         preference: Preference,
-        spec: OneuiXPSettingSpec,
+        spec: OneUIAlohaSettingSpec,
     ): Boolean = evaluateVisibility(preference, spec.visibility)
 
     private fun evaluateVisibility(
         preference: Preference,
-        rule: OneuiXPVisibility,
+        rule: OneUIAlohaVisibility,
     ): Boolean = when (rule) {
-        OneuiXPVisibility.Always -> true
-        is OneuiXPVisibility.Bool ->
+        OneUIAlohaVisibility.Always -> true
+        is OneUIAlohaVisibility.Bool ->
             (valueAt(preference, rule.path).toBooleanStrictOrNull() ?: false) == rule.expected
-        is OneuiXPVisibility.IntEquals ->
+        is OneUIAlohaVisibility.IntEquals ->
             valueAt(preference, rule.path).toIntOrNull() == rule.value
-        is OneuiXPVisibility.StringContains ->
+        is OneUIAlohaVisibility.StringContains ->
             valueAt(preference, rule.path).contains(rule.token)
-        is OneuiXPVisibility.All ->
+        is OneUIAlohaVisibility.All ->
             rule.rules.all { evaluateVisibility(preference, it) }
-        is OneuiXPVisibility.Not ->
+        is OneUIAlohaVisibility.Not ->
             !evaluateVisibility(preference, rule.rule)
-        is OneuiXPVisibility.AndroidAtLeast -> Build.VERSION.SDK_INT >= rule.sdk
-        is OneuiXPVisibility.AndroidAtMost -> Build.VERSION.SDK_INT <= rule.sdk
-        is OneuiXPVisibility.AndroidEquals -> Build.VERSION.SDK_INT == rule.sdk
-        is OneuiXPVisibility.OneUiAtLeast -> ONE_UI_VERSION >= rule.version
-        is OneuiXPVisibility.OneUiBelow -> ONE_UI_VERSION < rule.version
-        is OneuiXPVisibility.ModelPrefix ->
+        is OneUIAlohaVisibility.AndroidAtLeast -> Build.VERSION.SDK_INT >= rule.sdk
+        is OneUIAlohaVisibility.AndroidAtMost -> Build.VERSION.SDK_INT <= rule.sdk
+        is OneUIAlohaVisibility.AndroidEquals -> Build.VERSION.SDK_INT == rule.sdk
+        is OneUIAlohaVisibility.OneUiAtLeast -> ONE_UI_VERSION >= rule.version
+        is OneUIAlohaVisibility.OneUiBelow -> ONE_UI_VERSION < rule.version
+        is OneUIAlohaVisibility.ModelPrefix ->
             Build.MODEL.startsWith(rule.prefix, ignoreCase = true)
     }
 
@@ -160,10 +160,10 @@ class OneuiXPToolsViewModel : ViewModel() {
         return current.jsonPrimitive.content
     }
 
-    fun setChecked(spec: OneuiXPSettingSpec, checked: Boolean) {
+    fun setChecked(spec: OneUIAlohaSettingSpec, checked: Boolean) {
         viewModelScope.launch {
             dataStore.updateData { current ->
-                if (spec.type == OneuiXPSettingType.PowerAction) {
+                if (spec.type == OneUIAlohaSettingType.PowerAction) {
                     val name = spec.powerActionName ?: return@updateData current
                     val actions = PowerMenuAction.normalize(
                         current.systemUI.other.powerMenuActions
@@ -181,23 +181,23 @@ class OneuiXPToolsViewModel : ViewModel() {
                     current.withJsonValue(spec.path, JsonPrimitive(checked))
                 }
             }
-            OneuiXPPreferenceBridge.ensureSynchronized(oneuiXPApp)
+            OneUIAlohaPreferenceBridge.ensureSynchronized(oneUIAlohaApp)
         }
     }
 
-    fun setRawValue(spec: OneuiXPSettingSpec, raw: String) {
+    fun setRawValue(spec: OneUIAlohaSettingSpec, raw: String) {
         val next: JsonPrimitive = when (spec.type) {
-            OneuiXPSettingType.IntValue,
-            OneuiXPSettingType.ChoiceInt -> raw.toIntOrNull()?.let(::JsonPrimitive) ?: return
+            OneUIAlohaSettingType.IntValue,
+            OneUIAlohaSettingType.ChoiceInt -> raw.toIntOrNull()?.let(::JsonPrimitive) ?: return
 
-            OneuiXPSettingType.FloatValue ->
+            OneUIAlohaSettingType.FloatValue ->
                 raw.toFloatOrNull()?.let(::JsonPrimitive) ?: return
 
-            OneuiXPSettingType.TextValue,
-            OneuiXPSettingType.ChoiceText -> JsonPrimitive(raw)
+            OneUIAlohaSettingType.TextValue,
+            OneUIAlohaSettingType.ChoiceText -> JsonPrimitive(raw)
 
-            OneuiXPSettingType.Toggle,
-            OneuiXPSettingType.PowerAction -> return
+            OneUIAlohaSettingType.Toggle,
+            OneUIAlohaSettingType.PowerAction -> return
         }
 
         viewModelScope.launch {
@@ -214,7 +214,7 @@ class OneuiXPToolsViewModel : ViewModel() {
                 }
                 updated
             }
-            OneuiXPPreferenceBridge.ensureSynchronized(oneuiXPApp)
+            OneUIAlohaPreferenceBridge.ensureSynchronized(oneUIAlohaApp)
         }
     }
 
