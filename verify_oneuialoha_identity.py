@@ -128,17 +128,29 @@ for path in source_files:
 # The sole app-package compatibility package literal belongs in the updater, outside this
 # current-identity source scan. Legacy persisted settings keys in Preference/Migration are
 # deliberately not renamed by this check.
-check("Current Aloha source has no retired package/resource-key references",
+check("Current Aloha source has no retired package/resource-ID references",
       not bad_source_refs, ", ".join(bad_source_refs[:20]))
 
-# Resource filenames and keys are part of the compiled public Android resource API.
+# Persisted preference and DataStore keys are intentionally retained for backwards
+# compatibility; they are not Android resource IDs and must not be blanket-renamed.
+preference_bridge = (ROOT / "app/src/main/java/com/oneuialoha/app/oneuialoha/OneUIAlohaPreferenceBridge.kt").read_text()
+theme_ext = (ROOT / "app/src/main/java/com/oneuialoha/app/ui/theme/ThemeExt.kt").read_text()
+gallery_hook = (ROOT / "hook/src/main/java/com/oneuialoha/hook/Gallery.kt").read_text()
+check("Legacy persisted settings/data keys are intentionally preserved",
+      'oneuixp_features.json' in preference_bridge
+      and '_oneuixp_remote_synced' in preference_bridge
+      and 'oneuixp_theme_color_animation' in theme_ext
+      and 'oneuixp_gallery' in gallery_hook)
+
+# Resource IDs are a separate contract from persisted preferences: old prefixed resource names
+# and references must all be renamed in every locale, while the settings keys above stay stable.
 resource_root = ROOT / "app/src/main/res"
 resource_hits = []
 for path in resource_root.rglob("*.xml"):
     text = path.read_text(encoding="utf-8")
-    if re.search(r"oneuixp_", text, re.IGNORECASE):
+    if re.search(r"""(?:\bname=["']oneuixp_|@[A-Za-z_-]+/oneuixp_)""", text, re.IGNORECASE):
         resource_hits.append(str(path.relative_to(ROOT)))
-check("Android resources contain no old prefixed resource references",
+check("Android resources contain no old prefixed resource names/references",
       not resource_hits, ", ".join(resource_hits[:20]))
 check("Owner certificate baseline is fixed in release validation",
       EXPECTED_OWNER_CERT in workflow.lower())
