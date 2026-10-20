@@ -12,11 +12,11 @@ import androidx.datastore.core.Serializer
 import androidx.datastore.dataStore
 import io.github.libxposed.service.XposedService
 import com.oneuixp.app.statusbar.LsposedFrameworkStatus
-import io.github.soclear.oneuix.common.IgnoreUnknownKeysJson
-import io.github.soclear.oneuix.common.Package
-import io.github.soclear.oneuix.common.Preference
-import io.github.soclear.oneuix.common.StatusBarRuntimeBridge
-import io.github.soclear.oneuix.common.ProductionPreferenceMigration
+import com.oneuixp.common.IgnoreUnknownKeysJson
+import com.oneuixp.common.Package
+import com.oneuixp.common.Preference
+import com.oneuixp.common.StatusBarRuntimeBridge
+import com.oneuixp.common.ProductionPreferenceMigration
 import java.io.InputStream
 import java.io.OutputStream
 import java.util.concurrent.atomic.AtomicBoolean
