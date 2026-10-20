@@ -1,0 +1,144 @@
+name: Temporary OneUI Aloha logo integration
+on:
+  push:
+    branches:
+      - migration/oneui-aloha-full-identity-20261020
+permissions:
+  contents: write
+jobs:
+  integrate:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Convert uploaded source art into Android resources
+        run: |
+          set -euo pipefail
+          test -s Logo001.jpg
+          test -s Logo002.png
+          python3 -m pip install --quiet Pillow
+          python3 - <<'PY'
+          from pathlib import Path
+          from PIL import Image, ImageOps
+          from statistics import median
+          import xml.etree.ElementTree as ET
+
+          root = Path(".")
+          logo1_path = root / "Logo001.jpg"
+          logo2_path = root / "Logo002.png"
+          res = root / "app/src/main/res"
+          d_nodpi = res / "drawable-nodpi"
+          mip_nodpi = res / "mipmap-nodpi"
+          mip_anydpi_v26 = res / "mipmap-anydpi-v26"
+          values = res / "values"
+          for directory in (d_nodpi, mip_nodpi, mip_anydpi_v26, values):
+              directory.mkdir(parents=True, exist_ok=True)
+
+          with Image.open(logo1_path) as src:
+              original_size = src.size
+              logo1 = src.convert("RGB")
+          sample = logo1.resize((128, 128), Image.Resampling.LANCZOS)
+          w, h = sample.size
+          patch = max(4, min(w, h) // 12)
+          pixels = []
+          for box in ((0, 0, patch, patch), (w-patch, 0, w, patch),
+                      (0, h-patch, patch, h), (w-patch, h-patch, w, h)):
+              pixels.extend(list(sample.crop(box).getdata()))
+          background = tuple(int(median([p[channel] for p in pixels])) for channel in range(3))
+          bg_hex = "#{:02X}{:02X}{:02X}".format(*background)
+
+          # Legacy launcher icon: preserve the complete image and its aspect ratio.
+          legacy_canvas = Image.new("RGB", (512, 512), background)
+          legacy = logo1.copy()
+          legacy.thumbnail((464, 464), Image.Resampling.LANCZOS)
+          legacy_canvas.paste(legacy, ((512-legacy.width)//2, (512-legacy.height)//2))
+          legacy_canvas.save(mip_nodpi / "ic_launcher.png", format="PNG", optimize=True, compress_level=9)
+
+          # Android adaptive foreground: transparent 432px canvas; artwork stays
+          # centered within the launcher safe zone and keeps its original aspect ratio.
+          foreground = Image.new("RGBA", (432, 432), (0, 0, 0, 0))
+          fg = logo1.copy()
+          fg.thumbnail((292, 292), Image.Resampling.LANCZOS)
+          foreground.paste(fg, ((432-fg.width)//2, (432-fg.height)//2))
+          foreground.save(d_nodpi / "ic_launcher_foreground.png", format="PNG", optimize=True, compress_level=9)
+
+          (mip_anydpi_v26 / "ic_launcher.xml").write_text(
+              '<?xml version="1.0" encoding="utf-8"?>\n'
+              '<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">\n'
+              '    <background android:drawable="@color/oneui_aloha_icon_background" />\n'
+              '    <foreground android:drawable="@drawable/ic_launcher_foreground" />\n'
+              '</adaptive-icon>\n',
+              encoding="utf-8"
+          )
+          (values / "ic_launcher_colors.xml").write_text(
+              '<?xml version="1.0" encoding="utf-8"?>\n'
+              '<resources>\n'
+              f'    <color name="oneui_aloha_icon_background">{bg_hex}</color>\n'
+              '</resources>\n',
+              encoding="utf-8"
+          )
+
+          # Logo002 is kept as a distinct drawable so startup/about sizing is independent.
+          with Image.open(logo2_path) as src:
+              logo2 = src.copy()
+              logo2_original_size = src.size
+          if logo2.mode not in ("RGB", "RGBA", "L", "LA", "P"):
+              logo2 = logo2.convert("RGBA")
+          logo2.thumbnail((1024, 1024), Image.Resampling.LANCZOS)
+          logo2.save(d_nodpi / "logo002.png", format="PNG", optimize=True, compress_level=9)
+
+          print("LOGO001_SOURCE_SIZE={}x{}".format(*original_size))
+          print("LOGO001_BACKGROUND={}".format(bg_hex))
+          print("LOGO001_LEGACY_OUTPUT_BYTES={}".format((mip_nodpi / "ic_launcher.png").stat().st_size))
+          print("LOGO001_ADAPTIVE_FOREGROUND_BYTES={}".format((d_nodpi / "ic_launcher_foreground.png").stat().st_size))
+          print("LOGO002_SOURCE_SIZE={}x{}".format(*logo2_original_size))
+          print("LOGO002_OUTPUT_SIZE={}x{}".format(*logo2.size))
+          print("LOGO002_OUTPUT_BYTES={}".format((d_nodpi / "logo002.png").stat().st_size))
+          PY
+      - name: Point startup animation and About themes to Logo002
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          files = {
+              "app/src/main/java/com/oneuialoha/app/ui/StartupActivity.kt": [
+                  ("BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher)",
+                   "BitmapFactory.decodeResource(resources, R.drawable.logo002)"),
+                  ("val size = dp(108f)", "val size = dp(96f)"),
+              ],
+              "app/src/main/java/com/oneuialoha/app/ui/screen/about/AboutMaterial.kt": [
+                  ("painterResource(id = R.mipmap.ic_launcher)",
+                   "painterResource(id = R.drawable.logo002)"),
+              ],
+              "app/src/main/java/com/oneuialoha/app/ui/screen/about/AboutMiuix.kt": [
+                  ("\.size(100.dp)", ".size(88.dp)"),
+                  ("painterResource(id = R.mipmap.ic_launcher)",
+                   "painterResource(id = R.drawable.logo002)"),
+              ],
+          }
+          for name, replacements in files.items():
+              path = Path(name)
+              text = path.read_text(encoding="utf-8")
+              for old, new in replacements:
+                  count = text.count(old)
+                  if count != 1:
+                      raise SystemExit(f"Expected exactly one occurrence of {old!r} in {name}, got {count}")
+                  text = text.replace(old, new, 1)
+              path.write_text(text, encoding="utf-8")
+              print(f"UPDATED:{name}")
+          PY
+      - name: Preserve original art, remove one-time integrator, and commit
+        env:
+          BRANCH_NAME: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          mkdir -p artwork
+          mv Logo001.jpg artwork/Logo001.jpg
+          mv Logo002.png artwork/Logo002.png
+          git rm .github/workflows/temporary-logo-integrator.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add artwork app/src/main/res app/src/main/java/com/oneuialoha/app/ui/StartupActivity.kt app/src/main/java/com/oneuialoha/app/ui/screen/about/AboutMaterial.kt app/src/main/java/com/oneuialoha/app/ui/screen/about/AboutMiuix.kt
+          git commit -m "feat(branding): apply Logo001 adaptive icon and Logo002 splash/about art"
+          git push origin "HEAD:${BRANCH_NAME}"
