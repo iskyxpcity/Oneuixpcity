@@ -1,4 +1,4 @@
-package com.oneuixp.app.ui.viewmodel
+package com.oneuialoha.app.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -7,10 +7,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import com.oneuixp.app.data.repository.SettingsRepository
-import com.oneuixp.app.data.repository.SettingsRepositoryImpl
-import com.oneuixp.app.ui.screen.settings.SettingsUiState
-import com.oneuixp.app.ui.theme.ColorMode
+import com.oneuialoha.app.data.repository.SettingsRepository
+import com.oneuialoha.app.data.repository.SettingsRepositoryImpl
+import com.oneuialoha.app.ui.screen.settings.SettingsUiState
+import com.oneuialoha.app.ui.theme.ColorMode
 
 class SettingsViewModel(
     private val repo: SettingsRepository = SettingsRepositoryImpl()
