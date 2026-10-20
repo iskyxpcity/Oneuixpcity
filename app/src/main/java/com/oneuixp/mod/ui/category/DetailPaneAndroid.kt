@@ -1,4 +1,4 @@
-package com.oneuixp.mod.ui.category
+package com.oneuialoha.mod.ui.category
 
 import android.os.Build
 import androidx.compose.animation.AnimatedVisibility
@@ -20,13 +20,13 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
-import com.oneuixp.app.R
-import com.oneuixp.common.Preference
-import com.oneuixp.app.ui.viewmodel.OneuiXPToolsViewModel
-import com.oneuixp.mod.ui.component.SwitchItem
-import com.oneuixp.mod.ui.component.OneuiXPSlider
-import com.oneuixp.mod.ui.component.OneuiXPPPreferenceGroup
-import com.oneuixp.mod.ui.component.OneuiXPDetailGroup
+import com.oneuialoha.app.R
+import com.oneuialoha.common.Preference
+import com.oneuialoha.app.ui.viewmodel.OneUIAlohaToolsViewModel
+import com.oneuialoha.mod.ui.component.SwitchItem
+import com.oneuialoha.mod.ui.component.OneUIAlohaSlider
+import com.oneuialoha.mod.ui.component.OneUIAlohaPPreferenceGroup
+import com.oneuialoha.mod.ui.component.OneUIAlohaDetailGroup
 import kotlin.math.roundToInt
 
 @Composable
@@ -40,19 +40,19 @@ fun DetailPaneAndroid(
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
     ) {
-        OneuiXPDetailGroup {
+        OneUIAlohaDetailGroup {
         SwitchItem(
             icon = ImageVector.vectorResource(id = R.drawable.lock_clock),
-            title = stringResource(id = R.string.oneuixp_disablePinVerifyPer72h_title),
+            title = stringResource(id = R.string.oneuialoha_disablePinVerifyPer72h_title),
             checked = uiState.disablePinVerifyPer72h,
             onCheckedChange = { onEvent(AndroidEvent.DisablePinVerifyPer72h(it)) }
         )
-        OneuiXPPPreferenceGroup {
+        OneUIAlohaPPreferenceGroup {
             var max by remember { mutableIntStateOf(uiState.maxNeverKilledAppNum) }
             var expanded by rememberSaveable { mutableStateOf(false) }
 
             SwitchItem(
-                title = stringResource(id = R.string.oneuixp_modifyMaxNeverKilledAppNum_title),
+                title = stringResource(id = R.string.oneuialoha_modifyMaxNeverKilledAppNum_title),
                 modifier = Modifier.animateContentSize(),
                 summary = if (uiState.modifyMaxNeverKilledAppNum) max.toString() else null,
                 icon = ImageVector.vectorResource(id = R.drawable.apps),
@@ -70,7 +70,7 @@ fun DetailPaneAndroid(
             )
 
             AnimatedVisibility(expanded && uiState.modifyMaxNeverKilledAppNum) {
-                OneuiXPSlider(
+                OneUIAlohaSlider(
                     value = max.toFloat(),
                     onValueChange = { max = it.roundToInt() },
                     modifier = Modifier.padding(horizontal = 16.dp),
@@ -82,44 +82,44 @@ fun DetailPaneAndroid(
         }
         SwitchItem(
             icon = ImageVector.vectorResource(id = R.drawable.notifications),
-            title = stringResource(id = R.string.oneuixp_setBlockableNotificationChannel_title),
-            summary = stringResource(id = R.string.oneuixp_setBlockableNotificationChannel_summary),
+            title = stringResource(id = R.string.oneuialoha_setBlockableNotificationChannel_title),
+            summary = stringResource(id = R.string.oneuialoha_setBlockableNotificationChannel_summary),
             checked = uiState.setBlockableNotificationChannel,
             onCheckedChange = { onEvent(AndroidEvent.SetBlockableNotificationChannel(it)) }
         )
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
             SwitchItem(
                 icon = ImageVector.vectorResource(id = R.drawable.block),
-                title = stringResource(id = R.string.oneuixp_supportAppJumpBlock_title),
-                summary = stringResource(id = R.string.oneuixp_supportAppJumpBlock_summary),
+                title = stringResource(id = R.string.oneuialoha_supportAppJumpBlock_title),
+                summary = stringResource(id = R.string.oneuialoha_supportAppJumpBlock_summary),
                 checked = uiState.supportAppJumpBlock,
                 onCheckedChange = { onEvent(AndroidEvent.SupportAppJumpBlock(it)) }
             )
         }
         SwitchItem(
             icon = ImageVector.vectorResource(id = R.drawable.expand),
-            title = stringResource(id = R.string.oneuixp_allowAllRotation_title),
-            summary = stringResource(id = R.string.oneuixp_allowAllRotation_summary),
+            title = stringResource(id = R.string.oneuialoha_allowAllRotation_title),
+            summary = stringResource(id = R.string.oneuialoha_allowAllRotation_summary),
             checked = uiState.allowAllRotation,
             onCheckedChange = { onEvent(AndroidEvent.AllowAllRotation(it)) }
         )
         SwitchItem(
             icon = ImageVector.vectorResource(id = R.drawable.google_play),
-            title = stringResource(id = R.string.oneuixp_liftFcmNetworkLimit_title),
-            summary = stringResource(id = R.string.oneuixp_liftFcmNetworkLimit_summary),
+            title = stringResource(id = R.string.oneuialoha_liftFcmNetworkLimit_title),
+            summary = stringResource(id = R.string.oneuialoha_liftFcmNetworkLimit_summary),
             checked = uiState.liftFcmNetworkLimit,
             onCheckedChange = { onEvent(AndroidEvent.LiftFcmNetworkLimit(it)) }
         )
         SwitchItem(
             icon = ImageVector.vectorResource(id = R.drawable.mobile_screensaver),
-            title = stringResource(id = R.string.oneuixp_disableScreenWakeOnPowerUnplugged_title),
+            title = stringResource(id = R.string.oneuialoha_disableScreenWakeOnPowerUnplugged_title),
             checked = uiState.disableScreenWakeOnPowerUnplugged,
             onCheckedChange = { onEvent(AndroidEvent.DisableScreenWakeOnPowerUnplugged(it)) }
         )
         SwitchItem(
             icon = ImageVector.vectorResource(id = R.drawable.format_letter_spacing),
-            title = stringResource(id = R.string.oneuixp_disableWritingToolkitGlobally_title),
-            summary = stringResource(id = R.string.oneuixp_disableWritingToolkitGlobally_summary),
+            title = stringResource(id = R.string.oneuialoha_disableWritingToolkitGlobally_title),
+            summary = stringResource(id = R.string.oneuialoha_disableWritingToolkitGlobally_summary),
             checked = uiState.disableWritingToolkitGlobally,
             onCheckedChange = { onEvent(AndroidEvent.DisableWritingToolkitGlobally(it)) }
         )
@@ -156,7 +156,7 @@ sealed interface AndroidEvent {
     value class DisableWritingToolkitGlobally(val value: Boolean) : AndroidEvent
 }
 
-fun OneuiXPToolsViewModel.onAndroidEvent(event: AndroidEvent) {
+fun OneUIAlohaToolsViewModel.onAndroidEvent(event: AndroidEvent) {
     updateData { preference ->
         when (event) {
             is AndroidEvent.DisablePinVerifyPer72h -> {
