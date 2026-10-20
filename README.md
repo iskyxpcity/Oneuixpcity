@@ -39,6 +39,8 @@ OneUI Aloha 是面向 Samsung One UI 的独立 Android / LSPosed 模块，提供
 - `KEY_ALIAS`
 - `KEY_PASSWORD`
 
+公开 Aloha Release 仅在 `main` 上由明确的 `release:*` 提交触发；该正式发布步骤另需单独配置 `ALOHA_RELEASE_TOKEN`，用于向 `iSkyJIE/OneUIAloha-Releases` 发布。该 Token 与 APK 签名凭据分离，不用于迁移分支 CI；本次独立化不会创建或覆盖公开 Release。
+
 固定 Owner 证书 SHA-256 基线为 `93bf61a6493c6b336383832eb41301bd8fe061f43566e7e384e3fdd9fc1c26a1`。请勿更换密钥、生成替代签名或将 keystore / 密码写入仓库。Secret 名称保持既有设置；本项目 Gradle 中使用的环境变量以 `ONEUIALOHA_*` 命名。
 
 - 私有源码仓库：[`iskyxpcity/Oneuixpcity`](https://github.com/iskyxpcity/Oneuixpcity)
