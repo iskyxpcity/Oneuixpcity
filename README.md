@@ -21,7 +21,7 @@ OneUI Aloha 是面向 Samsung One UI 的独立 Android / LSPosed 模块，提供
 - `hook/`：LSPosed 功能入口与 Hook 实现，命名空间为 `com.oneuialoha.hook`。
 - `stub/`：编译期 Android API 存根，命名空间为 `com.oneuialoha.stub`。
 - `.github/workflows/build.yml`：源码检查、编译、签名与 APK 验证。
-- `verify_migration.py`、`verify_no_jni.py`：源码迁移与构建前校验。
+- `verify_migration.py`、`verify_no_jni.py`、`verify_oneuialoha_identity.py`：源码迁移、JNI 禁用与 Aloha 身份/版本/入口/资源校验。
 
 ## 更新源职责
 

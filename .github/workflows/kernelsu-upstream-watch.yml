@@ -112,7 +112,7 @@ jobs:
 
             const title = "KernelSU upstream UI/theme sync review";
             const body = [
-              "KernelSU upstream UI/theme files or dependency versions differ from the reviewed baseline. Review and port relevant changes manually; do not blindly replace OneUI XP custom navigation destinations or behavior.",
+              "KernelSU upstream UI/theme files or dependency versions differ from the reviewed baseline. Review and port relevant changes manually; do not blindly replace OneUI Aloha custom navigation destinations or behavior.",
               "",
               "- Upstream HEAD: https://github.com/tiann/KernelSU/commit/" + upstreamCommit.sha,
               "- Latest release: " + releaseLabel,

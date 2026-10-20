@@ -17,6 +17,7 @@ def check(label, ok, detail=""):
     if not ok:
         problems.append(f"{label}: {detail or 'failed'}")
 
+root_gradle = (ROOT / "build.gradle.kts").read_text()
 gradle_app = (ROOT / "app/build.gradle.kts").read_text()
 gradle_common = (ROOT / "common/build.gradle.kts").read_text()
 gradle_hook = (ROOT / "hook/build.gradle.kts").read_text()
@@ -40,6 +41,9 @@ check("Common, Hook and Stub namespaces are Aloha",
       and 'namespace = "com.oneuialoha.hook"' in gradle_hook
       and 'namespace = "com.oneuialoha.stub"' in gradle_stub)
 check("Root project name is Aloha", 'rootProject.name = "OneUIAloha"' in settings)
+check("Root Gradle consumes the Aloha versionCode property",
+      'findProperty("oneuiAlohaVersionCode")' in root_gradle
+      and 'findProperty("oneuixpVersionCode")' not in root_gradle)
 check("Gradle version properties are explicit",
       "oneuiAlohaVersionName=1.0.261021.1" in gradle_props
       and "oneuiAlohaVersionCode=100261022" in gradle_props)
