@@ -8,6 +8,15 @@ preference_source = (root/'common/src/main/java/io/github/soclear/oneuix/common/
 combo_runtime_source = (root/'hook/src/main/java/io/github/soclear/oneuix/hook/systemui/StatusBarComboStyleOneRuntime.kt').read_text()
 network_speed_runtime_source = (root/'hook/src/main/java/io/github/soclear/oneuix/hook/systemui/StatusBarNetworkSpeedRuntime.kt').read_text()
 independent_signal_runtime_source = (root/'hook/src/main/java/io/github/soclear/oneuix/hook/systemui/StatusBarSignalIndependentRuntime.kt').read_text()
+feature_intro_source = (root/'app/src/main/java/com/oneuixp/app/ui/screen/about/FeatureIntroductionScreens.kt').read_text()
+feature_routes_source = (root/'app/src/main/java/com/oneuixp/app/ui/navigation3/Routes.kt').read_text()
+main_activity_source = (root/'app/src/main/java/com/oneuixp/app/ui/MainActivity.kt').read_text()
+release_note_resources = [
+    (root/'app/src/main/res/values/strings.xml').read_text(),
+    (root/'app/src/main/res/values-zh-rCN/strings.xml').read_text(),
+    (root/'app/src/main/res/values-zh-rHK/strings.xml').read_text(),
+    (root/'app/src/main/res/values-zh-rTW/strings.xml').read_text(),
+]
 legacy_combo_markers = (
     'glyphScaleDefaultMigrationDone', 'glyphScaleDefault100MigrationDone',
     'glyphLeftMarginOneDpMigrationDone', 'glyphLeftMarginZeroDpMigrationDone',
@@ -87,6 +96,36 @@ checks = {
      and 'reapplyHostTrailingGap' not in network_speed_runtime_source
      and 'params.marginEnd = targetEnd' not in network_speed_runtime_source
      and 'params.marginStart = baseStart' not in network_speed_runtime_source
+ ),
+ '1.0.261019.1 release notes appear first in both feature-intro themes': (
+     feature_intro_source.index('feature_intro_version_updates_2610191')
+     < feature_intro_source.index('feature_intro_version_updates_261018')
+     and 'onOpen2610191Updates' in feature_intro_source
+     and 'is2610191 -> R.string.version_1_0_2610191_title' in feature_intro_source
+     and 'is2610191 -> R.string.version_1_0_2610191_summary' in feature_intro_source
+     and feature_intro_source.count('is2610191 -> listOf(') == 2
+ ),
+ '1.0.261019.1 changelog route is registered and reachable': (
+     'data object VersionChangelog2610191' in feature_routes_source
+     and 'entry<Route.VersionChangelog2610191>' in main_activity_source
+     and 'VersionChangelog2610191Screen()' in main_activity_source
+ ),
+ 'Release note titles and all three update sections are localized': (
+     all(
+         all(f'name="{key}"' in resource for key in (
+             'feature_intro_version_updates_2610191',
+             'feature_intro_version_updates_2610191_summary',
+             'version_1_0_2610191_title',
+             'version_1_0_2610191_summary',
+             'changelog_2610191_new_features_title',
+             'changelog_2610191_new_features_body',
+             'changelog_2610191_optimizations_title',
+             'changelog_2610191_optimizations_body',
+             'changelog_2610191_fixes_title',
+             'changelog_2610191_fixes_body',
+         ))
+         for resource in release_note_resources
+     )
  )
 }
 for name, ok in checks.items(): print(('PASS' if ok else 'FAIL') + ': ' + name)
