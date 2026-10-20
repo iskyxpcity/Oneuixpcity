@@ -27,7 +27,7 @@ val managerName = project.findProperty("ONEUIALOHA_NAME")?.toString() ?: default
 
 
 android {
-    namespace = "com.oneuixp.app"
+    namespace = "com.oneuialoha.app"
 
     // The same owner keystore must sign EVERY distributable APK.
     // CI supplies credentials via GitHub Actions secrets; never commit keys.
