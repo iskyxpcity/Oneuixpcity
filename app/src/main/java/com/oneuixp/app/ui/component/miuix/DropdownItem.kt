@@ -1,4 +1,4 @@
-package com.oneuixp.app.ui.component.miuix
+package com.oneuialoha.app.ui.component.miuix
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
