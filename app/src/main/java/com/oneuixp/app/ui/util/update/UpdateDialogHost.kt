@@ -23,7 +23,6 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.SystemUpdateAlt
 import androidx.compose.material3.ButtonGroupDefaults
@@ -404,19 +403,6 @@ private fun UpdateDialogMaterial(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.bodyMedium,
                     )
-                    Text(
-                        text = stringResource(R.string.update_dialog_download_address),
-                        color = onContainer,
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                    SelectionContainer {
-                        Text(
-                            text = info.downloadUrl,
-                            color = accent,
-                            style = MaterialTheme.typography.bodySmall,
-                        )
-                    }
                 }
 
                 Text(
@@ -507,10 +493,13 @@ private fun UpdateDialogMaterial(
                                 modifier = Modifier.size(18.dp),
                             )
                             Spacer(Modifier.width(8.dp))
-                            Text(stringResource(
-                                if (info.isMigration) R.string.update_dialog_download
-                                else R.string.update_dialog_install,
-                            ))
+                            Text(
+                                text = if (info.isMigration) {
+                                    stringResource(R.string.update_dialog_download, targetAppName)
+                                } else {
+                                    stringResource(R.string.update_dialog_install)
+                                },
+                            )
                         }
                     }
                 }
@@ -670,19 +659,6 @@ private fun UpdateDialogMiuix(
                     color = colors.onSurfaceVariantSummary,
                     fontSize = MiuixTheme.textStyles.body2.fontSize,
                 )
-                MiuixText(
-                    text = stringResource(R.string.update_dialog_download_address),
-                    color = colors.onSurface,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = MiuixTheme.textStyles.body2.fontSize,
-                )
-                SelectionContainer {
-                    MiuixText(
-                        text = info.downloadUrl,
-                        color = colors.primary,
-                        fontSize = MiuixTheme.textStyles.body2.fontSize,
-                    )
-                }
             }
 
             MiuixText(
@@ -778,10 +754,13 @@ private fun UpdateDialogMiuix(
                         )
                     }
                     Spacer(Modifier.width(8.dp))
-                    MiuixText(text = stringResource(
-                        if (info.isMigration) R.string.update_dialog_download
-                        else R.string.update_dialog_install,
-                    ))
+                    MiuixText(
+                        text = if (info.isMigration) {
+                            stringResource(R.string.update_dialog_download, targetAppName)
+                        } else {
+                            stringResource(R.string.update_dialog_install)
+                        },
+                    )
                 }
             }
         }
