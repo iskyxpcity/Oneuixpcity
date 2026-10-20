@@ -113,7 +113,7 @@ jobs:
           set -euo pipefail
           for key in KEYSTORE_BASE64 KEYSTORE_PASSWORD KEY_ALIAS KEY_PASSWORD; do
             if [ -z "${!key}" ]; then
-              echo "::error::Missing OneUI Aloha repository Actions secret ${key}. Configure the NEW independent permanent OneUI Aloha keystore generated on 2026-09-23 in this repository's Actions secrets. Cannot release a stable-signed APK without them."
+              echo "::error::Missing OneUI Aloha repository Actions secret ${key}. Configure the existing Owner signing credentials matching the fixed Owner certificate SHA-256 baseline in this repository's Actions secrets. Cannot release a stable-signed APK without them."
               exit 1
             fi
           done
@@ -134,7 +134,7 @@ jobs:
           ./gradlew "$APP_ASSEMBLE_TASK" -PONEUIALOHA_PACKAGE_NAME=com.oneuialoha.app -PONEUIALOHA_NAME="OneUI Aloha" --stacktrace --no-daemon 2>&1 | tee diagnostics/gradle-build.log
 
       - name: Validate optimized release candidate
-        if: success() && github.ref == 'refs/heads/migration/public-release-repo-20260930'
+        if: success() && github.ref == 'refs/heads/migration/oneui-aloha-full-identity-20261020'
         env:
           ONEUIALOHA_KEYSTORE_PATH: ${{ github.workspace }}/app/owner.keystore
           ONEUIALOHA_KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
@@ -152,12 +152,14 @@ jobs:
           AAPT="$ANDROID_HOME/build-tools/37.0.0/aapt"
 
           "$APKSIGNER" verify --verbose --print-certs "$RELEASE_APK" | tee diagnostics/release-validation/SIGNING_INFO.txt
+          grep -Fq 'Verified using v2 scheme (APK Signature Scheme v2): true' diagnostics/release-validation/SIGNING_INFO.txt
           CERT=$(sed -n 's/^.*certificate SHA-256 digest: //p' diagnostics/release-validation/SIGNING_INFO.txt | head -1 | tr -d ': ' | tr '[:upper:]' '[:lower:]')
           EXPECTED=$(printf '%s' "$EXPECTED_CERT" | tr -d ': ' | tr '[:upper:]' '[:lower:]')
           test "$CERT" = "$EXPECTED"
 
           "$AAPT" dump badging "$RELEASE_APK" | tee diagnostics/release-validation/APK_PACKAGE_INFO.txt
           grep -q "^package: name='com.oneuialoha.app'" diagnostics/release-validation/APK_PACKAGE_INFO.txt
+          grep -q "application: label='OneUI Aloha'" diagnostics/release-validation/APK_PACKAGE_INFO.txt
           grep -q "versionName='$VERSION_NAME'" diagnostics/release-validation/APK_PACKAGE_INFO.txt
           grep -q "versionCode='$VERSION_CODE'" diagnostics/release-validation/APK_PACKAGE_INFO.txt
 
@@ -299,7 +301,7 @@ jobs:
         continue-on-error: true
         if: success() && github.ref == 'refs/heads/main'
         with:
-          name: OneUI-XP-Owner-Signed
+          name: OneUIAloha-Owner-Signed
           path: dist/
           if-no-files-found: error
       - name: Optionally upload build diagnostics
@@ -307,6 +309,6 @@ jobs:
         continue-on-error: true
         if: failure()
         with:
-          name: OneUI-XP-Build-Diagnostics
+          name: OneUIAloha-Build-Diagnostics
           path: diagnostics/
           if-no-files-found: warn
