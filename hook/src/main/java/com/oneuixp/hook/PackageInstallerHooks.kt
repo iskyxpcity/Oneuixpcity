@@ -1,11 +1,11 @@
-package io.github.soclear.oneuix.hook
+package com.oneuixp.hook
 
 import android.view.View
 import io.github.libxposed.api.XposedModule
 import io.github.libxposed.api.XposedModuleInterface
-import io.github.soclear.oneuix.common.Package
-import io.github.soclear.oneuix.hook.util.PreferenceProvider
-import io.github.soclear.oneuix.hook.util.xlog
+import com.oneuixp.common.Package
+import com.oneuixp.hook.util.PreferenceProvider
+import com.oneuixp.hook.util.xlog
 
 /**
  * Hides Samsung's post-install recommendation panel in the Samsung installer.

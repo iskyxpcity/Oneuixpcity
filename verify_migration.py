@@ -132,11 +132,15 @@ checks = {
 
 # Construct legacy markers in fragments so this checker does not flag its own code.
 old_namespace = "io.github." + "soclear"
+legacy_owner_token = "soclear"
+legacy_project_segment = "oneuix"
 old_token = "RELEASE_REPO_" + "TOKEN"
 old_brand = re.compile(r"(?:OneuiX|OneUIX|oneuix)P[a-z]")
 ignored_dirs = {".git", ".gradle", "build"}
 namespace_hits = []
 brand_hits = []
+owner_hits = []
+legacy_segment_hits = []
 token_hits = []
 
 for path in root.rglob("*"):
@@ -152,6 +156,10 @@ for path in root.rglob("*"):
 
     if old_namespace.lower() in rel.lower() or old_namespace.replace(".", "/").lower() in rel.lower():
         namespace_hits.append(rel)
+    if legacy_owner_token in rel.lower():
+        owner_hits.append(rel)
+    if re.search(r"(?:^|/)oneuix(?:/|$)", rel, re.IGNORECASE):
+        legacy_segment_hits.append(rel)
     if old_brand.search(rel):
         brand_hits.append(rel)
 
@@ -165,18 +173,24 @@ for path in root.rglob("*"):
 
     if old_namespace.lower() in text.lower() or old_namespace.replace(".", "/").lower() in text.lower():
         namespace_hits.append(rel)
+    if legacy_owner_token in text.lower():
+        owner_hits.append(rel)
+    if re.search(r"(?i)(?:^|[./\\])oneuix(?:$|[./\\])", text):
+        legacy_segment_hits.append(rel)
     if old_brand.search(text):
         brand_hits.append(rel)
     if old_token in text:
         token_hits.append(rel)
 
 checks["No legacy namespace outside license texts"] = not namespace_hits
+checks["No legacy soclear ownership token outside license texts"] = not owner_hits
+checks["No standalone legacy oneuix namespace/path segment outside license texts"] = not legacy_segment_hits
 checks["No old OneUIX token outside license texts"] = not brand_hits
 checks["No cross-repository release token reference"] = not token_hits
 
 for name, ok in checks.items(): print(('PASS' if ok else 'FAIL') + ': ' + name)
 if not all(checks.values()):
- for label, items in (("namespace", namespace_hits), ("brand", brand_hits), ("release token", token_hits)):
+ for label, items in (("namespace", namespace_hits), ("socl-ear", owner_hits), ("oneuix path segment", legacy_segment_hits), ("brand", brand_hits), ("release token", token_hits)):
   if items: print(f"Residual {label} references: " + ", ".join(sorted(set(items))), file=sys.stderr)
  print('BLOCKED: source preflight failed; do not claim APK build success.', file=sys.stderr)
  sys.exit(1)
