@@ -1,10 +1,10 @@
-package com.oneuixp.app.ui.screen.colorpalette
+package com.oneuialoha.app.ui.screen.colorpalette
 
 import androidx.compose.runtime.Immutable
 import com.materialkolor.PaletteStyle
 import com.materialkolor.dynamiccolor.ColorSpec
-import com.oneuixp.app.ui.screen.settings.SettingsUiState
-import com.oneuixp.app.ui.theme.ColorMode
+import com.oneuialoha.app.ui.screen.settings.SettingsUiState
+import com.oneuialoha.app.ui.theme.ColorMode
 
 @Immutable
 data class ColorPaletteUiState(

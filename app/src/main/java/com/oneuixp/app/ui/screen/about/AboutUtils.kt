@@ -1,4 +1,4 @@
-package com.oneuixp.app.ui.screen.about
+package com.oneuialoha.app.ui.screen.about
 
 import android.text.Html
 import android.text.Spanned

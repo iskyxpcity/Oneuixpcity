@@ -1,4 +1,4 @@
-package com.oneuixp.app.ui.screen.home
+package com.oneuialoha.app.ui.screen.home
 
 import android.app.ActivityManager
 import android.content.Context
@@ -74,9 +74,9 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.material3.Icon as MaterialIcon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text as MaterialText
-import com.oneuixp.app.ui.LocalUiMode
-import com.oneuixp.app.ui.UiMode
-import com.oneuixp.app.ui.component.material.TonalCard
+import com.oneuialoha.app.ui.LocalUiMode
+import com.oneuialoha.app.ui.UiMode
+import com.oneuialoha.app.ui.component.material.TonalCard
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive

@@ -1,4 +1,4 @@
-package com.oneuixp.app.ui.screen.colorpalette
+package com.oneuialoha.app.ui.screen.colorpalette
 
 import android.annotation.SuppressLint
 import android.os.Build
@@ -65,13 +65,13 @@ import androidx.compose.ui.unit.sp
 import com.materialkolor.PaletteStyle
 import com.materialkolor.dynamiccolor.ColorSpec
 import com.materialkolor.rememberDynamicColorScheme
-import com.oneuixp.app.R
-import com.oneuixp.app.ui.component.bottombar.useNavigationRail
-import com.oneuixp.app.ui.component.miuix.ScaleDialog
-import com.oneuixp.app.ui.theme.LocalEnableBlur
-import com.oneuixp.app.ui.theme.keyColorOptions
-import com.oneuixp.app.ui.util.BlurredBar
-import com.oneuixp.app.ui.util.rememberBlurBackdrop
+import com.oneuialoha.app.R
+import com.oneuialoha.app.ui.component.bottombar.useNavigationRail
+import com.oneuialoha.app.ui.component.miuix.ScaleDialog
+import com.oneuialoha.app.ui.theme.LocalEnableBlur
+import com.oneuialoha.app.ui.theme.keyColorOptions
+import com.oneuialoha.app.ui.util.BlurredBar
+import com.oneuialoha.app.ui.util.rememberBlurBackdrop
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton

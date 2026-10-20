@@ -1,4 +1,4 @@
-package com.oneuixp.app.ui.screen.about
+package com.oneuialoha.app.ui.screen.about
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
@@ -26,16 +26,16 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.dropUnlessResumed
-import com.oneuixp.app.R
-import com.oneuixp.app.ui.LocalUiMode
-import com.oneuixp.app.ui.UiMode
-import com.oneuixp.app.ui.component.material.SegmentedColumn
-import com.oneuixp.app.ui.component.material.SegmentedListItem
-import com.oneuixp.app.ui.component.material.TopBarBackButton
-import com.oneuixp.app.ui.navigation3.LocalNavigator
-import com.oneuixp.app.ui.theme.LocalEnableBlur
-import com.oneuixp.app.ui.util.BlurredBar
-import com.oneuixp.app.ui.util.rememberBlurBackdrop
+import com.oneuialoha.app.R
+import com.oneuialoha.app.ui.LocalUiMode
+import com.oneuialoha.app.ui.UiMode
+import com.oneuialoha.app.ui.component.material.SegmentedColumn
+import com.oneuialoha.app.ui.component.material.SegmentedListItem
+import com.oneuialoha.app.ui.component.material.TopBarBackButton
+import com.oneuialoha.app.ui.navigation3.LocalNavigator
+import com.oneuialoha.app.ui.theme.LocalEnableBlur
+import com.oneuialoha.app.ui.util.BlurredBar
+import com.oneuialoha.app.ui.util.rememberBlurBackdrop
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.Card as MiuixCard
 import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon

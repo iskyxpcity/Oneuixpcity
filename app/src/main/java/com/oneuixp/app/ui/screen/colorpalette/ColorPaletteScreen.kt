@@ -1,4 +1,4 @@
-package com.oneuixp.app.ui.screen.colorpalette
+package com.oneuialoha.app.ui.screen.colorpalette
 
 import android.os.Build
 import androidx.activity.compose.LocalActivity
@@ -9,12 +9,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.materialkolor.PaletteStyle
 import com.materialkolor.dynamiccolor.ColorSpec
-import com.oneuixp.app.OneuiXPApplication
-import com.oneuixp.app.ui.LocalUiMode
-import com.oneuixp.app.ui.UiMode
-import com.oneuixp.app.ui.navigation3.LocalNavigator
-import com.oneuixp.app.ui.theme.ColorMode
-import com.oneuixp.app.ui.viewmodel.SettingsViewModel
+import com.oneuialoha.app.OneUIAlohaApplication
+import com.oneuialoha.app.ui.LocalUiMode
+import com.oneuialoha.app.ui.UiMode
+import com.oneuialoha.app.ui.navigation3.LocalNavigator
+import com.oneuialoha.app.ui.theme.ColorMode
+import com.oneuialoha.app.ui.viewmodel.SettingsViewModel
 
 @Composable
 fun ColorPaletteScreen() {
@@ -53,7 +53,7 @@ fun ColorPaletteScreen() {
         onSetEnablePredictiveBack = { enabled ->
             viewModel.setEnablePredictiveBack(enabled)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                OneuiXPApplication.applyEnableOnBackInvokedCallback(context, enabled)
+                OneUIAlohaApplication.applyEnableOnBackInvokedCallback(context, enabled)
                 activity?.recreate()
             }
         },

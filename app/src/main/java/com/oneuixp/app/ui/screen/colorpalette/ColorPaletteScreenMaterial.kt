@@ -1,4 +1,4 @@
-package com.oneuixp.app.ui.screen.colorpalette
+package com.oneuialoha.app.ui.screen.colorpalette
 
 import android.annotation.SuppressLint
 import android.os.Build
@@ -93,16 +93,16 @@ import androidx.compose.ui.unit.dp
 import com.materialkolor.PaletteStyle
 import com.materialkolor.dynamiccolor.ColorSpec
 import com.materialkolor.rememberDynamicColorScheme
-import com.oneuixp.app.R
-import com.oneuixp.app.ui.component.bottombar.useNavigationRail
-import com.oneuixp.app.ui.component.material.ExpressiveToggleButton
-import com.oneuixp.app.ui.component.material.SegmentedColumn
-import com.oneuixp.app.ui.component.material.SegmentedDropdownItem
-import com.oneuixp.app.ui.component.material.SegmentedSwitchItem
-import com.oneuixp.app.ui.component.material.TonalCard
-import com.oneuixp.app.ui.theme.ColorMode
-import com.oneuixp.app.ui.theme.rememberOneuiXPColorScheme
-import com.oneuixp.app.ui.theme.keyColorOptions
+import com.oneuialoha.app.R
+import com.oneuialoha.app.ui.component.bottombar.useNavigationRail
+import com.oneuialoha.app.ui.component.material.ExpressiveToggleButton
+import com.oneuialoha.app.ui.component.material.SegmentedColumn
+import com.oneuialoha.app.ui.component.material.SegmentedDropdownItem
+import com.oneuialoha.app.ui.component.material.SegmentedSwitchItem
+import com.oneuialoha.app.ui.component.material.TonalCard
+import com.oneuialoha.app.ui.theme.ColorMode
+import com.oneuialoha.app.ui.theme.rememberOneUIAlohaColorScheme
+import com.oneuialoha.app.ui.theme.keyColorOptions
 
 @Composable
 fun ColorPaletteScreenMaterial(
@@ -392,7 +392,7 @@ private fun ThemePreviewCard(
     val screenRatio = screenWidth / screenHeight
     val useRail = useNavigationRail()
 
-    val colorScheme = rememberOneuiXPColorScheme(
+    val colorScheme = rememberOneUIAlohaColorScheme(
         seedColor = if (keyColor == 0) Color.Unspecified else Color(keyColor),
         isDark = isDark,
         isAmoled = isAmoled,
@@ -519,7 +519,7 @@ private fun ColorButtonMaterial(
     onClick: () -> Unit
 ) {
     val haptic = LocalHapticFeedback.current
-    val colorScheme = rememberOneuiXPColorScheme(
+    val colorScheme = rememberOneUIAlohaColorScheme(
         seedColor = color,
         isDark = isDark,
         isAmoled = isAmoled,

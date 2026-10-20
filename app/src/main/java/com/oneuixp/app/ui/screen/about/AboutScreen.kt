@@ -1,14 +1,14 @@
-package com.oneuixp.app.ui.screen.about
+package com.oneuialoha.app.ui.screen.about
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.dropUnlessResumed
-import com.oneuixp.app.BuildConfig
-import com.oneuixp.app.R
-import com.oneuixp.app.ui.LocalUiMode
-import com.oneuixp.app.ui.UiMode
-import com.oneuixp.app.ui.navigation3.LocalNavigator
-import com.oneuixp.app.ui.navigation3.Route
+import com.oneuialoha.app.BuildConfig
+import com.oneuialoha.app.R
+import com.oneuialoha.app.ui.LocalUiMode
+import com.oneuialoha.app.ui.UiMode
+import com.oneuialoha.app.ui.navigation3.LocalNavigator
+import com.oneuialoha.app.ui.navigation3.Route
 
 @Composable
 fun AboutScreen() {
