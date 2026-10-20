@@ -4,15 +4,15 @@ from pathlib import Path
 import re
 import sys
 root = Path(__file__).resolve().parent
-migration_source = (root/'common/src/main/java/com/oneuixp/common/ProductionPreferenceMigration.kt').read_text()
-preference_source = (root/'common/src/main/java/com/oneuixp/common/Preference.kt').read_text()
-combo_runtime_source = (root/'hook/src/main/java/com/oneuixp/hook/systemui/StatusBarComboStyleOneRuntime.kt').read_text()
-network_speed_runtime_source = (root/'hook/src/main/java/com/oneuixp/hook/systemui/StatusBarNetworkSpeedRuntime.kt').read_text()
-independent_signal_runtime_source = (root/'hook/src/main/java/com/oneuixp/hook/systemui/StatusBarSignalIndependentRuntime.kt').read_text()
-feature_intro_source = (root/'app/src/main/java/com/oneuixp/app/ui/screen/about/FeatureIntroductionScreens.kt').read_text()
-feature_routes_source = (root/'app/src/main/java/com/oneuixp/app/ui/navigation3/Routes.kt').read_text()
-preference_bridge_source = (root/'app/src/main/java/com/oneuixp/app/oneuixp/OneuiXPPreferenceBridge.kt').read_text()
-main_activity_source = (root/'app/src/main/java/com/oneuixp/app/ui/MainActivity.kt').read_text()
+migration_source = (root/'common/src/main/java/com/oneuialoha/common/ProductionPreferenceMigration.kt').read_text()
+preference_source = (root/'common/src/main/java/com/oneuialoha/common/Preference.kt').read_text()
+combo_runtime_source = (root/'hook/src/main/java/com/oneuialoha/hook/systemui/StatusBarComboStyleOneRuntime.kt').read_text()
+network_speed_runtime_source = (root/'hook/src/main/java/com/oneuialoha/hook/systemui/StatusBarNetworkSpeedRuntime.kt').read_text()
+independent_signal_runtime_source = (root/'hook/src/main/java/com/oneuialoha/hook/systemui/StatusBarSignalIndependentRuntime.kt').read_text()
+feature_intro_source = (root/'app/src/main/java/com/oneuialoha/app/ui/screen/about/FeatureIntroductionScreens.kt').read_text()
+feature_routes_source = (root/'app/src/main/java/com/oneuialoha/app/ui/navigation3/Routes.kt').read_text()
+preference_bridge_source = (root/'app/src/main/java/com/oneuialoha/app/oneuixp/OneUIAlohaPreferenceBridge.kt').read_text()
+main_activity_source = (root/'app/src/main/java/com/oneuialoha/app/ui/MainActivity.kt').read_text()
 release_note_resources = [
     (root/'app/src/main/res/values/strings.xml').read_text(),
     (root/'app/src/main/res/values-zh-rCN/strings.xml').read_text(),
@@ -30,13 +30,13 @@ legacy_combo_markers = (
 )
 checks = {
  'Gradle wrapper': (root/'gradlew').is_file(),
- 'Original Miuix home': (root/'app/src/main/java/com/oneuixp/app/ui/screen/home/HomeMiuix.kt').is_file(),
- 'Original Miuix bottom bar': (root/'app/src/main/java/com/oneuixp/app/ui/component/bottombar/BottomBarMiuix.kt').is_file(),
+ 'Original Miuix home': (root/'app/src/main/java/com/oneuialoha/app/ui/screen/home/HomeMiuix.kt').is_file(),
+ 'Original Miuix bottom bar': (root/'app/src/main/java/com/oneuialoha/app/ui/component/bottombar/BottomBarMiuix.kt').is_file(),
  'Legacy native build disabled': 'externalNativeBuild' not in (root/'app/build.gradle.kts').read_text(),
- 'Original LSPosed hook': (root/'app/src/main/java/com/oneuixp/app/statusbar/SystemUiEntry.java').is_file(),
- 'Flux-style no heartbeat bridge': not (root/'app/src/main/java/com/oneuixp/app/statusbar/StatusBridge.java').exists() and '${applicationId}.statusbridge' not in (root/'app/src/main/AndroidManifest.xml').read_text() and 'startHeartbeat(' not in (root/'hook/src/main/java/com/oneuixp/hook/util/OneuiXPStatusReporter.kt').read_text(),
- 'OneuiXP application ID': 'com.oneuixp.app' in (root/'app/build.gradle.kts').read_text(),
- 'Preference bridge uses canonical OneUI XP symbol': 'object OneuiXPPreferenceBridge' in preference_bridge_source,
+ 'Original LSPosed hook': (root/'app/src/main/java/com/oneuialoha/app/statusbar/SystemUiEntry.java').is_file(),
+ 'Flux-style no heartbeat bridge': not (root/'app/src/main/java/com/oneuialoha/app/statusbar/StatusBridge.java').exists() and '${applicationId}.statusbridge' not in (root/'app/src/main/AndroidManifest.xml').read_text() and 'startHeartbeat(' not in (root/'hook/src/main/java/com/oneuialoha/hook/util/OneUIAlohaStatusReporter.kt').read_text(),
+ 'OneUIAloha application ID': 'com.oneuialoha.app' in (root/'app/build.gradle.kts').read_text(),
+ 'Preference bridge uses canonical OneUI Aloha symbol': 'object OneUIAlohaPreferenceBridge' in preference_bridge_source,
  'Feature store migration does not hard-code former namespace': (
      'candidate.name.endsWith("_features.json")' in preference_bridge_source
      and 'oneui" + "x"' not in preference_bridge_source
@@ -145,7 +145,7 @@ legacy_owner_token = _chars((115, 111, 99, 108, 101, 97, 114))
 legacy_project_segment = _chars((111, 110, 101, 117, 105, 120))
 old_namespace = "io.github." + legacy_owner_token
 old_token = "RELEASE_REPO_" + _chars((84, 79, 75, 69, 78))
-# Distinguish the old standalone project token from OneUI XP's accepted
+# Distinguish the old standalone project token from OneUI Aloha's accepted
 # casing variants, all of which add the project-specific trailing "p".
 old_brand = re.compile(
     r"(?i)(?<![a-z0-9])" + legacy_project_segment + r"(?!p)(?![a-z0-9])"
@@ -214,12 +214,12 @@ checks["No standalone former namespace/path segment outside license texts"] = no
 checks["No former project brand token outside license texts"] = not brand_hits
 checks["No former project naming token outside license texts"] = not legacy_name_hits
 checks["Former standalone project token remains detectable"] = bool(legacy_name_pattern.search(legacy_project_segment))
-checks["Supported OneUI XP casing variants are accepted"] = not any(
+checks["Supported OneUI Aloha casing variants are accepted"] = not any(
     old_brand.search(variant) or legacy_name_pattern.search(variant)
-    for variant in ("OneuiXP", "OneUIXP", "oneuixp", "OneuiXp")
+    for variant in ("OneUIAloha", "OneUIAloha", "oneuixp", "OneUIAloha")
 )
 checks["No cross-repository release token reference"] = not token_hits
-checks["No malformed duplicated OneUI XP symbols"] = not malformed_symbol_hits
+checks["No malformed duplicated OneUI Aloha symbols"] = not malformed_symbol_hits
 
 for name, ok in checks.items(): print(('PASS' if ok else 'FAIL') + ': ' + name)
 if not all(checks.values()):
