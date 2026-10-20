@@ -8,7 +8,7 @@ import android.os.UserManager
 import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelStoreOwner
 import com.oneuialoha.app.data.repository.SettingsRepositoryImpl
-import com.oneuialoha.app.oneuixp.OneUIAlohaPreferenceBridge
+import com.oneuialoha.app.oneuialoha.OneUIAlohaPreferenceBridge
 import com.oneuialoha.app.statusbar.LsposedFrameworkStatus
 import okhttp3.Cache
 import okhttp3.OkHttpClient
