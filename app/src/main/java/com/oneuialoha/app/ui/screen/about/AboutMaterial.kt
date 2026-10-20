@@ -68,7 +68,7 @@ fun AboutScreenMaterial(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 12.dp)
-                        .padding(vertical = 48.dp),
+                        .padding(top = 64.dp, bottom = 20.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Box(
