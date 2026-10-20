@@ -467,7 +467,7 @@ private fun UpdateDialogMaterial(
                     ExpressiveToggleButton(
                         checked = false,
                         onCheckedChange = { onDismiss() },
-                        modifier = Modifier.weight(if (info.isMigration) 0.8f else 1f).height(48.dp),
+                        modifier = Modifier.weight(if (info.isMigration) 0.55f else 1f).height(48.dp),
                         enabled = !isBusy,
                         shapes = ButtonGroupDefaults.connectedLeadingButtonShapes(),
                     ) {
@@ -476,7 +476,7 @@ private fun UpdateDialogMaterial(
                     ExpressiveToggleButton(
                         checked = true,
                         onCheckedChange = { onUpdate() },
-                        modifier = Modifier.weight(if (info.isMigration) 1.2f else 1f).height(48.dp),
+                        modifier = Modifier.weight(if (info.isMigration) 1.45f else 1f).height(48.dp),
                         enabled = !isBusy,
                         shapes = ButtonGroupDefaults.connectedTrailingButtonShapes(),
                     ) {
@@ -495,13 +495,16 @@ private fun UpdateDialogMaterial(
                                 )
                                 Spacer(Modifier.width(8.dp))
                             }
-                            Text(
-                                text = if (info.isMigration) {
-                                    stringResource(R.string.update_dialog_download, targetAppName)
-                                } else {
-                                    stringResource(R.string.update_dialog_install)
-                                },
-                            )
+                            if (info.isMigration) {
+                                Text(
+                                    text = stringResource(R.string.update_dialog_download, targetAppName),
+                                    fontSize = 12.sp,
+                                    maxLines = 1,
+                                    softWrap = false,
+                                )
+                            } else {
+                                Text(stringResource(R.string.update_dialog_install))
+                            }
                         }
                     }
                 }
@@ -725,7 +728,7 @@ private fun UpdateDialogMiuix(
                     onClick = onDismiss,
                     enabled = !isBusy,
                     modifier = Modifier
-                        .weight(if (info.isMigration) 0.8f else 1f)
+                        .weight(if (info.isMigration) 0.55f else 1f)
                         .height(48.dp)
                         .border(
                             width = 1.dp,
@@ -742,7 +745,7 @@ private fun UpdateDialogMiuix(
                 MiuixButton(
                     onClick = { if (!isBusy) onUpdate() },
                     enabled = !isBusy,
-                    modifier = Modifier.weight(if (info.isMigration) 1.2f else 1f).height(48.dp),
+                    modifier = Modifier.weight(if (info.isMigration) 1.45f else 1f).height(48.dp),
                     colors = MiuixButtonDefaults.buttonColorsPrimary(),
                 ) {
                     if (isBusy) {
@@ -756,13 +759,16 @@ private fun UpdateDialogMiuix(
                         )
                     }
                     if (!info.isMigration) Spacer(Modifier.width(8.dp))
-                    MiuixText(
-                        text = if (info.isMigration) {
-                            stringResource(R.string.update_dialog_download, targetAppName)
-                        } else {
-                            stringResource(R.string.update_dialog_install)
-                        },
-                    )
+                    if (info.isMigration) {
+                        MiuixText(
+                            text = stringResource(R.string.update_dialog_download, targetAppName),
+                            fontSize = 12.sp,
+                            maxLines = 1,
+                            softWrap = false,
+                        )
+                    } else {
+                        MiuixText(text = stringResource(R.string.update_dialog_install))
+                    }
                 }
             }
         }
