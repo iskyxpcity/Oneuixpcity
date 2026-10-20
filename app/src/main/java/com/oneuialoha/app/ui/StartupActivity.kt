@@ -192,7 +192,7 @@ private class NativeOneUIAlohaStartupView(
         // starting surface can hand off without a visible icon disappearance.
         val settle = easeOutBack(segment(timeline, 0f, 0.18f))
         val scale = 0.92f + 0.08f * settle
-        val size = dp(144f)
+        val size = dp(200f)
         val cx = width / 2f
         val cy = height * 0.37f
 
@@ -218,7 +218,7 @@ private class NativeOneUIAlohaStartupView(
         textPaint.alpha = (255f * progress).roundToInt().coerceIn(0, 255)
 
         val x = (width - textPaint.measureText(title)) / 2f
-        val y = height * 0.37f + dp(144f) / 2f + dp(61f) + dp(10f) * (1f - progress)
+        val y = height * 0.37f + dp(200f) / 2f + dp(61f) + dp(10f) * (1f - progress)
         canvas.drawText(title, x, y, textPaint)
     }
 
@@ -248,7 +248,7 @@ private class NativeOneUIAlohaStartupView(
         }
 
         var x = (width - totalWidth) / 2f
-        val baseline = height * 0.37f + dp(144f) / 2f + dp(113f)
+        val baseline = height * 0.37f + dp(200f) / 2f + dp(113f)
         var visibleIndex = 0
 
         title.forEachIndexed { index, c ->

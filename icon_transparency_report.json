@@ -1,0 +1,39 @@
+{
+  "source": "Logo001.jpg",
+  "source_dimensions": [
+    3684,
+    3704
+  ],
+  "output_foreground_dimensions": [
+    432,
+    432
+  ],
+  "checkerboard_sample_centers": [
+    199.04,
+    249.77
+  ],
+  "background_pixels_removed": 49469,
+  "foreground_transparent_percent": 26.51,
+  "foreground_bytes": 68494,
+  "foreground_alpha_extrema": [
+    0,
+    255
+  ],
+  "foreground_corner_alpha": [
+    0,
+    0,
+    0,
+    0
+  ],
+  "fallback_bytes": 65166,
+  "fallback_alpha_extrema": [
+    0,
+    255
+  ],
+  "fallback_corner_alpha": [
+    0,
+    0,
+    0,
+    0
+  ]
+}
