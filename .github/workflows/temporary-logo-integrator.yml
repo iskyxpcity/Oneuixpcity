@@ -112,7 +112,7 @@ jobs:
                    "painterResource(id = R.drawable.logo002)"),
               ],
               "app/src/main/java/com/oneuialoha/app/ui/screen/about/AboutMiuix.kt": [
-                  ("\.size(100.dp)", ".size(88.dp)"),
+                  (".size(100.dp)", ".size(88.dp)"),
                   ("painterResource(id = R.mipmap.ic_launcher)",
                    "painterResource(id = R.drawable.logo002)"),
               ],
