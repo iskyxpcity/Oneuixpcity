@@ -1,0 +1,59 @@
+name: Temporary OneUI artwork WebP size optimization
+on:
+  push:
+    branches:
+      - migration/oneui-aloha-full-identity-20261020
+permissions:
+  contents: write
+jobs:
+  optimize:
+    if: contains(github.event.head_commit.message, '[aloha-optimize-webp]')
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: migration/oneui-aloha-full-identity-20261020
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Recompress runtime images while preserving alpha
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check Pillow
+          python <<'PY'
+          from pathlib import Path
+          from PIL import Image
+          import hashlib
+
+          paths = [
+              Path("app/src/main/res/drawable-nodpi/ic_launcher_foreground_logo001.webp"),
+              Path("app/src/main/res/mipmap-nodpi/ic_launcher.webp"),
+              Path("app/src/main/res/drawable-nodpi/logo002.webp"),
+          ]
+          for path in paths:
+              if not path.is_file():
+                  raise SystemExit(f"Missing runtime image: {path}")
+              before = path.stat().st_size
+              image = Image.open(path).convert("RGBA")
+              alpha_before = image.getchannel("A").tobytes()
+              image.save(path, "WEBP", lossless=False, quality=90, method=6, alpha_quality=100)
+              check = Image.open(path).convert("RGBA")
+              if check.size != image.size:
+                  raise SystemExit(f"Unexpected image size change: {path}")
+              # WebP lossy preserves alpha independently with alpha_quality=100.
+              if check.getchannel("A").tobytes() != alpha_before:
+                  raise SystemExit(f"Alpha channel changed while recompressing: {path}")
+              after = path.stat().st_size
+              print(f"{path}: {before} -> {after} bytes ({(1-after/before)*100:.1f}% smaller), alpha unchanged")
+          PY
+      - name: Commit compressed resources and remove temporary workflow
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/temporary-oneui-artwork-optimize.yml
+          git add app/src/main/res/drawable-nodpi/ic_launcher_foreground_logo001.webp app/src/main/res/mipmap-nodpi/ic_launcher.webp app/src/main/res/drawable-nodpi/logo002.webp
+          git diff --cached --check
+          git commit -m "perf: compress regenerated OneUI artwork with alpha preserved [generated-aloha-webp]"
+          git push origin HEAD:refs/heads/migration/oneui-aloha-full-identity-20261020
