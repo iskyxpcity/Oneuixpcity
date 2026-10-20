@@ -17,7 +17,7 @@ jobs:
   review-upstream:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout OneUI XP
+      - name: Checkout OneUI Aloha
         uses: actions/checkout@v4
 
       - name: Compare tracked KernelSU UI and theme sources
