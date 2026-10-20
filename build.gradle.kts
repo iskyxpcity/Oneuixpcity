@@ -28,8 +28,8 @@ fun getGitDescribe(): String {
 }
 
 /**
- * OneuiXP uses an explicit small monotonic Android versionCode.
- * Increment oneuixpVersionCode in gradle.properties for every formal release.
+ * OneUIAloha uses an explicit small monotonic Android versionCode.
+ * Increment oneuiAlohaVersionCode in gradle.properties for every formal release.
  */
 fun getVersionCode(): Int {
     val explicit = (findProperty("oneuixpVersionCode") as? String)?.toIntOrNull()
@@ -46,6 +46,6 @@ fun getVersionCode(): Int {
 }
 
 fun getVersionName(): String {
-    return (findProperty("oneuixpVersionName") as? String)?.takeIf { it.isNotBlank() }
+    return (findProperty("oneuiAlohaVersionName") as? String)?.takeIf { it.isNotBlank() }
         ?: getGitDescribe()
 }
