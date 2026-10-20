@@ -1,4 +1,4 @@
-package com.oneuixp.app.ui.util
+package com.oneuialoha.app.ui.util
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalResources

@@ -1,8 +1,8 @@
-package com.oneuixp.app.ui.viewmodel
+package com.oneuialoha.app.ui.viewmodel
 
 import androidx.compose.runtime.Immutable
-import com.oneuixp.app.ui.UiMode
-import com.oneuixp.app.ui.theme.AppSettings
+import com.oneuialoha.app.ui.UiMode
+import com.oneuialoha.app.ui.theme.AppSettings
 
 @Immutable
 data class MainActivityUiState(

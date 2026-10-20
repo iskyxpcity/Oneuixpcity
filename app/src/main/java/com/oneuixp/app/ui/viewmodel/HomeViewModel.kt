@@ -1,4 +1,4 @@
-package com.oneuixp.app.ui.viewmodel
+package com.oneuialoha.app.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -9,15 +9,15 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import com.oneuixp.app.data.repository.SettingsRepository
-import com.oneuixp.app.data.repository.SettingsRepositoryImpl
-import com.oneuixp.app.oneuiXPApp
-import com.oneuixp.app.ui.screen.home.HomeUiState
-import com.oneuixp.app.ui.screen.home.getManagerVersion
-import com.oneuixp.app.ui.util.checkNewVersion
-import com.oneuixp.app.ui.util.update.LatestVersionInfo
+import com.oneuialoha.app.data.repository.SettingsRepository
+import com.oneuialoha.app.data.repository.SettingsRepositoryImpl
+import com.oneuialoha.app.oneUIAlohaApp
+import com.oneuialoha.app.ui.screen.home.HomeUiState
+import com.oneuialoha.app.ui.screen.home.getManagerVersion
+import com.oneuialoha.app.ui.util.checkNewVersion
+import com.oneuialoha.app.ui.util.update.LatestVersionInfo
 
-/** OneuiXP homepage state and self-update data. */
+/** OneUIAloha homepage state and self-update data. */
 class HomeViewModel(
     private val settingsRepo: SettingsRepository = SettingsRepositoryImpl(),
 ) : ViewModel() {
@@ -36,7 +36,7 @@ class HomeViewModel(
     }
 
     private fun buildState(): HomeUiState {
-        val managerVersion = getManagerVersion(oneuiXPApp)
+        val managerVersion = getManagerVersion(oneUIAlohaApp)
         return HomeUiState(
             checkUpdateEnabled = settingsRepo.checkUpdate,
             latestVersionInfo = LatestVersionInfo(),
