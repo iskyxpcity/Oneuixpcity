@@ -13,5 +13,5 @@
     <string name="save_log">Salvesta Logid</string>
     <string name="download_dialog_title">Sisesta pildi URL</string>
     <string name="download_dialog_msg">Täielik OTA-pilt või tehasepilt</string>
-    <string name="oneuixp_tools">Tools</string>
+    <string name="oneuialoha_tools">Tools</string>
 </resources>

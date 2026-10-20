@@ -15,5 +15,5 @@
     <string name="download_dialog_title">Ilagay ang URL ng imahe</string>
     <string name="download_dialog_msg">Buong OTA na imahe o factory na imahe</string>
     <string name="log_saved">Nai-save ang mga log</string>
-    <string name="oneuixp_tools">Tools</string>
+    <string name="oneuialoha_tools">Tools</string>
 </resources>
