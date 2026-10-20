@@ -1,10 +1,10 @@
-package com.oneuixp.app.statusbar
+package com.oneuialoha.app.statusbar
 
 /**
  * Flux-style self-process activation probe.
  *
  * The normal app implementation is always false. When LSPosed actually injects
- * OneuiXP's own process, the modern Xposed entry replaces this method with true.
+ * OneUIAloha's own process, the modern Xposed entry replaces this method with true.
  */
 object ModuleStatus {
     @JvmStatic

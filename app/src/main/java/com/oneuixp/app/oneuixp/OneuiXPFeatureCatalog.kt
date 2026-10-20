@@ -1,18 +1,18 @@
-package com.oneuixp.app.oneuixp
+package com.oneuialoha.app.oneuixp
 
 import android.os.Build
-import com.oneuixp.common.ONE_UI_VERSION
-import com.oneuixp.common.Package
-import com.oneuixp.common.PowerMenuAction
-import com.oneuixp.common.Preference
-import com.oneuixp.common.IgnoreUnknownKeysJson
+import com.oneuialoha.common.ONE_UI_VERSION
+import com.oneuialoha.common.Package
+import com.oneuialoha.common.PowerMenuAction
+import com.oneuialoha.common.Preference
+import com.oneuialoha.common.IgnoreUnknownKeysJson
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.jsonPrimitive
 
-enum class OneuiXPCategory(
+enum class OneUIAlohaCategory(
     val packageName: String,
     val fallbackTitle: String,
 ) {
@@ -39,7 +39,7 @@ enum class OneuiXPCategory(
     Weather(Package.WEATHER, "Weather"),
 }
 
-enum class OneuiXPSettingType {
+enum class OneUIAlohaSettingType {
     Toggle,
     IntValue,
     FloatValue,
@@ -49,35 +49,35 @@ enum class OneuiXPSettingType {
     PowerAction,
 }
 
-sealed interface OneuiXPVisibility {
-    data object Always : OneuiXPVisibility
-    data class Bool(val path: String, val expected: Boolean = true) : OneuiXPVisibility
-    data class IntEquals(val path: String, val value: Int) : OneuiXPVisibility
-    data class StringContains(val path: String, val token: String) : OneuiXPVisibility
-    data class All(val rules: List<OneuiXPVisibility>) : OneuiXPVisibility
-    data class Not(val rule: OneuiXPVisibility) : OneuiXPVisibility
-    data class AndroidAtLeast(val sdk: Int) : OneuiXPVisibility
-    data class AndroidAtMost(val sdk: Int) : OneuiXPVisibility
-    data class AndroidEquals(val sdk: Int) : OneuiXPVisibility
-    data class OneUiAtLeast(val version: Int) : OneuiXPVisibility
-    data class OneUiBelow(val version: Int) : OneuiXPVisibility
-    data class ModelPrefix(val prefix: String) : OneuiXPVisibility
+sealed interface OneUIAlohaVisibility {
+    data object Always : OneUIAlohaVisibility
+    data class Bool(val path: String, val expected: Boolean = true) : OneUIAlohaVisibility
+    data class IntEquals(val path: String, val value: Int) : OneUIAlohaVisibility
+    data class StringContains(val path: String, val token: String) : OneUIAlohaVisibility
+    data class All(val rules: List<OneUIAlohaVisibility>) : OneUIAlohaVisibility
+    data class Not(val rule: OneUIAlohaVisibility) : OneUIAlohaVisibility
+    data class AndroidAtLeast(val sdk: Int) : OneUIAlohaVisibility
+    data class AndroidAtMost(val sdk: Int) : OneUIAlohaVisibility
+    data class AndroidEquals(val sdk: Int) : OneUIAlohaVisibility
+    data class OneUiAtLeast(val version: Int) : OneUIAlohaVisibility
+    data class OneUiBelow(val version: Int) : OneUIAlohaVisibility
+    data class ModelPrefix(val prefix: String) : OneUIAlohaVisibility
 }
 
-data class OneuiXPChoice(
+data class OneUIAlohaChoice(
     val value: String,
     val label: String,
 )
 
-data class OneuiXPSettingSpec(
+data class OneUIAlohaSettingSpec(
     val path: String,
-    val type: OneuiXPSettingType,
+    val type: OneUIAlohaSettingType,
     val section: String,
     val titleOverride: String? = null,
     val summary: String? = null,
-    val choices: List<OneuiXPChoice> = emptyList(),
+    val choices: List<OneUIAlohaChoice> = emptyList(),
     val powerActionName: String? = null,
-    val visibility: OneuiXPVisibility = OneuiXPVisibility.Always,
+    val visibility: OneUIAlohaVisibility = OneUIAlohaVisibility.Always,
 ) {
     val title: String
         get() = titleOverride ?: humanizeSettingName(path.substringAfterLast('.'))
@@ -100,28 +100,28 @@ private fun humanizeSettingName(raw: String): String {
 }
 
 private fun toggles(section: String, vararg paths: String) =
-    paths.map { OneuiXPSettingSpec(it, OneuiXPSettingType.Toggle, section) }
+    paths.map { OneUIAlohaSettingSpec(it, OneUIAlohaSettingType.Toggle, section) }
 
 private fun ints(section: String, vararg paths: String) =
-    paths.map { OneuiXPSettingSpec(it, OneuiXPSettingType.IntValue, section) }
+    paths.map { OneUIAlohaSettingSpec(it, OneUIAlohaSettingType.IntValue, section) }
 
 private fun floats(section: String, vararg paths: String) =
-    paths.map { OneuiXPSettingSpec(it, OneuiXPSettingType.FloatValue, section) }
+    paths.map { OneUIAlohaSettingSpec(it, OneUIAlohaSettingType.FloatValue, section) }
 
 private fun texts(section: String, vararg paths: String) =
-    paths.map { OneuiXPSettingSpec(it, OneuiXPSettingType.TextValue, section) }
+    paths.map { OneUIAlohaSettingSpec(it, OneUIAlohaSettingType.TextValue, section) }
 
 private fun choiceInt(
     section: String,
     path: String,
     title: String? = null,
     vararg choices: Pair<Int, String>,
-) = OneuiXPSettingSpec(
+) = OneUIAlohaSettingSpec(
     path = path,
-    type = OneuiXPSettingType.ChoiceInt,
+    type = OneUIAlohaSettingType.ChoiceInt,
     section = section,
     titleOverride = title,
-    choices = choices.map { OneuiXPChoice(it.first.toString(), it.second) },
+    choices = choices.map { OneUIAlohaChoice(it.first.toString(), it.second) },
 )
 
 private fun choiceText(
@@ -129,23 +129,23 @@ private fun choiceText(
     path: String,
     title: String? = null,
     vararg choices: Pair<String, String>,
-) = OneuiXPSettingSpec(
+) = OneUIAlohaSettingSpec(
     path = path,
-    type = OneuiXPSettingType.ChoiceText,
+    type = OneUIAlohaSettingType.ChoiceText,
     section = section,
     titleOverride = title,
-    choices = choices.map { OneuiXPChoice(it.first, it.second) },
+    choices = choices.map { OneUIAlohaChoice(it.first, it.second) },
 )
 
-private fun powerAction(name: String, label: String) = OneuiXPSettingSpec(
+private fun powerAction(name: String, label: String) = OneUIAlohaSettingSpec(
     path = "systemUI.other.powerMenuActions.$name",
-    type = OneuiXPSettingType.PowerAction,
+    type = OneUIAlohaSettingType.PowerAction,
     section = "Power menu actions",
     titleOverride = label,
     powerActionName = name,
 )
 
-object OneuiXPFeatureCatalog {
+object OneUIAlohaFeatureCatalog {
     // Keep the feature counter on the exact same preference semantics as the
     // Features UI. Defaults must be encoded, otherwise default-enabled switches
     // disappear from JSON and are incorrectly treated as disabled.
@@ -323,43 +323,43 @@ object OneuiXPFeatureCatalog {
         "camera.disableCameraTemperatureCheck",
     )
 
-    private val byCategory: Map<OneuiXPCategory, List<OneuiXPSettingSpec>> = mapOf(
-        OneuiXPCategory.Android to android,
-        OneuiXPCategory.SystemUI to (
+    private val byCategory: Map<OneUIAlohaCategory, List<OneUIAlohaSettingSpec>> = mapOf(
+        OneUIAlohaCategory.Android to android,
+        OneUIAlohaCategory.SystemUI to (
             systemUiStatusBar + systemUiQs + systemUiAod + systemUiNotification + systemUiOther
         ),
-        OneuiXPCategory.Settings to settings,
-        OneuiXPCategory.Call to call,
-        OneuiXPCategory.Camera to camera,
-        OneuiXPCategory.Browser to toggles(
+        OneUIAlohaCategory.Settings to settings,
+        OneUIAlohaCategory.Call to call,
+        OneUIAlohaCategory.Camera to camera,
+        OneUIAlohaCategory.Browser to toggles(
             "Samsung Internet",
             "other.showMorePlaybackSpeeds",
             "other.redirectCustomTab",
             "other.spoofBrowserCountryCodeToUS",
         ),
-        OneuiXPCategory.Calendar to toggles(
+        OneUIAlohaCategory.Calendar to toggles(
             "Calendar",
             "other.enableChineseHolidayDisplay",
         ),
-        OneuiXPCategory.DualApp to toggles(
+        OneUIAlohaCategory.DualApp to toggles(
             "Dual Messenger",
             "other.makeAllUserAppsAvailable",
         ),
-        OneuiXPCategory.Gallery to toggles(
+        OneUIAlohaCategory.Gallery to toggles(
             "Gallery",
             "other.supportAllGallerySettings",
             "other.supportSharedAlbumsInHide",
             "other.hideVideoEditorStudio",
         ),
-        OneuiXPCategory.GalaxyStore to toggles(
+        OneUIAlohaCategory.GalaxyStore to toggles(
             "Galaxy Store",
             "other.blockGalaxyStoreAds",
         ),
-        OneuiXPCategory.HealthMonitor to toggles(
+        OneUIAlohaCategory.HealthMonitor to toggles(
             "Samsung Health Monitor",
             "other.bypassHealthMonitorCountryCheck",
         ),
-        OneuiXPCategory.Launcher to toggles(
+        OneUIAlohaCategory.Launcher to toggles(
             "One UI Home",
             "other.showMemoryUsageInRecents",
             "other.recentsGridThreeRows",
@@ -367,35 +367,35 @@ object OneuiXPFeatureCatalog {
             "other.hideAppsSearchBar",
             "other.removeShortcutBadge",
         ),
-        OneuiXPCategory.Messaging to toggles(
+        OneUIAlohaCategory.Messaging to toggles(
             "Messages",
             "other.supportBlockMessage",
         ),
-        OneuiXPCategory.Notes to toggles(
+        OneUIAlohaCategory.Notes to toggles(
             "Samsung Notes",
             "other.supportAllNotesFeatures",
         ),
-        OneuiXPCategory.PhotoRetouching to toggles(
+        OneUIAlohaCategory.PhotoRetouching to toggles(
             "Photo Editor",
             "other.noAIWatermark",
         ),
-        OneuiXPCategory.SketchBook to toggles(
+        OneUIAlohaCategory.SketchBook to toggles(
             "SketchBook",
             "other.noAIWatermark",
         ),
-        OneuiXPCategory.SPen to toggles(
+        OneUIAlohaCategory.SPen to toggles(
             "S Pen",
             "other.useSPenGoogleTranslate",
         ),
-        OneuiXPCategory.ThemeCenter to toggles(
+        OneUIAlohaCategory.ThemeCenter to toggles(
             "Galaxy Themes",
             "other.setThemeTrialNeverExpired",
         ),
-        OneuiXPCategory.Video to toggles(
+        OneUIAlohaCategory.Video to toggles(
             "Samsung Video",
             "other.showMorePlaybackSpeeds",
         ),
-        OneuiXPCategory.WatchManager to (
+        OneUIAlohaCategory.WatchManager to (
             toggles(
                 "Galaxy Wearable",
                 "other.bypassWatchPairingRegionCheck",
@@ -411,115 +411,115 @@ object OneuiXPFeatureCatalog {
                 )
             )
         ),
-        OneuiXPCategory.Weather to toggles(
+        OneUIAlohaCategory.Weather to toggles(
             "Weather",
             "other.setWeatherProviderCN",
         ),
     )
 
-    private val visibilityByPath: Map<String, OneuiXPVisibility> = mapOf(
-        "android.maxNeverKilledAppNum" to OneuiXPVisibility.Bool("android.modifyMaxNeverKilledAppNum"),
-        "android.supportAppJumpBlock" to OneuiXPVisibility.AndroidAtLeast(35),
+    private val visibilityByPath: Map<String, OneUIAlohaVisibility> = mapOf(
+        "android.maxNeverKilledAppNum" to OneUIAlohaVisibility.Bool("android.modifyMaxNeverKilledAppNum"),
+        "android.supportAppJumpBlock" to OneUIAlohaVisibility.AndroidAtLeast(35),
 
         "systemUI.statusBar.statusBarLeftPaddingDp" to
-            OneuiXPVisibility.Bool("systemUI.statusBar.modifyStatusBarLeftPadding"),
+            OneUIAlohaVisibility.Bool("systemUI.statusBar.modifyStatusBarLeftPadding"),
         "systemUI.statusBar.statusBarRightPaddingDp" to
-            OneuiXPVisibility.Bool("systemUI.statusBar.modifyStatusBarRightPadding"),
+            OneUIAlohaVisibility.Bool("systemUI.statusBar.modifyStatusBarRightPadding"),
         "systemUI.statusBar.statusBarTopPaddingDp" to
-            OneuiXPVisibility.Bool("systemUI.statusBar.modifyStatusBarTopPadding"),
+            OneUIAlohaVisibility.Bool("systemUI.statusBar.modifyStatusBarTopPadding"),
         "systemUI.statusBar.statusBarBottomPaddingDp" to
-            OneuiXPVisibility.Bool("systemUI.statusBar.modifyStatusBarBottomPadding"),
+            OneUIAlohaVisibility.Bool("systemUI.statusBar.modifyStatusBarBottomPadding"),
         "systemUI.statusBar.batteryIconWidthScale" to
-            OneuiXPVisibility.Bool("systemUI.statusBar.setBatteryIconWidthScale"),
+            OneUIAlohaVisibility.Bool("systemUI.statusBar.setBatteryIconWidthScale"),
         "systemUI.statusBar.batteryIconHeightScale" to
-            OneuiXPVisibility.Bool("systemUI.statusBar.setBatteryIconHeightScale"),
+            OneUIAlohaVisibility.Bool("systemUI.statusBar.setBatteryIconHeightScale"),
         "systemUI.statusBar.hideBatteryPercentageSign" to
-            OneuiXPVisibility.AndroidAtMost(34),
+            OneUIAlohaVisibility.AndroidAtMost(34),
         "systemUI.statusBar.addBatteryLevelText" to
-            OneuiXPVisibility.OneUiAtLeast(70000),
+            OneUIAlohaVisibility.OneUiAtLeast(70000),
         "systemUI.statusBar.hideBatteryLevelTextPercentageSign" to
-            OneuiXPVisibility.All(
+            OneUIAlohaVisibility.All(
                 listOf(
-                    OneuiXPVisibility.OneUiAtLeast(70000),
-                    OneuiXPVisibility.Bool("systemUI.statusBar.addBatteryLevelText"),
+                    OneUIAlohaVisibility.OneUiAtLeast(70000),
+                    OneUIAlohaVisibility.Bool("systemUI.statusBar.addBatteryLevelText"),
                 )
             ),
         "systemUI.statusBar.hideBatteryLevelTextChargingIcon" to
-            OneuiXPVisibility.All(
+            OneUIAlohaVisibility.All(
                 listOf(
-                    OneuiXPVisibility.OneUiAtLeast(70000),
-                    OneuiXPVisibility.Bool("systemUI.statusBar.addBatteryLevelText"),
+                    OneUIAlohaVisibility.OneUiAtLeast(70000),
+                    OneUIAlohaVisibility.Bool("systemUI.statusBar.addBatteryLevelText"),
                 )
             ),
         "systemUI.statusBar.statusBarClockFormat" to
-            OneuiXPVisibility.Bool("systemUI.statusBar.setStatusBarClockFormat"),
+            OneUIAlohaVisibility.Bool("systemUI.statusBar.setStatusBarClockFormat"),
         "systemUI.statusBar.statusBarDoubleLineClockSize" to
-            OneuiXPVisibility.All(
+            OneUIAlohaVisibility.All(
                 listOf(
-                    OneuiXPVisibility.Bool("systemUI.statusBar.setStatusBarClockFormat"),
-                    OneuiXPVisibility.StringContains("systemUI.statusBar.statusBarClockFormat", "\n"),
-                    OneuiXPVisibility.Not(OneuiXPVisibility.ModelPrefix("SM-F966")),
+                    OneUIAlohaVisibility.Bool("systemUI.statusBar.setStatusBarClockFormat"),
+                    OneUIAlohaVisibility.StringContains("systemUI.statusBar.statusBarClockFormat", "\n"),
+                    OneUIAlohaVisibility.Not(OneUIAlohaVisibility.ModelPrefix("SM-F966")),
                 )
             ),
         "systemUI.statusBar.useFold7CustomDoubleLineClockScale" to
-            OneuiXPVisibility.All(
+            OneUIAlohaVisibility.All(
                 listOf(
-                    OneuiXPVisibility.Bool("systemUI.statusBar.setStatusBarClockFormat"),
-                    OneuiXPVisibility.StringContains("systemUI.statusBar.statusBarClockFormat", "\n"),
-                    OneuiXPVisibility.ModelPrefix("SM-F966"),
+                    OneUIAlohaVisibility.Bool("systemUI.statusBar.setStatusBarClockFormat"),
+                    OneUIAlohaVisibility.StringContains("systemUI.statusBar.statusBarClockFormat", "\n"),
+                    OneUIAlohaVisibility.ModelPrefix("SM-F966"),
                 )
             ),
         "systemUI.statusBar.fold7DoubleLineClockTimeScale" to
-            OneuiXPVisibility.All(
+            OneUIAlohaVisibility.All(
                 listOf(
-                    OneuiXPVisibility.Bool("systemUI.statusBar.setStatusBarClockFormat"),
-                    OneuiXPVisibility.StringContains("systemUI.statusBar.statusBarClockFormat", "\n"),
-                    OneuiXPVisibility.ModelPrefix("SM-F966"),
-                    OneuiXPVisibility.Bool("systemUI.statusBar.useFold7CustomDoubleLineClockScale"),
+                    OneUIAlohaVisibility.Bool("systemUI.statusBar.setStatusBarClockFormat"),
+                    OneUIAlohaVisibility.StringContains("systemUI.statusBar.statusBarClockFormat", "\n"),
+                    OneUIAlohaVisibility.ModelPrefix("SM-F966"),
+                    OneUIAlohaVisibility.Bool("systemUI.statusBar.useFold7CustomDoubleLineClockScale"),
                 )
             ),
         "systemUI.statusBar.fold7DoubleLineClockDateScale" to
-            OneuiXPVisibility.All(
+            OneUIAlohaVisibility.All(
                 listOf(
-                    OneuiXPVisibility.Bool("systemUI.statusBar.setStatusBarClockFormat"),
-                    OneuiXPVisibility.StringContains("systemUI.statusBar.statusBarClockFormat", "\n"),
-                    OneuiXPVisibility.ModelPrefix("SM-F966"),
-                    OneuiXPVisibility.Bool("systemUI.statusBar.useFold7CustomDoubleLineClockScale"),
+                    OneUIAlohaVisibility.Bool("systemUI.statusBar.setStatusBarClockFormat"),
+                    OneUIAlohaVisibility.StringContains("systemUI.statusBar.statusBarClockFormat", "\n"),
+                    OneUIAlohaVisibility.ModelPrefix("SM-F966"),
+                    OneUIAlohaVisibility.Bool("systemUI.statusBar.useFold7CustomDoubleLineClockScale"),
                 )
             ),
         "systemUI.statusBar.modifyDoubleLineClockGap" to
-            OneuiXPVisibility.All(
+            OneUIAlohaVisibility.All(
                 listOf(
-                    OneuiXPVisibility.Bool("systemUI.statusBar.setStatusBarClockFormat"),
-                    OneuiXPVisibility.StringContains("systemUI.statusBar.statusBarClockFormat", "\n"),
+                    OneUIAlohaVisibility.Bool("systemUI.statusBar.setStatusBarClockFormat"),
+                    OneUIAlohaVisibility.StringContains("systemUI.statusBar.statusBarClockFormat", "\n"),
                 )
             ),
         "systemUI.statusBar.doubleLineClockGapDp" to
-            OneuiXPVisibility.All(
+            OneUIAlohaVisibility.All(
                 listOf(
-                    OneuiXPVisibility.Bool("systemUI.statusBar.setStatusBarClockFormat"),
-                    OneuiXPVisibility.StringContains("systemUI.statusBar.statusBarClockFormat", "\n"),
-                    OneuiXPVisibility.Bool("systemUI.statusBar.modifyDoubleLineClockGap"),
+                    OneUIAlohaVisibility.Bool("systemUI.statusBar.setStatusBarClockFormat"),
+                    OneUIAlohaVisibility.StringContains("systemUI.statusBar.statusBarClockFormat", "\n"),
+                    OneUIAlohaVisibility.Bool("systemUI.statusBar.modifyDoubleLineClockGap"),
                 )
             ),
         "systemUI.statusBar.setStatusBarClockTextScale" to
-            OneuiXPVisibility.Not(
-                OneuiXPVisibility.All(
+            OneUIAlohaVisibility.Not(
+                OneUIAlohaVisibility.All(
                     listOf(
-                        OneuiXPVisibility.Bool("systemUI.statusBar.setStatusBarClockFormat"),
-                        OneuiXPVisibility.StringContains("systemUI.statusBar.statusBarClockFormat", "\n"),
+                        OneUIAlohaVisibility.Bool("systemUI.statusBar.setStatusBarClockFormat"),
+                        OneUIAlohaVisibility.StringContains("systemUI.statusBar.statusBarClockFormat", "\n"),
                     )
                 )
             ),
         "systemUI.statusBar.statusBarClockTextScale" to
-            OneuiXPVisibility.All(
+            OneUIAlohaVisibility.All(
                 listOf(
-                    OneuiXPVisibility.Bool("systemUI.statusBar.setStatusBarClockTextScale"),
-                    OneuiXPVisibility.Not(
-                        OneuiXPVisibility.All(
+                    OneUIAlohaVisibility.Bool("systemUI.statusBar.setStatusBarClockTextScale"),
+                    OneUIAlohaVisibility.Not(
+                        OneUIAlohaVisibility.All(
                             listOf(
-                                OneuiXPVisibility.Bool("systemUI.statusBar.setStatusBarClockFormat"),
-                                OneuiXPVisibility.StringContains(
+                                OneUIAlohaVisibility.Bool("systemUI.statusBar.setStatusBarClockFormat"),
+                                OneUIAlohaVisibility.StringContains(
                                     "systemUI.statusBar.statusBarClockFormat",
                                     "\n",
                                 ),
@@ -529,86 +529,86 @@ object OneuiXPFeatureCatalog {
                 )
             ),
         "systemUI.statusBar.physicalEsimAdapterSimSlot" to
-            OneuiXPVisibility.Bool("systemUI.statusBar.physicalEsimAdapterWorkaround"),
+            OneUIAlohaVisibility.Bool("systemUI.statusBar.physicalEsimAdapterWorkaround"),
         "systemUI.statusBar.statusBarMaxNotificationIcons" to
-            OneuiXPVisibility.Bool("systemUI.statusBar.modifyStatusBarMaxNotificationIcons"),
+            OneUIAlohaVisibility.Bool("systemUI.statusBar.modifyStatusBarMaxNotificationIcons"),
         "systemUI.statusBar.customCarrierName" to
-            OneuiXPVisibility.Bool("systemUI.statusBar.setCustomCarrierName"),
+            OneUIAlohaVisibility.Bool("systemUI.statusBar.setCustomCarrierName"),
 
-        "systemUI.qs.hideDeviceControlQsTile" to OneuiXPVisibility.AndroidEquals(34),
-        "systemUI.qs.hideSmartViewQsTile" to OneuiXPVisibility.AndroidEquals(34),
-        "systemUI.qs.turnOn5gQsTile" to OneuiXPVisibility.AndroidEquals(34),
+        "systemUI.qs.hideDeviceControlQsTile" to OneUIAlohaVisibility.AndroidEquals(34),
+        "systemUI.qs.hideSmartViewQsTile" to OneUIAlohaVisibility.AndroidEquals(34),
+        "systemUI.qs.turnOn5gQsTile" to OneUIAlohaVisibility.AndroidEquals(34),
         "systemUI.qs.hideQsBarMediaPlayer" to
-            OneuiXPVisibility.All(
+            OneUIAlohaVisibility.All(
                 listOf(
-                    OneuiXPVisibility.AndroidAtLeast(35),
-                    OneuiXPVisibility.OneUiBelow(80500),
+                    OneUIAlohaVisibility.AndroidAtLeast(35),
+                    OneUIAlohaVisibility.OneUiBelow(80500),
                 )
             ),
         "systemUI.qs.hideQsBarNearbyDevicesAndDeviceControl" to
-            OneuiXPVisibility.All(
+            OneUIAlohaVisibility.All(
                 listOf(
-                    OneuiXPVisibility.AndroidAtLeast(35),
-                    OneuiXPVisibility.OneUiBelow(80500),
+                    OneUIAlohaVisibility.AndroidAtLeast(35),
+                    OneUIAlohaVisibility.OneUiBelow(80500),
                 )
             ),
-        "systemUI.qs.hideQsBarSecurityFooter" to OneuiXPVisibility.AndroidAtLeast(35),
-        "systemUI.qs.hideQsBarDataUsage" to OneuiXPVisibility.AndroidAtLeast(35),
+        "systemUI.qs.hideQsBarSecurityFooter" to OneUIAlohaVisibility.AndroidAtLeast(35),
+        "systemUI.qs.hideQsBarDataUsage" to OneUIAlohaVisibility.AndroidAtLeast(35),
         "systemUI.qs.hideQsBarSmartViewAndModes" to
-            OneuiXPVisibility.All(
+            OneUIAlohaVisibility.All(
                 listOf(
-                    OneuiXPVisibility.AndroidAtLeast(35),
-                    OneuiXPVisibility.OneUiBelow(80500),
+                    OneUIAlohaVisibility.AndroidAtLeast(35),
+                    OneUIAlohaVisibility.OneUiBelow(80500),
                 )
             ),
         "systemUI.qs.alwaysExpandQsTileChunk" to
-            OneuiXPVisibility.All(
+            OneUIAlohaVisibility.All(
                 listOf(
-                    OneuiXPVisibility.AndroidAtLeast(35),
-                    OneuiXPVisibility.OneUiBelow(80500),
+                    OneUIAlohaVisibility.AndroidAtLeast(35),
+                    OneUIAlohaVisibility.OneUiBelow(80500),
                 )
             ),
         "systemUI.qs.alwaysShowTimeDateOnQs" to
-            OneuiXPVisibility.All(
+            OneUIAlohaVisibility.All(
                 listOf(
-                    OneuiXPVisibility.AndroidAtLeast(35),
-                    OneuiXPVisibility.OneUiBelow(80500),
+                    OneUIAlohaVisibility.AndroidAtLeast(35),
+                    OneUIAlohaVisibility.OneUiBelow(80500),
                 )
             ),
         "systemUI.qs.addBrightnessProgressToQsBar" to
-            OneuiXPVisibility.All(
+            OneUIAlohaVisibility.All(
                 listOf(
-                    OneuiXPVisibility.AndroidAtLeast(35),
-                    OneuiXPVisibility.OneUiBelow(80500),
+                    OneUIAlohaVisibility.AndroidAtLeast(35),
+                    OneUIAlohaVisibility.OneUiBelow(80500),
                 )
             ),
         "systemUI.qs.addVolumeProgressToQsBar" to
-            OneuiXPVisibility.All(
+            OneUIAlohaVisibility.All(
                 listOf(
-                    OneuiXPVisibility.AndroidAtLeast(35),
-                    OneuiXPVisibility.OneUiBelow(80500),
+                    OneUIAlohaVisibility.AndroidAtLeast(35),
+                    OneUIAlohaVisibility.OneUiBelow(80500),
                 )
             ),
         "systemUI.qs.showTraditionalChineseDateOnQS" to
-            OneuiXPVisibility.AndroidAtLeast(35),
+            OneUIAlohaVisibility.AndroidAtLeast(35),
         "systemUI.qs.modifyQSClockTextSize" to
-            OneuiXPVisibility.AndroidAtLeast(35),
+            OneUIAlohaVisibility.AndroidAtLeast(35),
         "systemUI.qs.qsClockTextSize" to
-            OneuiXPVisibility.All(
+            OneUIAlohaVisibility.All(
                 listOf(
-                    OneuiXPVisibility.AndroidAtLeast(35),
-                    OneuiXPVisibility.Bool("systemUI.qs.modifyQSClockTextSize"),
+                    OneUIAlohaVisibility.AndroidAtLeast(35),
+                    OneUIAlohaVisibility.Bool("systemUI.qs.modifyQSClockTextSize"),
                 )
             ),
-        "systemUI.aod.hideAODStatusBar" to OneuiXPVisibility.AndroidAtLeast(35),
-        "systemUI.aod.aodLockSupportLunar" to OneuiXPVisibility.AndroidAtLeast(35),
+        "systemUI.aod.hideAODStatusBar" to OneUIAlohaVisibility.AndroidAtLeast(35),
+        "systemUI.aod.aodLockSupportLunar" to OneUIAlohaVisibility.AndroidAtLeast(35),
 
         "systemUI.notification.hideOngoingActivityMediaPackages" to
-            OneuiXPVisibility.Bool("systemUI.notification.hideOngoingActivityMedia"),
+            OneUIAlohaVisibility.Bool("systemUI.notification.hideOngoingActivityMedia"),
 
-        "other.showMemoryUsageInRecents" to OneuiXPVisibility.AndroidAtLeast(35),
+        "other.showMemoryUsageInRecents" to OneUIAlohaVisibility.AndroidAtLeast(35),
         "other.supplementChinaWearOsGms" to
-            OneuiXPVisibility.IntEquals("other.watchPairingConnectionMode", 1),
+            OneUIAlohaVisibility.IntEquals("other.watchPairingConnectionMode", 1),
     )
 
     private fun preferenceValue(preference: Preference, path: String): String {
@@ -623,46 +623,46 @@ object OneuiXPFeatureCatalog {
     }
 
     private fun visibilityMatches(
-        rule: OneuiXPVisibility,
+        rule: OneUIAlohaVisibility,
         preference: Preference,
     ): Boolean = when (rule) {
-        OneuiXPVisibility.Always -> true
-        is OneuiXPVisibility.Bool ->
+        OneUIAlohaVisibility.Always -> true
+        is OneUIAlohaVisibility.Bool ->
             preferenceValue(preference, rule.path).toBooleanStrictOrNull() == rule.expected
-        is OneuiXPVisibility.IntEquals ->
+        is OneUIAlohaVisibility.IntEquals ->
             preferenceValue(preference, rule.path).toIntOrNull() == rule.value
-        is OneuiXPVisibility.StringContains ->
+        is OneUIAlohaVisibility.StringContains ->
             preferenceValue(preference, rule.path).contains(rule.token)
-        is OneuiXPVisibility.All ->
+        is OneUIAlohaVisibility.All ->
             rule.rules.all { visibilityMatches(it, preference) }
-        is OneuiXPVisibility.Not ->
+        is OneUIAlohaVisibility.Not ->
             !visibilityMatches(rule.rule, preference)
-        is OneuiXPVisibility.AndroidAtLeast -> Build.VERSION.SDK_INT >= rule.sdk
-        is OneuiXPVisibility.AndroidAtMost -> Build.VERSION.SDK_INT <= rule.sdk
-        is OneuiXPVisibility.AndroidEquals -> Build.VERSION.SDK_INT == rule.sdk
-        is OneuiXPVisibility.OneUiAtLeast -> ONE_UI_VERSION >= rule.version
-        is OneuiXPVisibility.OneUiBelow -> ONE_UI_VERSION < rule.version
-        is OneuiXPVisibility.ModelPrefix ->
+        is OneUIAlohaVisibility.AndroidAtLeast -> Build.VERSION.SDK_INT >= rule.sdk
+        is OneUIAlohaVisibility.AndroidAtMost -> Build.VERSION.SDK_INT <= rule.sdk
+        is OneUIAlohaVisibility.AndroidEquals -> Build.VERSION.SDK_INT == rule.sdk
+        is OneUIAlohaVisibility.OneUiAtLeast -> ONE_UI_VERSION >= rule.version
+        is OneUIAlohaVisibility.OneUiBelow -> ONE_UI_VERSION < rule.version
+        is OneUIAlohaVisibility.ModelPrefix ->
             Build.MODEL.startsWith(rule.prefix, ignoreCase = true)
     }
 
     /**
-     * Number of enabled OneuiXP feature injections represented by the feature catalog.
+     * Number of enabled OneUIAloha feature injections represented by the feature catalog.
      *
      * Count category entries rather than unique preference paths: a shared feature that
      * injects into two target apps is two actual injection targets. Child value fields and
      * power-menu action rows are not counted separately.
      */
     fun enabledInjectionCount(preference: Preference): Int {
-        val catalogCount = OneuiXPCategory.entries.sumOf { category ->
+        val catalogCount = OneUIAlohaCategory.entries.sumOf { category ->
             settings(category).count { spec ->
                 if (!visibilityMatches(spec.visibility, preference)) {
                     false
                 } else {
                     when (spec.type) {
-                        OneuiXPSettingType.Toggle ->
+                        OneUIAlohaSettingType.Toggle ->
                             preferenceValue(preference, spec.path).toBooleanStrictOrNull() == true
-                        OneuiXPSettingType.ChoiceInt ->
+                        OneUIAlohaSettingType.ChoiceInt ->
                             spec.path == "other.watchPairingConnectionMode" &&
                                 preferenceValue(preference, spec.path).toIntOrNull() != 0
                         else -> false
@@ -671,8 +671,8 @@ object OneuiXPFeatureCatalog {
             }
         }
 
-        // Include OneuiXP's newer standalone runtime features alongside the legacy
-        // OneuiXP catalog. Count only each feature's master enable switch; appearance,
+        // Include OneUIAloha's newer standalone runtime features alongside the legacy
+        // OneUIAloha catalog. Count only each feature's master enable switch; appearance,
         // size, color, spacing, and per-element settings are not separate injections.
         val statusBar = preference.systemUI.statusBar
         val runtimeFeatureCount = listOf(
@@ -688,12 +688,12 @@ object OneuiXPFeatureCatalog {
         return catalogCount + runtimeFeatureCount
     }
 
-    fun settings(category: OneuiXPCategory): List<OneuiXPSettingSpec> =
+    fun settings(category: OneUIAlohaCategory): List<OneUIAlohaSettingSpec> =
         byCategory[category].orEmpty().map { spec ->
             val rule = when {
-                spec.type == OneuiXPSettingType.PowerAction ->
-                    OneuiXPVisibility.Bool("systemUI.other.customPowerMenu")
-                else -> visibilityByPath[spec.path] ?: OneuiXPVisibility.Always
+                spec.type == OneUIAlohaSettingType.PowerAction ->
+                    OneUIAlohaVisibility.Bool("systemUI.other.customPowerMenu")
+                else -> visibilityByPath[spec.path] ?: OneUIAlohaVisibility.Always
             }
             spec.copy(visibility = rule)
         }

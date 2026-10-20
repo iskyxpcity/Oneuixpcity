@@ -1,16 +1,16 @@
-package com.oneuixp.app.data.repository
+package com.oneuialoha.app.data.repository
 
 import android.content.Context
 import androidx.core.content.edit
 import com.materialkolor.PaletteStyle
 import com.materialkolor.dynamiccolor.ColorSpec
-import com.oneuixp.app.oneuiXPApp
-import com.oneuixp.app.ui.UiMode
+import com.oneuialoha.app.oneUIAlohaApp
+import com.oneuialoha.app.ui.UiMode
 
-/** Persist only the OneuiXP theme/navigation configuration. */
+/** Persist only the OneUIAloha theme/navigation configuration. */
 class SettingsRepositoryImpl : SettingsRepository {
     private val prefs by lazy {
-        oneuiXPApp.getSharedPreferences("settings", Context.MODE_PRIVATE)
+        oneUIAlohaApp.getSharedPreferences("settings", Context.MODE_PRIVATE)
     }
 
     override var uiMode: String

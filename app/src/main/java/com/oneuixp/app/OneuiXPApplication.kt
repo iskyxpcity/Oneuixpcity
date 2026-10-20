@@ -1,4 +1,4 @@
-package com.oneuixp.app
+package com.oneuialoha.app
 
 import android.app.Application
 import android.content.Context
@@ -7,17 +7,17 @@ import android.os.Build
 import android.os.UserManager
 import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelStoreOwner
-import com.oneuixp.app.data.repository.SettingsRepositoryImpl
-import com.oneuixp.app.oneuixp.OneuiXPPreferenceBridge
-import com.oneuixp.app.statusbar.LsposedFrameworkStatus
+import com.oneuialoha.app.data.repository.SettingsRepositoryImpl
+import com.oneuialoha.app.oneuixp.OneUIAlohaPreferenceBridge
+import com.oneuialoha.app.statusbar.LsposedFrameworkStatus
 import okhttp3.Cache
 import okhttp3.OkHttpClient
 import java.util.Locale
 import org.lsposed.hiddenapibypass.HiddenApiBypass
 
-lateinit var oneuiXPApp: OneuiXPApplication
+lateinit var oneUIAlohaApp: OneUIAlohaApplication
 
-class OneuiXPApplication : Application(), ViewModelStoreOwner {
+class OneUIAlohaApplication : Application(), ViewModelStoreOwner {
 
     companion object {
         fun setEnableOnBackInvokedCallback(appInfo: ApplicationInfo, enable: Boolean): Boolean =
@@ -37,7 +37,7 @@ class OneuiXPApplication : Application(), ViewModelStoreOwner {
                 HiddenApiBypass.addHiddenApiExemptions("Landroid/content/pm/ApplicationInfo;")
             }
             val contextApplied = setEnableOnBackInvokedCallback(context.applicationInfo, enable)
-            val appInfo = (context.applicationContext as? OneuiXPApplication)?.applicationInfo
+            val appInfo = (context.applicationContext as? OneUIAlohaApplication)?.applicationInfo
             val applicationApplied = appInfo?.let { setEnableOnBackInvokedCallback(it, enable) } ?: false
             return contextApplied || applicationApplied
         }
@@ -51,15 +51,15 @@ class OneuiXPApplication : Application(), ViewModelStoreOwner {
 
     override fun onCreate() {
         super.onCreate()
-        oneuiXPApp = this
+        oneUIAlohaApp = this
         LsposedFrameworkStatus.initialize()
-        OneuiXPPreferenceBridge.initialize(this)
+        OneUIAlohaPreferenceBridge.initialize(this)
 
         if (!isUserUnlocked()) {
             return
         }
 
-        OneuiXPPreferenceBridge.ensureSynchronized(this)
+        OneUIAlohaPreferenceBridge.ensureSynchronized(this)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             applyEnableOnBackInvokedCallback(this, SettingsRepositoryImpl().enablePredictiveBack)
@@ -70,7 +70,7 @@ class OneuiXPApplication : Application(), ViewModelStoreOwner {
                 .addInterceptor { block ->
                     block.proceed(
                         block.request().newBuilder()
-                            .header("User-Agent", "OneuiXP/${BuildConfig.VERSION_CODE}")
+                            .header("User-Agent", "OneUIAloha/${BuildConfig.VERSION_CODE}")
                             .header("Accept-Language", Locale.getDefault().toLanguageTag()).build()
                     )
                 }.build()

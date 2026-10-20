@@ -1,11 +1,11 @@
-package com.oneuixp.app.oneuixp
+package com.oneuialoha.app.oneuixp
 
 /**
- * UI ordering/grouping rules for the OneuiXP feature catalog. Keep them
+ * UI ordering/grouping rules for the OneUIAloha feature catalog. Keep them
  * separate from persisted Preference data so layout organization can evolve
  * independently of the data model.
  */
-object OneuiXPLayoutRules {
+object OneUIAlohaLayoutRules {
     private val systemUiOrder = listOf(
         "systemUI.statusBar.modifyStatusBarLeftPadding",
         "systemUI.statusBar.statusBarLeftPaddingDp",
@@ -78,8 +78,8 @@ object OneuiXPLayoutRules {
     private val systemUiOrderIndex =
         systemUiOrder.withIndex().associate { it.value to it.index }
 
-    private val categoryOrder: Map<OneuiXPCategory, List<String>> = mapOf(
-        OneuiXPCategory.Android to listOf(
+    private val categoryOrder: Map<OneUIAlohaCategory, List<String>> = mapOf(
+        OneUIAlohaCategory.Android to listOf(
             "android.disablePinVerifyPer72h",
             "android.modifyMaxNeverKilledAppNum",
             "android.maxNeverKilledAppNum",
@@ -90,7 +90,7 @@ object OneuiXPLayoutRules {
             "android.disableScreenWakeOnPowerUnplugged",
             "android.disableWritingToolkitGlobally",
         ),
-        OneuiXPCategory.Settings to listOf(
+        OneUIAlohaCategory.Settings to listOf(
             "settings.showForcePeakRefreshRatePreference",
             "settings.supportOutdoorMode",
             "settings.showMoreBatteryInfo",
@@ -100,73 +100,73 @@ object OneuiXPLayoutRules {
             "settings.supportAutoPowerOnOff",
             "settings.spoofPhoneStatusAsOfficial",
         ),
-        OneuiXPCategory.Call to listOf(
+        OneUIAlohaCategory.Call to listOf(
             "call.supportVoiceCallRecording",
             "call.preferRecordingButton",
             "call.showGeocodedLocationInRecentCall",
             "call.isOpStyleCHN",
             "call.supportCallAndTextOnOtherDevices",
         ),
-        OneuiXPCategory.Camera to listOf(
+        OneUIAlohaCategory.Camera to listOf(
             "camera.supportAllCameraMenu",
             "camera.disableCameraTemperatureCheck",
         ),
-        OneuiXPCategory.Browser to listOf(
+        OneUIAlohaCategory.Browser to listOf(
             "other.showMorePlaybackSpeeds",
             "other.redirectCustomTab",
             "other.spoofBrowserCountryCodeToUS",
         ),
-        OneuiXPCategory.Calendar to listOf(
+        OneUIAlohaCategory.Calendar to listOf(
             "other.enableChineseHolidayDisplay",
         ),
-        OneuiXPCategory.DualApp to listOf(
+        OneUIAlohaCategory.DualApp to listOf(
             "other.makeAllUserAppsAvailable",
         ),
-        OneuiXPCategory.Gallery to listOf(
+        OneUIAlohaCategory.Gallery to listOf(
             "other.supportAllGallerySettings",
             "other.supportSharedAlbumsInHide",
             "other.hideVideoEditorStudio",
         ),
-        OneuiXPCategory.GalaxyStore to listOf(
+        OneUIAlohaCategory.GalaxyStore to listOf(
             "other.blockGalaxyStoreAds",
         ),
-        OneuiXPCategory.HealthMonitor to listOf(
+        OneUIAlohaCategory.HealthMonitor to listOf(
             "other.bypassHealthMonitorCountryCheck",
         ),
-        OneuiXPCategory.Launcher to listOf(
+        OneUIAlohaCategory.Launcher to listOf(
             "other.showMemoryUsageInRecents",
             "other.recentsGridThreeRows",
             "other.hideRecentsCloseAllButton",
             "other.hideAppsSearchBar",
             "other.removeShortcutBadge",
         ),
-        OneuiXPCategory.Messaging to listOf(
+        OneUIAlohaCategory.Messaging to listOf(
             "other.supportBlockMessage",
         ),
-        OneuiXPCategory.Notes to listOf(
+        OneUIAlohaCategory.Notes to listOf(
             "other.supportAllNotesFeatures",
         ),
-        OneuiXPCategory.PhotoRetouching to listOf(
+        OneUIAlohaCategory.PhotoRetouching to listOf(
             "other.noAIWatermark",
         ),
-        OneuiXPCategory.SketchBook to listOf(
+        OneUIAlohaCategory.SketchBook to listOf(
             "other.noAIWatermark",
         ),
-        OneuiXPCategory.SPen to listOf(
+        OneUIAlohaCategory.SPen to listOf(
             "other.useSPenGoogleTranslate",
         ),
-        OneuiXPCategory.ThemeCenter to listOf(
+        OneUIAlohaCategory.ThemeCenter to listOf(
             "other.setThemeTrialNeverExpired",
         ),
-        OneuiXPCategory.Video to listOf(
+        OneUIAlohaCategory.Video to listOf(
             "other.showMorePlaybackSpeeds",
         ),
-        OneuiXPCategory.WatchManager to listOf(
+        OneUIAlohaCategory.WatchManager to listOf(
             "other.watchPairingConnectionMode",
             "other.bypassWatchPairingRegionCheck",
             "other.supplementChinaWearOsGms",
         ),
-        OneuiXPCategory.Weather to listOf(
+        OneUIAlohaCategory.Weather to listOf(
             "other.setWeatherProviderCN",
         ),
     )
@@ -246,19 +246,19 @@ object OneuiXPLayoutRules {
         directChildrenByParent[path]?.isNotEmpty() == true
 
     fun ordered(
-        category: OneuiXPCategory,
-        settings: List<OneuiXPSettingSpec>,
-    ): List<OneuiXPSettingSpec> {
-        if (category == OneuiXPCategory.SystemUI) {
+        category: OneUIAlohaCategory,
+        settings: List<OneUIAlohaSettingSpec>,
+    ): List<OneUIAlohaSettingSpec> {
+        if (category == OneUIAlohaCategory.SystemUI) {
             return settings.sortedWith(
-                compareBy<OneuiXPSettingSpec> {
+                compareBy<OneUIAlohaSettingSpec> {
                     when {
-                        it.type == OneuiXPSettingType.PowerAction ->
+                        it.type == OneUIAlohaSettingType.PowerAction ->
                             systemUiOrderIndex["systemUI.other.customPowerMenu"] ?: Int.MAX_VALUE
                         else -> systemUiOrderIndex[it.path] ?: Int.MAX_VALUE
                     }
                 }.thenBy {
-                    if (it.type == OneuiXPSettingType.PowerAction) {
+                    if (it.type == OneUIAlohaSettingType.PowerAction) {
                         1 + powerActionOrder(it.powerActionName)
                     } else {
                         0
@@ -272,25 +272,25 @@ object OneuiXPLayoutRules {
         return settings.sortedBy { index[it.path] ?: Int.MAX_VALUE }
     }
 
-    fun groupKey(spec: OneuiXPSettingSpec): String =
+    fun groupKey(spec: OneUIAlohaSettingSpec): String =
         when {
-            spec.type == OneuiXPSettingType.PowerAction ->
+            spec.type == OneUIAlohaSettingType.PowerAction ->
                 "systemUI.other.customPowerMenu"
             else -> parentByPath[spec.path] ?: spec.path
         }
 
     fun section(
-        category: OneuiXPCategory,
-        spec: OneuiXPSettingSpec,
+        category: OneUIAlohaCategory,
+        spec: OneUIAlohaSettingSpec,
     ): String {
-        if (category != OneuiXPCategory.SystemUI) return spec.section
+        if (category != OneUIAlohaCategory.SystemUI) return spec.section
         return when {
             spec.path.startsWith("systemUI.statusBar.") -> "Status bar"
             spec.path.startsWith("systemUI.qs.") -> "Quick settings"
             spec.path.startsWith("systemUI.aod.") -> "Always On Display"
             spec.path.startsWith("systemUI.notification.") -> "Notifications"
             spec.path.startsWith("systemUI.other.") ||
-                spec.type == OneuiXPSettingType.PowerAction -> "Other System UI"
+                spec.type == OneUIAlohaSettingType.PowerAction -> "Other System UI"
             else -> spec.section
         }
     }

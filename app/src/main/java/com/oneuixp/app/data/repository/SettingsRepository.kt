@@ -1,6 +1,6 @@
-package com.oneuixp.app.data.repository
+package com.oneuialoha.app.data.repository
 
-/** OneuiXP appearance, navigation and self-update preferences. */
+/** OneUIAloha appearance, navigation and self-update preferences. */
 interface SettingsRepository {
     var uiMode: String
     var checkUpdate: Boolean

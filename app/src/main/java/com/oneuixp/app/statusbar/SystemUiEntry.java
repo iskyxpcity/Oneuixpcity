@@ -1,4 +1,4 @@
-package com.oneuixp.app.statusbar;
+package com.oneuialoha.app.statusbar;
 
 import android.app.Application;
 import android.content.Context;
@@ -112,7 +112,7 @@ public final class SystemUiEntry implements IXposedHookLoadPackage {
         synchronized (SystemUiEntry.class) {
             if (reportedThisProcess) return;
             try {
-                Uri uri = Uri.parse("content://" + com.oneuixp.app.BuildConfig.APPLICATION_ID + ".statusbridge");
+                Uri uri = Uri.parse("content://" + com.oneuialoha.app.BuildConfig.APPLICATION_ID + ".statusbridge");
                 android.os.Bundle report = new android.os.Bundle();
                 report.putString("probe", probeDetails(loader));
                 android.os.Bundle response = context.getContentResolver().call(uri, "loaded", null, report);

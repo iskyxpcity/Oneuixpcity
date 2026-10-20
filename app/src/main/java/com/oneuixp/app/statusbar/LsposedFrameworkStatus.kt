@@ -1,4 +1,4 @@
-package com.oneuixp.app.statusbar
+package com.oneuialoha.app.statusbar
 
 import android.util.Log
 import io.github.libxposed.service.XposedService
@@ -30,7 +30,7 @@ data class LsposedFrameworkSnapshot(
  * - no periodic polling loop
  */
 object LsposedFrameworkStatus {
-    private const val TAG = "OneuiXP-LSPosed"
+    private const val TAG = "OneUIAloha-LSPosed"
     private val initialized = AtomicBoolean(false)
 
     @Volatile private var service: XposedService? = null
@@ -47,7 +47,7 @@ object LsposedFrameworkStatus {
                 notifyServiceObservers(boundService)
                 Thread(
                     { refreshScope() },
-                    "OneuiXP-LSPosed-bind",
+                    "OneUIAloha-LSPosed-bind",
                 ).apply {
                     isDaemon = true
                     start()
