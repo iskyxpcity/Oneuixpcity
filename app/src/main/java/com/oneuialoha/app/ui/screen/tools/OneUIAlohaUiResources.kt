@@ -16,7 +16,7 @@ import com.oneuialoha.app.oneuialoha.OneUIAlohaSettingType
 @Composable
 internal fun oneUIAlohaCategoryTitle(category: OneUIAlohaCategory): String {
     val context = LocalContext.current
-    val key = "oneuixp_category_${category.name.lowercase()}"
+    val key = "oneuialoha_category_${category.name.lowercase()}"
     return remember(category, context.resources.configuration.locales) {
         val packageManager = context.packageManager
         val installedLabel = runCatching {
@@ -36,33 +36,33 @@ internal fun oneUIAlohaCategoryTitle(category: OneUIAlohaCategory): String {
 internal fun oneUIAlohaSectionTitle(section: String): String {
     val context = LocalContext.current
     val key = when (section) {
-        "Android" -> "oneuixp_section_android"
-        "Status bar" -> "oneuixp_section_status_bar"
-        "Status bar values" -> "oneuixp_section_status_bar_values"
-        "Quick settings" -> "oneuixp_section_quick_settings"
-        "Always On Display" -> "oneuixp_section_aod"
-        "Notifications" -> "oneuixp_section_notifications"
-        "Other System UI" -> "oneuixp_section_other_system_ui"
-        "Power menu actions" -> "oneuixp_section_power_menu_actions"
-        "Settings" -> "oneuixp_section_settings"
-        "Call" -> "oneuixp_section_call"
-        "Camera" -> "oneuixp_section_camera"
-        "Samsung Internet" -> "oneuixp_section_browser"
-        "Calendar" -> "oneuixp_section_calendar"
-        "Dual Messenger" -> "oneuixp_section_dual_app"
-        "Gallery" -> "oneuixp_section_gallery"
-        "Galaxy Store" -> "oneuixp_section_galaxy_store"
-        "Samsung Health Monitor" -> "oneuixp_section_health_monitor"
-        "One UI Home" -> "oneuixp_section_launcher"
-        "Messages" -> "oneuixp_section_messaging"
-        "Samsung Notes" -> "oneuixp_section_notes"
-        "Photo Editor" -> "oneuixp_section_photo_editor"
-        "SketchBook" -> "oneuixp_section_sketchbook"
-        "S Pen" -> "oneuixp_section_spen"
-        "Galaxy Themes" -> "oneuixp_section_theme_center"
-        "Samsung Video" -> "oneuixp_section_video"
-        "Galaxy Wearable" -> "oneuixp_section_watch_manager"
-        "Weather" -> "oneuixp_section_weather"
+        "Android" -> "oneuialoha_section_android"
+        "Status bar" -> "oneuialoha_section_status_bar"
+        "Status bar values" -> "oneuialoha_section_status_bar_values"
+        "Quick settings" -> "oneuialoha_section_quick_settings"
+        "Always On Display" -> "oneuialoha_section_aod"
+        "Notifications" -> "oneuialoha_section_notifications"
+        "Other System UI" -> "oneuialoha_section_other_system_ui"
+        "Power menu actions" -> "oneuialoha_section_power_menu_actions"
+        "Settings" -> "oneuialoha_section_settings"
+        "Call" -> "oneuialoha_section_call"
+        "Camera" -> "oneuialoha_section_camera"
+        "Samsung Internet" -> "oneuialoha_section_browser"
+        "Calendar" -> "oneuialoha_section_calendar"
+        "Dual Messenger" -> "oneuialoha_section_dual_app"
+        "Gallery" -> "oneuialoha_section_gallery"
+        "Galaxy Store" -> "oneuialoha_section_galaxy_store"
+        "Samsung Health Monitor" -> "oneuialoha_section_health_monitor"
+        "One UI Home" -> "oneuialoha_section_launcher"
+        "Messages" -> "oneuialoha_section_messaging"
+        "Samsung Notes" -> "oneuialoha_section_notes"
+        "Photo Editor" -> "oneuialoha_section_photo_editor"
+        "SketchBook" -> "oneuialoha_section_sketchbook"
+        "S Pen" -> "oneuialoha_section_spen"
+        "Galaxy Themes" -> "oneuialoha_section_theme_center"
+        "Samsung Video" -> "oneuialoha_section_video"
+        "Galaxy Wearable" -> "oneuialoha_section_watch_manager"
+        "Weather" -> "oneuialoha_section_weather"
         else -> null
     }
     return remember(section, context.resources.configuration.locales) {
@@ -75,7 +75,7 @@ internal fun oneUIAlohaSettingTitle(spec: OneUIAlohaSettingSpec): String {
     val context = LocalContext.current
     return remember(spec.path, spec.powerActionName, context.resources.configuration.locales) {
         if (spec.type == OneUIAlohaSettingType.PowerAction) {
-            val powerKey = spec.powerActionName?.let { "oneuixp_power_$it" }
+            val powerKey = spec.powerActionName?.let { "oneuialoha_power_$it" }
             powerKey?.let { resolveString(context, listOf(it)) } ?: spec.title
         } else {
             val raw = spec.path.substringAfterLast('.')
@@ -84,9 +84,9 @@ internal fun oneUIAlohaSettingTitle(spec: OneUIAlohaSettingSpec): String {
             resolveString(
                 context,
                 listOf(
-                    "oneuixp_${sourceKey}_title",
-                    "oneuixp_${raw}_title",
-                    "oneuixp_${snake}_title",
+                    "oneuialoha_${sourceKey}_title",
+                    "oneuialoha_${raw}_title",
+                    "oneuialoha_${snake}_title",
                 ),
             ) ?: spec.title
         }
@@ -104,9 +104,9 @@ internal fun oneUIAlohaSettingSummary(spec: OneUIAlohaSettingSpec): String? {
         resolveString(
             context,
             listOf(
-                "oneuixp_${sourceKey}_summary",
-                "oneuixp_${raw}_summary",
-                "oneuixp_${snake}_summary",
+                "oneuialoha_${sourceKey}_summary",
+                "oneuialoha_${raw}_summary",
+                "oneuialoha_${snake}_summary",
             ),
         )?.takeUnless { it.contains('%') }
     }
@@ -119,25 +119,25 @@ internal fun oneUIAlohaChoiceLabels(spec: OneUIAlohaSettingSpec): List<String> {
         spec.choices.map { choice ->
             val key = when (spec.path) {
                 "systemUI.statusBar.statusBarDoubleLineClockSize" -> when (choice.value) {
-                    "small" -> "oneuixp_statusBarDoubleLineClockSize_small"
-                    "compact" -> "oneuixp_statusBarDoubleLineClockSize_compact"
-                    "standard" -> "oneuixp_statusBarDoubleLineClockSize_standard"
-                    "large" -> "oneuixp_statusBarDoubleLineClockSize_large"
-                    "extra_large" -> "oneuixp_statusBarDoubleLineClockSize_extraLarge"
+                    "small" -> "oneuialoha_statusBarDoubleLineClockSize_small"
+                    "compact" -> "oneuialoha_statusBarDoubleLineClockSize_compact"
+                    "standard" -> "oneuialoha_statusBarDoubleLineClockSize_standard"
+                    "large" -> "oneuialoha_statusBarDoubleLineClockSize_large"
+                    "extra_large" -> "oneuialoha_statusBarDoubleLineClockSize_extraLarge"
                     else -> null
                 }
 
                 "systemUI.statusBar.physicalEsimAdapterSimSlot" -> when (choice.value) {
-                    "0" -> "oneuixp_sim_slot_1"
-                    "1" -> "oneuixp_sim_slot_2"
-                    "2" -> "oneuixp_sim_slot_both"
+                    "0" -> "oneuialoha_sim_slot_1"
+                    "1" -> "oneuialoha_sim_slot_2"
+                    "2" -> "oneuialoha_sim_slot_both"
                     else -> null
                 }
 
                 "other.watchPairingConnectionMode" -> when (choice.value) {
-                    "0" -> "oneuixp_watchPairing_mode_none"
-                    "1" -> "oneuixp_watchPairing_mode_wearos_cn"
-                    "2" -> "oneuixp_watchPairing_mode_wearos_global"
+                    "0" -> "oneuialoha_watchPairing_mode_none"
+                    "1" -> "oneuialoha_watchPairing_mode_wearos_cn"
+                    "2" -> "oneuialoha_watchPairing_mode_wearos_global"
                     else -> null
                 }
 
