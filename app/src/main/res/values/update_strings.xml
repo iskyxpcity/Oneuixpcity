@@ -11,8 +11,7 @@
     <string name="update_dialog_migration_app_name">OneUI Aloha</string>
     <string name="update_dialog_migration_notice">OneUI Aloha uses a new Android package name, so it will install as a separate app instead of replacing OneUI XP. App data will not transfer automatically. Keep OneUI XP installed until you have confirmed that OneUI Aloha works, then remove the old app if desired.</string>
     <string name="update_dialog_migration_section">Migration notes</string>
-    <string name="update_dialog_download_address">Official download address:</string>
-    <string name="update_dialog_download">Download OneUI Aloha</string>
+    <string name="update_dialog_download">Download %1$s</string>
     <string name="update_dialog_migration_url_invalid">The migration download URL is not a verified official release asset.</string>
     <string name="update_dialog_downloading">Downloading and verifying the APK…</string>
     <string name="update_dialog_permission_needed">Allow %1$s to install unknown apps in system settings, then return and tap Update now.</string>
