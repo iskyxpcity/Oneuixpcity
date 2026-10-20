@@ -189,7 +189,6 @@ jobs:
           grep -Fq 'dp(73f)' app/src/main/java/com/oneuialoha/app/ui/StartupActivity.kt
           grep -Fq '.padding(top = 64.dp, bottom = 20.dp)' app/src/main/java/com/oneuialoha/app/ui/screen/about/AboutMaterial.kt
           grep -Fq 'Modifier.padding(top = 4.dp, bottom = 5.dp)' app/src/main/java/com/oneuialoha/app/ui/screen/about/AboutMiuix.kt
-          test ! -e .github/workflows/temporary-oneui-icon-layout.yml
       - name: Commit generated icon and layout
         env:
           GH_TOKEN: ${{ github.token }}
