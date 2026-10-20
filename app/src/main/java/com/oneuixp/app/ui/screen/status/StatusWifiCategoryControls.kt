@@ -1,4 +1,4 @@
-package com.oneuixp.app.ui.screen.status
+package com.oneuialoha.app.ui.screen.status
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,12 +15,12 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
-import com.oneuixp.app.R
-import com.oneuixp.common.Preference
-import com.oneuixp.mod.ui.component.OneuiXPInfoItem
-import com.oneuixp.mod.ui.component.OneuiXPSlider
-import com.oneuixp.mod.ui.component.SelectItem
-import com.oneuixp.mod.ui.component.SwitchItem
+import com.oneuialoha.app.R
+import com.oneuialoha.common.Preference
+import com.oneuialoha.mod.ui.component.OneUIAlohaInfoItem
+import com.oneuialoha.mod.ui.component.OneUIAlohaSlider
+import com.oneuialoha.mod.ui.component.SelectItem
+import com.oneuialoha.mod.ui.component.SwitchItem
 import kotlin.math.roundToInt
 
 private val WIFI_PRESET_KEYS = listOf("default", "compact", "wide")
@@ -255,7 +255,7 @@ fun StatusWifiCategoryControls(
                         repeat(wifiRuntime.arcCount.coerceIn(3, 4)) { index ->
                             val state = arcStates[index]
                             add {
-                                OneuiXPInfoItem(
+                                OneUIAlohaInfoItem(
                                     icon = wifiIcon,
                                     title = stringResource(id = R.string.status_wifi_arc_title, index + 1),
                                     summary = stringResource(id = R.string.status_wifi_arc_title_summary),
@@ -432,13 +432,13 @@ private fun WifiSliderSetting(
     onFinished: () -> Unit,
 ) {
     Column {
-        OneuiXPInfoItem(
+        OneUIAlohaInfoItem(
             icon = icon,
             title = title,
             summary = summary,
         )
         StatusThemeChildItem {
-            OneuiXPSlider(
+            OneUIAlohaSlider(
                 value = value,
                 onValueChange = onValueChange,
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),

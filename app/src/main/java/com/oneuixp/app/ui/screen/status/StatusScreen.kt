@@ -1,4 +1,4 @@
-package com.oneuixp.app.ui.screen.status
+package com.oneuialoha.app.ui.screen.status
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -46,19 +46,19 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import com.oneuixp.app.R
-import com.oneuixp.app.ui.LocalUiMode
-import com.oneuixp.app.ui.UiMode
-import com.oneuixp.app.ui.component.configtransfer.ConfigTransferPopup
-import com.oneuixp.app.ui.component.rebootlistpopup.RebootListPopup
-import com.oneuixp.app.ui.component.material.SegmentedColumn
-import com.oneuixp.app.ui.component.material.SegmentedListItem
-import com.oneuixp.app.ui.navigation3.Navigator
-import com.oneuixp.app.ui.navigation3.Route
-import com.oneuixp.app.ui.screen.home.LocalLsposedHomeStatus
-import com.oneuixp.app.ui.theme.LocalEnableBlur
-import com.oneuixp.app.ui.util.BlurredBar
-import com.oneuixp.app.ui.util.rememberBlurBackdrop
+import com.oneuialoha.app.R
+import com.oneuialoha.app.ui.LocalUiMode
+import com.oneuialoha.app.ui.UiMode
+import com.oneuialoha.app.ui.component.configtransfer.ConfigTransferPopup
+import com.oneuialoha.app.ui.component.rebootlistpopup.RebootListPopup
+import com.oneuialoha.app.ui.component.material.SegmentedColumn
+import com.oneuialoha.app.ui.component.material.SegmentedListItem
+import com.oneuialoha.app.ui.navigation3.Navigator
+import com.oneuialoha.app.ui.navigation3.Route
+import com.oneuialoha.app.ui.screen.home.LocalLsposedHomeStatus
+import com.oneuialoha.app.ui.theme.LocalEnableBlur
+import com.oneuialoha.app.ui.util.BlurredBar
+import com.oneuialoha.app.ui.util.rememberBlurBackdrop
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
@@ -121,8 +121,8 @@ private fun StatusPagerMiuix(
             BlurredBar(backdrop) {
                 TopAppBar(
                     color = barColor,
-                    title = stringResource(R.string.oneuixp_status),
-                    largeTitle = stringResource(R.string.oneuixp_status),
+                    title = stringResource(R.string.oneuialoha_status),
+                    largeTitle = stringResource(R.string.oneuialoha_status),
                     navigationIcon = { ConfigTransferPopup() },
                     actions = { RebootListPopup() },
                     scrollBehavior = scrollBehavior,
@@ -223,7 +223,7 @@ private fun StatusPagerMaterial(
     androidx.compose.material3.Scaffold(
         topBar = {
             LargeFlexibleTopAppBar(
-                title = { Text(stringResource(R.string.oneuixp_status)) },
+                title = { Text(stringResource(R.string.oneuialoha_status)) },
                 navigationIcon = { ConfigTransferPopup() },
                 actions = { RebootListPopup() },
                 colors = TopAppBarDefaults.topAppBarColors(

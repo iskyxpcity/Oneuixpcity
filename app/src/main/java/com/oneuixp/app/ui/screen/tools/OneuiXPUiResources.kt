@@ -1,4 +1,4 @@
-package com.oneuixp.app.ui.screen.tools
+package com.oneuialoha.app.ui.screen.tools
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -8,13 +8,13 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.vectorResource
 import androidx.core.graphics.drawable.toBitmap
-import com.oneuixp.app.R
-import com.oneuixp.app.oneuixp.OneuiXPCategory
-import com.oneuixp.app.oneuixp.OneuiXPSettingSpec
-import com.oneuixp.app.oneuixp.OneuiXPSettingType
+import com.oneuialoha.app.R
+import com.oneuialoha.app.oneuixp.OneUIAlohaCategory
+import com.oneuialoha.app.oneuixp.OneUIAlohaSettingSpec
+import com.oneuialoha.app.oneuixp.OneUIAlohaSettingType
 
 @Composable
-internal fun oneuiXPCategoryTitle(category: OneuiXPCategory): String {
+internal fun oneUIAlohaCategoryTitle(category: OneUIAlohaCategory): String {
     val context = LocalContext.current
     val key = "oneuixp_category_${category.name.lowercase()}"
     return remember(category, context.resources.configuration.locales) {
@@ -33,7 +33,7 @@ internal fun oneuiXPCategoryTitle(category: OneuiXPCategory): String {
 }
 
 @Composable
-internal fun oneuiXPSectionTitle(section: String): String {
+internal fun oneUIAlohaSectionTitle(section: String): String {
     val context = LocalContext.current
     val key = when (section) {
         "Android" -> "oneuixp_section_android"
@@ -71,10 +71,10 @@ internal fun oneuiXPSectionTitle(section: String): String {
 }
 
 @Composable
-internal fun oneuiXPSettingTitle(spec: OneuiXPSettingSpec): String {
+internal fun oneUIAlohaSettingTitle(spec: OneUIAlohaSettingSpec): String {
     val context = LocalContext.current
     return remember(spec.path, spec.powerActionName, context.resources.configuration.locales) {
-        if (spec.type == OneuiXPSettingType.PowerAction) {
+        if (spec.type == OneUIAlohaSettingType.PowerAction) {
             val powerKey = spec.powerActionName?.let { "oneuixp_power_$it" }
             powerKey?.let { resolveString(context, listOf(it)) } ?: spec.title
         } else {
@@ -94,8 +94,8 @@ internal fun oneuiXPSettingTitle(spec: OneuiXPSettingSpec): String {
 }
 
 @Composable
-internal fun oneuiXPSettingSummary(spec: OneuiXPSettingSpec): String? {
-    if (spec.type == OneuiXPSettingType.PowerAction) return null
+internal fun oneUIAlohaSettingSummary(spec: OneUIAlohaSettingSpec): String? {
+    if (spec.type == OneUIAlohaSettingType.PowerAction) return null
     val context = LocalContext.current
     return remember(spec.path, context.resources.configuration.locales) {
         val raw = spec.path.substringAfterLast('.')
@@ -113,7 +113,7 @@ internal fun oneuiXPSettingSummary(spec: OneuiXPSettingSpec): String? {
 }
 
 @Composable
-internal fun oneuiXPChoiceLabels(spec: OneuiXPSettingSpec): List<String> {
+internal fun oneUIAlohaChoiceLabels(spec: OneUIAlohaSettingSpec): List<String> {
     val context = LocalContext.current
     return remember(spec.path, spec.choices, context.resources.configuration.locales) {
         spec.choices.map { choice ->
@@ -150,7 +150,7 @@ internal fun oneuiXPChoiceLabels(spec: OneuiXPSettingSpec): List<String> {
 
 
 @Composable
-internal fun oneuiXPSettingIcon(spec: OneuiXPSettingSpec): ImageVector? {
+internal fun oneUIAlohaSettingIcon(spec: OneUIAlohaSettingSpec): ImageVector? {
     val resId = when (spec.path) {
         "android.disablePinVerifyPer72h" -> R.drawable.lock_clock
         "android.modifyMaxNeverKilledAppNum" -> R.drawable.apps
@@ -267,7 +267,7 @@ internal fun oneuiXPSettingIcon(spec: OneuiXPSettingSpec): ImageVector? {
 }
 
 @Composable
-internal fun rememberOneuiXPCategoryIcon(category: OneuiXPCategory): ImageBitmap {
+internal fun rememberOneUIAlohaCategoryIcon(category: OneUIAlohaCategory): ImageBitmap {
     val context = LocalContext.current
     return remember(category) {
         val packageManager = context.packageManager

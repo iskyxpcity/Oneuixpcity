@@ -1,4 +1,4 @@
-package com.oneuixp.app.ui.screen.status
+package com.oneuialoha.app.ui.screen.status
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,12 +10,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.oneuixp.app.ui.LocalUiMode
-import com.oneuixp.app.ui.UiMode
-import com.oneuixp.app.ui.component.material.SegmentedColumn
-import com.oneuixp.app.ui.component.material.SegmentedListItem
-import com.oneuixp.app.ui.component.material.oneuiXPSegmentedColors
-import com.oneuixp.mod.ui.component.LocalOneuiXPGroupedPreference
+import com.oneuialoha.app.ui.LocalUiMode
+import com.oneuialoha.app.ui.UiMode
+import com.oneuialoha.app.ui.component.material.SegmentedColumn
+import com.oneuialoha.app.ui.component.material.SegmentedListItem
+import com.oneuialoha.app.ui.component.material.oneUIAlohaSegmentedColors
+import com.oneuialoha.mod.ui.component.LocalOneUIAlohaGroupedPreference
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
 import top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme
@@ -23,7 +23,7 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme
 /**
  * Native status-tab group container.
  *
- * Material uses OneuiXP's real SegmentedColumn implementation.
+ * Material uses OneUIAloha's real SegmentedColumn implementation.
  * Miuix uses Miuix's real Card implementation.
  * Shared rows only receive the grouped flag so they render without adding
  * their own outer card.
@@ -68,7 +68,7 @@ fun StatusThemeGroup(
                 content = items.map { item ->
                     {
                         CompositionLocalProvider(
-                            LocalOneuiXPGroupedPreference provides true,
+                            LocalOneUIAlohaGroupedPreference provides true,
                         ) {
                             item()
                         }
@@ -82,7 +82,7 @@ fun StatusThemeGroup(
                 modifier = modifier.padding(horizontal = 12.dp, vertical = groupVerticalPadding),
             ) {
                 CompositionLocalProvider(
-                    LocalOneuiXPGroupedPreference provides true,
+                    LocalOneUIAlohaGroupedPreference provides true,
                 ) {
                     Column {
                         items.forEach { item -> item() }
@@ -109,7 +109,7 @@ fun StatusThemeChildItem(
         UiMode.Material -> {
             SegmentedListItem(
                 modifier = modifier,
-                colors = oneuiXPSegmentedColors(),
+                colors = oneUIAlohaSegmentedColors(),
                 headlineContent = {
                     Box(
                         modifier = Modifier

@@ -1,4 +1,4 @@
-package com.oneuixp.app.ui.screen.tools
+package com.oneuialoha.app.ui.screen.tools
 
 import android.os.Build
 import androidx.compose.foundation.layout.Box
@@ -60,79 +60,79 @@ import java.util.concurrent.TimeUnit
 import java.time.LocalDateTime
 import kotlin.math.roundToInt
 import android.widget.Toast
-import com.oneuixp.app.R
-import com.oneuixp.app.oneuiXPApp
-import com.oneuixp.app.oneuixp.OneuiXPPreferenceBridge
-import com.oneuixp.app.oneuixp.OneuiXPCategory
-import com.oneuixp.app.oneuixp.OneuiXPFeatureCatalog
-import com.oneuixp.app.oneuixp.OneuiXPLayoutRules
-import com.oneuixp.app.oneuixp.OneuiXPSettingSpec
-import com.oneuixp.app.oneuixp.OneuiXPSettingType
-import com.oneuixp.app.ui.LocalUiMode
-import com.oneuixp.app.ui.UiMode
-import com.oneuixp.app.ui.component.material.SegmentedColumn
-import com.oneuixp.app.ui.component.material.SegmentedDropdownItem
-import com.oneuixp.app.ui.component.material.SegmentedListItem
-import com.oneuixp.app.ui.component.material.ExpressiveSwitch
-import com.oneuixp.app.ui.component.material.SegmentedSwitchItem
-import com.oneuixp.app.ui.component.material.SegmentedSliderItem
-import com.oneuixp.app.ui.component.material.SegmentedTextField
-import com.oneuixp.app.ui.component.rebootlistpopup.RebootListPopup
-import com.oneuixp.app.ui.component.miuix.EditText
-import com.oneuixp.app.ui.navigation3.LocalNavigator
-import com.oneuixp.app.ui.theme.LocalEnableBlur
-import com.oneuixp.app.ui.util.BlurredBar
-import com.oneuixp.app.ui.util.rememberBlurBackdrop
-import com.oneuixp.app.ui.viewmodel.OneuiXPToolsViewModel
-import com.oneuixp.common.Preference
-import com.oneuixp.common.ONE_UI_VERSION
-import com.oneuixp.common.PowerMenuAction
-import com.oneuixp.hook.util.StatusBarClockFormatter
-import com.oneuixp.mod.ui.category.DetailPaneAndroid
-import com.oneuixp.mod.ui.category.AndroidEvent
-import com.oneuixp.mod.ui.category.DetailPaneBrowser
-import com.oneuixp.mod.ui.category.DetailPaneCalendar
-import com.oneuixp.mod.ui.category.DetailPaneCall
-import com.oneuixp.mod.ui.category.DetailPaneCamera
-import com.oneuixp.mod.ui.category.DetailPaneDualApp
-import com.oneuixp.mod.ui.category.DetailPaneGalaxyStore
-import com.oneuixp.mod.ui.category.DetailPaneGallery
-import com.oneuixp.mod.ui.category.DetailPaneHealthMonitor
-import com.oneuixp.mod.ui.category.DetailPaneLauncher
-import com.oneuixp.mod.ui.category.DetailPaneMessaging
-import com.oneuixp.mod.ui.category.DetailPaneNotes
-import com.oneuixp.mod.ui.category.DetailPanePhotoRetouching
-import com.oneuixp.mod.ui.category.DetailPaneSPen
-import com.oneuixp.mod.ui.category.DetailPaneSettings
-import com.oneuixp.mod.ui.category.DetailPaneSketchBook
-import com.oneuixp.mod.ui.category.DetailPaneSystemUI
-import com.oneuixp.mod.ui.category.SystemUIEvent
-import com.oneuixp.mod.ui.category.DetailPaneThemeCenter
-import com.oneuixp.mod.ui.category.DetailPaneVideo
-import com.oneuixp.mod.ui.category.DetailPaneWatchManager
-import com.oneuixp.mod.ui.category.DetailPaneWeather
-import com.oneuixp.mod.ui.category.onAndroidEvent
-import com.oneuixp.mod.ui.category.onBrowserEvent
-import com.oneuixp.mod.ui.category.onCalendarEvent
-import com.oneuixp.mod.ui.category.onCallEvent
-import com.oneuixp.mod.ui.category.onCameraEvent
-import com.oneuixp.mod.ui.category.onDualAppEvent
-import com.oneuixp.mod.ui.category.onGalaxyStoreEvent
-import com.oneuixp.mod.ui.category.onGalleryEvent
-import com.oneuixp.mod.ui.category.onHealthMonitorEvent
-import com.oneuixp.mod.ui.category.onLauncherEvent
-import com.oneuixp.mod.ui.category.onMessagingEvent
-import com.oneuixp.mod.ui.category.onNotesEvent
-import com.oneuixp.mod.ui.category.onPhotoRetouchingEvent
-import com.oneuixp.mod.ui.category.onSPenEvent
-import com.oneuixp.mod.ui.category.onSettingsEvent
-import com.oneuixp.mod.ui.category.onSketchBookEvent
-import com.oneuixp.mod.ui.category.onSystemUIEvent
-import com.oneuixp.mod.ui.category.onThemeCenterEvent
-import com.oneuixp.mod.ui.category.onVideoEvent
-import com.oneuixp.mod.ui.category.WatchManagerEvent
-import com.oneuixp.mod.ui.category.onWatchManagerEvent
-import com.oneuixp.mod.ui.category.onWeatherEvent
+import com.oneuialoha.app.R
+import com.oneuialoha.app.oneUIAlohaApp
+import com.oneuialoha.app.oneuixp.OneUIAlohaPreferenceBridge
+import com.oneuialoha.app.oneuixp.OneUIAlohaCategory
+import com.oneuialoha.app.oneuixp.OneUIAlohaFeatureCatalog
+import com.oneuialoha.app.oneuixp.OneUIAlohaLayoutRules
+import com.oneuialoha.app.oneuixp.OneUIAlohaSettingSpec
+import com.oneuialoha.app.oneuixp.OneUIAlohaSettingType
+import com.oneuialoha.app.ui.LocalUiMode
+import com.oneuialoha.app.ui.UiMode
+import com.oneuialoha.app.ui.component.material.SegmentedColumn
+import com.oneuialoha.app.ui.component.material.SegmentedDropdownItem
+import com.oneuialoha.app.ui.component.material.SegmentedListItem
+import com.oneuialoha.app.ui.component.material.ExpressiveSwitch
+import com.oneuialoha.app.ui.component.material.SegmentedSwitchItem
+import com.oneuialoha.app.ui.component.material.SegmentedSliderItem
+import com.oneuialoha.app.ui.component.material.SegmentedTextField
+import com.oneuialoha.app.ui.component.rebootlistpopup.RebootListPopup
+import com.oneuialoha.app.ui.component.miuix.EditText
+import com.oneuialoha.app.ui.navigation3.LocalNavigator
+import com.oneuialoha.app.ui.theme.LocalEnableBlur
+import com.oneuialoha.app.ui.util.BlurredBar
+import com.oneuialoha.app.ui.util.rememberBlurBackdrop
+import com.oneuialoha.app.ui.viewmodel.OneUIAlohaToolsViewModel
+import com.oneuialoha.common.Preference
+import com.oneuialoha.common.ONE_UI_VERSION
+import com.oneuialoha.common.PowerMenuAction
+import com.oneuialoha.hook.util.StatusBarClockFormatter
+import com.oneuialoha.mod.ui.category.DetailPaneAndroid
+import com.oneuialoha.mod.ui.category.AndroidEvent
+import com.oneuialoha.mod.ui.category.DetailPaneBrowser
+import com.oneuialoha.mod.ui.category.DetailPaneCalendar
+import com.oneuialoha.mod.ui.category.DetailPaneCall
+import com.oneuialoha.mod.ui.category.DetailPaneCamera
+import com.oneuialoha.mod.ui.category.DetailPaneDualApp
+import com.oneuialoha.mod.ui.category.DetailPaneGalaxyStore
+import com.oneuialoha.mod.ui.category.DetailPaneGallery
+import com.oneuialoha.mod.ui.category.DetailPaneHealthMonitor
+import com.oneuialoha.mod.ui.category.DetailPaneLauncher
+import com.oneuialoha.mod.ui.category.DetailPaneMessaging
+import com.oneuialoha.mod.ui.category.DetailPaneNotes
+import com.oneuialoha.mod.ui.category.DetailPanePhotoRetouching
+import com.oneuialoha.mod.ui.category.DetailPaneSPen
+import com.oneuialoha.mod.ui.category.DetailPaneSettings
+import com.oneuialoha.mod.ui.category.DetailPaneSketchBook
+import com.oneuialoha.mod.ui.category.DetailPaneSystemUI
+import com.oneuialoha.mod.ui.category.SystemUIEvent
+import com.oneuialoha.mod.ui.category.DetailPaneThemeCenter
+import com.oneuialoha.mod.ui.category.DetailPaneVideo
+import com.oneuialoha.mod.ui.category.DetailPaneWatchManager
+import com.oneuialoha.mod.ui.category.DetailPaneWeather
+import com.oneuialoha.mod.ui.category.onAndroidEvent
+import com.oneuialoha.mod.ui.category.onBrowserEvent
+import com.oneuialoha.mod.ui.category.onCalendarEvent
+import com.oneuialoha.mod.ui.category.onCallEvent
+import com.oneuialoha.mod.ui.category.onCameraEvent
+import com.oneuialoha.mod.ui.category.onDualAppEvent
+import com.oneuialoha.mod.ui.category.onGalaxyStoreEvent
+import com.oneuialoha.mod.ui.category.onGalleryEvent
+import com.oneuialoha.mod.ui.category.onHealthMonitorEvent
+import com.oneuialoha.mod.ui.category.onLauncherEvent
+import com.oneuialoha.mod.ui.category.onMessagingEvent
+import com.oneuialoha.mod.ui.category.onNotesEvent
+import com.oneuialoha.mod.ui.category.onPhotoRetouchingEvent
+import com.oneuialoha.mod.ui.category.onSPenEvent
+import com.oneuialoha.mod.ui.category.onSettingsEvent
+import com.oneuialoha.mod.ui.category.onSketchBookEvent
+import com.oneuialoha.mod.ui.category.onSystemUIEvent
+import com.oneuialoha.mod.ui.category.onThemeCenterEvent
+import com.oneuialoha.mod.ui.category.onVideoEvent
+import com.oneuialoha.mod.ui.category.WatchManagerEvent
+import com.oneuialoha.mod.ui.category.onWatchManagerEvent
+import com.oneuialoha.mod.ui.category.onWeatherEvent
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
 import top.yukonga.miuix.kmp.basic.IconButton as MiuixIconButton
@@ -148,17 +148,17 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme
 import top.yukonga.miuix.kmp.utils.overScrollVertical
 import top.yukonga.miuix.kmp.utils.scrollEndHaptic
 
-private data class OneuiXPSettingGroup(
+private data class OneUIAlohaSettingGroup(
     val section: String,
-    val items: List<OneuiXPSettingSpec>,
+    val items: List<OneUIAlohaSettingSpec>,
 )
 
 @Composable
-fun OneuiXPCategoryScreen(categoryName: String) {
+fun OneUIAlohaCategoryScreen(categoryName: String) {
     val navigator = LocalNavigator.current
-    val category = runCatching { OneuiXPCategory.valueOf(categoryName) }.getOrNull()
+    val category = runCatching { OneUIAlohaCategory.valueOf(categoryName) }.getOrNull()
         ?: return
-    val toolsViewModel = viewModel<OneuiXPToolsViewModel>()
+    val toolsViewModel = viewModel<OneUIAlohaToolsViewModel>()
     val preference by toolsViewModel.preference.collectAsStateWithLifecycle()
 
     /*
@@ -166,14 +166,14 @@ fun OneuiXPCategoryScreen(categoryName: String) {
      *
      * Every category now uses the canonical feature DetailPane implementation
      * for ordering, strings, parent/child visibility, state, validation and
-     * events. SwitchItem / SelectItem / OneuiXPSlider / OneuiXP special controls
+     * events. SwitchItem / SelectItem / OneUIAlohaSlider / OneUIAloha special controls
      * choose only the Miuix or Material rendering.
      *
      * Do not rebuild Material behavior from FeatureCatalog paths again: that
      * duplicated the application logic and caused missing controls, misplaced
      * previews and incorrect default-value restoration.
      */
-    OneuiXPOriginalCategoryScreen(
+    OneUIAlohaOriginalCategoryScreen(
         category = category,
         preference = preference,
         toolsViewModel = toolsViewModel,
@@ -181,9 +181,9 @@ fun OneuiXPCategoryScreen(categoryName: String) {
     )
 }
 
-private fun oneuiXPMaterialPlatformVisible(
+private fun oneUIAlohaMaterialPlatformVisible(
     preference: Preference,
-    spec: OneuiXPSettingSpec,
+    spec: OneUIAlohaSettingSpec,
 ): Boolean {
     val sdk = Build.VERSION.SDK_INT
     val statusBar = preference.systemUI.statusBar
@@ -246,56 +246,56 @@ private fun oneuiXPMaterialPlatformVisible(
 }
 
 @Composable
-private fun OneuiXPOriginalCategoryScreen(
-    category: OneuiXPCategory,
+private fun OneUIAlohaOriginalCategoryScreen(
+    category: OneUIAlohaCategory,
     preference: Preference,
-    toolsViewModel: OneuiXPToolsViewModel,
+    toolsViewModel: OneUIAlohaToolsViewModel,
     onBack: () -> Unit,
 ) {
     @Composable
     fun OriginalContent(modifier: Modifier) {
         when (category) {
-            OneuiXPCategory.Android -> DetailPaneAndroid(
+            OneUIAlohaCategory.Android -> DetailPaneAndroid(
                 uiState = preference.android,
                 onEvent = toolsViewModel::onAndroidEvent,
                 modifier = modifier,
             )
-            OneuiXPCategory.SystemUI -> DetailPaneSystemUI(
+            OneUIAlohaCategory.SystemUI -> DetailPaneSystemUI(
                 uiState = preference.systemUI,
                 onEvent = toolsViewModel::onSystemUIEvent,
                 modifier = modifier,
             )
-            OneuiXPCategory.Settings -> DetailPaneSettings(
+            OneUIAlohaCategory.Settings -> DetailPaneSettings(
                 uiState = preference.settings,
                 onEvent = toolsViewModel::onSettingsEvent,
                 modifier = modifier,
             )
-            OneuiXPCategory.Call -> DetailPaneCall(
+            OneUIAlohaCategory.Call -> DetailPaneCall(
                 uiState = preference.call,
                 onEvent = toolsViewModel::onCallEvent,
                 modifier = modifier,
             )
-            OneuiXPCategory.Camera -> DetailPaneCamera(
+            OneUIAlohaCategory.Camera -> DetailPaneCamera(
                 uiState = preference.camera,
                 onEvent = toolsViewModel::onCameraEvent,
                 modifier = modifier,
             )
-            OneuiXPCategory.Browser -> DetailPaneBrowser(preference.other, toolsViewModel::onBrowserEvent, modifier)
-            OneuiXPCategory.Calendar -> DetailPaneCalendar(preference.other, toolsViewModel::onCalendarEvent, modifier)
-            OneuiXPCategory.DualApp -> DetailPaneDualApp(preference.other, toolsViewModel::onDualAppEvent, modifier)
-            OneuiXPCategory.Gallery -> DetailPaneGallery(preference.other, toolsViewModel::onGalleryEvent, modifier)
-            OneuiXPCategory.GalaxyStore -> DetailPaneGalaxyStore(preference.other, toolsViewModel::onGalaxyStoreEvent, modifier)
-            OneuiXPCategory.HealthMonitor -> DetailPaneHealthMonitor(preference.other, toolsViewModel::onHealthMonitorEvent, modifier)
-            OneuiXPCategory.Launcher -> DetailPaneLauncher(preference.other, toolsViewModel::onLauncherEvent, modifier)
-            OneuiXPCategory.Messaging -> DetailPaneMessaging(preference.other, toolsViewModel::onMessagingEvent, modifier)
-            OneuiXPCategory.Notes -> DetailPaneNotes(preference.other, toolsViewModel::onNotesEvent, modifier)
-            OneuiXPCategory.PhotoRetouching -> DetailPanePhotoRetouching(preference.other, toolsViewModel::onPhotoRetouchingEvent, modifier)
-            OneuiXPCategory.SketchBook -> DetailPaneSketchBook(preference.other, toolsViewModel::onSketchBookEvent, modifier)
-            OneuiXPCategory.SPen -> DetailPaneSPen(preference.other, toolsViewModel::onSPenEvent, modifier)
-            OneuiXPCategory.ThemeCenter -> DetailPaneThemeCenter(preference.other, toolsViewModel::onThemeCenterEvent, modifier)
-            OneuiXPCategory.Video -> DetailPaneVideo(preference.other, toolsViewModel::onVideoEvent, modifier)
-            OneuiXPCategory.WatchManager -> DetailPaneWatchManager(preference.other, toolsViewModel::onWatchManagerEvent, modifier)
-            OneuiXPCategory.Weather -> DetailPaneWeather(preference.other, toolsViewModel::onWeatherEvent, modifier)
+            OneUIAlohaCategory.Browser -> DetailPaneBrowser(preference.other, toolsViewModel::onBrowserEvent, modifier)
+            OneUIAlohaCategory.Calendar -> DetailPaneCalendar(preference.other, toolsViewModel::onCalendarEvent, modifier)
+            OneUIAlohaCategory.DualApp -> DetailPaneDualApp(preference.other, toolsViewModel::onDualAppEvent, modifier)
+            OneUIAlohaCategory.Gallery -> DetailPaneGallery(preference.other, toolsViewModel::onGalleryEvent, modifier)
+            OneUIAlohaCategory.GalaxyStore -> DetailPaneGalaxyStore(preference.other, toolsViewModel::onGalaxyStoreEvent, modifier)
+            OneUIAlohaCategory.HealthMonitor -> DetailPaneHealthMonitor(preference.other, toolsViewModel::onHealthMonitorEvent, modifier)
+            OneUIAlohaCategory.Launcher -> DetailPaneLauncher(preference.other, toolsViewModel::onLauncherEvent, modifier)
+            OneUIAlohaCategory.Messaging -> DetailPaneMessaging(preference.other, toolsViewModel::onMessagingEvent, modifier)
+            OneUIAlohaCategory.Notes -> DetailPaneNotes(preference.other, toolsViewModel::onNotesEvent, modifier)
+            OneUIAlohaCategory.PhotoRetouching -> DetailPanePhotoRetouching(preference.other, toolsViewModel::onPhotoRetouchingEvent, modifier)
+            OneUIAlohaCategory.SketchBook -> DetailPaneSketchBook(preference.other, toolsViewModel::onSketchBookEvent, modifier)
+            OneUIAlohaCategory.SPen -> DetailPaneSPen(preference.other, toolsViewModel::onSPenEvent, modifier)
+            OneUIAlohaCategory.ThemeCenter -> DetailPaneThemeCenter(preference.other, toolsViewModel::onThemeCenterEvent, modifier)
+            OneUIAlohaCategory.Video -> DetailPaneVideo(preference.other, toolsViewModel::onVideoEvent, modifier)
+            OneUIAlohaCategory.WatchManager -> DetailPaneWatchManager(preference.other, toolsViewModel::onWatchManagerEvent, modifier)
+            OneUIAlohaCategory.Weather -> DetailPaneWeather(preference.other, toolsViewModel::onWeatherEvent, modifier)
         }
     }
 
@@ -311,9 +311,9 @@ private fun OneuiXPOriginalCategoryScreen(
                                 Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
                             }
                         },
-                        title = { Text(oneuiXPCategoryTitle(category)) },
+                        title = { Text(oneUIAlohaCategoryTitle(category)) },
                         actions = {
-                            if (category == OneuiXPCategory.SystemUI) {
+                            if (category == OneUIAlohaCategory.SystemUI) {
                                 RebootListPopup()
                             }
                         },
@@ -348,7 +348,7 @@ private fun OneuiXPOriginalCategoryScreen(
                     BlurredBar(backdrop) {
                         TopAppBar(
                             color = barColor,
-                            title = oneuiXPCategoryTitle(category),
+                            title = oneUIAlohaCategoryTitle(category),
                             navigationIcon = {
                                 MiuixIconButton(onClick = onBack) {
                                     val layoutDirection = LocalLayoutDirection.current
@@ -363,7 +363,7 @@ private fun OneuiXPOriginalCategoryScreen(
                                 }
                             },
                             actions = {
-                                if (category == OneuiXPCategory.SystemUI) {
+                                if (category == OneUIAlohaCategory.SystemUI) {
                                     RebootListPopup()
                                 }
                             },
@@ -389,11 +389,11 @@ private fun OneuiXPOriginalCategoryScreen(
 }
 
 @Composable
-private fun OneuiXPCategoryMaterial(
-    category: OneuiXPCategory,
-    groups: List<OneuiXPSettingGroup>,
+private fun OneUIAlohaCategoryMaterial(
+    category: OneUIAlohaCategory,
+    groups: List<OneUIAlohaSettingGroup>,
     preference: Preference,
-    toolsViewModel: OneuiXPToolsViewModel,
+    toolsViewModel: OneUIAlohaToolsViewModel,
     onBack: () -> Unit,
 ) {
     val scrollBehavior =
@@ -410,7 +410,7 @@ private fun OneuiXPCategoryMaterial(
                         )
                     }
                 },
-                title = { Text(oneuiXPCategoryTitle(category)) },
+                title = { Text(oneUIAlohaCategoryTitle(category)) },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface,
                     scrolledContainerColor = MaterialTheme.colorScheme.surface,
@@ -431,7 +431,7 @@ private fun OneuiXPCategoryMaterial(
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
                 .verticalScroll(rememberScrollState()),
         ) {
-            if (category == OneuiXPCategory.SystemUI) {
+            if (category == OneUIAlohaCategory.SystemUI) {
                 val context = LocalContext.current
                 val coroutineScope = rememberCoroutineScope()
                 Row(
@@ -443,11 +443,11 @@ private fun OneuiXPCategoryMaterial(
                         onClick = {
                             coroutineScope.launch {
                                 val synchronized =
-                                    OneuiXPPreferenceBridge.synchronizeNow(oneuiXPApp)
+                                    OneUIAlohaPreferenceBridge.synchronizeNow(oneUIAlohaApp)
                                 if (!synchronized) {
                                     Toast.makeText(
                                         context,
-                                        R.string.oneuixp_preferenceSync_failed,
+                                        R.string.oneuialoha_preferenceSync_failed,
                                         Toast.LENGTH_SHORT,
                                     ).show()
                                     return@launch
@@ -468,14 +468,14 @@ private fun OneuiXPCategoryMaterial(
                                 }
                                 Toast.makeText(
                                     context,
-                                    if (restarted) R.string.oneuixp_restartSystemUI_success
-                                    else R.string.oneuixp_restartSystemUI_failed,
+                                    if (restarted) R.string.oneuialoha_restartSystemUI_success
+                                    else R.string.oneuialoha_restartSystemUI_failed,
                                     Toast.LENGTH_SHORT,
                                 ).show()
                             }
                         },
                     ) {
-                        Text(stringResource(com.oneuixp.common.R.string.restartSystemUI))
+                        Text(stringResource(com.oneuialoha.common.R.string.restartSystemUI))
                     }
                 }
             }
@@ -485,7 +485,7 @@ private fun OneuiXPCategoryMaterial(
                 .forEach { (section, sectionGroups) ->
                     SegmentedColumn(
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                        title = oneuiXPSectionTitle(section),
+                        title = oneUIAlohaSectionTitle(section),
                         content = buildList {
                             sectionGroups.forEach { group ->
                                 group.items.forEachIndexed { index, spec ->
@@ -494,29 +494,29 @@ private fun OneuiXPCategoryMaterial(
                                             spec = spec,
                                             preference = preference,
                                             toolsViewModel = toolsViewModel,
-                                            hasChildren = OneuiXPLayoutRules.hasChildren(spec.path) ||
+                                            hasChildren = OneUIAlohaLayoutRules.hasChildren(spec.path) ||
                                                 (index == 0 && group.items.size > 1),
                                             isChild = index > 0,
                                         )
                                     }
 
                                     if (
-                                        category == OneuiXPCategory.SystemUI &&
+                                        category == OneUIAlohaCategory.SystemUI &&
                                         section == "Quick settings" &&
                                         spec.path == "systemUI.qs.setQsClockMonospaced" &&
                                         Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM
                                     ) {
                                         add {
-                                            MaterialOneuiXPInfoRow(
-                                                title = stringResource(R.string.oneuixp_turnOn5gQsTile_title),
-                                                summary = stringResource(R.string.oneuixp_root5gQsTile_summary),
+                                            MaterialOneUIAlohaInfoRow(
+                                                title = stringResource(R.string.oneuialoha_turnOn5gQsTile_title),
+                                                summary = stringResource(R.string.oneuialoha_root5gQsTile_summary),
                                                 icon = ImageVector.vectorResource(R.drawable.five_g),
                                             )
                                         }
                                         add {
-                                            MaterialOneuiXPInfoRow(
-                                                title = stringResource(R.string.oneuixp_immersiveModeQsTile_title),
-                                                summary = stringResource(R.string.oneuixp_rootImmersiveModeQsTile_summary),
+                                            MaterialOneUIAlohaInfoRow(
+                                                title = stringResource(R.string.oneuialoha_immersiveModeQsTile_title),
+                                                summary = stringResource(R.string.oneuialoha_rootImmersiveModeQsTile_summary),
                                                 icon = ImageVector.vectorResource(R.drawable.immersive_mode),
                                             )
                                         }
@@ -533,7 +533,7 @@ private fun OneuiXPCategoryMaterial(
 }
 
 @Composable
-private fun MaterialOneuiXPInfoRow(
+private fun MaterialOneUIAlohaInfoRow(
     title: String,
     summary: String,
     icon: ImageVector,
@@ -552,15 +552,15 @@ private fun MaterialOneuiXPInfoRow(
 
 @Composable
 private fun MaterialSettingRow(
-    spec: OneuiXPSettingSpec,
+    spec: OneUIAlohaSettingSpec,
     preference: Preference,
-    toolsViewModel: OneuiXPToolsViewModel,
+    toolsViewModel: OneUIAlohaToolsViewModel,
     hasChildren: Boolean = false,
     isChild: Boolean = false,
 ) {
-    val title = oneuiXPSettingTitle(spec)
-    val summary = oneuiXPSettingSummary(spec)
-    val icon = oneuiXPSettingIcon(spec)
+    val title = oneUIAlohaSettingTitle(spec)
+    val summary = oneUIAlohaSettingSummary(spec)
+    val icon = oneUIAlohaSettingIcon(spec)
 
     if (spec.path == "systemUI.statusBar.networkSpeedThresholdKb") {
         NetworkSpeedThresholdMaterial(
@@ -586,7 +586,7 @@ private fun MaterialSettingRow(
     }
 
     when (spec.type) {
-        OneuiXPSettingType.Toggle -> {
+        OneUIAlohaSettingType.Toggle -> {
             SegmentedSwitchItem(
                 icon = icon,
                 title = title,
@@ -597,7 +597,7 @@ private fun MaterialSettingRow(
             )
         }
 
-        OneuiXPSettingType.PowerAction -> {
+        OneUIAlohaSettingType.PowerAction -> {
             MaterialPowerActionRow(
                 spec = spec,
                 preference = preference,
@@ -605,10 +605,10 @@ private fun MaterialSettingRow(
             )
         }
 
-        OneuiXPSettingType.ChoiceInt,
-        OneuiXPSettingType.ChoiceText -> {
+        OneUIAlohaSettingType.ChoiceInt,
+        OneUIAlohaSettingType.ChoiceText -> {
             val current = toolsViewModel.value(preference, spec)
-            val labels = oneuiXPChoiceLabels(spec)
+            val labels = oneUIAlohaChoiceLabels(spec)
             val index = spec.choices.indexOfFirst { it.value == current }
                 .coerceAtLeast(0)
 
@@ -649,9 +649,9 @@ private fun MaterialSettingRow(
             )
         }
 
-        OneuiXPSettingType.IntValue,
-        OneuiXPSettingType.FloatValue,
-        OneuiXPSettingType.TextValue -> {
+        OneUIAlohaSettingType.IntValue,
+        OneUIAlohaSettingType.FloatValue,
+        OneUIAlohaSettingType.TextValue -> {
             if (spec.path == "systemUI.statusBar.statusBarClockFormat") {
                 MaterialClockFormatEditor(
                     spec = spec,
@@ -725,22 +725,22 @@ private fun materialSliderValueLabel(
     "systemUI.statusBar.statusBarRightPaddingDp" -> "%.1f dp".format(value)
 
     "systemUI.statusBar.statusBarTopPaddingDp" ->
-        stringResource(R.string.oneuixp_statusBarTopPaddingDp_summary, value)
+        stringResource(R.string.oneuialoha_statusBarTopPaddingDp_summary, value)
 
     "systemUI.statusBar.statusBarBottomPaddingDp" ->
-        stringResource(R.string.oneuixp_statusBarBottomPaddingDp_summary, value)
+        stringResource(R.string.oneuialoha_statusBarBottomPaddingDp_summary, value)
 
     "systemUI.statusBar.batteryIconWidthScale",
     "systemUI.statusBar.batteryIconHeightScale" -> "%.2f".format(value)
 
     "systemUI.statusBar.fold7DoubleLineClockTimeScale" ->
-        stringResource(R.string.oneuixp_fold7DoubleLineClockTimeScale_summary, value)
+        stringResource(R.string.oneuialoha_fold7DoubleLineClockTimeScale_summary, value)
 
     "systemUI.statusBar.fold7DoubleLineClockDateScale" ->
-        stringResource(R.string.oneuixp_fold7DoubleLineClockDateScale_summary, value)
+        stringResource(R.string.oneuialoha_fold7DoubleLineClockDateScale_summary, value)
 
     "systemUI.statusBar.doubleLineClockGapDp" ->
-        stringResource(R.string.oneuixp_statusBarDoubleLineClockGap_summary, value)
+        stringResource(R.string.oneuialoha_statusBarDoubleLineClockGap_summary, value)
 
     "systemUI.statusBar.statusBarClockTextScale" -> "%.2fx".format(value)
     "systemUI.statusBar.statusBarMaxNotificationIcons" -> value.roundToInt().toString()
@@ -759,10 +759,10 @@ private fun sliderStorageValue(
 }
 
 private fun commitMaterialSliderValue(
-    spec: OneuiXPSettingSpec,
+    spec: OneUIAlohaSettingSpec,
     value: Float,
     config: MaterialSliderConfig,
-    toolsViewModel: OneuiXPToolsViewModel,
+    toolsViewModel: OneUIAlohaToolsViewModel,
 ) {
     when (spec.path) {
         "android.maxNeverKilledAppNum" ->
@@ -847,10 +847,10 @@ private fun commitMaterialSliderValue(
 
 @Composable
 private fun MaterialSliderValue(
-    spec: OneuiXPSettingSpec,
+    spec: OneUIAlohaSettingSpec,
     title: String,
     preference: Preference,
-    toolsViewModel: OneuiXPToolsViewModel,
+    toolsViewModel: OneUIAlohaToolsViewModel,
     config: MaterialSliderConfig,
     isChild: Boolean,
 ) {
@@ -860,7 +860,7 @@ private fun MaterialSliderValue(
     }
 
     SegmentedSliderItem(
-        icon = if (isChild) null else oneuiXPSettingIcon(spec),
+        icon = if (isChild) null else oneUIAlohaSettingIcon(spec),
         title = if (
             !isChild ||
             spec.path == "systemUI.statusBar.fold7DoubleLineClockTimeScale" ||
@@ -885,9 +885,9 @@ private fun MaterialSliderValue(
 
 @Composable
 private fun MaterialPowerActionRow(
-    spec: OneuiXPSettingSpec,
+    spec: OneUIAlohaSettingSpec,
     preference: Preference,
-    toolsViewModel: OneuiXPToolsViewModel,
+    toolsViewModel: OneUIAlohaToolsViewModel,
 ) {
     val name = spec.powerActionName ?: return
     val actions = PowerMenuAction.normalize(preference.systemUI.other.powerMenuActions)
@@ -896,16 +896,16 @@ private fun MaterialPowerActionRow(
     val visiblePosition = actions.take(index + 1).count { it.visible }
 
     SegmentedListItem(
-        headlineContent = { Text(oneuiXPSettingTitle(spec)) },
+        headlineContent = { Text(oneUIAlohaSettingTitle(spec)) },
         supportingContent = {
             Text(
                 if (action.visible) {
                     stringResource(
-                        R.string.oneuixp_powerMenuActionVisible_summary,
+                        R.string.oneuialoha_powerMenuActionVisible_summary,
                         visiblePosition,
                     )
                 } else {
-                    stringResource(R.string.oneuixp_powerMenuActionHidden_summary)
+                    stringResource(R.string.oneuialoha_powerMenuActionHidden_summary)
                 }
             )
         },
@@ -923,7 +923,7 @@ private fun MaterialPowerActionRow(
                         )
                     },
                 ) {
-                    Text(stringResource(R.string.oneuixp_moveUp))
+                    Text(stringResource(R.string.oneuialoha_moveUp))
                 }
                 TextButton(
                     enabled = index in 0 until actions.lastIndex,
@@ -935,7 +935,7 @@ private fun MaterialPowerActionRow(
                         )
                     },
                 ) {
-                    Text(stringResource(R.string.oneuixp_moveDown))
+                    Text(stringResource(R.string.oneuialoha_moveDown))
                 }
                 ExpressiveSwitch(
                     checked = action.visible,
@@ -975,11 +975,11 @@ private fun List<PowerMenuAction>.movePowerAction(
 
 @Composable
 private fun NetworkSpeedThresholdMaterial(
-    spec: OneuiXPSettingSpec,
+    spec: OneUIAlohaSettingSpec,
     title: String,
     summary: String?,
     preference: Preference,
-    toolsViewModel: OneuiXPToolsViewModel,
+    toolsViewModel: OneUIAlohaToolsViewModel,
 ) {
     val current = toolsViewModel.value(preference, spec).toIntOrNull() ?: 0
     var expanded by remember(spec.path) { mutableStateOf(false) }
@@ -989,7 +989,7 @@ private fun NetworkSpeedThresholdMaterial(
 
     Column {
         SegmentedSwitchItem(
-            icon = oneuiXPSettingIcon(spec),
+            icon = oneUIAlohaSettingIcon(spec),
             title = title,
             summary = if (current > 0) "$current KB/s" else summary,
             checked = current > 0,
@@ -1014,7 +1014,7 @@ private fun NetworkSpeedThresholdMaterial(
 
         if (expanded && current > 0) {
             SegmentedTextField(
-                label = stringResource(R.string.oneuixp_networkSpeedThreshold_label),
+                label = stringResource(R.string.oneuialoha_networkSpeedThreshold_label),
                 value = thresholdText,
                 onValueChange = { raw ->
                     thresholdText = raw.filter(Char::isDigit)
@@ -1032,7 +1032,7 @@ private fun NetworkSpeedThresholdMaterial(
                             )
                         },
                     ) {
-                        Text(stringResource(R.string.oneuixp_confirm))
+                        Text(stringResource(R.string.oneuialoha_confirm))
                     }
                 },
             )
@@ -1042,10 +1042,10 @@ private fun NetworkSpeedThresholdMaterial(
 
 @Composable
 private fun MaterialClockFormatEditor(
-    spec: OneuiXPSettingSpec,
+    spec: OneUIAlohaSettingSpec,
     title: String,
     preference: Preference,
-    toolsViewModel: OneuiXPToolsViewModel,
+    toolsViewModel: OneUIAlohaToolsViewModel,
 ) {
     val current = toolsViewModel.value(preference, spec)
     var edit by remember(spec.path, current) { mutableStateOf(current) }
@@ -1058,7 +1058,7 @@ private fun MaterialClockFormatEditor(
     }
 
     SegmentedTextField(
-        // OneuiXP shows the formatted preview above the raw format text.
+        // OneUIAloha shows the formatted preview above the raw format text.
         // The parent switch already carries the setting title.
         label = preview.ifBlank { current },
         value = edit,
@@ -1086,7 +1086,7 @@ private fun MaterialClockFormatEditor(
                     }
                 },
             ) {
-                Text(stringResource(R.string.oneuixp_confirm))
+                Text(stringResource(R.string.oneuialoha_confirm))
             }
         },
         supportingContent = null,
@@ -1095,11 +1095,11 @@ private fun MaterialClockFormatEditor(
 
 @Composable
 private fun EditableMaterialValue(
-    spec: OneuiXPSettingSpec,
+    spec: OneUIAlohaSettingSpec,
     title: String,
     summary: String?,
     preference: Preference,
-    toolsViewModel: OneuiXPToolsViewModel,
+    toolsViewModel: OneUIAlohaToolsViewModel,
     showIcon: Boolean = true,
 ) {
     val current = toolsViewModel.value(preference, spec)
@@ -1117,20 +1117,20 @@ private fun EditableMaterialValue(
         value = edit,
         onValueChange = {
             edit = it
-            if (!requiresConfirm && (spec.type == OneuiXPSettingType.TextValue || validNumber(spec, it))) {
+            if (!requiresConfirm && (spec.type == OneUIAlohaSettingType.TextValue || validNumber(spec, it))) {
                 toolsViewModel.setRawValue(spec, it)
             }
         },
         keyboardOptions = KeyboardOptions(
             keyboardType = when (spec.type) {
-                OneuiXPSettingType.IntValue -> KeyboardType.Number
-                OneuiXPSettingType.FloatValue -> KeyboardType.Decimal
+                OneUIAlohaSettingType.IntValue -> KeyboardType.Number
+                OneUIAlohaSettingType.FloatValue -> KeyboardType.Decimal
                 else -> KeyboardType.Text
             },
         ),
         singleLine = spec.path != "systemUI.statusBar.statusBarClockFormat",
         leadingContent = if (showIcon) {
-            oneuiXPSettingIcon(spec)?.let { imageVector ->
+            oneUIAlohaSettingIcon(spec)?.let { imageVector ->
                 { Icon(imageVector = imageVector, contentDescription = null) }
             }
         } else {
@@ -1140,12 +1140,12 @@ private fun EditableMaterialValue(
             {
                 TextButton(
                     onClick = {
-                        if (spec.type == OneuiXPSettingType.TextValue || validNumber(spec, edit)) {
+                        if (spec.type == OneUIAlohaSettingType.TextValue || validNumber(spec, edit)) {
                             toolsViewModel.setRawValue(spec, edit)
                         }
                     },
                 ) {
-                    Text(stringResource(R.string.oneuixp_confirm))
+                    Text(stringResource(R.string.oneuialoha_confirm))
                 }
             }
         } else {
@@ -1158,11 +1158,11 @@ private fun EditableMaterialValue(
 }
 
 @Composable
-private fun OneuiXPCategoryMiuix(
-    category: OneuiXPCategory,
-    groups: List<OneuiXPSettingGroup>,
+private fun OneUIAlohaCategoryMiuix(
+    category: OneUIAlohaCategory,
+    groups: List<OneUIAlohaSettingGroup>,
     preference: Preference,
-    toolsViewModel: OneuiXPToolsViewModel,
+    toolsViewModel: OneUIAlohaToolsViewModel,
     onBack: () -> Unit,
 ) {
     val scrollBehavior = MiuixScrollBehavior()
@@ -1174,7 +1174,7 @@ private fun OneuiXPCategoryMiuix(
             BlurredBar(backdrop) {
                 TopAppBar(
                     color = barColor,
-                    title = oneuiXPCategoryTitle(category),
+                    title = oneUIAlohaCategoryTitle(category),
                     navigationIcon = {
                         MiuixIconButton(onClick = onBack) {
                             val layoutDirection = LocalLayoutDirection.current
@@ -1214,7 +1214,7 @@ private fun OneuiXPCategoryMiuix(
                     if (previousSection != group.section) {
                         item {
                             top.yukonga.miuix.kmp.basic.Text(
-                                text = oneuiXPSectionTitle(group.section),
+                                text = oneUIAlohaSectionTitle(group.section),
                                 color = colorScheme.primary,
                                 modifier = Modifier.padding(
                                     start = 16.dp,
@@ -1251,13 +1251,13 @@ private fun OneuiXPCategoryMiuix(
 
 @Composable
 private fun MiuixSettingRow(
-    spec: OneuiXPSettingSpec,
+    spec: OneUIAlohaSettingSpec,
     preference: Preference,
-    toolsViewModel: OneuiXPToolsViewModel,
+    toolsViewModel: OneUIAlohaToolsViewModel,
 ) {
-    val title = oneuiXPSettingTitle(spec)
-    val summary = oneuiXPSettingSummary(spec)
-    val icon = oneuiXPSettingIcon(spec)
+    val title = oneUIAlohaSettingTitle(spec)
+    val summary = oneUIAlohaSettingSummary(spec)
+    val icon = oneUIAlohaSettingIcon(spec)
 
     if (spec.path == "systemUI.statusBar.networkSpeedThresholdKb") {
         NetworkSpeedThresholdMiuix(
@@ -1271,8 +1271,8 @@ private fun MiuixSettingRow(
     }
 
     when (spec.type) {
-        OneuiXPSettingType.Toggle,
-        OneuiXPSettingType.PowerAction -> {
+        OneUIAlohaSettingType.Toggle,
+        OneUIAlohaSettingType.PowerAction -> {
             SwitchPreference(
                 title = title,
                 summary = summary,
@@ -1291,10 +1291,10 @@ private fun MiuixSettingRow(
             )
         }
 
-        OneuiXPSettingType.ChoiceInt,
-        OneuiXPSettingType.ChoiceText -> {
+        OneUIAlohaSettingType.ChoiceInt,
+        OneUIAlohaSettingType.ChoiceText -> {
             val current = toolsViewModel.value(preference, spec)
-            val labels = oneuiXPChoiceLabels(spec)
+            val labels = oneUIAlohaChoiceLabels(spec)
             val index = spec.choices.indexOfFirst { it.value == current }
                 .coerceAtLeast(0)
 
@@ -1321,9 +1321,9 @@ private fun MiuixSettingRow(
             )
         }
 
-        OneuiXPSettingType.IntValue,
-        OneuiXPSettingType.FloatValue,
-        OneuiXPSettingType.TextValue -> {
+        OneUIAlohaSettingType.IntValue,
+        OneUIAlohaSettingType.FloatValue,
+        OneUIAlohaSettingType.TextValue -> {
             EditableMiuixValue(
                 spec = spec,
                 title = title,
@@ -1337,17 +1337,17 @@ private fun MiuixSettingRow(
 
 @Composable
 private fun NetworkSpeedThresholdMiuix(
-    spec: OneuiXPSettingSpec,
+    spec: OneUIAlohaSettingSpec,
     title: String,
     summary: String?,
     preference: Preference,
-    toolsViewModel: OneuiXPToolsViewModel,
+    toolsViewModel: OneUIAlohaToolsViewModel,
 ) {
     val current = toolsViewModel.value(preference, spec).toIntOrNull() ?: 0
     SwitchPreference(
         title = title,
         summary = if (current > 0) "$current KB/s" else summary,
-        startAction = oneuiXPSettingIcon(spec)?.let { imageVector ->
+        startAction = oneUIAlohaSettingIcon(spec)?.let { imageVector ->
             {
                 MiuixIcon(
                     imageVector = imageVector,
@@ -1379,11 +1379,11 @@ private fun NetworkSpeedThresholdMiuix(
 
 @Composable
 private fun EditableMiuixValue(
-    spec: OneuiXPSettingSpec,
+    spec: OneUIAlohaSettingSpec,
     title: String,
     summary: String?,
     preference: Preference,
-    toolsViewModel: OneuiXPToolsViewModel,
+    toolsViewModel: OneUIAlohaToolsViewModel,
     showIcon: Boolean = true,
 ) {
     val current = toolsViewModel.value(preference, spec)
@@ -1393,7 +1393,7 @@ private fun EditableMiuixValue(
         title = title,
         summary = summary,
         startAction = if (showIcon) {
-            oneuiXPSettingIcon(spec)?.let { imageVector ->
+            oneUIAlohaSettingIcon(spec)?.let { imageVector ->
                 {
                     MiuixIcon(
                         imageVector = imageVector,
@@ -1408,14 +1408,14 @@ private fun EditableMiuixValue(
         value = edit,
         onValueChange = {
             edit = it
-            if (spec.type == OneuiXPSettingType.TextValue || validNumber(spec, it)) {
+            if (spec.type == OneUIAlohaSettingType.TextValue || validNumber(spec, it)) {
                 toolsViewModel.setRawValue(spec, it)
             }
         },
         keyboardOptions = KeyboardOptions(
             keyboardType = when (spec.type) {
-                OneuiXPSettingType.IntValue -> KeyboardType.Number
-                OneuiXPSettingType.FloatValue -> KeyboardType.Decimal
+                OneUIAlohaSettingType.IntValue -> KeyboardType.Number
+                OneUIAlohaSettingType.FloatValue -> KeyboardType.Decimal
                 else -> KeyboardType.Text
             },
         ),
@@ -1423,10 +1423,10 @@ private fun EditableMiuixValue(
 }
 
 private fun validNumber(
-    spec: OneuiXPSettingSpec,
+    spec: OneUIAlohaSettingSpec,
     value: String,
 ): Boolean = when (spec.type) {
-    OneuiXPSettingType.IntValue -> value.toIntOrNull() != null
-    OneuiXPSettingType.FloatValue -> value.toFloatOrNull() != null
+    OneUIAlohaSettingType.IntValue -> value.toIntOrNull() != null
+    OneUIAlohaSettingType.FloatValue -> value.toFloatOrNull() != null
     else -> true
 }
