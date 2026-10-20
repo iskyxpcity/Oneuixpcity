@@ -1,4 +1,4 @@
-package com.oneuixp.mod.ui.component
+package com.oneuialoha.mod.ui.component
 
 import android.view.HapticFeedbackConstants
 import androidx.compose.foundation.Canvas
@@ -25,8 +25,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.oneuixp.app.ui.LocalUiMode
-import com.oneuixp.app.ui.UiMode
+import com.oneuialoha.app.ui.LocalUiMode
+import com.oneuialoha.app.ui.UiMode
 import androidx.compose.material3.Slider as MaterialSlider
 import androidx.compose.ui.graphics.Color
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -34,12 +34,12 @@ import kotlin.math.abs
 import kotlin.math.roundToInt
 
 /**
- * Controlled OneuiXP slider. The owner value is the only source of truth for the
+ * Controlled OneUIAloha slider. The owner value is the only source of truth for the
  * thumb position; a separate animated mirror can restore a stale value when a
  * Miuix drag-finished callback arrives before the next composition.
  */
 @Composable
-fun OneuiXPSlider(
+fun OneUIAlohaSlider(
     value: Float,
     onValueChange: (Float) -> Unit,
     modifier: Modifier = Modifier,

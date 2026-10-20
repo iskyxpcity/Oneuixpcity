@@ -1,4 +1,4 @@
-package com.oneuixp.mod.ui.category
+package com.oneuialoha.mod.ui.category
 
 import android.os.Build
 import androidx.compose.animation.animateContentSize
@@ -20,18 +20,18 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
-import com.oneuixp.app.R
-import com.oneuixp.common.Preference
-import com.oneuixp.hook.util.StatusBarClockFormatter
-import com.oneuixp.mod.ui.component.OneuiXPActionButton
-import com.oneuixp.mod.ui.component.OneuiXPChildVisibility
-import com.oneuixp.mod.ui.component.OneuiXPInfoItem
-import com.oneuixp.mod.ui.component.OneuiXPInlineTextField
-import com.oneuixp.mod.ui.component.OneuiXPPPreferenceGroup
-import com.oneuixp.mod.ui.component.OneuiXPSlider
-import com.oneuixp.mod.ui.component.OneuiXPSupportingText
-import com.oneuixp.mod.ui.component.SelectItem
-import com.oneuixp.mod.ui.component.SwitchItem
+import com.oneuialoha.app.R
+import com.oneuialoha.common.Preference
+import com.oneuialoha.hook.util.StatusBarClockFormatter
+import com.oneuialoha.mod.ui.component.OneUIAlohaActionButton
+import com.oneuialoha.mod.ui.component.OneUIAlohaChildVisibility
+import com.oneuialoha.mod.ui.component.OneUIAlohaInfoItem
+import com.oneuialoha.mod.ui.component.OneUIAlohaInlineTextField
+import com.oneuialoha.mod.ui.component.OneUIAlohaPPreferenceGroup
+import com.oneuialoha.mod.ui.component.OneUIAlohaSlider
+import com.oneuialoha.mod.ui.component.OneUIAlohaSupportingText
+import com.oneuialoha.mod.ui.component.SelectItem
+import com.oneuialoha.mod.ui.component.SwitchItem
 import java.time.LocalDateTime
 import kotlin.math.roundToInt
 
@@ -65,12 +65,12 @@ fun StatusBarTimeControls(
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier) {
-        OneuiXPPPreferenceGroup {
+        OneUIAlohaPPreferenceGroup {
         Column {
             var expanded by rememberSaveable { mutableStateOf(false) }
 
             SwitchItem(
-                title = stringResource(id = R.string.oneuixp_setStatusBarClockFormat_title),
+                title = stringResource(id = R.string.oneuialoha_setStatusBarClockFormat_title),
                 modifier = Modifier.animateContentSize(),
                 summary = if (uiState.setStatusBarClockFormat) {
                     uiState.statusBarClockFormat
@@ -89,7 +89,7 @@ fun StatusBarTimeControls(
                 }
             )
 
-            OneuiXPChildVisibility(expanded && uiState.setStatusBarClockFormat) {
+            OneUIAlohaChildVisibility(expanded && uiState.setStatusBarClockFormat) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.padding(horizontal = 16.dp),
@@ -98,7 +98,7 @@ fun StatusBarTimeControls(
                         mutableStateOf(uiState.statusBarClockFormat)
                     }
                     var label by remember { mutableStateOf("") }
-                    OneuiXPInlineTextField(
+                    OneUIAlohaInlineTextField(
                         value = tempDataTimeFormat,
                         onValueChange = {
                             tempDataTimeFormat = it
@@ -110,8 +110,8 @@ fun StatusBarTimeControls(
                         labelText = label.takeIf { it.isNotBlank() },
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    OneuiXPActionButton(
-                        text = stringResource(id = R.string.oneuixp_confirm),
+                    OneUIAlohaActionButton(
+                        text = stringResource(id = R.string.oneuialoha_confirm),
                         primary = true,
                         onClick = {
                             var right = true
@@ -146,7 +146,7 @@ fun StatusBarTimeControls(
                     SwitchItem(
                         icon = ImageVector.vectorResource(id = R.drawable.format_size),
                         title = stringResource(
-                            id = R.string.oneuixp_fold7CustomDoubleLineClockScale_title
+                            id = R.string.oneuialoha_fold7CustomDoubleLineClockScale_title
                         ),
                         showChildIndicator = true,
                 checked = uiState.useFold7CustomDoubleLineClockScale,
@@ -156,7 +156,7 @@ fun StatusBarTimeControls(
                             )
                         }
                     )
-                    OneuiXPChildVisibility(uiState.useFold7CustomDoubleLineClockScale) {
+                    OneUIAlohaChildVisibility(uiState.useFold7CustomDoubleLineClockScale) {
                         Column {
                             var timeScale by remember(
                                 uiState.fold7DoubleLineClockTimeScale
@@ -165,16 +165,16 @@ fun StatusBarTimeControls(
                                     uiState.fold7DoubleLineClockTimeScale
                                 )
                             }
-                            OneuiXPInfoItem(
+                            OneUIAlohaInfoItem(
                                 title = stringResource(
-                                    id = R.string.oneuixp_fold7DoubleLineClockTimeScale_title
+                                    id = R.string.oneuialoha_fold7DoubleLineClockTimeScale_title
                                 ),
                                 summary = stringResource(
-                                    id = R.string.oneuixp_fold7DoubleLineClockTimeScale_summary,
+                                    id = R.string.oneuialoha_fold7DoubleLineClockTimeScale_summary,
                                     timeScale,
                                 ),
                             )
-                            OneuiXPSlider(
+                            OneUIAlohaSlider(
                                 value = timeScale,
                                 onValueChange = { raw ->
                                     val value = (raw * 100f).roundToInt() / 100f
@@ -204,16 +204,16 @@ fun StatusBarTimeControls(
                                     uiState.fold7DoubleLineClockDateScale
                                 )
                             }
-                            OneuiXPInfoItem(
+                            OneUIAlohaInfoItem(
                                 title = stringResource(
-                                    id = R.string.oneuixp_fold7DoubleLineClockDateScale_title
+                                    id = R.string.oneuialoha_fold7DoubleLineClockDateScale_title
                                 ),
                                 summary = stringResource(
-                                    id = R.string.oneuixp_fold7DoubleLineClockDateScale_summary,
+                                    id = R.string.oneuialoha_fold7DoubleLineClockDateScale_summary,
                                     dateScale,
                                 ),
                             )
-                            OneuiXPSlider(
+                            OneUIAlohaSlider(
                                 value = dateScale,
                                 onValueChange = { raw ->
                                     val value = (raw * 100f).roundToInt() / 100f
@@ -241,11 +241,11 @@ fun StatusBarTimeControls(
                 }
                 if (!isFold7) {
                     val sizeLabels = listOf(
-                        stringResource(id = R.string.oneuixp_statusBarDoubleLineClockSize_small),
-                        stringResource(id = R.string.oneuixp_statusBarDoubleLineClockSize_compact),
-                        stringResource(id = R.string.oneuixp_statusBarDoubleLineClockSize_standard),
-                        stringResource(id = R.string.oneuixp_statusBarDoubleLineClockSize_large),
-                        stringResource(id = R.string.oneuixp_statusBarDoubleLineClockSize_extraLarge),
+                        stringResource(id = R.string.oneuialoha_statusBarDoubleLineClockSize_small),
+                        stringResource(id = R.string.oneuialoha_statusBarDoubleLineClockSize_compact),
+                        stringResource(id = R.string.oneuialoha_statusBarDoubleLineClockSize_standard),
+                        stringResource(id = R.string.oneuialoha_statusBarDoubleLineClockSize_large),
+                        stringResource(id = R.string.oneuialoha_statusBarDoubleLineClockSize_extraLarge),
                     )
                     val selectedSize = uiState.statusBarDoubleLineClockSize.ifBlank {
                         statusTimeLegacyDoubleLineClockSize(uiState.statusBarClockTextScale)
@@ -255,7 +255,7 @@ fun StatusBarTimeControls(
                     ).coerceAtLeast(0)
                     SelectItem(
                         icon = ImageVector.vectorResource(id = R.drawable.format_size),
-                        title = stringResource(id = R.string.oneuixp_statusBarDoubleLineClockSize_title),
+                        title = stringResource(id = R.string.oneuialoha_statusBarDoubleLineClockSize_title),
                         entries = sizeLabels,
                         selectedIndex = selectedIndex,
                         onSelectedIndexChange = {
@@ -267,9 +267,9 @@ fun StatusBarTimeControls(
                         }
                     )
                     val positionLabels = listOf(
-                        stringResource(id = R.string.oneuixp_statusBarDoubleLineClockPosition_top),
-                        stringResource(id = R.string.oneuixp_statusBarDoubleLineClockPosition_middle),
-                        stringResource(id = R.string.oneuixp_statusBarDoubleLineClockPosition_bottom),
+                        stringResource(id = R.string.oneuialoha_statusBarDoubleLineClockPosition_top),
+                        stringResource(id = R.string.oneuialoha_statusBarDoubleLineClockPosition_middle),
+                        stringResource(id = R.string.oneuialoha_statusBarDoubleLineClockPosition_bottom),
                     )
                     val positionValues = listOf("top", "middle", "bottom")
                     val positionIndex = positionValues.indexOf(
@@ -277,7 +277,7 @@ fun StatusBarTimeControls(
                     ).let { if (it >= 0) it else 1 }
                     SelectItem(
                         icon = ImageVector.vectorResource(id = R.drawable.format_size),
-                        title = stringResource(id = R.string.oneuixp_statusBarDoubleLineClockPosition_title),
+                        title = stringResource(id = R.string.oneuialoha_statusBarDoubleLineClockPosition_title),
                         entries = positionLabels,
                         selectedIndex = positionIndex,
                         onSelectedIndexChange = {
@@ -293,12 +293,12 @@ fun StatusBarTimeControls(
                     mutableFloatStateOf(uiState.doubleLineClockGapDp)
                 }
                 var gapExpanded by rememberSaveable { mutableStateOf(false) }
-                OneuiXPPPreferenceGroup {
+                OneUIAlohaPPreferenceGroup {
                     SwitchItem(
-                        title = stringResource(id = R.string.oneuixp_statusBarDoubleLineClockGap_title),
+                        title = stringResource(id = R.string.oneuialoha_statusBarDoubleLineClockGap_title),
                         summary = if (uiState.modifyDoubleLineClockGap) {
                             stringResource(
-                                id = R.string.oneuixp_statusBarDoubleLineClockGap_summary,
+                                id = R.string.oneuialoha_statusBarDoubleLineClockGap_summary,
                                 lineGapDp
                             )
                         } else null,
@@ -311,10 +311,10 @@ fun StatusBarTimeControls(
                             onEvent(SystemUIEvent.StatusBar.ModifyDoubleLineClockGap(it))
                         }
                     )
-                    OneuiXPChildVisibility(
+                    OneUIAlohaChildVisibility(
                         gapExpanded && uiState.modifyDoubleLineClockGap
                     ) {
-                        OneuiXPSlider(
+                        OneUIAlohaSlider(
                             value = lineGapDp,
                             onValueChange = { raw ->
                                 val value = (raw * 10f).roundToInt() / 10f
@@ -340,8 +340,8 @@ fun StatusBarTimeControls(
                     }
                 }
                 if (!isFold7) {
-                    OneuiXPSupportingText(
-                        text = stringResource(id = R.string.oneuixp_statusBarDoubleLineClockSize_summary),
+                    OneUIAlohaSupportingText(
+                        text = stringResource(id = R.string.oneuialoha_statusBarDoubleLineClockSize_summary),
                         modifier = Modifier.padding(horizontal = 16.dp)
                     )
                 }
@@ -354,7 +354,7 @@ fun StatusBarTimeControls(
                 var expanded by rememberSaveable { mutableStateOf(false) }
 
                 SwitchItem(
-                    title = stringResource(id = R.string.oneuixp_setStatusBarClockTextScale_title),
+                    title = stringResource(id = R.string.oneuialoha_setStatusBarClockTextScale_title),
                     modifier = Modifier.animateContentSize(),
                     summary = if (uiState.setStatusBarClockTextScale) {
                         "%.2fx".format(scale)
@@ -372,8 +372,8 @@ fun StatusBarTimeControls(
                         onEvent(SystemUIEvent.StatusBar.SetStatusBarClockTextScale(it))
                     }
                 )
-                OneuiXPChildVisibility(expanded && uiState.setStatusBarClockTextScale) {
-                    OneuiXPSlider(
+                OneUIAlohaChildVisibility(expanded && uiState.setStatusBarClockTextScale) {
+                    OneUIAlohaSlider(
                         value = scale,
                         onValueChange = { raw ->
                             val value = (raw * 100f).roundToInt() / 100f
@@ -395,8 +395,8 @@ fun StatusBarTimeControls(
         }
         }
         SwitchItem(
-            title = stringResource(id = R.string.oneuixp_updateStatusBarClockEverySecond_title),
-            summary = stringResource(id = R.string.oneuixp_updateStatusBarClockEverySecond_summary),
+            title = stringResource(id = R.string.oneuialoha_updateStatusBarClockEverySecond_title),
+            summary = stringResource(id = R.string.oneuialoha_updateStatusBarClockEverySecond_summary),
             icon = ImageVector.vectorResource(id = R.drawable.nest_clock_farsight_digital),
             checked = uiState.updateStatusBarClockEverySecond,
             onCheckedChange = {

@@ -1,4 +1,4 @@
-package com.oneuixp.mod.ui.category
+package com.oneuialoha.mod.ui.category
 
 import android.os.Build
 import androidx.compose.animation.animateContentSize
@@ -16,13 +16,13 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
-import com.oneuixp.app.R
-import com.oneuixp.common.ONE_UI_VERSION
-import com.oneuixp.common.Preference
-import com.oneuixp.mod.ui.component.OneuiXPChildVisibility
-import com.oneuixp.mod.ui.component.OneuiXPPPreferenceGroup
-import com.oneuixp.mod.ui.component.OneuiXPSlider
-import com.oneuixp.mod.ui.component.SwitchItem
+import com.oneuialoha.app.R
+import com.oneuialoha.common.ONE_UI_VERSION
+import com.oneuialoha.common.Preference
+import com.oneuialoha.mod.ui.component.OneUIAlohaChildVisibility
+import com.oneuialoha.mod.ui.component.OneUIAlohaPPreferenceGroup
+import com.oneuialoha.mod.ui.component.OneUIAlohaSlider
+import com.oneuialoha.mod.ui.component.SwitchItem
 
 /**
  * Canonical status-bar battery/power controls shared by the legacy SystemUI
@@ -34,14 +34,14 @@ fun StatusBarPowerControls(
     uiState: Preference.SystemUI.StatusBar,
     onEvent: (SystemUIEvent) -> Unit,
 ) {
-    OneuiXPPPreferenceGroup {
+    OneUIAlohaPPreferenceGroup {
         var widthScale by remember(uiState.batteryIconWidthScale) {
             mutableFloatStateOf(uiState.batteryIconWidthScale)
         }
         var expanded by rememberSaveable { mutableStateOf(false) }
 
         SwitchItem(
-            title = stringResource(id = R.string.oneuixp_setBatteryIconWidthScale_title),
+            title = stringResource(id = R.string.oneuialoha_setBatteryIconWidthScale_title),
             modifier = Modifier.animateContentSize(),
             summary = if (uiState.setBatteryIconWidthScale) {
                 "%.2f".format(widthScale)
@@ -61,8 +61,8 @@ fun StatusBarPowerControls(
                 onEvent(SystemUIEvent.StatusBar.SetBatteryIconWidthScale(it))
             },
         )
-        OneuiXPChildVisibility(expanded && uiState.setBatteryIconWidthScale) {
-            OneuiXPSlider(
+        OneUIAlohaChildVisibility(expanded && uiState.setBatteryIconWidthScale) {
+            OneUIAlohaSlider(
                 value = widthScale,
                 onValueChange = { widthScale = it },
                 modifier = Modifier.padding(horizontal = 16.dp),
@@ -74,14 +74,14 @@ fun StatusBarPowerControls(
         }
     }
 
-    OneuiXPPPreferenceGroup {
+    OneUIAlohaPPreferenceGroup {
         var heightScale by remember(uiState.batteryIconHeightScale) {
             mutableFloatStateOf(uiState.batteryIconHeightScale)
         }
         var expanded by rememberSaveable { mutableStateOf(false) }
 
         SwitchItem(
-            title = stringResource(id = R.string.oneuixp_setBatteryIconHeightScale_title),
+            title = stringResource(id = R.string.oneuialoha_setBatteryIconHeightScale_title),
             modifier = Modifier.animateContentSize(),
             summary = if (uiState.setBatteryIconHeightScale) {
                 "%.2f".format(heightScale)
@@ -101,8 +101,8 @@ fun StatusBarPowerControls(
                 onEvent(SystemUIEvent.StatusBar.SetBatteryIconHeightScale(it))
             },
         )
-        OneuiXPChildVisibility(expanded && uiState.setBatteryIconHeightScale) {
-            OneuiXPSlider(
+        OneUIAlohaChildVisibility(expanded && uiState.setBatteryIconHeightScale) {
+            OneUIAlohaSlider(
                 value = heightScale,
                 onValueChange = { heightScale = it },
                 modifier = Modifier.padding(horizontal = 16.dp),
@@ -117,8 +117,8 @@ fun StatusBarPowerControls(
     if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
         SwitchItem(
             icon = ImageVector.vectorResource(id = R.drawable.battery),
-            title = stringResource(id = R.string.oneuixp_hideBatteryPercentageSign_title),
-            summary = stringResource(id = R.string.oneuixp_hideBatteryPercentageSign_summary),
+            title = stringResource(id = R.string.oneuialoha_hideBatteryPercentageSign_title),
+            summary = stringResource(id = R.string.oneuialoha_hideBatteryPercentageSign_summary),
             checked = uiState.hideBatteryPercentageSign,
             onCheckedChange = {
                 onEvent(SystemUIEvent.StatusBar.HideBatteryPercentageSign(it))
@@ -128,8 +128,8 @@ fun StatusBarPowerControls(
 
     SwitchItem(
         icon = ImageVector.vectorResource(id = R.drawable.battery),
-        title = stringResource(id = R.string.oneuixp_hideBatteryIcon_title),
-        summary = stringResource(id = R.string.oneuixp_hideBatteryIcon_summary),
+        title = stringResource(id = R.string.oneuialoha_hideBatteryIcon_title),
+        summary = stringResource(id = R.string.oneuialoha_hideBatteryIcon_summary),
         checked = uiState.hideBatteryIcon,
         onCheckedChange = {
             onEvent(SystemUIEvent.StatusBar.HideBatteryIcon(it))
@@ -137,23 +137,23 @@ fun StatusBarPowerControls(
     )
 
     if (ONE_UI_VERSION >= 70000) {
-        OneuiXPPPreferenceGroup {
+        OneUIAlohaPPreferenceGroup {
             SwitchItem(
                 icon = ImageVector.vectorResource(id = R.drawable.battery),
-                title = stringResource(id = R.string.oneuixp_addBatteryLevelText_title),
-                summary = stringResource(id = R.string.oneuixp_addBatteryLevelText_summary),
+                title = stringResource(id = R.string.oneuialoha_addBatteryLevelText_title),
+                summary = stringResource(id = R.string.oneuialoha_addBatteryLevelText_summary),
                 showChildIndicator = true,
                 checked = uiState.addBatteryLevelText,
                 onCheckedChange = {
                     onEvent(SystemUIEvent.StatusBar.AddBatteryLevelText(it))
                 },
             )
-            OneuiXPChildVisibility(uiState.addBatteryLevelText) {
+            OneUIAlohaChildVisibility(uiState.addBatteryLevelText) {
                 Column {
                     SwitchItem(
                         icon = ImageVector.vectorResource(id = R.drawable.battery),
                         title = stringResource(
-                            id = R.string.oneuixp_hideBatteryLevelTextPercentageSign_title
+                            id = R.string.oneuialoha_hideBatteryLevelTextPercentageSign_title
                         ),
                         checked = uiState.hideBatteryLevelTextPercentageSign,
                         onCheckedChange = {
@@ -165,7 +165,7 @@ fun StatusBarPowerControls(
                     SwitchItem(
                         icon = ImageVector.vectorResource(id = R.drawable.battery),
                         title = stringResource(
-                            id = R.string.oneuixp_hideBatteryLevelTextChargingIcon_title
+                            id = R.string.oneuialoha_hideBatteryLevelTextChargingIcon_title
                         ),
                         checked = uiState.hideBatteryLevelTextChargingIcon,
                         onCheckedChange = {

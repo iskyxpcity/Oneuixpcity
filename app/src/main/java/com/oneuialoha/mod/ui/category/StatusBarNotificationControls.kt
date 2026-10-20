@@ -1,4 +1,4 @@
-package com.oneuixp.mod.ui.category
+package com.oneuialoha.mod.ui.category
 
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.padding
@@ -14,12 +14,12 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
-import com.oneuixp.app.R
-import com.oneuixp.common.Preference
-import com.oneuixp.mod.ui.component.OneuiXPChildVisibility
-import com.oneuixp.mod.ui.component.OneuiXPPPreferenceGroup
-import com.oneuixp.mod.ui.component.OneuiXPSlider
-import com.oneuixp.mod.ui.component.SwitchItem
+import com.oneuialoha.app.R
+import com.oneuialoha.common.Preference
+import com.oneuialoha.mod.ui.component.OneUIAlohaChildVisibility
+import com.oneuialoha.mod.ui.component.OneUIAlohaPPreferenceGroup
+import com.oneuialoha.mod.ui.component.OneUIAlohaSlider
+import com.oneuialoha.mod.ui.component.SwitchItem
 import kotlin.math.roundToInt
 
 /**
@@ -32,14 +32,14 @@ fun StatusBarNotificationControls(
     uiState: Preference.SystemUI.StatusBar,
     onEvent: (SystemUIEvent) -> Unit,
 ) {
-    OneuiXPPPreferenceGroup {
+    OneUIAlohaPPreferenceGroup {
         var max by remember(uiState.statusBarMaxNotificationIcons) {
             mutableIntStateOf(uiState.statusBarMaxNotificationIcons)
         }
         var expanded by rememberSaveable { mutableStateOf(false) }
 
         SwitchItem(
-            title = stringResource(id = R.string.oneuixp_setStatusBarMaxNotificationIcons_title),
+            title = stringResource(id = R.string.oneuialoha_setStatusBarMaxNotificationIcons_title),
             modifier = Modifier.animateContentSize(),
             summary = if (uiState.modifyStatusBarMaxNotificationIcons) " $max" else null,
             icon = ImageVector.vectorResource(id = R.drawable.notifications),
@@ -55,8 +55,8 @@ fun StatusBarNotificationControls(
                 onEvent(SystemUIEvent.StatusBar.ModifyStatusBarMaxNotificationIcons(it))
             },
         )
-        OneuiXPChildVisibility(expanded && uiState.modifyStatusBarMaxNotificationIcons) {
-            OneuiXPSlider(
+        OneUIAlohaChildVisibility(expanded && uiState.modifyStatusBarMaxNotificationIcons) {
+            OneUIAlohaSlider(
                 value = max.toFloat(),
                 onValueChange = { max = it.roundToInt() },
                 modifier = Modifier.padding(horizontal = 16.dp),
