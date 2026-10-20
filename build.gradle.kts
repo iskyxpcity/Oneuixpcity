@@ -32,7 +32,7 @@ fun getGitDescribe(): String {
  * Increment oneuiAlohaVersionCode in gradle.properties for every formal release.
  */
 fun getVersionCode(): Int {
-    val explicit = (findProperty("oneuixpVersionCode") as? String)?.toIntOrNull()
+    val explicit = (findProperty("oneuiAlohaVersionCode") as? String)?.toIntOrNull()
     if (explicit != null && explicit > 0) return explicit
 
     val parts = getVersionName().removePrefix("v").split(".").mapNotNull { it.toIntOrNull() }
