@@ -1,4 +1,4 @@
-package com.oneuixp.app.ui.component.miuix
+package com.oneuialoha.app.ui.component.miuix
 
 import android.content.Intent
 import android.net.Uri
@@ -24,13 +24,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
-import com.oneuixp.app.R
-import com.oneuixp.app.ui.util.createOneuiXPDiagnosticShareIntent
-import com.oneuixp.app.ui.util.buildOneuiXPDiagnosticReport
-import com.oneuixp.app.ui.util.buildOneuiXPDiagnosticReportForExport
-import com.oneuixp.app.ui.util.oneuiXPDiagnosticFileName
-import com.oneuixp.app.ui.util.writeOneuiXPDiagnosticReport
-import com.oneuixp.app.ui.component.dialog.LoadingDialogHandle
+import com.oneuialoha.app.R
+import com.oneuialoha.app.ui.util.createOneUIAlohaDiagnosticShareIntent
+import com.oneuialoha.app.ui.util.buildOneUIAlohaDiagnosticReport
+import com.oneuialoha.app.ui.util.buildOneUIAlohaDiagnosticReportForExport
+import com.oneuialoha.app.ui.util.oneUIAlohaDiagnosticFileName
+import com.oneuialoha.app.ui.util.writeOneUIAlohaDiagnosticReport
+import com.oneuialoha.app.ui.component.dialog.LoadingDialogHandle
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextButton
@@ -56,10 +56,10 @@ fun SendLogDialog(
     ) { uri: Uri? ->
         if (uri != null) {
             try {
-                writeOneuiXPDiagnosticReport(
+                writeOneUIAlohaDiagnosticReport(
                     context,
                     uri,
-                    reportToExport ?: buildOneuiXPDiagnosticReport(context),
+                    reportToExport ?: buildOneUIAlohaDiagnosticReport(context),
                 )
                 Toast.makeText(context, savedText, Toast.LENGTH_SHORT).show()
             } catch (error: Exception) {
@@ -88,8 +88,8 @@ fun SendLogDialog(
                 },
                 onClick = {
                     scope.launch {
-                        reportToExport = buildOneuiXPDiagnosticReportForExport(context)
-                        saveLauncher.launch(oneuiXPDiagnosticFileName())
+                        reportToExport = buildOneUIAlohaDiagnosticReportForExport(context)
+                        saveLauncher.launch(oneUIAlohaDiagnosticFileName())
                         onDismissRequest()
                     }
                 },
@@ -103,10 +103,10 @@ fun SendLogDialog(
                 },
                 onClick = {
                     scope.launch {
-                        val report = buildOneuiXPDiagnosticReportForExport(context)
+                        val report = buildOneUIAlohaDiagnosticReportForExport(context)
                         context.startActivity(
                             Intent.createChooser(
-                                createOneuiXPDiagnosticShareIntent(context, report),
+                                createOneUIAlohaDiagnosticShareIntent(context, report),
                                 shareTitle,
                             )
                         )

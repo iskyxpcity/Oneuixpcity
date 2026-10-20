@@ -1,6 +1,6 @@
 // Mirrored from compose-miuix-ui example.
 
-package com.oneuixp.app.ui.component.miuix.effect
+package com.oneuialoha.app.ui.component.miuix.effect
 
 const val OS3_BG_FRAG = """
     uniform vec2 uResolution;

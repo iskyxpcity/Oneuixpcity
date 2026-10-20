@@ -1,4 +1,4 @@
-package com.oneuixp.app.ui.component.miuix
+package com.oneuialoha.app.ui.component.miuix
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -10,7 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.oneuixp.app.ui.theme.isInDarkTheme
+import com.oneuialoha.app.ui.theme.isInDarkTheme
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.CardDefaults
 import top.yukonga.miuix.kmp.basic.Text

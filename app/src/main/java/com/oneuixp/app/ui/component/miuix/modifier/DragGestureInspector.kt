@@ -1,4 +1,4 @@
-package com.oneuixp.app.ui.component.miuix.modifier
+package com.oneuialoha.app.ui.component.miuix.modifier
 
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown

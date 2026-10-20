@@ -1,4 +1,4 @@
-package com.oneuixp.app.ui.component.miuix
+package com.oneuialoha.app.ui.component.miuix
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -63,7 +63,7 @@ import androidx.compose.ui.zIndex
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
-import com.oneuixp.app.ui.component.SearchStatus
+import com.oneuialoha.app.ui.component.SearchStatus
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.InputField
 import top.yukonga.miuix.kmp.basic.Text
