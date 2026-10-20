@@ -176,9 +176,6 @@ for path in root.rglob("*"):
         continue
     if "LICENSE" in path.name.upper():
         continue
-    if rel == "verify_migration.py":
-        continue
-
     if old_namespace.lower() in rel.lower() or old_namespace.replace(".", "/").lower() in rel.lower():
         namespace_hits.append(rel)
     if legacy_owner_token in rel.lower():
