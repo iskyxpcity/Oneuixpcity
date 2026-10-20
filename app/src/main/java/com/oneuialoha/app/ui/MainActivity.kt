@@ -50,7 +50,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
-import com.oneuialoha.app.oneuixp.OneUIAlohaPreferenceBridge
+import com.oneuialoha.app.oneuialoha.OneUIAlohaPreferenceBridge
 import com.oneuialoha.app.ui.component.bottombar.BottomBar
 import com.oneuialoha.app.ui.component.bottombar.SideNavigationRail
 import com.oneuialoha.app.ui.component.bottombar.useNavigationRail
