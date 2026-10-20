@@ -1,4 +1,4 @@
-package com.oneuixp.app.ui
+package com.oneuialoha.app.ui
 
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
@@ -23,12 +23,12 @@ import android.view.View
 import android.view.animation.LinearInterpolator
 import androidx.activity.ComponentActivity
 import androidx.annotation.RequiresApi
-import com.oneuixp.app.R
-import com.oneuixp.app.data.repository.SettingsRepositoryImpl
-import com.oneuixp.app.ui.component.miuix.effect.BgEffectConfig
-import com.oneuixp.app.ui.component.miuix.effect.DeviceType
-import com.oneuixp.app.ui.component.miuix.effect.OS3_BG_FRAG
-import com.oneuixp.app.ui.theme.ColorMode
+import com.oneuialoha.app.R
+import com.oneuialoha.app.data.repository.SettingsRepositoryImpl
+import com.oneuialoha.app.ui.component.miuix.effect.BgEffectConfig
+import com.oneuialoha.app.ui.component.miuix.effect.DeviceType
+import com.oneuialoha.app.ui.component.miuix.effect.OS3_BG_FRAG
+import com.oneuialoha.app.ui.theme.ColorMode
 import kotlin.math.cos
 import kotlin.math.min
 import kotlin.math.roundToInt
@@ -48,7 +48,7 @@ class StartupActivity : ComponentActivity() {
         configureStartupWindow(darkMode)
 
         setContentView(
-            NativeOneuiXPStartupView(
+            NativeOneUIAlohaStartupView(
                 context = this,
                 darkMode = darkMode,
                 onFinished = ::openMainActivity,
@@ -91,7 +91,7 @@ class StartupActivity : ComponentActivity() {
     }
 }
 
-private class NativeOneuiXPStartupView(
+private class NativeOneUIAlohaStartupView(
     context: Context,
     private val darkMode: Boolean,
     private val onFinished: () -> Unit,
@@ -223,7 +223,7 @@ private class NativeOneuiXPStartupView(
     }
 
     private fun drawRainbowTitle(canvas: Canvas) {
-        val title = "OneUI XP"
+        val title = "OneUI Aloha"
         val firstLetterStart = 0.34f
         val letterDuration = 0.14f
         val visibleLetters = title.count { !it.isWhitespace() }.coerceAtLeast(1)

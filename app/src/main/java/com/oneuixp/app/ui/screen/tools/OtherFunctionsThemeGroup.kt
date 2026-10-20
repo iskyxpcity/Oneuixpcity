@@ -1,4 +1,4 @@
-package com.oneuixp.app.ui.screen.tools
+package com.oneuialoha.app.ui.screen.tools
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -8,12 +8,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.oneuixp.app.ui.LocalUiMode
-import com.oneuixp.app.ui.UiMode
-import com.oneuixp.app.ui.component.material.SegmentedColumn
-import com.oneuixp.app.ui.component.material.SegmentedListItem
-import com.oneuixp.app.ui.component.material.oneuiXPSegmentedColors
-import com.oneuixp.mod.ui.component.LocalOneuiXPGroupedPreference
+import com.oneuialoha.app.ui.LocalUiMode
+import com.oneuialoha.app.ui.UiMode
+import com.oneuialoha.app.ui.component.material.SegmentedColumn
+import com.oneuialoha.app.ui.component.material.SegmentedListItem
+import com.oneuialoha.app.ui.component.material.oneUIAlohaSegmentedColors
+import com.oneuialoha.mod.ui.component.LocalOneUIAlohaGroupedPreference
 import top.yukonga.miuix.kmp.basic.Card
 
 /**
@@ -34,7 +34,7 @@ fun OtherFunctionsThemeGroup(
             content = items.map { item ->
                 {
                     CompositionLocalProvider(
-                        LocalOneuiXPGroupedPreference provides true,
+                        LocalOneUIAlohaGroupedPreference provides true,
                     ) {
                         item()
                     }
@@ -46,7 +46,7 @@ fun OtherFunctionsThemeGroup(
             modifier = modifier.padding(horizontal = 12.dp, vertical = 4.dp),
         ) {
             CompositionLocalProvider(
-                LocalOneuiXPGroupedPreference provides true,
+                LocalOneUIAlohaGroupedPreference provides true,
             ) {
                 Column {
                     items.forEach { item -> item() }
@@ -65,7 +65,7 @@ fun OtherFunctionsThemeChildItem(
     when (LocalUiMode.current) {
         UiMode.Material -> SegmentedListItem(
             modifier = modifier,
-            colors = oneuiXPSegmentedColors(),
+            colors = oneUIAlohaSegmentedColors(),
             headlineContent = {
                 Box(
                     modifier = Modifier

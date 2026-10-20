@@ -1,4 +1,4 @@
-package com.oneuixp.app.ui.theme
+package com.oneuialoha.app.ui.theme
 
 import android.app.Activity
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -19,7 +19,7 @@ import top.yukonga.miuix.kmp.theme.ThemeController
 import top.yukonga.miuix.kmp.theme.ThemePaletteStyle
 
 @Composable
-fun MiuixOneuiXPTheme(
+fun MiuixOneUIAlohaTheme(
     appSettings: AppSettings,
     content: @Composable () -> Unit
 ) {

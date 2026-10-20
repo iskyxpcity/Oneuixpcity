@@ -1,4 +1,4 @@
-package com.oneuixp.app.ui.theme
+package com.oneuialoha.app.ui.theme
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb

@@ -1,4 +1,4 @@
-package com.oneuixp.app.ui.theme
+package com.oneuialoha.app.ui.theme
 
 import android.app.Activity
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -11,10 +11,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.core.view.WindowInsetsControllerCompat
 
 /**
- * OneuiXP Material theme implementation using the current upstream expressive theme model.
+ * OneUIAloha Material theme implementation using the current upstream expressive theme model.
  */
 @Composable
-fun MaterialOneuiXPTheme(
+fun MaterialOneUIAlohaTheme(
     appSettings: AppSettings,
     content: @Composable () -> Unit
 ) {
@@ -25,7 +25,7 @@ fun MaterialOneuiXPTheme(
     val amoledMode = appSettings.colorMode.isAmoled
     val dynamicColor = appSettings.keyColor == 0
 
-    val colorScheme = rememberOneuiXPColorScheme(
+    val colorScheme = rememberOneUIAlohaColorScheme(
         seedColor = if (dynamicColor) Color.Unspecified else Color(appSettings.keyColor),
         isDark = darkTheme,
         isAmoled = amoledMode,

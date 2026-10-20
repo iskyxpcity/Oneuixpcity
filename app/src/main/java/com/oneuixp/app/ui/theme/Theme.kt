@@ -1,4 +1,4 @@
-package com.oneuixp.app.ui.theme
+package com.oneuialoha.app.ui.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
@@ -6,10 +6,10 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.staticCompositionLocalOf
 import com.materialkolor.PaletteStyle
 import com.materialkolor.dynamiccolor.ColorSpec
-import com.oneuixp.app.data.repository.SettingsRepository
-import com.oneuixp.app.data.repository.SettingsRepositoryImpl
-import com.oneuixp.app.ui.LocalUiMode
-import com.oneuixp.app.ui.UiMode
+import com.oneuialoha.app.data.repository.SettingsRepository
+import com.oneuialoha.app.data.repository.SettingsRepositoryImpl
+import com.oneuialoha.app.ui.LocalUiMode
+import com.oneuialoha.app.ui.UiMode
 
 enum class ColorMode(val value: Int) {
     SYSTEM(0),
@@ -101,18 +101,18 @@ object ThemeController {
 }
 
 @Composable
-fun OneuiXPTheme(
+fun OneUIAlohaTheme(
     appSettings: AppSettings = ThemeController.getAppSettings(),
     uiMode: UiMode = LocalUiMode.current,
     content: @Composable () -> Unit
 ) {
     when (uiMode) {
-        UiMode.Miuix -> MiuixOneuiXPTheme(
+        UiMode.Miuix -> MiuixOneUIAlohaTheme(
             appSettings = appSettings,
             content = content
         )
 
-        UiMode.Material -> MaterialOneuiXPTheme(
+        UiMode.Material -> MaterialOneUIAlohaTheme(
             appSettings = appSettings,
             content = content
         )

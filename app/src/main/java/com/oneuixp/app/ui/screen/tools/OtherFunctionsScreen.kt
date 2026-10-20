@@ -1,4 +1,4 @@
-package com.oneuixp.app.ui.screen.tools
+package com.oneuialoha.app.ui.screen.tools
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -36,18 +36,18 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import com.oneuixp.app.R
-import com.oneuixp.app.ui.LocalUiMode
-import com.oneuixp.app.ui.UiMode
-import com.oneuixp.app.ui.component.rebootlistpopup.RebootListPopup
-import com.oneuixp.app.ui.navigation3.LocalNavigator
-import com.oneuixp.app.ui.theme.LocalEnableBlur
-import com.oneuixp.app.ui.util.BlurredBar
-import com.oneuixp.app.ui.util.rememberBlurBackdrop
-import com.oneuixp.app.ui.viewmodel.OneuiXPToolsViewModel
-import com.oneuixp.common.Preference
-import com.oneuixp.mod.ui.category.SystemUIEvent
-import com.oneuixp.mod.ui.category.onSystemUIEvent
+import com.oneuialoha.app.R
+import com.oneuialoha.app.ui.LocalUiMode
+import com.oneuialoha.app.ui.UiMode
+import com.oneuialoha.app.ui.component.rebootlistpopup.RebootListPopup
+import com.oneuialoha.app.ui.navigation3.LocalNavigator
+import com.oneuialoha.app.ui.theme.LocalEnableBlur
+import com.oneuialoha.app.ui.util.BlurredBar
+import com.oneuialoha.app.ui.util.rememberBlurBackdrop
+import com.oneuialoha.app.ui.viewmodel.OneUIAlohaToolsViewModel
+import com.oneuialoha.common.Preference
+import com.oneuialoha.mod.ui.category.SystemUIEvent
+import com.oneuialoha.mod.ui.category.onSystemUIEvent
 import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
 import top.yukonga.miuix.kmp.basic.IconButton as MiuixIconButton
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
@@ -62,7 +62,7 @@ import top.yukonga.miuix.kmp.utils.scrollEndHaptic
 @Composable
 fun OtherFunctionsScreen() {
     val navigator = LocalNavigator.current
-    val toolsViewModel = viewModel<OneuiXPToolsViewModel>()
+    val toolsViewModel = viewModel<OneUIAlohaToolsViewModel>()
     val preference by toolsViewModel.preference.collectAsStateWithLifecycle()
 
     when (LocalUiMode.current) {
@@ -113,7 +113,7 @@ private fun OtherFunctionsMaterial(
                         )
                     }
                 },
-                title = { Text(stringResource(R.string.oneuixp_other_functions_title)) },
+                title = { Text(stringResource(R.string.oneuialoha_other_functions_title)) },
                 actions = { RebootListPopup() },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface,
@@ -163,7 +163,7 @@ private fun OtherFunctionsMiuix(
     val scrollBehavior = MiuixScrollBehavior()
     val backdrop = rememberBlurBackdrop(LocalEnableBlur.current)
     val barColor = if (backdrop != null) Color.Transparent else colorScheme.surface
-    val title = stringResource(R.string.oneuixp_other_functions_title)
+    val title = stringResource(R.string.oneuialoha_other_functions_title)
 
     top.yukonga.miuix.kmp.basic.Scaffold(
         topBar = {

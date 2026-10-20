@@ -1,4 +1,4 @@
-package com.oneuixp.app.ui.theme
+package com.oneuialoha.app.ui.theme
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.spring
@@ -14,7 +14,7 @@ import com.materialkolor.rememberDynamicColorScheme
 
 /**
  * Adapted from the KernelSU v3.3.1 theme layer under GPL-3.0.
- * Kept as a OneuiXP-local theme helper; no KernelSU functionality is included.
+ * Kept as a OneUIAloha-local theme helper; no KernelSU functionality is included.
  */
 fun ColorScheme.amoledBackground(amoled: Boolean): ColorScheme =
     if (!amoled) this
@@ -30,7 +30,7 @@ fun ColorScheme.amoledBackground(amoled: Boolean): ColorScheme =
     )
 
 @Composable
-fun rememberOneuiXPColorScheme(
+fun rememberOneUIAlohaColorScheme(
     seedColor: Color,
     isDark: Boolean,
     isAmoled: Boolean,
