@@ -218,7 +218,7 @@ private class NativeOneUIAlohaStartupView(
         textPaint.alpha = (255f * progress).roundToInt().coerceIn(0, 255)
 
         val x = (width - textPaint.measureText(title)) / 2f
-        val y = height * 0.37f + dp(200f) / 2f + dp(61f) + dp(10f) * (1f - progress)
+        val y = height * 0.40f + dp(200f) / 2f + dp(31f) + dp(8f) * (1f - progress)
         canvas.drawText(title, x, y, textPaint)
     }
 
