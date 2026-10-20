@@ -3,7 +3,7 @@ package com.oneuialoha.app.ui.component.rebootlistpopup
 import android.widget.Toast
 import androidx.compose.runtime.rememberCoroutineScope
 import com.oneuialoha.app.oneUIAlohaApp
-import com.oneuialoha.app.oneuixp.OneUIAlohaPreferenceBridge
+import com.oneuialoha.app.oneuialoha.OneUIAlohaPreferenceBridge
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
