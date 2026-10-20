@@ -191,4 +191,14 @@
 
     <string name="nav_rail_expand">Expand navigation rail</string>
     <string name="nav_rail_collapse">Collapse navigation rail</string>
+    <string name="feature_intro_version_updates_2610191">OneUI XP 1.0.261019.1 Highlights</string>
+    <string name="feature_intro_version_updates_2610191_summary">2026-10-19</string>
+    <string name="version_1_0_2610191_title">OneUI XP 1.0.261019.1 Highlights</string>
+    <string name="version_1_0_2610191_summary">2026-10-19</string>
+    <string name="changelog_2610191_new_features_title">New features</string>
+    <string name="changelog_2610191_new_features_body">• Customizable power menu with configurable actions and ordering.\n• Disable screenshot sounds.\n• Call-return delay setting from 0–5 seconds.\n• Dual-pane layout option for System Settings.\n• Allow installation of older-version apps.\n• Remove secure-window screenshot restrictions.\n• Disable post-install app recommendations.\n• Soft-restart options for SystemUI and Android Runtime.</string>
+    <string name="changelog_2610191_optimizations_title">Improvements</string>
+    <string name="changelog_2610191_optimizations_body">• Refined status-bar combo icon layout and native icon spacing.\n• Improved native signal icon display and restoration behavior.\n• Improved persistence and migration of icon-scaling settings.\n• Better Material, Miuix and wide-screen layout adaptation.</string>
+    <string name="changelog_2610191_fixes_title">Fixes</string>
+    <string name="changelog_2610191_fixes_body">• Fixed abnormal icon-scale ratios during some settings migrations.\n• Fixed leftover blank space that could remain after hiding native icons.\n• Improved configuration reading and compatibility for some system functions.</string>
 </resources>
