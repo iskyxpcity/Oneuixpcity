@@ -1,4 +1,4 @@
-package com.oneuixp.app.ui.component.filter
+package com.oneuialoha.app.ui.component.filter
 
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue

@@ -1,7 +1,7 @@
 // Adapted from Kyant0/AndroidLiquidGlass — https://github.com/Kyant0/AndroidLiquidGlass (Apache 2.0).
 // Mirrored from compose-miuix-ui example.
 
-package com.oneuixp.app.ui.component.liquid
+package com.oneuialoha.app.ui.component.liquid
 
 import top.yukonga.miuix.kmp.blur.BackdropEffectScope
 import top.yukonga.miuix.kmp.blur.colorControls

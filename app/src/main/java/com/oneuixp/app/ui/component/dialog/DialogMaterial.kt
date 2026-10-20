@@ -1,4 +1,4 @@
-package com.oneuixp.app.ui.component.dialog
+package com.oneuialoha.app.ui.component.dialog
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
@@ -16,7 +16,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import com.oneuixp.app.ui.component.markdown.MarkdownContent
+import com.oneuialoha.app.ui.component.markdown.MarkdownContent
 
 @Composable
 fun LoadingDialogMaterial(showDialog: MutableState<Boolean>) {
