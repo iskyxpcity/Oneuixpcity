@@ -21,8 +21,8 @@ import androidx.compose.ui.unit.dp
 import com.oneuixp.app.R
 import io.github.soclear.oneuix.common.Preference
 import io.github.soclear.oneuix.ui.category.SystemUIEvent
-import io.github.soclear.oneuix.ui.component.OneuiXActionButton
-import io.github.soclear.oneuix.ui.component.OneuiXInlineTextField
+import com.oneuixp.mod.ui.component.OneuiXPActionButton
+import com.oneuixp.mod.ui.component.OneuiXPInlineTextField
 import io.github.soclear.oneuix.ui.component.SwitchItem
 
 @Composable
@@ -40,14 +40,14 @@ fun StatusNotificationCenterCategoryControls(
             add {
                 SwitchItem(
                     icon = ImageVector.vectorResource(id = R.drawable.music_note),
-                    title = stringResource(id = R.string.oneuix_hideOngoingActivityMedia_title),
+                    title = stringResource(id = R.string.oneuixp_hideOngoingActivityMedia_title),
                     summary = if (
                         uiState.hideOngoingActivityMedia &&
                         uiState.hideOngoingActivityMediaPackages.isNotEmpty()
                     ) {
                         uiState.hideOngoingActivityMediaPackages
                     } else {
-                        stringResource(id = R.string.oneuix_hideOngoingActivityMedia_summary)
+                        stringResource(id = R.string.oneuixp_hideOngoingActivityMedia_summary)
                     },
                     modifier = Modifier.animateContentSize(),
                     clickable = true,
@@ -72,18 +72,18 @@ fun StatusNotificationCenterCategoryControls(
                                 .fillMaxWidth()
                                 .padding(horizontal = 8.dp),
                         ) {
-                            OneuiXInlineTextField(
+                            OneuiXPInlineTextField(
                                 value = packages,
                                 onValueChange = { packages = it },
                                 modifier = Modifier.weight(1f),
                                 labelText = stringResource(
-                                    id = R.string.oneuix_hideOngoingActivityMedia_packages_hint
+                                    id = R.string.oneuixp_hideOngoingActivityMedia_packages_hint
                                 ),
                                 singleLine = true,
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            OneuiXActionButton(
-                                text = stringResource(id = R.string.oneuix_confirm),
+                            OneuiXPActionButton(
+                                text = stringResource(id = R.string.oneuixp_confirm),
                                 primary = true,
                                 onClick = {
                                     onEvent(
@@ -100,8 +100,8 @@ fun StatusNotificationCenterCategoryControls(
             add {
                 SwitchItem(
                     icon = ImageVector.vectorResource(id = R.drawable.notifications),
-                    title = stringResource(id = R.string.oneuix_disableNotificationGrouping_title),
-                    summary = stringResource(id = R.string.oneuix_disableNotificationGrouping_summary),
+                    title = stringResource(id = R.string.oneuixp_disableNotificationGrouping_title),
+                    summary = stringResource(id = R.string.oneuixp_disableNotificationGrouping_summary),
                     checked = uiState.disableNotificationGrouping,
                     onCheckedChange = {
                         onEvent(SystemUIEvent.Notification.DisableNotificationGrouping(it))
@@ -111,7 +111,7 @@ fun StatusNotificationCenterCategoryControls(
             add {
                 SwitchItem(
                     icon = ImageVector.vectorResource(id = R.drawable.notifications),
-                    title = stringResource(id = R.string.oneuix_autoExpandNotifications_title),
+                    title = stringResource(id = R.string.oneuixp_autoExpandNotifications_title),
                     checked = uiState.autoExpandNotifications,
                     onCheckedChange = {
                         onEvent(SystemUIEvent.Notification.AutoExpandNotifications(it))
