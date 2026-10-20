@@ -4,11 +4,11 @@ import android.os.Build
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.oneuialoha.app.oneUIAlohaApp
-import com.oneuialoha.app.oneuixp.OneUIAlohaPreferenceBridge
-import com.oneuialoha.app.oneuixp.OneUIAlohaSettingSpec
-import com.oneuialoha.app.oneuixp.OneUIAlohaSettingType
-import com.oneuialoha.app.oneuixp.OneUIAlohaVisibility
-import com.oneuialoha.app.oneuixp.oneUIAlohaDataStore
+import com.oneuialoha.app.oneuialoha.OneUIAlohaPreferenceBridge
+import com.oneuialoha.app.oneuialoha.OneUIAlohaSettingSpec
+import com.oneuialoha.app.oneuialoha.OneUIAlohaSettingType
+import com.oneuialoha.app.oneuialoha.OneUIAlohaVisibility
+import com.oneuialoha.app.oneuialoha.oneUIAlohaDataStore
 import com.oneuialoha.common.IgnoreUnknownKeysJson
 import com.oneuialoha.common.ONE_UI_VERSION
 import com.oneuialoha.common.PowerMenuAction
