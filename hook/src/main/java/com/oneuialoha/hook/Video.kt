@@ -1,4 +1,4 @@
-package com.oneuixp.hook
+package com.oneuialoha.hook
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -12,13 +12,13 @@ import android.widget.TextView
 import io.github.libxposed.api.XposedModule
 import io.github.libxposed.api.XposedModuleInterface
 import kotlinx.serialization.Serializable
-import com.oneuixp.common.Package
-import com.oneuixp.hook.util.HookConfig
-import com.oneuixp.hook.util.afterAttach
-import com.oneuixp.hook.util.getHookConfig
-import com.oneuixp.hook.util.longVersionCode
-import com.oneuixp.hook.util.reflect
-import com.oneuixp.hook.util.xlog
+import com.oneuialoha.common.Package
+import com.oneuialoha.hook.util.HookConfig
+import com.oneuialoha.hook.util.afterAttach
+import com.oneuialoha.hook.util.getHookConfig
+import com.oneuialoha.hook.util.longVersionCode
+import com.oneuialoha.hook.util.reflect
+import com.oneuialoha.hook.util.xlog
 import org.luckypray.dexkit.DexKitBridge
 import org.luckypray.dexkit.wrap.DexField
 import org.luckypray.dexkit.wrap.DexMethod

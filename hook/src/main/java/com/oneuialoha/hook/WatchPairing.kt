@@ -1,10 +1,10 @@
-package com.oneuixp.hook
+package com.oneuialoha.hook
 
 import io.github.libxposed.api.XposedModule
 import io.github.libxposed.api.XposedModuleInterface
-import com.oneuixp.common.Package
-import com.oneuixp.hook.util.reflect
-import com.oneuixp.hook.util.xlog
+import com.oneuialoha.common.Package
+import com.oneuialoha.hook.util.reflect
+import com.oneuialoha.hook.util.xlog
 
 object WatchPairing {
     const val MODE_NONE = 0
@@ -19,7 +19,7 @@ object WatchPairing {
     ) {
         if (param.packageName != Package.WATCH_MANAGER) return
 
-        xlog("OneuiXP: WatchPairing init: bypassRegionCheck=$bypassRegionCheck, connectionMode=$connectionMode")
+        xlog("OneUIAloha: WatchPairing init: bypassRegionCheck=$bypassRegionCheck, connectionMode=$connectionMode")
 
         if (bypassRegionCheck) {
             bypassRegionCheck()

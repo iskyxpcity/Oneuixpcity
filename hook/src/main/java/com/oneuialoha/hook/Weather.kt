@@ -1,11 +1,11 @@
-package com.oneuixp.hook
+package com.oneuialoha.hook
 
 import android.os.Build
 import io.github.libxposed.api.XposedInterface
 import io.github.libxposed.api.XposedModule
 import io.github.libxposed.api.XposedModuleInterface
-import com.oneuixp.common.Package
-import com.oneuixp.hook.util.xlog
+import com.oneuialoha.common.Package
+import com.oneuialoha.hook.util.xlog
 
 object Weather {
     context(xposedModule: XposedModule, param: XposedModuleInterface.PackageReadyParam)

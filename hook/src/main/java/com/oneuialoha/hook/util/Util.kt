@@ -1,4 +1,4 @@
-package com.oneuixp.hook.util
+package com.oneuialoha.hook.util
 
 import android.annotation.SuppressLint
 import android.app.Application
@@ -63,8 +63,8 @@ fun afterAttachTry(canRunAction: Boolean = true, action: Context.() -> Unit) {
 
     val caller = Throwable().stackTrace.firstOrNull { frame ->
         val name = frame.className
-        name != "com.oneuixp.hook.util.UtilKt" &&
-            !name.startsWith("com.oneuixp.hook.util.UtilKt$")
+        name != "com.oneuialoha.hook.util.UtilKt" &&
+            !name.startsWith("com.oneuialoha.hook.util.UtilKt$")
     }
     val installKey = caller?.let {
         "${it.className}#${it.methodName}:${it.lineNumber}"
@@ -96,7 +96,7 @@ fun addAssetPath(modulePath: String) {
                 resourcesLoader.addProvider(resourcesProvider)
                 context.resources.addLoaders(resourcesLoader)
             } catch (_: Throwable) {
-                // OneuiXP does not continuously emit LSPosed module logs.
+                // OneUIAloha does not continuously emit LSPosed module logs.
             }
         }
         result
@@ -116,5 +116,5 @@ fun xlog(
     throwable: Throwable? = null,
     priority: Int = Log.ERROR,
 ) {
-    // Intentionally silent. OneuiXP diagnostics are generated on demand from Settings.
+    // Intentionally silent. OneUIAloha diagnostics are generated on demand from Settings.
 }
