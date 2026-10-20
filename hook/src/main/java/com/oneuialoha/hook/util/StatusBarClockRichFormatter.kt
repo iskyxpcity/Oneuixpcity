@@ -1,4 +1,4 @@
-package com.oneuixp.hook.util
+package com.oneuialoha.hook.util
 
 import android.content.res.Resources
 import android.graphics.Canvas
@@ -10,8 +10,8 @@ import android.graphics.Typeface
 import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.style.ReplacementSpan
-import com.oneuixp.common.Preference
-import com.oneuixp.common.StatusBarClockBlockParser
+import com.oneuialoha.common.Preference
+import com.oneuialoha.common.StatusBarClockBlockParser
 import java.time.LocalDateTime
 import kotlin.math.ceil
 import kotlin.math.roundToInt

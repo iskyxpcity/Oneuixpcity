@@ -1,11 +1,11 @@
-package com.oneuixp.hook.util
+package com.oneuialoha.hook.util
 
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
 /**
- * Status-bar clock formatter with OneuiXP custom tokens.
+ * Status-bar clock formatter with OneUIAloha custom tokens.
  * Standard DateTimeFormatter patterns remain unchanged.
  *
  * Custom tokens:
