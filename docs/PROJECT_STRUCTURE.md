@@ -29,6 +29,14 @@
 - 旧安装识别常量 `com.oneuixp.app` 和 XP 更新源只允许保留在明确的迁移兼容逻辑中；不得把它们用作 Aloha 的 namespace、Xposed self-scope 或当前 APK package。
 - Aloha 的 `applicationId` 不同于 XP，因此它作为独立应用安装，不是原地覆盖升级。用户资料/设置不会自动转移；迁移说明必须如实告知用户。
 
+## 品牌图案与 Android 图标资源
+
+- `artwork/Logo001.jpg`、`artwork/Logo002.png` 保存用户提供的原始图稿，作为后续维护的源文件。
+- 应用启动器图标在 Android 8.0+ 使用 `app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml`，以前景 `drawable-nodpi/ic_launcher_foreground.png` 和颜色资源 `values/ic_launcher_colors.xml` 构成自适应图标；`mipmap-nodpi/ic_launcher.png` 为旧版 Android 回退图标。Manifest 继续引用 `@mipmap/ic_launcher`。
+- `Logo002` 的应用内绘制资源为 `drawable-nodpi/logo002.png`。原生开屏动画和 Material / Miuix 两套「关于」页面统一引用该资源，并分别控制显示尺寸。
+- 不要把开屏/关于页图案与启动器图标资源混用；变更时须同时验证两类显示位置。
+- 当前应用身份、`versionCode=100261022` 与 Owner 签名基线不因图标更新而改变。
+
 ## 构建与发布约定
 
 - `.github/workflows/build.yml` 执行源码预检、编译、签名及 APK 元数据 / V2 / ZIP 验证。
