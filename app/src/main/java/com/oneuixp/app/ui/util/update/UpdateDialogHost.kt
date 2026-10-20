@@ -1,4 +1,4 @@
-package com.oneuixp.app.ui.util.update
+package com.oneuialoha.app.ui.util.update
 
 import android.content.Intent
 import android.net.Uri
@@ -51,10 +51,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import com.oneuixp.app.BuildConfig
-import com.oneuixp.app.R
-import com.oneuixp.app.ui.component.material.ExpressiveToggleButton
-import com.oneuixp.app.ui.util.checkNewVersion
+import com.oneuialoha.app.BuildConfig
+import com.oneuialoha.app.R
+import com.oneuialoha.app.ui.component.material.ExpressiveToggleButton
+import com.oneuialoha.app.ui.util.checkNewVersion
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -74,8 +74,8 @@ import top.yukonga.miuix.kmp.blur.highlight.BloomStroke
 import top.yukonga.miuix.kmp.blur.highlight.Highlight
 import top.yukonga.miuix.kmp.blur.highlight.LightPosition
 import top.yukonga.miuix.kmp.blur.highlight.LightSource
-import com.oneuixp.app.ui.component.liquid.lens
-import com.oneuixp.app.ui.component.liquid.vibrancy
+import com.oneuialoha.app.ui.component.liquid.lens
+import com.oneuialoha.app.ui.component.liquid.vibrancy
 import top.yukonga.miuix.kmp.shader.isRenderEffectSupported
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
@@ -126,7 +126,7 @@ fun requestUpdateDialog(info: LatestVersionInfo) {
 }
 
 /**
- * Checks the public OneUI XP release feed without blocking the first frame.
+ * Checks the public OneUI Aloha release feed without blocking the first frame.
  * A dialog is only shown when the release feed advertises a newer stable version.
  */
 @Composable
