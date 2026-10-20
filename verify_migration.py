@@ -152,7 +152,8 @@ old_brand = re.compile(
     + _chars((79, 110, 101, 85, 73, 88))
     + "|"
     + legacy_project_segment
-    + r")P[a-z]"
+    + r")P[a-z]",
+    re.IGNORECASE,
 )
 legacy_name_pattern = re.compile(r"(?i)" + legacy_project_segment + r"(?!p)")
 ignored_dirs = {".git", ".gradle", "build"}
@@ -206,7 +207,7 @@ for path in root.rglob("*"):
         brand_hits.append(rel)
     if legacy_name_pattern.search(text):
         legacy_name_hits.append(rel)
-    if old_token in text:
+    if old_token.lower() in text.lower():
         token_hits.append(rel)
     if any(marker in text for marker in malformed_symbol_markers):
         malformed_symbol_hits.append(rel)
