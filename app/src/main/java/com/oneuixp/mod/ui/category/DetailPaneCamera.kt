@@ -1,4 +1,4 @@
-package com.oneuixp.mod.ui.category
+package com.oneuialoha.mod.ui.category
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -9,11 +9,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
-import com.oneuixp.app.R
-import com.oneuixp.common.Preference
-import com.oneuixp.app.ui.viewmodel.OneuiXPToolsViewModel
-import com.oneuixp.mod.ui.component.SwitchItem
-import com.oneuixp.mod.ui.component.OneuiXPDetailGroup
+import com.oneuialoha.app.R
+import com.oneuialoha.common.Preference
+import com.oneuialoha.app.ui.viewmodel.OneUIAlohaToolsViewModel
+import com.oneuialoha.mod.ui.component.SwitchItem
+import com.oneuialoha.mod.ui.component.OneUIAlohaDetailGroup
 
 @Composable
 fun DetailPaneCamera(
@@ -26,17 +26,17 @@ fun DetailPaneCamera(
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
     ) {
-        OneuiXPDetailGroup {
+        OneUIAlohaDetailGroup {
         SwitchItem(
             icon = ImageVector.vectorResource(id = R.drawable.camera),
-            title = stringResource(id = R.string.oneuixp_supportAllCameraMenu_title),
-            summary = stringResource(id = R.string.oneuixp_supportAllCameraMenu_summary),
+            title = stringResource(id = R.string.oneuialoha_supportAllCameraMenu_title),
+            summary = stringResource(id = R.string.oneuialoha_supportAllCameraMenu_summary),
             checked = uiState.supportAllCameraMenu,
             onCheckedChange = { onEvent(CameraEvent.SupportAllCameraMenu(it)) }
         )
         SwitchItem(
             icon = ImageVector.vectorResource(id = R.drawable.camera),
-            title = stringResource(id = R.string.oneuixp_disableCameraTemperatureCheck_title),
+            title = stringResource(id = R.string.oneuialoha_disableCameraTemperatureCheck_title),
             checked = uiState.disableCameraTemperatureCheck,
             onCheckedChange = { onEvent(CameraEvent.DisableCameraTemperatureCheck(it)) }
         )
@@ -52,7 +52,7 @@ sealed interface CameraEvent {
     value class DisableCameraTemperatureCheck(val value: Boolean) : CameraEvent
 }
 
-fun OneuiXPToolsViewModel.onCameraEvent(event: CameraEvent) {
+fun OneUIAlohaToolsViewModel.onCameraEvent(event: CameraEvent) {
     updateData { preference ->
         when (event) {
             is CameraEvent.SupportAllCameraMenu -> {
