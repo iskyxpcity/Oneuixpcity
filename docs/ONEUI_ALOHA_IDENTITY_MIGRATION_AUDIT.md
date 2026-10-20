@@ -93,3 +93,10 @@ Correction after a fresh check on 2026-10-20 HST: `GET /repos/iSkyJIE/OneUIAloha
 - Actions Run #766 (`39434732600`) built an Owner-signed Release APK but correctly failed candidate validation: the APK label, package, versionName, V2 signature and Owner certificate were correct, while its actual `versionCode=31465` did not match the required Aloha value `100261022`.
 - Root `build.gradle.kts` had read the obsolete `oneuixpVersionCode` property. The migration branch now reads `oneuiAlohaVersionCode`, so the explicit Aloha version property can be used by the Android app module. A version-source regression guard is also included in `verify_oneuialoha_identity.py`.
 - The failed candidate was not published. A new run on the follow-up HEAD must confirm the APK's actual versionCode and finish all remaining Release validation before any APK is delivered.
+
+
+## Current migration versionCode decision (2026-10-20 HST)
+
+- Per the latest user instruction, the current migration/test candidate now uses `oneuiAlohaVersionCode=11`; `oneuiAlohaVersionName=1.0.261021.1` is unchanged.
+- The previous value `100261022` above describes the earlier candidate at the time of that audit and is superseded for the current branch. The CI identity guard now asserts the explicitly selected value 11 rather than deriving Android `versionCode` from `versionName`.
+- This is a migration/test build, not a public formal release. Before a future formal release, update the versionCode property and the identity guard together after deciding the next code. Do not publish a public Release or merge `main` as part of this change.

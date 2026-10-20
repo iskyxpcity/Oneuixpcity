@@ -4,7 +4,7 @@
 
 - 用户可见应用名：`OneUI Aloha`
 - Android application ID / app namespace：`com.oneuialoha.app`
-- 当前迁移候选版本属性：`oneuiAlohaVersionName=1.0.261021.1`、`oneuiAlohaVersionCode=100261022`（须以最终构建 APK 为准）。
+- 当前迁移候选版本属性：`oneuiAlohaVersionName=1.0.261021.1`、`oneuiAlohaVersionCode=11`（当前迁移测试候选值；正式发布前另行确认并同步更新验证规则）。
 - Xposed 主入口：`com.oneuialoha.hook.Main`。
 - 模块命名空间：`com.oneuialoha.common`、`com.oneuialoha.hook`、`com.oneuialoha.stub`。
 - 可分发 APK 继续使用固定 Owner 签名证书基线：`93bf61a6493c6b336383832eb41301bd8fe061f43566e7e384e3fdd9fc1c26a1`；不得重生成或替换签名密钥。
@@ -32,10 +32,10 @@
 ## 品牌图案与 Android 图标资源
 
 - `artwork/Logo001.jpg`、`artwork/Logo002.png` 保存用户提供的原始图稿，作为后续维护的源文件。
-- 应用启动器图标在 Android 8.0+ 使用 `app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml`，以前景 `drawable-nodpi/ic_launcher_foreground.png` 和颜色资源 `values/ic_launcher_colors.xml` 构成自适应图标；`mipmap-nodpi/ic_launcher.png` 为旧版 Android 回退图标。Manifest 继续引用 `@mipmap/ic_launcher`。
+- 应用启动器图标在 Android 8.0+ 使用 `app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml`，以前景 `drawable-nodpi/ic_launcher_foreground_logo001.png` 和颜色资源 `values/ic_launcher_colors.xml` 构成自适应图标；`mipmap-nodpi/ic_launcher.png` 为旧版 Android 回退图标。Manifest 继续引用 `@mipmap/ic_launcher`。
 - `Logo002` 的应用内绘制资源为 `drawable-nodpi/logo002.png`。原生开屏动画和 Material / Miuix 两套「关于」页面统一引用该资源，并分别控制显示尺寸。
 - 不要把开屏/关于页图案与启动器图标资源混用；变更时须同时验证两类显示位置。
-- 当前应用身份、`versionCode=100261022` 与 Owner 签名基线不因图标更新而改变。
+- 当前应用身份、`versionCode=11` 与 Owner 签名基线不因图标更新而改变。
 
 ## 构建与发布约定
 

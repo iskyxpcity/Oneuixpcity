@@ -8,7 +8,7 @@ OneUI Aloha 是面向 Samsung One UI 的独立 Android / LSPosed 模块，提供
 - Android application ID / app namespace：`com.oneuialoha.app`
 - Hook 入口：`com.oneuialoha.hook.Main`
 - Xposed API：`101`
-- 当前源码迁移候选：`1.0.261021.1`（versionCode：`100261022`；以最终已验证构建为准）
+- 当前源码迁移候选：`1.0.261021.1`（versionCode：`11`；当前迁移测试候选值，以最终已验证构建为准）
 - Xposed self-scope：`app/src/main/resources/META-INF/xposed/scope.list`
 
 变更后的 application ID 使 OneUI Aloha 成为独立安装的 Android 应用，而不是 OneUI XP 的原地升级。Android 不会因安装 Aloha 自动迁移旧 XP 的应用数据或 DataStore 设置；安装前请保留旧应用及需要的配置备份。

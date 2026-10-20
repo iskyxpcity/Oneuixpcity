@@ -46,17 +46,19 @@ check("Root Gradle consumes the Aloha versionCode property",
       and 'findProperty("oneuixpVersionCode")' not in root_gradle)
 check("Gradle version properties are explicit",
       "oneuiAlohaVersionName=1.0.261021.1" in gradle_props
-      and "oneuiAlohaVersionCode=100261022" in gradle_props)
+      and "oneuiAlohaVersionCode=11" in gradle_props)
 version_name = re.search(r"(?m)^oneuiAlohaVersionName=(\S+)$", gradle_props)
 version_code = re.search(r"(?m)^oneuiAlohaVersionCode=(\d+)$", gradle_props)
 version_ok = False
 if version_name and version_code:
     components = [int(v) for v in version_name.group(1).split(".")]
-    if len(components) in (3, 4):
-        derived = components[0] * 100_000_000 + components[1] * 1_000_000 + components[2] + (components[3] if len(components) == 4 else 0)
-        version_ok = derived == int(version_code.group(1))
-check("Aloha versionCode matches updater four-part comparison", version_ok,
-      "versionName/versionCode drift")
+    version_ok = (
+        len(components) in (3, 4)
+        and all(component >= 0 for component in components)
+        and int(version_code.group(1)) == 11
+    )
+check("Aloha migration/test versionCode is explicitly set to 11", version_ok,
+      "expected user-selected versionCode=11; update this guard with the next formal-release decision")
 
 check("App Manifest points at the Aloha Application and themes",
       'android:name=".OneUIAlohaApplication"' in manifest
