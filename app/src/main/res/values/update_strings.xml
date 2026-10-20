@@ -19,5 +19,5 @@
     <string name="update_dialog_failed_detail">Update failed: %1$s</string>
     <string name="update_dialog_unknown_error">Unknown error</string>
     <string name="changelog_261018_update_dialog_title">In-app update dialog</string>
-    <string name="changelog_261018_update_dialog_body">Check the public stable release on startup; show release notes in a themed dialog; verify the downloaded APK digest, package, version and signer; then try to reopen OneUI XP after installation.</string>
+    <string name="changelog_261018_update_dialog_body">Check the public stable release on startup; show release notes in a themed dialog; verify the downloaded APK digest, package, version and signer; then try to reopen OneUI Aloha after installation.</string>
 </resources>
