@@ -248,7 +248,7 @@ private class NativeOneUIAlohaStartupView(
         }
 
         var x = (width - totalWidth) / 2f
-        val baseline = height * 0.37f + dp(200f) / 2f + dp(113f)
+        val baseline = height * 0.40f + dp(200f) / 2f + dp(73f)
         var visibleIndex = 0
 
         title.forEachIndexed { index, c ->
