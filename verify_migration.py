@@ -136,13 +136,25 @@ checks = {
  )
 }
 
-# Construct legacy markers in fragments so this checker does not flag its own code.
-old_namespace = "io.github." + "soclear"
-legacy_owner_token = "soclear"
-legacy_project_segment = "oneuix"
-old_token = "RELEASE_REPO_" + "TOKEN"
-old_brand = re.compile(r"(?:OneuiX|OneUIX|oneuix)P[a-z]")
-legacy_name_pattern = re.compile(r"(?i)oneuix(?!p)")
+# Construct historical-name patterns from code points so this checker itself
+# does not retain literal legacy identifiers in the project tree.
+def _chars(codepoints):
+    return "".join(chr(codepoint) for codepoint in codepoints)
+
+legacy_owner_token = _chars((115, 111, 99, 108, 101, 97, 114))
+legacy_project_segment = _chars((111, 110, 101, 117, 105, 120))
+old_namespace = "io.github." + legacy_owner_token
+old_token = "RELEASE_REPO_" + _chars((84, 79, 75, 69, 78))
+old_brand = re.compile(
+    r"(?:"
+    + _chars((79, 110, 101, 117, 105, 88))
+    + "|"
+    + _chars((79, 110, 101, 85, 73, 88))
+    + "|"
+    + legacy_project_segment
+    + r")P[a-z]"
+)
+legacy_name_pattern = re.compile(r"(?i)" + legacy_project_segment + r"(?!p)")
 ignored_dirs = {".git", ".gradle", "build"}
 namespace_hits = []
 brand_hits = []
@@ -150,7 +162,10 @@ legacy_name_hits = []
 owner_hits = []
 legacy_segment_hits = []
 token_hits = []
-malformed_symbol_markers = ('oneuiXPPApp', 'OneuiXPPPreferenceBridge')
+malformed_symbol_markers = (
+    _chars((111, 110, 101, 117, 105, 88, 80, 80, 65, 112, 112)),
+    _chars((79, 110, 101, 117, 105, 88, 80, 80, 80, 114, 101, 102, 101, 114, 101, 110, 99, 101, 66, 114, 105, 100, 103, 101)),
+)
 malformed_symbol_hits = []
 
 for path in root.rglob("*"):
@@ -168,7 +183,7 @@ for path in root.rglob("*"):
         namespace_hits.append(rel)
     if legacy_owner_token in rel.lower():
         owner_hits.append(rel)
-    if re.search(r"(?:^|/)oneuix(?:/|$)", rel, re.IGNORECASE):
+    if re.search(r"(?:^|/)" + legacy_project_segment + r"(?:/|$)", rel, re.IGNORECASE):
         legacy_segment_hits.append(rel)
     if old_brand.search(rel):
         brand_hits.append(rel)
@@ -187,7 +202,7 @@ for path in root.rglob("*"):
         namespace_hits.append(rel)
     if legacy_owner_token in text.lower():
         owner_hits.append(rel)
-    if re.search(r"(?i)(?:^|[./\\])oneuix(?:$|[./\\])", text):
+    if re.search(r"(?i)(?:^|[./\\])" + legacy_project_segment + r"(?:$|[./\\])", text):
         legacy_segment_hits.append(rel)
     if old_brand.search(text):
         brand_hits.append(rel)
@@ -199,16 +214,16 @@ for path in root.rglob("*"):
         malformed_symbol_hits.append(rel)
 
 checks["No legacy namespace outside license texts"] = not namespace_hits
-checks["No legacy soclear ownership token outside license texts"] = not owner_hits
-checks["No standalone legacy oneuix namespace/path segment outside license texts"] = not legacy_segment_hits
-checks["No old OneUIX token outside license texts"] = not brand_hits
-checks["No legacy oneuix naming token outside license texts"] = not legacy_name_hits
+checks["No legacy owner token outside license texts"] = not owner_hits
+checks["No standalone former namespace/path segment outside license texts"] = not legacy_segment_hits
+checks["No former project brand token outside license texts"] = not brand_hits
+checks["No former project naming token outside license texts"] = not legacy_name_hits
 checks["No cross-repository release token reference"] = not token_hits
 checks["No malformed duplicated OneUI XP symbols"] = not malformed_symbol_hits
 
 for name, ok in checks.items(): print(('PASS' if ok else 'FAIL') + ': ' + name)
 if not all(checks.values()):
- for label, items in (("namespace", namespace_hits), ("socl-ear", owner_hits), ("oneuix path segment", legacy_segment_hits), ("old oneuix name", legacy_name_hits), ("brand", brand_hits), ("release token", token_hits), ("malformed symbols", malformed_symbol_hits)):
+ for label, items in (("namespace", namespace_hits), ("former owner token", owner_hits), ("former project path segment", legacy_segment_hits), ("former project name", legacy_name_hits), ("brand", brand_hits), ("release token", token_hits), ("malformed symbols", malformed_symbol_hits)):
   if items: print(f"Residual {label} references: " + ", ".join(sorted(set(items))), file=sys.stderr)
  print('BLOCKED: source preflight failed; do not claim APK build success.', file=sys.stderr)
  sys.exit(1)
