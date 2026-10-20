@@ -1,4 +1,4 @@
-package com.oneuixp.common
+package com.oneuialoha.common
 
 import android.graphics.Canvas
 import android.graphics.Color
@@ -7,7 +7,7 @@ import android.graphics.Path
 import android.graphics.Rect
 import android.graphics.RectF
 import android.graphics.Typeface
-import com.oneuixp.common.Preference.SystemUI.StatusBarComboStyleOneRuntime
+import com.oneuialoha.common.Preference.SystemUI.StatusBarComboStyleOneRuntime
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.max
@@ -1840,7 +1840,7 @@ object StatusComboStyleOneGlyphRenderer {
         if (!config.roleColors) return tint
         val darkBackground = luminance(tint) > 0.5f
         return when {
-            // OneuiXP behavior: charging color wins over low/critical and power-save colors.
+            // OneUIAloha behavior: charging color wins over low/critical and power-save colors.
             state.charging ->
                 if (darkBackground) config.chargingColorDarkArgb else config.chargingColorLightArgb
             // The critical cutoff is exclusive; its exact value belongs to the low color.

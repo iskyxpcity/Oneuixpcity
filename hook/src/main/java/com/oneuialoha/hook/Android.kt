@@ -1,12 +1,12 @@
-package com.oneuixp.hook
+package com.oneuialoha.hook
 
 import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.os.Bundle
 import io.github.libxposed.api.XposedModule
 import io.github.libxposed.api.XposedModuleInterface
-import com.oneuixp.hook.util.reflect
-import com.oneuixp.hook.util.xlog
+import com.oneuialoha.hook.util.reflect
+import com.oneuialoha.hook.util.xlog
 
 @SuppressLint("PrivateApi")
 object Android {

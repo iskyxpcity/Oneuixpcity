@@ -1,4 +1,4 @@
-package com.oneuixp.common
+package com.oneuialoha.common
 
 import android.os.SystemProperties
 
