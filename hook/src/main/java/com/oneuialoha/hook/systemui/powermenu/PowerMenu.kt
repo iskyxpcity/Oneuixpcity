@@ -1,4 +1,4 @@
-package com.oneuixp.hook.systemui.powermenu
+package com.oneuialoha.hook.systemui.powermenu
 
 import com.samsung.android.globalactions.presentation.SamsungGlobalActions
 import com.samsung.android.globalactions.presentation.SamsungGlobalActionsPresenter
@@ -6,11 +6,11 @@ import com.samsung.android.globalactions.presentation.viewmodel.ActionViewModel
 import com.samsung.android.globalactions.presentation.viewmodel.ViewType
 import io.github.libxposed.api.XposedModule
 import io.github.libxposed.api.XposedModuleInterface
-import com.oneuixp.common.Package
-import com.oneuixp.common.PowerMenuAction
-import com.oneuixp.hook.util.reflect
-import com.oneuixp.hook.util.HookInstallTracker
-import com.oneuixp.hook.util.xlog
+import com.oneuialoha.common.Package
+import com.oneuialoha.common.PowerMenuAction
+import com.oneuialoha.hook.util.reflect
+import com.oneuialoha.hook.util.HookInstallTracker
+import com.oneuialoha.hook.util.xlog
 
 object PowerMenu {
     private var installed = false

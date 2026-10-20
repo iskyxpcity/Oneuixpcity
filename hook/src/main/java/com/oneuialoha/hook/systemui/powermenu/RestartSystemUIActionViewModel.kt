@@ -1,4 +1,4 @@
-package com.oneuixp.hook.systemui.powermenu
+package com.oneuialoha.hook.systemui.powermenu
 
 import android.os.Handler
 import android.os.Looper
@@ -7,10 +7,10 @@ import com.samsung.android.globalactions.presentation.SamsungGlobalActions
 import com.samsung.android.globalactions.presentation.viewmodel.ActionInfo
 import com.samsung.android.globalactions.presentation.viewmodel.ActionViewModel
 import com.samsung.android.globalactions.presentation.viewmodel.ViewType
-import com.oneuixp.common.PowerMenuAction
-import com.oneuixp.hook.R
-import com.oneuixp.hook.util.currentContext
-import com.oneuixp.common.R as CommonR
+import com.oneuialoha.common.PowerMenuAction
+import com.oneuialoha.hook.R
+import com.oneuialoha.hook.util.currentContext
+import com.oneuialoha.common.R as CommonR
 
 class RestartSystemUIActionViewModel(
     private val globalActions: SamsungGlobalActions,
