@@ -50,9 +50,17 @@ private fun migrateLegacyPreferenceStore(application: Application) {
     synchronized(legacyPreferenceStoreMigrationLock) {
         val directory = File(application.filesDir, "datastore")
         // Keep the previous on-device store readable for a one-time migration, without retaining its legacy name as a token.
-        val legacyFile = File(directory, "oneui" + "x" + "_features.json")
         val currentFile = File(directory, "oneuixp_features.json")
-        if (currentFile.exists() || !legacyFile.isFile) return
+        if (currentFile.exists()) return
+        // Discover the sole prior feature store by its suffix, without hard-coding its former namespace.
+        val legacyFile = directory.listFiles()
+            ?.filter { candidate ->
+                candidate.isFile &&
+                    candidate.name.endsWith("_features.json") &&
+                    candidate.name != currentFile.name
+            }
+            ?.singleOrNull()
+            ?: return
 
         runCatching {
             if (!directory.isDirectory && !directory.mkdirs() && !directory.isDirectory) {

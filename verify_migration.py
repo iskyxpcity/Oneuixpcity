@@ -37,6 +37,10 @@ checks = {
  'Flux-style no heartbeat bridge': not (root/'app/src/main/java/com/oneuixp/app/statusbar/StatusBridge.java').exists() and '${applicationId}.statusbridge' not in (root/'app/src/main/AndroidManifest.xml').read_text() and 'startHeartbeat(' not in (root/'hook/src/main/java/com/oneuixp/hook/util/OneuiXPStatusReporter.kt').read_text(),
  'OneuiXP application ID': 'com.oneuixp.app' in (root/'app/build.gradle.kts').read_text(),
  'Preference bridge uses canonical OneUI XP symbol': 'object OneuiXPPreferenceBridge' in preference_bridge_source,
+ 'Feature store migration does not hard-code former namespace': (
+     'candidate.name.endsWith("_features.json")' in preference_bridge_source
+     and 'oneui" + "x"' not in preference_bridge_source
+ ),
  'Composite glyph is isolated from legacy preference migration': 'comboStyleOneRuntime' not in migration_source and not any(marker in migration_source or marker in preference_source for marker in legacy_combo_markers),
  'Native mobile signal is restored when outside stacking is off': (
      'config.signalMode == 0 || (config.signalMode == 1 && config.stackedSignal)' in combo_runtime_source
