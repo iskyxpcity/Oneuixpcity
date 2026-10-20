@@ -1,4 +1,4 @@
-package com.oneuixp.app.ui.util
+package com.oneuialoha.app.ui.util
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable

@@ -1,4 +1,4 @@
-package com.oneuixp.app.ui
+package com.oneuialoha.app.ui
 
 import androidx.compose.runtime.staticCompositionLocalOf
 

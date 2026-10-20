@@ -1,4 +1,4 @@
-package com.oneuixp.app.ui.util
+package com.oneuialoha.app.ui.util
 
 import android.content.Context
 import android.content.pm.ApplicationInfo
@@ -11,7 +11,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
-import com.oneuixp.app.ui.util.AppIconCache.getMainUserId
+import com.oneuialoha.app.ui.util.AppIconCache.getMainUserId
 import me.zhanghai.android.appiconloader.AppIconLoader
 import org.lsposed.hiddenapibypass.HiddenApiBypass
 import java.util.concurrent.ConcurrentHashMap
