@@ -49,7 +49,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.oneuialoha.app.R
-import com.oneuialoha.app.oneuixp.OneUIAlohaCategory
+import com.oneuialoha.app.oneuialoha.OneUIAlohaCategory
 import com.oneuialoha.app.ui.LocalUiMode
 import com.oneuialoha.app.ui.UiMode
 import com.oneuialoha.app.ui.component.configtransfer.ConfigTransferPopup
