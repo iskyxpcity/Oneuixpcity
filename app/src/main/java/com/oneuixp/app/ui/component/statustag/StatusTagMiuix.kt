@@ -1,4 +1,4 @@
-package com.oneuixp.app.ui.component.statustag
+package com.oneuialoha.app.ui.component.statustag
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box

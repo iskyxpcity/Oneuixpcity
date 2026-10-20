@@ -1,4 +1,4 @@
-package com.oneuixp.app.ui.screen.about
+package com.oneuialoha.app.ui.screen.about
 
 import android.os.Build
 import androidx.compose.foundation.Image
@@ -55,13 +55,13 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.flow.onEach
-import com.oneuixp.app.R
-import com.oneuixp.app.ui.component.miuix.effect.BgEffectBackground
-import com.oneuixp.app.ui.component.miuix.effect.ColorBlendToken
-import com.oneuixp.app.ui.theme.LocalEnableBlur
-import com.oneuixp.app.ui.theme.isInDarkTheme
-import com.oneuixp.app.ui.util.BlurredBar
-import com.oneuixp.app.ui.util.rememberBlurBackdrop
+import com.oneuialoha.app.R
+import com.oneuialoha.app.ui.component.miuix.effect.BgEffectBackground
+import com.oneuialoha.app.ui.component.miuix.effect.ColorBlendToken
+import com.oneuialoha.app.ui.theme.LocalEnableBlur
+import com.oneuialoha.app.ui.theme.isInDarkTheme
+import com.oneuialoha.app.ui.util.BlurredBar
+import com.oneuialoha.app.ui.util.rememberBlurBackdrop
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.CardDefaults
 import top.yukonga.miuix.kmp.basic.Icon

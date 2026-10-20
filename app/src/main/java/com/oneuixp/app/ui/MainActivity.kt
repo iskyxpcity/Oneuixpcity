@@ -1,4 +1,4 @@
-package com.oneuixp.app.ui
+package com.oneuialoha.app.ui
 
 import android.annotation.SuppressLint
 import android.content.Intent
@@ -50,46 +50,46 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
-import com.oneuixp.app.oneuixp.OneuiXPPreferenceBridge
-import com.oneuixp.app.ui.component.bottombar.BottomBar
-import com.oneuixp.app.ui.component.bottombar.SideNavigationRail
-import com.oneuixp.app.ui.component.bottombar.useNavigationRail
-import com.oneuixp.app.ui.component.bottombar.MainPagerState
-import com.oneuixp.app.ui.component.bottombar.rememberMainPagerState
-import com.oneuixp.app.ui.navigation3.LocalNavigator
-import com.oneuixp.app.ui.navigation3.Navigator
-import com.oneuixp.app.ui.navigation3.Route
-import com.oneuixp.app.ui.navigation3.rememberNavigator
-import com.oneuixp.app.ui.screen.about.AboutScreen
-import com.oneuixp.app.ui.screen.about.DisclaimerScreen
-import com.oneuixp.app.ui.screen.about.FeatureIntroductionScreen
-import com.oneuixp.app.ui.screen.about.VersionChangelogScreen
-import com.oneuixp.app.ui.screen.about.VersionChangelog2610191Screen
-import com.oneuixp.app.ui.screen.about.VersionChangelog261013Screen
-import com.oneuixp.app.ui.screen.about.VersionChangelog261018Screen
-import com.oneuixp.app.ui.screen.about.VersionChangelog261016Screen
-import com.oneuixp.app.ui.screen.colorpalette.ColorPaletteScreen
-import com.oneuixp.app.ui.screen.home.HomePager
-import com.oneuixp.app.ui.screen.home.LocalLsposedHomeStatus
-import com.oneuixp.app.ui.screen.home.rememberLsposedHomeStatus
-import com.oneuixp.app.ui.screen.status.StatusPager
-import com.oneuixp.app.ui.screen.status.StatusCategoryScreen
-import com.oneuixp.app.ui.screen.settings.SettingPager
-import com.oneuixp.app.ui.screen.tools.ToolsPager
-import com.oneuixp.app.ui.screen.tools.OneuiXPCategoryScreen
-import com.oneuixp.app.ui.screen.tools.OtherFunctionsScreen
-import com.oneuixp.app.ui.screen.tools.CallReturnDelayScreen
-import com.oneuixp.app.ui.theme.LocalColorMode
-import com.oneuixp.app.ui.theme.LocalEnableBlur
-import com.oneuixp.app.ui.theme.LocalEnableFloatingBottomBar
-import com.oneuixp.app.ui.theme.LocalEnableFloatingBottomBarBlur
-import com.oneuixp.app.ui.theme.OneuiXPTheme
-import com.oneuixp.app.ui.util.rememberBlurBackdrop
-import com.oneuixp.app.ui.util.rememberContentReady
-import com.oneuixp.app.ui.util.update.UpdateDialogHost
-import com.oneuixp.app.ui.util.update.handleUpdateInstallStatus
-import com.oneuixp.app.ui.viewmodel.MainActivityViewModel
-import com.oneuixp.app.ui.viewmodel.MainPagerConfig
+import com.oneuialoha.app.oneuixp.OneUIAlohaPreferenceBridge
+import com.oneuialoha.app.ui.component.bottombar.BottomBar
+import com.oneuialoha.app.ui.component.bottombar.SideNavigationRail
+import com.oneuialoha.app.ui.component.bottombar.useNavigationRail
+import com.oneuialoha.app.ui.component.bottombar.MainPagerState
+import com.oneuialoha.app.ui.component.bottombar.rememberMainPagerState
+import com.oneuialoha.app.ui.navigation3.LocalNavigator
+import com.oneuialoha.app.ui.navigation3.Navigator
+import com.oneuialoha.app.ui.navigation3.Route
+import com.oneuialoha.app.ui.navigation3.rememberNavigator
+import com.oneuialoha.app.ui.screen.about.AboutScreen
+import com.oneuialoha.app.ui.screen.about.DisclaimerScreen
+import com.oneuialoha.app.ui.screen.about.FeatureIntroductionScreen
+import com.oneuialoha.app.ui.screen.about.VersionChangelogScreen
+import com.oneuialoha.app.ui.screen.about.VersionChangelog2610191Screen
+import com.oneuialoha.app.ui.screen.about.VersionChangelog261013Screen
+import com.oneuialoha.app.ui.screen.about.VersionChangelog261018Screen
+import com.oneuialoha.app.ui.screen.about.VersionChangelog261016Screen
+import com.oneuialoha.app.ui.screen.colorpalette.ColorPaletteScreen
+import com.oneuialoha.app.ui.screen.home.HomePager
+import com.oneuialoha.app.ui.screen.home.LocalLsposedHomeStatus
+import com.oneuialoha.app.ui.screen.home.rememberLsposedHomeStatus
+import com.oneuialoha.app.ui.screen.status.StatusPager
+import com.oneuialoha.app.ui.screen.status.StatusCategoryScreen
+import com.oneuialoha.app.ui.screen.settings.SettingPager
+import com.oneuialoha.app.ui.screen.tools.ToolsPager
+import com.oneuialoha.app.ui.screen.tools.OneUIAlohaCategoryScreen
+import com.oneuialoha.app.ui.screen.tools.OtherFunctionsScreen
+import com.oneuialoha.app.ui.screen.tools.CallReturnDelayScreen
+import com.oneuialoha.app.ui.theme.LocalColorMode
+import com.oneuialoha.app.ui.theme.LocalEnableBlur
+import com.oneuialoha.app.ui.theme.LocalEnableFloatingBottomBar
+import com.oneuialoha.app.ui.theme.LocalEnableFloatingBottomBarBlur
+import com.oneuialoha.app.ui.theme.OneUIAlohaTheme
+import com.oneuialoha.app.ui.util.rememberBlurBackdrop
+import com.oneuialoha.app.ui.util.rememberContentReady
+import com.oneuialoha.app.ui.util.update.UpdateDialogHost
+import com.oneuialoha.app.ui.util.update.handleUpdateInstallStatus
+import com.oneuialoha.app.ui.viewmodel.MainActivityViewModel
+import com.oneuialoha.app.ui.viewmodel.MainPagerConfig
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.blur.layerBackdrop
 import top.yukonga.miuix.kmp.blur.rememberLayerBackdrop
@@ -111,7 +111,7 @@ class MainActivity : ComponentActivity() {
         // Keep PackageInstaller callbacks on the real app activity so system confirmation
         // can be launched from the foreground without a background trampoline activity.
         handleUpdateInstallStatus(this, intent)
-        OneuiXPPreferenceBridge.ensureSynchronized(application)
+        OneUIAlohaPreferenceBridge.ensureSynchronized(application)
 
         setContent {
             val viewModel = viewModel<MainActivityViewModel>()
@@ -154,7 +154,7 @@ class MainActivity : ComponentActivity() {
                 LocalUiMode provides uiMode,
                 LocalLsposedHomeStatus provides lsposedStatus,
             ) {
-                OneuiXPTheme(appSettings = appSettings, uiMode = uiMode) {
+                OneUIAlohaTheme(appSettings = appSettings, uiMode = uiMode) {
                     val mainScreenEntry = @Composable {
                         MainScreen(
                             initialPage = selectedMainPage,
@@ -165,7 +165,7 @@ class MainActivity : ComponentActivity() {
                     }
 
                     // Match KernelSU v3.3.1 navigation behavior while retaining
-                    // OneuiXP routes, its two visual themes, and its own page content.
+                    // OneUIAloha routes, its two visual themes, and its own page content.
                     val swipeDismiss = if (uiState.enableSwipeBack) {
                         if (LocalLayoutDirection.current == LayoutDirection.Rtl) {
                             NavSwipeDirection.RightToLeft
@@ -194,8 +194,8 @@ class MainActivity : ComponentActivity() {
                             entry<Route.VersionChangelog261018>(swipeDismiss = swipeDismiss) { VersionChangelog261018Screen() }
                             entry<Route.VersionChangelog261016>(swipeDismiss = swipeDismiss) { VersionChangelog261016Screen() }
                             entry<Route.ColorPalette>(swipeDismiss = swipeDismiss) { ColorPaletteScreen() }
-                            entry<Route.OneuiXPCategory>(swipeDismiss = swipeDismiss) { key ->
-                                OneuiXPCategoryScreen(key.category)
+                            entry<Route.OneUIAlohaCategory>(swipeDismiss = swipeDismiss) { key ->
+                                OneUIAlohaCategoryScreen(key.category)
                             }
                             entry<Route.StatusCategory>(swipeDismiss = swipeDismiss) { key ->
                                 StatusCategoryScreen(key.category)
@@ -247,7 +247,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        OneuiXPPreferenceBridge.ensureSynchronized(application)
+        OneUIAlohaPreferenceBridge.ensureSynchronized(application)
     }
 }
 

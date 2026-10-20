@@ -1,11 +1,11 @@
-package com.oneuixp.app.ui.navigation3
+package com.oneuialoha.app.ui.navigation3
 
 import android.os.Parcelable
 import top.yukonga.miuix.kmp.nav.core.NavKey
 import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
 
-/** OneuiXP main pages plus theme/About and OneuiXP feature-category details. */
+/** OneUIAloha main pages plus theme/About and OneUIAloha feature-category details. */
 @Serializable
 sealed interface Route : NavKey, Parcelable {
     @Parcelize @Serializable data object Main : Route
@@ -22,7 +22,7 @@ sealed interface Route : NavKey, Parcelable {
     @Parcelize @Serializable data object VersionChangelog261016 : Route
     @Parcelize @Serializable data object VersionChangelog261013 : Route
     @Parcelize @Serializable data object ColorPalette : Route
-    @Parcelize @Serializable data class OneuiXPCategory(val category: String) : Route
+    @Parcelize @Serializable data class OneUIAlohaCategory(val category: String) : Route
     @Parcelize @Serializable data class StatusCategory(val category: String) : Route
     @Parcelize @Serializable data object OtherFunctions : Route
     @Parcelize @Serializable data object CallReturnDelay : Route
