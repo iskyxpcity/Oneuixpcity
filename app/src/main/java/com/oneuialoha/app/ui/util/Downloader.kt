@@ -52,9 +52,9 @@ private fun fetchLatestRelease(repository: String): JSONObject? = runCatching {
 }.getOrNull()
 
 /**
- * Old OneUI XP builds first look for a stable OneUI Aloha release and offer it as a separate-app
+ * Old OneUI Aloha builds first look for a stable OneUI Aloha release and offer it as a separate-app
  * migration. If no OneUI Aloha release/asset is published yet, they continue checking the legacy
- * OneUI XP feed. Once the app package is renamed, this same updater uses the OneUI Aloha feed.
+ * OneUI Aloha feed. Once the app package is renamed, this same updater uses the OneUI Aloha feed.
  */
 fun checkNewVersion(): LatestVersionInfo {
     if (!isNetworkAvailable(oneUIAlohaApp)) return LatestVersionInfo()
