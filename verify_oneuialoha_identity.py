@@ -118,11 +118,12 @@ check("No old source namespace directories remain",
 bad_source_refs = []
 for path in source_files:
     text = path.read_text(encoding="utf-8")
-    # Preserve just the intentional XP updater fallback; no current package/path/resource
-    # declarations may reuse the legacy identity.
+    # Preserve the legacy package/feed only in the updater. Persisted preferences and
+    # DataStore migration identifiers (for example old filenames/markers) are not resource IDs.
     if path == (ROOT / "app/src/main/java/com/oneuialoha/app/ui/util/Downloader.kt"):
         text = text.replace('com.oneuixp.app', '').replace('iSkyJIE/OneuiXP-Releases', '')
-    if "com.oneuixp" in text or "com/oneuixp" in text or "oneuixp_" in text.lower():
+    if ("com.oneuixp" in text or "com/oneuixp" in text
+            or re.search(r"(?:R\\.string\\.|@string/)oneuixp_", text, re.IGNORECASE)):
         bad_source_refs.append(str(path.relative_to(ROOT)))
 # The sole app-package compatibility package literal belongs in the updater, outside this
 # current-identity source scan. Legacy persisted settings keys in Preference/Migration are
