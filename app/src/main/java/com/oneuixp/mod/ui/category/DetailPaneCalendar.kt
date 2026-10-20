@@ -1,14 +1,14 @@
-package com.oneuixp.mod.ui.category
+package com.oneuialoha.mod.ui.category
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
-import com.oneuixp.app.R
-import com.oneuixp.common.Preference
-import com.oneuixp.app.ui.viewmodel.OneuiXPToolsViewModel
-import com.oneuixp.mod.ui.component.SwitchItem
+import com.oneuialoha.app.R
+import com.oneuialoha.common.Preference
+import com.oneuialoha.app.ui.viewmodel.OneUIAlohaToolsViewModel
+import com.oneuialoha.mod.ui.component.SwitchItem
 
 @Composable
 fun DetailPaneCalendar(
@@ -19,7 +19,7 @@ fun DetailPaneCalendar(
     PackagePane(modifier) {
         SwitchItem(
             icon = ImageVector.vectorResource(id = R.drawable.today),
-            title = stringResource(id = R.string.oneuixp_enableChineseHolidayDisplay_title),
+            title = stringResource(id = R.string.oneuialoha_enableChineseHolidayDisplay_title),
             checked = uiState.enableChineseHolidayDisplay,
             onCheckedChange = { onEvent(CalendarEvent.EnableChineseHolidayDisplay(it)) }
         )
@@ -31,7 +31,7 @@ sealed interface CalendarEvent {
     value class EnableChineseHolidayDisplay(val value: Boolean) : CalendarEvent
 }
 
-fun OneuiXPToolsViewModel.onCalendarEvent(event: CalendarEvent) {
+fun OneUIAlohaToolsViewModel.onCalendarEvent(event: CalendarEvent) {
     updateData { preference ->
         when (event) {
             is CalendarEvent.EnableChineseHolidayDisplay -> preference.copy(
