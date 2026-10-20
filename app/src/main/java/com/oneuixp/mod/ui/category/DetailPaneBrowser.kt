@@ -1,14 +1,14 @@
-package com.oneuixp.mod.ui.category
+package com.oneuialoha.mod.ui.category
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
-import com.oneuixp.app.R
-import com.oneuixp.common.Preference
-import com.oneuixp.app.ui.viewmodel.OneuiXPToolsViewModel
-import com.oneuixp.mod.ui.component.SwitchItem
+import com.oneuialoha.app.R
+import com.oneuialoha.common.Preference
+import com.oneuialoha.app.ui.viewmodel.OneUIAlohaToolsViewModel
+import com.oneuialoha.mod.ui.component.SwitchItem
 
 @Composable
 fun DetailPaneBrowser(
@@ -19,22 +19,22 @@ fun DetailPaneBrowser(
     PackagePane(modifier) {
         SwitchItem(
             icon = ImageVector.vectorResource(id = R.drawable.fast_forward),
-            title = stringResource(id = R.string.oneuixp_showMorePlaybackSpeeds_title),
-            summary = stringResource(id = R.string.oneuixp_showMorePlaybackSpeeds_summary),
+            title = stringResource(id = R.string.oneuialoha_showMorePlaybackSpeeds_title),
+            summary = stringResource(id = R.string.oneuialoha_showMorePlaybackSpeeds_summary),
             checked = uiState.showMorePlaybackSpeeds,
             onCheckedChange = { onEvent(BrowserEvent.ShowMorePlaybackSpeeds(it)) }
         )
         SwitchItem(
             icon = ImageVector.vectorResource(id = R.drawable.tab_move),
-            title = stringResource(id = R.string.oneuixp_redirect_custom_tab_title),
-            summary = stringResource(id = R.string.oneuixp_redirect_custom_tab_summary),
+            title = stringResource(id = R.string.oneuialoha_redirect_custom_tab_title),
+            summary = stringResource(id = R.string.oneuialoha_redirect_custom_tab_summary),
             checked = uiState.redirectCustomTab,
             onCheckedChange = { onEvent(BrowserEvent.RedirectCustomTab(it)) }
         )
         SwitchItem(
             icon = ImageVector.vectorResource(id = R.drawable.language_us),
-            title = stringResource(id = R.string.oneuixp_spoofBrowserCountryCodeToUS_title),
-            summary = stringResource(id = R.string.oneuixp_spoofBrowserCountryCodeToUS_summary),
+            title = stringResource(id = R.string.oneuialoha_spoofBrowserCountryCodeToUS_title),
+            summary = stringResource(id = R.string.oneuialoha_spoofBrowserCountryCodeToUS_summary),
             checked = uiState.spoofBrowserCountryCodeToUS,
             onCheckedChange = { onEvent(BrowserEvent.SpoofBrowserCountryCodeToUS(it)) }
         )
@@ -52,7 +52,7 @@ sealed interface BrowserEvent {
     value class SpoofBrowserCountryCodeToUS(val value: Boolean) : BrowserEvent
 }
 
-fun OneuiXPToolsViewModel.onBrowserEvent(event: BrowserEvent) {
+fun OneUIAlohaToolsViewModel.onBrowserEvent(event: BrowserEvent) {
     updateData { preference ->
         when (event) {
             is BrowserEvent.ShowMorePlaybackSpeeds -> preference.copy(
