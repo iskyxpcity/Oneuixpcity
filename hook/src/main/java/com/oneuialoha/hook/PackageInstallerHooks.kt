@@ -1,11 +1,11 @@
-package com.oneuixp.hook
+package com.oneuialoha.hook
 
 import android.view.View
 import io.github.libxposed.api.XposedModule
 import io.github.libxposed.api.XposedModuleInterface
-import com.oneuixp.common.Package
-import com.oneuixp.hook.util.PreferenceProvider
-import com.oneuixp.hook.util.xlog
+import com.oneuialoha.common.Package
+import com.oneuialoha.hook.util.PreferenceProvider
+import com.oneuialoha.hook.util.xlog
 
 /**
  * Hides Samsung's post-install recommendation panel in the Samsung installer.

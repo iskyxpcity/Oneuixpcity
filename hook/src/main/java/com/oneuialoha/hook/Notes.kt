@@ -1,8 +1,8 @@
-package com.oneuixp.hook
+package com.oneuialoha.hook
 
 import io.github.libxposed.api.XposedModule
 import io.github.libxposed.api.XposedModuleInterface
-import com.oneuixp.common.Package
+import com.oneuialoha.common.Package
 
 object Notes {
     context(xposedModule: XposedModule, param: XposedModuleInterface.PackageReadyParam)
