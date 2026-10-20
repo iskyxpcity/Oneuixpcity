@@ -267,7 +267,7 @@ private fun AboutContent(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(
-                    top = logoPadding.calculateTopPadding() + 52.dp,
+                    top = logoPadding.calculateTopPadding() + 68.dp,
                     start = logoPadding.calculateStartPadding(layoutDirection),
                     end = logoPadding.calculateEndPadding(layoutDirection),
                 )
