@@ -6,14 +6,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.graphics.vector.ImageVector
 import com.oneuixp.app.R
 import com.oneuixp.app.ui.component.ListPopupDefaults
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.ListPopupColumn
 import top.yukonga.miuix.kmp.basic.PopupPositionProvider
-import top.yukonga.miuix.kmp.icon.MiuixIcons
-import top.yukonga.miuix.kmp.icon.extended.Close2
 import top.yukonga.miuix.kmp.overlay.OverlayListPopup
 import top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme
 
@@ -31,7 +31,7 @@ fun RebootListPopupMiuix(
             holdDownState = showTopPopup.value
         ) {
             Icon(
-                imageVector = MiuixIcons.Close2,
+                imageVector = ImageVector.vectorResource(id = R.drawable.power_settings_new),
                 contentDescription = stringResource(id = R.string.reboot),
                 tint = colorScheme.onBackground
             )
@@ -71,7 +71,7 @@ fun RebootDropdownItem(
     onReboot: (String) -> Unit,
 ) {
     com.oneuixp.app.ui.component.miuix.DropdownItem(
-        text = if (option.reason == "statusbar_xp_systemui") "重启 SystemUI" else stringResource(option.labelRes),
+        text = stringResource(option.labelRes),
         optionSize = optionSize,
         onSelectedIndexChange = {
             showTopPopup.value = false

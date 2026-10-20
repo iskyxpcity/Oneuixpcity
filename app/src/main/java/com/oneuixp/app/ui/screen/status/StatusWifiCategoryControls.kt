@@ -16,11 +16,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import com.oneuixp.app.R
-import com.oneuixp.common.Preference
-import com.oneuixp.mod.ui.component.OneuiXPInfoItem
-import com.oneuixp.mod.ui.component.OneuiXPSlider
-import com.oneuixp.mod.ui.component.SelectItem
-import com.oneuixp.mod.ui.component.SwitchItem
+import io.github.soclear.oneuix.common.Preference
+import io.github.soclear.oneuix.ui.component.OneuiXInfoItem
+import io.github.soclear.oneuix.ui.component.OneuiXSlider
+import io.github.soclear.oneuix.ui.component.SelectItem
+import io.github.soclear.oneuix.ui.component.SwitchItem
 import kotlin.math.roundToInt
 
 private val WIFI_PRESET_KEYS = listOf("default", "compact", "wide")
@@ -255,7 +255,7 @@ fun StatusWifiCategoryControls(
                         repeat(wifiRuntime.arcCount.coerceIn(3, 4)) { index ->
                             val state = arcStates[index]
                             add {
-                                OneuiXPInfoItem(
+                                OneuiXInfoItem(
                                     icon = wifiIcon,
                                     title = stringResource(id = R.string.status_wifi_arc_title, index + 1),
                                     summary = stringResource(id = R.string.status_wifi_arc_title_summary),
@@ -432,13 +432,13 @@ private fun WifiSliderSetting(
     onFinished: () -> Unit,
 ) {
     Column {
-        OneuiXPInfoItem(
+        OneuiXInfoItem(
             icon = icon,
             title = title,
             summary = summary,
         )
         StatusThemeChildItem {
-            OneuiXPSlider(
+            OneuiXSlider(
                 value = value,
                 onValueChange = onValueChange,
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),

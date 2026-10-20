@@ -29,7 +29,7 @@ fun ConfigTransferPopupMiuix(
     ) {
         Icon(
             imageVector = MiuixIcons.Notes,
-            contentDescription = stringResource(R.string.oneuixp_backup_config),
+            contentDescription = stringResource(R.string.oneuix_backup_config),
             tint = colorScheme.onSurface,
         )
     }
@@ -42,7 +42,7 @@ fun ConfigTransferPopupMiuix(
         content = {
             ListPopupColumn {
                 DropdownItem(
-                    text = stringResource(R.string.oneuixp_backup_config),
+                    text = stringResource(R.string.oneuix_backup_config),
                     optionSize = 2,
                     index = 0,
                     onSelectedIndexChange = {
@@ -51,7 +51,7 @@ fun ConfigTransferPopupMiuix(
                     },
                 )
                 DropdownItem(
-                    text = stringResource(R.string.oneuixp_restore_config),
+                    text = stringResource(R.string.oneuix_restore_config),
                     optionSize = 2,
                     index = 1,
                     onSelectedIndexChange = {

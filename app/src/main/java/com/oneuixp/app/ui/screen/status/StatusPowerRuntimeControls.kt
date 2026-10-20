@@ -19,12 +19,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import com.oneuixp.app.R
-import com.oneuixp.common.Preference
-import com.oneuixp.common.StatusBarRuntimeBridge
-import com.oneuixp.mod.ui.component.OneuiXPInfoItem
-import com.oneuixp.mod.ui.component.OneuiXPSlider
-import com.oneuixp.mod.ui.component.SelectItem
-import com.oneuixp.mod.ui.component.SwitchItem
+import io.github.soclear.oneuix.common.Preference
+import io.github.soclear.oneuix.common.StatusBarRuntimeBridge
+import io.github.soclear.oneuix.ui.component.OneuiXInfoItem
+import io.github.soclear.oneuix.ui.component.OneuiXSlider
+import io.github.soclear.oneuix.ui.component.SelectItem
+import io.github.soclear.oneuix.ui.component.SwitchItem
 import kotlin.math.roundToInt
 
 private val POWER_SLOT_KEYS = listOf(
@@ -314,7 +314,7 @@ internal fun StatusPowerRuntimeControls(
                 }
 
                 add {
-                    OneuiXPInfoItem(
+                    OneuiXInfoItem(
                         icon = powerIcon,
                         title = stringResource(id = R.string.status_power_text_size),
                         summary = stringResource(
@@ -325,7 +325,7 @@ internal fun StatusPowerRuntimeControls(
                 }
                 add {
                     StatusThemeChildItem {
-                        OneuiXPSlider(
+                        OneuiXSlider(
                             value = powerTextSize,
                             onValueChange = {
                                 val next = roundPowerHalfStep(it)
@@ -343,7 +343,7 @@ internal fun StatusPowerRuntimeControls(
                 }
 
                 add {
-                    OneuiXPInfoItem(
+                    OneuiXInfoItem(
                         icon = powerIcon,
                         title = stringResource(id = R.string.status_power_refresh_interval),
                         summary = stringResource(
@@ -354,7 +354,7 @@ internal fun StatusPowerRuntimeControls(
                 }
                 add {
                     StatusThemeChildItem {
-                        OneuiXPSlider(
+                        OneuiXSlider(
                             value = refreshInterval,
                             onValueChange = {
                                 val next = (it / 500f).roundToInt() * 500f
@@ -376,7 +376,7 @@ internal fun StatusPowerRuntimeControls(
                 }
 
                 add {
-                    OneuiXPInfoItem(
+                    OneuiXInfoItem(
                         icon = powerIcon,
                         title = stringResource(id = R.string.status_power_column_gap),
                         summary = stringResource(id = R.string.status_power_dp_summary, columnGap),
@@ -384,7 +384,7 @@ internal fun StatusPowerRuntimeControls(
                 }
                 add {
                     StatusThemeChildItem {
-                        OneuiXPSlider(
+                        OneuiXSlider(
                             value = columnGap,
                             onValueChange = {
                                 val next = roundPowerHalfStep(it)
@@ -403,7 +403,7 @@ internal fun StatusPowerRuntimeControls(
 
                 if (powerRuntime.doubleLine) {
                     add {
-                        OneuiXPInfoItem(
+                        OneuiXInfoItem(
                             icon = powerIcon,
                             title = stringResource(id = R.string.status_power_row_gap),
                             summary = stringResource(id = R.string.status_power_dp_summary, rowGap),
@@ -411,7 +411,7 @@ internal fun StatusPowerRuntimeControls(
                     }
                     add {
                         StatusThemeChildItem {
-                            OneuiXPSlider(
+                            OneuiXSlider(
                                 value = rowGap,
                                 onValueChange = {
                                     val next = roundPowerHalfStep(it)
@@ -430,7 +430,7 @@ internal fun StatusPowerRuntimeControls(
                 }
 
                 add {
-                    OneuiXPInfoItem(
+                    OneuiXInfoItem(
                         icon = powerIcon,
                         title = stringResource(id = R.string.status_power_horizontal_offset),
                         summary = stringResource(id = R.string.status_power_dp_summary, horizontalOffset),
@@ -438,7 +438,7 @@ internal fun StatusPowerRuntimeControls(
                 }
                 add {
                     StatusThemeChildItem {
-                        OneuiXPSlider(
+                        OneuiXSlider(
                             value = horizontalOffset,
                             onValueChange = {
                                 val next = roundPowerHalfStep(it)
@@ -460,7 +460,7 @@ internal fun StatusPowerRuntimeControls(
                 }
 
                 add {
-                    OneuiXPInfoItem(
+                    OneuiXInfoItem(
                         icon = powerIcon,
                         title = stringResource(id = R.string.status_power_vertical_offset),
                         summary = stringResource(id = R.string.status_power_dp_summary, verticalOffset),
@@ -468,7 +468,7 @@ internal fun StatusPowerRuntimeControls(
                 }
                 add {
                     StatusThemeChildItem {
-                        OneuiXPSlider(
+                        OneuiXSlider(
                             value = verticalOffset,
                             onValueChange = {
                                 val next = roundPowerHalfStep(it)
@@ -486,7 +486,7 @@ internal fun StatusPowerRuntimeControls(
                 }
 
                 add {
-                    OneuiXPInfoItem(
+                    OneuiXInfoItem(
                         icon = powerIcon,
                         title = stringResource(id = R.string.status_power_start_padding),
                         summary = stringResource(id = R.string.status_power_dp_summary, startPadding),
@@ -494,7 +494,7 @@ internal fun StatusPowerRuntimeControls(
                 }
                 add {
                     StatusThemeChildItem {
-                        OneuiXPSlider(
+                        OneuiXSlider(
                             value = startPadding,
                             onValueChange = {
                                 val next = roundPowerHalfStep(it)
@@ -512,7 +512,7 @@ internal fun StatusPowerRuntimeControls(
                 }
 
                 add {
-                    OneuiXPInfoItem(
+                    OneuiXInfoItem(
                         icon = powerIcon,
                         title = stringResource(id = R.string.status_power_end_padding),
                         summary = stringResource(id = R.string.status_power_dp_summary, endPadding),
@@ -520,7 +520,7 @@ internal fun StatusPowerRuntimeControls(
                 }
                 add {
                     StatusThemeChildItem {
-                        OneuiXPSlider(
+                        OneuiXSlider(
                             value = endPadding,
                             onValueChange = {
                                 val next = roundPowerHalfStep(it)

@@ -67,7 +67,7 @@ import kotlinx.coroutines.launch
 val LocalListItemShapes = compositionLocalOf<ListItemShapes?> { null }
 
 @Composable
-fun oneuiXPSegmentedColors(): ListItemColors = ListItemDefaults.segmentedColors().copy(
+fun oneuiXSegmentedColors(): ListItemColors = ListItemDefaults.segmentedColors().copy(
     containerColor = colorScheme.surfaceColorAtElevation(1.dp),
     disabledContainerColor = colorScheme.surfaceColorAtElevation(1.dp),
     supportingContentColor = colorScheme.outline
@@ -135,7 +135,7 @@ fun SegmentedListItem(
     onClick: (() -> Unit)? = null,
     onLongClick: (() -> Unit)? = null,
     enabled: Boolean = true,
-    colors: ListItemColors = oneuiXPSegmentedColors(),
+    colors: ListItemColors = oneuiXSegmentedColors(),
     interactionSource: MutableInteractionSource? = null,
     headlineContent: @Composable () -> Unit,
     overlineContent: @Composable (() -> Unit)? = null,
@@ -166,7 +166,7 @@ fun SegmentedListItem(
     onCheckedChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    colors: ListItemColors = oneuiXPSegmentedColors(),
+    colors: ListItemColors = oneuiXSegmentedColors(),
     interactionSource: MutableInteractionSource? = null,
     headlineContent: @Composable () -> Unit,
     overlineContent: @Composable (() -> Unit)? = null,
@@ -199,7 +199,7 @@ fun SegmentedListItem(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    colors: ListItemColors = oneuiXPSegmentedColors(),
+    colors: ListItemColors = oneuiXSegmentedColors(),
     interactionSource: MutableInteractionSource? = null,
     headlineContent: @Composable () -> Unit,
     overlineContent: @Composable (() -> Unit)? = null,
@@ -231,7 +231,7 @@ fun SegmentedSwitchItem(
     icon: ImageVector? = null,
     title: String,
     summary: String? = null,
-    colors: ListItemColors = oneuiXPSegmentedColors(),
+    colors: ListItemColors = oneuiXSegmentedColors(),
     checked: Boolean,
     enabled: Boolean = true,
     showChildIndicator: Boolean = false,
@@ -293,7 +293,7 @@ fun SegmentedDropdownItem(
     title: String,
     summary: String? = null,
     items: List<String>,
-    colors: ListItemColors = oneuiXPSegmentedColors(),
+    colors: ListItemColors = oneuiXSegmentedColors(),
     enabled: Boolean = true,
     onClick: (() -> Unit)? = null,
     selectedIndex: Int,
@@ -378,7 +378,7 @@ fun SegmentedDropdownItem(
 fun SegmentedRadioItem(
     title: String,
     summary: String? = null,
-    colors: ListItemColors = oneuiXPSegmentedColors(),
+    colors: ListItemColors = oneuiXSegmentedColors(),
     selected: Boolean,
     enabled: Boolean = true,
     onClick: () -> Unit,
@@ -409,7 +409,7 @@ fun SegmentedRadioItem(
 fun SegmentedCheckboxItem(
     title: String,
     summary: String? = null,
-    colors: ListItemColors = oneuiXPSegmentedColors(),
+    colors: ListItemColors = oneuiXSegmentedColors(),
     checked: Boolean,
     enabled: Boolean = true,
     onCheckedChange: (Boolean) -> Unit,
@@ -448,7 +448,7 @@ fun SegmentedTextField(
     onValueChange: (String) -> Unit,
     enabled: Boolean = true,
     readOnly: Boolean = false,
-    colors: ListItemColors = oneuiXPSegmentedColors(),
+    colors: ListItemColors = oneuiXSegmentedColors(),
     textStyle: TextStyle = MaterialTheme.typography.bodyLarge,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,

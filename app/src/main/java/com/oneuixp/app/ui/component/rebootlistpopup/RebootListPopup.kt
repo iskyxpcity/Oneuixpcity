@@ -3,7 +3,7 @@ package com.oneuixp.app.ui.component.rebootlistpopup
 import android.widget.Toast
 import androidx.compose.runtime.rememberCoroutineScope
 import com.oneuixp.app.oneuiXPApp
-import com.oneuixp.app.oneuixp.OneuiXPPPreferenceBridge
+import com.oneuixp.app.oneuix.OneuiXPreferenceBridge
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -20,40 +20,72 @@ data class RebootListOption(
 
 @Composable
 fun getRebootListOption(): List<RebootListOption> =
-    listOf(RebootListOption(R.string.reboot_soft, "statusbar_xp_systemui"))
+    listOf(
+        RebootListOption(R.string.oneuix_rebootSystemUI_menu, "statusbar_xp_systemui"),
+        RebootListOption(R.string.oneuix_softRebootRuntime_menu, "soft_reboot_android_runtime"),
+    )
 
 @Composable
 fun rememberRebootAction(): (String) -> Unit {
     val scope = rememberCoroutineScope()
     return { reason ->
-        if (reason == "statusbar_xp_systemui") {
+        if (reason == "statusbar_xp_systemui" || reason == "soft_reboot_android_runtime") {
             scope.launch {
-                val synchronized = OneuiXPPPreferenceBridge.synchronizeNow(oneuiXPApp)
+                val synchronized = OneuiXPreferenceBridge.synchronizeNow(oneuiXPApp)
                 if (!synchronized) {
                     Toast.makeText(
                         oneuiXPApp,
-                        R.string.oneuixp_preferenceSync_failed,
+                        R.string.oneuix_preferenceSync_failed,
                         Toast.LENGTH_SHORT,
                     ).show()
                     return@launch
                 }
 
-                val restarted = withContext(Dispatchers.IO) {
-                    runCatching {
-                        ProcessBuilder(
-                            "su",
-                            "-c",
-                            "pkill -TERM -f com.android.systemui"
-                        ).start()
-                        true
-                    }.getOrDefault(false)
-                }
-                if (!restarted) {
-                    Toast.makeText(
-                        oneuiXPApp,
-                        R.string.oneuixp_restartSystemUI_failed,
-                        Toast.LENGTH_SHORT,
-                    ).show()
+                when (reason) {
+                    "statusbar_xp_systemui" -> {
+                        val restarted = withContext(Dispatchers.IO) {
+                            runCatching {
+                                ProcessBuilder(
+                                    "su",
+                                    "-c",
+                                    "pkill -TERM -f com.android.systemui"
+                                ).start()
+                                true
+                            }.getOrDefault(false)
+                        }
+                        if (!restarted) {
+                            Toast.makeText(
+                                oneuiXPApp,
+                                R.string.oneuix_restartSystemUI_failed,
+                                Toast.LENGTH_SHORT,
+                            ).show()
+                        }
+                    }
+
+                    "soft_reboot_android_runtime" -> {
+                        Toast.makeText(
+                            oneuiXPApp,
+                            R.string.oneuix_softRebootStarted,
+                            Toast.LENGTH_SHORT,
+                        ).show()
+                        val started = withContext(Dispatchers.IO) {
+                            runCatching {
+                                ProcessBuilder(
+                                    "su",
+                                    "-c",
+                                    "(sleep 0.3; setprop ctl.restart zygote) >/dev/null 2>&1 &"
+                                ).start()
+                                true
+                            }.getOrDefault(false)
+                        }
+                        if (!started) {
+                            Toast.makeText(
+                                oneuiXPApp,
+                                R.string.oneuix_softRebootFailed,
+                                Toast.LENGTH_SHORT,
+                            ).show()
+                        }
+                    }
                 }
             }
         }

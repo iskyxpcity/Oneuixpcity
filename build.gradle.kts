@@ -35,13 +35,10 @@ fun getVersionCode(): Int {
     val explicit = (findProperty("oneuixpVersionCode") as? String)?.toIntOrNull()
     if (explicit != null && explicit > 0) return explicit
 
-    val parts = getVersionName().removePrefix("v").split(".").map {
-        it.toIntOrNull() ?: return 30000 + getGitCommitCount()
-    }
-    if (parts.size in 3..4) {
+    val parts = getVersionName().removePrefix("v").split(".").mapNotNull { it.toIntOrNull() }
+    if (parts.size == 3) {
         val (major, minor, date) = parts
-        val patch = parts.getOrElse(3) { 0 }
-        if (major in 0..20 && minor in 0..99 && date in 0..999999 && patch in 0..999) {
+        if (major in 0..20 && minor in 0..99 && date in 0..999999) {
             return major * 100_000_000 + minor * 1_000_000 + date
         }
     }

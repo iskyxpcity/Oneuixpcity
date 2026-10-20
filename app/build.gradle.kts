@@ -91,7 +91,7 @@ android {
         generateLocaleConfig = true
 
         // Hook resources are loaded into SystemUI / Samsung host processes.
-        // Keep OneUIXP's non-default resource package ID to avoid 0x7f collisions.
+        // Keep OneUIX's non-default resource package ID to avoid 0x7f collisions.
         additionalParameters += listOf(
             "--allow-reserved-package-id",
             "--package-id",

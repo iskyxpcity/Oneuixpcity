@@ -68,9 +68,9 @@
     <string name="oneuixp_status">状态栏</string>
     <string name="oneuixp_feature_injection_count">Features enabled</string>
 
-    <string name="oneuixp_core_features">System features</string>
-    <string name="oneuixp_app_features">Samsung app features</string>
-    <string name="oneuixp_migration_notice">Migration preview · settings are saved, but OneUIXP feature hooks are still disabled.</string>
+    <string name="oneuix_core_features">System features</string>
+    <string name="oneuix_app_features">Samsung app features</string>
+    <string name="oneuix_migration_notice">Migration preview · settings are saved, but OneUIX feature hooks are still disabled.</string>
     <string name="status_category_padding">Status bar padding</string>
     <string name="status_category_time">Status bar time</string>
     <string name="status_category_notification">Status bar notifications</string>
@@ -136,22 +136,11 @@
     <string name="feature_introduction">Feature Introduction</string>
     <string name="disclaimer_title">Disclaimer</string>
     <string name="disclaimer_source_title">Source code usage</string>
-    <string name="disclaimer_source_body">This project incorporates and adapts source code from OneUIXP and HyperDuo.</string>
+    <string name="disclaimer_source_body">This project incorporates and adapts source code from OneUIX and HyperDuo.</string>
     <string name="disclaimer_style_title">Interface style</string>
     <string name="disclaimer_style_body">Some parts of this app use the KernelSU interface style.</string>
     <string name="disclaimer_risk_title">Modding Risks</string>
     <string name="disclaimer_risk_body">Modding involves risks. This module may cause system errors, data loss, boot failure, or device damage. Users bear all risks and losses arising from use of this module.</string>
-
-    <string name="feature_intro_version_updates_2610191">OneUI XP 1.0.261019.1 Highlights</string>
-    <string name="feature_intro_version_updates_2610191_summary">2026-10-19</string>
-    <string name="version_1_0_261019_1_title">OneUI XP 1.0.261019.1 Highlights</string>
-    <string name="version_1_0_261019_1_summary">2026-10-19</string>
-    <string name="changelog_2610191_features_title">New features</string>
-    <string name="changelog_2610191_features_body">Custom power menu; disable screenshot sound; call-return delay (0–5 seconds); dual-column Settings; allow installation of older apps; remove secure-window screenshot restrictions; disable post-install app recommendations; and soft-restart options for SystemUI and Android Runtime.</string>
-    <string name="changelog_2610191_improvements_title">Improvements</string>
-    <string name="changelog_2610191_improvements_body">Improved status-bar composite icon layout and native icon spacing, native signal icon display and restoration, icon-scale settings persistence, and Material, Miuix, and wide-screen adaptation.</string>
-    <string name="changelog_2610191_fixes_title">Fixes</string>
-    <string name="changelog_2610191_fixes_body">Fixed incorrect icon scaling after some settings migrations and blank gaps left after hiding native icons; improved configuration loading and compatibility.</string>
     <string name="feature_intro_version_updates">OneUI XP 1.0.260930 Highlights</string>
     <string name="feature_intro_version_updates_summary">2026-09-30</string>
     <string name="feature_intro_version_updates_261013">OneUI XP 1.0.261013 Highlights</string>
