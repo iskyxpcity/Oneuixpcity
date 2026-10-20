@@ -1,4 +1,4 @@
-package com.oneuixp.mod.ui.category
+package com.oneuialoha.mod.ui.category
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -7,7 +7,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.oneuixp.mod.ui.component.OneuiXPDetailGroup
+import com.oneuialoha.mod.ui.component.OneUIAlohaDetailGroup
 
 @Composable
 internal fun PackagePane(
@@ -19,7 +19,7 @@ internal fun PackagePane(
             .fillMaxSize()
             .verticalScroll(rememberScrollState()),
     ) {
-        OneuiXPDetailGroup {
+        OneUIAlohaDetailGroup {
             content()
         }
     }

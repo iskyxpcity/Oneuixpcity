@@ -1,4 +1,4 @@
-package com.oneuixp.mod.ui.category
+package com.oneuialoha.mod.ui.category
 
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Row
@@ -20,14 +20,14 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
-import com.oneuixp.app.R
-import com.oneuixp.common.Preference
-import com.oneuixp.mod.ui.component.OneuiXPActionButton
-import com.oneuixp.mod.ui.component.OneuiXPChildVisibility
-import com.oneuixp.mod.ui.component.OneuiXPInlineTextField
-import com.oneuixp.mod.ui.component.OneuiXPPPreferenceGroup
-import com.oneuixp.mod.ui.component.OneuiXPSlider
-import com.oneuixp.mod.ui.component.SwitchItem
+import com.oneuialoha.app.R
+import com.oneuialoha.common.Preference
+import com.oneuialoha.mod.ui.component.OneUIAlohaActionButton
+import com.oneuialoha.mod.ui.component.OneUIAlohaChildVisibility
+import com.oneuialoha.mod.ui.component.OneUIAlohaInlineTextField
+import com.oneuialoha.mod.ui.component.OneUIAlohaPPreferenceGroup
+import com.oneuialoha.mod.ui.component.OneUIAlohaSlider
+import com.oneuialoha.mod.ui.component.SwitchItem
 import kotlin.math.roundToInt
 
 /**
@@ -42,8 +42,8 @@ fun StatusBarNetworkSpeedControls(
 ) {
     SwitchItem(
         icon = ImageVector.vectorResource(id = R.drawable.net_speed),
-        title = stringResource(id = R.string.oneuixp_supportRealTimeNetworkSpeed_title),
-        summary = stringResource(id = R.string.oneuixp_supportRealTimeNetworkSpeed_summary),
+        title = stringResource(id = R.string.oneuialoha_supportRealTimeNetworkSpeed_title),
+        summary = stringResource(id = R.string.oneuialoha_supportRealTimeNetworkSpeed_summary),
         checked = uiState.supportRealTimeNetworkSpeed,
         onCheckedChange = {
             onEvent(SystemUIEvent.StatusBar.SupportRealTimeNetworkSpeed(it))
@@ -51,8 +51,8 @@ fun StatusBarNetworkSpeedControls(
     )
     SwitchItem(
         icon = ImageVector.vectorResource(id = R.drawable.net_speed),
-        title = stringResource(id = R.string.oneuixp_showSeparateUpDownNetworkSpeeds_title),
-        summary = stringResource(id = R.string.oneuixp_showSeparateUpDownNetworkSpeeds_summary),
+        title = stringResource(id = R.string.oneuialoha_showSeparateUpDownNetworkSpeeds_title),
+        summary = stringResource(id = R.string.oneuialoha_showSeparateUpDownNetworkSpeeds_summary),
         checked = uiState.showSeparateUpDownNetworkSpeeds,
         onCheckedChange = {
             onEvent(SystemUIEvent.StatusBar.ShowSeparateUpDownNetworkSpeeds(it))
@@ -60,18 +60,18 @@ fun StatusBarNetworkSpeedControls(
     )
 
     if (uiState.supportRealTimeNetworkSpeed || uiState.showSeparateUpDownNetworkSpeeds) {
-        OneuiXPPPreferenceGroup {
+        OneUIAlohaPPreferenceGroup {
             var expanded by rememberSaveable { mutableStateOf(false) }
             var lineGapDp by remember(uiState.networkSpeedLineGapDp) {
             mutableFloatStateOf(uiState.networkSpeedLineGapDp)
         }
         SwitchItem(
             icon = ImageVector.vectorResource(id = R.drawable.format_letter_spacing),
-            title = stringResource(id = R.string.oneuixp_networkSpeedLineGap_title),
+            title = stringResource(id = R.string.oneuialoha_networkSpeedLineGap_title),
             summary = if (uiState.modifyNetworkSpeedLineGap) {
-                stringResource(id = R.string.oneuixp_networkSpeedLineGap_summary, lineGapDp)
+                stringResource(id = R.string.oneuialoha_networkSpeedLineGap_summary, lineGapDp)
             } else {
-                stringResource(id = R.string.oneuixp_networkSpeedDoubleLineOnly_summary)
+                stringResource(id = R.string.oneuialoha_networkSpeedDoubleLineOnly_summary)
             },
             modifier = Modifier.animateContentSize(),
             clickable = true,
@@ -82,8 +82,8 @@ fun StatusBarNetworkSpeedControls(
                 onEvent(SystemUIEvent.StatusBar.ModifyNetworkSpeedLineGap(it))
             },
         )
-        OneuiXPChildVisibility(expanded && uiState.modifyNetworkSpeedLineGap) {
-            OneuiXPSlider(
+        OneUIAlohaChildVisibility(expanded && uiState.modifyNetworkSpeedLineGap) {
+            OneUIAlohaSlider(
                 value = lineGapDp,
                 onValueChange = { lineGapDp = (it * 10f).roundToInt() / 10f },
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
@@ -95,18 +95,18 @@ fun StatusBarNetworkSpeedControls(
         }
     }
 
-    OneuiXPPPreferenceGroup {
+    OneUIAlohaPPreferenceGroup {
         var expanded by rememberSaveable { mutableStateOf(false) }
         var uploadScale by remember(uiState.networkSpeedUploadTextScale) {
             mutableFloatStateOf(uiState.networkSpeedUploadTextScale)
         }
         SwitchItem(
             icon = ImageVector.vectorResource(id = R.drawable.format_size),
-            title = stringResource(id = R.string.oneuixp_networkSpeedUploadTextScale_title),
+            title = stringResource(id = R.string.oneuialoha_networkSpeedUploadTextScale_title),
             summary = if (uiState.setNetworkSpeedUploadTextScale) {
-                stringResource(id = R.string.oneuixp_networkSpeedUploadTextScale_summary, uploadScale)
+                stringResource(id = R.string.oneuialoha_networkSpeedUploadTextScale_summary, uploadScale)
             } else {
-                stringResource(id = R.string.oneuixp_networkSpeedDoubleLineOnly_summary)
+                stringResource(id = R.string.oneuialoha_networkSpeedDoubleLineOnly_summary)
             },
             modifier = Modifier.animateContentSize(),
             clickable = true,
@@ -117,8 +117,8 @@ fun StatusBarNetworkSpeedControls(
                 onEvent(SystemUIEvent.StatusBar.SetNetworkSpeedUploadTextScale(it))
             },
         )
-        OneuiXPChildVisibility(expanded && uiState.setNetworkSpeedUploadTextScale) {
-            OneuiXPSlider(
+        OneUIAlohaChildVisibility(expanded && uiState.setNetworkSpeedUploadTextScale) {
+            OneUIAlohaSlider(
                 value = uploadScale,
                 onValueChange = { uploadScale = (it * 100f).roundToInt() / 100f },
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
@@ -130,18 +130,18 @@ fun StatusBarNetworkSpeedControls(
         }
     }
 
-    OneuiXPPPreferenceGroup {
+    OneUIAlohaPPreferenceGroup {
         var expanded by rememberSaveable { mutableStateOf(false) }
         var downloadScale by remember(uiState.networkSpeedDownloadTextScale) {
             mutableFloatStateOf(uiState.networkSpeedDownloadTextScale)
         }
         SwitchItem(
             icon = ImageVector.vectorResource(id = R.drawable.format_size),
-            title = stringResource(id = R.string.oneuixp_networkSpeedDownloadTextScale_title),
+            title = stringResource(id = R.string.oneuialoha_networkSpeedDownloadTextScale_title),
             summary = if (uiState.setNetworkSpeedDownloadTextScale) {
-                stringResource(id = R.string.oneuixp_networkSpeedDownloadTextScale_summary, downloadScale)
+                stringResource(id = R.string.oneuialoha_networkSpeedDownloadTextScale_summary, downloadScale)
             } else {
-                stringResource(id = R.string.oneuixp_networkSpeedDoubleLineOnly_summary)
+                stringResource(id = R.string.oneuialoha_networkSpeedDoubleLineOnly_summary)
             },
             modifier = Modifier.animateContentSize(),
             clickable = true,
@@ -152,8 +152,8 @@ fun StatusBarNetworkSpeedControls(
                 onEvent(SystemUIEvent.StatusBar.SetNetworkSpeedDownloadTextScale(it))
             },
         )
-        OneuiXPChildVisibility(expanded && uiState.setNetworkSpeedDownloadTextScale) {
-            OneuiXPSlider(
+        OneUIAlohaChildVisibility(expanded && uiState.setNetworkSpeedDownloadTextScale) {
+            OneUIAlohaSlider(
                 value = downloadScale,
                 onValueChange = { downloadScale = (it * 100f).roundToInt() / 100f },
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
@@ -167,7 +167,7 @@ fun StatusBarNetworkSpeedControls(
 
     }
 
-    OneuiXPPPreferenceGroup {
+    OneUIAlohaPPreferenceGroup {
         var expanded by rememberSaveable { mutableStateOf(false) }
         var threshold by remember(uiState.networkSpeedThresholdKb) {
             mutableIntStateOf(uiState.networkSpeedThresholdKb)
@@ -175,11 +175,11 @@ fun StatusBarNetworkSpeedControls(
 
         SwitchItem(
             icon = ImageVector.vectorResource(id = R.drawable.net_speed),
-            title = stringResource(id = R.string.oneuixp_networkSpeedThreshold_title),
+            title = stringResource(id = R.string.oneuialoha_networkSpeedThreshold_title),
             summary = if (uiState.networkSpeedThresholdKb > 0) {
                 "${uiState.networkSpeedThresholdKb} KB/s"
             } else {
-                stringResource(id = R.string.oneuixp_networkSpeedThreshold_scope_summary)
+                stringResource(id = R.string.oneuialoha_networkSpeedThreshold_scope_summary)
             },
             modifier = Modifier.animateContentSize(),
             clickable = true,
@@ -196,23 +196,23 @@ fun StatusBarNetworkSpeedControls(
                 onEvent(SystemUIEvent.StatusBar.NetworkSpeedThreshold(threshold))
             },
         )
-        OneuiXPChildVisibility(expanded && uiState.networkSpeedThresholdKb > 0) {
+        OneUIAlohaChildVisibility(expanded && uiState.networkSpeedThresholdKb > 0) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.padding(horizontal = 16.dp),
             ) {
-                OneuiXPInlineTextField(
+                OneUIAlohaInlineTextField(
                     value = threshold.toString(),
                     onValueChange = {
                         threshold = it.toIntOrNull()?.coerceAtLeast(1) ?: 1
                     },
                     modifier = Modifier.weight(1f),
-                    labelText = stringResource(id = R.string.oneuixp_networkSpeedThreshold_label),
+                    labelText = stringResource(id = R.string.oneuialoha_networkSpeedThreshold_label),
                     singleLine = true,
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                OneuiXPActionButton(
-                    text = stringResource(id = R.string.oneuixp_confirm),
+                OneUIAlohaActionButton(
+                    text = stringResource(id = R.string.oneuialoha_confirm),
                     primary = true,
                     onClick = {
                         onEvent(SystemUIEvent.StatusBar.NetworkSpeedThreshold(threshold))
