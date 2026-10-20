@@ -1,4 +1,4 @@
-package com.oneuixp.app.ui.component.material
+package com.oneuialoha.app.ui.component.material
 
 import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.MutableInteractionSource

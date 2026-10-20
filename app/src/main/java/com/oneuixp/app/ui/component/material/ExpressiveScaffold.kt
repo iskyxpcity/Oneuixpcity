@@ -1,4 +1,4 @@
-package com.oneuixp.app.ui.component.material
+package com.oneuialoha.app.ui.component.material
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
