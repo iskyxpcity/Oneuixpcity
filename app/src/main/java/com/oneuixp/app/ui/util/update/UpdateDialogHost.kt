@@ -195,7 +195,7 @@ fun UpdateDialogHost(
                         val path = uri.path.orEmpty().lowercase()
                         val isOfficialAsset = uri.scheme?.equals("https", ignoreCase = true) == true &&
                             uri.host?.equals("github.com", ignoreCase = true) == true &&
-                            path.startsWith("/iskyjie/oneuixp-releases/releases/download/")
+                            path.startsWith("/iskyjie/oneuialoha-releases/releases/download/")
                         if (!isOfficialAsset) {
                             statusMessage = context.getString(R.string.update_dialog_migration_url_invalid)
                         } else {
