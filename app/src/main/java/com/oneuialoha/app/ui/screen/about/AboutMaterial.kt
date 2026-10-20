@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -68,14 +67,13 @@ fun AboutScreenMaterial(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 12.dp)
-                        .padding(top = 64.dp, bottom = 20.dp),
+                        .padding(top = 80.dp, bottom = 20.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Box(
                         contentAlignment = Alignment.Center,
                         modifier = Modifier
                             .size(200.dp)
-                            .clip(RoundedCornerShape(16.dp))
                     ) {
                         Image(
                             modifier = Modifier.fillMaxSize(),
@@ -85,7 +83,7 @@ fun AboutScreenMaterial(
                         )
                     }
                     Text(
-                        modifier = Modifier.padding(top = 4.dp),
+                        modifier = Modifier.padding(top = 0.dp),
                         text = state.appName,
                         fontWeight = FontWeight.Medium,
                         fontSize = MaterialTheme.typography.headlineMedium.fontSize

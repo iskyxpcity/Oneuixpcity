@@ -34,12 +34,12 @@
 启动器、开屏和关于页使用经过压缩的 WebP 资源；启动器自适应背景层透明，源图稿保持原样供后续编辑。
 
 - `artwork/Logo001.jpg`、`artwork/Logo002.png` 保存用户提供的原始图稿，作为后续维护的源文件。
-- 应用启动器图标在 Android 8.0+ 使用 `app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml`，以前景安全区包装资源 `drawable/ic_launcher_foreground_safe.xml` 引用 `drawable-nodpi/ic_launcher_foreground_logo001.webp`，透明背景层保留真正 Alpha，由 Samsung One UI 9 启动器应用系统圆角蒙版。Manifest 的 `android:icon` 和 `android:roundIcon` 均指向 `@mipmap/ic_launcher`；旧版 Android 回退资源继续独立维护。
+- 应用启动器图标在 Android 8.0+ 使用 `app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml`，以透明前景 `drawable/ic_launcher_foreground_logo001.webp` 放在自适应图标中央安全区，由 Samsung One UI 9 启动器应用系统圆角蒙版，图标内背景为无网格的纯色 `#E7E8E6`。旧版 Android 的 `mipmap-nodpi/ic_launcher.webp` 用同一 Logo001 重绘为带真正透明外角的 One UI 风格 superellipse 圆角方形。Manifest 的 `android:icon` 和 `android:roundIcon` 均指向 `@mipmap/ic_launcher`；旧版 Android 回退资源继续独立维护。
 - `Logo002` 的应用内绘制资源为 `drawable-nodpi/logo002.webp`。原生开屏动画和 Material / Miuix 两套「关于」页面统一引用该资源，并分别控制显示尺寸。
 - 不要把开屏/关于页图案与启动器图标资源混用；变更时须同时验证两类显示位置。
 - 当前应用身份、`versionCode=11` 与 Owner 签名基线不因图标更新而改变。
 
-- Logo001 的运行时前景保留真正透明 Alpha，并通过 60dp 居中安全区包装避免重要图案被 One UI 启动器蒙版裁切；Samsung 系统负责 Android 8.0+ 图标外轮廓，不在源 Logo 上手工叠加白色网格或硬裁切。
+- Logo001 每次均从未经修改的根目录原图重新生成，先清理边缘连通的棋盘背景，再裁掉外部透明边；生成的前景保留 Alpha 并完整置于自适应图标安全区，旧版回退图标同样以原稿重绘并做真正透明外角。
 - 开屏动画和 Material / Miuix 两套「关于」页面继续统一以 200dp 使用同一份 R.drawable.logo002。开屏图案下移，并把两行标题基线与 Logo 的距离分别收紧；关于页图案组垂直位置略向下调整，Logo 与应用名称间距由 12dp 调整为 4dp。
 
 ## 构建与发布约定

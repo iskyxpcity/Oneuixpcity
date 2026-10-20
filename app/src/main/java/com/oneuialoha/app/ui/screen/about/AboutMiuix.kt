@@ -267,7 +267,7 @@ private fun AboutContent(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(
-                    top = logoPadding.calculateTopPadding() + 68.dp,
+                    top = logoPadding.calculateTopPadding() + 84.dp,
                     start = logoPadding.calculateStartPadding(layoutDirection),
                     end = logoPadding.calculateEndPadding(layoutDirection),
                 )
@@ -302,7 +302,7 @@ private fun AboutContent(
             }
             Text(
                 modifier = Modifier
-                    .padding(top = 4.dp, bottom = 5.dp)
+                    .padding(top = 0.dp, bottom = 5.dp)
                     .onGloballyPositioned { coordinates ->
                         if (projectNameY != 0f) return@onGloballyPositioned
                         val y = coordinates.positionInWindow().y
@@ -373,7 +373,7 @@ private fun AboutContent(
                     Modifier
                         .fillMaxWidth()
                         .height(
-                            logoHeightDp + 68.dp + logoPadding.calculateTopPadding() - scrollPadding.calculateTopPadding() + 126.dp,
+                            logoHeightDp + 84.dp + logoPadding.calculateTopPadding() - scrollPadding.calculateTopPadding() + 126.dp,
                         )
                         .onSizeChanged { size ->
                             onLogoHeightChanged(size.height)
