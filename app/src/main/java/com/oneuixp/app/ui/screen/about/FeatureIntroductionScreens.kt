@@ -423,18 +423,25 @@ private fun VersionChangelogMiuix(onBack: () -> Unit, isLatestVersion: Boolean, 
     val backdrop = rememberBlurBackdrop(LocalEnableBlur.current)
     val barColor = if (backdrop != null) Color.Transparent else colorScheme.surface
     val versionTitle = when {
+        is2610191 -> R.string.version_1_0_2610191_title
         is261018 -> R.string.version_1_0_261018_title
         is261016 -> R.string.version_1_0_261016_title
         isLatestVersion -> R.string.version_1_0_261013_title
         else -> R.string.version_1_0_260930_title
     }
     val versionDate = when {
+        is2610191 -> R.string.version_1_0_2610191_summary
         is261018 -> R.string.version_1_0_261018_summary
         is261016 -> R.string.version_1_0_261016_summary
         isLatestVersion -> R.string.version_1_0_261013_summary
         else -> R.string.version_1_0_260930_summary
     }
     val updateRows = when {
+        is2610191 -> listOf(
+            R.string.changelog_2610191_new_features_title to R.string.changelog_2610191_new_features_body,
+            R.string.changelog_2610191_optimizations_title to R.string.changelog_2610191_optimizations_body,
+            R.string.changelog_2610191_fixes_title to R.string.changelog_2610191_fixes_body,
+        )
         is261018 -> listOf(
             R.string.changelog_261018_device_status_title to R.string.changelog_261018_device_status_body,
             R.string.changelog_261018_cpu_frequency_title to R.string.changelog_261018_cpu_frequency_body,
