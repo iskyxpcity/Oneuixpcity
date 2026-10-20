@@ -67,9 +67,9 @@
     <string name="oneuixp_tools">功能</string>
     <string name="oneuixp_feature_injection_count">功能已开启</string>
 
-    <string name="oneuix_core_features">系统功能</string>
-    <string name="oneuix_app_features">三星应用功能</string>
-    <string name="oneuix_migration_notice">迁移预览 · 设置会正常保存，但 OneUIX 功能 Hook 目前仍保持关闭。</string>
+    <string name="oneuixp_core_features">系统功能</string>
+    <string name="oneuixp_app_features">三星应用功能</string>
+    <string name="oneuixp_migration_notice">迁移预览 · 设置会正常保存，但 OneUIXP 功能 Hook 目前仍保持关闭。</string>
     <string name="status_category_padding">状态栏边距</string>
     <string name="status_category_time">状态栏时间</string>
     <string name="status_category_notification">状态栏通知</string>
@@ -135,7 +135,7 @@
     <string name="feature_introduction">功能介绍</string>
     <string name="disclaimer_title">免责声明</string>
     <string name="disclaimer_source_title">源码使用说明</string>
-    <string name="disclaimer_source_body">本项目使用并整合、修改了 OneUIX 与 HyperDuo 的相关源码。</string>
+    <string name="disclaimer_source_body">本项目使用并整合、修改了 OneUIXP 与 HyperDuo 的相关源码。</string>
     <string name="disclaimer_style_title">界面风格说明</string>
     <string name="disclaimer_style_body">本应用部分界面采用了 KernelSU 的界面风格。</string>
     <string name="disclaimer_risk_title">玩机风险提示</string>

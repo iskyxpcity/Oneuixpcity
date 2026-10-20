@@ -3,7 +3,7 @@ package com.oneuixp.app.ui.component.rebootlistpopup
 import android.widget.Toast
 import androidx.compose.runtime.rememberCoroutineScope
 import com.oneuixp.app.oneuiXPApp
-import com.oneuixp.app.oneuix.OneuiXPreferenceBridge
+import com.oneuixp.app.oneuixp.OneuiXPPPreferenceBridge
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -31,11 +31,11 @@ fun rememberRebootAction(): (String) -> Unit {
     return { reason ->
         if (reason == "statusbar_xp_systemui" || reason == "soft_reboot_android_runtime") {
             scope.launch {
-                val synchronized = OneuiXPreferenceBridge.synchronizeNow(oneuiXPApp)
+                val synchronized = OneuiXPPPreferenceBridge.synchronizeNow(oneuiXPApp)
                 if (!synchronized) {
                     Toast.makeText(
                         oneuiXPApp,
-                        R.string.oneuix_preferenceSync_failed,
+                        R.string.oneuixp_preferenceSync_failed,
                         Toast.LENGTH_SHORT,
                     ).show()
                     return@launch
@@ -56,7 +56,7 @@ fun rememberRebootAction(): (String) -> Unit {
                         if (!restarted) {
                             Toast.makeText(
                                 oneuiXPApp,
-                                R.string.oneuix_restartSystemUI_failed,
+                                R.string.oneuixp_restartSystemUI_failed,
                                 Toast.LENGTH_SHORT,
                             ).show()
                         }

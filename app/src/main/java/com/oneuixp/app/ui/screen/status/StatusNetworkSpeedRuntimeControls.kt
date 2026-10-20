@@ -21,10 +21,10 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.oneuixp.app.R
-import com.oneuixp.app.ui.viewmodel.OneuiXToolsViewModel
+import com.oneuixp.app.ui.viewmodel.OneuiXPToolsViewModel
 import io.github.soclear.oneuix.common.Preference
-import io.github.soclear.oneuix.ui.component.OneuiXInfoItem
-import io.github.soclear.oneuix.ui.component.OneuiXSlider
+import com.oneuixp.mod.ui.component.OneuiXPInfoItem
+import com.oneuixp.mod.ui.component.OneuiXPSlider
 import io.github.soclear.oneuix.ui.component.SwitchItem
 import kotlin.math.roundToInt
 
@@ -32,7 +32,7 @@ import kotlin.math.roundToInt
 internal fun StatusNetworkSpeedRuntimeControls(
     uiState: Preference.SystemUI.StatusBar,
 ) {
-    val toolsViewModel = viewModel<OneuiXToolsViewModel>()
+    val toolsViewModel = viewModel<OneuiXPToolsViewModel>()
     val localView = LocalView.current
     val icon = ImageVector.vectorResource(id = R.drawable.net_speed)
     val runtime = uiState.networkSpeedRuntime
@@ -223,9 +223,9 @@ private fun NetworkSpeedSliderSetting(
     onFinished: () -> Unit,
 ) {
     Column {
-        OneuiXInfoItem(icon = icon, title = title, summary = summary)
+        OneuiXPInfoItem(icon = icon, title = title, summary = summary)
         StatusThemeChildItem {
-            OneuiXSlider(
+            OneuiXPSlider(
                 value = value,
                 onValueChange = onValueChange,
                 modifier = Modifier
