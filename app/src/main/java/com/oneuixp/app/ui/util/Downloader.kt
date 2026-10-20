@@ -1,15 +1,15 @@
-package com.oneuixp.app.ui.util
+package com.oneuialoha.app.ui.util
 
-import com.oneuixp.app.BuildConfig
-import com.oneuixp.app.oneuiXPApp
-import com.oneuixp.app.ui.util.update.LatestVersionInfo
-import com.oneuixp.app.ui.util.update.compareOneuiXPVersions
+import com.oneuialoha.app.BuildConfig
+import com.oneuialoha.app.oneUIAlohaApp
+import com.oneuialoha.app.ui.util.update.LatestVersionInfo
+import com.oneuialoha.app.ui.util.update.compareOneUIAlohaVersions
 import okhttp3.Request
 import org.json.JSONObject
 import java.net.URI
 import java.util.Locale
 
-private const val LEGACY_RELEASE_REPO = "iSkyJIE/OneuiXP-Releases"
+private const val LEGACY_RELEASE_REPO = "iSkyJIE/OneUIAloha-Releases"
 private const val ALOHA_RELEASE_REPO = "iSkyJIE/OneUIAloha-Releases"
 private const val LEGACY_PACKAGE_NAME = "com.oneuixp.app"
 private val oneUiAlohaApkPrefix = Regex("""(?i)^OneUIAloha(?:[_ -][A-Za-z0-9][A-Za-z0-9._ -]*)?\.apk$""")
@@ -41,7 +41,7 @@ private fun isOneUiAlohaApkForVersion(assetName: String, versionName: String): B
 
 private fun fetchLatestRelease(repository: String): JSONObject? = runCatching {
     val endpoint = "https://api.github.com/repos/$repository/releases/latest"
-    oneuiXPApp.okhttpClient.newCall(
+    oneUIAlohaApp.okhttpClient.newCall(
         Request.Builder().url(endpoint)
             .header("Accept", "application/vnd.github+json")
             .header("User-Agent", "OneUI-Android-Updater")
@@ -57,9 +57,9 @@ private fun fetchLatestRelease(repository: String): JSONObject? = runCatching {
  * OneUI XP feed. Once the app package is renamed, this same updater uses the OneUI Aloha feed.
  */
 fun checkNewVersion(): LatestVersionInfo {
-    if (!isNetworkAvailable(oneuiXPApp)) return LatestVersionInfo()
+    if (!isNetworkAvailable(oneUIAlohaApp)) return LatestVersionInfo()
 
-    val isLegacyApp = oneuiXPApp.packageName.equals(LEGACY_PACKAGE_NAME, ignoreCase = true)
+    val isLegacyApp = oneUIAlohaApp.packageName.equals(LEGACY_PACKAGE_NAME, ignoreCase = true)
 
     if (isLegacyApp) {
         val alohaRelease = fetchLatestRelease(ALOHA_RELEASE_REPO)
@@ -93,7 +93,7 @@ fun checkNewVersion(): LatestVersionInfo {
     val release = fetchLatestRelease(releaseRepository) ?: return LatestVersionInfo()
     val versionName = release.optString("tag_name").removePrefix("v").removePrefix("V")
     if (!isSupportedVersionName(versionName)) return LatestVersionInfo()
-    if (compareOneuiXPVersions(versionName, BuildConfig.VERSION_NAME) <= 0) {
+    if (compareOneUIAlohaVersions(versionName, BuildConfig.VERSION_NAME) <= 0) {
         return LatestVersionInfo()
     }
 
@@ -111,7 +111,7 @@ fun checkNewVersion(): LatestVersionInfo {
     val assets = release.optJSONArray("assets") ?: return LatestVersionInfo()
     val expectedLegacyNames = setOf(
         "OneUI_XP_${versionName}.apk",
-        "OneuiXP_${versionName}.apk",
+        "OneUIAloha_${versionName}.apk",
     ).map { it.lowercase(Locale.ROOT) }.toSet()
     val apkAsset = (0 until assets.length())
         .map { assets.getJSONObject(it) }
