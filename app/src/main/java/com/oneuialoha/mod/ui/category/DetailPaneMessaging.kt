@@ -1,14 +1,14 @@
-package com.oneuixp.mod.ui.category
+package com.oneuialoha.mod.ui.category
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
-import com.oneuixp.app.R
-import com.oneuixp.common.Preference
-import com.oneuixp.app.ui.viewmodel.OneuiXPToolsViewModel
-import com.oneuixp.mod.ui.component.SwitchItem
+import com.oneuialoha.app.R
+import com.oneuialoha.common.Preference
+import com.oneuialoha.app.ui.viewmodel.OneUIAlohaToolsViewModel
+import com.oneuialoha.mod.ui.component.SwitchItem
 
 @Composable
 fun DetailPaneMessaging(
@@ -19,7 +19,7 @@ fun DetailPaneMessaging(
     PackagePane(modifier) {
         SwitchItem(
             icon = ImageVector.vectorResource(id = R.drawable.sms),
-            title = stringResource(id = R.string.oneuixp_supportBlockMessage_title),
+            title = stringResource(id = R.string.oneuialoha_supportBlockMessage_title),
             checked = uiState.supportBlockMessage,
             onCheckedChange = { onEvent(MessagingEvent.SupportBlockMessage(it)) }
         )
@@ -31,7 +31,7 @@ sealed interface MessagingEvent {
     value class SupportBlockMessage(val value: Boolean) : MessagingEvent
 }
 
-fun OneuiXPToolsViewModel.onMessagingEvent(event: MessagingEvent) {
+fun OneUIAlohaToolsViewModel.onMessagingEvent(event: MessagingEvent) {
     updateData { preference ->
         when (event) {
             is MessagingEvent.SupportBlockMessage -> preference.copy(

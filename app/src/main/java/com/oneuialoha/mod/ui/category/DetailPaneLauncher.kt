@@ -1,4 +1,4 @@
-package com.oneuixp.mod.ui.category
+package com.oneuialoha.mod.ui.category
 
 import android.os.Build
 import androidx.compose.runtime.Composable
@@ -6,10 +6,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
-import com.oneuixp.app.R
-import com.oneuixp.common.Preference
-import com.oneuixp.app.ui.viewmodel.OneuiXPToolsViewModel
-import com.oneuixp.mod.ui.component.SwitchItem
+import com.oneuialoha.app.R
+import com.oneuialoha.common.Preference
+import com.oneuialoha.app.ui.viewmodel.OneUIAlohaToolsViewModel
+import com.oneuialoha.mod.ui.component.SwitchItem
 
 @Composable
 fun DetailPaneLauncher(
@@ -21,34 +21,34 @@ fun DetailPaneLauncher(
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
             SwitchItem(
                 icon = ImageVector.vectorResource(id = R.drawable.memory),
-                title = stringResource(id = R.string.oneuixp_showMemoryUsageInRecents_title),
+                title = stringResource(id = R.string.oneuialoha_showMemoryUsageInRecents_title),
                 checked = uiState.showMemoryUsageInRecents,
                 onCheckedChange = { onEvent(LauncherEvent.ShowMemoryUsageInRecents(it)) }
             )
         }
         SwitchItem(
             icon = ImageVector.vectorResource(id = R.drawable.tile_medium),
-            title = stringResource(id = R.string.oneuixp_recentsGridThreeRows_title),
-            summary = stringResource(id = R.string.oneuixp_recentsGridThreeRows_summary),
+            title = stringResource(id = R.string.oneuialoha_recentsGridThreeRows_title),
+            summary = stringResource(id = R.string.oneuialoha_recentsGridThreeRows_summary),
             checked = uiState.recentsGridThreeRows,
             onCheckedChange = { onEvent(LauncherEvent.RecentsGridThreeRows(it)) }
         )
         SwitchItem(
             icon = ImageVector.vectorResource(id = R.drawable.block),
-            title = stringResource(id = R.string.oneuixp_hideRecentsCloseAllButton_title),
+            title = stringResource(id = R.string.oneuialoha_hideRecentsCloseAllButton_title),
             checked = uiState.hideRecentsCloseAllButton,
             onCheckedChange = { onEvent(LauncherEvent.HideRecentsCloseAllButton(it)) }
         )
         SwitchItem(
             icon = ImageVector.vectorResource(id = R.drawable.apps),
-            title = stringResource(id = R.string.oneuixp_hideAppsSearchBar_title),
+            title = stringResource(id = R.string.oneuialoha_hideAppsSearchBar_title),
             checked = uiState.hideAppsSearchBar,
             onCheckedChange = { onEvent(LauncherEvent.HideAppsSearchBar(it)) }
         )
         SwitchItem(
             icon = ImageVector.vectorResource(id = R.drawable.position_bottom_right),
-            title = stringResource(id = R.string.oneuixp_removeShortcutBadge_title),
-            summary = stringResource(id = R.string.oneuixp_removeShortcutBadge_summary),
+            title = stringResource(id = R.string.oneuialoha_removeShortcutBadge_title),
+            summary = stringResource(id = R.string.oneuialoha_removeShortcutBadge_summary),
             checked = uiState.removeShortcutBadge,
             onCheckedChange = { onEvent(LauncherEvent.RemoveShortcutBadge(it)) }
         )
@@ -72,7 +72,7 @@ sealed interface LauncherEvent {
     value class RemoveShortcutBadge(val value: Boolean) : LauncherEvent
 }
 
-fun OneuiXPToolsViewModel.onLauncherEvent(event: LauncherEvent) {
+fun OneUIAlohaToolsViewModel.onLauncherEvent(event: LauncherEvent) {
     updateData { preference ->
         when (event) {
             is LauncherEvent.ShowMemoryUsageInRecents -> preference.copy(

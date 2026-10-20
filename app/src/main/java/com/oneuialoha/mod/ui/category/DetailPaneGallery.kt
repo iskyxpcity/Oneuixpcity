@@ -1,14 +1,14 @@
-package com.oneuixp.mod.ui.category
+package com.oneuialoha.mod.ui.category
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
-import com.oneuixp.app.R
-import com.oneuixp.common.Preference
-import com.oneuixp.app.ui.viewmodel.OneuiXPToolsViewModel
-import com.oneuixp.mod.ui.component.SwitchItem
+import com.oneuialoha.app.R
+import com.oneuialoha.common.Preference
+import com.oneuialoha.app.ui.viewmodel.OneUIAlohaToolsViewModel
+import com.oneuialoha.mod.ui.component.SwitchItem
 
 @Composable
 fun DetailPaneGallery(
@@ -19,21 +19,21 @@ fun DetailPaneGallery(
     PackagePane(modifier) {
         SwitchItem(
             icon = ImageVector.vectorResource(id = R.drawable.photo_library),
-            title = stringResource(id = R.string.oneuixp_supportAllGallerySettings_title),
-            summary = stringResource(id = R.string.oneuixp_supportAllGallerySettings_summary),
+            title = stringResource(id = R.string.oneuialoha_supportAllGallerySettings_title),
+            summary = stringResource(id = R.string.oneuialoha_supportAllGallerySettings_summary),
             checked = uiState.supportAllGallerySettings,
             onCheckedChange = { onEvent(GalleryEvent.SupportAllGallerySettings(it)) }
         )
         SwitchItem(
             icon = ImageVector.vectorResource(id = R.drawable.photo_library),
-            title = stringResource(id = R.string.oneuixp_supportSharedAlbumsInHide_title),
-            summary = stringResource(id = R.string.oneuixp_supportSharedAlbumsInHide_summary),
+            title = stringResource(id = R.string.oneuialoha_supportSharedAlbumsInHide_title),
+            summary = stringResource(id = R.string.oneuialoha_supportSharedAlbumsInHide_summary),
             checked = uiState.supportSharedAlbumsInHide,
             onCheckedChange = { onEvent(GalleryEvent.SupportSharedAlbumsInHide(it)) }
         )
         SwitchItem(
             icon = ImageVector.vectorResource(id = R.drawable.photo_library),
-            title = stringResource(id = R.string.oneuixp_hideVideoEditorStudio_title),
+            title = stringResource(id = R.string.oneuialoha_hideVideoEditorStudio_title),
             checked = uiState.hideVideoEditorStudio,
             onCheckedChange = { onEvent(GalleryEvent.HideVideoEditorStudio(it)) }
         )
@@ -51,7 +51,7 @@ sealed interface GalleryEvent {
     value class HideVideoEditorStudio(val value: Boolean) : GalleryEvent
 }
 
-fun OneuiXPToolsViewModel.onGalleryEvent(event: GalleryEvent) {
+fun OneUIAlohaToolsViewModel.onGalleryEvent(event: GalleryEvent) {
     updateData { preference ->
         when (event) {
             is GalleryEvent.SupportAllGallerySettings -> preference.copy(
