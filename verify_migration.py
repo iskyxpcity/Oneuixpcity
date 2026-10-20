@@ -11,7 +11,7 @@ network_speed_runtime_source = (root/'hook/src/main/java/com/oneuialoha/hook/sys
 independent_signal_runtime_source = (root/'hook/src/main/java/com/oneuialoha/hook/systemui/StatusBarSignalIndependentRuntime.kt').read_text()
 feature_intro_source = (root/'app/src/main/java/com/oneuialoha/app/ui/screen/about/FeatureIntroductionScreens.kt').read_text()
 feature_routes_source = (root/'app/src/main/java/com/oneuialoha/app/ui/navigation3/Routes.kt').read_text()
-preference_bridge_source = (root/'app/src/main/java/com/oneuialoha/app/oneuixp/OneUIAlohaPreferenceBridge.kt').read_text()
+preference_bridge_source = (root/'app/src/main/java/com/oneuialoha/app/oneuialoha/OneUIAlohaPreferenceBridge.kt').read_text()
 main_activity_source = (root/'app/src/main/java/com/oneuialoha/app/ui/MainActivity.kt').read_text()
 release_note_resources = [
     (root/'app/src/main/res/values/strings.xml').read_text(),
@@ -161,8 +161,8 @@ owner_hits = []
 legacy_segment_hits = []
 token_hits = []
 malformed_symbol_markers = (
-    _chars((111, 110, 101, 117, 105, 88, 80, 80, 65, 112, 112)),
-    _chars((79, 110, 101, 117, 105, 88, 80, 80, 80, 114, 101, 102, 101, 114, 101, 110, 99, 101, 66, 114, 105, 100, 103, 101)),
+    _chars((111, 110, 101, 117, 105, 97, 108, 111, 104, 97, 65, 112, 112)),
+    _chars((79, 110, 101, 85, 73, 65, 108, 111, 104, 97, 65, 108, 111, 104, 97, 80, 114, 101, 102, 101, 114, 101, 110, 99, 101, 66, 114, 105, 100, 103, 101)),
 )
 malformed_symbol_hits = []
 
@@ -214,7 +214,7 @@ checks["No standalone former namespace/path segment outside license texts"] = no
 checks["No former project brand token outside license texts"] = not brand_hits
 checks["No former project naming token outside license texts"] = not legacy_name_hits
 checks["Former standalone project token remains detectable"] = bool(legacy_name_pattern.search(legacy_project_segment))
-checks["Supported OneUI Aloha casing variants are accepted"] = not any(
+checks["Supported OneUI Aloha casing variants do not match the retired namespace token"] = not any(
     old_brand.search(variant) or legacy_name_pattern.search(variant)
     for variant in ("OneUIAloha", "OneUIAloha", "oneuixp", "OneUIAloha")
 )
