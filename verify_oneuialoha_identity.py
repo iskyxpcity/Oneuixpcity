@@ -123,7 +123,7 @@ for path in source_files:
     if path == (ROOT / "app/src/main/java/com/oneuialoha/app/ui/util/Downloader.kt"):
         text = text.replace('com.oneuixp.app', '').replace('iSkyJIE/OneuiXP-Releases', '')
     if ("com.oneuixp" in text or "com/oneuixp" in text
-            or re.search(r"(?:R\\.string\\.|@string/)oneuixp_", text, re.IGNORECASE)):
+            or re.search(r"(?:R\.string\.|@string/)oneuixp_", text, re.IGNORECASE)):
         bad_source_refs.append(str(path.relative_to(ROOT)))
 # The sole app-package compatibility package literal belongs in the updater, outside this
 # current-identity source scan. Legacy persisted settings keys in Preference/Migration are
