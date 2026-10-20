@@ -1,4 +1,4 @@
-package com.oneuixp.mod.ui.category
+package com.oneuialoha.mod.ui.category
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -9,11 +9,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
-import com.oneuixp.app.R
-import com.oneuixp.common.Preference
-import com.oneuixp.app.ui.viewmodel.OneuiXPToolsViewModel
-import com.oneuixp.mod.ui.component.SwitchItem
-import com.oneuixp.mod.ui.component.OneuiXPDetailGroup
+import com.oneuialoha.app.R
+import com.oneuialoha.common.Preference
+import com.oneuialoha.app.ui.viewmodel.OneUIAlohaToolsViewModel
+import com.oneuialoha.mod.ui.component.SwitchItem
+import com.oneuialoha.mod.ui.component.OneUIAlohaDetailGroup
 
 @Composable
 fun DetailPaneCall(
@@ -26,35 +26,35 @@ fun DetailPaneCall(
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
     ) {
-        OneuiXPDetailGroup {
+        OneUIAlohaDetailGroup {
         SwitchItem(
             icon = ImageVector.vectorResource(id = R.drawable.call_recording),
-            title = stringResource(id = R.string.oneuixp_supportVoiceCallRecording_title),
+            title = stringResource(id = R.string.oneuialoha_supportVoiceCallRecording_title),
             checked = uiState.supportVoiceCallRecording,
             onCheckedChange = { onEvent(CallEvent.SupportVoiceCallRecording(it)) }
         )
         SwitchItem(
             icon = ImageVector.vectorResource(id = R.drawable.call_recording),
-            title = stringResource(id = R.string.oneuixp_preferRecordingButton_title),
+            title = stringResource(id = R.string.oneuialoha_preferRecordingButton_title),
             checked = uiState.preferRecordingButton,
             onCheckedChange = { onEvent(CallEvent.PreferRecordingButton(it)) }
         )
         SwitchItem(
             icon = ImageVector.vectorResource(id = R.drawable.person_pin_circle),
-            title = stringResource(id = R.string.oneuixp_showGeocodedLocationInRecentCall_title),
+            title = stringResource(id = R.string.oneuialoha_showGeocodedLocationInRecentCall_title),
             checked = uiState.showGeocodedLocationInRecentCall,
             onCheckedChange = { onEvent(CallEvent.ShowGeocodedLocationInRecentCall(it)) }
         )
         SwitchItem(
             icon = ImageVector.vectorResource(id = R.drawable.call_log),
-            title = stringResource(id = R.string.oneuixp_isOpStyleCHN_title),
+            title = stringResource(id = R.string.oneuialoha_isOpStyleCHN_title),
             checked = uiState.isOpStyleCHN,
             onCheckedChange = { onEvent(CallEvent.IsOpStyleCHN(it)) }
         )
         SwitchItem(
             icon = ImageVector.vectorResource(id = R.drawable.phone_forwarded),
-            title = stringResource(id = R.string.oneuixp_supportCallAndTextOnOtherDevices_title),
-            summary = stringResource(id = R.string.oneuixp_supportCallAndTextOnOtherDevices_summary),
+            title = stringResource(id = R.string.oneuialoha_supportCallAndTextOnOtherDevices_title),
+            summary = stringResource(id = R.string.oneuialoha_supportCallAndTextOnOtherDevices_summary),
             checked = uiState.supportCallAndTextOnOtherDevices,
             onCheckedChange = { onEvent(CallEvent.SupportCallAndTextOnOtherDevices(it)) }
         )
@@ -80,7 +80,7 @@ sealed interface CallEvent {
     value class SupportCallAndTextOnOtherDevices(val value: Boolean) : CallEvent
 }
 
-fun OneuiXPToolsViewModel.onCallEvent(event: CallEvent) {
+fun OneUIAlohaToolsViewModel.onCallEvent(event: CallEvent) {
     updateData {
         when (event) {
             is CallEvent.SupportVoiceCallRecording -> {
