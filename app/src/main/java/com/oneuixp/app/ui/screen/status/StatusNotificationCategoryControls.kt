@@ -1,4 +1,4 @@
-package com.oneuixp.app.ui.screen.status
+package com.oneuialoha.app.ui.screen.status
 
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,11 +15,11 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
-import com.oneuixp.app.R
-import com.oneuixp.common.Preference
-import com.oneuixp.mod.ui.category.SystemUIEvent
-import com.oneuixp.mod.ui.component.OneuiXPSlider
-import com.oneuixp.mod.ui.component.SwitchItem
+import com.oneuialoha.app.R
+import com.oneuialoha.common.Preference
+import com.oneuialoha.mod.ui.category.SystemUIEvent
+import com.oneuialoha.mod.ui.component.OneUIAlohaSlider
+import com.oneuialoha.mod.ui.component.SwitchItem
 import kotlin.math.roundToInt
 
 @Composable
@@ -36,7 +36,7 @@ fun StatusNotificationCategoryControls(
         items = buildList {
             add {
                 SwitchItem(
-                    title = stringResource(id = R.string.oneuixp_setStatusBarMaxNotificationIcons_title),
+                    title = stringResource(id = R.string.oneuialoha_setStatusBarMaxNotificationIcons_title),
                     modifier = Modifier.animateContentSize(),
                     summary = if (uiState.modifyStatusBarMaxNotificationIcons) " $max" else null,
                     icon = ImageVector.vectorResource(id = R.drawable.notifications),
@@ -56,7 +56,7 @@ fun StatusNotificationCategoryControls(
             if (expanded && uiState.modifyStatusBarMaxNotificationIcons) {
                 add {
                     StatusThemeChildItem {
-                        OneuiXPSlider(
+                        OneUIAlohaSlider(
                             value = max.toFloat(),
                             onValueChange = { max = it.roundToInt() },
                             modifier = Modifier

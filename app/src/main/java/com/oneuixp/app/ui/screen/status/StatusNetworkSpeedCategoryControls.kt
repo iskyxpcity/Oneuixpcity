@@ -1,4 +1,4 @@
-package com.oneuixp.app.ui.screen.status
+package com.oneuialoha.app.ui.screen.status
 
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Row
@@ -21,14 +21,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.oneuixp.app.R
-import com.oneuixp.app.ui.viewmodel.OneuiXPToolsViewModel
-import com.oneuixp.common.Preference
-import com.oneuixp.mod.ui.category.SystemUIEvent
-import com.oneuixp.mod.ui.component.OneuiXPActionButton
-import com.oneuixp.mod.ui.component.OneuiXPInlineTextField
-import com.oneuixp.mod.ui.component.OneuiXPSlider
-import com.oneuixp.mod.ui.component.SwitchItem
+import com.oneuialoha.app.R
+import com.oneuialoha.app.ui.viewmodel.OneUIAlohaToolsViewModel
+import com.oneuialoha.common.Preference
+import com.oneuialoha.mod.ui.category.SystemUIEvent
+import com.oneuialoha.mod.ui.component.OneUIAlohaActionButton
+import com.oneuialoha.mod.ui.component.OneUIAlohaInlineTextField
+import com.oneuialoha.mod.ui.component.OneUIAlohaSlider
+import com.oneuialoha.mod.ui.component.SwitchItem
 import kotlin.math.roundToInt
 
 @Composable
@@ -36,7 +36,7 @@ fun StatusNetworkSpeedCategoryControls(
     uiState: Preference.SystemUI.StatusBar,
     onEvent: (SystemUIEvent) -> Unit,
 ) {
-    val toolsViewModel = viewModel<OneuiXPToolsViewModel>()
+    val toolsViewModel = viewModel<OneUIAlohaToolsViewModel>()
 
     fun preview(nextStatusBar: Preference.SystemUI.StatusBar) {
         toolsViewModel.previewData { current ->
@@ -73,8 +73,8 @@ fun StatusNetworkSpeedCategoryControls(
             add {
                 SwitchItem(
                     icon = ImageVector.vectorResource(id = R.drawable.net_speed),
-                    title = stringResource(id = R.string.oneuixp_supportRealTimeNetworkSpeed_title),
-                    summary = stringResource(id = R.string.oneuixp_supportRealTimeNetworkSpeed_summary),
+                    title = stringResource(id = R.string.oneuialoha_supportRealTimeNetworkSpeed_title),
+                    summary = stringResource(id = R.string.oneuialoha_supportRealTimeNetworkSpeed_summary),
                     checked = uiState.supportRealTimeNetworkSpeed,
                     onCheckedChange = {
                         onEvent(SystemUIEvent.StatusBar.SupportRealTimeNetworkSpeed(it))
@@ -84,8 +84,8 @@ fun StatusNetworkSpeedCategoryControls(
             add {
                 SwitchItem(
                     icon = ImageVector.vectorResource(id = R.drawable.net_speed),
-                    title = stringResource(id = R.string.oneuixp_showSeparateUpDownNetworkSpeeds_title),
-                    summary = stringResource(id = R.string.oneuixp_showSeparateUpDownNetworkSpeeds_summary),
+                    title = stringResource(id = R.string.oneuialoha_showSeparateUpDownNetworkSpeeds_title),
+                    summary = stringResource(id = R.string.oneuialoha_showSeparateUpDownNetworkSpeeds_summary),
                     checked = uiState.showSeparateUpDownNetworkSpeeds,
                     onCheckedChange = {
                         onEvent(SystemUIEvent.StatusBar.ShowSeparateUpDownNetworkSpeeds(it))
@@ -97,14 +97,14 @@ fun StatusNetworkSpeedCategoryControls(
                 add {
                     SwitchItem(
                         icon = ImageVector.vectorResource(id = R.drawable.format_letter_spacing),
-                        title = stringResource(id = R.string.oneuixp_networkSpeedLineGap_title),
+                        title = stringResource(id = R.string.oneuialoha_networkSpeedLineGap_title),
                         summary = if (uiState.modifyNetworkSpeedLineGap) {
                             stringResource(
-                                id = R.string.oneuixp_networkSpeedLineGap_summary,
+                                id = R.string.oneuialoha_networkSpeedLineGap_summary,
                                 lineGapDp,
                             )
                         } else {
-                            stringResource(id = R.string.oneuixp_networkSpeedDoubleLineOnly_summary)
+                            stringResource(id = R.string.oneuialoha_networkSpeedDoubleLineOnly_summary)
                         },
                         modifier = Modifier.animateContentSize(),
                         clickable = true,
@@ -119,7 +119,7 @@ fun StatusNetworkSpeedCategoryControls(
                 if (lineGapExpanded && uiState.modifyNetworkSpeedLineGap) {
                     add {
                         StatusThemeChildItem {
-                            OneuiXPSlider(
+                            OneUIAlohaSlider(
                                 value = lineGapDp,
                                 onValueChange = {
                                     lineGapDp = (it * 10f).roundToInt() / 10f
@@ -142,14 +142,14 @@ fun StatusNetworkSpeedCategoryControls(
                 add {
                     SwitchItem(
                         icon = ImageVector.vectorResource(id = R.drawable.format_size),
-                        title = stringResource(id = R.string.oneuixp_networkSpeedUploadTextScale_title),
+                        title = stringResource(id = R.string.oneuialoha_networkSpeedUploadTextScale_title),
                         summary = if (uiState.setNetworkSpeedUploadTextScale) {
                             stringResource(
-                                id = R.string.oneuixp_networkSpeedUploadTextScale_summary,
+                                id = R.string.oneuialoha_networkSpeedUploadTextScale_summary,
                                 uploadScale,
                             )
                         } else {
-                            stringResource(id = R.string.oneuixp_networkSpeedDoubleLineOnly_summary)
+                            stringResource(id = R.string.oneuialoha_networkSpeedDoubleLineOnly_summary)
                         },
                         modifier = Modifier.animateContentSize(),
                         clickable = true,
@@ -164,7 +164,7 @@ fun StatusNetworkSpeedCategoryControls(
                 if (uploadScaleExpanded && uiState.setNetworkSpeedUploadTextScale) {
                     add {
                         StatusThemeChildItem {
-                            OneuiXPSlider(
+                            OneUIAlohaSlider(
                                 value = uploadScale,
                                 onValueChange = {
                                     uploadScale = (it * 100f).roundToInt() / 100f
@@ -187,14 +187,14 @@ fun StatusNetworkSpeedCategoryControls(
                 add {
                     SwitchItem(
                         icon = ImageVector.vectorResource(id = R.drawable.format_size),
-                        title = stringResource(id = R.string.oneuixp_networkSpeedDownloadTextScale_title),
+                        title = stringResource(id = R.string.oneuialoha_networkSpeedDownloadTextScale_title),
                         summary = if (uiState.setNetworkSpeedDownloadTextScale) {
                             stringResource(
-                                id = R.string.oneuixp_networkSpeedDownloadTextScale_summary,
+                                id = R.string.oneuialoha_networkSpeedDownloadTextScale_summary,
                                 downloadScale,
                             )
                         } else {
-                            stringResource(id = R.string.oneuixp_networkSpeedDoubleLineOnly_summary)
+                            stringResource(id = R.string.oneuialoha_networkSpeedDoubleLineOnly_summary)
                         },
                         modifier = Modifier.animateContentSize(),
                         clickable = true,
@@ -209,7 +209,7 @@ fun StatusNetworkSpeedCategoryControls(
                 if (downloadScaleExpanded && uiState.setNetworkSpeedDownloadTextScale) {
                     add {
                         StatusThemeChildItem {
-                            OneuiXPSlider(
+                            OneUIAlohaSlider(
                                 value = downloadScale,
                                 onValueChange = {
                                     downloadScale = (it * 100f).roundToInt() / 100f
@@ -233,11 +233,11 @@ fun StatusNetworkSpeedCategoryControls(
             add {
                 SwitchItem(
                     icon = ImageVector.vectorResource(id = R.drawable.net_speed),
-                    title = stringResource(id = R.string.oneuixp_networkSpeedThreshold_title),
+                    title = stringResource(id = R.string.oneuialoha_networkSpeedThreshold_title),
                     summary = if (uiState.networkSpeedThresholdKb > 0) {
                         "${uiState.networkSpeedThresholdKb} KB/s"
                     } else {
-                        stringResource(id = R.string.oneuixp_networkSpeedThreshold_scope_summary)
+                        stringResource(id = R.string.oneuialoha_networkSpeedThreshold_scope_summary)
                     },
                     modifier = Modifier.animateContentSize(),
                     clickable = true,
@@ -264,7 +264,7 @@ fun StatusNetworkSpeedCategoryControls(
                                 .fillMaxWidth()
                                 .padding(horizontal = 8.dp),
                         ) {
-                            OneuiXPInlineTextField(
+                            OneUIAlohaInlineTextField(
                                 value = threshold.toString(),
                                 onValueChange = {
                                     threshold = it.toIntOrNull()?.coerceAtLeast(1) ?: 1
@@ -272,13 +272,13 @@ fun StatusNetworkSpeedCategoryControls(
                                 },
                                 modifier = Modifier.weight(1f),
                                 labelText = stringResource(
-                                    id = R.string.oneuixp_networkSpeedThreshold_label
+                                    id = R.string.oneuialoha_networkSpeedThreshold_label
                                 ),
                                 singleLine = true,
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            OneuiXPActionButton(
-                                text = stringResource(id = R.string.oneuixp_confirm),
+                            OneUIAlohaActionButton(
+                                text = stringResource(id = R.string.oneuialoha_confirm),
                                 primary = true,
                                 onClick = {
                                     onEvent(SystemUIEvent.StatusBar.NetworkSpeedThreshold(threshold))

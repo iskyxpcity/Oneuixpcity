@@ -1,4 +1,4 @@
-package com.oneuixp.app.ui.screen.status
+package com.oneuialoha.app.ui.screen.status
 
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,15 +15,15 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
-import com.oneuixp.app.R
-import com.oneuixp.common.Preference
-import com.oneuixp.mod.ui.category.SystemUIEvent
-import com.oneuixp.mod.ui.component.OneuiXPSlider
-import com.oneuixp.mod.ui.component.SwitchItem
+import com.oneuialoha.app.R
+import com.oneuialoha.common.Preference
+import com.oneuialoha.mod.ui.category.SystemUIEvent
+import com.oneuialoha.mod.ui.component.OneUIAlohaSlider
+import com.oneuialoha.mod.ui.component.SwitchItem
 import kotlin.math.roundToInt
 
 /**
- * OneuiXP-owned whole-status-bar padding controls.
+ * OneUIAloha-owned whole-status-bar padding controls.
  *
  * These values affect the whole status bar and therefore live in their own
  * top-level category instead of Signal.
@@ -57,7 +57,7 @@ fun StatusPaddingCategoryControls(
         items = buildList {
             add {
                 SwitchItem(
-                    title = stringResource(id = R.string.oneuixp_statusBarLeftPaddingDp_title),
+                    title = stringResource(id = R.string.oneuialoha_statusBarLeftPaddingDp_title),
                     summary = if (uiState.modifyStatusBarLeftPadding) "%.1fdp".format(left) else null,
                     icon = ImageVector.vectorResource(id = R.drawable.padding),
                     modifier = Modifier.animateContentSize(),
@@ -73,7 +73,7 @@ fun StatusPaddingCategoryControls(
             if (leftExpanded && uiState.modifyStatusBarLeftPadding) {
                 add {
                     StatusThemeChildItem {
-                        OneuiXPSlider(
+                        OneUIAlohaSlider(
                             value = left,
                             onValueChange = { left = it },
                             modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
@@ -88,7 +88,7 @@ fun StatusPaddingCategoryControls(
 
             add {
                 SwitchItem(
-                    title = stringResource(id = R.string.oneuixp_statusBarRightPaddingDp_title),
+                    title = stringResource(id = R.string.oneuialoha_statusBarRightPaddingDp_title),
                     summary = if (uiState.modifyStatusBarRightPadding) "%.1fdp".format(right) else null,
                     icon = ImageVector.vectorResource(id = R.drawable.padding),
                     modifier = Modifier.animateContentSize(),
@@ -104,7 +104,7 @@ fun StatusPaddingCategoryControls(
             if (rightExpanded && uiState.modifyStatusBarRightPadding) {
                 add {
                     StatusThemeChildItem {
-                        OneuiXPSlider(
+                        OneUIAlohaSlider(
                             value = right,
                             onValueChange = { right = it },
                             modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
@@ -119,7 +119,7 @@ fun StatusPaddingCategoryControls(
 
             add {
                 SwitchItem(
-                    title = stringResource(id = R.string.oneuixp_statusBarTopPaddingDp_title),
+                    title = stringResource(id = R.string.oneuialoha_statusBarTopPaddingDp_title),
                     summary = if (uiState.modifyStatusBarTopPadding) {
                         stringResource(id = R.string.status_padding_top_summary, top)
                     } else null,
@@ -137,7 +137,7 @@ fun StatusPaddingCategoryControls(
             if (topExpanded && uiState.modifyStatusBarTopPadding) {
                 add {
                     StatusThemeChildItem {
-                        OneuiXPSlider(
+                        OneUIAlohaSlider(
                             value = top,
                             onValueChange = { top = it },
                             modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
@@ -156,7 +156,7 @@ fun StatusPaddingCategoryControls(
 
             add {
                 SwitchItem(
-                    title = stringResource(id = R.string.oneuixp_statusBarBottomPaddingDp_title),
+                    title = stringResource(id = R.string.oneuialoha_statusBarBottomPaddingDp_title),
                     summary = if (uiState.modifyStatusBarBottomPadding) {
                         stringResource(id = R.string.status_padding_bottom_summary, bottom)
                     } else null,
@@ -174,7 +174,7 @@ fun StatusPaddingCategoryControls(
             if (bottomExpanded && uiState.modifyStatusBarBottomPadding) {
                 add {
                     StatusThemeChildItem {
-                        OneuiXPSlider(
+                        OneUIAlohaSlider(
                             value = bottom,
                             onValueChange = { bottom = it },
                             modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),

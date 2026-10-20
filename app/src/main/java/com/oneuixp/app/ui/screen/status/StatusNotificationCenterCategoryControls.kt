@@ -1,4 +1,4 @@
-package com.oneuixp.app.ui.screen.status
+package com.oneuialoha.app.ui.screen.status
 
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Row
@@ -18,12 +18,12 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
-import com.oneuixp.app.R
-import com.oneuixp.common.Preference
-import com.oneuixp.mod.ui.category.SystemUIEvent
-import com.oneuixp.mod.ui.component.OneuiXPActionButton
-import com.oneuixp.mod.ui.component.OneuiXPInlineTextField
-import com.oneuixp.mod.ui.component.SwitchItem
+import com.oneuialoha.app.R
+import com.oneuialoha.common.Preference
+import com.oneuialoha.mod.ui.category.SystemUIEvent
+import com.oneuialoha.mod.ui.component.OneUIAlohaActionButton
+import com.oneuialoha.mod.ui.component.OneUIAlohaInlineTextField
+import com.oneuialoha.mod.ui.component.SwitchItem
 
 @Composable
 fun StatusNotificationCenterCategoryControls(
@@ -40,14 +40,14 @@ fun StatusNotificationCenterCategoryControls(
             add {
                 SwitchItem(
                     icon = ImageVector.vectorResource(id = R.drawable.music_note),
-                    title = stringResource(id = R.string.oneuixp_hideOngoingActivityMedia_title),
+                    title = stringResource(id = R.string.oneuialoha_hideOngoingActivityMedia_title),
                     summary = if (
                         uiState.hideOngoingActivityMedia &&
                         uiState.hideOngoingActivityMediaPackages.isNotEmpty()
                     ) {
                         uiState.hideOngoingActivityMediaPackages
                     } else {
-                        stringResource(id = R.string.oneuixp_hideOngoingActivityMedia_summary)
+                        stringResource(id = R.string.oneuialoha_hideOngoingActivityMedia_summary)
                     },
                     modifier = Modifier.animateContentSize(),
                     clickable = true,
@@ -72,18 +72,18 @@ fun StatusNotificationCenterCategoryControls(
                                 .fillMaxWidth()
                                 .padding(horizontal = 8.dp),
                         ) {
-                            OneuiXPInlineTextField(
+                            OneUIAlohaInlineTextField(
                                 value = packages,
                                 onValueChange = { packages = it },
                                 modifier = Modifier.weight(1f),
                                 labelText = stringResource(
-                                    id = R.string.oneuixp_hideOngoingActivityMedia_packages_hint
+                                    id = R.string.oneuialoha_hideOngoingActivityMedia_packages_hint
                                 ),
                                 singleLine = true,
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            OneuiXPActionButton(
-                                text = stringResource(id = R.string.oneuixp_confirm),
+                            OneUIAlohaActionButton(
+                                text = stringResource(id = R.string.oneuialoha_confirm),
                                 primary = true,
                                 onClick = {
                                     onEvent(
@@ -100,8 +100,8 @@ fun StatusNotificationCenterCategoryControls(
             add {
                 SwitchItem(
                     icon = ImageVector.vectorResource(id = R.drawable.notifications),
-                    title = stringResource(id = R.string.oneuixp_disableNotificationGrouping_title),
-                    summary = stringResource(id = R.string.oneuixp_disableNotificationGrouping_summary),
+                    title = stringResource(id = R.string.oneuialoha_disableNotificationGrouping_title),
+                    summary = stringResource(id = R.string.oneuialoha_disableNotificationGrouping_summary),
                     checked = uiState.disableNotificationGrouping,
                     onCheckedChange = {
                         onEvent(SystemUIEvent.Notification.DisableNotificationGrouping(it))
@@ -111,7 +111,7 @@ fun StatusNotificationCenterCategoryControls(
             add {
                 SwitchItem(
                     icon = ImageVector.vectorResource(id = R.drawable.notifications),
-                    title = stringResource(id = R.string.oneuixp_autoExpandNotifications_title),
+                    title = stringResource(id = R.string.oneuialoha_autoExpandNotifications_title),
                     checked = uiState.autoExpandNotifications,
                     onCheckedChange = {
                         onEvent(SystemUIEvent.Notification.AutoExpandNotifications(it))

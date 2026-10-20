@@ -1,4 +1,4 @@
-package com.oneuixp.app.ui.screen.status
+package com.oneuialoha.app.ui.screen.status
 
 import android.os.Build
 import androidx.compose.animation.animateContentSize
@@ -18,12 +18,12 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
-import com.oneuixp.app.R
-import com.oneuixp.common.ONE_UI_VERSION
-import com.oneuixp.common.Preference
-import com.oneuixp.mod.ui.category.SystemUIEvent
-import com.oneuixp.mod.ui.component.OneuiXPSlider
-import com.oneuixp.mod.ui.component.SwitchItem
+import com.oneuialoha.app.R
+import com.oneuialoha.common.ONE_UI_VERSION
+import com.oneuialoha.common.Preference
+import com.oneuialoha.mod.ui.category.SystemUIEvent
+import com.oneuialoha.mod.ui.component.OneUIAlohaSlider
+import com.oneuialoha.mod.ui.component.SwitchItem
 
 @Composable
 fun StatusPowerCategoryControls(
@@ -56,7 +56,7 @@ fun StatusPowerCategoryControls(
         items = buildList {
             add {
                 SwitchItem(
-                    title = stringResource(id = R.string.oneuixp_setBatteryIconWidthScale_title),
+                    title = stringResource(id = R.string.oneuialoha_setBatteryIconWidthScale_title),
                     modifier = Modifier.animateContentSize(),
                     summary = if (uiState.setBatteryIconWidthScale) "%.2f".format(widthScale) else null,
                     icon = batteryIcon,
@@ -73,7 +73,7 @@ fun StatusPowerCategoryControls(
             if (widthExpanded && uiState.setBatteryIconWidthScale) {
                 add {
                     StatusThemeChildItem {
-                        OneuiXPSlider(
+                        OneUIAlohaSlider(
                             value = widthScale,
                             onValueChange = { widthScale = it },
                             modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
@@ -88,7 +88,7 @@ fun StatusPowerCategoryControls(
 
             add {
                 SwitchItem(
-                    title = stringResource(id = R.string.oneuixp_setBatteryIconHeightScale_title),
+                    title = stringResource(id = R.string.oneuialoha_setBatteryIconHeightScale_title),
                     modifier = Modifier.animateContentSize(),
                     summary = if (uiState.setBatteryIconHeightScale) "%.2f".format(heightScale) else null,
                     icon = batteryIcon,
@@ -105,7 +105,7 @@ fun StatusPowerCategoryControls(
             if (heightExpanded && uiState.setBatteryIconHeightScale) {
                 add {
                     StatusThemeChildItem {
-                        OneuiXPSlider(
+                        OneUIAlohaSlider(
                             value = heightScale,
                             onValueChange = { heightScale = it },
                             modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
@@ -122,8 +122,8 @@ fun StatusPowerCategoryControls(
                 add {
                     SwitchItem(
                         icon = batteryIcon,
-                        title = stringResource(id = R.string.oneuixp_hideBatteryPercentageSign_title),
-                        summary = stringResource(id = R.string.oneuixp_hideBatteryPercentageSign_summary),
+                        title = stringResource(id = R.string.oneuialoha_hideBatteryPercentageSign_title),
+                        summary = stringResource(id = R.string.oneuialoha_hideBatteryPercentageSign_summary),
                         checked = uiState.hideBatteryPercentageSign,
                         onCheckedChange = {
                             onEvent(SystemUIEvent.StatusBar.HideBatteryPercentageSign(it))
@@ -135,8 +135,8 @@ fun StatusPowerCategoryControls(
             add {
                 SwitchItem(
                     icon = batteryIcon,
-                    title = stringResource(id = R.string.oneuixp_hideBatteryIcon_title),
-                    summary = stringResource(id = R.string.oneuixp_hideBatteryIcon_summary),
+                    title = stringResource(id = R.string.oneuialoha_hideBatteryIcon_title),
+                    summary = stringResource(id = R.string.oneuialoha_hideBatteryIcon_summary),
                     checked = uiState.hideBatteryIcon,
                     onCheckedChange = {
                         onEvent(SystemUIEvent.StatusBar.HideBatteryIcon(it))
@@ -148,8 +148,8 @@ fun StatusPowerCategoryControls(
                 add {
                     SwitchItem(
                         icon = batteryIcon,
-                        title = stringResource(id = R.string.oneuixp_addBatteryLevelText_title),
-                        summary = stringResource(id = R.string.oneuixp_addBatteryLevelText_summary),
+                        title = stringResource(id = R.string.oneuialoha_addBatteryLevelText_title),
+                        summary = stringResource(id = R.string.oneuialoha_addBatteryLevelText_summary),
                         showChildIndicator = true,
                         checked = uiState.addBatteryLevelText,
                         onCheckedChange = {
@@ -161,7 +161,7 @@ fun StatusPowerCategoryControls(
                     add {
                         SwitchItem(
                             icon = batteryIcon,
-                            title = stringResource(id = R.string.oneuixp_hideBatteryLevelTextPercentageSign_title),
+                            title = stringResource(id = R.string.oneuialoha_hideBatteryLevelTextPercentageSign_title),
                             checked = uiState.hideBatteryLevelTextPercentageSign,
                             onCheckedChange = {
                                 onEvent(SystemUIEvent.StatusBar.HideBatteryLevelTextPercentageSign(it))
@@ -171,7 +171,7 @@ fun StatusPowerCategoryControls(
                     add {
                         SwitchItem(
                             icon = batteryIcon,
-                            title = stringResource(id = R.string.oneuixp_hideBatteryLevelTextChargingIcon_title),
+                            title = stringResource(id = R.string.oneuialoha_hideBatteryLevelTextChargingIcon_title),
                             checked = uiState.hideBatteryLevelTextChargingIcon,
                             onCheckedChange = {
                                 onEvent(SystemUIEvent.StatusBar.HideBatteryLevelTextChargingIcon(it))

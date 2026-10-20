@@ -1,4 +1,4 @@
-package com.oneuixp.app.ui.screen.status
+package com.oneuialoha.app.ui.screen.status
 
 import android.view.HapticFeedbackConstants
 import android.view.View
@@ -20,19 +20,19 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.oneuixp.app.R
-import com.oneuixp.app.ui.viewmodel.OneuiXPToolsViewModel
-import com.oneuixp.common.Preference
-import com.oneuixp.mod.ui.component.OneuiXPInfoItem
-import com.oneuixp.mod.ui.component.OneuiXPSlider
-import com.oneuixp.mod.ui.component.SwitchItem
+import com.oneuialoha.app.R
+import com.oneuialoha.app.ui.viewmodel.OneUIAlohaToolsViewModel
+import com.oneuialoha.common.Preference
+import com.oneuialoha.mod.ui.component.OneUIAlohaInfoItem
+import com.oneuialoha.mod.ui.component.OneUIAlohaSlider
+import com.oneuialoha.mod.ui.component.SwitchItem
 import kotlin.math.roundToInt
 
 @Composable
 internal fun StatusNetworkSpeedRuntimeControls(
     uiState: Preference.SystemUI.StatusBar,
 ) {
-    val toolsViewModel = viewModel<OneuiXPToolsViewModel>()
+    val toolsViewModel = viewModel<OneUIAlohaToolsViewModel>()
     val localView = LocalView.current
     val icon = ImageVector.vectorResource(id = R.drawable.net_speed)
     val runtime = uiState.networkSpeedRuntime
@@ -223,9 +223,9 @@ private fun NetworkSpeedSliderSetting(
     onFinished: () -> Unit,
 ) {
     Column {
-        OneuiXPInfoItem(icon = icon, title = title, summary = summary)
+        OneUIAlohaInfoItem(icon = icon, title = title, summary = summary)
         StatusThemeChildItem {
-            OneuiXPSlider(
+            OneUIAlohaSlider(
                 value = value,
                 onValueChange = onValueChange,
                 modifier = Modifier
