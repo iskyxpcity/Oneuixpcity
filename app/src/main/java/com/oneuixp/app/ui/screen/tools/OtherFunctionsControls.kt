@@ -29,14 +29,14 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.Icon as MaterialIcon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text as MaterialText
-import com.oneuixp.app.oneuiXPApp
-import com.oneuixp.app.oneuix.OneuiXPreferenceBridge
+import com.oneuixp.app.oneuiXPPApp
+import com.oneuixp.app.oneuixp.OneuiXPPreferenceBridge
 import com.oneuixp.app.ui.LocalUiMode
 import com.oneuixp.app.ui.navigation3.LocalNavigator
 import com.oneuixp.app.ui.navigation3.Route
 import com.oneuixp.app.ui.UiMode
 import com.oneuixp.app.ui.component.dialog.rememberConfirmDialog
-import io.github.soclear.oneuix.ui.component.OneuiXSlider
+import com.oneuixp.mod.ui.component.OneuiXPSlider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -44,20 +44,20 @@ import top.yukonga.miuix.kmp.basic.Text as MiuixText
 import top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme
 import kotlin.math.roundToInt
 import com.oneuixp.app.R
-import io.github.soclear.oneuix.common.PowerMenuAction
-import io.github.soclear.oneuix.common.Preference
-import io.github.soclear.oneuix.ui.category.SystemUIEvent
-import io.github.soclear.oneuix.ui.component.OneuiXActionButton
-import io.github.soclear.oneuix.ui.component.OneuiXInfoItem
-import io.github.soclear.oneuix.ui.component.OneuiXSwitch
+import com.oneuixp.common.PowerMenuAction
+import com.oneuixp.common.Preference
+import com.oneuixp.mod.ui.category.SystemUIEvent
+import com.oneuixp.mod.ui.component.OneuiXPActionButton
+import com.oneuixp.mod.ui.component.OneuiXPInfoItem
+import com.oneuixp.mod.ui.component.OneuiXPSwitch
 import com.oneuixp.app.ui.component.material.SegmentedListItem
-import com.oneuixp.app.ui.component.material.oneuiXSegmentedColors
+import com.oneuixp.app.ui.component.material.oneuiXPSegmentedColors
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.basic.ArrowRight
-import io.github.soclear.oneuix.ui.component.SwitchItem
-import io.github.soclear.oneuix.common.R as CommonR
+import com.oneuixp.mod.ui.component.SwitchItem
+import com.oneuixp.common.R as CommonR
 
 @Composable
 fun OtherFunctionsControls(
@@ -69,12 +69,12 @@ fun OtherFunctionsControls(
     val navigator = LocalNavigator.current
     val persistedCallReturnDelay = otherState.callReturnDelaySeconds.coerceIn(0, 5)
     val callReturnDelayStatus = if (otherState.callReturnDelayEnabled) {
-        stringResource(R.string.oneuix_callReturnEntryStateEnabled, persistedCallReturnDelay)
+        stringResource(R.string.oneuixp_callReturnEntryStateEnabled, persistedCallReturnDelay)
     } else {
-        stringResource(R.string.oneuix_callReturnStateDisabled)
+        stringResource(R.string.oneuixp_callReturnStateDisabled)
     }
     val callReturnDelaySummary = callReturnDelayStatus +
-        "\n" + stringResource(R.string.oneuix_callReturnDelay_summary)
+        "\n" + stringResource(R.string.oneuixp_callReturnDelay_summary)
 
     var powerMenuExpanded by rememberSaveable { mutableStateOf(false) }
 
@@ -83,8 +83,8 @@ fun OtherFunctionsControls(
             add {
                 SwitchItem(
                     icon = ImageVector.vectorResource(id = R.drawable.power_settings_new),
-                    title = stringResource(id = R.string.oneuix_customPowerMenu_title),
-                    summary = stringResource(id = R.string.oneuix_customPowerMenu_summary),
+                    title = stringResource(id = R.string.oneuixp_customPowerMenu_title),
+                    summary = stringResource(id = R.string.oneuixp_customPowerMenu_summary),
                     clickable = true,
                     onClick = { powerMenuExpanded = !powerMenuExpanded },
                     checked = uiState.customPowerMenu,
@@ -100,20 +100,20 @@ fun OtherFunctionsControls(
                 actions.forEachIndexed { index, action ->
                     add {
                         val visiblePosition = actions.take(index + 1).count { it.visible }
-                        OneuiXInfoItem(
+                        OneuiXPInfoItem(
                             title = stringResource(id = powerMenuActionTitle(action.name)),
                             summary = if (action.visible) {
                                 stringResource(
-                                    id = R.string.oneuix_powerMenuActionVisible_summary,
+                                    id = R.string.oneuixp_powerMenuActionVisible_summary,
                                     visiblePosition,
                                 )
                             } else {
-                                stringResource(id = R.string.oneuix_powerMenuActionHidden_summary)
+                                stringResource(id = R.string.oneuixp_powerMenuActionHidden_summary)
                             },
                             trailingContent = {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
-                                    OneuiXActionButton(
-                                        text = stringResource(id = R.string.oneuix_moveUp),
+                                    OneuiXPActionButton(
+                                        text = stringResource(id = R.string.oneuixp_moveUp),
                                         enabled = index > 0,
                                         onClick = {
                                             onEvent(
@@ -124,8 +124,8 @@ fun OtherFunctionsControls(
                                         },
                                     )
                                     Spacer(Modifier.width(8.dp))
-                                    OneuiXActionButton(
-                                        text = stringResource(id = R.string.oneuix_moveDown),
+                                    OneuiXPActionButton(
+                                        text = stringResource(id = R.string.oneuixp_moveDown),
                                         enabled = index < actions.lastIndex,
                                         onClick = {
                                             onEvent(
@@ -136,7 +136,7 @@ fun OtherFunctionsControls(
                                         },
                                     )
                                     Spacer(Modifier.width(8.dp))
-                                    OneuiXSwitch(
+                                    OneuiXPSwitch(
                                         checked = action.visible,
                                         onCheckedChange = { visible ->
                                             onEvent(
@@ -162,8 +162,8 @@ fun OtherFunctionsControls(
             add {
                 SwitchItem(
                     icon = ImageVector.vectorResource(id = R.drawable.screenshot),
-                    title = stringResource(id = R.string.oneuix_disableScreenshotCaptureSound_title),
-                    summary = stringResource(id = R.string.oneuix_disableScreenshotCaptureSound_summary),
+                    title = stringResource(id = R.string.oneuixp_disableScreenshotCaptureSound_title),
+                    summary = stringResource(id = R.string.oneuixp_disableScreenshotCaptureSound_summary),
                     checked = uiState.disableScreenshotCaptureSound,
                     onCheckedChange = {
                         onEvent(SystemUIEvent.Other.DisableScreenshotCaptureSound(it))
@@ -180,9 +180,9 @@ fun OtherFunctionsControls(
                 when (LocalUiMode.current) {
                     UiMode.Material -> SegmentedListItem(
                         onClick = { navigator.push(Route.CallReturnDelay) },
-                        colors = oneuiXSegmentedColors(),
+                        colors = oneuiXPSegmentedColors(),
                         headlineContent = {
-                            MaterialText(text = stringResource(R.string.oneuix_callReturnDelay_title))
+                            MaterialText(text = stringResource(R.string.oneuixp_callReturnDelay_title))
                         },
                         supportingContent = {
                             MaterialText(text = callReturnDelaySummary)
@@ -190,7 +190,7 @@ fun OtherFunctionsControls(
                         leadingContent = {
                             MaterialIcon(
                                 imageVector = ImageVector.vectorResource(id = R.drawable.phone_forwarded),
-                                contentDescription = stringResource(R.string.oneuix_callReturnDelay_title),
+                                contentDescription = stringResource(R.string.oneuixp_callReturnDelay_title),
                             )
                         },
                         trailingContent = {
@@ -201,12 +201,12 @@ fun OtherFunctionsControls(
                         },
                     )
                     UiMode.Miuix -> BasicComponent(
-                        title = stringResource(R.string.oneuix_callReturnDelay_title),
+                        title = stringResource(R.string.oneuixp_callReturnDelay_title),
                         summary = callReturnDelaySummary,
                         startAction = {
                             MiuixIcon(
                                 imageVector = ImageVector.vectorResource(id = R.drawable.phone_forwarded),
-                                contentDescription = stringResource(R.string.oneuix_callReturnDelay_title),
+                                contentDescription = stringResource(R.string.oneuixp_callReturnDelay_title),
                                 tint = colorScheme.onSurface,
                             )
                         },
@@ -229,8 +229,8 @@ fun OtherFunctionsControls(
             add {
                 SwitchItem(
                     icon = ImageVector.vectorResource(id = R.drawable.expand),
-                    title = stringResource(id = R.string.oneuix_settingsTwoPane_title),
-                    summary = stringResource(id = R.string.oneuix_settingsTwoPane_summary),
+                    title = stringResource(id = R.string.oneuixp_settingsTwoPane_title),
+                    summary = stringResource(id = R.string.oneuixp_settingsTwoPane_summary),
                     checked = otherState.settingsTwoPaneEnabled,
                     onCheckedChange = { checked ->
                         onOtherChange { current -> current.copy(settingsTwoPaneEnabled = checked) }
@@ -245,8 +245,8 @@ fun OtherFunctionsControls(
             add {
                 SwitchItem(
                     icon = ImageVector.vectorResource(id = R.drawable.apk_document),
-                    title = stringResource(id = R.string.oneuix_allowAppDowngrade_title),
-                    summary = stringResource(id = R.string.oneuix_allowAppDowngrade_summary),
+                    title = stringResource(id = R.string.oneuixp_allowAppDowngrade_title),
+                    summary = stringResource(id = R.string.oneuixp_allowAppDowngrade_summary),
                     checked = otherState.allowAppDowngradeEnabled,
                     onCheckedChange = { checked ->
                         onOtherChange { current -> current.copy(allowAppDowngradeEnabled = checked) }
@@ -261,8 +261,8 @@ fun OtherFunctionsControls(
             add {
                 SwitchItem(
                     icon = ImageVector.vectorResource(id = R.drawable.screenshot),
-                    title = stringResource(id = R.string.oneuix_disableSecureScreenshotRestriction_title),
-                    summary = stringResource(id = R.string.oneuix_disableSecureScreenshotRestriction_summary),
+                    title = stringResource(id = R.string.oneuixp_disableSecureScreenshotRestriction_title),
+                    summary = stringResource(id = R.string.oneuixp_disableSecureScreenshotRestriction_summary),
                     checked = otherState.disableSecureScreenshotRestrictionEnabled,
                     onCheckedChange = { checked ->
                         onOtherChange { current ->
@@ -279,8 +279,8 @@ fun OtherFunctionsControls(
             add {
                 SwitchItem(
                     icon = ImageVector.vectorResource(id = R.drawable.ad_off),
-                    title = stringResource(id = R.string.oneuix_hidePackageInstallerRecommendation_title),
-                    summary = stringResource(id = R.string.oneuix_hidePackageInstallerRecommendation_summary),
+                    title = stringResource(id = R.string.oneuixp_hidePackageInstallerRecommendation_title),
+                    summary = stringResource(id = R.string.oneuixp_hidePackageInstallerRecommendation_summary),
                     checked = otherState.hidePackageInstallerRecommendationEnabled,
                     onCheckedChange = { checked ->
                         onOtherChange { current ->
@@ -298,16 +298,16 @@ private fun List<PowerMenuAction>.move(fromIndex: Int, toIndex: Int): List<Power
 
 @StringRes
 private fun powerMenuActionTitle(actionName: String): Int = when (actionName) {
-    PowerMenuAction.POWER -> R.string.oneuix_powerMenuAction_power
-    PowerMenuAction.DATA_MODE -> R.string.oneuix_powerMenuAction_dataMode
-    PowerMenuAction.RESTART -> R.string.oneuix_powerMenuAction_restart
-    PowerMenuAction.SAFE_MODE -> R.string.oneuix_powerMenuAction_safeMode
-    PowerMenuAction.LOCK_DOWN_MODE -> R.string.oneuix_powerMenuAction_lockDownMode
-    PowerMenuAction.EMERGENCY_CALL -> R.string.oneuix_powerMenuAction_emergencyCall
-    PowerMenuAction.MEDICAL_INFO -> R.string.oneuix_powerMenuAction_medicalInfo
-    PowerMenuAction.FORCE_RESTART_MESSAGE -> R.string.oneuix_powerMenuAction_forceRestartMessage
+    PowerMenuAction.POWER -> R.string.oneuixp_powerMenuAction_power
+    PowerMenuAction.DATA_MODE -> R.string.oneuixp_powerMenuAction_dataMode
+    PowerMenuAction.RESTART -> R.string.oneuixp_powerMenuAction_restart
+    PowerMenuAction.SAFE_MODE -> R.string.oneuixp_powerMenuAction_safeMode
+    PowerMenuAction.LOCK_DOWN_MODE -> R.string.oneuixp_powerMenuAction_lockDownMode
+    PowerMenuAction.EMERGENCY_CALL -> R.string.oneuixp_powerMenuAction_emergencyCall
+    PowerMenuAction.MEDICAL_INFO -> R.string.oneuixp_powerMenuAction_medicalInfo
+    PowerMenuAction.FORCE_RESTART_MESSAGE -> R.string.oneuixp_powerMenuAction_forceRestartMessage
     PowerMenuAction.RESTART_SYSTEMUI -> CommonR.string.restartSystemUI
     PowerMenuAction.RESTART_RECOVERY -> CommonR.string.restartRecovery
     PowerMenuAction.RESTART_DOWNLOAD -> CommonR.string.restartDownload
-    else -> R.string.oneuix_other
+    else -> R.string.oneuixp_other
 }

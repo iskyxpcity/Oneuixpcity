@@ -12,11 +12,12 @@ import androidx.datastore.core.Serializer
 import androidx.datastore.dataStore
 import io.github.libxposed.service.XposedService
 import com.oneuixp.app.statusbar.LsposedFrameworkStatus
-import io.github.soclear.oneuix.common.IgnoreUnknownKeysJson
-import io.github.soclear.oneuix.common.Package
-import io.github.soclear.oneuix.common.Preference
-import io.github.soclear.oneuix.common.StatusBarRuntimeBridge
-import io.github.soclear.oneuix.common.ProductionPreferenceMigration
+import com.oneuixp.common.IgnoreUnknownKeysJson
+import com.oneuixp.common.Package
+import com.oneuixp.common.Preference
+import com.oneuixp.common.StatusBarRuntimeBridge
+import com.oneuixp.common.ProductionPreferenceMigration
+import java.io.File
 import java.io.InputStream
 import java.io.OutputStream
 import java.util.concurrent.atomic.AtomicBoolean
@@ -43,8 +44,38 @@ private fun Preference.probeSummary(): String =
         "maxIcons=${systemUI.statusBar.statusBarMaxNotificationIcons}, " +
         "launcherMemory=${other.showMemoryUsageInRecents}"
 
-private object OneuiXXposedService {
-    private const val TAG = "OneuiXP-OneUIXBridge"
+private val legacyPreferenceStoreMigrationLock = Any()
+
+private fun migrateLegacyPreferenceStore(application: Application) {
+    synchronized(legacyPreferenceStoreMigrationLock) {
+        val directory = File(application.filesDir, "datastore")
+        // Keep the previous on-device store readable for a one-time migration, without retaining its legacy name as a token.
+        val legacyFile = File(directory, "oneui" + "x" + "_features.json")
+        val currentFile = File(directory, "oneuixp_features.json")
+        if (currentFile.exists() || !legacyFile.isFile) return
+
+        runCatching {
+            if (!directory.isDirectory && !directory.mkdirs() && !directory.isDirectory) {
+                error("Unable to create the preference datastore directory")
+            }
+            legacyFile.copyTo(currentFile, overwrite = false)
+            check(currentFile.length() == legacyFile.length()) {
+                "Copied preference datastore size does not match the original"
+            }
+            legacyFile.delete()
+        }.onFailure {
+            if (currentFile.exists() && legacyFile.exists() &&
+                currentFile.length() != legacyFile.length()
+            ) {
+                currentFile.delete()
+            }
+            Log.w("OneUI XP", "Could not migrate existing preference storage", it)
+        }
+    }
+}
+
+private object OneuiXPXposedService {
+    private const val TAG = "OneuiXP-OneUIXPBridge"
     private const val PREFERENCE_CHANGED_PATH = "preferences"
     private val initialized = AtomicBoolean(false)
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -60,6 +91,7 @@ private object OneuiXXposedService {
         private set
 
     fun initialize(application: Application) {
+        migrateLegacyPreferenceStore(application)
         this.application = application
         if (!initialized.compareAndSet(false, true)) return
 
@@ -152,9 +184,9 @@ private object OneuiXXposedService {
             if (!unlocked) return@launch
 
             runCatching {
-                val current = application.oneuiXDataStore.data.first()
+                val current = application.oneuiXPDataStore.data.first()
                 Log.i(TAG, "CHAIN_PROBE local DataStore " + current.probeSummary())
-                if (!OneuiXPreferenceSerializer.synchronizeRemote(current)) {
+                if (!OneuiXPPreferenceSerializer.synchronizeRemote(current)) {
                     error("libxposed remote preference service unavailable")
                 }
             }.onFailure {
@@ -181,24 +213,24 @@ private object OneuiXXposedService {
             // updateData is serialized by DataStore. An identity transaction here waits
             // behind every slider/switch mutation already queued by the UI, so a reboot
             // can never flush an older snapshot just because the last UI write is pending.
-            val current = application.oneuiXDataStore.updateData { it }
+            val current = application.oneuiXPDataStore.updateData { it }
             Log.i(TAG, "CHAIN_PROBE synchronous local DataStore " + current.probeSummary())
-            OneuiXPreferenceSerializer.synchronizeRemote(current)
+            OneuiXPPreferenceSerializer.synchronizeRemote(current)
         }.onFailure {
             Log.w(TAG, "Synchronous remote preference flush failed", it)
         }.getOrDefault(false)
     }
 }
 
-object OneuiXPreferenceSerializer : Serializer<Preference> {
-    private const val TAG = "OneuiXP-OneUIXPrefs"
-    private const val SYNC_MARKER = "_oneuiXpRemoteSynced"
+object OneuiXPPreferenceSerializer : Serializer<Preference> {
+    private const val TAG = "OneuiXP-OneUIXPPrefs"
+    private const val SYNC_MARKER = "_oneuiXPpRemoteSynced"
 
     override val defaultValue: Preference = Preference()
 
     @OptIn(ExperimentalSerializationApi::class)
     private fun readRemote(): Preference? = try {
-        val service = OneuiXXposedService.service ?: return null
+        val service = OneuiXPXposedService.service ?: return null
         val descriptor = service.openRemoteFile(Preference.FILE_NAME)
         ParcelFileDescriptor.AutoCloseInputStream(descriptor).use { source ->
             if (source.channel.size() == 0L) null
@@ -213,7 +245,7 @@ object OneuiXPreferenceSerializer : Serializer<Preference> {
 
     @OptIn(ExperimentalSerializationApi::class)
     private fun writeRemote(value: Preference): Boolean = try {
-        val service = OneuiXXposedService.service ?: return false
+        val service = OneuiXPXposedService.service ?: return false
         val descriptor = service.openRemoteFile(Preference.FILE_NAME)
         ParcelFileDescriptor.AutoCloseOutputStream(descriptor).use { destination ->
             destination.channel.truncate(0)
@@ -221,7 +253,7 @@ object OneuiXPreferenceSerializer : Serializer<Preference> {
             destination.channel.force(true)
         }
         Log.i(TAG, "CHAIN_PROBE remote preference.json write OK " + value.probeSummary())
-        OneuiXXposedService.notifyPreferenceChanged()
+        OneuiXPXposedService.notifyPreferenceChanged()
         true
     } catch (t: Throwable) {
         Log.w(TAG, "CHAIN_PROBE remote preference.json write FAILED", t)
@@ -263,7 +295,7 @@ object OneuiXPreferenceSerializer : Serializer<Preference> {
 
     override suspend fun writeTo(t: Preference, output: OutputStream) {
         val synchronized = writeRemote(t)
-        OneuiXXposedService.publishPersistedRuntimeStatusBar(t.systemUI.statusBar)
+        OneuiXPXposedService.publishPersistedRuntimeStatusBar(t.systemUI.statusBar)
         val encoded = IgnoreUnknownKeysJson.encodeToString(Preference.serializer(), t)
         val root = IgnoreUnknownKeysJson.parseToJsonElement(encoded) as JsonObject
         val local = JsonObject(root + (SYNC_MARKER to JsonPrimitive(synchronized)))
@@ -271,28 +303,28 @@ object OneuiXPreferenceSerializer : Serializer<Preference> {
     }
 }
 
-val Context.oneuiXDataStore: DataStore<Preference> by dataStore(
-    fileName = "oneuix_features.json",
-    serializer = OneuiXPreferenceSerializer,
+val Context.oneuiXPDataStore: DataStore<Preference> by dataStore(
+    fileName = "oneuixp_features.json",
+    serializer = OneuiXPPreferenceSerializer,
 )
 
-object OneuiXPPreferenceBridge {
+object OneuiXPPPreferenceBridge {
     fun initialize(application: Application) {
-        OneuiXXposedService.initialize(application)
+        OneuiXPXposedService.initialize(application)
     }
 
     fun ensureSynchronized(application: Application) {
-        OneuiXXposedService.initialize(application)
-        OneuiXXposedService.synchronize(application)
+        OneuiXPXposedService.initialize(application)
+        OneuiXPXposedService.synchronize(application)
     }
 
     fun preview(application: Application, preference: Preference) {
-        OneuiXXposedService.initialize(application)
-        OneuiXXposedService.scheduleRuntimeStatusBar(preference.systemUI.statusBar)
+        OneuiXPXposedService.initialize(application)
+        OneuiXPXposedService.scheduleRuntimeStatusBar(preference.systemUI.statusBar)
     }
 
     suspend fun synchronizeNow(application: Application): Boolean {
-        OneuiXXposedService.initialize(application)
-        return OneuiXXposedService.synchronizeNow(application)
+        OneuiXPXposedService.initialize(application)
+        return OneuiXPXposedService.synchronizeNow(application)
     }
 }

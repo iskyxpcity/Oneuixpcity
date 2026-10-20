@@ -44,10 +44,10 @@ import com.oneuixp.app.ui.navigation3.LocalNavigator
 import com.oneuixp.app.ui.theme.LocalEnableBlur
 import com.oneuixp.app.ui.util.BlurredBar
 import com.oneuixp.app.ui.util.rememberBlurBackdrop
-import com.oneuixp.app.ui.viewmodel.OneuiXToolsViewModel
-import io.github.soclear.oneuix.common.Preference
-import io.github.soclear.oneuix.ui.category.SystemUIEvent
-import io.github.soclear.oneuix.ui.category.onSystemUIEvent
+import com.oneuixp.app.ui.viewmodel.OneuiXPToolsViewModel
+import com.oneuixp.common.Preference
+import com.oneuixp.mod.ui.category.SystemUIEvent
+import com.oneuixp.mod.ui.category.onSystemUIEvent
 import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
 import top.yukonga.miuix.kmp.basic.IconButton as MiuixIconButton
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
@@ -62,7 +62,7 @@ import top.yukonga.miuix.kmp.utils.scrollEndHaptic
 @Composable
 fun OtherFunctionsScreen() {
     val navigator = LocalNavigator.current
-    val toolsViewModel = viewModel<OneuiXToolsViewModel>()
+    val toolsViewModel = viewModel<OneuiXPToolsViewModel>()
     val preference by toolsViewModel.preference.collectAsStateWithLifecycle()
 
     when (LocalUiMode.current) {
@@ -113,7 +113,7 @@ private fun OtherFunctionsMaterial(
                         )
                     }
                 },
-                title = { Text(stringResource(R.string.oneuix_other_functions_title)) },
+                title = { Text(stringResource(R.string.oneuixp_other_functions_title)) },
                 actions = { RebootListPopup() },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface,
@@ -163,7 +163,7 @@ private fun OtherFunctionsMiuix(
     val scrollBehavior = MiuixScrollBehavior()
     val backdrop = rememberBlurBackdrop(LocalEnableBlur.current)
     val barColor = if (backdrop != null) Color.Transparent else colorScheme.surface
-    val title = stringResource(R.string.oneuix_other_functions_title)
+    val title = stringResource(R.string.oneuixp_other_functions_title)
 
     top.yukonga.miuix.kmp.basic.Scaffold(
         topBar = {
