@@ -10,22 +10,22 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.oneuixp.app.R
 import com.oneuixp.app.ui.LocalUiMode
 import com.oneuixp.app.ui.UiMode
-import com.oneuixp.app.ui.viewmodel.OneuiXPToolsViewModel
+import com.oneuixp.app.ui.viewmodel.OneuiXToolsViewModel
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 /**
- * Top-left OneUIXP configuration transfer menu.
+ * Top-left OneUIX configuration transfer menu.
  *
  * Keeps KernelSU 3.2.5's navigation-icon position while replacing the original
- * destination action with OneUIXP-Mod's real full Preference backup/restore.
+ * destination action with OneUIX-Mod's real full Preference backup/restore.
  */
 @Composable
 fun ConfigTransferPopup() {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val viewModel = viewModel<OneuiXPToolsViewModel>()
+    val viewModel = viewModel<OneuiXToolsViewModel>()
 
     val backupLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument("application/json")
@@ -51,7 +51,7 @@ fun ConfigTransferPopup() {
                 } catch (_: Throwable) {
                     Toast.makeText(
                         context,
-                        R.string.oneuixp_restore_failed,
+                        R.string.oneuix_restore_failed,
                         Toast.LENGTH_SHORT,
                     ).show()
                 }

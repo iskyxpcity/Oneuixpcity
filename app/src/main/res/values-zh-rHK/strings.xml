@@ -68,7 +68,7 @@
     <string name="feature_introduction">功能介紹</string>
     <string name="disclaimer_title">免責聲明</string>
     <string name="disclaimer_source_title">原始碼使用說明</string>
-    <string name="disclaimer_source_body">本專案使用並整合、修改了 OneUIXP 與 HyperDuo 的相關原始碼。</string>
+    <string name="disclaimer_source_body">本專案使用並整合、修改了 OneUIX 與 HyperDuo 的相關原始碼。</string>
     <string name="disclaimer_style_title">介面風格說明</string>
     <string name="disclaimer_style_body">本應用程式部分介面採用了 KernelSU 的介面風格。</string>
     <string name="disclaimer_risk_title">玩機風險提示</string>

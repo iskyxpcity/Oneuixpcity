@@ -50,7 +50,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
-import com.oneuixp.app.oneuixp.OneuiXPPPreferenceBridge
+import com.oneuixp.app.oneuix.OneuiXPreferenceBridge
 import com.oneuixp.app.ui.component.bottombar.BottomBar
 import com.oneuixp.app.ui.component.bottombar.SideNavigationRail
 import com.oneuixp.app.ui.component.bottombar.useNavigationRail
@@ -65,7 +65,6 @@ import com.oneuixp.app.ui.screen.about.DisclaimerScreen
 import com.oneuixp.app.ui.screen.about.FeatureIntroductionScreen
 import com.oneuixp.app.ui.screen.about.VersionChangelogScreen
 import com.oneuixp.app.ui.screen.about.VersionChangelog261013Screen
-import com.oneuixp.app.ui.screen.about.VersionChangelog2610191Screen
 import com.oneuixp.app.ui.screen.about.VersionChangelog261018Screen
 import com.oneuixp.app.ui.screen.about.VersionChangelog261016Screen
 import com.oneuixp.app.ui.screen.colorpalette.ColorPaletteScreen
@@ -76,7 +75,9 @@ import com.oneuixp.app.ui.screen.status.StatusPager
 import com.oneuixp.app.ui.screen.status.StatusCategoryScreen
 import com.oneuixp.app.ui.screen.settings.SettingPager
 import com.oneuixp.app.ui.screen.tools.ToolsPager
-import com.oneuixp.app.ui.screen.tools.OneuiXPCategoryScreen
+import com.oneuixp.app.ui.screen.tools.OneuiXCategoryScreen
+import com.oneuixp.app.ui.screen.tools.OtherFunctionsScreen
+import com.oneuixp.app.ui.screen.tools.CallReturnDelayScreen
 import com.oneuixp.app.ui.theme.LocalColorMode
 import com.oneuixp.app.ui.theme.LocalEnableBlur
 import com.oneuixp.app.ui.theme.LocalEnableFloatingBottomBar
@@ -109,7 +110,7 @@ class MainActivity : ComponentActivity() {
         // Keep PackageInstaller callbacks on the real app activity so system confirmation
         // can be launched from the foreground without a background trampoline activity.
         handleUpdateInstallStatus(this, intent)
-        OneuiXPPPreferenceBridge.ensureSynchronized(application)
+        OneuiXPreferenceBridge.ensureSynchronized(application)
 
         setContent {
             val viewModel = viewModel<MainActivityViewModel>()
@@ -188,16 +189,17 @@ class MainActivity : ComponentActivity() {
                             entry<Route.FeatureIntroduction>(swipeDismiss = swipeDismiss) { FeatureIntroductionScreen() }
                             entry<Route.VersionChangelog>(swipeDismiss = swipeDismiss) { VersionChangelogScreen() }
                             entry<Route.VersionChangelog261013>(swipeDismiss = swipeDismiss) { VersionChangelog261013Screen() }
-                            entry<Route.VersionChangelog2610191>(swipeDismiss = swipeDismiss) { VersionChangelog2610191Screen() }
                             entry<Route.VersionChangelog261018>(swipeDismiss = swipeDismiss) { VersionChangelog261018Screen() }
                             entry<Route.VersionChangelog261016>(swipeDismiss = swipeDismiss) { VersionChangelog261016Screen() }
                             entry<Route.ColorPalette>(swipeDismiss = swipeDismiss) { ColorPaletteScreen() }
-                            entry<Route.OneuiXPCategory>(swipeDismiss = swipeDismiss) { key ->
-                                OneuiXPCategoryScreen(key.category)
+                            entry<Route.OneuiXCategory>(swipeDismiss = swipeDismiss) { key ->
+                                OneuiXCategoryScreen(key.category)
                             }
                             entry<Route.StatusCategory>(swipeDismiss = swipeDismiss) { key ->
                                 StatusCategoryScreen(key.category)
                             }
+                            entry<Route.OtherFunctions>(swipeDismiss = swipeDismiss) { OtherFunctionsScreen() }
+                            entry<Route.CallReturnDelay>(swipeDismiss = swipeDismiss) { CallReturnDelayScreen() }
                             entry<Route.Home>(swipeDismiss = swipeDismiss) { mainScreenEntry() }
                             entry<Route.Tools>(swipeDismiss = swipeDismiss) { mainScreenEntry() }
                             entry<Route.Status>(swipeDismiss = swipeDismiss) { mainScreenEntry() }
@@ -243,7 +245,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        OneuiXPPPreferenceBridge.ensureSynchronized(application)
+        OneuiXPreferenceBridge.ensureSynchronized(application)
     }
 }
 

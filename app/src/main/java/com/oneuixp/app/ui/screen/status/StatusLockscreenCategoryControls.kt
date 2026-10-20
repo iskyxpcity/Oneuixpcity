@@ -6,9 +6,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import com.oneuixp.app.R
-import com.oneuixp.common.Preference
-import com.oneuixp.mod.ui.category.SystemUIEvent
-import com.oneuixp.mod.ui.component.SwitchItem
+import io.github.soclear.oneuix.common.Preference
+import io.github.soclear.oneuix.ui.category.SystemUIEvent
+import io.github.soclear.oneuix.ui.component.SwitchItem
 
 @Composable
 fun StatusLockscreenCategoryControls(
@@ -21,7 +21,7 @@ fun StatusLockscreenCategoryControls(
             add {
                 SwitchItem(
                     icon = ImageVector.vectorResource(id = R.drawable.mobile_screensaver),
-                    title = stringResource(id = R.string.oneuixp_doubleTapStatusBarToSleep_title),
+                    title = stringResource(id = R.string.oneuix_doubleTapStatusBarToSleep_title),
                     checked = statusBar.doubleTapStatusBarToSleep,
                     onCheckedChange = {
                         onEvent(SystemUIEvent.StatusBar.DoubleTapStatusBarToSleep(it))
@@ -31,7 +31,7 @@ fun StatusLockscreenCategoryControls(
             add {
                 SwitchItem(
                     icon = ImageVector.vectorResource(id = R.drawable.mobile_screensaver),
-                    title = stringResource(id = R.string.oneuixp_hideLockscreenStatusBar_title),
+                    title = stringResource(id = R.string.oneuix_hideLockscreenStatusBar_title),
                     checked = statusBar.hideLockscreenStatusBar,
                     onCheckedChange = {
                         onEvent(SystemUIEvent.StatusBar.HideLockscreenStatusBar(it))
@@ -42,7 +42,7 @@ fun StatusLockscreenCategoryControls(
                 add {
                     SwitchItem(
                         icon = ImageVector.vectorResource(id = R.drawable.battery),
-                        title = stringResource(id = R.string.oneuixp_hideAODStatusBar_title),
+                        title = stringResource(id = R.string.oneuix_hideAODStatusBar_title),
                         checked = aod.hideAODStatusBar,
                         onCheckedChange = {
                             onEvent(SystemUIEvent.AOD.HideAODStatusBar(it))
@@ -52,7 +52,7 @@ fun StatusLockscreenCategoryControls(
                 add {
                     SwitchItem(
                         icon = ImageVector.vectorResource(id = R.drawable.today),
-                        title = stringResource(id = R.string.oneuixp_aodLockSupportLunar_title),
+                        title = stringResource(id = R.string.oneuix_aodLockSupportLunar_title),
                         checked = aod.aodLockSupportLunar,
                         onCheckedChange = {
                             onEvent(SystemUIEvent.AOD.AODLockSupportLunar(it))

@@ -3,7 +3,7 @@ plugins {
 }
 
 android {
-    namespace = "com.oneuixp.stub"
+    namespace = "io.github.soclear.oneuix.stub"
     compileSdk {
         version = release(37)
     }

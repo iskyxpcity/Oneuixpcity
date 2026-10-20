@@ -27,18 +27,18 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import com.oneuixp.app.R
-import com.oneuixp.common.Preference
-import com.oneuixp.common.StatusBarClockBlockParser
-import com.oneuixp.hook.util.StatusBarClockFormatter
-import com.oneuixp.mod.ui.category.SystemUIEvent
-import com.oneuixp.mod.ui.component.OneuiXPActionButton
-import com.oneuixp.mod.ui.component.OneuiXPInfoItem
-import com.oneuixp.mod.ui.component.OneuiXPInlineTextField
-import com.oneuixp.mod.ui.component.OneuiXPSlider
-import com.oneuixp.mod.ui.component.OneuiXPSectionLabel
-import com.oneuixp.mod.ui.component.OneuiXPSupportingText
-import com.oneuixp.mod.ui.component.SelectItem
-import com.oneuixp.mod.ui.component.SwitchItem
+import io.github.soclear.oneuix.common.Preference
+import io.github.soclear.oneuix.common.StatusBarClockBlockParser
+import io.github.soclear.oneuix.hook.util.StatusBarClockFormatter
+import io.github.soclear.oneuix.ui.category.SystemUIEvent
+import io.github.soclear.oneuix.ui.component.OneuiXActionButton
+import io.github.soclear.oneuix.ui.component.OneuiXInfoItem
+import io.github.soclear.oneuix.ui.component.OneuiXInlineTextField
+import io.github.soclear.oneuix.ui.component.OneuiXSlider
+import io.github.soclear.oneuix.ui.component.OneuiXSectionLabel
+import io.github.soclear.oneuix.ui.component.OneuiXSupportingText
+import io.github.soclear.oneuix.ui.component.SelectItem
+import io.github.soclear.oneuix.ui.component.SwitchItem
 import java.time.LocalDateTime
 import kotlin.math.roundToInt
 
@@ -158,7 +158,7 @@ fun StatusTimeCategoryControls(
         items = buildList {
             add {
                 SwitchItem(
-                    title = stringResource(id = R.string.oneuixp_setStatusBarClockFormat_title),
+                    title = stringResource(id = R.string.oneuix_setStatusBarClockFormat_title),
                     modifier = Modifier.animateContentSize(),
                     summary = if (uiState.setStatusBarClockFormat) {
                         uiState.statusBarClockFormat
@@ -189,7 +189,7 @@ fun StatusTimeCategoryControls(
                                 verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier.fillMaxWidth(),
                             ) {
-                                OneuiXPInlineTextField(
+                                OneuiXInlineTextField(
                                     value = tempDataTimeFormat,
                                     onValueChange = {
                                         tempDataTimeFormat = it
@@ -204,8 +204,8 @@ fun StatusTimeCategoryControls(
                                     labelText = formatLabel.takeIf { it.isNotBlank() },
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
-                                OneuiXPActionButton(
-                                    text = stringResource(id = R.string.oneuixp_confirm),
+                                OneuiXActionButton(
+                                    text = stringResource(id = R.string.oneuix_confirm),
                                     primary = true,
                                     onClick = {
                                         var right = true
@@ -235,9 +235,9 @@ fun StatusTimeCategoryControls(
                                     .padding(top = 8.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
-                                OneuiXPActionButton(
+                                OneuiXActionButton(
                                     text = stringResource(
-                                        id = R.string.oneuixp_clockFormatHelp_show
+                                        id = R.string.oneuix_clockFormatHelp_show
                                     ),
                                     onClick = { showFormatHelp = true },
                                 )
@@ -252,7 +252,7 @@ fun StatusTimeCategoryControls(
                                     androidx.compose.foundation.layout.Arrangement.spacedBy(6.dp),
                             ) {
                                 STATUS_CLOCK_FORMAT_PRESETS.forEach { preset ->
-                                    OneuiXPActionButton(
+                                    OneuiXActionButton(
                                         text = stringResource(id = preset.labelRes),
                                         onClick = {
                                             val selection = tempDataTimeFormat.selection
@@ -293,8 +293,8 @@ fun StatusTimeCategoryControls(
             if (uiState.setStatusBarClockFormat) {
                 add {
                     SwitchItem(
-                        title = stringResource(id = R.string.oneuixp_clockRichStyle_title),
-                        summary = stringResource(id = R.string.oneuixp_clockRichStyle_summary),
+                        title = stringResource(id = R.string.oneuix_clockRichStyle_title),
+                        summary = stringResource(id = R.string.oneuix_clockRichStyle_summary),
                         icon = ImageVector.vectorResource(id = R.drawable.format_size),
                         checked = uiState.enableStatusBarClockRichStyle,
                         onCheckedChange = {
@@ -320,13 +320,13 @@ fun StatusTimeCategoryControls(
                         add {
                             SelectItem(
                                 title = stringResource(
-                                    id = R.string.oneuixp_clockRichSelectBlock_title
+                                    id = R.string.oneuix_clockRichSelectBlock_title
                                 ),
                                 entries = blocks.mapIndexed { index, block ->
                                     val preview =
                                         clockRichPreview(block, now).ifEmpty { " " }
                                     stringResource(
-                                        id = R.string.oneuixp_clockRichBlock_title,
+                                        id = R.string.oneuix_clockRichBlock_title,
                                         (block.styleIndex ?: index) + 1,
                                         block.source.replace("\n", "\\n"),
                                     ) + " · " + preview
@@ -342,12 +342,12 @@ fun StatusTimeCategoryControls(
                         add {
                             SwitchItem(
                                 title = stringResource(
-                                    id = R.string.oneuixp_clockRichBlock_title,
+                                    id = R.string.oneuix_clockRichBlock_title,
                                     selectedBlockIndex + 1,
                                     selectedBlock.source.replace("\n", "\\n"),
                                 ),
                                 summary = stringResource(
-                                    id = R.string.oneuixp_clockRichBlock_summary,
+                                    id = R.string.oneuix_clockRichBlock_summary,
                                     selectedPreview,
                                 ),
                                 clickable = true,
@@ -407,11 +407,11 @@ fun StatusTimeCategoryControls(
                 SwitchItem(
                     icon = ImageVector.vectorResource(id = R.drawable.padding),
                     title = stringResource(
-                        id = R.string.oneuixp_statusBarClockPosition_title
+                        id = R.string.oneuix_statusBarClockPosition_title
                     ),
                     summary = if (uiState.modifyStatusBarClockPosition) {
                         stringResource(
-                            id = R.string.oneuixp_statusBarClockPosition_summary,
+                            id = R.string.oneuix_statusBarClockPosition_summary,
                             clockOffsetX,
                             clockOffsetY,
                         )
@@ -438,20 +438,20 @@ fun StatusTimeCategoryControls(
                                 .padding(horizontal = 8.dp),
                             verticalArrangement = Arrangement.spacedBy(4.dp),
                         ) {
-                            OneuiXPSectionLabel(
+                            OneuiXSectionLabel(
                                 text = stringResource(
-                                    id = R.string.oneuixp_statusBarClockOffsetX_title
+                                    id = R.string.oneuix_statusBarClockOffsetX_title
                                 ),
                                 modifier = Modifier.padding(horizontal = 12.dp),
                             )
-                            OneuiXPSupportingText(
+                            OneuiXSupportingText(
                                 text = stringResource(
-                                    id = R.string.oneuixp_statusBarClockOffset_summary,
+                                    id = R.string.oneuix_statusBarClockOffset_summary,
                                     clockOffsetX,
                                 ),
                                 modifier = Modifier.padding(horizontal = 12.dp),
                             )
-                            OneuiXPSlider(
+                            OneuiXSlider(
                                 value = clockOffsetX,
                                 stepSize = 1f,
                                 onValueChange = { raw ->
@@ -471,20 +471,20 @@ fun StatusTimeCategoryControls(
                                     )
                                 },
                             )
-                            OneuiXPSectionLabel(
+                            OneuiXSectionLabel(
                                 text = stringResource(
-                                    id = R.string.oneuixp_statusBarClockOffsetY_title
+                                    id = R.string.oneuix_statusBarClockOffsetY_title
                                 ),
                                 modifier = Modifier.padding(horizontal = 12.dp),
                             )
-                            OneuiXPSupportingText(
+                            OneuiXSupportingText(
                                 text = stringResource(
-                                    id = R.string.oneuixp_statusBarClockOffset_summary,
+                                    id = R.string.oneuix_statusBarClockOffset_summary,
                                     clockOffsetY,
                                 ),
                                 modifier = Modifier.padding(horizontal = 12.dp),
                             )
-                            OneuiXPSlider(
+                            OneuiXSlider(
                                 value = clockOffsetY,
                                 stepSize = 1f,
                                 onValueChange = { raw ->
@@ -515,13 +515,13 @@ fun StatusTimeCategoryControls(
                         SelectItem(
                             icon = ImageVector.vectorResource(id = R.drawable.format_size),
                             title = stringResource(
-                                id = R.string.oneuixp_statusBarClockAlignment_title
+                                id = R.string.oneuix_statusBarClockAlignment_title
                             ),
                             entries = listOf(
-                                stringResource(id = R.string.oneuixp_statusBarClockAlignment_native),
-                                stringResource(id = R.string.oneuixp_statusBarClockAlignment_start),
-                                stringResource(id = R.string.oneuixp_statusBarClockAlignment_center),
-                                stringResource(id = R.string.oneuixp_statusBarClockAlignment_end),
+                                stringResource(id = R.string.oneuix_statusBarClockAlignment_native),
+                                stringResource(id = R.string.oneuix_statusBarClockAlignment_start),
+                                stringResource(id = R.string.oneuix_statusBarClockAlignment_center),
+                                stringResource(id = R.string.oneuix_statusBarClockAlignment_end),
                             ),
                             selectedIndex = listOf("native", "start", "center", "end")
                                 .indexOf(clockAlignment)
@@ -553,20 +553,20 @@ fun StatusTimeCategoryControls(
                                 .padding(horizontal = 8.dp),
                             verticalArrangement = Arrangement.spacedBy(4.dp),
                         ) {
-                            OneuiXPSectionLabel(
+                            OneuiXSectionLabel(
                                 text = stringResource(
-                                    id = R.string.oneuixp_statusBarClockFixedContentWidth_title
+                                    id = R.string.oneuix_statusBarClockFixedContentWidth_title
                                 ),
                                 modifier = Modifier.padding(horizontal = 12.dp),
                             )
-                            OneuiXPSupportingText(
+                            OneuiXSupportingText(
                                 text = stringResource(
-                                    id = R.string.oneuixp_statusBarClockFixedContentWidth_summary,
+                                    id = R.string.oneuix_statusBarClockFixedContentWidth_summary,
                                     clockFixedContentWidth,
                                 ),
                                 modifier = Modifier.padding(horizontal = 12.dp),
                             )
-                            OneuiXPSlider(
+                            OneuiXSlider(
                                 value = clockFixedContentWidth,
                                 stepSize = 1f,
                                 onValueChange = { raw ->
@@ -599,20 +599,20 @@ fun StatusTimeCategoryControls(
                                 .padding(horizontal = 8.dp),
                             verticalArrangement = Arrangement.spacedBy(4.dp),
                         ) {
-                            OneuiXPSectionLabel(
+                            OneuiXSectionLabel(
                                 text = stringResource(
-                                    id = R.string.oneuixp_statusBarClockLeftMargin_title
+                                    id = R.string.oneuix_statusBarClockLeftMargin_title
                                 ),
                                 modifier = Modifier.padding(horizontal = 12.dp),
                             )
-                            OneuiXPSupportingText(
+                            OneuiXSupportingText(
                                 text = stringResource(
-                                    id = R.string.oneuixp_statusBarClockMargin_summary,
+                                    id = R.string.oneuix_statusBarClockMargin_summary,
                                     clockLeftMargin,
                                 ),
                                 modifier = Modifier.padding(horizontal = 12.dp),
                             )
-                            OneuiXPSlider(
+                            OneuiXSlider(
                                 value = clockLeftMargin,
                                 stepSize = 1f,
                                 onValueChange = { raw ->
@@ -634,20 +634,20 @@ fun StatusTimeCategoryControls(
                                     )
                                 },
                             )
-                            OneuiXPSectionLabel(
+                            OneuiXSectionLabel(
                                 text = stringResource(
-                                    id = R.string.oneuixp_statusBarClockRightMargin_title
+                                    id = R.string.oneuix_statusBarClockRightMargin_title
                                 ),
                                 modifier = Modifier.padding(horizontal = 12.dp),
                             )
-                            OneuiXPSupportingText(
+                            OneuiXSupportingText(
                                 text = stringResource(
-                                    id = R.string.oneuixp_statusBarClockMargin_summary,
+                                    id = R.string.oneuix_statusBarClockMargin_summary,
                                     clockRightMargin,
                                 ),
                                 modifier = Modifier.padding(horizontal = 12.dp),
                             )
-                            OneuiXPSlider(
+                            OneuiXSlider(
                                 value = clockRightMargin,
                                 stepSize = 1f,
                                 onValueChange = { raw ->
@@ -680,7 +680,7 @@ fun StatusTimeCategoryControls(
                         SwitchItem(
                             icon = ImageVector.vectorResource(id = R.drawable.format_size),
                             title = stringResource(
-                                id = R.string.oneuixp_fold7CustomDoubleLineClockScale_title
+                                id = R.string.oneuix_fold7CustomDoubleLineClockScale_title
                             ),
                             showChildIndicator = true,
                             checked = uiState.useFold7CustomDoubleLineClockScale,
@@ -697,16 +697,16 @@ fun StatusTimeCategoryControls(
                                 Column(
                                     modifier = Modifier.fillMaxWidth(),
                                 ) {
-                                    OneuiXPInfoItem(
+                                    OneuiXInfoItem(
                                         title = stringResource(
-                                            id = R.string.oneuixp_fold7DoubleLineClockTimeScale_title
+                                            id = R.string.oneuix_fold7DoubleLineClockTimeScale_title
                                         ),
                                         summary = stringResource(
-                                            id = R.string.oneuixp_fold7DoubleLineClockTimeScale_summary,
+                                            id = R.string.oneuix_fold7DoubleLineClockTimeScale_summary,
                                             timeScale,
                                         ),
                                     )
-                                    OneuiXPSlider(
+                                    OneuiXSlider(
                                         value = timeScale * 100f,
                                         stepSize = 1f,
                                         onValueChange = { raw ->
@@ -732,16 +732,16 @@ fun StatusTimeCategoryControls(
                                             )
                                         },
                                     )
-                                    OneuiXPInfoItem(
+                                    OneuiXInfoItem(
                                         title = stringResource(
-                                            id = R.string.oneuixp_fold7DoubleLineClockDateScale_title
+                                            id = R.string.oneuix_fold7DoubleLineClockDateScale_title
                                         ),
                                         summary = stringResource(
-                                            id = R.string.oneuixp_fold7DoubleLineClockDateScale_summary,
+                                            id = R.string.oneuix_fold7DoubleLineClockDateScale_summary,
                                             dateScale,
                                         ),
                                     )
-                                    OneuiXPSlider(
+                                    OneuiXSlider(
                                         value = dateScale * 100f,
                                         stepSize = 1f,
                                         onValueChange = { raw ->
@@ -774,11 +774,11 @@ fun StatusTimeCategoryControls(
                 } else {
                     add {
                         val sizeLabels = listOf(
-                            stringResource(id = R.string.oneuixp_statusBarDoubleLineClockSize_small),
-                            stringResource(id = R.string.oneuixp_statusBarDoubleLineClockSize_compact),
-                            stringResource(id = R.string.oneuixp_statusBarDoubleLineClockSize_standard),
-                            stringResource(id = R.string.oneuixp_statusBarDoubleLineClockSize_large),
-                            stringResource(id = R.string.oneuixp_statusBarDoubleLineClockSize_extraLarge),
+                            stringResource(id = R.string.oneuix_statusBarDoubleLineClockSize_small),
+                            stringResource(id = R.string.oneuix_statusBarDoubleLineClockSize_compact),
+                            stringResource(id = R.string.oneuix_statusBarDoubleLineClockSize_standard),
+                            stringResource(id = R.string.oneuix_statusBarDoubleLineClockSize_large),
+                            stringResource(id = R.string.oneuix_statusBarDoubleLineClockSize_extraLarge),
                         )
                         val selectedSize = uiState.statusBarDoubleLineClockSize.ifBlank {
                             statusCategoryTimeLegacyDoubleLineClockSize(uiState.statusBarClockTextScale)
@@ -790,7 +790,7 @@ fun StatusTimeCategoryControls(
                         SelectItem(
                             icon = ImageVector.vectorResource(id = R.drawable.format_size),
                             title = stringResource(
-                                id = R.string.oneuixp_statusBarDoubleLineClockSize_title
+                                id = R.string.oneuix_statusBarDoubleLineClockSize_title
                             ),
                             entries = sizeLabels,
                             selectedIndex = selectedIndex,
@@ -807,7 +807,7 @@ fun StatusTimeCategoryControls(
 
                 add {
                     SwitchItem(
-                        title = stringResource(id = R.string.oneuixp_statusBarDoubleLineClockGap_title),
+                        title = stringResource(id = R.string.oneuix_statusBarDoubleLineClockGap_title),
                         summary = if (lineGapEnabled) {
                             lineGapDp.roundToInt().toString() + " dp"
                         } else null,
@@ -822,7 +822,7 @@ fun StatusTimeCategoryControls(
                 if (lineGapEnabled) {
                     add {
                         StatusThemeChildItem {
-                            OneuiXPSlider(
+                            OneuiXSlider(
                                 value = lineGapDp,
                                 stepSize = 1f,
                                 onValueChange = { raw ->
@@ -854,7 +854,7 @@ fun StatusTimeCategoryControls(
             } else {
                 add {
                     SwitchItem(
-                        title = stringResource(id = R.string.oneuixp_setStatusBarClockTextScale_title),
+                        title = stringResource(id = R.string.oneuix_setStatusBarClockTextScale_title),
                         modifier = Modifier.animateContentSize(),
                         summary = if (uiState.setStatusBarClockTextScale) {
                             "${(singleLineScale * 100f).roundToInt()}%"
@@ -876,7 +876,7 @@ fun StatusTimeCategoryControls(
                 if (singleLineScaleExpanded && uiState.setStatusBarClockTextScale) {
                     add {
                         StatusThemeChildItem {
-                            OneuiXPSlider(
+                            OneuiXSlider(
                                 value = singleLineScale * 100f,
                                 stepSize = 1f,
                                 onValueChange = { raw ->
@@ -910,10 +910,10 @@ fun StatusTimeCategoryControls(
             add {
                 SwitchItem(
                     title = stringResource(
-                        id = R.string.oneuixp_updateStatusBarClockEverySecond_title
+                        id = R.string.oneuix_updateStatusBarClockEverySecond_title
                     ),
                     summary = stringResource(
-                        id = R.string.oneuixp_updateStatusBarClockEverySecond_summary
+                        id = R.string.oneuix_updateStatusBarClockEverySecond_summary
                     ),
                     icon = ImageVector.vectorResource(
                         id = R.drawable.nest_clock_farsight_digital
@@ -934,8 +934,8 @@ fun StatusTimeCategoryControls(
     }
 
     if (isDoubleLine && !isFold7) {
-        OneuiXPSupportingText(
-            text = stringResource(id = R.string.oneuixp_statusBarDoubleLineClockSize_summary),
+        OneuiXSupportingText(
+            text = stringResource(id = R.string.oneuix_statusBarDoubleLineClockSize_summary),
             modifier = Modifier.padding(horizontal = 16.dp),
         )
     }

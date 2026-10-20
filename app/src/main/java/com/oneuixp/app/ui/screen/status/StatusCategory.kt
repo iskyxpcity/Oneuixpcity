@@ -70,7 +70,7 @@ enum class StatusCategory(
         0xFF2BB7A8.toInt(),
     ),
     Other(
-        R.string.oneuixp_other,
+        R.string.oneuix_other,
         R.drawable.power_settings_new,
         0xFF607D8B.toInt(),
     ),

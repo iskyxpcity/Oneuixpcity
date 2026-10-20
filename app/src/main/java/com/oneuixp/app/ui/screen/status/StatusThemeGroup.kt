@@ -14,8 +14,8 @@ import com.oneuixp.app.ui.LocalUiMode
 import com.oneuixp.app.ui.UiMode
 import com.oneuixp.app.ui.component.material.SegmentedColumn
 import com.oneuixp.app.ui.component.material.SegmentedListItem
-import com.oneuixp.app.ui.component.material.oneuiXPSegmentedColors
-import com.oneuixp.mod.ui.component.LocalOneuiXPGroupedPreference
+import com.oneuixp.app.ui.component.material.oneuiXSegmentedColors
+import io.github.soclear.oneuix.ui.component.LocalOneuiXGroupedPreference
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
 import top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme
@@ -68,7 +68,7 @@ fun StatusThemeGroup(
                 content = items.map { item ->
                     {
                         CompositionLocalProvider(
-                            LocalOneuiXPGroupedPreference provides true,
+                            LocalOneuiXGroupedPreference provides true,
                         ) {
                             item()
                         }
@@ -82,7 +82,7 @@ fun StatusThemeGroup(
                 modifier = modifier.padding(horizontal = 12.dp, vertical = groupVerticalPadding),
             ) {
                 CompositionLocalProvider(
-                    LocalOneuiXPGroupedPreference provides true,
+                    LocalOneuiXGroupedPreference provides true,
                 ) {
                     Column {
                         items.forEach { item -> item() }
@@ -109,7 +109,7 @@ fun StatusThemeChildItem(
         UiMode.Material -> {
             SegmentedListItem(
                 modifier = modifier,
-                colors = oneuiXPSegmentedColors(),
+                colors = oneuiXSegmentedColors(),
                 headlineContent = {
                     Box(
                         modifier = Modifier

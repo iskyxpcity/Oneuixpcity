@@ -64,25 +64,19 @@ import top.yukonga.miuix.kmp.utils.scrollEndHaptic
 fun FeatureIntroductionScreen() {
     val navigator = LocalNavigator.current
     val onBack = dropUnlessResumed { navigator.pop() }
-    val onOpen2610191Updates = dropUnlessResumed { navigator.push(Route.VersionChangelog2610191) }
     val onOpen261018Updates = dropUnlessResumed { navigator.push(Route.VersionChangelog261018) }
     val onOpen261016Updates = dropUnlessResumed { navigator.push(Route.VersionChangelog261016) }
     val onOpen261013Updates = dropUnlessResumed { navigator.push(Route.VersionChangelog261013) }
     val onOpenFirstRelease = dropUnlessResumed { navigator.push(Route.VersionChangelog) }
     when (LocalUiMode.current) {
-        UiMode.Material -> FeatureIntroductionMaterial(onBack, onOpen2610191Updates, onOpen261018Updates, onOpen261016Updates, onOpen261013Updates, onOpenFirstRelease)
-        UiMode.Miuix -> FeatureIntroductionMiuix(onBack, onOpen2610191Updates, onOpen261018Updates, onOpen261016Updates, onOpen261013Updates, onOpenFirstRelease)
+        UiMode.Material -> FeatureIntroductionMaterial(onBack, onOpen261018Updates, onOpen261016Updates, onOpen261013Updates, onOpenFirstRelease)
+        UiMode.Miuix -> FeatureIntroductionMiuix(onBack, onOpen261018Updates, onOpen261016Updates, onOpen261013Updates, onOpenFirstRelease)
     }
 }
 
 @Composable
 fun VersionChangelogScreen() {
     VersionChangelogContent(isLatestVersion = false)
-}
-
-@Composable
-fun VersionChangelog2610191Screen() {
-    VersionChangelogContent(isLatestVersion = true, is2610191 = true)
 }
 
 @Composable
@@ -105,20 +99,18 @@ private fun VersionChangelogContent(
     isLatestVersion: Boolean,
     is261016: Boolean = false,
     is261018: Boolean = false,
-    is2610191: Boolean = false,
 ) {
     val navigator = LocalNavigator.current
     val onBack = dropUnlessResumed { navigator.pop() }
     when (LocalUiMode.current) {
-        UiMode.Material -> VersionChangelogMaterial(onBack, isLatestVersion, is261016, is261018, is2610191)
-        UiMode.Miuix -> VersionChangelogMiuix(onBack, isLatestVersion, is261016, is261018, is2610191)
+        UiMode.Material -> VersionChangelogMaterial(onBack, isLatestVersion, is261016, is261018)
+        UiMode.Miuix -> VersionChangelogMiuix(onBack, isLatestVersion, is261016, is261018)
     }
 }
 
 @Composable
 private fun FeatureIntroductionMaterial(
     onBack: () -> Unit,
-    onOpen2610191Updates: () -> Unit,
     onOpen261018Updates: () -> Unit,
     onOpen261016Updates: () -> Unit,
     onOpen261013Updates: () -> Unit,
@@ -149,19 +141,6 @@ private fun FeatureIntroductionMaterial(
                 SegmentedColumn(
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
                     content = listOf(
-                        {
-                            SegmentedListItem(
-                                onClick = onOpen2610191Updates,
-                                headlineContent = { Text(stringResource(R.string.feature_intro_version_updates_2610191)) },
-                                supportingContent = { Text(stringResource(R.string.feature_intro_version_updates_2610191_summary)) },
-                                leadingContent = {
-                                    androidx.compose.material3.Icon(Icons.AutoMirrored.Filled.Article, contentDescription = null)
-                                },
-                                trailingContent = {
-                                    androidx.compose.material3.Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
-                                },
-                            )
-                        },
                         {
                             SegmentedListItem(
                                 onClick = onOpen261018Updates,
@@ -225,7 +204,6 @@ private fun FeatureIntroductionMaterial(
 @Composable
 private fun FeatureIntroductionMiuix(
     onBack: () -> Unit,
-    onOpen2610191Updates: () -> Unit,
     onOpen261018Updates: () -> Unit,
     onOpen261016Updates: () -> Unit,
     onOpen261013Updates: () -> Unit,
@@ -268,15 +246,6 @@ private fun FeatureIntroductionMiuix(
                 item {
                     MiuixCard(modifier = Modifier.padding(top = 12.dp).fillMaxWidth()) {
                         ArrowPreference(
-                            title = stringResource(R.string.feature_intro_version_updates_2610191),
-                            summary = stringResource(R.string.feature_intro_version_updates_2610191_summary),
-                            onClick = onOpen2610191Updates,
-                        )
-                    }
-                }
-                item {
-                    MiuixCard(modifier = Modifier.padding(top = 8.dp).fillMaxWidth()) {
-                        ArrowPreference(
                             title = stringResource(R.string.feature_intro_version_updates_261018),
                             summary = stringResource(R.string.feature_intro_version_updates_261018_summary),
                             onClick = onOpen261018Updates,
@@ -317,28 +286,21 @@ private fun FeatureIntroductionMiuix(
 }
 
 @Composable
-private fun VersionChangelogMaterial(onBack: () -> Unit, isLatestVersion: Boolean, is261016: Boolean, is261018: Boolean, is2610191: Boolean) {
+private fun VersionChangelogMaterial(onBack: () -> Unit, isLatestVersion: Boolean, is261016: Boolean, is261018: Boolean) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
     val versionTitle = when {
-        is2610191 -> R.string.version_1_0_261019_1_title
         is261018 -> R.string.version_1_0_261018_title
         is261016 -> R.string.version_1_0_261016_title
         isLatestVersion -> R.string.version_1_0_261013_title
         else -> R.string.version_1_0_260930_title
     }
     val versionDate = when {
-        is2610191 -> R.string.version_1_0_261019_1_summary
         is261018 -> R.string.version_1_0_261018_summary
         is261016 -> R.string.version_1_0_261016_summary
         isLatestVersion -> R.string.version_1_0_261013_summary
         else -> R.string.version_1_0_260930_summary
     }
     val updateRows = when {
-        is2610191 -> listOf(
-            R.string.changelog_2610191_features_title to R.string.changelog_2610191_features_body,
-            R.string.changelog_2610191_improvements_title to R.string.changelog_2610191_improvements_body,
-            R.string.changelog_2610191_fixes_title to R.string.changelog_2610191_fixes_body,
-        )
         is261018 -> listOf(
             R.string.changelog_261018_device_status_title to R.string.changelog_261018_device_status_body,
             R.string.changelog_261018_cpu_frequency_title to R.string.changelog_261018_cpu_frequency_body,
@@ -418,30 +380,23 @@ private fun VersionChangelogMaterial(onBack: () -> Unit, isLatestVersion: Boolea
 }
 
 @Composable
-private fun VersionChangelogMiuix(onBack: () -> Unit, isLatestVersion: Boolean, is261016: Boolean, is261018: Boolean, is2610191: Boolean) {
+private fun VersionChangelogMiuix(onBack: () -> Unit, isLatestVersion: Boolean, is261016: Boolean, is261018: Boolean) {
     val scrollBehavior = MiuixScrollBehavior()
     val backdrop = rememberBlurBackdrop(LocalEnableBlur.current)
     val barColor = if (backdrop != null) Color.Transparent else colorScheme.surface
     val versionTitle = when {
-        is2610191 -> R.string.version_1_0_261019_1_title
         is261018 -> R.string.version_1_0_261018_title
         is261016 -> R.string.version_1_0_261016_title
         isLatestVersion -> R.string.version_1_0_261013_title
         else -> R.string.version_1_0_260930_title
     }
     val versionDate = when {
-        is2610191 -> R.string.version_1_0_261019_1_summary
         is261018 -> R.string.version_1_0_261018_summary
         is261016 -> R.string.version_1_0_261016_summary
         isLatestVersion -> R.string.version_1_0_261013_summary
         else -> R.string.version_1_0_260930_summary
     }
     val updateRows = when {
-        is2610191 -> listOf(
-            R.string.changelog_2610191_features_title to R.string.changelog_2610191_features_body,
-            R.string.changelog_2610191_improvements_title to R.string.changelog_2610191_improvements_body,
-            R.string.changelog_2610191_fixes_title to R.string.changelog_2610191_fixes_body,
-        )
         is261018 -> listOf(
             R.string.changelog_261018_device_status_title to R.string.changelog_261018_device_status_body,
             R.string.changelog_261018_cpu_frequency_title to R.string.changelog_261018_cpu_frequency_body,
