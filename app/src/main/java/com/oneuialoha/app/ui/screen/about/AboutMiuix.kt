@@ -373,7 +373,7 @@ private fun AboutContent(
                     Modifier
                         .fillMaxWidth()
                         .height(
-                            logoHeightDp + 52.dp + logoPadding.calculateTopPadding() - scrollPadding.calculateTopPadding() + 126.dp,
+                            logoHeightDp + 68.dp + logoPadding.calculateTopPadding() - scrollPadding.calculateTopPadding() + 126.dp,
                         )
                         .onSizeChanged { size ->
                             onLogoHeightChanged(size.height)
