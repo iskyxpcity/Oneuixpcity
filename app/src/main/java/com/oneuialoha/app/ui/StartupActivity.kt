@@ -218,7 +218,7 @@ private class NativeOneUIAlohaStartupView(
         textPaint.alpha = (255f * progress).roundToInt().coerceIn(0, 255)
 
         val x = (width - textPaint.measureText(title)) / 2f
-        val y = height * 0.37f + dp(108f) / 2f + dp(61f) + dp(10f) * (1f - progress)
+        val y = height * 0.37f + dp(96f) / 2f + dp(61f) + dp(10f) * (1f - progress)
         canvas.drawText(title, x, y, textPaint)
     }
 
@@ -248,7 +248,7 @@ private class NativeOneUIAlohaStartupView(
         }
 
         var x = (width - totalWidth) / 2f
-        val baseline = height * 0.37f + dp(108f) / 2f + dp(113f)
+        val baseline = height * 0.37f + dp(96f) / 2f + dp(113f)
         var visibleIndex = 0
 
         title.forEachIndexed { index, c ->
