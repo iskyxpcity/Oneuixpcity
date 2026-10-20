@@ -1,4 +1,4 @@
-package com.oneuixp.app.ui.util.update
+package com.oneuialoha.app.ui.util.update
 
 import android.app.PendingIntent
 import android.content.Context
@@ -12,8 +12,8 @@ import android.net.Uri
 import android.os.Build
 import android.util.Log
 import android.provider.Settings
-import com.oneuixp.app.R
-import com.oneuixp.app.oneuiXPApp
+import com.oneuialoha.app.R
+import com.oneuialoha.app.oneUIAlohaApp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.Request
@@ -21,7 +21,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.security.MessageDigest
 
-private const val UPDATE_INSTALL_ACTION = "com.oneuixp.app.action.UPDATE_INSTALL_STATUS"
+private const val UPDATE_INSTALL_ACTION = "com.oneuialoha.app.action.UPDATE_INSTALL_STATUS"
 
 sealed interface UpdateDownloadResult {
     data class Success(val apk: File) : UpdateDownloadResult
@@ -93,11 +93,11 @@ suspend fun downloadAndVerifyUpdate(
         val request = Request.Builder()
             .url(info.downloadUrl)
             .header("Accept", "application/octet-stream")
-            .header("User-Agent", "OneuiXP-Android")
+            .header("User-Agent", "OneUIAloha-Android")
             .build()
 
         val digest = MessageDigest.getInstance("SHA-256")
-        oneuiXPApp.okhttpClient.newCall(request).execute().use { response ->
+        oneUIAlohaApp.okhttpClient.newCall(request).execute().use { response ->
             if (!response.isSuccessful) {
                 return@withContext UpdateDownloadResult.Error("下载失败：HTTP ${response.code}")
             }
@@ -174,7 +174,7 @@ fun submitUpdateSession(context: Context, apk: File): UpdateInstallResult {
             // while it is foregrounded and is itself relaunched on install success.
             val statusIntent = Intent(
                 context,
-                com.oneuixp.app.ui.MainActivity::class.java,
+                com.oneuialoha.app.ui.MainActivity::class.java,
             ).apply {
                 action = UPDATE_INSTALL_ACTION
                 putExtra(PackageInstaller.EXTRA_SESSION_ID, sessionId)
@@ -219,7 +219,7 @@ fun openUnknownSourcesSettings(context: Context): Boolean = runCatching {
  * required confirmation while foregrounded and open the app only for STATUS_SUCCESS.
  * Failed/cancelled installs are deliberately silent.
  */
-private const val UPDATE_INSTALL_STATUS_TAG = "OneuiXP-UpdateInstall"
+private const val UPDATE_INSTALL_STATUS_TAG = "OneUIAloha-UpdateInstall"
 
 /**
  * Handles PackageInstaller's result on the real MainActivity. Avoid routing from a
@@ -231,7 +231,7 @@ fun handleUpdateInstallStatus(activity: Activity, resultIntent: Intent): Boolean
 
     // Consume the one-shot callback action, so returning from system installer doesn't
     // re-process the same result and re-open the confirmation or update dialog.
-    activity.setIntent(Intent(activity, com.oneuixp.app.ui.MainActivity::class.java))
+    activity.setIntent(Intent(activity, com.oneuialoha.app.ui.MainActivity::class.java))
 
     val status = resultIntent.getIntExtra(
         PackageInstaller.EXTRA_STATUS,
