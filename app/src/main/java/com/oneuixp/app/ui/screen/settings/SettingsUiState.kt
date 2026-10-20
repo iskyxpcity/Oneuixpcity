@@ -1,11 +1,11 @@
-package com.oneuixp.app.ui.screen.settings
+package com.oneuialoha.app.ui.screen.settings
 
 import androidx.compose.runtime.Immutable
 import com.materialkolor.PaletteStyle
 import com.materialkolor.dynamiccolor.ColorSpec
-import com.oneuixp.app.ui.UiMode
+import com.oneuialoha.app.ui.UiMode
 
-/** OneuiXP appearance and application preferences. */
+/** OneUIAloha appearance and application preferences. */
 @Immutable
 data class SettingsUiState(
     val uiMode: String = UiMode.DEFAULT_VALUE,

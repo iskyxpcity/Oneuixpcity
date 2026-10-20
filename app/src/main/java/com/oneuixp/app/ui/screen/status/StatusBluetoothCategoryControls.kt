@@ -1,4 +1,4 @@
-package com.oneuixp.app.ui.screen.status
+package com.oneuialoha.app.ui.screen.status
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -16,13 +16,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.oneuixp.app.R
-import com.oneuixp.app.ui.viewmodel.OneuiXPToolsViewModel
-import com.oneuixp.common.Preference
-import com.oneuixp.mod.ui.category.SystemUIEvent
-import com.oneuixp.mod.ui.component.OneuiXPInfoItem
-import com.oneuixp.mod.ui.component.OneuiXPSlider
-import com.oneuixp.mod.ui.component.SwitchItem
+import com.oneuialoha.app.R
+import com.oneuialoha.app.ui.viewmodel.OneUIAlohaToolsViewModel
+import com.oneuialoha.common.Preference
+import com.oneuialoha.mod.ui.category.SystemUIEvent
+import com.oneuialoha.mod.ui.component.OneUIAlohaInfoItem
+import com.oneuialoha.mod.ui.component.OneUIAlohaSlider
+import com.oneuialoha.mod.ui.component.SwitchItem
 import kotlin.math.roundToInt
 
 @Composable
@@ -31,7 +31,7 @@ fun StatusBluetoothCategoryControls(
     onEvent: (SystemUIEvent) -> Unit,
 ) {
     val bluetoothIcon = ImageVector.vectorResource(id = R.drawable.bluetooth)
-    val toolsViewModel = viewModel<OneuiXPToolsViewModel>()
+    val toolsViewModel = viewModel<OneUIAlohaToolsViewModel>()
     val runtime = uiState.bluetoothRuntime
 
     var expanded by rememberSaveable { mutableStateOf(runtime.enabled) }
@@ -78,13 +78,13 @@ fun StatusBluetoothCategoryControls(
         }
     }
 
-    // Keep the original OneuiXP restore-icon function as its own card.
+    // Keep the original OneUIAloha restore-icon function as its own card.
     StatusThemeGroup(
         items = listOf(
             {
                 SwitchItem(
                     icon = bluetoothIcon,
-                    title = stringResource(id = R.string.oneuixp_restoreBluetoothStatusBarIcon_title),
+                    title = stringResource(id = R.string.oneuialoha_restoreBluetoothStatusBarIcon_title),
                     checked = uiState.restoreBluetoothStatusBarIcon,
                     onCheckedChange = {
                         onEvent(SystemUIEvent.StatusBar.RestoreBluetoothStatusBarIcon(it))
@@ -269,13 +269,13 @@ private fun BluetoothSliderSetting(
     onFinished: () -> Unit,
 ) {
     Column {
-        OneuiXPInfoItem(
+        OneUIAlohaInfoItem(
             icon = icon,
             title = title,
             summary = summary,
         )
         StatusThemeChildItem {
-            OneuiXPSlider(
+            OneUIAlohaSlider(
                 value = value,
                 onValueChange = onValueChange,
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),

@@ -1,8 +1,8 @@
-package com.oneuixp.app.ui.screen.status
+package com.oneuialoha.app.ui.screen.status
 
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
-import com.oneuixp.app.R
+import com.oneuialoha.app.R
 
 enum class StatusCategory(
     @get:StringRes val titleRes: Int,
@@ -70,7 +70,7 @@ enum class StatusCategory(
         0xFF2BB7A8.toInt(),
     ),
     Other(
-        R.string.oneuixp_other,
+        R.string.oneuialoha_other,
         R.drawable.power_settings_new,
         0xFF607D8B.toInt(),
     ),

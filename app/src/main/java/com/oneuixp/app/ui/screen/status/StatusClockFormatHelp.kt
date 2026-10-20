@@ -1,4 +1,4 @@
-package com.oneuixp.app.ui.screen.status
+package com.oneuialoha.app.ui.screen.status
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -12,11 +12,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import com.oneuixp.app.R
-import com.oneuixp.app.ui.LocalUiMode
-import com.oneuixp.app.ui.UiMode
-import com.oneuixp.hook.util.StatusBarClockFormatter
-import com.oneuixp.mod.ui.component.OneuiXPActionButton
+import com.oneuialoha.app.R
+import com.oneuialoha.app.ui.LocalUiMode
+import com.oneuialoha.app.ui.UiMode
+import com.oneuialoha.hook.util.StatusBarClockFormatter
+import com.oneuialoha.mod.ui.component.OneUIAlohaActionButton
 import java.time.LocalDateTime
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -28,21 +28,21 @@ data class StatusClockFormatPreset(
 )
 
 val STATUS_CLOCK_FORMAT_PRESETS = listOf(
-    StatusClockFormatPreset(R.string.oneuixp_clockFormatPreset_period, "CNPERIOD"),
-    StatusClockFormatPreset(R.string.oneuixp_clockFormatPreset_hour24, "HH"),
-    StatusClockFormatPreset(R.string.oneuixp_clockFormatPreset_hour12, "hh"),
-    StatusClockFormatPreset(R.string.oneuixp_clockFormatPreset_minute, "mm"),
-    StatusClockFormatPreset(R.string.oneuixp_clockFormatPreset_second, "ss"),
-    StatusClockFormatPreset(R.string.oneuixp_clockFormatPreset_month, "MM"),
-    StatusClockFormatPreset(R.string.oneuixp_clockFormatPreset_day, "dd"),
-    StatusClockFormatPreset(R.string.oneuixp_clockFormatPreset_weekday, "EEE"),
-    StatusClockFormatPreset(R.string.oneuixp_clockFormatPreset_space, " "),
-    StatusClockFormatPreset(R.string.oneuixp_clockFormatPreset_newLine, "\n"),
-    StatusClockFormatPreset(R.string.oneuixp_clockFormatPreset_lunar, "CNLUNAR"),
-    StatusClockFormatPreset(R.string.oneuixp_clockFormatPreset_traditionalTime, "CNTIME"),
-    StatusClockFormatPreset(R.string.oneuixp_clockFormatPreset_lunarYear, "CNYEAR"),
-    StatusClockFormatPreset(R.string.oneuixp_clockFormatPreset_zodiac, "CNZODIAC"),
-    StatusClockFormatPreset(R.string.oneuixp_clockFormatPreset_season, "CNSEASON"),
+    StatusClockFormatPreset(R.string.oneuialoha_clockFormatPreset_period, "CNPERIOD"),
+    StatusClockFormatPreset(R.string.oneuialoha_clockFormatPreset_hour24, "HH"),
+    StatusClockFormatPreset(R.string.oneuialoha_clockFormatPreset_hour12, "hh"),
+    StatusClockFormatPreset(R.string.oneuialoha_clockFormatPreset_minute, "mm"),
+    StatusClockFormatPreset(R.string.oneuialoha_clockFormatPreset_second, "ss"),
+    StatusClockFormatPreset(R.string.oneuialoha_clockFormatPreset_month, "MM"),
+    StatusClockFormatPreset(R.string.oneuialoha_clockFormatPreset_day, "dd"),
+    StatusClockFormatPreset(R.string.oneuialoha_clockFormatPreset_weekday, "EEE"),
+    StatusClockFormatPreset(R.string.oneuialoha_clockFormatPreset_space, " "),
+    StatusClockFormatPreset(R.string.oneuialoha_clockFormatPreset_newLine, "\n"),
+    StatusClockFormatPreset(R.string.oneuialoha_clockFormatPreset_lunar, "CNLUNAR"),
+    StatusClockFormatPreset(R.string.oneuialoha_clockFormatPreset_traditionalTime, "CNTIME"),
+    StatusClockFormatPreset(R.string.oneuialoha_clockFormatPreset_lunarYear, "CNYEAR"),
+    StatusClockFormatPreset(R.string.oneuialoha_clockFormatPreset_zodiac, "CNZODIAC"),
+    StatusClockFormatPreset(R.string.oneuialoha_clockFormatPreset_season, "CNSEASON"),
 )
 
 @Composable
@@ -82,25 +82,25 @@ private fun ClockFormatHelpContent(
             .padding(horizontal = 18.dp, vertical = 10.dp),
     ) {
         ClockFormatHelpText(
-            text = stringResource(id = R.string.oneuixp_clockFormatHelp_intro),
+            text = stringResource(id = R.string.oneuialoha_clockFormatHelp_intro),
             modifier = Modifier.padding(bottom = 10.dp),
         )
 
         listOf(
-            "HH" to R.string.oneuixp_clockFormatHelp_hour24,
-            "hh" to R.string.oneuixp_clockFormatHelp_hour12,
-            "mm" to R.string.oneuixp_clockFormatHelp_minute,
-            "ss" to R.string.oneuixp_clockFormatHelp_second,
-            "yyyy" to R.string.oneuixp_clockFormatHelp_year,
-            "MM" to R.string.oneuixp_clockFormatHelp_month,
-            "dd" to R.string.oneuixp_clockFormatHelp_day,
-            "EEE" to R.string.oneuixp_clockFormatHelp_weekday,
-            "CNPERIOD" to R.string.oneuixp_clockFormatHelp_period,
-            "CNLUNAR" to R.string.oneuixp_clockFormatHelp_lunar,
-            "CNTIME" to R.string.oneuixp_clockFormatHelp_traditionalTime,
-            "CNYEAR" to R.string.oneuixp_clockFormatHelp_lunarYear,
-            "CNZODIAC" to R.string.oneuixp_clockFormatHelp_zodiac,
-            "CNSEASON" to R.string.oneuixp_clockFormatHelp_season,
+            "HH" to R.string.oneuialoha_clockFormatHelp_hour24,
+            "hh" to R.string.oneuialoha_clockFormatHelp_hour12,
+            "mm" to R.string.oneuialoha_clockFormatHelp_minute,
+            "ss" to R.string.oneuialoha_clockFormatHelp_second,
+            "yyyy" to R.string.oneuialoha_clockFormatHelp_year,
+            "MM" to R.string.oneuialoha_clockFormatHelp_month,
+            "dd" to R.string.oneuialoha_clockFormatHelp_day,
+            "EEE" to R.string.oneuialoha_clockFormatHelp_weekday,
+            "CNPERIOD" to R.string.oneuialoha_clockFormatHelp_period,
+            "CNLUNAR" to R.string.oneuialoha_clockFormatHelp_lunar,
+            "CNTIME" to R.string.oneuialoha_clockFormatHelp_traditionalTime,
+            "CNYEAR" to R.string.oneuialoha_clockFormatHelp_lunarYear,
+            "CNZODIAC" to R.string.oneuialoha_clockFormatHelp_zodiac,
+            "CNSEASON" to R.string.oneuialoha_clockFormatHelp_season,
         ).forEach { (token, descriptionRes) ->
             ClockFormatHelpText(
                 text = "$token  ·  " + stringResource(id = descriptionRes),
@@ -109,7 +109,7 @@ private fun ClockFormatHelpContent(
         }
 
         ClockFormatHelpText(
-            text = stringResource(id = R.string.oneuixp_clockFormatHelp_examples),
+            text = stringResource(id = R.string.oneuialoha_clockFormatHelp_examples),
             modifier = Modifier.padding(top = 12.dp, bottom = 4.dp),
         )
         examples.forEach { pattern ->
@@ -122,7 +122,7 @@ private fun ClockFormatHelpContent(
             )
         }
 
-        OneuiXPActionButton(
+        OneUIAlohaActionButton(
             text = stringResource(id = android.R.string.ok),
             onClick = onDismiss,
             modifier = Modifier
@@ -145,7 +145,7 @@ fun StatusClockFormatHelpDialog(
             ) {
                 Column {
                     MaterialText(
-                        text = stringResource(id = R.string.oneuixp_clockFormatHelp_title),
+                        text = stringResource(id = R.string.oneuialoha_clockFormatHelp_title),
                         modifier = Modifier.padding(
                             start = 24.dp,
                             end = 24.dp,
@@ -161,7 +161,7 @@ fun StatusClockFormatHelpDialog(
 
         UiMode.Miuix -> WindowDialog(
             show = true,
-            title = stringResource(id = R.string.oneuixp_clockFormatHelp_title),
+            title = stringResource(id = R.string.oneuialoha_clockFormatHelp_title),
             onDismissRequest = onDismiss,
             content = { ClockFormatHelpContent(onDismiss) },
         )

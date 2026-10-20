@@ -1,4 +1,4 @@
-package com.oneuixp.app.ui.screen.status
+package com.oneuialoha.app.ui.screen.status
 
 import android.content.Context
 import android.graphics.Canvas
@@ -6,10 +6,10 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Typeface
 import android.view.View
-import com.oneuixp.app.R
-import com.oneuixp.common.Preference
-import com.oneuixp.common.StatusComboStyleOneGlyphRenderer
-import com.oneuixp.common.StatusComboStyleOneGlyphState
+import com.oneuialoha.app.R
+import com.oneuialoha.common.Preference
+import com.oneuialoha.common.StatusComboStyleOneGlyphRenderer
+import com.oneuialoha.common.StatusComboStyleOneGlyphState
 
 /** Preview surface using the same renderer as the status-bar icon. */
 class StatusComboStyleOnePreviewView(context: Context) : View(context) {

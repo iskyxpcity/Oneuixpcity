@@ -1,4 +1,4 @@
-package com.oneuixp.app.ui.screen.status
+package com.oneuialoha.app.ui.screen.status
 
 import android.content.Intent
 import android.graphics.Color as AndroidColor
@@ -58,20 +58,20 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.oneuixp.app.R
-import com.oneuixp.app.ui.viewmodel.OneuiXPToolsViewModel
-import com.oneuixp.common.IgnoreUnknownKeysJson
-import com.oneuixp.common.Package
-import com.oneuixp.common.Preference
-import com.oneuixp.common.StatusBarRuntimeBridge
-import com.oneuixp.mod.ui.category.SystemUIEvent
-import com.oneuixp.mod.ui.component.OneuiXPSlider
-import com.oneuixp.mod.ui.component.OneuiXPActionButton
-import com.oneuixp.app.ui.component.material.ExpressiveConfirmDialog
-import com.oneuixp.mod.ui.component.SwitchItem
-import com.oneuixp.mod.ui.component.SelectItem
-import com.oneuixp.app.ui.LocalUiMode
-import com.oneuixp.app.ui.UiMode
+import com.oneuialoha.app.R
+import com.oneuialoha.app.ui.viewmodel.OneUIAlohaToolsViewModel
+import com.oneuialoha.common.IgnoreUnknownKeysJson
+import com.oneuialoha.common.Package
+import com.oneuialoha.common.Preference
+import com.oneuialoha.common.StatusBarRuntimeBridge
+import com.oneuialoha.mod.ui.category.SystemUIEvent
+import com.oneuialoha.mod.ui.component.OneUIAlohaSlider
+import com.oneuialoha.mod.ui.component.OneUIAlohaActionButton
+import com.oneuialoha.app.ui.component.material.ExpressiveConfirmDialog
+import com.oneuialoha.mod.ui.component.SwitchItem
+import com.oneuialoha.mod.ui.component.SelectItem
+import com.oneuialoha.app.ui.LocalUiMode
+import com.oneuialoha.app.ui.UiMode
 import top.yukonga.miuix.kmp.basic.Button as MiuixButton
 import top.yukonga.miuix.kmp.basic.ButtonDefaults as MiuixButtonDefaults
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
@@ -89,7 +89,7 @@ fun StatusComboStyleOneCategoryControls(
     uiState: Preference.SystemUI.StatusBar,
     onEvent: (SystemUIEvent) -> Unit,
 ) {
-    val viewModel = viewModel<OneuiXPToolsViewModel>()
+    val viewModel = viewModel<OneUIAlohaToolsViewModel>()
     val context = LocalContext.current
     // Match the upstream threshold rule: critical battery uses a fixed 20% cutoff.
     // Normalize legacy saved values so preview and live SystemUI share the rule.
@@ -713,12 +713,12 @@ private fun StyleOneRoleColorDialog(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                OneuiXPActionButton(
+                OneUIAlohaActionButton(
                     text = stringResource(R.string.status_combo_style_one_color_cancel),
                     onClick = onCancel,
                     modifier = Modifier.weight(1f),
                 )
-                OneuiXPActionButton(
+                OneUIAlohaActionButton(
                     text = stringResource(R.string.status_combo_style_one_color_apply),
                     onClick = { onApply(draftDarkColor, draftLightColor) },
                     modifier = Modifier.weight(1f),
@@ -1051,7 +1051,7 @@ private fun styleOneSlider(
                     }
                 }
             }
-            OneuiXPSlider(
+            OneUIAlohaSlider(
                 value = value,
                 modifier = Modifier.fillMaxWidth().alpha(if (enabled) 1f else 0.45f),
                 valueRange = range, steps = 0,

@@ -1,4 +1,4 @@
-package com.oneuixp.app.ui.screen.status
+package com.oneuialoha.app.ui.screen.status
 
 import android.graphics.Color as AndroidColor
 import androidx.compose.foundation.Canvas
@@ -40,12 +40,12 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import com.oneuixp.app.R
-import com.oneuixp.app.ui.LocalUiMode
-import com.oneuixp.app.ui.UiMode
-import com.oneuixp.mod.ui.component.OneuiXPActionButton
-import com.oneuixp.mod.ui.component.OneuiXPInlineTextField
-import com.oneuixp.mod.ui.component.OneuiXPSlider
+import com.oneuialoha.app.R
+import com.oneuialoha.app.ui.LocalUiMode
+import com.oneuialoha.app.ui.UiMode
+import com.oneuialoha.mod.ui.component.OneUIAlohaActionButton
+import com.oneuialoha.mod.ui.component.OneUIAlohaInlineTextField
+import com.oneuialoha.mod.ui.component.OneUIAlohaSlider
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.window.WindowDialog
@@ -236,7 +236,7 @@ private fun ColorPickerBody(
             )
         }
 
-        PickerText(text = stringResource(id = R.string.oneuixp_clockRichCommonColors))
+        PickerText(text = stringResource(id = R.string.oneuialoha_clockRichCommonColors))
         CLOCK_COLOR_PRESETS.chunked(6).forEach { row ->
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -277,11 +277,11 @@ private fun ColorPickerBody(
 
         PickerText(
             text = stringResource(
-                id = R.string.oneuixp_clockRichHue,
+                id = R.string.oneuialoha_clockRichHue,
                 hsv[0].roundToInt(),
             )
         )
-        OneuiXPSlider(
+        OneUIAlohaSlider(
             value = hsv[0],
             onValueChange = { hue ->
                 setColor(
@@ -299,7 +299,7 @@ private fun ColorPickerBody(
             valueRange = 0f..360f,
         )
 
-        OneuiXPInlineTextField(
+        OneUIAlohaInlineTextField(
             value = hexInput,
             onValueChange = { value ->
                 hexInput = value
@@ -313,9 +313,9 @@ private fun ColorPickerBody(
             modifier = Modifier.fillMaxWidth(),
             labelText = stringResource(
                 id = if (hexError) {
-                    R.string.oneuixp_clockRichInvalidColor
+                    R.string.oneuialoha_clockRichInvalidColor
                 } else {
-                    R.string.oneuixp_clockRichColorHint
+                    R.string.oneuialoha_clockRichColorHint
                 }
             ),
             singleLine = true,
@@ -325,13 +325,13 @@ private fun ColorPickerBody(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            OneuiXPActionButton(
+            OneUIAlohaActionButton(
                 text = stringResource(id = android.R.string.cancel),
                 onClick = onCancel,
                 modifier = Modifier.weight(1f),
             )
-            OneuiXPActionButton(
-                text = stringResource(id = R.string.oneuixp_clockRichApplyColor),
+            OneUIAlohaActionButton(
+                text = stringResource(id = R.string.oneuialoha_clockRichApplyColor),
                 onClick = onApply,
                 modifier = Modifier.weight(1f),
                 primary = true,
@@ -391,8 +391,8 @@ fun StatusClockColorPicker(
                 .weight(1f)
                 .padding(horizontal = 12.dp),
         )
-        OneuiXPActionButton(
-            text = stringResource(id = R.string.oneuixp_clockRichChooseColor),
+        OneUIAlohaActionButton(
+            text = stringResource(id = R.string.oneuialoha_clockRichChooseColor),
             onClick = ::openPicker,
         )
     }
@@ -409,7 +409,7 @@ fun StatusClockColorPicker(
                 ) {
                     Column {
                         MaterialText(
-                            text = stringResource(id = R.string.oneuixp_clockRichColorPicker_title),
+                            text = stringResource(id = R.string.oneuialoha_clockRichColorPicker_title),
                             modifier = Modifier.padding(
                                 start = 24.dp,
                                 end = 24.dp,
@@ -433,7 +433,7 @@ fun StatusClockColorPicker(
 
             UiMode.Miuix -> WindowDialog(
                 show = true,
-                title = stringResource(id = R.string.oneuixp_clockRichColorPicker_title),
+                title = stringResource(id = R.string.oneuialoha_clockRichColorPicker_title),
                 onDismissRequest = ::cancelPicker,
                 content = {
                     ColorPickerBody(
