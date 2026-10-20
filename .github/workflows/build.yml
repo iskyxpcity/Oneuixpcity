@@ -212,7 +212,7 @@ jobs:
           grep -Eq 'hasFragileUserData.*0x0$' dist/APK_MANIFEST_CHECK.txt
           COMMIT_SUBJECT=$(git log -1 --pretty=%s)
           if [ "$GITHUB_REF" = "refs/heads/main" ] && [[ "$COMMIT_SUBJECT" == release:* ]]; then
-            # Keep the legacy asset name so already-installed older updaters can find this transition release.
+            # Publish the exact Aloha asset name consumed by both the XP-to-Aloha migration check and Aloha self-updater.
             OUTPUT_APK="OneUIAloha_${VERSION_NAME}.apk"
           else
             OUTPUT_APK="OneUIAloha_${VERSION_NAME}_BUILD_${GITHUB_RUN_NUMBER}.apk"
@@ -230,6 +230,7 @@ jobs:
         if: success() && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/migration/') || startsWith(github.ref, 'refs/heads/test/'))
         env:
           SOURCE_REPO_TOKEN: ${{ github.token }}
+          ALOHA_RELEASE_TOKEN: ${{ secrets.ALOHA_RELEASE_TOKEN }}
         run: |
           set -euo pipefail
           SHORT_SHA="${GITHUB_SHA::7}"
@@ -241,6 +242,13 @@ jobs:
 
           if [ "$GITHUB_REF" = "refs/heads/main" ] && [[ "$COMMIT_SUBJECT" == release:* ]]; then
             FORMAL_RELEASE=true
+            RELEASE_REPO="iSkyJIE/OneUIAloha-Releases"
+            GH_TOKEN="$ALOHA_RELEASE_TOKEN"
+            if [ -z "$GH_TOKEN" ]; then
+              echo "::error::Formal Aloha releases require the ALOHA_RELEASE_TOKEN Actions secret with write access to iSkyJIE/OneUIAloha-Releases. No public release was published."
+              exit 1
+            fi
+            export GH_TOKEN
             TAG="v${VERSION_NAME}"
             TITLE="OneUI Aloha ${VERSION_NAME}"
             if [ "$VERSION_NAME" = "1.0.261019" ]; then
