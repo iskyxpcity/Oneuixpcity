@@ -1,22 +1,22 @@
-package com.oneuixp.hook.util
+package com.oneuialoha.hook.util
 
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.Build
-import com.oneuixp.common.StatusBarRuntimeBridge
+import com.oneuialoha.common.StatusBarRuntimeBridge
 import java.util.ArrayDeque
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
- * The single in-memory diagnostics sink for OneuiXP's injected SystemUI hooks.
+ * The single in-memory diagnostics sink for OneUIAloha's injected SystemUI hooks.
  *
  * Feature hooks call record(category, message). Entries are bounded and exported
  * only after the user selects Settings → Send logs; there is no persistent
  * Logcat spam, per-feature debug preference, polling, or app-process heartbeat.
  */
-object OneuiXPDiagnosticLog {
+object OneUIAlohaDiagnosticLog {
     private const val MAX_ENTRIES = 600
     private const val MAX_TOTAL_CHARS = 96 * 1024
     private const val MAX_ENTRY_CHARS = 2048
@@ -56,7 +56,7 @@ object OneuiXPDiagnosticLog {
                 val requestId = intent.getStringExtra(StatusBarRuntimeBridge.EXTRA_DIAGNOSTIC_REQUEST_ID)
                 if (requestId.isNullOrBlank()) return
 
-                record("OneuiXPDiagnostics", "Settings requested the SystemUI diagnostic buffer.")
+                record("OneUIAlohaDiagnostics", "Settings requested the SystemUI diagnostic buffer.")
                 val snapshot = runCatching {
                     liveSnapshotProvider?.invoke()
                         ?: "(Live status-bar geometry provider is not registered.)"
@@ -64,7 +64,7 @@ object OneuiXPDiagnosticLog {
                     "Live status-bar geometry snapshot failed: ${it.javaClass.simpleName}: ${it.message.orEmpty()}"
                 }.take(48 * 1024)
                 record(
-                    "OneuiXPDiagnostics",
+                    "OneUIAlohaDiagnostics",
                     "On-demand live geometry snapshot collected: ${snapshot.length} characters.",
                 )
                 val payload = buildString {
@@ -74,13 +74,13 @@ object OneuiXPDiagnosticLog {
                     appendLine(snapshot)
                 }
                 val reply = Intent(StatusBarRuntimeBridge.ACTION_DIAGNOSTIC_LOG_RESPONSE)
-                    .setPackage(StatusBarRuntimeBridge.ONEUIXP_APP_PACKAGE)
+                    .setPackage(StatusBarRuntimeBridge.ONEUIALOHA_APP_PACKAGE)
                     .putExtra(StatusBarRuntimeBridge.EXTRA_DIAGNOSTIC_REQUEST_ID, requestId)
                     .putExtra(StatusBarRuntimeBridge.EXTRA_DIAGNOSTIC_LOG_TEXT, payload)
                 runCatching { context.sendBroadcast(reply) }
                     .onFailure {
                         record(
-                            "OneuiXPDiagnostics",
+                            "OneUIAlohaDiagnostics",
                             "Failed to return diagnostic buffer: ${it.javaClass.simpleName}: ${it.message.orEmpty()}",
                         )
                     }
@@ -94,11 +94,11 @@ object OneuiXPDiagnosticLog {
                 @Suppress("DEPRECATION")
                 app.registerReceiver(receiver, filter)
             }
-            record("OneuiXPDiagnostics", "On-demand SystemUI diagnostics receiver registered.")
+            record("OneUIAlohaDiagnostics", "On-demand SystemUI diagnostics receiver registered.")
         } catch (error: Exception) {
             receiverInstalled.set(false)
             record(
-                "OneuiXPDiagnostics",
+                "OneUIAlohaDiagnostics",
                 "Receiver registration failed: ${error.javaClass.simpleName}: ${error.message.orEmpty()}",
             )
         }

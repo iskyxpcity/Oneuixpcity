@@ -1,4 +1,4 @@
-package com.oneuixp.hook.util
+package com.oneuialoha.hook.util
 
 import android.app.Activity
 import android.app.Application
@@ -10,24 +10,24 @@ import android.os.Build
 import android.os.Bundle
 import io.github.libxposed.api.XposedModule
 import io.github.libxposed.api.XposedModuleInterface
-import com.oneuixp.common.Package
-import com.oneuixp.hook.systemui.StatusBarBluetoothRuntime
-import com.oneuixp.hook.systemui.StatusBarNetworkSpeedRuntime
-import com.oneuixp.hook.systemui.StatusBarPowerRuntime
-import com.oneuixp.hook.systemui.StatusBarWifiRuntime
+import com.oneuialoha.common.Package
+import com.oneuialoha.hook.systemui.StatusBarBluetoothRuntime
+import com.oneuialoha.hook.systemui.StatusBarNetworkSpeedRuntime
+import com.oneuialoha.hook.systemui.StatusBarPowerRuntime
+import com.oneuialoha.hook.systemui.StatusBarWifiRuntime
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Flux-style SystemUI liveness probe.
  *
- * SystemUI never calls back into the OneuiXP app on a timer. It only exposes an
+ * SystemUI never calls back into the OneUIAloha app on a timer. It only exposes an
  * ordered PING receiver inside the already-injected SystemUI process. This
  * avoids keeping or resurrecting the manager app process after its task is
  * removed.
  */
-object OneuiXPStatusReporter {
-    private const val ACTION_PING = "com.oneuixp.app.PING.V2"
-    private const val EXTRA_PROTOCOL = "com.oneuixp.app.PING_PROTOCOL"
+object OneUIAlohaStatusReporter {
+    private const val ACTION_PING = "com.oneuialoha.app.PING.V2"
+    private const val EXTRA_PROTOCOL = "com.oneuialoha.app.PING_PROTOCOL"
     private const val PROTOCOL = "oneuixp-flux-v2"
 
     private val attachInstalled = AtomicBoolean(false)
