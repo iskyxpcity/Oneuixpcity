@@ -69,7 +69,7 @@
 
     <string name="oneuixp_core_features">系统功能</string>
     <string name="oneuixp_app_features">三星应用功能</string>
-    <string name="oneuixp_migration_notice">迁移预览 · 设置会正常保存，但 OneUIXP 功能 Hook 目前仍保持关闭。</string>
+    <string name="oneuixp_migration_notice">迁移说明 · 设置会正常保存，OneUI XP 功能 Hook 已启用。</string>
     <string name="status_category_padding">状态栏边距</string>
     <string name="status_category_time">状态栏时间</string>
     <string name="status_category_notification">状态栏通知</string>
@@ -135,7 +135,7 @@
     <string name="feature_introduction">功能介绍</string>
     <string name="disclaimer_title">免责声明</string>
     <string name="disclaimer_source_title">源码使用说明</string>
-    <string name="disclaimer_source_body">本项目使用并整合、修改了 OneUIXP 与 HyperDuo 的相关源码。</string>
+    <string name="disclaimer_source_body">本项目整合并修改了第三方开源组件；相关版权与许可条款请参阅随附的许可文件。</string>
     <string name="disclaimer_style_title">界面风格说明</string>
     <string name="disclaimer_style_body">本应用部分界面采用了 KernelSU 的界面风格。</string>
     <string name="disclaimer_risk_title">玩机风险提示</string>

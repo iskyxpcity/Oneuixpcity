@@ -19,7 +19,7 @@ object WatchPairing {
     ) {
         if (param.packageName != Package.WATCH_MANAGER) return
 
-        xlog("OneUIXP: WatchPairing init: bypassRegionCheck=$bypassRegionCheck, connectionMode=$connectionMode")
+        xlog("OneuiXP: WatchPairing init: bypassRegionCheck=$bypassRegionCheck, connectionMode=$connectionMode")
 
         if (bypassRegionCheck) {
             bypassRegionCheck()

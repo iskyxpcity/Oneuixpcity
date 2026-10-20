@@ -5,7 +5,7 @@ import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
 /**
- * Status-bar clock formatter with OneUIXP custom tokens.
+ * Status-bar clock formatter with OneuiXP custom tokens.
  * Standard DateTimeFormatter patterns remain unchanged.
  *
  * Custom tokens:

@@ -1,9 +1,9 @@
 package com.oneuixp.app.oneuixp
 
 /**
- * UI ordering/grouping rules copied from the visual order of OneUIXP-Mod's
- * DetailPane* screens. This is deliberately separate from Preference so
- * upstream synchronization does not require changing the data model.
+ * UI ordering/grouping rules for the OneuiXP feature catalog. Keep them
+ * separate from persisted Preference data so layout organization can evolve
+ * independently of the data model.
  */
 object OneuiXPLayoutRules {
     private val systemUiOrder = listOf(

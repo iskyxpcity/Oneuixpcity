@@ -26,7 +26,7 @@ internal fun oneuiXPCategoryTitle(category: OneuiXPCategory): String {
                 .takeIf { it.isNotBlank() }
         }.getOrNull()
 
-        // OneUIXP-Mod uses the installed Samsung app label as the category name.
+        // Use the installed Samsung app label as the category name.
         // Keep our localized text only as a fallback when the package is absent.
         installedLabel ?: resolveString(context, listOf(key)) ?: category.fallbackTitle
     }
@@ -281,7 +281,7 @@ internal fun rememberOneuiXPCategoryIcon(category: OneuiXPCategory): ImageBitmap
                 context.getDrawable(R.mipmap.ic_launcher)
             )
 
-        // Match OneUIXP-Mod exactly: preserve the drawable's intrinsic/adaptive
+        // Preserve the drawable's intrinsic/adaptive
         // icon rendering instead of forcing it into a 128x128 bitmap first.
         drawable.toBitmap().asImageBitmap()
     }

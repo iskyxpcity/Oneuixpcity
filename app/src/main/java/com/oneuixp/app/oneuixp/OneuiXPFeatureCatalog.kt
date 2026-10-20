@@ -672,7 +672,7 @@ object OneuiXPFeatureCatalog {
         }
 
         // Include OneuiXP's newer standalone runtime features alongside the legacy
-        // OneUIXP catalog. Count only each feature's master enable switch; appearance,
+        // OneuiXP catalog. Count only each feature's master enable switch; appearance,
         // size, color, spacing, and per-element settings are not separate injections.
         val statusBar = preference.systemUI.statusBar
         val runtimeFeatureCount = listOf(

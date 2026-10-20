@@ -23,7 +23,7 @@ import com.oneuixp.hook.util.xlog
 
 class Main : XposedModule() {
     private companion object {
-        // Full OneUIXP migration: imported feature hooks are active.
+        // OneuiXP migration: imported feature hooks are active.
         const val ENABLE_ONEUIXP_FUNCTIONS = true
     }
 
@@ -333,8 +333,7 @@ class Main : XposedModule() {
                 }
 
                 // StatusBarNetworkSpeedRuntime is the single SystemUI presentation owner.
-                // Keep OneUIXP Network.kt intact for upstream sync, but do not install its
-                // legacy NetspeedView display hooks here. The dedicated runtime consumes
+                // Do not install a second NetspeedView display hook. The dedicated runtime consumes
                 // these preferences and owns threshold, line gap, per-line scale, styling,
                 // and the separate upload/download data source.
 

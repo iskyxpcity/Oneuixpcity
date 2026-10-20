@@ -915,7 +915,7 @@ object OfficialMainStatusBarMod {
         if (refreshStarted) return
         refreshStarted = true
 
-        val worker = HandlerThread("OneUIXPModStatusBarPrefs").apply { start() }
+        val worker = HandlerThread("OneuiXPStatusBarPrefs").apply { start() }
         val background = Handler(worker.looper)
         val main = Handler(Looper.getMainLooper())
         var previous: Preference.SystemUI.StatusBar? = null

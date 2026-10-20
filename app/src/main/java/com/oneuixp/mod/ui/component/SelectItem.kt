@@ -16,7 +16,7 @@ import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
 import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme
 
-/** OneUIXP selection semantics rendered with the active OneuiXP theme. */
+/** OneuiXP selection semantics rendered with the active OneuiXP theme. */
 @Composable
 fun SelectItem(
     title: String,

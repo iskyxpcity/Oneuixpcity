@@ -33,7 +33,7 @@ import top.yukonga.miuix.kmp.preference.SwitchPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme
 
 /**
- * Canonical OneUIXP switch semantics rendered by the active OneuiXP theme.
+ * Canonical OneuiXP switch semantics rendered by the active OneuiXP theme.
  * The source DetailPane keeps ownership of ordering, strings, state and events;
  * this adapter only decides how the row is drawn.
  */

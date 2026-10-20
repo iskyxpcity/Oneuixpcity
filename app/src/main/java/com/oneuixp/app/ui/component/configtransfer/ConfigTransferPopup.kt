@@ -16,10 +16,10 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 /**
- * Top-left OneUIXP configuration transfer menu.
+ * Top-left OneuiXP configuration transfer menu.
  *
  * Keeps KernelSU 3.2.5's navigation-icon position while replacing the original
- * destination action with OneUIXP-Mod's real full Preference backup/restore.
+ * destination action with the application's full Preference backup/restore.
  */
 @Composable
 fun ConfigTransferPopup() {

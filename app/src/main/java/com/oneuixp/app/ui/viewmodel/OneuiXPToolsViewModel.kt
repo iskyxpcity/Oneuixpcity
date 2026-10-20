@@ -72,7 +72,7 @@ class OneuiXPToolsViewModel : ViewModel() {
     }
 
     /**
-     * OneUIXP-Mod compatible full preference backup.
+     * Compatible full preference backup.
      * The exported JSON deliberately contains only the Preference payload, not
      * OneuiXP's local synchronization marker.
      */
@@ -86,7 +86,7 @@ class OneuiXPToolsViewModel : ViewModel() {
     }
 
     /**
-     * Restore through the same production migration decoder used by OneUIXP-Mod
+     * Restore through the same production migration decoder used by the app
      * so backups from older schemas remain importable.
      */
     suspend fun restoreFrom(input: InputStream) = withContext(Dispatchers.IO) {

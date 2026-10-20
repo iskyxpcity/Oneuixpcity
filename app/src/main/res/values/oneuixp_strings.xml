@@ -1,5 +1,5 @@
 <resources>
-    <string name="oneuixp_app_name">OneUIXP MOD</string>
+    <string name="oneuixp_app_name">OneUI XP</string>
     <string name="oneuixp_xposed_description">Samsung One UI Extension</string>
     <string name="oneuixp_module_disabled_tip">Please enable this module in LSPosed</string>
     <string name="oneuixp_confirm">Confirm</string>

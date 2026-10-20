@@ -164,7 +164,7 @@ fun OneuiXPCategoryScreen(categoryName: String) {
     /*
      * One functional tree, two skins.
      *
-     * Every category now uses the canonical OneUIXP DetailPane implementation
+     * Every category now uses the canonical feature DetailPane implementation
      * for ordering, strings, parent/child visibility, state, validation and
      * events. SwitchItem / SelectItem / OneuiXPSlider / OneuiXP special controls
      * choose only the Miuix or Material rendering.
@@ -1058,7 +1058,7 @@ private fun MaterialClockFormatEditor(
     }
 
     SegmentedTextField(
-        // OneUIXP shows the formatted preview above the raw format text.
+        // OneuiXP shows the formatted preview above the raw format text.
         // The parent switch already carries the setting title.
         label = preview.ifBlank { current },
         value = edit,

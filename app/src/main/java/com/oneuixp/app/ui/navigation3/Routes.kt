@@ -5,7 +5,7 @@ import top.yukonga.miuix.kmp.nav.core.NavKey
 import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
 
-/** OneuiXP main pages plus theme/About and OneUIXP feature-category details. */
+/** OneuiXP main pages plus theme/About and OneuiXP feature-category details. */
 @Serializable
 sealed interface Route : NavKey, Parcelable {
     @Parcelize @Serializable data object Main : Route

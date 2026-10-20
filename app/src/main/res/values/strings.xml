@@ -70,7 +70,7 @@
 
     <string name="oneuixp_core_features">System features</string>
     <string name="oneuixp_app_features">Samsung app features</string>
-    <string name="oneuixp_migration_notice">Migration preview · settings are saved, but OneUIXP feature hooks are still disabled.</string>
+    <string name="oneuixp_migration_notice">Migration note · settings are saved and OneUI XP feature hooks are enabled.</string>
     <string name="status_category_padding">Status bar padding</string>
     <string name="status_category_time">Status bar time</string>
     <string name="status_category_notification">Status bar notifications</string>
@@ -136,7 +136,7 @@
     <string name="feature_introduction">Feature Introduction</string>
     <string name="disclaimer_title">Disclaimer</string>
     <string name="disclaimer_source_title">Source code usage</string>
-    <string name="disclaimer_source_body">This project incorporates and adapts source code from OneUIXP and HyperDuo.</string>
+    <string name="disclaimer_source_body">This project integrates and adapts third-party open-source components; see the included license notices for applicable copyright and license terms.</string>
     <string name="disclaimer_style_title">Interface style</string>
     <string name="disclaimer_style_body">Some parts of this app use the KernelSU interface style.</string>
     <string name="disclaimer_risk_title">Modding Risks</string>

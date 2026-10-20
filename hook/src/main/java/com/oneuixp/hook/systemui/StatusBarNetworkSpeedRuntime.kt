@@ -44,10 +44,10 @@ import kotlin.math.roundToInt
 /**
  * Event-driven presentation and data layer for Samsung's native NetspeedView.
  *
- * Samsung still supplies the stock aggregate network-speed value and owns the native
- * view lifecycle. OneuiXP is the only SystemUI presentation owner once this runtime is
- * installed. Separate upload/download mode uses a dedicated data-source hook here so
- * the legacy OneUIXP Network.kt NetspeedView hooks can remain uninstalled and untouched.
+ * Samsung supplies the stock aggregate network-speed value and owns the native view
+ * lifecycle. OneuiXP is the only SystemUI presentation owner when this runtime is
+ * installed. Separate upload/download mode uses a dedicated data-source hook, while
+ * this runtime remains the sole owner of NetspeedView presentation.
  */
 internal object StatusBarNetworkSpeedRuntime {
     private const val TAG = "OneuiXPNetworkSpeed"

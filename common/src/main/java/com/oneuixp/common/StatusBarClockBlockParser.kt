@@ -8,7 +8,7 @@ package com.oneuixp.common
  * HH:mm -> HH | : | mm
  * HH:mm\nMM月dd日 EEE -> HH | : | mm | \n | MM | 月 | dd | 日  | EEE
  *
- * Quoted DateTimeFormatter literals remain one block, and OneUIXP custom tokens
+ * Quoted DateTimeFormatter literals remain one block, and OneuiXP custom tokens
  * are kept whole instead of being split into ASCII letters.
  */
 object StatusBarClockBlockParser {

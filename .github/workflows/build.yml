@@ -90,7 +90,7 @@ jobs:
           test ! -e hook/src/main/resources/META-INF/xposed/java_init.list
           test ! -e hook/src/main/resources/META-INF/xposed/module.prop
           test ! -e hook/src/main/resources/META-INF/xposed/scope.list
-          echo "OneUI XP API101 Flux-style single-entry migration validated; full OneUIXP functional hooks enabled"
+          echo "OneUI XP API101 single-entry migration validated; full OneuiXP functional hooks enabled"
 
       - name: Compile OneUI XP before the owner-signing gate
         run: |
