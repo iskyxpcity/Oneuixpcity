@@ -12,7 +12,7 @@ import java.util.Locale
 private const val LEGACY_RELEASE_REPO = "iSkyJIE/OneuiXP-Releases"
 private const val ALOHA_RELEASE_REPO = "iSkyJIE/OneUIAloha-Releases"
 private const val LEGACY_PACKAGE_NAME = "com.oneuixp.app"
-private val oneUiAlohaApkPrefix = Regex("""(?i)^OneUIAloha(?:[_ -][A-Za-z0-9][A-Za-z0-9._ -]*)?\.apk$""")
+private val supportedAlohaApkPrefix = Regex("""(?i)^(?:AlohaOneUI|OneUIAloha)(?:[_ -][A-Za-z0-9][A-Za-z0-9._ -]*)?\.apk$""")
 
 private fun isSupportedVersionName(value: String): Boolean =
     value.trim().removePrefix("v").removePrefix("V")
@@ -29,13 +29,14 @@ private fun isOfficialReleaseAssetUrl(value: String, repository: String): Boolea
         uri.path.orEmpty().lowercase(Locale.ROOT).startsWith(expectedPrefix)
 }.getOrDefault(false)
 
-/** Accept OneUIAloha.apk or a versioned OneUIAloha_<tag-version>.apk, case-insensitively. */
-private fun isOneUiAlohaApkForVersion(assetName: String, versionName: String): Boolean {
-    if (!oneUiAlohaApkPrefix.matches(assetName)) return false
+/** Accept both new AlohaOneUI APK names and legacy OneUIAloha names, case-insensitively. */
+private fun isSupportedAlohaApkForVersion(assetName: String, versionName: String): Boolean {
+    if (!supportedAlohaApkPrefix.matches(assetName)) return false
     val versionedName = Regex(
-        """(?i)^OneUIAloha[_ -]${Regex.escape(versionName)}\.apk$"""
+        """(?i)^(?:AlohaOneUI|OneUIAloha)[_ -]${Regex.escape(versionName)}\.apk$"""
     )
-    return assetName.equals("OneUIAloha.apk", ignoreCase = true) ||
+    return assetName.equals("AlohaOneUI.apk", ignoreCase = true) ||
+        assetName.equals("OneUIAloha.apk", ignoreCase = true) ||
         versionedName.matches(assetName)
 }
 
@@ -44,7 +45,7 @@ private fun fetchLatestRelease(repository: String): JSONObject? = runCatching {
     oneUIAlohaApp.okhttpClient.newCall(
         Request.Builder().url(endpoint)
             .header("Accept", "application/vnd.github+json")
-            .header("User-Agent", "OneUI-Android-Updater")
+            .header("User-Agent", "Aloha-OneUI-Android-Updater")
             .build()
     ).execute().use { response ->
         if (!response.isSuccessful) null else JSONObject(response.body.string())
@@ -71,7 +72,7 @@ fun checkNewVersion(): LatestVersionInfo {
                 val migrationAsset = (0 until assets.length())
                     .map { assets.getJSONObject(it) }
                     .firstOrNull { asset ->
-                        isOneUiAlohaApkForVersion(asset.optString("name"), versionName) &&
+                        isSupportedAlohaApkForVersion(asset.optString("name"), versionName) &&
                             isOfficialReleaseAssetUrl(
                                 asset.optString("browser_download_url"),
                                 ALOHA_RELEASE_REPO,
@@ -112,6 +113,7 @@ fun checkNewVersion(): LatestVersionInfo {
     val expectedLegacyNames = setOf(
         "OneUI_XP_${versionName}.apk",
         "OneUIAloha_${versionName}.apk",
+        "AlohaOneUI_${versionName}.apk",
     ).map { it.lowercase(Locale.ROOT) }.toSet()
     val apkAsset = (0 until assets.length())
         .map { assets.getJSONObject(it) }
@@ -120,7 +122,7 @@ fun checkNewVersion(): LatestVersionInfo {
             val correctName = if (isLegacyApp) {
                 name.lowercase(Locale.ROOT) in expectedLegacyNames
             } else {
-                isOneUiAlohaApkForVersion(name, versionName)
+                isSupportedAlohaApkForVersion(name, versionName)
             }
             correctName && isOfficialReleaseAssetUrl(
                 asset.optString("browser_download_url"),
