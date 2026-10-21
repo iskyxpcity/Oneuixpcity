@@ -85,7 +85,9 @@ check("Launcher icon preserves the uploaded source and generates a padded adapti
       and 'name="aloha_launcher_background"' in gradle_app
       and 'android:icon="@mipmap/ic_launcher_aloha"' in manifest
       and '@color/aloha_launcher_background' in adaptive_icon_text
-      and '@drawable/ic_launcher_aloha_foreground' in adaptive_icon_text
+      and '@mipmap/ic_launcher_aloha_foreground' in adaptive_icon_text
+      and 'mipmap-xxxhdpi/ic_launcher_aloha_foreground.png' in gradle_app
+      and 'drawable-nodpi/ic_launcher_aloha_foreground.png' not in gradle_app
       and 'TYPE_INT_ARGB' in gradle_app
       and '66/108' in gradle_app)
 check("Hook Manifest uses Aloha component package",

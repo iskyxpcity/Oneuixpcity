@@ -138,7 +138,7 @@ val prepareAlohaLauncherIcon = tasks.register("prepareAlohaLauncherIcon") {
 
         val foregroundIcon = File(
             outputRoot,
-            "drawable-nodpi/ic_launcher_aloha_foreground.png"
+            "mipmap-xxxhdpi/ic_launcher_aloha_foreground.png"
         )
         foregroundIcon.parentFile.mkdirs()
         check(ImageIO.write(canvas, "png", foregroundIcon)) {
