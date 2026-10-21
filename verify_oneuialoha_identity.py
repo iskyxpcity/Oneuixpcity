@@ -71,12 +71,13 @@ check("Visible application name is Aloha OneUI",
       and 'android:roundIcon=' not in manifest)
 adaptive_icon_file = ROOT / "app/src/main/res/mipmap-anydpi-v26/ic_launcher_aloha.xml"
 adaptive_icon_text = adaptive_icon_file.read_text() if adaptive_icon_file.is_file() else ""
-check("Launcher icon preserves the uploaded source and generates a padded adaptive foreground",
+check("Launcher icon preserves the uploaded source and uses a slightly enlarged padded adaptive foreground",
       (ROOT / "Aloha_OneUI_icon.png").is_file()
       and 'rootProject.file("Aloha_OneUI_icon.png")' in gradle_app
       and 'ImageIO.read(launcherIconSource)' in gradle_app
       and 'adaptiveIconCanvasPx = 432' in gradle_app
-      and 'adaptiveIconSafeZonePx = 264' in gradle_app
+      and 'adaptiveIconForegroundPx = 276' in gradle_app
+      and '69dp' in gradle_app
       and 'BufferedImage.TYPE_INT_ARGB' in gradle_app
       and 'graphics.drawImage(' in gradle_app
       and 'sourceImage,' in gradle_app
@@ -88,8 +89,7 @@ check("Launcher icon preserves the uploaded source and generates a padded adapti
       and '@mipmap/ic_launcher_aloha_foreground' in adaptive_icon_text
       and 'mipmap-xxxhdpi/ic_launcher_aloha_foreground.png' in gradle_app
       and 'drawable-nodpi/ic_launcher_aloha_foreground.png' not in gradle_app
-      and 'TYPE_INT_ARGB' in gradle_app
-      and '66/108' in gradle_app)
+      and 'TYPE_INT_ARGB' in gradle_app)
 check("Hook Manifest uses Aloha component package",
       "com.oneuialoha.hook.RebootActivity" in hook_manifest)
 check("Xposed initialization entry matches renamed Hook class",

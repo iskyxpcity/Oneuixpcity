@@ -32,12 +32,12 @@ val managerPackageName = project.findProperty("ONEUIALOHA_PACKAGE_NAME")?.toStri
 val managerName = project.findProperty("ONEUIALOHA_NAME")?.toString() ?: defaultManagerName
 
 // Keep the user's source image unchanged in the repository. Generate only the
-// launcher-specific foreground: fit the complete artwork inside Android's 66dp safe
-// zone on a transparent 108dp canvas so OEM masks (including Samsung One UI) don't clip it.
+// launcher-specific foreground: keep the complete artwork slightly larger to reduce the
+// visible base-color rim while preserving the whole source without cropping.
 val launcherIconSource = rootProject.file("Aloha_OneUI_icon.png")
 val generatedLauncherResDir = layout.buildDirectory.dir("generated/res/alohaLauncher")
 val adaptiveIconCanvasPx = 432 // 108dp at 4x density
-val adaptiveIconSafeZonePx = 264 // 66dp at 4x density
+val adaptiveIconForegroundPx = 276 // 69dp at 4x density; 4.5% larger than the previous fit
 
 fun sampleAlohaIconBackground(image: BufferedImage): String {
     val buckets = mutableMapOf<Int, MutableList<Int>>()
@@ -93,13 +93,14 @@ val prepareAlohaLauncherIcon = tasks.register("prepareAlohaLauncherIcon") {
         outputRoot.deleteRecursively()
 
         // The uploaded original is read-only; only this derived resource is transformed.
-        // Scale the whole source proportionally, never trim/crop it, and leave transparent
-        // pixels around it. 264/432 == 66/108, the official adaptive-icon safe zone.
+        // Fit the complete source proportionally to a 276px (69dp) foreground area on the
+        // 432px (108dp) transparent canvas. This slightly enlarges the prior 264px fit to
+        // narrow the visible base-color rim; no source pixels are trimmed or cropped.
         val scale = minOf(
             1.0,
             minOf(
-                adaptiveIconSafeZonePx.toDouble() / sourceImage.width,
-                adaptiveIconSafeZonePx.toDouble() / sourceImage.height
+                adaptiveIconForegroundPx.toDouble() / sourceImage.width,
+                adaptiveIconForegroundPx.toDouble() / sourceImage.height
             )
         )
         val drawWidth = (sourceImage.width * scale).roundToInt().coerceAtLeast(1)
@@ -159,7 +160,7 @@ val prepareAlohaLauncherIcon = tasks.register("prepareAlohaLauncherIcon") {
 
         println(
             "Generated Aloha adaptive icon: full source fitted without cropping into " +
-                "${adaptiveIconSafeZonePx}x${adaptiveIconSafeZonePx} safe zone on " +
+                "${adaptiveIconForegroundPx}x${adaptiveIconForegroundPx} foreground area on " +
                 "${adaptiveIconCanvasPx}x${adaptiveIconCanvasPx} transparent canvas; " +
                 "source file was not modified; background=$background"
         )
