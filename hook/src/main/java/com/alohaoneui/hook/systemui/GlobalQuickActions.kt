@@ -18,6 +18,7 @@ import android.os.Handler
 import android.os.Looper
 import android.os.PowerManager
 import android.os.SystemClock
+import android.os.UserHandle
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.provider.MediaStore
@@ -32,6 +33,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewConfiguration
 import android.view.WindowManager
+import android.widget.Toast
 import io.github.libxposed.api.XposedModule
 import io.github.libxposed.api.XposedModuleInterface
 import com.alohaoneui.common.Preference
@@ -1018,7 +1020,12 @@ object GlobalQuickActions {
         runCatching {
             if (action.startsWith(ACTION_CUSTOM_APP_PREFIX)) {
                 val component = ComponentName.unflattenFromString(action.removePrefix(ACTION_CUSTOM_APP_PREFIX)) ?: return
-                context.startActivity(Intent(Intent.ACTION_MAIN).setComponent(component).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                context.startActivity(
+                    Intent(Intent.ACTION_MAIN)
+                        .addCategory(Intent.CATEGORY_LAUNCHER)
+                        .setComponent(component)
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED),
+                )
                 return
             }
             when (action) {
@@ -1046,7 +1053,11 @@ object GlobalQuickActions {
                     val power = context.getSystemService(PowerManager::class.java)
                     callCompatible(power, "goToSleep", SystemClock.uptimeMillis())
                 }
-                "power_menu" -> invokePolicy("showGlobalActions")
+                "power_menu" -> {
+                    if (!runShellCommandForSuccess("input keyevent --longpress KEYCODE_POWER")) {
+                        injectLongPressKey(KeyEvent.KEYCODE_POWER, 700L)
+                    }
+                }
                 "notifications" -> runCatching {
                     callCompatible(context.getSystemService("statusbar"), "expandNotificationsPanel")
                 }
@@ -1059,8 +1070,18 @@ object GlobalQuickActions {
                 "kill_foreground_app" -> cleanForegroundApp(context)
                 "memory_clean" -> cleanBackgroundApps(context)
                 "screen_record" -> {
-                    if (!startComponent(context, "com.android.systemui", "com.android.systemui.screenrecord.ScreenRecordPermissionActivity")) {
-                        context.sendBroadcast(Intent("com.android.systemui.screenrecord.START").setPackage("com.android.systemui"))
+                    if (!startSamsungCaptureSideButtonAction(context, "record_screen")) {
+                        val intent = Intent("com.samsung.android.app.screenrecorder.ACTION_START").apply {
+                            component = ComponentName(
+                                "com.samsung.android.app.smartcapture",
+                                "com.samsung.android.app.smartcapture.screenrecorder.ScreenRecorderService",
+                            )
+                        }
+                        if (!startServiceAsCurrentUser(context, intent)) {
+                            runShellCommandForSuccess(
+                                "cmd statusbar click-tile com.samsung.android.app.smartcapture/com.samsung.android.app.screenrecorder.view.RecordScreenTile",
+                            )
+                        }
                     }
                 }
                 "take_photo" -> launchCamera(context, video = false)
@@ -1105,6 +1126,9 @@ object GlobalQuickActions {
 
     private fun invokePolicy(method: String): Boolean {
         val policy = phoneWindowManager ?: return false
+        val exists = generateSequence(policy.javaClass as Class<*>?) { it.superclass }
+            .any { type -> runCatching { type.declaredMethods.any { it.name == method } }.getOrDefault(false) }
+        if (!exists) return false
         return runCatching {
             callCompatible(policy, method)
             true
@@ -1130,17 +1154,23 @@ object GlobalQuickActions {
     }
 
     private fun launchCamera(context: Context, video: Boolean) {
+        val action = if (video) "android.media.action.VIDEO_CAMERA" else MediaStore.ACTION_IMAGE_CAPTURE
         runCatching {
-            val intent = if (video) Intent(MediaStore.ACTION_VIDEO_CAPTURE) else Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            runCatching {
-                context.packageManager.getLaunchIntentForPackage("com.sec.android.app.camera")
-            }.getOrNull()?.let { launch ->
-                launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                context.startActivity(launch)
-                return
-            }
-            context.startActivity(intent)
+            context.startActivity(
+                Intent(action)
+                    .setPackage("com.sec.android.app.camera")
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+            )
+            return
+        }.onFailure { Log.w(TAG, "Samsung camera action unavailable; trying camera activity", it) }
+
+        if (startComponent(context, "com.sec.android.app.camera", "com.sec.android.app.camera.Camera")) return
+
+        runCatching {
+            context.startActivity(
+                (if (video) Intent(MediaStore.ACTION_VIDEO_CAPTURE) else Intent(MediaStore.ACTION_IMAGE_CAPTURE))
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+            )
         }.onFailure { Log.w(TAG, "camera shortcut launch failed", it) }
     }
 
@@ -1207,11 +1237,47 @@ object GlobalQuickActions {
             )
             putExtra("selected_action", selectedAction)
         }
-        return runCatching {
-            context.startService(intent)
-            true
-        }.onFailure { Log.w(TAG, "Samsung capture side-button action unavailable: $selectedAction", it) }
+        return startServiceAsCurrentUser(context, intent).also { started ->
+            if (!started) Log.w(TAG, "Samsung capture side-button action unavailable: $selectedAction")
+        }
+    }
+
+    private fun startServiceAsCurrentUser(context: Context, intent: Intent): Boolean {
+        val currentUser = runCatching {
+            UserHandle::class.java.getDeclaredField("CURRENT").apply { isAccessible = true }.get(null)
+        }.getOrNull()
+        if (currentUser != null) {
+            val startedAsUser = runCatching {
+                callCompatible(context, "startServiceAsUser", intent, currentUser) != null
+            }.getOrDefault(false)
+            if (startedAsUser) return true
+        }
+        return runCatching { context.startService(intent) != null }.getOrDefault(false)
+    }
+
+    private fun injectLongPressKey(keyCode: Int, durationMs: Long) {
+        val manager = inputManagerService ?: return
+        val downTime = SystemClock.uptimeMillis()
+        val down = KeyEvent(
+            downTime, downTime, KeyEvent.ACTION_DOWN, keyCode, 0, 0,
+            KeyCharacterMap.VIRTUAL_KEYBOARD, 0,
+            KeyEvent.FLAG_FROM_SYSTEM or KeyEvent.FLAG_LONG_PRESS,
+            InputDevice.SOURCE_KEYBOARD,
+        )
+        val injected = runCatching { callCompatible(manager, "injectInputEvent", down, 0) != null }
             .getOrDefault(false)
+        if (!injected) return
+        Thread {
+            runCatching {
+                Thread.sleep(durationMs)
+                val up = KeyEvent(
+                    downTime, SystemClock.uptimeMillis(), KeyEvent.ACTION_UP, keyCode, 0, 0,
+                    KeyCharacterMap.VIRTUAL_KEYBOARD, 0, KeyEvent.FLAG_FROM_SYSTEM,
+                    InputDevice.SOURCE_KEYBOARD,
+                )
+                callCompatible(manager, "injectInputEvent", up, 0)
+            }.onFailure { Log.w(TAG, "long-press key injection failed: $keyCode", it) }
+        }.start()
     }
 
     private fun sendSamsungScreenshotExecutor(context: Context): Boolean {
@@ -1234,29 +1300,40 @@ object GlobalQuickActions {
 
     private fun setRingerMode(context: Context, mode: Int) {
         val audio = context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager ?: return
-        audio.ringerMode = if (audio.ringerMode == mode) AudioManager.RINGER_MODE_NORMAL else mode
+        audio.ringerMode = mode
     }
 
     private fun cleanForegroundApp(context: Context) {
         val manager = context.getSystemService(ActivityManager::class.java) ?: return
-        val topPackage = runCatching { manager.getRunningTasks(1).firstOrNull()?.topActivity?.packageName }.getOrNull()
-            ?: return
-        if (topPackage == "android" || topPackage == "com.android.systemui" || topPackage == context.packageName) return
-        if (runShellCommandForSuccess("am force-stop $topPackage")) return
+        val topPackage = runCatching {
+            @Suppress("DEPRECATION")
+            manager.getRunningTasks(1).firstOrNull()?.topActivity?.packageName
+        }.getOrNull() ?: return
+        if (
+            topPackage == "android" || topPackage == "system" ||
+            topPackage == "com.android.systemui" || topPackage.startsWith("com.android.") ||
+            topPackage == context.packageName
+        ) return
+        if (runShellCommandForSuccess("am force-stop '$topPackage'")) return
         runCatching { manager.killBackgroundProcesses(topPackage) }
         runCatching { callCompatible(manager, "forceStopPackage", topPackage) }
     }
 
     private fun cleanBackgroundApps(context: Context) {
         val manager = context.getSystemService(ActivityManager::class.java) ?: return
-        if (runShellCommandForSuccess("am kill-all")) return
+        val protectedPackages = setOf(
+            "android",
+            "system",
+            "com.android.systemui",
+            context.packageName,
+        )
         runCatching {
-            manager.runningAppProcesses.orEmpty()
-                .filter { it.importance >= ActivityManager.RunningAppProcessInfo.IMPORTANCE_CACHED }
-                .mapNotNull { it.processName.substringBefore(':').takeIf(String::isNotBlank) }
-                .distinct()
-                .filterNot { it == "android" || it == "com.android.systemui" || it == context.packageName }
-                .forEach { packageName -> runCatching { manager.killBackgroundProcesses(packageName) } }
+            manager.runningAppProcesses.orEmpty().forEach { process ->
+                val packageName = process.processName.substringBefore(':')
+                if (process.importance <= ActivityManager.RunningAppProcessInfo.IMPORTANCE_SERVICE) return@forEach
+                if (packageName in protectedPackages || packageName.startsWith("com.android.")) return@forEach
+                runCatching { manager.killBackgroundProcesses(packageName) }
+            }
         }.onFailure { Log.w(TAG, "memory clean failed", it) }
     }
 
