@@ -34,7 +34,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
+import com.alohaoneui.mod.ui.component.AlohaOneUIInlineTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -712,12 +712,12 @@ private fun FloatingBallColorControl(
                     .background(Color(argb)),
             )
             Spacer(Modifier.width(10.dp))
-            OutlinedTextField(
+            AlohaOneUIInlineTextField(
                 value = colorText,
                 onValueChange = { colorText = it },
                 enabled = enabled,
                 singleLine = true,
-                label = { Text("ARGB，例如 #AA5E7CFF") },
+                labelText = "ARGB，例如 #AA5E7CFF",
                 modifier = Modifier.weight(1f),
             )
             Spacer(Modifier.width(8.dp))
