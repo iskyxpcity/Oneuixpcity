@@ -1612,7 +1612,7 @@ private fun ShortcutActionGroupCard(
                     MiuixText("${group.actions.size} 项", color = secondary)
                     MiuixText(if (expanded) "⌃" else "⌄", modifier = Modifier.padding(start = 8.dp), color = secondary)
                 }
-                if (expanded) ShortcutActionGrid(group, selectedAction, accentColor, unselectedBackground, onSelect)
+                if (expanded) ShortcutActionGrid(group, selectedAction, selectedBackground, unselectedBackground, onSelect)
             }
         }
     }
