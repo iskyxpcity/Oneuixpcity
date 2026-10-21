@@ -181,55 +181,10 @@ object StatusBar {
             }
         }
     }
-    private val statusBarClockSecondHelpers: MutableSet<Any> =
-        Collections.synchronizedSet(
-            Collections.newSetFromMap(WeakHashMap<Any, Boolean>())
-        )
-
-    private fun applyStatusBarClockSecondState(helper: Any, enabled: Boolean) {
-        runCatching {
-            val secondTick = helper.reflect["mSecondTick"] as? Runnable
-                ?: run {
-                    Log.w(
-                        "AlohaOneUI-QSClockSeconds",
-                        "QS_CLOCK_SECONDS missing Runnable field " +
-                            "helper=${helper.javaClass.name} enabled=$enabled",
-                    )
-                    return@runCatching
-                }
-            val currentHandler = helper.reflect["mSecondsHandler"] as? Handler
-            if (enabled) {
-                // Samsung may keep mSecondsHandler non-null even after its callback
-                // was removed. A null-only check therefore leaves the clock stuck.
-                // Re-arm the same native Runnable idempotently on every native update.
-                val handler = currentHandler ?: Handler(Looper.getMainLooper()).also {
-                    helper.reflect["mSecondsHandler"] = it
-                }
-                handler.removeCallbacks(secondTick)
-                handler.post(secondTick)
-            } else {
-                currentHandler?.removeCallbacks(secondTick)
-                helper.reflect["mSecondsHandler"] = null
-            }
-        }.onFailure { error ->
-            Log.w(
-                "AlohaOneUI-QSClockSeconds",
-                "QS_CLOCK_SECONDS apply failed helper=${helper.javaClass.name} " +
-                    "enabled=$enabled: ${error.javaClass.simpleName}: ${error.message}",
-                error,
-            )
-        }
-    }
-
     fun setStatusBarClockSecondRuntimeEnabled(enabled: Boolean) {
-        if (statusBarClockSecondRuntimeEnabled == enabled) return
+        // This flag only controls the optional tabular-digit styling below.
+        // Samsung QuickStar remains the owner of its native seconds scheduler.
         statusBarClockSecondRuntimeEnabled = enabled
-        val helpers = synchronized(statusBarClockSecondHelpers) {
-            statusBarClockSecondHelpers.toList()
-        }
-        helpers.forEach { helper ->
-            applyStatusBarClockSecondState(helper, enabled)
-        }
     }
 
     context(xposedModule: XposedModule)
@@ -338,35 +293,10 @@ object StatusBar {
     fun installStatusBarClockSecondControl(initialEnabled: Boolean) = afterAttachTry {
         statusBarClockSecondRuntimeEnabled = initialEnabled
 
-        try {
-            val helperClass = classLoader.loadClass(
-                "com.android.systemui.statusbar.policy.QSClockQuickStarHelper"
-            )
-            helperClass.declaredConstructors.forEach { constructor ->
-                xposedModule.hook(constructor).intercept { chain ->
-                    val result = chain.proceed()
-                    statusBarClockSecondHelpers.add(chain.thisObject)
-                    applyStatusBarClockSecondState(
-                        chain.thisObject,
-                        statusBarClockSecondRuntimeEnabled,
-                    )
-                    result
-                }
-            }
-
-            val method = helperClass.getDeclaredMethod("updateSecondsClockHandler")
-            xposedModule.hook(method).intercept { chain ->
-                val result = chain.proceed()
-                statusBarClockSecondHelpers.add(chain.thisObject)
-                applyStatusBarClockSecondState(
-                    chain.thisObject,
-                    statusBarClockSecondRuntimeEnabled,
-                )
-                result
-            }
-        } catch (t: Throwable) {
-            xlog(t)
-        }
+        // Do not hook QSClockQuickStarHelper or mutate mSecondTick/mSecondsHandler.
+        // Samsung QuickStar owns the QS clock's "show seconds" preference. Taking over
+        // its private Handler can cancel QuickStar's scheduled callback whenever Aloha
+        // OneUI is active, so this hook deliberately leaves the native scheduler alone.
 
         // Keep Samsung's clock digits tabular only while second-level updates are enabled.
         try {
