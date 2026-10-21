@@ -26,10 +26,10 @@ val managerVersionCode = rootProject.extra["managerVersionCode"] as Int
 val managerVersionName = rootProject.extra["managerVersionName"] as String
 
 val isPrBuild = project.findProperty("IS_PR_BUILD")?.toString()?.toBoolean() ?: false
-val defaultManagerPackageName = "com.oneuialoha.app"
+val defaultManagerPackageName = "com.alohaoneui.app"
 val defaultManagerName = "Aloha OneUI"
-val managerPackageName = project.findProperty("ONEUIALOHA_PACKAGE_NAME")?.toString() ?: defaultManagerPackageName
-val managerName = project.findProperty("ONEUIALOHA_NAME")?.toString() ?: defaultManagerName
+val managerPackageName = project.findProperty("ALOHAONEUI_PACKAGE_NAME")?.toString() ?: defaultManagerPackageName
+val managerName = project.findProperty("ALOHAONEUI_NAME")?.toString() ?: defaultManagerName
 
 // Keep the user's source image unchanged in the repository. Generate only the
 // launcher-specific foreground: keep the complete artwork slightly larger to reduce the
@@ -170,14 +170,14 @@ val prepareAlohaLauncherIcon = tasks.register("prepareAlohaLauncherIcon") {
 }
 
 android {
-    namespace = "com.oneuialoha.app"
+    namespace = "com.alohaoneui.app"
 
     // The same owner keystore must sign EVERY distributable APK.
     // CI supplies credentials via GitHub Actions secrets; never commit keys.
-    val ownerKeystore = System.getenv("ONEUIALOHA_KEYSTORE_PATH")?.takeIf { it.isNotBlank() }
-    val ownerStorePassword = System.getenv("ONEUIALOHA_KEYSTORE_PASSWORD")
-    val ownerKeyAlias = System.getenv("ONEUIALOHA_KEY_ALIAS")
-    val ownerKeyPassword = System.getenv("ONEUIALOHA_KEY_PASSWORD")
+    val ownerKeystore = System.getenv("ALOHAONEUI_KEYSTORE_PATH")?.takeIf { it.isNotBlank() }
+    val ownerStorePassword = System.getenv("ALOHAONEUI_KEYSTORE_PASSWORD")
+    val ownerKeyAlias = System.getenv("ALOHAONEUI_KEY_ALIAS")
+    val ownerKeyPassword = System.getenv("ALOHAONEUI_KEY_PASSWORD")
     val ownerSigningReady = !ownerKeystore.isNullOrBlank() &&
         !ownerStorePassword.isNullOrBlank() &&
         !ownerKeyAlias.isNullOrBlank() &&

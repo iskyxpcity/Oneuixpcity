@@ -13,5 +13,5 @@
     <string name="download_dialog_title">Introduceți URL-ul imaginii</string>
     <string name="download_dialog_msg">Imagine OTA completă sau imagine de fabrică</string>
     <string name="save_log">Salvează Jurnale</string>
-    <string name="oneuialoha_tools">Tools</string>
+    <string name="alohaoneui_tools">Tools</string>
 </resources>

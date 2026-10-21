@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "com.oneuialoha.common"
+    namespace = "com.alohaoneui.common"
     compileSdk {
         version = release(37)
     }
@@ -14,7 +14,7 @@ android {
         buildConfigField(
             "String",
             "MODULE_APPLICATION_ID",
-            "\"${providers.gradleProperty("oneuiAloha.applicationId").get()}\"",
+            "\"${providers.gradleProperty("alohaOneUI.applicationId").get()}\"",
         )
     }
 

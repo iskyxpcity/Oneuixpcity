@@ -54,5 +54,5 @@
     <string name="settings_floating_bottom_bar_summary">Utilisez la barre inférieure flottante de type Apple</string>
     <string name="settings_enable_glass">Liquid Glass</string>
     <string name="settings_enable_glass_summary">Activez l\'effet Liquid Glass pour la barre inférieure flottante</string>
-    <string name="oneuialoha_tools">Tools</string>
+    <string name="alohaoneui_tools">Tools</string>
 </resources>

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="home">Startseite</string>
-    <string name="about">Über OneUIAloha</string>
+    <string name="about">Über AlohaOneUI</string>
     <string name="app_update">Aktualisieren</string>
     <string name="new_version_available">Neue Version %s verfügbar, tippen zum Aktualisieren!</string>
     <string name="reboot">Neustarten</string>
@@ -15,5 +15,5 @@
     <string name="save_log">Protokolle Speichern</string>
     <string name="log_saved">Protokolle gespeichert</string>
     <string name="confirm">Bestätigen</string>
-    <string name="oneuialoha_tools">Tools</string>
+    <string name="alohaoneui_tools">Tools</string>
 </resources>

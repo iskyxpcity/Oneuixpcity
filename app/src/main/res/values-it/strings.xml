@@ -13,5 +13,5 @@
     <string name="download_dialog_title">Inserisci l\'URL dell\'immagine</string>
     <string name="download_dialog_msg">Immagine OTA completa o immagine di fabbrica</string>
     <string name="save_log">Salva Registri</string>
-    <string name="oneuialoha_tools">Tools</string>
+    <string name="alohaoneui_tools">Tools</string>
 </resources>

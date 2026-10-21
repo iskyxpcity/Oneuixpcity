@@ -33,7 +33,7 @@
     </queries>
 
     <application
-        android:name=".OneUIAlohaApplication"
+        android:name=".AlohaOneUIApplication"
         android:allowBackup="false"
         android:enableOnBackInvokedCallback="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -43,7 +43,7 @@
         android:icon="@mipmap/ic_launcher_aloha"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:theme="@style/Theme.OneUIAloha">
+        android:theme="@style/Theme.AlohaOneUI">
         <meta-data android:name="xposedmodule" android:value="true" />
         <meta-data android:name="xposeddescription" android:value="Aloha OneUI · independent feature module" />
         <meta-data android:name="xposedminversion" android:value="93" />
@@ -52,7 +52,7 @@
         <activity
             android:name=".ui.StartupActivity"
             android:exported="true"
-            android:theme="@style/Theme.OneUIAloha.Startup">
+            android:theme="@style/Theme.AlohaOneUI.Startup">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -61,7 +61,7 @@
         <activity
             android:name=".ui.MainActivity"
             android:exported="true"
-            android:theme="@style/Theme.OneUIAloha"
+            android:theme="@style/Theme.AlohaOneUI"
             android:windowSoftInputMode="adjustResize" />
 
     </application>
