@@ -20,7 +20,7 @@ jobs:
       - name: Preserve Logo002 visible proportions and tighten layout
         run: |
           set -euo pipefail
-          python -m pip install --disable-pip-version-check Pillow
+          python -m pip install --disable-pip-version-check Pillow numpy
           python <<'PY'
           from pathlib import Path
           from PIL import Image
