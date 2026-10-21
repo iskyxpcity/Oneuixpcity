@@ -93,7 +93,7 @@ check("Xposed self-scope uses only the Aloha application ID",
       and "com.oneuixp.app" not in scope_lines)
 check("Updater preserves the XP compatibility feed and Aloha feed",
       'LEGACY_RELEASE_REPO = "iSkyJIE/OneuiXP-Releases"' in downloader
-      and 'ALOHA_RELEASE_REPO = "iSkyJIE/OneUIAloha-Releases"' in downloader
+      and 'ALOHA_RELEASE_REPO = "iSkyJIE/AlohaOneUI"' in downloader
       and 'LEGACY_PACKAGE_NAME = "com.oneuixp.app"' in downloader)
 check("Updater accepts both AlohaOneUI and legacy OneUIAloha versioned APK assets",
       'AlohaOneUI' in downloader
