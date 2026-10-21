@@ -252,10 +252,10 @@ jobs:
 
           if [ "$GITHUB_REF" = "refs/heads/main" ] && [[ "$COMMIT_SUBJECT" == release:* ]]; then
             FORMAL_RELEASE=true
-            RELEASE_REPO="iSkyJIE/OneUIAloha-Releases"
+            RELEASE_REPO="iSkyJIE/AlohaOneUI"
             GH_TOKEN="$ALOHA_RELEASE_TOKEN"
             if [ -z "$GH_TOKEN" ]; then
-              echo "::error::Formal Aloha releases require the ALOHA_RELEASE_TOKEN Actions secret with write access to iSkyJIE/OneUIAloha-Releases. No public release was published."
+              echo "::error::Formal Aloha releases require the ALOHA_RELEASE_TOKEN Actions secret with write access to iSkyJIE/AlohaOneUI. No public release was published."
               exit 1
             fi
             export GH_TOKEN
