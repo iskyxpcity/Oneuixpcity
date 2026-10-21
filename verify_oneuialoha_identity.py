@@ -31,6 +31,7 @@ module_file = ROOT / "app/src/main/resources/META-INF/xposed/module.prop"
 scope_file = ROOT / "app/src/main/resources/META-INF/xposed/scope.list"
 asset_scope_file = ROOT / "app/src/main/assets/xposed_scope"
 downloader = (ROOT / "app/src/main/java/com/oneuialoha/app/ui/util/Downloader.kt").read_text()
+startup_activity = (ROOT / "app/src/main/java/com/oneuialoha/app/ui/StartupActivity.kt").read_text()
 workflow = (ROOT / ".github/workflows/build.yml").read_text()
 
 check("App namespace and default application ID are Aloha",
@@ -69,6 +70,10 @@ check("Visible application name is Aloha OneUI",
       'val defaultManagerName = "Aloha OneUI"' in gradle_app
       and 'android:icon="@mipmap/ic_launcher_aloha"' in manifest
       and 'android:roundIcon=' not in manifest)
+check("Startup animation reduces the logo-to-first-line gap and separates the two title lines",
+      'private fun logoBottom(): Float' in startup_activity
+      and 'val y = logoBottom() + dp(12f) + dp(6f) * (1f - progress)' in startup_activity
+      and 'val baseline = logoBottom() + dp(62f)' in startup_activity)
 adaptive_icon_file = ROOT / "app/src/main/res/mipmap-anydpi-v26/ic_launcher_aloha.xml"
 adaptive_icon_text = adaptive_icon_file.read_text() if adaptive_icon_file.is_file() else ""
 check("Launcher icon preserves the uploaded source and uses a slightly enlarged padded adaptive foreground",

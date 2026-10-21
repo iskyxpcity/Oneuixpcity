@@ -220,7 +220,9 @@ private class NativeOneUIAlohaStartupView(
         textPaint.alpha = (255f * progress).roundToInt().coerceIn(0, 255)
 
         val x = (width - textPaint.measureText(title)) / 2f
-        val y = height * 0.43f + dp(200f) / 2f + dp(22f) + dp(6f) * (1f - progress)
+        // Bring the first line closer to the logo; the second line is positioned separately
+        // so the two baselines no longer crowd together.
+        val y = logoBottom() + dp(12f) + dp(6f) * (1f - progress)
         canvas.drawText(title, x, y, textPaint)
     }
 
@@ -250,7 +252,7 @@ private class NativeOneUIAlohaStartupView(
         }
 
         var x = (width - totalWidth) / 2f
-        val baseline = height * 0.43f + dp(200f) / 2f + dp(55f)
+        val baseline = logoBottom() + dp(62f)
         var visibleIndex = 0
 
         title.forEachIndexed { index, c ->
@@ -288,6 +290,9 @@ private class NativeOneUIAlohaStartupView(
             x += widths[index]
         }
     }
+
+    // Shared reference keeps both text lines aligned to the 200dp logo's actual layout box.
+    private fun logoBottom(): Float = height * 0.43f + dp(200f) / 2f
 
     private fun dp(value: Float): Float = value * density
     private fun sp(value: Float): Float = value * scaledDensity
