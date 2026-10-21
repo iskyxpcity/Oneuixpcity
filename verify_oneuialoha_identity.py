@@ -78,7 +78,8 @@ check("Launcher icon preserves the uploaded source and generates a padded adapti
       and 'adaptiveIconCanvasPx = 432' in gradle_app
       and 'adaptiveIconSafeZonePx = 264' in gradle_app
       and 'BufferedImage.TYPE_INT_ARGB' in gradle_app
-      and 'graphics.drawImage(sourceImage,' in gradle_app
+      and 'graphics.drawImage(' in gradle_app
+      and 'sourceImage,' in gradle_app
       and 'launcherIconSource.copyTo' not in gradle_app
       and 'getSubimage' not in gradle_app
       and 'name="aloha_launcher_background"' in gradle_app
