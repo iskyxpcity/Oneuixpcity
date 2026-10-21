@@ -6,6 +6,7 @@ import java.awt.image.BufferedImage
 import java.io.File
 import javax.imageio.ImageIO
 import kotlin.math.roundToInt
+import java.util.Locale
 
 plugins {
     alias(libs.plugins.agp.app)
@@ -29,9 +30,6 @@ val defaultManagerPackageName = "com.oneuialoha.app"
 val defaultManagerName = "Aloha OneUI"
 val managerPackageName = project.findProperty("ONEUIALOHA_PACKAGE_NAME")?.toString() ?: defaultManagerPackageName
 val managerName = project.findProperty("ONEUIALOHA_NAME")?.toString() ?: defaultManagerName
-
-val launcherIconSource = rootProject.file("Aloha_OneUI_icon.png")
-val generatedLauncherResDir = layout.buildDirectory.dir("generated/res/alohaLauncher")
 
 // Keep the user's source image unchanged in the repository. Generate only the
 // launcher-specific foreground: fit the complete artwork inside Android's 66dp safe
@@ -75,7 +73,7 @@ fun sampleAlohaIconBackground(image: BufferedImage): String {
     val red = dominant.sumOf { (it ushr 16) and 0xFF } / dominant.size
     val green = dominant.sumOf { (it ushr 8) and 0xFF } / dominant.size
     val blue = dominant.sumOf { it and 0xFF } / dominant.size
-    return String.format(java.util.Locale.ROOT, "#%02X%02X%02X", red, green, blue)
+    return String.format(Locale.ROOT, "#%02X%02X%02X", red, green, blue)
 }
 
 val prepareAlohaLauncherIcon = tasks.register("prepareAlohaLauncherIcon") {
