@@ -16,6 +16,10 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.ColumnScope
@@ -229,7 +233,6 @@ fun GlobalShortcutActionsScreen() {
             icon = ShortcutEntryIcon.Gesture,
             description = "统一设置三指滑动、捏合和展开动作。",
             state = if (enabledThreeFingerCount == 0) "未启用" else "已启用 ${enabledThreeFingerCount} 项",
-            iconColor = Color(0xFF5C6BC0),
             onClick = { navigator.push(Route.GlobalThreeFingerActions) },
         )
         GlobalShortcutEntryCard(
@@ -237,7 +240,6 @@ fun GlobalShortcutActionsScreen() {
             icon = ShortcutEntryIcon.FloatingBall,
             description = "设置悬浮球颜色、大小、和单击/双击/划动动作。",
             state = if (settings.floatingBallEnabled) "已启用" else "未启用",
-            iconColor = Color(0xFF00897B),
             onClick = { navigator.push(Route.GlobalFloatingBallShortcut) },
         )
         GlobalShortcutEntryCard(
@@ -245,7 +247,6 @@ fun GlobalShortcutActionsScreen() {
             icon = ShortcutEntryIcon.StatusBar,
             description = "设置状态栏双击、左上角/右上角单击和长按动作。",
             state = if (settings.statusBarShortcutEnabled) "已启用" else "未启用",
-            iconColor = Color(0xFF607D8B),
             onClick = { navigator.push(Route.GlobalStatusBarShortcut) },
         )
         GlobalShortcutEntryCard(
@@ -253,7 +254,6 @@ fun GlobalShortcutActionsScreen() {
             icon = ShortcutEntryIcon.NavigationBar,
             description = "设置返回、Home、最近任务的双击和长按动作。",
             state = if (settings.navigationKeyShortcutEnabled) "已启用" else "未启用",
-            iconColor = Color(0xFF8E24AA),
             onClick = { navigator.push(Route.GlobalNavigationKeyShortcut) },
         )
         GlobalShortcutEntryCard(
@@ -261,7 +261,6 @@ fun GlobalShortcutActionsScreen() {
             icon = ShortcutEntryIcon.Volume,
             description = "息屏长按音量键切歌，双击音量键播放/暂停。",
             state = if (settings.screenOffVolumeKeyEnabled) "已启用" else "未启用",
-            iconColor = Color(0xFFEF6C00),
             onClick = { navigator.push(Route.GlobalScreenOffVolumeKeyShortcut) },
         )
     }
@@ -285,7 +284,6 @@ fun GlobalThreeFingerActionsScreen() {
             icon = ShortcutEntryIcon.Gesture,
             description = "设置三指上划、下划、左划、右划动作。",
             state = if (settings.threeFingerGestureEnabled) "已启用" else "未启用",
-            iconColor = Color(0xFF5C6BC0),
             onClick = { navigator.push(Route.GlobalThreeFingerSwipe) },
         )
         GlobalShortcutEntryCard(
@@ -293,7 +291,6 @@ fun GlobalThreeFingerActionsScreen() {
             icon = ShortcutEntryIcon.Pinch,
             description = "设置三根手指同时向内捏合时执行的动作。",
             state = if (settings.threeFingerPinchEnabled) "已启用" else "未启用",
-            iconColor = Color(0xFF00897B),
             onClick = { navigator.push(Route.GlobalThreeFingerPinch) },
         )
         GlobalShortcutEntryCard(
@@ -301,7 +298,6 @@ fun GlobalThreeFingerActionsScreen() {
             icon = ShortcutEntryIcon.Spread,
             description = "设置三根手指同时向外展开时执行的动作。",
             state = if (settings.threeFingerSpreadEnabled) "已启用" else "未启用",
-            iconColor = Color(0xFF7E57C2),
             onClick = { navigator.push(Route.GlobalThreeFingerSpread) },
         )
     }
@@ -425,93 +421,117 @@ private fun GlobalShortcutPageFrame(
 }
 
 @Composable
-private fun ShortcutEntryGlyph(icon: ShortcutEntryIcon) {
-    Canvas(modifier = Modifier.size(24.dp)) {
+private fun ShortcutEntryGlyph(
+    icon: ShortcutEntryIcon,
+    accentColor: Color,
+) {
+    // Same 24x24 drawing grid and 0.56x icon scale as RootFeatureIconView in App20261018Aloha.
+    Canvas(modifier = Modifier.size(22.4.dp)) {
         val sx = size.width / 24f
         val sy = size.height / 24f
-        val strokeWidth = 1.9.dp.toPx()
+        val scale = min(sx, sy)
+        val strokeWidth = 1.9f * scale
+
         fun point(x: Float, y: Float) = Offset(x * sx, y * sy)
         fun line(x1: Float, y1: Float, x2: Float, y2: Float) {
             drawLine(
-                color = Color.White,
+                color = accentColor,
                 start = point(x1, y1),
                 end = point(x2, y2),
                 strokeWidth = strokeWidth,
                 cap = StrokeCap.Round,
             )
         }
-        fun ring(x: Float, y: Float, radius: Float) {
+        fun dot(cx: Float, cy: Float, radius: Float) {
+            drawCircle(color = accentColor, radius = radius * scale, center = point(cx, cy))
+        }
+        fun ring(cx: Float, cy: Float, radius: Float) {
             drawCircle(
-                color = Color.White,
-                radius = radius * min(sx, sy),
-                center = point(x, y),
-                style = Stroke(width = strokeWidth),
+                color = accentColor,
+                radius = radius * scale,
+                center = point(cx, cy),
+                style = Stroke(width = strokeWidth, cap = StrokeCap.Round, join = StrokeJoin.Round),
             )
         }
-        fun dot(x: Float, y: Float, radius: Float = 1.2f) {
-            drawCircle(color = Color.White, radius = radius * min(sx, sy), center = point(x, y))
+        fun frame(left: Float, top: Float, right: Float, bottom: Float, radius: Float) {
+            drawRoundRect(
+                color = accentColor,
+                topLeft = point(left, top),
+                size = Size((right - left) * sx, (bottom - top) * sy),
+                cornerRadius = CornerRadius(radius * scale, radius * scale),
+                style = Stroke(width = strokeWidth, cap = StrokeCap.Round, join = StrokeJoin.Round),
+            )
         }
+        fun arc(left: Float, top: Float, right: Float, bottom: Float, start: Float, sweep: Float) {
+            drawArc(
+                color = accentColor,
+                startAngle = start,
+                sweepAngle = sweep,
+                useCenter = false,
+                topLeft = point(left, top),
+                size = Size((right - left) * sx, (bottom - top) * sy),
+                style = Stroke(width = strokeWidth, cap = StrokeCap.Round, join = StrokeJoin.Round),
+            )
+        }
+        fun circle(cx: Float, cy: Float, radius: Float) = ring(cx, cy, radius)
+        fun poly(vararg coordinates: Float) {
+            if (coordinates.size < 4) return
+            val path = Path()
+            path.moveTo(coordinates[0] * sx, coordinates[1] * sy)
+            var i = 2
+            while (i + 1 < coordinates.size) {
+                path.lineTo(coordinates[i] * sx, coordinates[i + 1] * sy)
+                i += 2
+            }
+            drawPath(
+                path = path,
+                color = accentColor,
+                style = Stroke(width = strokeWidth, cap = StrokeCap.Round, join = StrokeJoin.Round),
+            )
+        }
+
+        // The coordinates below are ported from the source RootFeatureIconView.drawGlyph().
         when (icon) {
             ShortcutEntryIcon.Gesture -> {
-                line(7f, 5f, 7f, 12.5f)
-                line(10.5f, 4f, 10.5f, 12.5f)
-                line(14f, 4.5f, 14f, 12.5f)
-                line(17.5f, 6f, 17.5f, 12.5f)
-                line(4f, 15.5f, 20f, 15.5f)
-                line(16.5f, 12.5f, 20f, 15.5f)
-                line(16.5f, 18.5f, 20f, 15.5f)
+                line(8f, 5.5f, 8f, 13f)
+                line(12f, 4.5f, 12f, 13f)
+                line(16f, 5.5f, 16f, 13f)
+                line(4.5f, 17.5f, 19.5f, 17.5f)
+                poly(16.9f, 15f, 19.5f, 17.5f, 16.9f, 20f)
             }
             ShortcutEntryIcon.FloatingBall -> {
-                ring(12f, 12f, 8.6f)
-                dot(12f, 12f, 3.2f)
-                dot(17.2f, 6.8f, 1f)
+                circle(12f, 12f, 8.4f)
+                dot(12f, 12f, 2.5f)
             }
             ShortcutEntryIcon.StatusBar -> {
-                line(3f, 6f, 21f, 6f)
-                line(3f, 6f, 3f, 17f)
-                line(3f, 17f, 21f, 17f)
-                line(21f, 6f, 21f, 17f)
-                dot(7f, 11.5f, 1f)
-                dot(11f, 11.5f, 1f)
-                line(14.5f, 11.5f, 18f, 11.5f)
+                frame(2.8f, 6.4f, 21.2f, 11.8f, 2.2f)
+                dot(18.2f, 9.1f, 1.05f)
+                dot(15f, 9.1f, 1.05f)
             }
             ShortcutEntryIcon.NavigationBar -> {
-                line(7.2f, 12f, 3.8f, 15.3f)
-                line(3.8f, 15.3f, 7.2f, 18.5f)
-                ring(12f, 15.5f, 3.1f)
-                line(18f, 12.5f, 21f, 12.5f)
-                line(18f, 15.5f, 21f, 15.5f)
-                line(18f, 18.5f, 21f, 18.5f)
+                poly(5f, 15.6f, 8.8f, 17.1f, 5f, 18.6f)
+                circle(12.1f, 17.1f, 1.6f)
+                frame(15.4f, 15.5f, 18.8f, 18.7f, 1f)
             }
             ShortcutEntryIcon.Volume -> {
-                line(3.5f, 9.5f, 7f, 9.5f)
-                line(7f, 9.5f, 10.5f, 6f)
-                line(10.5f, 6f, 10.5f, 18f)
-                line(10.5f, 18f, 7f, 14.5f)
-                line(7f, 14.5f, 3.5f, 14.5f)
-                line(3.5f, 14.5f, 3.5f, 9.5f)
-                line(14.5f, 9f, 16.5f, 12f)
-                line(16.5f, 12f, 14.5f, 15f)
-                line(17.5f, 6.5f, 21f, 12f)
-                line(21f, 12f, 17.5f, 17.5f)
+                poly(
+                    3.6f, 9.6f, 6.6f, 9.6f, 10f, 6.4f, 10f, 17.6f,
+                    6.6f, 14.4f, 3.6f, 14.4f, 3.6f, 9.6f,
+                )
+                arc(11.4f, 8.6f, 16.6f, 15.4f, -62f, 124f)
+                arc(13.6f, 5.8f, 20.4f, 18.2f, -62f, 124f)
             }
             ShortcutEntryIcon.Pinch -> {
-                line(2.8f, 12f, 10f, 12f)
-                line(6.7f, 8.8f, 10f, 12f)
-                line(6.7f, 15.2f, 10f, 12f)
-                line(21.2f, 12f, 14f, 12f)
-                line(17.3f, 8.8f, 14f, 12f)
-                line(17.3f, 15.2f, 14f, 12f)
-                dot(12f, 12f, 1f)
+                line(3.4f, 12f, 9.8f, 12f)
+                poly(7f, 8.8f, 9.8f, 12f, 7f, 15.2f)
+                line(20.6f, 12f, 14.2f, 12f)
+                poly(17f, 8.8f, 14.2f, 12f, 17f, 15.2f)
             }
             ShortcutEntryIcon.Spread -> {
-                line(10f, 12f, 2.8f, 12f)
-                line(6.1f, 8.8f, 2.8f, 12f)
-                line(6.1f, 15.2f, 2.8f, 12f)
-                line(14f, 12f, 21.2f, 12f)
-                line(17.9f, 8.8f, 21.2f, 12f)
-                line(17.9f, 15.2f, 21.2f, 12f)
-                dot(12f, 12f, 1f)
+                line(10.2f, 12f, 4.2f, 12f)
+                poly(7f, 8.8f, 4.2f, 12f, 7f, 15.2f)
+                line(13.8f, 12f, 19.8f, 12f)
+                poly(17f, 8.8f, 19.8f, 12f, 17f, 15.2f)
             }
         }
     }
@@ -523,59 +543,107 @@ private fun GlobalShortcutEntryCard(
     description: String,
     state: String,
     icon: ShortcutEntryIcon,
-    iconColor: Color,
     onClick: () -> Unit,
 ) {
+    val iconAccent = when (LocalUiMode.current) {
+        UiMode.Material -> MaterialTheme.colorScheme.primary
+        UiMode.Miuix -> colorScheme.primary
+    }
+    val iconChip = when (LocalUiMode.current) {
+        UiMode.Material -> MaterialTheme.colorScheme.surfaceContainerHighest
+        UiMode.Miuix -> colorScheme.surface
+    }
     when (LocalUiMode.current) {
         UiMode.Material -> Card(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 5.dp).clickable(onClick = onClick),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 5.dp)
+                .clickable(onClick = onClick),
             shape = RoundedCornerShape(22.dp),
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Box(
-                    modifier = Modifier.size(40.dp).clip(RoundedCornerShape(14.dp)).background(iconColor),
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(RoundedCornerShape(13.2.dp))
+                        .background(iconChip),
                     contentAlignment = Alignment.Center,
                 ) {
-                    ShortcutEntryGlyph(icon = icon)
+                    ShortcutEntryGlyph(icon = icon, accentColor = iconAccent)
                 }
                 Column(modifier = Modifier.weight(1f).padding(start = 12.dp)) {
-                    Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                    Text(
+                        title,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                    )
                     Text(
                         state,
+                        modifier = Modifier.padding(top = 5.dp),
                         style = MaterialTheme.typography.bodySmall,
-                        color = if (state.startsWith("已启用")) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = if (state.startsWith("已启用")) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.onSurfaceVariant,
                     )
-                    Text(description, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(
+                        description,
+                        modifier = Modifier.padding(top = 5.dp),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                 }
-                Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                Icon(
+                    Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
         }
         UiMode.Miuix -> MiuixCard(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 5.dp).clickable(onClick = onClick),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp, vertical = 5.dp)
+                .clickable(onClick = onClick),
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth().padding(14.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Box(
-                    modifier = Modifier.size(40.dp).clip(RoundedCornerShape(14.dp)).background(iconColor),
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(RoundedCornerShape(13.2.dp))
+                        .background(iconChip),
                     contentAlignment = Alignment.Center,
                 ) {
-                    ShortcutEntryGlyph(icon = icon)
+                    ShortcutEntryGlyph(icon = icon, accentColor = iconAccent)
                 }
                 Column(modifier = Modifier.weight(1f).padding(start = 12.dp)) {
-                    MiuixText(title, color = colorScheme.onSurface, fontWeight = FontWeight.SemiBold)
-                    MiuixText(state, color = if (state.startsWith("已启用")) colorScheme.primary else colorScheme.onSurfaceVariantSummary)
-                    MiuixText(description, color = colorScheme.onSurface)
+                    MiuixText(
+                        title,
+                        color = colorScheme.onSurface,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    MiuixText(
+                        state,
+                        modifier = Modifier.padding(top = 5.dp),
+                        color = if (state.startsWith("已启用")) colorScheme.primary else colorScheme.onSurfaceVariantSummary,
+                    )
+                    MiuixText(
+                        description,
+                        modifier = Modifier.padding(top = 5.dp),
+                        color = colorScheme.onSurfaceVariantSummary,
+                    )
                 }
                 MiuixIcon(
-                    modifier = Modifier.padding(start = 8.dp).size(width = 10.dp, height = 16.dp),
+                    modifier = Modifier
+                        .padding(start = 8.dp)
+                        .size(width = 10.dp, height = 16.dp),
                     imageVector = MiuixIcons.Basic.ArrowRight,
                     contentDescription = null,
-                    tint = colorScheme.onSurfaceVariantActions,
+                    tint = colorScheme.onSurfaceVariant,
                 )
             }
         }
