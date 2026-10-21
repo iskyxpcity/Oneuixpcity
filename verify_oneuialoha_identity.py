@@ -81,8 +81,8 @@ check("Launcher icon preserves the uploaded source and uses a slightly enlarged 
       and 'rootProject.file("Aloha_OneUI_icon.png")' in gradle_app
       and 'ImageIO.read(launcherIconSource)' in gradle_app
       and 'adaptiveIconCanvasPx = 432' in gradle_app
-      and 'adaptiveIconForegroundPx = 276' in gradle_app
-      and '69dp' in gradle_app
+      and 'adaptiveIconForegroundPx = 278' in gradle_app
+      and '69.5dp' in gradle_app
       and 'BufferedImage.TYPE_INT_ARGB' in gradle_app
       and 'graphics.drawImage(' in gradle_app
       and 'sourceImage,' in gradle_app
