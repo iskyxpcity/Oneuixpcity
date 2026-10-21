@@ -3,6 +3,7 @@ package com.alohaoneui.hook.systemui
 import android.app.ActivityManager
 import android.bluetooth.BluetoothAdapter
 import android.content.ComponentName
+import android.database.ContentObserver
 import android.content.Context
 import android.content.Intent
 import android.graphics.Canvas
@@ -59,16 +60,19 @@ object GlobalQuickActions {
     private const val ACTION_NONE = "none"
     private const val ACTION_CUSTOM_APP_PREFIX = "custom_app:"
     private const val STATUS_BAR_DOUBLE_CLICK_MS = 320L
-    private const val DEFAULT_LONG_PRESS_MS = 500L
-    private const val DOUBLE_TAP_MS = 300L
-    private const val FLOATING_BALL_LONG_PRESS_MS = 420L
-    private const val FLOATING_BALL_SWIPE_THRESHOLD_DP = 48f
+    private const val STATUS_BAR_TAP_MAX_MS = 260L
+    private const val STATUS_BAR_TAP_SLOP_DP = 10f
+    private const val STATUS_BAR_LONG_PRESS_MS = 520L
+    private const val DOUBLE_TAP_MS = 320L
+    private const val FLOATING_BALL_LONG_PRESS_MS = 520L
+    private const val FLOATING_BALL_SWIPE_THRESHOLD_DP = 38f
     private const val FLOATING_BALL_TAP_SLOP_DP = 8f
 
     private val mainHandler = Handler(Looper.getMainLooper())
     @Volatile private var cachedSettings: Preference.GlobalShortcutActions? = null
     @Volatile private var cachedSettingsAt = 0L
     @Volatile private var systemServerContext: Context? = null
+    @Volatile private var preferenceObserver: ContentObserver? = null
     @Volatile private var inputManagerService: Any? = null
     @Volatile private var phoneWindowManager: Any? = null
 
@@ -180,10 +184,35 @@ object GlobalQuickActions {
             .onFailure { Log.w(TAG, "PhoneWindowManager hook unavailable", it) }
 
         systemServerContext?.let { context ->
+            registerPreferenceObserver(context)
             runCatching { ensureFloatingBall(context, currentSettings()) }
                 .onFailure { Log.w(TAG, "initial floating-ball setup failed", it) }
         }
         Log.i(TAG, "installed system-server global shortcut dispatch")
+    }
+
+    context(xposedModule: XposedModule)
+    private fun registerPreferenceObserver(context: Context) {
+        if (preferenceObserver != null) return
+        runCatching {
+            val observer = object : ContentObserver(mainHandler) {
+                override fun onChange(selfChange: Boolean) {
+                    cachedSettings = null
+                    cachedSettingsAt = 0L
+                    val fresh = currentSettings()
+                    runCatching { ensureFloatingBall(context, fresh) }
+                        .onFailure { Log.w(TAG, "floating-ball preference refresh failed", it) }
+                }
+            }
+            context.contentResolver.registerContentObserver(
+                Uri.parse("content://com.alohaoneui.app.statusbridge/preferences"),
+                false,
+                observer,
+            )
+            preferenceObserver = observer
+        }.onFailure {
+            Log.w(TAG, "global-shortcut preference observer registration failed", it)
+        }
     }
 
     context(xposedModule: XposedModule)
@@ -439,11 +468,7 @@ object GlobalQuickActions {
                 statusDownY = event.rawY
                 statusDownTime = event.eventTime
                 val width = context.resources.displayMetrics.widthPixels.toFloat()
-                statusSide = when {
-                    statusDownX < width * 0.33f -> -1
-                    statusDownX > width * 0.67f -> 1
-                    else -> 0
-                }
+                statusSide = if (statusDownX < width * 0.5f) -1 else 1
                 val longAction = if (statusSide < 0) settings.statusBarLeftLongPressAction
                     else settings.statusBarRightLongPressAction
                 statusLongPressRunnable?.let { mainHandler.removeCallbacks(it) }
@@ -455,7 +480,7 @@ object GlobalQuickActions {
                             performHaptic(context, settings.statusBarShortcutHapticEnabled, settings.statusBarShortcutHapticStrength)
                             performGlobalAction(context, longAction)
                         }
-                    }.also { mainHandler.postDelayed(it, DEFAULT_LONG_PRESS_MS) }
+                    }.also { mainHandler.postDelayed(it, STATUS_BAR_LONG_PRESS_MS) }
                 } else null
             }
 
@@ -475,7 +500,7 @@ object GlobalQuickActions {
                 statusLongPressRunnable?.let { mainHandler.removeCallbacks(it) }
                 statusLongPressRunnable = null
                 if (!statusGestureMoved && !statusLongPressTriggered &&
-                    event.eventTime - statusDownTime <= 800L
+                    event.eventTime - statusDownTime <= STATUS_BAR_TAP_MAX_MS
                 ) {
                     val clickAction = when (statusSide) {
                         -1 -> settings.statusBarLeftClickAction
@@ -562,7 +587,7 @@ object GlobalQuickActions {
                             performHaptic(context, settings.navigationKeyHapticEnabled, settings.navigationKeyHapticStrength)
                             performGlobalAction(context, longAction)
                         }
-                    }.also { mainHandler.postDelayed(it, DEFAULT_LONG_PRESS_MS) }
+                    }.also { mainHandler.postDelayed(it, ViewConfiguration.getLongPressTimeout().toLong()) }
                 } else null
                 return true
             }
@@ -1001,11 +1026,20 @@ object GlobalQuickActions {
                 "home" -> injectKey(KeyEvent.KEYCODE_HOME)
                 "recents" -> injectKey(KeyEvent.KEYCODE_APP_SWITCH)
                 "screenshot" -> {
-                    if (!invokePolicy("takeScreenshot")) injectKey(KeyEvent.KEYCODE_SYSRQ)
+                    if (!startSamsungCaptureSideButtonAction(context, "take_screenshot") &&
+                        !sendSamsungScreenshotExecutor(context) &&
+                        !invokePolicy("takeScreenshot")
+                    ) {
+                        injectKey(KeyEvent.KEYCODE_SYSRQ)
+                        runShellCommandForSuccess("cmd statusbar screenshot")
+                    }
                 }
                 "smart_screenshot" -> {
-                    if (!startComponent(context, "com.samsung.android.smartcapture", "com.samsung.android.smartcapture.SmartCaptureActivity")) {
-                        if (!invokePolicy("takeScreenshot")) injectKey(KeyEvent.KEYCODE_SYSRQ)
+                    if (!startSamsungCaptureSideButtonAction(context, "smart_select") &&
+                        !sendSamsungScreenshotExecutor(context) &&
+                        !invokePolicy("takeScreenshot")
+                    ) {
+                        injectKey(KeyEvent.KEYCODE_SYSRQ)
                     }
                 }
                 "lock_screen" -> runCatching {
@@ -1037,12 +1071,12 @@ object GlobalQuickActions {
                 "vibrate_mode" -> setRingerMode(context, AudioManager.RINGER_MODE_VIBRATE)
                 "wifi" -> toggleWifi(context)
                 "mobile_data" -> toggleMobileData(context)
-                "wechat_scan" -> startActionUri(context, "weixin://dl/scan", "com.tencent.mm")
-                "wechat_pay" -> startActionUri(context, "weixin://dl/moments", "com.tencent.mm")
-                "wechat_collect" -> startActionUri(context, "weixin://dl/scan", "com.tencent.mm")
-                "alipay_scan" -> startActionUri(context, "alipays://platformapi/startapp?saId=10000007", "com.eg.android.AlipayGphone")
-                "alipay_pay" -> startActionUri(context, "alipays://platformapi/startapp?saId=20000056", "com.eg.android.AlipayGphone")
-                "alipay_collect" -> startActionUri(context, "alipays://platformapi/startapp?saId=20000123", "com.eg.android.AlipayGphone")
+                "wechat_scan" -> startActivityComponent(context, "com.tencent.mm", "com.tencent.mm.plugin.scanner.ui.BaseScanUI")
+                "wechat_pay" -> startActivityComponent(context, "com.tencent.mm", "com.tencent.mm.plugin.offline.ui.WalletOfflineCoinPurseUI")
+                "wechat_collect" -> startActivityComponent(context, "com.tencent.mm", "com.tencent.mm.plugin.collect.ui.CollectMainUI")
+                "alipay_scan" -> startActionUri(context, "alipayqr://platformapi/startapp?saId=10000007", "com.eg.android.AlipayGphone")
+                "alipay_pay" -> startActionUri(context, "alipayqr://platformapi/startapp?saId=20000056", "com.eg.android.AlipayGphone")
+                "alipay_collect" -> startActionUri(context, "alipays://platformapi/startapp?appId=20000123", "com.eg.android.AlipayGphone")
             }
         }.onFailure { Log.w(TAG, "shortcut action failed: $action", it) }
     }
@@ -1130,21 +1164,73 @@ object GlobalQuickActions {
 
     @Suppress("DEPRECATION")
     private fun toggleBluetooth() {
-        val adapter = BluetoothAdapter.getDefaultAdapter() ?: return
-        if (adapter.isEnabled) adapter.disable() else adapter.enable()
+        val adapter = BluetoothAdapter.getDefaultAdapter()
+        val enabled = adapter?.isEnabled == true
+        if (runShellCommandForSuccess(if (enabled) "svc bluetooth disable" else "svc bluetooth enable")) return
+        if (enabled) adapter?.disable() else adapter?.enable()
     }
 
     @Suppress("DEPRECATION")
     private fun toggleWifi(context: Context) {
-        val wifi = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as? WifiManager ?: return
-        wifi.isWifiEnabled.let { wifi.setWifiEnabled(!it) }
+        val wifi = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as? WifiManager
+            ?: context.getSystemService(Context.WIFI_SERVICE) as? WifiManager
+        val enabled = runCatching { wifi?.isWifiEnabled }.getOrNull()
+            ?: runCatching { Settings.Global.getInt(context.contentResolver, "wifi_on", 0) == 1 }.getOrDefault(false)
+        val next = !enabled
+        val handledByManager = runCatching { wifi?.setWifiEnabled(next) == true }.getOrDefault(false)
+        if (handledByManager) return
+        val state = if (next) "enabled" else "disabled"
+        if (runShellCommandForSuccess("cmd wifi set-wifi-enabled $state")) return
+        if (runShellCommandForSuccess(if (next) "svc wifi enable" else "svc wifi disable")) return
+        Settings.Global.putInt(context.contentResolver, "wifi_on", if (next) 1 else 0)
     }
 
     private fun toggleMobileData(context: Context) {
-        val telephony = context.getSystemService(Context.TELEPHONY_SERVICE) as? TelephonyManager ?: return
-        val enabled = runCatching { callCompatible(telephony, "isDataEnabled") as? Boolean }.getOrNull() ?: false
-        callCompatible(telephony, "setDataEnabled", !enabled)
+        val telephony = context.getSystemService(Context.TELEPHONY_SERVICE) as? TelephonyManager
+        val enabled = runCatching { callCompatible(telephony, "isDataEnabled") as? Boolean }.getOrNull()
+            ?: runCatching { callCompatible(telephony, "getDataEnabled") as? Boolean }.getOrNull()
+            ?: runCatching { Settings.Global.getInt(context.contentResolver, "mobile_data", 1) == 1 }.getOrDefault(true)
+        val next = !enabled
+        val telephonyMethods = telephony?.javaClass?.methods.orEmpty().map { it.name }.toSet()
+        if ("setDataEnabled" in telephonyMethods && runCatching { callCompatible(telephony, "setDataEnabled", next); true }.getOrDefault(false)) return
+        if ("setDataEnabledForReason" in telephonyMethods && runCatching { callCompatible(telephony, "setDataEnabledForReason", 0, next); true }.getOrDefault(false)) return
+        if (runShellCommandForSuccess(if (next) "svc data enable" else "svc data disable")) return
+        if (runShellCommandForSuccess("cmd phone data ${if (next) "enable" else "disable"}")) return
+        Settings.Global.putInt(context.contentResolver, "mobile_data", if (next) 1 else 0)
     }
+
+    private fun startSamsungCaptureSideButtonAction(context: Context, selectedAction: String): Boolean {
+        val intent = Intent("smartcapture.intent.action.side_button_action").apply {
+            component = ComponentName(
+                "com.samsung.android.app.smartcapture",
+                "com.samsung.android.app.settings.SideButtonStarterService",
+            )
+            putExtra("selected_action", selectedAction)
+        }
+        return runCatching {
+            context.startService(intent)
+            true
+        }.onFailure { Log.w(TAG, "Samsung capture side-button action unavailable: $selectedAction", it) }
+            .getOrDefault(false)
+    }
+
+    private fun sendSamsungScreenshotExecutor(context: Context): Boolean {
+        val intent = Intent("com.samsung.android.capture.ScreenshotExecutor").apply {
+            setPackage("android")
+            putExtra("capturedOrigin", 100)
+            putExtra("callingPackageName", "com.samsung.android.app.smartcapture")
+            putExtra("displayId", "0")
+            putExtra("type", "Fullscreen")
+        }
+        return runCatching {
+            context.sendBroadcast(intent, "com.samsung.permission.CAPTURE")
+            true
+        }.getOrDefault(false)
+    }
+
+    private fun runShellCommandForSuccess(command: String): Boolean = runCatching {
+        Runtime.getRuntime().exec(arrayOf("sh", "-c", command)).waitFor() == 0
+    }.getOrDefault(false)
 
     private fun setRingerMode(context: Context, mode: Int) {
         val audio = context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager ?: return
@@ -1156,12 +1242,14 @@ object GlobalQuickActions {
         val topPackage = runCatching { manager.getRunningTasks(1).firstOrNull()?.topActivity?.packageName }.getOrNull()
             ?: return
         if (topPackage == "android" || topPackage == "com.android.systemui" || topPackage == context.packageName) return
+        if (runShellCommandForSuccess("am force-stop $topPackage")) return
         runCatching { manager.killBackgroundProcesses(topPackage) }
         runCatching { callCompatible(manager, "forceStopPackage", topPackage) }
     }
 
     private fun cleanBackgroundApps(context: Context) {
         val manager = context.getSystemService(ActivityManager::class.java) ?: return
+        if (runShellCommandForSuccess("am kill-all")) return
         runCatching {
             manager.runningAppProcesses.orEmpty()
                 .filter { it.importance >= ActivityManager.RunningAppProcessInfo.IMPORTANCE_CACHED }
