@@ -1,0 +1,7 @@
+{
+  "startup_size_dp": 200,
+  "about_material_size_dp": 200,
+  "about_miuix_size_dp": 200,
+  "shared_resource": "R.drawable.logo002",
+  "shared_resource_count": 1
+}

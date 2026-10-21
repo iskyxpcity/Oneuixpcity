@@ -1,6 +1,12 @@
 @file:Suppress("UnstableApiUsage")
 
+import java.awt.AlphaComposite
+import java.awt.RenderingHints
+import java.awt.image.BufferedImage
 import java.io.File
+import javax.imageio.ImageIO
+import kotlin.math.roundToInt
+import java.util.Locale
 
 plugins {
     alias(libs.plugins.agp.app)
@@ -20,21 +26,158 @@ val managerVersionCode = rootProject.extra["managerVersionCode"] as Int
 val managerVersionName = rootProject.extra["managerVersionName"] as String
 
 val isPrBuild = project.findProperty("IS_PR_BUILD")?.toString()?.toBoolean() ?: false
-val defaultManagerPackageName = "com.oneuixp.app"
-val defaultManagerName = "OneUI XP"
-val managerPackageName = project.findProperty("ONEUIXP_PACKAGE_NAME")?.toString() ?: defaultManagerPackageName
-val managerName = project.findProperty("ONEUIXP_NAME")?.toString() ?: defaultManagerName
+val defaultManagerPackageName = "com.oneuialoha.app"
+val defaultManagerName = "Aloha OneUI"
+val managerPackageName = project.findProperty("ONEUIALOHA_PACKAGE_NAME")?.toString() ?: defaultManagerPackageName
+val managerName = project.findProperty("ONEUIALOHA_NAME")?.toString() ?: defaultManagerName
 
+// Keep the user's source image unchanged in the repository. Generate only the
+// launcher-specific foreground: keep the complete artwork slightly larger to reduce the
+// visible base-color rim while preserving the whole source without cropping.
+val launcherIconSource = rootProject.file("Aloha_OneUI_icon.png")
+val generatedLauncherResDir = layout.buildDirectory.dir("generated/res/alohaLauncher")
+val adaptiveIconCanvasPx = 432 // 108dp at 4x density
+val adaptiveIconForegroundPx = 280 // 70dp at 4x density; 2px larger than the previous fit
+
+fun sampleAlohaIconBackground(image: BufferedImage): String {
+    val buckets = mutableMapOf<Int, MutableList<Int>>()
+
+    fun recordPixel(x: Int, y: Int) {
+        val argb = image.getRGB(x, y)
+        val alpha = (argb ushr 24) and 0xFF
+        if (alpha < 240) return
+        val red = (argb ushr 16) and 0xFF
+        val green = (argb ushr 8) and 0xFF
+        val blue = argb and 0xFF
+        // Group near-identical edge colors, then average the dominant group.
+        val bucket = ((red ushr 4) shl 8) or ((green ushr 4) shl 4) or (blue ushr 4)
+        buckets.getOrPut(bucket) { mutableListOf() }.add(argb)
+    }
+
+    val horizontalBand = maxOf(1, image.width / 64)
+    val verticalBand = maxOf(1, image.height / 64)
+    for (x in 0 until image.width) {
+        for (offset in 0 until minOf(verticalBand, image.height)) {
+            recordPixel(x, offset)
+            recordPixel(x, image.height - 1 - offset)
+        }
+    }
+    for (y in 0 until image.height) {
+        for (offset in 0 until minOf(horizontalBand, image.width)) {
+            recordPixel(offset, y)
+            recordPixel(image.width - 1 - offset, y)
+        }
+    }
+
+    val dominant = buckets.values.maxByOrNull { it.size } ?: return "#00000000"
+    val red = dominant.sumOf { (it ushr 16) and 0xFF } / dominant.size
+    val green = dominant.sumOf { (it ushr 8) and 0xFF } / dominant.size
+    val blue = dominant.sumOf { it and 0xFF } / dominant.size
+    return String.format(Locale.ROOT, "#%02X%02X%02X", red, green, blue)
+}
+
+val prepareAlohaLauncherIcon = tasks.register("prepareAlohaLauncherIcon") {
+    inputs.file(launcherIconSource)
+    outputs.dir(generatedLauncherResDir)
+    doLast {
+        check(launcherIconSource.isFile) {
+            "Required launcher icon source is missing: ${launcherIconSource.path}"
+        }
+        val sourceImage = ImageIO.read(launcherIconSource)
+            ?: error("Unable to decode Aloha_OneUI_icon.png")
+        check(sourceImage.width > 0 && sourceImage.height > 0) {
+            "Aloha launcher source image has invalid dimensions."
+        }
+
+        val outputRoot = generatedLauncherResDir.get().asFile
+        outputRoot.deleteRecursively()
+
+        // The uploaded original is read-only; only this derived resource is transformed.
+        // Fit the complete source proportionally to a 280px (70dp) foreground area on the
+        // 432px (108dp) transparent canvas. This enlarges the previous 278px fit by 2px
+        // to narrow the visible base-color rim; no source pixels are trimmed or cropped.
+        val scale = minOf(
+            1.0,
+            minOf(
+                adaptiveIconForegroundPx.toDouble() / sourceImage.width,
+                adaptiveIconForegroundPx.toDouble() / sourceImage.height
+            )
+        )
+        val drawWidth = (sourceImage.width * scale).roundToInt().coerceAtLeast(1)
+        val drawHeight = (sourceImage.height * scale).roundToInt().coerceAtLeast(1)
+        val canvas = BufferedImage(
+            adaptiveIconCanvasPx,
+            adaptiveIconCanvasPx,
+            BufferedImage.TYPE_INT_ARGB
+        )
+        val graphics = canvas.createGraphics()
+        try {
+            graphics.composite = AlphaComposite.Src
+            graphics.setRenderingHint(
+                RenderingHints.KEY_INTERPOLATION,
+                RenderingHints.VALUE_INTERPOLATION_BICUBIC
+            )
+            graphics.setRenderingHint(
+                RenderingHints.KEY_RENDERING,
+                RenderingHints.VALUE_RENDER_QUALITY
+            )
+            graphics.setRenderingHint(
+                RenderingHints.KEY_ALPHA_INTERPOLATION,
+                RenderingHints.VALUE_ALPHA_INTERPOLATION_QUALITY
+            )
+            graphics.drawImage(
+                sourceImage,
+                (adaptiveIconCanvasPx - drawWidth) / 2,
+                (adaptiveIconCanvasPx - drawHeight) / 2,
+                drawWidth,
+                drawHeight,
+                null
+            )
+        } finally {
+            graphics.dispose()
+        }
+
+        val foregroundIcon = File(
+            outputRoot,
+            "mipmap-xxxhdpi/ic_launcher_aloha_foreground.png"
+        )
+        foregroundIcon.parentFile.mkdirs()
+        check(ImageIO.write(canvas, "png", foregroundIcon)) {
+            "Unable to write generated adaptive launcher foreground."
+        }
+
+        val background = sampleAlohaIconBackground(sourceImage)
+        val colorsXml = File(outputRoot, "values/aloha_launcher_colors.xml")
+        colorsXml.parentFile.mkdirs()
+        colorsXml.writeText(
+            """<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="aloha_launcher_background">$background</color>
+</resources>
+""".trimIndent() + "\n",
+            Charsets.UTF_8
+        )
+
+        println(
+            "Generated Aloha adaptive icon: full source fitted without cropping into " +
+                "${adaptiveIconForegroundPx}x${adaptiveIconForegroundPx} foreground area on " +
+                "${adaptiveIconCanvasPx}x${adaptiveIconCanvasPx} transparent canvas; " +
+                "source file was not modified; background=$background"
+        )
+        sourceImage.flush()
+        canvas.flush()
+    }
+}
 
 android {
-    namespace = "com.oneuixp.app"
+    namespace = "com.oneuialoha.app"
 
     // The same owner keystore must sign EVERY distributable APK.
     // CI supplies credentials via GitHub Actions secrets; never commit keys.
-    val ownerKeystore = System.getenv("ONEUIXP_KEYSTORE_PATH")?.takeIf { it.isNotBlank() }
-    val ownerStorePassword = System.getenv("ONEUIXP_KEYSTORE_PASSWORD")
-    val ownerKeyAlias = System.getenv("ONEUIXP_KEY_ALIAS")
-    val ownerKeyPassword = System.getenv("ONEUIXP_KEY_PASSWORD")
+    val ownerKeystore = System.getenv("ONEUIALOHA_KEYSTORE_PATH")?.takeIf { it.isNotBlank() }
+    val ownerStorePassword = System.getenv("ONEUIALOHA_KEYSTORE_PASSWORD")
+    val ownerKeyAlias = System.getenv("ONEUIALOHA_KEY_ALIAS")
+    val ownerKeyPassword = System.getenv("ONEUIALOHA_KEY_PASSWORD")
     val ownerSigningReady = !ownerKeystore.isNullOrBlank() &&
         !ownerStorePassword.isNullOrBlank() &&
         !ownerKeyAlias.isNullOrBlank() &&
@@ -131,6 +274,14 @@ android {
     compileOptions {
         sourceCompatibility = androidSourceCompatibility
         targetCompatibility = androidTargetCompatibility
+    }
+}
+
+// Register the generated resources and make every Android resource-processing task depend on their generation.
+android.sourceSets.getByName("main").res.srcDir(generatedLauncherResDir.get().asFile)
+tasks.configureEach {
+    if (name.contains("Resources") || name.endsWith("SourceSetPaths") || name.contains("SupportedLocales") || name.contains("DeepLinks")) {
+        dependsOn(prepareAlohaLauncherIcon)
     }
 }
 

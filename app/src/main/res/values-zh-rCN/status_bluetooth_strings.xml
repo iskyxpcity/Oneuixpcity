@@ -5,7 +5,7 @@
     <string name="status_bluetooth_show_left">显示在左侧状态栏</string>
     <string name="status_bluetooth_show_left_summary">使用叠加层把蓝牙图标显示到左侧，不直接搬动三星 SystemUI 原生 View</string>
     <string name="status_bluetooth_custom_icon">使用自定义蓝牙图标</string>
-    <string name="status_bluetooth_custom_icon_summary">开启后使用 OneuiXP 蓝牙图形；关闭时尽量复用三星原生图标</string>
+    <string name="status_bluetooth_custom_icon_summary">开启后使用 OneUIAloha 蓝牙图形；关闭时尽量复用三星原生图标</string>
     <string name="status_bluetooth_portrait_size">竖屏图标大小</string>
     <string name="status_bluetooth_landscape_size">横屏图标大小</string>
     <string name="status_bluetooth_horizontal_offset">左右位置</string>

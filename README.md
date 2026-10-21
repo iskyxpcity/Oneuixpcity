@@ -1,45 +1,55 @@
-# OneUI XP
+# OneUI Aloha
 
-OneUI XP 是面向 Samsung One UI 的独立 Android / LSPosed 项目，提供系统界面定制与双主题设置界面（Miuix / Material）。它不是 Root 管理工具。
+OneUI Aloha 是面向 Samsung One UI 的独立 Android / LSPosed 模块，提供系统界面定制与双主题设置界面（Miuix / Material）。它不是 Root 管理工具。
 
-## 当前版本
+## 应用身份与版本
 
-- 应用 ID：`com.oneuixp.app`
-- 当前版本：`1.0.261020`（versionCode：`10`）
+- 用户可见名称：`OneUI Aloha`
+- Android application ID / app namespace：`com.oneuialoha.app`
+- Hook 入口：`com.oneuialoha.hook.Main`
 - Xposed API：`101`
-- 模块入口：`com.oneuixp.hook.Main`
-- 作用域由 `app/src/main/resources/META-INF/xposed/scope.list` 管理。
+- 当前源码迁移候选：`1.0.261021.1`（versionCode：`11`；当前迁移测试候选值，以最终已验证构建为准）
+- Xposed self-scope：`app/src/main/resources/META-INF/xposed/scope.list`
+
+变更后的 application ID 使 OneUI Aloha 成为独立安装的 Android 应用，而不是 OneUI XP 的原地升级。Android 不会因安装 Aloha 自动迁移旧 XP 的应用数据或 DataStore 设置；安装前请保留旧应用及需要的配置备份。
 
 ## 项目结构
 
-- `app/src/main/java/com/oneuixp/app/`：应用入口、设置界面、状态诊断与更新器。
-- `app/src/main/java/com/oneuixp/mod/ui/`：已迁移到独立命名空间的功能界面代码。
-- `common/`：共享配置模型和通用逻辑，命名空间为 `com.oneuixp.common`。
-- `hook/`：LSPosed 功能入口和 Hook 实现，命名空间为 `com.oneuixp.hook`。
-- `stub/`：编译期 Android API 存根，命名空间为 `com.oneuixp.stub`。
+- `app/src/main/java/com/oneuialoha/app/`：应用入口、设置界面、状态诊断与更新器。
+- `app/src/main/java/com/oneuialoha/mod/ui/`：功能设置界面。
+- `common/`：共享配置模型与通用逻辑，命名空间为 `com.oneuialoha.common`。
+- `hook/`：LSPosed 功能入口与 Hook 实现，命名空间为 `com.oneuialoha.hook`。
+- `stub/`：编译期 Android API 存根，命名空间为 `com.oneuialoha.stub`。
 - `.github/workflows/build.yml`：源码检查、编译、签名与 APK 验证。
+- `verify_migration.py`、`verify_no_jni.py`、`verify_oneuialoha_identity.py`：源码迁移、JNI 禁用与 Aloha 身份/版本/入口/资源校验。
 
-## 构建与发布
+## 更新源职责
 
-正式 APK 使用 OneUI XP 专用的永久签名密钥。仓库 Actions Secrets 仅需配置：
+- OneUI Aloha 自身更新及旧应用迁移目标：[`iSkyJIE/OneUIAloha-Releases`](https://github.com/iSkyJIE/OneUIAloha-Releases/releases)
+- 已安装 OneUI XP 的旧版本常规更新与无 Aloha 可用迁移资产时的回退源：[`iSkyJIE/OneuiXP-Releases`](https://github.com/iSkyJIE/OneuiXP-Releases/releases)
+
+旧 XP feed 与旧包名只应出现在明确的迁移/兼容逻辑中，不是 Aloha 当前应用身份的一部分。迁移检查必须继续限制为 Aloha 官方 HTTPS Release 资产，且不得将不同 application ID 的 Aloha APK 当作旧 XP 包的原地覆盖升级。
+
+## 构建、签名与发布
+
+构建使用 GitHub Actions Secrets 提供既有 Owner 签名凭据：
 
 - `KEYSTORE_BASE64`
 - `KEYSTORE_PASSWORD`
 - `KEY_ALIAS`
 - `KEY_PASSWORD`
 
-签名证书指纹由构建工作流固定校验；私钥和密码不得提交到 Git。
+公开 Aloha Release 仅在 `main` 上由明确的 `release:*` 提交触发；该正式发布步骤另需单独配置 `ALOHA_RELEASE_TOKEN`，用于向 `iSkyJIE/OneUIAloha-Releases` 发布。该 Token 与 APK 签名凭据分离，不用于迁移分支 CI；本次独立化不会创建或覆盖公开 Release。
 
-私有源码仓库 `iskyxpcity/Oneuixpcity` 保存源代码、Actions 构建记录与 CI 测试预发布。面向用户的公开正式 APK Release 及应用内更新 feed 位于项目专用的公开仓库 `iSkyJIE/OneuiXP-Releases`；更新器从该仓库读取最新 Release。两者都是 OneUI XP 自有项目的一部分，不是第三方仓库或需要移除的外部镜像。
+固定 Owner 证书 SHA-256 基线为 `93bf61a6493c6b336383832eb41301bd8fe061f43566e7e384e3fdd9fc1c26a1`。请勿更换密钥、生成替代签名或将 keystore / 密码写入仓库。Secret 名称保持既有设置；本项目 Gradle 中使用的环境变量以 `ONEUIALOHA_*` 命名。
 
-源码仓库 CI 成功或其中存在测试预发布，并不自动证明公开 Release 已同步发布。正式用户发行须单独核对公开 Release 的标签、APK 文件名、包名与版本、固定签名证书及 APK SHA-256。构建流程不要求配置跨仓库发布 Token，也不会将跨仓库自动镜像作为 CI 成功条件。
+- 私有源码仓库：[`iskyxpcity/Oneuixpcity`](https://github.com/iskyxpcity/Oneuixpcity)
+- 私有源码仓库 Actions：[`Oneuixpcity/actions`](https://github.com/iskyxpcity/Oneuixpcity/actions)
+- Aloha 公开 Release 与 Aloha 更新源：[`OneUIAloha-Releases`](https://github.com/iSkyJIE/OneUIAloha-Releases/releases)
+- 旧 XP 更新源：[`OneuiXP-Releases`](https://github.com/iSkyJIE/OneuiXP-Releases/releases)
 
-- [私有源码仓库 GitHub Actions](https://github.com/iskyxpcity/Oneuixpcity/actions)
-- [私有源码仓库 Releases（CI / 测试预发布）](https://github.com/iskyxpcity/Oneuixpcity/releases)
-- [公开正式 Release 与应用内更新源](https://github.com/iSkyJIE/OneUIXP-Releases/releases)
+源码预检、CI 成功、APK 已签名与三星真机验收是不同的验证阶段。正式交付前须核对最终 HEAD 对应的 Actions run、实际 APK 直链及资产、包名/应用标签/versionName/versionCode、APK SHA-256、Owner 证书指纹、APK V2 签名与 ZIP 完整性。CI 通过本身不代表已在三星真机完成验收。
 
 ## 独立性与许可证
 
-项目使用自身的应用 ID、源码命名空间、构建配置和发布流程，不配置旧项目的代码同步或自动合并任务。独立化不会改变应用 ID、签名或版本管理。
-
-项目中保留的第三方组件仍遵守其原有许可证与必要署名。相关许可证正文保存在 `LICENSE` 和 `third_party/THIRD_PARTY_MOD_LICENSE.txt`；许可证文件内容保持原样。
+OneUI Aloha 使用独立的 application ID、源码命名空间、构建配置与发布流程。项目保留的第三方组件仍遵守原有许可证与必要署名；相关许可证正文保存在 `LICENSE` 和 `third_party/THIRD_PARTY_MOD_LICENSE.txt`，不得为追求品牌清理而删除或篡改许可证内容。

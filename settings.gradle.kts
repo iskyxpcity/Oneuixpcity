@@ -19,7 +19,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "OneuiXP"
+rootProject.name = "OneUIAloha"
 include(":app")
 include(":common")
 include(":hook")

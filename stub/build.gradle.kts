@@ -3,7 +3,7 @@ plugins {
 }
 
 android {
-    namespace = "com.oneuixp.stub"
+    namespace = "com.oneuialoha.stub"
     compileSdk {
         version = release(37)
     }

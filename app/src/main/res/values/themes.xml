@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.OneuiXP" parent="android:Theme.Material.Light.NoActionBar">
+    <style name="Theme.OneUIAloha" parent="android:Theme.Material.Light.NoActionBar">
         <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
     </style>
 
-    <style name="Theme.OneuiXP.Startup" parent="Theme.OneuiXP">
+    <style name="Theme.OneUIAloha.Startup" parent="Theme.OneUIAloha">
         <item name="android:windowDisablePreview">true</item>
         <item name="android:windowIsTranslucent">true</item>
         <item name="android:windowBackground">@android:color/transparent</item>

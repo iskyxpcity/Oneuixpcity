@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="status_wifi_runtime_enable">Modify status bar Wi-Fi</string>
-    <string name="status_wifi_runtime_enable_summary">Enable OneuiXP Samsung SystemUI Wi‑Fi icon controls.</string>
+    <string name="status_wifi_runtime_enable_summary">Enable OneUIAloha Samsung SystemUI Wi‑Fi icon controls.</string>
     <string name="status_wifi_editor_enable">Custom Wi-Fi icon editor</string>
-    <string name="status_wifi_editor_enable_summary">Replace the native Wi-Fi glyph with the editable OneuiXP arc renderer.</string>
+    <string name="status_wifi_editor_enable_summary">Replace the native Wi-Fi glyph with the editable OneUIAloha arc renderer.</string>
     <string name="status_wifi_hide_activity">Hide Wi-Fi activity arrows</string>
     <string name="status_wifi_hide_standard_badge">Hide Wi-Fi standard badge</string>
     <string name="status_wifi_hide_standard_badge_summary">Hide Wi-Fi 6 / standard text or badge when Samsung exposes it.</string>

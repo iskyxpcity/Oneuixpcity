@@ -2,13 +2,13 @@
 """Guard against accidentally re-enabling KernelSU JNI."""
 from pathlib import Path
 root = Path(__file__).resolve().parent
-native_path = root / 'app/src/main/java/com/oneuixp/app/Natives.kt'
+native_path = root / 'app/src/main/java/com/oneuialoha/app/Natives.kt'
 assert not native_path.exists(), 'obsolete KernelSU native compatibility layer must remain absent'
 for dead in ('core/tasks', 'ui/webui', 'data/model', 'ui/screen/flash', 'ui/screen/modulerepo'):
-    assert not (root / 'app/src/main/java/com/oneuixp/app' / dead).exists(), dead
+    assert not (root / 'app/src/main/java/com/oneuialoha/app' / dead).exists(), dead
 gradle = (root / 'app/build.gradle.kts').read_text()
 assert 'externalNativeBuild' not in gradle
-assert (root / 'app/src/main/java/com/oneuixp/app/statusbar/SystemUiEntry.java').exists()
+assert (root / 'app/src/main/java/com/oneuialoha/app/statusbar/SystemUiEntry.java').exists()
 print('PASS: no KernelSU Natives shim/JNI sources/build; SystemUI hook retained')
 
 # Legacy KernelSU boot/preload components must never return to the install manifest.
@@ -16,8 +16,8 @@ manifest = (root / 'app/src/main/AndroidManifest.xml').read_text()
 for component in ('MagicaService', 'BootCompletedReceiver', 'AppZygotePreload', 'useAppZygote', 'zygotePreloadName'):
     assert component not in manifest, component
 for name in ('AppZygotePreload.java', 'BootCompletedReceiver.java', 'MagicaService.java'):
-    assert not (root / 'app/src/main/java/com/oneuixp/app/magica' / name).exists(), name
-assert 'setSuEnabled' not in (root / 'app/src/main/java/com/oneuixp/app/data/repository/SettingsRepositoryImpl.kt').read_text()
+    assert not (root / 'app/src/main/java/com/oneuialoha/app/magica' / name).exists(), name
+assert 'setSuEnabled' not in (root / 'app/src/main/java/com/oneuialoha/app/data/repository/SettingsRepositoryImpl.kt').read_text()
 print('PASS: legacy KernelSU boot and Zygote components removed; auto-jailbreak disabled')
 
 # The project must remain independent of the removed KernelSU native source tree.
@@ -29,23 +29,23 @@ assert 'ndk;' not in workflow.lower()
 print('PASS: obsolete KernelSU C++ sources and header restoration removed; CI does not restore them')
 
 # Theme extraction guard: legacy KernelSU feature backend must stay disconnected.
-settings_impl = (root / 'app/src/main/java/com/oneuixp/app/data/repository/SettingsRepositoryImpl.kt').read_text()
+settings_impl = (root / 'app/src/main/java/com/oneuialoha/app/data/repository/SettingsRepositoryImpl.kt').read_text()
 assert 'execKsud(' not in settings_impl
 assert 'getFeatureStatus(' not in settings_impl
 assert 'ShellUtils.fastCmd' not in settings_impl
-reboot_popup = (root / 'app/src/main/java/com/oneuixp/app/ui/component/rebootlistpopup/RebootListPopup.kt').read_text()
+reboot_popup = (root / 'app/src/main/java/com/oneuialoha/app/ui/component/rebootlistpopup/RebootListPopup.kt').read_text()
 assert 'reboot(reason)' not in reboot_popup
 assert '"recovery"' not in reboot_popup and '"bootloader"' not in reboot_popup and '"download"' not in reboot_popup
 assert 'statusbar_xp_systemui' in reboot_popup
-theme = (root / 'app/src/main/java/com/oneuixp/app/ui/theme/Theme.kt').read_text()
-assert 'fun OneuiXPTheme(' in theme
-print('PASS: KernelSU feature/reboot paths disconnected; OneuiXP dual-theme wrapper active')
+theme = (root / 'app/src/main/java/com/oneuialoha/app/ui/theme/Theme.kt').read_text()
+assert 'fun OneUIAlohaTheme(' in theme
+print('PASS: KernelSU feature/reboot paths disconnected; OneUIAloha dual-theme wrapper active')
 
 # Never bring back the abandoned KernelSU intent drain or unused adaptive side rails.
-assert not (root / 'app/src/main/java/com/oneuixp/app/ui/navigation3/IntentDispatcher.kt').exists()
+assert not (root / 'app/src/main/java/com/oneuialoha/app/ui/navigation3/IntentDispatcher.kt').exists()
 for name in ('NavigationRailMiuix.kt', 'NavigationRailMaterial.kt'):
-    assert not (root / 'app/src/main/java/com/oneuixp/app/ui/component/bottombar' / name).exists(), name
-assert 'fun SideRail(' not in (root / 'app/src/main/java/com/oneuixp/app/ui/component/bottombar/BottomBar.kt').read_text()
+    assert not (root / 'app/src/main/java/com/oneuialoha/app/ui/component/bottombar' / name).exists(), name
+assert 'fun SideRail(' not in (root / 'app/src/main/java/com/oneuialoha/app/ui/component/bottombar/BottomBar.kt').read_text()
 print('PASS: no old intent dispatcher or inactive adaptive navigation rails')
 
 # Resource guard: the root/module backend has been removed across every locale.
@@ -75,17 +75,17 @@ for dead_key in ('profile_default', 'home_gki_warning', 'settings_sucompat', 're
         )
 assert 'networkSecurityConfig' not in (root / 'app/src/main/AndroidManifest.xml').read_text()
 assert not (root / 'app/src/main/res/xml/network_security_config.xml').exists()
-assert 'Theme.OneuiXP.WebUI' not in (root / 'app/src/main/res/values-night/themes.xml').read_text()
+assert 'Theme.OneUIAloha.WebUI' not in (root / 'app/src/main/res/values-night/themes.xml').read_text()
 print('PASS: no legacy KernelSU WebUI theme or local HTTP cleartext exemption')
 
-# OneuiXP page names and preferences must not retain KernelSU manager concepts.
+# OneUIAloha page names and preferences must not retain KernelSU manager concepts.
 for dead in ('ui/screen/superuser', 'ui/screen/module'):
-    assert not (root / 'app/src/main/java/com/oneuixp/app' / dead).exists(), dead
-assert (root / 'app/src/main/java/com/oneuixp/app/ui/screen/tools/ToolsScreen.kt').exists()
-assert (root / 'app/src/main/java/com/oneuixp/app/ui/screen/status/StatusScreen.kt').exists()
-settings_contract = (root / 'app/src/main/java/com/oneuixp/app/data/repository/SettingsRepository.kt').read_text()
-main_activity = (root / 'app/src/main/java/com/oneuixp/app/ui/MainActivity.kt').read_text()
-theme_source = (root / 'app/src/main/java/com/oneuixp/app/ui/theme/Theme.kt').read_text()
+    assert not (root / 'app/src/main/java/com/oneuialoha/app' / dead).exists(), dead
+assert (root / 'app/src/main/java/com/oneuialoha/app/ui/screen/tools/ToolsScreen.kt').exists()
+assert (root / 'app/src/main/java/com/oneuialoha/app/ui/screen/status/StatusScreen.kt').exists()
+settings_contract = (root / 'app/src/main/java/com/oneuialoha/app/data/repository/SettingsRepository.kt').read_text()
+main_activity = (root / 'app/src/main/java/com/oneuialoha/app/ui/MainActivity.kt').read_text()
+theme_source = (root / 'app/src/main/java/com/oneuialoha/app/ui/theme/Theme.kt').read_text()
 for obsolete in ('moduleDescriptionMaxLines', 'enableNavigationBadge'):
     assert obsolete not in settings_contract, obsolete
     assert obsolete not in main_activity, obsolete
@@ -95,12 +95,12 @@ print('PASS: legacy SuperUser/Module page names and dead manager-only preference
 
 # No manager-only pager gesture preferences or module-named update model may remain.
 for obsolete in ('enableSwipeDismiss', 'pagerInterceptionMode'):
-    assert obsolete not in (root / 'app/src/main/java/com/oneuixp/app/data/repository/SettingsRepository.kt').read_text(), obsolete
-assert not (root / 'app/src/main/java/com/oneuixp/app/ui/util/module').exists()
-assert (root / 'app/src/main/java/com/oneuixp/app/ui/util/update/LatestVersionInfo.kt').exists()
-print('PASS: dead manager pager preferences removed; update model uses OneuiXP naming')
+    assert obsolete not in (root / 'app/src/main/java/com/oneuialoha/app/data/repository/SettingsRepository.kt').read_text(), obsolete
+assert not (root / 'app/src/main/java/com/oneuialoha/app/ui/util/module').exists()
+assert (root / 'app/src/main/java/com/oneuialoha/app/ui/util/update/LatestVersionInfo.kt').exists()
+print('PASS: dead manager pager preferences removed; update model uses OneUIAloha naming')
 
-# Final naming/resource guard: only required OneUI XP resources and libxposed metadata may use these names.
+# Final naming/resource guard: only required OneUI Aloha resources and libxposed metadata may use these names.
 default_strings = {
     node.get('name', '') for node in ElementTree.parse(root / 'app/src/main/res/values/strings.xml').getroot().findall('string')
 }
@@ -109,4 +109,4 @@ assert not any(name.startswith('module_') for name in default_strings)
 for obsolete in ('settings_navigation_badge',
                  'settings_enable_swipe_dismiss', 'settings_pager_gesture_mode'):
     assert obsolete not in default_strings, obsolete
-print('PASS: OneuiXP resource names contain no legacy manager/module UI keys')
+print('PASS: OneUIAloha resource names contain no legacy manager/module UI keys')

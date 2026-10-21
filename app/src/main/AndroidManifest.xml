@@ -33,26 +33,26 @@
     </queries>
 
     <application
-        android:name=".OneuiXPApplication"
+        android:name=".OneUIAlohaApplication"
         android:allowBackup="false"
         android:enableOnBackInvokedCallback="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:directBootAware="true"
         android:fullBackupContent="@xml/backup_rules"
         android:hasFragileUserData="false"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@mipmap/ic_launcher_aloha"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:theme="@style/Theme.OneuiXP">
+        android:theme="@style/Theme.OneUIAloha">
         <meta-data android:name="xposedmodule" android:value="true" />
-        <meta-data android:name="xposeddescription" android:value="OneuiXP · independent feature module" />
+        <meta-data android:name="xposeddescription" android:value="Aloha OneUI · independent feature module" />
         <meta-data android:name="xposedminversion" android:value="93" />
         <meta-data android:name="xposedscope" android:resource="@array/xposed_scope" />
 
         <activity
             android:name=".ui.StartupActivity"
             android:exported="true"
-            android:theme="@style/Theme.OneuiXP.Startup">
+            android:theme="@style/Theme.OneUIAloha.Startup">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -61,7 +61,7 @@
         <activity
             android:name=".ui.MainActivity"
             android:exported="true"
-            android:theme="@style/Theme.OneuiXP"
+            android:theme="@style/Theme.OneUIAloha"
             android:windowSoftInputMode="adjustResize" />
 
     </application>
