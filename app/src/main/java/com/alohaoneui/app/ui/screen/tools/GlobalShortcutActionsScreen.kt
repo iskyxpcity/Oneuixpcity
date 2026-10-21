@@ -170,6 +170,16 @@ private val shortcutActionOptions = shortcutActionGroups.flatMap { it.actions }
 private typealias ShortcutSettingsUpdater =
     ((Preference.GlobalShortcutActions) -> Preference.GlobalShortcutActions) -> Unit
 
+private enum class ShortcutEntryIcon {
+    Gesture,
+    FloatingBall,
+    StatusBar,
+    NavigationBar,
+    Volume,
+    Pinch,
+    Spread,
+}
+
 private enum class GlobalShortcutPageKind(
     val title: String,
     val subtitle: String,
@@ -214,6 +224,7 @@ fun GlobalShortcutActionsScreen() {
     ) {
         GlobalShortcutEntryCard(
             title = "全局三指动作",
+            icon = ShortcutEntryIcon.Gesture,
             description = "统一设置三指滑动、捏合和展开动作。",
             state = if (enabledThreeFingerCount == 0) "未启用" else "已启用 ${enabledThreeFingerCount} 项",
             iconColor = Color(0xFF5C6BC0),
@@ -221,13 +232,15 @@ fun GlobalShortcutActionsScreen() {
         )
         GlobalShortcutEntryCard(
             title = "悬浮球",
-            description = "设置悬浮球颜色、大小和单击/双击/划动动作。",
+            icon = ShortcutEntryIcon.FloatingBall,
+            description = "设置悬浮球颜色、大小、和单击/双击/划动动作。",
             state = if (settings.floatingBallEnabled) "已启用" else "未启用",
             iconColor = Color(0xFF00897B),
             onClick = { navigator.push(Route.GlobalFloatingBallShortcut) },
         )
         GlobalShortcutEntryCard(
             title = "状态栏快捷动作",
+            icon = ShortcutEntryIcon.StatusBar,
             description = "设置状态栏双击、左上角/右上角单击和长按动作。",
             state = if (settings.statusBarShortcutEnabled) "已启用" else "未启用",
             iconColor = Color(0xFF607D8B),
@@ -235,6 +248,7 @@ fun GlobalShortcutActionsScreen() {
         )
         GlobalShortcutEntryCard(
             title = "虚拟导航键动作",
+            icon = ShortcutEntryIcon.NavigationBar,
             description = "设置返回、Home、最近任务的双击和长按动作。",
             state = if (settings.navigationKeyShortcutEnabled) "已启用" else "未启用",
             iconColor = Color(0xFF8E24AA),
@@ -242,6 +256,7 @@ fun GlobalShortcutActionsScreen() {
         )
         GlobalShortcutEntryCard(
             title = "息屏音量键动作",
+            icon = ShortcutEntryIcon.Volume,
             description = "息屏长按音量键切歌，双击音量键播放/暂停。",
             state = if (settings.screenOffVolumeKeyEnabled) "已启用" else "未启用",
             iconColor = Color(0xFFEF6C00),
@@ -265,6 +280,7 @@ fun GlobalThreeFingerActionsScreen() {
     ) {
         GlobalShortcutEntryCard(
             title = "三指滑动",
+            icon = ShortcutEntryIcon.Gesture,
             description = "设置三指上划、下划、左划、右划动作。",
             state = if (settings.threeFingerGestureEnabled) "已启用" else "未启用",
             iconColor = Color(0xFF5C6BC0),
@@ -272,6 +288,7 @@ fun GlobalThreeFingerActionsScreen() {
         )
         GlobalShortcutEntryCard(
             title = "三指捏合",
+            icon = ShortcutEntryIcon.Pinch,
             description = "设置三根手指同时向内捏合时执行的动作。",
             state = if (settings.threeFingerPinchEnabled) "已启用" else "未启用",
             iconColor = Color(0xFF00897B),
@@ -279,6 +296,7 @@ fun GlobalThreeFingerActionsScreen() {
         )
         GlobalShortcutEntryCard(
             title = "三指展开",
+            icon = ShortcutEntryIcon.Spread,
             description = "设置三根手指同时向外展开时执行的动作。",
             state = if (settings.threeFingerSpreadEnabled) "已启用" else "未启用",
             iconColor = Color(0xFF7E57C2),
@@ -405,10 +423,104 @@ private fun GlobalShortcutPageFrame(
 }
 
 @Composable
+private fun ShortcutEntryGlyph(icon: ShortcutEntryIcon) {
+    Canvas(modifier = Modifier.size(24.dp)) {
+        val sx = size.width / 24f
+        val sy = size.height / 24f
+        val strokeWidth = 1.9.dp.toPx()
+        fun point(x: Float, y: Float) = Offset(x * sx, y * sy)
+        fun line(x1: Float, y1: Float, x2: Float, y2: Float) {
+            drawLine(
+                color = Color.White,
+                start = point(x1, y1),
+                end = point(x2, y2),
+                strokeWidth = strokeWidth,
+                cap = StrokeCap.Round,
+            )
+        }
+        fun ring(x: Float, y: Float, radius: Float) {
+            drawCircle(
+                color = Color.White,
+                radius = radius * min(sx, sy),
+                center = point(x, y),
+                style = Stroke(width = strokeWidth),
+            )
+        }
+        fun dot(x: Float, y: Float, radius: Float = 1.2f) {
+            drawCircle(color = Color.White, radius = radius * min(sx, sy), center = point(x, y))
+        }
+        when (icon) {
+            ShortcutEntryIcon.Gesture -> {
+                line(7f, 5f, 7f, 12.5f)
+                line(10.5f, 4f, 10.5f, 12.5f)
+                line(14f, 4.5f, 14f, 12.5f)
+                line(17.5f, 6f, 17.5f, 12.5f)
+                line(4f, 15.5f, 20f, 15.5f)
+                line(16.5f, 12.5f, 20f, 15.5f)
+                line(16.5f, 18.5f, 20f, 15.5f)
+            }
+            ShortcutEntryIcon.FloatingBall -> {
+                ring(12f, 12f, 8.6f)
+                dot(12f, 12f, 3.2f)
+                dot(17.2f, 6.8f, 1f)
+            }
+            ShortcutEntryIcon.StatusBar -> {
+                line(3f, 6f, 21f, 6f)
+                line(3f, 6f, 3f, 17f)
+                line(3f, 17f, 21f, 17f)
+                line(21f, 6f, 21f, 17f)
+                dot(7f, 11.5f, 1f)
+                dot(11f, 11.5f, 1f)
+                line(14.5f, 11.5f, 18f, 11.5f)
+            }
+            ShortcutEntryIcon.NavigationBar -> {
+                line(7.2f, 12f, 3.8f, 15.3f)
+                line(3.8f, 15.3f, 7.2f, 18.5f)
+                ring(12f, 15.5f, 3.1f)
+                line(18f, 12.5f, 21f, 12.5f)
+                line(18f, 15.5f, 21f, 15.5f)
+                line(18f, 18.5f, 21f, 18.5f)
+            }
+            ShortcutEntryIcon.Volume -> {
+                line(3.5f, 9.5f, 7f, 9.5f)
+                line(7f, 9.5f, 10.5f, 6f)
+                line(10.5f, 6f, 10.5f, 18f)
+                line(10.5f, 18f, 7f, 14.5f)
+                line(7f, 14.5f, 3.5f, 14.5f)
+                line(3.5f, 14.5f, 3.5f, 9.5f)
+                line(14.5f, 9f, 16.5f, 12f)
+                line(16.5f, 12f, 14.5f, 15f)
+                line(17.5f, 6.5f, 21f, 12f)
+                line(21f, 12f, 17.5f, 17.5f)
+            }
+            ShortcutEntryIcon.Pinch -> {
+                line(2.8f, 12f, 10f, 12f)
+                line(6.7f, 8.8f, 10f, 12f)
+                line(6.7f, 15.2f, 10f, 12f)
+                line(21.2f, 12f, 14f, 12f)
+                line(17.3f, 8.8f, 14f, 12f)
+                line(17.3f, 15.2f, 14f, 12f)
+                dot(12f, 12f, 1f)
+            }
+            ShortcutEntryIcon.Spread -> {
+                line(10f, 12f, 2.8f, 12f)
+                line(6.1f, 8.8f, 2.8f, 12f)
+                line(6.1f, 15.2f, 2.8f, 12f)
+                line(14f, 12f, 21.2f, 12f)
+                line(17.9f, 8.8f, 21.2f, 12f)
+                line(17.9f, 15.2f, 21.2f, 12f)
+                dot(12f, 12f, 1f)
+            }
+        }
+    }
+}
+
+@Composable
 private fun GlobalShortcutEntryCard(
     title: String,
     description: String,
     state: String,
+    icon: ShortcutEntryIcon,
     iconColor: Color,
     onClick: () -> Unit,
 ) {
@@ -425,12 +537,7 @@ private fun GlobalShortcutEntryCard(
                     modifier = Modifier.size(40.dp).clip(RoundedCornerShape(14.dp)).background(iconColor),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Icon(
-                        imageVector = ImageVector.vectorResource(R.drawable.ic_nav_gesture),
-                        contentDescription = title,
-                        tint = Color.White,
-                        modifier = Modifier.size(24.dp),
-                    )
+                    ShortcutEntryGlyph(icon = icon)
                 }
                 Column(modifier = Modifier.weight(1f).padding(start = 12.dp)) {
                     Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
@@ -455,12 +562,7 @@ private fun GlobalShortcutEntryCard(
                     modifier = Modifier.size(40.dp).clip(RoundedCornerShape(14.dp)).background(iconColor),
                     contentAlignment = Alignment.Center,
                 ) {
-                    MiuixIcon(
-                        imageVector = ImageVector.vectorResource(R.drawable.ic_nav_gesture),
-                        contentDescription = title,
-                        tint = Color.White,
-                        modifier = Modifier.size(24.dp),
-                    )
+                    ShortcutEntryGlyph(icon = icon)
                 }
                 Column(modifier = Modifier.weight(1f).padding(start = 12.dp)) {
                     MiuixText(title, color = colorScheme.onSurface, fontWeight = FontWeight.SemiBold)
