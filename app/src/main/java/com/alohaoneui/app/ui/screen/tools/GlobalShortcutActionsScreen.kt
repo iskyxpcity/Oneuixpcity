@@ -742,17 +742,39 @@ private fun ShortcutFeatureEnableCard(
     enabled: Boolean,
     onEnabledChange: (Boolean) -> Unit,
 ) {
-    SectionCard(
-        title = kind.enableLabel,
-        summary = if (enabled) "已启用" else "未启用",
-    ) {
-        SwitchItem(
-            title = kind.enableLabel,
-            summary = null,
-            checked = enabled,
-            onCheckedChange = onEnabledChange,
-        )
-        ShortcutBodyText(kind.note)
+    // Mirrors the source enable card: one switch row, its status, then the scope note.
+    when (LocalUiMode.current) {
+        UiMode.Material -> Card(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp),
+            shape = RoundedCornerShape(24.dp),
+        ) {
+            Column(modifier = Modifier.padding(vertical = 8.dp)) {
+                CompositionLocalProvider(LocalAlohaOneUIGroupedPreference provides true) {
+                    SwitchItem(
+                        title = kind.enableLabel,
+                        summary = if (enabled) "已启用" else "未启用",
+                        checked = enabled,
+                        onCheckedChange = onEnabledChange,
+                    )
+                }
+                ShortcutBodyText(kind.note)
+            }
+        }
+        UiMode.Miuix -> MiuixCard(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp),
+        ) {
+            Column(modifier = Modifier.padding(vertical = 8.dp)) {
+                CompositionLocalProvider(LocalAlohaOneUIGroupedPreference provides true) {
+                    SwitchItem(
+                        title = kind.enableLabel,
+                        summary = if (enabled) "已启用" else "未启用",
+                        checked = enabled,
+                        onCheckedChange = onEnabledChange,
+                    )
+                }
+                ShortcutBodyText(kind.note)
+            }
+        }
     }
 }
 
