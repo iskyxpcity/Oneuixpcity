@@ -40,8 +40,8 @@
         android:directBootAware="true"
         android:fullBackupContent="@xml/backup_rules"
         android:hasFragileUserData="false"
-        android:icon="@mipmap/ic_launcher"
-        android:roundIcon="@mipmap/ic_launcher"
+        android:icon="@mipmap/ic_launcher_aloha"
+        android:roundIcon="@mipmap/ic_launcher_aloha"
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/Theme.OneUIAloha">
