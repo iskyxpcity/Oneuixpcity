@@ -373,7 +373,7 @@ private fun GlobalShortcutPageFrame(
                             navigationIcon = {
                                 MiuixIconButton(onClick = onBack) {
                                     MiuixIcon(
-                                        imageVector = MiuixIcons.Extended.Back,
+                                        imageVector = MiuixIcons.Back,
                                         contentDescription = null,
                                         tint = colorScheme.onSurface,
                                     )
@@ -462,10 +462,10 @@ private fun GlobalShortcutEntryCard(
                 }
                 Column(modifier = Modifier.weight(1f).padding(start = 12.dp)) {
                     MiuixText(title, color = colorScheme.onSurface, fontWeight = FontWeight.SemiBold)
-                    MiuixText(state, color = if (state.startsWith("已启用")) colorScheme.primary else colorScheme.onSurfaceVariant)
+                    MiuixText(state, color = if (state.startsWith("已启用")) colorScheme.primary else colorScheme.onSurfaceVariantSummary)
                     MiuixText(description, color = colorScheme.onSurface)
                 }
-                MiuixText("›", color = colorScheme.onSurfaceVariant)
+                MiuixText("›", color = colorScheme.onSurfaceVariantSummary)
             }
         }
     }
@@ -769,7 +769,7 @@ private fun ShortcutSectionHeading(text: String) {
         UiMode.Miuix -> MiuixText(
             text = text,
             modifier = Modifier.padding(start = 20.dp, end = 12.dp, top = 18.dp, bottom = 6.dp),
-            color = colorScheme.onSurfaceVariant,
+            color = colorScheme.onSurfaceVariantSummary,
             fontWeight = FontWeight.SemiBold,
         )
     }
@@ -1113,7 +1113,7 @@ private fun ColorWheelSlider(title: String, value: Int, onValueChange: (Int) -> 
             }
             when (LocalUiMode.current) {
                 UiMode.Material -> Text(value.toString(), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                UiMode.Miuix -> MiuixText(value.toString(), color = colorScheme.onSurfaceVariant)
+                UiMode.Miuix -> MiuixText(value.toString(), color = colorScheme.onSurfaceVariantSummary)
             }
         }
         AlohaOneUISlider(
@@ -1177,7 +1177,7 @@ private fun ShortcutActionRow(
                 MiuixText(
                     selectedLabel,
                     modifier = Modifier.padding(top = 5.dp),
-                    color = if (enabled && selectedAction != ACTION_NONE) colorScheme.primary else colorScheme.onSurfaceVariant,
+                    color = if (enabled && selectedAction != ACTION_NONE) colorScheme.primary else colorScheme.onSurfaceVariantSummary,
                 )
                 MiuixText(description, modifier = Modifier.padding(top = 5.dp), color = colorScheme.onSurface)
             }
@@ -1258,7 +1258,7 @@ private fun ShortcutActionGroupCard(
     }
     val secondary = when (LocalUiMode.current) {
         UiMode.Material -> MaterialTheme.colorScheme.onSurfaceVariant
-        UiMode.Miuix -> colorScheme.onSurfaceVariant
+        UiMode.Miuix -> colorScheme.onSurfaceVariantSummary
     }
     when (LocalUiMode.current) {
         UiMode.Material -> Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = RoundedCornerShape(18.dp)) {
