@@ -1,0 +1,20 @@
+package com.alohaoneui.app.data.repository
+
+/** AlohaOneUI appearance, navigation and self-update preferences. */
+interface SettingsRepository {
+    var uiMode: String
+    var checkUpdate: Boolean
+    var themeMode: Int
+    var miuixMonet: Boolean
+    var keyColor: Int
+    var colorStyle: String
+    var colorSpec: String
+    var enablePredictiveBack: Boolean
+    var enableBlur: Boolean
+    var enableFloatingBottomBar: Boolean
+    var enableFloatingBottomBarBlur: Boolean
+    var navigationRailExpanded: Boolean
+    var pageScale: Float
+    var enableSwipeBack: Boolean
+    var pagerGestureMode: Int
+}

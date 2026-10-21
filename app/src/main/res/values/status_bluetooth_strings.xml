@@ -5,7 +5,7 @@
     <string name="status_bluetooth_show_left">Show on left side</string>
     <string name="status_bluetooth_show_left_summary">Move the Bluetooth icon to the left status area using an overlay, without reparenting Samsung SystemUI views.</string>
     <string name="status_bluetooth_custom_icon">Use custom Bluetooth glyph</string>
-    <string name="status_bluetooth_custom_icon_summary">Use the OneUIAloha Bluetooth glyph; when disabled, the Samsung drawable is reused where possible.</string>
+    <string name="status_bluetooth_custom_icon_summary">Use the AlohaOneUI Bluetooth glyph; when disabled, the Samsung drawable is reused where possible.</string>
     <string name="status_bluetooth_portrait_size">Portrait size</string>
     <string name="status_bluetooth_landscape_size">Landscape size</string>
     <string name="status_bluetooth_horizontal_offset">Horizontal position</string>

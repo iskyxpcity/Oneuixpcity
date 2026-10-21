@@ -7,9 +7,9 @@
     <string name="update_dialog_no_changelog">This release includes improvements and bug fixes.</string>
     <string name="update_dialog_cancel">Cancel</string>
     <string name="update_dialog_install">Update now</string>
-    <string name="update_dialog_migration_title">OneUI Aloha is available</string>
-    <string name="update_dialog_migration_app_name">OneUI Aloha</string>
-    <string name="update_dialog_migration_notice">OneUI Aloha uses a new Android package name, so it will install as a separate app instead of replacing OneUI XP. App data will not transfer automatically. Keep OneUI XP installed until you have confirmed that OneUI Aloha works, then remove the old app if desired.</string>
+    <string name="update_dialog_migration_title">Aloha OneUI is available</string>
+    <string name="update_dialog_migration_app_name">Aloha OneUI</string>
+    <string name="update_dialog_migration_notice">Aloha OneUI uses a new Android package name, so it will install as a separate app instead of replacing OneUI XP. App data will not transfer automatically. Keep OneUI XP installed until you have confirmed that Aloha OneUI works, then remove the old app if desired.</string>
     <string name="update_dialog_migration_section">Migration notes</string>
     <string name="update_dialog_download">Download %1$s</string>
     <string name="update_dialog_migration_url_invalid">The migration download URL is not a verified official release asset.</string>
@@ -19,5 +19,5 @@
     <string name="update_dialog_failed_detail">Update failed: %1$s</string>
     <string name="update_dialog_unknown_error">Unknown error</string>
     <string name="changelog_261018_update_dialog_title">In-app update dialog</string>
-    <string name="changelog_261018_update_dialog_body">Check the public stable release on startup; show release notes in a themed dialog; verify the downloaded APK digest, package, version and signer; then try to reopen OneUI Aloha after installation.</string>
+    <string name="changelog_261018_update_dialog_body">Check the public stable release on startup; show release notes in a themed dialog; verify the downloaded APK digest, package, version and signer; then try to reopen Aloha OneUI after installation.</string>
 </resources>

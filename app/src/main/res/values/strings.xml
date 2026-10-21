@@ -10,7 +10,7 @@
     <string name="app_update">Update</string>
     <string name="new_version_available">New version %s is available, click to upgrade!</string>
     <string name="update_install_failed_message">The system installer could not complete the update. Details: %1$s</string>
-    <string name="update_install_confirmation_missing_message">Android did not provide an installation confirmation screen. Please return to OneUI Aloha and try the update again.</string>
+    <string name="update_install_confirmation_missing_message">Android did not provide an installation confirmation screen. Please return to Aloha OneUI and try the update again.</string>
     <string name="update_install_confirmation_fallback_message">Android could not open the installation confirmation automatically. Tap Continue to try opening it again.</string>
     <string name="home_lsposed_manager_unavailable">LSPosed Manager was not found. Please install or enable LSPosed first.</string>
     <string name="app_changelog">Changelog</string>
@@ -64,13 +64,13 @@
     <string name="settings_floating_bottom_bar_summary">Use Apple style floating bottom bar.</string>
     <string name="settings_enable_glass">Liquid glass</string>
     <string name="settings_enable_glass_summary">Enable liquid glass effect for floating bottom bar.</string>
-    <string name="oneuialoha_tools">Features</string>
-    <string name="oneuialoha_status">状态栏</string>
-    <string name="oneuialoha_feature_injection_count">Features enabled</string>
+    <string name="alohaoneui_tools">Features</string>
+    <string name="alohaoneui_status">状态栏</string>
+    <string name="alohaoneui_feature_injection_count">Features enabled</string>
 
-    <string name="oneuialoha_core_features">System features</string>
-    <string name="oneuialoha_app_features">Samsung app features</string>
-    <string name="oneuialoha_migration_notice">Migration note · settings are saved and OneUI Aloha feature hooks are enabled.</string>
+    <string name="alohaoneui_core_features">System features</string>
+    <string name="alohaoneui_app_features">Samsung app features</string>
+    <string name="alohaoneui_migration_notice">Migration note · settings are saved and Aloha OneUI feature hooks are enabled.</string>
     <string name="status_category_padding">Status bar padding</string>
     <string name="status_category_time">Status bar time</string>
     <string name="status_category_notification">Status bar notifications</string>
@@ -118,13 +118,13 @@
     <string name="status_power_dp_summary">%1$.1f dp</string>
 
     <string name="status_wifi_no_migrated_feature_title">No status bar Wi-Fi option to migrate</string>
-    <string name="status_wifi_no_migrated_feature_summary">The current upstream Function page does not provide a status bar Wi-Fi feature. This category is reserved for OneUI Aloha Wi-Fi icon features added later.</string>
+    <string name="status_wifi_no_migrated_feature_summary">The current upstream Function page does not provide a status bar Wi-Fi feature. This category is reserved for Aloha OneUI Wi-Fi icon features added later.</string>
 
     <string name="status_padding_top_summary">Moves the status bar down: %1$.1f dp</string>
     <string name="status_padding_bottom_summary">Moves the status bar up: %1$.1f dp</string>
 
     <string name="status_signal_runtime_enable">Independent status bar signal</string>
-    <string name="status_signal_runtime_enable_summary">Hide Samsung signal presentation and let OneUI Aloha draw signal bars from Android mobile-network state.</string>
+    <string name="status_signal_runtime_enable_summary">Hide Samsung signal presentation and let Aloha OneUI draw signal bars from Android mobile-network state.</string>
     <string name="status_signal_show_sim1">Show SIM 1</string>
     <string name="status_signal_show_sim2">Show SIM 2</string>
     <string name="status_signal_portrait_size">Portrait size</string>
@@ -141,22 +141,22 @@
     <string name="disclaimer_style_body">Some parts of this app use the KernelSU interface style.</string>
     <string name="disclaimer_risk_title">Modding Risks</string>
     <string name="disclaimer_risk_body">Modding involves risks. This module may cause system errors, data loss, boot failure, or device damage. Users bear all risks and losses arising from use of this module.</string>
-    <string name="feature_intro_version_updates">OneUI Aloha 1.0.260930 Highlights</string>
+    <string name="feature_intro_version_updates">Aloha OneUI 1.0.260930 Highlights</string>
     <string name="feature_intro_version_updates_summary">2026-09-30</string>
-    <string name="feature_intro_version_updates_261013">OneUI Aloha 1.0.261013 Highlights</string>
+    <string name="feature_intro_version_updates_261013">Aloha OneUI 1.0.261013 Highlights</string>
     <string name="feature_intro_version_updates_261013_summary">2026-10-13</string>
-    <string name="feature_intro_version_updates_261018">OneUI Aloha 1.0.261018 Highlights</string>
+    <string name="feature_intro_version_updates_261018">Aloha OneUI 1.0.261018 Highlights</string>
     <string name="feature_intro_version_updates_261018_summary">2026-10-18</string>
-    <string name="feature_intro_version_updates_261016">OneUI Aloha 1.0.261016 Highlights</string>
+    <string name="feature_intro_version_updates_261016">Aloha OneUI 1.0.261016 Highlights</string>
     <string name="feature_intro_version_updates_261016_summary">2026-10-16</string>
     <string name="version_updates_title">Version Highlights</string>
     <string name="version_1_0_260930_title">1.0.260930 · First Release</string>
     <string name="version_1_0_260930_summary">An introduction to the main features included in the first release.</string>
-    <string name="version_1_0_261013_title">OneUI Aloha 1.0.261013 Highlights</string>
+    <string name="version_1_0_261013_title">Aloha OneUI 1.0.261013 Highlights</string>
     <string name="version_1_0_261013_summary">2026-10-13</string>
-    <string name="version_1_0_261018_title">OneUI Aloha 1.0.261018 Highlights</string>
+    <string name="version_1_0_261018_title">Aloha OneUI 1.0.261018 Highlights</string>
     <string name="version_1_0_261018_summary">2026-10-18</string>
-    <string name="version_1_0_261016_title">OneUI Aloha 1.0.261016 Highlights</string>
+    <string name="version_1_0_261016_title">Aloha OneUI 1.0.261016 Highlights</string>
     <string name="version_1_0_261016_summary">2026-10-16</string>
     <string name="changelog_261018_device_status_title">Home device status card</string>
     <string name="changelog_261018_device_status_body">Added an expandable card that brings together system monitoring, screen details and device information.</string>
@@ -169,7 +169,7 @@
     <string name="changelog_261016_statusbar_stability_title">Status bar layout stability</string>
     <string name="changelog_261016_statusbar_stability_body">Fixed a Samsung One UI fold/unfold issue where the empty native status-icon container reported fluctuating widths, making the network-speed text jump left briefly and return.</string>
     <string name="changelog_261016_burnin_title">Status bar burn-in protection</string>
-    <string name="changelog_261016_burnin_body">Added burn-in protection for status-bar elements drawn by OneUI Aloha. It applies a gentle, slow X/Y micro-shift to reduce the risk of the same pixels displaying static content for long periods. Open Status bar → Other → Status bar burn-in protection to enable or disable it and adjust the movement amplitude (0–2 dp) and cycle period (10–300 seconds).</string>
+    <string name="changelog_261016_burnin_body">Added burn-in protection for status-bar elements drawn by Aloha OneUI. It applies a gentle, slow X/Y micro-shift to reduce the risk of the same pixels displaying static content for long periods. Open Status bar → Other → Status bar burn-in protection to enable or disable it and adjust the movement amplitude (0–2 dp) and cycle period (10–300 seconds).</string>
     <string name="changelog_261013_feature_intro_title">Feature introduction</string>
     <string name="changelog_261013_feature_intro_body">Added the Feature Introduction entry and version update pages.</string>
     <string name="changelog_261013_dual_ui_title">Two interface styles</string>
@@ -187,13 +187,13 @@
     <string name="changelog_section_ui_title">Two app interface styles</string>
     <string name="changelog_section_ui_body">Choose between Miuix and Material in Settings. Theme appearance also includes light/dark mode and accent-color options.</string>
     <string name="changelog_section_diagnostics_title">Settings and diagnostics</string>
-    <string name="changelog_section_diagnostics_body">Feature categories are organized across the main pages of OneUI Aloha. Use Settings → Send log to export runtime diagnostics when troubleshooting module behavior or status-bar display issues.</string>
+    <string name="changelog_section_diagnostics_body">Feature categories are organized across the main pages of Aloha OneUI. Use Settings → Send log to export runtime diagnostics when troubleshooting module behavior or status-bar display issues.</string>
 
     <string name="nav_rail_expand">Expand navigation rail</string>
     <string name="nav_rail_collapse">Collapse navigation rail</string>
-    <string name="feature_intro_version_updates_2610191">OneUI Aloha 1.0.261019.1 Highlights</string>
+    <string name="feature_intro_version_updates_2610191">Aloha OneUI 1.0.261019.1 Highlights</string>
     <string name="feature_intro_version_updates_2610191_summary">2026-10-19</string>
-    <string name="version_1_0_2610191_title">OneUI Aloha 1.0.261019.1 Highlights</string>
+    <string name="version_1_0_2610191_title">Aloha OneUI 1.0.261019.1 Highlights</string>
     <string name="version_1_0_2610191_summary">2026-10-19</string>
     <string name="changelog_2610191_new_features_title">New features</string>
     <string name="changelog_2610191_new_features_body">• Customizable power menu with configurable actions and ordering.\n• Disable screenshot sounds.\n• Call-return delay setting from 0–5 seconds.\n• Dual-pane layout option for System Settings.\n• Allow installation of older-version apps.\n• Remove secure-window screenshot restrictions.\n• Disable post-install app recommendations.\n• Soft-restart options for SystemUI and Android Runtime.</string>

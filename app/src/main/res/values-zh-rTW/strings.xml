@@ -21,8 +21,8 @@
     <string name="settings_theme_mode_light">淺色</string>
     <string name="settings_theme_mode_dark">深色</string>
     <string name="settings_theme_summary">選擇應用的主題模式。</string>
-    <string name="oneuialoha_tools">功能</string>
-    <string name="oneuialoha_feature_injection_count">已開啟功能</string>
+    <string name="alohaoneui_tools">功能</string>
+    <string name="alohaoneui_feature_injection_count">已開啟功能</string>
     <string name="status_category_time">狀態列時間</string>
     <string name="status_category_notification">狀態列通知</string>
     <string name="status_category_network_speed">狀態列網速</string>
@@ -40,14 +40,14 @@
     <string name="disclaimer_style_body">本應用程式部分介面採用了 KernelSU 的介面風格。</string>
     <string name="disclaimer_risk_title">玩機風險提示</string>
     <string name="disclaimer_risk_body">玩機有風險。本模組應用可能導致系統異常、資料遺失、無法開機甚至裝置損壞。使用本模組所產生的一切風險與損失由使用者自行承擔。</string>
-    <string name="feature_intro_version_updates">OneUI Aloha 1.0.260930 主要更新</string>
+    <string name="feature_intro_version_updates">Aloha OneUI 1.0.260930 主要更新</string>
     <string name="feature_intro_version_updates_summary">2026-09-30</string>
-    <string name="feature_intro_version_updates_261013">OneUI Aloha 1.0.261013 主要更新</string>
+    <string name="feature_intro_version_updates_261013">Aloha OneUI 1.0.261013 主要更新</string>
     <string name="feature_intro_version_updates_261013_summary">2026-10-13</string>
     <string name="version_updates_title">版本主要更新</string>
     <string name="version_1_0_260930_title">1.0.260930 · 首個版本</string>
     <string name="version_1_0_260930_summary">首個版本的主要功能介紹。</string>
-    <string name="version_1_0_261013_title">OneUI Aloha 1.0.261013 主要更新</string>
+    <string name="version_1_0_261013_title">Aloha OneUI 1.0.261013 主要更新</string>
     <string name="version_1_0_261013_summary">2026-10-13</string>
     <string name="changelog_261013_feature_intro_title">功能入口</string>
     <string name="changelog_261013_feature_intro_body">新增「功能介紹」入口與版本更新頁面。</string>
@@ -68,9 +68,9 @@
     <string name="changelog_section_diagnostics_title">設定與執行診斷</string>
     <string name="changelog_section_diagnostics_body">應用程式各主要頁面依功能分類組織設定。遇到模組執行或狀態列顯示問題時，可透過「設定 → 傳送日誌」匯出執行診斷資訊，方便排查。</string>
 
-    <string name="feature_intro_version_updates_2610191">OneUI Aloha 1.0.261019.1 主要更新</string>
+    <string name="feature_intro_version_updates_2610191">Aloha OneUI 1.0.261019.1 主要更新</string>
     <string name="feature_intro_version_updates_2610191_summary">2026-10-19</string>
-    <string name="version_1_0_2610191_title">OneUI Aloha 1.0.261019.1 主要更新</string>
+    <string name="version_1_0_2610191_title">Aloha OneUI 1.0.261019.1 主要更新</string>
     <string name="version_1_0_2610191_summary">2026-10-19</string>
     <string name="changelog_2610191_new_features_title">新增功能</string>
     <string name="changelog_2610191_new_features_body">• 新增自訂關機選單，可調整操作項目及排列順序。\n• 新增停用截圖聲音。\n• 新增通話返回延遲設定，支援 0–5 秒。\n• 新增系統設定雙欄佈局選項。\n• 新增允許安裝較舊版本的應用程式。\n• 新增解除安全視窗截圖限制。\n• 新增關閉安裝後的應用程式推薦。\n• 新增重新啟動 SystemUI 和 Android Runtime 的軟重啟選項。</string>

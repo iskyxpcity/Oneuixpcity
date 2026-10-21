@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "com.oneuialoha.hook"
+    namespace = "com.alohaoneui.hook"
     compileSdk {
         version = release(37)
     }

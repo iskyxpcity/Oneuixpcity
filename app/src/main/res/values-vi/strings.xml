@@ -54,5 +54,5 @@
     <string name="settings_floating_bottom_bar_summary">Sử dụng thanh điều hướng nổi kiểu Apple.</string>
     <string name="settings_enable_glass">Liquid Glass</string>
     <string name="settings_enable_glass_summary">Kích hoạt hiệu ứng Liquid Glass cho thanh điều hướng nổi.</string>
-    <string name="oneuialoha_tools">Tools</string>
+    <string name="alohaoneui_tools">Tools</string>
 </resources>
