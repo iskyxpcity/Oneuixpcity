@@ -75,7 +75,7 @@ check("Launcher icon is copied byte-for-byte from the supplied PNG without resiz
       and 'launcherIconSource.copyTo(launcherIcon, overwrite = true)' in gradle_app
       and 'launcherIcon.readBytes().contentEquals(launcherIconSource.readBytes())' in gradle_app
       and 'prepareAlohaLauncherIcon' in gradle_app
-      and 'adaptive-icon' not in gradle_app
+      and 'mipmap-anydpi-v26/ic_launcher_aloha.xml' not in gradle_app
       and 'BufferedImage' not in gradle_app
       and 'val size = 256' not in gradle_app)
 check("Hook Manifest uses Aloha component package",
