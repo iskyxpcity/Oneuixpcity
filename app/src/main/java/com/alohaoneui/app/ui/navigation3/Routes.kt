@@ -27,4 +27,12 @@ sealed interface Route : NavKey, Parcelable {
     @Parcelize @Serializable data object OtherFunctions : Route
     @Parcelize @Serializable data object CallReturnDelay : Route
     @Parcelize @Serializable data object GlobalShortcutActions : Route
+    @Parcelize @Serializable data object GlobalThreeFingerActions : Route
+    @Parcelize @Serializable data object GlobalThreeFingerSwipe : Route
+    @Parcelize @Serializable data object GlobalThreeFingerPinch : Route
+    @Parcelize @Serializable data object GlobalThreeFingerSpread : Route
+    @Parcelize @Serializable data object GlobalFloatingBallShortcut : Route
+    @Parcelize @Serializable data object GlobalStatusBarShortcut : Route
+    @Parcelize @Serializable data object GlobalNavigationKeyShortcut : Route
+    @Parcelize @Serializable data object GlobalScreenOffVolumeKeyShortcut : Route
 }

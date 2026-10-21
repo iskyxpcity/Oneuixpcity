@@ -80,6 +80,14 @@ import com.alohaoneui.app.ui.screen.tools.AlohaOneUICategoryScreen
 import com.alohaoneui.app.ui.screen.tools.OtherFunctionsScreen
 import com.alohaoneui.app.ui.screen.tools.CallReturnDelayScreen
 import com.alohaoneui.app.ui.screen.tools.GlobalShortcutActionsScreen
+import com.alohaoneui.app.ui.screen.tools.GlobalScreenOffVolumeKeyShortcutScreen
+import com.alohaoneui.app.ui.screen.tools.GlobalNavigationKeyShortcutScreen
+import com.alohaoneui.app.ui.screen.tools.GlobalStatusBarShortcutScreen
+import com.alohaoneui.app.ui.screen.tools.GlobalFloatingBallShortcutScreen
+import com.alohaoneui.app.ui.screen.tools.GlobalThreeFingerSpreadScreen
+import com.alohaoneui.app.ui.screen.tools.GlobalThreeFingerPinchScreen
+import com.alohaoneui.app.ui.screen.tools.GlobalThreeFingerSwipeScreen
+import com.alohaoneui.app.ui.screen.tools.GlobalThreeFingerActionsScreen
 import com.alohaoneui.app.ui.theme.LocalColorMode
 import com.alohaoneui.app.ui.theme.LocalEnableBlur
 import com.alohaoneui.app.ui.theme.LocalEnableFloatingBottomBar
@@ -204,6 +212,14 @@ class MainActivity : ComponentActivity() {
                             entry<Route.OtherFunctions>(swipeDismiss = swipeDismiss) { OtherFunctionsScreen() }
                             entry<Route.CallReturnDelay>(swipeDismiss = swipeDismiss) { CallReturnDelayScreen() }
                             entry<Route.GlobalShortcutActions>(swipeDismiss = swipeDismiss) { GlobalShortcutActionsScreen() }
+                            entry<Route.GlobalThreeFingerActions>(swipeDismiss = swipeDismiss) { GlobalThreeFingerActionsScreen() }
+                            entry<Route.GlobalThreeFingerSwipe>(swipeDismiss = swipeDismiss) { GlobalThreeFingerSwipeScreen() }
+                            entry<Route.GlobalThreeFingerPinch>(swipeDismiss = swipeDismiss) { GlobalThreeFingerPinchScreen() }
+                            entry<Route.GlobalThreeFingerSpread>(swipeDismiss = swipeDismiss) { GlobalThreeFingerSpreadScreen() }
+                            entry<Route.GlobalFloatingBallShortcut>(swipeDismiss = swipeDismiss) { GlobalFloatingBallShortcutScreen() }
+                            entry<Route.GlobalStatusBarShortcut>(swipeDismiss = swipeDismiss) { GlobalStatusBarShortcutScreen() }
+                            entry<Route.GlobalNavigationKeyShortcut>(swipeDismiss = swipeDismiss) { GlobalNavigationKeyShortcutScreen() }
+                            entry<Route.GlobalScreenOffVolumeKeyShortcut>(swipeDismiss = swipeDismiss) { GlobalScreenOffVolumeKeyShortcutScreen() }
                             entry<Route.Home>(swipeDismiss = swipeDismiss) { mainScreenEntry() }
                             entry<Route.Tools>(swipeDismiss = swipeDismiss) { mainScreenEntry() }
                             entry<Route.Status>(swipeDismiss = swipeDismiss) { mainScreenEntry() }
