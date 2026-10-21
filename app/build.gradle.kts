@@ -37,7 +37,7 @@ val managerName = project.findProperty("ONEUIALOHA_NAME")?.toString() ?: default
 val launcherIconSource = rootProject.file("Aloha_OneUI_icon.png")
 val generatedLauncherResDir = layout.buildDirectory.dir("generated/res/alohaLauncher")
 val adaptiveIconCanvasPx = 432 // 108dp at 4x density
-val adaptiveIconForegroundPx = 278 // 69.5dp at 4x density; 2px larger than the previous fit
+val adaptiveIconForegroundPx = 280 // 70dp at 4x density; 2px larger than the previous fit
 
 fun sampleAlohaIconBackground(image: BufferedImage): String {
     val buckets = mutableMapOf<Int, MutableList<Int>>()
@@ -93,8 +93,8 @@ val prepareAlohaLauncherIcon = tasks.register("prepareAlohaLauncherIcon") {
         outputRoot.deleteRecursively()
 
         // The uploaded original is read-only; only this derived resource is transformed.
-        // Fit the complete source proportionally to a 278px (69.5dp) foreground area on the
-        // 432px (108dp) transparent canvas. This enlarges the previous 276px fit by 2px
+        // Fit the complete source proportionally to a 280px (70dp) foreground area on the
+        // 432px (108dp) transparent canvas. This enlarges the previous 278px fit by 2px
         // to narrow the visible base-color rim; no source pixels are trimmed or cropped.
         val scale = minOf(
             1.0,
