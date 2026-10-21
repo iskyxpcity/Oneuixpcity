@@ -225,7 +225,7 @@ private class NativeOneUIAlohaStartupView(
     }
 
     private fun drawRainbowTitle(canvas: Canvas) {
-        val title = "OneUI Aloha"
+        val title = "Aloha OneUI"
         val firstLetterStart = 0.34f
         val letterDuration = 0.14f
         val visibleLetters = title.count { !it.isWhitespace() }.coerceAtLeast(1)
