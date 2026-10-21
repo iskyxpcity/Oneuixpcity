@@ -10,9 +10,9 @@ import java.net.URI
 import java.util.Locale
 
 private const val LEGACY_RELEASE_REPO = "iSkyJIE/OneuiXP-Releases"
-private const val ALOHA_RELEASE_REPO = "iSkyJIE/OneUIAloha-Releases"
+private const val ALOHA_RELEASE_REPO = "iSkyJIE/AlohaOneUI"
 private const val LEGACY_PACKAGE_NAME = "com.oneuixp.app"
-private val oneUiAlohaApkPrefix = Regex("""(?i)^OneUIAloha(?:[_ -][A-Za-z0-9][A-Za-z0-9._ -]*)?\.apk$""")
+private val oneUiAlohaApkPrefix = Regex("""(?i)^(?:AlohaOneUI|OneUIAloha)(?:[_ -][A-Za-z0-9][A-Za-z0-9._ -]*)?\.apk$""")
 
 private fun isSupportedVersionName(value: String): Boolean =
     value.trim().removePrefix("v").removePrefix("V")
@@ -29,11 +29,11 @@ private fun isOfficialReleaseAssetUrl(value: String, repository: String): Boolea
         uri.path.orEmpty().lowercase(Locale.ROOT).startsWith(expectedPrefix)
 }.getOrDefault(false)
 
-/** Accept OneUIAloha.apk or a versioned OneUIAloha_<tag-version>.apk, case-insensitively. */
+/** Accept either AlohaOneUI or legacy OneUIAloha APK asset names, case-insensitively. */
 private fun isOneUiAlohaApkForVersion(assetName: String, versionName: String): Boolean {
     if (!oneUiAlohaApkPrefix.matches(assetName)) return false
     val versionedName = Regex(
-        """(?i)^OneUIAloha[_ -]${Regex.escape(versionName)}\.apk$"""
+        """(?i)^(?:AlohaOneUI|OneUIAloha)[_ -]${Regex.escape(versionName)}\.apk$"""
     )
     return assetName.equals("OneUIAloha.apk", ignoreCase = true) ||
         versionedName.matches(assetName)

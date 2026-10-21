@@ -30,7 +30,7 @@ jobs:
         run: |
           set -euo pipefail
           COMMIT_SUBJECT=$(git log -1 --pretty=%s)
-          if { [ "$GITHUB_REF" = "refs/heads/main" ] && [[ "$COMMIT_SUBJECT" == release:* ]]; } || [ "$GITHUB_REF" = "refs/heads/migration/optimized-bridge-release-20261020" ]; then
+          if { [ "$GITHUB_REF" = "refs/heads/main" ] && [[ "$COMMIT_SUBJECT" == release:* ]]; } || [ "$GITHUB_REF" = "refs/heads/migration/bridge-aloha-feed-update-20261021" ]; then
             echo "BUILD_VARIANT=release" >> "$GITHUB_ENV"
             echo "APP_ASSEMBLE_TASK=:app:assembleRelease" >> "$GITHUB_ENV"
             echo "APK_OUTPUT_DIR=release" >> "$GITHUB_ENV"
@@ -134,7 +134,7 @@ jobs:
           ./gradlew "$APP_ASSEMBLE_TASK" -PONEUIXP_PACKAGE_NAME=com.oneuixp.app -PONEUIXP_NAME="OneUI XP" --stacktrace --no-daemon 2>&1 | tee diagnostics/gradle-build.log
 
       - name: Validate optimized release candidate
-        if: success() && github.ref == 'refs/heads/migration/optimized-bridge-release-20261020'
+        if: success() && github.ref == 'refs/heads/migration/bridge-aloha-feed-update-20261021'
         env:
           ONEUIXP_KEYSTORE_PATH: ${{ github.workspace }}/app/owner.keystore
           ONEUIXP_KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}

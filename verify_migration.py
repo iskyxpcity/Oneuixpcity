@@ -6,6 +6,8 @@ import sys
 root = Path(__file__).resolve().parent
 migration_source = (root/'common/src/main/java/com/oneuixp/common/ProductionPreferenceMigration.kt').read_text()
 preference_source = (root/'common/src/main/java/com/oneuixp/common/Preference.kt').read_text()
+downloader_source = (root/'app/src/main/java/com/oneuixp/app/ui/util/Downloader.kt').read_text()
+bridge_version_properties = (root/'gradle.properties').read_text()
 combo_runtime_source = (root/'hook/src/main/java/com/oneuixp/hook/systemui/StatusBarComboStyleOneRuntime.kt').read_text()
 network_speed_runtime_source = (root/'hook/src/main/java/com/oneuixp/hook/systemui/StatusBarNetworkSpeedRuntime.kt').read_text()
 independent_signal_runtime_source = (root/'hook/src/main/java/com/oneuixp/hook/systemui/StatusBarSignalIndependentRuntime.kt').read_text()
@@ -36,6 +38,12 @@ checks = {
  'Original LSPosed hook': (root/'app/src/main/java/com/oneuixp/app/statusbar/SystemUiEntry.java').is_file(),
  'Flux-style no heartbeat bridge': not (root/'app/src/main/java/com/oneuixp/app/statusbar/StatusBridge.java').exists() and '${applicationId}.statusbridge' not in (root/'app/src/main/AndroidManifest.xml').read_text() and 'startHeartbeat(' not in (root/'hook/src/main/java/com/oneuixp/hook/util/OneuiXPStatusReporter.kt').read_text(),
  'OneuiXP application ID': 'com.oneuixp.app' in (root/'app/build.gradle.kts').read_text(),
+ 'Bridge version exceeds existing public bridge and targets the current Aloha feed': (
+     'oneuixpVersionName=1.0.261021.1' in bridge_version_properties
+     and 'oneuixpVersionCode=12' in bridge_version_properties
+     and 'ALOHA_RELEASE_REPO = "iSkyJIE/AlohaOneUI"' in downloader_source
+     and '(?:AlohaOneUI|OneUIAloha)' in downloader_source
+ ),
  'Preference bridge uses canonical OneUI XP symbol': 'object OneuiXPPreferenceBridge' in preference_bridge_source,
  'Feature store migration does not hard-code former namespace': (
      'candidate.name.endsWith("_features.json")' in preference_bridge_source
