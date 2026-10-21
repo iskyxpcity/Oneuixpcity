@@ -64,7 +64,15 @@ check("App Manifest points at the Aloha Application and themes",
       'android:name=".OneUIAlohaApplication"' in manifest
       and '@style/Theme.OneUIAloha' in manifest
       and '@style/Theme.OneUIAloha.Startup' in manifest
-      and 'xposeddescription" android:value="OneUI Aloha' in manifest)
+      and 'xposeddescription" android:value="Aloha OneUI' in manifest)check("Visible application name is Aloha OneUI",
+      'val defaultManagerName = "Aloha OneUI"' in gradle_app
+      and 'android:icon="@mipmap/ic_launcher_aloha"' in manifest
+      and 'android:roundIcon="@mipmap/ic_launcher_aloha"' in manifest)
+check("Launcher icon is generated at 256x256 from the uploaded root PNG",
+      (ROOT / "Aloha_OneUI_icon.png").is_file()
+      and 'rootProject.file("Aloha_OneUI_icon.png")' in gradle_app
+      and 'val size = 256' in gradle_app
+      and 'prepareAlohaLauncherIcon' in gradle_app)
 check("Hook Manifest uses Aloha component package",
       "com.oneuialoha.hook.RebootActivity" in hook_manifest)
 check("Xposed initialization entry matches renamed Hook class",
@@ -73,7 +81,7 @@ module_text = module_file.read_text()
 check("Xposed module metadata retains API 101 and Aloha identity",
       "minApiVersion=101" in module_text
       and "targetApiVersion=101" in module_text
-      and "description=OneUI Aloha" in module_text)
+      and "description=Aloha OneUI" in module_text)
 scope_text = scope_file.read_text()
 asset_scope_text = asset_scope_file.read_text()
 check("Xposed scope manifests are byte-identical",
@@ -85,7 +93,12 @@ check("Xposed self-scope uses only the Aloha application ID",
 check("Updater preserves the XP compatibility feed and Aloha feed",
       'LEGACY_RELEASE_REPO = "iSkyJIE/OneuiXP-Releases"' in downloader
       and 'ALOHA_RELEASE_REPO = "iSkyJIE/OneUIAloha-Releases"' in downloader
-      and 'LEGACY_PACKAGE_NAME = "com.oneuixp.app"' in downloader)
+      and 'LEGACY_PACKAGE_NAME = "com.oneuixp.app"' in downloader)check("Updater accepts both AlohaOneUI and legacy OneUIAloha versioned APK assets",
+      'AlohaOneUI' in downloader
+      and 'OneUIAloha' in downloader
+      and 'AlohaOneUI_${versionName}.apk' in downloader
+      and 'AlohaOneUI_${VERSION_NAME}.apk' in workflow
+      and 'OneUIAloha_${VERSION_NAME}.apk' in workflow)
 check("CI verifies Aloha paths and routes future formal releases to the Aloha feed",
       "python3 ./verify_oneuialoha_identity.py" in workflow
       and 'RELEASE_REPO="iSkyJIE/OneUIAloha-Releases"' in workflow
