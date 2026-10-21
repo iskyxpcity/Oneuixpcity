@@ -1372,10 +1372,9 @@ object GlobalQuickActions {
 
     private fun cleanForegroundApp(context: Context) {
         val manager = context.getSystemService(ActivityManager::class.java) ?: return
-        val topPackage = runCatching {
-            @Suppress("DEPRECATION")
-            manager.getRunningTasks(1).firstOrNull()?.topActivity?.packageName
-        }.getOrNull() ?: return
+        @Suppress("DEPRECATION")
+        val task = runCatching { manager.getRunningTasks(1).firstOrNull() }.getOrNull() ?: return
+        val topPackage = task.topActivity?.packageName ?: return
         if (
             topPackage == "android" || topPackage == "system" ||
             topPackage == "com.android.systemui" || topPackage.startsWith("com.android.") ||
@@ -1384,12 +1383,14 @@ object GlobalQuickActions {
             showShortcutToast(context, "不允许结束该程序")
             return
         }
-        if (runShellCommandForSuccess("am force-stop '$topPackage'")) {
-            showShortcutToast(context, "已结束程序")
-            return
+        // Source behavior: remove the foreground task from Recents first, then force-stop it.
+        if (!invokeCompatible(manager, "semRemoveTask", task.id, 1)) {
+            invokeCompatible(manager, "removeTask", task.id)
         }
-        runCatching { manager.killBackgroundProcesses(topPackage) }
-        runCatching { callCompatible(manager, "forceStopPackage", topPackage) }
+        if (!runShellCommandForSuccess("am force-stop '$topPackage'")) {
+            invokeCompatible(manager, "forceStopPackage", topPackage)
+            runCatching { manager.killBackgroundProcesses(topPackage) }
+        }
         showShortcutToast(context, "已结束程序")
     }
 
