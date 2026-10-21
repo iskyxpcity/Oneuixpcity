@@ -69,11 +69,15 @@ check("Visible application name is Aloha OneUI",
       'val defaultManagerName = "Aloha OneUI"' in gradle_app
       and 'android:icon="@mipmap/ic_launcher_aloha"' in manifest
       and 'android:roundIcon="@mipmap/ic_launcher_aloha"' in manifest)
-check("Launcher icon is generated at 256x256 from the uploaded root PNG",
+check("Launcher icon is copied byte-for-byte from the supplied PNG without resizing or adaptive foreground",
       (ROOT / "Aloha_OneUI_icon.png").is_file()
       and 'rootProject.file("Aloha_OneUI_icon.png")' in gradle_app
-      and 'val size = 256' in gradle_app
-      and 'prepareAlohaLauncherIcon' in gradle_app)
+      and 'launcherIconSource.copyTo(launcherIcon, overwrite = true)' in gradle_app
+      and 'launcherIcon.readBytes().contentEquals(launcherIconSource.readBytes())' in gradle_app
+      and 'prepareAlohaLauncherIcon' in gradle_app
+      and 'adaptive-icon' not in gradle_app
+      and 'BufferedImage' not in gradle_app
+      and 'val size = 256' not in gradle_app)
 check("Hook Manifest uses Aloha component package",
       "com.oneuialoha.hook.RebootActivity" in hook_manifest)
 check("Xposed initialization entry matches renamed Hook class",
