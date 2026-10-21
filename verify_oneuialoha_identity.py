@@ -103,7 +103,7 @@ check("Updater accepts both AlohaOneUI and legacy OneUIAloha versioned APK asset
       and 'OneUIAloha_${VERSION_NAME}.apk' in workflow)
 check("CI verifies Aloha paths and routes future formal releases to the Aloha feed",
       "python3 ./verify_oneuialoha_identity.py" in workflow
-      and 'RELEASE_REPO="iSkyJIE/OneUIAloha-Releases"' in workflow
+      and 'RELEASE_REPO="iSkyJIE/AlohaOneUI"' in workflow
       and "secrets.ALOHA_RELEASE_TOKEN" in workflow
       and 'iSkyJIE/OneuiXP-Releases' in workflow)
 
