@@ -1,10 +1,6 @@
 @file:Suppress("UnstableApiUsage")
 
 import java.io.File
-import java.awt.RenderingHints
-import java.awt.image.BufferedImage
-import javax.imageio.ImageIO
-import kotlin.math.roundToInt
 
 plugins {
     alias(libs.plugins.agp.app)
@@ -32,9 +28,8 @@ val managerName = project.findProperty("ONEUIALOHA_NAME")?.toString() ?: default
 val launcherIconSource = rootProject.file("Aloha_OneUI_icon.png")
 val generatedLauncherResDir = layout.buildDirectory.dir("generated/res/alohaLauncher")
 
-// Build the launcher icon directly from the owner-supplied root PNG.
-// The generated artwork is exactly 256x256 pixels; transparency is preserved
-// and non-square inputs are contained without stretching or cropping.
+// Use the user-supplied full launcher icon as-is. Do not resize, crop, redraw, add padding,
+// or wrap it in an Android adaptive-icon foreground (which applies another system mask).
 val prepareAlohaLauncherIcon = tasks.register("prepareAlohaLauncherIcon") {
     inputs.file(launcherIconSource)
     outputs.dir(generatedLauncherResDir)
@@ -42,58 +37,17 @@ val prepareAlohaLauncherIcon = tasks.register("prepareAlohaLauncherIcon") {
         check(launcherIconSource.isFile) {
             "Required launcher icon source is missing: ${launcherIconSource.path}"
         }
-        val sourceImage = ImageIO.read(launcherIconSource)
-            ?: throw GradleException("Cannot decode Aloha_OneUI_icon.png as an image.")
-        val size = 256
-        val outputImage = BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB)
-        val graphics = outputImage.createGraphics()
-        try {
-            graphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC)
-            graphics.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY)
-            graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
-            val scale = minOf(size.toDouble() / sourceImage.width, size.toDouble() / sourceImage.height)
-            val drawWidth = (sourceImage.width * scale).roundToInt().coerceIn(1, size)
-            val drawHeight = (sourceImage.height * scale).roundToInt().coerceIn(1, size)
-            graphics.drawImage(
-                sourceImage,
-                (size - drawWidth) / 2,
-                (size - drawHeight) / 2,
-                drawWidth,
-                drawHeight,
-                null,
-            )
-        } finally {
-            graphics.dispose()
-        }
-
         val outputRoot = generatedLauncherResDir.get().asFile
         outputRoot.deleteRecursively()
-        val legacyIcon = File(outputRoot, "mipmap-nodpi/ic_launcher_aloha.png")
-        val adaptiveForeground = File(outputRoot, "drawable-nodpi/ic_launcher_aloha_foreground.png")
-        legacyIcon.parentFile.mkdirs()
-        adaptiveForeground.parentFile.mkdirs()
-        check(ImageIO.write(outputImage, "png", legacyIcon)) {
-            "No PNG writer is available for the legacy launcher icon."
+        val launcherIcon = File(outputRoot, "mipmap-nodpi/ic_launcher_aloha.png")
+        launcherIcon.parentFile.mkdirs()
+        launcherIconSource.copyTo(launcherIcon, overwrite = true)
+        check(launcherIcon.readBytes().contentEquals(launcherIconSource.readBytes())) {
+            "Generated launcher icon must be byte-identical to Aloha_OneUI_icon.png."
         }
-        check(ImageIO.write(outputImage, "png", adaptiveForeground)) {
-            "No PNG writer is available for the adaptive launcher foreground."
-        }
-        File(outputRoot, "mipmap-anydpi-v26/ic_launcher_aloha.xml").apply {
-            parentFile.mkdirs()
-            writeText(
-                """
-                <?xml version="1.0" encoding="utf-8"?>
-                <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
-                    <background android:drawable="@android:color/transparent" />
-                    <foreground android:drawable="@drawable/ic_launcher_aloha_foreground" />
-                </adaptive-icon>
-                """.trimIndent() + "\n"
-            )
-        }
-        println("Prepared Aloha launcher icon: ${size}x${size} px from ${launcherIconSource.name}")
+        println("Copied supplied Aloha launcher icon byte-for-byte: ${launcherIconSource.name}")
     }
 }
-
 
 android {
     namespace = "com.oneuialoha.app"
