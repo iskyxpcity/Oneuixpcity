@@ -432,7 +432,86 @@ data class Preference(
         val bypassWatchPairingRegionCheck: Boolean = false,
         val watchPairingConnectionMode: Int = 0,
         val supplementChinaWearOsGms: Boolean = false,
+        val globalShortcutActions: GlobalShortcutActions = GlobalShortcutActions(),
     )
+
+    /**
+     * Settings for the original App20261018Aloha "全局快捷动作" feature.
+     *
+     * Each trigger group is independently disabled by default. Action IDs intentionally
+     * retain the source repository's stable IDs so selectors and runtime dispatch stay aligned.
+     */
+    @Serializable
+    data class GlobalShortcutActions(
+        // Global three-finger swipes.
+        val threeFingerGestureEnabled: Boolean = false,
+        val threeFingerTouchCancelThresholdDp: Int = 8,
+        val threeFingerHapticEnabled: Boolean = false,
+        val threeFingerHapticStrength: Int = 60,
+        val threeFingerSwipeUpAction: String = "none",
+        val threeFingerSwipeDownAction: String = "none",
+        val threeFingerSwipeLeftAction: String = "none",
+        val threeFingerSwipeRightAction: String = "none",
+
+        // Three-finger pinch-in and spread-out triggers.
+        val threeFingerPinchEnabled: Boolean = false,
+        val threeFingerPinchThresholdDp: Int = 48,
+        val threeFingerPinchHapticEnabled: Boolean = false,
+        val threeFingerPinchHapticStrength: Int = 60,
+        val threeFingerPinchAction: String = "none",
+        val threeFingerSpreadEnabled: Boolean = false,
+        val threeFingerSpreadThresholdDp: Int = 48,
+        val threeFingerSpreadHapticEnabled: Boolean = false,
+        val threeFingerSpreadHapticStrength: Int = 60,
+        val threeFingerSpreadAction: String = "none",
+
+        // Floating ball configuration and its click/swipe actions.
+        val floatingBallEnabled: Boolean = false,
+        val floatingBallColorArgb: Int = 0xAA5E7CFF.toInt(),
+        val floatingBallSizeDp: Int = 56,
+        val floatingBallAutoEdgeDelaySeconds: Int = 0,
+        val floatingBallHapticEnabled: Boolean = false,
+        val floatingBallHapticStrength: Int = 60,
+        val floatingBallClickAction: String = "none",
+        val floatingBallDoubleClickAction: String = "none",
+        val floatingBallSwipeUpAction: String = "none",
+        val floatingBallSwipeDownAction: String = "none",
+        val floatingBallSwipeLeftAction: String = "none",
+        val floatingBallSwipeRightAction: String = "none",
+        val floatingBallX: Int = 0,
+        val floatingBallY: Int = 0,
+
+        // Status bar: double click, left/right click and long press.
+        val statusBarShortcutEnabled: Boolean = false,
+        val statusBarShortcutHapticEnabled: Boolean = false,
+        val statusBarShortcutHapticStrength: Int = 60,
+        val statusBarDoubleClickAction: String = "none",
+        val statusBarLeftClickAction: String = "none",
+        val statusBarLeftLongPressAction: String = "none",
+        val statusBarRightClickAction: String = "none",
+        val statusBarRightLongPressAction: String = "none",
+
+        // Android soft-navigation buttons.
+        val navigationKeyShortcutEnabled: Boolean = false,
+        val navigationKeyHapticEnabled: Boolean = false,
+        val navigationKeyHapticStrength: Int = 60,
+        val navigationBackDoubleTapAction: String = "none",
+        val navigationBackLongPressAction: String = "none",
+        val navigationHomeDoubleTapAction: String = "none",
+        val navigationHomeLongPressAction: String = "none",
+        val navigationRecentsDoubleTapAction: String = "none",
+        val navigationRecentsLongPressAction: String = "none",
+
+        // Volume buttons while the display is off.
+        val screenOffVolumeKeyEnabled: Boolean = false,
+        val screenOffVolumeLongPressEnabled: Boolean = true,
+        val screenOffVolumeLongPressTimeoutMs: Int = 500,
+        val screenOffVolumeDoubleClickEnabled: Boolean = true,
+        val screenOffVolumeDoubleClickTimeoutMs: Int = 500,
+        val screenOffVolumeHapticEnabled: Boolean = false,
+        val screenOffVolumeHapticStrength: Int = 60,
+    )
+
 
     companion object {
         const val FILE_NAME = "preference.json"

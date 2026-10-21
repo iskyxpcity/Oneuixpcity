@@ -9,6 +9,11 @@
     <uses-sdk tools:overrideLibrary="top.yukonga.miuix.kmp.blur" />
 
     <queries>
+        <!-- Make every launchable app visible to the custom global-shortcut action picker. -->
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
         <package android:name="org.lsposed.manager" />
         <package android:name="com.android.settings" />
         <package android:name="com.android.systemui" />

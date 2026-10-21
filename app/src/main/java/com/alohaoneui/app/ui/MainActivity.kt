@@ -79,6 +79,7 @@ import com.alohaoneui.app.ui.screen.tools.ToolsPager
 import com.alohaoneui.app.ui.screen.tools.AlohaOneUICategoryScreen
 import com.alohaoneui.app.ui.screen.tools.OtherFunctionsScreen
 import com.alohaoneui.app.ui.screen.tools.CallReturnDelayScreen
+import com.alohaoneui.app.ui.screen.tools.GlobalShortcutActionsScreen
 import com.alohaoneui.app.ui.theme.LocalColorMode
 import com.alohaoneui.app.ui.theme.LocalEnableBlur
 import com.alohaoneui.app.ui.theme.LocalEnableFloatingBottomBar
@@ -202,6 +203,7 @@ class MainActivity : ComponentActivity() {
                             }
                             entry<Route.OtherFunctions>(swipeDismiss = swipeDismiss) { OtherFunctionsScreen() }
                             entry<Route.CallReturnDelay>(swipeDismiss = swipeDismiss) { CallReturnDelayScreen() }
+                            entry<Route.GlobalShortcutActions>(swipeDismiss = swipeDismiss) { GlobalShortcutActionsScreen() }
                             entry<Route.Home>(swipeDismiss = swipeDismiss) { mainScreenEntry() }
                             entry<Route.Tools>(swipeDismiss = swipeDismiss) { mainScreenEntry() }
                             entry<Route.Status>(swipeDismiss = swipeDismiss) { mainScreenEntry() }

@@ -6,6 +6,7 @@ import io.github.libxposed.api.XposedModuleInterface
 import com.alohaoneui.common.Package
 import com.alohaoneui.hook.systemui.AOD
 import com.alohaoneui.hook.systemui.ESIM
+import com.alohaoneui.hook.systemui.GlobalQuickActions
 import com.alohaoneui.hook.systemui.HideBatteryIcon
 import com.alohaoneui.hook.systemui.Notification
 import com.alohaoneui.hook.systemui.Other
@@ -266,6 +267,7 @@ class Main : XposedModule() {
             }
 
             Package.SYSTEMUI if (processName == Package.SYSTEMUI) -> {
+                GlobalQuickActions.installSystemUi(param)
                 StatusBarBurnInProtectionRuntime.install(this@Main, param)
                 StatusBarComboStyleOneRuntime.install(this@Main, param)
                 StatusBarSignalIndependentRuntime.install(this@Main, param)
@@ -539,6 +541,8 @@ class Main : XposedModule() {
 
     override fun onSystemServerStarting(param: XposedModuleInterface.SystemServerStartingParam) = with(param) {
         if (!ENABLE_ALOHAONEUI_FUNCTIONS) return@with
+
+        GlobalQuickActions.installSystemServer(param.classLoader)
 
         val preference = PreferenceProvider.loadPreference() ?: return@with
 
