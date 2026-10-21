@@ -491,7 +491,7 @@ private fun GlobalShortcutSettingsContent(
             }
             ThresholdShortcutCard(
                 title = "禁止交互阈值",
-                summary = "阈值决定三指滑动移动多远后接管触摸。数值越小越灵敏；数值越大越不容易误触。",
+                summary = "",
                 value = settings.threeFingerTouchCancelThresholdDp,
                 range = 1..20,
                 enabled = settings.threeFingerGestureEnabled,
@@ -527,13 +527,13 @@ private fun GlobalShortcutSettingsContent(
             }
             ThresholdShortcutCard(
                 title = "捏合阈值",
-                summary = "以三指平均跨度的缩小距离判断是否完成捏合。",
+                summary = "",
                 value = settings.threeFingerPinchThresholdDp,
                 range = 8..160,
                 enabled = settings.threeFingerPinchEnabled,
-                format = { "跨度变化：${it}dp" },
+                format = { "三指平均间距向内收缩 ${it} dp 后触发" },
                 helpTitle = "捏合阈值",
-                helpMessage = "“捏合阈值”指三根手指之间的平均距离向内缩小了多少。\n· 数值越小：轻微收拢就会触发，更灵敏，但更容易误触\n· 数值越大：需要更明显的捏合动作，误触更少，但需要做得更完整",
+                helpMessage = "“阈值”指的是三根手指之间的平均距离向内缩小了多少。\n· 数值越小：轻轻一捏就会触发，更灵敏，但更容易误触\n· 数值越大：需要捏合得更明显才触发，误触更少，但动作要做得更完整",
                 onCommit = { value -> update { it.copy(threeFingerPinchThresholdDp = value) } },
             )
             ShortcutSectionHeading("触发动作")
@@ -554,13 +554,13 @@ private fun GlobalShortcutSettingsContent(
             }
             ThresholdShortcutCard(
                 title = "展开阈值",
-                summary = "以三指平均跨度的增大距离判断是否完成展开。",
+                summary = "",
                 value = settings.threeFingerSpreadThresholdDp,
                 range = 8..160,
                 enabled = settings.threeFingerSpreadEnabled,
-                format = { "跨度变化：${it}dp" },
+                format = { "三指平均间距向外扩大 ${it} dp 后触发" },
                 helpTitle = "展开阈值",
-                helpMessage = "“展开阈值”指的是三根手指之间的平均距离向外扩大了多少。\n· 数值越小：稍微分开一点就会触发，更灵敏，但更容易误触\n· 数值越大：需要明显展开才触发，误触更少，但动作要做得更完整",
+                helpMessage = "“阈值”指的是三根手指之间的平均距离向外扩大了多少。\n· 数值越小：手指刚分开一点就会触发，更灵敏，但更容易误触\n· 数值越大：需要展开得更明显才触发，误触更少，但动作要做得更完整",
                 onCommit = { value -> update { it.copy(threeFingerSpreadThresholdDp = value) } },
             )
             ShortcutSectionHeading("触发动作")
