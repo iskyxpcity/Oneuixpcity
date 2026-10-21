@@ -85,7 +85,10 @@ def main() -> None:
             decoded = raw.decode("utf-8")
         except UnicodeDecodeError:
             decoded = None
-        if decoded is not None:
+        if decoded is not None and rel != WORKFLOW:
+            # The workflow is already updated through the repository contents API.
+            # Do not rewrite .github/workflows via GITHUB_TOKEN: GitHub rejects that
+            # write without a separate workflows permission.
             transformed = apply_text_replacements(decoded, rel).encode("utf-8")
 
         new_rel = rename_path(rel)
