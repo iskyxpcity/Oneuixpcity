@@ -34,6 +34,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.add
+import androidx.compose.foundation.layout.displayCutout
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -80,9 +87,11 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.alohaoneui.app.R
@@ -351,36 +360,46 @@ private fun GlobalShortcutPageFrame(
             val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
             Scaffold(
                 topBar = {
-                    BlurredBar(backdrop) {
-                        LargeFlexibleTopAppBar(
-                            title = { Text(title) },
-                            navigationIcon = {
-                                IconButton(onClick = onBack) {
-                                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
-                                }
-                            },
-                            colors = TopAppBarDefaults.topAppBarColors(
-                                containerColor = MaterialTheme.colorScheme.surface,
-                                scrolledContainerColor = MaterialTheme.colorScheme.surface,
-                            ),
-                            scrollBehavior = scrollBehavior,
-                        )
-                    }
+                    LargeFlexibleTopAppBar(
+                        title = { Text(title) },
+                        navigationIcon = {
+                            IconButton(onClick = onBack) {
+                                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
+                            }
+                        },
+                        colors = TopAppBarDefaults.topAppBarColors(
+                            containerColor = MaterialTheme.colorScheme.surface,
+                            scrolledContainerColor = MaterialTheme.colorScheme.surface,
+                        ),
+                        windowInsets = WindowInsets.safeDrawing.only(
+                            WindowInsetsSides.Top + WindowInsetsSides.Horizontal,
+                        ),
+                        scrollBehavior = scrollBehavior,
+                    )
                 },
+                contentWindowInsets = WindowInsets.safeDrawing.only(
+                    WindowInsetsSides.Top + WindowInsetsSides.Horizontal,
+                ),
             ) { innerPadding ->
-                Column(
-                    modifier = (if (backdrop != null) Modifier.layerBackdrop(backdrop) else Modifier)
+                Box(
+                    modifier = Modifier
                         .fillMaxSize()
-                        .verticalScroll(rememberScrollState())
-                        .padding(innerPadding)
-                        .nestedScroll(scrollBehavior.nestedScrollConnection),
+                        .nestedScroll(scrollBehavior.nestedScrollConnection)
+                        .padding(innerPadding),
                 ) {
-                    if (subtitle.isNotBlank()) ShortcutBodyText(subtitle)
-                    content()
-                    Spacer(Modifier.height(24.dp))
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .verticalScroll(rememberScrollState()),
+                    ) {
+                        if (subtitle.isNotBlank()) ShortcutBodyText(subtitle)
+                        content()
+                        Spacer(Modifier.height(24.dp))
+                    }
                 }
             }
         }
+
         UiMode.Miuix -> {
             val scrollBehavior = MiuixScrollBehavior()
             val barColor = if (backdrop != null) Color.Transparent else colorScheme.surface
@@ -390,12 +409,17 @@ private fun GlobalShortcutPageFrame(
                         MiuixTopAppBar(
                             color = barColor,
                             title = title,
+                            largeTitle = title,
                             navigationIcon = {
                                 MiuixIconButton(onClick = onBack) {
+                                    val layoutDirection = LocalLayoutDirection.current
                                     MiuixIcon(
+                                        modifier = Modifier.graphicsLayer {
+                                            if (layoutDirection == LayoutDirection.Rtl) scaleX = -1f
+                                        },
                                         imageVector = MiuixIcons.Back,
                                         contentDescription = null,
-                                        tint = colorScheme.onSurface,
+                                        tint = colorScheme.onBackground,
                                     )
                                 }
                             },
@@ -404,18 +428,26 @@ private fun GlobalShortcutPageFrame(
                     }
                 },
                 popupHost = {},
+                contentWindowInsets = WindowInsets.systemBars.add(WindowInsets.displayCutout)
+                    .only(WindowInsetsSides.Horizontal),
             ) { innerPadding ->
-                Column(
+                Box(
                     modifier = (if (backdrop != null) Modifier.layerBackdrop(backdrop) else Modifier)
                         .fillMaxSize()
-                        .scrollEndHaptic()
-                        .overScrollVertical()
-                        .verticalScroll(rememberScrollState())
+                        .nestedScroll(scrollBehavior.nestedScrollConnection)
                         .padding(innerPadding),
                 ) {
-                    if (subtitle.isNotBlank()) ShortcutBodyText(subtitle)
-                    content()
-                    Spacer(Modifier.height(24.dp))
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .scrollEndHaptic()
+                            .overScrollVertical()
+                            .verticalScroll(rememberScrollState()),
+                    ) {
+                        if (subtitle.isNotBlank()) ShortcutBodyText(subtitle)
+                        content()
+                        Spacer(Modifier.height(24.dp))
+                    }
                 }
             }
         }
@@ -555,54 +587,62 @@ private fun GlobalShortcutEntryCard(
         UiMode.Material -> MaterialTheme.colorScheme.surfaceContainerHighest
         UiMode.Miuix -> colorScheme.surface
     }
+
     when (LocalUiMode.current) {
-        UiMode.Material -> Card(
+        UiMode.Material -> SegmentedColumn(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 5.dp)
-                .clickable(onClick = onClick),
-            
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(RoundedCornerShape(13.2.dp))
-                        .background(iconChip),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    ShortcutEntryGlyph(icon = icon, accentColor = iconAccent)
-                }
-                Column(modifier = Modifier.weight(1f).padding(start = 12.dp)) {
-                    Text(
-                        title,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                    )
-                    Text(
-                        state,
-                        modifier = Modifier.padding(top = 5.dp),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = if (state.startsWith("已启用")) MaterialTheme.colorScheme.primary
-                            else MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    Text(
-                        description,
-                        modifier = Modifier.padding(top = 5.dp),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-                Icon(
-                    Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                .padding(horizontal = 16.dp, vertical = 5.dp),
+            content = listOf({
+                SegmentedListItem(
+                    onClick = onClick,
+                    colors = alohaOneUISegmentedColors(),
+                    headlineContent = {
+                        Text(
+                            title,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                    },
+                    supportingContent = {
+                        Column {
+                            Text(
+                                state,
+                                modifier = Modifier.padding(top = 2.dp),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = if (state.startsWith("已启用")) MaterialTheme.colorScheme.primary
+                                    else MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                            Text(
+                                description,
+                                modifier = Modifier.padding(top = 5.dp),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    },
+                    leadingContent = {
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(RoundedCornerShape(13.dp))
+                                .background(iconChip),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            ShortcutEntryGlyph(icon = icon, accentColor = iconAccent)
+                        }
+                    },
+                    trailingContent = {
+                        Icon(
+                            Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    },
                 )
-            }
-        }
+            }),
+        )
+
         UiMode.Miuix -> MiuixCard(
             modifier = Modifier
                 .fillMaxWidth()
@@ -616,18 +656,14 @@ private fun GlobalShortcutEntryCard(
                 Box(
                     modifier = Modifier
                         .size(40.dp)
-                        .clip(RoundedCornerShape(13.2.dp))
+                        .clip(RoundedCornerShape(13.dp))
                         .background(iconChip),
                     contentAlignment = Alignment.Center,
                 ) {
                     ShortcutEntryGlyph(icon = icon, accentColor = iconAccent)
                 }
                 Column(modifier = Modifier.weight(1f).padding(start = 12.dp)) {
-                    MiuixText(
-                        title,
-                        color = colorScheme.onSurface,
-                        fontWeight = FontWeight.Bold,
-                    )
+                    MiuixText(title, color = colorScheme.onSurface, fontWeight = FontWeight.SemiBold)
                     MiuixText(
                         state,
                         modifier = Modifier.padding(top = 5.dp),
@@ -640,9 +676,7 @@ private fun GlobalShortcutEntryCard(
                     )
                 }
                 MiuixIcon(
-                    modifier = Modifier
-                        .padding(start = 8.dp)
-                        .size(width = 10.dp, height = 16.dp),
+                    modifier = Modifier.padding(start = 8.dp).size(width = 10.dp, height = 16.dp),
                     imageVector = MiuixIcons.Basic.ArrowRight,
                     contentDescription = null,
                     tint = colorScheme.onSurfaceVariantSummary,
@@ -682,16 +716,16 @@ private fun GlobalShortcutSettingsContent(
                 onHapticEnabled = { value -> update { it.copy(threeFingerHapticEnabled = value) } },
                 onStrength = { value -> update { it.copy(threeFingerHapticStrength = value) } },
             )
-            ShortcutActionRow("三指上划", "三根手指同时向上滑动。", settings.threeFingerSwipeUpAction, settings.threeFingerGestureEnabled) {
+            ShortcutActionRow("三指上划", "三根手指同时向上滑动。", settings.threeFingerSwipeUpAction, settings.threeFingerGestureEnabled, pickerMessage = "选择这个方向触发的动作。") {
                 value -> update { it.copy(threeFingerSwipeUpAction = value) }
             }
-            ShortcutActionRow("三指下划", "三根手指同时向下滑动。", settings.threeFingerSwipeDownAction, settings.threeFingerGestureEnabled) {
+            ShortcutActionRow("三指下划", "三根手指同时向下滑动。", settings.threeFingerSwipeDownAction, settings.threeFingerGestureEnabled, pickerMessage = "选择这个方向触发的动作。") {
                 value -> update { it.copy(threeFingerSwipeDownAction = value) }
             }
-            ShortcutActionRow("三指左划", "三根手指同时向左滑动。", settings.threeFingerSwipeLeftAction, settings.threeFingerGestureEnabled) {
+            ShortcutActionRow("三指左划", "三根手指同时向左滑动。", settings.threeFingerSwipeLeftAction, settings.threeFingerGestureEnabled, pickerMessage = "选择这个方向触发的动作。") {
                 value -> update { it.copy(threeFingerSwipeLeftAction = value) }
             }
-            ShortcutActionRow("三指右划", "三根手指同时向右滑动。", settings.threeFingerSwipeRightAction, settings.threeFingerGestureEnabled) {
+            ShortcutActionRow("三指右划", "三根手指同时向右滑动。", settings.threeFingerSwipeRightAction, settings.threeFingerGestureEnabled, pickerMessage = "选择这个方向触发的动作。") {
                 value -> update { it.copy(threeFingerSwipeRightAction = value) }
             }
         }
@@ -1392,6 +1426,7 @@ private fun ShortcutActionRow(
     description: String,
     selectedAction: String,
     enabled: Boolean,
+    pickerMessage: String = "选择这个触发器执行的动作。",
     onSelected: (String) -> Unit,
 ) {
     val context = LocalContext.current
@@ -1408,26 +1443,52 @@ private fun ShortcutActionRow(
             shortcutActionOptions.firstOrNull { it.id == selectedAction }?.label ?: "无动作"
         }
     }
+
     when (LocalUiMode.current) {
-        UiMode.Material -> Card(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 5.dp)
-                .graphicsLayer { alpha = if (enabled) 1f else 0.48f }
-                .clickable(enabled = enabled) { showActionPicker = true },
-            
-        ) {
-            Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
-                Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                Text(
-                    selectedLabel,
-                    modifier = Modifier.padding(top = 5.dp),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = if (enabled && selectedAction != ACTION_NONE) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+        UiMode.Material -> SegmentedColumn(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 5.dp)
+                .graphicsLayer { alpha = if (enabled) 1f else 0.48f },
+            content = listOf({
+                SegmentedListItem(
+                    onClick = { if (enabled) showActionPicker = true },
+                    enabled = enabled,
+                    colors = alohaOneUISegmentedColors(),
+                    headlineContent = {
+                        Text(
+                            title,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                    },
+                    supportingContent = {
+                        Column {
+                            Text(
+                                selectedLabel,
+                                modifier = Modifier.padding(top = 2.dp),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = if (enabled && selectedAction != ACTION_NONE) MaterialTheme.colorScheme.primary
+                                    else MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                            if (description.isNotBlank()) {
+                                Text(
+                                    description,
+                                    modifier = Modifier.padding(top = 5.dp),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                        }
+                    },
                 )
-                Text(description, modifier = Modifier.padding(top = 5.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-        }
+            }),
+        )
+
         UiMode.Miuix -> MiuixCard(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 5.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp, vertical = 5.dp)
                 .graphicsLayer { alpha = if (enabled) 1f else 0.48f }
                 .clickable(enabled = enabled) { showActionPicker = true },
         ) {
@@ -1438,14 +1499,21 @@ private fun ShortcutActionRow(
                     modifier = Modifier.padding(top = 5.dp),
                     color = if (enabled && selectedAction != ACTION_NONE) colorScheme.primary else colorScheme.onSurfaceVariantSummary,
                 )
-                MiuixText(description, modifier = Modifier.padding(top = 5.dp), color = colorScheme.onSurface)
+                if (description.isNotBlank()) {
+                    MiuixText(
+                        description,
+                        modifier = Modifier.padding(top = 5.dp),
+                        color = colorScheme.onSurfaceVariantSummary,
+                    )
+                }
             }
         }
     }
+
     if (showActionPicker) {
         GroupedShortcutActionPicker(
             title = title,
-            message = "选择这个触发器执行的动作。",
+            message = pickerMessage,
             selectedAction = selectedAction,
             onDismiss = { showActionPicker = false },
             onSelect = { action ->
@@ -1454,6 +1522,7 @@ private fun ShortcutActionRow(
             },
         )
     }
+
     if (showAppPicker) {
         CustomShortcutAppPicker(
             apps = apps,
