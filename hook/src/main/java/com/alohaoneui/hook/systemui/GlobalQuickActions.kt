@@ -146,7 +146,8 @@ object GlobalQuickActions {
 
     context(xposedModule: XposedModule)
     fun installSystemUi(param: XposedModuleInterface.PackageReadyParam) {
-        if (param.packageName != "com.android.systemui" || param.processName != "com.android.systemui") return
+        // Main.onPackageReady already gates this to the primary SystemUI process.
+        if (param.packageName != "com.android.systemui") return
         runCatching {
             val keyButton = param.classLoader.loadClass(
                 "com.android.systemui.navigationbar.views.buttons.KeyButtonView"
