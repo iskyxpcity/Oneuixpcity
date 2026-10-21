@@ -206,7 +206,7 @@ android {
 // Register the generated resources and make every Android resource-processing task depend on their generation.
 android.sourceSets.getByName("main").res.srcDir(generatedLauncherResDir.get().asFile)
 tasks.configureEach {
-    if (name.contains("Resources") || name.endsWith("SourceSetPaths") || name.contains("SupportedLocales")) {
+    if (name.contains("Resources") || name.endsWith("SourceSetPaths") || name.contains("SupportedLocales") || name.contains("DeepLinks")) {
         dependsOn(prepareAlohaLauncherIcon)
     }
 }
