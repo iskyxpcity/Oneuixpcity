@@ -83,6 +83,7 @@ import top.yukonga.miuix.kmp.basic.IconButton as MiuixIconButton
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.basic.Scaffold as MiuixScaffold
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
+import top.yukonga.miuix.kmp.basic.TextField as MiuixTextField
 import top.yukonga.miuix.kmp.basic.TopAppBar as MiuixTopAppBar
 import top.yukonga.miuix.kmp.blur.layerBackdrop
 import top.yukonga.miuix.kmp.icon.MiuixIcons
@@ -712,14 +713,32 @@ private fun FloatingBallColorControl(
                     .background(Color(argb)),
             )
             Spacer(Modifier.width(10.dp))
-            OutlinedTextField(
-                value = colorText,
-                onValueChange = { colorText = it },
-                enabled = enabled,
-                singleLine = true,
-                label = { Text("ARGB，例如 #AA5E7CFF") },
-                modifier = Modifier.weight(1f),
-            )
+            when (LocalUiMode.current) {
+                UiMode.Material -> OutlinedTextField(
+                    value = colorText,
+                    onValueChange = { colorText = it },
+                    enabled = enabled,
+                    singleLine = true,
+                    label = { Text("ARGB，例如 #AA5E7CFF") },
+                    modifier = Modifier.weight(1f),
+                )
+                UiMode.Miuix -> Column(modifier = Modifier.weight(1f)) {
+                    MiuixText(
+                        text = "ARGB，例如 #AA5E7CFF",
+                        color = colorScheme.onSurfaceVariantSummary,
+                    )
+                    MiuixTextField(
+                        value = colorText,
+                        onValueChange = { colorText = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        insideMargin = androidx.compose.ui.unit.DpSize(12.dp, 8.dp),
+                        cornerRadius = 12.dp,
+                        enabled = enabled,
+                        singleLine = true,
+                        maxLines = 1,
+                    )
+                }
+            }
             Spacer(Modifier.width(8.dp))
             Button(
                 enabled = enabled && colorText.trim().matches(Regex("#[0-9a-fA-F]{8}")),
