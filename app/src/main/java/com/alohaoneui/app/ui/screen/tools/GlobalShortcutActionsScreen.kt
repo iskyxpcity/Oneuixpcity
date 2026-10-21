@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import kotlin.math.roundToInt
 import kotlin.math.min
 import kotlin.math.hypot
@@ -99,6 +100,7 @@ import com.alohaoneui.app.ui.util.BlurredBar
 import com.alohaoneui.app.ui.util.rememberBlurBackdrop
 import com.alohaoneui.app.ui.viewmodel.AlohaOneUIToolsViewModel
 import com.alohaoneui.common.Preference
+import com.alohaoneui.mod.ui.component.AlohaOneUIActionButton
 import com.alohaoneui.mod.ui.component.AlohaOneUISlider
 import com.alohaoneui.mod.ui.component.LocalAlohaOneUIGroupedPreference
 import com.alohaoneui.mod.ui.component.SelectItem
@@ -225,7 +227,7 @@ fun GlobalShortcutActionsScreen() {
 
     GlobalShortcutPageFrame(
         title = "全局快捷动作",
-        subtitle = "集中管理三指、悬浮球、状态栏与按键快捷触发。",
+        subtitle = "集中管理三指、状态栏、息屏按键等快捷触发。",
         onBack = navigator::pop,
     ) {
         GlobalShortcutEntryCard(
@@ -559,7 +561,7 @@ private fun GlobalShortcutEntryCard(
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 5.dp)
                 .clickable(onClick = onClick),
-            shape = RoundedCornerShape(22.dp),
+            
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp),
@@ -680,16 +682,16 @@ private fun GlobalShortcutSettingsContent(
                 onHapticEnabled = { value -> update { it.copy(threeFingerHapticEnabled = value) } },
                 onStrength = { value -> update { it.copy(threeFingerHapticStrength = value) } },
             )
-            ShortcutActionRow("上划", "三根手指同时向上滑动。", settings.threeFingerSwipeUpAction, settings.threeFingerGestureEnabled) {
+            ShortcutActionRow("三指上划", "三根手指同时向上滑动。", settings.threeFingerSwipeUpAction, settings.threeFingerGestureEnabled) {
                 value -> update { it.copy(threeFingerSwipeUpAction = value) }
             }
-            ShortcutActionRow("下划", "三根手指同时向下滑动。", settings.threeFingerSwipeDownAction, settings.threeFingerGestureEnabled) {
+            ShortcutActionRow("三指下划", "三根手指同时向下滑动。", settings.threeFingerSwipeDownAction, settings.threeFingerGestureEnabled) {
                 value -> update { it.copy(threeFingerSwipeDownAction = value) }
             }
-            ShortcutActionRow("左划", "三根手指同时向左滑动。", settings.threeFingerSwipeLeftAction, settings.threeFingerGestureEnabled) {
+            ShortcutActionRow("三指左划", "三根手指同时向左滑动。", settings.threeFingerSwipeLeftAction, settings.threeFingerGestureEnabled) {
                 value -> update { it.copy(threeFingerSwipeLeftAction = value) }
             }
-            ShortcutActionRow("右划", "三根手指同时向右滑动。", settings.threeFingerSwipeRightAction, settings.threeFingerGestureEnabled) {
+            ShortcutActionRow("三指右划", "三根手指同时向右滑动。", settings.threeFingerSwipeRightAction, settings.threeFingerGestureEnabled) {
                 value -> update { it.copy(threeFingerSwipeRightAction = value) }
             }
         }
@@ -873,19 +875,20 @@ private fun GlobalShortcutSettingsContent(
             SectionCard("长按切歌", "音量上：下一曲；音量下：上一曲。") {
                 SwitchItem(
                     title = "启用长按切歌",
-                    summary = "仅屏幕关闭时长按音量键触发；亮屏保持系统原有音量控制。",
+                    summary = null,
                     checked = settings.screenOffVolumeLongPressEnabled,
                     enabled = settings.screenOffVolumeKeyEnabled,
                     onCheckedChange = { value -> update { it.copy(screenOffVolumeLongPressEnabled = value) } },
                 )
                 NumericShortcutSlider(
-                    title = "长按判定时间",
-                    summary = "按住多久后触发切歌。",
+                    title = "",
+                    summary = "",
                     value = settings.screenOffVolumeLongPressTimeoutMs,
                     range = 350..2000,
                     enabled = settings.screenOffVolumeKeyEnabled && settings.screenOffVolumeLongPressEnabled,
-                    format = { "${it} ms" },
+                    format = { "长按判定：${it} ms" },
                     onCommit = { value -> update { it.copy(screenOffVolumeLongPressTimeoutMs = value) } },
+                    showTitleAndSummary = false,
                 )
             }
             SectionCard("双击播放/暂停", "息屏时快速双击同一个音量键，发送媒体播放/暂停。") {
@@ -896,13 +899,14 @@ private fun GlobalShortcutSettingsContent(
                     onCheckedChange = { value -> update { it.copy(screenOffVolumeDoubleClickEnabled = value) } },
                 )
                 NumericShortcutSlider(
-                    title = "双击间隔",
-                    summary = "两次按键之间允许的最大时间。",
+                    title = "",
+                    summary = "",
                     value = settings.screenOffVolumeDoubleClickTimeoutMs,
                     range = 100..1000,
                     enabled = settings.screenOffVolumeKeyEnabled && settings.screenOffVolumeDoubleClickEnabled,
-                    format = { "${it} ms" },
+                    format = { "双击间隔：${it} ms" },
                     onCommit = { value -> update { it.copy(screenOffVolumeDoubleClickTimeoutMs = value) } },
+                    showTitleAndSummary = false,
                 )
             }
             ShortcutHapticCard(
@@ -923,40 +927,25 @@ private fun ShortcutFeatureEnableCard(
     enabled: Boolean,
     onEnabledChange: (Boolean) -> Unit,
 ) {
-    // Mirrors the source enable card: one switch row, its status, then the scope note.
-    when (LocalUiMode.current) {
-        UiMode.Material -> Card(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp),
-            shape = RoundedCornerShape(24.dp),
-        ) {
-            Column(modifier = Modifier.padding(vertical = 8.dp)) {
-                CompositionLocalProvider(LocalAlohaOneUIGroupedPreference provides true) {
-                    SwitchItem(
-                        title = kind.enableLabel,
-                        summary = if (enabled) "已启用" else "未启用",
-                        checked = enabled,
-                        onCheckedChange = onEnabledChange,
-                    )
-                }
-                ShortcutBodyText(kind.note)
+    OtherFunctionsThemeGroup(
+        items = buildList {
+            add {
+                SwitchItem(
+                    title = kind.enableLabel,
+                    summary = if (enabled) "已启用" else "未启用",
+                    checked = enabled,
+                    onCheckedChange = onEnabledChange,
+                )
             }
-        }
-        UiMode.Miuix -> MiuixCard(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp),
-        ) {
-            Column(modifier = Modifier.padding(vertical = 8.dp)) {
-                CompositionLocalProvider(LocalAlohaOneUIGroupedPreference provides true) {
-                    SwitchItem(
-                        title = kind.enableLabel,
-                        summary = if (enabled) "已启用" else "未启用",
-                        checked = enabled,
-                        onCheckedChange = onEnabledChange,
-                    )
+            if (kind.note.isNotBlank()) {
+                add {
+                    OtherFunctionsThemeChildItem {
+                        ShortcutBodyText(kind.note)
+                    }
                 }
-                ShortcutBodyText(kind.note)
             }
-        }
-    }
+        },
+    )
 }
 
 @Composable
@@ -985,22 +974,30 @@ private fun ShortcutHapticCard(
     strength: Int,
     onHapticEnabled: (Boolean) -> Unit,
     onStrength: (Int) -> Unit,
-    summary: String = "动作触发时提供触觉反馈。",
+    summary: String = "",
 ) {
-    SectionCard("振动反馈", summary) {
-        SwitchItem(
-            title = "启用振动反馈",
-            summary = null,
-            checked = hapticEnabled,
-            enabled = enabled,
-            onCheckedChange = onHapticEnabled,
-        )
-        HapticStrengthSlider(
-            value = strength,
-            enabled = enabled && hapticEnabled,
-            onCommit = onStrength,
-        )
-    }
+    OtherFunctionsThemeGroup(
+        items = buildList {
+            add {
+                SwitchItem(
+                    title = "振动反馈",
+                    summary = summary.takeIf { it.isNotBlank() },
+                    checked = hapticEnabled,
+                    enabled = enabled,
+                    onCheckedChange = onHapticEnabled,
+                )
+            }
+            add {
+                OtherFunctionsThemeChildItem {
+                    HapticStrengthSlider(
+                        value = strength,
+                        enabled = enabled && hapticEnabled,
+                        onCommit = onStrength,
+                    )
+                }
+            }
+        },
+    )
 }
 
 @Composable
@@ -1016,94 +1013,69 @@ private fun ThresholdShortcutCard(
     onCommit: (Int) -> Unit,
 ) {
     var showHelp by remember { mutableStateOf(false) }
-    // Source layout: title with an adjacent “?” affordance, explanatory line, value and slider.
-    // Both Aloha themes keep their own row, colors and typography instead of a generic button at the bottom.
-    when (LocalUiMode.current) {
-        UiMode.Material -> Card(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp),
-            shape = RoundedCornerShape(22.dp),
-        ) {
-            Column(modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        text = title,
-                        modifier = Modifier.weight(1f),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                    Box(
-                        modifier = Modifier.size(28.dp).clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.surfaceContainerHighest)
-                            .clickable { showHelp = true },
-                        contentAlignment = Alignment.Center,
+    OtherFunctionsThemeGroup(
+        items = buildList {
+            add {
+                OtherFunctionsThemeChildItem {
+                    Column(
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
                     ) {
-                        Text("?", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            when (LocalUiMode.current) {
+                                UiMode.Material -> Text(
+                                    text = title,
+                                    modifier = Modifier.weight(1f),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                )
+                                UiMode.Miuix -> MiuixText(
+                                    text = title,
+                                    modifier = Modifier.weight(1f),
+                                    color = colorScheme.onSurface,
+                                    fontWeight = FontWeight.SemiBold,
+                                )
+                            }
+                            Box(
+                                modifier = Modifier.size(28.dp)
+                                    .clip(CircleShape)
+                                    .background(
+                                        when (LocalUiMode.current) {
+                                            UiMode.Material -> MaterialTheme.colorScheme.surfaceContainerHighest
+                                            UiMode.Miuix -> colorScheme.surface
+                                        },
+                                    )
+                                    .clickable { showHelp = true },
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                when (LocalUiMode.current) {
+                                    UiMode.Material -> Text("?", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                                    UiMode.Miuix -> MiuixText("?", color = colorScheme.primary, fontWeight = FontWeight.Bold)
+                                }
+                            }
+                        }
+                        if (summary.isNotBlank()) ShortcutBodyText(summary)
+                        NumericShortcutSlider(
+                            title = "",
+                            summary = "",
+                            value = value,
+                            range = range,
+                            enabled = enabled,
+                            format = format,
+                            onCommit = onCommit,
+                            showTitleAndSummary = false,
+                        )
                     }
                 }
-                Text(
-                    text = summary,
-                    modifier = Modifier.padding(horizontal = 18.dp, vertical = 4.dp),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                NumericShortcutSlider(
-                    title = "",
-                    summary = "",
-                    value = value,
-                    range = range,
-                    enabled = enabled,
-                    format = format,
-                    onCommit = onCommit,
-                    showTitleAndSummary = false,
-                )
             }
-        }
-        UiMode.Miuix -> MiuixCard(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp),
-        ) {
-            Column(modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    MiuixText(
-                        text = title,
-                        modifier = Modifier.weight(1f),
-                        color = colorScheme.onSurface,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                    Box(
-                        modifier = Modifier.size(28.dp).clip(CircleShape)
-                            .background(colorScheme.surface)
-                            .clickable { showHelp = true },
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        MiuixText("?", color = colorScheme.primary, fontWeight = FontWeight.Bold)
-                    }
-                }
-                MiuixText(
-                    text = summary,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
-                    color = colorScheme.onSurfaceVariantSummary,
-                )
-                NumericShortcutSlider(
-                    title = "",
-                    summary = "",
-                    value = value,
-                    range = range,
-                    enabled = enabled,
-                    format = format,
-                    onCommit = onCommit,
-                    showTitleAndSummary = false,
-                )
-            }
-        }
-    }
+        },
+    )
     if (showHelp) ShortcutInformationDialog(helpTitle, helpMessage) { showHelp = false }
 }
+
 @Composable
 private fun SectionCard(
     title: String,
@@ -1113,7 +1085,7 @@ private fun SectionCard(
     when (LocalUiMode.current) {
         UiMode.Material -> Card(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp),
-            shape = RoundedCornerShape(24.dp),
+            
         ) {
             Column(modifier = Modifier.padding(vertical = 8.dp)) {
                 Text(
@@ -1232,20 +1204,21 @@ private fun HapticStrengthSlider(
     onCommit: (Int) -> Unit,
 ) {
     NumericShortcutSlider(
-        title = "振动强度",
-        summary = "振动强度范围：1–100%。",
+        title = "",
+        summary = "",
         value = value.coerceIn(1, 100),
         range = 1..100,
         enabled = enabled,
-        format = { "${it}%" },
+        format = { "强度：${it}%" },
         onCommit = onCommit,
+        showTitleAndSummary = false,
     )
 }
 
 @Composable
 private fun FloatingBallColorControl(argb: Int, enabled: Boolean, onCommit: (Int) -> Unit) {
     var showPicker by remember { mutableStateOf(false) }
-    SectionCard("悬浮球颜色", "点击颜色预览，使用颜色轮调整色相、亮度和透明度。") {
+    SectionCard("悬浮球颜色", "") {
         val labelColor = run {
             val lum = 0.299 * ((argb shr 16) and 0xFF) +
                 0.587 * ((argb shr 8) and 0xFF) + 0.114 * (argb and 0xFF)
@@ -1300,7 +1273,7 @@ private fun ShortcutColorPickerDialog(
 
     ShortcutDialogSurface(
         title = "悬浮球颜色",
-        subtitle = "拖动颜色轮选择色相与饱和度，再调整亮度和透明度。",
+        subtitle = "",
         onDismiss = onDismiss,
     ) {
         when (LocalUiMode.current) {
@@ -1440,7 +1413,7 @@ private fun ShortcutActionRow(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 5.dp)
                 .graphicsLayer { alpha = if (enabled) 1f else 0.48f }
                 .clickable(enabled = enabled) { showActionPicker = true },
-            shape = RoundedCornerShape(22.dp),
+            
         ) {
             Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
                 Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
@@ -1534,12 +1507,12 @@ private fun ShortcutActionGroupCard(
     onToggle: () -> Unit,
     onSelect: (String) -> Unit,
 ) {
-    val accentColor = when (LocalUiMode.current) {
-        UiMode.Material -> MaterialTheme.colorScheme.primary
-        UiMode.Miuix -> colorScheme.primary
+    val selectedBackground = when (LocalUiMode.current) {
+        UiMode.Material -> MaterialTheme.colorScheme.primaryContainer
+        UiMode.Miuix -> colorScheme.primary.copy(alpha = 0.16f)
     }
     val unselectedBackground = when (LocalUiMode.current) {
-        UiMode.Material -> MaterialTheme.colorScheme.surfaceContainerHighest
+        UiMode.Material -> MaterialTheme.colorScheme.surfaceContainerLow
         UiMode.Miuix -> colorScheme.surface
     }
     val secondary = when (LocalUiMode.current) {
@@ -1557,7 +1530,7 @@ private fun ShortcutActionGroupCard(
                     Text("${group.actions.size} 项", color = secondary, style = MaterialTheme.typography.bodySmall)
                     Text(if (expanded) "⌃" else "⌄", modifier = Modifier.padding(start = 8.dp), color = secondary)
                 }
-                if (expanded) ShortcutActionGrid(group, selectedAction, accentColor, unselectedBackground, onSelect)
+                if (expanded) ShortcutActionGrid(group, selectedAction, selectedBackground, unselectedBackground, onSelect)
             }
         }
         UiMode.Miuix -> MiuixCard(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
@@ -1590,14 +1563,26 @@ private fun ShortcutActionGrid(
                 rowActions.forEach { option ->
                     val selected = option.id == selectedAction ||
                         (option.id == ACTION_CUSTOM_APP && selectedAction.startsWith(ACTION_CUSTOM_APP_PREFIX))
-                    val foreground = if (selected) Color.White else when (LocalUiMode.current) {
+                    val foreground = if (selected) when (LocalUiMode.current) {
+                        UiMode.Material -> MaterialTheme.colorScheme.onPrimaryContainer
+                        UiMode.Miuix -> colorScheme.primary
+                    } else when (LocalUiMode.current) {
                         UiMode.Material -> MaterialTheme.colorScheme.onSurface
                         UiMode.Miuix -> colorScheme.onSurface
                     }
+                    val chipShape = RoundedCornerShape(14.dp)
+                    val borderColor = if (selected) when (LocalUiMode.current) {
+                        UiMode.Material -> MaterialTheme.colorScheme.primary
+                        UiMode.Miuix -> colorScheme.primary
+                    } else when (LocalUiMode.current) {
+                        UiMode.Material -> MaterialTheme.colorScheme.outlineVariant
+                        UiMode.Miuix -> colorScheme.onSurfaceVariantSummary.copy(alpha = 0.24f)
+                    }
                     Box(
                         modifier = Modifier.weight(1f).padding(4.dp)
-                            .clip(RoundedCornerShape(14.dp))
+                            .clip(chipShape)
                             .background(if (selected) selectedBackground else unselectedBackground)
+                            .border(1.dp, borderColor, chipShape)
                             .clickable { onSelect(option.id) }
                             .heightIn(min = 44.dp)
                             .padding(horizontal = 10.dp, vertical = 8.dp),
@@ -1657,7 +1642,7 @@ private fun ShortcutDialogSurface(
         when (LocalUiMode.current) {
             UiMode.Material -> Card(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp).widthIn(max = 520.dp),
-                shape = RoundedCornerShape(28.dp),
+                
             ) {
                 Column(modifier = Modifier.padding(18.dp)) {
                     Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
@@ -1695,24 +1680,12 @@ private fun GlobalShortcutActionButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val background = when (LocalUiMode.current) {
-        UiMode.Material -> if (primary) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHighest
-        UiMode.Miuix -> if (primary) colorScheme.primary else colorScheme.surface
-    }
-    val foreground = if (primary) Color.White else when (LocalUiMode.current) {
-        UiMode.Material -> MaterialTheme.colorScheme.onSurface
-        UiMode.Miuix -> colorScheme.onSurface
-    }
-    Box(
-        modifier = modifier.clip(RoundedCornerShape(999.dp)).background(background).clickable(onClick = onClick)
-            .padding(horizontal = 14.dp, vertical = 12.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        when (LocalUiMode.current) {
-            UiMode.Material -> Text(label, color = foreground, fontWeight = FontWeight.SemiBold)
-            UiMode.Miuix -> MiuixText(label, color = foreground, fontWeight = FontWeight.SemiBold)
-        }
-    }
+    AlohaOneUIActionButton(
+        text = label,
+        primary = primary,
+        onClick = onClick,
+        modifier = modifier,
+    )
 }
 
 private fun loadShortcutLauncherApps(context: Context): List<ShortcutLauncherApp> {
