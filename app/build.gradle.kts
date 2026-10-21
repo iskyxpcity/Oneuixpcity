@@ -1,6 +1,11 @@
 @file:Suppress("UnstableApiUsage")
 
+import java.awt.AlphaComposite
+import java.awt.RenderingHints
+import java.awt.image.BufferedImage
 import java.io.File
+import javax.imageio.ImageIO
+import kotlin.math.roundToInt
 
 plugins {
     alias(libs.plugins.agp.app)
@@ -28,8 +33,51 @@ val managerName = project.findProperty("ONEUIALOHA_NAME")?.toString() ?: default
 val launcherIconSource = rootProject.file("Aloha_OneUI_icon.png")
 val generatedLauncherResDir = layout.buildDirectory.dir("generated/res/alohaLauncher")
 
-// Use the user-supplied full launcher icon as-is. Do not resize, crop, redraw, add padding,
-// or wrap it in an Android adaptive-icon foreground (which applies another system mask).
+// Keep the user's source image unchanged in the repository. Generate only the
+// launcher-specific foreground: fit the complete artwork inside Android's 66dp safe
+// zone on a transparent 108dp canvas so OEM masks (including Samsung One UI) don't clip it.
+val launcherIconSource = rootProject.file("Aloha_OneUI_icon.png")
+val generatedLauncherResDir = layout.buildDirectory.dir("generated/res/alohaLauncher")
+val adaptiveIconCanvasPx = 432 // 108dp at 4x density
+val adaptiveIconSafeZonePx = 264 // 66dp at 4x density
+
+fun sampleAlohaIconBackground(image: BufferedImage): String {
+    val buckets = mutableMapOf<Int, MutableList<Int>>()
+
+    fun recordPixel(x: Int, y: Int) {
+        val argb = image.getRGB(x, y)
+        val alpha = (argb ushr 24) and 0xFF
+        if (alpha < 240) return
+        val red = (argb ushr 16) and 0xFF
+        val green = (argb ushr 8) and 0xFF
+        val blue = argb and 0xFF
+        // Group near-identical edge colors, then average the dominant group.
+        val bucket = ((red ushr 4) shl 8) or ((green ushr 4) shl 4) or (blue ushr 4)
+        buckets.getOrPut(bucket) { mutableListOf() }.add(argb)
+    }
+
+    val horizontalBand = maxOf(1, image.width / 64)
+    val verticalBand = maxOf(1, image.height / 64)
+    for (x in 0 until image.width) {
+        for (offset in 0 until minOf(verticalBand, image.height)) {
+            recordPixel(x, offset)
+            recordPixel(x, image.height - 1 - offset)
+        }
+    }
+    for (y in 0 until image.height) {
+        for (offset in 0 until minOf(horizontalBand, image.width)) {
+            recordPixel(offset, y)
+            recordPixel(image.width - 1 - offset, y)
+        }
+    }
+
+    val dominant = buckets.values.maxByOrNull { it.size } ?: return "#00000000"
+    val red = dominant.sumOf { (it ushr 16) and 0xFF } / dominant.size
+    val green = dominant.sumOf { (it ushr 8) and 0xFF } / dominant.size
+    val blue = dominant.sumOf { it and 0xFF } / dominant.size
+    return String.format(java.util.Locale.ROOT, "#%02X%02X%02X", red, green, blue)
+}
+
 val prepareAlohaLauncherIcon = tasks.register("prepareAlohaLauncherIcon") {
     inputs.file(launcherIconSource)
     outputs.dir(generatedLauncherResDir)
@@ -37,15 +85,88 @@ val prepareAlohaLauncherIcon = tasks.register("prepareAlohaLauncherIcon") {
         check(launcherIconSource.isFile) {
             "Required launcher icon source is missing: ${launcherIconSource.path}"
         }
+        val sourceImage = ImageIO.read(launcherIconSource)
+            ?: error("Unable to decode Aloha_OneUI_icon.png")
+        check(sourceImage.width > 0 && sourceImage.height > 0) {
+            "Aloha launcher source image has invalid dimensions."
+        }
+
         val outputRoot = generatedLauncherResDir.get().asFile
         outputRoot.deleteRecursively()
-        val launcherIcon = File(outputRoot, "mipmap-nodpi/ic_launcher_aloha.png")
-        launcherIcon.parentFile.mkdirs()
-        launcherIconSource.copyTo(launcherIcon, overwrite = true)
-        check(launcherIcon.readBytes().contentEquals(launcherIconSource.readBytes())) {
-            "Generated launcher icon must be byte-identical to Aloha_OneUI_icon.png."
+
+        // The uploaded original is read-only; only this derived resource is transformed.
+        // Scale the whole source proportionally, never trim/crop it, and leave transparent
+        // pixels around it. 264/432 == 66/108, the official adaptive-icon safe zone.
+        val scale = minOf(
+            1.0,
+            minOf(
+                adaptiveIconSafeZonePx.toDouble() / sourceImage.width,
+                adaptiveIconSafeZonePx.toDouble() / sourceImage.height
+            )
+        )
+        val drawWidth = (sourceImage.width * scale).roundToInt().coerceAtLeast(1)
+        val drawHeight = (sourceImage.height * scale).roundToInt().coerceAtLeast(1)
+        val canvas = BufferedImage(
+            adaptiveIconCanvasPx,
+            adaptiveIconCanvasPx,
+            BufferedImage.TYPE_INT_ARGB
+        )
+        val graphics = canvas.createGraphics()
+        try {
+            graphics.composite = AlphaComposite.Src
+            graphics.setRenderingHint(
+                RenderingHints.KEY_INTERPOLATION,
+                RenderingHints.VALUE_INTERPOLATION_BICUBIC
+            )
+            graphics.setRenderingHint(
+                RenderingHints.KEY_RENDERING,
+                RenderingHints.VALUE_RENDER_QUALITY
+            )
+            graphics.setRenderingHint(
+                RenderingHints.KEY_ALPHA_INTERPOLATION,
+                RenderingHints.VALUE_ALPHA_INTERPOLATION_QUALITY
+            )
+            graphics.drawImage(
+                sourceImage,
+                (adaptiveIconCanvasPx - drawWidth) / 2,
+                (adaptiveIconCanvasPx - drawHeight) / 2,
+                drawWidth,
+                drawHeight,
+                null
+            )
+        } finally {
+            graphics.dispose()
         }
-        println("Copied supplied Aloha launcher icon byte-for-byte: ${launcherIconSource.name}")
+
+        val foregroundIcon = File(
+            outputRoot,
+            "drawable-nodpi/ic_launcher_aloha_foreground.png"
+        )
+        foregroundIcon.parentFile.mkdirs()
+        check(ImageIO.write(canvas, "png", foregroundIcon)) {
+            "Unable to write generated adaptive launcher foreground."
+        }
+
+        val background = sampleAlohaIconBackground(sourceImage)
+        val colorsXml = File(outputRoot, "values/aloha_launcher_colors.xml")
+        colorsXml.parentFile.mkdirs()
+        colorsXml.writeText(
+            """<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="aloha_launcher_background">$background</color>
+</resources>
+""".trimIndent() + "\n",
+            Charsets.UTF_8
+        )
+
+        println(
+            "Generated Aloha adaptive icon: full source fitted without cropping into " +
+                "${adaptiveIconSafeZonePx}x${adaptiveIconSafeZonePx} safe zone on " +
+                "${adaptiveIconCanvasPx}x${adaptiveIconCanvasPx} transparent canvas; " +
+                "source file was not modified; background=$background"
+        )
+        sourceImage.flush()
+        canvas.flush()
     }
 }
 

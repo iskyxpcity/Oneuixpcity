@@ -68,16 +68,25 @@ check("App Manifest points at the Aloha Application and themes",
 check("Visible application name is Aloha OneUI",
       'val defaultManagerName = "Aloha OneUI"' in gradle_app
       and 'android:icon="@mipmap/ic_launcher_aloha"' in manifest
-      and 'android:roundIcon="@mipmap/ic_launcher_aloha"' in manifest)
-check("Launcher icon is copied byte-for-byte from the supplied PNG without resizing or adaptive foreground",
+      and 'android:roundIcon=' not in manifest)
+adaptive_icon_file = ROOT / "app/src/main/res/mipmap-anydpi-v26/ic_launcher_aloha.xml"
+adaptive_icon_text = adaptive_icon_file.read_text() if adaptive_icon_file.is_file() else ""
+check("Launcher icon preserves the uploaded source and generates a padded adaptive foreground",
       (ROOT / "Aloha_OneUI_icon.png").is_file()
       and 'rootProject.file("Aloha_OneUI_icon.png")' in gradle_app
-      and 'launcherIconSource.copyTo(launcherIcon, overwrite = true)' in gradle_app
-      and 'launcherIcon.readBytes().contentEquals(launcherIconSource.readBytes())' in gradle_app
-      and 'prepareAlohaLauncherIcon' in gradle_app
-      and 'mipmap-anydpi-v26/ic_launcher_aloha.xml' not in gradle_app
-      and 'BufferedImage' not in gradle_app
-      and 'val size = 256' not in gradle_app)
+      and 'ImageIO.read(launcherIconSource)' in gradle_app
+      and 'adaptiveIconCanvasPx = 432' in gradle_app
+      and 'adaptiveIconSafeZonePx = 264' in gradle_app
+      and 'BufferedImage.TYPE_INT_ARGB' in gradle_app
+      and 'graphics.drawImage(sourceImage,' in gradle_app
+      and 'launcherIconSource.copyTo' not in gradle_app
+      and 'getSubimage' not in gradle_app
+      and 'name="aloha_launcher_background"' in gradle_app
+      and 'android:icon="@mipmap/ic_launcher_aloha"' in manifest
+      and '@color/aloha_launcher_background' in adaptive_icon_text
+      and '@drawable/ic_launcher_aloha_foreground' in adaptive_icon_text
+      and 'TYPE_INT_ARGB' in gradle_app
+      and '66/108' in gradle_app)
 check("Hook Manifest uses Aloha component package",
       "com.oneuialoha.hook.RebootActivity" in hook_manifest)
 check("Xposed initialization entry matches renamed Hook class",
