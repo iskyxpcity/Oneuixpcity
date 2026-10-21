@@ -190,10 +190,10 @@ object StatusBar {
         runCatching {
             val secondTick = helper.reflect["mSecondTick"] as? Runnable
                 ?: run {
-                    xlog(
+                    Log.w(
+                        "AlohaOneUI-QSClockSeconds",
                         "QS_CLOCK_SECONDS missing Runnable field " +
                             "helper=${helper.javaClass.name} enabled=$enabled",
-                        priority = Log.WARN,
                     )
                     return@runCatching
                 }
@@ -212,12 +212,12 @@ object StatusBar {
                 helper.reflect["mSecondsHandler"] = null
             }
         }.onFailure { error ->
-            xlog(
+            Log.w(
+                "AlohaOneUI-QSClockSeconds",
                 "QS_CLOCK_SECONDS apply failed helper=${helper.javaClass.name} " +
                     "enabled=$enabled: ${error.javaClass.simpleName}: ${error.message}",
-                priority = Log.WARN,
+                error,
             )
-            xlog(error)
         }
     }
 
