@@ -145,7 +145,7 @@ jobs:
           set -euo pipefail
           mkdir -p diagnostics
           chmod +x gradlew
-          ./gradlew "$APP_ASSEMBLE_TASK" -PONEUIALOHA_PACKAGE_NAME=com.oneuialoha.app -PONEUIALOHA_NAME="OneUI Aloha" --stacktrace --no-daemon 2>&1 | tee diagnostics/gradle-build.log
+          ./gradlew "$APP_ASSEMBLE_TASK" -PONEUIALOHA_PACKAGE_NAME=com.oneuialoha.app -PONEUIALOHA_NAME="Aloha OneUI" --stacktrace --no-daemon 2>&1 | tee diagnostics/gradle-build.log
 
       - name: Validate optimized release candidate
         if: success() && github.ref == 'refs/heads/migration/oneui-aloha-full-identity-20261020'
@@ -158,7 +158,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p diagnostics/release-validation
-          ./gradlew :app:assembleRelease -PONEUIALOHA_PACKAGE_NAME=com.oneuialoha.app -PONEUIALOHA_NAME="OneUI Aloha" --stacktrace --no-daemon 2>&1 | tee diagnostics/release-validation/assemble-release.log
+          ./gradlew :app:assembleRelease -PONEUIALOHA_PACKAGE_NAME=com.oneuialoha.app -PONEUIALOHA_NAME="Aloha OneUI" --stacktrace --no-daemon 2>&1 | tee diagnostics/release-validation/assemble-release.log
 
           RELEASE_APK=$(find app/build/outputs/apk/release -type f -name '*.apk' | head -1)
           test -s "$RELEASE_APK"
