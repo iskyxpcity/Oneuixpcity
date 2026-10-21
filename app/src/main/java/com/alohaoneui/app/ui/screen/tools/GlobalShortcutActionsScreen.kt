@@ -44,6 +44,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -107,6 +108,7 @@ import top.yukonga.miuix.kmp.basic.TopAppBar as MiuixTopAppBar
 import top.yukonga.miuix.kmp.blur.layerBackdrop
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Back
+import top.yukonga.miuix.kmp.icon.basic.ArrowRight
 import top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme
 import top.yukonga.miuix.kmp.utils.overScrollVertical
 import top.yukonga.miuix.kmp.utils.scrollEndHaptic
@@ -420,14 +422,14 @@ private fun GlobalShortcutEntryCard(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Box(
-                    modifier = Modifier.size(44.dp).clip(RoundedCornerShape(14.dp)).background(iconColor),
+                    modifier = Modifier.size(40.dp).clip(RoundedCornerShape(14.dp)).background(iconColor),
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(
                         imageVector = ImageVector.vectorResource(R.drawable.ic_nav_gesture),
                         contentDescription = title,
                         tint = Color.White,
-                        modifier = Modifier.size(25.dp),
+                        modifier = Modifier.size(24.dp),
                     )
                 }
                 Column(modifier = Modifier.weight(1f).padding(start = 12.dp)) {
@@ -439,7 +441,7 @@ private fun GlobalShortcutEntryCard(
                     )
                     Text(description, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-                Text("›", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
         UiMode.Miuix -> MiuixCard(
@@ -450,14 +452,14 @@ private fun GlobalShortcutEntryCard(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Box(
-                    modifier = Modifier.size(44.dp).clip(RoundedCornerShape(14.dp)).background(iconColor),
+                    modifier = Modifier.size(40.dp).clip(RoundedCornerShape(14.dp)).background(iconColor),
                     contentAlignment = Alignment.Center,
                 ) {
                     MiuixIcon(
                         imageVector = ImageVector.vectorResource(R.drawable.ic_nav_gesture),
                         contentDescription = title,
                         tint = Color.White,
-                        modifier = Modifier.size(25.dp),
+                        modifier = Modifier.size(24.dp),
                     )
                 }
                 Column(modifier = Modifier.weight(1f).padding(start = 12.dp)) {
@@ -465,7 +467,12 @@ private fun GlobalShortcutEntryCard(
                     MiuixText(state, color = if (state.startsWith("已启用")) colorScheme.primary else colorScheme.onSurfaceVariantSummary)
                     MiuixText(description, color = colorScheme.onSurface)
                 }
-                MiuixText("›", color = colorScheme.onSurfaceVariantSummary)
+                MiuixIcon(
+                    modifier = Modifier.padding(start = 8.dp).size(width = 10.dp, height = 16.dp),
+                    imageVector = MiuixIcons.Basic.ArrowRight,
+                    contentDescription = null,
+                    tint = colorScheme.onSurfaceVariantActions,
+                )
             }
         }
     }
@@ -577,26 +584,28 @@ private fun GlobalShortcutSettingsContent(
                 enabled = settings.floatingBallEnabled,
                 onCommit = { value -> update { it.copy(floatingBallColorArgb = value) } },
             )
-            SectionCard("悬浮球大小", "调整悬浮球直径。") {
+            SectionCard("悬浮球大小", "") {
                 NumericShortcutSlider(
-                    title = "悬浮球大小",
-                    summary = "设置悬浮球的显示尺寸。",
+                    title = "",
+                    summary = "",
                     value = settings.floatingBallSizeDp,
                     range = 40..88,
                     enabled = settings.floatingBallEnabled,
                     format = { "${it} dp" },
                     onCommit = { value -> update { it.copy(floatingBallSizeDp = value) } },
+                    showTitleAndSummary = false,
                 )
             }
-            SectionCard("自动贴边", "松开悬浮球后等待指定时间，再自动贴向屏幕边缘。") {
+            SectionCard("自动贴边", "") {
                 NumericShortcutSlider(
-                    title = "自动贴边",
-                    summary = "0 表示关闭自动贴边。",
+                    title = "",
+                    summary = "",
                     value = settings.floatingBallAutoEdgeDelaySeconds,
                     range = 0..10,
                     enabled = settings.floatingBallEnabled,
                     format = { if (it <= 0) "已关闭" else "${it} 秒无操作后贴边" },
                     onCommit = { value -> update { it.copy(floatingBallAutoEdgeDelaySeconds = value) } },
+                    showTitleAndSummary = false,
                 )
             }
             ShortcutSectionHeading("触发动作")
@@ -809,7 +818,7 @@ private fun ShortcutHapticCard(
     SectionCard("振动反馈", summary) {
         SwitchItem(
             title = "启用振动反馈",
-            summary = "触发动作时提供触觉反馈。",
+            summary = null,
             checked = hapticEnabled,
             enabled = enabled,
             onCheckedChange = onHapticEnabled,
@@ -835,22 +844,91 @@ private fun ThresholdShortcutCard(
     onCommit: (Int) -> Unit,
 ) {
     var showHelp by remember { mutableStateOf(false) }
-    SectionCard(title, summary) {
-        NumericShortcutSlider(
-            title = title,
-            summary = summary,
-            value = value,
-            range = range,
-            enabled = enabled,
-            format = format,
-            onCommit = onCommit,
-        )
-        GlobalShortcutActionButton(
-            label = "查看阈值说明",
-            primary = false,
-            onClick = { showHelp = true },
+    // Source layout: title with an adjacent “?” affordance, explanatory line, value and slider.
+    // Both Aloha themes keep their own row, colors and typography instead of a generic button at the bottom.
+    when (LocalUiMode.current) {
+        UiMode.Material -> Card(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp),
-        )
+            shape = RoundedCornerShape(22.dp),
+        ) {
+            Column(modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = title,
+                        modifier = Modifier.weight(1f),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                    Box(
+                        modifier = Modifier.size(28.dp).clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.surfaceContainerHighest)
+                            .clickable { showHelp = true },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text("?", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                    }
+                }
+                Text(
+                    text = summary,
+                    modifier = Modifier.padding(horizontal = 18.dp, vertical = 4.dp),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                NumericShortcutSlider(
+                    title = "",
+                    summary = "",
+                    value = value,
+                    range = range,
+                    enabled = enabled,
+                    format = format,
+                    onCommit = onCommit,
+                    showTitleAndSummary = false,
+                )
+            }
+        }
+        UiMode.Miuix -> MiuixCard(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp),
+        ) {
+            Column(modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    MiuixText(
+                        text = title,
+                        modifier = Modifier.weight(1f),
+                        color = colorScheme.onSurface,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                    Box(
+                        modifier = Modifier.size(28.dp).clip(CircleShape)
+                            .background(colorScheme.surface)
+                            .clickable { showHelp = true },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        MiuixText("?", color = colorScheme.primary, fontWeight = FontWeight.Bold)
+                    }
+                }
+                MiuixText(
+                    text = summary,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                    color = colorScheme.onSurfaceVariantSummary,
+                )
+                NumericShortcutSlider(
+                    title = "",
+                    summary = "",
+                    value = value,
+                    range = range,
+                    enabled = enabled,
+                    format = format,
+                    onCommit = onCommit,
+                    showTitleAndSummary = false,
+                )
+            }
+        }
     }
     if (showHelp) ShortcutInformationDialog(helpTitle, helpMessage) { showHelp = false }
 }
@@ -933,19 +1011,29 @@ private fun NumericShortcutSlider(
     enabled: Boolean,
     format: (Int) -> String,
     onCommit: (Int) -> Unit,
+    showTitleAndSummary: Boolean = true,
 ) {
     var preview by remember(value, range) { mutableFloatStateOf(value.toFloat()) }
     LaunchedEffect(value, range) { preview = value.toFloat() }
-    Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
+    Column(
+        modifier = Modifier.fillMaxWidth().padding(
+            horizontal = if (showTitleAndSummary) 16.dp else 0.dp,
+            vertical = 8.dp,
+        ),
+    ) {
         when (LocalUiMode.current) {
             UiMode.Material -> {
-                Text(title, style = MaterialTheme.typography.titleSmall)
-                Text(summary, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                if (showTitleAndSummary) {
+                    Text(title, style = MaterialTheme.typography.titleSmall)
+                    Text(summary, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
                 Text(format(preview.toInt()), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
             }
             UiMode.Miuix -> {
-                MiuixText(title, color = colorScheme.onSurface)
-                MiuixText(summary, color = colorScheme.onSurface)
+                if (showTitleAndSummary) {
+                    MiuixText(title, color = colorScheme.onSurface)
+                    MiuixText(summary, color = colorScheme.onSurfaceVariantSummary)
+                }
                 MiuixText(format(preview.toInt()), color = colorScheme.primary)
             }
         }
