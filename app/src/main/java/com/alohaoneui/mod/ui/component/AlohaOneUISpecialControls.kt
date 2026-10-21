@@ -208,7 +208,6 @@ fun AlohaOneUIInlineTextField(
     modifier: Modifier = Modifier,
     labelText: String? = null,
     singleLine: Boolean = false,
-    enabled: Boolean = true,
 ) {
     val grouped = LocalAlohaOneUIGroupedPreference.current
     when (LocalUiMode.current) {
@@ -216,7 +215,6 @@ fun AlohaOneUIInlineTextField(
             value = value,
             onValueChange = onValueChange,
             modifier = modifier,
-            enabled = enabled,
             label = labelText?.let { label -> { MaterialText(label) } },
             singleLine = singleLine,
         )
@@ -243,7 +241,7 @@ fun AlohaOneUIInlineTextField(
                         modifier = Modifier.fillMaxWidth(),
                         insideMargin = DpSize(12.dp, 10.dp),
                         cornerRadius = 12.dp,
-                        enabled = enabled,
+                        enabled = true,
                         singleLine = singleLine,
                         maxLines = if (singleLine) 1 else Int.MAX_VALUE,
                     )

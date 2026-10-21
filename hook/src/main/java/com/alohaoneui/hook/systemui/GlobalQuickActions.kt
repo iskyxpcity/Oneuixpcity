@@ -796,7 +796,7 @@ object GlobalQuickActions {
         val params = WindowManager.LayoutParams(
             size,
             size,
-            2019, // TYPE_NAVIGATION_BAR_PANEL: available to system_server without app overlay permission.
+            2024, // TYPE_NAVIGATION_BAR_PANEL (same window type used by the source implementation).
             flags,
             PixelFormat.TRANSLUCENT,
         ).apply {
@@ -1216,7 +1216,7 @@ object GlobalQuickActions {
     }
 
     private fun toggleMobileData(context: Context) {
-        val telephony = context.getSystemService(Context.TELEPHONY_SERVICE) as? TelephonyManager
+        val telephony = defaultDataTelephonyManager(context)
         val enabled = runCatching { callCompatible(telephony, "isDataEnabled") as? Boolean }.getOrNull()
             ?: runCatching { callCompatible(telephony, "getDataEnabled") as? Boolean }.getOrNull()
             ?: runCatching { Settings.Global.getInt(context.contentResolver, "mobile_data", 1) == 1 }.getOrDefault(true)
@@ -1227,6 +1227,23 @@ object GlobalQuickActions {
         if (runShellCommandForSuccess(if (next) "svc data enable" else "svc data disable")) return
         if (runShellCommandForSuccess("cmd phone data ${if (next) "enable" else "disable"}")) return
         Settings.Global.putInt(context.contentResolver, "mobile_data", if (next) 1 else 0)
+    }
+
+    /**
+     * Resolve the phone object for the current default-data subscription, matching the source
+     * implementation on dual-SIM / eSIM devices instead of blindly toggling the base subscription.
+     */
+    private fun defaultDataTelephonyManager(context: Context): TelephonyManager? {
+        val base = context.getSystemService(Context.TELEPHONY_SERVICE) as? TelephonyManager ?: return null
+        val subscriptionId = runCatching {
+            Class.forName("android.telephony.SubscriptionManager")
+                .getMethod("getDefaultDataSubscriptionId")
+                .invoke(null) as? Int
+        }.getOrNull()
+        if (subscriptionId == null || subscriptionId < 0) return base
+        return runCatching {
+            callCompatible(base, "createForSubscriptionId", subscriptionId) as? TelephonyManager
+        }.getOrNull() ?: base
     }
 
     private fun startSamsungCaptureSideButtonAction(context: Context, selectedAction: String): Boolean {
