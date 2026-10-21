@@ -506,7 +506,7 @@ data class Preference(
         val screenOffVolumeKeyEnabled: Boolean = false,
         val screenOffVolumeLongPressEnabled: Boolean = true,
         val screenOffVolumeLongPressTimeoutMs: Int = 500,
-        val screenOffVolumeDoubleClickEnabled: Boolean = true,
+        val screenOffVolumeDoubleClickEnabled: Boolean = false,
         val screenOffVolumeDoubleClickTimeoutMs: Int = 500,
         val screenOffVolumeHapticEnabled: Boolean = false,
         val screenOffVolumeHapticStrength: Int = 60,
