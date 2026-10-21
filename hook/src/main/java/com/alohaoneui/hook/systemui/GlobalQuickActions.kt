@@ -1111,28 +1111,21 @@ object GlobalQuickActions {
             )
             val up = KeyEvent.changeAction(down, KeyEvent.ACTION_UP)
             val manager = inputManagerService
-            if (manager != null && callCompatible(manager, "injectInputEvent", down, 0) != null) {
-                callCompatible(manager, "injectInputEvent", up, 0)
+            if (manager != null && invokeCompatible(manager, "injectInputEvent", down, 0)) {
+                invokeCompatible(manager, "injectInputEvent", up, 0)
                 return
             }
             val clazz = Class.forName("android.hardware.input.InputManager")
             val instance = callCompatible(clazz, "getInstance")
-            if (instance != null) {
-                callCompatible(instance, "injectInputEvent", down, 0)
-                callCompatible(instance, "injectInputEvent", up, 0)
+            if (instance != null && invokeCompatible(instance, "injectInputEvent", down, 0)) {
+                invokeCompatible(instance, "injectInputEvent", up, 0)
             }
         }.onFailure { Log.w(TAG, "key injection failed: $keyCode", it) }
     }
 
     private fun invokePolicy(method: String): Boolean {
         val policy = phoneWindowManager ?: return false
-        val exists = generateSequence(policy.javaClass as Class<*>?) { it.superclass }
-            .any { type -> runCatching { type.declaredMethods.any { it.name == method } }.getOrDefault(false) }
-        if (!exists) return false
-        return runCatching {
-            callCompatible(policy, method)
-            true
-        }.getOrDefault(false)
+        return invokeCompatible(policy, method)
     }
 
     private fun startComponent(context: Context, packageName: String, className: String): Boolean {
@@ -1221,9 +1214,8 @@ object GlobalQuickActions {
             ?: runCatching { callCompatible(telephony, "getDataEnabled") as? Boolean }.getOrNull()
             ?: runCatching { Settings.Global.getInt(context.contentResolver, "mobile_data", 1) == 1 }.getOrDefault(true)
         val next = !enabled
-        val telephonyMethods = telephony?.javaClass?.methods.orEmpty().map { it.name }.toSet()
-        if ("setDataEnabled" in telephonyMethods && runCatching { callCompatible(telephony, "setDataEnabled", next); true }.getOrDefault(false)) return
-        if ("setDataEnabledForReason" in telephonyMethods && runCatching { callCompatible(telephony, "setDataEnabledForReason", 0, next); true }.getOrDefault(false)) return
+        if (invokeCompatible(telephony, "setDataEnabled", next)) return
+        if (invokeCompatible(telephony, "setDataEnabledForReason", 0, next)) return
         if (runShellCommandForSuccess(if (next) "svc data enable" else "svc data disable")) return
         if (runShellCommandForSuccess("cmd phone data ${if (next) "enable" else "disable"}")) return
         Settings.Global.putInt(context.contentResolver, "mobile_data", if (next) 1 else 0)
@@ -1281,8 +1273,7 @@ object GlobalQuickActions {
             KeyEvent.FLAG_FROM_SYSTEM or KeyEvent.FLAG_LONG_PRESS,
             InputDevice.SOURCE_KEYBOARD,
         )
-        val injected = runCatching { callCompatible(manager, "injectInputEvent", down, 0) != null }
-            .getOrDefault(false)
+        val injected = invokeCompatible(manager, "injectInputEvent", down, 0)
         if (!injected) return
         Thread {
             runCatching {
@@ -1292,7 +1283,7 @@ object GlobalQuickActions {
                     KeyCharacterMap.VIRTUAL_KEYBOARD, 0, KeyEvent.FLAG_FROM_SYSTEM,
                     InputDevice.SOURCE_KEYBOARD,
                 )
-                callCompatible(manager, "injectInputEvent", up, 0)
+                invokeCompatible(manager, "injectInputEvent", up, 0)
             }.onFailure { Log.w(TAG, "long-press key injection failed: $keyCode", it) }
         }.start()
     }
@@ -1330,10 +1321,17 @@ object GlobalQuickActions {
             topPackage == "android" || topPackage == "system" ||
             topPackage == "com.android.systemui" || topPackage.startsWith("com.android.") ||
             topPackage == context.packageName
-        ) return
-        if (runShellCommandForSuccess("am force-stop '$topPackage'")) return
+        ) {
+            showShortcutToast(context, "不允许结束该程序")
+            return
+        }
+        if (runShellCommandForSuccess("am force-stop '$topPackage'")) {
+            showShortcutToast(context, "已结束程序")
+            return
+        }
         runCatching { manager.killBackgroundProcesses(topPackage) }
         runCatching { callCompatible(manager, "forceStopPackage", topPackage) }
+        showShortcutToast(context, "已结束程序")
     }
 
     private fun cleanBackgroundApps(context: Context) {
@@ -1352,6 +1350,15 @@ object GlobalQuickActions {
                 runCatching { manager.killBackgroundProcesses(packageName) }
             }
         }.onFailure { Log.w(TAG, "memory clean failed", it) }
+        showShortcutToast(context, "内存已清理")
+    }
+
+    private fun showShortcutToast(context: Context, message: String) {
+        mainHandler.post {
+            runCatching {
+                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+            }.onFailure { Log.w(TAG, "shortcut feedback could not be shown", it) }
+        }
     }
 
     private fun currentSystemContext(): Context? =
@@ -1380,6 +1387,43 @@ object GlobalQuickActions {
             type = currentType.superclass
         }
         return null
+    }
+
+    /**
+     * Invoke a reflected method and report whether the invocation actually succeeded.
+     * Unlike callCompatible(), this distinguishes a successful Unit-returning method from
+     * an inaccessible method or a Boolean-returning API that rejected the request.
+     */
+    private fun invokeCompatible(target: Any?, name: String, vararg args: Any?): Boolean {
+        if (target == null) return false
+        val clazz = if (target is Class<*>) target else target.javaClass
+        var type: Class<*>? = clazz
+        while (type != null) {
+            val currentType = type
+            val methods = runCatching { currentType.declaredMethods.toList() }.getOrDefault(emptyList())
+            val candidate = methods.firstOrNull { method ->
+                method.name == name &&
+                    method.parameterTypes.size == args.size &&
+                    method.parameterTypes.indices.all { index ->
+                        val argument = args[index]
+                        argument == null && !method.parameterTypes[index].isPrimitive ||
+                            argument != null && (
+                                method.parameterTypes[index].isInstance(argument) ||
+                                    method.parameterTypes[index].isPrimitive &&
+                                    primitiveBox(method.parameterTypes[index]).isInstance(argument)
+                                )
+                    }
+            }
+            if (candidate != null) {
+                return runCatching {
+                    candidate.isAccessible = true
+                    val result = candidate.invoke(if (target is Class<*>) null else target, *args)
+                    result !is Boolean || result
+                }.getOrDefault(false)
+            }
+            type = currentType.superclass
+        }
+        return false
     }
 
     private fun callCompatible(target: Any?, name: String, vararg args: Any?): Any? {
