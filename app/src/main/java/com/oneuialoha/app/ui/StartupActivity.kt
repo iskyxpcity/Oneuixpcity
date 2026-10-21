@@ -193,11 +193,13 @@ private class NativeOneUIAlohaStartupView(
         val settle = easeOutBack(segment(timeline, 0f, 0.18f))
         val scale = 0.92f + 0.08f * settle
         val size = dp(200f)
+        val imageWidth = size * (logo.width.toFloat() / logo.height.toFloat())
         val cx = width / 2f
         val cy = height * 0.43f
 
-        val half = size / 2f
-        val dst = RectF(cx - half, cy - half, cx + half, cy + half)
+        val halfWidth = imageWidth / 2f
+        val halfHeight = size / 2f
+        val dst = RectF(cx - halfWidth, cy - halfHeight, cx + halfWidth, cy + halfHeight)
 
         canvas.save()
         canvas.scale(scale, scale, cx, cy)

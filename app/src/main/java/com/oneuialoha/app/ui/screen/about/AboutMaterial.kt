@@ -73,7 +73,7 @@ fun AboutScreenMaterial(
                     Box(
                         contentAlignment = Alignment.Center,
                         modifier = Modifier
-                            .size(200.dp)
+                            .size(width = 253.dp, height = 200.dp)
                     ) {
                         Image(
                             modifier = Modifier.fillMaxSize(),
