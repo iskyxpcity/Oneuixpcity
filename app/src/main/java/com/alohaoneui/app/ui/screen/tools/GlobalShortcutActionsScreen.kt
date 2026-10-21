@@ -764,8 +764,7 @@ private fun ActionSelector(
 
     SelectItem(
         title = title,
-        summary = explanation + "
-当前：" + selectedLabel,
+        summary = explanation + "\n当前：" + selectedLabel,
         entries = shortcutActionOptions.map { it.label },
         selectedIndex = selectedIndex.coerceAtLeast(0),
         enabled = enabled,
