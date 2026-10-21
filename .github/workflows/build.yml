@@ -59,7 +59,7 @@ jobs:
         run: |
           set -euo pipefail
           COMMIT_SUBJECT=$(git log -1 --pretty=%s)
-          if [ "$GITHUB_REF" = "refs/heads/migration/alohaoneui-full-identity-20261020" ] || { [ "$GITHUB_REF" = "refs/heads/main" ] && [[ "$COMMIT_SUBJECT" == release:* ]]; }; then
+          if [ "$GITHUB_REF" = "refs/heads/migration/alohaoneui-rename-20261020" ] || [ "$GITHUB_REF" = "refs/heads/migration/alohaoneui-full-identity-20261020" ] || { [ "$GITHUB_REF" = "refs/heads/main" ] && [[ "$COMMIT_SUBJECT" == release:* ]]; }; then
             echo "BUILD_VARIANT=release" >> "$GITHUB_ENV"
             echo "APP_ASSEMBLE_TASK=:app:assembleRelease" >> "$GITHUB_ENV"
             echo "APK_OUTPUT_DIR=release" >> "$GITHUB_ENV"
