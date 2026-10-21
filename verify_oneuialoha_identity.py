@@ -64,7 +64,8 @@ check("App Manifest points at the Aloha Application and themes",
       'android:name=".OneUIAlohaApplication"' in manifest
       and '@style/Theme.OneUIAloha' in manifest
       and '@style/Theme.OneUIAloha.Startup' in manifest
-      and 'xposeddescription" android:value="Aloha OneUI' in manifest)check("Visible application name is Aloha OneUI",
+      and 'xposeddescription" android:value="Aloha OneUI' in manifest)
+check("Visible application name is Aloha OneUI",
       'val defaultManagerName = "Aloha OneUI"' in gradle_app
       and 'android:icon="@mipmap/ic_launcher_aloha"' in manifest
       and 'android:roundIcon="@mipmap/ic_launcher_aloha"' in manifest)
@@ -93,7 +94,8 @@ check("Xposed self-scope uses only the Aloha application ID",
 check("Updater preserves the XP compatibility feed and Aloha feed",
       'LEGACY_RELEASE_REPO = "iSkyJIE/OneuiXP-Releases"' in downloader
       and 'ALOHA_RELEASE_REPO = "iSkyJIE/OneUIAloha-Releases"' in downloader
-      and 'LEGACY_PACKAGE_NAME = "com.oneuixp.app"' in downloader)check("Updater accepts both AlohaOneUI and legacy OneUIAloha versioned APK assets",
+      and 'LEGACY_PACKAGE_NAME = "com.oneuixp.app"' in downloader)
+check("Updater accepts both AlohaOneUI and legacy OneUIAloha versioned APK assets",
       'AlohaOneUI' in downloader
       and 'OneUIAloha' in downloader
       and 'AlohaOneUI_${versionName}.apk' in downloader
