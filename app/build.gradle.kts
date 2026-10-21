@@ -204,7 +204,7 @@ android {
 }
 
 // Keep the generated icon in the Android resource merge for both debug and release builds.
-android.sourceSets.getByName("main").res.srcDir(generatedLauncherResDir)
+android.sourceSets.getByName("main").res.srcDir(generatedLauncherResDir.get().asFile)
 tasks.configureEach {
     if (name.startsWith("merge") && name.endsWith("Resources")) {
         dependsOn(prepareAlohaLauncherIcon)
