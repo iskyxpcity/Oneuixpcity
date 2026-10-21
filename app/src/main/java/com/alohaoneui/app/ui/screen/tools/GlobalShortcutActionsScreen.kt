@@ -950,12 +950,14 @@ private fun SectionCard(
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
                 )
-                Text(
-                    text = summary,
-                    modifier = Modifier.padding(horizontal = 18.dp, vertical = 4.dp),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                if (summary.isNotBlank()) {
+                    Text(
+                        text = summary,
+                        modifier = Modifier.padding(horizontal = 18.dp, vertical = 4.dp),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
                 CompositionLocalProvider(LocalAlohaOneUIGroupedPreference provides true) {
                     content()
                 }
@@ -972,11 +974,13 @@ private fun SectionCard(
                     color = colorScheme.onSurface,
                     fontWeight = FontWeight.SemiBold,
                 )
-                MiuixText(
-                    text = summary,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
-                    color = colorScheme.onSurface,
-                )
+                if (summary.isNotBlank()) {
+                    MiuixText(
+                        text = summary,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                        color = colorScheme.onSurfaceVariantSummary,
+                    )
+                }
                 CompositionLocalProvider(LocalAlohaOneUIGroupedPreference provides true) {
                     content()
                 }
