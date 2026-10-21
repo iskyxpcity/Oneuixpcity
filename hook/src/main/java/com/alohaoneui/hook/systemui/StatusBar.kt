@@ -188,18 +188,36 @@ object StatusBar {
 
     private fun applyStatusBarClockSecondState(helper: Any, enabled: Boolean) {
         runCatching {
-            val secondTick = helper.reflect["mSecondTick"] as? Runnable ?: return
+            val secondTick = helper.reflect["mSecondTick"] as? Runnable
+                ?: run {
+                    Log.w(
+                        "AlohaOneUI-QSClockSeconds",
+                        "QS_CLOCK_SECONDS missing Runnable field " +
+                            "helper=${helper.javaClass.name} enabled=$enabled",
+                    )
+                    return@runCatching
+                }
             val currentHandler = helper.reflect["mSecondsHandler"] as? Handler
             if (enabled) {
-                if (currentHandler == null) {
-                    val handler = Handler(Looper.getMainLooper())
-                    helper.reflect["mSecondsHandler"] = handler
-                    handler.post(secondTick)
+                // Samsung may keep mSecondsHandler non-null even after its callback
+                // was removed. A null-only check therefore leaves the clock stuck.
+                // Re-arm the same native Runnable idempotently on every native update.
+                val handler = currentHandler ?: Handler(Looper.getMainLooper()).also {
+                    helper.reflect["mSecondsHandler"] = it
                 }
+                handler.removeCallbacks(secondTick)
+                handler.post(secondTick)
             } else {
                 currentHandler?.removeCallbacks(secondTick)
                 helper.reflect["mSecondsHandler"] = null
             }
+        }.onFailure { error ->
+            Log.w(
+                "AlohaOneUI-QSClockSeconds",
+                "QS_CLOCK_SECONDS apply failed helper=${helper.javaClass.name} " +
+                    "enabled=$enabled: ${error.javaClass.simpleName}: ${error.message}",
+                error,
+            )
         }
     }
 
