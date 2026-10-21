@@ -643,7 +643,7 @@ private fun GlobalShortcutEntryCard(
                         .size(width = 10.dp, height = 16.dp),
                     imageVector = MiuixIcons.Basic.ArrowRight,
                     contentDescription = null,
-                    tint = colorScheme.onSurfaceVariant,
+                    tint = colorScheme.onSurfaceVariantSummary,
                 )
             }
         }
