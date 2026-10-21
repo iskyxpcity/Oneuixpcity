@@ -220,6 +220,7 @@ jobs:
             LEGACY_OUTPUT_APK=""
           fi
           echo "OUTPUT_APK=$OUTPUT_APK" >> "$GITHUB_ENV"
+          echo "LEGACY_OUTPUT_APK=${LEGACY_OUTPUT_APK:-}" >> "$GITHUB_ENV"
           cp "$APK" "dist/$OUTPUT_APK"
           if [ -n "${LEGACY_OUTPUT_APK:-}" ]; then
             cp "$APK" "dist/$LEGACY_OUTPUT_APK"
