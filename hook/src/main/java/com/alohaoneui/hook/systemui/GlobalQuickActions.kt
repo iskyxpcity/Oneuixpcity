@@ -69,6 +69,8 @@ object GlobalQuickActions {
     private const val FLOATING_BALL_LONG_PRESS_MS = 520L
     private const val FLOATING_BALL_SWIPE_THRESHOLD_DP = 38f
     private const val FLOATING_BALL_TAP_SLOP_DP = 8f
+    private const val FLOATING_BALL_INNER_RADIUS_RATIO = 0.61f
+    private const val FLOATING_BALL_INNER_OFFSET_LIMIT_DP = 11f
 
     private val mainHandler = Handler(Looper.getMainLooper())
     @Volatile private var cachedSettings: Preference.GlobalShortcutActions? = null
@@ -129,6 +131,8 @@ object GlobalQuickActions {
     private var floatingBallStartX = 0
     private var floatingBallStartY = 0
     private var floatingBallDownTime = 0L
+    private var floatingBallInnerOffsetX = 0f
+    private var floatingBallInnerOffsetY = 0f
     private var floatingBallLongPressTriggered = false
     private var floatingBallMoved = false
     private var floatingBallLastTapTime = 0L
@@ -650,6 +654,12 @@ object GlobalQuickActions {
     }
 
     private fun navigationRole(view: View): String? {
+        val code = (readField(view, "mCode") as? Number)?.toInt() ?: 0
+        when (code) {
+            KeyEvent.KEYCODE_BACK -> return "back"
+            KeyEvent.KEYCODE_HOME -> return "home"
+            KeyEvent.KEYCODE_APP_SWITCH -> return "recents"
+        }
         val idName = runCatching { view.resources.getResourceEntryName(view.id) }.getOrDefault("")
             .lowercase()
         val hint = (idName + " " + view.javaClass.simpleName).lowercase()
@@ -813,7 +823,7 @@ object GlobalQuickActions {
                 val color = settings.floatingBallColorArgb
                 paint.style = Paint.Style.FILL
                 paint.color = android.graphics.Color.argb(
-                    (android.graphics.Color.alpha(color) * 0.42f).roundToInt().coerceIn(24, 190),
+                    (android.graphics.Color.alpha(color) * 0.42f).roundToInt().coerceIn(28, 180),
                     android.graphics.Color.red(color),
                     android.graphics.Color.green(color),
                     android.graphics.Color.blue(color),
@@ -825,7 +835,17 @@ object GlobalQuickActions {
                 canvas.drawCircle(width / 2f, height / 2f, radius, paint)
                 paint.style = Paint.Style.FILL
                 paint.color = color
-                canvas.drawCircle(width / 2f, height / 2f, radius * 0.72f, paint)
+                val innerMoveLimit = (radius - radius * FLOATING_BALL_INNER_RADIUS_RATIO - dp(context, 3f)).coerceAtLeast(0f)
+                val innerX = floatingBallInnerOffsetX.coerceIn(-innerMoveLimit, innerMoveLimit)
+                val innerY = floatingBallInnerOffsetY.coerceIn(-innerMoveLimit, innerMoveLimit)
+                val innerCenterX = width / 2f + innerX
+                val innerCenterY = height / 2f + innerY
+                paint.color = color
+                canvas.drawCircle(innerCenterX, innerCenterY, radius * FLOATING_BALL_INNER_RADIUS_RATIO, paint)
+                paint.style = Paint.Style.STROKE
+                paint.strokeWidth = dp(context, 1f).toFloat()
+                paint.color = android.graphics.Color.argb(205, 255, 255, 255)
+                canvas.drawCircle(innerCenterX, innerCenterY, radius * FLOATING_BALL_INNER_RADIUS_RATIO, paint)
             }
         }
         view.setOnTouchListener { touchedView, event ->
@@ -842,6 +862,7 @@ object GlobalQuickActions {
             floatingBallX = params.x
             floatingBallY = params.y
             Log.i(TAG, "floating ball added")
+            scheduleFloatingBallAutoEdge(context, manager, view, params, settings)
         }.onFailure {
             // A Samsung build may not allow TYPE_NAVIGATION_BAR_PANEL for the SystemServer context.
             runCatching {
@@ -853,6 +874,7 @@ object GlobalQuickActions {
                 floatingBallSettingsHash = settings.hashCode()
                 floatingBallX = params.x
                 floatingBallY = params.y
+                scheduleFloatingBallAutoEdge(context, manager, view, params, settings)
             }.onFailure { fallback ->
                 Log.w(TAG, "floating ball could not be attached", fallback)
                 floatingBallView = null
@@ -878,6 +900,28 @@ object GlobalQuickActions {
         floatingBallParams = null
         floatingBallWindowManager = null
         floatingBallSettingsHash = 0
+        floatingBallInnerOffsetX = 0f
+        floatingBallInnerOffsetY = 0f
+    }
+
+    private fun updateFloatingBallInnerOffset(context: Context, view: View, dx: Float, dy: Float) {
+        val limit = dp(context, FLOATING_BALL_INNER_OFFSET_LIMIT_DP.toFloat()).toFloat()
+        val distance = hypot(dx, dy)
+        if (distance <= 0f) {
+            floatingBallInnerOffsetX = 0f
+            floatingBallInnerOffsetY = 0f
+        } else {
+            val ratio = min(1f, distance / dp(context, FLOATING_BALL_SWIPE_THRESHOLD_DP))
+            floatingBallInnerOffsetX = dx / distance * limit * ratio
+            floatingBallInnerOffsetY = dy / distance * limit * ratio
+        }
+        view.invalidate()
+    }
+
+    private fun resetFloatingBallInnerOffset(view: View) {
+        floatingBallInnerOffsetX = 0f
+        floatingBallInnerOffsetY = 0f
+        view.invalidate()
     }
 
     private fun handleFloatingBallTouch(
@@ -892,6 +936,9 @@ object GlobalQuickActions {
             MotionEvent.ACTION_DOWN -> {
                 floatingBallAutoEdge?.let { mainHandler.removeCallbacks(it) }
                 floatingBallAutoEdge = null
+                floatingBallPendingClick?.let { mainHandler.removeCallbacks(it) }
+                floatingBallPendingClick = null
+                resetFloatingBallInnerOffset(view)
                 floatingBallDownX = event.rawX
                 floatingBallDownY = event.rawY
                 floatingBallStartX = params.x
@@ -908,12 +955,18 @@ object GlobalQuickActions {
             MotionEvent.ACTION_MOVE -> {
                 val dx = event.rawX - floatingBallDownX
                 val dy = event.rawY - floatingBallDownY
+                updateFloatingBallInnerOffset(context, view, dx, dy)
                 if (max(abs(dx), abs(dy)) > dp(context, FLOATING_BALL_TAP_SLOP_DP)) {
                     floatingBallMoved = true
+                    if (!floatingBallLongPressTriggered) {
+                        floatingBallLongPress?.let { mainHandler.removeCallbacks(it) }
+                        floatingBallLongPress = null
+                        return
+                    }
                 }
                 if (floatingBallLongPressTriggered) {
                     params.x = (floatingBallStartX + dx).roundToInt().coerceIn(0, context.resources.displayMetrics.widthPixels - view.width)
-                    params.y = (floatingBallStartY + dy).roundToInt().coerceAtLeast(0)
+                    params.y = (floatingBallStartY + dy).roundToInt().coerceIn(0, context.resources.displayMetrics.heightPixels - view.height)
                     floatingBallX = params.x
                     floatingBallY = params.y
                     runCatching { manager.updateViewLayout(view, params) }
@@ -925,7 +978,7 @@ object GlobalQuickActions {
                 floatingBallLongPress = null
                 if (floatingBallLongPressTriggered) {
                     floatingBallLongPressTriggered = false
-                    scheduleFloatingBallAutoEdge(context, manager, view, params, settings)
+                    resetFloatingBallInnerOffset(view)
                     return
                 }
                 val dx = event.rawX - floatingBallDownX
@@ -968,13 +1021,19 @@ object GlobalQuickActions {
                     performHaptic(context, settings.floatingBallHapticEnabled, settings.floatingBallHapticStrength)
                     performGlobalAction(context, action)
                 }
+                resetFloatingBallInnerOffset(view)
+                floatingBallLastTapTime = event.eventTime
                 scheduleFloatingBallAutoEdge(context, manager, view, params, settings)
             }
 
             MotionEvent.ACTION_CANCEL -> {
                 floatingBallLongPress?.let { mainHandler.removeCallbacks(it) }
                 floatingBallLongPress = null
+                floatingBallPendingClick?.let { mainHandler.removeCallbacks(it) }
+                floatingBallPendingClick = null
                 floatingBallLongPressTriggered = false
+                resetFloatingBallInnerOffset(view)
+                scheduleFloatingBallAutoEdge(context, manager, view, params, settings)
             }
         }
     }
