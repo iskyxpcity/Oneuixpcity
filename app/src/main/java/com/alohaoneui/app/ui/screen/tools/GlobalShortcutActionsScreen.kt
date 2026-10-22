@@ -41,6 +41,7 @@ import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -105,6 +106,7 @@ import com.alohaoneui.app.alohaOneUIApp
 import com.alohaoneui.app.alohaoneui.AlohaOneUIPreferenceBridge
 import com.alohaoneui.app.ui.LocalUiMode
 import com.alohaoneui.app.ui.UiMode
+import com.alohaoneui.app.ui.component.material.ExpressiveContentDialog
 import com.alohaoneui.app.ui.component.material.SegmentedColumn
 import com.alohaoneui.app.ui.component.material.SegmentedListItem
 import com.alohaoneui.app.ui.component.material.alohaOneUISegmentedColors
@@ -128,6 +130,7 @@ import top.yukonga.miuix.kmp.basic.IconButton as MiuixIconButton
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.basic.Scaffold as MiuixScaffold
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
+import top.yukonga.miuix.kmp.window.WindowDialog
 import top.yukonga.miuix.kmp.basic.TextField as MiuixTextField
 import top.yukonga.miuix.kmp.basic.TopAppBar as MiuixTopAppBar
 import top.yukonga.miuix.kmp.blur.layerBackdrop
@@ -1936,34 +1939,50 @@ private fun ShortcutDialogSurface(
     onDismiss: () -> Unit,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
-        when (LocalUiMode.current) {
-            UiMode.Material -> Card(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp).widthIn(max = 520.dp),
-                
-            ) {
-                Column(modifier = Modifier.padding(18.dp)) {
-                    Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
-                    if (subtitle.isNotBlank()) {
-                        Text(subtitle, modifier = Modifier.padding(top = 6.dp, bottom = 12.dp),
-                            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                    content()
-                }
+    when (LocalUiMode.current) {
+        UiMode.Material -> ExpressiveContentDialog(
+            onDismissRequest = onDismiss,
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp).widthIn(max = 520.dp),
+            properties = DialogProperties(usePlatformDefaultWidth = false),
+        ) {
+            Text(
+                title,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.SemiBold,
+            )
+            if (subtitle.isNotBlank()) {
+                Text(
+                    subtitle,
+                    modifier = Modifier.padding(top = 6.dp, bottom = 12.dp),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
-            UiMode.Miuix -> MiuixCard(modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp).widthIn(max = 520.dp)) {
-                Column(modifier = Modifier.padding(18.dp)) {
-                    MiuixText(title, color = colorScheme.onSurface, fontWeight = FontWeight.SemiBold)
-                    if (subtitle.isNotBlank()) {
-                        MiuixText(subtitle, modifier = Modifier.padding(top = 6.dp, bottom = 12.dp), color = colorScheme.onSurface)
-                    }
-                    content()
-                }
-            }
+            content()
         }
+
+        UiMode.Miuix -> WindowDialog(
+            show = true,
+            modifier = Modifier.windowInsetsPadding(
+                WindowInsets.systemBars.only(WindowInsetsSides.Top),
+            ),
+            title = title,
+            onDismissRequest = onDismiss,
+            content = {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    if (subtitle.isNotBlank()) {
+                        MiuixText(
+                            subtitle,
+                            modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+                            color = colorScheme.onSurfaceVariantSummary,
+                        )
+                    }
+                    content()
+                }
+            },
+        )
     }
 }
-
 @Composable
 private fun ShortcutInformationDialog(title: String, message: String, onDismiss: () -> Unit) {
     ShortcutDialogSurface(title, message, onDismiss) {
