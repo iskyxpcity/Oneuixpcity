@@ -2,6 +2,7 @@ package com.alohaoneui.hook.systemui
 
 import android.content.Context
 import android.util.Log
+import android.view.View
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
 
@@ -33,6 +34,14 @@ internal fun GlobalQuickActions.statusBarHeightPx(context: Context): Int {
 
 internal fun GlobalQuickActions.dp(context: Context, value: Int): Int =
     (value * context.resources.displayMetrics.density + 0.5f).toInt()
+
+
+internal fun GlobalQuickActions.viewIdName(view: View): String? {
+    return runCatching {
+        val id = view.id
+        if (id == View.NO_ID) null else view.resources.getResourceEntryName(id)
+    }.getOrNull()
+}
 
 internal fun GlobalQuickActions.readField(instance: Any?, name: String): Any? {
     var type: Class<*> = instance?.javaClass ?: return null
