@@ -11,7 +11,6 @@ import kotlin.math.min
 import kotlin.math.hypot
 import kotlin.math.atan2
 import androidx.compose.ui.window.DialogProperties
-import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -58,7 +57,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.material3.Card
