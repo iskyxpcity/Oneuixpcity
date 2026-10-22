@@ -127,6 +127,7 @@ object GlobalQuickActions {
     private var floatingBallSettingsHash = 0
     private var floatingBallX = 0
     private var floatingBallY = 0
+    private var floatingBallPositionInitialized = false
     private var floatingBallDownX = 0f
     private var floatingBallDownY = 0f
     private var floatingBallStartX = 0
@@ -840,8 +841,20 @@ object GlobalQuickActions {
         val manager = context.getSystemService(WindowManager::class.java) ?: return
         val size = dp(context, settings.floatingBallSizeDp.coerceIn(40, 88).toFloat())
         val screenWidth = context.resources.displayMetrics.widthPixels
-        val initialX = if (floatingBallX > 0) floatingBallX else screenWidth - size - dp(context, 18f)
-        val initialY = if (floatingBallY > 0) floatingBallY else statusBarHeightPx(context) + dp(context, 160f)
+        val screenHeight = context.resources.displayMetrics.heightPixels
+        val maxX = (screenWidth - size).coerceAtLeast(0)
+        val maxY = (screenHeight - size).coerceAtLeast(0)
+        // Preserve a legitimate x=0/y=0 placement too; zero is a valid edge position.
+        val initialX = if (floatingBallPositionInitialized) {
+            floatingBallX.coerceIn(0, maxX)
+        } else {
+            (maxX - dp(context, 18f)).coerceAtLeast(0)
+        }
+        val initialY = if (floatingBallPositionInitialized) {
+            floatingBallY.coerceIn(0, maxY)
+        } else {
+            (statusBarHeightPx(context) + dp(context, 160f)).coerceIn(0, maxY)
+        }
         val flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
             WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
             WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
@@ -904,6 +917,7 @@ object GlobalQuickActions {
             floatingBallSettingsHash = settings.hashCode()
             floatingBallX = params.x
             floatingBallY = params.y
+            floatingBallPositionInitialized = true
             Log.i(TAG, "floating ball added")
             scheduleFloatingBallAutoEdge(context, manager, view, params, settings)
         }.onFailure {
@@ -917,6 +931,7 @@ object GlobalQuickActions {
                 floatingBallSettingsHash = settings.hashCode()
                 floatingBallX = params.x
                 floatingBallY = params.y
+                floatingBallPositionInitialized = true
                 scheduleFloatingBallAutoEdge(context, manager, view, params, settings)
             }.onFailure { fallback ->
                 Log.w(TAG, "floating ball could not be attached", fallback)
@@ -1012,6 +1027,7 @@ object GlobalQuickActions {
                     params.y = (floatingBallStartY + dy).roundToInt().coerceIn(0, context.resources.displayMetrics.heightPixels - view.height)
                     floatingBallX = params.x
                     floatingBallY = params.y
+                    floatingBallPositionInitialized = true
                     runCatching { manager.updateViewLayout(view, params) }
                 }
             }
@@ -1022,6 +1038,9 @@ object GlobalQuickActions {
                 if (floatingBallLongPressTriggered) {
                     floatingBallLongPressTriggered = false
                     resetFloatingBallInnerOffset(view)
+                    // ACTION_DOWN canceled the timer; dragging/holding exits here, so
+                    // restart the idle auto-edge countdown before returning.
+                    scheduleFloatingBallAutoEdge(context, manager, view, params, settings)
                     return
                 }
                 val dx = event.rawX - floatingBallDownX
@@ -1093,10 +1112,13 @@ object GlobalQuickActions {
         if (settings.floatingBallAutoEdgeDelaySeconds <= 0) return
         val runnable = Runnable {
             val displayWidth = context.resources.displayMetrics.widthPixels
-            params.x = if (params.x + view.width / 2 < displayWidth / 2) 0
-                else (displayWidth - view.width).coerceAtLeast(0)
+            val ballWidth = view.width.takeIf { it > 0 } ?: params.width
+            val maxX = (displayWidth - ballWidth).coerceAtLeast(0)
+            params.x = if (params.x + ballWidth / 2 < displayWidth / 2) 0 else maxX
             floatingBallX = params.x
+            floatingBallPositionInitialized = true
             runCatching { manager.updateViewLayout(view, params) }
+                .onFailure { Log.w(TAG, "floating-ball auto-edge update failed", it) }
             floatingBallAutoEdge = null
         }
         floatingBallAutoEdge = runnable
