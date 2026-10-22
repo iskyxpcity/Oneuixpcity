@@ -1287,7 +1287,7 @@ private fun FloatingBallColorControl(
                     }
                     UiMode.Miuix -> MiuixBasicComponent(
                         title = colorLabel,
-                        summary = "点击更改悬浮球颜色",
+                        summary = null,
                         modifier = Modifier
                             .fillMaxWidth()
                             .graphicsLayer { alpha = if (enabled) 1f else 0.45f },
@@ -1735,25 +1735,20 @@ private fun CustomShortcutAppPicker(
         } else {
             Column(modifier = Modifier.heightIn(max = 500.dp).verticalScroll(rememberScrollState())) {
                 apps.forEach { app ->
-                    OtherFunctionsThemeGroup(
-                        modifier = Modifier.padding(vertical = 1.dp),
-                        items = listOf({
-                            when (LocalUiMode.current) {
-                                UiMode.Material -> Text(
-                                    app.label,
-                                    modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
-                                        .clickable { onSelect(app.component) }.padding(12.dp),
-                                    style = MaterialTheme.typography.bodyMedium,
-                                )
-                                UiMode.Miuix -> MiuixBasicComponent(
-                                    title = app.label,
-                                    modifier = Modifier.fillMaxWidth(),
-                                    onClick = { onSelect(app.component) },
-                                    role = Role.Button,
-                                )
-                            }
-                        }),
-                    )
+                    when (LocalUiMode.current) {
+                        UiMode.Material -> Text(
+                            app.label,
+                            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
+                                .clickable { onSelect(app.component) }.padding(12.dp),
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                        UiMode.Miuix -> MiuixBasicComponent(
+                            title = app.label,
+                            modifier = Modifier.fillMaxWidth(),
+                            onClick = { onSelect(app.component) },
+                            role = Role.Button,
+                        )
+                    }
                 }
             }
         }
