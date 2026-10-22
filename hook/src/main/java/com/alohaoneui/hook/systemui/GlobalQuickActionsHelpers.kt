@@ -34,9 +34,6 @@ internal fun GlobalQuickActions.statusBarHeightPx(context: Context): Int {
 internal fun GlobalQuickActions.dp(context: Context, value: Int): Int =
     (value * context.resources.displayMetrics.density + 0.5f).toInt()
 
-internal fun GlobalQuickActions.withAlpha(color: Int, alpha: Int): Int =
-    (color and 0x00FFFFFF) or (alpha.coerceIn(0, 255) shl 24)
-
 internal fun GlobalQuickActions.readField(instance: Any?, name: String): Any? {
     var type: Class<*> = instance?.javaClass ?: return null
     while (true) {
