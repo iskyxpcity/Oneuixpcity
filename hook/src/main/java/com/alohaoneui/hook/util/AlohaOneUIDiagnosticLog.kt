@@ -1,5 +1,6 @@
 package com.alohaoneui.hook.util
 
+import android.Manifest
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -23,8 +24,11 @@ object AlohaOneUIDiagnosticLog {
 
     private val lock = Any()
     private val entries = ArrayDeque<String>()
+    private val globalShortcutEntries = ArrayDeque<String>()
     private val receiverInstalled = AtomicBoolean(false)
     private var totalChars = 0
+    private const val MAX_GLOBAL_SHORTCUT_ENTRIES = 48
+    private const val GLOBAL_SHORTCUT_CATEGORY = "AlohaOneUI-GlobalQuickActions"
     @Volatile private var liveSnapshotProvider: (() -> String)? = null
 
     /** Supplies the live geometry snapshot collected by the existing Send logs action. */
@@ -44,6 +48,12 @@ object AlohaOneUIDiagnosticLog {
             }
             entries.addLast(line)
             totalChars += line.length
+            if (category == GLOBAL_SHORTCUT_CATEGORY) {
+                while (globalShortcutEntries.size >= MAX_GLOBAL_SHORTCUT_ENTRIES) {
+                    globalShortcutEntries.removeFirst()
+                }
+                globalShortcutEntries.addLast(line)
+            }
         }
     }
 
@@ -102,16 +112,63 @@ object AlohaOneUIDiagnosticLog {
                 "Receiver registration failed: ${error.javaClass.simpleName}: ${error.message.orEmpty()}",
             )
         }
+
+        runCatching {
+            val systemServerEvents = object : BroadcastReceiver() {
+                override fun onReceive(context: Context, intent: Intent) {
+                    if (intent.action != StatusBarRuntimeBridge.ACTION_SYSTEM_SERVER_DIAGNOSTIC_EVENT) return
+                    val category = intent.getStringExtra(
+                        StatusBarRuntimeBridge.EXTRA_SYSTEM_SERVER_DIAGNOSTIC_CATEGORY,
+                    ) ?: return
+                    val message = intent.getStringExtra(
+                        StatusBarRuntimeBridge.EXTRA_SYSTEM_SERVER_DIAGNOSTIC_MESSAGE,
+                    ) ?: return
+                    if (category != GLOBAL_SHORTCUT_CATEGORY) return
+                    record(category, message)
+                }
+            }
+            val eventFilter = IntentFilter(StatusBarRuntimeBridge.ACTION_SYSTEM_SERVER_DIAGNOSTIC_EVENT)
+            if (Build.VERSION.SDK_INT >= 33) {
+                app.registerReceiver(
+                    systemServerEvents,
+                    eventFilter,
+                    Manifest.permission.DUMP,
+                    null,
+                    Context.RECEIVER_EXPORTED,
+                )
+            } else {
+                @Suppress("DEPRECATION")
+                app.registerReceiver(
+                    systemServerEvents,
+                    eventFilter,
+                    Manifest.permission.DUMP,
+                    null,
+                )
+            }
+            record("AlohaOneUIDiagnostics", "SystemServer global-shortcut diagnostics bridge registered.")
+        }.onFailure {
+            record(
+                "AlohaOneUIDiagnostics",
+                "SystemServer diagnostics bridge registration failed: ${it.javaClass.simpleName}: ${it.message.orEmpty()}",
+            )
+        }
     }
 
     private fun dump(): String = synchronized(lock) {
-        if (entries.isEmpty()) {
-            "(No SystemUI diagnostic events have been recorded since this process started.)"
-        } else {
-            buildString {
+        buildString {
+            if (entries.isEmpty()) {
+                appendLine("(No SystemUI diagnostic events have been recorded since this process started.)")
+            } else {
                 appendLine("Buffered events: ${entries.size}")
                 appendLine("Buffer limit: ${MAX_ENTRIES} entries / ${MAX_TOTAL_CHARS} characters")
                 entries.forEach { appendLine(it) }
+            }
+            appendLine()
+            appendLine("[SystemServer global-shortcut runtime diagnostics]")
+            if (globalShortcutEntries.isEmpty()) {
+                appendLine("(No bridged system_server global-shortcut events captured in this process.)")
+            } else {
+                globalShortcutEntries.forEach { appendLine(it) }
             }
         }
     }

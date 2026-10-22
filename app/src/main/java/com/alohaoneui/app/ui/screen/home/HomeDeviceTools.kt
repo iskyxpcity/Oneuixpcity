@@ -89,6 +89,7 @@ import kotlinx.coroutines.withContext
 import top.yukonga.miuix.kmp.basic.Card as MiuixCard
 import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
+import top.yukonga.miuix.kmp.basic.TabRowWithContour as MiuixTabRowWithContour
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import java.io.File
 import java.util.Locale
@@ -193,40 +194,26 @@ fun HomeDeviceToolsCard() {
                     modifier = Modifier.fillMaxWidth().padding(start = 18.dp, end = 18.dp, bottom = 18.dp),
                     verticalArrangement = Arrangement.spacedBy(14.dp),
                 ) {
-                    if (LocalUiMode.current == UiMode.Material) {
-                        MaterialDeviceInfoSegmentedSelector(
-                            selectedSection = selectedSection,
-                            onSelect = { selectedSection = it },
-                        )
-                        when (selectedSection) {
-                            0 -> {
-                                DeviceToolsDivider()
-                                DeviceSectionHeading(Icons.Outlined.Speed, "系统监视器", "CPU、运行内存、内部存储与电池")
-                                SystemMonitorContent(snapshot)
-                            }
-                            1 -> {
-                                DeviceToolsDivider()
-                                DeviceSectionHeading(Icons.Outlined.Monitor, "屏幕信息", "显示参数、刷新率、像素密度与亮度")
-                                ScreenInformationContent(snapshot)
-                            }
-                            else -> {
-                                DeviceToolsDivider()
-                                DeviceSectionHeading(Icons.Outlined.Memory, "设备信息", "本机型号、系统版本与硬件环境")
-                                DeviceInformationContent(snapshot)
-                            }
+                    DeviceInfoSectionSelector(
+                        selectedSection = selectedSection,
+                        onSelect = { selectedSection = it },
+                    )
+                    when (selectedSection) {
+                        0 -> {
+                            DeviceToolsDivider()
+                            DeviceSectionHeading(Icons.Outlined.Speed, "系统监视器", "CPU、运行内存、内部存储与电池")
+                            SystemMonitorContent(snapshot)
                         }
-                    } else {
-                        DeviceToolsDivider()
-                        DeviceSectionHeading(Icons.Outlined.Speed, "系统监视器", "CPU、运行内存、内部存储与电池")
-                        SystemMonitorContent(snapshot)
-
-                        DeviceToolsDivider()
-                        DeviceSectionHeading(Icons.Outlined.Monitor, "屏幕信息", "显示参数、刷新率、像素密度与亮度")
-                        ScreenInformationContent(snapshot)
-
-                        DeviceToolsDivider()
-                        DeviceSectionHeading(Icons.Outlined.Memory, "设备信息", "本机型号、系统版本与硬件环境")
-                        DeviceInformationContent(snapshot)
+                        1 -> {
+                            DeviceToolsDivider()
+                            DeviceSectionHeading(Icons.Outlined.Monitor, "屏幕信息", "显示参数、刷新率、像素密度与亮度")
+                            ScreenInformationContent(snapshot)
+                        }
+                        else -> {
+                            DeviceToolsDivider()
+                            DeviceSectionHeading(Icons.Outlined.Memory, "设备信息", "本机型号、系统版本与硬件环境")
+                            DeviceInformationContent(snapshot)
+                        }
                     }
                 }
             }
@@ -236,27 +223,35 @@ fun HomeDeviceToolsCard() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun MaterialDeviceInfoSegmentedSelector(
+private fun DeviceInfoSectionSelector(
     selectedSection: Int,
     onSelect: (Int) -> Unit,
 ) {
     val options = listOf("系统监视器", "屏幕信息", "设备信息")
-    SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-        options.forEachIndexed { index, label ->
-            SegmentedButton(
-                selected = selectedSection == index,
-                onClick = { onSelect(index) },
-                shape = SegmentedButtonDefaults.itemShape(index = index, count = options.size),
-                label = {
-                    MaterialText(
-                        text = label,
-                        maxLines = 1,
-                        overflow = TextOverflow.Clip,
-                        style = MaterialTheme.typography.labelMedium,
-                    )
-                },
-            )
+    when (LocalUiMode.current) {
+        UiMode.Material -> SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+            options.forEachIndexed { index, label ->
+                SegmentedButton(
+                    selected = selectedSection == index,
+                    onClick = { onSelect(index) },
+                    shape = SegmentedButtonDefaults.itemShape(index = index, count = options.size),
+                    label = {
+                        MaterialText(
+                            text = label,
+                            maxLines = 1,
+                            overflow = TextOverflow.Clip,
+                            style = MaterialTheme.typography.labelMedium,
+                        )
+                    },
+                )
+            }
         }
+        UiMode.Miuix -> MiuixTabRowWithContour(
+            tabs = options,
+            selectedTabIndex = selectedSection,
+            onTabSelected = onSelect,
+            modifier = Modifier.fillMaxWidth(),
+        )
     }
 }
 

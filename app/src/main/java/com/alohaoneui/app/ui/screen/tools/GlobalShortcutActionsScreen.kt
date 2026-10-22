@@ -1762,12 +1762,10 @@ private fun ShortcutActionGroupCard(
         modifier = Modifier.padding(vertical = 1.dp),
         items = buildList {
             add {
-                OtherFunctionsThemeChildItem {
+                OtherFunctionsThemeChildItem(onClick = onToggle) {
                     when (LocalUiMode.current) {
                         UiMode.Material -> Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable(role = Role.Button, onClick = onToggle),
+                            modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Text(

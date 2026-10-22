@@ -38,6 +38,7 @@ import android.widget.Toast
 import io.github.libxposed.api.XposedModule
 import io.github.libxposed.api.XposedModuleInterface
 import com.alohaoneui.common.Preference
+import com.alohaoneui.common.StatusBarRuntimeBridge
 import com.alohaoneui.hook.util.PreferenceProvider
 import java.lang.reflect.Constructor
 import java.lang.reflect.Field
@@ -138,6 +139,7 @@ object GlobalQuickActions {
     private var floatingBallInnerOffsetY = 0f
     private var floatingBallLongPressTriggered = false
     private var floatingBallMoved = false
+    private var floatingBallTouchActive = false
     private var floatingBallLastTapTime = 0L
     private var floatingBallPendingClick: Runnable? = null
     private var floatingBallLongPress: Runnable? = null
@@ -833,12 +835,64 @@ object GlobalQuickActions {
         }.onFailure { Log.w(TAG, "volume fallback failed", it) }
     }
 
+    private fun recordFloatingBallDiagnostic(
+        context: Context,
+        message: String,
+        failure: Throwable? = null,
+    ) {
+        if (failure == null) Log.i(TAG, message) else Log.w(TAG, message, failure)
+        val exportedMessage = if (failure == null) {
+            message
+        } else {
+            "$message error=${failure.javaClass.simpleName}:${failure.message.orEmpty()}"
+        }
+        runCatching {
+            context.sendBroadcast(
+                Intent(StatusBarRuntimeBridge.ACTION_SYSTEM_SERVER_DIAGNOSTIC_EVENT)
+                    .setPackage("com.android.systemui")
+                    .putExtra(StatusBarRuntimeBridge.EXTRA_SYSTEM_SERVER_DIAGNOSTIC_CATEGORY, TAG)
+                    .putExtra(StatusBarRuntimeBridge.EXTRA_SYSTEM_SERVER_DIAGNOSTIC_MESSAGE, exportedMessage),
+            )
+        }.onFailure {
+            Log.w(TAG, "could not bridge floating-ball diagnostics into SystemUI export", it)
+        }
+    }
+
     private fun ensureFloatingBall(context: Context, settings: Preference.GlobalShortcutActions) {
         if (!settings.floatingBallEnabled) {
             removeFloatingBall()
             return
         }
-        if (floatingBallView != null && floatingBallSettingsHash == settings.hashCode()) return
+        if (floatingBallView != null && floatingBallSettingsHash == settings.hashCode()) {
+            val existingView = floatingBallView
+            val existingParams = floatingBallParams
+            val existingManager = floatingBallWindowManager
+            val delaySeconds = settings.floatingBallAutoEdgeDelaySeconds.coerceIn(0, 10)
+            if (delaySeconds > 0 && !floatingBallTouchActive && floatingBallAutoEdge == null &&
+                existingView != null && existingParams != null && existingManager != null
+            ) {
+                val width = existingView.width.takeIf { it > 0 }
+                    ?: existingParams.width.takeIf { it > 0 }
+                    ?: 0
+                val displayPoint = Point()
+                val displayWidth = runCatching {
+                    (existingView.display ?: existingManager.defaultDisplay).getRealSize(displayPoint)
+                    displayPoint.x
+                }.getOrNull()?.takeIf { it > 0 }
+                    ?: context.resources.displayMetrics.widthPixels
+                val rightEdgeX = (displayWidth - width).coerceAtLeast(0)
+                val alreadyAtEdge = existingParams.x <= 0 || existingParams.x >= rightEdgeX
+                if (!alreadyAtEdge) {
+                    recordFloatingBallDiagnostic(
+                        context,
+                        "floating-ball idle timer missing away from edge; rearming: " +
+                            "delaySeconds=$delaySeconds x=${existingParams.x} rightEdgeX=$rightEdgeX",
+                    )
+                    scheduleFloatingBallAutoEdge(context, existingManager, existingView, existingParams, settings)
+                }
+            }
+            return
+        }
         removeFloatingBall()
 
         val manager = context.getSystemService(WindowManager::class.java) ?: return
@@ -923,9 +977,14 @@ object GlobalQuickActions {
             floatingBallX = params.x
             floatingBallY = params.y
             floatingBallPositionInitialized = true
-            Log.i(TAG, "floating ball added")
+            recordFloatingBallDiagnostic(
+                context,
+                "floating-ball window added: type=${params.type} size=${size}px x=${params.x} y=${params.y} " +
+                    "enabled=${settings.floatingBallEnabled} autoEdgeDelaySeconds=${settings.floatingBallAutoEdgeDelaySeconds}",
+            )
             scheduleFloatingBallAutoEdge(context, manager, view, params, settings)
         }.onFailure {
+            recordFloatingBallDiagnostic(context, "floating-ball primary window attach failed: type=${params.type}", it)
             // A Samsung build may not allow TYPE_NAVIGATION_BAR_PANEL for the SystemServer context.
             runCatching {
                 params.type = 2038 // TYPE_APPLICATION_OVERLAY fallback.
@@ -937,9 +996,14 @@ object GlobalQuickActions {
                 floatingBallX = params.x
                 floatingBallY = params.y
                 floatingBallPositionInitialized = true
+                recordFloatingBallDiagnostic(
+                    context,
+                    "floating-ball fallback window added: type=${params.type} size=${size}px " +
+                        "x=${params.x} y=${params.y} autoEdgeDelaySeconds=${settings.floatingBallAutoEdgeDelaySeconds}",
+                )
                 scheduleFloatingBallAutoEdge(context, manager, view, params, settings)
             }.onFailure { fallback ->
-                Log.w(TAG, "floating ball could not be attached", fallback)
+                recordFloatingBallDiagnostic(context, "floating-ball could not be attached on either window type", fallback)
                 floatingBallView = null
                 floatingBallParams = null
                 floatingBallWindowManager = null
@@ -949,6 +1013,7 @@ object GlobalQuickActions {
     }
 
     private fun removeFloatingBall() {
+        floatingBallTouchActive = false
         cancelFloatingBallAutoEdge()
         floatingBallPendingClick?.let { mainHandler.removeCallbacks(it) }
         floatingBallPendingClick = null
@@ -996,6 +1061,7 @@ object GlobalQuickActions {
     ) {
         when (event.actionMasked) {
             MotionEvent.ACTION_DOWN -> {
+                floatingBallTouchActive = true
                 cancelFloatingBallAutoEdge()
                 floatingBallPendingClick?.let { mainHandler.removeCallbacks(it) }
                 floatingBallPendingClick = null
@@ -1040,6 +1106,7 @@ object GlobalQuickActions {
                 floatingBallLongPress = null
                 if (floatingBallLongPressTriggered) {
                     floatingBallLongPressTriggered = false
+                    floatingBallTouchActive = false
                     resetFloatingBallInnerOffset(view)
                     // ACTION_DOWN canceled the timer; dragging/holding exits here, so
                     // restart the idle auto-edge countdown before returning.
@@ -1088,6 +1155,7 @@ object GlobalQuickActions {
                 }
                 resetFloatingBallInnerOffset(view)
                 floatingBallLastTapTime = event.eventTime
+                floatingBallTouchActive = false
                 scheduleFloatingBallAutoEdge(context, manager, view, params, settings)
             }
 
@@ -1098,6 +1166,7 @@ object GlobalQuickActions {
                 floatingBallPendingClick = null
                 floatingBallLongPressTriggered = false
                 resetFloatingBallInnerOffset(view)
+                floatingBallTouchActive = false
                 scheduleFloatingBallAutoEdge(context, manager, view, params, settings)
             }
         }
@@ -1123,32 +1192,48 @@ object GlobalQuickActions {
     ) {
         cancelFloatingBallAutoEdge()
         val delaySeconds = settings.floatingBallAutoEdgeDelaySeconds.coerceIn(0, 10)
-        if (!settings.floatingBallEnabled || delaySeconds <= 0) return
+        if (!settings.floatingBallEnabled || delaySeconds <= 0) {
+            recordFloatingBallDiagnostic(
+                context,
+                "floating-ball auto-edge not scheduled: enabled=${settings.floatingBallEnabled} " +
+                    "delaySeconds=$delaySeconds x=${params.x} y=${params.y} " +
+                    "viewAttached=${view.isAttachedToWindow} viewSize=${view.width}x${view.height}",
+            )
+            return
+        }
 
         val generation = floatingBallAutoEdgeGeneration
         val delayMs = delaySeconds * 1000L
-        Log.i(
-            TAG,
-            "floating-ball auto-edge scheduled: delay=${delaySeconds}s x=${params.x} y=${params.y}",
+        recordFloatingBallDiagnostic(
+            context,
+            "floating-ball auto-edge scheduled: delaySeconds=$delaySeconds delayMs=$delayMs " +
+                "generation=$generation x=${params.x} y=${params.y} " +
+                "viewAttached=${view.isAttachedToWindow} viewSize=${view.width}x${view.height} " +
+                "paramsSize=${params.width}x${params.height}",
         )
 
         lateinit var runnable: Runnable
         runnable = Runnable {
-            if (generation != floatingBallAutoEdgeGeneration ||
-                floatingBallView !== view ||
-                floatingBallParams !== params ||
+            val currentGeneration = floatingBallAutoEdgeGeneration
+            val currentView = floatingBallView === view
+            val currentParams = floatingBallParams === params
+            recordFloatingBallDiagnostic(
+                context,
+                "floating-ball auto-edge timer fired: scheduledGeneration=$generation " +
+                    "currentGeneration=$currentGeneration currentView=$currentView currentParams=$currentParams " +
+                    "enabled=${settings.floatingBallEnabled} x=${params.x} y=${params.y}",
+            )
+            if (generation != currentGeneration || !currentView || !currentParams ||
                 !settings.floatingBallEnabled
             ) {
-                Log.d(
-                    TAG,
+                recordFloatingBallDiagnostic(
+                    context,
                     "floating-ball auto-edge skipped stale task: generation=$generation " +
-                        "currentGeneration=$floatingBallAutoEdgeGeneration",
+                        "currentGeneration=$currentGeneration currentView=$currentView currentParams=$currentParams",
                 )
                 return@Runnable
             }
 
-            // The same idle task is placed on the attach-aware view queue and the
-            // process main handler. Whichever active queue runs first removes the duplicate.
             floatingBallAutoEdgeGeneration += 1L
             mainHandler.removeCallbacks(runnable)
             view.removeCallbacks(runnable)
@@ -1169,6 +1254,12 @@ object GlobalQuickActions {
             val previousX = params.x
             val leftHalf = previousX + ballWidth / 2 < displayWidth / 2
             val targetX = if (leftHalf) 0 else maxX
+            recordFloatingBallDiagnostic(
+                context,
+                "floating-ball auto-edge applying: side=${if (leftHalf) "left" else "right"} " +
+                    "delaySeconds=$delaySeconds displayWidth=$displayWidth ballWidth=$ballWidth " +
+                    "fromX=$previousX targetX=$targetX y=${params.y}",
+            )
 
             runCatching {
                 params.x = targetX
@@ -1176,15 +1267,16 @@ object GlobalQuickActions {
                 floatingBallX = params.x
                 floatingBallY = params.y
                 floatingBallPositionInitialized = true
-                Log.i(
-                    TAG,
+                recordFloatingBallDiagnostic(
+                    context,
                     "floating-ball auto-edge applied: side=${if (leftHalf) "left" else "right"} " +
-                        "delay=${delaySeconds}s displayWidth=$displayWidth ballWidth=$ballWidth " +
+                        "delaySeconds=$delaySeconds displayWidth=$displayWidth ballWidth=$ballWidth " +
                         "fromX=$previousX toX=${params.x} y=${params.y}",
                 )
             }.onFailure {
-                Log.w(
-                    TAG,
+                params.x = previousX
+                recordFloatingBallDiagnostic(
+                    context,
                     "floating-ball auto-edge update failed: displayWidth=$displayWidth " +
                         "ballWidth=$ballWidth fromX=$previousX targetX=$targetX",
                     it,
@@ -1201,11 +1293,14 @@ object GlobalQuickActions {
                 floatingBallAutoEdge = null
                 floatingBallAutoEdgeHost = null
             }
-            Log.w(TAG, "floating-ball auto-edge scheduler rejected delay=${delayMs}ms on both queues")
+            recordFloatingBallDiagnostic(
+                context,
+                "floating-ball auto-edge scheduler rejected delay=${delayMs}ms on both queues",
+            )
         } else {
-            Log.i(
-                TAG,
-                "floating-ball auto-edge timer armed: delay=${delaySeconds}s " +
+            recordFloatingBallDiagnostic(
+                context,
+                "floating-ball auto-edge timer armed: delaySeconds=$delaySeconds " +
                     "viewPosted=$viewPosted handlerPosted=$handlerPosted x=${params.x} y=${params.y}",
             )
         }

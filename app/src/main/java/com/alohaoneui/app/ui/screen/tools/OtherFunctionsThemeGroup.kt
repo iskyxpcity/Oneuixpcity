@@ -64,11 +64,13 @@ fun OtherFunctionsThemeGroup(
 @Composable
 fun OtherFunctionsThemeChildItem(
     modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null,
     content: @Composable () -> Unit,
 ) {
     when (LocalUiMode.current) {
         UiMode.Material -> SegmentedListItem(
             modifier = modifier,
+            onClick = onClick,
             colors = alohaOneUISegmentedColors(),
             headlineContent = {
                 Box(modifier = Modifier.fillMaxWidth()) {
