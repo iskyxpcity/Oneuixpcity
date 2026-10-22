@@ -1,8 +1,15 @@
 package com.alohaoneui.app.ui.screen.tools
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -96,26 +103,104 @@ private fun NavigationFeatureIcon(
     icon: ShortcutEntryIcon,
     size: Dp,
 ) {
-    val accent = when (LocalUiMode.current) {
-        UiMode.Material -> MaterialTheme.colorScheme.primary
-        UiMode.Miuix -> colorScheme.primary
+    val isOtherFunctions = icon == ShortcutEntryIcon.OtherFunctions
+    val backgroundColors = if (isOtherFunctions) {
+        listOf(Color(0xFF11B8A5), Color(0xFF1386D9), Color(0xFF435CE5))
+    } else {
+        listOf(Color(0xFF25B9EA), Color(0xFF3C70EC), Color(0xFF6A4EDB))
     }
-    val container = when (LocalUiMode.current) {
-        UiMode.Material -> MaterialTheme.colorScheme.surfaceContainerHighest
-        UiMode.Miuix -> colorScheme.primary.copy(alpha = 0.08f)
-    }
-    Box(
-        modifier = Modifier
-            .size(size)
-            .clip(RoundedCornerShape(14.dp))
-            .background(container),
-        contentAlignment = Alignment.Center,
-    ) {
-        ShortcutEntryGlyph(
-            icon = icon,
-            accentColor = accent,
-            iconSize = size * 0.56f,
+
+    // Samsung One UI app-icon language: a vivid rounded-square tile, bold white
+    // symbol, analogous-color gradient, and restrained highlights for soft depth.
+    Canvas(modifier = Modifier.size(size)) {
+        val unit = size.minDimension
+        val radius = CornerRadius(unit * 0.255f, unit * 0.255f)
+        val canvasSize = Size(size.width, size.height)
+
+        drawRoundRect(
+            color = Color.Black.copy(alpha = 0.16f),
+            topLeft = Offset(0f, unit * 0.025f),
+            size = canvasSize,
+            cornerRadius = radius,
         )
+        drawRoundRect(
+            brush = Brush.linearGradient(
+                colors = backgroundColors,
+                start = Offset(0f, 0f),
+                end = Offset(size.width, size.height),
+            ),
+            size = canvasSize,
+            cornerRadius = radius,
+        )
+        drawRoundRect(
+            brush = Brush.verticalGradient(
+                colors = listOf(Color.White.copy(alpha = 0.25f), Color.White.copy(alpha = 0.015f), Color.Transparent),
+                startY = 0f,
+                endY = size.height * 0.72f,
+            ),
+            size = canvasSize,
+            cornerRadius = radius,
+        )
+        drawRoundRect(
+            color = Color.White.copy(alpha = 0.24f),
+            topLeft = Offset(unit * 0.018f, unit * 0.018f),
+            size = Size(size.width - unit * 0.036f, size.height - unit * 0.036f),
+            cornerRadius = CornerRadius(unit * 0.238f, unit * 0.238f),
+            style = Stroke(width = unit * 0.018f),
+        )
+
+        fun line(x1: Float, y1: Float, x2: Float, y2: Float, width: Float) {
+            val start = Offset(x1 * unit, y1 * unit)
+            val end = Offset(x2 * unit, y2 * unit)
+            drawLine(
+                color = Color.Black.copy(alpha = 0.18f),
+                start = Offset(start.x, start.y + unit * 0.015f),
+                end = Offset(end.x, end.y + unit * 0.015f),
+                strokeWidth = width,
+                cap = StrokeCap.Round,
+            )
+            drawLine(
+                color = Color.White.copy(alpha = 0.98f),
+                start = start,
+                end = end,
+                strokeWidth = width,
+                cap = StrokeCap.Round,
+            )
+        }
+
+        fun handle(cx: Float, cy: Float) {
+            val center = Offset(cx * unit, cy * unit)
+            drawCircle(
+                color = Color.Black.copy(alpha = 0.18f),
+                radius = unit * 0.076f,
+                center = Offset(center.x, center.y + unit * 0.018f),
+            )
+            drawCircle(color = Color.White, radius = unit * 0.076f, center = center)
+            drawCircle(
+                color = backgroundColors[1],
+                radius = unit * 0.035f,
+                center = Offset(center.x, center.y - unit * 0.008f),
+            )
+        }
+
+        if (isOtherFunctions) {
+            val stroke = unit * 0.075f
+            line(0.25f, 0.35f, 0.75f, 0.35f, stroke)
+            line(0.25f, 0.50f, 0.75f, 0.50f, stroke)
+            line(0.25f, 0.65f, 0.75f, 0.65f, stroke)
+            handle(0.42f, 0.35f)
+            handle(0.62f, 0.50f)
+            handle(0.49f, 0.65f)
+        } else {
+            // Rounded finger strokes and a swipe arrow read as a gesture instead of a generic line glyph.
+            val fingerWidth = unit * 0.092f
+            line(0.34f, 0.34f, 0.34f, 0.55f, fingerWidth)
+            line(0.50f, 0.27f, 0.50f, 0.56f, fingerWidth)
+            line(0.66f, 0.34f, 0.66f, 0.55f, fingerWidth)
+            line(0.28f, 0.72f, 0.68f, 0.72f, unit * 0.070f)
+            line(0.57f, 0.61f, 0.68f, 0.72f, unit * 0.070f)
+            line(0.57f, 0.83f, 0.68f, 0.72f, unit * 0.070f)
+        }
     }
 }
 
@@ -277,36 +362,51 @@ private fun ToolsPagerMiuix(
                             .fillMaxWidth()
                             .padding(bottom = 12.dp)
                             .graphicsLayer { alpha = if (lsposedActive) 1f else 0.38f },
-                        insideMargin = PaddingValues(start = 10.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
+                        onClick = {
+                            if (lsposedActive) navigator.push(Route.GlobalShortcutActions)
+                        },
+                        showIndication = lsposedActive,
+                        insideMargin = PaddingValues(
+                            start = 10.dp,
+                            end = 16.dp,
+                            top = 8.dp,
+                            bottom = 8.dp,
+                        ),
                     ) {
-                        MiuixBasicComponent(
-                            title = stringResource(R.string.alohaoneui_global_shortcut_actions_title),
-                            summary = stringResource(R.string.alohaoneui_global_shortcut_actions_summary),
-                            modifier = Modifier.fillMaxWidth(),
-                            enabled = lsposedActive,
-                            startAction = {
-                                NavigationFeatureIcon(
-                                    icon = ShortcutEntryIcon.Gesture,
-                                    size = 48.dp,
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            NavigationFeatureIcon(
+                                icon = ShortcutEntryIcon.Gesture,
+                                size = 48.dp,
+                            )
+                            Column(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(start = 10.dp),
+                            ) {
+                                MiuixText(
+                                    text = stringResource(R.string.alohaoneui_global_shortcut_actions_title),
+                                    fontWeight = FontWeight(550),
+                                    color = colorScheme.onSurface,
+                                    maxLines = 1,
                                 )
-                            },
-                            endActions = {
-                                val layoutDirection = LocalLayoutDirection.current
-                                MiuixIcon(
-                                    modifier = Modifier
-                                        .graphicsLayer { if (layoutDirection == LayoutDirection.Rtl) scaleX = -1f }
-                                        .padding(start = 8.dp)
-                                        .size(width = 10.dp, height = 16.dp),
-                                    imageVector = MiuixIcons.Basic.ArrowRight,
-                                    contentDescription = null,
-                                    tint = colorScheme.onSurfaceVariantActions,
+                                MiuixText(
+                                    text = stringResource(R.string.alohaoneui_global_shortcut_actions_summary),
+                                    modifier = Modifier.padding(top = 4.dp),
+                                    color = colorScheme.onSurfaceVariantSummary,
+                                    maxLines = 2,
                                 )
-                            },
-                            onClick = {
-                                if (lsposedActive) navigator.push(Route.GlobalShortcutActions)
-                            },
-                            role = Role.Button,
-                        )
+                            }
+                            val layoutDirection = LocalLayoutDirection.current
+                            MiuixIcon(
+                                modifier = Modifier
+                                    .graphicsLayer { if (layoutDirection == LayoutDirection.Rtl) scaleX = -1f }
+                                    .padding(start = 8.dp)
+                                    .size(width = 10.dp, height = 16.dp),
+                                imageVector = MiuixIcons.Basic.ArrowRight,
+                                contentDescription = null,
+                                tint = colorScheme.onSurfaceVariantActions,
+                            )
+                        }
                     }
                 }
 

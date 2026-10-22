@@ -1259,7 +1259,7 @@ private fun NumericShortcutSlider(
     // Miuix Card has no built-in content inset here. Keep every value
     // slider inside the rounded frame even when its title row is hidden.
     val sliderHorizontalPadding = when (LocalUiMode.current) {
-        UiMode.Material -> if (showTitleAndSummary) 16.dp else 0.dp
+        UiMode.Material -> 0.dp
         UiMode.Miuix -> 16.dp
     }
     Column(

@@ -278,7 +278,7 @@ internal fun rememberAlohaOneUICategoryIcon(category: AlohaOneUICategory): Image
         val drawable = applicationInfo
             ?.loadIcon(packageManager)
             ?: requireNotNull(
-                context.getDrawable(R.mipmap.ic_launcher)
+                context.getDrawable(R.mipmap.ic_launcher_aloha)
             )
 
         // Preserve the drawable's intrinsic/adaptive
