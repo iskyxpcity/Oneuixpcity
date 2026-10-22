@@ -16,12 +16,6 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import kotlin.math.abs
-import kotlin.math.cos
-import kotlin.math.sin
-import kotlin.math.PI
-import kotlin.math.pow
-import kotlin.math.sign
 
 /**
  * Shared One UI 8.5 / 9-inspired feature tiles: rounded colorful gradients,
@@ -93,50 +87,50 @@ internal fun OneUiFeatureIcon(
             drawPath(path, shade, style = if (fill) androidx.compose.ui.graphics.drawscope.Fill else Stroke(width * u, cap = StrokeCap.Round))
             drawPath(path, color, style = if (fill) androidx.compose.ui.graphics.drawscope.Fill else Stroke(width * u, cap = StrokeCap.Round))
         }
-        // One UI 8.5 app icons use a continuously curved squircle, not a
-        // rectangle with four flat sides and circular corner arcs. Use a
-        // sampled superellipse contour, then smooth each interval with cubic
-        // Bézier segments. This keeps curvature along the full perimeter.
+        // Geometry measured from the binary Android VectorDrawable pathData
+        // in One UI 9 framework-res:
+        // notification_icon_squircle.xml (viewport 192 x 192).
+        // This is a firmware-extracted system squircle, not a guessed exponent
+        // and not a claim that Samsung publishes an app-launcher mask spec.
         fun oneUiIconPath(x: Float, y: Float, width: Float, height: Float): Path {
-            val exponent = 3.2
-            val power = 2.0 / exponent
-            val segments = 128
-            val halfWidth = width / 2f
-            val halfHeight = height / 2f
-            val centerX = x + halfWidth
-            val centerY = y + halfHeight
-            val points = List(segments) { index ->
-                val angle = 2.0 * PI * index / segments
-                val cosine = cos(angle)
-                val sine = sin(angle)
-                val normalizedX = sign(cosine) * abs(cosine).pow(power)
-                val normalizedY = sign(sine) * abs(sine).pow(power)
-                Offset(
-                    centerX + halfWidth * normalizedX.toFloat(),
-                    centerY + halfHeight * normalizedY.toFloat(),
-                )
-            }
+            val sx = width / 192f
+            val sy = height / 192f
+            fun point(px: Float, py: Float) = Offset(x + px * sx, y + py * sy)
             return Path().apply {
-                moveTo(points[0].x, points[0].y)
-                for (index in points.indices) {
-                    val previous = points[(index - 1 + segments) % segments]
-                    val start = points[index]
-                    val end = points[(index + 1) % segments]
-                    val next = points[(index + 2) % segments]
-                    val controlOne = Offset(
-                        start.x + (end.x - previous.x) / 6f,
-                        start.y + (end.y - previous.y) / 6f,
-                    )
-                    val controlTwo = Offset(
-                        end.x - (next.x - start.x) / 6f,
-                        end.y - (next.y - start.y) / 6f,
-                    )
-                    cubicTo(
-                        controlOne.x, controlOne.y,
-                        controlTwo.x, controlTwo.y,
-                        end.x, end.y,
-                    )
-                }
+                val p0 = point(169.51f, 21.33f)
+                moveTo(p0.x, p0.y)
+                val p1 = point(151.9f, 3.6f)
+                val p2 = point(125.51f, 0f)
+                val p3 = point(96f, 0f)
+                cubicTo(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y)
+                val p4 = point(66.49f, 0f)
+                val p5 = point(40.1f, 3.6f)
+                val p6 = point(22.49f, 21.33f)
+                cubicTo(p4.x, p4.y, p5.x, p5.y, p6.x, p6.y)
+                val p7 = point(8.45f, 35.47f)
+                val p8 = point(0f, 58.58f)
+                val p9 = point(0f, 96f)
+                cubicTo(p7.x, p7.y, p8.x, p8.y, p9.x, p9.y)
+                val p10 = point(0f, 133.42f)
+                val p11 = point(8.46f, 156.53f)
+                val p12 = point(22.49f, 170.67f)
+                cubicTo(p10.x, p10.y, p11.x, p11.y, p12.x, p12.y)
+                val p13 = point(40.1f, 188.4f)
+                val p14 = point(66.49f, 192f)
+                val p15 = point(96f, 192f)
+                cubicTo(p13.x, p13.y, p14.x, p14.y, p15.x, p15.y)
+                val p16 = point(125.5f, 192f)
+                val p17 = point(151.9f, 188.4f)
+                val p18 = point(169.51f, 170.67f)
+                cubicTo(p16.x, p16.y, p17.x, p17.y, p18.x, p18.y)
+                val p19 = point(183.54f, 156.53f)
+                val p20 = point(192f, 133.42f)
+                val p21 = point(192f, 96f)
+                cubicTo(p19.x, p19.y, p20.x, p20.y, p21.x, p21.y)
+                val p22 = point(192f, 58.58f)
+                val p23 = point(183.55f, 35.47f)
+                val p24 = point(169.51f, 21.33f)
+                cubicTo(p22.x, p22.y, p23.x, p23.y, p24.x, p24.y)
                 close()
             }
         }
