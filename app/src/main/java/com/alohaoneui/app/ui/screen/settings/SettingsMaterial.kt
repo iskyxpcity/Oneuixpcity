@@ -1,6 +1,7 @@
 package com.alohaoneui.app.ui.screen.settings
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
@@ -85,6 +86,8 @@ fun SettingPagerMaterial(
     ) { paddingValues ->
         Column(
             modifier = Modifier
+                // Match AboutMaterial's full-height scroll container so blank space participates.
+                .fillMaxSize()
                 .padding(paddingValues)
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
                 .verticalScroll(rememberScrollState())

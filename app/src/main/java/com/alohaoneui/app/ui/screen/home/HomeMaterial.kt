@@ -72,6 +72,8 @@ fun HomePagerMaterial(
     ) { innerPadding ->
         Column(
             modifier = Modifier
+                // Match AboutMaterial: keep the whole viewport, including blank space, scrollable.
+                .fillMaxSize()
                 .padding(innerPadding)
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
                 .verticalScroll(rememberScrollState())

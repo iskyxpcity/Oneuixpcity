@@ -79,6 +79,7 @@ object GlobalQuickActions {
     private const val FLOATING_BALL_TAP_SLOP_DP = 8f
     private const val FLOATING_BALL_INNER_RADIUS_RATIO = 0.61f
     private const val FLOATING_BALL_INNER_OFFSET_LIMIT_DP = 11f
+    private const val FLOATING_BALL_ENSURE_THROTTLE_MS = 450L
 
     private val mainHandler = Handler(Looper.getMainLooper())
     @Volatile private var cachedSettings: Preference.GlobalShortcutActions? = null
@@ -99,6 +100,7 @@ object GlobalQuickActions {
     private var lastPointerSignature = ""
     private var lastPointerSignatureAt = 0L
     @Volatile private var lastGuardedHookFailureLoggedAt = 0L
+    @Volatile private var lastFloatingBallEnsureAt = 0L
 
     private var statusGestureActive = false
     private var statusGestureMoved = false
@@ -159,7 +161,7 @@ object GlobalQuickActions {
     private fun currentSettings(): Preference.GlobalShortcutActions {
         val now = SystemClock.uptimeMillis()
         val cached = cachedSettings
-        if (cached == null || now - cachedSettingsAt > 450L) {
+        if (cached == null || now - cachedSettingsAt > FLOATING_BALL_ENSURE_THROTTLE_MS) {
             runCatching {
                 PreferenceProvider.loadPreference()?.other?.globalShortcutActions
             }.getOrNull()?.let { cachedSettings = it }
@@ -235,8 +237,13 @@ object GlobalQuickActions {
         systemServerContext?.let { context ->
             registerPreferenceObserver(context)
             registerSystemServerDiagnosticQueryReceiver(context)
-            runCatching { ensureFloatingBall(context, currentSettings()) }
-                .onFailure { Log.w(TAG, "initial floating-ball setup failed", it) }
+            // WindowManager/View operations must run on SystemServer's main looper, as in
+            // App20261018Aloha's postOnMain { ensureFloatingBall(...) } path.
+            mainHandler.post {
+                val activeContext = systemServerContext ?: context
+                runCatching { ensureFloatingBall(activeContext, currentSettings()) }
+                    .onFailure { Log.w(TAG, "initial floating-ball setup failed", it) }
+            }
         }
         Log.i(TAG, "installed system-server global shortcut dispatch")
     }
@@ -263,11 +270,14 @@ object GlobalQuickActions {
                 }
             }
             val filter = IntentFilter(StatusBarRuntimeBridge.ACTION_SYSTEM_SERVER_DIAGNOSTIC_QUERY)
+            // The third parameter constrains who may SEND to this receiver. The SystemUI
+            // requester does not hold DUMP; the query broadcast itself already constrains its
+            // recipient with receiverPermission=DUMP so only privileged SystemServer receives it.
             if (Build.VERSION.SDK_INT >= 33) {
-                context.registerReceiver(receiver, filter, Manifest.permission.DUMP, null, Context.RECEIVER_EXPORTED)
+                context.registerReceiver(receiver, filter, null, null, Context.RECEIVER_EXPORTED)
             } else {
                 @Suppress("DEPRECATION")
-                context.registerReceiver(receiver, filter, Manifest.permission.DUMP, null)
+                context.registerReceiver(receiver, filter, null, null)
             }
             Log.i(TAG, "registered on-demand SystemServer diagnostics query receiver")
         } catch (failure: Exception) {
@@ -417,7 +427,18 @@ object GlobalQuickActions {
         val context = systemServerContext ?: findSystemContext()
         if (context != null) {
             systemServerContext = context
-            ensureFloatingBall(context, settings)
+            // PointerEventDispatcher / PointerEventListener run on the input-dispatch path.
+            // Mirror upstream SystemUiRootHook: throttle and move all floating-ball WindowManager
+            // and View lifecycle work onto the SystemServer main looper.
+            val now = SystemClock.uptimeMillis()
+            if (now - lastFloatingBallEnsureAt > FLOATING_BALL_ENSURE_THROTTLE_MS) {
+                lastFloatingBallEnsureAt = now
+                mainHandler.post {
+                    val activeContext = systemServerContext ?: context
+                    runCatching { ensureFloatingBall(activeContext, currentSettings()) }
+                        .onFailure { Log.w(TAG, "deferred floating-ball ensure failed", it) }
+                }
+            }
         }
 
         handleStatusBarMotion(event, context, settings)
