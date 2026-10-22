@@ -76,6 +76,8 @@ object GlobalQuickActions {
     internal var floatingBallLongPressRunnable: Runnable? = null
     internal var floatingBallPendingClickRunnable: Runnable? = null
     internal var floatingBallAutoEdgeRunnable: Runnable? = null
+    @Volatile internal var floatingBallAutoEdgeHost: View? = null
+    internal var floatingBallAutoEdgeGeneration = 0L
     internal var floatingBallInnerOffsetX = 0f
     internal var floatingBallInnerOffsetY = 0f
     internal var floatingBallX = 0
@@ -111,6 +113,16 @@ object GlobalQuickActions {
             cachedSettingsAt = now
         }
         return cachedSettings ?: Preference.GlobalShortcutActions()
+    }
+
+    internal fun recordSystemServerDiagnosticEvent(context: Context, message: String) {
+        val event = Intent(StatusBarRuntimeBridge.ACTION_SYSTEM_SERVER_DIAGNOSTIC_EVENT)
+            .setPackage("com.android.systemui")
+            .addFlags(Intent.FLAG_RECEIVER_FOREGROUND)
+            .putExtra(StatusBarRuntimeBridge.EXTRA_SYSTEM_SERVER_DIAGNOSTIC_CATEGORY, TAG)
+            .putExtra(StatusBarRuntimeBridge.EXTRA_SYSTEM_SERVER_DIAGNOSTIC_MESSAGE, message.take(1800))
+        runCatching { context.sendBroadcast(event) }
+            .onFailure { Log.w(TAG, "could not bridge SystemServer runtime diagnostic event", it) }
     }
 
     private fun logGuardedHookFailure(label: String, event: MotionEvent, failure: Throwable) {
