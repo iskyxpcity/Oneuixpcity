@@ -1705,6 +1705,7 @@ private fun ShortcutActionGrid(
                             modifier = Modifier.weight(1f).padding(4.dp)
                                 .heightIn(min = 44.dp)
                                 .border(1.dp, borderColor, chipShape),
+                            cornerRadius = 14.dp,
                             colors = MiuixCardDefaults.defaultColors(
                                 color = if (selected) selectedBackground else unselectedBackground,
                             ),
