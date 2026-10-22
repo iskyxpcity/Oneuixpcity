@@ -89,6 +89,7 @@ object GlobalQuickActions {
 
     private var lastPointerSignature = ""
     private var lastPointerSignatureAt = 0L
+    @Volatile private var lastGuardedHookFailureLoggedAt = 0L
 
     private var statusGestureActive = false
     private var statusGestureMoved = false
@@ -154,6 +155,30 @@ object GlobalQuickActions {
         return cachedSettings ?: Preference.GlobalShortcutActions()
     }
 
+    private fun logGuardedHookFailure(label: String, event: MotionEvent, failure: Throwable) {
+        if (failure is VirtualMachineError || failure is ThreadDeath) throw failure
+        val now = SystemClock.uptimeMillis()
+        val previous = lastGuardedHookFailureLoggedAt
+        if (now - previous >= 10_000L) {
+            lastGuardedHookFailureLoggedAt = now
+            Log.e(
+                TAG,
+                "$label failed; continuing platform input dispatch " +
+                    "(action=${event.actionMasked}, pointers=${event.pointerCount})",
+                failure,
+            )
+        }
+    }
+
+    context(xposedModule: XposedModule)
+    private fun dispatchGlobalMotionSafely(event: MotionEvent) {
+        try {
+            handleGlobalMotion(event, currentSettings())
+        } catch (failure: Throwable) {
+            logGuardedHookFailure("global three-finger/status-bar shortcut handler", event, failure)
+        }
+    }
+
     context(xposedModule: XposedModule)
     fun installSystemUi(param: XposedModuleInterface.PackageReadyParam) {
         // Main.onPackageReady already gates this to the primary SystemUI process.
@@ -169,7 +194,12 @@ object GlobalQuickActions {
                 if (view == null || event == null) {
                     chain.proceed()
                 } else {
-                    val handled = handleNavigationTouch(view, event, currentSettings())
+                    val handled = try {
+                        handleNavigationTouch(view, event, currentSettings())
+                    } catch (failure: Throwable) {
+                        logGuardedHookFailure("SystemUI navigation shortcut handler", event, failure)
+                        null
+                    }
                     if (handled == null) chain.proceed() else handled
                 }
             }
@@ -247,7 +277,7 @@ object GlobalQuickActions {
             val method = dispatcher.getDeclaredMethod("onInputEvent", InputEvent::class.java)
             xposedModule.hook(method).intercept { chain ->
                 val event = chain.args.firstOrNull() as? MotionEvent
-                if (event != null) handleGlobalMotion(event, currentSettings())
+                if (event != null) dispatchGlobalMotionSafely(event)
                 chain.proceed()
             }
             Log.i(TAG, "hooked PointerEventDispatcher.onInputEvent")
@@ -270,7 +300,7 @@ object GlobalQuickActions {
                     if (signature != lastPointerSignature || now - lastPointerSignatureAt > 20L) {
                         lastPointerSignature = signature
                         lastPointerSignatureAt = now
-                        handleGlobalMotion(event, currentSettings())
+                        dispatchGlobalMotionSafely(event)
                     }
                 }
                 chain.proceed()
@@ -416,9 +446,22 @@ object GlobalQuickActions {
         strength: Int,
     ) {
         threeFingerConsumed = true
-        runCatching { callCompatible(inputManagerService, "cancelCurrentTouch") }
+        // Do not re-enter InputManagerService synchronously from its pointer-event callback.
+        cancelCurrentTouchAfterDispatch()
         performHaptic(context, haptic, strength)
         performGlobalAction(context, action)
+    }
+
+    private fun cancelCurrentTouchAfterDispatch() {
+        val manager = inputManagerService ?: return
+        runCatching {
+            mainHandler.post {
+                runCatching { callCompatible(manager, "cancelCurrentTouch") }
+                    .onFailure { Log.w(TAG, "deferred touch cancellation failed", it) }
+            }
+        }.onFailure {
+            Log.w(TAG, "could not schedule deferred touch cancellation", it)
+        }
     }
 
     private fun averageThreeFingerSpan(event: MotionEvent): Float {
