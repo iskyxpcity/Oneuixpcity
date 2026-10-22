@@ -125,9 +125,6 @@ object AlohaOneUIDiagnosticLog {
                 }
             }
             try {
-                val filter = IntentFilter(StatusBarRuntimeBridge.ACTION_DIAGNOSTIC_LOG_REQUEST)                }
-            }
-            try {
                 val filter = IntentFilter(StatusBarRuntimeBridge.ACTION_DIAGNOSTIC_LOG_REQUEST)
                 if (Build.VERSION.SDK_INT >= 33) {
                     app.registerReceiver(receiver, filter, Context.RECEIVER_EXPORTED)
@@ -159,7 +156,7 @@ object AlohaOneUIDiagnosticLog {
                                 ?: "(SystemServer returned an empty diagnostic snapshot.)"
                             record(
                                 GLOBAL_SHORTCUT_CATEGORY,
-                                "on-demand SystemServer snapshot response received: @@{snapshot.replace('\\n', ' ').take(1400)}",
+                                "on-demand SystemServer snapshot response received: ${snapshot.take(1400)}",
                             )
                             pendingSystemServerSnapshots.remove(requestId)?.complete(snapshot)
                             return
