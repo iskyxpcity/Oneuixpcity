@@ -60,3 +60,20 @@ The source `RootModuleShared.kt` defines these action identifiers; every identif
 3. Verify the seven Aloha settings pages and the existing Material/Miuix UI code remain unchanged unless a demonstrated synchronization defect requires a focused fix.
 4. After source migration and static call-chain review are complete, run the branch build and verify that the build's `head_sha` is exactly the reviewed migration commit.
 5. Samsung `SM-F966U1` / Android 17 acceptance is separate from CI: verify all gesture triggers, float-ball click/double-click/long press/drag/auto-edge/config refresh, status-bar regions, each navigation key, screen-off volume timing, each action, and both UI themes. Until then, no claim of full functional acceptance.
+
+
+## Implementation checkpoint — 2026-10-22
+
+On `refactor/global-shortcut-upstream-port-20261022`, the first implementation tranche restores separate source-derived runtime files:
+
+- `GlobalQuickActionsModels.kt`: upstream action IDs, thresholds, per-trigger typed settings/state models.
+- `GlobalQuickActionsPreferences.kt`: thin adapter from Aloha's `Preference.GlobalShortcutActions`, preserving the existing stored preference format.
+- `GlobalQuickActionsGesture.kt`: upstream runtime handlers from `SystemUiRootHookGesture.kt`; legacy entry installers excluded and reflection calls routed through the Aloha adapter.
+- `GlobalQuickActionsFloatingBall.kt`: source lifecycle/touch/auto-edge functions; the upstream package broadcast receiver is intentionally replaced by Aloha's preference URI observer.
+- `GlobalQuickActionsGestureActions.kt` and `GlobalQuickActionsAppLaunch.kt`: source action switch and companion helpers restored as separate files.
+- `GlobalQuickActionsHelpers.kt`: narrow context/main-thread/reflection adapter.
+- `GlobalQuickActions.kt`: replaces the monolithic business implementation with libxposed hook registration, source-shaped state ownership, existing one-shot SystemServer diagnostics, and the Aloha preference observer.
+
+The app UI file, Aloha persisted preference model, Material/Miuix components, seven-page hierarchy, and deferred “是否立即同步？” mechanism are not part of this tranche. The source action constant `quick_camera` is present in the upstream catalog, but the source action dispatcher does not currently have an explicit branch for it; this discrepancy is tracked rather than silently creating new behavior.
+
+This is an implementation checkpoint, not a completion declaration. The source comparison, Kotlin build, and Samsung `SM-F966U1` / Android 17 acceptance remain separate gates.

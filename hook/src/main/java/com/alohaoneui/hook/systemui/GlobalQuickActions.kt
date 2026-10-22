@@ -1,170 +1,112 @@
 package com.alohaoneui.hook.systemui
 
-import android.Manifest
-import android.app.ActivityManager
-import android.bluetooth.BluetoothAdapter
 import android.content.BroadcastReceiver
-import android.content.ComponentName
-import android.database.ContentObserver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.graphics.Canvas
-import android.graphics.Paint
-import android.graphics.PixelFormat
-import android.graphics.Point
-import android.hardware.camera2.CameraCharacteristics
-import android.hardware.camera2.CameraManager
-import android.media.AudioManager
+import android.database.ContentObserver
 import android.net.Uri
-import android.net.wifi.WifiManager
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
-import android.os.Build
-import android.os.PowerManager
 import android.os.Process
 import android.os.SystemClock
-import android.os.UserHandle
-import android.os.VibrationEffect
-import android.os.Vibrator
-import android.provider.MediaStore
-import android.provider.Settings
-import android.telephony.TelephonyManager
 import android.util.Log
-import android.view.InputDevice
 import android.view.InputEvent
-import android.view.KeyCharacterMap
 import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.View
-import android.view.ViewConfiguration
 import android.view.WindowManager
-import android.widget.Toast
 import io.github.libxposed.api.XposedModule
 import io.github.libxposed.api.XposedModuleInterface
 import com.alohaoneui.common.Preference
 import com.alohaoneui.common.StatusBarRuntimeBridge
 import com.alohaoneui.hook.util.PreferenceProvider
-import java.lang.reflect.Constructor
-import java.lang.reflect.Field
-import java.lang.reflect.Method
+import java.util.Collections
 import java.util.WeakHashMap
 import java.util.concurrent.atomic.AtomicBoolean
-import kotlin.math.abs
-import kotlin.math.hypot
-import kotlin.math.max
-import kotlin.math.min
-import kotlin.math.roundToInt
 
 /**
- * Runtime adapter for the global shortcut controls migrated from App20261018Aloha.
- *
- * Unlike the source project, Aloha OneUI uses libxposed API 101 and a single serialized
- * Preference object. Every callback refreshes its cached preference from preference.json,
- * so changing an option doesn't require reinstalling or rewriting legacy SharedPreferences.
- * The host-specific hook points are deliberately isolated here to avoid touching unrelated
- * status-bar behavior (including Samsung QuickStar's native seconds scheduler).
+ * libxposed entry adapter for the upstream global-shortcut runtime.
+ * Trigger recognition, per-feature state machines, floating-ball touch handling, and action
+ * implementations are kept in their source-derived responsibility files.
  */
 object GlobalQuickActions {
-    private const val TAG = "AlohaOneUI-GlobalQuickActions"
-    private const val ACTION_NONE = "none"
-    private const val ACTION_CUSTOM_APP_PREFIX = "custom_app:"
-    private const val STATUS_BAR_DOUBLE_CLICK_MS = 320L
-    private const val STATUS_BAR_TAP_MAX_MS = 260L
-    private const val STATUS_BAR_TAP_SLOP_DP = 10f
-    private const val STATUS_BAR_LONG_PRESS_MS = 520L
-    private const val DOUBLE_TAP_MS = 320L
-    private const val FLOATING_BALL_LONG_PRESS_MS = 520L
-    private const val FLOATING_BALL_SWIPE_THRESHOLD_DP = 38f
-    private const val FLOATING_BALL_TAP_SLOP_DP = 8f
-    private const val FLOATING_BALL_INNER_RADIUS_RATIO = 0.61f
-    private const val FLOATING_BALL_INNER_OFFSET_LIMIT_DP = 11f
-    private const val FLOATING_BALL_ENSURE_THROTTLE_MS = 450L
+    internal const val TAG = "AlohaOneUI-GlobalQuickActions"
+    internal val mainHandler = Handler(Looper.getMainLooper())
+    internal val navigationKeyHandler = Handler(Looper.getMainLooper())
+    internal val screenOffVolumeHandler = Handler(Looper.getMainLooper())
 
-    private val mainHandler = Handler(Looper.getMainLooper())
-    @Volatile private var cachedSettings: Preference.GlobalShortcutActions? = null
-    @Volatile private var cachedSettingsAt = 0L
-    @Volatile private var systemServerContext: Context? = null
-    @Volatile private var preferenceObserver: ContentObserver? = null
-    @Volatile private var inputManagerService: Any? = null
-    @Volatile private var phoneWindowManager: Any? = null
+    @Volatile internal var cachedSettings: Preference.GlobalShortcutActions? = null
+    @Volatile internal var cachedSettingsAt = 0L
+    @Volatile internal var systemServerContext: Context? = null
+    @Volatile internal var inputManagerService: Any? = null
+    @Volatile internal var phoneWindowManager: Any? = null
+    private var preferenceObserver: ContentObserver? = null
     private val diagnosticQueryReceiverInstalled = AtomicBoolean(false)
 
-    private val gesturePointerIds = IntArray(3) { -1 }
-    private val gestureStartX = FloatArray(3)
-    private val gestureStartY = FloatArray(3)
-    private var threeFingerActive = false
-    private var threeFingerConsumed = false
-    private var threeFingerStartSpan = 0f
+    internal var threeFingerActive = false
+    internal var threeFingerConsumed = false
+    internal var threeFingerTouchCancelled = false
+    internal val threeFingerPointerIds = IntArray(THREE_FINGER_COUNT) { -1 }
+    internal val threeFingerStartXs = FloatArray(THREE_FINGER_COUNT)
+    internal val threeFingerStartYs = FloatArray(THREE_FINGER_COUNT)
+    internal var threeFingerStartTime = 0L
+    internal var threeFingerPinchActive = false
+    internal var threeFingerPinchConsumed = false
+    internal val threeFingerPinchPointerIds = IntArray(THREE_FINGER_COUNT) { -1 }
+    internal var threeFingerPinchStartSpan = 0f
+    internal var threeFingerSpreadActive = false
+    internal var threeFingerSpreadConsumed = false
+    internal val threeFingerSpreadPointerIds = IntArray(THREE_FINGER_COUNT) { -1 }
+    internal var threeFingerSpreadStartSpan = 0f
 
-    private var lastPointerSignature = ""
-    private var lastPointerSignatureAt = 0L
-    @Volatile private var lastGuardedHookFailureLoggedAt = 0L
-    @Volatile private var lastFloatingBallEnsureAt = 0L
+    @Volatile internal var floatingBallView: View? = null
+    @Volatile internal var floatingBallLayoutParams: WindowManager.LayoutParams? = null
+    @Volatile internal var floatingBallWindowManager: WindowManager? = null
+    internal var floatingBallTouchStartX = 0f
+    internal var floatingBallTouchStartY = 0f
+    internal var floatingBallStartX = 0
+    internal var floatingBallStartY = 0
+    internal var floatingBallTouchDownTime = 0L
+    internal var floatingBallLastTapTime = 0L
+    internal var floatingBallMoved = false
+    internal var floatingBallDragging = false
+    internal var floatingBallLongPressRunnable: Runnable? = null
+    internal var floatingBallPendingClickRunnable: Runnable? = null
+    internal var floatingBallAutoEdgeRunnable: Runnable? = null
+    internal var floatingBallInnerOffsetX = 0f
+    internal var floatingBallInnerOffsetY = 0f
+    internal var floatingBallX = 0
+    internal var floatingBallY = 0
+    internal var lastFloatingBallEnsureTime = 0L
+    internal var lastFloatingBallSettings: FloatingBallSettings? = null
 
-    private var statusGestureActive = false
-    private var statusGestureMoved = false
-    private var statusLongPressTriggered = false
-    private var statusDownX = 0f
-    private var statusDownY = 0f
-    private var statusDownTime = 0L
-    private var statusSide = 0
-    private var statusLastTapTime = 0L
-    private var statusPendingSingle: Runnable? = null
-    private var statusLongPressRunnable: Runnable? = null
+    internal var screenOffVolumeDownKeyCode = 0
+    internal var screenOffVolumeLongPressTriggered = false
+    internal var screenOffVolumeLongPressRunnable: Runnable? = null
+    internal var screenOffVolumeDoubleClickPending = false
+    internal var screenOffVolumeDoubleClickKeyCode = 0
+    internal var screenOffVolumeDoubleClickRunnable: Runnable? = null
 
-    private var volumeDownKeyCode = 0
-    private var volumeLongPressTriggered = false
-    private var volumeLongPressRunnable: Runnable? = null
-    private var volumeDoubleClickRunnable: Runnable? = null
-    private var volumeDoubleClickPending = false
-    private var volumeDoubleClickKeyCode = 0
-
-    private class NavigationTouchState {
-        var active = false
-        var downX = 0f
-        var downY = 0f
-        var lastTapUpTime = 0L
-        var longPressTriggered = false
-        var cancelled = false
-        var pendingSingle: Runnable? = null
-        var longPress: Runnable? = null
-    }
-    private val navigationStates = WeakHashMap<View, NavigationTouchState>()
-
-    @Volatile private var floatingBallView: View? = null
-    @Volatile private var floatingBallParams: WindowManager.LayoutParams? = null
-    @Volatile private var floatingBallWindowManager: WindowManager? = null
-    @Volatile private var floatingBallSettingsHash = 0
-    @Volatile private var floatingBallX = 0
-    @Volatile private var floatingBallY = 0
-    @Volatile private var floatingBallPositionInitialized = false
-    private var floatingBallDownX = 0f
-    private var floatingBallDownY = 0f
-    private var floatingBallStartX = 0
-    private var floatingBallStartY = 0
-    private var floatingBallDownTime = 0L
-    private var floatingBallInnerOffsetX = 0f
-    private var floatingBallInnerOffsetY = 0f
-    private var floatingBallLongPressTriggered = false
-    private var floatingBallMoved = false
-    @Volatile private var floatingBallTouchActive = false
-    private var floatingBallLastTapTime = 0L
-    private var floatingBallPendingClick: Runnable? = null
-    private var floatingBallLongPress: Runnable? = null
-    @Volatile private var floatingBallAutoEdge: Runnable? = null
-    @Volatile private var floatingBallAutoEdgeHost: View? = null
-    @Volatile private var floatingBallAutoEdgeGeneration = 0L
-    private val torchStates = mutableMapOf<String, Boolean>()
+    internal var statusBarShortcutDownInBar = false
+    internal var statusBarShortcutLongPressTriggered = false
+    internal var statusBarShortcutDownX = 0f
+    internal var statusBarShortcutDownY = 0f
+    internal var statusBarShortcutDownTime = 0L
+    internal var statusBarShortcutLastTapTime = 0L
+    internal var statusBarPendingSingleTap: Runnable? = null
+    internal val navigationKeyTouchStates: MutableMap<View, NavigationKeyTouchState> =
+        Collections.synchronizedMap(WeakHashMap<View, NavigationKeyTouchState>())
+    internal var flashlightEnabled = false
 
     context(xposedModule: XposedModule)
     private fun currentSettings(): Preference.GlobalShortcutActions {
         val now = SystemClock.uptimeMillis()
         val cached = cachedSettings
-        if (cached == null || now - cachedSettingsAt > FLOATING_BALL_ENSURE_THROTTLE_MS) {
-            runCatching {
-                PreferenceProvider.loadPreference()?.other?.globalShortcutActions
-            }.getOrNull()?.let { cachedSettings = it }
+        if (cached == null || now - cachedSettingsAt > SETTINGS_CACHE_MS) {
+            runCatching { PreferenceProvider.loadPreference()?.other?.globalShortcutActions }
+                .getOrNull()?.let { cachedSettings = it }
             cachedSettingsAt = now
         }
         return cachedSettings ?: Preference.GlobalShortcutActions()
@@ -172,36 +114,24 @@ object GlobalQuickActions {
 
     private fun logGuardedHookFailure(label: String, event: MotionEvent, failure: Throwable) {
         if (failure is VirtualMachineError || failure is ThreadDeath) throw failure
-        val now = SystemClock.uptimeMillis()
-        val previous = lastGuardedHookFailureLoggedAt
-        if (now - previous >= 10_000L) {
-            lastGuardedHookFailureLoggedAt = now
-            Log.e(
-                TAG,
-                "$label failed; continuing platform input dispatch " +
-                    "(action=${event.actionMasked}, pointers=${event.pointerCount})",
-                failure,
-            )
-        }
+        Log.e(TAG, "$label failed; action=${event.actionMasked}, pointers=${event.pointerCount}", failure)
     }
 
     context(xposedModule: XposedModule)
     private fun dispatchGlobalMotionSafely(event: MotionEvent) {
         try {
-            handleGlobalMotion(event, currentSettings())
+            currentSettings()
+            GlobalQuickActions.handleGlobalMotion(event)
         } catch (failure: Throwable) {
-            logGuardedHookFailure("global three-finger/status-bar shortcut handler", event, failure)
+            logGuardedHookFailure("global gesture/status-bar shortcut handler", event, failure)
         }
     }
 
     context(xposedModule: XposedModule)
     fun installSystemUi(param: XposedModuleInterface.PackageReadyParam) {
-        // Main.onPackageReady already gates this to the primary SystemUI process.
         if (param.packageName != "com.android.systemui") return
         runCatching {
-            val keyButton = param.classLoader.loadClass(
-                "com.android.systemui.navigationbar.views.buttons.KeyButtonView"
-            )
+            val keyButton = param.classLoader.loadClass("com.android.systemui.navigationbar.views.buttons.KeyButtonView")
             val method = keyButton.getDeclaredMethod("onTouchEvent", MotionEvent::class.java)
             xposedModule.hook(method).intercept { chain ->
                 val view = chain.thisObject as? View
@@ -210,12 +140,13 @@ object GlobalQuickActions {
                     chain.proceed()
                 } else {
                     val handled = try {
-                        handleNavigationTouch(view, event, currentSettings())
+                        currentSettings()
+                        GlobalQuickActions.handleNavigationKeyShortcutTouch(view, event)
                     } catch (failure: Throwable) {
                         logGuardedHookFailure("SystemUI navigation shortcut handler", event, failure)
-                        null
+                        false
                     }
-                    if (handled == null) chain.proceed() else handled
+                    if (handled) true else chain.proceed()
                 }
             }
             Log.i(TAG, "installed SystemUI virtual-navigation shortcut hook")
@@ -226,26 +157,23 @@ object GlobalQuickActions {
 
     context(xposedModule: XposedModule)
     fun installSystemServer(loader: ClassLoader) {
-        systemServerContext = findSystemContext() ?: systemServerContext
-        runCatching { hookInputManagerService(loader) }
-            .onFailure { Log.w(TAG, "InputManagerService hook unavailable", it) }
-        runCatching { hookGlobalPointerEvents(loader) }
-            .onFailure { Log.w(TAG, "global pointer-event hook unavailable", it) }
-        runCatching { hookPhoneWindowManager(loader) }
-            .onFailure { Log.w(TAG, "PhoneWindowManager hook unavailable", it) }
+        systemServerContext = GlobalQuickActions.findSystemContext() ?: systemServerContext
+        runCatching { hookInputManagerService(loader) }.onFailure { Log.w(TAG, "InputManagerService hook unavailable", it) }
+        runCatching { hookGlobalPointerEvents(loader) }.onFailure { Log.w(TAG, "global pointer-event hook unavailable", it) }
+        runCatching { hookPhoneWindowManager(loader) }.onFailure { Log.w(TAG, "PhoneWindowManager hook unavailable", it) }
 
         systemServerContext?.let { context ->
+            currentSettings()
+            lastFloatingBallSettings = GlobalQuickActions.floatingBallSettings(context)
             registerPreferenceObserver(context)
             registerSystemServerDiagnosticQueryReceiver(context)
-            // WindowManager/View operations must run on SystemServer's main looper, as in
-            // App20261018Aloha's postOnMain { ensureFloatingBall(...) } path.
             mainHandler.post {
                 val activeContext = systemServerContext ?: context
-                runCatching { ensureFloatingBall(activeContext, currentSettings()) }
+                runCatching { GlobalQuickActions.ensureFloatingBall(activeContext) }
                     .onFailure { Log.w(TAG, "initial floating-ball setup failed", it) }
             }
         }
-        Log.i(TAG, "installed system-server global shortcut dispatch")
+        Log.i(TAG, "installed SystemServer global shortcut dispatch")
     }
 
     private fun registerSystemServerDiagnosticQueryReceiver(context: Context) {
@@ -254,12 +182,9 @@ object GlobalQuickActions {
             val receiver = object : BroadcastReceiver() {
                 override fun onReceive(context: Context, intent: Intent) {
                     if (intent.action != StatusBarRuntimeBridge.ACTION_SYSTEM_SERVER_DIAGNOSTIC_QUERY) return
-                    val requestId = intent.getStringExtra(StatusBarRuntimeBridge.EXTRA_DIAGNOSTIC_REQUEST_ID)
-                        ?: return
+                    val requestId = intent.getStringExtra(StatusBarRuntimeBridge.EXTRA_DIAGNOSTIC_REQUEST_ID) ?: return
                     val snapshot = runCatching { buildSystemServerDiagnosticSnapshot(context) }
-                        .getOrElse {
-                            "snapshotFailed=${it.javaClass.simpleName}:${it.message.orEmpty()}"
-                        }
+                        .getOrElse { "snapshotFailed=${it.javaClass.simpleName}:${it.message.orEmpty()}" }
                     val response = Intent(StatusBarRuntimeBridge.ACTION_SYSTEM_SERVER_DIAGNOSTIC_RESPONSE)
                         .setPackage("com.android.systemui")
                         .addFlags(Intent.FLAG_RECEIVER_FOREGROUND)
@@ -270,45 +195,29 @@ object GlobalQuickActions {
                 }
             }
             val filter = IntentFilter(StatusBarRuntimeBridge.ACTION_SYSTEM_SERVER_DIAGNOSTIC_QUERY)
-            // The third parameter constrains who may SEND to this receiver. The SystemUI
-            // requester does not hold DUMP; the query broadcast itself already constrains its
-            // recipient with receiverPermission=DUMP so only privileged SystemServer receives it.
-            if (Build.VERSION.SDK_INT >= 33) {
-                context.registerReceiver(receiver, filter, null, null, Context.RECEIVER_EXPORTED)
-            } else {
+            if (Build.VERSION.SDK_INT >= 33) context.registerReceiver(receiver, filter, null, null, Context.RECEIVER_EXPORTED)
+            else {
                 @Suppress("DEPRECATION")
                 context.registerReceiver(receiver, filter, null, null)
             }
-            Log.i(TAG, "registered on-demand SystemServer diagnostics query receiver")
+            Log.i(TAG, "registered on-demand SystemServer diagnostics receiver")
         } catch (failure: Exception) {
             diagnosticQueryReceiverInstalled.set(false)
-            Log.w(TAG, "could not register on-demand SystemServer diagnostics query receiver", failure)
+            Log.w(TAG, "could not register on-demand SystemServer diagnostics receiver", failure)
         }
     }
 
     private fun buildSystemServerDiagnosticSnapshot(context: Context): String {
         val settings = cachedSettings ?: Preference.GlobalShortcutActions()
         val view = floatingBallView
-        val params = floatingBallParams
-        val delaySeconds = settings.floatingBallAutoEdgeDelaySeconds.coerceIn(0, 10)
+        val params = floatingBallLayoutParams
         return buildString {
             appendLine("capturedAtMs=${System.currentTimeMillis()} uid=${Process.myUid()} contextPackage=${context.packageName}")
-            appendLine("enabled=${settings.floatingBallEnabled} autoEdgeDelaySeconds=${delaySeconds}")
-            appendLine(
-                "viewPresent=${view != null} attached=${view?.isAttachedToWindow} " +
-                    "viewSize=${view?.width}x${view?.height} visibility=${view?.visibility}"
-            )
-            appendLine(
-                "paramsPresent=${params != null} x=${params?.x} y=${params?.y} " +
-                    "width=${params?.width} height=${params?.height} windowManagerPresent=${floatingBallWindowManager != null}"
-            )
-            appendLine(
-                "timerArmed=${floatingBallAutoEdge != null} timerHostMatchesView=${floatingBallAutoEdgeHost === view} " +
-                    "generation=${floatingBallAutoEdgeGeneration} touchActive=${floatingBallTouchActive}"
-            )
-            appendLine(
-                "positionInitialized=${floatingBallPositionInitialized} savedX=${floatingBallX} savedY=${floatingBallY}"
-            )
+            appendLine("enabled=${settings.floatingBallEnabled} autoEdgeDelaySeconds=${settings.floatingBallAutoEdgeDelaySeconds}")
+            appendLine("viewPresent=${view != null} attached=${view?.isAttachedToWindow} viewSize=${view?.width}x${view?.height} visibility=${view?.visibility}")
+            appendLine("paramsPresent=${params != null} x=${params?.x} y=${params?.y} width=${params?.width} height=${params?.height} windowManagerPresent=${floatingBallWindowManager != null}")
+            appendLine("timerArmed=${floatingBallAutoEdgeRunnable != null} dragging=${floatingBallDragging}")
+            appendLine("savedX=${floatingBallX} savedY=${floatingBallY}")
         }
     }
 
@@ -320,20 +229,25 @@ object GlobalQuickActions {
                 override fun onChange(selfChange: Boolean) {
                     cachedSettings = null
                     cachedSettingsAt = 0L
-                    val fresh = currentSettings()
-                    runCatching { ensureFloatingBall(context, fresh) }
-                        .onFailure { Log.w(TAG, "floating-ball preference refresh failed", it) }
+                    currentSettings()
+                    val freshFloatingBall = GlobalQuickActions.floatingBallSettings(context)
+                    val previous = lastFloatingBallSettings
+                    lastFloatingBallSettings = freshFloatingBall
+                    if (previous == null || previous != freshFloatingBall) {
+                        mainHandler.post {
+                            runCatching {
+                                GlobalQuickActions.removeFloatingBall()
+                                GlobalQuickActions.ensureFloatingBall(context)
+                            }.onFailure { Log.w(TAG, "floating-ball preference refresh failed", it) }
+                        }
+                    }
                 }
             }
             context.contentResolver.registerContentObserver(
-                Uri.parse("content://com.alohaoneui.app.statusbridge/preferences"),
-                false,
-                observer,
+                Uri.parse("content://com.alohaoneui.app.statusbridge/preferences"), false, observer
             )
             preferenceObserver = observer
-        }.onFailure {
-            Log.w(TAG, "global-shortcut preference observer registration failed", it)
-        }
+        }.onFailure { Log.w(TAG, "global-shortcut preference observer registration failed", it) }
     }
 
     context(xposedModule: XposedModule)
@@ -367,27 +281,16 @@ object GlobalQuickActions {
             }
             Log.i(TAG, "hooked PointerEventDispatcher.onInputEvent")
             return
-        } catch (first: Throwable) {
-            Log.w(TAG, "PointerEventDispatcher.onInputEvent not available; trying pointer listener", first)
+        } catch (failure: Throwable) {
+            Log.w(TAG, "PointerEventDispatcher.onInputEvent unavailable; using pointer-listener hook", failure)
         }
-
         val listener = loader.loadClass("android.view.WindowManagerPolicyConstants\$PointerEventListener")
         listener.declaredMethods.filter {
-            it.name == "onPointerEvent" &&
-                it.parameterTypes.size == 1 &&
-                MotionEvent::class.java.isAssignableFrom(it.parameterTypes[0])
+            it.name == "onPointerEvent" && it.parameterTypes.size == 1 && MotionEvent::class.java.isAssignableFrom(it.parameterTypes[0])
         }.forEach { method ->
             xposedModule.hook(method).intercept { chain ->
                 val event = chain.args.firstOrNull() as? MotionEvent
-                if (event != null) {
-                    val signature = "${event.eventTime}:${event.actionMasked}:${event.pointerCount}"
-                    val now = SystemClock.uptimeMillis()
-                    if (signature != lastPointerSignature || now - lastPointerSignatureAt > 20L) {
-                        lastPointerSignature = signature
-                        lastPointerSignatureAt = now
-                        dispatchGlobalMotionSafely(event)
-                    }
-                }
+                if (event != null) dispatchGlobalMotionSafely(event)
                 chain.proceed()
             }
         }
@@ -404,1466 +307,17 @@ object GlobalQuickActions {
             }
         }
         clazz.declaredMethods.filter { method ->
-            method.name == "interceptKeyBeforeQueueing" &&
-                method.parameterTypes.any { KeyEvent::class.java.isAssignableFrom(it) }
+            method.name == "interceptKeyBeforeQueueing" && method.parameterTypes.any { KeyEvent::class.java.isAssignableFrom(it) }
         }.forEach { method ->
             xposedModule.hook(method).intercept { chain ->
                 phoneWindowManager = chain.thisObject
                 val event = chain.args.firstOrNull { it is KeyEvent } as? KeyEvent
-                val context = currentSystemContext()
-                if (event != null && context != null &&
-                    handleScreenOffVolumeKey(context, event, currentSettings())
-                ) {
-                    0
-                } else {
-                    chain.proceed()
-                }
+                val context = GlobalQuickActions.currentSystemContext()
+                if (event != null && context != null) {
+                    currentSettings()
+                    if (GlobalQuickActions.handleScreenOffVolumeKeyShortcut(context, event)) 0 else chain.proceed()
+                } else chain.proceed()
             }
         }
-    }
-
-    context(xposedModule: XposedModule)
-    private fun handleGlobalMotion(event: MotionEvent, settings: Preference.GlobalShortcutActions) {
-        val context = systemServerContext ?: findSystemContext()
-        if (context != null) {
-            systemServerContext = context
-            // PointerEventDispatcher / PointerEventListener run on the input-dispatch path.
-            // Mirror upstream SystemUiRootHook: throttle and move all floating-ball WindowManager
-            // and View lifecycle work onto the SystemServer main looper.
-            val now = SystemClock.uptimeMillis()
-            if (now - lastFloatingBallEnsureAt > FLOATING_BALL_ENSURE_THROTTLE_MS) {
-                lastFloatingBallEnsureAt = now
-                mainHandler.post {
-                    val activeContext = systemServerContext ?: context
-                    runCatching { ensureFloatingBall(activeContext, currentSettings()) }
-                        .onFailure { Log.w(TAG, "deferred floating-ball ensure failed", it) }
-                }
-            }
-        }
-
-        handleStatusBarMotion(event, context, settings)
-        if (context == null) return
-
-        when (event.actionMasked) {
-            MotionEvent.ACTION_DOWN, MotionEvent.ACTION_CANCEL, MotionEvent.ACTION_UP -> {
-                if (event.actionMasked != MotionEvent.ACTION_MOVE) {
-                    if (event.actionMasked == MotionEvent.ACTION_DOWN) resetThreeFingerState()
-                    if (event.actionMasked == MotionEvent.ACTION_UP || event.actionMasked == MotionEvent.ACTION_CANCEL) {
-                        resetThreeFingerState()
-                    }
-                }
-            }
-            MotionEvent.ACTION_POINTER_DOWN -> {
-                if (event.pointerCount == 3) startThreeFingerGesture(event)
-                else if (event.pointerCount > 3) resetThreeFingerState()
-            }
-            MotionEvent.ACTION_POINTER_UP -> {
-                if (event.pointerCount <= 3) resetThreeFingerState()
-            }
-            MotionEvent.ACTION_MOVE -> handleThreeFingerMove(context, event, settings)
-        }
-    }
-
-    private fun startThreeFingerGesture(event: MotionEvent) {
-        threeFingerActive = true
-        threeFingerConsumed = false
-        threeFingerStartSpan = averageThreeFingerSpan(event)
-        for (i in 0 until 3) {
-            gesturePointerIds[i] = event.getPointerId(i)
-            gestureStartX[i] = event.getX(i)
-            gestureStartY[i] = event.getY(i)
-        }
-    }
-
-    private fun handleThreeFingerMove(
-        context: Context,
-        event: MotionEvent,
-        settings: Preference.GlobalShortcutActions,
-    ) {
-        if (!threeFingerActive || threeFingerConsumed || event.pointerCount != 3 ||
-            (event.source and InputDevice.SOURCE_TOUCHSCREEN) != InputDevice.SOURCE_TOUCHSCREEN
-        ) return
-
-        val density = context.resources.displayMetrics.density.takeIf { it > 0 } ?: 1f
-        val span = averageThreeFingerSpan(event)
-        val spanChangeDp = (span - threeFingerStartSpan) / density
-
-        if (settings.threeFingerPinchEnabled &&
-            spanChangeDp <= -settings.threeFingerPinchThresholdDp.toFloat() &&
-            settings.threeFingerPinchAction != ACTION_NONE
-        ) {
-            consumeThreeFingerGesture(context, settings.threeFingerPinchAction,
-                settings.threeFingerPinchHapticEnabled, settings.threeFingerPinchHapticStrength)
-            return
-        }
-        if (settings.threeFingerSpreadEnabled &&
-            spanChangeDp >= settings.threeFingerSpreadThresholdDp.toFloat() &&
-            settings.threeFingerSpreadAction != ACTION_NONE
-        ) {
-            consumeThreeFingerGesture(context, settings.threeFingerSpreadAction,
-                settings.threeFingerSpreadHapticEnabled, settings.threeFingerSpreadHapticStrength)
-            return
-        }
-
-        if (!settings.threeFingerGestureEnabled) return
-        val threshold = settings.threeFingerTouchCancelThresholdDp * density
-        var direction: String? = null
-        for (i in 0 until 3) {
-            val index = event.findPointerIndex(gesturePointerIds[i])
-            if (index < 0) return
-            val dx = event.getX(index) - gestureStartX[i]
-            val dy = event.getY(index) - gestureStartY[i]
-            if (max(abs(dx), abs(dy)) < threshold) return
-            val fingerDirection = if (abs(dy) > abs(dx)) {
-                if (dy < 0f) "up" else "down"
-            } else {
-                if (dx < 0f) "left" else "right"
-            }
-            if (direction == null) direction = fingerDirection
-            else if (direction != fingerDirection) return
-        }
-
-        val action = when (direction) {
-            "up" -> settings.threeFingerSwipeUpAction
-            "down" -> settings.threeFingerSwipeDownAction
-            "left" -> settings.threeFingerSwipeLeftAction
-            "right" -> settings.threeFingerSwipeRightAction
-            else -> ACTION_NONE
-        }
-        if (action != ACTION_NONE) {
-            consumeThreeFingerGesture(context, action, settings.threeFingerHapticEnabled, settings.threeFingerHapticStrength)
-        }
-    }
-
-    private fun consumeThreeFingerGesture(
-        context: Context,
-        action: String,
-        haptic: Boolean,
-        strength: Int,
-    ) {
-        threeFingerConsumed = true
-        // Do not re-enter InputManagerService synchronously from its pointer-event callback.
-        cancelCurrentTouchAfterDispatch()
-        performHaptic(context, haptic, strength)
-        performGlobalAction(context, action)
-    }
-
-    private fun cancelCurrentTouchAfterDispatch() {
-        val manager = inputManagerService ?: return
-        runCatching {
-            mainHandler.post {
-                runCatching { callCompatible(manager, "cancelCurrentTouch") }
-                    .onFailure { Log.w(TAG, "deferred touch cancellation failed", it) }
-            }
-        }.onFailure {
-            Log.w(TAG, "could not schedule deferred touch cancellation", it)
-        }
-    }
-
-    private fun averageThreeFingerSpan(event: MotionEvent): Float {
-        if (event.pointerCount < 3) return 0f
-        var total = 0f
-        var pairs = 0
-        for (i in 0..2) for (j in i + 1..2) {
-            total += hypot(event.getX(i) - event.getX(j), event.getY(i) - event.getY(j))
-            pairs++
-        }
-        return if (pairs == 0) 0f else total / pairs
-    }
-
-    private fun resetThreeFingerState() {
-        threeFingerActive = false
-        threeFingerConsumed = false
-        threeFingerStartSpan = 0f
-        for (i in 0 until 3) {
-            gesturePointerIds[i] = -1
-            gestureStartX[i] = 0f
-            gestureStartY[i] = 0f
-        }
-    }
-
-    context(xposedModule: XposedModule)
-    private fun handleStatusBarMotion(
-        event: MotionEvent,
-        context: Context?,
-        settings: Preference.GlobalShortcutActions,
-    ) {
-        if (!settings.statusBarShortcutEnabled || context == null) {
-            if (event.actionMasked == MotionEvent.ACTION_CANCEL) resetStatusBarState()
-            return
-        }
-        val anyConfigured = settings.statusBarDoubleClickAction != ACTION_NONE ||
-            settings.statusBarLeftClickAction != ACTION_NONE ||
-            settings.statusBarLeftLongPressAction != ACTION_NONE ||
-            settings.statusBarRightClickAction != ACTION_NONE ||
-            settings.statusBarRightLongPressAction != ACTION_NONE
-        if (!anyConfigured) return
-
-        val barHeight = statusBarHeightPx(context)
-        when (event.actionMasked) {
-            MotionEvent.ACTION_DOWN -> {
-                if (event.rawY > barHeight) {
-                    statusGestureActive = false
-                    return
-                }
-                statusGestureActive = true
-                statusGestureMoved = false
-                statusLongPressTriggered = false
-                statusDownX = event.rawX
-                statusDownY = event.rawY
-                statusDownTime = event.eventTime
-                val width = context.resources.displayMetrics.widthPixels.toFloat()
-                statusSide = if (statusDownX < width * 0.5f) -1 else 1
-                val longAction = if (statusSide < 0) settings.statusBarLeftLongPressAction
-                    else settings.statusBarRightLongPressAction
-                statusLongPressRunnable?.let { mainHandler.removeCallbacks(it) }
-                statusLongPressRunnable = if (longAction != ACTION_NONE && statusSide != 0) {
-                    Runnable {
-                        if (statusGestureActive && !statusGestureMoved) {
-                            statusLongPressTriggered = true
-                            callCompatible(inputManagerService, "cancelCurrentTouch")
-                            performHaptic(context, settings.statusBarShortcutHapticEnabled, settings.statusBarShortcutHapticStrength)
-                            performGlobalAction(context, longAction)
-                        }
-                    }.also { mainHandler.postDelayed(it, STATUS_BAR_LONG_PRESS_MS) }
-                } else null
-            }
-
-            MotionEvent.ACTION_MOVE -> {
-                if (!statusGestureActive) return
-                if (max(abs(event.rawX - statusDownX), abs(event.rawY - statusDownY)) >
-                    ViewConfiguration.get(context).scaledTouchSlop
-                ) {
-                    statusGestureMoved = true
-                    statusLongPressRunnable?.let { mainHandler.removeCallbacks(it) }
-                    statusLongPressRunnable = null
-                }
-            }
-
-            MotionEvent.ACTION_UP -> {
-                if (!statusGestureActive) return
-                statusLongPressRunnable?.let { mainHandler.removeCallbacks(it) }
-                statusLongPressRunnable = null
-                if (!statusGestureMoved && !statusLongPressTriggered &&
-                    event.eventTime - statusDownTime <= STATUS_BAR_TAP_MAX_MS
-                ) {
-                    val clickAction = when (statusSide) {
-                        -1 -> settings.statusBarLeftClickAction
-                        1 -> settings.statusBarRightClickAction
-                        else -> ACTION_NONE
-                    }
-                    val secondTap = statusLastTapTime > 0L &&
-                        event.eventTime - statusLastTapTime <= STATUS_BAR_DOUBLE_CLICK_MS
-                    if (secondTap && settings.statusBarDoubleClickAction != ACTION_NONE) {
-                        statusPendingSingle?.let { mainHandler.removeCallbacks(it) }
-                        statusPendingSingle = null
-                        statusLastTapTime = 0L
-                        callCompatible(inputManagerService, "cancelCurrentTouch")
-                        performHaptic(context, settings.statusBarShortcutHapticEnabled, settings.statusBarShortcutHapticStrength)
-                        performGlobalAction(context, settings.statusBarDoubleClickAction)
-                    } else {
-                        statusLastTapTime = event.eventTime
-                        if (clickAction != ACTION_NONE) {
-                            statusPendingSingle?.let { mainHandler.removeCallbacks(it) }
-                            val pending = Runnable {
-                                performHaptic(context, settings.statusBarShortcutHapticEnabled, settings.statusBarShortcutHapticStrength)
-                                performGlobalAction(context, clickAction)
-                                statusPendingSingle = null
-                            }
-                            statusPendingSingle = pending
-                            if (settings.statusBarDoubleClickAction != ACTION_NONE) {
-                                mainHandler.postDelayed(pending, STATUS_BAR_DOUBLE_CLICK_MS)
-                            } else {
-                                mainHandler.post(pending)
-                            }
-                        }
-                    }
-                }
-                statusGestureActive = false
-            }
-
-            MotionEvent.ACTION_CANCEL -> resetStatusBarState()
-        }
-    }
-
-    private fun resetStatusBarState() {
-        statusGestureActive = false
-        statusGestureMoved = false
-        statusLongPressTriggered = false
-        statusLongPressRunnable?.let { mainHandler.removeCallbacks(it) }
-        statusLongPressRunnable = null
-    }
-
-    private fun statusBarHeightPx(context: Context): Int {
-        val id = context.resources.getIdentifier("status_bar_height", "dimen", "android")
-        return if (id != 0) runCatching { context.resources.getDimensionPixelSize(id) }.getOrDefault(dp(context, 24f))
-            else dp(context, 24f)
-    }
-
-    private fun handleNavigationTouch(
-        view: View,
-        event: MotionEvent,
-        settings: Preference.GlobalShortcutActions,
-    ): Boolean? {
-        if (!settings.navigationKeyShortcutEnabled) return null
-        val role = navigationRole(view) ?: return null
-        val doubleAction = navigationDoubleAction(settings, role)
-        val longAction = navigationLongAction(settings, role)
-        if (doubleAction == ACTION_NONE && longAction == ACTION_NONE) return null
-
-        val state = synchronized(navigationStates) {
-            navigationStates.getOrPut(view) { NavigationTouchState() }
-        }
-        val context = view.context
-        when (event.actionMasked) {
-            MotionEvent.ACTION_DOWN -> {
-                state.active = true
-                state.downX = event.rawX
-                state.downY = event.rawY
-                state.longPressTriggered = false
-                state.cancelled = false
-                state.longPress?.let { mainHandler.removeCallbacks(it) }
-                state.longPress = if (longAction != ACTION_NONE) {
-                    Runnable {
-                        if (state.active && !state.cancelled) {
-                            state.longPressTriggered = true
-                            state.pendingSingle?.let { mainHandler.removeCallbacks(it) }
-                            state.pendingSingle = null
-                            performHaptic(context, settings.navigationKeyHapticEnabled, settings.navigationKeyHapticStrength)
-                            performGlobalAction(context, longAction)
-                        }
-                    }.also { mainHandler.postDelayed(it, ViewConfiguration.getLongPressTimeout().toLong()) }
-                } else null
-                return true
-            }
-
-            MotionEvent.ACTION_MOVE -> {
-                if (state.active && max(abs(event.rawX - state.downX), abs(event.rawY - state.downY)) >
-                    ViewConfiguration.get(context).scaledTouchSlop
-                ) {
-                    state.cancelled = true
-                    state.longPress?.let { mainHandler.removeCallbacks(it) }
-                    state.longPress = null
-                }
-                return if (state.active) true else null
-            }
-
-            MotionEvent.ACTION_UP -> {
-                if (!state.active) return null
-                state.active = false
-                state.longPress?.let { mainHandler.removeCallbacks(it) }
-                state.longPress = null
-                if (state.longPressTriggered || state.cancelled) return true
-
-                val normalKey = navigationDefaultKey(role)
-                if (doubleAction != ACTION_NONE) {
-                    val isDouble = state.lastTapUpTime > 0L &&
-                        event.eventTime - state.lastTapUpTime <= ViewConfiguration.getDoubleTapTimeout()
-                    if (isDouble) {
-                        state.pendingSingle?.let { mainHandler.removeCallbacks(it) }
-                        state.pendingSingle = null
-                        state.lastTapUpTime = 0L
-                        performHaptic(context, settings.navigationKeyHapticEnabled, settings.navigationKeyHapticStrength)
-                        performGlobalAction(context, doubleAction)
-                    } else {
-                        state.lastTapUpTime = event.eventTime
-                        state.pendingSingle?.let { mainHandler.removeCallbacks(it) }
-                        val pending = Runnable {
-                            injectKey(normalKey)
-                            state.pendingSingle = null
-                        }
-                        state.pendingSingle = pending
-                        mainHandler.postDelayed(pending, ViewConfiguration.getDoubleTapTimeout().toLong())
-                    }
-                } else {
-                    injectKey(normalKey)
-                }
-                return true
-            }
-
-            MotionEvent.ACTION_CANCEL -> {
-                state.active = false
-                state.cancelled = true
-                state.longPress?.let { mainHandler.removeCallbacks(it) }
-                state.longPress = null
-                return true
-            }
-        }
-        return if (state.active) true else null
-    }
-
-    private fun navigationRole(view: View): String? {
-        val code = (readField(view, "mCode") as? Number)?.toInt() ?: 0
-        when (code) {
-            KeyEvent.KEYCODE_BACK -> return "back"
-            KeyEvent.KEYCODE_HOME -> return "home"
-            KeyEvent.KEYCODE_APP_SWITCH -> return "recents"
-        }
-        val idName = runCatching { view.resources.getResourceEntryName(view.id) }.getOrDefault("")
-            .lowercase()
-        val hint = (idName + " " + view.javaClass.simpleName).lowercase()
-        return when {
-            hint.contains("back") -> "back"
-            hint.contains("home") -> "home"
-            hint.contains("recent") || hint.contains("recents") || hint.contains("task") -> "recents"
-            else -> null
-        }
-    }
-
-    private fun navigationDoubleAction(settings: Preference.GlobalShortcutActions, role: String): String =
-        when (role) {
-            "back" -> settings.navigationBackDoubleTapAction
-            "home" -> settings.navigationHomeDoubleTapAction
-            else -> settings.navigationRecentsDoubleTapAction
-        }.ifBlank { ACTION_NONE }
-
-    private fun navigationLongAction(settings: Preference.GlobalShortcutActions, role: String): String =
-        when (role) {
-            "back" -> settings.navigationBackLongPressAction
-            "home" -> settings.navigationHomeLongPressAction
-            else -> settings.navigationRecentsLongPressAction
-        }.ifBlank { ACTION_NONE }
-
-    private fun navigationDefaultKey(role: String): Int = when (role) {
-        "back" -> KeyEvent.KEYCODE_BACK
-        "home" -> KeyEvent.KEYCODE_HOME
-        else -> KeyEvent.KEYCODE_APP_SWITCH
-    }
-
-    private fun handleScreenOffVolumeKey(
-        context: Context,
-        event: KeyEvent,
-        settings: Preference.GlobalShortcutActions,
-    ): Boolean {
-        val code = event.keyCode
-        if (code != KeyEvent.KEYCODE_VOLUME_UP && code != KeyEvent.KEYCODE_VOLUME_DOWN) return false
-        val activeSequence = volumeDownKeyCode == code || volumeLongPressTriggered
-        if (!settings.screenOffVolumeKeyEnabled && !activeSequence) return false
-        val interactive = runCatching {
-            context.getSystemService(PowerManager::class.java)?.isInteractive ?: true
-        }.getOrDefault(true)
-        if (interactive && !activeSequence) return false
-        if (!settings.screenOffVolumeLongPressEnabled && !settings.screenOffVolumeDoubleClickEnabled) return false
-
-        when (event.action) {
-            KeyEvent.ACTION_DOWN -> {
-                if (event.repeatCount > 0) return activeSequence
-                volumeLongPressRunnable?.let { mainHandler.removeCallbacks(it) }
-                volumeDownKeyCode = code
-                volumeLongPressTriggered = false
-                if (settings.screenOffVolumeLongPressEnabled) {
-                    volumeLongPressRunnable = Runnable {
-                        if (volumeDownKeyCode == code) {
-                            volumeLongPressTriggered = true
-                            volumeDownKeyCode = 0
-                            cancelVolumeDoubleClick()
-                            performHaptic(context, settings.screenOffVolumeHapticEnabled, settings.screenOffVolumeHapticStrength)
-                            injectKey(if (code == KeyEvent.KEYCODE_VOLUME_UP) {
-                                KeyEvent.KEYCODE_MEDIA_NEXT
-                            } else {
-                                KeyEvent.KEYCODE_MEDIA_PREVIOUS
-                            })
-                        }
-                    }.also { mainHandler.postDelayed(it, settings.screenOffVolumeLongPressTimeoutMs.toLong()) }
-                }
-                return true
-            }
-
-            KeyEvent.ACTION_UP -> {
-                volumeLongPressRunnable?.let { mainHandler.removeCallbacks(it) }
-                volumeLongPressRunnable = null
-                if (volumeLongPressTriggered) {
-                    volumeLongPressTriggered = false
-                    volumeDownKeyCode = 0
-                    return true
-                }
-                volumeDownKeyCode = 0
-                if (settings.screenOffVolumeDoubleClickEnabled) {
-                    if (volumeDoubleClickPending && volumeDoubleClickKeyCode == code) {
-                        cancelVolumeDoubleClick()
-                        performHaptic(context, settings.screenOffVolumeHapticEnabled, settings.screenOffVolumeHapticStrength)
-                        injectKey(KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE)
-                    } else {
-                        cancelVolumeDoubleClick()
-                        volumeDoubleClickPending = true
-                        volumeDoubleClickKeyCode = code
-                        volumeDoubleClickRunnable = Runnable {
-                            if (volumeDoubleClickPending && volumeDoubleClickKeyCode == code) {
-                                volumeDoubleClickPending = false
-                                volumeDoubleClickKeyCode = 0
-                                adjustMusicVolume(context, code)
-                            }
-                            volumeDoubleClickRunnable = null
-                        }.also { mainHandler.postDelayed(it, settings.screenOffVolumeDoubleClickTimeoutMs.toLong()) }
-                    }
-                } else {
-                    adjustMusicVolume(context, code)
-                }
-                return true
-            }
-
-            KeyEvent.ACTION_MULTIPLE -> return true
-            else -> return activeSequence
-        }
-    }
-
-    private fun cancelVolumeDoubleClick() {
-        volumeDoubleClickRunnable?.let { mainHandler.removeCallbacks(it) }
-        volumeDoubleClickRunnable = null
-        volumeDoubleClickPending = false
-        volumeDoubleClickKeyCode = 0
-    }
-
-    private fun adjustMusicVolume(context: Context, keyCode: Int) {
-        runCatching {
-            val audio = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-            audio.adjustStreamVolume(
-                AudioManager.STREAM_MUSIC,
-                if (keyCode == KeyEvent.KEYCODE_VOLUME_UP) AudioManager.ADJUST_RAISE else AudioManager.ADJUST_LOWER,
-                0,
-            )
-        }.onFailure { Log.w(TAG, "volume fallback failed", it) }
-    }
-
-    private fun recordFloatingBallDiagnostic(
-        context: Context,
-        message: String,
-        failure: Throwable? = null,
-    ) {
-        if (failure == null) Log.i(TAG, message) else Log.w(TAG, message, failure)
-        val exportedMessage = if (failure == null) {
-            message
-        } else {
-            "$message error=${failure.javaClass.simpleName}:${failure.message.orEmpty()}"
-        }
-        runCatching {
-            context.sendBroadcast(
-                Intent(StatusBarRuntimeBridge.ACTION_SYSTEM_SERVER_DIAGNOSTIC_EVENT)
-                    .setPackage("com.android.systemui")
-                    .addFlags(Intent.FLAG_RECEIVER_FOREGROUND)
-                    .putExtra(StatusBarRuntimeBridge.EXTRA_SYSTEM_SERVER_DIAGNOSTIC_CATEGORY, TAG)
-                    .putExtra(StatusBarRuntimeBridge.EXTRA_SYSTEM_SERVER_DIAGNOSTIC_MESSAGE, exportedMessage),
-            )
-        }.onFailure {
-            Log.w(TAG, "could not bridge floating-ball diagnostics into SystemUI export", it)
-        }
-    }
-
-    private fun ensureFloatingBall(context: Context, settings: Preference.GlobalShortcutActions) {
-        if (!settings.floatingBallEnabled) {
-            removeFloatingBall()
-            return
-        }
-        if (floatingBallView != null && floatingBallSettingsHash == settings.hashCode()) {
-            val existingView = floatingBallView
-            val existingParams = floatingBallParams
-            val existingManager = floatingBallWindowManager
-            val delaySeconds = settings.floatingBallAutoEdgeDelaySeconds.coerceIn(0, 10)
-            if (delaySeconds > 0 && !floatingBallTouchActive && floatingBallAutoEdge == null &&
-                existingView != null && existingParams != null && existingManager != null
-            ) {
-                val width = existingView.width.takeIf { it > 0 }
-                    ?: existingParams.width.takeIf { it > 0 }
-                    ?: 0
-                val displayPoint = Point()
-                val displayWidth = runCatching {
-                    (existingView.display ?: existingManager.defaultDisplay).getRealSize(displayPoint)
-                    displayPoint.x
-                }.getOrNull()?.takeIf { it > 0 }
-                    ?: context.resources.displayMetrics.widthPixels
-                val rightEdgeX = (displayWidth - width).coerceAtLeast(0)
-                val alreadyAtEdge = existingParams.x <= 0 || existingParams.x >= rightEdgeX
-                if (!alreadyAtEdge) {
-                    recordFloatingBallDiagnostic(
-                        context,
-                        "floating-ball idle timer missing away from edge; rearming: " +
-                            "delaySeconds=$delaySeconds x=${existingParams.x} rightEdgeX=$rightEdgeX",
-                    )
-                    scheduleFloatingBallAutoEdge(context, existingManager, existingView, existingParams, settings)
-                }
-            }
-            return
-        }
-        removeFloatingBall()
-
-        val manager = context.getSystemService(WindowManager::class.java) ?: return
-        val size = dp(context, settings.floatingBallSizeDp.coerceIn(40, 88).toFloat())
-        val screenWidth = context.resources.displayMetrics.widthPixels
-        val screenHeight = context.resources.displayMetrics.heightPixels
-        val maxX = (screenWidth - size).coerceAtLeast(0)
-        val maxY = (screenHeight - size).coerceAtLeast(0)
-        // Preserve a legitimate x=0/y=0 placement too; zero is a valid edge position.
-        val initialX = if (floatingBallPositionInitialized) {
-            floatingBallX.coerceIn(0, maxX)
-        } else {
-            (maxX - dp(context, 18f)).coerceAtLeast(0)
-        }
-        val initialY = if (floatingBallPositionInitialized) {
-            floatingBallY.coerceIn(0, maxY)
-        } else {
-            (statusBarHeightPx(context) + dp(context, 160f)).coerceIn(0, maxY)
-        }
-        val flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
-            WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
-            WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
-            WindowManager.LayoutParams.FLAG_SECURE
-        val params = WindowManager.LayoutParams(
-            size,
-            size,
-            2024, // TYPE_NAVIGATION_BAR_PANEL (same window type used by the source implementation).
-            flags,
-            PixelFormat.TRANSLUCENT,
-        ).apply {
-            // Use physical left-origin X coordinates so 0 and maxX always represent
-            // the left/right edges regardless of the system layout direction.
-            gravity = android.view.Gravity.TOP or android.view.Gravity.LEFT
-            x = initialX.coerceAtLeast(0)
-            y = initialY.coerceAtLeast(0)
-            title = "Aloha OneUI Global Shortcut"
-        }
-        val view = object : View(context) {
-            private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-            override fun onDraw(canvas: Canvas) {
-                super.onDraw(canvas)
-                val radius = min(width, height) / 2f - dp(context, 1f)
-                val color = settings.floatingBallColorArgb
-                paint.style = Paint.Style.FILL
-                paint.color = android.graphics.Color.argb(
-                    (android.graphics.Color.alpha(color) * 0.42f).roundToInt().coerceIn(28, 180),
-                    android.graphics.Color.red(color),
-                    android.graphics.Color.green(color),
-                    android.graphics.Color.blue(color),
-                )
-                canvas.drawCircle(width / 2f, height / 2f, radius, paint)
-                paint.style = Paint.Style.STROKE
-                paint.strokeWidth = dp(context, 2f).toFloat()
-                paint.color = android.graphics.Color.argb(190, 255, 255, 255)
-                canvas.drawCircle(width / 2f, height / 2f, radius, paint)
-                paint.style = Paint.Style.FILL
-                paint.color = color
-                val innerMoveLimit = (radius - radius * FLOATING_BALL_INNER_RADIUS_RATIO - dp(context, 3f)).coerceAtLeast(0f)
-                val innerX = floatingBallInnerOffsetX.coerceIn(-innerMoveLimit, innerMoveLimit)
-                val innerY = floatingBallInnerOffsetY.coerceIn(-innerMoveLimit, innerMoveLimit)
-                val innerCenterX = width / 2f + innerX
-                val innerCenterY = height / 2f + innerY
-                paint.color = color
-                canvas.drawCircle(innerCenterX, innerCenterY, radius * FLOATING_BALL_INNER_RADIUS_RATIO, paint)
-                paint.style = Paint.Style.STROKE
-                paint.strokeWidth = dp(context, 1f).toFloat()
-                paint.color = android.graphics.Color.argb(205, 255, 255, 255)
-                canvas.drawCircle(innerCenterX, innerCenterY, radius * FLOATING_BALL_INNER_RADIUS_RATIO, paint)
-            }
-        }
-        view.setOnTouchListener { touchedView, event ->
-            handleFloatingBallTouch(context, manager, touchedView, params, event, settings)
-            true
-        }
-
-        runCatching {
-            manager.addView(view, params)
-            floatingBallView = view
-            floatingBallParams = params
-            floatingBallWindowManager = manager
-            floatingBallSettingsHash = settings.hashCode()
-            floatingBallX = params.x
-            floatingBallY = params.y
-            floatingBallPositionInitialized = true
-            recordFloatingBallDiagnostic(
-                context,
-                "floating-ball window added: type=${params.type} size=${size}px x=${params.x} y=${params.y} " +
-                    "enabled=${settings.floatingBallEnabled} autoEdgeDelaySeconds=${settings.floatingBallAutoEdgeDelaySeconds}",
-            )
-            scheduleFloatingBallAutoEdge(context, manager, view, params, settings)
-        }.onFailure {
-            recordFloatingBallDiagnostic(context, "floating-ball primary window attach failed: type=${params.type}", it)
-            // A Samsung build may not allow TYPE_NAVIGATION_BAR_PANEL for the SystemServer context.
-            runCatching {
-                params.type = 2038 // TYPE_APPLICATION_OVERLAY fallback.
-                manager.addView(view, params)
-                floatingBallView = view
-                floatingBallParams = params
-                floatingBallWindowManager = manager
-                floatingBallSettingsHash = settings.hashCode()
-                floatingBallX = params.x
-                floatingBallY = params.y
-                floatingBallPositionInitialized = true
-                recordFloatingBallDiagnostic(
-                    context,
-                    "floating-ball fallback window added: type=${params.type} size=${size}px " +
-                        "x=${params.x} y=${params.y} autoEdgeDelaySeconds=${settings.floatingBallAutoEdgeDelaySeconds}",
-                )
-                scheduleFloatingBallAutoEdge(context, manager, view, params, settings)
-            }.onFailure { fallback ->
-                recordFloatingBallDiagnostic(context, "floating-ball could not be attached on either window type", fallback)
-                floatingBallView = null
-                floatingBallParams = null
-                floatingBallWindowManager = null
-                floatingBallSettingsHash = 0
-            }
-        }
-    }
-
-    private fun removeFloatingBall() {
-        floatingBallTouchActive = false
-        cancelFloatingBallAutoEdge()
-        floatingBallPendingClick?.let { mainHandler.removeCallbacks(it) }
-        floatingBallPendingClick = null
-        floatingBallLongPress?.let { mainHandler.removeCallbacks(it) }
-        floatingBallLongPress = null
-        val view = floatingBallView
-        if (view != null) {
-            runCatching { floatingBallWindowManager?.removeView(view) }
-        }
-        floatingBallView = null
-        floatingBallParams = null
-        floatingBallWindowManager = null
-        floatingBallSettingsHash = 0
-        floatingBallInnerOffsetX = 0f
-        floatingBallInnerOffsetY = 0f
-    }
-
-    private fun updateFloatingBallInnerOffset(context: Context, view: View, dx: Float, dy: Float) {
-        val limit = dp(context, FLOATING_BALL_INNER_OFFSET_LIMIT_DP.toFloat()).toFloat()
-        val distance = hypot(dx, dy)
-        if (distance <= 0f) {
-            floatingBallInnerOffsetX = 0f
-            floatingBallInnerOffsetY = 0f
-        } else {
-            val ratio = min(1f, distance / dp(context, FLOATING_BALL_SWIPE_THRESHOLD_DP))
-            floatingBallInnerOffsetX = dx / distance * limit * ratio
-            floatingBallInnerOffsetY = dy / distance * limit * ratio
-        }
-        view.invalidate()
-    }
-
-    private fun resetFloatingBallInnerOffset(view: View) {
-        floatingBallInnerOffsetX = 0f
-        floatingBallInnerOffsetY = 0f
-        view.invalidate()
-    }
-
-    private fun handleFloatingBallTouch(
-        context: Context,
-        manager: WindowManager,
-        view: View,
-        params: WindowManager.LayoutParams,
-        event: MotionEvent,
-        settings: Preference.GlobalShortcutActions,
-    ) {
-        when (event.actionMasked) {
-            MotionEvent.ACTION_DOWN -> {
-                floatingBallTouchActive = true
-                cancelFloatingBallAutoEdge()
-                floatingBallPendingClick?.let { mainHandler.removeCallbacks(it) }
-                floatingBallPendingClick = null
-                resetFloatingBallInnerOffset(view)
-                floatingBallDownX = event.rawX
-                floatingBallDownY = event.rawY
-                floatingBallStartX = params.x
-                floatingBallStartY = params.y
-                floatingBallDownTime = event.eventTime
-                floatingBallLongPressTriggered = false
-                floatingBallMoved = false
-                floatingBallLongPress?.let { mainHandler.removeCallbacks(it) }
-                floatingBallLongPress = Runnable {
-                    floatingBallLongPressTriggered = true
-                }.also { mainHandler.postDelayed(it, FLOATING_BALL_LONG_PRESS_MS) }
-            }
-
-            MotionEvent.ACTION_MOVE -> {
-                val dx = event.rawX - floatingBallDownX
-                val dy = event.rawY - floatingBallDownY
-                updateFloatingBallInnerOffset(context, view, dx, dy)
-                if (max(abs(dx), abs(dy)) > dp(context, FLOATING_BALL_TAP_SLOP_DP)) {
-                    floatingBallMoved = true
-                    if (!floatingBallLongPressTriggered) {
-                        floatingBallLongPress?.let { mainHandler.removeCallbacks(it) }
-                        floatingBallLongPress = null
-                        return
-                    }
-                }
-                if (floatingBallLongPressTriggered) {
-                    params.x = (floatingBallStartX + dx).roundToInt().coerceIn(0, context.resources.displayMetrics.widthPixels - view.width)
-                    params.y = (floatingBallStartY + dy).roundToInt().coerceIn(0, context.resources.displayMetrics.heightPixels - view.height)
-                    floatingBallX = params.x
-                    floatingBallY = params.y
-                    floatingBallPositionInitialized = true
-                    runCatching { manager.updateViewLayout(view, params) }
-                }
-            }
-
-            MotionEvent.ACTION_UP -> {
-                floatingBallLongPress?.let { mainHandler.removeCallbacks(it) }
-                floatingBallLongPress = null
-                if (floatingBallLongPressTriggered) {
-                    floatingBallLongPressTriggered = false
-                    floatingBallTouchActive = false
-                    resetFloatingBallInnerOffset(view)
-                    // ACTION_DOWN canceled the timer; dragging/holding exits here, so
-                    // restart the idle auto-edge countdown before returning.
-                    scheduleFloatingBallAutoEdge(context, manager, view, params, settings)
-                    return
-                }
-                val dx = event.rawX - floatingBallDownX
-                val dy = event.rawY - floatingBallDownY
-                val threshold = dp(context, FLOATING_BALL_SWIPE_THRESHOLD_DP)
-                val action = if (max(abs(dx), abs(dy)) >= threshold) {
-                    when {
-                        abs(dy) >= abs(dx) && dy < 0 -> settings.floatingBallSwipeUpAction
-                        abs(dy) >= abs(dx) -> settings.floatingBallSwipeDownAction
-                        dx < 0 -> settings.floatingBallSwipeLeftAction
-                        else -> settings.floatingBallSwipeRightAction
-                    }
-                } else if (event.eventTime - floatingBallLastTapTime <= DOUBLE_TAP_MS &&
-                    floatingBallLastTapTime > 0L && settings.floatingBallDoubleClickAction != ACTION_NONE
-                ) {
-                    floatingBallPendingClick?.let { mainHandler.removeCallbacks(it) }
-                    floatingBallPendingClick = null
-                    floatingBallLastTapTime = 0L
-                    settings.floatingBallDoubleClickAction
-                } else {
-                    floatingBallLastTapTime = event.eventTime
-                    val single = settings.floatingBallClickAction
-                    if (single != ACTION_NONE) {
-                        floatingBallPendingClick?.let { mainHandler.removeCallbacks(it) }
-                        val pending = Runnable {
-                            performHaptic(context, settings.floatingBallHapticEnabled, settings.floatingBallHapticStrength)
-                            performGlobalAction(context, single)
-                            floatingBallPendingClick = null
-                        }
-                        floatingBallPendingClick = pending
-                        if (settings.floatingBallDoubleClickAction != ACTION_NONE) {
-                            mainHandler.postDelayed(pending, DOUBLE_TAP_MS)
-                        } else {
-                            mainHandler.post(pending)
-                        }
-                    }
-                    ACTION_NONE
-                }
-                if (action != ACTION_NONE) {
-                    performHaptic(context, settings.floatingBallHapticEnabled, settings.floatingBallHapticStrength)
-                    performGlobalAction(context, action)
-                }
-                resetFloatingBallInnerOffset(view)
-                floatingBallLastTapTime = event.eventTime
-                floatingBallTouchActive = false
-                scheduleFloatingBallAutoEdge(context, manager, view, params, settings)
-            }
-
-            MotionEvent.ACTION_CANCEL -> {
-                floatingBallLongPress?.let { mainHandler.removeCallbacks(it) }
-                floatingBallLongPress = null
-                floatingBallPendingClick?.let { mainHandler.removeCallbacks(it) }
-                floatingBallPendingClick = null
-                floatingBallLongPressTriggered = false
-                resetFloatingBallInnerOffset(view)
-                floatingBallTouchActive = false
-                scheduleFloatingBallAutoEdge(context, manager, view, params, settings)
-            }
-        }
-    }
-
-    private fun cancelFloatingBallAutoEdge() {
-        floatingBallAutoEdgeGeneration += 1L
-        val runnable = floatingBallAutoEdge
-        runnable?.let {
-            mainHandler.removeCallbacks(it)
-            floatingBallAutoEdgeHost?.removeCallbacks(it)
-        }
-        floatingBallAutoEdge = null
-        floatingBallAutoEdgeHost = null
-    }
-
-    private fun scheduleFloatingBallAutoEdge(
-        context: Context,
-        manager: WindowManager,
-        view: View,
-        params: WindowManager.LayoutParams,
-        settings: Preference.GlobalShortcutActions,
-    ) {
-        cancelFloatingBallAutoEdge()
-        val delaySeconds = settings.floatingBallAutoEdgeDelaySeconds.coerceIn(0, 10)
-        if (!settings.floatingBallEnabled || delaySeconds <= 0) {
-            recordFloatingBallDiagnostic(
-                context,
-                "floating-ball auto-edge not scheduled: enabled=${settings.floatingBallEnabled} " +
-                    "delaySeconds=$delaySeconds x=${params.x} y=${params.y} " +
-                    "viewAttached=${view.isAttachedToWindow} viewSize=${view.width}x${view.height}",
-            )
-            return
-        }
-
-        val generation = floatingBallAutoEdgeGeneration
-        val delayMs = delaySeconds * 1000L
-        recordFloatingBallDiagnostic(
-            context,
-            "floating-ball auto-edge scheduled: delaySeconds=$delaySeconds delayMs=$delayMs " +
-                "generation=$generation x=${params.x} y=${params.y} " +
-                "viewAttached=${view.isAttachedToWindow} viewSize=${view.width}x${view.height} " +
-                "paramsSize=${params.width}x${params.height}",
-        )
-
-        lateinit var runnable: Runnable
-        runnable = Runnable {
-            val currentGeneration = floatingBallAutoEdgeGeneration
-            val currentView = floatingBallView === view
-            val currentParams = floatingBallParams === params
-            recordFloatingBallDiagnostic(
-                context,
-                "floating-ball auto-edge timer fired: scheduledGeneration=$generation " +
-                    "currentGeneration=$currentGeneration currentView=$currentView currentParams=$currentParams " +
-                    "enabled=${settings.floatingBallEnabled} x=${params.x} y=${params.y}",
-            )
-            if (generation != currentGeneration || !currentView || !currentParams ||
-                !settings.floatingBallEnabled || floatingBallTouchActive
-            ) {
-                recordFloatingBallDiagnostic(
-                    context,
-                    "floating-ball auto-edge skipped stale task: generation=$generation " +
-                        "currentGeneration=$currentGeneration currentView=$currentView currentParams=$currentParams " +
-                            "touchActive=$floatingBallTouchActive",
-                )
-                return@Runnable
-            }
-
-            floatingBallAutoEdgeGeneration += 1L
-            mainHandler.removeCallbacks(runnable)
-            view.removeCallbacks(runnable)
-            floatingBallAutoEdge = null
-            floatingBallAutoEdgeHost = null
-
-            val displayPoint = Point()
-            val displayWidth = runCatching {
-                val display = view.display ?: manager.defaultDisplay
-                display.getRealSize(displayPoint)
-                displayPoint.x
-            }.getOrNull()?.takeIf { it > 0 }
-                ?: context.resources.displayMetrics.widthPixels
-            val ballWidth = view.width.takeIf { it > 0 }
-                ?: params.width.takeIf { it > 0 }
-                ?: 0
-            val maxX = (displayWidth - ballWidth).coerceAtLeast(0)
-            val previousX = params.x
-            val leftHalf = previousX + ballWidth / 2 < displayWidth / 2
-            val targetX = if (leftHalf) 0 else maxX
-            recordFloatingBallDiagnostic(
-                context,
-                "floating-ball auto-edge applying: side=${if (leftHalf) "left" else "right"} " +
-                    "delaySeconds=$delaySeconds displayWidth=$displayWidth ballWidth=$ballWidth " +
-                    "fromX=$previousX targetX=$targetX y=${params.y}",
-            )
-
-            runCatching {
-                params.x = targetX
-                manager.updateViewLayout(view, params)
-                floatingBallX = params.x
-                floatingBallY = params.y
-                floatingBallPositionInitialized = true
-                recordFloatingBallDiagnostic(
-                    context,
-                    "floating-ball auto-edge applied: side=${if (leftHalf) "left" else "right"} " +
-                        "delaySeconds=$delaySeconds displayWidth=$displayWidth ballWidth=$ballWidth " +
-                        "fromX=$previousX toX=${params.x} y=${params.y}",
-                )
-            }.onFailure {
-                params.x = previousX
-                recordFloatingBallDiagnostic(
-                    context,
-                    "floating-ball auto-edge update failed: displayWidth=$displayWidth " +
-                        "ballWidth=$ballWidth fromX=$previousX targetX=$targetX",
-                    it,
-                )
-            }
-        }
-
-        floatingBallAutoEdge = runnable
-        floatingBallAutoEdgeHost = view
-        // A single main-handler queue owns the idle timer. Posting the same Runnable
-        // to both ViewRoot and Handler queues can race window/input callbacks in system_server.
-        val handlerPosted = mainHandler.postDelayed(runnable, delayMs)
-        if (!handlerPosted) {
-            if (floatingBallAutoEdge === runnable) {
-                floatingBallAutoEdge = null
-                floatingBallAutoEdgeHost = null
-            }
-            recordFloatingBallDiagnostic(
-                context,
-                "floating-ball auto-edge scheduler rejected delay=${delayMs}ms on main handler",
-            )
-        } else {
-            recordFloatingBallDiagnostic(
-                context,
-                "floating-ball auto-edge timer armed: delaySeconds=$delaySeconds " +
-                    "handlerPosted=$handlerPosted x=${params.x} y=${params.y}",
-            )
-        }
-    }
-
-    private fun performHaptic(context: Context, enabled: Boolean, strength: Int) {
-        if (!enabled) return
-        runCatching {
-            val vibrator = context.getSystemService(Vibrator::class.java) ?: return
-            val amplitude = (strength.coerceIn(1, 100) * 255 / 100).coerceIn(1, 255)
-            vibrator.vibrate(VibrationEffect.createOneShot(18L, amplitude))
-        }.onFailure {
-            runCatching {
-                @Suppress("DEPRECATION")
-                (context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator)?.vibrate(18L)
-            }
-        }
-    }
-
-    private fun performGlobalAction(context: Context, action: String) {
-        if (action.isBlank() || action == ACTION_NONE) return
-        runCatching {
-            if (action.startsWith(ACTION_CUSTOM_APP_PREFIX)) {
-                val component = ComponentName.unflattenFromString(action.removePrefix(ACTION_CUSTOM_APP_PREFIX)) ?: return
-                context.startActivity(
-                    Intent(Intent.ACTION_MAIN)
-                        .addCategory(Intent.CATEGORY_LAUNCHER)
-                        .setComponent(component)
-                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED),
-                )
-                return
-            }
-            when (action) {
-                "back" -> injectKey(KeyEvent.KEYCODE_BACK)
-                "home" -> injectKey(KeyEvent.KEYCODE_HOME)
-                "recents" -> injectKey(KeyEvent.KEYCODE_APP_SWITCH)
-                "screenshot" -> {
-                    if (!startSamsungCaptureSideButtonAction(context, "take_screenshot") &&
-                        !sendSamsungScreenshotExecutor(context) &&
-                        !invokePolicy("takeScreenshot")
-                    ) {
-                        injectKey(KeyEvent.KEYCODE_SYSRQ)
-                        runShellCommandForSuccess("cmd statusbar screenshot")
-                    }
-                }
-                "smart_screenshot" -> {
-                    if (!startSamsungCaptureSideButtonAction(context, "smart_select") &&
-                        !sendSamsungScreenshotExecutor(context) &&
-                        !invokePolicy("takeScreenshot")
-                    ) {
-                        injectKey(KeyEvent.KEYCODE_SYSRQ)
-                    }
-                }
-                "lock_screen" -> runCatching {
-                    val power = context.getSystemService(PowerManager::class.java)
-                    callCompatible(power, "goToSleep", SystemClock.uptimeMillis())
-                }
-                "power_menu" -> {
-                    if (!runShellCommandForSuccess("input keyevent --longpress KEYCODE_POWER")) {
-                        injectLongPressKey(KeyEvent.KEYCODE_POWER, 700L)
-                    }
-                }
-                "notifications" -> runCatching {
-                    callCompatible(context.getSystemService("statusbar"), "expandNotificationsPanel")
-                }
-                "previous_track" -> injectKey(KeyEvent.KEYCODE_MEDIA_PREVIOUS)
-                "next_track" -> injectKey(KeyEvent.KEYCODE_MEDIA_NEXT)
-                "play_pause" -> injectKey(KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE)
-                "media_rewind" -> injectKey(KeyEvent.KEYCODE_MEDIA_REWIND)
-                "media_fast_forward" -> injectKey(KeyEvent.KEYCODE_MEDIA_FAST_FORWARD)
-                "flashlight" -> toggleFlashlight(context)
-                "kill_foreground_app" -> cleanForegroundApp(context)
-                "memory_clean" -> cleanBackgroundApps(context)
-                "screen_record" -> {
-                    if (!startSamsungCaptureSideButtonAction(context, "record_screen")) {
-                        val intent = Intent("com.samsung.android.app.screenrecorder.ACTION_START").apply {
-                            component = ComponentName(
-                                "com.samsung.android.app.smartcapture",
-                                "com.samsung.android.app.smartcapture.screenrecorder.ScreenRecorderService",
-                            )
-                        }
-                        if (!startServiceAsCurrentUser(context, intent)) {
-                            runShellCommandForSuccess(
-                                "cmd statusbar click-tile com.samsung.android.app.smartcapture/com.samsung.android.app.screenrecorder.view.RecordScreenTile",
-                            )
-                        }
-                    }
-                }
-                "take_photo" -> launchCamera(context, video = false)
-                "quick_video" -> launchCamera(context, video = true)
-                "airplane_mode" -> toggleAirplaneMode(context)
-                "bluetooth" -> toggleBluetooth()
-                "silent_mode" -> setRingerMode(context, AudioManager.RINGER_MODE_SILENT)
-                "vibrate_mode" -> setRingerMode(context, AudioManager.RINGER_MODE_VIBRATE)
-                "wifi" -> toggleWifi(context)
-                "mobile_data" -> toggleMobileData(context)
-                "wechat_scan" -> startComponent(context, "com.tencent.mm", "com.tencent.mm.plugin.scanner.ui.BaseScanUI")
-                "wechat_pay" -> startComponent(context, "com.tencent.mm", "com.tencent.mm.plugin.offline.ui.WalletOfflineCoinPurseUI")
-                "wechat_collect" -> startComponent(context, "com.tencent.mm", "com.tencent.mm.plugin.collect.ui.CollectMainUI")
-                "alipay_scan" -> startActionUri(context, "alipayqr://platformapi/startapp?saId=10000007", "com.eg.android.AlipayGphone")
-                "alipay_pay" -> startActionUri(context, "alipayqr://platformapi/startapp?saId=20000056", "com.eg.android.AlipayGphone")
-                "alipay_collect" -> startActionUri(context, "alipays://platformapi/startapp?appId=20000123", "com.eg.android.AlipayGphone")
-            }
-        }.onFailure { Log.w(TAG, "shortcut action failed: $action", it) }
-    }
-
-    private fun injectKey(keyCode: Int) {
-        runCatching {
-            val now = SystemClock.uptimeMillis()
-            val down = KeyEvent(
-                now, now, KeyEvent.ACTION_DOWN, keyCode, 0, 0,
-                KeyCharacterMap.VIRTUAL_KEYBOARD, 0, KeyEvent.FLAG_FROM_SYSTEM, InputDevice.SOURCE_KEYBOARD,
-            )
-            val up = KeyEvent.changeAction(down, KeyEvent.ACTION_UP)
-            val manager = inputManagerService
-            if (manager != null && invokeCompatible(manager, "injectInputEvent", down, 0)) {
-                invokeCompatible(manager, "injectInputEvent", up, 0)
-                return
-            }
-            val clazz = Class.forName("android.hardware.input.InputManager")
-            val instance = callCompatible(clazz, "getInstance")
-            if (instance != null && invokeCompatible(instance, "injectInputEvent", down, 0)) {
-                invokeCompatible(instance, "injectInputEvent", up, 0)
-            }
-        }.onFailure { Log.w(TAG, "key injection failed: $keyCode", it) }
-    }
-
-    private fun invokePolicy(method: String): Boolean {
-        val policy = phoneWindowManager ?: return false
-        return invokeCompatible(policy, method)
-    }
-
-    private fun startComponent(context: Context, packageName: String, className: String): Boolean {
-        return runCatching {
-            context.startActivity(
-                Intent(Intent.ACTION_MAIN).setComponent(ComponentName(packageName, className))
-                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
-            )
-            true
-        }.getOrDefault(false)
-    }
-
-    private fun startActionUri(context: Context, uri: String, packageName: String) {
-        runCatching {
-            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(uri)).setPackage(packageName)
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            context.startActivity(intent)
-        }.onFailure { Log.w(TAG, "could not launch shortcut URI $uri", it) }
-    }
-
-    private fun launchCamera(context: Context, video: Boolean) {
-        val action = if (video) "android.media.action.VIDEO_CAMERA" else MediaStore.ACTION_IMAGE_CAPTURE
-        runCatching {
-            context.startActivity(
-                Intent(action)
-                    .setPackage("com.sec.android.app.camera")
-                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
-            )
-            return
-        }.onFailure { Log.w(TAG, "Samsung camera action unavailable; trying camera activity", it) }
-
-        if (startComponent(context, "com.sec.android.app.camera", "com.sec.android.app.camera.Camera")) return
-
-        runCatching {
-            context.startActivity(
-                (if (video) Intent(MediaStore.ACTION_VIDEO_CAPTURE) else Intent(MediaStore.ACTION_IMAGE_CAPTURE))
-                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
-            )
-        }.onFailure { Log.w(TAG, "camera shortcut launch failed", it) }
-    }
-
-    private fun toggleFlashlight(context: Context) {
-        val camera = context.getSystemService(CameraManager::class.java) ?: return
-        val cameraId = camera.cameraIdList.firstOrNull { id ->
-            runCatching { camera.getCameraCharacteristics(id).get(CameraCharacteristics.FLASH_INFO_AVAILABLE) == true }.getOrDefault(false)
-        } ?: return
-        val next = !(torchStates[cameraId] ?: false)
-        camera.setTorchMode(cameraId, next)
-        torchStates[cameraId] = next
-    }
-
-    private fun toggleAirplaneMode(context: Context) {
-        val resolver = context.contentResolver
-        val enabled = Settings.Global.getInt(resolver, Settings.Global.AIRPLANE_MODE_ON, 0) != 0
-        val next = if (enabled) 0 else 1
-        Settings.Global.putInt(resolver, Settings.Global.AIRPLANE_MODE_ON, next)
-        context.sendBroadcast(Intent(Intent.ACTION_AIRPLANE_MODE_CHANGED).putExtra("state", next == 1))
-    }
-
-    @Suppress("DEPRECATION")
-    private fun toggleBluetooth() {
-        val adapter = BluetoothAdapter.getDefaultAdapter()
-        val enabled = adapter?.isEnabled == true
-        if (runShellCommandForSuccess(if (enabled) "svc bluetooth disable" else "svc bluetooth enable")) return
-        if (enabled) adapter?.disable() else adapter?.enable()
-    }
-
-    @Suppress("DEPRECATION")
-    private fun toggleWifi(context: Context) {
-        val wifi = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as? WifiManager
-            ?: context.getSystemService(Context.WIFI_SERVICE) as? WifiManager
-        val enabled = runCatching { wifi?.isWifiEnabled }.getOrNull()
-            ?: runCatching { Settings.Global.getInt(context.contentResolver, "wifi_on", 0) == 1 }.getOrDefault(false)
-        val next = !enabled
-        val handledByManager = runCatching { wifi?.setWifiEnabled(next) == true }.getOrDefault(false)
-        if (handledByManager) return
-        val state = if (next) "enabled" else "disabled"
-        if (runShellCommandForSuccess("cmd wifi set-wifi-enabled $state")) return
-        if (runShellCommandForSuccess(if (next) "svc wifi enable" else "svc wifi disable")) return
-        Settings.Global.putInt(context.contentResolver, "wifi_on", if (next) 1 else 0)
-    }
-
-    private fun toggleMobileData(context: Context) {
-        val telephony = defaultDataTelephonyManager(context)
-        val enabled = runCatching { callCompatible(telephony, "isDataEnabled") as? Boolean }.getOrNull()
-            ?: runCatching { callCompatible(telephony, "getDataEnabled") as? Boolean }.getOrNull()
-            ?: runCatching { Settings.Global.getInt(context.contentResolver, "mobile_data", 1) == 1 }.getOrDefault(true)
-        val next = !enabled
-        if (invokeCompatible(telephony, "setDataEnabled", next)) return
-        if (invokeCompatible(telephony, "setDataEnabledForReason", 0, next)) return
-        if (runShellCommandForSuccess(if (next) "svc data enable" else "svc data disable")) return
-        if (runShellCommandForSuccess("cmd phone data ${if (next) "enable" else "disable"}")) return
-        Settings.Global.putInt(context.contentResolver, "mobile_data", if (next) 1 else 0)
-    }
-
-    /**
-     * Resolve the phone object for the current default-data subscription, matching the source
-     * implementation on dual-SIM / eSIM devices instead of blindly toggling the base subscription.
-     */
-    private fun defaultDataTelephonyManager(context: Context): TelephonyManager? {
-        val base = context.getSystemService(Context.TELEPHONY_SERVICE) as? TelephonyManager ?: return null
-        val subscriptionId = runCatching {
-            Class.forName("android.telephony.SubscriptionManager")
-                .getMethod("getDefaultDataSubscriptionId")
-                .invoke(null) as? Int
-        }.getOrNull()
-        if (subscriptionId == null || subscriptionId < 0) return base
-        return runCatching {
-            callCompatible(base, "createForSubscriptionId", subscriptionId) as? TelephonyManager
-        }.getOrNull() ?: base
-    }
-
-    private fun startSamsungCaptureSideButtonAction(context: Context, selectedAction: String): Boolean {
-        val intent = Intent("smartcapture.intent.action.side_button_action").apply {
-            component = ComponentName(
-                "com.samsung.android.app.smartcapture",
-                "com.samsung.android.app.settings.SideButtonStarterService",
-            )
-            putExtra("selected_action", selectedAction)
-        }
-        return startServiceAsCurrentUser(context, intent).also { started ->
-            if (!started) Log.w(TAG, "Samsung capture side-button action unavailable: $selectedAction")
-        }
-    }
-
-    private fun startServiceAsCurrentUser(context: Context, intent: Intent): Boolean {
-        val currentUser = runCatching {
-            UserHandle::class.java.getDeclaredField("CURRENT").apply { isAccessible = true }.get(null)
-        }.getOrNull()
-        if (currentUser != null) {
-            val startedAsUser = runCatching {
-                callCompatible(context, "startServiceAsUser", intent, currentUser) != null
-            }.getOrDefault(false)
-            if (startedAsUser) return true
-        }
-        return runCatching { context.startService(intent) != null }.getOrDefault(false)
-    }
-
-    private fun injectLongPressKey(keyCode: Int, durationMs: Long) {
-        val manager = inputManagerService ?: return
-        val downTime = SystemClock.uptimeMillis()
-        val down = KeyEvent(
-            downTime, downTime, KeyEvent.ACTION_DOWN, keyCode, 0, 0,
-            KeyCharacterMap.VIRTUAL_KEYBOARD, 0,
-            KeyEvent.FLAG_FROM_SYSTEM or KeyEvent.FLAG_LONG_PRESS,
-            InputDevice.SOURCE_KEYBOARD,
-        )
-        val injected = invokeCompatible(manager, "injectInputEvent", down, 0)
-        if (!injected) return
-        Thread {
-            runCatching {
-                Thread.sleep(durationMs)
-                val up = KeyEvent(
-                    downTime, SystemClock.uptimeMillis(), KeyEvent.ACTION_UP, keyCode, 0, 0,
-                    KeyCharacterMap.VIRTUAL_KEYBOARD, 0, KeyEvent.FLAG_FROM_SYSTEM,
-                    InputDevice.SOURCE_KEYBOARD,
-                )
-                invokeCompatible(manager, "injectInputEvent", up, 0)
-            }.onFailure { Log.w(TAG, "long-press key injection failed: $keyCode", it) }
-        }.start()
-    }
-
-    private fun sendSamsungScreenshotExecutor(context: Context): Boolean {
-        val intent = Intent("com.samsung.android.capture.ScreenshotExecutor").apply {
-            setPackage("android")
-            putExtra("capturedOrigin", 100)
-            putExtra("callingPackageName", "com.samsung.android.app.smartcapture")
-            putExtra("displayId", "0")
-            putExtra("type", "Fullscreen")
-        }
-        return runCatching {
-            context.sendBroadcast(intent, "com.samsung.permission.CAPTURE")
-            true
-        }.getOrDefault(false)
-    }
-
-    private fun runShellCommandForSuccess(command: String): Boolean = runCatching {
-        Runtime.getRuntime().exec(arrayOf("sh", "-c", command)).waitFor() == 0
-    }.getOrDefault(false)
-
-    private fun setRingerMode(context: Context, mode: Int) {
-        val audio = context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager ?: return
-        audio.ringerMode = mode
-    }
-
-    private fun cleanForegroundApp(context: Context) {
-        val manager = context.getSystemService(ActivityManager::class.java) ?: return
-        @Suppress("DEPRECATION")
-        val task = runCatching { manager.getRunningTasks(1).firstOrNull() }.getOrNull() ?: return
-        val topPackage = task.topActivity?.packageName ?: return
-        if (
-            topPackage == "android" || topPackage == "system" ||
-            topPackage == "com.android.systemui" || topPackage.startsWith("com.android.") ||
-            topPackage == context.packageName
-        ) {
-            showShortcutToast(context, "不允许结束该程序")
-            return
-        }
-        // Source behavior: remove the foreground task from Recents first, then force-stop it.
-        if (!invokeCompatible(manager, "semRemoveTask", task.id, 1)) {
-            invokeCompatible(manager, "removeTask", task.id)
-        }
-        if (!runShellCommandForSuccess("am force-stop '$topPackage'")) {
-            invokeCompatible(manager, "forceStopPackage", topPackage)
-            runCatching { manager.killBackgroundProcesses(topPackage) }
-        }
-        showShortcutToast(context, "已结束程序")
-    }
-
-    private fun cleanBackgroundApps(context: Context) {
-        val manager = context.getSystemService(ActivityManager::class.java) ?: return
-        val protectedPackages = setOf(
-            "android",
-            "system",
-            "com.android.systemui",
-            context.packageName,
-        )
-        runCatching {
-            manager.runningAppProcesses.orEmpty().forEach { process ->
-                val packageName = process.processName.substringBefore(':')
-                if (process.importance <= ActivityManager.RunningAppProcessInfo.IMPORTANCE_SERVICE) return@forEach
-                if (packageName in protectedPackages || packageName.startsWith("com.android.")) return@forEach
-                runCatching { manager.killBackgroundProcesses(packageName) }
-            }
-        }.onFailure { Log.w(TAG, "memory clean failed", it) }
-        showShortcutToast(context, "内存已清理")
-    }
-
-    private fun showShortcutToast(context: Context, message: String) {
-        mainHandler.post {
-            runCatching {
-                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-            }.onFailure { Log.w(TAG, "shortcut feedback could not be shown", it) }
-        }
-    }
-
-    private fun currentSystemContext(): Context? =
-        systemServerContext ?: findSystemContext()?.also { systemServerContext = it }
-
-    private fun findSystemContext(): Context? = runCatching {
-        val activityThread = Class.forName("android.app.ActivityThread")
-        val thread = activityThread.getDeclaredMethod("currentActivityThread").apply { isAccessible = true }.invoke(null)
-        val value = readField(thread, "mSystemContext")
-        value as? Context
-    }.getOrNull()
-
-    private fun dp(context: Context, value: Float): Int =
-        (value * (context.resources.displayMetrics.density.takeIf { it > 0f } ?: 1f)).roundToInt()
-
-    private fun readField(instance: Any?, name: String): Any? {
-        if (instance == null) return null
-        var type: Class<*>? = instance.javaClass
-        while (type != null) {
-            val currentType = type
-            runCatching {
-                val field = currentType.getDeclaredField(name)
-                field.isAccessible = true
-                return field.get(instance)
-            }
-            type = currentType.superclass
-        }
-        return null
-    }
-
-    /**
-     * Invoke a reflected method and report whether the invocation actually succeeded.
-     * Unlike callCompatible(), this distinguishes a successful Unit-returning method from
-     * an inaccessible method or a Boolean-returning API that rejected the request.
-     */
-    private fun invokeCompatible(target: Any?, name: String, vararg args: Any?): Boolean {
-        if (target == null) return false
-        val clazz = if (target is Class<*>) target else target.javaClass
-        var type: Class<*>? = clazz
-        while (type != null) {
-            val currentType = type
-            val methods = runCatching { currentType.declaredMethods.toList() }.getOrDefault(emptyList())
-            val candidate = methods.firstOrNull { method ->
-                method.name == name &&
-                    method.parameterTypes.size == args.size &&
-                    method.parameterTypes.indices.all { index ->
-                        val argument = args[index]
-                        argument == null && !method.parameterTypes[index].isPrimitive ||
-                            argument != null && (
-                                method.parameterTypes[index].isInstance(argument) ||
-                                    method.parameterTypes[index].isPrimitive &&
-                                    primitiveBox(method.parameterTypes[index]).isInstance(argument)
-                                )
-                    }
-            }
-            if (candidate != null) {
-                return runCatching {
-                    candidate.isAccessible = true
-                    val result = candidate.invoke(if (target is Class<*>) null else target, *args)
-                    result !is Boolean || result
-                }.getOrDefault(false)
-            }
-            type = currentType.superclass
-        }
-        return false
-    }
-
-    private fun callCompatible(target: Any?, name: String, vararg args: Any?): Any? {
-        if (target == null) return null
-        val clazz = if (target is Class<*>) target else target.javaClass
-        var type: Class<*>? = clazz
-        while (type != null) {
-            val currentType = type
-            val methods = runCatching { currentType.declaredMethods.toList() }.getOrDefault(emptyList())
-            val candidate = methods.firstOrNull { method ->
-                method.name == name &&
-                    method.parameterTypes.size == args.size &&
-                    method.parameterTypes.indices.all { index ->
-                        val argument = args[index]
-                        argument == null && !method.parameterTypes[index].isPrimitive ||
-                            argument != null && (
-                                method.parameterTypes[index].isInstance(argument) ||
-                                    method.parameterTypes[index].isPrimitive && primitiveBox(method.parameterTypes[index]).isInstance(argument)
-                                )
-                    }
-            }
-            if (candidate != null) {
-                return runCatching {
-                    candidate.isAccessible = true
-                    candidate.invoke(if (target is Class<*>) null else target, *args)
-                }.getOrNull()
-            }
-            type = currentType.superclass
-        }
-        return null
-    }
-
-    private fun primitiveBox(type: Class<*>): Class<*> = when (type) {
-        Boolean::class.javaPrimitiveType -> Boolean::class.javaObjectType
-        Int::class.javaPrimitiveType -> Int::class.javaObjectType
-        Long::class.javaPrimitiveType -> Long::class.javaObjectType
-        Float::class.javaPrimitiveType -> Float::class.javaObjectType
-        Double::class.javaPrimitiveType -> Double::class.javaObjectType
-        Short::class.javaPrimitiveType -> Short::class.javaObjectType
-        Byte::class.javaPrimitiveType -> Byte::class.javaObjectType
-        Char::class.javaPrimitiveType -> Char::class.javaObjectType
-        else -> type
     }
 }
