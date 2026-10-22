@@ -44,6 +44,7 @@ object GlobalQuickActions {
     @Volatile internal var phoneWindowManager: Any? = null
     private var preferenceObserver: ContentObserver? = null
     private val diagnosticQueryReceiverInstalled = AtomicBoolean(false)
+    @Volatile internal var lastGlobalActionDiagnostic: String = "not-run"
 
     internal var threeFingerActive = false
     internal var threeFingerConsumed = false
@@ -218,6 +219,7 @@ object GlobalQuickActions {
             appendLine("paramsPresent=${params != null} x=${params?.x} y=${params?.y} width=${params?.width} height=${params?.height} windowManagerPresent=${floatingBallWindowManager != null}")
             appendLine("timerArmed=${floatingBallAutoEdgeRunnable != null} dragging=${floatingBallDragging}")
             appendLine("savedX=${floatingBallX} savedY=${floatingBallY}")
+            appendLine("lastGlobalAction=$lastGlobalActionDiagnostic")
         }
     }
 
