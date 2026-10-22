@@ -84,11 +84,30 @@ internal fun GlobalQuickActions.ensureFloatingBall(context: Context) {
         floatingBallX = params.x
         floatingBallY = params.y
         log("floating ball added")
-        // Wait until the overlay has attached and completed its first layout before
-        // arming the idle auto-edge timer. During addView(), view.width may still be 0.
+        recordSystemServerDiagnosticEvent(
+            context,
+            "floating-ball added x=${params.x} y=${params.y} width=${params.width} attached=${view.isAttachedToWindow} enabled=${settings.enabled} autoEdgeDelaySeconds=${settings.autoEdgeDelaySeconds}",
+        )
+        // Arm the timer immediately from SystemServer's main Handler. Do not make
+        // View.post() the only path: the initial attach/layout callback was not
+        // reliable on the affected Samsung SystemUI lifecycle.
+        scheduleFloatingBallAutoEdge(context, windowManager, view, params, floatingBallSettings(context))
+        // Layout gives us a second, event-driven chance if neither queue accepted
+        // the initial timer. Never reset an already-armed countdown here.
         view.post {
             if (floatingBallView === view && view.isAttachedToWindow) {
-                scheduleFloatingBallAutoEdge(context, windowManager, view, params, floatingBallSettings(context))
+                recordSystemServerDiagnosticEvent(
+                    context,
+                    "floating-ball first-layout callback size=${view.width}x${view.height} timerArmed=${floatingBallAutoEdgeRunnable != null}",
+                )
+                if (floatingBallAutoEdgeRunnable == null) {
+                    scheduleFloatingBallAutoEdge(context, windowManager, view, params, floatingBallSettings(context))
+                }
+            } else {
+                recordSystemServerDiagnosticEvent(
+                    context,
+                    "floating-ball first-layout callback ignored currentView=${floatingBallView === view} attached=${view.isAttachedToWindow}",
+                )
             }
         }
     }.onFailure {
@@ -96,16 +115,27 @@ internal fun GlobalQuickActions.ensureFloatingBall(context: Context) {
         floatingBallLayoutParams = null
         floatingBallWindowManager = null
         log("floating ball add failed")
+        recordSystemServerDiagnosticEvent(
+            context,
+            "floating-ball add failed error=${it.javaClass.simpleName}:${it.message.orEmpty()}",
+        )
         Log.w(TAG, "Source floating-ball operation failed", it)
     }
 }
 
 internal fun GlobalQuickActions.removeFloatingBall() {
+    cancelFloatingBallAutoEdge()
     val view = floatingBallView ?: return
     val context = systemServerContext ?: currentApplicationContext() ?: return
-    val windowManager = context.getSystemService(WindowManager::class.java) ?: return
+    val windowManager = floatingBallWindowManager ?: context.getSystemService(WindowManager::class.java) ?: return
     runCatching { windowManager.removeView(view) }
-    cancelFloatingBallAutoEdge()
+        .onFailure {
+            recordSystemServerDiagnosticEvent(
+                context,
+                "floating-ball remove failed error=${it.javaClass.simpleName}:${it.message.orEmpty()}",
+            )
+        }
+    recordSystemServerDiagnosticEvent(context, "floating-ball removed")
     floatingBallView = null
     floatingBallLayoutParams = null
     floatingBallWindowManager = null
@@ -166,6 +196,11 @@ internal fun GlobalQuickActions.handleFloatingBallTouch(
             if (floatingBallDragging) {
                 floatingBallDragging = false
                 resetFloatingBallInnerOffset(view)
+                recordSystemServerDiagnosticEvent(
+                    context,
+                    "floating-ball drag ended x=${params.x} y=${params.y}; restarting auto-edge countdown",
+                )
+                scheduleFloatingBallAutoEdge(context, windowManager, view, params, floatingBallSettings(context))
                 return
             }
             val dx = event.rawX - floatingBallTouchStartX
@@ -227,18 +262,98 @@ internal fun GlobalQuickActions.scheduleFloatingBallAutoEdge(
 ) {
     cancelFloatingBallAutoEdge()
     val delaySeconds = settings.autoEdgeDelaySeconds
-    if (delaySeconds <= 0 || !settings.enabled) return
-    floatingBallAutoEdgeRunnable = Runnable {
-        snapFloatingBallToNearestEdge(context, windowManager, view, params)
-        floatingBallAutoEdgeRunnable = null
-    }.also { runnable ->
-        postOnMainDelayed(runnable, delaySeconds * 1000L)
+    if (delaySeconds <= 0 || !settings.enabled) {
+        recordSystemServerDiagnosticEvent(
+            context,
+            "auto-edge not scheduled enabled=${settings.enabled} delaySeconds=$delaySeconds x=${params.x} attached=${view.isAttachedToWindow}",
+        )
+        return
     }
+
+    val delayMillis = delaySeconds * 1000L
+    val generation = floatingBallAutoEdgeGeneration
+    var fired = false
+    val runnable = object : Runnable {
+        override fun run() {
+            if (fired) return
+            fired = true
+            if (generation != floatingBallAutoEdgeGeneration || floatingBallAutoEdgeRunnable !== this) {
+                recordSystemServerDiagnosticEvent(
+                    context,
+                    "auto-edge stale callback skipped taskGeneration=$generation currentGeneration=$floatingBallAutoEdgeGeneration currentView=${floatingBallView === view} currentParams=${floatingBallLayoutParams === params}",
+                )
+                return
+            }
+
+            val host = floatingBallAutoEdgeHost
+            mainHandler.removeCallbacks(this)
+            host?.removeCallbacks(this)
+            floatingBallAutoEdgeRunnable = null
+            floatingBallAutoEdgeHost = null
+            floatingBallAutoEdgeGeneration += 1
+
+            val currentSettings = floatingBallSettings(context)
+            if (!currentSettings.enabled || currentSettings.autoEdgeDelaySeconds <= 0) {
+                recordSystemServerDiagnosticEvent(
+                    context,
+                    "auto-edge callback cancelled by current settings enabled=${currentSettings.enabled} delaySeconds=${currentSettings.autoEdgeDelaySeconds}",
+                )
+                return
+            }
+            if (floatingBallView !== view || floatingBallLayoutParams !== params || !view.isAttachedToWindow) {
+                recordSystemServerDiagnosticEvent(
+                    context,
+                    "auto-edge callback skipped stale window currentView=${floatingBallView === view} currentParams=${floatingBallLayoutParams === params} attached=${view.isAttachedToWindow}",
+                )
+                return
+            }
+            if (floatingBallDragging) {
+                recordSystemServerDiagnosticEvent(context, "auto-edge callback skipped because floating-ball is dragging")
+                return
+            }
+
+            recordSystemServerDiagnosticEvent(
+                context,
+                "auto-edge timer fired generation=$generation x=${params.x} y=${params.y} viewSize=${view.width}x${view.height} paramsSize=${params.width}x${params.height}",
+            )
+            snapFloatingBallToNearestEdge(context, windowManager, view, params)
+        }
+    }
+
+    floatingBallAutoEdgeRunnable = runnable
+    floatingBallAutoEdgeHost = view
+    val handlerAccepted = mainHandler.postDelayed(runnable, delayMillis)
+    val viewAccepted = view.postDelayed(runnable, delayMillis)
+    if (!handlerAccepted && !viewAccepted) {
+        mainHandler.removeCallbacks(runnable)
+        view.removeCallbacks(runnable)
+        if (floatingBallAutoEdgeRunnable === runnable) {
+            floatingBallAutoEdgeRunnable = null
+            floatingBallAutoEdgeHost = null
+            floatingBallAutoEdgeGeneration += 1
+        }
+        recordSystemServerDiagnosticEvent(
+            context,
+            "auto-edge scheduling rejected delayMillis=$delayMillis handlerAccepted=$handlerAccepted viewAccepted=$viewAccepted attached=${view.isAttachedToWindow}",
+        )
+        return
+    }
+    recordSystemServerDiagnosticEvent(
+        context,
+        "auto-edge scheduled delaySeconds=$delaySeconds delayMillis=$delayMillis handlerAccepted=$handlerAccepted viewAccepted=$viewAccepted attached=${view.isAttachedToWindow} x=${params.x} y=${params.y} viewSize=${view.width}x${view.height} paramsSize=${params.width}x${params.height} generation=$generation",
+    )
 }
 
 internal fun GlobalQuickActions.cancelFloatingBallAutoEdge() {
-    floatingBallAutoEdgeRunnable?.let { mainHandler?.removeCallbacks(it) }
+    val runnable = floatingBallAutoEdgeRunnable
+    val host = floatingBallAutoEdgeHost
+    floatingBallAutoEdgeGeneration += 1
+    if (runnable != null) {
+        mainHandler.removeCallbacks(runnable)
+        host?.removeCallbacks(runnable)
+    }
     floatingBallAutoEdgeRunnable = null
+    floatingBallAutoEdgeHost = null
 }
 
 internal fun GlobalQuickActions.snapFloatingBallToNearestEdge(
@@ -246,18 +361,53 @@ internal fun GlobalQuickActions.snapFloatingBallToNearestEdge(
     windowManager: WindowManager,
     view: View,
     params: WindowManager.LayoutParams
-) {
+): Boolean {
     val displayWidth = context.resources.displayMetrics.widthPixels
     // The first auto-edge callback can race the overlay's initial layout. Use the
     // actual layout width when available, otherwise the configured WindowManager width.
-    val ballWidth = view.width.takeIf { it > 0 } ?: params.width.takeIf { it > 0 } ?: return
+    val ballWidth = view.width.takeIf { it > 0 } ?: params.width.takeIf { it > 0 }
+    if (displayWidth <= 0 || ballWidth == null || ballWidth <= 0) {
+        recordSystemServerDiagnosticEvent(
+            context,
+            "auto-edge failed invalid geometry displayWidth=$displayWidth viewWidth=${view.width} paramsWidth=${params.width}",
+        )
+        return false
+    }
     val maxX = (displayWidth - ballWidth).coerceAtLeast(0)
     val targetX = if (params.x + ballWidth / 2f < displayWidth / 2f) 0 else maxX
-    if (params.x == targetX) return
+    val side = if (targetX == 0) "left" else "right"
+    val fromX = params.x
+    if (fromX == targetX) {
+        floatingBallX = params.x
+        floatingBallY = params.y
+        recordSystemServerDiagnosticEvent(
+            context,
+            "auto-edge already at target side=$side x=$fromX maxX=$maxX displayWidth=$displayWidth ballWidth=$ballWidth",
+        )
+        return true
+    }
+
     params.x = targetX
-    floatingBallX = params.x
-    floatingBallY = params.y
-    runCatching { windowManager.updateViewLayout(view, params) }
+    val updateSucceeded = runCatching {
+        windowManager.updateViewLayout(view, params)
+        true
+    }.getOrElse {
+        params.x = fromX
+        recordSystemServerDiagnosticEvent(
+            context,
+            "auto-edge update failed side=$side fromX=$fromX targetX=$targetX y=${params.y} error=${it.javaClass.simpleName}:${it.message.orEmpty()}",
+        )
+        false
+    }
+    if (updateSucceeded) {
+        floatingBallX = params.x
+        floatingBallY = params.y
+        recordSystemServerDiagnosticEvent(
+            context,
+            "auto-edge applied side=$side fromX=$fromX toX=${params.x} y=${params.y} displayWidth=$displayWidth ballWidth=$ballWidth maxX=$maxX",
+        )
+    }
+    return updateSucceeded
 }
 
 internal fun GlobalQuickActions.updateFloatingBallInnerOffset(context: Context, view: View, dx: Float, dy: Float) {
