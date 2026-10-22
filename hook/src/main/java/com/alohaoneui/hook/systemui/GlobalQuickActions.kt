@@ -73,11 +73,12 @@ object GlobalQuickActions {
     internal var floatingBallLastTapTime = 0L
     internal var floatingBallMoved = false
     internal var floatingBallDragging = false
+    @Volatile internal var floatingBallTouchActive = false
     internal var floatingBallLongPressRunnable: Runnable? = null
     internal var floatingBallPendingClickRunnable: Runnable? = null
-    internal var floatingBallAutoEdgeRunnable: Runnable? = null
+    @Volatile internal var floatingBallAutoEdgeRunnable: Runnable? = null
     @Volatile internal var floatingBallAutoEdgeHost: View? = null
-    internal var floatingBallAutoEdgeGeneration = 0L
+    @Volatile internal var floatingBallAutoEdgeGeneration = 0L
     internal var floatingBallInnerOffsetX = 0f
     internal var floatingBallInnerOffsetY = 0f
     internal var floatingBallX = 0
@@ -229,7 +230,7 @@ object GlobalQuickActions {
             appendLine("enabled=${settings.floatingBallEnabled} autoEdgeDelaySeconds=${settings.floatingBallAutoEdgeDelaySeconds}")
             appendLine("viewPresent=${view != null} attached=${view?.isAttachedToWindow} viewSize=${view?.width}x${view?.height} visibility=${view?.visibility}")
             appendLine("paramsPresent=${params != null} x=${params?.x} y=${params?.y} width=${params?.width} height=${params?.height} windowManagerPresent=${floatingBallWindowManager != null}")
-            appendLine("timerArmed=${floatingBallAutoEdgeRunnable != null} dragging=${floatingBallDragging}")
+            appendLine("timerArmed=${floatingBallAutoEdgeRunnable != null} timerHostMatchesView=${floatingBallAutoEdgeHost === view} generation=${floatingBallAutoEdgeGeneration} dragging=${floatingBallDragging} touchActive=${floatingBallTouchActive}")
             appendLine("savedX=${floatingBallX} savedY=${floatingBallY}")
             appendLine("lastGlobalAction=$lastGlobalActionDiagnostic")
         }
