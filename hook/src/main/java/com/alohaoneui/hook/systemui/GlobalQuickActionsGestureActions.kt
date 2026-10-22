@@ -21,10 +21,14 @@ import android.view.InputEvent
 import android.view.MotionEvent
 
 internal fun GlobalQuickActions.performGlobalGestureAction(context: Context, action: String) {
-    if (action == ACTION_NONE || action == ACTION_NOTIFICATIONS) return
+    if (action == ACTION_NONE || action == ACTION_NOTIFICATIONS) {
+        recordGlobalGestureActionResult(action, "skipped")
+        return
+    }
     runCatching {
         if (action.startsWith(ACTION_CUSTOM_APP_PREFIX)) {
             startCustomApp(context, action)
+            recordGlobalGestureActionResult(action, "success")
             log("three-finger action performed: $action")
             return
         }
@@ -61,12 +65,28 @@ internal fun GlobalQuickActions.performGlobalGestureAction(context: Context, act
             ACTION_ALIPAY_SCAN -> startActivityUri(context, ALIPAY_SCAN_URI)
             ACTION_ALIPAY_PAY -> startActivityUri(context, ALIPAY_PAY_URI)
             ACTION_ALIPAY_COLLECT -> startActivityUri(context, ALIPAY_COLLECT_URI)
+            else -> throw IllegalArgumentException("Unsupported global shortcut action ID: $action")
         }
+        recordGlobalGestureActionResult(action, "success")
         log("three-finger action performed: $action")
     }.onFailure {
+        recordGlobalGestureActionResult(action, "failure", it)
         log("three-finger action failed: $action")
         Log.w(TAG, "Source global shortcut action failed", it)
     }
+}
+
+internal fun GlobalQuickActions.recordGlobalGestureActionResult(
+    action: String,
+    status: String,
+    failure: Throwable? = null,
+) {
+    val safeAction = action.replace('\n', ' ').replace('\r', ' ').take(160)
+    val failureSummary = failure?.let {
+        " error=${it.javaClass.simpleName}:${it.message.orEmpty().replace('\n', ' ').replace('\r', ' ').take(240)}"
+    }.orEmpty()
+    lastGlobalActionDiagnostic =
+        "atMs=${System.currentTimeMillis()} action=$safeAction status=$status$failureSummary"
 }
 
 internal fun GlobalQuickActions.performHapticFeedback(context: Context, enabled: Boolean, strength: Int) {
