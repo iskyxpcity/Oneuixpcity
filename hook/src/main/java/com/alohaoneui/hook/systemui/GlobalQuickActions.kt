@@ -277,7 +277,7 @@ object GlobalQuickActions {
     }
 
     private fun buildSystemServerDiagnosticSnapshot(context: Context): String {
-        val settings = currentSettings()
+        val settings = cachedSettings ?: Preference.GlobalShortcutActions()
         val view = floatingBallView
         val params = floatingBallParams
         val delaySeconds = settings.floatingBallAutoEdgeDelaySeconds.coerceIn(0, 10)
