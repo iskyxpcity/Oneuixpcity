@@ -956,7 +956,7 @@ private fun GlobalShortcutSettingsContent(
             )
 
 
-            ShortcutHapticCard(
+            ScreenOffVolumeHapticCard(
                 enabled = settings.screenOffVolumeKeyEnabled,
                 hapticEnabled = settings.screenOffVolumeHapticEnabled,
                 strength = settings.screenOffVolumeHapticStrength,
@@ -1028,6 +1028,42 @@ private fun ShortcutHapticCard(
             {
                 SwitchItem(
                     title = "振动反馈",
+                    summary = null,
+                    checked = hapticEnabled,
+                    enabled = enabled,
+                    onCheckedChange = onHapticEnabled,
+                )
+            },
+            {
+                OtherFunctionsThemeChildItem {
+                    HapticStrengthSlider(
+                        value = strength,
+                        enabled = enabled && hapticEnabled,
+                        onCommit = onStrength,
+                    )
+                }
+            },
+        ),
+    )
+}
+
+@Composable
+private fun ScreenOffVolumeHapticCard(
+    enabled: Boolean,
+    hapticEnabled: Boolean,
+    strength: Int,
+    onHapticEnabled: (Boolean) -> Unit,
+    onStrength: (Int) -> Unit,
+) {
+    // ScreenOffVolumeKeyActivity has its own source-specific card header and
+    // summary; unlike the gesture/trigger cards, its switch is titled below.
+    ShortcutSettingsSection(
+        title = "振动反馈",
+        summary = "切歌或播放/暂停触发成功时振动一次。",
+        items = listOf(
+            {
+                SwitchItem(
+                    title = "启用振动反馈",
                     summary = null,
                     checked = hapticEnabled,
                     enabled = enabled,
