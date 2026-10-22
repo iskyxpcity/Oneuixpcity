@@ -189,7 +189,7 @@ private val shortcutActionOptions = shortcutActionGroups.flatMap { it.actions }
 private typealias ShortcutSettingsUpdater =
     ((Preference.GlobalShortcutActions) -> Preference.GlobalShortcutActions) -> Unit
 
-private enum class ShortcutEntryIcon {
+internal enum class ShortcutEntryIcon {
     Gesture,
     FloatingBall,
     StatusBar,
@@ -457,12 +457,13 @@ private fun GlobalShortcutPageFrame(
 }
 
 @Composable
-private fun ShortcutEntryGlyph(
+internal fun ShortcutEntryGlyph(
     icon: ShortcutEntryIcon,
     accentColor: Color,
+    iconSize: androidx.compose.ui.unit.Dp = 22.4.dp,
 ) {
     // Same 24x24 drawing grid and 0.56x icon scale as RootFeatureIconView in App20261018Aloha.
-    Canvas(modifier = Modifier.size(22.4.dp)) {
+    Canvas(modifier = Modifier.size(iconSize)) {
         val sx = size.width / 24f
         val sy = size.height / 24f
         val scale = min(sx, sy)
@@ -1066,42 +1067,39 @@ private fun ThresholdShortcutCard(
                     Column(
                         modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
                     ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            when (LocalUiMode.current) {
-                                UiMode.Material -> Text(
+                        when (LocalUiMode.current) {
+                            UiMode.Material -> Row(
+                                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Text(
                                     text = title,
                                     modifier = Modifier.weight(1f),
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.SemiBold,
                                     color = MaterialTheme.colorScheme.onSurface,
                                 )
-                                UiMode.Miuix -> MiuixText(
-                                    text = title,
-                                    modifier = Modifier.weight(1f),
-                                    color = colorScheme.onSurface,
-                                    fontWeight = FontWeight.SemiBold,
-                                )
-                            }
-                            Box(
-                                modifier = Modifier.size(28.dp)
-                                    .clip(CircleShape)
-                                    .background(
-                                        when (LocalUiMode.current) {
-                                            UiMode.Material -> MaterialTheme.colorScheme.surfaceContainerHighest
-                                            UiMode.Miuix -> colorScheme.surface
-                                        },
-                                    )
-                                    .clickable { showHelp = true },
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                when (LocalUiMode.current) {
-                                    UiMode.Material -> Text("?", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
-                                    UiMode.Miuix -> MiuixText("?", color = colorScheme.primary, fontWeight = FontWeight.Bold)
+                                Box(
+                                    modifier = Modifier.size(28.dp)
+                                        .clip(CircleShape)
+                                        .background(MaterialTheme.colorScheme.surfaceContainerHighest)
+                                        .clickable { showHelp = true },
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Text("?", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
                                 }
                             }
+                            UiMode.Miuix -> MiuixBasicComponent(
+                                title = title,
+                                modifier = Modifier.fillMaxWidth(),
+                                endActions = {
+                                    MiuixIconButton(onClick = { showHelp = true }) {
+                                        MiuixText("?", color = colorScheme.primary, fontWeight = FontWeight.Bold)
+                                    }
+                                },
+                                onClick = { showHelp = true },
+                                role = Role.Button,
+                            )
                         }
                         if (summary.isNotBlank()) ShortcutBodyText(summary)
                         NumericShortcutSlider(
@@ -1267,34 +1265,52 @@ private fun FloatingBallColorControl(
             0.587 * ((argb shr 8) and 0xFF) + 0.114 * (argb and 0xFF)
         if (lum > 150) Color.Black else Color.White
     }
+    val colorLabel = String.format("#%08X", argb)
 
     ShortcutSettingsSection(
         title = "悬浮球颜色",
         summary = "",
         items = listOf({
             OtherFunctionsThemeChildItem {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
-                        .graphicsLayer { alpha = if (enabled) 1f else 0.48f }
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(Color(argb))
-                        .clickable(enabled = enabled) { showPicker = true }
-                        .padding(14.dp),
-                ) {
-                    when (LocalUiMode.current) {
-                        UiMode.Material -> Text(
-                            String.format("#%08X", argb),
-                            color = labelColor,
-                            fontWeight = FontWeight.SemiBold,
-                        )
-                        UiMode.Miuix -> MiuixText(
-                            String.format("#%08X", argb),
-                            color = labelColor,
-                            fontWeight = FontWeight.SemiBold,
-                        )
+                when (LocalUiMode.current) {
+                    UiMode.Material -> Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                            .graphicsLayer { alpha = if (enabled) 1f else 0.48f }
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(Color(argb))
+                            .clickable(enabled = enabled) { showPicker = true }
+                            .padding(14.dp),
+                    ) {
+                        Text(colorLabel, color = labelColor, fontWeight = FontWeight.SemiBold)
                     }
+                    UiMode.Miuix -> MiuixBasicComponent(
+                        title = colorLabel,
+                        summary = "点击更改悬浮球颜色",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .graphicsLayer { alpha = if (enabled) 1f else 0.45f },
+                        startAction = {
+                            Box(
+                                modifier = Modifier
+                                    .size(30.dp)
+                                    .clip(RoundedCornerShape(9.dp))
+                                    .background(Color(argb)),
+                            )
+                        },
+                        endActions = {
+                            MiuixIcon(
+                                modifier = Modifier.padding(start = 8.dp).size(width = 10.dp, height = 16.dp),
+                                imageVector = MiuixIcons.Basic.ArrowRight,
+                                contentDescription = null,
+                                tint = colorScheme.onSurfaceVariantSummary,
+                            )
+                        },
+                        enabled = enabled,
+                        onClick = { if (enabled) showPicker = true },
+                        role = Role.Button,
+                    )
                 }
             }
         }),
@@ -1594,46 +1610,40 @@ private fun ShortcutActionGroupCard(
         items = buildList {
             add {
                 OtherFunctionsThemeChildItem {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable(onClick = onToggle)
-                            .padding(horizontal = 14.dp, vertical = 12.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        when (LocalUiMode.current) {
-                            UiMode.Material -> Text(
-                                group.title,
-                                modifier = Modifier.weight(1f),
-                                fontWeight = FontWeight.SemiBold,
-                            )
-                            UiMode.Miuix -> MiuixText(
-                                group.title,
-                                modifier = Modifier.weight(1f),
-                                color = colorScheme.onSurface,
-                                fontWeight = FontWeight.SemiBold,
-                            )
-                        }
-                        when (LocalUiMode.current) {
-                            UiMode.Material -> Text(
+                    when (LocalUiMode.current) {
+                        UiMode.Material -> Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable(onClick = onToggle)
+                                .padding(horizontal = 14.dp, vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(group.title, modifier = Modifier.weight(1f), fontWeight = FontWeight.SemiBold)
+                            Text(
                                 "${group.actions.size} 项",
                                 color = secondary,
                                 style = MaterialTheme.typography.bodySmall,
                             )
-                            UiMode.Miuix -> MiuixText("${group.actions.size} 项", color = secondary)
-                        }
-                        when (LocalUiMode.current) {
-                            UiMode.Material -> Text(
-                                if (expanded) "⌃" else "⌄",
-                                modifier = Modifier.padding(start = 8.dp),
-                                color = secondary,
-                            )
-                            UiMode.Miuix -> MiuixText(
+                            Text(
                                 if (expanded) "⌃" else "⌄",
                                 modifier = Modifier.padding(start = 8.dp),
                                 color = secondary,
                             )
                         }
+                        UiMode.Miuix -> MiuixBasicComponent(
+                            title = group.title,
+                            summary = "${group.actions.size} 项",
+                            modifier = Modifier.fillMaxWidth(),
+                            endActions = {
+                                MiuixText(
+                                    if (expanded) "⌃" else "⌄",
+                                    modifier = Modifier.padding(start = 8.dp),
+                                    color = colorScheme.onSurfaceVariantSummary,
+                                )
+                            },
+                            onClick = onToggle,
+                            role = Role.Button,
+                        )
                     }
                 }
             }
@@ -1677,20 +1687,28 @@ private fun ShortcutActionGrid(
                         UiMode.Material -> MaterialTheme.colorScheme.outlineVariant
                         UiMode.Miuix -> colorScheme.onSurfaceVariantSummary.copy(alpha = 0.24f)
                     }
-                    Box(
-                        modifier = Modifier.weight(1f).padding(4.dp)
-                            .clip(chipShape)
-                            .background(if (selected) selectedBackground else unselectedBackground)
-                            .border(1.dp, borderColor, chipShape)
-                            .clickable { onSelect(option.id) }
-                            .heightIn(min = 44.dp)
-                            .padding(horizontal = 10.dp, vertical = 8.dp),
-                        contentAlignment = Alignment.CenterStart,
-                    ) {
-                        when (LocalUiMode.current) {
-                            UiMode.Material -> Text(option.label, color = foreground, style = MaterialTheme.typography.bodySmall)
-                            UiMode.Miuix -> MiuixText(option.label, color = foreground)
+                    when (LocalUiMode.current) {
+                        UiMode.Material -> Box(
+                            modifier = Modifier.weight(1f).padding(4.dp)
+                                .clip(chipShape)
+                                .background(if (selected) selectedBackground else unselectedBackground)
+                                .border(1.dp, borderColor, chipShape)
+                                .clickable { onSelect(option.id) }
+                                .heightIn(min = 44.dp)
+                                .padding(horizontal = 10.dp, vertical = 8.dp),
+                            contentAlignment = Alignment.CenterStart,
+                        ) {
+                            Text(option.label, color = foreground, style = MaterialTheme.typography.bodySmall)
                         }
+                        UiMode.Miuix -> MiuixBasicComponent(
+                            title = option.label,
+                            modifier = Modifier.weight(1f).padding(4.dp)
+                                .clip(chipShape)
+                                .background(if (selected) selectedBackground else unselectedBackground)
+                                .border(1.dp, borderColor, chipShape),
+                            onClick = { onSelect(option.id) },
+                            role = Role.RadioButton,
+                        )
                     }
                 }
                 if (rowActions.size == 1) Spacer(Modifier.weight(1f))
@@ -1711,18 +1729,25 @@ private fun CustomShortcutAppPicker(
         } else {
             Column(modifier = Modifier.heightIn(max = 500.dp).verticalScroll(rememberScrollState())) {
                 apps.forEach { app ->
-                    when (LocalUiMode.current) {
-                        UiMode.Material -> Text(
-                            app.label,
-                            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).clickable { onSelect(app.component) }.padding(12.dp),
-                            style = MaterialTheme.typography.bodyMedium,
-                        )
-                        UiMode.Miuix -> MiuixText(
-                            app.label,
-                            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).clickable { onSelect(app.component) }.padding(12.dp),
-                            color = colorScheme.onSurface,
-                        )
-                    }
+                    OtherFunctionsThemeGroup(
+                        modifier = Modifier.padding(vertical = 1.dp),
+                        items = listOf({
+                            when (LocalUiMode.current) {
+                                UiMode.Material -> Text(
+                                    app.label,
+                                    modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
+                                        .clickable { onSelect(app.component) }.padding(12.dp),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                )
+                                UiMode.Miuix -> MiuixBasicComponent(
+                                    title = app.label,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    onClick = { onSelect(app.component) },
+                                    role = Role.Button,
+                                )
+                            }
+                        }),
+                    )
                 }
             }
         }
