@@ -149,11 +149,11 @@ internal fun GlobalQuickActions.removeFloatingBall() {
         ?: context?.getSystemService(WindowManager::class.java)
     if (view != null && windowManager != null) {
         runCatching { windowManager.removeView(view) }
-            .onFailure {
-                context?.let {
+            .onFailure { failure ->
+                context?.let { diagnosticContext ->
                     recordSystemServerDiagnosticEvent(
-                        it,
-                        "floating-ball remove failed error=${it.javaClass.simpleName}:${it.message.orEmpty()}",
+                        diagnosticContext,
+                        "floating-ball remove failed error=${failure.javaClass.simpleName}:${failure.message.orEmpty()}",
                     )
                 }
             }
