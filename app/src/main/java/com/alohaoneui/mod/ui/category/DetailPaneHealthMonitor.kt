@@ -1,6 +1,7 @@
 package com.alohaoneui.mod.ui.category
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.size
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import com.alohaoneui.app.alohaoneui.AlohaOneUICategory
