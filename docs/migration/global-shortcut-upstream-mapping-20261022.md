@@ -74,7 +74,7 @@ On `refactor/global-shortcut-upstream-port-20261022`, the first implementation t
 - `GlobalQuickActionsHelpers.kt`: narrow context/main-thread/reflection adapter.
 - `GlobalQuickActions.kt`: replaces the monolithic business implementation with libxposed hook registration, source-shaped state ownership, existing one-shot SystemServer diagnostics, and the Aloha preference observer.
 
-The app UI file, Aloha persisted preference model, Material/Miuix components, seven-page hierarchy, and deferred “是否立即同步？” mechanism are not part of this tranche. The source action constant `quick_camera` is present in the upstream catalog, but the source action dispatcher does not currently have an explicit branch for it; this discrepancy is tracked rather than silently creating new behavior.
+The app UI file, Aloha persisted preference model, Material/Miuix components, existing grouped page/subpage hierarchy, and deferred “是否立即同步？” mechanism are not part of this tranche. The source action constant `quick_camera` is present in the upstream catalog, but the source action dispatcher does not currently have an explicit branch for it; this discrepancy is tracked rather than silently creating new behavior.
 
 This is an implementation checkpoint, not a completion declaration. The source comparison, Kotlin build, and Samsung `SM-F966U1` / Android 17 acceptance remain separate gates.
 
@@ -104,3 +104,8 @@ The transferred runtime bodies have been compared against current upstream bodie
 ## Model-constant cross-check
 
 The union of constants referenced by all imported source runtime bodies was compared with the new target model constants and the corresponding upstream `RootModuleShared.kt` declarations. The static scan found one naming mismatch, `STATUS_BAR_DOUBLE_TAP_MS`, which is now restored to the exact upstream identifier. Android `MotionEvent.ACTION_*` / `Intent.ACTION_*` references were excluded from the feature-ID comparison. The action IDs `scroll_top` and `scroll_bottom` are defined in the target model even though the current upstream picker doesn't expose them, and their source dispatcher implementations remain present.
+
+
+## Build trigger routing
+
+The repository's checked-in `.github/workflows/build.yml` only triggers push builds for `main`, `test/**` and `migration/**` (or manual dispatch), not for the canonical `refactor/**` branch name. To preserve the requested review branch and avoid changing `main`, the exact same final commit will also be fast-forwarded onto a temporary `migration/global-shortcut-upstream-port-20261022` build-trigger ref. CI evidence will be accepted only if the run's `head_sha` equals the reviewed commit SHA; the temporary ref does not carry separate code.
