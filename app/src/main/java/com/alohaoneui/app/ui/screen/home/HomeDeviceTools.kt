@@ -73,7 +73,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.material3.Icon as MaterialIcon
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text as MaterialText
 import com.alohaoneui.app.ui.LocalUiMode
 import com.alohaoneui.app.ui.UiMode
@@ -150,6 +154,7 @@ private data class HomeDeviceSnapshot(
 @Composable
 fun HomeDeviceToolsCard() {
     var expanded by rememberSaveable { mutableStateOf(true) }
+    var selectedSection by rememberSaveable { mutableStateOf(0) }
     val snapshot = rememberHomeDeviceSnapshot(expanded)
 
     DeviceToolsSurface {
@@ -170,7 +175,7 @@ fun HomeDeviceToolsCard() {
                     verticalArrangement = Arrangement.spacedBy(3.dp),
                 ) {
                     DeviceToolsText("设备状态信息", DeviceTextKind.Title)
-                    DeviceToolsText("系统监视器 · 屏幕信息 · 硬件参数", DeviceTextKind.Caption)
+                    DeviceToolsText("系统监视器 · 屏幕信息 · 设备信息", DeviceTextKind.Caption)
                 }
                 DeviceToolsIcon(
                     if (expanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
@@ -188,19 +193,69 @@ fun HomeDeviceToolsCard() {
                     modifier = Modifier.fillMaxWidth().padding(start = 18.dp, end = 18.dp, bottom = 18.dp),
                     verticalArrangement = Arrangement.spacedBy(14.dp),
                 ) {
-                    DeviceToolsDivider()
-                    DeviceSectionHeading(Icons.Outlined.Speed, "系统监视器", "CPU、运行内存、内部存储与电池")
-                    SystemMonitorContent(snapshot)
+                    if (LocalUiMode.current == UiMode.Material) {
+                        MaterialDeviceInfoSegmentedSelector(
+                            selectedSection = selectedSection,
+                            onSelect = { selectedSection = it },
+                        )
+                        when (selectedSection) {
+                            0 -> {
+                                DeviceToolsDivider()
+                                DeviceSectionHeading(Icons.Outlined.Speed, "系统监视器", "CPU、运行内存、内部存储与电池")
+                                SystemMonitorContent(snapshot)
+                            }
+                            1 -> {
+                                DeviceToolsDivider()
+                                DeviceSectionHeading(Icons.Outlined.Monitor, "屏幕信息", "显示参数、刷新率、像素密度与亮度")
+                                ScreenInformationContent(snapshot)
+                            }
+                            else -> {
+                                DeviceToolsDivider()
+                                DeviceSectionHeading(Icons.Outlined.Memory, "设备信息", "本机型号、系统版本与硬件环境")
+                                DeviceInformationContent(snapshot)
+                            }
+                        }
+                    } else {
+                        DeviceToolsDivider()
+                        DeviceSectionHeading(Icons.Outlined.Speed, "系统监视器", "CPU、运行内存、内部存储与电池")
+                        SystemMonitorContent(snapshot)
 
-                    DeviceToolsDivider()
-                    DeviceSectionHeading(Icons.Outlined.Monitor, "屏幕信息", "显示参数、刷新率、像素密度与亮度")
-                    ScreenInformationContent(snapshot)
+                        DeviceToolsDivider()
+                        DeviceSectionHeading(Icons.Outlined.Monitor, "屏幕信息", "显示参数、刷新率、像素密度与亮度")
+                        ScreenInformationContent(snapshot)
 
-                    DeviceToolsDivider()
-                    DeviceSectionHeading(Icons.Outlined.Memory, "设备信息", "本机型号、系统版本与硬件环境")
-                    DeviceInformationContent(snapshot)
+                        DeviceToolsDivider()
+                        DeviceSectionHeading(Icons.Outlined.Memory, "设备信息", "本机型号、系统版本与硬件环境")
+                        DeviceInformationContent(snapshot)
+                    }
                 }
             }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun MaterialDeviceInfoSegmentedSelector(
+    selectedSection: Int,
+    onSelect: (Int) -> Unit,
+) {
+    val options = listOf("系统监视器", "屏幕信息", "设备信息")
+    SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+        options.forEachIndexed { index, label ->
+            SegmentedButton(
+                selected = selectedSection == index,
+                onClick = { onSelect(index) },
+                shape = SegmentedButtonDefaults.itemShape(index = index, count = options.size),
+                label = {
+                    MaterialText(
+                        text = label,
+                        maxLines = 1,
+                        overflow = TextOverflow.Clip,
+                        style = MaterialTheme.typography.labelMedium,
+                    )
+                },
+            )
         }
     }
 }

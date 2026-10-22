@@ -1765,14 +1765,13 @@ private fun ShortcutActionGroupCard(
                 OtherFunctionsThemeChildItem {
                     when (LocalUiMode.current) {
                         UiMode.Material -> Row(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable(role = Role.Button, onClick = onToggle),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            // Match the upstream accordion interaction: only the title
-                            // text itself toggles this group; count/chevron/blank space do not.
                             Text(
                                 group.title,
-                                modifier = Modifier.clickable(onClick = onToggle),
                                 fontWeight = FontWeight.SemiBold,
                             )
                             Spacer(Modifier.weight(1f))

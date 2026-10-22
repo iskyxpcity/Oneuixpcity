@@ -142,6 +142,7 @@ object GlobalQuickActions {
     private var floatingBallPendingClick: Runnable? = null
     private var floatingBallLongPress: Runnable? = null
     private var floatingBallAutoEdge: Runnable? = null
+    private var floatingBallAutoEdgeHost: View? = null
     private var floatingBallAutoEdgeGeneration = 0L
     private val torchStates = mutableMapOf<String, Boolean>()
 
@@ -1104,8 +1105,13 @@ object GlobalQuickActions {
 
     private fun cancelFloatingBallAutoEdge() {
         floatingBallAutoEdgeGeneration += 1L
-        floatingBallAutoEdge?.let { mainHandler.removeCallbacks(it) }
+        val runnable = floatingBallAutoEdge
+        runnable?.let {
+            mainHandler.removeCallbacks(it)
+            floatingBallAutoEdgeHost?.removeCallbacks(it)
+        }
         floatingBallAutoEdge = null
+        floatingBallAutoEdgeHost = null
     }
 
     private fun scheduleFloatingBallAutoEdge(
@@ -1118,23 +1124,37 @@ object GlobalQuickActions {
         cancelFloatingBallAutoEdge()
         val delaySeconds = settings.floatingBallAutoEdgeDelaySeconds.coerceIn(0, 10)
         if (!settings.floatingBallEnabled || delaySeconds <= 0) return
+
         val generation = floatingBallAutoEdgeGeneration
         val delayMs = delaySeconds * 1000L
-        Log.i(TAG, "floating-ball auto-edge scheduled: delay=${delaySeconds}s x=${params.x} y=${params.y}")
+        Log.i(
+            TAG,
+            "floating-ball auto-edge scheduled: delay=${delaySeconds}s x=${params.x} y=${params.y}",
+        )
 
-        val runnable = Runnable {
-            // A previous timer must never move a recreated window or override a newer touch.
+        lateinit var runnable: Runnable
+        runnable = Runnable {
             if (generation != floatingBallAutoEdgeGeneration ||
                 floatingBallView !== view ||
                 floatingBallParams !== params ||
                 !settings.floatingBallEnabled
             ) {
+                Log.d(
+                    TAG,
+                    "floating-ball auto-edge skipped stale task: generation=$generation " +
+                        "currentGeneration=$floatingBallAutoEdgeGeneration",
+                )
                 return@Runnable
             }
-            floatingBallAutoEdge = null
 
-            // System-server resources can report stale/compat dimensions on foldables.
-            // Prefer the actual display attached to this window and fall back to metrics.
+            // The same idle task is placed on the attach-aware view queue and the
+            // process main handler. Whichever active queue runs first removes the duplicate.
+            floatingBallAutoEdgeGeneration += 1L
+            mainHandler.removeCallbacks(runnable)
+            view.removeCallbacks(runnable)
+            floatingBallAutoEdge = null
+            floatingBallAutoEdgeHost = null
+
             val displayPoint = Point()
             val displayWidth = runCatching {
                 val display = view.display ?: manager.defaultDisplay
@@ -1171,10 +1191,23 @@ object GlobalQuickActions {
                 )
             }
         }
+
         floatingBallAutoEdge = runnable
-        if (!mainHandler.postDelayed(runnable, delayMs)) {
-            if (floatingBallAutoEdge === runnable) floatingBallAutoEdge = null
-            Log.w(TAG, "floating-ball auto-edge scheduler rejected delay=${delayMs}ms")
+        floatingBallAutoEdgeHost = view
+        val viewPosted = runCatching { view.postDelayed(runnable, delayMs) }.getOrDefault(false)
+        val handlerPosted = mainHandler.postDelayed(runnable, delayMs)
+        if (!viewPosted && !handlerPosted) {
+            if (floatingBallAutoEdge === runnable) {
+                floatingBallAutoEdge = null
+                floatingBallAutoEdgeHost = null
+            }
+            Log.w(TAG, "floating-ball auto-edge scheduler rejected delay=${delayMs}ms on both queues")
+        } else {
+            Log.i(
+                TAG,
+                "floating-ball auto-edge timer armed: delay=${delaySeconds}s " +
+                    "viewPosted=$viewPosted handlerPosted=$handlerPosted x=${params.x} y=${params.y}",
+            )
         }
     }
 
