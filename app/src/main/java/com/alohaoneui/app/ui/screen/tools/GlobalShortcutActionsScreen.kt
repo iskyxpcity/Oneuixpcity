@@ -117,6 +117,7 @@ import com.alohaoneui.mod.ui.component.SelectItem
 import com.alohaoneui.mod.ui.component.SwitchItem
 import top.yukonga.miuix.kmp.basic.BasicComponent as MiuixBasicComponent
 import top.yukonga.miuix.kmp.basic.Card as MiuixCard
+import top.yukonga.miuix.kmp.basic.CardDefaults as MiuixCardDefaults
 import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
 import top.yukonga.miuix.kmp.basic.IconButton as MiuixIconButton
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
@@ -1704,7 +1705,9 @@ private fun ShortcutActionGrid(
                             modifier = Modifier.weight(1f).padding(4.dp)
                                 .heightIn(min = 44.dp)
                                 .border(1.dp, borderColor, chipShape),
-                            color = if (selected) selectedBackground else unselectedBackground,
+                            colors = MiuixCardDefaults.defaultColors(
+                                color = if (selected) selectedBackground else unselectedBackground,
+                            ),
                             insideMargin = PaddingValues(horizontal = 10.dp, vertical = 8.dp),
                             showIndication = true,
                             onClick = { onSelect(option.id) },
