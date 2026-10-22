@@ -258,7 +258,7 @@ object GlobalQuickActions {
                         .addFlags(Intent.FLAG_RECEIVER_FOREGROUND)
                         .putExtra(StatusBarRuntimeBridge.EXTRA_DIAGNOSTIC_REQUEST_ID, requestId)
                         .putExtra(StatusBarRuntimeBridge.EXTRA_SYSTEM_SERVER_DIAGNOSTIC_SNAPSHOT, snapshot)
-                    runCatching { context.sendBroadcast(response, Manifest.permission.DUMP) }
+                    runCatching { context.sendBroadcast(response) }
                         .onFailure { Log.w(TAG, "could not return on-demand SystemServer snapshot", it) }
                 }
             }
@@ -922,7 +922,6 @@ object GlobalQuickActions {
                     .addFlags(Intent.FLAG_RECEIVER_FOREGROUND)
                     .putExtra(StatusBarRuntimeBridge.EXTRA_SYSTEM_SERVER_DIAGNOSTIC_CATEGORY, TAG)
                     .putExtra(StatusBarRuntimeBridge.EXTRA_SYSTEM_SERVER_DIAGNOSTIC_MESSAGE, exportedMessage),
-                Manifest.permission.DUMP,
             )
         }.onFailure {
             Log.w(TAG, "could not bridge floating-ball diagnostics into SystemUI export", it)

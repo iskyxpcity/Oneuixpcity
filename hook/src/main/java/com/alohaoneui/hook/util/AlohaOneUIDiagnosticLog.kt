@@ -180,11 +180,18 @@ object AlohaOneUIDiagnosticLog {
                     app.registerReceiver(
                         systemServerEvents,
                         eventFilter,
+                        Manifest.permission.DUMP,
+                        null,
                         Context.RECEIVER_EXPORTED,
                     )
                 } else {
                     @Suppress("DEPRECATION")
-                    app.registerReceiver(systemServerEvents, eventFilter)
+                    app.registerReceiver(
+                        systemServerEvents,
+                        eventFilter,
+                        Manifest.permission.DUMP,
+                        null,
+                    )
                 }
                 record("AlohaOneUIDiagnostics", "SystemServer global-shortcut diagnostics bridge registered.")
             }.onFailure {
