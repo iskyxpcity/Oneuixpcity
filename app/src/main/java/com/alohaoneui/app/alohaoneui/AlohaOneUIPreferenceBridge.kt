@@ -100,14 +100,19 @@ private object AlohaOneUIXposedService {
     var service: XposedService? = null
         private set
 
-    fun deferGlobalShortcutSync(application: Application) {
+    fun deferGlobalShortcutSync(application: Application): Boolean {
         // Commit before queuing the DataStore mutation so its Serializer cannot
         // publish the newly edited shortcuts before the user confirms sync.
-        application.getSharedPreferences(GLOBAL_SHORTCUT_SYNC_STATE_PREFS, Context.MODE_PRIVATE)
-            .edit()
-            .putBoolean(KEY_GLOBAL_SHORTCUT_SYNC_PENDING, true)
-            .commit()
+        val committed = application.getSharedPreferences(
+            GLOBAL_SHORTCUT_SYNC_STATE_PREFS,
+            Context.MODE_PRIVATE,
+        ).edit().putBoolean(KEY_GLOBAL_SHORTCUT_SYNC_PENDING, true).commit()
+        if (!committed) {
+            Log.e(TAG, "Could not persist deferred global-shortcut sync marker")
+            return false
+        }
         initialize(application)
+        return true
     }
 
     fun isGlobalShortcutSyncPending(): Boolean =
@@ -399,9 +404,8 @@ object AlohaOneUIPreferenceBridge {
         AlohaOneUIXposedService.initialize(application)
     }
 
-    fun deferGlobalShortcutSync(application: Application) {
+    fun deferGlobalShortcutSync(application: Application): Boolean =
         AlohaOneUIXposedService.deferGlobalShortcutSync(application)
-    }
 
     suspend fun synchronizeGlobalShortcutActionsNow(application: Application): Boolean {
         AlohaOneUIXposedService.initialize(application)

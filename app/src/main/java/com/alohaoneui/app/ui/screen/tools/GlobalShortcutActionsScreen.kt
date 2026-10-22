@@ -352,11 +352,26 @@ private fun GlobalShortcutSettingsScreen(kind: GlobalShortcutPageKind) {
     val update: ShortcutSettingsUpdater = { change ->
         // Match the upstream "saved locally, sync on confirmation" contract for every
         // global-shortcut toggle, action selection, haptic switch, and committed slider.
-        AlohaOneUIPreferenceBridge.deferGlobalShortcutSync(alohaOneUIApp)
-        model.updateData { current ->
-            current.copy(other = current.other.copy(globalShortcutActions = change(current.other.globalShortcutActions)))
+        if (!AlohaOneUIPreferenceBridge.deferGlobalShortcutSync(alohaOneUIApp)) {
+            Toast.makeText(context, "无法保存同步状态，请重试", Toast.LENGTH_LONG).show()
+        } else {
+            syncScope.launch {
+                val saved = runCatching {
+                    model.updateDataAndWait { current ->
+                        current.copy(
+                            other = current.other.copy(
+                                globalShortcutActions = change(current.other.globalShortcutActions),
+                            ),
+                        )
+                    }
+                }.isSuccess
+                if (saved) {
+                    showSyncDialog = true
+                } else {
+                    Toast.makeText(context, "设置保存失败，请重试", Toast.LENGTH_LONG).show()
+                }
+            }
         }
-        showSyncDialog = true
     }
     GlobalShortcutPageFrame(title = kind.title, subtitle = kind.subtitle, onBack = navigator::pop) {
         GlobalShortcutSettingsContent(kind = kind, settings = settings, update = update)

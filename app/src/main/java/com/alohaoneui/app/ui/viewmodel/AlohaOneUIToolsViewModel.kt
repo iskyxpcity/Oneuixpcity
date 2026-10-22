@@ -59,6 +59,11 @@ class AlohaOneUIToolsViewModel : ViewModel() {
         }
     }
 
+    /** Await persistence when the UI must not offer "sync now" before a setting is saved. */
+    suspend fun updateDataAndWait(nextPreference: (Preference) -> Preference) {
+        dataStore.updateData(nextPreference)
+    }
+
     /**
      * Runtime-only preview for high-frequency controls such as sliders.
      * This deliberately bypasses DataStore so dragging never queues disk writes.
