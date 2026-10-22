@@ -80,7 +80,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import android.widget.Toast
+import kotlinx.coroutines.launch
+import com.alohaoneui.app.alohaOneUIApp
+import com.alohaoneui.app.alohaoneui.AlohaOneUIPreferenceBridge
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -342,13 +347,61 @@ private fun GlobalShortcutSettingsScreen(kind: GlobalShortcutPageKind) {
     val model = viewModel<AlohaOneUIToolsViewModel>()
     val preference by model.preference.collectAsStateWithLifecycle()
     val settings = preference.other.globalShortcutActions
+    val context = LocalContext.current
+    val syncScope = rememberCoroutineScope()
+    var showSyncDialog by remember { mutableStateOf(false) }
+    var syncInProgress by remember { mutableStateOf(false) }
     val update: ShortcutSettingsUpdater = { change ->
+        // Match the upstream "saved locally, sync on confirmation" contract for every
+        // global-shortcut toggle, action selection, haptic switch, and committed slider.
+        AlohaOneUIPreferenceBridge.deferGlobalShortcutSync(alohaOneUIApp)
         model.updateData { current ->
             current.copy(other = current.other.copy(globalShortcutActions = change(current.other.globalShortcutActions)))
         }
+        showSyncDialog = true
     }
     GlobalShortcutPageFrame(title = kind.title, subtitle = kind.subtitle, onBack = navigator::pop) {
         GlobalShortcutSettingsContent(kind = kind, settings = settings, update = update)
+        if (showSyncDialog) {
+            ShortcutDialogSurface(
+                title = "是否立即同步？",
+                subtitle = "设置已保存。立即同步会写入模块配置，如果同步后没有生效，可以稍后尝试软重启一次。",
+                onDismiss = { if (!syncInProgress) showSyncDialog = false },
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    GlobalShortcutActionButton(
+                        label = "稍后",
+                        primary = false,
+                        onClick = { if (!syncInProgress) showSyncDialog = false },
+                        modifier = Modifier.weight(1f),
+                    )
+                    GlobalShortcutActionButton(
+                        label = if (syncInProgress) "正在同步…" else "立即同步",
+                        primary = true,
+                        onClick = {
+                            if (!syncInProgress) {
+                                syncInProgress = true
+                                Toast.makeText(context, "正在同步", Toast.LENGTH_SHORT).show()
+                                syncScope.launch {
+                                    val synced = AlohaOneUIPreferenceBridge.synchronizeGlobalShortcutActionsNow(alohaOneUIApp)
+                                    syncInProgress = false
+                                    if (synced) {
+                                        showSyncDialog = false
+                                        Toast.makeText(context, "同步完成", Toast.LENGTH_SHORT).show()
+                                    } else {
+                                        Toast.makeText(context, "同步失败，请确认 LSPosed 服务已连接", Toast.LENGTH_LONG).show()
+                                    }
+                                }
+                            }
+                        },
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+            }
+        }
     }
 }
 

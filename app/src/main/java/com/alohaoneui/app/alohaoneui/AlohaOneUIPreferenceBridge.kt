@@ -85,6 +85,8 @@ private fun migrateLegacyPreferenceStore(application: Application) {
 private object AlohaOneUIXposedService {
     private const val TAG = "AlohaOneUI-PreferenceBridge"
     private const val PREFERENCE_CHANGED_PATH = "preferences"
+    private const val GLOBAL_SHORTCUT_SYNC_STATE_PREFS = "aloha_oneui_global_shortcut_sync"
+    private const val KEY_GLOBAL_SHORTCUT_SYNC_PENDING = "pending"
     private val initialized = AtomicBoolean(false)
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private const val RUNTIME_PREVIEW_INTERVAL_MS = 32L
@@ -97,6 +99,26 @@ private object AlohaOneUIXposedService {
     @Volatile
     var service: XposedService? = null
         private set
+
+    fun deferGlobalShortcutSync(application: Application) {
+        // Commit before queuing the DataStore mutation so its Serializer cannot
+        // publish the newly edited shortcuts before the user confirms sync.
+        application.getSharedPreferences(GLOBAL_SHORTCUT_SYNC_STATE_PREFS, Context.MODE_PRIVATE)
+            .edit()
+            .putBoolean(KEY_GLOBAL_SHORTCUT_SYNC_PENDING, true)
+            .commit()
+        initialize(application)
+    }
+
+    fun isGlobalShortcutSyncPending(): Boolean =
+        application?.getSharedPreferences(GLOBAL_SHORTCUT_SYNC_STATE_PREFS, Context.MODE_PRIVATE)
+            ?.getBoolean(KEY_GLOBAL_SHORTCUT_SYNC_PENDING, false) == true
+
+    private fun setGlobalShortcutSyncPending(application: Application, pending: Boolean): Boolean =
+        application.getSharedPreferences(GLOBAL_SHORTCUT_SYNC_STATE_PREFS, Context.MODE_PRIVATE)
+            .edit()
+            .putBoolean(KEY_GLOBAL_SHORTCUT_SYNC_PENDING, pending)
+            .commit()
 
     fun initialize(application: Application) {
         migrateLegacyPreferenceStore(application)
@@ -219,14 +241,42 @@ private object AlohaOneUIXposedService {
         if (!unlocked) return false
         return runCatching {
             // updateData is serialized by DataStore. An identity transaction here waits
-            // behind every slider/switch mutation already queued by the UI, so a reboot
-            // can never flush an older snapshot just because the last UI write is pending.
+            // behind every user mutation already queued by the UI.
             val current = application.alohaOneUIDataStore.updateData { it }
             Log.i(TAG, "CHAIN_PROBE synchronous local DataStore " + current.probeSummary())
+            // Ordinary sync honours a pending global-shortcut confirmation.
             AlohaOneUIPreferenceSerializer.synchronizeRemote(current)
         }.onFailure {
             Log.w(TAG, "Synchronous remote preference flush failed", it)
         }.getOrDefault(false)
+    }
+
+    suspend fun synchronizeGlobalShortcutActionsNow(application: Application): Boolean {
+        val unlocked =
+            application.getSystemService(UserManager::class.java)?.isUserUnlocked == true
+        if (!unlocked) return false
+        return try {
+            // Wait behind the toggle/action update which opened the dialog.
+            val current = application.alohaOneUIDataStore.updateData { it }
+            Log.i(TAG, "Explicit global-shortcut sync requested " + current.probeSummary())
+            if (!AlohaOneUIPreferenceSerializer.synchronizeRemoteIncludingPending(current)) {
+                Log.w(TAG, "Explicit global-shortcut sync failed; pending state retained")
+                return false
+            }
+            if (!setGlobalShortcutSyncPending(application, false)) {
+                Log.w(TAG, "Remote shortcut sync succeeded but pending marker could not be cleared")
+                return false
+            }
+            // Refresh DataStore's local sync marker after clearing the deferred state.
+            // The remote write above already succeeded; this second write only keeps the
+            // local marker consistent and may safely be retried if the service disconnects.
+            runCatching { application.alohaOneUIDataStore.updateData { it } }
+                .onFailure { Log.w(TAG, "Local sync marker refresh failed after successful shortcut sync", it) }
+            true
+        } catch (failure: Throwable) {
+            Log.w(TAG, "Explicit global-shortcut synchronization failed", failure)
+            false
+        }
     }
 }
 
@@ -268,7 +318,21 @@ object AlohaOneUIPreferenceSerializer : Serializer<Preference> {
         false
     }
 
-    fun synchronizeRemote(value: Preference): Boolean = writeRemote(value)
+    private fun preserveActiveGlobalShortcuts(value: Preference): Preference {
+        if (!AlohaOneUIXposedService.isGlobalShortcutSyncPending()) return value
+        val activeShortcuts = readRemote()?.other?.globalShortcutActions
+            ?: defaultValue.other.globalShortcutActions
+        return value.copy(
+            other = value.other.copy(globalShortcutActions = activeShortcuts),
+        )
+    }
+
+    /** Normal preference writes keep pending global shortcuts local until explicit confirmation. */
+    fun synchronizeRemote(value: Preference): Boolean =
+        writeRemote(preserveActiveGlobalShortcuts(value))
+
+    /** Explicit confirmation path: publish the complete current preference, including pending shortcuts. */
+    fun synchronizeRemoteIncludingPending(value: Preference): Boolean = writeRemote(value)
 
     override suspend fun readFrom(input: InputStream): Preference {
         val localBytes = runCatching { input.readBytes() }.getOrNull()
@@ -305,15 +369,18 @@ object AlohaOneUIPreferenceSerializer : Serializer<Preference> {
         if (local != null && selected == local && local != remote &&
             (unsynced || productionLocal || remote == null || remote == defaultValue)
         ) {
-            writeRemote(local)
+            // If global shortcut changes are waiting for confirmation, recover/push all
+            // other local preferences but preserve the last active global-shortcut payload.
+            synchronizeRemote(local)
         } else if (localRaw == null && remote == null) {
-            writeRemote(defaultValue)
+            synchronizeRemote(defaultValue)
         }
         return selected
     }
 
     override suspend fun writeTo(t: Preference, output: OutputStream) {
-        val synchronized = writeRemote(t)
+        val pendingGlobalShortcutSync = AlohaOneUIXposedService.isGlobalShortcutSyncPending()
+        val synchronized = synchronizeRemote(t) && !pendingGlobalShortcutSync
         AlohaOneUIXposedService.publishPersistedRuntimeStatusBar(t.systemUI.statusBar)
         val encoded = IgnoreUnknownKeysJson.encodeToString(Preference.serializer(), t)
         val root = IgnoreUnknownKeysJson.parseToJsonElement(encoded) as JsonObject
@@ -330,6 +397,15 @@ val Context.alohaOneUIDataStore: DataStore<Preference> by dataStore(
 object AlohaOneUIPreferenceBridge {
     fun initialize(application: Application) {
         AlohaOneUIXposedService.initialize(application)
+    }
+
+    fun deferGlobalShortcutSync(application: Application) {
+        AlohaOneUIXposedService.deferGlobalShortcutSync(application)
+    }
+
+    suspend fun synchronizeGlobalShortcutActionsNow(application: Application): Boolean {
+        AlohaOneUIXposedService.initialize(application)
+        return AlohaOneUIXposedService.synchronizeGlobalShortcutActionsNow(application)
     }
 
     fun ensureSynchronized(application: Application) {
