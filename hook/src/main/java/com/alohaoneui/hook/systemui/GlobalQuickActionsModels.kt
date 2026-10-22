@@ -44,7 +44,7 @@ internal const val DEFAULT_SCREEN_OFF_VOLUME_DOUBLE_CLICK_TIMEOUT_MS = 500
 internal const val TYPE_NAVIGATION_BAR_PANEL = 2024
 internal const val STATUS_BAR_TAP_SLOP_DP = 10
 internal const val STATUS_BAR_TAP_MAX_MS = 260L
-internal const val STATUS_BAR_DOUBLE_CLICK_MS = 320L
+internal const val STATUS_BAR_DOUBLE_TAP_MS = 320L
 internal const val STATUS_BAR_LONG_PRESS_MS = 520L
 internal const val NAVIGATION_KEY_DOUBLE_TAP_MS = 320L
 
