@@ -1700,15 +1700,21 @@ private fun ShortcutActionGrid(
                         ) {
                             Text(option.label, color = foreground, style = MaterialTheme.typography.bodySmall)
                         }
-                        UiMode.Miuix -> MiuixBasicComponent(
-                            title = option.label,
+                        UiMode.Miuix -> MiuixCard(
                             modifier = Modifier.weight(1f).padding(4.dp)
-                                .clip(chipShape)
-                                .background(if (selected) selectedBackground else unselectedBackground)
+                                .heightIn(min = 44.dp)
                                 .border(1.dp, borderColor, chipShape),
+                            color = if (selected) selectedBackground else unselectedBackground,
+                            insideMargin = PaddingValues(horizontal = 10.dp, vertical = 8.dp),
+                            showIndication = true,
                             onClick = { onSelect(option.id) },
-                            role = Role.RadioButton,
-                        )
+                        ) {
+                            MiuixText(
+                                option.label,
+                                modifier = Modifier.fillMaxWidth(),
+                                color = if (selected) colorScheme.primary else colorScheme.onSurface,
+                            )
+                        }
                     }
                 }
                 if (rowActions.size == 1) Spacer(Modifier.weight(1f))
