@@ -26,6 +26,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -416,7 +417,8 @@ private fun CpuFrequencyGrid(entries: List<CpuFrequencyEntry>) {
                             .weight(1f)
                             .height(58.dp)
                             .clip(RoundedCornerShape(12.dp))
-                            .background(deviceSecondaryColor().copy(alpha = 0.08f))
+                            .background(deviceTileColor())
+                            .border(1.dp, deviceTileOutlineColor(), RoundedCornerShape(12.dp))
                             .padding(horizontal = 3.dp, vertical = 8.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center,
@@ -448,7 +450,8 @@ private fun CpuFrequencyGrid(entries: List<CpuFrequencyEntry>) {
 private fun DeviceValueTile(title: String, value: String, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier.clip(RoundedCornerShape(14.dp))
-            .background(deviceSecondaryColor().copy(alpha = 0.08f))
+            .background(deviceTileColor())
+            .border(1.dp, deviceTileOutlineColor(), RoundedCornerShape(14.dp))
             .padding(horizontal = 12.dp, vertical = 11.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
@@ -473,7 +476,7 @@ private fun DeviceDataRow(label: String, value: String) {
 private fun DeviceToolsDivider() {
     Box(
         modifier = Modifier.fillMaxWidth().height(1.dp)
-            .background(deviceSecondaryColor().copy(alpha = 0.14f)),
+            .background(deviceDividerColor()),
     )
 }
 
@@ -559,6 +562,26 @@ private fun deviceSecondaryColor(): Color = when (LocalUiMode.current) {
 private fun deviceAccentColor(): Color = when (LocalUiMode.current) {
     UiMode.Material -> MaterialTheme.colorScheme.primary
     UiMode.Miuix -> MiuixTheme.colorScheme.primary
+}
+
+@Composable
+private fun deviceTileColor(): Color = when (LocalUiMode.current) {
+    // Material's tonal surface container and Miuix's own surface variant keep
+    // the telemetry tiles visibly tied to each theme rather than a tinted overlay.
+    UiMode.Material -> MaterialTheme.colorScheme.surfaceContainerLow
+    UiMode.Miuix -> MiuixTheme.colorScheme.surfaceVariant
+}
+
+@Composable
+private fun deviceTileOutlineColor(): Color = when (LocalUiMode.current) {
+    UiMode.Material -> MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.72f)
+    UiMode.Miuix -> MiuixTheme.colorScheme.onSurfaceVariantSummary.copy(alpha = 0.22f)
+}
+
+@Composable
+private fun deviceDividerColor(): Color = when (LocalUiMode.current) {
+    UiMode.Material -> MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.68f)
+    UiMode.Miuix -> MiuixTheme.colorScheme.onSurfaceVariantSummary.copy(alpha = 0.28f)
 }
 
 @Composable
