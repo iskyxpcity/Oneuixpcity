@@ -9,6 +9,7 @@ import android.content.Intent
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.PixelFormat
+import android.graphics.Point
 import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraManager
 import android.media.AudioManager
@@ -141,6 +142,7 @@ object GlobalQuickActions {
     private var floatingBallPendingClick: Runnable? = null
     private var floatingBallLongPress: Runnable? = null
     private var floatingBallAutoEdge: Runnable? = null
+    private var floatingBallAutoEdgeGeneration = 0L
     private val torchStates = mutableMapOf<String, Boolean>()
 
     context(xposedModule: XposedModule)
@@ -866,7 +868,9 @@ object GlobalQuickActions {
             flags,
             PixelFormat.TRANSLUCENT,
         ).apply {
-            gravity = android.view.Gravity.TOP or android.view.Gravity.START
+            // Use physical left-origin X coordinates so 0 and maxX always represent
+            // the left/right edges regardless of the system layout direction.
+            gravity = android.view.Gravity.TOP or android.view.Gravity.LEFT
             x = initialX.coerceAtLeast(0)
             y = initialY.coerceAtLeast(0)
             title = "Aloha OneUI Global Shortcut"
@@ -944,8 +948,7 @@ object GlobalQuickActions {
     }
 
     private fun removeFloatingBall() {
-        floatingBallAutoEdge?.let { mainHandler.removeCallbacks(it) }
-        floatingBallAutoEdge = null
+        cancelFloatingBallAutoEdge()
         floatingBallPendingClick?.let { mainHandler.removeCallbacks(it) }
         floatingBallPendingClick = null
         floatingBallLongPress?.let { mainHandler.removeCallbacks(it) }
@@ -992,8 +995,7 @@ object GlobalQuickActions {
     ) {
         when (event.actionMasked) {
             MotionEvent.ACTION_DOWN -> {
-                floatingBallAutoEdge?.let { mainHandler.removeCallbacks(it) }
-                floatingBallAutoEdge = null
+                cancelFloatingBallAutoEdge()
                 floatingBallPendingClick?.let { mainHandler.removeCallbacks(it) }
                 floatingBallPendingClick = null
                 resetFloatingBallInnerOffset(view)
@@ -1100,6 +1102,12 @@ object GlobalQuickActions {
         }
     }
 
+    private fun cancelFloatingBallAutoEdge() {
+        floatingBallAutoEdgeGeneration += 1L
+        floatingBallAutoEdge?.let { mainHandler.removeCallbacks(it) }
+        floatingBallAutoEdge = null
+    }
+
     private fun scheduleFloatingBallAutoEdge(
         context: Context,
         manager: WindowManager,
@@ -1107,22 +1115,67 @@ object GlobalQuickActions {
         params: WindowManager.LayoutParams,
         settings: Preference.GlobalShortcutActions,
     ) {
-        floatingBallAutoEdge?.let { mainHandler.removeCallbacks(it) }
-        floatingBallAutoEdge = null
-        if (settings.floatingBallAutoEdgeDelaySeconds <= 0) return
+        cancelFloatingBallAutoEdge()
+        val delaySeconds = settings.floatingBallAutoEdgeDelaySeconds.coerceIn(0, 10)
+        if (!settings.floatingBallEnabled || delaySeconds <= 0) return
+        val generation = floatingBallAutoEdgeGeneration
+        val delayMs = delaySeconds * 1000L
+        Log.i(TAG, "floating-ball auto-edge scheduled: delay=${delaySeconds}s x=${params.x} y=${params.y}")
+
         val runnable = Runnable {
-            val displayWidth = context.resources.displayMetrics.widthPixels
-            val ballWidth = view.width.takeIf { it > 0 } ?: params.width
-            val maxX = (displayWidth - ballWidth).coerceAtLeast(0)
-            params.x = if (params.x + ballWidth / 2 < displayWidth / 2) 0 else maxX
-            floatingBallX = params.x
-            floatingBallPositionInitialized = true
-            runCatching { manager.updateViewLayout(view, params) }
-                .onFailure { Log.w(TAG, "floating-ball auto-edge update failed", it) }
+            // A previous timer must never move a recreated window or override a newer touch.
+            if (generation != floatingBallAutoEdgeGeneration ||
+                floatingBallView !== view ||
+                floatingBallParams !== params ||
+                !settings.floatingBallEnabled
+            ) {
+                return@Runnable
+            }
             floatingBallAutoEdge = null
+
+            // System-server resources can report stale/compat dimensions on foldables.
+            // Prefer the actual display attached to this window and fall back to metrics.
+            val displayPoint = Point()
+            val displayWidth = runCatching {
+                val display = view.display ?: manager.defaultDisplay
+                display.getRealSize(displayPoint)
+                displayPoint.x
+            }.getOrNull()?.takeIf { it > 0 }
+                ?: context.resources.displayMetrics.widthPixels
+            val ballWidth = view.width.takeIf { it > 0 }
+                ?: params.width.takeIf { it > 0 }
+                ?: 0
+            val maxX = (displayWidth - ballWidth).coerceAtLeast(0)
+            val previousX = params.x
+            val leftHalf = previousX + ballWidth / 2 < displayWidth / 2
+            val targetX = if (leftHalf) 0 else maxX
+
+            runCatching {
+                params.x = targetX
+                manager.updateViewLayout(view, params)
+                floatingBallX = params.x
+                floatingBallY = params.y
+                floatingBallPositionInitialized = true
+                Log.i(
+                    TAG,
+                    "floating-ball auto-edge applied: side=${if (leftHalf) "left" else "right"} " +
+                        "delay=${delaySeconds}s displayWidth=$displayWidth ballWidth=$ballWidth " +
+                        "fromX=$previousX toX=${params.x} y=${params.y}",
+                )
+            }.onFailure {
+                Log.w(
+                    TAG,
+                    "floating-ball auto-edge update failed: displayWidth=$displayWidth " +
+                        "ballWidth=$ballWidth fromX=$previousX targetX=$targetX",
+                    it,
+                )
+            }
         }
         floatingBallAutoEdge = runnable
-        mainHandler.postDelayed(runnable, settings.floatingBallAutoEdgeDelaySeconds.coerceIn(1, 10) * 1000L)
+        if (!mainHandler.postDelayed(runnable, delayMs)) {
+            if (floatingBallAutoEdge === runnable) floatingBallAutoEdge = null
+            Log.w(TAG, "floating-ball auto-edge scheduler rejected delay=${delayMs}ms")
+        }
     }
 
     private fun performHaptic(context: Context, enabled: Boolean, strength: Int) {
