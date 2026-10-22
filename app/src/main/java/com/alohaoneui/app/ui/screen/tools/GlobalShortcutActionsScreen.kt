@@ -1746,7 +1746,7 @@ private fun ShortcutActionGroupCard(
     onSelect: (String) -> Unit,
 ) {
     val selectedBackground = when (LocalUiMode.current) {
-        UiMode.Material -> MaterialTheme.colorScheme.primaryContainer
+        UiMode.Material -> MaterialTheme.colorScheme.primary.copy(alpha = 0.16f)
         UiMode.Miuix -> colorScheme.primary.copy(alpha = 0.16f)
     }
     val unselectedBackground = when (LocalUiMode.current) {
@@ -1833,7 +1833,7 @@ private fun ShortcutActionGrid(
                     val selected = option.id == selectedAction ||
                         (option.id == ACTION_CUSTOM_APP && selectedAction.startsWith(ACTION_CUSTOM_APP_PREFIX))
                     val foreground = if (selected) when (LocalUiMode.current) {
-                        UiMode.Material -> MaterialTheme.colorScheme.onPrimaryContainer
+                        UiMode.Material -> MaterialTheme.colorScheme.primary
                         UiMode.Miuix -> colorScheme.primary
                     } else when (LocalUiMode.current) {
                         UiMode.Material -> MaterialTheme.colorScheme.onSurface
@@ -1841,8 +1841,8 @@ private fun ShortcutActionGrid(
                     }
                     val chipShape = RoundedCornerShape(14.dp)
                     val borderColor = if (selected) when (LocalUiMode.current) {
-                        UiMode.Material -> MaterialTheme.colorScheme.primary
-                        UiMode.Miuix -> colorScheme.primary
+                        UiMode.Material -> MaterialTheme.colorScheme.primary.copy(alpha = 0.62f)
+                        UiMode.Miuix -> colorScheme.primary.copy(alpha = 0.62f)
                     } else when (LocalUiMode.current) {
                         UiMode.Material -> MaterialTheme.colorScheme.outlineVariant
                         UiMode.Miuix -> colorScheme.onSurfaceVariantSummary.copy(alpha = 0.24f)

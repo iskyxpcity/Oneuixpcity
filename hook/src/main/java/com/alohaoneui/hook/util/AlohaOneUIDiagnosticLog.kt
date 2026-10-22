@@ -26,6 +26,7 @@ object AlohaOneUIDiagnosticLog {
     private val entries = ArrayDeque<String>()
     private val globalShortcutEntries = ArrayDeque<String>()
     private val receiverInstalled = AtomicBoolean(false)
+    private val systemServerReceiverInstalled = AtomicBoolean(false)
     private var totalChars = 0
     private const val MAX_GLOBAL_SHORTCUT_ENTRIES = 48
     private const val GLOBAL_SHORTCUT_CATEGORY = "AlohaOneUI-GlobalQuickActions"
@@ -58,99 +59,110 @@ object AlohaOneUIDiagnosticLog {
     }
 
     fun install(context: Context) {
-        if (!receiverInstalled.compareAndSet(false, true)) return
         val app = context.applicationContext ?: context
-        val receiver = object : BroadcastReceiver() {
-            override fun onReceive(context: Context, intent: Intent) {
-                if (intent.action != StatusBarRuntimeBridge.ACTION_DIAGNOSTIC_LOG_REQUEST) return
-                val requestId = intent.getStringExtra(StatusBarRuntimeBridge.EXTRA_DIAGNOSTIC_REQUEST_ID)
-                if (requestId.isNullOrBlank()) return
 
-                record("AlohaOneUIDiagnostics", "Settings requested the SystemUI diagnostic buffer.")
-                val snapshot = runCatching {
-                    liveSnapshotProvider?.invoke()
-                        ?: "(Live status-bar geometry provider is not registered.)"
-                }.getOrElse {
-                    "Live status-bar geometry snapshot failed: ${it.javaClass.simpleName}: ${it.message.orEmpty()}"
-                }.take(48 * 1024)
+        if (receiverInstalled.compareAndSet(false, true)) {
+            val receiver = object : BroadcastReceiver() {
+                override fun onReceive(context: Context, intent: Intent) {
+                    if (intent.action != StatusBarRuntimeBridge.ACTION_DIAGNOSTIC_LOG_REQUEST) return
+                    val requestId = intent.getStringExtra(StatusBarRuntimeBridge.EXTRA_DIAGNOSTIC_REQUEST_ID)
+                    if (requestId.isNullOrBlank()) return
+
+                    // A prior bridge registration may have failed even though the main
+                    // Send logs receiver is already active. Retry it on the next request.
+                    install(context)
+                    record("AlohaOneUIDiagnostics", "Settings requested the SystemUI diagnostic buffer.")
+                    val snapshot = runCatching {
+                        liveSnapshotProvider?.invoke()
+                            ?: "(Live status-bar geometry provider is not registered.)"
+                    }.getOrElse {
+                        "Live status-bar geometry snapshot failed: ${it.javaClass.simpleName}: ${it.message.orEmpty()}"
+                    }.take(48 * 1024)
+                    record(
+                        "AlohaOneUIDiagnostics",
+                        "On-demand live geometry snapshot collected: ${snapshot.length} characters.",
+                    )
+                    val payload = buildString {
+                        append(dump())
+                        appendLine()
+                        appendLine("[Live status-bar geometry snapshot]")
+                        appendLine(snapshot)
+                    }
+                    val reply = Intent(StatusBarRuntimeBridge.ACTION_DIAGNOSTIC_LOG_RESPONSE)
+                        .setPackage(StatusBarRuntimeBridge.ALOHAONEUI_APP_PACKAGE)
+                        .putExtra(StatusBarRuntimeBridge.EXTRA_DIAGNOSTIC_REQUEST_ID, requestId)
+                        .putExtra(StatusBarRuntimeBridge.EXTRA_DIAGNOSTIC_LOG_TEXT, payload)
+                    runCatching { context.sendBroadcast(reply) }
+                        .onFailure {
+                            record(
+                                "AlohaOneUIDiagnostics",
+                                "Failed to return diagnostic buffer: ${it.javaClass.simpleName}: ${it.message.orEmpty()}",
+                            )
+                        }
+                }
+            }
+            try {
+                val filter = IntentFilter(StatusBarRuntimeBridge.ACTION_DIAGNOSTIC_LOG_REQUEST)
+                if (Build.VERSION.SDK_INT >= 33) {
+                    app.registerReceiver(receiver, filter, Context.RECEIVER_EXPORTED)
+                } else {
+                    @Suppress("DEPRECATION")
+                    app.registerReceiver(receiver, filter)
+                }
+                record("AlohaOneUIDiagnostics", "On-demand SystemUI diagnostics receiver registered.")
+            } catch (error: Exception) {
+                receiverInstalled.set(false)
                 record(
                     "AlohaOneUIDiagnostics",
-                    "On-demand live geometry snapshot collected: ${snapshot.length} characters.",
+                    "Receiver registration failed: ${error.javaClass.simpleName}: ${error.message.orEmpty()}",
                 )
-                val payload = buildString {
-                    append(dump())
-                    appendLine()
-                    appendLine("[Live status-bar geometry snapshot]")
-                    appendLine(snapshot)
-                }
-                val reply = Intent(StatusBarRuntimeBridge.ACTION_DIAGNOSTIC_LOG_RESPONSE)
-                    .setPackage(StatusBarRuntimeBridge.ALOHAONEUI_APP_PACKAGE)
-                    .putExtra(StatusBarRuntimeBridge.EXTRA_DIAGNOSTIC_REQUEST_ID, requestId)
-                    .putExtra(StatusBarRuntimeBridge.EXTRA_DIAGNOSTIC_LOG_TEXT, payload)
-                runCatching { context.sendBroadcast(reply) }
-                    .onFailure {
-                        record(
-                            "AlohaOneUIDiagnostics",
-                            "Failed to return diagnostic buffer: ${it.javaClass.simpleName}: ${it.message.orEmpty()}",
-                        )
-                    }
             }
-        }
-        try {
-            val filter = IntentFilter(StatusBarRuntimeBridge.ACTION_DIAGNOSTIC_LOG_REQUEST)
-            if (Build.VERSION.SDK_INT >= 33) {
-                app.registerReceiver(receiver, filter, Context.RECEIVER_EXPORTED)
-            } else {
-                @Suppress("DEPRECATION")
-                app.registerReceiver(receiver, filter)
-            }
-            record("AlohaOneUIDiagnostics", "On-demand SystemUI diagnostics receiver registered.")
-        } catch (error: Exception) {
-            receiverInstalled.set(false)
-            record(
-                "AlohaOneUIDiagnostics",
-                "Receiver registration failed: ${error.javaClass.simpleName}: ${error.message.orEmpty()}",
-            )
         }
 
-        runCatching {
-            val systemServerEvents = object : BroadcastReceiver() {
-                override fun onReceive(context: Context, intent: Intent) {
-                    if (intent.action != StatusBarRuntimeBridge.ACTION_SYSTEM_SERVER_DIAGNOSTIC_EVENT) return
-                    val category = intent.getStringExtra(
-                        StatusBarRuntimeBridge.EXTRA_SYSTEM_SERVER_DIAGNOSTIC_CATEGORY,
-                    ) ?: return
-                    val message = intent.getStringExtra(
-                        StatusBarRuntimeBridge.EXTRA_SYSTEM_SERVER_DIAGNOSTIC_MESSAGE,
-                    ) ?: return
-                    if (category != GLOBAL_SHORTCUT_CATEGORY) return
-                    record(category, message)
+        // Retry this receiver independently if first registration failed. The general
+        // Send logs receiver may already be installed, so its one-time guard must not
+        // prevent the SystemServer runtime diagnostics channel from recovering.
+        if (systemServerReceiverInstalled.compareAndSet(false, true)) {
+            runCatching {
+                val systemServerEvents = object : BroadcastReceiver() {
+                    override fun onReceive(context: Context, intent: Intent) {
+                        if (intent.action != StatusBarRuntimeBridge.ACTION_SYSTEM_SERVER_DIAGNOSTIC_EVENT) return
+                        val category = intent.getStringExtra(
+                            StatusBarRuntimeBridge.EXTRA_SYSTEM_SERVER_DIAGNOSTIC_CATEGORY,
+                        ) ?: return
+                        val message = intent.getStringExtra(
+                            StatusBarRuntimeBridge.EXTRA_SYSTEM_SERVER_DIAGNOSTIC_MESSAGE,
+                        ) ?: return
+                        if (category != GLOBAL_SHORTCUT_CATEGORY) return
+                        record(category, message)
+                    }
                 }
-            }
-            val eventFilter = IntentFilter(StatusBarRuntimeBridge.ACTION_SYSTEM_SERVER_DIAGNOSTIC_EVENT)
-            if (Build.VERSION.SDK_INT >= 33) {
-                app.registerReceiver(
-                    systemServerEvents,
-                    eventFilter,
-                    Manifest.permission.DUMP,
-                    null,
-                    Context.RECEIVER_EXPORTED,
+                val eventFilter = IntentFilter(StatusBarRuntimeBridge.ACTION_SYSTEM_SERVER_DIAGNOSTIC_EVENT)
+                if (Build.VERSION.SDK_INT >= 33) {
+                    app.registerReceiver(
+                        systemServerEvents,
+                        eventFilter,
+                        Manifest.permission.DUMP,
+                        null,
+                        Context.RECEIVER_EXPORTED,
+                    )
+                } else {
+                    @Suppress("DEPRECATION")
+                    app.registerReceiver(
+                        systemServerEvents,
+                        eventFilter,
+                        Manifest.permission.DUMP,
+                        null,
+                    )
+                }
+                record("AlohaOneUIDiagnostics", "SystemServer global-shortcut diagnostics bridge registered.")
+            }.onFailure {
+                systemServerReceiverInstalled.set(false)
+                record(
+                    "AlohaOneUIDiagnostics",
+                    "SystemServer diagnostics bridge registration failed: ${it.javaClass.simpleName}: ${it.message.orEmpty()}",
                 )
-            } else {
-                @Suppress("DEPRECATION")
-                app.registerReceiver(
-                    systemServerEvents,
-                    eventFilter,
-                    Manifest.permission.DUMP,
-                    null,
-                )
             }
-            record("AlohaOneUIDiagnostics", "SystemServer global-shortcut diagnostics bridge registered.")
-        }.onFailure {
-            record(
-                "AlohaOneUIDiagnostics",
-                "SystemServer diagnostics bridge registration failed: ${it.javaClass.simpleName}: ${it.message.orEmpty()}",
-            )
         }
     }
 

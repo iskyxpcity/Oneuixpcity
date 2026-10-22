@@ -235,6 +235,14 @@ private fun DeviceInfoSectionSelector(
                     selected = selectedSection == index,
                     onClick = { onSelect(index) },
                     shape = SegmentedButtonDefaults.itemShape(index = index, count = options.size),
+                    colors = SegmentedButtonDefaults.colors(
+                        activeContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                        activeContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                        activeBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.55f),
+                        inactiveContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                        inactiveContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        inactiveBorderColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.65f),
+                    ),
                     label = {
                         MaterialText(
                             text = label,

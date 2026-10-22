@@ -19,6 +19,7 @@ import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -172,7 +173,12 @@ fun AlohaOneUIActionButton(
             enabled = enabled,
             colors = MiuixButtonDefaults.buttonColorsPrimary(),
         ) {
-            MiuixText(text)
+            Box(
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.Center,
+            ) {
+                MiuixText(text)
+            }
         }
     }
 }

@@ -123,13 +123,13 @@ object GlobalQuickActions {
     }
     private val navigationStates = WeakHashMap<View, NavigationTouchState>()
 
-    private var floatingBallView: View? = null
-    private var floatingBallParams: WindowManager.LayoutParams? = null
-    private var floatingBallWindowManager: WindowManager? = null
-    private var floatingBallSettingsHash = 0
-    private var floatingBallX = 0
-    private var floatingBallY = 0
-    private var floatingBallPositionInitialized = false
+    @Volatile private var floatingBallView: View? = null
+    @Volatile private var floatingBallParams: WindowManager.LayoutParams? = null
+    @Volatile private var floatingBallWindowManager: WindowManager? = null
+    @Volatile private var floatingBallSettingsHash = 0
+    @Volatile private var floatingBallX = 0
+    @Volatile private var floatingBallY = 0
+    @Volatile private var floatingBallPositionInitialized = false
     private var floatingBallDownX = 0f
     private var floatingBallDownY = 0f
     private var floatingBallStartX = 0
@@ -139,13 +139,13 @@ object GlobalQuickActions {
     private var floatingBallInnerOffsetY = 0f
     private var floatingBallLongPressTriggered = false
     private var floatingBallMoved = false
-    private var floatingBallTouchActive = false
+    @Volatile private var floatingBallTouchActive = false
     private var floatingBallLastTapTime = 0L
     private var floatingBallPendingClick: Runnable? = null
     private var floatingBallLongPress: Runnable? = null
-    private var floatingBallAutoEdge: Runnable? = null
-    private var floatingBallAutoEdgeHost: View? = null
-    private var floatingBallAutoEdgeGeneration = 0L
+    @Volatile private var floatingBallAutoEdge: Runnable? = null
+    @Volatile private var floatingBallAutoEdgeHost: View? = null
+    @Volatile private var floatingBallAutoEdgeGeneration = 0L
     private val torchStates = mutableMapOf<String, Boolean>()
 
     context(xposedModule: XposedModule)
@@ -1224,12 +1224,13 @@ object GlobalQuickActions {
                     "enabled=${settings.floatingBallEnabled} x=${params.x} y=${params.y}",
             )
             if (generation != currentGeneration || !currentView || !currentParams ||
-                !settings.floatingBallEnabled
+                !settings.floatingBallEnabled || floatingBallTouchActive
             ) {
                 recordFloatingBallDiagnostic(
                     context,
                     "floating-ball auto-edge skipped stale task: generation=$generation " +
-                        "currentGeneration=$currentGeneration currentView=$currentView currentParams=$currentParams",
+                        "currentGeneration=$currentGeneration currentView=$currentView currentParams=$currentParams " +
+                            "touchActive=$floatingBallTouchActive",
                 )
                 return@Runnable
             }
@@ -1286,22 +1287,23 @@ object GlobalQuickActions {
 
         floatingBallAutoEdge = runnable
         floatingBallAutoEdgeHost = view
-        val viewPosted = runCatching { view.postDelayed(runnable, delayMs) }.getOrDefault(false)
+        // A single main-handler queue owns the idle timer. Posting the same Runnable
+        // to both ViewRoot and Handler queues can race window/input callbacks in system_server.
         val handlerPosted = mainHandler.postDelayed(runnable, delayMs)
-        if (!viewPosted && !handlerPosted) {
+        if (!handlerPosted) {
             if (floatingBallAutoEdge === runnable) {
                 floatingBallAutoEdge = null
                 floatingBallAutoEdgeHost = null
             }
             recordFloatingBallDiagnostic(
                 context,
-                "floating-ball auto-edge scheduler rejected delay=${delayMs}ms on both queues",
+                "floating-ball auto-edge scheduler rejected delay=${delayMs}ms on main handler",
             )
         } else {
             recordFloatingBallDiagnostic(
                 context,
                 "floating-ball auto-edge timer armed: delaySeconds=$delaySeconds " +
-                    "viewPosted=$viewPosted handlerPosted=$handlerPosted x=${params.x} y=${params.y}",
+                    "handlerPosted=$handlerPosted x=${params.x} y=${params.y}",
             )
         }
     }
