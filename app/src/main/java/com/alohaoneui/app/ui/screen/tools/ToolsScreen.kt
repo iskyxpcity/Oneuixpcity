@@ -113,9 +113,9 @@ private fun NavigationFeatureIcon(
     // Samsung One UI app-icon language: a vivid rounded-square tile, bold white
     // symbol, analogous-color gradient, and restrained highlights for soft depth.
     Canvas(modifier = Modifier.size(size)) {
-        val unit = size.minDimension
+        val unit = this.size.minDimension
         val radius = CornerRadius(unit * 0.255f, unit * 0.255f)
-        val canvasSize = Size(size.width, size.height)
+        val canvasSize = Size(this.size.width, this.size.height)
 
         drawRoundRect(
             color = Color.Black.copy(alpha = 0.16f),
@@ -127,7 +127,7 @@ private fun NavigationFeatureIcon(
             brush = Brush.linearGradient(
                 colors = backgroundColors,
                 start = Offset(0f, 0f),
-                end = Offset(size.width, size.height),
+                end = Offset(this.size.width, this.size.height),
             ),
             size = canvasSize,
             cornerRadius = radius,
@@ -136,7 +136,7 @@ private fun NavigationFeatureIcon(
             brush = Brush.verticalGradient(
                 colors = listOf(Color.White.copy(alpha = 0.25f), Color.White.copy(alpha = 0.015f), Color.Transparent),
                 startY = 0f,
-                endY = size.height * 0.72f,
+                endY = this.size.height * 0.72f,
             ),
             size = canvasSize,
             cornerRadius = radius,
@@ -144,7 +144,7 @@ private fun NavigationFeatureIcon(
         drawRoundRect(
             color = Color.White.copy(alpha = 0.24f),
             topLeft = Offset(unit * 0.018f, unit * 0.018f),
-            size = Size(size.width - unit * 0.036f, size.height - unit * 0.036f),
+            size = Size(this.size.width - unit * 0.036f, this.size.height - unit * 0.036f),
             cornerRadius = CornerRadius(unit * 0.238f, unit * 0.238f),
             style = Stroke(width = unit * 0.018f),
         )
