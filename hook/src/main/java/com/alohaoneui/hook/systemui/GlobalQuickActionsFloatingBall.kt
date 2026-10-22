@@ -118,7 +118,8 @@ internal fun GlobalQuickActions.ensureFloatingBall(context: Context) {
             context,
             "floating-ball added x=${params.x} y=${params.y} width=${params.width} attached=${view.isAttachedToWindow} enabled=${settings.enabled} autoEdgeDelaySeconds=${settings.autoEdgeDelaySeconds}",
         )
-        // Match the upstream lifecycle: arm the idle timer immediately after addView.
+        // Aloha exposes the auto-edge delay as an app setting; arm its timer after addView.
+        // The upstream runtime has internal handling, but its app UI does not expose this control.
         // It is owned by the SystemServer main Handler; no View.post or duplicate queue.
         scheduleFloatingBallAutoEdge(context, windowManager, view, params, settings)
     }.onFailure {
