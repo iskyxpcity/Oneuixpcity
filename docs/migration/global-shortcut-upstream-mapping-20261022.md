@@ -77,3 +77,12 @@ On `refactor/global-shortcut-upstream-port-20261022`, the first implementation t
 The app UI file, Aloha persisted preference model, Material/Miuix components, seven-page hierarchy, and deferred “是否立即同步？” mechanism are not part of this tranche. The source action constant `quick_camera` is present in the upstream catalog, but the source action dispatcher does not currently have an explicit branch for it; this discrepancy is tracked rather than silently creating new behavior.
 
 This is an implementation checkpoint, not a completion declaration. The source comparison, Kotlin build, and Samsung `SM-F966U1` / Android 17 acceptance remain separate gates.
+
+
+## Static review before the first migration build
+
+- Verified the new hook runtime has distinct swipe, pinch, spread, status-bar, navigation-key and screen-off-volume handlers sourced from `SystemUiRootHookGesture.kt`; the legacy Xposed installer functions are not present in the target port.
+- Verified the float-ball create/remove, touch and auto-edge methods come from `SystemUiRootHookFloatingBall.kt`; configuration refresh uses the existing Aloha preference URI observer rather than the upstream package broadcast.
+- Verified action dispatch bodies are sourced from `SystemUiRootHookGestureActions.kt` plus `SystemUiRootHookAppLaunch.kt`; old `XposedHelpers` / `XposedBridge` symbols were removed from the transferred runtime files.
+- Verified the current target app-side setting model and UI hierarchy were not edited by this migration tranche. The existing deferred sync marker and “稍后 / 立即同步” code remain at their base-commit blobs.
+- Corrected the target's status-bar-height adapter to preserve the upstream fallback and changed reflection lookup to snapshot the current class before enumerating methods. Build and final symbol verification follow this source review.
