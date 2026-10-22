@@ -980,17 +980,12 @@ private fun GlobalShortcutSettingsContent(
             ShortcutSettingsSection(
                 title = "长按切歌",
                 summary = "音量上：下一曲；音量下：上一曲。",
+                headerChecked = settings.screenOffVolumeLongPressEnabled,
+                headerEnabled = settings.screenOffVolumeKeyEnabled,
+                onHeaderCheckedChange = { value ->
+                    update { it.copy(screenOffVolumeLongPressEnabled = value) }
+                },
                 items = listOf(
-                    {
-                        SwitchItem(
-                            title = "启用长按切歌",
-                            summary = null,
-                            checked = settings.screenOffVolumeLongPressEnabled,
-                            enabled = settings.screenOffVolumeKeyEnabled,
-                    dimWhenDisabled = false,
-                            onCheckedChange = { value -> update { it.copy(screenOffVolumeLongPressEnabled = value) } },
-                        )
-                    },
                     {
                         OtherFunctionsThemeChildItem {
                             NumericShortcutSlider(
@@ -1010,17 +1005,12 @@ private fun GlobalShortcutSettingsContent(
             ShortcutSettingsSection(
                 title = "双击播放/暂停",
                 summary = "息屏时快速双击同一个音量键，发送媒体播放/暂停。",
+                headerChecked = settings.screenOffVolumeDoubleClickEnabled,
+                headerEnabled = settings.screenOffVolumeKeyEnabled,
+                onHeaderCheckedChange = { value ->
+                    update { it.copy(screenOffVolumeDoubleClickEnabled = value) }
+                },
                 items = listOf(
-                    {
-                        SwitchItem(
-                            title = "启用双击播放/暂停",
-                            summary = null,
-                            checked = settings.screenOffVolumeDoubleClickEnabled,
-                            enabled = settings.screenOffVolumeKeyEnabled,
-                    dimWhenDisabled = false,
-                            onCheckedChange = { value -> update { it.copy(screenOffVolumeDoubleClickEnabled = value) } },
-                        )
-                    },
                     {
                         OtherFunctionsThemeChildItem {
                             NumericShortcutSlider(
@@ -1144,17 +1134,10 @@ private fun ScreenOffVolumeHapticCard(
     ShortcutSettingsSection(
         title = "振动反馈",
         summary = "切歌或播放/暂停触发成功时振动一次。",
+        headerChecked = hapticEnabled,
+        headerEnabled = enabled,
+        onHeaderCheckedChange = onHapticEnabled,
         items = listOf(
-            {
-                SwitchItem(
-                    title = "启用振动反馈",
-                    summary = null,
-                    checked = hapticEnabled,
-                    enabled = enabled,
-                    dimWhenDisabled = false,
-                    onCheckedChange = onHapticEnabled,
-                )
-            },
             {
                 OtherFunctionsThemeChildItem {
                     HapticStrengthSlider(
@@ -1274,37 +1257,53 @@ private fun ShortcutSettingsSection(
     title: String,
     summary: String,
     items: List<@Composable () -> Unit>,
+    headerChecked: Boolean? = null,
+    headerEnabled: Boolean = true,
+    onHeaderCheckedChange: ((Boolean) -> Unit)? = null,
 ) {
     OtherFunctionsThemeGroup(
         items = buildList {
             add {
-                when (LocalUiMode.current) {
-                    UiMode.Material -> OtherFunctionsThemeChildItem {
-                        Column(
-                            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                        ) {
-                            Text(
-                                title,
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.onSurface,
-                            )
-                            if (summary.isNotBlank()) {
-                                Text(
-                                    summary,
-                                    modifier = Modifier.padding(top = 4.dp),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                            }
-                        }
-                    }
-
-                    UiMode.Miuix -> MiuixBasicComponent(
+                if (headerChecked != null && onHeaderCheckedChange != null) {
+                    // Keep the three screen-off controls on their section title row
+                    // using the same theme-native switch row in Material and Miuix.
+                    SwitchItem(
                         title = title,
                         summary = summary.takeIf { it.isNotBlank() },
-                        modifier = Modifier.fillMaxWidth(),
+                        checked = headerChecked,
+                        enabled = headerEnabled,
+                        dimWhenDisabled = false,
+                        onCheckedChange = onHeaderCheckedChange,
                     )
+                } else {
+                    when (LocalUiMode.current) {
+                        UiMode.Material -> OtherFunctionsThemeChildItem {
+                            Column(
+                                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                            ) {
+                                Text(
+                                    title,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                )
+                                if (summary.isNotBlank()) {
+                                    Text(
+                                        summary,
+                                        modifier = Modifier.padding(top = 4.dp),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                }
+                            }
+                        }
+
+                        UiMode.Miuix -> MiuixBasicComponent(
+                            title = title,
+                            summary = summary.takeIf { it.isNotBlank() },
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                    }
                 }
             }
             addAll(items)
