@@ -1,6 +1,13 @@
 package com.alohaoneui.app.ui.component.material
 
 import androidx.compose.material3.AlertDialog
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.BasicAlertDialog
+import androidx.compose.material3.Surface
+import androidx.compose.ui.unit.dp
 import androidx.compose.material3.AlertDialogDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -67,4 +74,38 @@ fun ExpressiveConfirmDialog(
             { TextButton(onClick = onDismiss) { Text(it) } }
         },
     )
+}
+
+
+/**
+ * Theme-native dialog frame for settings popups that need arbitrary interactive content.
+ *
+ * Keep this alongside ExpressiveDialog so custom pickers use the same Material 3 shape,
+ * container, typography colors, and tonal elevation as the app's standard dialogs.
+ */
+@Composable
+fun ExpressiveContentDialog(
+    onDismissRequest: () -> Unit,
+    modifier: Modifier = Modifier,
+    properties: DialogProperties = DialogProperties(),
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    BasicAlertDialog(
+        onDismissRequest = onDismissRequest,
+        modifier = modifier,
+        properties = properties,
+    ) {
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = MaterialTheme.shapes.extraLarge,
+            color = AlertDialogDefaults.containerColor,
+            contentColor = AlertDialogDefaults.textContentColor,
+            tonalElevation = AlertDialogDefaults.TonalElevation,
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp),
+                content = content,
+            )
+        }
+    }
 }
