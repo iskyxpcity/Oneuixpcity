@@ -1734,7 +1734,6 @@ private fun GroupedShortcutActionPicker(
                 )
             }
         }
-        GlobalShortcutActionButton("取消", false, onDismiss, Modifier.fillMaxWidth().padding(top = 10.dp))
     }
 }
 
@@ -1766,12 +1765,17 @@ private fun ShortcutActionGroupCard(
                 OtherFunctionsThemeChildItem {
                     when (LocalUiMode.current) {
                         UiMode.Material -> Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable(onClick = onToggle),
+                            modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            Text(group.title, modifier = Modifier.weight(1f), fontWeight = FontWeight.SemiBold)
+                            // Match the upstream accordion interaction: only the title
+                            // text itself toggles this group; count/chevron/blank space do not.
+                            Text(
+                                group.title,
+                                modifier = Modifier.clickable(onClick = onToggle),
+                                fontWeight = FontWeight.SemiBold,
+                            )
+                            Spacer(Modifier.weight(1f))
                             Text(
                                 "${group.actions.size} 项",
                                 color = secondary,
