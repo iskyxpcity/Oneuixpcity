@@ -43,26 +43,30 @@ fun SwitchItem(
     modifier: Modifier = Modifier,
     summary: String? = null,
     icon: ImageVector? = null,
+    leadingContent: (@Composable () -> Unit)? = null,
     clickable: Boolean = false,
     showChildIndicator: Boolean = clickable,
     onClick: () -> Unit = {},
     enabled: Boolean = true,
+    dimWhenDisabled: Boolean = true,
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit
 ) {
     val grouped = LocalAlohaOneUIGroupedPreference.current
+    val rowEnabled = enabled || !dimWhenDisabled
+    val rowAlpha = if (dimWhenDisabled && !enabled) 0.45f else 1f
 
     when (LocalUiMode.current) {
         UiMode.Material -> {
             if (clickable) {
                 SegmentedListItem(
-                    modifier = (if (grouped) modifier else modifier.padding(horizontal = 16.dp, vertical = 4.dp)).alpha(if (enabled) 1f else 0.45f),
-                    enabled = enabled,
+                    modifier = (if (grouped) modifier else modifier.padding(horizontal = 16.dp, vertical = 4.dp)).alpha(rowAlpha),
+                    enabled = rowEnabled,
                     onClick = { if (enabled) onClick() },
                     colors = alohaOneUISegmentedColors(),
                     headlineContent = { Text(title) },
                     supportingContent = summary?.let { { Text(it) } },
-                    leadingContent = icon?.let { imageVector ->
+                    leadingContent = leadingContent ?: icon?.let { imageVector ->
                         { Icon(imageVector, contentDescription = title) }
                     },
                     trailingContent = {
@@ -87,10 +91,12 @@ fun SwitchItem(
                 )
             } else {
                 Box(
-                    modifier = (if (grouped) modifier else modifier.padding(horizontal = 16.dp, vertical = 4.dp)).alpha(if (enabled) 1f else 0.45f),
+                    modifier = (if (grouped) modifier else modifier.padding(horizontal = 16.dp, vertical = 4.dp)).alpha(rowAlpha),
                 ) {
                     SegmentedSwitchItem(
                         icon = icon,
+                        leadingContent = leadingContent,
+                        dimWhenDisabled = dimWhenDisabled,
                         colors = alohaOneUISegmentedColors(),
                         title = title,
                         summary = summary,
@@ -105,21 +111,23 @@ fun SwitchItem(
         UiMode.Miuix -> {
             @Composable
             fun Content() {
+                val miuixStartAction: (@Composable () -> Unit)? =
+                    leadingContent ?: icon?.let { imageVector ->
+                        {
+                            MiuixIcon(
+                                imageVector = imageVector,
+                                contentDescription = title,
+                                tint = colorScheme.onSurface,
+                            )
+                        }
+                    }
                 if (clickable) {
                     BasicComponent(
                         title = title,
                         summary = summary,
-                        enabled = enabled,
-                        modifier = Modifier.alpha(if (enabled) 1f else 0.45f),
-                        startAction = icon?.let { imageVector ->
-                            {
-                                MiuixIcon(
-                                    imageVector = imageVector,
-                                    contentDescription = title,
-                                    tint = colorScheme.onSurface,
-                                )
-                            }
-                        },
+                        enabled = rowEnabled,
+                        modifier = Modifier.alpha(rowAlpha),
+                        startAction = miuixStartAction,
                         endActions = {
                             if (showChildIndicator) {
                                 MiuixVerticalDivider(
@@ -142,17 +150,9 @@ fun SwitchItem(
                     BasicComponent(
                         title = title,
                         summary = summary,
-                        enabled = enabled,
-                        modifier = Modifier.alpha(if (enabled) 1f else 0.45f),
-                        startAction = icon?.let { imageVector ->
-                            {
-                                MiuixIcon(
-                                    imageVector = imageVector,
-                                    contentDescription = title,
-                                    tint = colorScheme.onSurface,
-                                )
-                            }
-                        },
+                        enabled = rowEnabled,
+                        modifier = Modifier.alpha(rowAlpha),
+                        startAction = miuixStartAction,
                         endActions = {
                             MiuixVerticalDivider(
                                 modifier = Modifier
@@ -170,30 +170,42 @@ fun SwitchItem(
                         role = Role.Switch,
                     )
                 } else {
-                    SwitchPreference(
-                        title = title,
-                        summary = summary,
-                        checked = checked,
-                        enabled = enabled,
-                        onCheckedChange = { if (enabled) onCheckedChange(it) },
-                        startAction = icon?.let { imageVector ->
-                            {
-                                MiuixIcon(
-                                    imageVector = imageVector,
-                                    contentDescription = title,
-                                    tint = colorScheme.onSurface,
+                    if (!dimWhenDisabled) {
+                        BasicComponent(
+                            title = title,
+                            summary = summary,
+                            enabled = rowEnabled,
+                            modifier = Modifier.alpha(rowAlpha),
+                            startAction = miuixStartAction,
+                            endActions = {
+                                MiuixSwitch(
+                                    modifier = Modifier.align(Alignment.CenterVertically),
+                                    checked = checked,
+                                    enabled = enabled,
+                                    onCheckedChange = { if (enabled) onCheckedChange(it) },
                                 )
-                            }
-                        },
-                    )
+                            },
+                            onClick = { if (enabled) onCheckedChange(!checked) },
+                            role = Role.Switch,
+                        )
+                    } else {
+                        SwitchPreference(
+                            title = title,
+                            summary = summary,
+                            checked = checked,
+                            enabled = enabled,
+                            onCheckedChange = { if (enabled) onCheckedChange(it) },
+                            startAction = miuixStartAction,
+                        )
+                    }
                 }
             }
 
             if (grouped) {
-                Box(modifier = Modifier.alpha(if (enabled) 1f else 0.45f)) { Content() }
+                Box(modifier = Modifier.alpha(rowAlpha)) { Content() }
             } else {
                 Card(
-                    modifier = modifier.padding(horizontal = 12.dp, vertical = 4.dp).alpha(if (enabled) 1f else 0.45f),
+                    modifier = modifier.padding(horizontal = 12.dp, vertical = 4.dp).alpha(rowAlpha),
                 ) {
                     Content()
                 }

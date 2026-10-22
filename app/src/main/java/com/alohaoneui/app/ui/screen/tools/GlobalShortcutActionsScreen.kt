@@ -198,6 +198,7 @@ internal enum class ShortcutEntryIcon {
     Volume,
     Pinch,
     Spread,
+    OtherFunctions,
 }
 
 private enum class GlobalShortcutPageKind(
@@ -530,6 +531,17 @@ internal fun ShortcutEntryGlyph(
 
         // The coordinates below are ported from the source RootFeatureIconView.drawGlyph().
         when (icon) {
+            ShortcutEntryIcon.OtherFunctions -> {
+                line(4.5f, 7f, 8f, 7f)
+                line(12f, 7f, 19.5f, 7f)
+                ring(10f, 7f, 1.8f)
+                line(4.5f, 12f, 13f, 12f)
+                line(17f, 12f, 19.5f, 12f)
+                ring(15f, 12f, 1.8f)
+                line(4.5f, 17f, 7f, 17f)
+                line(11f, 17f, 19.5f, 17f)
+                ring(9f, 17f, 1.8f)
+            }
             ShortcutEntryIcon.Gesture -> {
                 line(8f, 5.5f, 8f, 13f)
                 line(12f, 4.5f, 12f, 13f)
@@ -906,6 +918,7 @@ private fun GlobalShortcutSettingsContent(
                             summary = null,
                             checked = settings.screenOffVolumeLongPressEnabled,
                             enabled = settings.screenOffVolumeKeyEnabled,
+                    dimWhenDisabled = false,
                             onCheckedChange = { value -> update { it.copy(screenOffVolumeLongPressEnabled = value) } },
                         )
                     },
@@ -935,6 +948,7 @@ private fun GlobalShortcutSettingsContent(
                             summary = null,
                             checked = settings.screenOffVolumeDoubleClickEnabled,
                             enabled = settings.screenOffVolumeKeyEnabled,
+                    dimWhenDisabled = false,
                             onCheckedChange = { value -> update { it.copy(screenOffVolumeDoubleClickEnabled = value) } },
                         )
                     },
@@ -1031,6 +1045,7 @@ private fun ShortcutHapticCard(
                     summary = null,
                     checked = hapticEnabled,
                     enabled = enabled,
+                    dimWhenDisabled = false,
                     onCheckedChange = onHapticEnabled,
                 )
             },
@@ -1067,6 +1082,7 @@ private fun ScreenOffVolumeHapticCard(
                     summary = null,
                     checked = hapticEnabled,
                     enabled = enabled,
+                    dimWhenDisabled = false,
                     onCheckedChange = onHapticEnabled,
                 )
             },
@@ -1105,7 +1121,7 @@ private fun ThresholdShortcutCard(
                     ) {
                         when (LocalUiMode.current) {
                             UiMode.Material -> Row(
-                                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                                modifier = Modifier.fillMaxWidth(),
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
                                 Text(
@@ -1169,7 +1185,10 @@ private fun ShortcutSettingsSection(
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                            .padding(
+                                horizontal = if (LocalUiMode.current == UiMode.Material) 0.dp else 16.dp,
+                                vertical = 8.dp,
+                            ),
                     ) {
                         when (LocalUiMode.current) {
                             UiMode.Material -> Text(
@@ -1318,7 +1337,7 @@ private fun FloatingBallColorControl(
                     UiMode.Material -> Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                            .padding(vertical = 8.dp)
                             .graphicsLayer { alpha = if (enabled) 1f else 0.48f }
                             .clip(RoundedCornerShape(16.dp))
                             .background(Color(argb))

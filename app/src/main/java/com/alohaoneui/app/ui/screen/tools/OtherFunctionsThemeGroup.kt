@@ -2,6 +2,7 @@ package com.alohaoneui.app.ui.screen.tools
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -44,6 +45,7 @@ fun OtherFunctionsThemeGroup(
 
         UiMode.Miuix -> Card(
             modifier = modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+            insideMargin = PaddingValues(0.dp),
         ) {
             CompositionLocalProvider(
                 LocalAlohaOneUIGroupedPreference provides true,

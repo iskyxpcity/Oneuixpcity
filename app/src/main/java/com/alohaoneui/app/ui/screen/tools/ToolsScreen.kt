@@ -92,19 +92,29 @@ fun ToolsPager(
 
 
 @Composable
-private fun OtherFunctionsCategoryIcon(size: Dp) {
+private fun NavigationFeatureIcon(
+    icon: ShortcutEntryIcon,
+    size: Dp,
+) {
+    val accent = when (LocalUiMode.current) {
+        UiMode.Material -> MaterialTheme.colorScheme.primary
+        UiMode.Miuix -> colorScheme.primary
+    }
+    val container = when (LocalUiMode.current) {
+        UiMode.Material -> MaterialTheme.colorScheme.surfaceContainerHighest
+        UiMode.Miuix -> colorScheme.primary.copy(alpha = 0.08f)
+    }
     Box(
         modifier = Modifier
             .size(size)
             .clip(RoundedCornerShape(14.dp))
-            .background(Color(0xFF607D8B)),
+            .background(container),
         contentAlignment = Alignment.Center,
     ) {
-        Icon(
-            imageVector = ImageVector.vectorResource(R.drawable.other_functions),
-            contentDescription = stringResource(R.string.alohaoneui_other_functions_title),
-            tint = Color.White,
-            modifier = Modifier.size(26.dp),
+        ShortcutEntryGlyph(
+            icon = icon,
+            accentColor = accent,
+            iconSize = size * 0.56f,
         )
     }
 }
@@ -235,7 +245,7 @@ private fun ToolsPagerMiuix(
                         ),
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            OtherFunctionsCategoryIcon(size = 48.dp)
+                            NavigationFeatureIcon(icon = ShortcutEntryIcon.OtherFunctions, size = 48.dp)
                             MiuixText(
                                 text = stringResource(R.string.alohaoneui_other_functions_title),
                                 modifier = Modifier
@@ -275,19 +285,10 @@ private fun ToolsPagerMiuix(
                             modifier = Modifier.fillMaxWidth(),
                             enabled = lsposedActive,
                             startAction = {
-                                Box(
-                                    modifier = Modifier
-                                        .size(48.dp)
-                                        .clip(RoundedCornerShape(14.dp))
-                                        .background(colorScheme.onSurfaceVariantSummary.copy(alpha = 0.08f)),
-                                    contentAlignment = Alignment.Center,
-                                ) {
-                                    ShortcutEntryGlyph(
-                                        icon = ShortcutEntryIcon.Gesture,
-                                        accentColor = colorScheme.primary,
-                                        iconSize = 26.88.dp,
-                                    )
-                                }
+                                NavigationFeatureIcon(
+                                    icon = ShortcutEntryIcon.Gesture,
+                                    size = 48.dp,
+                                )
                             },
                             endActions = {
                                 val layoutDirection = LocalLayoutDirection.current
@@ -437,7 +438,7 @@ private fun ToolsPagerMaterial(
                             Text(stringResource(R.string.alohaoneui_other_functions_title))
                         },
                         leadingContent = {
-                            OtherFunctionsCategoryIcon(size = 48.dp)
+                            NavigationFeatureIcon(icon = ShortcutEntryIcon.OtherFunctions, size = 48.dp)
                         },
                         trailingContent = {
                             Icon(
@@ -463,18 +464,10 @@ private fun ToolsPagerMaterial(
                         headlineContent = { Text(stringResource(R.string.alohaoneui_global_shortcut_actions_title)) },
                         supportingContent = { Text(stringResource(R.string.alohaoneui_global_shortcut_actions_summary)) },
                         leadingContent = {
-                            Box(
-                                modifier = Modifier
-                                    .size(40.dp)
-                                    .clip(RoundedCornerShape(13.2.dp))
-                                    .background(MaterialTheme.colorScheme.surfaceContainerHighest),
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                ShortcutEntryGlyph(
-                                    icon = ShortcutEntryIcon.Gesture,
-                                    accentColor = MaterialTheme.colorScheme.primary,
-                                )
-                            }
+                            NavigationFeatureIcon(
+                                icon = ShortcutEntryIcon.Gesture,
+                                size = 48.dp,
+                            )
                         },
                         trailingContent = {
                             Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)

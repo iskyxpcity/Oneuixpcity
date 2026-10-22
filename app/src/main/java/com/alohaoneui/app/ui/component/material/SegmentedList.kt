@@ -229,16 +229,19 @@ fun SegmentedListItem(
 @Composable
 fun SegmentedSwitchItem(
     icon: ImageVector? = null,
+    leadingContent: (@Composable () -> Unit)? = null,
     title: String,
     summary: String? = null,
     colors: ListItemColors = alohaOneUISegmentedColors(),
     checked: Boolean,
     enabled: Boolean = true,
+    dimWhenDisabled: Boolean = true,
     showChildIndicator: Boolean = false,
     onRowClick: (() -> Unit)? = null,
     onCheckedChange: (Boolean) -> Unit,
 ) {
     val haptic = LocalHapticFeedback.current
+    val rowEnabled = enabled || !dimWhenDisabled
     val interactionSource = remember { MutableInteractionSource() }
     val switchInteractionSource = remember { MutableInteractionSource() }
 
@@ -251,11 +254,11 @@ fun SegmentedSwitchItem(
                 onCheckedChange(!checked)
             }
         },
-        enabled = enabled,
+        enabled = rowEnabled,
         interactionSource = interactionSource,
         colors = colors,
         headlineContent = { Text(title) },
-        leadingContent = icon?.let { { Icon(it, title) } },
+        leadingContent = leadingContent ?: icon?.let { { Icon(it, title) } },
         trailingContent = {
             Row(
                 modifier = Modifier.height(IntrinsicSize.Min),
