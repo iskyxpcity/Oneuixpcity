@@ -1,6 +1,5 @@
 package com.alohaoneui.app.ui.screen.status
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -21,7 +20,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
@@ -34,19 +32,18 @@ import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.alohaoneui.app.R
+import com.alohaoneui.app.ui.component.OneUiFeatureIcon
+import com.alohaoneui.app.ui.component.OneUiFeatureIconKind
 import com.alohaoneui.app.ui.LocalUiMode
 import com.alohaoneui.app.ui.UiMode
 import com.alohaoneui.app.ui.component.configtransfer.ConfigTransferPopup
@@ -90,20 +87,25 @@ private fun StatusCategoryIcon(
     category: StatusCategory,
     size: Dp = 48.dp,
 ) {
-    Box(
-        modifier = Modifier
-            .size(size)
-            .clip(RoundedCornerShape(14.dp))
-            .background(Color(category.backgroundArgb)),
-        contentAlignment = Alignment.Center,
-    ) {
-        Icon(
-            imageVector = ImageVector.vectorResource(category.iconRes),
-            contentDescription = stringResource(category.titleRes),
-            tint = Color.White,
-            modifier = Modifier.size(26.dp),
-        )
-    }
+    OneUiFeatureIcon(
+        kind = when (category) {
+            StatusCategory.Padding -> OneUiFeatureIconKind.StatusPadding
+            StatusCategory.Time -> OneUiFeatureIconKind.StatusTime
+            StatusCategory.Notification -> OneUiFeatureIconKind.StatusNotification
+            StatusCategory.NetworkSpeed -> OneUiFeatureIconKind.StatusNetworkSpeed
+            StatusCategory.Power -> OneUiFeatureIconKind.StatusPower
+            StatusCategory.ComboStyleOne -> OneUiFeatureIconKind.StatusCombo
+            StatusCategory.Signal -> OneUiFeatureIconKind.StatusSignal
+            StatusCategory.Wifi -> OneUiFeatureIconKind.StatusWifi
+            StatusCategory.Bluetooth -> OneUiFeatureIconKind.StatusBluetooth
+            StatusCategory.Lockscreen -> OneUiFeatureIconKind.StatusLockscreen
+            StatusCategory.NotificationCenter -> OneUiFeatureIconKind.StatusNotificationCenter
+            StatusCategory.ControlCenter -> OneUiFeatureIconKind.StatusControlCenter
+            StatusCategory.Other -> OneUiFeatureIconKind.StatusOther
+        },
+        size = size,
+        contentDescription = stringResource(category.titleRes),
+    )
 }
 
 @Composable

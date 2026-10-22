@@ -69,11 +69,7 @@ fun OtherFunctionsThemeChildItem(
             modifier = modifier,
             colors = alohaOneUISegmentedColors(),
             headlineContent = {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp),
-                ) {
+                Box(modifier = Modifier.fillMaxWidth()) {
                     content()
                 }
             },

@@ -1,15 +1,9 @@
 package com.alohaoneui.app.ui.screen.tools
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -60,6 +54,8 @@ import com.alohaoneui.app.R
 import com.alohaoneui.app.alohaoneui.AlohaOneUICategory
 import com.alohaoneui.app.ui.LocalUiMode
 import com.alohaoneui.app.ui.UiMode
+import com.alohaoneui.app.ui.component.OneUiFeatureIcon
+import com.alohaoneui.app.ui.component.OneUiFeatureIconKind
 import com.alohaoneui.app.ui.component.configtransfer.ConfigTransferPopup
 import com.alohaoneui.app.ui.component.rebootlistpopup.RebootListPopup
 import com.alohaoneui.app.ui.component.material.SegmentedColumn
@@ -103,105 +99,13 @@ private fun NavigationFeatureIcon(
     icon: ShortcutEntryIcon,
     size: Dp,
 ) {
-    val isOtherFunctions = icon == ShortcutEntryIcon.OtherFunctions
-    val backgroundColors = if (isOtherFunctions) {
-        listOf(Color(0xFF11B8A5), Color(0xFF1386D9), Color(0xFF435CE5))
-    } else {
-        listOf(Color(0xFF25B9EA), Color(0xFF3C70EC), Color(0xFF6A4EDB))
-    }
-
-    // Samsung One UI app-icon language: a vivid rounded-square tile, bold white
-    // symbol, analogous-color gradient, and restrained highlights for soft depth.
-    Canvas(modifier = Modifier.size(size)) {
-        val unit = this.size.minDimension
-        val radius = CornerRadius(unit * 0.255f, unit * 0.255f)
-        val canvasSize = Size(this.size.width, this.size.height)
-
-        drawRoundRect(
-            color = Color.Black.copy(alpha = 0.16f),
-            topLeft = Offset(0f, unit * 0.025f),
-            size = canvasSize,
-            cornerRadius = radius,
-        )
-        drawRoundRect(
-            brush = Brush.linearGradient(
-                colors = backgroundColors,
-                start = Offset(0f, 0f),
-                end = Offset(this.size.width, this.size.height),
-            ),
-            size = canvasSize,
-            cornerRadius = radius,
-        )
-        drawRoundRect(
-            brush = Brush.verticalGradient(
-                colors = listOf(Color.White.copy(alpha = 0.25f), Color.White.copy(alpha = 0.015f), Color.Transparent),
-                startY = 0f,
-                endY = this.size.height * 0.72f,
-            ),
-            size = canvasSize,
-            cornerRadius = radius,
-        )
-        drawRoundRect(
-            color = Color.White.copy(alpha = 0.24f),
-            topLeft = Offset(unit * 0.018f, unit * 0.018f),
-            size = Size(this.size.width - unit * 0.036f, this.size.height - unit * 0.036f),
-            cornerRadius = CornerRadius(unit * 0.238f, unit * 0.238f),
-            style = Stroke(width = unit * 0.018f),
-        )
-
-        fun line(x1: Float, y1: Float, x2: Float, y2: Float, width: Float) {
-            val start = Offset(x1 * unit, y1 * unit)
-            val end = Offset(x2 * unit, y2 * unit)
-            drawLine(
-                color = Color.Black.copy(alpha = 0.18f),
-                start = Offset(start.x, start.y + unit * 0.015f),
-                end = Offset(end.x, end.y + unit * 0.015f),
-                strokeWidth = width,
-                cap = StrokeCap.Round,
-            )
-            drawLine(
-                color = Color.White.copy(alpha = 0.98f),
-                start = start,
-                end = end,
-                strokeWidth = width,
-                cap = StrokeCap.Round,
-            )
-        }
-
-        fun handle(cx: Float, cy: Float) {
-            val center = Offset(cx * unit, cy * unit)
-            drawCircle(
-                color = Color.Black.copy(alpha = 0.18f),
-                radius = unit * 0.076f,
-                center = Offset(center.x, center.y + unit * 0.018f),
-            )
-            drawCircle(color = Color.White, radius = unit * 0.076f, center = center)
-            drawCircle(
-                color = backgroundColors[1],
-                radius = unit * 0.035f,
-                center = Offset(center.x, center.y - unit * 0.008f),
-            )
-        }
-
-        if (isOtherFunctions) {
-            val stroke = unit * 0.075f
-            line(0.25f, 0.35f, 0.75f, 0.35f, stroke)
-            line(0.25f, 0.50f, 0.75f, 0.50f, stroke)
-            line(0.25f, 0.65f, 0.75f, 0.65f, stroke)
-            handle(0.42f, 0.35f)
-            handle(0.62f, 0.50f)
-            handle(0.49f, 0.65f)
-        } else {
-            // Rounded finger strokes and a swipe arrow read as a gesture instead of a generic line glyph.
-            val fingerWidth = unit * 0.092f
-            line(0.34f, 0.34f, 0.34f, 0.55f, fingerWidth)
-            line(0.50f, 0.27f, 0.50f, 0.56f, fingerWidth)
-            line(0.66f, 0.34f, 0.66f, 0.55f, fingerWidth)
-            line(0.28f, 0.72f, 0.68f, 0.72f, unit * 0.070f)
-            line(0.57f, 0.61f, 0.68f, 0.72f, unit * 0.070f)
-            line(0.57f, 0.83f, 0.68f, 0.72f, unit * 0.070f)
-        }
-    }
+    OneUiFeatureIcon(
+        kind = when (icon) {
+            ShortcutEntryIcon.OtherFunctions -> OneUiFeatureIconKind.OtherFunctions
+            else -> OneUiFeatureIconKind.GlobalShortcuts
+        },
+        size = size,
+    )
 }
 
 @Composable
