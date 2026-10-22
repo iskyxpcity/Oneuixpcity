@@ -1020,15 +1020,14 @@ private fun ShortcutHapticCard(
     strength: Int,
     onHapticEnabled: (Boolean) -> Unit,
     onStrength: (Int) -> Unit,
-    summary: String = "",
 ) {
-    ShortcutSettingsSection(
-        title = "振动反馈",
-        summary = summary,
+    // Match upstream: the vibration switch shares its title row, and the
+    // strength slider remains inside the same theme-native card.
+    OtherFunctionsThemeGroup(
         items = listOf(
             {
                 SwitchItem(
-                    title = "启用振动反馈",
+                    title = "振动反馈",
                     summary = null,
                     checked = hapticEnabled,
                     enabled = enabled,
@@ -1202,9 +1201,15 @@ private fun NumericShortcutSlider(
 ) {
     var preview by remember(value, range) { mutableFloatStateOf(value.toFloat()) }
     LaunchedEffect(value, range) { preview = value.toFloat() }
+    // Miuix Card has no built-in content inset here. Keep every value
+    // slider inside the rounded frame even when its title row is hidden.
+    val sliderHorizontalPadding = when (LocalUiMode.current) {
+        UiMode.Material -> if (showTitleAndSummary) 16.dp else 0.dp
+        UiMode.Miuix -> 16.dp
+    }
     Column(
         modifier = Modifier.fillMaxWidth().padding(
-            horizontal = if (showTitleAndSummary) 16.dp else 0.dp,
+            horizontal = sliderHorizontalPadding,
             vertical = 8.dp,
         ),
     ) {
