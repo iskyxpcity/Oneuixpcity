@@ -84,7 +84,13 @@ internal fun GlobalQuickActions.ensureFloatingBall(context: Context) {
         floatingBallX = params.x
         floatingBallY = params.y
         log("floating ball added")
-        scheduleFloatingBallAutoEdge(context, windowManager, view, params, settings)
+        // Wait until the overlay has attached and completed its first layout before
+        // arming the idle auto-edge timer. During addView(), view.width may still be 0.
+        view.post {
+            if (floatingBallView === view && view.isAttachedToWindow) {
+                scheduleFloatingBallAutoEdge(context, windowManager, view, params, floatingBallSettings(context))
+            }
+        }
     }.onFailure {
         floatingBallView = null
         floatingBallLayoutParams = null
@@ -242,8 +248,11 @@ internal fun GlobalQuickActions.snapFloatingBallToNearestEdge(
     params: WindowManager.LayoutParams
 ) {
     val displayWidth = context.resources.displayMetrics.widthPixels
-    val maxX = (displayWidth - view.width).coerceAtLeast(0)
-    val targetX = if (params.x + view.width / 2f < displayWidth / 2f) 0 else maxX
+    // The first auto-edge callback can race the overlay's initial layout. Use the
+    // actual layout width when available, otherwise the configured WindowManager width.
+    val ballWidth = view.width.takeIf { it > 0 } ?: params.width.takeIf { it > 0 } ?: return
+    val maxX = (displayWidth - ballWidth).coerceAtLeast(0)
+    val targetX = if (params.x + ballWidth / 2f < displayWidth / 2f) 0 else maxX
     if (params.x == targetX) return
     params.x = targetX
     floatingBallX = params.x
