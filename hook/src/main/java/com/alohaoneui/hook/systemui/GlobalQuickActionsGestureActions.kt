@@ -19,6 +19,7 @@ import android.view.KeyCharacterMap
 import android.view.KeyEvent
 import android.view.InputEvent
 import android.view.MotionEvent
+import com.alohaoneui.hook.util.AlohaOneUIDiagnosticLog
 
 internal fun GlobalQuickActions.performGlobalGestureAction(context: Context, action: String) {
     if (action == ACTION_NONE || action == ACTION_NOTIFICATIONS) {
@@ -87,6 +88,7 @@ internal fun GlobalQuickActions.recordGlobalGestureActionResult(
     }.orEmpty()
     lastGlobalActionDiagnostic =
         "atMs=${System.currentTimeMillis()} action=$safeAction status=$status$failureSummary"
+    AlohaOneUIDiagnosticLog.record(TAG, lastGlobalActionDiagnostic)
 }
 
 internal fun GlobalQuickActions.performHapticFeedback(context: Context, enabled: Boolean, strength: Int) {
