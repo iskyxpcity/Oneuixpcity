@@ -17,6 +17,7 @@ import android.util.Log
 import android.view.InputDevice
 import android.view.KeyCharacterMap
 import android.view.KeyEvent
+import android.view.InputEvent
 import android.view.MotionEvent
 
 internal fun GlobalQuickActions.performGlobalGestureAction(context: Context, action: String) {
@@ -87,7 +88,6 @@ internal fun GlobalQuickActions.withAlpha(color: Int, alpha: Int): Int {
 
 internal fun GlobalQuickActions.injectKey(keyCode: Int) {
     val now = SystemClock.uptimeMillis()
-    val inputManager = getInputManager()
     val mode = 0
     val down = KeyEvent(
         now,
@@ -102,8 +102,40 @@ internal fun GlobalQuickActions.injectKey(keyCode: Int) {
         InputDevice.SOURCE_KEYBOARD
     )
     val up = KeyEvent.changeAction(down, KeyEvent.ACTION_UP)
-    GlobalQuickActions.callCompatible(inputManager, "injectInputEvent", down, mode)
-    GlobalQuickActions.callCompatible(inputManager, "injectInputEvent", up, mode)
+    injectInputEventCompat(down, mode)
+    injectInputEventCompat(up, mode)
+}
+
+/**
+ * Prefer the InputManagerService instance captured in system_server, where the
+ * original global gestures are dispatched. Fall back to InputManager's client
+ * facade for triggers running in SystemUI.
+ */
+internal fun GlobalQuickActions.injectInputEventCompat(event: InputEvent, mode: Int) {
+    var systemServerFailure: Throwable? = null
+    val service = inputManagerService
+    if (service != null) {
+        val attempt = runCatching {
+            GlobalQuickActions.callCompatible(service, "injectInputEvent", event, mode)
+        }
+        if (attempt.isSuccess && attempt.getOrNull() != false) return
+        systemServerFailure = attempt.exceptionOrNull()
+            ?: IllegalStateException("InputManagerService.injectInputEvent returned false")
+    }
+
+    val inputManager = try {
+        getInputManager()
+    } catch (failure: Throwable) {
+        systemServerFailure?.let { if (it !== failure) failure.addSuppressed(it) }
+        throw failure
+    }
+    try {
+        val result = GlobalQuickActions.callCompatible(inputManager, "injectInputEvent", event, mode)
+        if (result == false) throw IllegalStateException("InputManager.injectInputEvent returned false")
+    } catch (failure: Throwable) {
+        systemServerFailure?.let { if (it !== failure) failure.addSuppressed(it) }
+        throw failure
+    }
 }
 
 internal fun GlobalQuickActions.takeScreenshot(context: Context? = null) {
@@ -176,7 +208,6 @@ internal fun GlobalQuickActions.showGlobalActions() {
 
 internal fun GlobalQuickActions.injectLongPressKey(keyCode: Int, durationMs: Long) {
     val downTime = SystemClock.uptimeMillis()
-    val inputManager = getInputManager()
     val mode = 0
     val down = KeyEvent(
         downTime,
@@ -190,7 +221,7 @@ internal fun GlobalQuickActions.injectLongPressKey(keyCode: Int, durationMs: Lon
         KeyEvent.FLAG_FROM_SYSTEM or KeyEvent.FLAG_LONG_PRESS,
         InputDevice.SOURCE_KEYBOARD
     )
-    GlobalQuickActions.callCompatible(inputManager, "injectInputEvent", down, mode)
+    injectInputEventCompat(down, mode)
     Thread {
         runCatching {
             Thread.sleep(durationMs)
@@ -207,7 +238,7 @@ internal fun GlobalQuickActions.injectLongPressKey(keyCode: Int, durationMs: Lon
                 KeyEvent.FLAG_FROM_SYSTEM,
                 InputDevice.SOURCE_KEYBOARD
             )
-            GlobalQuickActions.callCompatible(inputManager, "injectInputEvent", up, mode)
+            injectInputEventCompat(up, mode)
         }
     }.start()
 }
@@ -326,14 +357,13 @@ internal fun GlobalQuickActions.defaultDataTelephonyManager(context: Context): A
 }
 
 internal fun GlobalQuickActions.injectSwipe(startX: Float, startY: Float, endX: Float, endY: Float, durationMs: Long = 180L) {
-    val inputManager = getInputManager()
     val downTime = SystemClock.uptimeMillis()
     fun send(action: Int, eventTime: Long, x: Float, y: Float) {
         val event = MotionEvent.obtain(downTime, eventTime, action, x, y, 0).apply {
             source = InputDevice.SOURCE_TOUCHSCREEN
         }
         runCatching {
-            GlobalQuickActions.callCompatible(inputManager, "injectInputEvent", event, 0)
+            injectInputEventCompat(event, 0)
         }
         event.recycle()
     }
