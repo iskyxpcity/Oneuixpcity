@@ -588,7 +588,7 @@ private fun GlobalShortcutEntryCard(
     }
     val iconChip = when (LocalUiMode.current) {
         UiMode.Material -> MaterialTheme.colorScheme.surfaceContainerHighest
-        UiMode.Miuix -> colorScheme.surface
+        UiMode.Miuix -> colorScheme.primary.copy(alpha = 0.08f)
     }
 
     OtherFunctionsThemeGroup(
