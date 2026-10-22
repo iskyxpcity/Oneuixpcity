@@ -8,6 +8,9 @@ import android.content.IntentFilter
 import android.os.Build
 import com.alohaoneui.common.StatusBarRuntimeBridge
 import java.util.ArrayDeque
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
@@ -27,6 +30,7 @@ object AlohaOneUIDiagnosticLog {
     private val globalShortcutEntries = ArrayDeque<String>()
     private val receiverInstalled = AtomicBoolean(false)
     private val systemServerReceiverInstalled = AtomicBoolean(false)
+    private val pendingSystemServerSnapshots = ConcurrentHashMap<String, CompletableFuture<String>>()
     private var totalChars = 0
     private const val MAX_GLOBAL_SHORTCUT_ENTRIES = 48
     private const val GLOBAL_SHORTCUT_CATEGORY = "AlohaOneUI-GlobalQuickActions"
@@ -68,8 +72,6 @@ object AlohaOneUIDiagnosticLog {
                     val requestId = intent.getStringExtra(StatusBarRuntimeBridge.EXTRA_DIAGNOSTIC_REQUEST_ID)
                     if (requestId.isNullOrBlank()) return
 
-                    // A prior bridge registration may have failed even though the main
-                    // Send logs receiver is already active. Retry it on the next request.
                     install(context)
                     record("AlohaOneUIDiagnostics", "Settings requested the SystemUI diagnostic buffer.")
                     val snapshot = runCatching {
@@ -82,24 +84,48 @@ object AlohaOneUIDiagnosticLog {
                         "AlohaOneUIDiagnostics",
                         "On-demand live geometry snapshot collected: ${snapshot.length} characters.",
                     )
-                    val payload = buildString {
-                        append(dump())
-                        appendLine()
-                        appendLine("[Live status-bar geometry snapshot]")
-                        appendLine(snapshot)
-                    }
-                    val reply = Intent(StatusBarRuntimeBridge.ACTION_DIAGNOSTIC_LOG_RESPONSE)
-                        .setPackage(StatusBarRuntimeBridge.ALOHAONEUI_APP_PACKAGE)
-                        .putExtra(StatusBarRuntimeBridge.EXTRA_DIAGNOSTIC_REQUEST_ID, requestId)
-                        .putExtra(StatusBarRuntimeBridge.EXTRA_DIAGNOSTIC_LOG_TEXT, payload)
-                    runCatching { context.sendBroadcast(reply) }
-                        .onFailure {
+
+                    val pendingResult = goAsync()
+                    Thread({
+                        try {
+                            val systemServerSnapshot = requestSystemServerSnapshot(context, requestId)
+                            val payload = buildString {
+                                append(dump())
+                                appendLine()
+                                appendLine("[SystemServer global-shortcut runtime snapshot]")
+                                appendLine(systemServerSnapshot)
+                                appendLine()
+                                appendLine("[Live status-bar geometry snapshot]")
+                                appendLine(snapshot)
+                            }
+                            val reply = Intent(StatusBarRuntimeBridge.ACTION_DIAGNOSTIC_LOG_RESPONSE)
+                                .setPackage(StatusBarRuntimeBridge.ALOHAONEUI_APP_PACKAGE)
+                                .addFlags(Intent.FLAG_RECEIVER_FOREGROUND)
+                                .putExtra(StatusBarRuntimeBridge.EXTRA_DIAGNOSTIC_REQUEST_ID, requestId)
+                                .putExtra(StatusBarRuntimeBridge.EXTRA_DIAGNOSTIC_LOG_TEXT, payload)
+                            runCatching { context.sendBroadcast(reply) }
+                                .onFailure {
+                                    record(
+                                        "AlohaOneUIDiagnostics",
+                                        "Failed to return diagnostic buffer: ${it.javaClass.simpleName}: ${it.message.orEmpty()}",
+                                    )
+                                }
+                        } catch (failure: Throwable) {
                             record(
                                 "AlohaOneUIDiagnostics",
-                                "Failed to return diagnostic buffer: ${it.javaClass.simpleName}: ${it.message.orEmpty()}",
+                                "Asynchronous diagnostic export failed: ${failure.javaClass.simpleName}: ${failure.message.orEmpty()}",
                             )
+                        } finally {
+                            pendingResult.finish()
                         }
+                    }, "AlohaOneUI-DiagnosticExport").apply {
+                        isDaemon = true
+                        start()
+                    }
                 }
+            }
+            try {
+                val filter = IntentFilter(StatusBarRuntimeBridge.ACTION_DIAGNOSTIC_LOG_REQUEST)                }
             }
             try {
                 val filter = IntentFilter(StatusBarRuntimeBridge.ACTION_DIAGNOSTIC_LOG_REQUEST)
@@ -126,6 +152,18 @@ object AlohaOneUIDiagnosticLog {
             runCatching {
                 val systemServerEvents = object : BroadcastReceiver() {
                     override fun onReceive(context: Context, intent: Intent) {
+                        if (intent.action == StatusBarRuntimeBridge.ACTION_SYSTEM_SERVER_DIAGNOSTIC_RESPONSE) {
+                            val requestId = intent.getStringExtra(StatusBarRuntimeBridge.EXTRA_DIAGNOSTIC_REQUEST_ID)
+                                ?: return
+                            val snapshot = intent.getStringExtra(StatusBarRuntimeBridge.EXTRA_SYSTEM_SERVER_DIAGNOSTIC_SNAPSHOT)
+                                ?: "(SystemServer returned an empty diagnostic snapshot.)"
+                            record(
+                                GLOBAL_SHORTCUT_CATEGORY,
+                                "on-demand SystemServer snapshot response received: @@{snapshot.replace('\\n', ' ').take(1400)}",
+                            )
+                            pendingSystemServerSnapshots.remove(requestId)?.complete(snapshot)
+                            return
+                        }
                         if (intent.action != StatusBarRuntimeBridge.ACTION_SYSTEM_SERVER_DIAGNOSTIC_EVENT) return
                         val category = intent.getStringExtra(
                             StatusBarRuntimeBridge.EXTRA_SYSTEM_SERVER_DIAGNOSTIC_CATEGORY,
@@ -137,23 +175,19 @@ object AlohaOneUIDiagnosticLog {
                         record(category, message)
                     }
                 }
-                val eventFilter = IntentFilter(StatusBarRuntimeBridge.ACTION_SYSTEM_SERVER_DIAGNOSTIC_EVENT)
+                val eventFilter = IntentFilter().apply {
+                    addAction(StatusBarRuntimeBridge.ACTION_SYSTEM_SERVER_DIAGNOSTIC_EVENT)
+                    addAction(StatusBarRuntimeBridge.ACTION_SYSTEM_SERVER_DIAGNOSTIC_RESPONSE)
+                }
                 if (Build.VERSION.SDK_INT >= 33) {
                     app.registerReceiver(
                         systemServerEvents,
                         eventFilter,
-                        Manifest.permission.DUMP,
-                        null,
                         Context.RECEIVER_EXPORTED,
                     )
                 } else {
                     @Suppress("DEPRECATION")
-                    app.registerReceiver(
-                        systemServerEvents,
-                        eventFilter,
-                        Manifest.permission.DUMP,
-                        null,
-                    )
+                    app.registerReceiver(systemServerEvents, eventFilter)
                 }
                 record("AlohaOneUIDiagnostics", "SystemServer global-shortcut diagnostics bridge registered.")
             }.onFailure {
@@ -163,6 +197,27 @@ object AlohaOneUIDiagnosticLog {
                     "SystemServer diagnostics bridge registration failed: ${it.javaClass.simpleName}: ${it.message.orEmpty()}",
                 )
             }
+        }
+    }
+
+    private fun requestSystemServerSnapshot(context: Context, requestId: String): String {
+        val future = CompletableFuture<String>()
+        pendingSystemServerSnapshots[requestId] = future
+        return try {
+            val query = Intent(StatusBarRuntimeBridge.ACTION_SYSTEM_SERVER_DIAGNOSTIC_QUERY)
+                .setPackage("android")
+                .addFlags(Intent.FLAG_RECEIVER_FOREGROUND)
+                .putExtra(StatusBarRuntimeBridge.EXTRA_DIAGNOSTIC_REQUEST_ID, requestId)
+            context.sendBroadcast(query, Manifest.permission.DUMP)
+            future.get(1500L, TimeUnit.MILLISECONDS).also {
+                record("AlohaOneUIDiagnostics", "On-demand SystemServer snapshot collected: ${it.length} characters.")
+            }
+        } catch (failure: Throwable) {
+            val message = "SystemServer on-demand snapshot unavailable: ${failure.javaClass.simpleName}: ${failure.message.orEmpty()}"
+            record("AlohaOneUIDiagnostics", message)
+            "No SystemServer snapshot received. ${failure.javaClass.simpleName}: ${failure.message.orEmpty()}"
+        } finally {
+            pendingSystemServerSnapshots.remove(requestId, future)
         }
     }
 

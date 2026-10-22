@@ -17,4 +17,9 @@ object StatusBarRuntimeBridge {
         "com.alohaoneui.app.action.SYSTEM_SERVER_DIAGNOSTIC_EVENT"
     const val EXTRA_SYSTEM_SERVER_DIAGNOSTIC_CATEGORY = "system_server_diagnostic_category"
     const val EXTRA_SYSTEM_SERVER_DIAGNOSTIC_MESSAGE = "system_server_diagnostic_message"
+    const val ACTION_SYSTEM_SERVER_DIAGNOSTIC_QUERY =
+        "com.alohaoneui.app.action.SYSTEM_SERVER_DIAGNOSTIC_QUERY"
+    const val ACTION_SYSTEM_SERVER_DIAGNOSTIC_RESPONSE =
+        "com.alohaoneui.app.action.SYSTEM_SERVER_DIAGNOSTIC_RESPONSE"
+    const val EXTRA_SYSTEM_SERVER_DIAGNOSTIC_SNAPSHOT = "system_server_diagnostic_snapshot"
 }

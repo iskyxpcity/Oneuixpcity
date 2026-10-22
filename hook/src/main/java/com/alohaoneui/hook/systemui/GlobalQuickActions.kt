@@ -1,11 +1,14 @@
 package com.alohaoneui.hook.systemui
 
+import android.Manifest
 import android.app.ActivityManager
 import android.bluetooth.BluetoothAdapter
+import android.content.BroadcastReceiver
 import android.content.ComponentName
 import android.database.ContentObserver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.PixelFormat
@@ -17,7 +20,9 @@ import android.net.Uri
 import android.net.wifi.WifiManager
 import android.os.Handler
 import android.os.Looper
+import android.os.Build
 import android.os.PowerManager
+import android.os.Process
 import android.os.SystemClock
 import android.os.UserHandle
 import android.os.VibrationEffect
@@ -44,6 +49,7 @@ import java.lang.reflect.Constructor
 import java.lang.reflect.Field
 import java.lang.reflect.Method
 import java.util.WeakHashMap
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.abs
 import kotlin.math.hypot
 import kotlin.math.max
@@ -81,6 +87,7 @@ object GlobalQuickActions {
     @Volatile private var preferenceObserver: ContentObserver? = null
     @Volatile private var inputManagerService: Any? = null
     @Volatile private var phoneWindowManager: Any? = null
+    private val diagnosticQueryReceiverInstalled = AtomicBoolean(false)
 
     private val gesturePointerIds = IntArray(3) { -1 }
     private val gestureStartX = FloatArray(3)
@@ -227,10 +234,72 @@ object GlobalQuickActions {
 
         systemServerContext?.let { context ->
             registerPreferenceObserver(context)
+            registerSystemServerDiagnosticQueryReceiver(context)
             runCatching { ensureFloatingBall(context, currentSettings()) }
                 .onFailure { Log.w(TAG, "initial floating-ball setup failed", it) }
         }
         Log.i(TAG, "installed system-server global shortcut dispatch")
+    }
+
+    private fun registerSystemServerDiagnosticQueryReceiver(context: Context) {
+        if (!diagnosticQueryReceiverInstalled.compareAndSet(false, true)) return
+        try {
+            val receiver = object : BroadcastReceiver() {
+                override fun onReceive(context: Context, intent: Intent) {
+                    if (intent.action != StatusBarRuntimeBridge.ACTION_SYSTEM_SERVER_DIAGNOSTIC_QUERY) return
+                    val requestId = intent.getStringExtra(StatusBarRuntimeBridge.EXTRA_DIAGNOSTIC_REQUEST_ID)
+                        ?: return
+                    val snapshot = runCatching { buildSystemServerDiagnosticSnapshot(context) }
+                        .getOrElse {
+                            "snapshotFailed=${it.javaClass.simpleName}:${it.message.orEmpty()}"
+                        }
+                    val response = Intent(StatusBarRuntimeBridge.ACTION_SYSTEM_SERVER_DIAGNOSTIC_RESPONSE)
+                        .setPackage("com.android.systemui")
+                        .addFlags(Intent.FLAG_RECEIVER_FOREGROUND)
+                        .putExtra(StatusBarRuntimeBridge.EXTRA_DIAGNOSTIC_REQUEST_ID, requestId)
+                        .putExtra(StatusBarRuntimeBridge.EXTRA_SYSTEM_SERVER_DIAGNOSTIC_SNAPSHOT, snapshot)
+                    runCatching { context.sendBroadcast(response, Manifest.permission.DUMP) }
+                        .onFailure { Log.w(TAG, "could not return on-demand SystemServer snapshot", it) }
+                }
+            }
+            val filter = IntentFilter(StatusBarRuntimeBridge.ACTION_SYSTEM_SERVER_DIAGNOSTIC_QUERY)
+            if (Build.VERSION.SDK_INT >= 33) {
+                context.registerReceiver(receiver, filter, Manifest.permission.DUMP, null, Context.RECEIVER_EXPORTED)
+            } else {
+                @Suppress("DEPRECATION")
+                context.registerReceiver(receiver, filter, Manifest.permission.DUMP, null)
+            }
+            Log.i(TAG, "registered on-demand SystemServer diagnostics query receiver")
+        } catch (failure: Exception) {
+            diagnosticQueryReceiverInstalled.set(false)
+            Log.w(TAG, "could not register on-demand SystemServer diagnostics query receiver", failure)
+        }
+    }
+
+    private fun buildSystemServerDiagnosticSnapshot(context: Context): String {
+        val settings = currentSettings()
+        val view = floatingBallView
+        val params = floatingBallParams
+        val delaySeconds = settings.floatingBallAutoEdgeDelaySeconds.coerceIn(0, 10)
+        return buildString {
+            appendLine("capturedAtMs=${System.currentTimeMillis()} uid=${Process.myUid()} contextPackage=${context.packageName}")
+            appendLine("enabled=${settings.floatingBallEnabled} autoEdgeDelaySeconds=${delaySeconds}")
+            appendLine(
+                "viewPresent=${view != null} attached=${view?.isAttachedToWindow} " +
+                    "viewSize=${view?.width}x${view?.height} visibility=${view?.visibility}"
+            )
+            appendLine(
+                "paramsPresent=${params != null} x=${params?.x} y=${params?.y} " +
+                    "width=${params?.width} height=${params?.height} windowManagerPresent=${floatingBallWindowManager != null}"
+            )
+            appendLine(
+                "timerArmed=${floatingBallAutoEdge != null} timerHostMatchesView=${floatingBallAutoEdgeHost === view} " +
+                    "generation=${floatingBallAutoEdgeGeneration} touchActive=${floatingBallTouchActive}"
+            )
+            appendLine(
+                "positionInitialized=${floatingBallPositionInitialized} savedX=${floatingBallX} savedY=${floatingBallY}"
+            )
+        }
     }
 
     context(xposedModule: XposedModule)
@@ -850,8 +919,10 @@ object GlobalQuickActions {
             context.sendBroadcast(
                 Intent(StatusBarRuntimeBridge.ACTION_SYSTEM_SERVER_DIAGNOSTIC_EVENT)
                     .setPackage("com.android.systemui")
+                    .addFlags(Intent.FLAG_RECEIVER_FOREGROUND)
                     .putExtra(StatusBarRuntimeBridge.EXTRA_SYSTEM_SERVER_DIAGNOSTIC_CATEGORY, TAG)
                     .putExtra(StatusBarRuntimeBridge.EXTRA_SYSTEM_SERVER_DIAGNOSTIC_MESSAGE, exportedMessage),
+                Manifest.permission.DUMP,
             )
         }.onFailure {
             Log.w(TAG, "could not bridge floating-ball diagnostics into SystemUI export", it)

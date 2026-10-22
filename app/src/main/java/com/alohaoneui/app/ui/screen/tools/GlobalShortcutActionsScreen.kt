@@ -1746,8 +1746,8 @@ private fun ShortcutActionGroupCard(
     onSelect: (String) -> Unit,
 ) {
     val selectedBackground = when (LocalUiMode.current) {
-        UiMode.Material -> MaterialTheme.colorScheme.primary.copy(alpha = 0.16f)
-        UiMode.Miuix -> colorScheme.primary.copy(alpha = 0.16f)
+        UiMode.Material -> MaterialTheme.colorScheme.secondaryContainer
+        UiMode.Miuix -> colorScheme.primary.copy(alpha = 0.15f)
     }
     val unselectedBackground = when (LocalUiMode.current) {
         UiMode.Material -> MaterialTheme.colorScheme.surfaceContainerLow
@@ -1833,16 +1833,16 @@ private fun ShortcutActionGrid(
                     val selected = option.id == selectedAction ||
                         (option.id == ACTION_CUSTOM_APP && selectedAction.startsWith(ACTION_CUSTOM_APP_PREFIX))
                     val foreground = if (selected) when (LocalUiMode.current) {
-                        UiMode.Material -> MaterialTheme.colorScheme.primary
-                        UiMode.Miuix -> colorScheme.primary
+                        UiMode.Material -> MaterialTheme.colorScheme.onSecondaryContainer
+                        UiMode.Miuix -> colorScheme.onSurface
                     } else when (LocalUiMode.current) {
                         UiMode.Material -> MaterialTheme.colorScheme.onSurface
                         UiMode.Miuix -> colorScheme.onSurface
                     }
                     val chipShape = RoundedCornerShape(14.dp)
                     val borderColor = if (selected) when (LocalUiMode.current) {
-                        UiMode.Material -> MaterialTheme.colorScheme.primary.copy(alpha = 0.62f)
-                        UiMode.Miuix -> colorScheme.primary.copy(alpha = 0.62f)
+                        UiMode.Material -> MaterialTheme.colorScheme.secondaryContainer
+                        UiMode.Miuix -> colorScheme.primary.copy(alpha = 0.15f)
                     } else when (LocalUiMode.current) {
                         UiMode.Material -> MaterialTheme.colorScheme.outlineVariant
                         UiMode.Miuix -> colorScheme.onSurfaceVariantSummary.copy(alpha = 0.24f)
@@ -1859,7 +1859,7 @@ private fun ShortcutActionGrid(
                         ) {
                             Box(
                                 modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp)
-                                    .padding(horizontal = 10.dp, vertical = 8.dp),
+                                    .padding(horizontal = 10.dp),
                                 contentAlignment = Alignment.CenterStart,
                             ) {
                                 Text(option.label, color = foreground, style = MaterialTheme.typography.bodySmall)
@@ -1873,15 +1873,20 @@ private fun ShortcutActionGrid(
                             colors = MiuixCardDefaults.defaultColors(
                                 color = if (selected) selectedBackground else unselectedBackground,
                             ),
-                            insideMargin = PaddingValues(horizontal = 10.dp, vertical = 8.dp),
+                            insideMargin = PaddingValues(horizontal = 10.dp, vertical = 0.dp),
                             showIndication = true,
                             onClick = { onSelect(option.id) },
                         ) {
-                            MiuixText(
-                                option.label,
-                                modifier = Modifier.fillMaxWidth(),
-                                color = if (selected) colorScheme.primary else colorScheme.onSurface,
-                            )
+                            Box(
+                                modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp),
+                                contentAlignment = Alignment.CenterStart,
+                            ) {
+                                MiuixText(
+                                    option.label,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    color = foreground,
+                                )
+                            }
                         }
                     }
                 }

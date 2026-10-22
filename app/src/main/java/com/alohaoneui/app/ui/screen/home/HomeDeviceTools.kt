@@ -73,11 +73,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.material3.Icon as MaterialIcon
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text as MaterialText
 import com.alohaoneui.app.ui.LocalUiMode
 import com.alohaoneui.app.ui.UiMode
@@ -221,7 +217,6 @@ fun HomeDeviceToolsCard() {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun DeviceInfoSectionSelector(
     selectedSection: Int,
@@ -229,29 +224,52 @@ private fun DeviceInfoSectionSelector(
 ) {
     val options = listOf("系统监视器", "屏幕信息", "设备信息")
     when (LocalUiMode.current) {
-        UiMode.Material -> SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-            options.forEachIndexed { index, label ->
-                SegmentedButton(
-                    selected = selectedSection == index,
-                    onClick = { onSelect(index) },
-                    shape = SegmentedButtonDefaults.itemShape(index = index, count = options.size),
-                    colors = SegmentedButtonDefaults.colors(
-                        activeContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                        activeContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                        activeBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.55f),
-                        inactiveContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                        inactiveContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                        inactiveBorderColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.65f),
-                    ),
-                    label = {
+        UiMode.Material -> {
+            val outerShape = RoundedCornerShape(14.dp)
+            val segmentShape = RoundedCornerShape(10.dp)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(45.dp)
+                    .clip(outerShape)
+                    .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                    .border(
+                        width = 1.dp,
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.42f),
+                        shape = outerShape,
+                    )
+                    .padding(4.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                options.forEachIndexed { index, label ->
+                    val selected = selectedSection == index
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight()
+                            .clip(segmentShape)
+                            .background(
+                                if (selected) MaterialTheme.colorScheme.secondaryContainer
+                                else Color.Transparent,
+                            )
+                            .clickable(role = Role.Tab) { onSelect(index) },
+                        contentAlignment = Alignment.Center,
+                    ) {
                         MaterialText(
                             text = label,
-                            maxLines = 1,
-                            overflow = TextOverflow.Clip,
+                            color = if (selected) {
+                                MaterialTheme.colorScheme.onSecondaryContainer
+                            } else {
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                            },
                             style = MaterialTheme.typography.labelMedium,
+                            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
                         )
-                    },
-                )
+                    }
+                }
             }
         }
         UiMode.Miuix -> MiuixTabRowWithContour(
