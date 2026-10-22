@@ -16,9 +16,12 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.PI
+import kotlin.math.pow
+import kotlin.math.sign
 
 /**
  * Shared One UI 8.5 / 9-inspired feature tiles: rounded colorful gradients,
@@ -90,27 +93,50 @@ internal fun OneUiFeatureIcon(
             drawPath(path, shade, style = if (fill) androidx.compose.ui.graphics.drawscope.Fill else Stroke(width * u, cap = StrokeCap.Round))
             drawPath(path, color, style = if (fill) androidx.compose.ui.graphics.drawscope.Fill else Stroke(width * u, cap = StrokeCap.Round))
         }
-        // Measured from the Aloha OneUI launcher silhouette and Samsung's
-        // One UI app-icon reference: the corner begins at ~26.5% of each side.
-        // The asymmetric Bézier handles preserve long straight edges while
-        // creating the continuous, soft square curve (not a circular roundRect).
+        // One UI 8.5 app icons use a continuously curved squircle, not a
+        // rectangle with four flat sides and circular corner arcs. Use a
+        // sampled superellipse contour, then smooth each interval with cubic
+        // Bézier segments. This keeps curvature along the full perimeter.
         fun oneUiIconPath(x: Float, y: Float, width: Float, height: Float): Path {
-            val corner = minOf(width, height) * 0.265f
-            val handle = minOf(width, height) * 0.132f
-            val left = x
-            val top = y
-            val right = x + width
-            val bottom = y + height
+            val exponent = 3.2
+            val power = 2.0 / exponent
+            val segments = 128
+            val halfWidth = width / 2f
+            val halfHeight = height / 2f
+            val centerX = x + halfWidth
+            val centerY = y + halfHeight
+            val points = List(segments) { index ->
+                val angle = 2.0 * PI * index / segments
+                val cosine = cos(angle)
+                val sine = sin(angle)
+                val normalizedX = sign(cosine) * abs(cosine).pow(power)
+                val normalizedY = sign(sine) * abs(sine).pow(power)
+                Offset(
+                    centerX + halfWidth * normalizedX.toFloat(),
+                    centerY + halfHeight * normalizedY.toFloat(),
+                )
+            }
             return Path().apply {
-                moveTo(left + corner, top)
-                lineTo(right - corner, top)
-                cubicTo(right - corner + handle, top, right, top + corner - handle, right, top + corner)
-                lineTo(right, bottom - corner)
-                cubicTo(right, bottom - corner + handle, right - corner + handle, bottom, right - corner, bottom)
-                lineTo(left + corner, bottom)
-                cubicTo(left + corner - handle, bottom, left, bottom - corner + handle, left, bottom - corner)
-                lineTo(left, top + corner)
-                cubicTo(left, top + corner - handle, left + corner - handle, top, left + corner, top)
+                moveTo(points[0].x, points[0].y)
+                for (index in points.indices) {
+                    val previous = points[(index - 1 + segments) % segments]
+                    val start = points[index]
+                    val end = points[(index + 1) % segments]
+                    val next = points[(index + 2) % segments]
+                    val controlOne = Offset(
+                        start.x + (end.x - previous.x) / 6f,
+                        start.y + (end.y - previous.y) / 6f,
+                    )
+                    val controlTwo = Offset(
+                        end.x - (next.x - start.x) / 6f,
+                        end.y - (next.y - start.y) / 6f,
+                    )
+                    cubicTo(
+                        controlOne.x, controlOne.y,
+                        controlTwo.x, controlTwo.y,
+                        end.x, end.y,
+                    )
+                }
                 close()
             }
         }

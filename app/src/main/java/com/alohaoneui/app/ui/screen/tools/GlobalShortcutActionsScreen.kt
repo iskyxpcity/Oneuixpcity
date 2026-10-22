@@ -59,7 +59,9 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -1000,7 +1002,7 @@ private fun ShortcutFeatureEnableCard(
             if (kind.note.isNotBlank()) {
                 add {
                     OtherFunctionsThemeChildItem {
-                        ShortcutBodyText(kind.note)
+                        ShortcutBodyText(kind.note, groupedChild = true)
                     }
                 }
             }
@@ -1209,44 +1211,33 @@ private fun ShortcutSettingsSection(
     OtherFunctionsThemeGroup(
         items = buildList {
             add {
-                OtherFunctionsThemeChildItem {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(
-                                horizontal = if (LocalUiMode.current == UiMode.Material) 0.dp else 16.dp,
-                                vertical = 8.dp,
-                            ),
-                    ) {
-                        when (LocalUiMode.current) {
-                            UiMode.Material -> Text(
+                when (LocalUiMode.current) {
+                    UiMode.Material -> OtherFunctionsThemeChildItem {
+                        Column(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                        ) {
+                            Text(
                                 title,
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.SemiBold,
                                 color = MaterialTheme.colorScheme.onSurface,
                             )
-                            UiMode.Miuix -> MiuixText(
-                                title,
-                                color = colorScheme.onSurface,
-                                fontWeight = FontWeight.SemiBold,
-                            )
-                        }
-                        if (summary.isNotBlank()) {
-                            when (LocalUiMode.current) {
-                                UiMode.Material -> Text(
+                            if (summary.isNotBlank()) {
+                                Text(
                                     summary,
                                     modifier = Modifier.padding(top = 4.dp),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
-                                UiMode.Miuix -> MiuixText(
-                                    summary,
-                                    modifier = Modifier.padding(top = 4.dp),
-                                    color = colorScheme.onSurfaceVariantSummary,
-                                )
                             }
                         }
                     }
+
+                    UiMode.Miuix -> MiuixBasicComponent(
+                        title = title,
+                        summary = summary.takeIf { it.isNotBlank() },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
                 }
             }
             addAll(items)
@@ -1255,11 +1246,17 @@ private fun ShortcutSettingsSection(
 }
 
 @Composable
-private fun ShortcutBodyText(text: String) {
+private fun ShortcutBodyText(
+    text: String,
+    groupedChild: Boolean = false,
+) {
     when (LocalUiMode.current) {
         UiMode.Material -> Text(
             text = text,
-            modifier = Modifier.padding(horizontal = 18.dp, vertical = 8.dp),
+            modifier = Modifier.padding(
+                horizontal = if (groupedChild) 0.dp else 18.dp,
+                vertical = 8.dp,
+            ),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -1704,8 +1701,7 @@ private fun ShortcutActionGroupCard(
                         UiMode.Material -> Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clickable(onClick = onToggle)
-                                .padding(horizontal = 14.dp, vertical = 12.dp),
+                                .clickable(onClick = onToggle),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Text(group.title, modifier = Modifier.weight(1f), fontWeight = FontWeight.SemiBold)
@@ -1756,7 +1752,13 @@ private fun ShortcutActionGrid(
     unselectedBackground: Color,
     onSelect: (String) -> Unit,
 ) {
-    Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp)) {
+    val gridInset = when (LocalUiMode.current) {
+        UiMode.Material -> PaddingValues(0.dp)
+        UiMode.Miuix -> PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+    }
+    Column(
+        modifier = Modifier.fillMaxWidth().padding(gridInset),
+    ) {
         group.actions.chunked(2).forEach { rowActions ->
             Row(modifier = Modifier.fillMaxWidth()) {
                 rowActions.forEach { option ->
@@ -1778,17 +1780,22 @@ private fun ShortcutActionGrid(
                         UiMode.Miuix -> colorScheme.onSurfaceVariantSummary.copy(alpha = 0.24f)
                     }
                     when (LocalUiMode.current) {
-                        UiMode.Material -> Box(
-                            modifier = Modifier.weight(1f).padding(4.dp)
-                                .clip(chipShape)
-                                .background(if (selected) selectedBackground else unselectedBackground)
-                                .border(1.dp, borderColor, chipShape)
-                                .clickable { onSelect(option.id) }
-                                .heightIn(min = 44.dp)
-                                .padding(horizontal = 10.dp, vertical = 8.dp),
-                            contentAlignment = Alignment.CenterStart,
+                        UiMode.Material -> Card(
+                            onClick = { onSelect(option.id) },
+                            modifier = Modifier.weight(1f).padding(4.dp).heightIn(min = 44.dp),
+                            shape = chipShape,
+                            colors = CardDefaults.cardColors(
+                                containerColor = if (selected) selectedBackground else unselectedBackground,
+                            ),
+                            border = BorderStroke(1.dp, borderColor),
                         ) {
-                            Text(option.label, color = foreground, style = MaterialTheme.typography.bodySmall)
+                            Box(
+                                modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp)
+                                    .padding(horizontal = 10.dp, vertical = 8.dp),
+                                contentAlignment = Alignment.CenterStart,
+                            ) {
+                                Text(option.label, color = foreground, style = MaterialTheme.typography.bodySmall)
+                            }
                         }
                         UiMode.Miuix -> MiuixCard(
                             modifier = Modifier.weight(1f).padding(4.dp)
@@ -1826,16 +1833,23 @@ private fun CustomShortcutAppPicker(
         if (apps.isEmpty()) {
             ShortcutBodyText("没有找到可从桌面启动的应用。")
         } else {
-            Column(modifier = Modifier.heightIn(max = 500.dp).verticalScroll(rememberScrollState())) {
-                apps.forEach { app ->
-                    when (LocalUiMode.current) {
-                        UiMode.Material -> Text(
-                            app.label,
-                            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
-                                .clickable { onSelect(app.component) }.padding(12.dp),
-                            style = MaterialTheme.typography.bodyMedium,
-                        )
-                        UiMode.Miuix -> MiuixBasicComponent(
+            when (LocalUiMode.current) {
+                UiMode.Material -> SegmentedColumn(
+                    modifier = Modifier.fillMaxWidth().heightIn(max = 500.dp).verticalScroll(rememberScrollState()),
+                    content = apps.map { app ->
+                        {
+                            SegmentedListItem(
+                                onClick = { onSelect(app.component) },
+                                colors = alohaOneUISegmentedColors(),
+                                headlineContent = { Text(app.label) },
+                            )
+                        }
+                    },
+                )
+
+                UiMode.Miuix -> Column(modifier = Modifier.heightIn(max = 500.dp).verticalScroll(rememberScrollState())) {
+                    apps.forEach { app ->
+                        MiuixBasicComponent(
                             title = app.label,
                             modifier = Modifier.fillMaxWidth(),
                             onClick = { onSelect(app.component) },
