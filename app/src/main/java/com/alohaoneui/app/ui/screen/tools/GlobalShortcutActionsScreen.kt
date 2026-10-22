@@ -1129,8 +1129,8 @@ private fun ScreenOffVolumeHapticCard(
     onHapticEnabled: (Boolean) -> Unit,
     onStrength: (Int) -> Unit,
 ) {
-    // ScreenOffVolumeKeyActivity has its own source-specific card header and
-    // summary; unlike the gesture/trigger cards, its switch is titled below.
+    // Keep the haptic switch on the section title row, aligned with the
+    // long-press and double-click switches in both supported themes.
     ShortcutSettingsSection(
         title = "振动反馈",
         summary = "切歌或播放/暂停触发成功时振动一次。",
