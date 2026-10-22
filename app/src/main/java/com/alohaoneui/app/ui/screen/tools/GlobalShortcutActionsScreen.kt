@@ -1113,43 +1113,59 @@ private fun ThresholdShortcutCard(
 ) {
     var showHelp by remember { mutableStateOf(false) }
     OtherFunctionsThemeGroup(
-        items = listOf({
-            when (LocalUiMode.current) {
-                UiMode.Material -> SegmentedListItem(
-                    colors = alohaOneUISegmentedColors(),
-                    headlineContent = {
-                        Column(
-                            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                        ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
+        items = listOf(
+            {
+                when (LocalUiMode.current) {
+                    UiMode.Material -> SegmentedListItem(
+                        onClick = { showHelp = true },
+                        colors = alohaOneUISegmentedColors(),
+                        headlineContent = {
+                            Text(
+                                text = title,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurface,
+                            )
+                        },
+                        supportingContent = summary.takeIf { it.isNotBlank() }?.let {
+                            {
                                 Text(
-                                    text = title,
-                                    modifier = Modifier.weight(1f),
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                )
-                                Box(
-                                    modifier = Modifier.size(28.dp)
-                                        .clip(CircleShape)
-                                        .background(MaterialTheme.colorScheme.surfaceContainerHighest)
-                                        .clickable { showHelp = true },
-                                    contentAlignment = Alignment.Center,
-                                ) {
-                                    Text("?", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
-                                }
-                            }
-                            if (summary.isNotBlank()) {
-                                Text(
-                                    text = summary,
-                                    modifier = Modifier.padding(top = 4.dp),
+                                    text = it,
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                             }
+                        },
+                        trailingContent = {
+                            IconButton(onClick = { showHelp = true }) {
+                                Text(
+                                    "?",
+                                    color = MaterialTheme.colorScheme.primary,
+                                    fontWeight = FontWeight.Bold,
+                                )
+                            }
+                        },
+                    )
+
+                    UiMode.Miuix -> MiuixBasicComponent(
+                        title = title,
+                        summary = summary.takeIf { it.isNotBlank() },
+                        modifier = Modifier.fillMaxWidth(),
+                        endActions = {
+                            MiuixIconButton(onClick = { showHelp = true }) {
+                                MiuixText("?", color = colorScheme.primary, fontWeight = FontWeight.Bold)
+                            }
+                        },
+                        onClick = { showHelp = true },
+                        role = Role.Button,
+                    )
+                }
+            },
+            {
+                when (LocalUiMode.current) {
+                    UiMode.Material -> SegmentedListItem(
+                        colors = alohaOneUISegmentedColors(),
+                        headlineContent = {
                             NumericShortcutSlider(
                                 title = "",
                                 summary = "",
@@ -1161,48 +1177,25 @@ private fun ThresholdShortcutCard(
                                 showTitleAndSummary = false,
                                 verticalPadding = 4.dp,
                             )
-                        }
-                    },
-                )
-
-                UiMode.Miuix -> Column(
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        MiuixText(
-                            text = title,
-                            modifier = Modifier.weight(1f),
-                            color = colorScheme.onSurface,
-                            fontWeight = FontWeight.SemiBold,
-                        )
-                        MiuixIconButton(onClick = { showHelp = true }) {
-                            MiuixText("?", color = colorScheme.primary, fontWeight = FontWeight.Bold)
-                        }
-                    }
-                    if (summary.isNotBlank()) {
-                        MiuixText(
-                            text = summary,
-                            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(top = 4.dp),
-                            color = colorScheme.onSurfaceVariantSummary,
-                        )
-                    }
-                    NumericShortcutSlider(
-                        title = "",
-                        summary = "",
-                        value = value,
-                        range = range,
-                        enabled = enabled,
-                        format = format,
-                        onCommit = onCommit,
-                        showTitleAndSummary = false,
-                        verticalPadding = 4.dp,
+                        },
                     )
+
+                    UiMode.Miuix -> OtherFunctionsThemeChildItem {
+                        NumericShortcutSlider(
+                            title = "",
+                            summary = "",
+                            value = value,
+                            range = range,
+                            enabled = enabled,
+                            format = format,
+                            onCommit = onCommit,
+                            showTitleAndSummary = false,
+                            verticalPadding = 4.dp,
+                        )
+                    }
                 }
-            }
-        }),
+            },
+        ),
     )
     if (showHelp) ShortcutInformationDialog(helpTitle, helpMessage) { showHelp = false }
 }

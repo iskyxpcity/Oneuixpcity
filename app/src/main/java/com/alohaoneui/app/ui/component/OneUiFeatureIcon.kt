@@ -65,7 +65,6 @@ internal fun OneUiFeatureIcon(
         val u = minOf(w, h)
         val white = Color.White
         val shade = Color(0xFF16305A).copy(alpha = 0.25f)
-        val tileRadius = CornerRadius(u * 0.32f, u * 0.32f)
         fun p(x: Float, y: Float) = Offset(x * u, y * u)
         fun rr(x: Float, y: Float, width: Float, height: Float, radius: Float, color: Color) {
             drawRoundRect(color, p(x, y), Size(width * u, height * u), CornerRadius(radius * u, radius * u))
@@ -91,17 +90,49 @@ internal fun OneUiFeatureIcon(
             drawPath(path, shade, style = if (fill) androidx.compose.ui.graphics.drawscope.Fill else Stroke(width * u, cap = StrokeCap.Round))
             drawPath(path, color, style = if (fill) androidx.compose.ui.graphics.drawscope.Fill else Stroke(width * u, cap = StrokeCap.Round))
         }
+        // Measured from the Aloha OneUI launcher silhouette and Samsung's
+        // One UI app-icon reference: the corner begins at ~26.5% of each side.
+        // The asymmetric Bézier handles preserve long straight edges while
+        // creating the continuous, soft square curve (not a circular roundRect).
+        fun oneUiIconPath(x: Float, y: Float, width: Float, height: Float): Path {
+            val corner = minOf(width, height) * 0.265f
+            val handle = minOf(width, height) * 0.132f
+            val left = x
+            val top = y
+            val right = x + width
+            val bottom = y + height
+            return Path().apply {
+                moveTo(left + corner, top)
+                lineTo(right - corner, top)
+                cubicTo(right - corner + handle, top, right, top + corner - handle, right, top + corner)
+                lineTo(right, bottom - corner)
+                cubicTo(right, bottom - corner + handle, right - corner + handle, bottom, right - corner, bottom)
+                lineTo(left + corner, bottom)
+                cubicTo(left + corner - handle, bottom, left, bottom - corner + handle, left, bottom - corner)
+                lineTo(left, top + corner)
+                cubicTo(left, top + corner - handle, left + corner - handle, top, left + corner, top)
+                close()
+            }
+        }
 
-        drawRoundRect(Color.Black.copy(alpha = 0.20f), Offset(0f, u * 0.026f), Size(w, h), tileRadius)
-        drawRoundRect(Brush.linearGradient(palette, Offset(0f, 0f), Offset(w, h)), size = Size(w, h), cornerRadius = tileRadius)
-        drawRoundRect(
-            Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.25f), Color.White.copy(alpha = 0.04f), Color.Transparent), 0f, h * 0.72f),
-            size = Size(w, h), cornerRadius = tileRadius,
+        drawPath(
+            oneUiIconPath(0f, u * 0.026f, w, h),
+            Color.Black.copy(alpha = 0.20f),
         )
-        drawRoundRect(
-            Color.White.copy(alpha = 0.24f), Offset(u * 0.018f, u * 0.018f),
-            Size(w - u * 0.036f, h - u * 0.036f),
-            CornerRadius(u * 0.30f, u * 0.30f), style = Stroke(u * 0.018f),
+        val tilePath = oneUiIconPath(0f, 0f, w, h)
+        drawPath(tilePath, Brush.linearGradient(palette, Offset(0f, 0f), Offset(w, h)))
+        drawPath(
+            tilePath,
+            Brush.verticalGradient(
+                listOf(Color.White.copy(alpha = 0.25f), Color.White.copy(alpha = 0.04f), Color.Transparent),
+                0f,
+                h * 0.72f,
+            ),
+        )
+        drawPath(
+            oneUiIconPath(u * 0.018f, u * 0.018f, w - u * 0.036f, h - u * 0.036f),
+            Color.White.copy(alpha = 0.24f),
+            style = Stroke(u * 0.018f),
         )
 
         when (kind) {
@@ -122,8 +153,8 @@ internal fun OneUiFeatureIcon(
                 ln(0.57f, 0.82f, 0.69f, 0.71f, 0.07f)
             }
             OneUiFeatureIconKind.StatusPadding -> {
-                strokeRect(0.22f, 0.25f, 0.56f, 0.50f, 0.12f)
-                strokeRect(0.36f, 0.37f, 0.28f, 0.26f, 0.085f, Color.White.copy(alpha = 0.96f))
+                strokeRect(0.22f, 0.25f, 0.56f, 0.50f, 0.06f)
+                strokeRect(0.36f, 0.37f, 0.28f, 0.26f, 0.035f, Color.White.copy(alpha = 0.96f))
                 ln(0.12f, 0.50f, 0.29f, 0.50f, 0.045f)
                 ln(0.22f, 0.43f, 0.29f, 0.50f, 0.045f)
                 ln(0.22f, 0.57f, 0.29f, 0.50f, 0.045f)
@@ -163,14 +194,14 @@ internal fun OneUiFeatureIcon(
                 ln(0.77f, 0.58f, 0.66f, 0.69f, 0.075f)
             }
             OneUiFeatureIconKind.StatusPower -> {
-                strokeRect(0.18f, 0.33f, 0.63f, 0.35f, 0.12f)
+                strokeRect(0.18f, 0.33f, 0.63f, 0.35f, 0.07f)
                 rr(0.81f, 0.43f, 0.06f, 0.15f, 0.02f, white)
                 poly(listOf(Offset(0.55f,0.36f),Offset(0.40f,0.52f),Offset(0.50f,0.52f),Offset(0.44f,0.64f),Offset(0.63f,0.46f),Offset(0.52f,0.46f)), 0.04f, Color(0xFFFFD05D), true)
             }
             OneUiFeatureIconKind.StatusCombo -> {
-                rr(0.23f,0.29f,0.54f,0.13f,0.08f,white)
-                rr(0.23f,0.47f,0.39f,0.10f,0.065f,Color.White.copy(alpha=0.92f))
-                rr(0.23f,0.63f,0.49f,0.10f,0.065f,Color.White.copy(alpha=0.80f))
+                rr(0.23f,0.29f,0.54f,0.13f,0.055f,white)
+                rr(0.23f,0.47f,0.39f,0.10f,0.04f,Color.White.copy(alpha=0.92f))
+                rr(0.23f,0.63f,0.49f,0.10f,0.04f,Color.White.copy(alpha=0.80f))
                 dot(0.73f,0.52f,0.06f)
             }
             OneUiFeatureIconKind.StatusSignal -> {
@@ -191,20 +222,20 @@ internal fun OneUiFeatureIcon(
                 ln(0.32f,0.36f,0.70f,0.61f,0.065f); ln(0.70f,0.61f,0.49f,0.78f,0.065f)
             }
             OneUiFeatureIconKind.StatusLockscreen -> {
-                rr(0.25f,0.45f,0.50f,0.32f,0.11f,white)
+                rr(0.25f,0.45f,0.50f,0.32f,0.075f,white)
                 val arch=Path().apply { moveTo(u*0.34f,u*0.47f); lineTo(u*0.34f,u*0.39f); quadraticTo(u*0.34f,u*0.24f,u*0.50f,u*0.24f); quadraticTo(u*0.66f,u*0.24f,u*0.66f,u*0.39f); lineTo(u*0.66f,u*0.47f) }
                 drawPath(arch,shade,style=Stroke(u*0.08f,cap=StrokeCap.Round)); drawPath(arch,white,style=Stroke(u*0.08f,cap=StrokeCap.Round))
                 dot(0.50f,0.58f,0.035f,palette[2]); ln(0.50f,0.59f,0.50f,0.66f,0.035f,palette[2])
             }
             OneUiFeatureIconKind.StatusNotificationCenter -> {
-                rr(0.26f,0.23f,0.51f,0.43f,0.085f,Color.White.copy(alpha=0.48f))
-                rr(0.21f,0.34f,0.51f,0.43f,0.085f,Color.White.copy(alpha=0.72f))
-                rr(0.27f,0.45f,0.51f,0.34f,0.085f,white)
+                rr(0.26f,0.23f,0.51f,0.43f,0.045f,Color.White.copy(alpha=0.48f))
+                rr(0.21f,0.34f,0.51f,0.43f,0.045f,Color.White.copy(alpha=0.72f))
+                rr(0.27f,0.45f,0.51f,0.34f,0.045f,white)
                 rr(0.35f,0.53f,0.26f,0.045f,0.022f,palette[1]); rr(0.35f,0.62f,0.32f,0.035f,0.018f,palette[0])
             }
             OneUiFeatureIconKind.StatusControlCenter -> {
                 listOf(listOf(0.22f,0.24f),listOf(0.53f,0.24f),listOf(0.22f,0.53f),listOf(0.53f,0.53f)).forEachIndexed { i, pos ->
-                    rr(pos[0],pos[1],0.25f,0.22f,0.085f,if(i==0) white else white.copy(alpha=0.78f))
+                    rr(pos[0],pos[1],0.25f,0.22f,0.055f,if(i==0) white else white.copy(alpha=0.78f))
                 }
                 dot(0.36f,0.35f,0.045f,palette[1]); dot(0.66f,0.64f,0.045f,palette[1])
             }
