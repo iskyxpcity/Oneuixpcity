@@ -84,8 +84,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import android.widget.Toast
 import kotlinx.coroutines.launch
-import com.alohaoneui.app.alohaOneUIApp
-import com.alohaoneui.app.alohaoneui.AlohaOneUIPreferenceBridge
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
