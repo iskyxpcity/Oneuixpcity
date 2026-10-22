@@ -1113,14 +1113,15 @@ private fun ThresholdShortcutCard(
 ) {
     var showHelp by remember { mutableStateOf(false) }
     OtherFunctionsThemeGroup(
-        items = buildList {
-            add {
-                OtherFunctionsThemeChildItem {
-                    Column(
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                    ) {
-                        when (LocalUiMode.current) {
-                            UiMode.Material -> Row(
+        items = listOf({
+            when (LocalUiMode.current) {
+                UiMode.Material -> SegmentedListItem(
+                    colors = alohaOneUISegmentedColors(),
+                    headlineContent = {
+                        Column(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                        ) {
+                            Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
@@ -1141,33 +1142,67 @@ private fun ThresholdShortcutCard(
                                     Text("?", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
                                 }
                             }
-                            UiMode.Miuix -> MiuixBasicComponent(
-                                title = title,
-                                modifier = Modifier.fillMaxWidth(),
-                                endActions = {
-                                    MiuixIconButton(onClick = { showHelp = true }) {
-                                        MiuixText("?", color = colorScheme.primary, fontWeight = FontWeight.Bold)
-                                    }
-                                },
-                                onClick = { showHelp = true },
-                                role = Role.Button,
+                            if (summary.isNotBlank()) {
+                                Text(
+                                    text = summary,
+                                    modifier = Modifier.padding(top = 4.dp),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                            NumericShortcutSlider(
+                                title = "",
+                                summary = "",
+                                value = value,
+                                range = range,
+                                enabled = enabled,
+                                format = format,
+                                onCommit = onCommit,
+                                showTitleAndSummary = false,
+                                verticalPadding = 4.dp,
                             )
                         }
-                        if (summary.isNotBlank()) ShortcutBodyText(summary)
-                        NumericShortcutSlider(
-                            title = "",
-                            summary = "",
-                            value = value,
-                            range = range,
-                            enabled = enabled,
-                            format = format,
-                            onCommit = onCommit,
-                            showTitleAndSummary = false,
+                    },
+                )
+
+                UiMode.Miuix -> Column(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        MiuixText(
+                            text = title,
+                            modifier = Modifier.weight(1f),
+                            color = colorScheme.onSurface,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                        MiuixIconButton(onClick = { showHelp = true }) {
+                            MiuixText("?", color = colorScheme.primary, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                    if (summary.isNotBlank()) {
+                        MiuixText(
+                            text = summary,
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(top = 4.dp),
+                            color = colorScheme.onSurfaceVariantSummary,
                         )
                     }
+                    NumericShortcutSlider(
+                        title = "",
+                        summary = "",
+                        value = value,
+                        range = range,
+                        enabled = enabled,
+                        format = format,
+                        onCommit = onCommit,
+                        showTitleAndSummary = false,
+                        verticalPadding = 4.dp,
+                    )
                 }
             }
-        },
+        }),
     )
     if (showHelp) ShortcutInformationDialog(helpTitle, helpMessage) { showHelp = false }
 }
@@ -1253,6 +1288,7 @@ private fun NumericShortcutSlider(
     format: (Int) -> String,
     onCommit: (Int) -> Unit,
     showTitleAndSummary: Boolean = true,
+    verticalPadding: androidx.compose.ui.unit.Dp = 8.dp,
 ) {
     var preview by remember(value, range) { mutableFloatStateOf(value.toFloat()) }
     LaunchedEffect(value, range) { preview = value.toFloat() }
@@ -1265,7 +1301,7 @@ private fun NumericShortcutSlider(
     Column(
         modifier = Modifier.fillMaxWidth().padding(
             horizontal = sliderHorizontalPadding,
-            vertical = 8.dp,
+            vertical = verticalPadding,
         ),
     ) {
         when (LocalUiMode.current) {
