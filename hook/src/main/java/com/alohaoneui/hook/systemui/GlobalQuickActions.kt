@@ -21,6 +21,7 @@ import io.github.libxposed.api.XposedModule
 import io.github.libxposed.api.XposedModuleInterface
 import com.alohaoneui.common.Preference
 import com.alohaoneui.common.StatusBarRuntimeBridge
+import com.alohaoneui.hook.util.AlohaOneUIDiagnosticLog
 import com.alohaoneui.hook.util.PreferenceProvider
 import java.util.Collections
 import java.util.WeakHashMap
@@ -144,6 +145,17 @@ object GlobalQuickActions {
     context(xposedModule: XposedModule)
     fun installSystemUi(param: XposedModuleInterface.PackageReadyParam) {
         if (param.packageName != "com.android.systemui") return
+
+        // Install the bounded diagnostic sink as early as SystemUI exposes an Application context.
+        // StatusBar host registration later supplies the live-geometry provider and retries installation.
+        runCatching {
+            GlobalQuickActions.currentApplicationContext()?.let { appContext ->
+                AlohaOneUIDiagnosticLog.install(appContext)
+            }
+        }.onFailure {
+            Log.w(TAG, "could not install early SystemUI diagnostics bridge", it)
+        }
+
         runCatching {
             val keyButton = param.classLoader.loadClass("com.android.systemui.navigationbar.views.buttons.KeyButtonView")
             val method = keyButton.getDeclaredMethod("onTouchEvent", MotionEvent::class.java)
@@ -180,9 +192,11 @@ object GlobalQuickActions {
             currentSettings()
             lastFloatingBallSettings = GlobalQuickActions.floatingBallSettings(context)
             registerPreferenceObserver(context)
-            registerSystemServerDiagnosticQueryReceiver(context)
             mainHandler.post {
                 val activeContext = systemServerContext ?: context
+                // Register the on-demand query receiver on SystemServer's main looper before
+                // creating the ball, so the diagnostics request cannot race startup registration.
+                registerSystemServerDiagnosticQueryReceiver(activeContext)
                 runCatching { GlobalQuickActions.ensureFloatingBall(activeContext) }
                     .onFailure { Log.w(TAG, "initial floating-ball setup failed", it) }
             }
