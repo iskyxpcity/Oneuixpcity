@@ -52,6 +52,16 @@ checks = {
      and 'refs/heads/migration/bridge-url-fix-20261022' in workflow_source
      and 'OUTPUT_APK="OneuiXP_${VERSION_NAME}.apk"' in workflow_source
  ),
+ 'Legacy installs receive the bridge before Aloha migration': (
+     'BRIDGE_VERSION_NAME = "1.0.261022"' in downloader_source
+     and 'BRIDGE_APK_ASSET_NAME = "OneuiXP_1.0.261022.apk"' in downloader_source
+     and 'return fetchLegacyBridgeUpdate()' in downloader_source
+     and 'if (isLegacyApp && compareOneuiXPVersions(BuildConfig.VERSION_NAME, BRIDGE_VERSION_NAME) < 0)' in downloader_source
+     and downloader_source.index(
+         'if (isLegacyApp && compareOneuiXPVersions(BuildConfig.VERSION_NAME, BRIDGE_VERSION_NAME) < 0)'
+     ) < downloader_source.index('fetchReleaseList(ALOHA_RELEASE_REPO)')
+     and 'val releaseRepository = ALOHA_RELEASE_REPO' in downloader_source
+ ),
  'Preference bridge uses canonical OneUI XP symbol': 'object OneuiXPPreferenceBridge' in preference_bridge_source,
  'Feature store migration does not hard-code former namespace': (
      'candidate.name.endsWith("_features.json")' in preference_bridge_source
