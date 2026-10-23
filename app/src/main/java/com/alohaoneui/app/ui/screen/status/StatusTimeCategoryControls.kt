@@ -99,7 +99,7 @@ fun StatusTimeCategoryControls(
     uiState: Preference.SystemUI.StatusBar,
     onEvent: (SystemUIEvent) -> Unit,
     modifier: Modifier = Modifier,
- ) {
+) {
     val uiMode = LocalUiMode.current
     val isDoubleLine =
         uiState.setStatusBarClockFormat && uiState.statusBarClockFormat.contains('\n')
@@ -220,50 +220,23 @@ fun StatusTimeCategoryControls(
                                 }
                             }
 
-                            when (LocalUiMode.current) {
-                                UiMode.Material -> {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        modifier = Modifier.fillMaxWidth(),
-                                    ) {
-                                        AlohaOneUIInlineTextField(
-                                            value = tempDataTimeFormat,
-                                            onValueChange = onFormatValueChange,
-                                            modifier = Modifier.weight(1f),
-                                            labelText = formatLabel.takeIf { it.isNotBlank() },
-                                        )
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        AlohaOneUIActionButton(
-                                            text = stringResource(id = R.string.alohaoneui_confirm),
-                                            primary = true,
-                                            onClick = confirmFormat,
-                                        )
-                                    }
-                                }
-
-                                UiMode.Miuix -> {
-                                    // Keep Miuix's editor full-width instead of squeezing it
-                                    // beside the confirm button inside the grouped Card.
-                                    AlohaOneUIInlineTextField(
-                                        value = tempDataTimeFormat,
-                                        onValueChange = onFormatValueChange,
-                                        modifier = Modifier.fillMaxWidth(),
-                                        labelText = formatLabel.takeIf { it.isNotBlank() },
-                                    )
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(horizontal = 16.dp),
-                                        horizontalArrangement = Arrangement.End,
-                                        verticalAlignment = Alignment.CenterVertically,
-                                    ) {
-                                        AlohaOneUIActionButton(
-                                            text = stringResource(id = R.string.alohaoneui_confirm),
-                                            primary = true,
-                                            onClick = confirmFormat,
-                                        )
-                                    }
-                                }
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.fillMaxWidth(),
+                            ) {
+                                AlohaOneUIInlineTextField(
+                                    value = tempDataTimeFormat,
+                                    onValueChange = onFormatValueChange,
+                                    modifier = Modifier.weight(1f),
+                                    labelText = formatLabel.takeIf { it.isNotBlank() },
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                AlohaOneUIActionButton(
+                                    text = stringResource(id = R.string.alohaoneui_confirm),
+                                    primary = true,
+                                    fillWidth = false,
+                                    onClick = confirmFormat,
+                                )
                             }
 
                             Row(
