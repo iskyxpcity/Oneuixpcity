@@ -329,12 +329,14 @@ private fun ColorPickerBody(
                 text = stringResource(id = android.R.string.cancel),
                 onClick = onCancel,
                 modifier = Modifier.weight(1f),
+                fillWidth = true,
             )
             AlohaOneUIActionButton(
                 text = stringResource(id = R.string.alohaoneui_clockRichApplyColor),
                 onClick = onApply,
                 modifier = Modifier.weight(1f),
                 primary = true,
+                fillWidth = true,
             )
         }
     }

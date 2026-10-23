@@ -717,12 +717,14 @@ private fun StyleOneRoleColorDialog(
                     text = stringResource(R.string.status_combo_style_one_color_cancel),
                     onClick = onCancel,
                     modifier = Modifier.weight(1f),
+                    fillWidth = true,
                 )
                 AlohaOneUIActionButton(
                     text = stringResource(R.string.status_combo_style_one_color_apply),
                     onClick = { onApply(draftDarkColor, draftLightColor) },
                     modifier = Modifier.weight(1f),
                     primary = true,
+                    fillWidth = true,
                 )
             }
         }

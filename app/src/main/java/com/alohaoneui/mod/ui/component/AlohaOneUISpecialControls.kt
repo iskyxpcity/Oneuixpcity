@@ -157,7 +157,7 @@ fun AlohaOneUIActionButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     primary: Boolean = false,
-    fillWidth: Boolean = true,
+    fillWidth: Boolean = false,
 ) {
     when (LocalUiMode.current) {
         UiMode.Material -> MaterialButton(
