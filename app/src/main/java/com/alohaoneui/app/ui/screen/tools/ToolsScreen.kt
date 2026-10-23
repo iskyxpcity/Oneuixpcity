@@ -215,100 +215,73 @@ private fun ToolsPagerMiuix(
                 }
 
                 item {
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 12.dp)
-                            .graphicsLayer {
-                                alpha = if (lsposedActive) 1f else 0.38f
-                            },
-                        onClick = {
-                            if (lsposedActive) navigator.push(Route.OtherFunctions)
-                        },
-                        showIndication = lsposedActive,
-                        insideMargin = PaddingValues(
-                            start = 10.dp,
-                            end = 16.dp,
-                            top = 8.dp,
-                            bottom = 8.dp,
-                        ),
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            NavigationFeatureIcon(icon = ShortcutEntryIcon.OtherFunctions, size = 48.dp)
-                            MiuixText(
-                                text = stringResource(R.string.alohaoneui_other_functions_title),
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .padding(start = 10.dp),
-                                fontWeight = FontWeight(550),
-                                color = colorScheme.onSurface,
-                                maxLines = 1,
-                            )
-                            val layoutDirection = LocalLayoutDirection.current
-                            MiuixIcon(
-                                modifier = Modifier
-                                    .graphicsLayer {
-                                        if (layoutDirection == LayoutDirection.Rtl) scaleX = -1f
-                                    }
-                                    .padding(start = 8.dp)
-                                    .size(width = 10.dp, height = 16.dp),
-                                imageVector = MiuixIcons.Basic.ArrowRight,
-                                contentDescription = null,
-                                tint = colorScheme.onSurfaceVariantActions,
-                            )
-                        }
-                    }
-                }
-
-                item {
+                    // One Miuix parent frame for both navigation entries.
+                    // Global Shortcut Actions is deliberately first; no secondary summary is shown.
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(bottom = 12.dp)
                             .graphicsLayer { alpha = if (lsposedActive) 1f else 0.38f },
-                        onClick = {
-                            if (lsposedActive) navigator.push(Route.GlobalShortcutActions)
-                        },
-                        showIndication = lsposedActive,
-                        insideMargin = PaddingValues(
-                            start = 10.dp,
-                            end = 16.dp,
-                            top = 8.dp,
-                            bottom = 8.dp,
-                        ),
+                        insideMargin = PaddingValues(0.dp),
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            NavigationFeatureIcon(
-                                icon = ShortcutEntryIcon.Gesture,
-                                size = 48.dp,
+                        Column {
+                            MiuixBasicComponent(
+                                title = stringResource(R.string.alohaoneui_global_shortcut_actions_title),
+                                modifier = Modifier.fillMaxWidth(),
+                                startAction = {
+                                    NavigationFeatureIcon(
+                                        icon = ShortcutEntryIcon.Gesture,
+                                        size = 48.dp,
+                                    )
+                                },
+                                endActions = {
+                                    val layoutDirection = LocalLayoutDirection.current
+                                    MiuixIcon(
+                                        modifier = Modifier
+                                            .graphicsLayer {
+                                                if (layoutDirection == LayoutDirection.Rtl) scaleX = -1f
+                                            }
+                                            .padding(start = 8.dp)
+                                            .size(width = 10.dp, height = 16.dp),
+                                        imageVector = MiuixIcons.Basic.ArrowRight,
+                                        contentDescription = null,
+                                        tint = colorScheme.onSurfaceVariantActions,
+                                    )
+                                },
+                                enabled = lsposedActive,
+                                onClick = {
+                                    if (lsposedActive) navigator.push(Route.GlobalShortcutActions)
+                                },
+                                role = Role.Button,
                             )
-                            Column(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .padding(start = 10.dp),
-                            ) {
-                                MiuixText(
-                                    text = stringResource(R.string.alohaoneui_global_shortcut_actions_title),
-                                    fontWeight = FontWeight(550),
-                                    color = colorScheme.onSurface,
-                                    maxLines = 1,
-                                )
-                                MiuixText(
-                                    text = stringResource(R.string.alohaoneui_global_shortcut_actions_summary),
-                                    modifier = Modifier.padding(top = 4.dp),
-                                    color = colorScheme.onSurfaceVariantSummary,
-                                    maxLines = 2,
-                                )
-                            }
-                            val layoutDirection = LocalLayoutDirection.current
-                            MiuixIcon(
-                                modifier = Modifier
-                                    .graphicsLayer { if (layoutDirection == LayoutDirection.Rtl) scaleX = -1f }
-                                    .padding(start = 8.dp)
-                                    .size(width = 10.dp, height = 16.dp),
-                                imageVector = MiuixIcons.Basic.ArrowRight,
-                                contentDescription = null,
-                                tint = colorScheme.onSurfaceVariantActions,
+                            MiuixBasicComponent(
+                                title = stringResource(R.string.alohaoneui_other_functions_title),
+                                modifier = Modifier.fillMaxWidth(),
+                                startAction = {
+                                    NavigationFeatureIcon(
+                                        icon = ShortcutEntryIcon.OtherFunctions,
+                                        size = 48.dp,
+                                    )
+                                },
+                                endActions = {
+                                    val layoutDirection = LocalLayoutDirection.current
+                                    MiuixIcon(
+                                        modifier = Modifier
+                                            .graphicsLayer {
+                                                if (layoutDirection == LayoutDirection.Rtl) scaleX = -1f
+                                            }
+                                            .padding(start = 8.dp)
+                                            .size(width = 10.dp, height = 16.dp),
+                                        imageVector = MiuixIcons.Basic.ArrowRight,
+                                        contentDescription = null,
+                                        tint = colorScheme.onSurfaceVariantActions,
+                                    )
+                                },
+                                enabled = lsposedActive,
+                                onClick = {
+                                    if (lsposedActive) navigator.push(Route.OtherFunctions)
+                                },
+                                role = Role.Button,
                             )
                         }
                     }
@@ -366,7 +339,6 @@ private fun ToolsPagerMaterial(
                     .graphicsLayer {
                         alpha = if (lsposedActive) 1f else 0.38f
                     },
-                title = stringResource(R.string.alohaoneui_core_features),
                 content = coreCategories.map { category ->
                     {
                         SegmentedListItem(
@@ -399,7 +371,6 @@ private fun ToolsPagerMaterial(
                     .graphicsLayer {
                         alpha = if (lsposedActive) 1f else 0.38f
                     },
-                title = stringResource(R.string.alohaoneui_app_features),
                 content = appCategories.map { category ->
                     {
                         SegmentedListItem(
@@ -429,58 +400,58 @@ private fun ToolsPagerMaterial(
             SegmentedColumn(
                 modifier = Modifier
                     .padding(horizontal = 16.dp, vertical = 8.dp)
-                    .graphicsLayer {
-                        alpha = if (lsposedActive) 1f else 0.38f
-                    },
-                content = listOf({
-                    SegmentedListItem(
-                        enabled = lsposedActive,
-                        onClick = {
-                            if (lsposedActive) navigator.push(Route.OtherFunctions)
-                        },
-                        headlineContent = {
-                            Text(stringResource(R.string.alohaoneui_other_functions_title))
-                        },
-                        leadingContent = {
-                            NavigationFeatureIcon(icon = ShortcutEntryIcon.OtherFunctions, size = 48.dp)
-                        },
-                        trailingContent = {
-                            Icon(
-                                Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                                contentDescription = null,
-                            )
-                        },
-                    )
-                }),
-            )
-
-            SegmentedColumn(
-                modifier = Modifier
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
                     .graphicsLayer { alpha = if (lsposedActive) 1f else 0.38f },
-                content = listOf({
-                    SegmentedListItem(
-                        enabled = lsposedActive,
-                        onClick = {
-                            if (lsposedActive) navigator.push(Route.GlobalShortcutActions)
-                        },
-                        colors = com.alohaoneui.app.ui.component.material.alohaOneUISegmentedColors(),
-                        headlineContent = { Text(stringResource(R.string.alohaoneui_global_shortcut_actions_title)) },
-                        supportingContent = { Text(stringResource(R.string.alohaoneui_global_shortcut_actions_summary)) },
-                        leadingContent = {
-                            NavigationFeatureIcon(
-                                icon = ShortcutEntryIcon.Gesture,
-                                size = 48.dp,
-                            )
-                        },
-                        trailingContent = {
-                            Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
-                        },
-                    )
-                }),
+                content = listOf(
+                    {
+                        SegmentedListItem(
+                            enabled = lsposedActive,
+                            onClick = {
+                                if (lsposedActive) navigator.push(Route.GlobalShortcutActions)
+                            },
+                            colors = com.alohaoneui.app.ui.component.material.alohaOneUISegmentedColors(),
+                            headlineContent = {
+                                Text(stringResource(R.string.alohaoneui_global_shortcut_actions_title))
+                            },
+                            leadingContent = {
+                                NavigationFeatureIcon(
+                                    icon = ShortcutEntryIcon.Gesture,
+                                    size = 48.dp,
+                                )
+                            },
+                            trailingContent = {
+                                Icon(
+                                    Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                    contentDescription = null,
+                                )
+                            },
+                        )
+                    },
+                    {
+                        SegmentedListItem(
+                            enabled = lsposedActive,
+                            onClick = {
+                                if (lsposedActive) navigator.push(Route.OtherFunctions)
+                            },
+                            colors = com.alohaoneui.app.ui.component.material.alohaOneUISegmentedColors(),
+                            headlineContent = {
+                                Text(stringResource(R.string.alohaoneui_other_functions_title))
+                            },
+                            leadingContent = {
+                                NavigationFeatureIcon(
+                                    icon = ShortcutEntryIcon.OtherFunctions,
+                                    size = 48.dp,
+                                )
+                            },
+                            trailingContent = {
+                                Icon(
+                                    Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                    contentDescription = null,
+                                )
+                            },
+                        )
+                    },
+                ),
             )
-
-            Spacer(Modifier.height(bottomInnerPadding))
         }
     }
 }
