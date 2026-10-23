@@ -16,7 +16,6 @@ private const val LEGACY_PACKAGE_NAME = "com.oneuixp.app"
 private const val BRIDGE_VERSION_NAME = "1.0.261022"
 private const val BRIDGE_VERSION_CODE = 13
 private const val BRIDGE_APK_ASSET_NAME = "OneuiXP_1.0.261022.apk"
-private const val BRIDGE_APK_SHA256 = "f6d56f93ffa9ff3cbbf76d1d6fd1c8ed449847cce53eb70493e35ea84d7be24b"
 private val oneUiAlohaApkPrefix = Regex("""(?i)^(?:AlohaOneUI|OneUIAloha)(?:[._ -][A-Za-z0-9][A-Za-z0-9._ -]*)?\.apk$""")
 
 private fun isSupportedVersionName(value: String): Boolean =
@@ -111,16 +110,11 @@ private fun fetchLegacyBridgeUpdate(): LatestVersionInfo {
                 )
         } ?: return LatestVersionInfo()
 
-    val reportedDigest = asset.optString("digest")
+    val digest = asset.optString("digest")
         .removePrefix("sha256:")
         .lowercase(Locale.ROOT)
-    // GitHub's API may omit digest metadata for an older uploaded asset. In that case, use the
-    // SHA-256 of the already-verified bridge build; a different APK will fail download validation.
-    val digest = if (reportedDigest.matches(Regex("[0-9a-f]{64}"))) {
-        reportedDigest
-    } else {
-        BRIDGE_APK_SHA256
-    }
+    // Without the digest of the exact published APK, don't offer an update that cannot be verified.
+    if (!digest.matches(Regex("[0-9a-f]{64}"))) return LatestVersionInfo()
 
     return LatestVersionInfo(
         versionCode = BRIDGE_VERSION_CODE,
