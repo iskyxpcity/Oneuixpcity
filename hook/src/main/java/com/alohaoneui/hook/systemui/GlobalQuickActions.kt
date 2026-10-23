@@ -140,6 +140,15 @@ object GlobalQuickActions {
         } catch (failure: Throwable) {
             logGuardedHookFailure("global gesture/status-bar shortcut handler", event, failure)
         }
+
+        // Some Samsung builds stop delivering the terminal touch event to a moved overlay
+        // even though SystemServer's global pointer dispatcher observes it. Let the View's
+        // normal UP/CANCEL handler run first; the fallback only acts if that handler did not.
+        try {
+            GlobalQuickActions.recoverFloatingBallTouchEndFromGlobalInput(event)
+        } catch (failure: Throwable) {
+            logGuardedHookFailure("floating-ball touch-end recovery", event, failure)
+        }
     }
 
     context(xposedModule: XposedModule)

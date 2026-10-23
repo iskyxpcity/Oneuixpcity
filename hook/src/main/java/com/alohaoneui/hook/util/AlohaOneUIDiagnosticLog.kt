@@ -235,6 +235,13 @@ object AlohaOneUIDiagnosticLog {
                 entries.forEach { appendLine(it) }
             }
             appendLine()
+            appendLine("[SystemUI diagnostic bridge status]")
+            appendLine(
+                "diagnosticRequestReceiverInstalled=${receiverInstalled.get()} " +
+                    "systemServerResponseReceiverInstalled=${systemServerReceiverInstalled.get()} " +
+                    "pendingSystemServerSnapshots=${pendingSystemServerSnapshots.size}",
+            )
+            appendLine()
             appendLine("[SystemServer global-shortcut runtime diagnostics]")
             if (globalShortcutEntries.isEmpty()) {
                 appendLine("(No bridged system_server global-shortcut events captured in this process.)")

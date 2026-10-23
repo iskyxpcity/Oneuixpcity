@@ -282,6 +282,50 @@ internal fun GlobalQuickActions.handleFloatingBallTouch(
     }
 }
 
+/**
+ * If moving the overlay prevents its own View from receiving UP/CANCEL, use the global
+ * SystemServer pointer stream as a fallback. A grace period lets normal View dispatch
+ * finish first; a new gesture or normal touch completion invalidates the fallback.
+ */
+private const val FLOATING_BALL_TOUCH_END_RECOVERY_DELAY_MS = 500L
+
+internal fun GlobalQuickActions.recoverFloatingBallTouchEndFromGlobalInput(event: MotionEvent) {
+    val action = event.actionMasked
+    if (action != MotionEvent.ACTION_UP && action != MotionEvent.ACTION_CANCEL) return
+    if (!floatingBallTouchActive) return
+
+    val context = systemServerContext ?: currentApplicationContext() ?: return
+    val view = floatingBallView ?: return
+    val params = floatingBallLayoutParams ?: return
+    val windowManager = floatingBallWindowManager ?: return
+    val capturedDownTime = floatingBallTouchDownTime
+
+    mainHandler.postDelayed({
+        if (
+            !floatingBallTouchActive ||
+            floatingBallTouchDownTime != capturedDownTime ||
+            floatingBallView !== view ||
+            floatingBallLayoutParams !== params
+        ) {
+            return@postDelayed
+        }
+
+        val wasDragging = floatingBallDragging
+        floatingBallTouchActive = false
+        floatingBallDragging = false
+        floatingBallLongPressRunnable?.let { mainHandler.removeCallbacks(it) }
+        floatingBallLongPressRunnable = null
+        resetFloatingBallInnerOffset(view)
+        recordSystemServerDiagnosticEvent(
+            context,
+            "floating-ball recovered missed touch end from global input: " +
+                "action=${if (action == MotionEvent.ACTION_UP) "UP" else "CANCEL"} " +
+                "wasDragging=$wasDragging x=${params.x} y=${params.y}; restarting auto-edge countdown",
+        )
+        scheduleFloatingBallAutoEdge(context, windowManager, view, params, floatingBallSettings(context))
+    }, FLOATING_BALL_TOUCH_END_RECOVERY_DELAY_MS)
+}
+
 internal fun GlobalQuickActions.scheduleFloatingBallAutoEdge(
     context: Context,
     windowManager: WindowManager,
