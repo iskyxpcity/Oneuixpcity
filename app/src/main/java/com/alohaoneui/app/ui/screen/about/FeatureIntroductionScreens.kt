@@ -64,15 +64,21 @@ import top.yukonga.miuix.kmp.utils.scrollEndHaptic
 fun FeatureIntroductionScreen() {
     val navigator = LocalNavigator.current
     val onBack = dropUnlessResumed { navigator.pop() }
+    val onOpen261023Updates = dropUnlessResumed { navigator.push(Route.VersionChangelog261023) }
     val onOpen2610191Updates = dropUnlessResumed { navigator.push(Route.VersionChangelog2610191) }
     val onOpen261018Updates = dropUnlessResumed { navigator.push(Route.VersionChangelog261018) }
     val onOpen261016Updates = dropUnlessResumed { navigator.push(Route.VersionChangelog261016) }
     val onOpen261013Updates = dropUnlessResumed { navigator.push(Route.VersionChangelog261013) }
     val onOpenFirstRelease = dropUnlessResumed { navigator.push(Route.VersionChangelog) }
     when (LocalUiMode.current) {
-        UiMode.Material -> FeatureIntroductionMaterial(onBack, onOpen2610191Updates, onOpen261018Updates, onOpen261016Updates, onOpen261013Updates, onOpenFirstRelease)
-        UiMode.Miuix -> FeatureIntroductionMiuix(onBack, onOpen2610191Updates, onOpen261018Updates, onOpen261016Updates, onOpen261013Updates, onOpenFirstRelease)
+        UiMode.Material -> FeatureIntroductionMaterial(onBack, onOpen261023Updates, onOpen2610191Updates, onOpen261018Updates, onOpen261016Updates, onOpen261013Updates, onOpenFirstRelease)
+        UiMode.Miuix -> FeatureIntroductionMiuix(onBack, onOpen261023Updates, onOpen2610191Updates, onOpen261018Updates, onOpen261016Updates, onOpen261013Updates, onOpenFirstRelease)
     }
+}
+
+@Composable
+fun VersionChangelog261023Screen() {
+    VersionChangelogContent(isLatestVersion = true, is261023 = true)
 }
 
 @Composable
@@ -103,6 +109,7 @@ fun VersionChangelog261013Screen() {
 @Composable
 private fun VersionChangelogContent(
     isLatestVersion: Boolean,
+    is261023: Boolean = false,
     is261016: Boolean = false,
     is261018: Boolean = false,
     is2610191: Boolean = false,
@@ -110,14 +117,15 @@ private fun VersionChangelogContent(
     val navigator = LocalNavigator.current
     val onBack = dropUnlessResumed { navigator.pop() }
     when (LocalUiMode.current) {
-        UiMode.Material -> VersionChangelogMaterial(onBack, isLatestVersion, is261016, is261018, is2610191)
-        UiMode.Miuix -> VersionChangelogMiuix(onBack, isLatestVersion, is261016, is261018, is2610191)
+        UiMode.Material -> VersionChangelogMaterial(onBack, isLatestVersion, is261023, is261016, is261018, is2610191)
+        UiMode.Miuix -> VersionChangelogMiuix(onBack, isLatestVersion, is261023, is261016, is261018, is2610191)
     }
 }
 
 @Composable
 private fun FeatureIntroductionMaterial(
     onBack: () -> Unit,
+    onOpen261023Updates: () -> Unit,
     onOpen2610191Updates: () -> Unit,
     onOpen261018Updates: () -> Unit,
     onOpen261016Updates: () -> Unit,
@@ -149,6 +157,19 @@ private fun FeatureIntroductionMaterial(
                 SegmentedColumn(
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
                     content = listOf(
+                        {
+                            SegmentedListItem(
+                                onClick = onOpen261023Updates,
+                                headlineContent = { Text(stringResource(R.string.feature_intro_version_updates_261023)) },
+                                supportingContent = { Text(stringResource(R.string.feature_intro_version_updates_261023_summary)) },
+                                leadingContent = {
+                                    androidx.compose.material3.Icon(Icons.AutoMirrored.Filled.Article, contentDescription = null)
+                                },
+                                trailingContent = {
+                                    androidx.compose.material3.Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
+                                },
+                            )
+                        },
                         {
                             SegmentedListItem(
                                 onClick = onOpen2610191Updates,
@@ -225,6 +246,7 @@ private fun FeatureIntroductionMaterial(
 @Composable
 private fun FeatureIntroductionMiuix(
     onBack: () -> Unit,
+    onOpen261023Updates: () -> Unit,
     onOpen2610191Updates: () -> Unit,
     onOpen261018Updates: () -> Unit,
     onOpen261016Updates: () -> Unit,
@@ -267,6 +289,15 @@ private fun FeatureIntroductionMiuix(
             ) {
                 item {
                     MiuixCard(modifier = Modifier.padding(top = 12.dp).fillMaxWidth()) {
+                        ArrowPreference(
+                            title = stringResource(R.string.feature_intro_version_updates_261023),
+                            summary = stringResource(R.string.feature_intro_version_updates_261023_summary),
+                            onClick = onOpen261023Updates,
+                        )
+                    }
+                }
+                item {
+                    MiuixCard(modifier = Modifier.padding(top = 8.dp).fillMaxWidth()) {
                         ArrowPreference(
                             title = stringResource(R.string.feature_intro_version_updates_2610191),
                             summary = stringResource(R.string.feature_intro_version_updates_2610191_summary),
@@ -317,9 +348,10 @@ private fun FeatureIntroductionMiuix(
 }
 
 @Composable
-private fun VersionChangelogMaterial(onBack: () -> Unit, isLatestVersion: Boolean, is261016: Boolean, is261018: Boolean, is2610191: Boolean) {
+private fun VersionChangelogMaterial(onBack: () -> Unit, isLatestVersion: Boolean, is261023: Boolean, is261016: Boolean, is261018: Boolean, is2610191: Boolean) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
     val versionTitle = when {
+        is261023 -> R.string.version_1_0_261023_title
         is2610191 -> R.string.version_1_0_2610191_title
         is261018 -> R.string.version_1_0_261018_title
         is261016 -> R.string.version_1_0_261016_title
@@ -327,6 +359,7 @@ private fun VersionChangelogMaterial(onBack: () -> Unit, isLatestVersion: Boolea
         else -> R.string.version_1_0_260930_title
     }
     val versionDate = when {
+        is261023 -> R.string.version_1_0_261023_summary
         is2610191 -> R.string.version_1_0_2610191_summary
         is261018 -> R.string.version_1_0_261018_summary
         is261016 -> R.string.version_1_0_261016_summary
@@ -334,6 +367,11 @@ private fun VersionChangelogMaterial(onBack: () -> Unit, isLatestVersion: Boolea
         else -> R.string.version_1_0_260930_summary
     }
     val updateRows = when {
+        is261023 -> listOf(
+            R.string.changelog_261023_rename_title to R.string.changelog_261023_rename_body,
+            R.string.changelog_261023_global_shortcuts_title to R.string.changelog_261023_global_shortcuts_body,
+            R.string.changelog_261023_qs_seconds_title to R.string.changelog_261023_qs_seconds_body,
+        )
         is2610191 -> listOf(
             R.string.changelog_2610191_new_features_title to R.string.changelog_2610191_new_features_body,
             R.string.changelog_2610191_optimizations_title to R.string.changelog_2610191_optimizations_body,
@@ -418,11 +456,12 @@ private fun VersionChangelogMaterial(onBack: () -> Unit, isLatestVersion: Boolea
 }
 
 @Composable
-private fun VersionChangelogMiuix(onBack: () -> Unit, isLatestVersion: Boolean, is261016: Boolean, is261018: Boolean, is2610191: Boolean) {
+private fun VersionChangelogMiuix(onBack: () -> Unit, isLatestVersion: Boolean, is261023: Boolean, is261016: Boolean, is261018: Boolean, is2610191: Boolean) {
     val scrollBehavior = MiuixScrollBehavior()
     val backdrop = rememberBlurBackdrop(LocalEnableBlur.current)
     val barColor = if (backdrop != null) Color.Transparent else colorScheme.surface
     val versionTitle = when {
+        is261023 -> R.string.version_1_0_261023_title
         is2610191 -> R.string.version_1_0_2610191_title
         is261018 -> R.string.version_1_0_261018_title
         is261016 -> R.string.version_1_0_261016_title
@@ -430,6 +469,7 @@ private fun VersionChangelogMiuix(onBack: () -> Unit, isLatestVersion: Boolean, 
         else -> R.string.version_1_0_260930_title
     }
     val versionDate = when {
+        is261023 -> R.string.version_1_0_261023_summary
         is2610191 -> R.string.version_1_0_2610191_summary
         is261018 -> R.string.version_1_0_261018_summary
         is261016 -> R.string.version_1_0_261016_summary
@@ -437,6 +477,11 @@ private fun VersionChangelogMiuix(onBack: () -> Unit, isLatestVersion: Boolean, 
         else -> R.string.version_1_0_260930_summary
     }
     val updateRows = when {
+        is261023 -> listOf(
+            R.string.changelog_261023_rename_title to R.string.changelog_261023_rename_body,
+            R.string.changelog_261023_global_shortcuts_title to R.string.changelog_261023_global_shortcuts_body,
+            R.string.changelog_261023_qs_seconds_title to R.string.changelog_261023_qs_seconds_body,
+        )
         is2610191 -> listOf(
             R.string.changelog_2610191_new_features_title to R.string.changelog_2610191_new_features_body,
             R.string.changelog_2610191_optimizations_title to R.string.changelog_2610191_optimizations_body,
