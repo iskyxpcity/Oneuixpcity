@@ -200,8 +200,10 @@ jobs:
           "$AAPT" dump xmltree "$APK" AndroidManifest.xml > dist/APK_MANIFEST_CHECK.txt
           grep -Eq 'hasFragileUserData.*0x0$' dist/APK_MANIFEST_CHECK.txt
           COMMIT_SUBJECT=$(git log -1 --pretty=%s)
-          if [ "$GITHUB_REF" = "refs/heads/main" ] && [[ "$COMMIT_SUBJECT" == release:* ]]; then
-            # Keep the legacy asset name so already-installed older updaters can find this transition release.
+          if [ "$GITHUB_REF" = "refs/heads/migration/bridge-url-fix-20261022" ]; then
+            # Older OneUI XP clients only recognize these exact versioned names in the public feed.
+            OUTPUT_APK="OneuiXP_${VERSION_NAME}.apk"
+          elif [ "$GITHUB_REF" = "refs/heads/main" ] && [[ "$COMMIT_SUBJECT" == release:* ]]; then
             OUTPUT_APK="OneuiXP_${VERSION_NAME}.apk"
           else
             OUTPUT_APK="OneuiXP_${VERSION_NAME}_BUILD_${GITHUB_RUN_NUMBER}.apk"

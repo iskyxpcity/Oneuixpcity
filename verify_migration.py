@@ -4,6 +4,7 @@ from pathlib import Path
 import re
 import sys
 root = Path(__file__).resolve().parent
+workflow_source = (root/'.github/workflows/build.yml').read_text()
 migration_source = (root/'common/src/main/java/com/oneuixp/common/ProductionPreferenceMigration.kt').read_text()
 preference_source = (root/'common/src/main/java/com/oneuixp/common/Preference.kt').read_text()
 downloader_source = (root/'app/src/main/java/com/oneuixp/app/ui/util/Downloader.kt').read_text()
@@ -48,6 +49,8 @@ checks = {
      and '/releases?per_page=30' in downloader_source
      and 'versionName.removePrefix("1.")' in downloader_source
      and 'path.startsWith("/iskyjie/alohaoneui/releases/download/")' in migration_dialog_source
+     and 'refs/heads/migration/bridge-url-fix-20261022' in workflow_source
+     and 'OUTPUT_APK="OneuiXP_${VERSION_NAME}.apk"' in workflow_source
  ),
  'Preference bridge uses canonical OneUI XP symbol': 'object OneuiXPPreferenceBridge' in preference_bridge_source,
  'Feature store migration does not hard-code former namespace': (
