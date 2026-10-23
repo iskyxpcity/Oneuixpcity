@@ -190,11 +190,11 @@
 
     <string name="nav_rail_expand">展开导航栏</string>
     <string name="nav_rail_collapse">收起导航栏</string>
-    <string name="feature_intro_version_updates_261023">Aloha OneUI 1.0.261023 更新</string>
+    <string name="feature_intro_version_updates_261023">Aloha OneUI 1.0.261023 主要更新</string>
     <string name="feature_intro_version_updates_261023_summary">2026-10-23</string>
     <string name="feature_intro_version_updates_2610191">Aloha OneUI 1.0.261019.1 主要更新</string>
     <string name="feature_intro_version_updates_2610191_summary">2026-10-19</string>
-    <string name="version_1_0_261023_title">Aloha OneUI 1.0.261023</string>
+    <string name="version_1_0_261023_title">Aloha OneUI 1.0.261023 主要更新</string>
     <string name="version_1_0_261023_summary">2026-10-23</string>
     <string name="changelog_261023_rename_title">正式更名</string>
     <string name="changelog_261023_rename_body">我们已经正式更名为 Aloha OneUI。</string>
