@@ -463,4 +463,9 @@ object AlohaOneUIPreferenceBridge {
         AlohaOneUIXposedService.initialize(application)
         return AlohaOneUIXposedService.synchronizeNow(application)
     }
+
+    suspend fun synchronizeRestoredConfiguration(application: Application): Boolean {
+        AlohaOneUIXposedService.initialize(application)
+        return AlohaOneUIXposedService.synchronizeRestoredConfiguration(application)
+    }
 }
