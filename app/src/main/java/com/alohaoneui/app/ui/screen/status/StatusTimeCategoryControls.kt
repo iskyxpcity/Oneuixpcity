@@ -27,6 +27,8 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import com.alohaoneui.app.R
+import com.alohaoneui.app.ui.LocalUiMode
+import com.alohaoneui.app.ui.UiMode
 import com.alohaoneui.common.Preference
 import com.alohaoneui.common.StatusBarClockBlockParser
 import com.alohaoneui.hook.util.StatusBarClockFormatter
@@ -98,6 +100,7 @@ fun StatusTimeCategoryControls(
     onEvent: (SystemUIEvent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val uiMode = LocalUiMode.current
     val isDoubleLine =
         uiState.setStatusBarClockFormat && uiState.statusBarClockFormat.contains('\n')
     val isFold7 = Build.MODEL.startsWith("SM-F966", ignoreCase = true)
@@ -168,7 +171,10 @@ fun StatusTimeCategoryControls(
                     onClick = { formatExpanded = !formatExpanded },
                     checked = uiState.setStatusBarClockFormat,
                     onCheckedChange = {
-                        if (it && uiState.statusBarClockFormat == "HH:mm") {
+                        if (uiMode == UiMode.Miuix) {
+                            // In Miuix, enabling the format option should reveal its editor.
+                            formatExpanded = it
+                        } else if (it && uiState.statusBarClockFormat == "HH:mm") {
                             formatExpanded = true
                         } else if (!it) {
                             formatExpanded = false
@@ -185,21 +191,42 @@ fun StatusTimeCategoryControls(
                                 .fillMaxWidth()
                                 .padding(horizontal = 8.dp),
                         ) {
+                            val onFormatValueChange: (TextFieldValue) -> Unit = { value ->
+                                tempDataTimeFormat = value
+                                formatLabel = runCatching {
+                                    StatusBarClockFormatter.format(
+                                        value.text,
+                                        LocalDateTime.now(),
+                                    )
+                                }.getOrElse { "error" }
+                            }
+                            val confirmFormat: () -> Unit = {
+                                var right = true
+                                formatLabel = try {
+                                    StatusBarClockFormatter.format(
+                                        tempDataTimeFormat.text,
+                                        LocalDateTime.now(),
+                                    )
+                                } catch (_: Throwable) {
+                                    right = false
+                                    "error"
+                                }
+                                if (right) {
+                                    onEvent(
+                                        SystemUIEvent.StatusBar.StatusBarClockFormat(
+                                            tempDataTimeFormat.text
+                                        )
+                                    )
+                                }
+                            }
+
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier.fillMaxWidth(),
                             ) {
                                 AlohaOneUIInlineTextField(
                                     value = tempDataTimeFormat,
-                                    onValueChange = {
-                                        tempDataTimeFormat = it
-                                        formatLabel = runCatching {
-                                            StatusBarClockFormatter.format(
-                                                it.text,
-                                                LocalDateTime.now(),
-                                            )
-                                        }.getOrElse { "error" }
-                                    },
+                                    onValueChange = onFormatValueChange,
                                     modifier = Modifier.weight(1f),
                                     labelText = formatLabel.takeIf { it.isNotBlank() },
                                 )
@@ -207,25 +234,8 @@ fun StatusTimeCategoryControls(
                                 AlohaOneUIActionButton(
                                     text = stringResource(id = R.string.alohaoneui_confirm),
                                     primary = true,
-                                    onClick = {
-                                        var right = true
-                                        formatLabel = try {
-                                            StatusBarClockFormatter.format(
-                                                tempDataTimeFormat.text,
-                                                LocalDateTime.now(),
-                                            )
-                                        } catch (_: Throwable) {
-                                            right = false
-                                            "error"
-                                        }
-                                        if (right) {
-                                            onEvent(
-                                                SystemUIEvent.StatusBar.StatusBarClockFormat(
-                                                    tempDataTimeFormat.text
-                                                )
-                                            )
-                                        }
-                                    },
+                                    fillWidth = false,
+                                    onClick = confirmFormat,
                                 )
                             }
 

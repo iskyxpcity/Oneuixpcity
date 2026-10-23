@@ -129,6 +129,7 @@ private fun ClockFormatHelpContent(
                 .fillMaxWidth()
                 .padding(top = 14.dp),
             primary = true,
+            fillWidth = true,
         )
     }
 }

@@ -157,6 +157,7 @@ fun AlohaOneUIActionButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     primary: Boolean = false,
+    fillWidth: Boolean = false,
 ) {
     when (LocalUiMode.current) {
         UiMode.Material -> MaterialButton(
@@ -174,7 +175,7 @@ fun AlohaOneUIActionButton(
             colors = MiuixButtonDefaults.buttonColorsPrimary(),
         ) {
             Box(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = if (fillWidth) Modifier.fillMaxWidth() else Modifier,
                 contentAlignment = Alignment.Center,
             ) {
                 MiuixText(text)

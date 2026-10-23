@@ -2005,6 +2005,7 @@ private fun GlobalShortcutActionButton(
         primary = primary,
         onClick = onClick,
         modifier = modifier,
+        fillWidth = true,
     )
 }
 
