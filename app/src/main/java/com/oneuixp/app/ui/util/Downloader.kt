@@ -13,6 +13,10 @@ import java.util.Locale
 private const val LEGACY_RELEASE_REPO = "iSkyJIE/OneuiXP-Releases"
 private const val ALOHA_RELEASE_REPO = "iSkyJIE/AlohaOneUI"
 private const val LEGACY_PACKAGE_NAME = "com.oneuixp.app"
+private const val BRIDGE_VERSION_NAME = "1.0.261022"
+private const val BRIDGE_VERSION_CODE = 13
+private const val BRIDGE_APK_ASSET_NAME = "OneuiXP_1.0.261022.apk"
+private const val BRIDGE_APK_SHA256 = "f6d56f93ffa9ff3cbbf76d1d6fd1c8ed449847cce53eb70493e35ea84d7be24b"
 private val oneUiAlohaApkPrefix = Regex("""(?i)^(?:AlohaOneUI|OneUIAloha)(?:[._ -][A-Za-z0-9][A-Za-z0-9._ -]*)?\.apk$""")
 
 private fun isSupportedVersionName(value: String): Boolean =
@@ -84,14 +88,61 @@ private fun fetchLatestRelease(repository: String): JSONObject? = runCatching {
 }.getOrNull()
 
 /**
- * Old OneUI XP builds first look for a stable OneUI Aloha release and offer it as a separate-app
- * migration. If no OneUI Aloha release/asset is published yet, they continue checking the legacy
- * OneUI XP feed. Once the app package is renamed, this same updater uses the OneUI Aloha feed.
+ * Resolve the one-time bridge update for legacy OneUI XP installations.
+ *
+ * Older installations must receive the bridge from the legacy release feed before they are ever
+ * offered the separate Aloha OneUI app. The exact versioned asset name is required because this
+ * is the filename recognized by the legacy updater.
+ */
+private fun fetchLegacyBridgeUpdate(): LatestVersionInfo {
+    val release = fetchReleaseList(LEGACY_RELEASE_REPO).firstOrNull {
+        !it.optBoolean("draft") &&
+            it.optString("tag_name").removePrefix("v").removePrefix("V") == BRIDGE_VERSION_NAME
+    } ?: return LatestVersionInfo()
+
+    val assets = release.optJSONArray("assets") ?: return LatestVersionInfo()
+    val asset = (0 until assets.length())
+        .map { assets.getJSONObject(it) }
+        .firstOrNull {
+            it.optString("name").equals(BRIDGE_APK_ASSET_NAME, ignoreCase = true) &&
+                isOfficialReleaseAssetUrl(
+                    it.optString("browser_download_url"),
+                    LEGACY_RELEASE_REPO,
+                )
+        } ?: return LatestVersionInfo()
+
+    val reportedDigest = asset.optString("digest")
+        .removePrefix("sha256:")
+        .lowercase(Locale.ROOT)
+    // GitHub's API may omit digest metadata for an older uploaded asset. In that case, use the
+    // SHA-256 of the already-verified bridge build; a different APK will fail download validation.
+    val digest = if (reportedDigest.matches(Regex("[0-9a-f]{64}"))) {
+        reportedDigest
+    } else {
+        BRIDGE_APK_SHA256
+    }
+
+    return LatestVersionInfo(
+        versionCode = BRIDGE_VERSION_CODE,
+        versionName = BRIDGE_VERSION_NAME,
+        downloadUrl = asset.optString("browser_download_url"),
+        changelog = release.optString("body"),
+        sha256 = digest,
+    )
+}
+
+/**
+ * Legacy versions below 1.0.261022 can only receive the bridge from the legacy release feed.
+ * Once the bridge is installed, the same package name switches to the Aloha OneUI migration feed.
  */
 fun checkNewVersion(): LatestVersionInfo {
     if (!isNetworkAvailable(oneuiXPApp)) return LatestVersionInfo()
 
     val isLegacyApp = oneuiXPApp.packageName.equals(LEGACY_PACKAGE_NAME, ignoreCase = true)
+
+    if (isLegacyApp && compareOneuiXPVersions(BuildConfig.VERSION_NAME, BRIDGE_VERSION_NAME) < 0) {
+        return fetchLegacyBridgeUpdate()
+    }
 
     if (isLegacyApp) {
         // The current public feed may mark a manually uploaded formal APK as a pre-release.
@@ -146,9 +197,12 @@ fun checkNewVersion(): LatestVersionInfo {
                 }
             }
         }
+        // After the bridge is installed, never fall back to the legacy feed; Aloha OneUI is the
+        // only intended update path for this package.
+        return LatestVersionInfo()
     }
 
-    val releaseRepository = if (isLegacyApp) LEGACY_RELEASE_REPO else ALOHA_RELEASE_REPO
+    val releaseRepository = ALOHA_RELEASE_REPO
     val release = fetchLatestRelease(releaseRepository) ?: return LatestVersionInfo()
     val versionName = release.optString("tag_name").removePrefix("v").removePrefix("V")
     if (!isSupportedVersionName(versionName)) return LatestVersionInfo()
