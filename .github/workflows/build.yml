@@ -30,7 +30,7 @@ jobs:
         run: |
           set -euo pipefail
           COMMIT_SUBJECT=$(git log -1 --pretty=%s)
-          if { [ "$GITHUB_REF" = "refs/heads/main" ] && [[ "$COMMIT_SUBJECT" == release:* ]]; } || [ "$GITHUB_REF" = "refs/heads/migration/bridge-aloha-feed-update-20261021" ]; then
+          if { [ "$GITHUB_REF" = "refs/heads/main" ] && [[ "$COMMIT_SUBJECT" == release:* ]]; } || [ "$GITHUB_REF" = "refs/heads/migration/bridge-url-fix-20261022" ]; then
             echo "BUILD_VARIANT=release" >> "$GITHUB_ENV"
             echo "APP_ASSEMBLE_TASK=:app:assembleRelease" >> "$GITHUB_ENV"
             echo "APK_OUTPUT_DIR=release" >> "$GITHUB_ENV"
@@ -54,6 +54,11 @@ jobs:
           set -euo pipefail
           python3 ./verify_no_jni.py
           python3 ./verify_migration.py
+          grep -Fq 'oneuixpVersionName=1.0.261022' gradle.properties
+          grep -Fq 'oneuixpVersionCode=13' gradle.properties
+          grep -Fq 'private const val ALOHA_RELEASE_REPO = "iSkyJIE/AlohaOneUI"' app/src/main/java/com/oneuixp/app/ui/util/Downloader.kt
+          grep -Fq '(?:AlohaOneUI|OneUIAloha)' app/src/main/java/com/oneuixp/app/ui/util/Downloader.kt
+          grep -Fq 'path.startsWith("/iskyjie/alohaoneui/releases/download/")' app/src/main/java/com/oneuixp/app/ui/util/update/UpdateDialogHost.kt
           grep -q 'android:hasFragileUserData="false"' app/src/main/AndroidManifest.xml
           grep -q 'val defaultManagerPackageName = "com.oneuixp.app"' app/build.gradle.kts
           test ! -e app/src/main/assets/xposed_init
@@ -134,7 +139,7 @@ jobs:
           ./gradlew "$APP_ASSEMBLE_TASK" -PONEUIXP_PACKAGE_NAME=com.oneuixp.app -PONEUIXP_NAME="OneUI XP" --stacktrace --no-daemon 2>&1 | tee diagnostics/gradle-build.log
 
       - name: Validate optimized release candidate
-        if: success() && github.ref == 'refs/heads/migration/bridge-aloha-feed-update-20261021'
+        if: success() && github.ref == 'refs/heads/migration/bridge-url-fix-20261022'
         env:
           ONEUIXP_KEYSTORE_PATH: ${{ github.workspace }}/app/owner.keystore
           ONEUIXP_KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
