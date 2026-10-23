@@ -5,6 +5,7 @@ import com.oneuixp.app.oneuiXPApp
 import com.oneuixp.app.ui.util.update.LatestVersionInfo
 import com.oneuixp.app.ui.util.update.compareOneuiXPVersions
 import okhttp3.Request
+import org.json.JSONArray
 import org.json.JSONObject
 import java.net.URI
 import java.util.Locale
@@ -12,7 +13,7 @@ import java.util.Locale
 private const val LEGACY_RELEASE_REPO = "iSkyJIE/OneuiXP-Releases"
 private const val ALOHA_RELEASE_REPO = "iSkyJIE/AlohaOneUI"
 private const val LEGACY_PACKAGE_NAME = "com.oneuixp.app"
-private val oneUiAlohaApkPrefix = Regex("""(?i)^(?:AlohaOneUI|OneUIAloha)(?:[_ -][A-Za-z0-9][A-Za-z0-9._ -]*)?\.apk$""")
+private val oneUiAlohaApkPrefix = Regex("""(?i)^(?:AlohaOneUI|OneUIAloha)(?:[._ -][A-Za-z0-9][A-Za-z0-9._ -]*)?\.apk$""")
 
 private fun isSupportedVersionName(value: String): Boolean =
     value.trim().removePrefix("v").removePrefix("V")
@@ -29,15 +30,46 @@ private fun isOfficialReleaseAssetUrl(value: String, repository: String): Boolea
         uri.path.orEmpty().lowercase(Locale.ROOT).startsWith(expectedPrefix)
 }.getOrDefault(false)
 
-/** Accept either AlohaOneUI or legacy OneUIAloha APK asset names, case-insensitively. */
+/**
+ * Accept official Aloha APK names for the release tag. Also accept the legacy
+ * manually-uploaded alias AlohaOneUI.0.xxxxx.apk when the tag is 1.0.xxxxx.
+ */
 private fun isOneUiAlohaApkForVersion(assetName: String, versionName: String): Boolean {
     if (!oneUiAlohaApkPrefix.matches(assetName)) return false
-    val versionedName = Regex(
-        """(?i)^(?:AlohaOneUI|OneUIAloha)[_ -]${Regex.escape(versionName)}\.apk$"""
-    )
-    return assetName.equals("OneUIAloha.apk", ignoreCase = true) ||
-        versionedName.matches(assetName)
+    val canonicalNames = listOf(
+        "AlohaOneUI_${versionName}.apk",
+        "AlohaOneUI-${versionName}.apk",
+        "AlohaOneUI ${versionName}.apk",
+        "OneUIAloha_${versionName}.apk",
+        "OneUIAloha-${versionName}.apk",
+        "OneUIAloha ${versionName}.apk",
+    ).toMutableSet()
+    if (versionName.startsWith("1.")) {
+        canonicalNames += "AlohaOneUI.${versionName.removePrefix("1.")}.apk"
+    }
+    val acceptedNames = canonicalNames.map { it.lowercase(Locale.ROOT) }.toSet()
+    return assetName.lowercase(Locale.ROOT) in acceptedNames ||
+        assetName.equals("AlohaOneUI.apk", ignoreCase = true) ||
+        assetName.equals("OneUIAloha.apk", ignoreCase = true)
 }
+
+/** Fetch published Release entries including pre-releases; drafts are never used. */
+private fun fetchReleaseList(repository: String): List<JSONObject> = runCatching {
+    val endpoint = "https://api.github.com/repos/$repository/releases?per_page=30"
+    oneuiXPApp.okhttpClient.newCall(
+        Request.Builder().url(endpoint)
+            .header("Accept", "application/vnd.github+json")
+            .header("User-Agent", "OneUI-Android-Updater")
+            .build()
+    ).execute().use { response ->
+        if (!response.isSuccessful) {
+            emptyList()
+        } else {
+            val releases = JSONArray(response.body.string())
+            (0 until releases.length()).map { releases.getJSONObject(it) }
+        }
+    }
+}.getOrDefault(emptyList())
 
 private fun fetchLatestRelease(repository: String): JSONObject? = runCatching {
     val endpoint = "https://api.github.com/repos/$repository/releases/latest"
@@ -62,12 +94,39 @@ fun checkNewVersion(): LatestVersionInfo {
     val isLegacyApp = oneuiXPApp.packageName.equals(LEGACY_PACKAGE_NAME, ignoreCase = true)
 
     if (isLegacyApp) {
-        val alohaRelease = fetchLatestRelease(ALOHA_RELEASE_REPO)
+        // The current public feed may mark a manually uploaded formal APK as a pre-release.
+        // /releases/latest returns 404 in that case, so scan published entries instead.
+        val alohaRelease = fetchReleaseList(ALOHA_RELEASE_REPO)
+            .asSequence()
+            .filterNot { it.optBoolean("draft") }
+            .filter {
+                isSupportedVersionName(
+                    it.optString("tag_name").removePrefix("v").removePrefix("V")
+                )
+            }
+            .sortedWith(Comparator { left, right ->
+                val leftVersion = left.optString("tag_name").removePrefix("v").removePrefix("V")
+                val rightVersion = right.optString("tag_name").removePrefix("v").removePrefix("V")
+                compareOneuiXPVersions(rightVersion, leftVersion)
+            })
+            .firstOrNull { release ->
+                val versionName = release.optString("tag_name").removePrefix("v").removePrefix("V")
+                val assets = release.optJSONArray("assets") ?: return@firstOrNull false
+                (0 until assets.length()).any { index ->
+                    val asset = assets.getJSONObject(index)
+                    isOneUiAlohaApkForVersion(asset.optString("name"), versionName) &&
+                        isOfficialReleaseAssetUrl(
+                            asset.optString("browser_download_url"),
+                            ALOHA_RELEASE_REPO,
+                        )
+                }
+            }
+
         if (alohaRelease != null) {
             val versionName = alohaRelease.optString("tag_name")
                 .removePrefix("v").removePrefix("V")
             val assets = alohaRelease.optJSONArray("assets")
-            if (isSupportedVersionName(versionName) && assets != null) {
+            if (assets != null) {
                 val migrationAsset = (0 until assets.length())
                     .map { assets.getJSONObject(it) }
                     .firstOrNull { asset ->

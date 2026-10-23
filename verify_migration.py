@@ -44,6 +44,9 @@ checks = {
      and 'oneuixpVersionCode=13' in bridge_version_properties
      and 'ALOHA_RELEASE_REPO = "iSkyJIE/AlohaOneUI"' in downloader_source
      and '(?:AlohaOneUI|OneUIAloha)' in downloader_source
+     and 'fetchReleaseList(ALOHA_RELEASE_REPO)' in downloader_source
+     and '/releases?per_page=30' in downloader_source
+     and 'versionName.removePrefix("1.")' in downloader_source
      and 'path.startsWith("/iskyjie/alohaoneui/releases/download/")' in migration_dialog_source
  ),
  'Preference bridge uses canonical OneUI XP symbol': 'object OneuiXPPreferenceBridge' in preference_bridge_source,
