@@ -6,6 +6,7 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.PixelFormat
 import android.graphics.Point
+import android.os.SystemClock
 import android.util.Log
 import android.view.Gravity
 import android.view.MotionEvent
@@ -138,6 +139,7 @@ internal fun GlobalQuickActions.ensureFloatingBall(context: Context) {
 internal fun GlobalQuickActions.removeFloatingBall() {
     floatingBallTouchActive = false
     floatingBallDragging = false
+    floatingBallTouchPointerId = -1
     cancelFloatingBallAutoEdge()
     floatingBallPendingClickRunnable?.let { mainHandler.removeCallbacks(it) }
     floatingBallPendingClickRunnable = null
@@ -176,6 +178,7 @@ internal fun GlobalQuickActions.handleFloatingBallTouch(
     when (event.actionMasked) {
         MotionEvent.ACTION_DOWN -> {
             floatingBallTouchActive = true
+            floatingBallTouchPointerId = event.getPointerId(event.actionIndex.coerceIn(0, event.pointerCount - 1))
             cancelFloatingBallAutoEdge()
             recordSystemServerDiagnosticEvent(context, "floating-ball touch down x=${params.x} y=${params.y}; auto-edge timer cancelled")
             floatingBallTouchStartX = event.rawX
@@ -288,24 +291,54 @@ internal fun GlobalQuickActions.handleFloatingBallTouch(
  * finish first; a new gesture or normal touch completion invalidates the fallback.
  */
 private const val FLOATING_BALL_TOUCH_END_RECOVERY_DELAY_MS = 500L
+private const val FLOATING_BALL_TOUCH_RELEASE_MARKER_MAX_AGE_MS = 30_000L
 
 internal fun GlobalQuickActions.recoverFloatingBallTouchEndFromGlobalInput(event: MotionEvent) {
     val action = event.actionMasked
     if (action != MotionEvent.ACTION_UP && action != MotionEvent.ACTION_CANCEL) return
-    if (!floatingBallTouchActive) return
+
+    val trackedPointerId = floatingBallTouchPointerId
+    val eventPointerId = if (
+        action == MotionEvent.ACTION_UP && event.pointerCount > 0
+    ) {
+        event.getPointerId(event.actionIndex.coerceIn(0, event.pointerCount - 1))
+    } else {
+        -1
+    }
+    val markerAge = SystemClock.uptimeMillis() - floatingBallTouchDownTime
+    val recentMatchingReleaseMarker =
+        trackedPointerId >= 0 &&
+            markerAge in 0..FLOATING_BALL_TOUCH_RELEASE_MARKER_MAX_AGE_MS &&
+            (eventPointerId < 0 || trackedPointerId == eventPointerId)
+
+    // Do not rely on touchActive alone: Samsung may clear one touch flag while the
+    // matching floating-ball release still has no successfully armed idle timer.
+    if (!floatingBallTouchActive && !floatingBallDragging && !recentMatchingReleaseMarker) return
+    if (eventPointerId >= 0 && trackedPointerId >= 0 && eventPointerId != trackedPointerId) return
 
     val context = systemServerContext ?: currentApplicationContext() ?: return
     val view = floatingBallView ?: return
     val params = floatingBallLayoutParams ?: return
     val windowManager = floatingBallWindowManager ?: return
     val capturedDownTime = floatingBallTouchDownTime
+    val capturedPointerId = trackedPointerId
 
     mainHandler.postDelayed({
         if (
-            !floatingBallTouchActive ||
             floatingBallTouchDownTime != capturedDownTime ||
             floatingBallView !== view ||
             floatingBallLayoutParams !== params
+        ) {
+            return@postDelayed
+        }
+
+        val touchStillActive = floatingBallTouchActive || floatingBallDragging
+        val sameReleaseMarker = capturedPointerId >= 0 &&
+            floatingBallTouchPointerId == capturedPointerId
+        // A normally delivered UP already arms the timer and clears the marker.
+        // Recover only if the normal path left no timer behind.
+        if (floatingBallAutoEdgeRunnable != null ||
+            (!touchStillActive && !sameReleaseMarker)
         ) {
             return@postDelayed
         }
@@ -318,9 +351,10 @@ internal fun GlobalQuickActions.recoverFloatingBallTouchEndFromGlobalInput(event
         resetFloatingBallInnerOffset(view)
         recordSystemServerDiagnosticEvent(
             context,
-            "floating-ball recovered missed touch end from global input: " +
+            "floating-ball recovered missing release/auto-edge timer: " +
                 "action=${if (action == MotionEvent.ACTION_UP) "UP" else "CANCEL"} " +
-                "wasDragging=$wasDragging x=${params.x} y=${params.y}; restarting auto-edge countdown",
+                "wasDragging=$wasDragging touchWasActive=$touchStillActive " +
+                "pointerId=$capturedPointerId x=${params.x} y=${params.y}; restarting countdown",
         )
         scheduleFloatingBallAutoEdge(context, windowManager, view, params, floatingBallSettings(context))
     }, FLOATING_BALL_TOUCH_END_RECOVERY_DELAY_MS)
@@ -336,6 +370,7 @@ internal fun GlobalQuickActions.scheduleFloatingBallAutoEdge(
     cancelFloatingBallAutoEdge()
     val delaySeconds = settings.autoEdgeDelaySeconds.coerceIn(0, 10)
     if (!settings.enabled || delaySeconds <= 0) {
+        floatingBallTouchPointerId = -1
         recordSystemServerDiagnosticEvent(
             context,
             "floating-ball auto-edge not scheduled: enabled=${settings.enabled} delaySeconds=$delaySeconds " +
@@ -416,6 +451,7 @@ internal fun GlobalQuickActions.scheduleFloatingBallAutoEdge(
             "floating-ball auto-edge scheduler rejected delay=${delayMillis}ms on main handler",
         )
     } else {
+        floatingBallTouchPointerId = -1
         recordSystemServerDiagnosticEvent(
             context,
             "floating-ball auto-edge timer armed: delaySeconds=$delaySeconds handlerPosted=$handlerPosted " +
