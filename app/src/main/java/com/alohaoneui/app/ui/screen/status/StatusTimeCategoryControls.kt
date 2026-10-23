@@ -207,6 +207,7 @@ fun StatusTimeCategoryControls(
                                 AlohaOneUIActionButton(
                                     text = stringResource(id = R.string.alohaoneui_confirm),
                                     primary = true,
+                                    fillWidth = false,
                                     onClick = {
                                         var right = true
                                         formatLabel = try {
