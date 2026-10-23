@@ -126,6 +126,7 @@ internal fun GlobalQuickActions.ensureFloatingBall(context: Context) {
         floatingBallView = null
         floatingBallLayoutParams = null
         floatingBallWindowManager = null
+        floatingBallPositionChanged = false
         log("floating ball add failed")
         recordSystemServerDiagnosticEvent(
             context,
@@ -138,6 +139,7 @@ internal fun GlobalQuickActions.ensureFloatingBall(context: Context) {
 internal fun GlobalQuickActions.removeFloatingBall() {
     floatingBallTouchActive = false
     floatingBallDragging = false
+    floatingBallPositionChanged = false
     cancelFloatingBallAutoEdge()
     floatingBallPendingClickRunnable?.let { mainHandler.removeCallbacks(it) }
     floatingBallPendingClickRunnable = null
@@ -176,6 +178,7 @@ internal fun GlobalQuickActions.handleFloatingBallTouch(
     when (event.actionMasked) {
         MotionEvent.ACTION_DOWN -> {
             floatingBallTouchActive = true
+            floatingBallPositionChanged = false
             cancelFloatingBallAutoEdge()
             recordSystemServerDiagnosticEvent(context, "floating-ball touch down x=${params.x} y=${params.y}; auto-edge timer cancelled")
             floatingBallTouchStartX = event.rawX
@@ -209,23 +212,62 @@ internal fun GlobalQuickActions.handleFloatingBallTouch(
                     floatingBallLongPressRunnable = null
                     return
                 }
-                params.x = (floatingBallStartX + dx).roundToInt().coerceIn(0, context.resources.displayMetrics.widthPixels - view.width)
-                params.y = (floatingBallStartY + dy).roundToInt().coerceIn(0, context.resources.displayMetrics.heightPixels - view.height)
-                floatingBallX = params.x
-                floatingBallY = params.y
-                runCatching { windowManager.updateViewLayout(view, params) }
+                val previousX = params.x
+                val previousY = params.y
+                val requestedX = (floatingBallStartX + dx).roundToInt()
+                    .coerceIn(0, (context.resources.displayMetrics.widthPixels - view.width).coerceAtLeast(0))
+                val requestedY = (floatingBallStartY + dy).roundToInt()
+                    .coerceIn(0, (context.resources.displayMetrics.heightPixels - view.height).coerceAtLeast(0))
+                if (requestedX != previousX || requestedY != previousY) {
+                    params.x = requestedX
+                    params.y = requestedY
+                    val updateSucceeded = runCatching {
+                        windowManager.updateViewLayout(view, params)
+                        true
+                    }.getOrElse { failure ->
+                        params.x = previousX
+                        params.y = previousY
+                        recordSystemServerDiagnosticEvent(
+                            context,
+                            "floating-ball drag position update failed fromX=$previousX fromY=$previousY " +
+                                "requestedX=$requestedX requestedY=$requestedY " +
+                                "error=${failure.javaClass.simpleName}:${failure.message.orEmpty()}",
+                        )
+                        false
+                    }
+                    if (updateSucceeded) {
+                        floatingBallX = params.x
+                        floatingBallY = params.y
+                        if (!floatingBallPositionChanged &&
+                            (params.x != floatingBallStartX || params.y != floatingBallStartY)
+                        ) {
+                            floatingBallPositionChanged = true
+                            recordSystemServerDiagnosticEvent(
+                                context,
+                                "floating-ball manual position changed: startX=$floatingBallStartX startY=$floatingBallStartY " +
+                                    "currentX=${params.x} currentY=${params.y}; auto-edge countdown will start on release " +
+                                    "independent of action execution",
+                            )
+                        }
+                    }
+                }
             }
         }
         MotionEvent.ACTION_UP -> {
             floatingBallLongPressRunnable?.let { mainHandler?.removeCallbacks(it) }
             floatingBallLongPressRunnable = null
-            if (floatingBallDragging) {
+            val manualPositionChanged = floatingBallPositionChanged
+            if (floatingBallDragging || manualPositionChanged) {
                 floatingBallDragging = false
                 floatingBallTouchActive = false
+                floatingBallPositionChanged = false
+                floatingBallX = params.x
+                floatingBallY = params.y
                 resetFloatingBallInnerOffset(view)
                 recordSystemServerDiagnosticEvent(
                     context,
-                    "floating-ball drag ended x=${params.x} y=${params.y}; restarting auto-edge countdown",
+                    "floating-ball drag ended without requiring an action: positionChanged=$manualPositionChanged " +
+                        "x=${params.x} y=${params.y}; restarting auto-edge countdown for configured delay",
                 )
                 scheduleFloatingBallAutoEdge(context, windowManager, view, params, floatingBallSettings(context))
                 return
@@ -270,13 +312,22 @@ internal fun GlobalQuickActions.handleFloatingBallTouch(
             scheduleFloatingBallAutoEdge(context, windowManager, view, params, floatingBallSettings(context))
         }
         MotionEvent.ACTION_CANCEL -> {
+            val manualPositionChanged = floatingBallPositionChanged
             floatingBallLongPressRunnable?.let { mainHandler?.removeCallbacks(it) }
             floatingBallLongPressRunnable = null
             floatingBallPendingClickRunnable?.let { mainHandler?.removeCallbacks(it) }
             floatingBallPendingClickRunnable = null
             floatingBallDragging = false
             floatingBallTouchActive = false
+            floatingBallPositionChanged = false
+            floatingBallX = params.x
+            floatingBallY = params.y
             resetFloatingBallInnerOffset(view)
+            recordSystemServerDiagnosticEvent(
+                context,
+                "floating-ball touch cancelled: positionChanged=$manualPositionChanged x=${params.x} y=${params.y}; " +
+                    "restarting auto-edge countdown independent of action execution",
+            )
             scheduleFloatingBallAutoEdge(context, windowManager, view, params, floatingBallSettings(context))
         }
     }
