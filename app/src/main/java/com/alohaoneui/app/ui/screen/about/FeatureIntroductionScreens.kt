@@ -370,6 +370,9 @@ private fun VersionChangelogMaterial(onBack: () -> Unit, isLatestVersion: Boolea
         is261023 -> listOf(
             R.string.changelog_261023_rename_title to R.string.changelog_261023_rename_body,
             R.string.changelog_261023_global_shortcuts_title to R.string.changelog_261023_global_shortcuts_body,
+            R.string.changelog_261023_shortcut_triggers_title to R.string.changelog_261023_shortcut_triggers_body,
+            R.string.changelog_261023_shortcut_actions_title to R.string.changelog_261023_shortcut_actions_body,
+            R.string.changelog_261023_shortcut_sync_title to R.string.changelog_261023_shortcut_sync_body,
             R.string.changelog_261023_qs_seconds_title to R.string.changelog_261023_qs_seconds_body,
         )
         is2610191 -> listOf(
@@ -480,6 +483,9 @@ private fun VersionChangelogMiuix(onBack: () -> Unit, isLatestVersion: Boolean, 
         is261023 -> listOf(
             R.string.changelog_261023_rename_title to R.string.changelog_261023_rename_body,
             R.string.changelog_261023_global_shortcuts_title to R.string.changelog_261023_global_shortcuts_body,
+            R.string.changelog_261023_shortcut_triggers_title to R.string.changelog_261023_shortcut_triggers_body,
+            R.string.changelog_261023_shortcut_actions_title to R.string.changelog_261023_shortcut_actions_body,
+            R.string.changelog_261023_shortcut_sync_title to R.string.changelog_261023_shortcut_sync_body,
             R.string.changelog_261023_qs_seconds_title to R.string.changelog_261023_qs_seconds_body,
         )
         is2610191 -> listOf(
