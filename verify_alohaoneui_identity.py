@@ -122,11 +122,13 @@ check("Updater accepts both AlohaOneUI and legacy AlohaOneUI versioned APK asset
       and 'AlohaOneUI_${versionName}.apk' in downloader
       and 'AlohaOneUI_${VERSION_NAME}.apk' in workflow
       and 'OneUIAloha_${VERSION_NAME}.apk' in workflow)
-check("CI verifies Aloha paths and routes future formal releases to the Aloha feed",
+check("CI publishes formal releases only to the source repository and leaves public-feed upload manual",
       "python3 ./verify_alohaoneui_identity.py" in workflow
-      and 'RELEASE_REPO="iSkyJIE/AlohaOneUI"' in workflow
-      and "secrets.ALOHA_RELEASE_TOKEN" in workflow
-      and 'iSkyJIE/OneuiXP-Releases' in workflow)
+      and 'RELEASE_REPO="$GITHUB_REPOSITORY"' in workflow
+      and "SOURCE_REPO_TOKEN: ${{ github.token }}" in workflow
+      and "ALOHA_RELEASE_TOKEN" not in workflow
+      and 'iSkyJIE/AlohaOneUI' not in workflow
+      and 'iSkyJIE/OneuiXP-Releases' in downloader)
 
 # Validate package declaration == physical path for every Kotlin/Java source under the
 # three renamed namespaces. This catches partial moves and mismatched package statements.
