@@ -8,7 +8,7 @@ Aloha OneUI 是面向 Samsung One UI 的独立 Android / LSPosed 模块，提供
 - Android application ID / app namespace：`com.alohaoneui.app`
 - Hook 入口：`com.alohaoneui.hook.Main`
 - Xposed API：`101`
-- 当前源码迁移候选：`1.0.261021.1`（versionCode：`11`；当前迁移测试候选值，以最终已验证构建为准）
+- 当前正式发行版本：`1.0.261023`（versionCode：`12`）。
 - Xposed self-scope：`app/src/main/resources/META-INF/xposed/scope.list`
 
 变更后的 application ID 使 Aloha OneUI 成为独立安装的 Android 应用，而不是 OneUI XP 的原地升级。Android 不会因安装 Aloha 自动迁移旧 XP 的应用数据或 DataStore 设置；安装前请保留旧应用及需要的配置备份。
@@ -39,7 +39,7 @@ Aloha OneUI 是面向 Samsung One UI 的独立 Android / LSPosed 模块，提供
 - `KEY_ALIAS`
 - `KEY_PASSWORD`
 
-公开 Aloha Release 仅在 `main` 上由明确的 `release:*` 提交触发；该正式发布步骤另需单独配置 `ALOHA_RELEASE_TOKEN`，用于向 `iSkyJIE/AlohaOneUI` 发布。该 Token 与 APK 签名凭据分离，不用于迁移分支 CI；本次独立化不会创建或覆盖公开 Release。
+公开 Aloha Release 仅在 `main` 上由明确的 `release:*` 提交触发；该正式发布步骤另需单独配置 `ALOHA_RELEASE_TOKEN`，用于向 `iSkyJIE/AlohaOneUI` 发布。该 Token 与 APK 签名凭据分离，不用于迁移分支 CI；正式发布同时附带 APK SHA-256、Owner 签名信息与 APK 包信息，测试预发布包不会作为正式版交付。
 
 固定 Owner 证书 SHA-256 基线为 `93bf61a6493c6b336383832eb41301bd8fe061f43566e7e384e3fdd9fc1c26a1`。请勿更换密钥、生成替代签名或将 keystore / 密码写入仓库。Secret 名称保持既有设置；本项目 Gradle 中使用的环境变量以 `ALOHAONEUI_*` 命名。
 
