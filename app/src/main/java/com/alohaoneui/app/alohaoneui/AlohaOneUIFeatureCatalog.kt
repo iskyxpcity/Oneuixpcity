@@ -685,7 +685,32 @@ object AlohaOneUIFeatureCatalog {
             statusBar.enableStatusBarClockRichStyle,
         ).count { it }
 
-        return catalogCount + runtimeFeatureCount
+        // These five switches live on the legacy "Other functions" page rather than
+        // AlohaOneUICategory. System UI's custom power menu and screenshot-sound switches
+        // are already present in systemUiOther above, so do not count them twice.
+        val other = preference.other
+        val otherFunctionsCount = listOf(
+            other.callReturnDelayEnabled,
+            other.settingsTwoPaneEnabled,
+            other.allowAppDowngradeEnabled,
+            other.disableSecureScreenshotRestrictionEnabled,
+            other.hidePackageInstallerRecommendationEnabled,
+        ).count { it }
+
+        // Count each independently enabled trigger group once. Individual action slots,
+        // haptics, colors, sizing, and thresholds are configuration details, not features.
+        val shortcuts = other.globalShortcutActions
+        val globalShortcutCount = listOf(
+            shortcuts.threeFingerGestureEnabled,
+            shortcuts.threeFingerPinchEnabled,
+            shortcuts.threeFingerSpreadEnabled,
+            shortcuts.floatingBallEnabled,
+            shortcuts.statusBarShortcutEnabled,
+            shortcuts.navigationKeyShortcutEnabled,
+            shortcuts.screenOffVolumeKeyEnabled,
+        ).count { it }
+
+        return catalogCount + runtimeFeatureCount + otherFunctionsCount + globalShortcutCount
     }
 
     fun settings(category: AlohaOneUICategory): List<AlohaOneUISettingSpec> =

@@ -72,4 +72,50 @@ class SettingsRepositoryImpl : SettingsRepository {
     override var pagerGestureMode: Int
         get() = prefs.getInt("pager_gesture_mode", 0).coerceIn(0, 2)
         set(value) = prefs.edit { putInt("pager_gesture_mode", value.coerceIn(0, 2)) }
+
+    override fun snapshotForBackup(): AppSettingsBackup = AppSettingsBackup(
+        uiMode = uiMode,
+        checkUpdate = checkUpdate,
+        themeMode = themeMode,
+        miuixMonet = miuixMonet,
+        keyColor = keyColor,
+        colorStyle = colorStyle,
+        colorSpec = colorSpec,
+        enablePredictiveBack = enablePredictiveBack,
+        enableBlur = enableBlur,
+        enableFloatingBottomBar = enableFloatingBottomBar,
+        enableFloatingBottomBarBlur = enableFloatingBottomBarBlur,
+        navigationRailExpanded = navigationRailExpanded,
+        pageScale = pageScale,
+        enableSwipeBack = enableSwipeBack,
+        pagerGestureMode = pagerGestureMode,
+    )
+
+    override fun restoreFromBackup(snapshot: AppSettingsBackup) {
+        val restoredColorStyle = runCatching {
+            PaletteStyle.valueOf(snapshot.colorStyle).name
+        }.getOrDefault(PaletteStyle.TonalSpot.name)
+        val restoredColorSpec = runCatching {
+            ColorSpec.SpecVersion.valueOf(snapshot.colorSpec).name
+        }.getOrDefault(ColorSpec.SpecVersion.SPEC_2025.name)
+
+        val committed = prefs.edit()
+            .putString("ui_mode", UiMode.fromValue(snapshot.uiMode).value)
+            .putBoolean("check_update", snapshot.checkUpdate)
+            .putInt("color_mode", snapshot.themeMode)
+            .putBoolean("miuix_monet", snapshot.miuixMonet)
+            .putInt("key_color", snapshot.keyColor)
+            .putString("color_style", restoredColorStyle)
+            .putString("color_spec", restoredColorSpec)
+            .putBoolean("enable_predictive_back", snapshot.enablePredictiveBack)
+            .putBoolean("enable_blur", snapshot.enableBlur)
+            .putBoolean("enable_floating_bottom_bar", snapshot.enableFloatingBottomBar)
+            .putBoolean("enable_floating_bottom_bar_blur", snapshot.enableFloatingBottomBarBlur)
+            .putBoolean("nav_rail_expanded", snapshot.navigationRailExpanded)
+            .putFloat("page_scale", snapshot.pageScale)
+            .putBoolean("enable_swipe_back", snapshot.enableSwipeBack)
+            .putInt("pager_gesture_mode", snapshot.pagerGestureMode.coerceIn(0, 2))
+            .commit()
+        check(committed) { "Could not persist restored AlohaOneUI app settings." }
+    }
 }

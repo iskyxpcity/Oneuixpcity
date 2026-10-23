@@ -283,6 +283,43 @@ private object AlohaOneUIXposedService {
             false
         }
     }
+    /**
+     * A configuration restore replaces the previous local configuration. It must not
+     * inherit an older "wait for shortcut sync" marker, or restored shortcut settings
+     * can be silently kept off the remote LSPosed preference file.
+     */
+    suspend fun synchronizeRestoredConfiguration(application: Application): Boolean {
+        val unlocked =
+            application.getSystemService(UserManager::class.java)?.isUserUnlocked == true
+        if (!unlocked) return false
+
+        return try {
+            // Wait for the DataStore restore transaction before publishing the complete payload.
+            val current = application.alohaOneUIDataStore.updateData { it }
+            val clearedBeforeWrite = setGlobalShortcutSyncPending(application, false)
+            if (!clearedBeforeWrite) {
+                Log.w(TAG, "Could not clear previous deferred shortcut-sync marker before config restore")
+            }
+
+            val synchronized =
+                AlohaOneUIPreferenceSerializer.synchronizeRemoteIncludingPending(current)
+            if (!synchronized) {
+                Log.w(TAG, "Configuration is restored locally; remote sync can retry when service reconnects")
+                return false
+            }
+
+            if (!setGlobalShortcutSyncPending(application, false)) {
+                Log.w(TAG, "Could not clear deferred shortcut-sync marker after config restore")
+                return false
+            }
+            runCatching { application.alohaOneUIDataStore.updateData { it } }
+                .onFailure { Log.w(TAG, "DataStore marker refresh failed after config restore", it) }
+            true
+        } catch (failure: Throwable) {
+            Log.w(TAG, "Full configuration synchronization after restore failed", failure)
+            false
+        }
+    }
 }
 
 object AlohaOneUIPreferenceSerializer : Serializer<Preference> {

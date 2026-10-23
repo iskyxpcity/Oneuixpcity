@@ -9,6 +9,8 @@ import com.alohaoneui.app.alohaoneui.AlohaOneUISettingSpec
 import com.alohaoneui.app.alohaoneui.AlohaOneUISettingType
 import com.alohaoneui.app.alohaoneui.AlohaOneUIVisibility
 import com.alohaoneui.app.alohaoneui.alohaOneUIDataStore
+import com.alohaoneui.app.data.repository.AppSettingsBackup
+import com.alohaoneui.app.data.repository.SettingsRepositoryImpl
 import com.alohaoneui.common.IgnoreUnknownKeysJson
 import com.alohaoneui.common.ONE_UI_VERSION
 import com.alohaoneui.common.PowerMenuAction
@@ -20,6 +22,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
@@ -30,8 +33,26 @@ import com.alohaoneui.common.ProductionPreferenceMigration
 import java.io.InputStream
 import java.io.OutputStream
 
+private const val CONFIGURATION_BACKUP_FORMAT = "aloha-oneui-config"
+private const val CONFIGURATION_BACKUP_SCHEMA_VERSION = 2
+
+private val configurationBackupJson = Json {
+    ignoreUnknownKeys = true
+    encodeDefaults = true
+    prettyPrint = true
+}
+
+@Serializable
+private data class AlohaOneUIConfigurationBackup(
+    val format: String,
+    val schemaVersion: Int,
+    val preferences: JsonObject,
+    val appSettings: AppSettingsBackup,
+)
+
 class AlohaOneUIToolsViewModel : ViewModel() {
     private val dataStore = alohaOneUIApp.alohaOneUIDataStore
+    private val appSettingsRepository = SettingsRepositoryImpl()
 
     /**
      * Material pages read generic settings by serialized property path. The
@@ -77,29 +98,65 @@ class AlohaOneUIToolsViewModel : ViewModel() {
     }
 
     /**
-     * Compatible full preference backup.
-     * The exported JSON deliberately contains only the Preference payload, not
-     * AlohaOneUI's local synchronization marker.
+     * Export the complete user configuration: all LSPosed feature preferences plus
+     * the app's own appearance, navigation, gesture, and update-check settings.
+     * Internal synchronization markers are intentionally not part of the backup.
      */
     suspend fun backupTo(output: OutputStream) = withContext(Dispatchers.IO) {
-        output.write(
-            IgnoreUnknownKeysJson.encodeToString(
+        val backup = AlohaOneUIConfigurationBackup(
+            format = CONFIGURATION_BACKUP_FORMAT,
+            schemaVersion = CONFIGURATION_BACKUP_SCHEMA_VERSION,
+            preferences = IgnoreUnknownKeysJson.encodeToJsonElement(
                 Preference.serializer(),
                 dataStore.data.first(),
+            ).jsonObject,
+            appSettings = appSettingsRepository.snapshotForBackup(),
+        )
+        output.write(
+            configurationBackupJson.encodeToString(
+                AlohaOneUIConfigurationBackup.serializer(),
+                backup,
             ).encodeToByteArray()
         )
+        output.flush()
     }
 
     /**
-     * Restore through the same production migration decoder used by the app
-     * so backups from older schemas remain importable.
+     * Restore the complete versioned bundle. Legacy raw Preference JSON files stay
+     * supported; those older files have no app-level settings section to restore.
      */
     suspend fun restoreFrom(input: InputStream) = withContext(Dispatchers.IO) {
-        val restored = ProductionPreferenceMigration.decode(
-            input.readBytes().decodeToString()
-        )
+        val raw = input.readBytes().decodeToString()
+        val root = configurationBackupJson.parseToJsonElement(raw).jsonObject
+
+        val bundle = if (root.containsKey("format")) {
+            val decoded = configurationBackupJson.decodeFromString(
+                AlohaOneUIConfigurationBackup.serializer(),
+                raw,
+            )
+            require(decoded.format == CONFIGURATION_BACKUP_FORMAT) {
+                "This file is not an AlohaOneUI configuration backup."
+            }
+            require(decoded.schemaVersion == CONFIGURATION_BACKUP_SCHEMA_VERSION) {
+                "Unsupported AlohaOneUI configuration backup version: ${decoded.schemaVersion}"
+            }
+            decoded
+        } else {
+            null
+        }
+
+        val restored = if (bundle != null) {
+            ProductionPreferenceMigration.decode(bundle.preferences.toString())
+        } else {
+            // Compatibility path for previous backups containing only Preference.
+            ProductionPreferenceMigration.decode(raw)
+        }
+
+        // Parse and validate the entire input before mutating either local store.
+        bundle?.let { appSettingsRepository.restoreFromBackup(it.appSettings) }
         dataStore.updateData { restored }
-        AlohaOneUIPreferenceBridge.synchronizeNow(alohaOneUIApp)
+        // Unlike ordinary preference sync, restore overrides any old deferred shortcut edits.
+        AlohaOneUIPreferenceBridge.synchronizeRestoredConfiguration(alohaOneUIApp)
     }
 
 
