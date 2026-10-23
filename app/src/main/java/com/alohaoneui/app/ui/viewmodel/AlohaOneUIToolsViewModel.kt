@@ -106,7 +106,7 @@ class AlohaOneUIToolsViewModel : ViewModel() {
         val backup = AlohaOneUIConfigurationBackup(
             format = CONFIGURATION_BACKUP_FORMAT,
             schemaVersion = CONFIGURATION_BACKUP_SCHEMA_VERSION,
-            preferences = IgnoreUnknownKeysJson.encodeToJsonElement(
+            preferences = configurationBackupJson.encodeToJsonElement(
                 Preference.serializer(),
                 dataStore.data.first(),
             ).jsonObject,
@@ -125,7 +125,7 @@ class AlohaOneUIToolsViewModel : ViewModel() {
      * Restore the complete versioned bundle. Legacy raw Preference JSON files stay
      * supported; those older files have no app-level settings section to restore.
      */
-    suspend fun restoreFrom(input: InputStream) = withContext(Dispatchers.IO) {
+    suspend fun restoreFrom(input: InputStream): Boolean = withContext(Dispatchers.IO) {
         val raw = input.readBytes().decodeToString()
         val root = configurationBackupJson.parseToJsonElement(raw).jsonObject
 

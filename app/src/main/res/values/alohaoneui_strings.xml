@@ -210,6 +210,10 @@
     <string name="alohaoneui_backup_config">Back up config</string>
     <string name="alohaoneui_restore_config">Restore config</string>
     <string name="alohaoneui_restore_failed">Restore failed, the file may be corrupted</string>
+    <string name="alohaoneui_backup_succeeded">Configuration backup saved</string>
+    <string name="alohaoneui_backup_failed">Configuration backup failed. Please try again.</string>
+    <string name="alohaoneui_restore_succeeded">Configuration restored</string>
+    <string name="alohaoneui_restore_local_only">Configuration restored locally; system features will sync when LSPosed reconnects.</string>
 
     <string name="alohaoneui_category_android">Android</string>
     <string name="alohaoneui_category_systemui">System UI</string>

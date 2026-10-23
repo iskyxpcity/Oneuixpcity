@@ -210,6 +210,10 @@
     <string name="alohaoneui_backup_config">备份配置</string>
     <string name="alohaoneui_restore_config">恢复配置</string>
     <string name="alohaoneui_restore_failed">恢复失败，文件可能已损坏</string>
+    <string name="alohaoneui_backup_succeeded">配置备份已保存</string>
+    <string name="alohaoneui_backup_failed">配置备份失败，请重试</string>
+    <string name="alohaoneui_restore_succeeded">配置已恢复</string>
+    <string name="alohaoneui_restore_local_only">配置已恢复到本机；LSPosed 重新连接后会同步系统功能设置</string>
 
     <string name="alohaoneui_category_android">Android 系统</string>
     <string name="alohaoneui_category_systemui">系统界面</string>

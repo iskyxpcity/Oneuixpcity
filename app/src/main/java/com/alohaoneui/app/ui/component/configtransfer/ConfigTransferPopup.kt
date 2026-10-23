@@ -19,7 +19,7 @@ import java.time.format.DateTimeFormatter
  * Top-left AlohaOneUI configuration transfer menu.
  *
  * Keeps KernelSU 3.2.5's navigation-icon position while replacing the original
- * destination action with the application's full Preference backup/restore.
+ * destination action with the application's full configuration backup/restore.
  */
 @Composable
 fun ConfigTransferPopup() {
@@ -32,8 +32,21 @@ fun ConfigTransferPopup() {
     ) { uri ->
         uri?.let {
             scope.launch {
-                context.contentResolver.openOutputStream(it)?.use { stream ->
-                    viewModel.backupTo(stream)
+                try {
+                    val output = context.contentResolver.openOutputStream(it)
+                        ?: error("Could not open the selected backup destination.")
+                    output.use { stream -> viewModel.backupTo(stream) }
+                    Toast.makeText(
+                        context,
+                        R.string.alohaoneui_backup_succeeded,
+                        Toast.LENGTH_SHORT,
+                    ).show()
+                } catch (_: Throwable) {
+                    Toast.makeText(
+                        context,
+                        R.string.alohaoneui_backup_failed,
+                        Toast.LENGTH_SHORT,
+                    ).show()
                 }
             }
         }
@@ -45,9 +58,18 @@ fun ConfigTransferPopup() {
         uri?.let {
             scope.launch {
                 try {
-                    context.contentResolver.openInputStream(it)?.use { stream ->
-                        viewModel.restoreFrom(stream)
-                    }
+                    val input = context.contentResolver.openInputStream(it)
+                        ?: error("Could not open the selected configuration file.")
+                    val remoteSynced = input.use { stream -> viewModel.restoreFrom(stream) }
+                    Toast.makeText(
+                        context,
+                        if (remoteSynced) {
+                            R.string.alohaoneui_restore_succeeded
+                        } else {
+                            R.string.alohaoneui_restore_local_only
+                        },
+                        Toast.LENGTH_LONG,
+                    ).show()
                 } catch (_: Throwable) {
                     Toast.makeText(
                         context,
