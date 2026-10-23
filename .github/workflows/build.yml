@@ -54,8 +54,8 @@ jobs:
           set -euo pipefail
           python3 ./verify_no_jni.py
           python3 ./verify_migration.py
-          grep -Fq 'oneuixpVersionName=1.0.261022' gradle.properties
-          grep -Fq 'oneuixpVersionCode=13' gradle.properties
+          grep -Fq 'oneuixpVersionName=1.0.261023.1' gradle.properties
+          grep -Fq 'oneuixpVersionCode=14' gradle.properties
           grep -Fq 'private const val ALOHA_RELEASE_REPO = "iSkyJIE/AlohaOneUI"' app/src/main/java/com/oneuixp/app/ui/util/Downloader.kt
           grep -Fq '(?:AlohaOneUI|OneUIAloha)' app/src/main/java/com/oneuixp/app/ui/util/Downloader.kt
           grep -Fq 'path.startsWith("/iskyjie/alohaoneui/releases/download/")' app/src/main/java/com/oneuixp/app/ui/util/update/UpdateDialogHost.kt

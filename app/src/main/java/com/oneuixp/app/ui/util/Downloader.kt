@@ -13,9 +13,9 @@ import java.util.Locale
 private const val LEGACY_RELEASE_REPO = "iSkyJIE/OneuiXP-Releases"
 private const val ALOHA_RELEASE_REPO = "iSkyJIE/AlohaOneUI"
 private const val LEGACY_PACKAGE_NAME = "com.oneuixp.app"
-private const val BRIDGE_VERSION_NAME = "1.0.261022"
-private const val BRIDGE_VERSION_CODE = 13
-private const val BRIDGE_APK_ASSET_NAME = "OneuiXP_1.0.261022.apk"
+private const val BRIDGE_VERSION_NAME = "1.0.261023.1"
+private const val BRIDGE_VERSION_CODE = 14
+private const val BRIDGE_APK_ASSET_NAME = "OneuiXP_1.0.261023.1.apk"
 private val oneUiAlohaApkPrefix = Regex("""(?i)^(?:AlohaOneUI|OneUIAloha)(?:[._ -][A-Za-z0-9][A-Za-z0-9._ -]*)?\.apk$""")
 
 private fun isSupportedVersionName(value: String): Boolean =
@@ -126,7 +126,7 @@ private fun fetchLegacyBridgeUpdate(): LatestVersionInfo {
 }
 
 /**
- * Legacy versions below 1.0.261022 can only receive the bridge from the legacy release feed.
+ * Legacy versions below 1.0.261023.1 can only receive the bridge from the legacy release feed.
  * Once the bridge is installed, the same package name switches to the Aloha OneUI migration feed.
  */
 fun checkNewVersion(): LatestVersionInfo {
@@ -145,9 +145,11 @@ fun checkNewVersion(): LatestVersionInfo {
             .asSequence()
             .filterNot { it.optBoolean("draft") }
             .filter {
-                isSupportedVersionName(
-                    it.optString("tag_name").removePrefix("v").removePrefix("V")
-                )
+                val versionName = it.optString("tag_name").removePrefix("v").removePrefix("V")
+                // The bridge may be mirrored into the Aloha feed so older clients can discover it.
+                // Never present that bridge package as the Aloha app itself; continue to the next
+                // valid Aloha APK (even when its version name is numerically lower).
+                isSupportedVersionName(versionName) && versionName != BRIDGE_VERSION_NAME
             }
             .sortedWith(Comparator { left, right ->
                 val leftVersion = left.optString("tag_name").removePrefix("v").removePrefix("V")

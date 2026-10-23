@@ -41,11 +41,12 @@ checks = {
  'Flux-style no heartbeat bridge': not (root/'app/src/main/java/com/oneuixp/app/statusbar/StatusBridge.java').exists() and '${applicationId}.statusbridge' not in (root/'app/src/main/AndroidManifest.xml').read_text() and 'startHeartbeat(' not in (root/'hook/src/main/java/com/oneuixp/hook/util/OneuiXPStatusReporter.kt').read_text(),
  'OneuiXP application ID': 'com.oneuixp.app' in (root/'app/build.gradle.kts').read_text(),
  'Bridge version exceeds existing public bridge and targets the current Aloha feed': (
-     'oneuixpVersionName=1.0.261022' in bridge_version_properties
-     and 'oneuixpVersionCode=13' in bridge_version_properties
+     'oneuixpVersionName=1.0.261023.1' in bridge_version_properties
+     and 'oneuixpVersionCode=14' in bridge_version_properties
      and 'ALOHA_RELEASE_REPO = "iSkyJIE/AlohaOneUI"' in downloader_source
      and '(?:AlohaOneUI|OneUIAloha)' in downloader_source
      and 'fetchReleaseList(ALOHA_RELEASE_REPO)' in downloader_source
+     and 'versionName != BRIDGE_VERSION_NAME' in downloader_source
      and '/releases?per_page=30' in downloader_source
      and 'versionName.removePrefix("1.")' in downloader_source
      and 'path.startsWith("/iskyjie/alohaoneui/releases/download/")' in migration_dialog_source
@@ -53,8 +54,8 @@ checks = {
      and 'OUTPUT_APK="OneuiXP_${VERSION_NAME}.apk"' in workflow_source
  ),
  'Legacy installs receive the bridge before Aloha migration': (
-     'BRIDGE_VERSION_NAME = "1.0.261022"' in downloader_source
-     and 'BRIDGE_APK_ASSET_NAME = "OneuiXP_1.0.261022.apk"' in downloader_source
+     'BRIDGE_VERSION_NAME = "1.0.261023.1"' in downloader_source
+     and 'BRIDGE_APK_ASSET_NAME = "OneuiXP_1.0.261023.1.apk"' in downloader_source
      and 'return fetchLegacyBridgeUpdate()' in downloader_source
      and 'if (isLegacyApp && compareOneuiXPVersions(BuildConfig.VERSION_NAME, BRIDGE_VERSION_NAME) < 0)' in downloader_source
      and downloader_source.index(
