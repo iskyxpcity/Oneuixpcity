@@ -99,7 +99,8 @@ fun StatusTimeCategoryControls(
     uiState: Preference.SystemUI.StatusBar,
     onEvent: (SystemUIEvent) -> Unit,
     modifier: Modifier = Modifier,
-) {
+ ) {
+    val uiMode = LocalUiMode.current
     val isDoubleLine =
         uiState.setStatusBarClockFormat && uiState.statusBarClockFormat.contains('\n')
     val isFold7 = Build.MODEL.startsWith("SM-F966", ignoreCase = true)
@@ -170,7 +171,7 @@ fun StatusTimeCategoryControls(
                     onClick = { formatExpanded = !formatExpanded },
                     checked = uiState.setStatusBarClockFormat,
                     onCheckedChange = {
-                        if (LocalUiMode.current == UiMode.Miuix) {
+                        if (uiMode == UiMode.Miuix) {
                             // In Miuix, enabling the format option should reveal its editor.
                             formatExpanded = it
                         } else if (it && uiState.statusBarClockFormat == "HH:mm") {
