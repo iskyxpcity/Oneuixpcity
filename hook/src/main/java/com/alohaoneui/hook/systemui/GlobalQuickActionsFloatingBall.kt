@@ -31,12 +31,19 @@ internal fun GlobalQuickActions.ensureFloatingBall(context: Context) {
         // Rebuild when the configured size no longer matches the live window. The preference
         // observer usually handles this, but a dropped broadcast would otherwise leave the ball
         // stuck at the old diameter forever because ensure() returns early for an existing view.
-        val expectedSize = dp(context, settings.sizeDp)
-        if (existingParams != null && existingParams.width > 0 && existingParams.width != expectedSize) {
+        val requestedSizeDp = settings.sizeDp.coerceIn(MIN_FLOATING_BALL_SIZE_DP, MAX_FLOATING_BALL_SIZE_DP)
+        val expectedSize = dp(context, requestedSizeDp)
+        val paramsSizeMismatch =
+            existingParams?.width != expectedSize || existingParams?.height != expectedSize
+        val measuredWidthMismatch = existingView.width > 0 && existingView.width != expectedSize
+        val measuredHeightMismatch = existingView.height > 0 && existingView.height != expectedSize
+        if (paramsSizeMismatch || measuredWidthMismatch || measuredHeightMismatch) {
             recordSystemServerDiagnosticEvent(
                 context,
-                "floating-ball size mismatch; rebuilding: currentWidth=${existingParams.width} " +
-                    "expectedWidth=$expectedSize sizeDp=${settings.sizeDp}",
+                "floating-ball size mismatch; rebuilding: " +
+                    "params=${existingParams?.width}x${existingParams?.height} " +
+                    "view=${existingView.width}x${existingView.height} expected=${expectedSize}px " +
+                    "sizeDp=${settings.sizeDp} normalizedSizeDp=$requestedSizeDp",
             )
             removeFloatingBall()
             ensureFloatingBall(context)
@@ -92,7 +99,7 @@ internal fun GlobalQuickActions.ensureFloatingBall(context: Context) {
 
     val windowManager = context.getSystemService(WindowManager::class.java) ?: return
     floatingBallWindowManager = windowManager
-    val size = dp(context, settings.sizeDp)
+    val size = dp(context, settings.sizeDp.coerceIn(MIN_FLOATING_BALL_SIZE_DP, MAX_FLOATING_BALL_SIZE_DP))
     val params = WindowManager.LayoutParams(
         size,
         size,
