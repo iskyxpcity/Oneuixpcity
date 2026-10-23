@@ -64,6 +64,7 @@ import com.alohaoneui.app.ui.screen.about.AboutScreen
 import com.alohaoneui.app.ui.screen.about.DisclaimerScreen
 import com.alohaoneui.app.ui.screen.about.FeatureIntroductionScreen
 import com.alohaoneui.app.ui.screen.about.VersionChangelogScreen
+import com.alohaoneui.app.ui.screen.about.VersionChangelog261023Screen
 import com.alohaoneui.app.ui.screen.about.VersionChangelog2610191Screen
 import com.alohaoneui.app.ui.screen.about.VersionChangelog261013Screen
 import com.alohaoneui.app.ui.screen.about.VersionChangelog261018Screen
@@ -197,6 +198,7 @@ class MainActivity : ComponentActivity() {
                             entry<Route.About>(swipeDismiss = swipeDismiss) { AboutScreen() }
                             entry<Route.Disclaimer>(swipeDismiss = swipeDismiss) { DisclaimerScreen() }
                             entry<Route.FeatureIntroduction>(swipeDismiss = swipeDismiss) { FeatureIntroductionScreen() }
+                            entry<Route.VersionChangelog261023>(swipeDismiss = swipeDismiss) { VersionChangelog261023Screen() }
                             entry<Route.VersionChangelog2610191>(swipeDismiss = swipeDismiss) { VersionChangelog2610191Screen() }
                             entry<Route.VersionChangelog>(swipeDismiss = swipeDismiss) { VersionChangelogScreen() }
                             entry<Route.VersionChangelog261013>(swipeDismiss = swipeDismiss) { VersionChangelog261013Screen() }
