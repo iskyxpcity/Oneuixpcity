@@ -88,6 +88,7 @@ jobs:
           python3 ./verify_no_jni.py
           python3 ./verify_migration.py
           python3 ./verify_alohaoneui_identity.py
+          python3 ./verify_config_consistency.py
           grep -q 'android:hasFragileUserData="false"' app/src/main/AndroidManifest.xml
           grep -q 'val defaultManagerPackageName = "com.alohaoneui.app"' app/build.gradle.kts
           grep -q 'namespace = "com.alohaoneui.app"' app/build.gradle.kts
