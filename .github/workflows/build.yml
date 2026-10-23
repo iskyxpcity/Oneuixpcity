@@ -270,7 +270,6 @@ jobs:
         if: success() && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/migration/') || startsWith(github.ref, 'refs/heads/test/'))
         env:
           SOURCE_REPO_TOKEN: ${{ github.token }}
-          ALOHA_RELEASE_TOKEN: ${{ secrets.ALOHA_RELEASE_TOKEN }}
         run: |
           set -euo pipefail
           SHORT_SHA="${GITHUB_SHA::7}"
@@ -281,14 +280,10 @@ jobs:
           export GH_TOKEN
 
           if [ "$GITHUB_REF" = "refs/heads/main" ] && [[ "$COMMIT_SUBJECT" == release:* ]]; then
+            # Publish the formal signed release only to the source repository.
+            # The user manually uploads the verified APK to the separate public update feed.
             FORMAL_RELEASE=true
-            RELEASE_REPO="iSkyJIE/AlohaOneUI"
-            GH_TOKEN="$ALOHA_RELEASE_TOKEN"
-            if [ -z "$GH_TOKEN" ]; then
-              echo "::error::Formal Aloha releases require the ALOHA_RELEASE_TOKEN Actions secret with write access to iSkyJIE/AlohaOneUI. No public release was published."
-              exit 1
-            fi
-            export GH_TOKEN
+            RELEASE_REPO="$GITHUB_REPOSITORY"
             TAG="v${VERSION_NAME}"
             TITLE="Aloha OneUI ${VERSION_NAME}"
             if [ "$VERSION_NAME" = "1.0.261023" ]; then
@@ -366,10 +361,10 @@ jobs:
         run: |
           mkdir -p diagnostics
           find . -path '*/build/reports/problems/*' -type f -exec cp --parents {} diagnostics/ \; || true
-      - name: Optionally mirror signed APK to Actions Artifact
+      - name: Retain signed APK and verification files as an Actions Artifact
         uses: actions/upload-artifact@v4
         continue-on-error: true
-        if: success() && github.ref == 'refs/heads/main'
+        if: always() && github.ref == 'refs/heads/main' && hashFiles('dist/*.apk') != ''
         with:
           name: AlohaOneUI-Owner-Signed
           path: dist/
