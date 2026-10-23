@@ -201,7 +201,7 @@
     <string name="changelog_261023_global_shortcuts_title">全局快捷动作</string>
     <string name="changelog_261023_global_shortcuts_body">新增全局快捷动作功能。</string>
     <string name="changelog_261023_qs_seconds_title">快捷面板显秒修复</string>
-    <string name="changelog_261023_qs_seconds_body">修复下拉快捷设置面板的时钟秒数显示问题。</string>
+    <string name="changelog_261023_qs_seconds_body">修复启用模块后，下拉快捷设置面板的时钟秒数无法正常显示的问题。</string>
     <string name="version_1_0_2610191_title">Aloha OneUI 1.0.261019.1 主要更新</string>
     <string name="version_1_0_2610191_summary">2026-10-19</string>
     <string name="changelog_2610191_new_features_title">新增功能</string>
