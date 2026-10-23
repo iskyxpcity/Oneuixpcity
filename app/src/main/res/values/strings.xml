@@ -191,8 +191,18 @@
 
     <string name="nav_rail_expand">Expand navigation rail</string>
     <string name="nav_rail_collapse">Collapse navigation rail</string>
+    <string name="feature_intro_version_updates_261023">Aloha OneUI 1.0.261023 updates</string>
+    <string name="feature_intro_version_updates_261023_summary">2026-10-23</string>
     <string name="feature_intro_version_updates_2610191">Aloha OneUI 1.0.261019.1 Highlights</string>
     <string name="feature_intro_version_updates_2610191_summary">2026-10-19</string>
+    <string name="version_1_0_261023_title">Aloha OneUI 1.0.261023</string>
+    <string name="version_1_0_261023_summary">2026-10-23</string>
+    <string name="changelog_261023_rename_title">Official rename</string>
+    <string name="changelog_261023_rename_body">The project has officially been renamed to Aloha OneUI.</string>
+    <string name="changelog_261023_global_shortcuts_title">Global shortcut actions</string>
+    <string name="changelog_261023_global_shortcuts_body">Added global shortcut actions and their available functions.</string>
+    <string name="changelog_261023_qs_seconds_title">Quick panel clock seconds</string>
+    <string name="changelog_261023_qs_seconds_body">Fixed seconds display in the pull-down Quick Settings panel.</string>
     <string name="version_1_0_2610191_title">Aloha OneUI 1.0.261019.1 Highlights</string>
     <string name="version_1_0_2610191_summary">2026-10-19</string>
     <string name="changelog_2610191_new_features_title">New features</string>
