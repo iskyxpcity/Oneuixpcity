@@ -622,15 +622,21 @@ internal fun GlobalQuickActions.recoverFloatingBallTouchEndFromGlobalInput(event
         -1
     }
     val markerAge = SystemClock.uptimeMillis() - floatingBallTouchDownTime
-    val recentMatchingReleaseMarker =
+    val recentReleaseMarker =
         trackedPointerId >= 0 &&
-            markerAge in 0..FLOATING_BALL_TOUCH_RELEASE_MARKER_MAX_AGE_MS &&
-            (eventPointerId < 0 || trackedPointerId == eventPointerId)
+            markerAge in 0..FLOATING_BALL_TOUCH_RELEASE_MARKER_MAX_AGE_MS
 
-    // Do not rely on touchActive alone: Samsung may clear one touch flag while the
-    // matching floating-ball release still has no successfully armed idle timer.
-    if (!floatingBallTouchActive && !floatingBallDragging && !recentMatchingReleaseMarker) return
-    if (eventPointerId >= 0 && trackedPointerId >= 0 && eventPointerId != trackedPointerId) return
+    // SystemServer and a moved overlay can expose different pointer IDs on some One UI builds.
+    // A mismatched ID must not suppress recovery while this ball still owns an active drag.
+    if (!floatingBallTouchActive && !floatingBallDragging && !recentReleaseMarker) return
+    if (eventPointerId >= 0 && trackedPointerId >= 0 && eventPointerId != trackedPointerId) {
+        if (!floatingBallTouchActive && !floatingBallDragging) return
+        recordSystemServerDiagnosticEvent(
+            systemServerContext ?: currentApplicationContext() ?: return,
+            "floating-ball global release pointer mismatch: tracked=$trackedPointerId " +
+                "event=$eventPointerId; active touch still requires recovery",
+        )
+    }
 
     val context = systemServerContext ?: currentApplicationContext() ?: return
     val view = floatingBallView ?: return
@@ -648,32 +654,49 @@ internal fun GlobalQuickActions.recoverFloatingBallTouchEndFromGlobalInput(event
             return@postDelayed
         }
 
-        val touchStillActive = floatingBallTouchActive || floatingBallDragging
-        val sameReleaseMarker = capturedPointerId >= 0 &&
-            floatingBallTouchPointerId == capturedPointerId
-        // A normally delivered UP already arms the timer and clears the marker.
-        // Recover only if the normal path left no timer behind.
-        if (floatingBallAutoEdgeRunnable != null ||
-            (!touchStillActive && !sameReleaseMarker)
-        ) {
+        // If the normal View handler succeeded, its timer is authoritative. Otherwise recover
+        // even if it already cleared the touch flags: the matching down-time still identifies
+        // this release, and there is no auto-edge runnable to carry the configured delay.
+        if (floatingBallAutoEdgeRunnable != null) return@postDelayed
+        val currentSettings = floatingBallSettings(context)
+        if (!currentSettings.enabled || currentSettings.autoEdgeDelaySeconds <= 0) {
             return@postDelayed
         }
 
         val wasDragging = floatingBallDragging
+        val touchWasActive = floatingBallTouchActive
+        val positionWasChanged = floatingBallPositionChanged
         floatingBallTouchActive = false
         floatingBallTouchPointerId = -1
+        floatingBallTouchDownAtMs = 0L
         floatingBallDragging = false
+        floatingBallPositionChanged = false
+        floatingBallDockedAtDown = 0
+        floatingBallX = params.x
+        floatingBallY = params.y
         floatingBallLongPressRunnable?.let { mainHandler.removeCallbacks(it) }
         floatingBallLongPressRunnable = null
         resetFloatingBallInnerOffset(view)
+
+        val displayWidth = floatingBallDisplayWidth(context, windowManager, view)
+        val ballWidth = view.width.takeIf { it > 0 } ?: params.width
+        if (
+            floatingBallDockedSide == 0 && ballWidth > 0 && displayWidth > 0 &&
+            params.x >= 0 && params.x + ballWidth <= displayWidth
+        ) {
+            floatingBallFreeX = params.x
+            floatingBallFreeY = params.y
+        }
+
         recordSystemServerDiagnosticEvent(
             context,
             "floating-ball recovered missing release/auto-edge timer: " +
                 "action=${if (action == MotionEvent.ACTION_UP) "UP" else "CANCEL"} " +
-                "wasDragging=$wasDragging touchWasActive=$touchStillActive " +
-                "pointerId=$capturedPointerId x=${params.x} y=${params.y}; restarting countdown",
+                "wasDragging=$wasDragging touchWasActive=$touchWasActive " +
+                "positionWasChanged=$positionWasChanged pointerId=$capturedPointerId " +
+                "x=${params.x} y=${params.y}; restarting countdown",
         )
-        scheduleFloatingBallAutoEdge(context, windowManager, view, params, floatingBallSettings(context))
+        scheduleFloatingBallAutoEdge(context, windowManager, view, params, currentSettings)
     }, FLOATING_BALL_TOUCH_END_RECOVERY_DELAY_MS)
 }
 
