@@ -199,7 +199,13 @@
     <string name="changelog_261023_rename_title">正式更名</string>
     <string name="changelog_261023_rename_body">我们已经正式更名为 Aloha OneUI。</string>
     <string name="changelog_261023_global_shortcuts_title">全局快捷动作</string>
-    <string name="changelog_261023_global_shortcuts_body">新增全局快捷动作功能。</string>
+    <string name="changelog_261023_global_shortcuts_body">入口：应用主界面 → 第三导航栏「功能」→ 页面下方的「全局快捷动作」（与「其他功能」并列）。可集中配置全局三指手势、悬浮球、状态栏快捷动作、虚拟导航键动作和息屏音量键动作。</string>
+    <string name="changelog_261023_shortcut_triggers_title">支持的触发方式</string>
+    <string name="changelog_261023_shortcut_triggers_body">• 全局三指动作：三指上划、下划、左划、右划；三指捏合和三指展开，各自可单独设置动作。\n• 悬浮球：可设置颜色、大小、震动反馈、单击、双击及四方向滑动动作。\n• 状态栏快捷动作：双击、左上角单击、右上角单击和长按。\n• 虚拟导航键动作：返回、主页、最近任务键的双击和长按。\n• 息屏音量键动作：息屏时长按音量键切歌，双击音量键播放 / 暂停；亮屏时保留原有音量键功能。</string>
+    <string name="changelog_261023_shortcut_actions_title">可分配的动作</string>
+    <string name="changelog_261023_shortcut_actions_body">• 默认：无动作。\n• 系统动作：返回、主页、最近任务、截图、智能截图、关屏、电源菜单、结束当前程序、内存清理。\n• 相机 / 录屏：拍照、录像、录制屏幕。\n• 媒体控制：上一曲、下一曲、播放 / 暂停、快退、快进。\n• 快捷开关：手电筒、飞行模式、蓝牙、静音模式、振动模式、Wi-Fi、移动数据。\n• 快捷支付：微信扫一扫、微信付款、微信收款、支付宝扫码、支付宝付款、支付宝收款。\n• 自定义：选择已安装的应用程序作为启动动作。</string>
+    <string name="changelog_261023_shortcut_sync_title">同步与生效条件</string>
+    <string name="changelog_261023_shortcut_sync_body">更改开关、动作或参数后会先保存，并提示「是否立即同步？」。选择「立即同步」将更改同步给模块；选择「稍后」则暂不应用本次修改。启用前需在 LSPosed 为模块勾选 android / 系统框架作用域；虚拟导航键动作仅三键导航下生效，并需勾选系统界面（SystemUI）作用域。</string>
     <string name="changelog_261023_qs_seconds_title">快捷面板显秒修复</string>
     <string name="changelog_261023_qs_seconds_body">修复启用模块后，下拉快捷设置面板的时钟秒数无法正常显示的问题。</string>
     <string name="version_1_0_2610191_title">Aloha OneUI 1.0.261019.1 主要更新</string>
