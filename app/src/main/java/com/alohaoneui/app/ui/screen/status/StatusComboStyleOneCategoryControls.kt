@@ -22,10 +22,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Button as MaterialButton
-import androidx.compose.material3.ButtonDefaults as MaterialButtonDefaults
 import androidx.compose.material3.ButtonGroupDefaults
-import androidx.compose.material3.ToggleButton
 import androidx.compose.material3.MaterialTheme as Material3Theme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -68,12 +65,11 @@ import com.alohaoneui.mod.ui.category.SystemUIEvent
 import com.alohaoneui.mod.ui.component.AlohaOneUISlider
 import com.alohaoneui.mod.ui.component.AlohaOneUIActionButton
 import com.alohaoneui.app.ui.component.material.ExpressiveConfirmDialog
+import com.alohaoneui.app.ui.component.material.ExpressiveToggleButton
 import com.alohaoneui.mod.ui.component.SwitchItem
 import com.alohaoneui.mod.ui.component.SelectItem
 import com.alohaoneui.app.ui.LocalUiMode
 import com.alohaoneui.app.ui.UiMode
-import top.yukonga.miuix.kmp.basic.Button as MiuixButton
-import top.yukonga.miuix.kmp.basic.ButtonDefaults as MiuixButtonDefaults
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
 import top.yukonga.miuix.kmp.basic.TabRow as MiuixTabRow
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -202,7 +198,7 @@ fun StatusComboStyleOneCategoryControls(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 tabs.forEachIndexed { index, label ->
-                    ToggleButton(
+                    ExpressiveToggleButton(
                         checked = selectedTab == index,
                         onCheckedChange = { checked ->
                             if (checked) {
@@ -623,43 +619,6 @@ private fun StyleOneRoleColorRow(
 }
 
 @Composable
-private fun StyleOneBackgroundButton(
-    label: String,
-    selected: Boolean,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit,
-) {
-    when (LocalUiMode.current) {
-        UiMode.Material -> MaterialButton(
-            onClick = onClick,
-            modifier = modifier,
-            colors = MaterialButtonDefaults.buttonColors(
-                containerColor = if (selected) Material3Theme.colorScheme.primary
-                    else Material3Theme.colorScheme.surfaceContainerHighest,
-                contentColor = if (selected) Material3Theme.colorScheme.onPrimary
-                    else Material3Theme.colorScheme.onSurface,
-            ),
-        ) {
-            Text(label)
-        }
-        UiMode.Miuix -> MiuixButton(
-            onClick = onClick,
-            modifier = modifier,
-            colors = if (selected) {
-                MiuixButtonDefaults.buttonColorsPrimary()
-            } else {
-                MiuixButtonDefaults.buttonColors(
-                    color = MiuixTheme.colorScheme.surfaceContainerHigh,
-                    contentColor = MiuixTheme.colorScheme.onSurfaceContainerHigh,
-                )
-            },
-        ) {
-            MiuixText(text = label)
-        }
-    }
-}
-
-@Composable
 private fun StyleOneRoleColorDialog(
     roleTitle: String,
     darkLabel: String,
@@ -682,21 +641,32 @@ private fun StyleOneRoleColorDialog(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                StyleOneBackgroundButton(
-                    label = darkLabel,
-                    selected = onDark,
-                    modifier = Modifier.weight(1f),
-                    onClick = { onDark = true },
-                )
-                StyleOneBackgroundButton(
-                    label = lightLabel,
-                    selected = !onDark,
-                    modifier = Modifier.weight(1f),
-                    onClick = { onDark = false },
+            when (LocalUiMode.current) {
+                UiMode.Material -> Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
+                ) {
+                    listOf(darkLabel, lightLabel).forEachIndexed { index, label ->
+                        ExpressiveToggleButton(
+                            checked = onDark == (index == 0),
+                            onCheckedChange = { checked -> if (checked) onDark = index == 0 },
+                            modifier = Modifier.weight(1f),
+                            shapes = if (index == 0) {
+                                ButtonGroupDefaults.connectedLeadingButtonShapes()
+                            } else {
+                                ButtonGroupDefaults.connectedTrailingButtonShapes()
+                            },
+                        ) {
+                            Text(label)
+                        }
+                    }
+                }
+                UiMode.Miuix -> MiuixTabRow(
+                    tabs = listOf(darkLabel, lightLabel),
+                    selectedTabIndex = if (onDark) 0 else 1,
+                    onTabSelected = { onDark = it == 0 },
+                    modifier = Modifier.fillMaxWidth(),
+                    height = 48.dp,
                 )
             }
 
