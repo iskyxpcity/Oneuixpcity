@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -20,6 +21,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -101,15 +103,16 @@ private fun ThemeStoreRegionFrame(
             modifier = Modifier.fillMaxWidth().padding(start = 14.dp, end = 12.dp, top = 8.dp, bottom = 8.dp),
             verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
         ) {
-            Column(
-                modifier = Modifier.weight(1f).clickable { expanded = !expanded }.padding(vertical = 7.dp)
+            Row(
+                modifier = Modifier.weight(1f).clickable { expanded = !expanded }.padding(vertical = 7.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 if (LocalUiMode.current == UiMode.Material) {
                     Text(stringResource(R.string.alohaoneui_setThemeStoreRegion_title), color = MaterialTheme.colorScheme.onSurface, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
-                    Text(if (expanded) "▾" else "▸", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
+                    Text(if (expanded) "  ▾" else "  ▸", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
                 } else {
                     MiuixText(stringResource(R.string.alohaoneui_setThemeStoreRegion_title), color = colorScheme.onSurface, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
-                    MiuixText(if (expanded) "▾" else "▸", color = colorScheme.onSurfaceVariantSummary, fontSize = 12.sp)
+                    MiuixText(if (expanded) "  ▾" else "  ▸", color = colorScheme.onSurfaceVariantSummary, fontSize = 12.sp)
                 }
             }
             if (LocalUiMode.current == UiMode.Material) {
@@ -198,7 +201,7 @@ private fun ThemeStoreRegionSelector(
                 }
             }
             if (index < (THEME_STORE_REGION_PRESETS.size - 1) / 4) {
-                Spacer(modifier = Modifier.padding(top = 6.dp))
+                Spacer(modifier = Modifier.height(6.dp))
             }
         }
     }
@@ -220,7 +223,7 @@ private fun ThemeStoreRegionChip(label: String, selected: Boolean, modifier: Mod
                     .border(1.dp, if (selected) scheme.primary else scheme.outlineVariant, shape)
                     .clickable(onClick = onClick)
                     .padding(horizontal = 2.dp, vertical = 10.dp)
-            ) {
+            , contentAlignment = Alignment.Center) {
                 Text(
                     text = label,
                     color = if (selected) scheme.onPrimary else scheme.onSurface,
