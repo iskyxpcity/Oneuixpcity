@@ -274,7 +274,7 @@ jobs:
           fi
 
       - name: Publish signed APK to GitHub release
-        if: success() && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/migration/'))
+        if: success() && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/migration/') || github.ref == 'refs/heads/test/theme-store-service-20261024')
         env:
           SOURCE_REPO_TOKEN: ${{ github.token }}
         run: |
