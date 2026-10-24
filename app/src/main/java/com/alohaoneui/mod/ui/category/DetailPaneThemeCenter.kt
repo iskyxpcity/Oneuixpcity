@@ -233,7 +233,7 @@ private fun ThemeStoreRegionChip(label: String, selected: Boolean, modifier: Mod
                         if (selected) scheme.primary else scheme.surfaceContainerHighest,
                         shape
                     )
-                                        .clickable(onClick = onClick)
+                    .clickable(onClick = onClick)
                     .padding(horizontal = 2.dp, vertical = 10.dp),
                 contentAlignment = Alignment.Center
             ) {
@@ -252,7 +252,7 @@ private fun ThemeStoreRegionChip(label: String, selected: Boolean, modifier: Mod
                     if (selected) colorScheme.primary else colorScheme.surfaceContainerHigh,
                     shape
                 )
-                                .clickable(onClick = onClick)
+                .clickable(onClick = onClick)
                 .padding(horizontal = 2.dp, vertical = 10.dp),
             contentAlignment = Alignment.Center
         ) {
