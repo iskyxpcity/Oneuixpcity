@@ -58,7 +58,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.Button
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -1875,10 +1874,6 @@ private fun ShortcutActionGrid(
         UiMode.Material -> MaterialTheme.colorScheme.surfaceContainerHigh
         UiMode.Miuix -> colorScheme.surface
     }
-    val unselectedStroke = when (LocalUiMode.current) {
-        UiMode.Material -> MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f)
-        UiMode.Miuix -> colorScheme.onSurfaceVariantSummary.copy(alpha = 0.18f)
-    }
     val unselectedText = when (LocalUiMode.current) {
         UiMode.Material -> MaterialTheme.colorScheme.onSurface
         UiMode.Miuix -> colorScheme.onSurface
@@ -1899,7 +1894,6 @@ private fun ShortcutActionGrid(
                         shape = chipShape,
                         accent = accent,
                         container = unselectedContainer,
-                        stroke = unselectedStroke,
                         content = unselectedText,
                         onClick = { onSelect(option.id) },
                         modifier = Modifier.weight(1f),
@@ -1922,7 +1916,6 @@ private fun ShortcutActionChip(
     shape: RoundedCornerShape,
     accent: Color,
     container: Color,
-    stroke: Color,
     content: Color,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -2078,22 +2071,26 @@ private fun ShortcutAppPickerRow(
         UiMode.Material -> MaterialTheme.colorScheme.onSurface
         UiMode.Miuix -> colorScheme.onSurface
     }
+    val selectedContainer = when (LocalUiMode.current) {
+        UiMode.Material -> MaterialTheme.colorScheme.primary
+        UiMode.Miuix -> colorScheme.primary
+    }
+    val selectedContent = when (LocalUiMode.current) {
+        UiMode.Material -> MaterialTheme.colorScheme.onPrimary
+        UiMode.Miuix -> colorScheme.onPrimary
+    }
     val supportingColor = when (LocalUiMode.current) {
-        UiMode.Material -> MaterialTheme.colorScheme.onSurfaceVariant
-        UiMode.Miuix -> colorScheme.onSurfaceVariantSummary
+        UiMode.Material -> if (selected) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.78f) else MaterialTheme.colorScheme.onSurfaceVariant
+        UiMode.Miuix -> if (selected) colorScheme.onPrimary.copy(alpha = 0.78f) else colorScheme.onSurfaceVariantSummary
     }
     val shape = RoundedCornerShape(18.dp)
-    val selectedAlpha = if (LocalUiMode.current == UiMode.Material) 0.12f else 0.18f
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .heightIn(min = 64.dp)
             .clip(shape)
-            .background(if (selected) accent.copy(alpha = selectedAlpha) else Color.Transparent, shape)
-            .then(
-                if (selected) Modifier.border(1.dp, accent.copy(alpha = 0.5f), shape) else Modifier,
-            )
+            .background(if (selected) selectedContainer else Color.Transparent, shape)
             .clickable(role = Role.Button, onClick = onClick)
             .padding(horizontal = 10.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -2109,7 +2106,7 @@ private fun ShortcutAppPickerRow(
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
-                        color = if (selected) accent else titleColor,
+                        color = if (selected) selectedContent else titleColor,
                     )
                     Text(
                         app.component.packageName,
@@ -2142,12 +2139,12 @@ private fun ShortcutAppPickerRow(
             modifier = Modifier
                 .size(22.dp)
                 .clip(CircleShape)
-                .background(if (selected) accent else Color.Transparent, CircleShape)
-                .border(1.5.dp, if (selected) accent else supportingColor.copy(alpha = 0.45f), CircleShape),
+                .background(if (selected) selectedContent else Color.Transparent, CircleShape)
+                .border(1.5.dp, if (selected) selectedContent else supportingColor.copy(alpha = 0.45f), CircleShape),
             contentAlignment = Alignment.Center,
         ) {
             if (selected) {
-                Box(Modifier.size(9.dp).clip(CircleShape).background(Color.White))
+                Box(Modifier.size(9.dp).clip(CircleShape).background(selectedContainer))
             }
         }
     }
