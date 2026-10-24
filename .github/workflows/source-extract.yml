@@ -25,6 +25,38 @@ jobs:
           7z x /tmp/theme-store-source.rar -oextracted -y
           find extracted -type f -printf '%P\t%s bytes\n' | sort | tee extracted-files.txt
           test "$(find extracted -type f | wc -l)" -gt 0
+          mkdir -p compare/source compare/target
+          for p in \
+            app/src/main/java/com/alohaoneui/app/ui/screen/tools/AlohaOneUICategoryScreen.kt \
+            app/src/main/java/com/alohaoneui/app/ui/screen/tools/AlohaOneUIUiResources.kt \
+            app/src/main/java/com/alohaoneui/app/ui/screen/tools/OtherFunctionsScreen.kt \
+            app/src/main/java/com/alohaoneui/app/ui/screen/tools/ToolsScreen.kt \
+            app/src/main/java/com/alohaoneui/app/ui/navigation3/Routes.kt \
+            app/src/main/java/com/alohaoneui/mod/ui/category/DetailPaneThemeCenter.kt \
+            app/src/main/res/values/alohaoneui_strings.xml \
+            app/src/main/res/values-zh-rCN/alohaoneui_strings.xml \
+            app/src/main/res/values/statusbar_xposed.xml \
+            common/src/main/java/com/alohaoneui/common/Package.kt \
+            common/src/main/java/com/alohaoneui/common/Preference.kt \
+            common/src/main/java/com/alohaoneui/common/ModuleActions.kt \
+            hook/src/main/java/com/alohaoneui/hook/Main.kt \
+            hook/src/main/java/com/alohaoneui/hook/ThemeCenter.kt \
+            app/build.gradle.kts; do
+            if [ -f "$p" ]; then mkdir -p "compare/target/$(dirname "$p")"; cp "$p" "compare/target/$p"; fi
+          done
+          for p in \
+            app/src/main/java/com/alohaoneui/mod/ui/category/DetailPaneThemeCenter.kt \
+            app/src/main/res/values/alohaoneui_strings.xml \
+            app/src/main/res/values-zh-rCN/alohaoneui_strings.xml \
+            app/src/main/res/values/statusbar_xposed.xml \
+            common/src/main/java/com/alohaoneui/common/Package.kt \
+            common/src/main/java/com/alohaoneui/common/Preference.kt \
+            common/src/main/java/com/alohaoneui/common/ModuleActions.kt \
+            hook/src/main/java/com/alohaoneui/hook/Main.kt \
+            hook/src/main/java/com/alohaoneui/hook/ThemeStoreRegion.kt; do
+            if [ -f "extracted/$p" ]; then mkdir -p "compare/source/$(dirname "$p")"; cp "extracted/$p" "compare/source/$p"; fi
+          done
+          find compare -type f -printf '%P\t%s bytes\n' | sort > compare-files.txt
       - uses: actions/upload-artifact@v4
         with:
           name: theme-store-source-extracted
