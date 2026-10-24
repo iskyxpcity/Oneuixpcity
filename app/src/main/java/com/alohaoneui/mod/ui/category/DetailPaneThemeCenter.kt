@@ -2,7 +2,6 @@ package com.alohaoneui.mod.ui.category
 
 import android.content.Intent
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -223,7 +222,7 @@ private fun ThemeStoreRegionSelector(
 
 @Composable
 private fun ThemeStoreRegionChip(label: String, selected: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit) {
-    val shape = RoundedCornerShape(999.dp)
+    val shape = RoundedCornerShape(12.dp)
     when (LocalUiMode.current) {
         UiMode.Material -> {
             val scheme = MaterialTheme.colorScheme
@@ -231,11 +230,10 @@ private fun ThemeStoreRegionChip(label: String, selected: Boolean, modifier: Mod
                 modifier = modifier
                     .clip(shape)
                     .background(
-                        if (selected) scheme.primary else scheme.surfaceVariant.copy(alpha = 0.45f),
+                        if (selected) scheme.primary else scheme.surfaceContainerHighest,
                         shape
                     )
-                    .border(1.dp, if (selected) scheme.primary else scheme.outlineVariant, shape)
-                    .clickable(onClick = onClick)
+                                        .clickable(onClick = onClick)
                     .padding(horizontal = 2.dp, vertical = 10.dp),
                 contentAlignment = Alignment.Center
             ) {
@@ -251,11 +249,10 @@ private fun ThemeStoreRegionChip(label: String, selected: Boolean, modifier: Mod
             modifier = modifier
                 .clip(shape)
                 .background(
-                    if (selected) colorScheme.primary else colorScheme.surface,
+                    if (selected) colorScheme.primary else colorScheme.surfaceContainerHigh,
                     shape
                 )
-                .border(1.dp, if (selected) colorScheme.primary else colorScheme.onSurfaceVariantSummary, shape)
-                .clickable(onClick = onClick)
+                                .clickable(onClick = onClick)
                 .padding(horizontal = 2.dp, vertical = 10.dp),
             contentAlignment = Alignment.Center
         ) {
