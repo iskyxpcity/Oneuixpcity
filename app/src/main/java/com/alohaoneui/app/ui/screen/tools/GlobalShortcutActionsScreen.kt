@@ -1854,7 +1854,7 @@ private fun ShortcutActionGroupCard(
             if (expanded) {
                 add {
                     OtherFunctionsThemeChildItem {
-                        ShortcutActionGrid(group, selectedAction, accent, onSelect)
+                        ShortcutActionGrid(group, selectedAction, onSelect)
                     }
                 }
             }
@@ -1866,13 +1866,12 @@ private fun ShortcutActionGroupCard(
 private fun ShortcutActionGrid(
     group: ShortcutActionGroup,
     selectedAction: String,
-    accent: Color,
     onSelect: (String) -> Unit,
 ) {
     val chipShape = RoundedCornerShape(12.dp)
     val unselectedContainer = when (LocalUiMode.current) {
-        UiMode.Material -> MaterialTheme.colorScheme.surfaceContainerHigh
-        UiMode.Miuix -> colorScheme.surface
+        UiMode.Material -> MaterialTheme.colorScheme.surfaceContainerHighest
+        UiMode.Miuix -> colorScheme.surfaceContainerHigh
     }
     val gridInset = when (LocalUiMode.current) {
         UiMode.Material -> PaddingValues(0.dp)
@@ -1939,7 +1938,7 @@ private fun ShortcutActionChip(
         }
         UiMode.Miuix -> MiuixCard(
             modifier = chipModifier,
-            cornerRadius = 16.dp,
+            cornerRadius = 12.dp,
             colors = MiuixCardDefaults.defaultColors(
                 color = if (selected) colorScheme.primary else container,
             ),
