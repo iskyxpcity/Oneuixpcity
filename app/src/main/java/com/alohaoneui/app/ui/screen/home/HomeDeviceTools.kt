@@ -88,7 +88,7 @@ import kotlinx.coroutines.withContext
 import top.yukonga.miuix.kmp.basic.Card as MiuixCard
 import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
-import top.yukonga.miuix.kmp.basic.TabRow as MiuixTabRow
+import top.yukonga.miuix.kmp.basic.TabRowWithContour as MiuixTabRowWithContour
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import java.io.File
 import java.util.Locale
@@ -253,12 +253,11 @@ private fun DeviceInfoSectionSelector(
                 }
             }
         }
-        UiMode.Miuix -> MiuixTabRow(
+        UiMode.Miuix -> MiuixTabRowWithContour(
             tabs = options,
             selectedTabIndex = selectedSection,
             onTabSelected = onSelect,
             modifier = Modifier.fillMaxWidth(),
-            height = 48.dp,
         )
     }
 }
