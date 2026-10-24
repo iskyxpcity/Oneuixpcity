@@ -1869,7 +1869,7 @@ private fun ShortcutActionGrid(
     accent: Color,
     onSelect: (String) -> Unit,
 ) {
-    val chipShape = RoundedCornerShape(16.dp)
+    val chipShape = RoundedCornerShape(12.dp)
     val unselectedContainer = when (LocalUiMode.current) {
         UiMode.Material -> MaterialTheme.colorScheme.surfaceContainerHigh
         UiMode.Miuix -> colorScheme.surface
@@ -2075,7 +2075,7 @@ private fun ShortcutAppPickerRow(
         UiMode.Material -> if (selected) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.78f) else MaterialTheme.colorScheme.onSurfaceVariant
         UiMode.Miuix -> if (selected) Color.White.copy(alpha = 0.78f) else colorScheme.onSurfaceVariantSummary
     }
-    val shape = RoundedCornerShape(18.dp)
+    val shape = RoundedCornerShape(12.dp)
 
     Row(
         modifier = Modifier
