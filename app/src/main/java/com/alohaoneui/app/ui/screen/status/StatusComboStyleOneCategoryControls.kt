@@ -634,10 +634,10 @@ private fun StyleOneBackgroundButton(
             onClick = onClick,
             modifier = modifier,
             colors = MaterialButtonDefaults.buttonColors(
-                containerColor = if (selected) Material3Theme.colorScheme.primaryContainer
-                    else Material3Theme.colorScheme.surfaceVariant,
-                contentColor = if (selected) Material3Theme.colorScheme.onPrimaryContainer
-                    else Material3Theme.colorScheme.onSurfaceVariant,
+                containerColor = if (selected) Material3Theme.colorScheme.primary
+                    else Material3Theme.colorScheme.surfaceContainerHighest,
+                contentColor = if (selected) Material3Theme.colorScheme.onPrimary
+                    else Material3Theme.colorScheme.onSurface,
             ),
         ) {
             Text(label)
