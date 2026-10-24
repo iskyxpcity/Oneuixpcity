@@ -9,8 +9,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -137,7 +135,6 @@ private const val REGION_APPLY_FLUSH_DELAY_MS = 700L
  * Region grid, ported from LaobaiAppFreezerModule's `ThemeStoreRegionActivity`:
  * wrap-around chips, the selected chip filled with the accent colour.
  */
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun ThemeStoreRegionSelector(
     selectedCountry: String,
@@ -171,40 +168,50 @@ private fun ThemeStoreRegionSelector(
                 modifier = Modifier.padding(bottom = 8.dp)
             )
         }
-        FlowRow(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            THEME_STORE_REGION_PRESETS.forEach { preset ->
-                ThemeStoreRegionChip(
-                    label = preset.label,
-                    selected = preset.matches(selectedCountry, selectedSalesCode),
-                    onClick = {
-                        onSelect(
-                            ThemeCenterEvent.SelectThemeStoreRegion(
-                                country = preset.country,
-                                salesCode = preset.salesCode,
-                                locale = preset.locale,
-                                mcc = preset.mcc,
-                                mnc = preset.mnc
-                            )
+        THEME_STORE_REGION_PRESETS.chunked(4).forEachIndexed { index, rowPresets ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                rowPresets.forEach { preset ->
+                    Box(modifier = Modifier.weight(1f)) {
+                        ThemeStoreRegionChip(
+                            label = preset.label,
+                            selected = preset.matches(selectedCountry, selectedSalesCode),
+                            modifier = Modifier.fillMaxWidth(),
+                            onClick = {
+                                onSelect(
+                                    ThemeCenterEvent.SelectThemeStoreRegion(
+                                        country = preset.country,
+                                        salesCode = preset.salesCode,
+                                        locale = preset.locale,
+                                        mcc = preset.mcc,
+                                        mnc = preset.mnc
+                                    )
+                                )
+                            }
                         )
                     }
-                )
+                }
+                repeat(4 - rowPresets.size) {
+                    Spacer(modifier = Modifier.weight(1f))
+                }
+            }
+            if (index < (THEME_STORE_REGION_PRESETS.size - 1) / 4) {
+                Spacer(modifier = Modifier.padding(top = 6.dp))
             }
         }
     }
 }
 
 @Composable
-private fun ThemeStoreRegionChip(label: String, selected: Boolean, onClick: () -> Unit) {
+private fun ThemeStoreRegionChip(label: String, selected: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit) {
     val shape = RoundedCornerShape(999.dp)
     when (LocalUiMode.current) {
         UiMode.Material -> {
             val scheme = MaterialTheme.colorScheme
             Box(
-                modifier = Modifier
+                modifier = modifier
                     .clip(shape)
                     .background(
                         if (selected) scheme.primary else scheme.surfaceVariant.copy(alpha = 0.45f),
@@ -212,18 +219,18 @@ private fun ThemeStoreRegionChip(label: String, selected: Boolean, onClick: () -
                     )
                     .border(1.dp, if (selected) scheme.primary else scheme.outlineVariant, shape)
                     .clickable(onClick = onClick)
-                    .padding(horizontal = 14.dp, vertical = 9.dp)
+                    .padding(horizontal = 2.dp, vertical = 10.dp)
             ) {
                 Text(
                     text = label,
                     color = if (selected) scheme.onPrimary else scheme.onSurface,
-                    fontSize = 13.5.sp,
+                    fontSize = 12.sp,
                     fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal
                 )
             }
         }
         UiMode.Miuix -> Box(
-            modifier = Modifier
+            modifier = modifier
                 .clip(shape)
                 .background(
                     if (selected) colorScheme.primary else colorScheme.surface,
