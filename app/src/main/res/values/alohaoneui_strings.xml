@@ -169,6 +169,9 @@
     <string name="alohaoneui_enableChineseHolidayDisplay_title">Show Chinese holidays in Calendar</string>
     <string name="alohaoneui_supportBlockMessage_title">Support message blocking</string>
     <string name="alohaoneui_setThemeTrialNeverExpired_title">Never expire theme and icon trials</string>
+    <string name="alohaoneui_setThemeStoreRegion_title">Change Theme Store region</string>
+    <string name="alohaoneui_setThemeStoreRegion_summary">Spoof country, CSC, locale and MCC/MNC. Reopen Theme Store to see the new region.</string>
+    <string name="alohaoneui_themeStoreRegion_current">Current region: %1$s</string>
     <string name="alohaoneui_spoofBrowserCountryCodeToUS_title">Spoof Browser Region to US</string>
     <string name="alohaoneui_spoofBrowserCountryCodeToUS_summary">Customize search engines and Ad blockers</string>
     <string name="alohaoneui_showGeocodedLocationInRecentCall_title">Show caller location in recent calls</string>

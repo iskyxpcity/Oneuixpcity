@@ -507,6 +507,11 @@ class Main : XposedModule() {
                 }
             }
 
+            Package.THEME_STORE -> {
+                // Read the region preference live so a change can apply without reloading LSPosed.
+                ThemeStoreRegion.hook(preference.other)
+            }
+
             Package.WEATHER -> {
                 if (preference.other.setWeatherProviderCN) {
                     Weather.setProviderCN()

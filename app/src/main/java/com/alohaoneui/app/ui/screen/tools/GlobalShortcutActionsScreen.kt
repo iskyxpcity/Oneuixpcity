@@ -58,7 +58,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.Button
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -1810,8 +1809,8 @@ private fun ShortcutActionGroupCard(
         UiMode.Miuix -> colorScheme.primary
     }
     val pillBackground = when (LocalUiMode.current) {
-        UiMode.Material -> MaterialTheme.colorScheme.surfaceContainerHigh
-        UiMode.Miuix -> colorScheme.surface
+        UiMode.Material -> MaterialTheme.colorScheme.surfaceContainerHighest
+        UiMode.Miuix -> colorScheme.surfaceContainerHigh
     }
     val secondary = when (LocalUiMode.current) {
         UiMode.Material -> MaterialTheme.colorScheme.onSurfaceVariant
@@ -1855,7 +1854,7 @@ private fun ShortcutActionGroupCard(
             if (expanded) {
                 add {
                     OtherFunctionsThemeChildItem {
-                        ShortcutActionGrid(group, selectedAction, accent, onSelect)
+                        ShortcutActionGrid(group, selectedAction, onSelect)
                     }
                 }
             }
@@ -1867,21 +1866,12 @@ private fun ShortcutActionGroupCard(
 private fun ShortcutActionGrid(
     group: ShortcutActionGroup,
     selectedAction: String,
-    accent: Color,
     onSelect: (String) -> Unit,
 ) {
-    val chipShape = RoundedCornerShape(16.dp)
+    val chipShape = RoundedCornerShape(12.dp)
     val unselectedContainer = when (LocalUiMode.current) {
-        UiMode.Material -> MaterialTheme.colorScheme.surfaceContainerHigh
-        UiMode.Miuix -> colorScheme.surface
-    }
-    val unselectedStroke = when (LocalUiMode.current) {
-        UiMode.Material -> MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f)
-        UiMode.Miuix -> colorScheme.onSurfaceVariantSummary.copy(alpha = 0.18f)
-    }
-    val unselectedText = when (LocalUiMode.current) {
-        UiMode.Material -> MaterialTheme.colorScheme.onSurface
-        UiMode.Miuix -> colorScheme.onSurface
+        UiMode.Material -> MaterialTheme.colorScheme.surfaceContainerHighest
+        UiMode.Miuix -> colorScheme.surfaceContainerHigh
     }
     val gridInset = when (LocalUiMode.current) {
         UiMode.Material -> PaddingValues(0.dp)
@@ -1897,10 +1887,7 @@ private fun ShortcutActionGrid(
                         label = option.label,
                         selected = selected,
                         shape = chipShape,
-                        accent = accent,
                         container = unselectedContainer,
-                        stroke = unselectedStroke,
-                        content = unselectedText,
                         onClick = { onSelect(option.id) },
                         modifier = Modifier.weight(1f),
                     )
@@ -1912,7 +1899,7 @@ private fun ShortcutActionGrid(
 }
 
 /**
- * 选项胶囊，规格对照 GroupedRootActionPicker：46dp 高、16dp 圆角、4dp 间距；
+ * 选项胶囊：46dp 高、12dp 圆角、4dp 间距；
  * 选中态是**实心主色 + 反白粗体**，不是低透明度填充，深色下也能一眼看出选中项。
  */
 @Composable
@@ -1920,10 +1907,7 @@ private fun ShortcutActionChip(
     label: String,
     selected: Boolean,
     shape: RoundedCornerShape,
-    accent: Color,
     container: Color,
-    stroke: Color,
-    content: Color,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -1934,9 +1918,9 @@ private fun ShortcutActionChip(
             modifier = chipModifier,
             shape = shape,
             colors = CardDefaults.cardColors(
-                containerColor = if (selected) accent else container,
+                containerColor = if (selected) MaterialTheme.colorScheme.primary else container,
             ),
-            border = if (selected) null else BorderStroke(1.dp, stroke),
+            border = null,
         ) {
             Box(
                 modifier = Modifier.fillMaxSize().padding(horizontal = 12.dp),
@@ -1944,7 +1928,7 @@ private fun ShortcutActionChip(
             ) {
                 Text(
                     label,
-                    color = if (selected) MaterialTheme.colorScheme.onPrimary else content,
+                    color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
                     fontSize = 14.sp,
                     fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
                     maxLines = 1,
@@ -1953,10 +1937,10 @@ private fun ShortcutActionChip(
             }
         }
         UiMode.Miuix -> MiuixCard(
-            modifier = chipModifier.border(1.dp, if (selected) accent else stroke, shape),
-            cornerRadius = 16.dp,
+            modifier = chipModifier,
+            cornerRadius = 12.dp,
             colors = MiuixCardDefaults.defaultColors(
-                color = if (selected) accent else container,
+                color = if (selected) colorScheme.primary else container,
             ),
             insideMargin = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
             showIndication = true,
@@ -1969,7 +1953,7 @@ private fun ShortcutActionChip(
                 MiuixText(
                     label,
                     modifier = Modifier.fillMaxWidth(),
-                    color = if (selected) Color.White else content,
+                    color = if (selected) Color.White else colorScheme.onSurfaceContainerHigh,
                     fontSize = 14.sp,
                     fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
                 )
@@ -2078,22 +2062,26 @@ private fun ShortcutAppPickerRow(
         UiMode.Material -> MaterialTheme.colorScheme.onSurface
         UiMode.Miuix -> colorScheme.onSurface
     }
-    val supportingColor = when (LocalUiMode.current) {
-        UiMode.Material -> MaterialTheme.colorScheme.onSurfaceVariant
-        UiMode.Miuix -> colorScheme.onSurfaceVariantSummary
+    val selectedContainer = when (LocalUiMode.current) {
+        UiMode.Material -> MaterialTheme.colorScheme.primary
+        UiMode.Miuix -> colorScheme.primary
     }
-    val shape = RoundedCornerShape(18.dp)
-    val selectedAlpha = if (LocalUiMode.current == UiMode.Material) 0.12f else 0.18f
+    val selectedContent = when (LocalUiMode.current) {
+        UiMode.Material -> MaterialTheme.colorScheme.onPrimary
+        UiMode.Miuix -> Color.White
+    }
+    val supportingColor = when (LocalUiMode.current) {
+        UiMode.Material -> if (selected) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.78f) else MaterialTheme.colorScheme.onSurfaceVariant
+        UiMode.Miuix -> if (selected) Color.White.copy(alpha = 0.78f) else colorScheme.onSurfaceVariantSummary
+    }
+    val shape = RoundedCornerShape(12.dp)
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .heightIn(min = 64.dp)
             .clip(shape)
-            .background(if (selected) accent.copy(alpha = selectedAlpha) else Color.Transparent, shape)
-            .then(
-                if (selected) Modifier.border(1.dp, accent.copy(alpha = 0.5f), shape) else Modifier,
-            )
+            .background(if (selected) selectedContainer else Color.Transparent, shape)
             .clickable(role = Role.Button, onClick = onClick)
             .padding(horizontal = 10.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -2109,7 +2097,7 @@ private fun ShortcutAppPickerRow(
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
-                        color = if (selected) accent else titleColor,
+                        color = if (selected) selectedContent else titleColor,
                     )
                     Text(
                         app.component.packageName,
@@ -2126,7 +2114,7 @@ private fun ShortcutAppPickerRow(
                         fontSize = 16.sp,
                         maxLines = 1,
                         fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
-                        color = if (selected) accent else titleColor,
+                        color = if (selected) selectedContent else titleColor,
                     )
                     MiuixText(
                         app.component.packageName,
@@ -2142,12 +2130,12 @@ private fun ShortcutAppPickerRow(
             modifier = Modifier
                 .size(22.dp)
                 .clip(CircleShape)
-                .background(if (selected) accent else Color.Transparent, CircleShape)
-                .border(1.5.dp, if (selected) accent else supportingColor.copy(alpha = 0.45f), CircleShape),
+                .background(if (selected) selectedContent else Color.Transparent, CircleShape)
+                .border(1.5.dp, if (selected) selectedContent else supportingColor.copy(alpha = 0.45f), CircleShape),
             contentAlignment = Alignment.Center,
         ) {
             if (selected) {
-                Box(Modifier.size(9.dp).clip(CircleShape).background(Color.White))
+                Box(Modifier.size(9.dp).clip(CircleShape).background(selectedContainer))
             }
         }
     }

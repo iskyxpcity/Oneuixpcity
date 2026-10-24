@@ -46,6 +46,28 @@ jobs:
         with:
           ref: ${{ github.ref == 'refs/heads/migration/alohaoneui-rename-20261020' && github.ref_name || github.sha }}
           fetch-depth: 0
+      - name: Enforce fixed app version on test branches
+        if: startsWith(github.ref, 'refs/heads/test/')
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          python3 - <<'PY'
+          from pathlib import Path
+          import subprocess
+          def read_values(text):
+              values = {}
+              for line in text.splitlines():
+                  if line.startswith(("alohaOneUIVersionName=", "alohaOneUIVersionCode=")):
+                      key, value = line.split("=", 1)
+                      values[key] = value.strip()
+              return values
+          branch = read_values(Path("gradle.properties").read_text())
+          main = read_values(subprocess.check_output(["git", "show", "origin/main:gradle.properties"], text=True))
+          for key in ("alohaOneUIVersionName", "alohaOneUIVersionCode"):
+              if branch.get(key) != main.get(key):
+                  raise SystemExit(f"Test branches must reuse main's {key}: test={branch.get(key)!r}, main={main.get(key)!r}. Only formal releases may increment app version values.")
+          print("Test version identity matches main; no app version increment allowed on test branches.")
+          PY
       - name: Read Aloha OneUI version
         run: |
           set -euo pipefail
@@ -59,7 +81,7 @@ jobs:
         run: |
           set -euo pipefail
           COMMIT_SUBJECT=$(git log -1 --pretty=%s)
-          if [ "$GITHUB_REF" = "refs/heads/migration/alohaoneui-rename-20261020" ] || [ "$GITHUB_REF" = "refs/heads/migration/alohaoneui-full-identity-20261020" ] || { [ "$GITHUB_REF" = "refs/heads/main" ] && [[ "$COMMIT_SUBJECT" == release:* ]]; }; then
+          if [ "$GITHUB_REF" = "refs/heads/migration/alohaoneui-rename-20261020" ] || [ "$GITHUB_REF" = "refs/heads/migration/alohaoneui-full-identity-20261020" ] || [ "$GITHUB_REF" = "refs/heads/test/theme-store-service-20261024" ] || { [ "$GITHUB_REF" = "refs/heads/main" ] && [[ "$COMMIT_SUBJECT" == release:* ]]; }; then
             echo "BUILD_VARIANT=release" >> "$GITHUB_ENV"
             echo "APP_ASSEMBLE_TASK=:app:assembleRelease" >> "$GITHUB_ENV"
             echo "APK_OUTPUT_DIR=release" >> "$GITHUB_ENV"
@@ -123,10 +145,15 @@ jobs:
           grep -Fxq 'com.alohaoneui.hook.Main' app/src/main/resources/META-INF/xposed/java_init.list
           grep -Fq 'minApiVersion=101' app/src/main/resources/META-INF/xposed/module.prop
           grep -Fq 'targetApiVersion=101' app/src/main/resources/META-INF/xposed/module.prop
-          SCOPE_COUNT=$(grep -cve '^[[:space:]]*$' app/src/main/resources/META-INF/xposed/scope.list)
-          test "$SCOPE_COUNT" -eq 26
+          test -f hook/src/main/java/com/alohaoneui/hook/ThemeStoreRegion.kt
+          grep -Fq 'ThemeStoreRegion.hook(preference.other)' hook/src/main/java/com/alohaoneui/hook/Main.kt
+          grep -Fq 'THEME_STORE_REGION_CHANGED' common/src/main/java/com/alohaoneui/common/ModuleActions.kt
+          grep -Fq 'THEME_STORE_REGION_CHANGED' hook/src/main/java/com/alohaoneui/hook/ThemeStoreRegion.kt
+          if grep -Fq 'ThemeStoreService' app/src/main/java/com/alohaoneui/app/alohaoneui/AlohaOneUIFeatureCatalog.kt; then echo 'Redundant Theme Store category detected'; exit 1; fi
+          SCOPE_COUNT=$(awk "NF { count++ } END { print count+0 }" app/src/main/resources/META-INF/xposed/scope.list)
+          test "$SCOPE_COUNT" -eq 27
           diff -u hook/src/main/resources/META-INF/xposed/scope.list app/src/main/resources/META-INF/xposed/scope.list 2>/dev/null || {
-            printf '%s\n'               com.alohaoneui.app               system               com.android.settings               com.android.systemui               com.samsung.android.app.notes               com.samsung.android.app.sketchbook               com.samsung.android.app.telephonyui               com.samsung.android.calendar               com.samsung.android.da.daagent               com.samsung.android.dialer               com.samsung.android.incallui               com.samsung.android.mdecservice               com.samsung.android.messaging               com.samsung.android.service.airviewdictionary               com.samsung.android.shealthmonitor               com.samsung.android.sm_cn               com.samsung.android.themecenter               com.samsung.android.video               com.samsung.android.app.watchmanager               com.sec.android.app.camera               com.sec.android.app.launcher               com.sec.android.app.samsungapps               com.sec.android.app.sbrowser               com.sec.android.daemonapp               com.sec.android.gallery3d               com.sec.android.mimage.photoretouching               | diff -u - app/src/main/resources/META-INF/xposed/scope.list
+            printf '%s\n'               com.alohaoneui.app               system               com.android.settings               com.android.systemui               com.samsung.android.app.notes               com.samsung.android.app.sketchbook               com.samsung.android.app.telephonyui               com.samsung.android.calendar               com.samsung.android.da.daagent               com.samsung.android.dialer               com.samsung.android.incallui               com.samsung.android.mdecservice               com.samsung.android.messaging               com.samsung.android.service.airviewdictionary               com.samsung.android.shealthmonitor               com.samsung.android.sm_cn               com.samsung.android.themecenter               com.samsung.android.themestore               com.samsung.android.video               com.samsung.android.app.watchmanager               com.sec.android.app.camera               com.sec.android.app.launcher               com.sec.android.app.samsungapps               com.sec.android.app.sbrowser               com.sec.android.daemonapp               com.sec.android.gallery3d               com.sec.android.mimage.photoretouching               | diff -u - app/src/main/resources/META-INF/xposed/scope.list
           }
           grep -Fq 'ENABLE_ALOHAONEUI_FUNCTIONS = true' hook/src/main/java/com/alohaoneui/hook/Main.kt
           test -f hook/src/main/java/com/alohaoneui/hook/util/AlohaOneUIStatusReporter.kt

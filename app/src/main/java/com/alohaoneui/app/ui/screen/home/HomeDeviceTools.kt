@@ -65,6 +65,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
@@ -74,10 +75,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.material3.Icon as MaterialIcon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.Text as MaterialText
 import com.alohaoneui.app.ui.LocalUiMode
 import com.alohaoneui.app.ui.UiMode
 import com.alohaoneui.app.ui.component.material.TonalCard
+import com.alohaoneui.app.ui.component.material.ExpressiveToggleButton
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -224,51 +227,29 @@ private fun DeviceInfoSectionSelector(
 ) {
     val options = listOf("系统监视器", "屏幕信息", "设备信息")
     when (LocalUiMode.current) {
-        UiMode.Material -> {
-            val outerShape = RoundedCornerShape(14.dp)
-            val segmentShape = RoundedCornerShape(10.dp)
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(45.dp)
-                    .clip(outerShape)
-                    .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-                    .border(
-                        width = 1.dp,
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.42f),
-                        shape = outerShape,
+        UiMode.Material -> Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            options.forEachIndexed { index, label ->
+                ExpressiveToggleButton(
+                    checked = selectedSection == index,
+                    onCheckedChange = { checked -> if (checked) onSelect(index) },
+                    modifier = Modifier.weight(1f).semantics { role = Role.RadioButton },
+                    shapes = when (index) {
+                        0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
+                        options.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
+                        else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
+                    },
+                ) {
+                    MaterialText(
+                        text = label,
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = if (selectedSection == index) FontWeight.SemiBold else FontWeight.Medium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                     )
-                    .padding(4.dp),
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                options.forEachIndexed { index, label ->
-                    val selected = selectedSection == index
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxHeight()
-                            .clip(segmentShape)
-                            .background(
-                                if (selected) MaterialTheme.colorScheme.secondaryContainer
-                                else Color.Transparent,
-                            )
-                            .clickable(role = Role.Tab) { onSelect(index) },
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        MaterialText(
-                            text = label,
-                            color = if (selected) {
-                                MaterialTheme.colorScheme.onSecondaryContainer
-                            } else {
-                                MaterialTheme.colorScheme.onSurfaceVariant
-                            },
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                    }
                 }
             }
         }
