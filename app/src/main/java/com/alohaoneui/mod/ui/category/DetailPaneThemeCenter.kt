@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Card as MaterialCard
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -41,10 +40,11 @@ import com.alohaoneui.common.ModuleActions
 import com.alohaoneui.common.Package
 import com.alohaoneui.common.Preference
 import com.alohaoneui.mod.ui.component.SwitchItem
+import com.alohaoneui.app.ui.screen.status.StatusThemeGroup
+import com.alohaoneui.app.ui.screen.status.StatusThemeChildItem
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
-import top.yukonga.miuix.kmp.basic.Card as MiuixCard
 import top.yukonga.miuix.kmp.basic.Switch as MiuixSwitch
 import com.alohaoneui.app.ui.component.material.ExpressiveSwitch
 import top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme
@@ -85,6 +85,13 @@ fun DetailPaneThemeCenter(
     }
 }
 
+/**
+ * Theme Store region follows the same native grouped-row pattern as
+ * Status bar > Other > Burn-in protection:
+ * - SwitchItem owns the theme-specific title, explanatory summary and switch.
+ * - StatusThemeGroup supplies Material segmented styling or the native Miuix card.
+ * - Expanded choices remain inside the same group instead of drawing a second frame.
+ */
 @Composable
 private fun ThemeStoreRegionFrame(
     enabled: Boolean,
@@ -93,81 +100,37 @@ private fun ThemeStoreRegionFrame(
     selectedSalesCode: String,
     onSelect: (ThemeCenterEvent.SelectThemeStoreRegion) -> Unit
 ) {
-    var expanded by remember { mutableStateOf(true) }
-    when (LocalUiMode.current) {
-        UiMode.Material -> MaterialCard(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp)
-        ) {
-            ThemeStoreRegionFrameContent(
-                enabled = enabled,
-                onEnabledChange = onEnabledChange,
-                expanded = expanded,
-                onToggleExpanded = { expanded = !expanded },
-                selectedCountry = selectedCountry,
-                selectedSalesCode = selectedSalesCode,
-                onSelect = onSelect
-            )
-        }
-        UiMode.Miuix -> MiuixCard(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp)
-        ) {
-            ThemeStoreRegionFrameContent(
-                enabled = enabled,
-                onEnabledChange = onEnabledChange,
-                expanded = expanded,
-                onToggleExpanded = { expanded = !expanded },
-                selectedCountry = selectedCountry,
-                selectedSalesCode = selectedSalesCode,
-                onSelect = onSelect
-            )
-        }
-    }
-}
+    var expanded by remember(enabled) { mutableStateOf(enabled) }
 
-@Composable
-private fun ThemeStoreRegionFrameContent(
-    enabled: Boolean,
-    onEnabledChange: (Boolean) -> Unit,
-    expanded: Boolean,
-    onToggleExpanded: () -> Unit,
-    selectedCountry: String,
-    selectedSalesCode: String,
-    onSelect: (ThemeCenterEvent.SelectThemeStoreRegion) -> Unit
-) {
-    Column {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(start = 14.dp, end = 12.dp, top = 8.dp, bottom = 8.dp),
-            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
-        ) {
-            Row(
-                modifier = Modifier.weight(1f).clickable { onToggleExpanded() }.padding(vertical = 7.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                if (LocalUiMode.current == UiMode.Material) {
-                    Text(stringResource(R.string.alohaoneui_setThemeStoreRegion_title), color = MaterialTheme.colorScheme.onSurface, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
-                    Text(if (expanded) "  ▾" else "  ▸", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
-                } else {
-                    MiuixText(stringResource(R.string.alohaoneui_setThemeStoreRegion_title), color = colorScheme.onSurface, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
-                    MiuixText(if (expanded) "  ▾" else "  ▸", color = colorScheme.onSurfaceVariantSummary, fontSize = 12.sp)
+    StatusThemeGroup(
+        items = buildList {
+            add {
+                SwitchItem(
+                    title = stringResource(R.string.alohaoneui_setThemeStoreRegion_title),
+                    summary = stringResource(R.string.alohaoneui_setThemeStoreRegion_summary),
+                    clickable = true,
+                    onClick = { expanded = !expanded },
+                    checked = enabled,
+                    onCheckedChange = { value ->
+                        onEnabledChange(value)
+                        expanded = value
+                    }
+                )
+            }
+            if (enabled && expanded) {
+                add {
+                    StatusThemeChildItem {
+                        ThemeStoreRegionSelector(
+                            selectedCountry = selectedCountry,
+                            selectedSalesCode = selectedSalesCode,
+                            onSelect = onSelect
+                        )
+                    }
                 }
             }
-            if (LocalUiMode.current == UiMode.Material) {
-                ExpressiveSwitch(checked = enabled, onCheckedChange = onEnabledChange)
-            } else {
-                MiuixSwitch(checked = enabled, onCheckedChange = onEnabledChange)
-            }
         }
-        if (expanded && enabled) {
-            ThemeStoreRegionSelector(
-                selectedCountry = selectedCountry,
-                selectedSalesCode = selectedSalesCode,
-                onSelect = onSelect
-            )
-        }
-    }
-
-    }
-
+    )
+}
 
 /** Time for the DataStore write and its remote preference flush to reach the hooked process. */
 private const val REGION_APPLY_FLUSH_DELAY_MS = 700L
