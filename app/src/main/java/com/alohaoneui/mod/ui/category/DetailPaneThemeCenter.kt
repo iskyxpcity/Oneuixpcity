@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Card as MaterialCard
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -43,6 +44,7 @@ import com.alohaoneui.mod.ui.component.SwitchItem
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
+import top.yukonga.miuix.kmp.basic.Card as MiuixCard
 import top.yukonga.miuix.kmp.basic.Switch as MiuixSwitch
 import com.alohaoneui.app.ui.component.material.ExpressiveSwitch
 import top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme
@@ -92,19 +94,54 @@ private fun ThemeStoreRegionFrame(
     onSelect: (ThemeCenterEvent.SelectThemeStoreRegion) -> Unit
 ) {
     var expanded by remember { mutableStateOf(true) }
-    val shape = RoundedCornerShape(16.dp)
-    val backgroundColor = if (LocalUiMode.current == UiMode.Material) MaterialTheme.colorScheme.surface else colorScheme.surface
-    val borderColor = if (LocalUiMode.current == UiMode.Material) MaterialTheme.colorScheme.outlineVariant else colorScheme.onSurfaceVariantSummary
-    Column(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp)
-            .clip(shape).background(backgroundColor, shape).border(1.dp, borderColor, shape)
-    ) {
+    when (LocalUiMode.current) {
+        UiMode.Material -> MaterialCard(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp)
+        ) {
+            ThemeStoreRegionFrameContent(
+                enabled = enabled,
+                onEnabledChange = onEnabledChange,
+                expanded = expanded,
+                onToggleExpanded = { expanded = !expanded },
+                selectedCountry = selectedCountry,
+                selectedSalesCode = selectedSalesCode,
+                onSelect = onSelect
+            )
+        }
+        UiMode.Miuix -> MiuixCard(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp)
+        ) {
+            ThemeStoreRegionFrameContent(
+                enabled = enabled,
+                onEnabledChange = onEnabledChange,
+                expanded = expanded,
+                onToggleExpanded = { expanded = !expanded },
+                selectedCountry = selectedCountry,
+                selectedSalesCode = selectedSalesCode,
+                onSelect = onSelect
+            )
+        }
+    }
+}
+
+@Composable
+private fun ThemeStoreRegionFrameContent(
+    enabled: Boolean,
+    onEnabledChange: (Boolean) -> Unit,
+    expanded: Boolean,
+    onToggleExpanded: () -> Unit,
+    selectedCountry: String,
+    selectedSalesCode: String,
+    onSelect: (ThemeCenterEvent.SelectThemeStoreRegion) -> Unit
+) {
+    Column {
+{
         Row(
             modifier = Modifier.fillMaxWidth().padding(start = 14.dp, end = 12.dp, top = 8.dp, bottom = 8.dp),
             verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
         ) {
             Row(
-                modifier = Modifier.weight(1f).clickable { expanded = !expanded }.padding(vertical = 7.dp),
+                modifier = Modifier.weight(1f).clickable { onToggleExpanded() }.padding(vertical = 7.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 if (LocalUiMode.current == UiMode.Material) {
@@ -129,7 +166,9 @@ private fun ThemeStoreRegionFrame(
             )
         }
     }
-}
+
+    }
+
 
 /** Time for the DataStore write and its remote preference flush to reach the hooked process. */
 private const val REGION_APPLY_FLUSH_DELAY_MS = 700L
