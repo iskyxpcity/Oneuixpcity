@@ -3,7 +3,7 @@ package com.alohaoneui.app.ui.screen.tools
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import kotlin.math.roundToInt
@@ -87,6 +87,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
@@ -95,10 +99,13 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.core.graphics.drawable.toBitmap
 import com.alohaoneui.app.R
 import com.alohaoneui.app.alohaOneUIApp
 import com.alohaoneui.app.alohaoneui.AlohaOneUIPreferenceBridge
@@ -145,7 +152,11 @@ private const val ACTION_CUSTOM_APP_PREFIX = "custom_app:"
 
 private data class ShortcutActionOption(val id: String, val label: String)
 private data class ShortcutActionGroup(val title: String, val actions: List<ShortcutActionOption>)
-private data class ShortcutLauncherApp(val label: String, val component: ComponentName)
+private data class ShortcutLauncherApp(
+    val label: String,
+    val component: ComponentName,
+    val icon: ImageBitmap?,
+)
 
 /** Group names, order and persisted IDs match App20261018Aloha/RootGestureActions.kt. */
 private val shortcutActionGroups = listOf(
@@ -1625,15 +1636,13 @@ private fun ShortcutActionRow(
     onSelected: (String) -> Unit,
 ) {
     val context = LocalContext.current
-    val apps = remember(context) { loadShortcutLauncherApps(context) }
     var showActionPicker by remember { mutableStateOf(false) }
     var showAppPicker by remember { mutableStateOf(false) }
     val isCustomApp = selectedAction.startsWith(ACTION_CUSTOM_APP_PREFIX)
-    val selectedLabel = remember(context, selectedAction, apps) {
+    val selectedLabel = remember(context, selectedAction) {
         if (isCustomApp) {
             val component = ComponentName.unflattenFromString(selectedAction.removePrefix(ACTION_CUSTOM_APP_PREFIX))
-            val appName = apps.firstOrNull { it.component == component }?.label ?: "自定义程序"
-            "自定义程序 · $appName"
+            "自定义程序 · ${resolveShortcutAppLabel(context, component)}"
         } else {
             shortcutActionOptions.firstOrNull { it.id == selectedAction }?.label ?: "无动作"
         }
@@ -1694,7 +1703,7 @@ private fun ShortcutActionRow(
     }
     if (showAppPicker) {
         CustomShortcutAppPicker(
-            apps = apps,
+            selectedAction = selectedAction,
             onDismiss = { showAppPicker = false },
             onSelect = { component ->
                 onSelected(ACTION_CUSTOM_APP_PREFIX + component.flattenToString())
@@ -1719,7 +1728,10 @@ private fun GroupedShortcutActionPicker(
     }?.title ?: "默认"
     var expandedGroups by remember(selectedAction) { mutableStateOf(setOf("默认", selectedGroup)) }
     ShortcutDialogSurface(title, message, onDismiss) {
-        Column(modifier = Modifier.heightIn(max = 500.dp).verticalScroll(rememberScrollState())) {
+        Column(
+            modifier = Modifier.heightIn(max = 470.dp).verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
             shortcutActionGroups.forEach { group ->
                 ShortcutActionGroupCard(
                     group = group,
@@ -1736,6 +1748,55 @@ private fun GroupedShortcutActionPicker(
     }
 }
 
+/** 分组标题右侧的「N 项」胶囊，规格对照 GroupedRootActionPicker：28dp 高、12.5sp 粗体。 */
+@Composable
+private fun ShortcutActionCountPill(count: Int, background: Color, contentColor: Color) {
+    Box(
+        modifier = Modifier
+            .height(28.dp)
+            .background(background, CircleShape)
+            .padding(horizontal = 10.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        val label = "$count 项"
+        when (LocalUiMode.current) {
+            UiMode.Material -> Text(
+                label,
+                color = contentColor,
+                fontSize = 12.5.sp,
+                fontWeight = FontWeight.SemiBold,
+            )
+            UiMode.Miuix -> MiuixText(
+                label,
+                color = contentColor,
+                fontSize = 12.5.sp,
+                fontWeight = FontWeight.SemiBold,
+            )
+        }
+    }
+}
+
+/** 折叠箭头：统一用矢量箭头 + 旋转，不再用 "⌃ / ⌄" 字符。 */
+@Composable
+private fun ShortcutActionGroupChevron(expanded: Boolean, tint: Color) {
+    val rotate = if (expanded) 90f else 0f
+    val modifier = Modifier.graphicsLayer { rotationZ = rotate }
+    when (LocalUiMode.current) {
+        UiMode.Material -> Icon(
+            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+            contentDescription = if (expanded) "收起" else "展开",
+            modifier = modifier.size(18.dp),
+            tint = tint,
+        )
+        UiMode.Miuix -> MiuixIcon(
+            imageVector = MiuixIcons.Basic.ArrowRight,
+            contentDescription = if (expanded) "收起" else "展开",
+            modifier = modifier.size(18.dp),
+            tint = tint,
+        )
+    }
+}
+
 @Composable
 private fun ShortcutActionGroupCard(
     group: ShortcutActionGroup,
@@ -1744,12 +1805,12 @@ private fun ShortcutActionGroupCard(
     onToggle: () -> Unit,
     onSelect: (String) -> Unit,
 ) {
-    val selectedBackground = when (LocalUiMode.current) {
-        UiMode.Material -> MaterialTheme.colorScheme.secondaryContainer
-        UiMode.Miuix -> colorScheme.primary.copy(alpha = 0.15f)
+    val accent = when (LocalUiMode.current) {
+        UiMode.Material -> MaterialTheme.colorScheme.primary
+        UiMode.Miuix -> colorScheme.primary
     }
-    val unselectedBackground = when (LocalUiMode.current) {
-        UiMode.Material -> MaterialTheme.colorScheme.surfaceContainerLow
+    val pillBackground = when (LocalUiMode.current) {
+        UiMode.Material -> MaterialTheme.colorScheme.surfaceContainerHigh
         UiMode.Miuix -> colorScheme.surface
     }
     val secondary = when (LocalUiMode.current) {
@@ -1758,7 +1819,7 @@ private fun ShortcutActionGroupCard(
     }
 
     OtherFunctionsThemeGroup(
-        modifier = Modifier.padding(vertical = 1.dp),
+        modifier = Modifier.padding(vertical = 0.dp),
         items = buildList {
             add {
                 OtherFunctionsThemeChildItem(onClick = onToggle) {
@@ -1769,30 +1830,21 @@ private fun ShortcutActionGroupCard(
                         ) {
                             Text(
                                 group.title,
+                                fontSize = 16.sp,
                                 fontWeight = FontWeight.SemiBold,
                             )
                             Spacer(Modifier.weight(1f))
-                            Text(
-                                "${group.actions.size} 项",
-                                color = secondary,
-                                style = MaterialTheme.typography.bodySmall,
-                            )
-                            Text(
-                                if (expanded) "⌃" else "⌄",
-                                modifier = Modifier.padding(start = 8.dp),
-                                color = secondary,
-                            )
+                            ShortcutActionCountPill(group.actions.size, pillBackground, secondary)
+                            Spacer(Modifier.width(8.dp))
+                            ShortcutActionGroupChevron(expanded, accent)
                         }
                         UiMode.Miuix -> MiuixBasicComponent(
                             title = group.title,
-                            summary = "${group.actions.size} 项",
                             modifier = Modifier.fillMaxWidth(),
                             endActions = {
-                                MiuixText(
-                                    if (expanded) "⌃" else "⌄",
-                                    modifier = Modifier.padding(start = 8.dp),
-                                    color = colorScheme.onSurfaceVariantSummary,
-                                )
+                                ShortcutActionCountPill(group.actions.size, pillBackground, secondary)
+                                Spacer(Modifier.width(8.dp))
+                                ShortcutActionGroupChevron(expanded, accent)
                             },
                             onClick = onToggle,
                             role = Role.Button,
@@ -1803,7 +1855,7 @@ private fun ShortcutActionGroupCard(
             if (expanded) {
                 add {
                     OtherFunctionsThemeChildItem {
-                        ShortcutActionGrid(group, selectedAction, selectedBackground, unselectedBackground, onSelect)
+                        ShortcutActionGrid(group, selectedAction, accent, onSelect)
                     }
                 }
             }
@@ -1815,79 +1867,43 @@ private fun ShortcutActionGroupCard(
 private fun ShortcutActionGrid(
     group: ShortcutActionGroup,
     selectedAction: String,
-    selectedBackground: Color,
-    unselectedBackground: Color,
+    accent: Color,
     onSelect: (String) -> Unit,
 ) {
+    val chipShape = RoundedCornerShape(16.dp)
+    val unselectedContainer = when (LocalUiMode.current) {
+        UiMode.Material -> MaterialTheme.colorScheme.surfaceContainerHigh
+        UiMode.Miuix -> colorScheme.surface
+    }
+    val unselectedStroke = when (LocalUiMode.current) {
+        UiMode.Material -> MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f)
+        UiMode.Miuix -> colorScheme.onSurfaceVariantSummary.copy(alpha = 0.18f)
+    }
+    val unselectedText = when (LocalUiMode.current) {
+        UiMode.Material -> MaterialTheme.colorScheme.onSurface
+        UiMode.Miuix -> colorScheme.onSurface
+    }
     val gridInset = when (LocalUiMode.current) {
         UiMode.Material -> PaddingValues(0.dp)
-        UiMode.Miuix -> PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+        UiMode.Miuix -> PaddingValues(horizontal = 12.dp, vertical = 4.dp)
     }
-    Column(
-        modifier = Modifier.fillMaxWidth().padding(gridInset),
-    ) {
+    Column(modifier = Modifier.fillMaxWidth().padding(gridInset)) {
         group.actions.chunked(2).forEach { rowActions ->
             Row(modifier = Modifier.fillMaxWidth()) {
                 rowActions.forEach { option ->
                     val selected = option.id == selectedAction ||
                         (option.id == ACTION_CUSTOM_APP && selectedAction.startsWith(ACTION_CUSTOM_APP_PREFIX))
-                    val foreground = if (selected) when (LocalUiMode.current) {
-                        UiMode.Material -> MaterialTheme.colorScheme.onSecondaryContainer
-                        UiMode.Miuix -> colorScheme.onSurface
-                    } else when (LocalUiMode.current) {
-                        UiMode.Material -> MaterialTheme.colorScheme.onSurface
-                        UiMode.Miuix -> colorScheme.onSurface
-                    }
-                    val chipShape = RoundedCornerShape(14.dp)
-                    val borderColor = if (selected) when (LocalUiMode.current) {
-                        UiMode.Material -> MaterialTheme.colorScheme.secondaryContainer
-                        UiMode.Miuix -> colorScheme.primary.copy(alpha = 0.15f)
-                    } else when (LocalUiMode.current) {
-                        UiMode.Material -> MaterialTheme.colorScheme.outlineVariant
-                        UiMode.Miuix -> colorScheme.onSurfaceVariantSummary.copy(alpha = 0.24f)
-                    }
-                    when (LocalUiMode.current) {
-                        UiMode.Material -> Card(
-                            onClick = { onSelect(option.id) },
-                            modifier = Modifier.weight(1f).padding(4.dp).heightIn(min = 44.dp),
-                            shape = chipShape,
-                            colors = CardDefaults.cardColors(
-                                containerColor = if (selected) selectedBackground else unselectedBackground,
-                            ),
-                            border = BorderStroke(1.dp, borderColor),
-                        ) {
-                            Box(
-                                modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp)
-                                    .padding(horizontal = 10.dp),
-                                contentAlignment = Alignment.CenterStart,
-                            ) {
-                                Text(option.label, color = foreground, style = MaterialTheme.typography.bodySmall)
-                            }
-                        }
-                        UiMode.Miuix -> MiuixCard(
-                            modifier = Modifier.weight(1f).padding(4.dp)
-                                .heightIn(min = 44.dp)
-                                .border(1.dp, borderColor, chipShape),
-                            cornerRadius = 14.dp,
-                            colors = MiuixCardDefaults.defaultColors(
-                                color = if (selected) selectedBackground else unselectedBackground,
-                            ),
-                            insideMargin = PaddingValues(horizontal = 10.dp, vertical = 0.dp),
-                            showIndication = true,
-                            onClick = { onSelect(option.id) },
-                        ) {
-                            Box(
-                                modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp),
-                                contentAlignment = Alignment.CenterStart,
-                            ) {
-                                MiuixText(
-                                    option.label,
-                                    modifier = Modifier.fillMaxWidth(),
-                                    color = foreground,
-                                )
-                            }
-                        }
-                    }
+                    ShortcutActionChip(
+                        label = option.label,
+                        selected = selected,
+                        shape = chipShape,
+                        accent = accent,
+                        container = unselectedContainer,
+                        stroke = unselectedStroke,
+                        content = unselectedText,
+                        onClick = { onSelect(option.id) },
+                        modifier = Modifier.weight(1f),
+                    )
                 }
                 if (rowActions.size == 1) Spacer(Modifier.weight(1f))
             }
@@ -1895,43 +1911,271 @@ private fun ShortcutActionGrid(
     }
 }
 
+/**
+ * 选项胶囊，规格对照 GroupedRootActionPicker：46dp 高、16dp 圆角、4dp 间距；
+ * 选中态是**实心主色 + 反白粗体**，不是低透明度填充，深色下也能一眼看出选中项。
+ */
+@Composable
+private fun ShortcutActionChip(
+    label: String,
+    selected: Boolean,
+    shape: RoundedCornerShape,
+    accent: Color,
+    container: Color,
+    stroke: Color,
+    content: Color,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val chipModifier = modifier.padding(4.dp).height(46.dp)
+    when (LocalUiMode.current) {
+        UiMode.Material -> Card(
+            onClick = onClick,
+            modifier = chipModifier,
+            shape = shape,
+            colors = CardDefaults.cardColors(
+                containerColor = if (selected) accent else container,
+            ),
+            border = if (selected) null else BorderStroke(1.dp, stroke),
+        ) {
+            Box(
+                modifier = Modifier.fillMaxSize().padding(horizontal = 12.dp),
+                contentAlignment = Alignment.CenterStart,
+            ) {
+                Text(
+                    label,
+                    color = if (selected) MaterialTheme.colorScheme.onPrimary else content,
+                    fontSize = 14.sp,
+                    fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+        UiMode.Miuix -> MiuixCard(
+            modifier = chipModifier.border(1.dp, if (selected) accent else stroke, shape),
+            cornerRadius = 16.dp,
+            colors = MiuixCardDefaults.defaultColors(
+                color = if (selected) accent else container,
+            ),
+            insideMargin = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
+            showIndication = true,
+            onClick = onClick,
+        ) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.CenterStart,
+            ) {
+                MiuixText(
+                    label,
+                    modifier = Modifier.fillMaxWidth(),
+                    color = if (selected) Color.White else content,
+                    fontSize = 14.sp,
+                    fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+                )
+            }
+        }
+    }
+}
+
 @Composable
 private fun CustomShortcutAppPicker(
-    apps: List<ShortcutLauncherApp>,
+    selectedAction: String,
     onDismiss: () -> Unit,
     onSelect: (ComponentName) -> Unit,
 ) {
-    ShortcutDialogSurface("选择自定义应用", "选择这个触发器要打开的应用。", onDismiss) {
-        if (apps.isEmpty()) {
-            ShortcutBodyText("没有找到可从桌面启动的应用。")
+    val context = LocalContext.current
+    // Loaded only while the picker is on screen: enumerating every launcher icon for each
+    // trigger row on the settings page used to be the expensive part, not the dialog itself.
+    val apps = remember(context) { loadShortcutLauncherApps(context) }
+    var query by remember { mutableStateOf("") }
+    val selectedComponent = remember(selectedAction) {
+        if (selectedAction.startsWith(ACTION_CUSTOM_APP_PREFIX)) {
+            ComponentName.unflattenFromString(selectedAction.removePrefix(ACTION_CUSTOM_APP_PREFIX))
         } else {
-            when (LocalUiMode.current) {
-                UiMode.Material -> SegmentedColumn(
-                    modifier = Modifier.fillMaxWidth().heightIn(max = 500.dp).verticalScroll(rememberScrollState()),
-                    content = apps.map { app ->
-                        {
-                            SegmentedListItem(
-                                onClick = { onSelect(app.component) },
-                                colors = alohaOneUISegmentedColors(),
-                                headlineContent = { Text(app.label) },
-                            )
-                        }
-                    },
-                )
+            null
+        }
+    }
+    val filtered = remember(apps, query) {
+        val key = query.trim().lowercase()
+        if (key.isEmpty()) {
+            apps
+        } else {
+            apps.filter {
+                it.label.lowercase().contains(key) || it.component.packageName.lowercase().contains(key)
+            }
+        }
+    }
+    val subtitle = if (apps.isEmpty()) {
+        "没有找到可从桌面启动的应用。"
+    } else {
+        "共 ${apps.size} 个可启动应用，可按名称或包名搜索。"
+    }
 
-                UiMode.Miuix -> Column(modifier = Modifier.heightIn(max = 500.dp).verticalScroll(rememberScrollState())) {
-                    apps.forEach { app ->
-                        MiuixBasicComponent(
-                            title = app.label,
-                            modifier = Modifier.fillMaxWidth(),
+    ShortcutDialogSurface("选择应用程序", subtitle, onDismiss) {
+        if (apps.isNotEmpty()) {
+            ShortcutAppSearchField(query) { query = it }
+            if (filtered.isEmpty()) {
+                Box(Modifier.padding(top = 8.dp)) {
+                    ShortcutBodyText("没有匹配「${query.trim()}」的应用。")
+                }
+            } else {
+                Spacer(Modifier.height(10.dp))
+                LazyColumn(modifier = Modifier.fillMaxWidth().heightIn(max = 420.dp)) {
+                    items(filtered, key = { it.component.flattenToString() }) { app ->
+                        ShortcutAppPickerRow(
+                            app = app,
+                            selected = app.component == selectedComponent,
                             onClick = { onSelect(app.component) },
-                            role = Role.Button,
                         )
                     }
                 }
             }
         }
         GlobalShortcutActionButton("取消", false, onDismiss, Modifier.fillMaxWidth().padding(top = 10.dp))
+    }
+}
+
+/** 搜索框：Material 用 OutlinedTextField，Miuix 用 MiuixTextField，外观对齐各自主题。 */
+@Composable
+private fun ShortcutAppSearchField(value: String, onValueChange: (String) -> Unit) {
+    when (LocalUiMode.current) {
+        UiMode.Material -> OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            placeholder = { Text("搜索应用名称或包名") },
+        )
+
+        UiMode.Miuix -> MiuixTextField(
+            value = value,
+            onValueChange = onValueChange,
+            modifier = Modifier.fillMaxWidth(),
+            insideMargin = DpSize(12.dp, 10.dp),
+            cornerRadius = 12.dp,
+            singleLine = true,
+            maxLines = 1,
+        )
+    }
+}
+
+/**
+ * 应用行：40dp 图标 + 应用名 + 包名 + 右侧选中圆点。
+ * 规格对照 RootCustomAppPicker.appRow（68dp 行、图标 42dp、选中项实心主色 + 粗体）。
+ */
+@Composable
+private fun ShortcutAppPickerRow(
+    app: ShortcutLauncherApp,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
+    val accent = when (LocalUiMode.current) {
+        UiMode.Material -> MaterialTheme.colorScheme.primary
+        UiMode.Miuix -> colorScheme.primary
+    }
+    val titleColor = when (LocalUiMode.current) {
+        UiMode.Material -> MaterialTheme.colorScheme.onSurface
+        UiMode.Miuix -> colorScheme.onSurface
+    }
+    val supportingColor = when (LocalUiMode.current) {
+        UiMode.Material -> MaterialTheme.colorScheme.onSurfaceVariant
+        UiMode.Miuix -> colorScheme.onSurfaceVariantSummary
+    }
+    val shape = RoundedCornerShape(18.dp)
+    val selectedAlpha = if (LocalUiMode.current == UiMode.Material) 0.12f else 0.18f
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = 64.dp)
+            .clip(shape)
+            .background(if (selected) accent.copy(alpha = selectedAlpha) else Color.Transparent, shape)
+            .then(
+                if (selected) Modifier.border(1.dp, accent.copy(alpha = 0.5f), shape) else Modifier,
+            )
+            .clickable(role = Role.Button, onClick = onClick)
+            .padding(horizontal = 10.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        ShortcutAppIcon(app, accent)
+        Spacer(Modifier.width(12.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            when (LocalUiMode.current) {
+                UiMode.Material -> {
+                    Text(
+                        app.label,
+                        fontSize = 16.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+                        color = if (selected) accent else titleColor,
+                    )
+                    Text(
+                        app.component.packageName,
+                        fontSize = 12.5.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        color = supportingColor,
+                    )
+                }
+
+                UiMode.Miuix -> {
+                    MiuixText(
+                        app.label,
+                        fontSize = 16.sp,
+                        maxLines = 1,
+                        fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+                        color = if (selected) accent else titleColor,
+                    )
+                    MiuixText(
+                        app.component.packageName,
+                        fontSize = 12.5.sp,
+                        maxLines = 1,
+                        color = supportingColor,
+                    )
+                }
+            }
+        }
+        Spacer(Modifier.width(8.dp))
+        Box(
+            modifier = Modifier
+                .size(22.dp)
+                .clip(CircleShape)
+                .background(if (selected) accent else Color.Transparent, CircleShape)
+                .border(1.5.dp, if (selected) accent else supportingColor.copy(alpha = 0.45f), CircleShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            if (selected) {
+                Box(Modifier.size(9.dp).clip(CircleShape).background(Color.White))
+            }
+        }
+    }
+}
+
+@Composable
+private fun ShortcutAppIcon(app: ShortcutLauncherApp, accent: Color) {
+    val shape = RoundedCornerShape(11.dp)
+    val icon = app.icon
+    if (icon != null) {
+        Image(
+            bitmap = icon,
+            contentDescription = null,
+            modifier = Modifier.size(40.dp).clip(shape),
+            contentScale = ContentScale.Fit,
+        )
+    } else {
+        Box(
+            modifier = Modifier.size(40.dp).clip(shape).background(accent.copy(alpha = 0.16f), shape),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                app.label.take(1).uppercase(),
+                color = accent,
+                fontSize = 17.sp,
+                fontWeight = FontWeight.SemiBold,
+            )
+        }
     }
 }
 
@@ -2005,23 +2249,53 @@ private fun GlobalShortcutActionButton(
         primary = primary,
         onClick = onClick,
         modifier = modifier,
-        fillWidth = true,
     )
 }
 
+private const val SHORTCUT_APP_ICON_PX = 96
+
+/**
+ * Enumerates every launchable app for the custom-app picker.
+ *
+ * `MATCH_DEFAULT_ONLY` used to be passed here: it silently drops activities that declare
+ * `CATEGORY_LAUNCHER` without `CATEGORY_DEFAULT`, which is why the picker only listed a
+ * fraction of the installed apps. Flags = 0 keeps them.
+ */
 private fun loadShortcutLauncherApps(context: Context): List<ShortcutLauncherApp> {
     val packageManager = context.packageManager
     val launcherIntent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)
+    val fallbackIcon = runCatching {
+        context.applicationInfo.loadIcon(packageManager)
+            .toBitmap(SHORTCUT_APP_ICON_PX, SHORTCUT_APP_ICON_PX)
+            .asImageBitmap()
+    }.getOrNull()
     return runCatching {
-        packageManager.queryIntentActivities(launcherIntent, PackageManager.MATCH_DEFAULT_ONLY)
+        packageManager.queryIntentActivities(launcherIntent, 0)
             .mapNotNull { resolve ->
                 val info = resolve.activityInfo ?: return@mapNotNull null
                 if (info.packageName == context.packageName) return@mapNotNull null
                 val component = ComponentName(info.packageName, info.name)
-                val label = runCatching { info.loadLabel(packageManager).toString() }.getOrDefault(info.packageName)
-                ShortcutLauncherApp(label, component)
+                val label = runCatching { info.loadLabel(packageManager).toString() }
+                    .getOrNull()
+                    .orEmpty()
+                    .ifBlank { info.packageName }
+                val icon = runCatching {
+                    info.loadIcon(packageManager)
+                        .toBitmap(SHORTCUT_APP_ICON_PX, SHORTCUT_APP_ICON_PX)
+                        .asImageBitmap()
+                }.getOrNull() ?: fallbackIcon
+                ShortcutLauncherApp(label, component, icon)
             }
             .distinctBy { it.component.flattenToString() }
             .sortedBy { it.label.lowercase() }
     }.getOrDefault(emptyList())
+}
+
+/** Resolves a single stored component's label without enumerating the whole launcher list. */
+private fun resolveShortcutAppLabel(context: Context, component: ComponentName?): String {
+    if (component == null) return "自定义程序"
+    val label = runCatching {
+        context.packageManager.getActivityInfo(component, 0).loadLabel(context.packageManager).toString()
+    }.getOrNull().orEmpty()
+    return label.ifBlank { component.packageName }
 }
