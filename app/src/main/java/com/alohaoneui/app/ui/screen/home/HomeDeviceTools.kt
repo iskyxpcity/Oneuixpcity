@@ -250,8 +250,8 @@ private fun DeviceInfoSectionSelector(
                             .fillMaxHeight()
                             .clip(segmentShape)
                             .background(
-                                if (selected) MaterialTheme.colorScheme.secondaryContainer
-                                else Color.Transparent,
+                                if (selected) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.surfaceContainerHighest,
                             )
                             .clickable(role = Role.Tab) { onSelect(index) },
                         contentAlignment = Alignment.Center,
@@ -259,9 +259,9 @@ private fun DeviceInfoSectionSelector(
                         MaterialText(
                             text = label,
                             color = if (selected) {
-                                MaterialTheme.colorScheme.onSecondaryContainer
+                                MaterialTheme.colorScheme.onPrimary
                             } else {
-                                MaterialTheme.colorScheme.onSurfaceVariant
+                                MaterialTheme.colorScheme.onSurface
                             },
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
