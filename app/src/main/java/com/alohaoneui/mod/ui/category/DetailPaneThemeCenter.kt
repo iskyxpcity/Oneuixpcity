@@ -7,6 +7,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,6 +17,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -37,6 +43,8 @@ import com.alohaoneui.mod.ui.component.SwitchItem
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
+import top.yukonga.miuix.kmp.basic.Switch as MiuixSwitch
+import com.alohaoneui.app.ui.component.material.ExpressiveSwitch
 import top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme
 
 @Composable
@@ -54,33 +62,69 @@ fun DetailPaneThemeCenter(
             checked = uiState.setThemeTrialNeverExpired,
             onCheckedChange = { onEvent(ThemeCenterEvent.SetThemeTrialNeverExpired(it)) }
         )
-        SwitchItem(
-            icon = ImageVector.vectorResource(id = R.drawable.language_us),
-            title = stringResource(id = R.string.alohaoneui_setThemeStoreRegion_title),
-            summary = stringResource(id = R.string.alohaoneui_setThemeStoreRegion_summary),
-            checked = uiState.setThemeStoreRegion,
-            onCheckedChange = { onEvent(ThemeCenterEvent.SetThemeStoreRegion(it)) }
-        )
-        if (uiState.setThemeStoreRegion) {
-            ThemeStoreRegionSelector(
-                selectedCountry = uiState.themeStoreRegionCountry,
-                selectedSalesCode = uiState.themeStoreRegionSalesCode,
-                onSelect = { event ->
-                    onEvent(event)
-                    scope.launch {
-                        // The Store keeps its resolved region for the whole process lifetime, so it
-                        // has to end itself. It does that on its own after this broadcast — no root
-                        // shell, no force-stop. The delay lets the DataStore write and its remote
-                        // preference flush land first, so the restarted Store reads the new region.
-                        delay(REGION_APPLY_FLUSH_DELAY_MS)
-                        runCatching {
-                            context.sendBroadcast(
-                                Intent(ModuleActions.THEME_STORE_REGION_CHANGED)
-                                    .setPackage(Package.THEME_STORE)
-                            )
-                        }
+        ThemeStoreRegionFrame(
+            enabled = uiState.setThemeStoreRegion,
+            onEnabledChange = { onEvent(ThemeCenterEvent.SetThemeStoreRegion(it)) },
+            selectedCountry = uiState.themeStoreRegionCountry,
+            selectedSalesCode = uiState.themeStoreRegionSalesCode,
+            onSelect = { event ->
+                onEvent(event)
+                scope.launch {
+                    delay(REGION_APPLY_FLUSH_DELAY_MS)
+                    runCatching {
+                        context.sendBroadcast(
+                            Intent(ModuleActions.THEME_STORE_REGION_CHANGED)
+                                .setPackage(Package.THEME_STORE)
+                        )
                     }
                 }
+            }
+        )
+    }
+}
+
+@Composable
+private fun ThemeStoreRegionFrame(
+    enabled: Boolean,
+    onEnabledChange: (Boolean) -> Unit,
+    selectedCountry: String,
+    selectedSalesCode: String,
+    onSelect: (ThemeCenterEvent.SelectThemeStoreRegion) -> Unit
+) {
+    var expanded by rememberSaveable { mutableStateOf(true) }
+    val shape = RoundedCornerShape(16.dp)
+    val backgroundColor = if (LocalUiMode.current == UiMode.Material) MaterialTheme.colorScheme.surface else colorScheme.surface
+    val borderColor = if (LocalUiMode.current == UiMode.Material) MaterialTheme.colorScheme.outlineVariant else colorScheme.onSurfaceVariantSummary
+    Column(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp)
+            .clip(shape).background(backgroundColor, shape).border(1.dp, borderColor, shape)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(start = 14.dp, end = 12.dp, top = 8.dp, bottom = 8.dp),
+            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+        ) {
+            Column(
+                modifier = Modifier.weight(1f).clickable { expanded = !expanded }.padding(vertical = 7.dp)
+            ) {
+                if (LocalUiMode.current == UiMode.Material) {
+                    Text(stringResource(R.string.alohaoneui_setThemeStoreRegion_title), color = MaterialTheme.colorScheme.onSurface, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+                    Text(if (expanded) "▾" else "▸", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
+                } else {
+                    MiuixText(stringResource(R.string.alohaoneui_setThemeStoreRegion_title), color = colorScheme.onSurface, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+                    MiuixText(if (expanded) "▾" else "▸", color = colorScheme.onSurfaceVariantSummary, fontSize = 12.sp)
+                }
+            }
+            if (LocalUiMode.current == UiMode.Material) {
+                ExpressiveSwitch(checked = enabled, onCheckedChange = onEnabledChange)
+            } else {
+                MiuixSwitch(checked = enabled, onCheckedChange = onEnabledChange)
+            }
+        }
+        if (expanded && enabled) {
+            ThemeStoreRegionSelector(
+                selectedCountry = selectedCountry,
+                selectedSalesCode = selectedSalesCode,
+                onSelect = onSelect
             )
         }
     }
