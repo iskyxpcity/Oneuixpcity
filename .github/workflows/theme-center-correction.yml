@@ -5,6 +5,7 @@ on:
     paths:
       - ".github/workflows/theme-center-correction.yml"
       - "tools/theme-store-source.rar.b64"
+      - "tools/correct-theme-center.py"
 permissions:
   contents: write
 jobs:
