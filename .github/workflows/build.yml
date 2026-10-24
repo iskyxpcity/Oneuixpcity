@@ -129,6 +129,527 @@ jobs:
           grep -Fq 'THEME_STORE_REGION_CHANGED' hook/src/main/java/com/alohaoneui/hook/ThemeStoreRegion.kt
           ! grep -Fq 'ThemeStoreService' app/src/main/java/com/alohaoneui/app/alohaoneui/AlohaOneUIFeatureCatalog.kt
           SCOPE_COUNT=$(grep -cve '^[[:space:]]*
+          diff -u hook/src/main/resources/META-INF/xposed/scope.list app/src/main/resources/META-INF/xposed/scope.list 2>/dev/null || {
+            printf '%s\n'               com.alohaoneui.app               system               com.android.settings               com.android.systemui               com.samsung.android.app.notes               com.samsung.android.app.sketchbook               com.samsung.android.app.telephonyui               com.samsung.android.calendar               com.samsung.android.da.daagent               com.samsung.android.dialer               com.samsung.android.incallui               com.samsung.android.mdecservice               com.samsung.android.messaging               com.samsung.android.service.airviewdictionary               com.samsung.android.shealthmonitor               com.samsung.android.sm_cn               com.samsung.android.themecenter               com.samsung.android.themestore               com.samsung.android.video               com.samsung.android.app.watchmanager               com.sec.android.app.camera               com.sec.android.app.launcher               com.sec.android.app.samsungapps               com.sec.android.app.sbrowser               com.sec.android.daemonapp               com.sec.android.gallery3d               com.sec.android.mimage.photoretouching               | diff -u - app/src/main/resources/META-INF/xposed/scope.list
+          }
+          grep -Fq 'ENABLE_ALOHAONEUI_FUNCTIONS = true' hook/src/main/java/com/alohaoneui/hook/Main.kt
+          test -f hook/src/main/java/com/alohaoneui/hook/util/AlohaOneUIStatusReporter.kt
+          test -f app/src/main/java/com/alohaoneui/app/alohaoneui/AlohaOneUIPreferenceBridge.kt
+          grep -Fq 'object AlohaOneUIPreferenceBridge' app/src/main/java/com/alohaoneui/app/alohaoneui/AlohaOneUIPreferenceBridge.kt
+          test -f app/src/main/java/com/alohaoneui/app/alohaoneui/AlohaOneUIFeatureCatalog.kt
+          test -f app/src/main/java/com/alohaoneui/app/ui/viewmodel/AlohaOneUIToolsViewModel.kt
+          test -f app/src/main/java/com/alohaoneui/app/ui/screen/tools/AlohaOneUICategoryScreen.kt
+          grep -Fq 'data class AlohaOneUICategory' app/src/main/java/com/alohaoneui/app/ui/navigation3/Routes.kt
+          grep -Fq 'AlohaOneUICategory.entries' app/src/main/java/com/alohaoneui/app/ui/screen/tools/ToolsScreen.kt
+          grep -Fq 'ENABLE_ALOHAONEUI_FUNCTIONS = true' hook/src/main/java/com/alohaoneui/hook/Main.kt
+          test ! -e hook/src/main/resources/META-INF/xposed/java_init.list
+          test ! -e hook/src/main/resources/META-INF/xposed/module.prop
+          test ! -e hook/src/main/resources/META-INF/xposed/scope.list
+          echo "Aloha OneUI API101 single-entry migration validated; full AlohaOneUI functional hooks enabled"
+
+      - name: Compile Aloha OneUI before the owner-signing gate
+        run: |
+          set -euo pipefail
+          mkdir -p diagnostics
+          chmod +x gradlew
+          ./gradlew :common:assembleDebug :stub:assembleDebug :hook:assembleDebug :app:compileDebugKotlin -PALOHAONEUI_PACKAGE_NAME=com.alohaoneui.app -PALOHAONEUI_NAME="Aloha OneUI" --stacktrace --no-daemon 2>&1 | tee diagnostics/preflight-compile.log
+
+      # GitHub does not sign Android packages automatically. Configure these FOUR
+      # repository Actions secrets once, from the same stable owner keystore:
+      # KEYSTORE_BASE64, KEYSTORE_PASSWORD, KEY_ALIAS, KEY_PASSWORD.
+      # Never fall back to a random CI debug key for an installable artifact.
+      - name: Load existing owner APK signing key
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          for key in KEYSTORE_BASE64 KEYSTORE_PASSWORD KEY_ALIAS KEY_PASSWORD; do
+            if [ -z "${!key}" ]; then
+              echo "::error::Missing Aloha OneUI repository Actions secret ${key}. Configure the existing Owner signing credentials matching the fixed Owner certificate SHA-256 baseline in this repository's Actions secrets. Cannot release a stable-signed APK without them."
+              exit 1
+            fi
+          done
+          umask 077
+          printf '%s' "$KEYSTORE_BASE64" | base64 --decode > app/owner.keystore
+          test -s app/owner.keystore
+
+      - name: Build owner-signed Aloha OneUI APK
+        env:
+          ALOHAONEUI_KEYSTORE_PATH: ${{ github.workspace }}/app/owner.keystore
+          ALOHAONEUI_KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          ALOHAONEUI_KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          ALOHAONEUI_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          mkdir -p diagnostics
+          chmod +x gradlew
+          ./gradlew "$APP_ASSEMBLE_TASK" -PALOHAONEUI_PACKAGE_NAME=com.alohaoneui.app -PALOHAONEUI_NAME="Aloha OneUI" --stacktrace --no-daemon 2>&1 | tee diagnostics/gradle-build.log
+
+      - name: Validate optimized release candidate
+        if: success() && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/migration/alohaoneui-rename-20261020' || github.ref == 'refs/heads/migration/alohaoneui-full-identity-20261020' || github.ref == 'refs/heads/test/theme-store-service-20261024')
+        env:
+          ALOHAONEUI_KEYSTORE_PATH: ${{ github.workspace }}/app/owner.keystore
+          ALOHAONEUI_KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          ALOHAONEUI_KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          ALOHAONEUI_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          EXPECTED_CERT: 93bf61a6493c6b336383832eb41301bd8fe061f43566e7e384e3fdd9fc1c26a1
+        run: |
+          set -euo pipefail
+          mkdir -p diagnostics/release-validation
+          ./gradlew :app:assembleRelease -PALOHAONEUI_PACKAGE_NAME=com.alohaoneui.app -PALOHAONEUI_NAME="Aloha OneUI" --stacktrace --no-daemon 2>&1 | tee diagnostics/release-validation/assemble-release.log
+
+          RELEASE_APK=$(find app/build/outputs/apk/release -type f -name '*.apk' | head -1)
+          test -s "$RELEASE_APK"
+          APKSIGNER="$ANDROID_HOME/build-tools/37.0.0/apksigner"
+          AAPT="$ANDROID_HOME/build-tools/37.0.0/aapt"
+
+          "$APKSIGNER" verify --verbose --print-certs "$RELEASE_APK" | tee diagnostics/release-validation/SIGNING_INFO.txt
+          grep -Fq 'Verified using v2 scheme (APK Signature Scheme v2): true' diagnostics/release-validation/SIGNING_INFO.txt
+          CERT=$(sed -n 's/^.*certificate SHA-256 digest: //p' diagnostics/release-validation/SIGNING_INFO.txt | head -1 | tr -d ': ' | tr '[:upper:]' '[:lower:]')
+          EXPECTED=$(printf '%s' "$EXPECTED_CERT" | tr -d ': ' | tr '[:upper:]' '[:lower:]')
+          test "$CERT" = "$EXPECTED"
+
+          "$AAPT" dump badging "$RELEASE_APK" | tee diagnostics/release-validation/APK_PACKAGE_INFO.txt
+          grep -q "^package: name='com.alohaoneui.app'" diagnostics/release-validation/APK_PACKAGE_INFO.txt
+          grep -q "application: label='Aloha OneUI'" diagnostics/release-validation/APK_PACKAGE_INFO.txt
+          grep -q "versionName='$VERSION_NAME'" diagnostics/release-validation/APK_PACKAGE_INFO.txt
+          grep -q "versionCode='$VERSION_CODE'" diagnostics/release-validation/APK_PACKAGE_INFO.txt
+
+          unzip -p "$RELEASE_APK" META-INF/xposed/java_init.list | grep -Fxq 'com.alohaoneui.hook.Main'
+          unzip -p "$RELEASE_APK" META-INF/xposed/module.prop | grep -Fq 'targetApiVersion=101'
+          unzip -p "$RELEASE_APK" META-INF/xposed/scope.list | grep -Fxq 'com.android.systemui'
+
+          RELEASE_SIZE=$(stat -c%s "$RELEASE_APK")
+          printf 'Optimized release APK bytes: %s\n' "$RELEASE_SIZE" | tee diagnostics/release-validation/APK_SIZE.txt
+
+      - name: Verify package, stable certificate and prepare APK
+        env:
+          EXPECTED_CERT: 93bf61a6493c6b336383832eb41301bd8fe061f43566e7e384e3fdd9fc1c26a1
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          APK=$(find "app/build/outputs/apk/$APK_OUTPUT_DIR" -type f -name '*.apk' | head -1)
+          test -s "$APK"
+          APKSIGNER="$ANDROID_HOME/build-tools/37.0.0/apksigner"
+          AAPT="$ANDROID_HOME/build-tools/37.0.0/aapt"
+          "$APKSIGNER" verify --verbose --print-certs "$APK" | tee dist/SIGNING_INFO.txt
+          grep -Fq 'Verified using v2 scheme (APK Signature Scheme v2): true' dist/SIGNING_INFO.txt
+          CERT=$(sed -n 's/^.*certificate SHA-256 digest: //p' dist/SIGNING_INFO.txt | head -1 | tr -d ': ' | tr '[:upper:]' '[:lower:]')
+          test -n "$CERT"
+          EXPECTED=$(printf '%s' "$EXPECTED_CERT" | tr -d ': ' | tr '[:upper:]' '[:lower:]')
+          if [ "$CERT" != "$EXPECTED" ]; then
+            echo '::error::Owner signing certificate does not match the fixed Owner certificate SHA-256 baseline.'
+            exit 1
+          fi
+          printf '%s\n' "$CERT" > dist/SIGNING_CERT_SHA256.txt
+          "$AAPT" dump badging "$APK" | tee dist/APK_PACKAGE_INFO.txt
+          grep -q "^package: name='com.alohaoneui.app'" dist/APK_PACKAGE_INFO.txt
+          grep -q "versionName='$VERSION_NAME'" dist/APK_PACKAGE_INFO.txt
+          grep -q "versionCode='$VERSION_CODE'" dist/APK_PACKAGE_INFO.txt
+          "$AAPT" dump xmltree "$APK" AndroidManifest.xml > dist/APK_MANIFEST_CHECK.txt
+          grep -Eq 'hasFragileUserData.*0x0$' dist/APK_MANIFEST_CHECK.txt
+          COMMIT_SUBJECT=$(git log -1 --pretty=%s)
+          if [ "$GITHUB_REF" = "refs/heads/main" ] && [[ "$COMMIT_SUBJECT" == release:* ]]; then
+            # Publish the exact Aloha asset name consumed by both the XP-to-Aloha migration check and Aloha self-updater.
+            OUTPUT_APK="AlohaOneUI_${VERSION_NAME}.apk"
+            LEGACY_OUTPUT_APK="OneUIAloha_${VERSION_NAME}.apk"
+          else
+            OUTPUT_APK="AlohaOneUI_${VERSION_NAME}_BUILD_${GITHUB_RUN_NUMBER}.apk"
+            LEGACY_OUTPUT_APK=""
+          fi
+          echo "OUTPUT_APK=$OUTPUT_APK" >> "$GITHUB_ENV"
+          echo "LEGACY_OUTPUT_APK=${LEGACY_OUTPUT_APK:-}" >> "$GITHUB_ENV"
+          cp "$APK" "dist/$OUTPUT_APK"
+          if [ -n "${LEGACY_OUTPUT_APK:-}" ]; then
+            cp "$APK" "dist/$LEGACY_OUTPUT_APK"
+          fi
+          unzip -t "dist/$OUTPUT_APK"
+          unzip -p "$APK" META-INF/xposed/java_init.list | grep -Fxq 'com.alohaoneui.hook.Main'
+          unzip -p "$APK" META-INF/xposed/module.prop | grep -Fq 'targetApiVersion=101'
+          unzip -p "$APK" META-INF/xposed/scope.list | grep -Fxq 'com.alohaoneui.app'
+          unzip -p "$APK" META-INF/xposed/scope.list | grep -Fxq 'com.android.systemui'
+          if [ -n "${LEGACY_OUTPUT_APK:-}" ]; then
+            (cd dist && sha256sum "$OUTPUT_APK" "$LEGACY_OUTPUT_APK" > SHA256SUMS)
+          else
+            (cd dist && sha256sum "$OUTPUT_APK" > SHA256SUMS)
+          fi
+
+      - name: Publish signed APK to GitHub release
+        if: success() && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/migration/') || github.ref == 'refs/heads/test/theme-store-service-20261024')
+        env:
+          SOURCE_REPO_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          SHORT_SHA="${GITHUB_SHA::7}"
+          COMMIT_SUBJECT=$(git log -1 --pretty=%s)
+          FORMAL_RELEASE=false
+          RELEASE_REPO="$GITHUB_REPOSITORY"
+          GH_TOKEN="$SOURCE_REPO_TOKEN"
+          export GH_TOKEN
+
+          if [ "$GITHUB_REF" = "refs/heads/main" ] && [[ "$COMMIT_SUBJECT" == release:* ]]; then
+            # Publish the formal signed release only to the source repository.
+            # The user manually uploads the verified APK to the separate public update feed.
+            FORMAL_RELEASE=true
+            RELEASE_REPO="$GITHUB_REPOSITORY"
+            TAG="v${VERSION_NAME}"
+            TITLE="Aloha OneUI ${VERSION_NAME}"
+            if [ "$VERSION_NAME" = "1.0.261023" ]; then
+              NOTES=$(printf 'Aloha OneUI %s 正式版。\n\n本次更新：\n- 完善全局快捷动作的功能组织与入口说明。\n- 修正主页已开启功能统计，纳入其他功能开关和全局快捷动作触发开关。\n- 完善手动配置备份/恢复，覆盖应用级设置与模块配置，并兼容旧版纯 Preference JSON 备份。\n- 恢复配置后执行完整设置同步，并区分恢复失败、恢复成功与本机恢复但尚未同步的状态。\n- 增加配置统计与备份/恢复完整性静态回归检查。\n' "$VERSION_NAME")
+            elif [ "$VERSION_NAME" = "1.0.261019" ]; then
+              NOTES=$(printf 'Aloha OneUI %s 正式版。\n\n本次修复：\n- 使用三段版本号作为过渡版本，恢复旧版更新器的识别兼容性。\n- 更新检查继续支持三段版本号与四段补丁版本号。\n- 确保 Release 版本名与 APK 内部版本号一致，避免“更新包版本不匹配”。\n' "$VERSION_NAME")
+            elif [ "$VERSION_NAME" = "1.0.261018.1" ]; then
+              NOTES=$(printf 'Aloha OneUI %s 正式版。\n\n本次修复：\n- 修复状态栏组合图标的整体缩放问题。\n- 修正状态栏组合图标设置页预览图标整体偏上的问题。\n' "$VERSION_NAME")
+            else
+              NOTES="Aloha OneUI ${VERSION_NAME} 正式版。此 Release 提供正式版 APK 下载和更新说明。"
+            fi
+            NOTES="$(printf '%s\n\n源码仓库：%s\n源码提交：%s' "$NOTES" "$GITHUB_REPOSITORY" "$GITHUB_SHA")"
+            if gh release view "$TAG" --repo "$RELEASE_REPO" >/dev/null 2>&1; then
+              echo "::error::Formal Release $TAG already exists in $RELEASE_REPO; refusing to overwrite published release assets."
+              exit 1
+            fi
+            gh release create "$TAG" \
+              --repo "$RELEASE_REPO" \
+              --target main \
+              --title "$TITLE" \
+              --notes "$NOTES" \
+              --latest
+          else
+            if [ "$GITHUB_REF" = "refs/heads/main" ]; then
+              TAG="main-build-${GITHUB_RUN_NUMBER}-$SHORT_SHA"
+              TITLE="Aloha OneUI main build #${GITHUB_RUN_NUMBER}"
+              NOTES="Automated signed main-branch test build. This is a prerelease, not a formal Aloha OneUI release."
+            else
+              if [[ "$GITHUB_REF" == refs/heads/test/* ]]; then
+                TAG="test-build-${GITHUB_RUN_NUMBER}-$SHORT_SHA"
+                TITLE="Aloha OneUI test build #${GITHUB_RUN_NUMBER}"
+                NOTES="Signed test build. Validate on Samsung hardware before merging to main."
+              else
+                TAG="migration-build-${GITHUB_RUN_NUMBER}-$SHORT_SHA"
+                TITLE="Aloha OneUI migration build #${GITHUB_RUN_NUMBER}"
+                NOTES="Signed migration test build. Validate on Samsung hardware before merging to main."
+              fi
+            fi
+
+            if ! gh release view "$TAG" --repo "$RELEASE_REPO" >/dev/null 2>&1; then
+              gh release create "$TAG" \
+                --repo "$RELEASE_REPO" \
+                --target "$GITHUB_SHA" \
+                --title "$TITLE" \
+                --notes "$NOTES" \
+                --prerelease
+            fi
+          fi
+
+          test -n "$OUTPUT_APK"
+          if [ "$FORMAL_RELEASE" = true ]; then
+            gh release upload "$TAG" \
+              --repo "$RELEASE_REPO" \
+              "dist/$OUTPUT_APK" \
+              "dist/$LEGACY_OUTPUT_APK" \
+              dist/SHA256SUMS \
+              dist/SIGNING_INFO.txt \
+              dist/APK_PACKAGE_INFO.txt \
+              --clobber
+            echo "Published formal signed APK and verification files to Aloha release repository: $RELEASE_REPO / $TAG"
+
+          else
+            gh release upload "$TAG" \
+              --repo "$RELEASE_REPO" \
+              "dist/$OUTPUT_APK" \
+              dist/SHA256SUMS \
+              dist/SIGNING_INFO.txt \
+              dist/APK_PACKAGE_INFO.txt \
+              --clobber
+            echo "Published signed test APK to source repository prerelease: $RELEASE_REPO / $TAG"
+          fi
+
+      - name: Save Gradle diagnostics on failure
+        if: failure()
+        run: |
+          mkdir -p diagnostics
+          find . -path '*/build/reports/problems/*' -type f -exec cp --parents {} diagnostics/ \; || true
+      - name: Retain signed APK and verification files as an Actions Artifact
+        uses: actions/upload-artifact@v4
+        continue-on-error: true
+        if: always() && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/test/')) && hashFiles('dist/*.apk') != ''
+        with:
+          name: ${{ startsWith(github.ref, 'refs/heads/test/') && 'AlohaOneUI-Signed-Test-APK' || 'AlohaOneUI-Owner-Signed' }}
+          path: dist/
+          if-no-files-found: error
+      - name: Optionally upload build diagnostics
+        uses: actions/upload-artifact@v4
+        continue-on-error: true
+        if: failure()
+        with:
+          name: AlohaOneUI-Build-Diagnostics
+          path: diagnostics/
+          if-no-files-found: warn
+ app/src/main/resources/META-INF/xposed/scope.list)
+          test "$SCOPE_COUNT" -eq 27
+          diff -u hook/src/main/resources/META-INF/xposed/scope.list app/src/main/resources/META-INF/xposed/scope.list 2>/dev/null || {
+            printf '%s\n'               com.alohaoneui.app               system               com.android.settings               com.android.systemui               com.samsung.android.app.notes               com.samsung.android.app.sketchbook               com.samsung.android.app.telephonyui               com.samsung.android.calendar               com.samsung.android.da.daagent               com.samsung.android.dialer               com.samsung.android.incallui               com.samsung.android.mdecservice               com.samsung.android.messaging               com.samsung.android.service.airviewdictionary               com.samsung.android.shealthmonitor               com.samsung.android.sm_cn               com.samsung.android.themecenter               com.samsung.android.themestore               com.samsung.android.video               com.samsung.android.app.watchmanager               com.sec.android.app.camera               com.sec.android.app.launcher               com.sec.android.app.samsungapps               com.sec.android.app.sbrowser               com.sec.android.daemonapp               com.sec.android.gallery3d               com.sec.android.mimage.photoretouching               | diff -u - app/src/main/resources/META-INF/xposed/scope.list
+          }
+          grep -Fq 'ENABLE_ALOHAONEUI_FUNCTIONS = true' hook/src/main/java/com/alohaoneui/hook/Main.kt
+          test -f hook/src/main/java/com/alohaoneui/hook/util/AlohaOneUIStatusReporter.kt
+          test -f app/src/main/java/com/alohaoneui/app/alohaoneui/AlohaOneUIPreferenceBridge.kt
+          grep -Fq 'object AlohaOneUIPreferenceBridge' app/src/main/java/com/alohaoneui/app/alohaoneui/AlohaOneUIPreferenceBridge.kt
+          test -f app/src/main/java/com/alohaoneui/app/alohaoneui/AlohaOneUIFeatureCatalog.kt
+          test -f app/src/main/java/com/alohaoneui/app/ui/viewmodel/AlohaOneUIToolsViewModel.kt
+          test -f app/src/main/java/com/alohaoneui/app/ui/screen/tools/AlohaOneUICategoryScreen.kt
+          grep -Fq 'data class AlohaOneUICategory' app/src/main/java/com/alohaoneui/app/ui/navigation3/Routes.kt
+          grep -Fq 'AlohaOneUICategory.entries' app/src/main/java/com/alohaoneui/app/ui/screen/tools/ToolsScreen.kt
+          grep -Fq 'ENABLE_ALOHAONEUI_FUNCTIONS = true' hook/src/main/java/com/alohaoneui/hook/Main.kt
+          test ! -e hook/src/main/resources/META-INF/xposed/java_init.list
+          test ! -e hook/src/main/resources/META-INF/xposed/module.prop
+          test ! -e hook/src/main/resources/META-INF/xposed/scope.list
+          echo "Aloha OneUI API101 single-entry migration validated; full AlohaOneUI functional hooks enabled"
+
+      - name: Compile Aloha OneUI before the owner-signing gate
+        run: |
+          set -euo pipefail
+          mkdir -p diagnostics
+          chmod +x gradlew
+          ./gradlew :common:assembleDebug :stub:assembleDebug :hook:assembleDebug :app:compileDebugKotlin -PALOHAONEUI_PACKAGE_NAME=com.alohaoneui.app -PALOHAONEUI_NAME="Aloha OneUI" --stacktrace --no-daemon 2>&1 | tee diagnostics/preflight-compile.log
+
+      # GitHub does not sign Android packages automatically. Configure these FOUR
+      # repository Actions secrets once, from the same stable owner keystore:
+      # KEYSTORE_BASE64, KEYSTORE_PASSWORD, KEY_ALIAS, KEY_PASSWORD.
+      # Never fall back to a random CI debug key for an installable artifact.
+      - name: Load existing owner APK signing key
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          for key in KEYSTORE_BASE64 KEYSTORE_PASSWORD KEY_ALIAS KEY_PASSWORD; do
+            if [ -z "${!key}" ]; then
+              echo "::error::Missing Aloha OneUI repository Actions secret ${key}. Configure the existing Owner signing credentials matching the fixed Owner certificate SHA-256 baseline in this repository's Actions secrets. Cannot release a stable-signed APK without them."
+              exit 1
+            fi
+          done
+          umask 077
+          printf '%s' "$KEYSTORE_BASE64" | base64 --decode > app/owner.keystore
+          test -s app/owner.keystore
+
+      - name: Build owner-signed Aloha OneUI APK
+        env:
+          ALOHAONEUI_KEYSTORE_PATH: ${{ github.workspace }}/app/owner.keystore
+          ALOHAONEUI_KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          ALOHAONEUI_KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          ALOHAONEUI_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          mkdir -p diagnostics
+          chmod +x gradlew
+          ./gradlew "$APP_ASSEMBLE_TASK" -PALOHAONEUI_PACKAGE_NAME=com.alohaoneui.app -PALOHAONEUI_NAME="Aloha OneUI" --stacktrace --no-daemon 2>&1 | tee diagnostics/gradle-build.log
+
+      - name: Validate optimized release candidate
+        if: success() && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/migration/alohaoneui-rename-20261020' || github.ref == 'refs/heads/migration/alohaoneui-full-identity-20261020' || github.ref == 'refs/heads/test/theme-store-service-20261024')
+        env:
+          ALOHAONEUI_KEYSTORE_PATH: ${{ github.workspace }}/app/owner.keystore
+          ALOHAONEUI_KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          ALOHAONEUI_KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          ALOHAONEUI_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          EXPECTED_CERT: 93bf61a6493c6b336383832eb41301bd8fe061f43566e7e384e3fdd9fc1c26a1
+        run: |
+          set -euo pipefail
+          mkdir -p diagnostics/release-validation
+          ./gradlew :app:assembleRelease -PALOHAONEUI_PACKAGE_NAME=com.alohaoneui.app -PALOHAONEUI_NAME="Aloha OneUI" --stacktrace --no-daemon 2>&1 | tee diagnostics/release-validation/assemble-release.log
+
+          RELEASE_APK=$(find app/build/outputs/apk/release -type f -name '*.apk' | head -1)
+          test -s "$RELEASE_APK"
+          APKSIGNER="$ANDROID_HOME/build-tools/37.0.0/apksigner"
+          AAPT="$ANDROID_HOME/build-tools/37.0.0/aapt"
+
+          "$APKSIGNER" verify --verbose --print-certs "$RELEASE_APK" | tee diagnostics/release-validation/SIGNING_INFO.txt
+          grep -Fq 'Verified using v2 scheme (APK Signature Scheme v2): true' diagnostics/release-validation/SIGNING_INFO.txt
+          CERT=$(sed -n 's/^.*certificate SHA-256 digest: //p' diagnostics/release-validation/SIGNING_INFO.txt | head -1 | tr -d ': ' | tr '[:upper:]' '[:lower:]')
+          EXPECTED=$(printf '%s' "$EXPECTED_CERT" | tr -d ': ' | tr '[:upper:]' '[:lower:]')
+          test "$CERT" = "$EXPECTED"
+
+          "$AAPT" dump badging "$RELEASE_APK" | tee diagnostics/release-validation/APK_PACKAGE_INFO.txt
+          grep -q "^package: name='com.alohaoneui.app'" diagnostics/release-validation/APK_PACKAGE_INFO.txt
+          grep -q "application: label='Aloha OneUI'" diagnostics/release-validation/APK_PACKAGE_INFO.txt
+          grep -q "versionName='$VERSION_NAME'" diagnostics/release-validation/APK_PACKAGE_INFO.txt
+          grep -q "versionCode='$VERSION_CODE'" diagnostics/release-validation/APK_PACKAGE_INFO.txt
+
+          unzip -p "$RELEASE_APK" META-INF/xposed/java_init.list | grep -Fxq 'com.alohaoneui.hook.Main'
+          unzip -p "$RELEASE_APK" META-INF/xposed/module.prop | grep -Fq 'targetApiVersion=101'
+          unzip -p "$RELEASE_APK" META-INF/xposed/scope.list | grep -Fxq 'com.android.systemui'
+
+          RELEASE_SIZE=$(stat -c%s "$RELEASE_APK")
+          printf 'Optimized release APK bytes: %s\n' "$RELEASE_SIZE" | tee diagnostics/release-validation/APK_SIZE.txt
+
+      - name: Verify package, stable certificate and prepare APK
+        env:
+          EXPECTED_CERT: 93bf61a6493c6b336383832eb41301bd8fe061f43566e7e384e3fdd9fc1c26a1
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          APK=$(find "app/build/outputs/apk/$APK_OUTPUT_DIR" -type f -name '*.apk' | head -1)
+          test -s "$APK"
+          APKSIGNER="$ANDROID_HOME/build-tools/37.0.0/apksigner"
+          AAPT="$ANDROID_HOME/build-tools/37.0.0/aapt"
+          "$APKSIGNER" verify --verbose --print-certs "$APK" | tee dist/SIGNING_INFO.txt
+          grep -Fq 'Verified using v2 scheme (APK Signature Scheme v2): true' dist/SIGNING_INFO.txt
+          CERT=$(sed -n 's/^.*certificate SHA-256 digest: //p' dist/SIGNING_INFO.txt | head -1 | tr -d ': ' | tr '[:upper:]' '[:lower:]')
+          test -n "$CERT"
+          EXPECTED=$(printf '%s' "$EXPECTED_CERT" | tr -d ': ' | tr '[:upper:]' '[:lower:]')
+          if [ "$CERT" != "$EXPECTED" ]; then
+            echo '::error::Owner signing certificate does not match the fixed Owner certificate SHA-256 baseline.'
+            exit 1
+          fi
+          printf '%s\n' "$CERT" > dist/SIGNING_CERT_SHA256.txt
+          "$AAPT" dump badging "$APK" | tee dist/APK_PACKAGE_INFO.txt
+          grep -q "^package: name='com.alohaoneui.app'" dist/APK_PACKAGE_INFO.txt
+          grep -q "versionName='$VERSION_NAME'" dist/APK_PACKAGE_INFO.txt
+          grep -q "versionCode='$VERSION_CODE'" dist/APK_PACKAGE_INFO.txt
+          "$AAPT" dump xmltree "$APK" AndroidManifest.xml > dist/APK_MANIFEST_CHECK.txt
+          grep -Eq 'hasFragileUserData.*0x0$' dist/APK_MANIFEST_CHECK.txt
+          COMMIT_SUBJECT=$(git log -1 --pretty=%s)
+          if [ "$GITHUB_REF" = "refs/heads/main" ] && [[ "$COMMIT_SUBJECT" == release:* ]]; then
+            # Publish the exact Aloha asset name consumed by both the XP-to-Aloha migration check and Aloha self-updater.
+            OUTPUT_APK="AlohaOneUI_${VERSION_NAME}.apk"
+            LEGACY_OUTPUT_APK="OneUIAloha_${VERSION_NAME}.apk"
+          else
+            OUTPUT_APK="AlohaOneUI_${VERSION_NAME}_BUILD_${GITHUB_RUN_NUMBER}.apk"
+            LEGACY_OUTPUT_APK=""
+          fi
+          echo "OUTPUT_APK=$OUTPUT_APK" >> "$GITHUB_ENV"
+          echo "LEGACY_OUTPUT_APK=${LEGACY_OUTPUT_APK:-}" >> "$GITHUB_ENV"
+          cp "$APK" "dist/$OUTPUT_APK"
+          if [ -n "${LEGACY_OUTPUT_APK:-}" ]; then
+            cp "$APK" "dist/$LEGACY_OUTPUT_APK"
+          fi
+          unzip -t "dist/$OUTPUT_APK"
+          unzip -p "$APK" META-INF/xposed/java_init.list | grep -Fxq 'com.alohaoneui.hook.Main'
+          unzip -p "$APK" META-INF/xposed/module.prop | grep -Fq 'targetApiVersion=101'
+          unzip -p "$APK" META-INF/xposed/scope.list | grep -Fxq 'com.alohaoneui.app'
+          unzip -p "$APK" META-INF/xposed/scope.list | grep -Fxq 'com.android.systemui'
+          if [ -n "${LEGACY_OUTPUT_APK:-}" ]; then
+            (cd dist && sha256sum "$OUTPUT_APK" "$LEGACY_OUTPUT_APK" > SHA256SUMS)
+          else
+            (cd dist && sha256sum "$OUTPUT_APK" > SHA256SUMS)
+          fi
+
+      - name: Publish signed APK to GitHub release
+        if: success() && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/migration/') || github.ref == 'refs/heads/test/theme-store-service-20261024')
+        env:
+          SOURCE_REPO_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          SHORT_SHA="${GITHUB_SHA::7}"
+          COMMIT_SUBJECT=$(git log -1 --pretty=%s)
+          FORMAL_RELEASE=false
+          RELEASE_REPO="$GITHUB_REPOSITORY"
+          GH_TOKEN="$SOURCE_REPO_TOKEN"
+          export GH_TOKEN
+
+          if [ "$GITHUB_REF" = "refs/heads/main" ] && [[ "$COMMIT_SUBJECT" == release:* ]]; then
+            # Publish the formal signed release only to the source repository.
+            # The user manually uploads the verified APK to the separate public update feed.
+            FORMAL_RELEASE=true
+            RELEASE_REPO="$GITHUB_REPOSITORY"
+            TAG="v${VERSION_NAME}"
+            TITLE="Aloha OneUI ${VERSION_NAME}"
+            if [ "$VERSION_NAME" = "1.0.261023" ]; then
+              NOTES=$(printf 'Aloha OneUI %s 正式版。\n\n本次更新：\n- 完善全局快捷动作的功能组织与入口说明。\n- 修正主页已开启功能统计，纳入其他功能开关和全局快捷动作触发开关。\n- 完善手动配置备份/恢复，覆盖应用级设置与模块配置，并兼容旧版纯 Preference JSON 备份。\n- 恢复配置后执行完整设置同步，并区分恢复失败、恢复成功与本机恢复但尚未同步的状态。\n- 增加配置统计与备份/恢复完整性静态回归检查。\n' "$VERSION_NAME")
+            elif [ "$VERSION_NAME" = "1.0.261019" ]; then
+              NOTES=$(printf 'Aloha OneUI %s 正式版。\n\n本次修复：\n- 使用三段版本号作为过渡版本，恢复旧版更新器的识别兼容性。\n- 更新检查继续支持三段版本号与四段补丁版本号。\n- 确保 Release 版本名与 APK 内部版本号一致，避免“更新包版本不匹配”。\n' "$VERSION_NAME")
+            elif [ "$VERSION_NAME" = "1.0.261018.1" ]; then
+              NOTES=$(printf 'Aloha OneUI %s 正式版。\n\n本次修复：\n- 修复状态栏组合图标的整体缩放问题。\n- 修正状态栏组合图标设置页预览图标整体偏上的问题。\n' "$VERSION_NAME")
+            else
+              NOTES="Aloha OneUI ${VERSION_NAME} 正式版。此 Release 提供正式版 APK 下载和更新说明。"
+            fi
+            NOTES="$(printf '%s\n\n源码仓库：%s\n源码提交：%s' "$NOTES" "$GITHUB_REPOSITORY" "$GITHUB_SHA")"
+            if gh release view "$TAG" --repo "$RELEASE_REPO" >/dev/null 2>&1; then
+              echo "::error::Formal Release $TAG already exists in $RELEASE_REPO; refusing to overwrite published release assets."
+              exit 1
+            fi
+            gh release create "$TAG" \
+              --repo "$RELEASE_REPO" \
+              --target main \
+              --title "$TITLE" \
+              --notes "$NOTES" \
+              --latest
+          else
+            if [ "$GITHUB_REF" = "refs/heads/main" ]; then
+              TAG="main-build-${GITHUB_RUN_NUMBER}-$SHORT_SHA"
+              TITLE="Aloha OneUI main build #${GITHUB_RUN_NUMBER}"
+              NOTES="Automated signed main-branch test build. This is a prerelease, not a formal Aloha OneUI release."
+            else
+              if [[ "$GITHUB_REF" == refs/heads/test/* ]]; then
+                TAG="test-build-${GITHUB_RUN_NUMBER}-$SHORT_SHA"
+                TITLE="Aloha OneUI test build #${GITHUB_RUN_NUMBER}"
+                NOTES="Signed test build. Validate on Samsung hardware before merging to main."
+              else
+                TAG="migration-build-${GITHUB_RUN_NUMBER}-$SHORT_SHA"
+                TITLE="Aloha OneUI migration build #${GITHUB_RUN_NUMBER}"
+                NOTES="Signed migration test build. Validate on Samsung hardware before merging to main."
+              fi
+            fi
+
+            if ! gh release view "$TAG" --repo "$RELEASE_REPO" >/dev/null 2>&1; then
+              gh release create "$TAG" \
+                --repo "$RELEASE_REPO" \
+                --target "$GITHUB_SHA" \
+                --title "$TITLE" \
+                --notes "$NOTES" \
+                --prerelease
+            fi
+          fi
+
+          test -n "$OUTPUT_APK"
+          if [ "$FORMAL_RELEASE" = true ]; then
+            gh release upload "$TAG" \
+              --repo "$RELEASE_REPO" \
+              "dist/$OUTPUT_APK" \
+              "dist/$LEGACY_OUTPUT_APK" \
+              dist/SHA256SUMS \
+              dist/SIGNING_INFO.txt \
+              dist/APK_PACKAGE_INFO.txt \
+              --clobber
+            echo "Published formal signed APK and verification files to Aloha release repository: $RELEASE_REPO / $TAG"
+
+          else
+            gh release upload "$TAG" \
+              --repo "$RELEASE_REPO" \
+              "dist/$OUTPUT_APK" \
+              dist/SHA256SUMS \
+              dist/SIGNING_INFO.txt \
+              dist/APK_PACKAGE_INFO.txt \
+              --clobber
+            echo "Published signed test APK to source repository prerelease: $RELEASE_REPO / $TAG"
+          fi
+
+      - name: Save Gradle diagnostics on failure
+        if: failure()
+        run: |
+          mkdir -p diagnostics
+          find . -path '*/build/reports/problems/*' -type f -exec cp --parents {} diagnostics/ \; || true
+      - name: Retain signed APK and verification files as an Actions Artifact
+        uses: actions/upload-artifact@v4
+        continue-on-error: true
+        if: always() && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/test/')) && hashFiles('dist/*.apk') != ''
+        with:
+          name: ${{ startsWith(github.ref, 'refs/heads/test/') && 'AlohaOneUI-Signed-Test-APK' || 'AlohaOneUI-Owner-Signed' }}
+          path: dist/
+          if-no-files-found: error
+      - name: Optionally upload build diagnostics
+        uses: actions/upload-artifact@v4
+        continue-on-error: true
+        if: failure()
+        with:
+          name: AlohaOneUI-Build-Diagnostics
+          path: diagnostics/
+          if-no-files-found: warn
+ app/src/main/resources/META-INF/xposed/scope.list)
           test "$SCOPE_COUNT" -eq 27
           diff -u hook/src/main/resources/META-INF/xposed/scope.list app/src/main/resources/META-INF/xposed/scope.list 2>/dev/null || {
             printf '%s\n'               com.alohaoneui.app               system               com.android.settings               com.android.systemui               com.samsung.android.app.notes               com.samsung.android.app.sketchbook               com.samsung.android.app.telephonyui               com.samsung.android.calendar               com.samsung.android.da.daagent               com.samsung.android.dialer               com.samsung.android.incallui               com.samsung.android.mdecservice               com.samsung.android.messaging               com.samsung.android.service.airviewdictionary               com.samsung.android.shealthmonitor               com.samsung.android.sm_cn               com.samsung.android.themecenter               com.samsung.android.themestore               com.samsung.android.video               com.samsung.android.app.watchmanager               com.sec.android.app.camera               com.sec.android.app.launcher               com.sec.android.app.samsungapps               com.sec.android.app.sbrowser               com.sec.android.daemonapp               com.sec.android.gallery3d               com.sec.android.mimage.photoretouching               | diff -u - app/src/main/resources/META-INF/xposed/scope.list
