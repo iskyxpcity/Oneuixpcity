@@ -72,9 +72,24 @@ object GlobalQuickActions {
     internal var floatingBallStartY = 0
     internal var floatingBallTouchDownTime = 0L
     @Volatile internal var floatingBallTouchPointerId = -1
+    /** Uptime of the current touch-down; used to self-heal a leaked touch state. */
+    @Volatile internal var floatingBallTouchDownAtMs = 0L
+    internal var floatingBallLastRawX = 0f
+    internal var floatingBallLastRawY = 0f
+    internal var floatingBallLongPressCancelled = false
+    /** Display width sampled on touch-down so per-frame drag math stays cheap. */
+    internal var floatingBallDragDisplayWidth = 0
+    /** Side docked at touch-down: -1 left, 1 right, 0 floating. */
+    internal var floatingBallDockedAtDown = 0
+    /** Current docked side: -1 left marker, 1 right marker, 0 full ball. */
+    @Volatile internal var floatingBallDockedSide = 0
+    /** Last free-floating position; tapping the marker restores the ball here. */
+    internal var floatingBallFreeX = -1
+    internal var floatingBallFreeY = -1
     internal var floatingBallLastTapTime = 0L
     internal var floatingBallMoved = false
     internal var floatingBallDragging = false
+    @Volatile internal var floatingBallPositionChanged = false
     @Volatile internal var floatingBallTouchActive = false
     internal var floatingBallLongPressRunnable: Runnable? = null
     internal var floatingBallPendingClickRunnable: Runnable? = null
@@ -255,7 +270,7 @@ object GlobalQuickActions {
             appendLine("viewPresent=${view != null} attached=${view?.isAttachedToWindow} viewSize=${view?.width}x${view?.height} visibility=${view?.visibility}")
             appendLine("paramsPresent=${params != null} x=${params?.x} y=${params?.y} width=${params?.width} height=${params?.height} windowManagerPresent=${floatingBallWindowManager != null}")
             appendLine("timerArmed=${floatingBallAutoEdgeRunnable != null} timerHostMatchesView=${floatingBallAutoEdgeHost === view} generation=${floatingBallAutoEdgeGeneration} dragging=${floatingBallDragging} touchActive=${floatingBallTouchActive} touchPointerId=${floatingBallTouchPointerId} touchDownTime=${floatingBallTouchDownTime}")
-            appendLine("savedX=${floatingBallX} savedY=${floatingBallY}")
+            appendLine("savedX=${floatingBallX} savedY=${floatingBallY} dockedSide=${floatingBallDockedSide} freeX=${floatingBallFreeX} freeY=${floatingBallFreeY}")
             appendLine("lastGlobalAction=$lastGlobalActionDiagnostic")
         }
     }

@@ -469,7 +469,7 @@ data class Preference(
         val floatingBallEnabled: Boolean = false,
         val floatingBallColorArgb: Int = 0xAA5E7CFF.toInt(),
         val floatingBallSizeDp: Int = 56,
-        val floatingBallAutoEdgeDelaySeconds: Int = 0,
+        val floatingBallAutoEdgeDelaySeconds: Int = 3,
         val floatingBallHapticEnabled: Boolean = false,
         val floatingBallHapticStrength: Int = 60,
         val floatingBallClickAction: String = "none",
