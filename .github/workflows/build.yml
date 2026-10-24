@@ -46,6 +46,28 @@ jobs:
         with:
           ref: ${{ github.ref == 'refs/heads/migration/alohaoneui-rename-20261020' && github.ref_name || github.sha }}
           fetch-depth: 0
+      - name: Enforce fixed app version on test branches
+        if: startsWith(github.ref, 'refs/heads/test/')
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          python3 - <<'PY'
+          from pathlib import Path
+          import subprocess
+          def read_values(text):
+              values = {}
+              for line in text.splitlines():
+                  if line.startswith(("alohaOneUIVersionName=", "alohaOneUIVersionCode=")):
+                      key, value = line.split("=", 1)
+                      values[key] = value.strip()
+              return values
+          branch = read_values(Path("gradle.properties").read_text())
+          main = read_values(subprocess.check_output(["git", "show", "origin/main:gradle.properties"], text=True))
+          for key in ("alohaOneUIVersionName", "alohaOneUIVersionCode"):
+              if branch.get(key) != main.get(key):
+                  raise SystemExit(f"Test branches must reuse main's {key}: test={branch.get(key)!r}, main={main.get(key)!r}. Only formal releases may increment app version values.")
+          print("Test version identity matches main; no app version increment allowed on test branches.")
+          PY
       - name: Read Aloha OneUI version
         run: |
           set -euo pipefail
