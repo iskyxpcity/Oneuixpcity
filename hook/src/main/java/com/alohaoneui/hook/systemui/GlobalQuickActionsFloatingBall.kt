@@ -566,6 +566,10 @@ internal fun GlobalQuickActions.handleFloatingBallTouch(
             }
             floatingBallLastTapTime = event.eventTime
             resetFloatingBallInnerOffset(view)
+            // Arm the idle timer before synchronous action dispatch, so action execution
+            // cannot prevent the release path from restoring auto-edge scheduling.
+            floatingBallTouchActive = false
+            armFloatingBallIdleAutoEdge(context, windowManager, view, params)
             if (action != ACTION_NONE) {
                 runCatching {
                     performHapticFeedback(context, settings.hapticEnabled, settings.hapticStrength)
@@ -578,8 +582,6 @@ internal fun GlobalQuickActions.handleFloatingBallTouch(
                     )
                 }
             }
-            floatingBallTouchActive = false
-            armFloatingBallIdleAutoEdge(context, windowManager, view, params)
         }
         MotionEvent.ACTION_CANCEL -> {
             floatingBallTouchPointerId = -1
