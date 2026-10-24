@@ -1934,9 +1934,9 @@ private fun ShortcutActionChip(
             modifier = chipModifier,
             shape = shape,
             colors = CardDefaults.cardColors(
-                containerColor = if (selected) accent else container,
+                containerColor = if (selected) MaterialTheme.colorScheme.primary else container,
             ),
-            border = if (selected) null else BorderStroke(1.dp, stroke),
+            border = null,
         ) {
             Box(
                 modifier = Modifier.fillMaxSize().padding(horizontal = 12.dp),
@@ -1944,7 +1944,7 @@ private fun ShortcutActionChip(
             ) {
                 Text(
                     label,
-                    color = if (selected) MaterialTheme.colorScheme.onPrimary else content,
+                    color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
                     fontSize = 14.sp,
                     fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
                     maxLines = 1,
@@ -1953,10 +1953,10 @@ private fun ShortcutActionChip(
             }
         }
         UiMode.Miuix -> MiuixCard(
-            modifier = chipModifier.border(1.dp, if (selected) accent else stroke, shape),
+            modifier = chipModifier,
             cornerRadius = 16.dp,
             colors = MiuixCardDefaults.defaultColors(
-                color = if (selected) accent else container,
+                color = if (selected) colorScheme.primary else container,
             ),
             insideMargin = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
             showIndication = true,
@@ -1969,7 +1969,7 @@ private fun ShortcutActionChip(
                 MiuixText(
                     label,
                     modifier = Modifier.fillMaxWidth(),
-                    color = if (selected) Color.White else content,
+                    color = if (selected) colorScheme.onPrimary else colorScheme.onSurfaceContainerHigh,
                     fontSize = 14.sp,
                     fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
                 )
