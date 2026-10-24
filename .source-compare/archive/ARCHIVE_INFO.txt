@@ -1,3 +1,0 @@
-Source: iskyxpcity/AppData main / 悬浮球模块源码.rar
-Expected archive SHA: e1ded8f4264d677529d7341262e4ea83608e6ba5 (Git blob)
-This directory is temporary comparison material, not application source.
