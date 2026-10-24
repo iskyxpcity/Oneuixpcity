@@ -108,6 +108,7 @@ import com.alohaoneui.mod.ui.category.DetailPaneSketchBook
 import com.alohaoneui.mod.ui.category.DetailPaneSystemUI
 import com.alohaoneui.mod.ui.category.SystemUIEvent
 import com.alohaoneui.mod.ui.category.DetailPaneThemeCenter
+import com.alohaoneui.mod.ui.category.DetailPaneThemeStoreService
 import com.alohaoneui.mod.ui.category.DetailPaneVideo
 import com.alohaoneui.mod.ui.category.DetailPaneWatchManager
 import com.alohaoneui.mod.ui.category.DetailPaneWeather
@@ -129,6 +130,7 @@ import com.alohaoneui.mod.ui.category.onSettingsEvent
 import com.alohaoneui.mod.ui.category.onSketchBookEvent
 import com.alohaoneui.mod.ui.category.onSystemUIEvent
 import com.alohaoneui.mod.ui.category.onThemeCenterEvent
+import com.alohaoneui.mod.ui.category.onThemeStoreServiceEvent
 import com.alohaoneui.mod.ui.category.onVideoEvent
 import com.alohaoneui.mod.ui.category.WatchManagerEvent
 import com.alohaoneui.mod.ui.category.onWatchManagerEvent
@@ -293,6 +295,7 @@ private fun AlohaOneUIOriginalCategoryScreen(
             AlohaOneUICategory.SketchBook -> DetailPaneSketchBook(preference.other, toolsViewModel::onSketchBookEvent, modifier)
             AlohaOneUICategory.SPen -> DetailPaneSPen(preference.other, toolsViewModel::onSPenEvent, modifier)
             AlohaOneUICategory.ThemeCenter -> DetailPaneThemeCenter(preference.other, toolsViewModel::onThemeCenterEvent, modifier)
+            AlohaOneUICategory.ThemeStoreService -> DetailPaneThemeStoreService(preference.other, toolsViewModel::onThemeStoreServiceEvent, modifier)
             AlohaOneUICategory.Video -> DetailPaneVideo(preference.other, toolsViewModel::onVideoEvent, modifier)
             AlohaOneUICategory.WatchManager -> DetailPaneWatchManager(preference.other, toolsViewModel::onWatchManagerEvent, modifier)
             AlohaOneUICategory.Weather -> DetailPaneWeather(preference.other, toolsViewModel::onWeatherEvent, modifier)

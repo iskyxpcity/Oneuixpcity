@@ -18,6 +18,10 @@ internal fun alohaOneUICategoryTitle(category: AlohaOneUICategory): String {
     val context = LocalContext.current
     val key = "alohaoneui_category_${category.name.lowercase()}"
     return remember(category, context.resources.configuration.locales) {
+        if (category == AlohaOneUICategory.ThemeStoreService) {
+            return@remember resolveString(context, listOf("alohaoneui_category_themestoreservice"))
+                ?: category.fallbackTitle
+        }
         val packageManager = context.packageManager
         val installedLabel = runCatching {
             packageManager.getApplicationInfo(category.packageName, 0)

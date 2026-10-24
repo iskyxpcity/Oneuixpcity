@@ -169,6 +169,10 @@
     <string name="alohaoneui_enableChineseHolidayDisplay_title">日历中显示中国节假日</string>
     <string name="alohaoneui_supportBlockMessage_title">支持拦截短信</string>
     <string name="alohaoneui_setThemeTrialNeverExpired_title">主题和图标试用永不过期</string>
+    <string name="alohaoneui_category_themestoreservice">主题商店服务</string>
+    <string name="alohaoneui_setThemeStoreRegion_title">切换主题商店地区</string>
+    <string name="alohaoneui_setThemeStoreRegion_summary">伪装国家、CSC、语言与 MCC/MNC。切换后重新打开主题商店即可。</string>
+    <string name="alohaoneui_themeStoreRegion_current">当前地区：%1$s</string>
     <string name="alohaoneui_spoofBrowserCountryCodeToUS_title">伪装浏览器国家/地区代码为美国</string>
     <string name="alohaoneui_spoofBrowserCountryCodeToUS_summary">自定义搜索引擎、广告拦截器</string>
     <string name="alohaoneui_showGeocodedLocationInRecentCall_title">显示来电归属地</string>

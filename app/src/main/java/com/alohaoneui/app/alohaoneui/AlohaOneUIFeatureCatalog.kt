@@ -34,6 +34,7 @@ enum class AlohaOneUICategory(
     SketchBook(Package.SKETCH_BOOK, "SketchBook"),
     SPen(Package.TRANSLATION, "S Pen translation"),
     ThemeCenter(Package.THEME_CENTER, "Galaxy Themes"),
+    ThemeStoreService(Package.THEME_STORE, "主题商店服务"),
     Video(Package.VIDEO, "Samsung Video"),
     WatchManager(Package.WATCH_MANAGER, "Galaxy Wearable"),
     Weather(Package.WEATHER, "Weather"),
@@ -390,6 +391,10 @@ object AlohaOneUIFeatureCatalog {
         AlohaOneUICategory.ThemeCenter to toggles(
             "Galaxy Themes",
             "other.setThemeTrialNeverExpired",
+        ),
+        AlohaOneUICategory.ThemeStoreService to toggles(
+            "Theme Store Service",
+            "other.setThemeStoreRegion",
         ),
         AlohaOneUICategory.Video to toggles(
             "Samsung Video",
