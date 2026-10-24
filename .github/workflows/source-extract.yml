@@ -1,4 +1,4 @@
-name: Temporary theme-store source extraction
+name: Temporary theme store integration
 on:
   push:
     branches: [ "work/theme-store-source-extract-20261024" ]
@@ -6,63 +6,34 @@ on:
       - ".github/workflows/source-extract.yml"
       - "tools/theme-store-source.rar.b64"
 permissions:
-  contents: read
-  actions: write
+  contents: write
 jobs:
-  extract:
+  integrate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Decode archive and extract RAR5
+        with:
+          persist-credentials: true
+      - name: Decode and extract supplied source archive
         shell: bash
         run: |
           set -euo pipefail
           base64 -d tools/theme-store-source.rar.b64 > /tmp/theme-store-source.rar
-          file /tmp/theme-store-source.rar
           sudo apt-get update
           sudo apt-get install -y p7zip-full
           mkdir -p extracted
           7z x /tmp/theme-store-source.rar -oextracted -y
-          find extracted -type f -printf '%P\t%s bytes\n' | sort | tee extracted-files.txt
-          test "$(find extracted -type f | wc -l)" -gt 0
-          mkdir -p compare/source compare/target
-          for p in \
-            app/src/main/java/com/alohaoneui/app/ui/screen/tools/AlohaOneUICategoryScreen.kt \
-            app/src/main/java/com/alohaoneui/app/ui/screen/tools/AlohaOneUIUiResources.kt \
-            app/src/main/java/com/alohaoneui/app/ui/screen/tools/OtherFunctionsScreen.kt \
-            app/src/main/java/com/alohaoneui/app/ui/screen/tools/ToolsScreen.kt \
-            app/src/main/java/com/alohaoneui/app/ui/navigation3/Routes.kt \
-            app/src/main/java/com/alohaoneui/mod/ui/category/DetailPaneThemeCenter.kt \
-            app/src/main/res/values/alohaoneui_strings.xml \
-            app/src/main/res/values-zh-rCN/alohaoneui_strings.xml \
-            app/src/main/res/values/statusbar_xposed.xml \
-            common/src/main/java/com/alohaoneui/common/Package.kt \
-            common/src/main/java/com/alohaoneui/common/Preference.kt \
-            common/src/main/java/com/alohaoneui/common/ModuleActions.kt \
-            hook/src/main/java/com/alohaoneui/hook/Main.kt \
-            hook/src/main/java/com/alohaoneui/hook/ThemeCenter.kt \
-            app/build.gradle.kts; do
-            if [ -f "$p" ]; then mkdir -p "compare/target/$(dirname "$p")"; cp "$p" "compare/target/$p"; fi
-          done
-          for p in \
-            app/src/main/java/com/alohaoneui/mod/ui/category/DetailPaneThemeCenter.kt \
-            app/src/main/res/values/alohaoneui_strings.xml \
-            app/src/main/res/values-zh-rCN/alohaoneui_strings.xml \
-            app/src/main/res/values/statusbar_xposed.xml \
-            common/src/main/java/com/alohaoneui/common/Package.kt \
-            common/src/main/java/com/alohaoneui/common/Preference.kt \
-            common/src/main/java/com/alohaoneui/common/ModuleActions.kt \
-            hook/src/main/java/com/alohaoneui/hook/Main.kt \
-            hook/src/main/java/com/alohaoneui/hook/ThemeStoreRegion.kt; do
-            if [ -f "extracted/$p" ]; then mkdir -p "compare/source/$(dirname "$p")"; cp "extracted/$p" "compare/source/$p"; fi
-          done
-          find compare -type f -printf '%P\t%s bytes\n' | sort > compare-files.txt
-      - uses: actions/upload-artifact@v4
-        with:
-          name: theme-store-source-extracted
-          path: |
-            extracted/**
-            extracted-files.txt
-            compare/**
-            compare-files.txt
-          if-no-files-found: error
+          test -f extracted/hook/src/main/java/com/alohaoneui/hook/ThemeStoreRegion.kt
+      - name: Apply reviewed integration patch
+        run: python3 tools/apply-theme-store.py
+      - name: Remove temporary extraction tooling and commit integration
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf extracted extracted-files.txt compare compare-files.txt
+          git rm -f tools/theme-store-source.rar.b64 tools/apply-theme-store.py .github/workflows/source-extract.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "feat(theme-store): add theme store service region controls"
+          git push origin HEAD:work/theme-store-source-extract-20261024
