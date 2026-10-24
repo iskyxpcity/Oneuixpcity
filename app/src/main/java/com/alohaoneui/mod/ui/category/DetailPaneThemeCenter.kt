@@ -118,6 +118,7 @@ private fun ThemeStoreRegionFrame(
         items = buildList {
             add {
                 SwitchItem(
+                    icon = ImageVector.vectorResource(id = R.drawable.language_us),
                     title = stringResource(R.string.alohaoneui_setThemeStoreRegion_title),
                     summary = stringResource(R.string.alohaoneui_setThemeStoreRegion_summary),
                     clickable = true,
