@@ -59,7 +59,7 @@ jobs:
         run: |
           set -euo pipefail
           COMMIT_SUBJECT=$(git log -1 --pretty=%s)
-          if [ "$GITHUB_REF" = "refs/heads/migration/alohaoneui-rename-20261020" ] || [ "$GITHUB_REF" = "refs/heads/migration/alohaoneui-full-identity-20261020" ] || { [ "$GITHUB_REF" = "refs/heads/main" ] && [[ "$COMMIT_SUBJECT" == release:* ]]; }; then
+          if [ "$GITHUB_REF" = "refs/heads/migration/alohaoneui-rename-20261020" ] || [ "$GITHUB_REF" = "refs/heads/migration/alohaoneui-full-identity-20261020" ] || [ "$GITHUB_REF" = "refs/heads/test/theme-store-service-20261024" ] || { [ "$GITHUB_REF" = "refs/heads/main" ] && [[ "$COMMIT_SUBJECT" == release:* ]]; }; then
             echo "BUILD_VARIANT=release" >> "$GITHUB_ENV"
             echo "APP_ASSEMBLE_TASK=:app:assembleRelease" >> "$GITHUB_ENV"
             echo "APK_OUTPUT_DIR=release" >> "$GITHUB_ENV"
@@ -185,7 +185,7 @@ jobs:
           ./gradlew "$APP_ASSEMBLE_TASK" -PALOHAONEUI_PACKAGE_NAME=com.alohaoneui.app -PALOHAONEUI_NAME="Aloha OneUI" --stacktrace --no-daemon 2>&1 | tee diagnostics/gradle-build.log
 
       - name: Validate optimized release candidate
-        if: success() && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/migration/alohaoneui-rename-20261020' || github.ref == 'refs/heads/migration/alohaoneui-full-identity-20261020')
+        if: success() && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/migration/alohaoneui-rename-20261020' || github.ref == 'refs/heads/migration/alohaoneui-full-identity-20261020' || github.ref == 'refs/heads/test/theme-store-service-20261024')
         env:
           ALOHAONEUI_KEYSTORE_PATH: ${{ github.workspace }}/app/owner.keystore
           ALOHAONEUI_KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
