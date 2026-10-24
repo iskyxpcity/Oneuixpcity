@@ -1874,10 +1874,6 @@ private fun ShortcutActionGrid(
         UiMode.Material -> MaterialTheme.colorScheme.surfaceContainerHigh
         UiMode.Miuix -> colorScheme.surface
     }
-    val unselectedText = when (LocalUiMode.current) {
-        UiMode.Material -> MaterialTheme.colorScheme.onSurface
-        UiMode.Miuix -> colorScheme.onSurface
-    }
     val gridInset = when (LocalUiMode.current) {
         UiMode.Material -> PaddingValues(0.dp)
         UiMode.Miuix -> PaddingValues(horizontal = 12.dp, vertical = 4.dp)
@@ -1892,9 +1888,7 @@ private fun ShortcutActionGrid(
                         label = option.label,
                         selected = selected,
                         shape = chipShape,
-                        accent = accent,
                         container = unselectedContainer,
-                        content = unselectedText,
                         onClick = { onSelect(option.id) },
                         modifier = Modifier.weight(1f),
                     )
@@ -1914,9 +1908,7 @@ private fun ShortcutActionChip(
     label: String,
     selected: Boolean,
     shape: RoundedCornerShape,
-    accent: Color,
     container: Color,
-    content: Color,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -2123,7 +2115,7 @@ private fun ShortcutAppPickerRow(
                         fontSize = 16.sp,
                         maxLines = 1,
                         fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
-                        color = if (selected) accent else titleColor,
+                        color = if (selected) selectedContent else titleColor,
                     )
                     MiuixText(
                         app.component.packageName,
