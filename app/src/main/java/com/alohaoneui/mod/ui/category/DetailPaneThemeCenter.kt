@@ -222,8 +222,9 @@ private fun ThemeStoreRegionChip(label: String, selected: Boolean, modifier: Mod
                     )
                     .border(1.dp, if (selected) scheme.primary else scheme.outlineVariant, shape)
                     .clickable(onClick = onClick)
-                    .padding(horizontal = 2.dp, vertical = 10.dp)
-            , contentAlignment = Alignment.Center) {
+                    .padding(horizontal = 2.dp, vertical = 10.dp),
+                contentAlignment = Alignment.Center
+            ) {
                 Text(
                     text = label,
                     color = if (selected) scheme.onPrimary else scheme.onSurface,
@@ -241,12 +242,13 @@ private fun ThemeStoreRegionChip(label: String, selected: Boolean, modifier: Mod
                 )
                 .border(1.dp, if (selected) colorScheme.primary else colorScheme.onSurfaceVariantSummary, shape)
                 .clickable(onClick = onClick)
-                .padding(horizontal = 14.dp, vertical = 9.dp)
+                .padding(horizontal = 2.dp, vertical = 10.dp),
+            contentAlignment = Alignment.Center
         ) {
             MiuixText(
                 text = label,
                 color = if (selected) Color.White else colorScheme.onSurface,
-                fontSize = 13.5.sp,
+                fontSize = 12.sp,
                 fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal
             )
         }
