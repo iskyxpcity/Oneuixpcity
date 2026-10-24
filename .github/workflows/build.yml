@@ -267,7 +267,7 @@ jobs:
           fi
 
       - name: Publish signed APK to GitHub release
-        if: success() && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/migration/') || startsWith(github.ref, 'refs/heads/test/'))
+        if: success() && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/migration/'))
         env:
           SOURCE_REPO_TOKEN: ${{ github.token }}
         run: |
@@ -364,9 +364,9 @@ jobs:
       - name: Retain signed APK and verification files as an Actions Artifact
         uses: actions/upload-artifact@v4
         continue-on-error: true
-        if: always() && github.ref == 'refs/heads/main' && hashFiles('dist/*.apk') != ''
+        if: always() && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/test/')) && hashFiles('dist/*.apk') != ''
         with:
-          name: AlohaOneUI-Owner-Signed
+          name: AlohaOneUI-Signed-Test-APK
           path: dist/
           if-no-files-found: error
       - name: Optionally upload build diagnostics
