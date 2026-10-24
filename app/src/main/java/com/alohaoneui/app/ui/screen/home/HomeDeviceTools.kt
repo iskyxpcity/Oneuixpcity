@@ -74,10 +74,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.material3.Icon as MaterialIcon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.Text as MaterialText
 import com.alohaoneui.app.ui.LocalUiMode
 import com.alohaoneui.app.ui.UiMode
 import com.alohaoneui.app.ui.component.material.TonalCard
+import com.alohaoneui.app.ui.component.material.ExpressiveToggleButton
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -85,7 +87,7 @@ import kotlinx.coroutines.withContext
 import top.yukonga.miuix.kmp.basic.Card as MiuixCard
 import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
-import top.yukonga.miuix.kmp.basic.TabRowWithContour as MiuixTabRowWithContour
+import top.yukonga.miuix.kmp.basic.TabRow as MiuixTabRow
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import java.io.File
 import java.util.Locale
@@ -224,59 +226,38 @@ private fun DeviceInfoSectionSelector(
 ) {
     val options = listOf("系统监视器", "屏幕信息", "设备信息")
     when (LocalUiMode.current) {
-        UiMode.Material -> {
-            val outerShape = RoundedCornerShape(14.dp)
-            val segmentShape = RoundedCornerShape(10.dp)
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(45.dp)
-                    .clip(outerShape)
-                    .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-                    .border(
-                        width = 1.dp,
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.42f),
-                        shape = outerShape,
+        UiMode.Material -> Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            options.forEachIndexed { index, label ->
+                ExpressiveToggleButton(
+                    checked = selectedSection == index,
+                    onCheckedChange = { checked -> if (checked) onSelect(index) },
+                    modifier = Modifier.weight(1f).semantics { role = Role.RadioButton },
+                    shapes = when (index) {
+                        0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
+                        options.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
+                        else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
+                    },
+                ) {
+                    MaterialText(
+                        text = label,
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = if (selectedSection == index) FontWeight.SemiBold else FontWeight.Medium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                     )
-                    .padding(4.dp),
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                options.forEachIndexed { index, label ->
-                    val selected = selectedSection == index
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxHeight()
-                            .clip(segmentShape)
-                            .background(
-                                if (selected) MaterialTheme.colorScheme.primary
-                                else MaterialTheme.colorScheme.surfaceContainerHighest,
-                            )
-                            .clickable(role = Role.Tab) { onSelect(index) },
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        MaterialText(
-                            text = label,
-                            color = if (selected) {
-                                MaterialTheme.colorScheme.onPrimary
-                            } else {
-                                MaterialTheme.colorScheme.onSurface
-                            },
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                    }
                 }
             }
         }
-        UiMode.Miuix -> MiuixTabRowWithContour(
+        UiMode.Miuix -> MiuixTabRow(
             tabs = options,
             selectedTabIndex = selectedSection,
             onTabSelected = onSelect,
             modifier = Modifier.fillMaxWidth(),
+            height = 48.dp,
         )
     }
 }
