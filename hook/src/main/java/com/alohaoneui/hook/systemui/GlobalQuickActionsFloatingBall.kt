@@ -616,6 +616,58 @@ internal fun GlobalQuickActions.armFloatingBallIdleAutoEdge(
     scheduleFloatingBallAutoEdge(context, windowManager, view, params, floatingBallSettings(context))
 }
 
+/**
+ * Recovery for Samsung builds that observe the global UP/CANCEL in SystemServer but do
+ * not deliver the terminal event to the moved overlay. The normal archive implementation
+ * is authoritative; this delayed fallback only runs when no idle timer was armed.
+ */
+private const val FLOATING_BALL_TOUCH_END_RECOVERY_DELAY_MS = 500L
+private const val FLOATING_BALL_TOUCH_RELEASE_MARKER_MAX_AGE_MS = 30_000L
+
+internal fun GlobalQuickActions.recoverFloatingBallTouchEndFromGlobalInput(event: MotionEvent) {
+    val action = event.actionMasked
+    if (action != MotionEvent.ACTION_UP && action != MotionEvent.ACTION_CANCEL) return
+
+    val markerAge = SystemClock.uptimeMillis() - floatingBallTouchDownTime
+    val recentReleaseMarker = floatingBallTouchDownTime > 0L &&
+        markerAge in 0..FLOATING_BALL_TOUCH_RELEASE_MARKER_MAX_AGE_MS
+    if (!floatingBallTouchActive && !floatingBallDragging && !recentReleaseMarker) return
+
+    val context = systemServerContext ?: currentApplicationContext() ?: return
+    val view = floatingBallView ?: return
+    val params = floatingBallLayoutParams ?: return
+    val windowManager = floatingBallWindowManager ?: return
+    val capturedDownTime = floatingBallTouchDownTime
+
+    mainHandler.postDelayed({
+        if (
+            floatingBallTouchDownTime != capturedDownTime ||
+            floatingBallView !== view ||
+            floatingBallLayoutParams !== params
+        ) {
+            return@postDelayed
+        }
+        val touchStillActive = floatingBallTouchActive || floatingBallDragging
+        if (floatingBallAutoEdgeRunnable != null || (!touchStillActive && floatingBallTouchDownAtMs == 0L && !recentReleaseMarker)) {
+            return@postDelayed
+        }
+        val wasDragging = floatingBallDragging
+        floatingBallTouchActive = false
+        floatingBallDragging = false
+        floatingBallTouchDownAtMs = 0L
+        floatingBallLongPressRunnable?.let { mainHandler.removeCallbacks(it) }
+        floatingBallLongPressRunnable = null
+        resetFloatingBallInnerOffset(view)
+        recordSystemServerDiagnosticEvent(
+            context,
+            "floating-ball recovered missing release/auto-edge timer: " +
+                "action=${if (action == MotionEvent.ACTION_UP) "UP" else "CANCEL"} " +
+                "wasDragging=$wasDragging touchWasActive=$touchStillActive x=${params.x} y=${params.y}; restarting countdown",
+        )
+        armFloatingBallIdleAutoEdge(context, windowManager, view, params)
+    }, FLOATING_BALL_TOUCH_END_RECOVERY_DELAY_MS)
+}
+
 internal fun GlobalQuickActions.scheduleFloatingBallAutoEdge(
     context: Context,
     windowManager: WindowManager,
