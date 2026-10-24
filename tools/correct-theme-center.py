@@ -77,18 +77,14 @@ for p in ["app/src/main/res/values/alohaoneui_strings.xml",
 # Delete the custom page so no orphan implementation remains.
 Path("app/src/main/java/com/alohaoneui/mod/ui/category/DetailPaneThemeStoreService.kt").unlink()
 
-# Preserve all pre-existing module actions from main, adding only the needed action.
-subprocess.run(["git", "fetch", "origin", "main", "--depth=1"], check=True)
-p = "common/src/main/java/com/alohaoneui/common/ModuleActions.kt"
-s = subprocess.check_output(["git", "show", "origin/main:" + p], text=True)
-anchor = "object ModuleActions {"
-if s.count(anchor) != 1:
-    raise RuntimeError("Could not locate original ModuleActions object")
-if "THEME_STORE_REGION_CHANGED" not in s:
-    s = s.replace(anchor, anchor + '\n    const val THEME_STORE_REGION_CHANGED = "com.alohaoneui.action.THEME_STORE_REGION_CHANGED"', 1)
-    # Keep Kotlin formatting: each const property on its own line.
-    s = s.replace('THEME_STORE_REGION_CHANGED = "com.alohaoneui.action.THEME_STORE_REGION_CHANGED"\n', 'THEME_STORE_REGION_CHANGED = "com.alohaoneui.action.THEME_STORE_REGION_CHANGED"\n', 1)
-write(p, s)
+# This repository did not have ModuleActions.kt on main; create the minimal action holder
+# required by the source hook, without replacing any existing action file.
+write("common/src/main/java/com/alohaoneui/common/ModuleActions.kt", """package com.alohaoneui.common
+
+object ModuleActions {
+    const val THEME_STORE_REGION_CHANGED = "com.alohaoneui.action.THEME_STORE_REGION_CHANGED"
+}
+""")
 
 # Add the hooked app to the Xposed scope list without disturbing existing scopes.
 p = "app/src/main/resources/META-INF/xposed/scope.list"
