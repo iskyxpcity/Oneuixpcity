@@ -19,14 +19,35 @@ internal const val MAX_FLOATING_BALL_SIZE_DP = 88
 internal const val DEFAULT_FLOATING_BALL_SIZE_DP = 56
 internal const val FLOATING_BALL_INNER_RADIUS_RATIO = 0.61f
 internal const val FLOATING_BALL_INNER_OFFSET_LIMIT_DP = 11
+/**
+ * Docked state no longer shows a half-clipped ball: the ball collapses into a small edge
+ * marker, so only this many pixels of its window stay on screen. A tap restores the ball to
+ * the last free-floating position.
+ */
+internal const val FLOATING_BALL_DOCK_INDICATOR_WIDTH_DP = 20
+/** Height of the docked triangle marker (touch target height, not the window height). */
+internal const val FLOATING_BALL_DOCK_INDICATOR_HEIGHT_DP = 36
+/** Breathing loop of the docked marker: one full fade cycle, and the redraw interval. */
+internal const val FLOATING_BALL_DOCK_BREATH_PERIOD_MS = 1800L
+internal const val FLOATING_BALL_DOCK_BREATH_FRAME_MS = 40L
 internal const val FLOATING_BALL_TAP_SLOP_DP = 8
 internal const val FLOATING_BALL_SWIPE_THRESHOLD_DP = 38
+/**
+ * Finger travel tolerated while the long-press timer is still running.
+ * Above [FLOATING_BALL_TAP_SLOP_DP] the touch stops being a tap, but it must stay
+ * far below the swipe threshold so normal finger tremor cannot cancel the drag.
+ */
+internal const val FLOATING_BALL_LONG_PRESS_SLOP_DP = 28
 internal const val FLOATING_BALL_LONG_PRESS_MS = 520L
+/** A touch that never delivered UP/CANCEL is treated as leaked after this long. */
+internal const val FLOATING_BALL_TOUCH_STALE_MS = 8000L
+/** Re-check interval for the idle timer while the finger is still down. */
+internal const val FLOATING_BALL_IDLE_RETRY_MS = 250L
 internal const val FLOATING_BALL_DOUBLE_TAP_MS = 320L
 internal const val DEFAULT_FLOATING_BALL_COLOR = 0xAA5E7CFF.toInt()
 internal const val MIN_FLOATING_BALL_AUTO_EDGE_DELAY_SECONDS = 0
 internal const val MAX_FLOATING_BALL_AUTO_EDGE_DELAY_SECONDS = 10
-internal const val DEFAULT_FLOATING_BALL_AUTO_EDGE_DELAY_SECONDS = 0
+internal const val DEFAULT_FLOATING_BALL_AUTO_EDGE_DELAY_SECONDS = 3
 internal const val FLOATING_BALL_UPDATE_BROADCAST = "com.mods.grx.SERVICES"
 internal const val FLOATING_BALL_UPDATE_EXTRA = "UPDATE"
 internal const val FLOATING_BALL_UPDATE_CONFIG = "FBV_CONFIG"
