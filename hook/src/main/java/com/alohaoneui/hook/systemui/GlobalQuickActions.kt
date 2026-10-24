@@ -21,7 +21,6 @@ import io.github.libxposed.api.XposedModule
 import io.github.libxposed.api.XposedModuleInterface
 import com.alohaoneui.common.Preference
 import com.alohaoneui.common.StatusBarRuntimeBridge
-import com.alohaoneui.hook.util.AlohaOneUIDiagnosticLog
 import com.alohaoneui.hook.util.PreferenceProvider
 import java.util.Collections
 import java.util.WeakHashMap
@@ -71,10 +70,29 @@ object GlobalQuickActions {
     internal var floatingBallStartX = 0
     internal var floatingBallStartY = 0
     internal var floatingBallTouchDownTime = 0L
-    @Volatile internal var floatingBallTouchPointerId = -1
+    /** Uptime of the current touch-down; used to self-heal a leaked touch state. */
+    @Volatile internal var floatingBallTouchDownAtMs = 0L
+    internal var floatingBallLastRawX = 0f
+    internal var floatingBallLastRawY = 0f
+    internal var floatingBallLongPressCancelled = false
+    /** Display width sampled on touch-down so per-frame drag math stays cheap. */
+    internal var floatingBallDragDisplayWidth = 0
+    /**
+     * Side the ball was docked on at touch-down: -1 left, 1 right, 0 free-floating.
+     * A docked ball is grabbed and pulled out immediately instead of waiting for the
+     * long-press, because its visible sliver sits on the screen edge where a 520ms
+     * stationary hold is nearly impossible to perform.
+     */
+    internal var floatingBallDockedAtDown = 0
+    /** Current docked side, drives rendering: -1 left marker, 1 right marker, 0 full ball. */
+    @Volatile internal var floatingBallDockedSide = 0
+    /** Last free-floating position; a tap on the docked marker restores the ball here. */
+    internal var floatingBallFreeX = -1
+    internal var floatingBallFreeY = -1
     internal var floatingBallLastTapTime = 0L
     internal var floatingBallMoved = false
     internal var floatingBallDragging = false
+    @Volatile internal var floatingBallPositionChanged = false
     @Volatile internal var floatingBallTouchActive = false
     internal var floatingBallLongPressRunnable: Runnable? = null
     internal var floatingBallPendingClickRunnable: Runnable? = null
@@ -119,6 +137,7 @@ object GlobalQuickActions {
     }
 
     internal fun recordSystemServerDiagnosticEvent(context: Context, message: String) {
+        if (DEBUG_LOG) Log.d(TAG, "diag: $message")
         val event = Intent(StatusBarRuntimeBridge.ACTION_SYSTEM_SERVER_DIAGNOSTIC_EVENT)
             .setPackage("com.android.systemui")
             .addFlags(Intent.FLAG_RECEIVER_FOREGROUND)
@@ -141,31 +160,11 @@ object GlobalQuickActions {
         } catch (failure: Throwable) {
             logGuardedHookFailure("global gesture/status-bar shortcut handler", event, failure)
         }
-
-        // Some Samsung builds stop delivering the terminal touch event to a moved overlay
-        // even though SystemServer's global pointer dispatcher observes it. Let the View's
-        // normal UP/CANCEL handler run first; the fallback only acts if that handler did not.
-        try {
-            GlobalQuickActions.recoverFloatingBallTouchEndFromGlobalInput(event)
-        } catch (failure: Throwable) {
-            logGuardedHookFailure("floating-ball touch-end recovery", event, failure)
-        }
     }
 
     context(xposedModule: XposedModule)
     fun installSystemUi(param: XposedModuleInterface.PackageReadyParam) {
         if (param.packageName != "com.android.systemui") return
-
-        // Install the bounded diagnostic sink as early as SystemUI exposes an Application context.
-        // StatusBar host registration later supplies the live-geometry provider and retries installation.
-        runCatching {
-            GlobalQuickActions.currentApplicationContext()?.let { appContext ->
-                AlohaOneUIDiagnosticLog.install(appContext)
-            }
-        }.onFailure {
-            Log.w(TAG, "could not install early SystemUI diagnostics bridge", it)
-        }
-
         runCatching {
             val keyButton = param.classLoader.loadClass("com.android.systemui.navigationbar.views.buttons.KeyButtonView")
             val method = keyButton.getDeclaredMethod("onTouchEvent", MotionEvent::class.java)
@@ -202,11 +201,9 @@ object GlobalQuickActions {
             currentSettings()
             lastFloatingBallSettings = GlobalQuickActions.floatingBallSettings(context)
             registerPreferenceObserver(context)
+            registerSystemServerDiagnosticQueryReceiver(context)
             mainHandler.post {
                 val activeContext = systemServerContext ?: context
-                // Register the on-demand query receiver on SystemServer's main looper before
-                // creating the ball, so the diagnostics request cannot race startup registration.
-                registerSystemServerDiagnosticQueryReceiver(activeContext)
                 runCatching { GlobalQuickActions.ensureFloatingBall(activeContext) }
                     .onFailure { Log.w(TAG, "initial floating-ball setup failed", it) }
             }
@@ -254,7 +251,7 @@ object GlobalQuickActions {
             appendLine("enabled=${settings.floatingBallEnabled} autoEdgeDelaySeconds=${settings.floatingBallAutoEdgeDelaySeconds}")
             appendLine("viewPresent=${view != null} attached=${view?.isAttachedToWindow} viewSize=${view?.width}x${view?.height} visibility=${view?.visibility}")
             appendLine("paramsPresent=${params != null} x=${params?.x} y=${params?.y} width=${params?.width} height=${params?.height} windowManagerPresent=${floatingBallWindowManager != null}")
-            appendLine("timerArmed=${floatingBallAutoEdgeRunnable != null} timerHostMatchesView=${floatingBallAutoEdgeHost === view} generation=${floatingBallAutoEdgeGeneration} dragging=${floatingBallDragging} touchActive=${floatingBallTouchActive} touchPointerId=${floatingBallTouchPointerId} touchDownTime=${floatingBallTouchDownTime}")
+            appendLine("timerArmed=${floatingBallAutoEdgeRunnable != null} timerHostMatchesView=${floatingBallAutoEdgeHost === view} generation=${floatingBallAutoEdgeGeneration} dragging=${floatingBallDragging} positionChanged=${floatingBallPositionChanged} touchActive=${floatingBallTouchActive}")
             appendLine("savedX=${floatingBallX} savedY=${floatingBallY}")
             appendLine("lastGlobalAction=$lastGlobalActionDiagnostic")
         }
