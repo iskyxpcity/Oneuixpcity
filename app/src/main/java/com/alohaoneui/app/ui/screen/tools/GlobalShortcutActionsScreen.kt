@@ -1809,8 +1809,8 @@ private fun ShortcutActionGroupCard(
         UiMode.Miuix -> colorScheme.primary
     }
     val pillBackground = when (LocalUiMode.current) {
-        UiMode.Material -> MaterialTheme.colorScheme.surfaceContainerHigh
-        UiMode.Miuix -> colorScheme.surface
+        UiMode.Material -> MaterialTheme.colorScheme.surfaceContainerHighest
+        UiMode.Miuix -> colorScheme.surfaceContainerHigh
     }
     val secondary = when (LocalUiMode.current) {
         UiMode.Material -> MaterialTheme.colorScheme.onSurfaceVariant
@@ -1900,7 +1900,7 @@ private fun ShortcutActionGrid(
 }
 
 /**
- * 选项胶囊，规格对照 GroupedRootActionPicker：46dp 高、16dp 圆角、4dp 间距；
+ * 选项胶囊：46dp 高、12dp 圆角、4dp 间距；
  * 选中态是**实心主色 + 反白粗体**，不是低透明度填充，深色下也能一眼看出选中项。
  */
 @Composable
