@@ -1954,7 +1954,7 @@ private fun ShortcutActionChip(
                 MiuixText(
                     label,
                     modifier = Modifier.fillMaxWidth(),
-                    color = if (selected) colorScheme.onPrimary else colorScheme.onSurfaceContainerHigh,
+                    color = if (selected) Color.White else colorScheme.onSurfaceContainerHigh,
                     fontSize = 14.sp,
                     fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
                 )
@@ -2069,11 +2069,11 @@ private fun ShortcutAppPickerRow(
     }
     val selectedContent = when (LocalUiMode.current) {
         UiMode.Material -> MaterialTheme.colorScheme.onPrimary
-        UiMode.Miuix -> colorScheme.onPrimary
+        UiMode.Miuix -> Color.White
     }
     val supportingColor = when (LocalUiMode.current) {
         UiMode.Material -> if (selected) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.78f) else MaterialTheme.colorScheme.onSurfaceVariant
-        UiMode.Miuix -> if (selected) colorScheme.onPrimary.copy(alpha = 0.78f) else colorScheme.onSurfaceVariantSummary
+        UiMode.Miuix -> if (selected) Color.White.copy(alpha = 0.78f) else colorScheme.onSurfaceVariantSummary
     }
     val shape = RoundedCornerShape(18.dp)
 
