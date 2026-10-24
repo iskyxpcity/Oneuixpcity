@@ -135,7 +135,6 @@ private fun ThemeStoreRegionFrameContent(
     onSelect: (ThemeCenterEvent.SelectThemeStoreRegion) -> Unit
 ) {
     Column {
-{
         Row(
             modifier = Modifier.fillMaxWidth().padding(start = 14.dp, end = 12.dp, top = 8.dp, bottom = 8.dp),
             verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
