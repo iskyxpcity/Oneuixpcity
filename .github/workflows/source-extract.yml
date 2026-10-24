@@ -63,4 +63,6 @@ jobs:
           path: |
             extracted/**
             extracted-files.txt
+            compare/**
+            compare-files.txt
           if-no-files-found: error
