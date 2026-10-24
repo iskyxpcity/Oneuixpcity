@@ -18,7 +18,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.rememberSaveable
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -91,7 +91,7 @@ private fun ThemeStoreRegionFrame(
     selectedSalesCode: String,
     onSelect: (ThemeCenterEvent.SelectThemeStoreRegion) -> Unit
 ) {
-    var expanded by rememberSaveable { mutableStateOf(true) }
+    var expanded by remember { mutableStateOf(true) }
     val shape = RoundedCornerShape(16.dp)
     val backgroundColor = if (LocalUiMode.current == UiMode.Material) MaterialTheme.colorScheme.surface else colorScheme.surface
     val borderColor = if (LocalUiMode.current == UiMode.Material) MaterialTheme.colorScheme.outlineVariant else colorScheme.onSurfaceVariantSummary
