@@ -9,9 +9,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -40,6 +43,7 @@ import com.alohaoneui.common.ModuleActions
 import com.alohaoneui.common.Package
 import com.alohaoneui.common.Preference
 import com.alohaoneui.mod.ui.component.SwitchItem
+import com.alohaoneui.mod.ui.component.AlohaOneUIDetailGroup
 import com.alohaoneui.app.ui.screen.status.StatusThemeGroup
 import com.alohaoneui.app.ui.screen.status.StatusThemeChildItem
 import kotlinx.coroutines.delay
@@ -57,13 +61,21 @@ fun DetailPaneThemeCenter(
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    PackagePane(modifier) {
-        SwitchItem(
-            icon = ImageVector.vectorResource(id = R.drawable.format_paint),
-            title = stringResource(id = R.string.alohaoneui_setThemeTrialNeverExpired_title),
-            checked = uiState.setThemeTrialNeverExpired,
-            onCheckedChange = { onEvent(ThemeCenterEvent.SetThemeTrialNeverExpired(it)) }
-        )
+    // Keep the two settings in independent native frames. The region setting
+    // must not be nested inside the trial-expiry group.
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState()),
+    ) {
+        AlohaOneUIDetailGroup {
+            SwitchItem(
+                icon = ImageVector.vectorResource(id = R.drawable.format_paint),
+                title = stringResource(id = R.string.alohaoneui_setThemeTrialNeverExpired_title),
+                checked = uiState.setThemeTrialNeverExpired,
+                onCheckedChange = { onEvent(ThemeCenterEvent.SetThemeTrialNeverExpired(it)) }
+            )
+        }
         ThemeStoreRegionFrame(
             enabled = uiState.setThemeStoreRegion,
             onEnabledChange = { onEvent(ThemeCenterEvent.SetThemeStoreRegion(it)) },
