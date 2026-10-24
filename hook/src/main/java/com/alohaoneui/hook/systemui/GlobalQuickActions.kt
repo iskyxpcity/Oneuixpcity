@@ -160,6 +160,15 @@ object GlobalQuickActions {
         } catch (failure: Throwable) {
             logGuardedHookFailure("global gesture/status-bar shortcut handler", event, failure)
         }
+
+        // Preserve Aloha's SystemServer UP/CANCEL fallback. The source archive's normal
+        // View path remains authoritative; this delayed fallback only repairs a missing
+        // terminal event when the normal handler did not arm the idle auto-edge timer.
+        try {
+            GlobalQuickActions.recoverFloatingBallTouchEndFromGlobalInput(event)
+        } catch (failure: Throwable) {
+            logGuardedHookFailure("floating-ball touch-end recovery", event, failure)
+        }
     }
 
     context(xposedModule: XposedModule)
