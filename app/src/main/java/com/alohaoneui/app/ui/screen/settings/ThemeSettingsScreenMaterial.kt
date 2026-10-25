@@ -120,7 +120,7 @@ private fun ThemeSection(index: Int, state: SettingsUiState, vm: SettingsViewMod
                         FilterChip(selected = state.themeMode == mode || (mode == 2 && state.themeMode == 6), onClick = { vm.setThemeMode(mode) }, label = { Text(stringResource(label)) })
                     }
                 }
-                ThemeSwitch(stringResource(R.string.settings_pure_black_title), stringResource(R.string.settings_pure_black_subtitle), state.themeMode == 6) { vm.setThemeMode(if (it) 6 else 2) }
+                ThemeSwitch(stringResource(R.string.settings_pure_black_title), stringResource(R.string.settings_pure_black_subtitle), state.themeMode == 6, onChange = { enabled -> vm.setThemeMode(if (enabled) 6 else 2) })
             }
             2 -> ThemeGroup {
                 val labels = listOf(R.string.theme_shape_rounded, R.string.theme_shape_cut, R.string.theme_shape_squircle, R.string.theme_shape_smooth, R.string.theme_shape_wavy, R.string.theme_shape_scoop, R.string.theme_shape_notch).map { stringResource(it) }
