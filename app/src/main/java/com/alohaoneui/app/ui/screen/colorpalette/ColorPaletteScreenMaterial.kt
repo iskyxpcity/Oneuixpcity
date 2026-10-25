@@ -54,6 +54,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.MenuOpen
 import androidx.compose.material.icons.filled.Brightness1
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Brightness3
@@ -68,6 +71,7 @@ import androidx.compose.material.icons.rounded.DesignServices
 import androidx.compose.material.icons.rounded.Style
 import androidx.compose.material.icons.rounded.Swipe
 import androidx.compose.material.icons.rounded.ViewCarousel
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.Icon
@@ -79,6 +83,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
@@ -142,6 +147,7 @@ fun ColorPaletteScreenMaterial(
     val haptic = LocalHapticFeedback.current
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
+    var schemePendingDelete by remember { mutableStateOf<com.alohaoneui.app.data.repository.MaterialColorScheme?>(null) }
     val imagePicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         if (uri != null) {
             coroutineScope.launch {
@@ -322,28 +328,72 @@ fun ColorPaletteScreenMaterial(
                         )
                     } else {
                         uiState.materialColorSchemes.forEachIndexed { index, scheme ->
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                            ) {
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(scheme.name, style = MaterialTheme.typography.titleSmall)
-                                    Text(
-                                        text = "${scheme.colorStyle} · ${if (scheme.keyColor == 0) stringResource(R.string.theme_saved_scheme_dynamic) else "#${scheme.keyColor.toUInt().toString(16).takeLast(6).uppercase()}"}",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.outline,
-                                    )
+                            TonalCard(modifier = Modifier.fillMaxWidth()) {
+                                Column(modifier = Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Surface(
+                                            modifier = Modifier.size(36.dp),
+                                            shape = CircleShape,
+                                            color = Color(scheme.keyColor.takeIf { it != 0 } ?: MaterialTheme.colorScheme.primary.toArgb()),
+                                        ) {}
+                                        Spacer(modifier = Modifier.width(10.dp))
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(scheme.name, style = MaterialTheme.typography.titleSmall)
+                                            val styleLabel = when (scheme.colorStyle) {
+                                                "Fidelity" -> stringResource(R.string.settings_palette_style_fidelity)
+                                                "TonalSpot" -> stringResource(R.string.settings_palette_style_tonal_spot)
+                                                "Expressive" -> stringResource(R.string.settings_palette_style_expressive)
+                                                "FruitSalad" -> stringResource(R.string.settings_palette_style_fruit_salad)
+                                                "Monochrome" -> stringResource(R.string.settings_palette_style_monochrome)
+                                                "Neutral" -> stringResource(R.string.settings_palette_style_neutral)
+                                                "Rainbow" -> stringResource(R.string.settings_palette_style_rainbow)
+                                                "Vibrant" -> stringResource(R.string.settings_palette_style_vibrant)
+                                                "Content" -> stringResource(R.string.settings_palette_style_content)
+                                                else -> scheme.colorStyle
+                                            }
+                                            Text(
+                                                text = "$styleLabel · ${if (scheme.keyColor == 0) stringResource(R.string.theme_saved_scheme_dynamic) else "#${scheme.keyColor.toUInt().toString(16).takeLast(6).uppercase()}"}",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.outline,
+                                            )
+                                        }
+                                    }
+                                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
+                                        IconButton(onClick = { actions.onEditMaterialColorScheme(index) }) {
+                                            Icon(Icons.Filled.Edit, contentDescription = stringResource(R.string.theme_scheme_edit))
+                                        }
+                                        IconButton(onClick = { actions.onApplyMaterialColorScheme(scheme) }) {
+                                            Icon(Icons.Filled.Check, contentDescription = stringResource(R.string.theme_saved_scheme_apply))
+                                        }
+                                        IconButton(onClick = { schemePendingDelete = scheme }) {
+                                            Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.theme_saved_scheme_delete), tint = MaterialTheme.colorScheme.error)
+                                        }
+                                    }
                                 }
-                                Button(onClick = { actions.onEditMaterialColorScheme(index) }) { Text(stringResource(R.string.theme_scheme_edit)) }
-                                Button(onClick = { actions.onApplyMaterialColorScheme(scheme) }) { Text(stringResource(R.string.theme_saved_scheme_apply)) }
-                                Button(onClick = { actions.onDeleteMaterialColorScheme(scheme.name) }) { Text(stringResource(R.string.theme_saved_scheme_delete)) }
                             }
                         }
                     }
                 }
             }
 
+            schemePendingDelete?.let { scheme ->
+                AlertDialog(
+                    onDismissRequest = { schemePendingDelete = null },
+                    title = { Text(stringResource(R.string.theme_saved_scheme_delete) + " · " + scheme.name) },
+                    text = { Text(stringResource(R.string.theme_scheme_delete_message)) },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            actions.onDeleteMaterialColorScheme(scheme.name)
+                            schemePendingDelete = null
+                        }) { Text(stringResource(R.string.theme_saved_scheme_delete)) }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { schemePendingDelete = null }) {
+                            Text(stringResource(android.R.string.cancel))
+                        }
+                    },
+                )
+            }
 
             TonalCard(
                 modifier = Modifier

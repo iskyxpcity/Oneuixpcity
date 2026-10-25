@@ -231,6 +231,9 @@ fun ThemeSchemeEditorScreen(index: Int) {
             Slider(value = contrast, onValueChange = { contrast = it }, valueRange = -1f..1f)
             Button(
                 onClick = {
+                    if (existing != null && !existing.name.equals(name.trim(), ignoreCase = true)) {
+                        viewModel.deleteMaterialColorScheme(existing.name)
+                    }
                     viewModel.saveMaterialColorScheme(
                         MaterialColorScheme(
                             name = name,

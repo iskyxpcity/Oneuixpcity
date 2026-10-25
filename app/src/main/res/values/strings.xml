@@ -51,12 +51,12 @@
     <string name="settings_color_spec">Color Spec</string>
     <string name="settings_palette_style_content">Content</string>
     <string name="settings_palette_style_expressive">Expressive</string>
-    <string name="settings_palette_style_fidelity">Fidelity</string>
+    <string name="settings_palette_style_fidelity">True to seed</string>
     <string name="settings_palette_style_fruit_salad">Fruit Salad</string>
     <string name="settings_palette_style_monochrome">Monochrome</string>
     <string name="settings_palette_style_neutral">Neutral</string>
     <string name="settings_palette_style_rainbow">Rainbow</string>
-    <string name="settings_palette_style_tonal_spot">Tonal Spot</string>
+    <string name="settings_palette_style_tonal_spot">Soft</string>
     <string name="settings_palette_style_vibrant">Vibrant</string>
     <string name="theme_editor_hex">HEX color</string>
     <string name="theme_editor_apply_hex">Apply</string>
@@ -273,6 +273,7 @@
     <string name="theme_saved_scheme_dynamic">Dynamic</string>
     <string name="theme_saved_scheme_apply">Apply</string>
     <string name="theme_saved_scheme_delete">Delete</string>
+    <string name="theme_scheme_delete_message">Delete this color scheme?</string>
     <string name="settings_material_border_width">Border width</string>
     <string name="settings_material_border_width_summary">Set the outline width for Material 3 cards from 0 to 3 dp.</string>
     <string name="settings_material_font_family">Font family</string>

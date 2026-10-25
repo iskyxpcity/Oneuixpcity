@@ -242,6 +242,7 @@ class SettingsViewModel(
 
     fun applyMaterialColorScheme(scheme: com.alohaoneui.app.data.repository.MaterialColorScheme) {
         repo.keyColor = scheme.keyColor
+        repo.materialDynamicColorEnabled = scheme.keyColor == 0
         repo.colorStyle = runCatching { com.materialkolor.PaletteStyle.valueOf(scheme.colorStyle).name }
             .getOrDefault(com.materialkolor.PaletteStyle.Expressive.name)
         repo.colorSpec = runCatching { com.materialkolor.dynamiccolor.ColorSpec.SpecVersion.valueOf(scheme.colorSpec).name }
@@ -251,6 +252,7 @@ class SettingsViewModel(
         _uiState.update {
             it.copy(
                 keyColor = repo.keyColor,
+                materialDynamicColorEnabled = repo.materialDynamicColorEnabled,
                 colorStyle = repo.colorStyle,
                 colorSpec = repo.colorSpec,
                 materialContrastMode = repo.materialContrastMode,
