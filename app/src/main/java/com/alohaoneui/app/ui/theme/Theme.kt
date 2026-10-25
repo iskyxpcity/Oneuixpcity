@@ -9,6 +9,8 @@ import com.materialkolor.dynamiccolor.ColorSpec
 import com.alohaoneui.app.data.repository.SettingsRepository
 import com.alohaoneui.app.data.repository.SettingsRepositoryImpl
 import com.alohaoneui.app.ui.LocalUiMode
+import com.alohaoneui.app.ui.ThemeId
+import com.alohaoneui.app.ui.ThemeRegistry
 import com.alohaoneui.app.ui.UiMode
 
 enum class ColorMode(val value: Int) {
@@ -106,17 +108,10 @@ fun AlohaOneUITheme(
     uiMode: UiMode = LocalUiMode.current,
     content: @Composable () -> Unit
 ) {
-    when (uiMode) {
-        UiMode.Miuix -> MiuixAlohaOneUITheme(
-            appSettings = appSettings,
-            content = content
-        )
-
-        UiMode.Material -> MaterialAlohaOneUITheme(
-            appSettings = appSettings,
-            content = content
-        )
-    }
+    // Theme selection is resolved through the registry; feature screens stay theme-agnostic.
+    ThemeRegistry.definition(ThemeId.fromPersistedValue(uiMode.value))
+        .adapter
+        .Apply(appSettings = appSettings, content = content)
 }
 
 @Composable
