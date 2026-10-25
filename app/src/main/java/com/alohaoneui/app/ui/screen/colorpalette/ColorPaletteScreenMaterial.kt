@@ -1,7 +1,13 @@
 package com.alohaoneui.app.ui.screen.colorpalette
 
 import android.annotation.SuppressLint
+import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.net.Uri
 import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeIn
@@ -77,6 +83,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -94,6 +101,9 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import com.materialkolor.PaletteStyle
 import com.materialkolor.hct.Hct
 import com.materialkolor.dynamiccolor.ColorSpec
@@ -122,6 +132,18 @@ fun ColorPaletteScreenMaterial(
     val colorStyle = state.currentPaletteStyle
     val colorSpec = state.currentColorSpec
     val haptic = LocalHapticFeedback.current
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    val imagePicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        if (uri != null) {
+            coroutineScope.launch {
+                val extractedColor = withContext(Dispatchers.IO) {
+                    runCatching { extractAverageSeedColor(context, uri) }.getOrNull()
+                }
+                extractedColor?.let(actions.onSetKeyColor)
+            }
+        }
+    }
 
     LaunchedEffect(Unit) {
         scrollBehavior.state.heightOffset = scrollBehavior.state.heightOffsetLimit
@@ -331,6 +353,34 @@ fun ColorPaletteScreenMaterial(
                                 }
                             }
                         }
+                    }
+                }
+            }
+
+            TonalCard(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = stringResource(R.string.theme_extract_color_title),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = stringResource(R.string.theme_extract_color_summary),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.outline
+                    )
+                    Button(
+                        onClick = { imagePicker.launch("image/*") },
+                        modifier = Modifier.align(Alignment.End)
+                    ) {
+                        Text(stringResource(R.string.theme_extract_color_action))
                     }
                 }
             }
@@ -871,5 +921,40 @@ private fun ColorButtonMaterial(
                 }
             }
         }
+    }
+}
+
+
+private fun extractAverageSeedColor(context: Context, uri: Uri): Int? {
+    val bitmap = context.contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it) } ?: return null
+    return try {
+        val sampleWidth = minOf(48, bitmap.width.coerceAtLeast(1))
+        val sampleHeight = minOf(48, bitmap.height.coerceAtLeast(1))
+        val sample = Bitmap.createScaledBitmap(bitmap, sampleWidth, sampleHeight, true)
+        try {
+            var red = 0L
+            var green = 0L
+            var blue = 0L
+            var count = 0L
+            for (y in 0 until sample.height) {
+                for (x in 0 until sample.width) {
+                    val pixel = sample.getPixel(x, y)
+                    if (android.graphics.Color.alpha(pixel) < 16) continue
+                    red += android.graphics.Color.red(pixel)
+                    green += android.graphics.Color.green(pixel)
+                    blue += android.graphics.Color.blue(pixel)
+                    count++
+                }
+            }
+            if (count == 0L) null else android.graphics.Color.rgb(
+                (red / count).toInt(),
+                (green / count).toInt(),
+                (blue / count).toInt(),
+            )
+        } finally {
+            if (sample !== bitmap) sample.recycle()
+        }
+    } finally {
+        bitmap.recycle()
     }
 }

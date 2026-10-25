@@ -275,4 +275,7 @@
     <string name="settings_material_color_vision_protanopia">红色盲模拟</string>
     <string name="settings_material_color_vision_deuteranopia">绿色盲模拟</string>
     <string name="settings_material_color_vision_tritanopia">蓝黄色觉异常模拟</string>
+    <string name="theme_extract_color_title">从图片提取种子色</string>
+    <string name="theme_extract_color_summary">选择图片后在本机采样计算平均颜色，并将其用作 Material 3 种子色；图片不会上传。</string>
+    <string name="theme_extract_color_action">选择图片</string>
 </resources>

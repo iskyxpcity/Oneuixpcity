@@ -278,4 +278,7 @@
     <string name="settings_material_color_vision_protanopia">Protanopia simulation</string>
     <string name="settings_material_color_vision_deuteranopia">Deuteranopia simulation</string>
     <string name="settings_material_color_vision_tritanopia">Tritanopia simulation</string>
+    <string name="theme_extract_color_title">Extract a seed color from an image</string>
+    <string name="theme_extract_color_summary">Choose an image. A sampled average color is calculated on this device and used as the Material 3 seed color; the image is not uploaded.</string>
+    <string name="theme_extract_color_action">Choose image</string>
 </resources>
