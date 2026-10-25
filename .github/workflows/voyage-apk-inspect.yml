@@ -58,6 +58,31 @@ jobs:
           cp "$RUNNER_TEMP/voyage-decoded/AndroidManifest.xml" "$RUNNER_TEMP/voyage-analysis/"
           mkdir -p "$RUNNER_TEMP/voyage-analysis/values"
           find "$RUNNER_TEMP/voyage-decoded/res" -maxdepth 2 -type d -name 'values*' -exec sh -c 'for d do cp -a "$d" "$1/values/"; done' sh "$RUNNER_TEMP/voyage-analysis" {} +
+      - name: Decompile Compose theme implementation with JADX
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/jadx-bin" "$RUNNER_TEMP/voyage-analysis/decompiled"
+          curl --fail --location --retry 3 https://api.github.com/repos/skylot/jadx/releases/latest -o "$RUNNER_TEMP/jadx-release.json"
+          jadx_url="$(jq -r '[.assets[] | select(.name | endswith(".zip")) | .browser_download_url][0] // empty' "$RUNNER_TEMP/jadx-release.json")"
+          test -n "$jadx_url"
+          curl --fail --location --retry 3 "$jadx_url" -o "$RUNNER_TEMP/jadx.zip"
+          unzip -q "$RUNNER_TEMP/jadx.zip" -d "$RUNNER_TEMP/jadx-bin"
+          jadx_bin="$(find "$RUNNER_TEMP/jadx-bin" -type f -path '*/bin/jadx' -print -quit)"
+          test -n "$jadx_bin"
+          chmod +x "$jadx_bin"
+          "$jadx_bin" --deobf --show-bad-code -d "$RUNNER_TEMP/voyage-analysis/decompiled" "$RUNNER_TEMP/voyage.apk" >/tmp/jadx.log 2>&1
+          {
+            echo "=== Compose/Material theme source excerpts ==="
+            grep -RnlE 'DynamicMaterialTheme|rememberDynamicColorScheme|dynamicColorScheme|MaterialTheme\(' "$RUNNER_TEMP/voyage-analysis/decompiled" --include='*.java' | sed -n '1,80p' > "$RUNNER_TEMP/theme-files.txt" || true
+            while IFS= read -r f; do
+              echo "--- $f ---"
+              grep -nE -C 5 'DynamicMaterialTheme|rememberDynamicColorScheme|dynamicColorScheme|MaterialTheme\(' "$f" | sed -n '1,220p' || true
+            done < "$RUNNER_TEMP/theme-files.txt"
+            echo "=== App-specific theme-related identifiers ==="
+            grep -RhoE '([A-Za-z0-9_]*(Theme|ColorScheme|TonalPalette|Typography|Palette|Material)[A-Za-z0-9_]*)' "$RUNNER_TEMP/voyage-analysis/decompiled/com" --include='*.java' 2>/dev/null | sort -u | sed -n '1,500p' || true
+          } > "$RUNNER_TEMP/voyage-analysis/compose-theme-source.txt"
+          sed -n '1,1600p' "$RUNNER_TEMP/voyage-analysis/compose-theme-source.txt"
       - name: Upload decoded reference report
         uses: actions/upload-artifact@v4
         with:
