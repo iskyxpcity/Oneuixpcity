@@ -306,6 +306,8 @@
     <string name="theme_nav_floating">Floating navigation bar</string>
     <string name="theme_nav_floating_summary">Let content scroll beneath the bottom navigation bar.</string>
     <string name="theme_nav_blur">Navigation bar blur</string>
+    <string name="theme_floating_nav_bar_title">Floating navigation bar</string>
+    <string name="theme_floating_nav_bar_subtitle">The bottom navigation bar floats above the page and content scrolls beneath it. Applies to the bottom bar on narrow screens.</string>
     <string name="theme_mode_system">Follow system</string>
     <string name="theme_mode_light">Light</string>
     <string name="theme_mode_dark">Dark</string>
