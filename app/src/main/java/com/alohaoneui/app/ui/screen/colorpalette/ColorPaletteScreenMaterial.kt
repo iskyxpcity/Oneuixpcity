@@ -56,11 +56,13 @@ import androidx.compose.material.icons.rounded.DesignServices
 import androidx.compose.material.icons.rounded.Style
 import androidx.compose.material.icons.rounded.Swipe
 import androidx.compose.material.icons.rounded.ViewCarousel
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
@@ -73,6 +75,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -193,6 +196,40 @@ fun ColorPaletteScreenMaterial(
                             actions.onSetKeyColor(color)
                         }
                     )
+                }
+            }
+
+            var seedHex by remember(currentKeyColor) {
+                mutableStateOf(
+                    if (currentKeyColor == 0) "" else
+                        (currentKeyColor and 0x00FFFFFF).toString(16).uppercase().padStart(6, '0')
+                )
+            }
+            val parsedSeedColor = seedHex.trim().removePrefix("#").takeIf { value ->
+                value.length == 6 && value.all { it.digitToIntOrNull(16) != null }
+            }?.toLongOrNull(16)?.toInt()?.or(0xFF000000.toInt())
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                OutlinedTextField(
+                    value = seedHex,
+                    onValueChange = { seedHex = it.take(7) },
+                    modifier = Modifier.weight(1f),
+                    label = { Text(stringResource(R.string.theme_editor_hex)) },
+                    placeholder = { Text("6750A4") },
+                    singleLine = true,
+                    isError = seedHex.isNotBlank() && parsedSeedColor == null,
+                )
+                Button(
+                    onClick = { parsedSeedColor?.let(actions.onSetKeyColor) },
+                    enabled = parsedSeedColor != null,
+                ) {
+                    Text(stringResource(R.string.theme_editor_apply_hex))
                 }
             }
 
