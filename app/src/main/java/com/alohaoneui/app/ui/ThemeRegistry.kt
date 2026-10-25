@@ -103,8 +103,8 @@ object ThemeRegistry {
                 colorSpecSelection = true,
                 amoledBlack = true,
                 expressiveMotion = true,
-                // Voyage supports this, but the editor has not yet been ported to Aloha.
-                customColorSchemes = false,
+                // The Material palette screen supports saving, applying, and deleting schemes.
+                customColorSchemes = true,
                 fontFamilySelection = true,
                 fontScale = true,
                 cornerScale = true,
