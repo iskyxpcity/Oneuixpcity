@@ -1,10 +1,12 @@
 package com.alohaoneui.app.ui.screen.settings
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -20,7 +22,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.alohaoneui.app.R
 import com.alohaoneui.app.ui.navigation3.LocalNavigator
 import com.alohaoneui.app.ui.viewmodel.SettingsViewModel
-import com.alohaoneui.app.ui.UiMode
 import com.materialkolor.PaletteStyle
 
 private data class VoyageThemeSection(val title: Int, val icon: ImageVector)
@@ -50,10 +51,6 @@ fun ThemeSettingsScreenMaterial() {
         Column(
             Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(bottom = 24.dp)
         ) {
-            TextButton(
-                onClick = { navigator.push(com.alohaoneui.app.ui.navigation3.Route.ColorPalette) },
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
-            ) { Text(stringResource(R.string.theme_scheme_title)) }
             // Match Voyage's continuous grouped preference page and original section order.
             listOf(0, 7, 1, 6, 5, 2, 3, 4).forEach { index ->
                 Text(
@@ -74,12 +71,6 @@ private fun ThemeSection(index: Int, state: SettingsUiState, vm: SettingsViewMod
         when (index) {
             0 -> {
                 ThemeGroup {
-                    ThemeDropdown(
-                        stringResource(R.string.settings_ui_mode),
-                        listOf(stringResource(R.string.theme_design_material3), stringResource(R.string.theme_design_miuix)),
-                        if (state.uiMode == UiMode.Material.value) 0 else 1,
-                        { vm.setUiMode(if (it == 0) UiMode.Material.value else UiMode.Miuix.value) }
-                    )
                     ThemeSwitch(stringResource(R.string.settings_dynamic_color_title), stringResource(R.string.settings_dynamic_color_subtitle), state.materialDynamicColorEnabled, vm::setMaterialDynamicColorEnabled)
                     val styles = listOf(PaletteStyle.Expressive, PaletteStyle.TonalSpot, PaletteStyle.Neutral, PaletteStyle.Vibrant, PaletteStyle.Rainbow, PaletteStyle.FruitSalad, PaletteStyle.Monochrome, PaletteStyle.Fidelity, PaletteStyle.Content)
                     val labels = styles.map { stringResource(when(it) {
