@@ -1,20 +1,16 @@
 package com.alohaoneui.app.ui.theme
 
 import android.app.Activity
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Shapes
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.shape.CutCornerShape
-import androidx.compose.foundation.shape.CornerBasedShape
-import androidx.compose.ui.unit.dp
 import androidx.compose.material3.MotionScheme
+import androidx.compose.material3.Shapes
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
@@ -23,6 +19,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.compose.material3.dynamicDarkColorScheme
+import androidx.compose.material3.dynamicLightColorScheme
+import com.materialkolor.DynamicMaterialExpressiveTheme
 
 val LocalMaterialBorderWidth = staticCompositionLocalOf { 0.0f }
 val LocalMaterialSwitchStyle = staticCompositionLocalOf { 0 }
@@ -35,8 +34,9 @@ val LocalMaterialShadowSwitches = staticCompositionLocalOf { true }
 val LocalMaterialShadowSliders = staticCompositionLocalOf { true }
 
 /**
- * Voyage-aligned Material 3 defaults for shapes and typography, while retaining Aloha's
- * expressive motion, palette preferences, AMOLED handling, and existing screen behavior.
+ * Voyage's MaterialKolor expressive theme is the rendering engine. Aloha feature state remains
+ * the source of persisted preferences; unsupported Aloha-only styling layers are not applied
+ * over the MaterialKolor theme.
  */
 @Composable
 fun MaterialAlohaOneUITheme(
@@ -49,22 +49,13 @@ fun MaterialAlohaOneUITheme(
     val darkTheme = appSettings.colorMode.isDark ||
         (appSettings.colorMode.isSystem && systemDarkTheme)
     val amoledMode = appSettings.colorMode.isAmoled
-    val dynamicColor = appSettings.materialDynamicColorEnabled && appSettings.keyColor == 0
-    val seedColor = when {
-        dynamicColor -> Color.Unspecified
-        appSettings.keyColor != 0 -> Color(appSettings.keyColor)
-        else -> Color(0xFF6750A4)
+    val seedColor = if (appSettings.materialDynamicColorEnabled && appSettings.keyColor == 0) {
+        (if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)).primary
+    } else if (appSettings.keyColor != 0) {
+        Color(appSettings.keyColor)
+    } else {
+        Color(0xFF6750A4)
     }
-
-    val colorScheme = rememberAlohaOneUIColorScheme(
-        seedColor = seedColor,
-        isDark = darkTheme,
-        isAmoled = amoledMode,
-        paletteStyle = appSettings.paletteStyle,
-        colorSpec = appSettings.colorSpec,
-        contrastLevelOverride = appSettings.materialContrastLevel.toDouble(),
-    )
-    val animatedColorScheme = colorScheme.animateAsState()
 
     LaunchedEffect(darkTheme) {
         val window = (context as? Activity)?.window ?: return@LaunchedEffect
@@ -85,48 +76,45 @@ fun MaterialAlohaOneUITheme(
         LocalMaterialShadowSwitches provides appSettings.materialShadowSwitches,
         LocalMaterialShadowSliders provides appSettings.materialShadowSliders,
         LocalDensity provides Density(
-            density = density.density * if (appSettings.materialLargeTextEnabled) 1.1f else 1.0f,
+            density = density.density,
             fontScale = density.fontScale * appSettings.materialFontScale.coerceIn(0.8f, 1.5f),
-        )
+        ),
     ) {
-        MaterialTheme(
-            colorScheme = animatedColorScheme,
-            shapes = Shapes(
-                small = materialShape(appSettings.materialShapeStyle, 4.dp),
-                medium = materialShape(appSettings.materialShapeStyle, 8.dp),
-                large = materialShape(appSettings.materialShapeStyle, 16.dp),
-            ),
+        DynamicMaterialExpressiveTheme(
+            seedColor = seedColor,
             motionScheme = MotionScheme.expressive(),
-            typography = Typography.withMaterialFontFamily(appSettings.materialFontFamily, appSettings.materialBoldTextEnabled),
-            content = {
-                val colorMatrix = materialColorVisionMatrix(appSettings.materialColorVisionMode, appSettings.materialInvertColors)
-                if (colorMatrix == null) {
+            isDark = darkTheme,
+            isAmoled = amoledMode,
+            style = appSettings.paletteStyle,
+            contrastLevel = appSettings.materialContrastLevel.toDouble(),
+            specVersion = appSettings.colorSpec.effectiveFor(appSettings.paletteStyle),
+            shapes = Shapes(),
+            typography = Typography.withMaterialFontFamily(
+                appSettings.materialFontFamily,
+                appSettings.materialBoldTextEnabled,
+            ),
+            animate = true,
+        ) {
+            val colorMatrix = materialColorVisionMatrix(
+                appSettings.materialColorVisionMode,
+                appSettings.materialInvertColors,
+            )
+            if (colorMatrix == null) {
+                content()
+            } else {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .graphicsLayer { colorFilter = ColorFilter.colorMatrix(colorMatrix) },
+                ) {
                     content()
-                } else {
-                    Box(
-                        modifier = androidx.compose.ui.Modifier
-                            .fillMaxSize()
-                            .graphicsLayer { colorFilter = ColorFilter.colorMatrix(colorMatrix) }
-                    ) { content() }
                 }
-            },
-        )
+            }
+        }
     }
 }
 
-
-private fun materialShape(style: Int, size: androidx.compose.ui.unit.Dp): CornerBasedShape = when (style.coerceIn(0, 6)) {
-    0 -> RoundedCornerShape(size)
-    1 -> CutCornerShape(size)
-    2 -> RoundedCornerShape(size * 2.0f)
-    3 -> RoundedCornerShape(size * 1.4f)
-    4 -> RoundedCornerShape(size * 1.2f)
-    5 -> RoundedCornerShape(percent = 50)
-    else -> CutCornerShape(topStart = size * 1.5f, topEnd = size, bottomEnd = size * 1.5f, bottomStart = size)
-}
-
 private fun materialColorVisionMatrix(mode: Int, invert: Boolean): ColorMatrix? {
-    val identity = ColorMatrix()
     val grayscale = ColorMatrix(floatArrayOf(
         0.2126f, 0.7152f, 0.0722f, 0f, 0f,
         0.2126f, 0.7152f, 0.0722f, 0f, 0f,
@@ -152,20 +140,21 @@ private fun materialColorVisionMatrix(mode: Int, invert: Boolean): ColorMatrix? 
         0f, 0f, 0f, 1f, 0f,
     ))
     fun partial(target: ColorMatrix, amount: Float): ColorMatrix {
-        val a = identity.values
-        val b = target.values
-        val out = FloatArray(20) { index -> a[index] * (1f - amount) + b[index] * amount }
-        return ColorMatrix(out)
+        val identity = ColorMatrix().values
+        val values = target.values
+        return ColorMatrix(FloatArray(20) { index ->
+            identity[index] * (1f - amount) + values[index] * amount
+        })
     }
     val vision = when (mode) {
-        1 -> partial(protanopia, 0.5f) // Protanomaly
-        2 -> partial(deuteranopia, 0.5f) // Deuteranomaly
-        3 -> partial(tritanopia, 0.5f) // Tritanomaly
-        4 -> protanopia // Protanopia
-        5 -> deuteranopia // Deuteranopia
-        6 -> tritanopia // Tritanopia
-        7 -> partial(grayscale, 0.5f) // Achromatomaly
-        8 -> grayscale // Achromatopsia
+        1 -> partial(protanopia, 0.5f)
+        2 -> partial(deuteranopia, 0.5f)
+        3 -> partial(tritanopia, 0.5f)
+        4 -> protanopia
+        5 -> deuteranopia
+        6 -> tritanopia
+        7 -> partial(grayscale, 0.5f)
+        8 -> grayscale
         else -> null
     }
     if (!invert) return vision
@@ -176,11 +165,8 @@ private fun materialColorVisionMatrix(mode: Int, invert: Boolean): ColorMatrix? 
         0f, 0f, 0f, 1f, 0f,
     ))
     if (vision == null) return inversion
-    return multiplyColorMatrices(inversion, vision)
-}
-private fun multiplyColorMatrices(first: ColorMatrix, second: ColorMatrix): ColorMatrix {
-    val a = first.values
-    val b = second.values
+    val a = inversion.values
+    val b = vision.values
     val out = FloatArray(20)
     for (row in 0..3) {
         for (column in 0..3) {
