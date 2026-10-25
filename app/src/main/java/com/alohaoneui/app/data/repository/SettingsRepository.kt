@@ -18,6 +18,7 @@ interface SettingsRepository {
     var materialBorderWidth: Float
     var materialFontFamily: String
     var materialColorVisionMode: Int
+    var materialNavigationMotionMode: Int
     var enablePredictiveBack: Boolean
     var enableBlur: Boolean
     var enableFloatingBottomBar: Boolean
@@ -60,6 +61,7 @@ data class AppSettingsBackup(
     val materialBorderWidth: Float = 0.0f,
     val materialFontFamily: String = "Default",
     val materialColorVisionMode: Int = 0,
+    val materialNavigationMotionMode: Int = 0,
     val enablePredictiveBack: Boolean,
     val enableBlur: Boolean,
     val enableFloatingBottomBar: Boolean,

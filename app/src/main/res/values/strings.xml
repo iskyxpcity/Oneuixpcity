@@ -281,4 +281,9 @@
     <string name="theme_extract_color_title">Extract a seed color from an image</string>
     <string name="theme_extract_color_summary">Choose an image. A sampled average color is calculated on this device and used as the Material 3 seed color; the image is not uploaded.</string>
     <string name="theme_extract_color_action">Choose image</string>
+    <string name="settings_material_navigation_motion">Navigation motion</string>
+    <string name="settings_material_navigation_motion_summary">Choose how the Material 3 main-page navigation animates.</string>
+    <string name="settings_material_navigation_motion_spring">Expressive spring</string>
+    <string name="settings_material_navigation_motion_smooth">Smooth</string>
+    <string name="settings_material_navigation_motion_instant">Instant</string>
 </resources>

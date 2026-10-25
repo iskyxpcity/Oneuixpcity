@@ -25,6 +25,7 @@ class MainPagerState(
     val pagerState: PagerState,
     private val coroutineScope: CoroutineScope,
     private val animatePageChanges: Boolean,
+    private val navigationMotionMode: Int,
 ) {
     var selectedPage by mutableIntStateOf(pagerState.currentPage)
         private set
@@ -45,10 +46,10 @@ class MainPagerState(
         navJob = coroutineScope.launch {
             val myJob = coroutineContext.job
             try {
-                if (animatePageChanges) {
-                    pagerState.springAnimateToPage(targetIndex)
-                } else {
-                    pagerState.scrollToPage(targetIndex)
+                when {
+                    !animatePageChanges || navigationMotionMode == 2 -> pagerState.scrollToPage(targetIndex)
+                    navigationMotionMode == 1 -> pagerState.animateScrollToPage(targetIndex)
+                    else -> pagerState.springAnimateToPage(targetIndex)
                 }
             } finally {
                 if (navJob == myJob) {
@@ -73,9 +74,10 @@ fun rememberMainPagerState(
     pagerState: PagerState,
     coroutineScope: CoroutineScope = rememberCoroutineScope(),
     animatePageChanges: Boolean = true,
+    navigationMotionMode: Int = 0,
 ): MainPagerState {
-    return remember(pagerState, coroutineScope, animatePageChanges) {
-        MainPagerState(pagerState, coroutineScope, animatePageChanges)
+    return remember(pagerState, coroutineScope, animatePageChanges, navigationMotionMode) {
+        MainPagerState(pagerState, coroutineScope, animatePageChanges, navigationMotionMode.coerceIn(0, 2))
     }
 }
 

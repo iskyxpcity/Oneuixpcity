@@ -23,6 +23,7 @@ data class SettingsUiState(
     val materialBorderWidth: Float = 0.0f,
     val materialFontFamily: String = "Default",
     val materialColorVisionMode: Int = 0,
+    val materialNavigationMotionMode: Int = 0,
     val enablePredictiveBack: Boolean = false,
     val enableBlur: Boolean = false,
     val enableFloatingBottomBar: Boolean = false,

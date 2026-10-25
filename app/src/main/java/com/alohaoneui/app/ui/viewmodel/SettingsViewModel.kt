@@ -45,6 +45,7 @@ class SettingsViewModel(
             val materialBorderWidth = repo.materialBorderWidth
             val materialFontFamily = repo.materialFontFamily
             val materialColorVisionMode = repo.materialColorVisionMode
+            val materialNavigationMotionMode = repo.materialNavigationMotionMode
             val uiMode = repo.uiMode
 
             _uiState.update {
@@ -70,6 +71,7 @@ class SettingsViewModel(
                     materialBorderWidth = materialBorderWidth,
                     materialFontFamily = materialFontFamily,
                     materialColorVisionMode = materialColorVisionMode,
+                    materialNavigationMotionMode = materialNavigationMotionMode,
                 )
             }
         }
@@ -226,6 +228,12 @@ class SettingsViewModel(
         val safeMode = mode.coerceIn(0, 4)
         repo.materialColorVisionMode = safeMode
         _uiState.update { it.copy(materialColorVisionMode = safeMode) }
+    }
+
+    fun setMaterialNavigationMotionMode(mode: Int) {
+        val safeMode = mode.coerceIn(0, 2)
+        repo.materialNavigationMotionMode = safeMode
+        _uiState.update { it.copy(materialNavigationMotionMode = safeMode) }
     }
 
     fun setEnablePredictiveBack(enabled: Boolean) {

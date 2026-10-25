@@ -593,6 +593,27 @@ fun ColorPaletteScreenMaterial(
                     ),
                 )
 
+                SegmentedColumn(
+                    modifier = Modifier.padding(top = 4.dp),
+                    content = listOf(
+                        {
+                            val navigationMotionLabels = listOf(
+                                stringResource(R.string.settings_material_navigation_motion_spring),
+                                stringResource(R.string.settings_material_navigation_motion_smooth),
+                                stringResource(R.string.settings_material_navigation_motion_instant),
+                            )
+                            SegmentedDropdownItem(
+                                icon = Icons.Rounded.ViewCarousel,
+                                title = stringResource(R.string.settings_material_navigation_motion),
+                                summary = stringResource(R.string.settings_material_navigation_motion_summary),
+                                items = navigationMotionLabels,
+                                selectedIndex = uiState.materialNavigationMotionMode.coerceIn(0, navigationMotionLabels.lastIndex),
+                                onItemSelected = actions.onSetMaterialNavigationMotionMode,
+                            )
+                        }
+                    ),
+                )
+
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
                     SegmentedColumn(
                         modifier = Modifier.padding(top = 4.dp),

@@ -111,7 +111,7 @@ object ThemeRegistry {
                 borderWidth = true,
                 colorVisionMode = true,
                 contentColorExtraction = false,
-                navigationMotionSelection = false,
+                navigationMotionSelection = true,
             ),
         ),
     )

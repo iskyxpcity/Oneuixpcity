@@ -278,4 +278,9 @@
     <string name="theme_extract_color_title">从图片提取种子色</string>
     <string name="theme_extract_color_summary">选择图片后在本机采样计算平均颜色，并将其用作 Material 3 种子色；图片不会上传。</string>
     <string name="theme_extract_color_action">选择图片</string>
+    <string name="settings_material_navigation_motion">导航动效</string>
+    <string name="settings_material_navigation_motion_summary">选择 Material 3 主页面切换的动画方式。</string>
+    <string name="settings_material_navigation_motion_spring">弹簧动效</string>
+    <string name="settings_material_navigation_motion_smooth">平滑切换</string>
+    <string name="settings_material_navigation_motion_instant">即时切换</string>
 </resources>

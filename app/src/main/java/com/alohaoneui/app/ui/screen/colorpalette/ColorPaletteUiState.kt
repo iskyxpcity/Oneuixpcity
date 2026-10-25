@@ -31,6 +31,7 @@ data class ColorPaletteScreenActions(
     val onSetMaterialBorderWidth: (Float) -> Unit,
     val onSetMaterialFontFamily: (String) -> Unit,
     val onSetMaterialColorVisionMode: (Int) -> Unit,
+    val onSetMaterialNavigationMotionMode: (Int) -> Unit,
     val onSaveMaterialColorScheme: (String) -> Unit,
     val onApplyMaterialColorScheme: (MaterialColorScheme) -> Unit,
     val onDeleteMaterialColorScheme: (String) -> Unit,

@@ -29,6 +29,8 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerDefaults
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.animation.core.snap
+import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
@@ -171,6 +173,7 @@ class MainActivity : ComponentActivity() {
                             initialPage = selectedMainPage,
                             onPageChanged = viewModel::setSelectedMainPage,
                             pagerGestureMode = uiState.pagerGestureMode,
+                            navigationMotionMode = if (uiState.uiMode == UiMode.Material) uiState.navigationMotionMode else 0,
                             enablePredictiveBack = uiState.enablePredictiveBack,
                         )
                     }
@@ -284,6 +287,7 @@ fun MainScreen(
     initialPage: Int = 0,
     onPageChanged: (Int) -> Unit = {},
     pagerGestureMode: Int = PagerInterceptionMode.Native.ordinal,
+    navigationMotionMode: Int = 0,
     enablePredictiveBack: Boolean = false,
 ) {
     val navController = LocalNavigator.current
@@ -298,6 +302,7 @@ fun MainScreen(
     val mainPagerState = rememberMainPagerState(
         pagerState = pagerState,
         animatePageChanges = !showNavigationRail,
+        navigationMotionMode = if (showNavigationRail) 2 else navigationMotionMode.coerceIn(0, 2),
     )
 
     // The main entry is saveable while a detail route is on top. If a page-switch
@@ -313,7 +318,11 @@ fun MainScreen(
     val interceptPagerAxis = pagerGestureMode == PagerInterceptionMode.CrossAxisInterceptor.ordinal
     val pagerFlingBehavior = PagerDefaults.flingBehavior(
         state = mainPagerState.pagerState,
-        snapAnimationSpec = PagerNavigationSpringSpec,
+        snapAnimationSpec = when (navigationMotionMode) {
+            1 -> tween(durationMillis = 320)
+            2 -> snap()
+            else -> PagerNavigationSpringSpec
+        },
     )
     val nativePagerNestedScrollConnection = PagerDefaults.pageNestedScrollConnection(
         mainPagerState.pagerState,

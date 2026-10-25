@@ -11,6 +11,7 @@ data class MainActivityUiState(
     val enablePredictiveBack: Boolean,
     val enableSwipeBack: Boolean,
     val pagerGestureMode: Int,
+    val navigationMotionMode: Int,
     val enableBlur: Boolean,
     val enableFloatingBottomBar: Boolean,
     val enableFloatingBottomBarBlur: Boolean,
