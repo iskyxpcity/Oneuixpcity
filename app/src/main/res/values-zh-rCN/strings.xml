@@ -259,6 +259,12 @@
     <string name="theme_scheme_edit">编辑方案</string>
     <string name="theme_picker_image">图片</string>
     <string name="theme_picker_choose_image">选择图片</string>
+    <string name="theme_role_primary">主色</string>
+    <string name="theme_role_secondary">次要色</string>
+    <string name="theme_role_tertiary">第三色</string>
+    <string name="theme_role_neutral_variant">中性色变体</string>
+    <string name="theme_role_surface">表面色</string>
+    <string name="theme_role_error">错误色</string>
     <string name="theme_picker_palette">调色板</string>
     <string name="theme_picker_sliders">滑块</string>
     <string name="theme_picker_spectrum">色谱</string>

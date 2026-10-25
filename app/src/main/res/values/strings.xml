@@ -262,6 +262,12 @@
     <string name="theme_scheme_edit">Edit scheme</string>
     <string name="theme_picker_image">Image</string>
     <string name="theme_picker_choose_image">Choose image</string>
+    <string name="theme_role_primary">Primary</string>
+    <string name="theme_role_secondary">Secondary</string>
+    <string name="theme_role_tertiary">Tertiary</string>
+    <string name="theme_role_neutral_variant">Neutral variant</string>
+    <string name="theme_role_surface">Surface</string>
+    <string name="theme_role_error">Error</string>
     <string name="theme_picker_palette">Palette</string>
     <string name="theme_picker_sliders">Sliders</string>
     <string name="theme_picker_spectrum">Spectrum</string>

@@ -1,9 +1,10 @@
 package com.alohaoneui.app.ui.screen.colorpalette
 
-import android.graphics.BitmapFactory
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -51,12 +52,16 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.width
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.alohaoneui.app.R
 import com.alohaoneui.app.data.repository.MaterialColorScheme
 import com.alohaoneui.app.ui.navigation3.LocalNavigator
+import com.alohaoneui.app.ui.theme.ColorMode
 import com.alohaoneui.app.ui.theme.keyColorOptions
+import com.alohaoneui.app.ui.theme.rememberAlohaOneUIColorScheme
+import com.materialkolor.dynamiccolor.ColorSpec
 import com.alohaoneui.app.ui.viewmodel.SettingsViewModel
 import com.materialkolor.PaletteStyle
 import com.materialkolor.hct.Hct
@@ -102,28 +107,23 @@ fun ThemeSchemeEditorScreen(index: Int) {
     val parsedHex = hex.trim().removePrefix("#").takeIf { it.length == 6 && it.all { c -> c.digitToIntOrNull(16) != null } }?.toLongOrNull(16)?.toInt()?.or(0xFF000000.toInt())
     val sliderSeedColor = Hct.from(hue = hue.toDouble(), chroma = chroma.toDouble(), tone = tone.toDouble()).toInt()
     val previewColor = if (selectedTab == 1 && hex.isBlank()) sliderSeedColor else parsedHex ?: keyColor.takeIf { it != 0 } ?: MaterialTheme.colorScheme.primary.toArgb()
+    val currentColorMode = ColorMode.fromValue(uiState.themeMode)
+    val previewDark = currentColorMode.isDark || (currentColorMode.isSystem && isSystemInDarkTheme())
+    val previewPaletteStyle = runCatching { PaletteStyle.valueOf(colorStyle) }.getOrDefault(PaletteStyle.Expressive)
+    val previewColorSpec = runCatching { ColorSpec.SpecVersion.valueOf(existing?.colorSpec ?: uiState.colorSpec) }
+        .getOrDefault(ColorSpec.SpecVersion.Default)
+    val roleScheme = rememberAlohaOneUIColorScheme(
+        seedColor = if (keyColor == 0) Color.Unspecified else Color(keyColor),
+        isDark = previewDark,
+        isAmoled = currentColorMode.isAmoled,
+        paletteStyle = previewPaletteStyle,
+        colorSpec = previewColorSpec,
+        contrastLevelOverride = contrast.toDouble(),
+    )
     val imagePicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         if (uri != null) scope.launch {
             val extracted = withContext(Dispatchers.IO) {
-                runCatching {
-                    context.contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it) }?.let { bitmap ->
-                        try {
-                            val stepX = (bitmap.width / 32).coerceAtLeast(1)
-                            val stepY = (bitmap.height / 32).coerceAtLeast(1)
-                            var red = 0L; var green = 0L; var blue = 0L; var count = 0L
-                            for (y in 0 until bitmap.height step stepY) for (x in 0 until bitmap.width step stepX) {
-                                val pixel = bitmap.getPixel(x, y)
-                                if (((pixel ushr 24) and 0xFF) >= 128) {
-                                    red += (pixel ushr 16) and 0xFF
-                                    green += (pixel ushr 8) and 0xFF
-                                    blue += pixel and 0xFF
-                                    count++
-                                }
-                            }
-                            if (count == 0L) null else (0xFF shl 24) or ((red / count).toInt() shl 16) or ((green / count).toInt() shl 8) or (blue / count).toInt()
-                        } finally { bitmap.recycle() }
-                    }
-                }.getOrNull()
+                runCatching { extractAverageSeedColor(context, uri) }.getOrNull()
             }
             if (extracted != null) {
                 keyColor = extracted
@@ -157,6 +157,28 @@ fun ThemeSchemeEditorScreen(index: Int) {
                 }
             }
             Surface(modifier = Modifier.fillMaxWidth().height(72.dp), shape = MaterialTheme.shapes.large, color = Color(previewColor)) {}
+            Row(
+                modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                listOf(
+                    stringResource(R.string.theme_role_primary) to roleScheme.primary,
+                    stringResource(R.string.theme_role_secondary) to roleScheme.secondary,
+                    stringResource(R.string.theme_role_tertiary) to roleScheme.tertiary,
+                    stringResource(R.string.theme_role_neutral_variant) to roleScheme.surfaceVariant,
+                    stringResource(R.string.theme_role_surface) to roleScheme.surface,
+                    stringResource(R.string.theme_role_error) to roleScheme.error,
+                ).forEach { (label, roleColor) ->
+                    Column(modifier = Modifier.width(72.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                        Surface(
+                            modifier = Modifier.fillMaxWidth().height(42.dp),
+                            shape = MaterialTheme.shapes.medium,
+                            color = roleColor,
+                        ) {}
+                        Text(label, style = MaterialTheme.typography.labelSmall, maxLines = 2)
+                    }
+                }
+            }
             TabRow(selectedTabIndex = selectedTab) {
                 listOf(stringResource(R.string.theme_picker_palette), stringResource(R.string.theme_picker_sliders), stringResource(R.string.theme_picker_spectrum), stringResource(R.string.theme_picker_image))
                     .forEachIndexed { i, label -> Tab(selected = selectedTab == i, onClick = { selectedTab = i }, text = { Text(label) }) }

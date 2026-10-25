@@ -1235,7 +1235,7 @@ private fun ColorButtonMaterial(
 }
 
 
-private fun extractAverageSeedColor(context: Context, uri: Uri): Int? {
+internal fun extractAverageSeedColor(context: Context, uri: Uri): Int? {
     val bitmap = context.contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it) } ?: return null
     return try {
         val sampleWidth = minOf(48, bitmap.width.coerceAtLeast(1))
