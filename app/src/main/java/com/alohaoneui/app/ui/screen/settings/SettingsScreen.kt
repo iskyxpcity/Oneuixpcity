@@ -41,9 +41,10 @@ fun SettingPager(
         onPauseOrDispose { }
     }
 
+    val currentUiMode = LocalUiMode.current
     val actions = SettingsScreenActions(
         onSetCheckUpdate = viewModel::setCheckUpdate,
-        onOpenTheme = { navigator.push(if (LocalUiMode.current == UiMode.Material) Route.ThemeSettings else Route.ColorPalette) },
+        onOpenTheme = { navigator.push(if (currentUiMode == UiMode.Material) Route.ThemeSettings else Route.ColorPalette) },
         onSetUiModeIndex = { index ->
             viewModel.setUiMode(if (index == 0) UiMode.Miuix.value else UiMode.Material.value)
         },
