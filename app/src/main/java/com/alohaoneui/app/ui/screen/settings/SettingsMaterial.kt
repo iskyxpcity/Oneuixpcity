@@ -56,7 +56,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.alohaoneui.app.R
 import com.alohaoneui.app.ui.UiMode
-import com.alohaoneui.app.ui.theme.ColorMode
 import com.alohaoneui.app.ui.component.material.SegmentedColumn
 import com.alohaoneui.app.ui.component.material.SegmentedDropdownItem
 import com.alohaoneui.app.ui.component.material.SegmentedListItem
@@ -125,45 +124,20 @@ fun SettingPagerMaterial(
                         )
                     }
                     add {
-                        val mode = ColorMode.fromValue(uiState.themeMode)
-                        val selectedMode = when {
-                            mode.isSystem -> 0
-                            mode.isDark -> 2
-                            else -> 1
-                        }
-                        SegmentedDropdownItem(
-                            icon = Icons.Filled.DisplaySettings,
-                            title = stringResource(R.string.theme_group_mode),
-                            items = listOf(
-                                stringResource(R.string.theme_mode_system),
-                                stringResource(R.string.theme_mode_light),
-                                stringResource(R.string.theme_mode_dark),
-                            ),
-                            selectedIndex = selectedMode,
-                            onItemSelected = { index ->
-                                actions.onSetThemeMode(when (index) {
-                                    1 -> ColorMode.LIGHT.value
-                                    2 -> ColorMode.DARK.value
-                                    else -> ColorMode.SYSTEM.value
-                                })
-                            }
-                        )
-                    }
-                    add {
-                        SegmentedSwitchItem(
-                            icon = Icons.Filled.Palette,
-                            title = stringResource(R.string.theme_dynamic_color_title),
-                            summary = stringResource(R.string.theme_dynamic_color_subtitle),
-                            checked = uiState.materialDynamicColorEnabled && uiState.keyColor == 0,
-                            onCheckedChange = actions.onSetMaterialDynamicColorEnabled
-                        )
-                    }
-                    add {
                         SegmentedListItem(
                             onClick = actions.onOpenLanguage,
                             headlineContent = { Text(stringResource(R.string.settings_group_language)) },
                             supportingContent = { Text(stringResource(R.string.settings_language_summary)) },
                             leadingContent = { Icon(Icons.Filled.Language, stringResource(R.string.settings_group_language)) },
+                            trailingContent = { Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null) }
+                        )
+                    }
+                    add {
+                        SegmentedListItem(
+                            onClick = actions.onOpenTheme,
+                            headlineContent = { Text(stringResource(id = R.string.settings_theme)) },
+                            supportingContent = { Text(stringResource(id = R.string.settings_theme_summary)) },
+                            leadingContent = { Icon(Icons.Filled.Palette, stringResource(id = R.string.settings_theme)) },
                             trailingContent = { Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null) }
                         )
                     }
@@ -182,15 +156,6 @@ fun SettingPagerMaterial(
                             headlineContent = { Text(stringResource(R.string.settings_group_behavior)) },
                             supportingContent = { Text(stringResource(R.string.settings_behavior_summary)) },
                             leadingContent = { Icon(Icons.Filled.ElectricalServices, stringResource(R.string.settings_group_behavior)) },
-                            trailingContent = { Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null) }
-                        )
-                    }
-                    add {
-                        SegmentedListItem(
-                            onClick = actions.onOpenTheme,
-                            headlineContent = { Text(stringResource(id = R.string.settings_theme)) },
-                            supportingContent = { Text(stringResource(id = R.string.settings_theme_summary)) },
-                            leadingContent = { Icon(Icons.Filled.Palette, stringResource(id = R.string.settings_theme)) },
                             trailingContent = { Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null) }
                         )
                     }

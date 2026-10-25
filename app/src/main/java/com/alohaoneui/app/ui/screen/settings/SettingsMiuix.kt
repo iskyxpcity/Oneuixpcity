@@ -152,20 +152,10 @@ fun SettingPagerMiuix(
                         ArrowPreference(
                             title = stringResource(R.string.settings_group_language),
                             summary = stringResource(R.string.settings_language_summary),
-                            startAction = { Icon(Icons.Rounded.Language, modifier = Modifier.padding(end = 6.dp), contentDescription = null, tint = colorScheme.onBackground) },
+                            startAction = {
+                                Icon(Icons.Rounded.Language, modifier = Modifier.padding(end = 6.dp), contentDescription = null, tint = colorScheme.onBackground)
+                            },
                             onClick = actions.onOpenLanguage
-                        )
-                        ArrowPreference(
-                            title = stringResource(R.string.settings_group_display),
-                            summary = stringResource(R.string.settings_display_summary),
-                            startAction = { Icon(Icons.Rounded.DisplaySettings, modifier = Modifier.padding(end = 6.dp), contentDescription = null, tint = colorScheme.onBackground) },
-                            onClick = actions.onOpenDisplayText
-                        )
-                        ArrowPreference(
-                            title = stringResource(R.string.settings_group_behavior),
-                            summary = stringResource(R.string.settings_behavior_summary),
-                            startAction = { Icon(Icons.Rounded.ElectricalServices, modifier = Modifier.padding(end = 6.dp), contentDescription = null, tint = colorScheme.onBackground) },
-                            onClick = actions.onOpenMotionHaptics
                         )
                         ArrowPreference(
                             title = stringResource(id = R.string.settings_theme),
@@ -180,8 +170,23 @@ fun SettingPagerMiuix(
                             },
                             onClick = actions.onOpenTheme
                         )
+                        ArrowPreference(
+                            title = stringResource(R.string.settings_group_display),
+                            summary = stringResource(R.string.settings_display_summary),
+                            startAction = {
+                                Icon(Icons.Rounded.DisplaySettings, modifier = Modifier.padding(end = 6.dp), contentDescription = null, tint = colorScheme.onBackground)
+                            },
+                            onClick = actions.onOpenDisplayText
+                        )
+                        ArrowPreference(
+                            title = stringResource(R.string.settings_group_behavior),
+                            summary = stringResource(R.string.settings_behavior_summary),
+                            startAction = {
+                                Icon(Icons.Rounded.ElectricalServices, modifier = Modifier.padding(end = 6.dp), contentDescription = null, tint = colorScheme.onBackground)
+                            },
+                            onClick = actions.onOpenMotionHaptics
+                        )
                     }
-
 
                     Card(
                         modifier = Modifier

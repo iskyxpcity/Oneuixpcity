@@ -6,7 +6,6 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.LocaleList
-import android.provider.Settings
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -19,7 +18,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -65,7 +63,6 @@ fun LanguageSettingsScreen() {
     val currentTag = if (Build.VERSION.SDK_INT >= 33) {
         context.getSystemService(LocaleManager::class.java).applicationLocales.toLanguageTags()
     } else ""
-    val selected = choices.indexOfFirst { it.tag.equals(currentTag, ignoreCase = true) }.coerceAtLeast(0)
     Scaffold(topBar = {
         TopAppBar(
             title = { Text(stringResource(R.string.settings_group_language)) },
@@ -82,23 +79,15 @@ fun LanguageSettingsScreen() {
                 androidx.compose.material3.ListItem(
                     headlineContent = { Text(stringResource(choice.labelRes)) },
                     trailingContent = if (isSelected) {{ Text("✓", color = MaterialTheme.colorScheme.primary) }} else null,
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = androidx.compose.material3.ListItemDefaults.colors(containerColor = if (isSelected) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceContainer),
-                    tonalElevation = 0.dp,
-                )
-                Button(
-                    onClick = {
+                    modifier = Modifier.fillMaxWidth().clickable {
                         if (Build.VERSION.SDK_INT >= 33) {
                             context.getSystemService(LocaleManager::class.java).applicationLocales =
                                 if (choice.tag.isBlank()) LocaleList.getEmptyLocaleList() else LocaleList.forLanguageTags(choice.tag)
-                        } else {
-                            runCatching {
-                                context.startActivity(Intent(Settings.ACTION_LOCALE_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
-                            }
                         }
                     },
-                    modifier = Modifier.fillMaxWidth(),
-                ) { Text(stringResource(choice.labelRes)) }
+                    colors = androidx.compose.material3.ListItemDefaults.colors(containerColor = if (isSelected) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceContainer),
+                    tonalElevation = 0.dp,
+                )
             }
             if (Build.VERSION.SDK_INT < 33) Text(stringResource(R.string.settings_language_unsupported), style = MaterialTheme.typography.bodySmall)
             Text(stringResource(R.string.settings_language_restart_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.outline)
