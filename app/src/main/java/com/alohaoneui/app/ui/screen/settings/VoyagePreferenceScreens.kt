@@ -52,6 +52,7 @@ private data class LanguageChoice(val tag: String, val labelRes: Int)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LanguageSettingsScreen() {
+    val context = LocalContext.current
     val navigator = LocalNavigator.current
     val choices = listOf(
         LanguageChoice("", R.string.settings_language_system),
