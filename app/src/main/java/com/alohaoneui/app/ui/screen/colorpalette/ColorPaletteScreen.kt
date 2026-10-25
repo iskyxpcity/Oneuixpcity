@@ -14,6 +14,7 @@ import com.alohaoneui.app.ui.LocalUiMode
 import com.alohaoneui.app.ui.UiMode
 import com.alohaoneui.app.ui.navigation3.LocalNavigator
 import com.alohaoneui.app.ui.theme.ColorMode
+import com.alohaoneui.app.ui.screen.settings.ThemeSettingsScreenMaterial
 import com.alohaoneui.app.ui.viewmodel.SettingsViewModel
 
 @Composable
@@ -64,6 +65,6 @@ fun ColorPaletteScreen() {
 
     when (LocalUiMode.current) {
         UiMode.Miuix -> ColorPaletteScreenMiuix(state, actions)
-        UiMode.Material -> ColorPaletteScreenMaterial(state, actions)
+        UiMode.Material -> ThemeSettingsScreenMaterial()
     }
 }
