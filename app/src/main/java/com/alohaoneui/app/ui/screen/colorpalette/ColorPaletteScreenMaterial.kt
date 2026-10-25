@@ -426,94 +426,6 @@ fun ColorPaletteScreenMaterial(
             }
 
             MaterialThemeGroup(
-                title = stringResource(R.string.theme_group_mode),
-                icon = Icons.Filled.Brightness4,
-            ) {
-                SegmentedColumn(
-                    modifier = Modifier.padding(top = 4.dp),
-                    content = listOf(
-                        {
-                            SegmentedSwitchItem(
-                                icon = Icons.Filled.Palette,
-                                title = stringResource(R.string.theme_dynamic_color_title),
-                                summary = stringResource(R.string.theme_dynamic_color_subtitle),
-                                checked = uiState.materialDynamicColorEnabled && uiState.keyColor == 0,
-                                onCheckedChange = actions.onSetMaterialDynamicColorEnabled,
-                            )
-                        },
-                        {
-                            SegmentedSwitchItem(
-                                icon = Icons.Filled.Brightness1,
-                                title = stringResource(R.string.settings_pure_black_title),
-                                summary = stringResource(R.string.settings_pure_black_subtitle),
-                                checked = currentColorMode.isAmoled,
-                                onCheckedChange = { enabled ->
-                                    actions.onSetColorMode(if (enabled) ColorMode.DARK_AMOLED else ColorMode.DARK)
-                                },
-                            )
-                        },
-                        {
-                            val styles = PaletteStyle.entries
-                            SegmentedDropdownItem(
-                                icon = Icons.Rounded.Style,
-                                title = stringResource(R.string.settings_color_style),
-                                items = styles.map { style ->
-                                    stringResource(
-                                        id = when (style.name) {
-                                            "Content" -> R.string.settings_palette_style_content
-                                            "Expressive" -> R.string.settings_palette_style_expressive
-                                            "Fidelity" -> R.string.settings_palette_style_fidelity
-                                            "FruitSalad" -> R.string.settings_palette_style_fruit_salad
-                                            "Monochrome" -> R.string.settings_palette_style_monochrome
-                                            "Neutral" -> R.string.settings_palette_style_neutral
-                                            "Rainbow" -> R.string.settings_palette_style_rainbow
-                                            "TonalSpot" -> R.string.settings_palette_style_tonal_spot
-                                            "Vibrant" -> R.string.settings_palette_style_vibrant
-                                            else -> R.string.settings_palette_style_tonal_spot
-                                        }
-                                    )
-                                },
-                                selectedIndex = styles.indexOf(colorStyle),
-                                onItemSelected = { index ->
-                                    actions.onSetColorStyle(styles[index].name)
-                                }
-                            )
-                        },
-                    )
-                )
-
-                TonalCard(modifier = Modifier.padding(top = 4.dp)) {
-                    var contrastLevel by remember(uiState.materialContrastLevel) { mutableFloatStateOf(uiState.materialContrastLevel) }
-                    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(text = stringResource(R.string.settings_material_contrast), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
-                                Text(text = if (kotlin.math.abs(contrastLevel) < 0.01f) stringResource(R.string.settings_contrast_normal) else String.format(java.util.Locale.ROOT, "%+.1f", contrastLevel), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.outline)
-                            }
-                            Text(text = String.format(java.util.Locale.ROOT, "%+.1f", contrastLevel), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                        Slider(value = contrastLevel, onValueChange = { contrastLevel = it }, onValueChangeFinished = { actions.onSetMaterialContrastLevel(contrastLevel) }, valueRange = -1.0f..1.0f, modifier = Modifier.fillMaxWidth())
-                    }
-                }
-
-                TonalCard(modifier = Modifier.padding(top = 4.dp)) {
-                    var fontScale by remember(uiState.materialFontScale) { mutableFloatStateOf(uiState.materialFontScale) }
-                    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(text = stringResource(R.string.settings_material_font_scale), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
-                                Text(text = stringResource(R.string.settings_material_font_scale_summary), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.outline)
-                            }
-                            Text(text = "${(fontScale * 100).toInt()}%", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                        Slider(value = fontScale, onValueChange = { fontScale = it }, onValueChangeFinished = { actions.onSetMaterialFontScale(fontScale) }, valueRange = 0.8f..1.5f, modifier = Modifier.fillMaxWidth())
-                    }
-                }
-
-
-            }
-
-            MaterialThemeGroup(
                 title = stringResource(R.string.theme_group_navigation_bar),
                 icon = Icons.AutoMirrored.Rounded.MenuOpen,
             ) {
@@ -610,6 +522,94 @@ fun ColorPaletteScreenMaterial(
                         )
                     }
                 }
+
+            }
+
+            MaterialThemeGroup(
+                title = stringResource(R.string.theme_group_mode),
+                icon = Icons.Filled.Brightness4,
+            ) {
+                SegmentedColumn(
+                    modifier = Modifier.padding(top = 4.dp),
+                    content = listOf(
+                        {
+                            SegmentedSwitchItem(
+                                icon = Icons.Filled.Palette,
+                                title = stringResource(R.string.theme_dynamic_color_title),
+                                summary = stringResource(R.string.theme_dynamic_color_subtitle),
+                                checked = uiState.materialDynamicColorEnabled && uiState.keyColor == 0,
+                                onCheckedChange = actions.onSetMaterialDynamicColorEnabled,
+                            )
+                        },
+                        {
+                            SegmentedSwitchItem(
+                                icon = Icons.Filled.Brightness1,
+                                title = stringResource(R.string.settings_pure_black_title),
+                                summary = stringResource(R.string.settings_pure_black_subtitle),
+                                checked = currentColorMode.isAmoled,
+                                onCheckedChange = { enabled ->
+                                    actions.onSetColorMode(if (enabled) ColorMode.DARK_AMOLED else ColorMode.DARK)
+                                },
+                            )
+                        },
+                        {
+                            val styles = PaletteStyle.entries
+                            SegmentedDropdownItem(
+                                icon = Icons.Rounded.Style,
+                                title = stringResource(R.string.settings_color_style),
+                                items = styles.map { style ->
+                                    stringResource(
+                                        id = when (style.name) {
+                                            "Content" -> R.string.settings_palette_style_content
+                                            "Expressive" -> R.string.settings_palette_style_expressive
+                                            "Fidelity" -> R.string.settings_palette_style_fidelity
+                                            "FruitSalad" -> R.string.settings_palette_style_fruit_salad
+                                            "Monochrome" -> R.string.settings_palette_style_monochrome
+                                            "Neutral" -> R.string.settings_palette_style_neutral
+                                            "Rainbow" -> R.string.settings_palette_style_rainbow
+                                            "TonalSpot" -> R.string.settings_palette_style_tonal_spot
+                                            "Vibrant" -> R.string.settings_palette_style_vibrant
+                                            else -> R.string.settings_palette_style_tonal_spot
+                                        }
+                                    )
+                                },
+                                selectedIndex = styles.indexOf(colorStyle),
+                                onItemSelected = { index ->
+                                    actions.onSetColorStyle(styles[index].name)
+                                }
+                            )
+                        },
+                    )
+                )
+
+                TonalCard(modifier = Modifier.padding(top = 4.dp)) {
+                    var contrastLevel by remember(uiState.materialContrastLevel) { mutableFloatStateOf(uiState.materialContrastLevel) }
+                    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(text = stringResource(R.string.settings_material_contrast), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
+                                Text(text = if (kotlin.math.abs(contrastLevel) < 0.01f) stringResource(R.string.settings_contrast_normal) else String.format(java.util.Locale.ROOT, "%+.1f", contrastLevel), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.outline)
+                            }
+                            Text(text = String.format(java.util.Locale.ROOT, "%+.1f", contrastLevel), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        Slider(value = contrastLevel, onValueChange = { contrastLevel = it }, onValueChangeFinished = { actions.onSetMaterialContrastLevel(contrastLevel) }, valueRange = -1.0f..1.0f, modifier = Modifier.fillMaxWidth())
+                    }
+                }
+
+                TonalCard(modifier = Modifier.padding(top = 4.dp)) {
+                    var fontScale by remember(uiState.materialFontScale) { mutableFloatStateOf(uiState.materialFontScale) }
+                    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(text = stringResource(R.string.settings_material_font_scale), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
+                                Text(text = stringResource(R.string.settings_material_font_scale_summary), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.outline)
+                            }
+                            Text(text = "${(fontScale * 100).toInt()}%", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        Slider(value = fontScale, onValueChange = { fontScale = it }, onValueChangeFinished = { actions.onSetMaterialFontScale(fontScale) }, valueRange = 0.8f..1.5f, modifier = Modifier.fillMaxWidth())
+                    }
+                }
+
 
             }
 
