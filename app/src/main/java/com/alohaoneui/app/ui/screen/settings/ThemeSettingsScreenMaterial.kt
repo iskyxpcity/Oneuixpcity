@@ -214,19 +214,6 @@ fun ThemeSettingsScreenMaterial() {
                         }
                     },
                     {
-                        SegmentedDropdownItem(
-                            icon = Icons.Filled.Tune,
-                            title = stringResource(R.string.settings_material_navigation_motion),
-                            items = listOf(
-                                stringResource(R.string.settings_material_navigation_motion_spring),
-                                stringResource(R.string.settings_material_navigation_motion_smooth),
-                                stringResource(R.string.settings_material_navigation_motion_instant),
-                            ),
-                            selectedIndex = state.materialNavigationMotionMode.coerceIn(0, 2),
-                            onItemSelected = viewModel::setMaterialNavigationMotionMode,
-                        )
-                    },
-                    {
                         Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
                             Text(stringResource(R.string.theme_component_border_width))
                             Text(String.format(java.util.Locale.ROOT, "%.1f dp", state.materialBorderWidth), style = MaterialTheme.typography.labelMedium)
