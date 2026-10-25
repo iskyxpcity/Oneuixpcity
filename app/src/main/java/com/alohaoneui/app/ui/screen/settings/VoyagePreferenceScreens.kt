@@ -2,7 +2,6 @@ package com.alohaoneui.app.ui.screen.settings
 
 import android.app.Activity
 import android.app.LocaleManager
-import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.LocaleList
@@ -156,8 +155,6 @@ fun MotionHapticsSettingsScreen() {
     val state by vm.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val view = LocalView.current
-    val preferences = remember(context) { context.getSharedPreferences("settings", Context.MODE_PRIVATE) }
-    var hapticsEnabled by rememberSaveable { mutableStateOf(preferences.getBoolean("voyage_haptic_feedback_enabled", true)) }
     Scaffold(topBar = {
         TopAppBar(
             title = { Text(stringResource(R.string.settings_behavior_title)) },
@@ -193,9 +190,8 @@ fun MotionHapticsSettingsScreen() {
                     Text(stringResource(R.string.settings_haptic_feedback_title))
                     Text(stringResource(R.string.settings_haptic_feedback_subtitle), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.outline)
                 }
-                Switch(checked = hapticsEnabled, onCheckedChange = { enabled ->
-                    hapticsEnabled = enabled
-                    preferences.edit().putBoolean("voyage_haptic_feedback_enabled", enabled).apply()
+                Switch(checked = state.enableHapticFeedback, onCheckedChange = { enabled ->
+                    vm.setEnableHapticFeedback(enabled)
                     view.isHapticFeedbackEnabled = enabled
                     (context as? Activity)?.window?.decorView?.isHapticFeedbackEnabled = enabled
                 })

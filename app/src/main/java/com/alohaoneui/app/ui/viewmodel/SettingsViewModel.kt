@@ -35,6 +35,7 @@ class SettingsViewModel(
             val enableFloatingBottomBarBlur = repo.enableFloatingBottomBarBlur
             val pageScale = repo.pageScale
             val enableSwipeBack = repo.enableSwipeBack
+            val enableHapticFeedback = repo.enableHapticFeedback
             val pagerGestureMode = repo.pagerGestureMode
             val colorStyle = repo.colorStyle
             val colorSpec = repo.colorSpec
@@ -74,6 +75,7 @@ class SettingsViewModel(
                     enableFloatingBottomBarBlur = enableFloatingBottomBarBlur,
                     pageScale = pageScale,
                     enableSwipeBack = enableSwipeBack,
+                    enableHapticFeedback = enableHapticFeedback,
                     pagerGestureMode = pagerGestureMode,
                     colorStyle = colorStyle,
                     colorSpec = colorSpec,
@@ -364,6 +366,11 @@ class SettingsViewModel(
     fun setEnableSwipeBack(enabled: Boolean) {
         repo.enableSwipeBack = enabled
         _uiState.update { it.copy(enableSwipeBack = enabled) }
+    }
+
+    fun setEnableHapticFeedback(enabled: Boolean) {
+        repo.enableHapticFeedback = enabled
+        _uiState.update { it.copy(enableHapticFeedback = enabled) }
     }
 
     fun setPagerGestureMode(mode: Int) {

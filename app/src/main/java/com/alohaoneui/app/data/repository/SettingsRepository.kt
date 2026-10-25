@@ -39,6 +39,7 @@ interface SettingsRepository {
     var navigationRailExpanded: Boolean
     var pageScale: Float
     var enableSwipeBack: Boolean
+    var enableHapticFeedback: Boolean
     var pagerGestureMode: Int
 
     fun snapshotForBackup(): AppSettingsBackup
@@ -97,4 +98,5 @@ data class AppSettingsBackup(
     val pageScale: Float,
     val enableSwipeBack: Boolean,
     val pagerGestureMode: Int,
+    val enableHapticFeedback: Boolean = true,
 )

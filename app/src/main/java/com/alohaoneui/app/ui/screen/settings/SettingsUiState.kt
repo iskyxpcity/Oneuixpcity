@@ -43,6 +43,7 @@ data class SettingsUiState(
     val enableFloatingBottomBarBlur: Boolean = false,
     val pageScale: Float = 1.0f,
     val enableSwipeBack: Boolean = false,
+    val enableHapticFeedback: Boolean = true,
     val pagerGestureMode: Int = 0,
 )
 

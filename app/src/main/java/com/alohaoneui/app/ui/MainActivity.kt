@@ -130,7 +130,7 @@ class MainActivity : ComponentActivity() {
         handleUpdateInstallStatus(this, intent)
         AlohaOneUIPreferenceBridge.ensureSynchronized(application)
         window.decorView.isHapticFeedbackEnabled = getSharedPreferences("settings", MODE_PRIVATE)
-            .getBoolean("voyage_haptic_feedback_enabled", true)
+            .getBoolean("enable_haptic_feedback", true)
 
         setContent {
             val viewModel = viewModel<MainActivityViewModel>()

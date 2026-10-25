@@ -202,6 +202,10 @@ class SettingsRepositoryImpl : SettingsRepository {
         get() = prefs.getBoolean("enable_swipe_back", false)
         set(value) = prefs.edit { putBoolean("enable_swipe_back", value) }
 
+    override var enableHapticFeedback: Boolean
+        get() = prefs.getBoolean("enable_haptic_feedback", true)
+        set(value) = prefs.edit { putBoolean("enable_haptic_feedback", value) }
+
     override var pagerGestureMode: Int
         get() = prefs.getInt("pager_gesture_mode", 0).coerceIn(0, 2)
         set(value) = prefs.edit { putInt("pager_gesture_mode", value.coerceIn(0, 2)) }
@@ -243,6 +247,7 @@ class SettingsRepositoryImpl : SettingsRepository {
         pageScale = pageScale,
         enableSwipeBack = enableSwipeBack,
         pagerGestureMode = pagerGestureMode,
+        enableHapticFeedback = enableHapticFeedback,
     )
 
     override fun restoreFromBackup(snapshot: AppSettingsBackup) {
@@ -290,6 +295,7 @@ class SettingsRepositoryImpl : SettingsRepository {
             .putFloat("page_scale", snapshot.pageScale)
             .putBoolean("enable_swipe_back", snapshot.enableSwipeBack)
             .putInt("pager_gesture_mode", snapshot.pagerGestureMode.coerceIn(0, 2))
+            .putBoolean("enable_haptic_feedback", snapshot.enableHapticFeedback)
             .commit()
         check(committed) { "Could not persist restored AlohaOneUI app settings." }
     }
