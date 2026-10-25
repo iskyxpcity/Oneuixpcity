@@ -27,7 +27,7 @@ import androidx.core.view.WindowInsetsControllerCompat
 
 val LocalMaterialBorderWidth = staticCompositionLocalOf { 0.0f }
 val LocalMaterialSwitchStyle = staticCompositionLocalOf { 0 }
-val LocalMaterialSliderStyle = staticCompositionLocalOf { 3 }
+val LocalMaterialSliderStyle = staticCompositionLocalOf { 0 }
 val LocalMaterialShadowContainers = staticCompositionLocalOf { true }
 val LocalMaterialShadowAppBars = staticCompositionLocalOf { true }
 val LocalMaterialShadowButtons = staticCompositionLocalOf { true }
