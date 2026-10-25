@@ -19,7 +19,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.unit.dp
 import com.alohaoneui.app.ui.theme.LocalMaterialSwitchStyle
 import com.alohaoneui.app.ui.theme.LocalMaterialShadowSwitches
-import com.alohaoneui.app.ui.theme.LocalMaterialSwitchStyle
 
 @Composable
 fun ExpressiveSwitch(
@@ -32,8 +31,6 @@ fun ExpressiveSwitch(
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     showThumbIcon: Boolean = true,
 ) {
-    val style = LocalMaterialSwitchStyle.current
-    val useIcon = showThumbIcon && style !in setOf(1, 4)
     val style = LocalMaterialSwitchStyle.current
     val useIcon = showThumbIcon && style !in setOf(1, 4)
     val switchModifier = if (LocalMaterialShadowSwitches.current) modifier.shadow(1.dp, CircleShape) else modifier

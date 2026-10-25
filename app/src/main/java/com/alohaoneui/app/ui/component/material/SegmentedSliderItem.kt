@@ -70,7 +70,6 @@ fun SegmentedSliderItem(
                     value = value,
                     colors = sliderColors,
                     onValueChange = onValueChange,
-                    modifier = Modifier.fillMaxWidth(),
                     valueRange = valueRange,
                     steps = steps,
                     onValueChangeFinished = onValueChangeFinished,
