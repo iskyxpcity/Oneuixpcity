@@ -497,6 +497,31 @@ fun ColorPaletteScreenMaterial(
                 title = stringResource(R.string.theme_group_navigation_bar),
                 icon = Icons.AutoMirrored.Rounded.MenuOpen,
             ) {
+                SegmentedColumn(
+                    modifier = Modifier.padding(top = 4.dp),
+                    content = listOf(
+                        {
+                            SegmentedSwitchItem(
+                                icon = Icons.AutoMirrored.Rounded.MenuOpen,
+                                title = stringResource(R.string.theme_floating_nav_bar_title),
+                                summary = stringResource(R.string.theme_floating_nav_bar_subtitle),
+                                checked = uiState.enableFloatingBottomBar,
+                                onCheckedChange = actions.onSetEnableFloatingBottomBar,
+                            )
+                        },
+                        {
+                            SegmentedSwitchItem(
+                                icon = Icons.Rounded.BlurOn,
+                                title = stringResource(R.string.theme_nav_blur),
+                                summary = stringResource(R.string.settings_enable_blur_summary),
+                                checked = uiState.enableFloatingBottomBarBlur,
+                                enabled = uiState.enableFloatingBottomBar,
+                                onCheckedChange = actions.onSetEnableFloatingBottomBarBlur,
+                            )
+                        },
+                    ),
+                )
+
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
                     SegmentedColumn(
                         modifier = Modifier.padding(top = 4.dp),
