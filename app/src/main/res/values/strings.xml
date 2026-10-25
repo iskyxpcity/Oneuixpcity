@@ -414,7 +414,10 @@
     <string name="settings_predictive_back_title">Predictive back</string>
     <string name="settings_predictive_back_subtitle">Preview the previous screen while swiping back</string>
     <string name="settings_font_family_default">Default</string>
+    <string name="settings_font_family_sans_serif">Sans serif</string>
     <string name="settings_font_family_serif">Serif</string>
+    <string name="settings_font_family_monospace">Monospace</string>
+    <string name="settings_font_family_cursive">Cursive</string>
     <string name="settings_font_family_title">Typeface</string>
     <string name="settings_font_scale_title">Font size</string>
     <string name="settings_display_scale_title">Display size</string>

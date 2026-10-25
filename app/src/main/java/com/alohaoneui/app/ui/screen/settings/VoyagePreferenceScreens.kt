@@ -101,10 +101,13 @@ fun DisplayTextSettingsScreen() {
     val vm = viewModel<SettingsViewModel>()
     val state by vm.uiState.collectAsStateWithLifecycle()
     var fontMenu by remember { mutableStateOf(false) }
-    val fontFamilies = listOf("Default", "Serif")
+    val fontFamilies = listOf("Default", "SansSerif", "Serif", "Monospace", "Cursive")
     val fontLabels = listOf(
         stringResource(R.string.settings_font_family_default),
+        stringResource(R.string.settings_font_family_sans_serif),
         stringResource(R.string.settings_font_family_serif),
+        stringResource(R.string.settings_font_family_monospace),
+        stringResource(R.string.settings_font_family_cursive),
     )
     val selectedFont = fontFamilies.indexOf(state.materialFontFamily).coerceAtLeast(0)
     Scaffold(topBar = {

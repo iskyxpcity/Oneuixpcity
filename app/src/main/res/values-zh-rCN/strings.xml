@@ -411,7 +411,10 @@
     <string name="settings_predictive_back_title">预测性返回手势</string>
     <string name="settings_predictive_back_subtitle">滑动返回时预览上一页面</string>
     <string name="settings_font_family_default">默认</string>
+    <string name="settings_font_family_sans_serif">无衬线</string>
     <string name="settings_font_family_serif">衬线</string>
+    <string name="settings_font_family_monospace">等宽</string>
+    <string name="settings_font_family_cursive">手写体</string>
     <string name="settings_font_family_title">字体</string>
     <string name="settings_font_scale_title">字体大小</string>
     <string name="settings_display_scale_title">界面大小</string>
