@@ -411,60 +411,29 @@ fun ColorPaletteScreenMaterial(
                 }
             }
 
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                val options = listOf(
-                    listOf(ColorMode.SYSTEM) to stringResource(R.string.settings_theme_mode_system),
-                    listOf(ColorMode.LIGHT) to stringResource(R.string.settings_theme_mode_light),
-                    listOf(ColorMode.DARK) to stringResource(R.string.settings_theme_mode_dark),
-                    listOf(ColorMode.DARK_AMOLED) to stringResource(R.string.settings_theme_mode_dark)
-                )
-
-                options.chunked(4).forEach { rowOptions ->
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)
-                    ) {
-                        rowOptions.forEachIndexed { index, (modes, label) ->
-                            ExpressiveToggleButton(
-                                checked = currentColorMode in modes,
-                                onCheckedChange = {
-                                    if (it) {
-                                        haptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
-                                        actions.onSetColorMode(modes.first())
-                                    }
-                                },
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .semantics { role = Role.RadioButton },
-                                shapes = when (index) {
-                                    0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
-                                    rowOptions.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
-                                    else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
-                                },
-                            ) {
-                                Icon(
-                                    imageVector = when (modes.first()) {
-                                        ColorMode.SYSTEM -> Icons.Filled.Brightness4
-                                        ColorMode.LIGHT -> Icons.Filled.Brightness7
-                                        ColorMode.DARK -> Icons.Filled.Brightness3
-                                        ColorMode.DARK_AMOLED -> Icons.Filled.Brightness1
-                                        else -> Icons.Filled.Brightness4
-                                    },
-                                    contentDescription = label
-                                )
-                            }
-                        }
-                    }
-                }
-
                 SegmentedColumn(
                     modifier = Modifier.padding(top = 4.dp),
                     content = listOf(
+                        {
+                            SegmentedSwitchItem(
+                                icon = Icons.Filled.Palette,
+                                title = stringResource(R.string.theme_dynamic_color_title),
+                                summary = stringResource(R.string.theme_dynamic_color_subtitle),
+                                checked = uiState.materialDynamicColorEnabled && uiState.keyColor == 0,
+                                onCheckedChange = actions.onSetMaterialDynamicColorEnabled,
+                            )
+                        },
+                        {
+                            SegmentedSwitchItem(
+                                icon = Icons.Filled.Brightness1,
+                                title = stringResource(R.string.settings_pure_black_title),
+                                summary = stringResource(R.string.settings_pure_black_subtitle),
+                                checked = currentColorMode.isAmoled,
+                                onCheckedChange = { enabled ->
+                                    actions.onSetColorMode(if (enabled) ColorMode.DARK_AMOLED else ColorMode.DARK)
+                                },
+                            )
+                        },
                         {
                             val styles = PaletteStyle.entries
                             SegmentedDropdownItem(
@@ -522,6 +491,17 @@ fun ColorPaletteScreenMaterial(
                         Slider(value = fontScale, onValueChange = { fontScale = it }, onValueChangeFinished = { actions.onSetMaterialFontScale(fontScale) }, valueRange = 0.8f..1.5f, modifier = Modifier.fillMaxWidth())
                     }
                 }
+
+                SegmentedColumn(
+                    modifier = Modifier.padding(top = 4.dp),
+                    content = listOf(
+                        { SegmentedSwitchItem(icon = Icons.Filled.Tune, title = stringResource(R.string.theme_shadow_container), checked = uiState.materialShadowContainers, onCheckedChange = actions.onSetMaterialShadowContainers) },
+                        { SegmentedSwitchItem(icon = Icons.Filled.Tune, title = stringResource(R.string.theme_shadow_app_bar), checked = uiState.materialShadowAppBars, onCheckedChange = actions.onSetMaterialShadowAppBars) },
+                        { SegmentedSwitchItem(icon = Icons.Filled.Tune, title = stringResource(R.string.theme_shadow_button), checked = uiState.materialShadowButtons, onCheckedChange = actions.onSetMaterialShadowButtons) },
+                        { SegmentedSwitchItem(icon = Icons.Filled.Tune, title = stringResource(R.string.theme_shadow_switch), checked = uiState.materialShadowSwitches, onCheckedChange = actions.onSetMaterialShadowSwitches) },
+                        { SegmentedSwitchItem(icon = Icons.Filled.Tune, title = stringResource(R.string.theme_shadow_slider), checked = uiState.materialShadowSliders, onCheckedChange = actions.onSetMaterialShadowSliders) },
+                    ),
+                )
 
                 SegmentedColumn(
                     modifier = Modifier.padding(top = 4.dp),

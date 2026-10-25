@@ -50,5 +50,7 @@ data class SettingsScreenActions(
     val onSetCheckUpdate: (Boolean) -> Unit,
     val onOpenTheme: () -> Unit,
     val onSetUiModeIndex: (Int) -> Unit,
+    val onSetThemeMode: (Int) -> Unit,
+    val onSetMaterialDynamicColorEnabled: (Boolean) -> Unit,
     val onOpenAbout: () -> Unit,
 )

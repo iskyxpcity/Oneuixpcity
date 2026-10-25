@@ -48,6 +48,8 @@ fun SettingPager(
         onSetUiModeIndex = { index ->
             viewModel.setUiMode(if (index == 0) UiMode.Miuix.value else UiMode.Material.value)
         },
+        onSetThemeMode = viewModel::setThemeMode,
+        onSetMaterialDynamicColorEnabled = viewModel::setMaterialDynamicColorEnabled,
         onOpenAbout = { navigator.push(Route.About) },
     )
 
