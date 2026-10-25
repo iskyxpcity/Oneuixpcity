@@ -146,8 +146,8 @@ fun SettingPagerMaterial(
                     icon = Icons.Filled.Language,
                     title = stringResource(R.string.settings_language_title),
                     summary = null,
-                    items = listOf(stringResource(R.string.settings_language_system), stringResource(R.string.settings_language_english), stringResource(R.string.settings_language_chinese)),
-                    selectedIndex = when (uiState.appLanguage) { "en" -> 1; "zh-CN" -> 2; else -> 0 },
+                    items = listOf(stringResource(R.string.settings_language_system)) + AppLanguageCatalog.nativeNames,
+                    selectedIndex = AppLanguageCatalog.indexOf(uiState.appLanguage),
                     onItemSelected = actions.onSetAppLanguage
                 )
             }))
