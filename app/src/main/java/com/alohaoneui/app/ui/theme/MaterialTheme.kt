@@ -75,7 +75,7 @@ fun MaterialAlohaOneUITheme(
     }
 
     CompositionLocalProvider(
-        LocalMaterialBorderWidth provides appSettings.materialBorderWidth.coerceIn(0.0f, 3.0f),
+        LocalMaterialBorderWidth provides 0.0f,
         LocalMaterialSwitchStyle provides appSettings.materialSwitchStyle.coerceIn(0, 7),
         LocalMaterialSliderStyle provides appSettings.materialSliderStyle.coerceIn(0, 3),
         LocalMaterialShadowContainers provides appSettings.materialShadowContainers,
@@ -92,9 +92,9 @@ fun MaterialAlohaOneUITheme(
         MaterialTheme(
             colorScheme = animatedColorScheme,
             shapes = Shapes(
-                small = materialShape(appSettings.materialShapeStyle, 4.dp * appSettings.materialCornerScale.coerceIn(0.5f, 1.5f)),
-                medium = materialShape(appSettings.materialShapeStyle, 8.dp * appSettings.materialCornerScale.coerceIn(0.5f, 1.5f)),
-                large = materialShape(appSettings.materialShapeStyle, 16.dp * appSettings.materialCornerScale.coerceIn(0.5f, 1.5f)),
+                small = materialShape(appSettings.materialShapeStyle, 4.dp),
+                medium = materialShape(appSettings.materialShapeStyle, 8.dp),
+                large = materialShape(appSettings.materialShapeStyle, 16.dp),
             ),
             motionScheme = MotionScheme.expressive(),
             typography = Typography.withMaterialFontFamily(appSettings.materialFontFamily),
