@@ -53,6 +53,7 @@ class MainActivityViewModel(
             enableFloatingBottomBar = settingRepo.enableFloatingBottomBar,
             enableFloatingBottomBarBlur = settingRepo.enableFloatingBottomBarBlur,
             uiMode = UiMode.fromValue(settingRepo.uiMode),
+            enableHapticFeedback = settingRepo.enableHapticFeedback,
         )
     }
 
@@ -70,6 +71,7 @@ class MainActivityViewModel(
             "enable_floating_bottom_bar",
             "enable_floating_bottom_bar_blur",
             "ui_mode",
+            "enable_haptic_feedback",
         )
     }
 }

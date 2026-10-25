@@ -15,4 +15,5 @@ data class MainActivityUiState(
     val enableFloatingBottomBar: Boolean,
     val enableFloatingBottomBarBlur: Boolean,
     val uiMode: UiMode,
+    val enableHapticFeedback: Boolean,
 )

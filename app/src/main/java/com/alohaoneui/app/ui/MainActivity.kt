@@ -45,6 +45,9 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.hapticfeedback.HapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.hapticfeedback.LocalHapticFeedback
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigationevent.NavigationEventInfo
@@ -131,6 +134,16 @@ class MainActivity : ComponentActivity() {
             val selectedMainPage by viewModel.selectedMainPage.collectAsStateWithLifecycle()
             val appSettings = uiState.appSettings
             val uiMode = uiState.uiMode
+            val platformHapticFeedback = LocalHapticFeedback.current
+            val appHapticFeedback = remember(platformHapticFeedback, uiState.enableHapticFeedback) {
+                object : HapticFeedback {
+                    override fun performHapticFeedback(hapticFeedbackType: HapticFeedbackType) {
+                        if (uiState.enableHapticFeedback) {
+                            platformHapticFeedback.performHapticFeedback(hapticFeedbackType)
+                        }
+                    }
+                }
+            }
             val lsposedStatus = rememberLsposedHomeStatus()
             val darkMode = appSettings.colorMode.isDark ||
                 (appSettings.colorMode.isSystem && isSystemInDarkTheme())
@@ -157,6 +170,7 @@ class MainActivity : ComponentActivity() {
             }
 
             CompositionLocalProvider(
+                LocalHapticFeedback provides appHapticFeedback,
                 LocalNavigator provides navigator,
                 LocalDensity provides density,
                 LocalColorMode provides appSettings.colorMode.value,
