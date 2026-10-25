@@ -272,4 +272,18 @@
     <string name="voyage_shadow_switch">Switches</string>
     <string name="voyage_shadow_slider">Sliders</string>
     <string name="voyage_theme_pure_black">Pure black</string>
+    <string name="voyage_switch_material_you">Material You</string>
+    <string name="voyage_switch_compose">Compose</string>
+    <string name="voyage_switch_pixel">Pixel</string>
+    <string name="voyage_switch_fluent">Fluent</string>
+    <string name="voyage_switch_cupertino">Cupertino</string>
+    <string name="voyage_switch_liquid_glass">Liquid Glass</string>
+    <string name="voyage_switch_hyper_os">HyperOS</string>
+    <string name="voyage_switch_one_ui">One UI</string>
+    <string name="voyage_slider_material_you">Material You</string>
+    <string name="voyage_slider_fancy">Expressive</string>
+    <string name="voyage_slider_material">Material</string>
+    <string name="voyage_slider_hyper_os">HyperOS</string>
+    <string name="voyage_font_default">Default</string>
+    <string name="voyage_font_serif">Serif</string>
 </resources>

@@ -110,10 +110,21 @@ fun VoyageThemeSettingsScreenMaterial(
                             }
                             VoyageThemeCategory.COMPONENTS -> {
                                 Header(R.string.voyage_theme_group_components)
-                                Drop(R.string.voyage_theme_switch_style, uiState.materialSwitchStyle.toString(), (0..7).map { it.toString() }) { viewModel.setMaterialSwitchStyle(it.toIntOrNull() ?: 0) }
-                                Drop(R.string.voyage_theme_slider_style, uiState.materialSliderStyle.toString(), (0..3).map { it.toString() }) { viewModel.setMaterialSliderStyle(it.toIntOrNull() ?: 0) }
-                                Drop(R.string.voyage_theme_font_family, uiState.materialFontFamily, listOf("Default", "Serif"), viewModel::setMaterialFontFamily)
+                                val switchStyles = listOf(
+                    stringResource(R.string.voyage_switch_material_you), stringResource(R.string.voyage_switch_compose),
+                    stringResource(R.string.voyage_switch_pixel), stringResource(R.string.voyage_switch_fluent),
+                    stringResource(R.string.voyage_switch_cupertino), stringResource(R.string.voyage_switch_liquid_glass),
+                    stringResource(R.string.voyage_switch_hyper_os), stringResource(R.string.voyage_switch_one_ui),
+                )
+                Drop(R.string.voyage_theme_switch_style, switchStyles[uiState.materialSwitchStyle.coerceIn(0, 7)], switchStyles) { viewModel.setMaterialSwitchStyle(switchStyles.indexOf(it).coerceAtLeast(0)) }
+                                val sliderStyles = listOf(
+                    stringResource(R.string.voyage_slider_material_you), stringResource(R.string.voyage_slider_fancy),
+                    stringResource(R.string.voyage_slider_material), stringResource(R.string.voyage_slider_hyper_os),
+                )
+                Drop(R.string.voyage_theme_slider_style, sliderStyles[uiState.materialSliderStyle.coerceIn(0, 3)], sliderStyles) { viewModel.setMaterialSliderStyle(sliderStyles.indexOf(it).coerceAtLeast(0)) }
+                                Drop(R.string.voyage_theme_font_family, if (uiState.materialFontFamily == "Serif") stringResource(R.string.voyage_font_serif) else stringResource(R.string.voyage_font_default), listOf(stringResource(R.string.voyage_font_default), stringResource(R.string.voyage_font_serif))) { viewModel.setMaterialFontFamily(if (it == stringResource(R.string.voyage_font_serif)) "Serif" else "Default") }
                                 Slide(R.string.voyage_theme_font_scale, uiState.materialFontScale, 0.8f..1.5f, viewModel::setMaterialFontScale)
+                                Slide(R.string.voyage_theme_border_width, uiState.materialBorderWidth, 0f..1.5f, viewModel::setMaterialBorderWidth)
                                 Toggle(R.string.voyage_theme_large_text, null, uiState.materialLargeTextEnabled, viewModel::setMaterialLargeTextEnabled)
                                 Toggle(R.string.voyage_theme_bold_text, null, uiState.materialBoldTextEnabled, viewModel::setMaterialBoldTextEnabled)
                             }
@@ -146,7 +157,6 @@ fun VoyageThemeSettingsScreenMaterial(
                                 )
                                 Drop(R.string.voyage_theme_shape_style, labels[uiState.materialShapeStyle.coerceIn(0, labels.lastIndex)], labels) { viewModel.setMaterialShapeStyle(labels.indexOf(it).coerceAtLeast(0)) }
                                 Slide(R.string.voyage_theme_corner_scale, uiState.materialCornerScale, 0.5f..1.5f, viewModel::setMaterialCornerScale)
-                                Slide(R.string.voyage_theme_border_width, uiState.materialBorderWidth, 0f..4f, viewModel::setMaterialBorderWidth)
                             }
                             VoyageThemeCategory.SHADOWS -> {
                                 Header(R.string.voyage_theme_group_shadows)
