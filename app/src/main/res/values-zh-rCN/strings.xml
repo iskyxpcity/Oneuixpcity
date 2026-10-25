@@ -257,6 +257,8 @@
     <string name="theme_scheme_add">新建方案</string>
     <string name="theme_editor_use_current">使用当前配色</string>
     <string name="theme_scheme_edit">编辑方案</string>
+    <string name="theme_picker_image">图片</string>
+    <string name="theme_picker_choose_image">选择图片</string>
     <string name="theme_picker_palette">调色板</string>
     <string name="theme_picker_sliders">滑块</string>
     <string name="theme_picker_spectrum">色谱</string>

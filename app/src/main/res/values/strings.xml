@@ -260,6 +260,8 @@
     <string name="theme_scheme_add">New scheme</string>
     <string name="theme_editor_use_current">Use current colors</string>
     <string name="theme_scheme_edit">Edit scheme</string>
+    <string name="theme_picker_image">Image</string>
+    <string name="theme_picker_choose_image">Choose image</string>
     <string name="theme_picker_palette">Palette</string>
     <string name="theme_picker_sliders">Sliders</string>
     <string name="theme_picker_spectrum">Spectrum</string>
