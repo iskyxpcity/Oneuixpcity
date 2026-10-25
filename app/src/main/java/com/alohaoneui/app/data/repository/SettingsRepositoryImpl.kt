@@ -206,6 +206,14 @@ class SettingsRepositoryImpl : SettingsRepository {
         get() = prefs.getBoolean("enable_haptic_feedback", true)
         set(value) = prefs.edit { putBoolean("enable_haptic_feedback", value) }
 
+    override var materialLargeTextEnabled: Boolean
+        get() = prefs.getBoolean("material_large_text_enabled", false)
+        set(value) = prefs.edit { putBoolean("material_large_text_enabled", value) }
+
+    override var materialBoldTextEnabled: Boolean
+        get() = prefs.getBoolean("material_bold_text_enabled", false)
+        set(value) = prefs.edit { putBoolean("material_bold_text_enabled", value) }
+
     override var pagerGestureMode: Int
         get() = prefs.getInt("pager_gesture_mode", 0).coerceIn(0, 2)
         set(value) = prefs.edit { putInt("pager_gesture_mode", value.coerceIn(0, 2)) }
@@ -248,6 +256,8 @@ class SettingsRepositoryImpl : SettingsRepository {
         enableSwipeBack = enableSwipeBack,
         pagerGestureMode = pagerGestureMode,
         enableHapticFeedback = enableHapticFeedback,
+        materialLargeTextEnabled = materialLargeTextEnabled,
+        materialBoldTextEnabled = materialBoldTextEnabled,
     )
 
     override fun restoreFromBackup(snapshot: AppSettingsBackup) {
@@ -296,6 +306,8 @@ class SettingsRepositoryImpl : SettingsRepository {
             .putBoolean("enable_swipe_back", snapshot.enableSwipeBack)
             .putInt("pager_gesture_mode", snapshot.pagerGestureMode.coerceIn(0, 2))
             .putBoolean("enable_haptic_feedback", snapshot.enableHapticFeedback)
+            .putBoolean("material_large_text_enabled", snapshot.materialLargeTextEnabled)
+            .putBoolean("material_bold_text_enabled", snapshot.materialBoldTextEnabled)
             .commit()
         check(committed) { "Could not persist restored AlohaOneUI app settings." }
     }

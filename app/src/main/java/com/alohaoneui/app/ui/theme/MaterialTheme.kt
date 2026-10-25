@@ -85,7 +85,7 @@ fun MaterialAlohaOneUITheme(
         LocalMaterialShadowSwitches provides appSettings.materialShadowSwitches,
         LocalMaterialShadowSliders provides appSettings.materialShadowSliders,
         LocalDensity provides Density(
-            density = density.density,
+            density = density.density * if (appSettings.materialLargeTextEnabled) 1.1f else 1.0f,
             fontScale = density.fontScale * appSettings.materialFontScale.coerceIn(0.8f, 1.5f),
         )
     ) {
@@ -97,7 +97,7 @@ fun MaterialAlohaOneUITheme(
                 large = materialShape(appSettings.materialShapeStyle, 16.dp),
             ),
             motionScheme = MotionScheme.expressive(),
-            typography = Typography.withMaterialFontFamily(appSettings.materialFontFamily),
+            typography = Typography.withMaterialFontFamily(appSettings.materialFontFamily, appSettings.materialBoldTextEnabled),
             content = {
                 val colorMatrix = materialColorVisionMatrix(appSettings.materialColorVisionMode, appSettings.materialInvertColors)
                 if (colorMatrix == null) {

@@ -41,6 +41,8 @@ interface SettingsRepository {
     var enableSwipeBack: Boolean
     var pagerGestureMode: Int
     var enableHapticFeedback: Boolean
+    var materialLargeTextEnabled: Boolean
+    var materialBoldTextEnabled: Boolean
 
     fun snapshotForBackup(): AppSettingsBackup
     fun restoreFromBackup(snapshot: AppSettingsBackup)
@@ -99,4 +101,6 @@ data class AppSettingsBackup(
     val enableSwipeBack: Boolean,
     val pagerGestureMode: Int,
     val enableHapticFeedback: Boolean = true,
+    val materialLargeTextEnabled: Boolean = false,
+    val materialBoldTextEnabled: Boolean = false,
 )

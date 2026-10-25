@@ -117,6 +117,17 @@ fun DisplayTextSettingsScreen() {
             Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text(stringResource(R.string.settings_large_text_title))
+                    Text(stringResource(R.string.settings_large_text_subtitle), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.outline)
+                }
+                Switch(checked = state.materialLargeTextEnabled, onCheckedChange = vm::setMaterialLargeTextEnabled)
+            }
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Text(stringResource(R.string.settings_bold_text_title), modifier = Modifier.weight(1f))
+                Switch(checked = state.materialBoldTextEnabled, onCheckedChange = vm::setMaterialBoldTextEnabled)
+            }
             Text(stringResource(R.string.settings_font_family_title), style = MaterialTheme.typography.titleMedium)
             androidx.compose.foundation.layout.Box {
                 OutlinedTextField(

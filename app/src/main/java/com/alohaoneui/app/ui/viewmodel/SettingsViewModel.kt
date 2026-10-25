@@ -36,6 +36,8 @@ class SettingsViewModel(
             val pageScale = repo.pageScale
             val enableSwipeBack = repo.enableSwipeBack
             val enableHapticFeedback = repo.enableHapticFeedback
+            val materialLargeTextEnabled = repo.materialLargeTextEnabled
+            val materialBoldTextEnabled = repo.materialBoldTextEnabled
             val pagerGestureMode = repo.pagerGestureMode
             val colorStyle = repo.colorStyle
             val colorSpec = repo.colorSpec
@@ -76,6 +78,8 @@ class SettingsViewModel(
                     pageScale = pageScale,
                     enableSwipeBack = enableSwipeBack,
                     enableHapticFeedback = enableHapticFeedback,
+                    materialLargeTextEnabled = materialLargeTextEnabled,
+                    materialBoldTextEnabled = materialBoldTextEnabled,
                     pagerGestureMode = pagerGestureMode,
                     colorStyle = colorStyle,
                     colorSpec = colorSpec,
@@ -371,6 +375,16 @@ class SettingsViewModel(
     fun setEnableHapticFeedback(enabled: Boolean) {
         repo.enableHapticFeedback = enabled
         _uiState.update { it.copy(enableHapticFeedback = enabled) }
+    }
+
+    fun setMaterialLargeTextEnabled(enabled: Boolean) {
+        repo.materialLargeTextEnabled = enabled
+        _uiState.update { it.copy(materialLargeTextEnabled = enabled) }
+    }
+
+    fun setMaterialBoldTextEnabled(enabled: Boolean) {
+        repo.materialBoldTextEnabled = enabled
+        _uiState.update { it.copy(materialBoldTextEnabled = enabled) }
     }
 
     fun setPagerGestureMode(mode: Int) {

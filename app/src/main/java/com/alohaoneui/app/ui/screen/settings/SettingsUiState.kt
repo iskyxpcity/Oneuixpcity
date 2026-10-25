@@ -44,6 +44,8 @@ data class SettingsUiState(
     val pageScale: Float = 1.0f,
     val enableSwipeBack: Boolean = false,
     val enableHapticFeedback: Boolean = true,
+    val materialLargeTextEnabled: Boolean = false,
+    val materialBoldTextEnabled: Boolean = false,
     val pagerGestureMode: Int = 0,
 )
 

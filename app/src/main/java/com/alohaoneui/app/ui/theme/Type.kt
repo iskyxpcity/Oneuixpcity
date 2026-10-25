@@ -20,7 +20,7 @@ val Typography = Typography(
 )
 
 
-fun Typography.withMaterialFontFamily(value: String): Typography {
+fun Typography.withMaterialFontFamily(value: String, boldText: Boolean = false): Typography {
     val family = when (value) {
         "SansSerif" -> FontFamily.SansSerif
         "Serif" -> FontFamily.Serif
@@ -28,21 +28,25 @@ fun Typography.withMaterialFontFamily(value: String): Typography {
         "Cursive" -> FontFamily.Cursive
         else -> FontFamily.Default
     }
+    fun TextStyle.withFamilyAndWeight(): TextStyle = copy(
+        fontFamily = family,
+        fontWeight = if (boldText) FontWeight.Bold else fontWeight,
+    )
     return copy(
-        displayLarge = displayLarge.copy(fontFamily = family),
-        displayMedium = displayMedium.copy(fontFamily = family),
-        displaySmall = displaySmall.copy(fontFamily = family),
-        headlineLarge = headlineLarge.copy(fontFamily = family),
-        headlineMedium = headlineMedium.copy(fontFamily = family),
-        headlineSmall = headlineSmall.copy(fontFamily = family),
-        titleLarge = titleLarge.copy(fontFamily = family),
-        titleMedium = titleMedium.copy(fontFamily = family),
-        titleSmall = titleSmall.copy(fontFamily = family),
-        bodyLarge = bodyLarge.copy(fontFamily = family),
-        bodyMedium = bodyMedium.copy(fontFamily = family),
-        bodySmall = bodySmall.copy(fontFamily = family),
-        labelLarge = labelLarge.copy(fontFamily = family),
-        labelMedium = labelMedium.copy(fontFamily = family),
-        labelSmall = labelSmall.copy(fontFamily = family),
+        displayLarge = displayLarge.withFamilyAndWeight(),
+        displayMedium = displayMedium.withFamilyAndWeight(),
+        displaySmall = displaySmall.withFamilyAndWeight(),
+        headlineLarge = headlineLarge.withFamilyAndWeight(),
+        headlineMedium = headlineMedium.withFamilyAndWeight(),
+        headlineSmall = headlineSmall.withFamilyAndWeight(),
+        titleLarge = titleLarge.withFamilyAndWeight(),
+        titleMedium = titleMedium.withFamilyAndWeight(),
+        titleSmall = titleSmall.withFamilyAndWeight(),
+        bodyLarge = bodyLarge.withFamilyAndWeight(),
+        bodyMedium = bodyMedium.withFamilyAndWeight(),
+        bodySmall = bodySmall.withFamilyAndWeight(),
+        labelLarge = labelLarge.withFamilyAndWeight(),
+        labelMedium = labelMedium.withFamilyAndWeight(),
+        labelSmall = labelSmall.withFamilyAndWeight(),
     )
 }

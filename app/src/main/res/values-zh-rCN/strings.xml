@@ -416,4 +416,7 @@
     <string name="settings_font_scale_title">字体大小</string>
     <string name="settings_display_scale_title">界面大小</string>
     <string name="settings_display_preview_sample">敏捷的棕色狐狸跳过了懒狗。</string>
+    <string name="settings_large_text_title">大字模式</string>
+    <string name="settings_large_text_subtitle">放大文字和控件</string>
+    <string name="settings_bold_text_title">粗体文字</string>
 </resources>

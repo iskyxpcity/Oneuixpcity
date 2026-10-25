@@ -419,4 +419,7 @@
     <string name="settings_font_scale_title">Font size</string>
     <string name="settings_display_scale_title">Display size</string>
     <string name="settings_display_preview_sample">The quick brown fox jumps over the lazy dog.</string>
+    <string name="settings_large_text_title">Large text mode</string>
+    <string name="settings_large_text_subtitle">Enlarges text and controls</string>
+    <string name="settings_bold_text_title">Bold text</string>
 </resources>
