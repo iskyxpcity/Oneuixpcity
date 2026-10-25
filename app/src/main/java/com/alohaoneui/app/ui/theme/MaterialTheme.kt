@@ -115,7 +115,7 @@ fun MaterialAlohaOneUITheme(
 }
 
 
-private fun materialColorVisionMatrix(mode: Int, invert: Boolean): ColorMatrix? {private fun materialShape(style: Int, size: androidx.compose.ui.unit.Dp): CornerBasedShape = when (style.coerceIn(0, 6)) {
+private fun materialShape(style: Int, size: androidx.compose.ui.unit.Dp): CornerBasedShape = when (style.coerceIn(0, 6)) {
     0 -> RoundedCornerShape(size)
     1 -> CutCornerShape(size)
     2 -> RoundedCornerShape(size * 2.0f)
@@ -125,7 +125,7 @@ private fun materialColorVisionMatrix(mode: Int, invert: Boolean): ColorMatrix? 
     else -> CutCornerShape(topStart = size * 1.5f, topEnd = size, bottomEnd = size * 1.5f, bottomStart = size)
 }
 
-
+private fun materialColorVisionMatrix(mode: Int, invert: Boolean): ColorMatrix? {
     val identity = ColorMatrix()
     val grayscale = ColorMatrix(floatArrayOf(
         0.2126f, 0.7152f, 0.0722f, 0f, 0f,
