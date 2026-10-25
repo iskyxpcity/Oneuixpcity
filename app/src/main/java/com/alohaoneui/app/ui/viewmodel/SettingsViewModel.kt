@@ -38,6 +38,7 @@ class SettingsViewModel(
             val pagerGestureMode = repo.pagerGestureMode
             val colorStyle = repo.colorStyle
             val colorSpec = repo.colorSpec
+            val materialFontScale = repo.materialFontScale
             val uiMode = repo.uiMode
 
             _uiState.update {
@@ -56,6 +57,7 @@ class SettingsViewModel(
                     pagerGestureMode = pagerGestureMode,
                     colorStyle = colorStyle,
                     colorSpec = colorSpec,
+                    materialFontScale = materialFontScale,
                 )
             }
         }
@@ -138,6 +140,12 @@ class SettingsViewModel(
     fun setColorSpec(spec: String) {
         repo.colorSpec = spec
         _uiState.update { it.copy(colorSpec = spec) }
+    }
+
+    fun setMaterialFontScale(scale: Float) {
+        val safeScale = scale.coerceIn(0.8f, 1.3f)
+        repo.materialFontScale = safeScale
+        _uiState.update { it.copy(materialFontScale = safeScale) }
     }
 
     fun setEnablePredictiveBack(enabled: Boolean) {

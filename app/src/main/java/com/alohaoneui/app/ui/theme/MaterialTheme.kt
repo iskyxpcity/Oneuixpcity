@@ -6,9 +6,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Shapes
 import androidx.compose.material3.MotionScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Density
 import androidx.core.view.WindowInsetsControllerCompat
 
 /**
@@ -21,6 +24,7 @@ fun MaterialAlohaOneUITheme(
     content: @Composable () -> Unit
 ) {
     val context = LocalContext.current
+    val density = LocalDensity.current
     val systemDarkTheme = isSystemInDarkTheme()
     val darkTheme = appSettings.colorMode.isDark ||
         (appSettings.colorMode.isSystem && systemDarkTheme)
@@ -44,11 +48,18 @@ fun MaterialAlohaOneUITheme(
         }
     }
 
-    MaterialTheme(
-        colorScheme = animatedColorScheme,
-        shapes = Shapes(),
-        motionScheme = MotionScheme.expressive(),
-        typography = Typography,
-        content = content,
-    )
+    CompositionLocalProvider(
+        LocalDensity provides Density(
+            density = density.density,
+            fontScale = density.fontScale * appSettings.materialFontScale.coerceIn(0.8f, 1.3f),
+        )
+    ) {
+        MaterialTheme(
+            colorScheme = animatedColorScheme,
+            shapes = Shapes(),
+            motionScheme = MotionScheme.expressive(),
+            typography = Typography,
+            content = content,
+        )
+    }
 }

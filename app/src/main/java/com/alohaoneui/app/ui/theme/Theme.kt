@@ -51,6 +51,7 @@ data class AppSettings(
     val keyColor: Int,
     val paletteStyle: PaletteStyle,
     val colorSpec: ColorSpec.SpecVersion,
+    val materialFontScale: Float = 1.0f,
 )
 
 val PaletteStyle.supportsSpec2025: Boolean
@@ -98,7 +99,7 @@ object ThemeController {
             ColorSpec.SpecVersion.SPEC_2025
         }
 
-        return AppSettings(colorMode, keyColor, paletteStyle, colorSpec)
+        return AppSettings(colorMode, keyColor, paletteStyle, colorSpec, repo.materialFontScale.coerceIn(0.8f, 1.3f))
     }
 }
 

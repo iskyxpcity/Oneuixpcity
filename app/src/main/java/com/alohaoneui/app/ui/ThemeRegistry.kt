@@ -103,7 +103,7 @@ object ThemeRegistry {
                 // Voyage supports this, but the editor has not yet been ported to Aloha.
                 customColorSchemes = false,
                 fontFamilySelection = false,
-                fontScale = false,
+                fontScale = true,
                 cornerScale = false,
                 borderWidth = false,
                 colorVisionMode = false,

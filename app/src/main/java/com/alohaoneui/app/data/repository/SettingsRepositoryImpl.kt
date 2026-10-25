@@ -41,6 +41,10 @@ class SettingsRepositoryImpl : SettingsRepository {
         get() = prefs.getString("color_spec", ColorSpec.SpecVersion.SPEC_2025.name) ?: ColorSpec.SpecVersion.SPEC_2025.name
         set(value) = prefs.edit { putString("color_spec", value) }
 
+    override var materialFontScale: Float
+        get() = prefs.getFloat("material_font_scale", 1.0f).coerceIn(0.8f, 1.3f)
+        set(value) = prefs.edit { putFloat("material_font_scale", value.coerceIn(0.8f, 1.3f)) }
+
     override var enablePredictiveBack: Boolean
         get() = prefs.getBoolean("enable_predictive_back", false)
         set(value) = prefs.edit { putBoolean("enable_predictive_back", value) }
@@ -81,6 +85,7 @@ class SettingsRepositoryImpl : SettingsRepository {
         keyColor = keyColor,
         colorStyle = colorStyle,
         colorSpec = colorSpec,
+        materialFontScale = materialFontScale,
         enablePredictiveBack = enablePredictiveBack,
         enableBlur = enableBlur,
         enableFloatingBottomBar = enableFloatingBottomBar,
@@ -107,6 +112,7 @@ class SettingsRepositoryImpl : SettingsRepository {
             .putInt("key_color", snapshot.keyColor)
             .putString("color_style", restoredColorStyle)
             .putString("color_spec", restoredColorSpec)
+            .putFloat("material_font_scale", snapshot.materialFontScale.coerceIn(0.8f, 1.3f))
             .putBoolean("enable_predictive_back", snapshot.enablePredictiveBack)
             .putBoolean("enable_blur", snapshot.enableBlur)
             .putBoolean("enable_floating_bottom_bar", snapshot.enableFloatingBottomBar)

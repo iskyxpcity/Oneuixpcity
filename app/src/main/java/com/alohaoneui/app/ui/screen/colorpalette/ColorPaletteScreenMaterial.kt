@@ -329,6 +329,20 @@ fun ColorPaletteScreenMaterial(
                     )
                 )
 
+                TonalCard(modifier = Modifier.padding(top = 4.dp)) {
+                    var fontScale by remember(uiState.materialFontScale) { mutableFloatStateOf(uiState.materialFontScale) }
+                    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(text = stringResource(R.string.settings_material_font_scale), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
+                                Text(text = stringResource(R.string.settings_material_font_scale_summary), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.outline)
+                            }
+                            Text(text = "${(fontScale * 100).toInt()}%", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        Slider(value = fontScale, onValueChange = { fontScale = it }, onValueChangeFinished = { actions.onSetMaterialFontScale(fontScale) }, valueRange = 0.8f..1.3f, steps = 4, modifier = Modifier.fillMaxWidth())
+                    }
+                }
+
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
                     SegmentedColumn(
                         modifier = Modifier.padding(top = 4.dp),

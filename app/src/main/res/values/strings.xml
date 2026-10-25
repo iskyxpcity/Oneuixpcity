@@ -41,6 +41,8 @@
     <string name="settings_ui_mode_summary">Choose the interface style.</string>
     <string name="settings_page_scale">Page Scale</string>
     <string name="settings_page_scale_summary">Adjust the global display scale.</string>
+    <string name="settings_material_font_scale">Font scale</string>
+    <string name="settings_material_font_scale_summary">Adjust text size in the Material 3 theme only.</string>
     <string name="settings_color_spec">Color Spec</string>
     <string name="settings_palette_style_content">Content</string>
     <string name="settings_palette_style_expressive">Expressive</string>

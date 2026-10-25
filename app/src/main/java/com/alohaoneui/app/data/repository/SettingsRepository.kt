@@ -11,6 +11,7 @@ interface SettingsRepository {
     var keyColor: Int
     var colorStyle: String
     var colorSpec: String
+    var materialFontScale: Float
     var enablePredictiveBack: Boolean
     var enableBlur: Boolean
     var enableFloatingBottomBar: Boolean
@@ -37,6 +38,7 @@ data class AppSettingsBackup(
     val keyColor: Int,
     val colorStyle: String,
     val colorSpec: String,
+    val materialFontScale: Float = 1.0f,
     val enablePredictiveBack: Boolean,
     val enableBlur: Boolean,
     val enableFloatingBottomBar: Boolean,
