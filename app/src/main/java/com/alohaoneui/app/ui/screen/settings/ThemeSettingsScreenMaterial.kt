@@ -65,6 +65,7 @@ fun ThemeSettingsScreenMaterial() {
             }
         }
     }
+}
 
 @Composable
 private fun ThemeSection(index: Int, state: SettingsUiState, vm: SettingsViewModel, modifier: Modifier) {
