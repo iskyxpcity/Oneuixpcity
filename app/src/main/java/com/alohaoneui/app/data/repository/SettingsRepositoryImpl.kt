@@ -16,6 +16,28 @@ class SettingsRepositoryImpl : SettingsRepository {
         alohaOneUIApp.getSharedPreferences("settings", Context.MODE_PRIVATE)
     }
 
+    init {
+        // The pre-port test builds stored switch/slider styles in Aloha's custom order.
+        // Migrate those values once to Voyage's enum order while leaving fresh installs
+        // on Voyage defaults (Material You for both controls).
+        val preferences = prefs
+        if (!preferences.getBoolean("material_control_style_voyage_order_v1", false)) {
+            preferences.edit {
+                if (preferences.contains("material_switch_style")) {
+                    val oldToVoyage = intArrayOf(1, 4, 3, 6, 5, 0, 7, 2)
+                    val oldValue = preferences.getInt("material_switch_style", 0).coerceIn(0, 7)
+                    putInt("material_switch_style", oldToVoyage[oldValue])
+                }
+                if (preferences.contains("material_slider_style")) {
+                    val oldToVoyage = intArrayOf(1, 3, 2, 0)
+                    val oldValue = preferences.getInt("material_slider_style", 3).coerceIn(0, 3)
+                    putInt("material_slider_style", oldToVoyage[oldValue])
+                }
+                putBoolean("material_control_style_voyage_order_v1", true)
+            }
+        }
+    }
+
     override var uiMode: String
         get() = prefs.getString("ui_mode", UiMode.DEFAULT_VALUE) ?: UiMode.DEFAULT_VALUE
         set(value) = prefs.edit { putString("ui_mode", value) }
