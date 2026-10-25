@@ -257,7 +257,10 @@
     <string name="theme_scheme_add">新建方案</string>
     <string name="theme_editor_use_current">使用当前配色</string>
     <string name="theme_scheme_edit">编辑方案</string>
-    <string name="theme_picker_image">图片</string>
+    <string name="theme_picker_change_image">更换图片</string>
+    <string name="theme_picker_image_failed">无法读取图片</string>
+    <string name="theme_editor_hex_invalid">颜色无效</string>
+    <string name="theme_picker_image">从图片选择</string>
     <string name="theme_picker_choose_image">选择图片</string>
     <string name="theme_role_primary">主色</string>
     <string name="theme_role_secondary">次要色</string>

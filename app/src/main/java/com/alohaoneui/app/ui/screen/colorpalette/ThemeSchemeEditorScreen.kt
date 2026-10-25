@@ -89,6 +89,8 @@ fun ThemeSchemeEditorScreen(index: Int) {
     var chroma by remember(index, hctBase) { mutableFloatStateOf(initialHct.chroma.toFloat()) }
     var tone by remember(index, hctBase) { mutableFloatStateOf(initialHct.tone.toFloat()) }
     var selectedTab by remember { mutableIntStateOf(0) }
+    var selectedImage by remember { mutableStateOf(false) }
+    var imageError by remember { mutableStateOf(false) }
     var expandedStyle by remember { mutableStateOf(false) }
     val styles = listOf(PaletteStyle.Expressive, PaletteStyle.TonalSpot, PaletteStyle.Neutral, PaletteStyle.Vibrant, PaletteStyle.Rainbow, PaletteStyle.FruitSalad, PaletteStyle.Monochrome, PaletteStyle.Fidelity, PaletteStyle.Content)
     val styleLabels = styles.map { style ->
@@ -128,6 +130,10 @@ fun ThemeSchemeEditorScreen(index: Int) {
             if (extracted != null) {
                 keyColor = extracted
                 hex = (extracted and 0x00FFFFFF).toString(16).uppercase().padStart(6, '0')
+                selectedImage = true
+                imageError = false
+            } else {
+                imageError = true
             }
         }
     }
@@ -135,7 +141,7 @@ fun ThemeSchemeEditorScreen(index: Int) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(if (index >= 0) R.string.theme_scheme_edit else R.string.theme_scheme_add)) },
+                title = { Text(stringResource(R.string.theme_scheme_title)) },
                 navigationIcon = { IconButton(onClick = { navigator.pop() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null) } },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface),
             )
@@ -239,13 +245,14 @@ fun ThemeSchemeEditorScreen(index: Int) {
                 }
                 else -> {
                     Icon(Icons.Filled.Image, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(36.dp).align(Alignment.CenterHorizontally))
-                    Text(stringResource(R.string.theme_picker_choose_image), style = MaterialTheme.typography.titleMedium)
-                    Button(onClick = { imagePicker.launch("image/*") }, modifier = Modifier.fillMaxWidth()) {
-                        Text(stringResource(R.string.theme_picker_choose_image))
+                    Text(stringResource(R.string.theme_picker_image), style = MaterialTheme.typography.titleMedium)
+                    Button(onClick = { imageError = false; imagePicker.launch("image/*") }, modifier = Modifier.fillMaxWidth()) {
+                        Text(stringResource(if (selectedImage) R.string.theme_picker_change_image else R.string.theme_picker_choose_image))
                     }
+                    if (imageError) Text(stringResource(R.string.theme_picker_image_failed), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
                 }
             }
-            OutlinedTextField(value = hex, onValueChange = { hex = it.take(7) }, modifier = Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.theme_editor_hex)) }, isError = hex.isNotBlank() && parsedHex == null, singleLine = true)
+            OutlinedTextField(value = hex, onValueChange = { hex = it.take(7) }, modifier = Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.theme_editor_hex)) }, isError = hex.isNotBlank() && parsedHex == null, supportingText = { if (hex.isNotBlank() && parsedHex == null) Text(stringResource(R.string.theme_editor_hex_invalid)) }, singleLine = true)
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(stringResource(R.string.settings_material_contrast), modifier = Modifier.weight(1f))
                 Text(String.format(java.util.Locale.ROOT, "%+.1f", contrast))

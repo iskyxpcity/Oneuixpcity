@@ -260,7 +260,10 @@
     <string name="theme_scheme_add">New scheme</string>
     <string name="theme_editor_use_current">Use current colors</string>
     <string name="theme_scheme_edit">Edit scheme</string>
-    <string name="theme_picker_image">Image</string>
+    <string name="theme_picker_change_image">Change image</string>
+    <string name="theme_picker_image_failed">Unable to read image</string>
+    <string name="theme_editor_hex_invalid">Invalid color</string>
+    <string name="theme_picker_image">From image</string>
     <string name="theme_picker_choose_image">Choose image</string>
     <string name="theme_role_primary">Primary</string>
     <string name="theme_role_secondary">Secondary</string>
