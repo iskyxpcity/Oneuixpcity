@@ -68,6 +68,7 @@ fun ColorPaletteScreen() {
         onSetMaterialLaunchFollowsTheme = viewModel::setMaterialLaunchFollowsTheme,
         onSetMaterialNavigationMotionMode = viewModel::setMaterialNavigationMotionMode,
         onSaveMaterialColorScheme = viewModel::saveMaterialColorScheme,
+        onEditMaterialColorScheme = { index -> navigator.push(com.alohaoneui.app.ui.navigation3.Route.ThemeSchemeEditor(index)) },
         onApplyMaterialColorScheme = viewModel::applyMaterialColorScheme,
         onDeleteMaterialColorScheme = viewModel::deleteMaterialColorScheme,
         onSetEnableBlur = viewModel::setEnableBlur,

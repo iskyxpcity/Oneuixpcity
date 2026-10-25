@@ -46,6 +46,7 @@ data class ColorPaletteScreenActions(
     val onSetMaterialLaunchFollowsTheme: (Boolean) -> Unit,
     val onSetMaterialNavigationMotionMode: (Int) -> Unit,
     val onSaveMaterialColorScheme: (String) -> Unit,
+    val onEditMaterialColorScheme: (Int) -> Unit,
     val onApplyMaterialColorScheme: (MaterialColorScheme) -> Unit,
     val onDeleteMaterialColorScheme: (String) -> Unit,
     val onSetEnableBlur: (Boolean) -> Unit,

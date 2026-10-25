@@ -302,40 +302,17 @@ fun ColorPaletteScreenMaterial(
                 }
             }
 
-            var schemeName by remember { mutableStateOf("") }
             TonalCard(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
             ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
+                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(
                         text = stringResource(R.string.theme_saved_schemes_title),
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurface
                     )
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        OutlinedTextField(
-                            value = schemeName,
-                            onValueChange = { schemeName = it.take(40) },
-                            modifier = Modifier.weight(1f),
-                            label = { Text(stringResource(R.string.theme_saved_scheme_name)) },
-                            singleLine = true,
-                        )
-                        Button(
-                            onClick = {
-                                actions.onSaveMaterialColorScheme(schemeName)
-                                schemeName = ""
-                            },
-                            enabled = schemeName.isNotBlank(),
-                        ) { Text(stringResource(R.string.theme_saved_scheme_save)) }
+                    Button(onClick = { actions.onEditMaterialColorScheme(-1) }, modifier = Modifier.fillMaxWidth()) {
+                        Text(stringResource(R.string.theme_scheme_add))
                     }
                     if (uiState.materialColorSchemes.isEmpty()) {
                         Text(
@@ -344,7 +321,7 @@ fun ColorPaletteScreenMaterial(
                             color = MaterialTheme.colorScheme.outline,
                         )
                     } else {
-                        uiState.materialColorSchemes.forEach { scheme ->
+                        uiState.materialColorSchemes.forEachIndexed { index, scheme ->
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 verticalAlignment = Alignment.CenterVertically,
@@ -358,17 +335,15 @@ fun ColorPaletteScreenMaterial(
                                         color = MaterialTheme.colorScheme.outline,
                                     )
                                 }
-                                Button(onClick = { actions.onApplyMaterialColorScheme(scheme) }) {
-                                    Text(stringResource(R.string.theme_saved_scheme_apply))
-                                }
-                                Button(onClick = { actions.onDeleteMaterialColorScheme(scheme.name) }) {
-                                    Text(stringResource(R.string.theme_saved_scheme_delete))
-                                }
+                                Button(onClick = { actions.onEditMaterialColorScheme(index) }) { Text(stringResource(R.string.theme_scheme_edit)) }
+                                Button(onClick = { actions.onApplyMaterialColorScheme(scheme) }) { Text(stringResource(R.string.theme_saved_scheme_apply)) }
+                                Button(onClick = { actions.onDeleteMaterialColorScheme(scheme.name) }) { Text(stringResource(R.string.theme_saved_scheme_delete)) }
                             }
                         }
                     }
                 }
             }
+
 
             TonalCard(
                 modifier = Modifier

@@ -207,6 +207,23 @@ class SettingsViewModel(
         _uiState.update { it.copy(materialCornerScale = safeScale) }
     }
 
+    fun saveMaterialColorScheme(scheme: com.alohaoneui.app.data.repository.MaterialColorScheme) {
+        val safeName = scheme.name.trim().take(40)
+        if (safeName.isBlank()) return
+        val normalized = scheme.copy(
+            name = safeName,
+            colorStyle = runCatching { com.materialkolor.PaletteStyle.valueOf(scheme.colorStyle).name }
+                .getOrDefault(com.materialkolor.PaletteStyle.Expressive.name),
+            colorSpec = runCatching { com.materialkolor.dynamiccolor.ColorSpec.SpecVersion.valueOf(scheme.colorSpec).name }
+                .getOrDefault(com.materialkolor.dynamiccolor.ColorSpec.SpecVersion.SPEC_2025.name),
+            contrastMode = scheme.contrastMode.coerceIn(-1, 2),
+            contrastLevel = scheme.contrastLevel.coerceIn(-1.0f, 1.0f),
+        )
+        val updated = repo.materialColorSchemes.filterNot { it.name.equals(safeName, ignoreCase = true) } + normalized
+        repo.materialColorSchemes = updated
+        _uiState.update { it.copy(materialColorSchemes = updated) }
+    }
+
     fun saveMaterialColorScheme(name: String) {
         val safeName = name.trim().take(40)
         if (safeName.isBlank()) return
