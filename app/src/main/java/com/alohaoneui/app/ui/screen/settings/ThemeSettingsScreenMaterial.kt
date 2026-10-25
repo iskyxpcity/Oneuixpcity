@@ -113,14 +113,11 @@ fun ThemeSettingsScreenMaterial() {
                             title = stringResource(R.string.theme_component_font_family),
                             items = listOf(
                                 stringResource(R.string.settings_material_font_family_default),
-                                stringResource(R.string.settings_material_font_family_sans),
                                 stringResource(R.string.settings_material_font_family_serif),
-                                stringResource(R.string.settings_material_font_family_monospace),
-                                stringResource(R.string.settings_material_font_family_cursive),
                             ),
                             selectedIndex = listOf("Default", "Serif").indexOf(state.materialFontFamily).coerceAtLeast(0),
                             onItemSelected = { index ->
-                                viewModel.setMaterialFontFamily(listOf("Default", "SansSerif", "Serif", "Monospace", "Cursive")[index])
+                                viewModel.setMaterialFontFamily(listOf("Default", "Serif")[index])
                             },
                         )
                     },
