@@ -189,6 +189,43 @@ fun ThemeSettingsScreenMaterial() {
                         )
                     },
                     {
+                        SegmentedDropdownItem(
+                            icon = Icons.Filled.Tune,
+                            title = stringResource(R.string.theme_component_contrast),
+                            items = listOf(
+                                stringResource(R.string.settings_contrast_follow_system),
+                                stringResource(R.string.settings_contrast_low),
+                                stringResource(R.string.settings_contrast_normal),
+                                stringResource(R.string.settings_contrast_high),
+                            ),
+                            selectedIndex = (state.materialContrastMode + 1).coerceIn(0, 3),
+                            onItemSelected = { index -> viewModel.setMaterialContrastMode(index - 1) },
+                        )
+                    },
+                    {
+                        Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
+                            Text(stringResource(R.string.settings_font_scale_title))
+                            Text(String.format(java.util.Locale.ROOT, "%.0f%%", state.materialFontScale * 100f), style = MaterialTheme.typography.labelMedium)
+                            Slider(
+                                value = state.materialFontScale,
+                                onValueChange = viewModel::setMaterialFontScale,
+                                valueRange = 0.8f..1.5f,
+                            )
+                        }
+                    },
+                    {
+                        SegmentedDropdownItem(
+                            icon = Icons.Filled.Tune,
+                            title = stringResource(R.string.settings_navigation_motion_title),
+                            items = listOf(
+                                stringResource(R.string.settings_navigation_motion_expressive),
+                                stringResource(R.string.settings_navigation_motion_reduced),
+                            ),
+                            selectedIndex = if (state.materialNavigationMotionMode == 1) 1 else 0,
+                            onItemSelected = viewModel::setMaterialNavigationMotionMode,
+                        )
+                    },
+                    {
                         Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
                             Text(stringResource(R.string.theme_component_border_width))
                             Text(String.format(java.util.Locale.ROOT, "%.1f dp", state.materialBorderWidth), style = MaterialTheme.typography.labelMedium)
