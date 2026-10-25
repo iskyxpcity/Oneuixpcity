@@ -57,7 +57,8 @@ jobs:
           echo "=== INSPECTION REPORT (end) ==="
           cp "$RUNNER_TEMP/voyage-decoded/AndroidManifest.xml" "$RUNNER_TEMP/voyage-analysis/"
           mkdir -p "$RUNNER_TEMP/voyage-analysis/values"
-          find "$RUNNER_TEMP/voyage-decoded/res" -maxdepth 2 -type d -name 'values*' -exec sh -c 'for d do cp -a "$d" "$1/values/"; done' sh "$RUNNER_TEMP/voyage-analysis" {} +
+          mkdir -p "$RUNNER_TEMP/voyage-analysis/values"
+          cp -a "$RUNNER_TEMP"/voyage-decoded/res/values* "$RUNNER_TEMP/voyage-analysis/values/"
       - name: Decompile Compose theme implementation with JADX
         shell: bash
         run: |
@@ -71,7 +72,7 @@ jobs:
           jadx_bin="$(find "$RUNNER_TEMP/jadx-bin" -type f -path '*/bin/jadx' -print -quit)"
           test -n "$jadx_bin"
           chmod +x "$jadx_bin"
-          "$jadx_bin" --deobf --show-bad-code -d "$RUNNER_TEMP/voyage-analysis/decompiled" "$RUNNER_TEMP/voyage.apk" >/tmp/jadx.log 2>&1
+          "$jadx_bin" --deobf --show-bad-code -d "$RUNNER_TEMP/voyage-analysis/decompiled" "$RUNNER_TEMP/voyage.apk" >/tmp/jadx.log 2>&1 || { code=$?; echo "JADX exit code=$code (continuing to inspect partial output)"; tail -100 /tmp/jadx.log; test -d "$RUNNER_TEMP/voyage-analysis/decompiled"; }
           {
             echo "=== Compose/Material theme source excerpts ==="
             grep -RnlE 'DynamicMaterialTheme|rememberDynamicColorScheme|dynamicColorScheme|MaterialTheme\(' "$RUNNER_TEMP/voyage-analysis/decompiled" --include='*.java' | sed -n '1,80p' > "$RUNNER_TEMP/theme-files.txt" || true
