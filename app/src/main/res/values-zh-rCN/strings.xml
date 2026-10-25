@@ -190,6 +190,18 @@
 
     <string name="nav_rail_expand">展开导航栏</string>
     <string name="nav_rail_collapse">收起导航栏</string>
+    <string name="feature_intro_version_updates_261025">Aloha OneUI 1.0.261025 主要更新</string>
+    <string name="feature_intro_version_updates_261025_summary">2026-10-25</string>
+    <string name="version_1_0_261025_title">Aloha OneUI 1.0.261025 主要更新</string>
+    <string name="version_1_0_261025_summary">2026-10-25</string>
+    <string name="changelog_261025_theme_store_region_title">主题商店地区切换</string>
+    <string name="changelog_261025_theme_store_region_body">新增主题商店地区切换选项，可选择所需地区浏览对应的主题商店。</string>
+    <string name="changelog_261025_floating_ball_docking_title">修复悬浮球自动贴边</string>
+    <string name="changelog_261025_floating_ball_docking_body">修复悬浮球移动后的自动贴边问题，同时保留已配置的触发动作与大小设置。</string>
+    <string name="changelog_261025_button_states_title">统一选项按钮状态样式</string>
+    <string name="changelog_261025_button_states_body">统一各功能选项的选中态与未选中态按钮样式，采用「主题设置」页三个按钮的形态；Miuix 主题「主页」中的设备状态三选项保留原有样式。</string>
+    <string name="changelog_261025_theme_store_ui_title">优化主题商店页面呈现</string>
+    <string name="changelog_261025_theme_store_ui_body">优化主题商店地区切换入口，并让 Material 与 Miuix 分别沿用各自主题的原生组件呈现方式。</string>
     <string name="feature_intro_version_updates_261023">Aloha OneUI 1.0.261023 主要更新</string>
     <string name="feature_intro_version_updates_261023_summary">2026-10-23</string>
     <string name="feature_intro_version_updates_2610191">Aloha OneUI 1.0.261019.1 主要更新</string>
