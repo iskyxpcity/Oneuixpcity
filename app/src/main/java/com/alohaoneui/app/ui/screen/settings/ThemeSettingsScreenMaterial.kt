@@ -87,19 +87,6 @@ fun ThemeSettingsScreenMaterial() {
             ThemeSettingsGroup {
                 SegmentedColumn(content = listOf(
                     {
-                        SegmentedDropdownItem(
-                            icon = Icons.Filled.DisplaySettings,
-                            title = stringResource(R.string.theme_group_design),
-                            summary = stringResource(R.string.settings_ui_mode_summary),
-                            items = listOf(stringResource(R.string.theme_design_miuix), stringResource(R.string.theme_design_material3)),
-                            selectedIndex = if (state.uiMode == UiMode.Material.value) 1 else 0,
-                            onItemSelected = { index ->
-                                viewModel.setUiMode(if (index == 1) UiMode.Material.value else UiMode.Miuix.value)
-                                if (index == 0 && navigator.backStackSize() > 1) navigator.pop()
-                            },
-                        )
-                    },
-                    {
                         SegmentedSwitchItem(
                             icon = Icons.Filled.Palette,
                             title = stringResource(R.string.theme_dynamic_color_title),
@@ -306,6 +293,23 @@ fun ThemeSettingsScreenMaterial() {
                             },
                         )
                     },
+                ))
+            }
+            ThemeSettingsGroup {
+                SegmentedColumn(content = listOf(
+                    {
+                        SegmentedDropdownItem(
+                            icon = Icons.Filled.DisplaySettings,
+                            title = stringResource(R.string.theme_group_design),
+                            summary = stringResource(R.string.settings_ui_mode_summary),
+                            items = listOf(stringResource(R.string.theme_design_miuix), stringResource(R.string.theme_design_material3)),
+                            selectedIndex = if (state.uiMode == UiMode.Material.value) 1 else 0,
+                            onItemSelected = { index ->
+                                viewModel.setUiMode(if (index == 1) UiMode.Material.value else UiMode.Miuix.value)
+                                if (index == 0 && navigator.backStackSize() > 1) navigator.pop()
+                            },
+                        )
+
                 ))
             }
             ThemeSettingsGroup {
