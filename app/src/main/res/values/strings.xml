@@ -191,6 +191,18 @@
 
     <string name="nav_rail_expand">Expand navigation rail</string>
     <string name="nav_rail_collapse">Collapse navigation rail</string>
+    <string name="feature_intro_version_updates_261025">Aloha OneUI 1.0.261025 Highlights</string>
+    <string name="feature_intro_version_updates_261025_summary">2026-10-25</string>
+    <string name="version_1_0_261025_title">Aloha OneUI 1.0.261025 Highlights</string>
+    <string name="version_1_0_261025_summary">2026-10-25</string>
+    <string name="changelog_261025_theme_store_region_title">Theme Store region switching</string>
+    <string name="changelog_261025_theme_store_region_body">Added a region selector for the Theme Store so users can choose the store region they want to browse.</string>
+    <string name="changelog_261025_floating_ball_docking_title">Floating ball edge docking fix</string>
+    <string name="changelog_261025_floating_ball_docking_body">Fixed automatic edge docking after moving the floating ball, while preserving its configured trigger actions and size.</string>
+    <string name="changelog_261025_button_states_title">Consistent selection button states</string>
+    <string name="changelog_261025_button_states_body">Unified selected and unselected option-button styles with the three-button style used on Theme Settings. The Miuix Home device-status selector retains its previous appearance.</string>
+    <string name="changelog_261025_theme_store_ui_title">Theme Store presentation improvements</string>
+    <string name="changelog_261025_theme_store_ui_body">Refined the Theme Store region-switching entry and kept Material and Miuix presentation aligned with each theme’s native components.</string>
     <string name="feature_intro_version_updates_261023">Aloha OneUI 1.0.261023 Highlights</string>
     <string name="feature_intro_version_updates_261023_summary">2026-10-23</string>
     <string name="feature_intro_version_updates_2610191">Aloha OneUI 1.0.261019.1 Highlights</string>
