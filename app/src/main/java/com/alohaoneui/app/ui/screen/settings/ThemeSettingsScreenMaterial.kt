@@ -55,14 +55,6 @@ fun ThemeSettingsScreenMaterial() {
     val navigator = LocalNavigator.current
     val viewModel = viewModel<SettingsViewModel>()
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    var designExpanded by rememberSaveable { mutableStateOf(true) }
-    var navigationExpanded by rememberSaveable { mutableStateOf(false) }
-    var launchExpanded by rememberSaveable { mutableStateOf(false) }
-    var modeExpanded by rememberSaveable { mutableStateOf(false) }
-    var assistExpanded by rememberSaveable { mutableStateOf(false) }
-    var shapeExpanded by rememberSaveable { mutableStateOf(false) }
-    var componentsExpanded by rememberSaveable { mutableStateOf(false) }
-    var shadowsExpanded by rememberSaveable { mutableStateOf(false) }
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     Scaffold(
@@ -92,11 +84,7 @@ fun ThemeSettingsScreenMaterial() {
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Spacer(Modifier.height(4.dp))
-            ThemeSettingsGroup(
-                title = stringResource(R.string.theme_group_design),
-                expanded = designExpanded,
-                onToggle = { designExpanded = !designExpanded },
-            ) {
+            ThemeSettingsGroup {
                 SegmentedColumn(content = listOf(
                     {
                         SegmentedDropdownItem(
@@ -130,133 +118,7 @@ fun ThemeSettingsScreenMaterial() {
                     },
                 ))
             }
-            ThemeSettingsGroup(
-                title = stringResource(R.string.theme_group_navigation_bar),
-                expanded = navigationExpanded,
-                onToggle = { navigationExpanded = !navigationExpanded },
-            ) {
-                SegmentedColumn(content = listOf(
-                    {
-                        SegmentedSwitchItem(
-                            icon = Icons.Filled.DisplaySettings,
-                            title = stringResource(R.string.theme_nav_floating),
-                            summary = stringResource(R.string.theme_nav_floating_summary),
-                            checked = state.enableFloatingBottomBar,
-                            onCheckedChange = viewModel::setEnableFloatingBottomBar,
-                        )
-                    },
-                    {
-                        SegmentedSwitchItem(
-                            icon = Icons.Filled.Tune,
-                            title = stringResource(R.string.theme_nav_blur),
-                            checked = state.enableFloatingBottomBarBlur,
-                            onCheckedChange = viewModel::setEnableFloatingBottomBarBlur,
-                        )
-                    },
-                ))
-            }
-            ThemeSettingsGroup(
-                title = stringResource(R.string.theme_group_mode),
-                expanded = modeExpanded,
-                onToggle = { modeExpanded = !modeExpanded },
-            ) {
-                val colorMode = ColorMode.fromValue(state.themeMode)
-                val selectedMode = when {
-                    colorMode.isSystem -> 0
-                    colorMode.isDark -> 2
-                    else -> 1
-                }
-                SegmentedColumn(content = listOf(
-                    {
-                        SegmentedDropdownItem(
-                            icon = Icons.Filled.DisplaySettings,
-                            title = stringResource(R.string.theme_group_mode),
-                            items = listOf(
-                                stringResource(R.string.theme_mode_system),
-                                stringResource(R.string.theme_mode_light),
-                                stringResource(R.string.theme_mode_dark),
-                            ),
-                            selectedIndex = selectedMode,
-                            onItemSelected = { index ->
-                                viewModel.setColorMode(
-                                    when (index) {
-                                        1 -> ColorMode.LIGHT
-                                        2 -> ColorMode.DARK
-                                        else -> ColorMode.SYSTEM
-                                    },
-                                )
-                            },
-                        )
-                    },
-                    {
-                        SegmentedSwitchItem(
-                            icon = Icons.Filled.DisplaySettings,
-                            title = stringResource(R.string.settings_pure_black_title),
-                            summary = stringResource(R.string.settings_pure_black_subtitle),
-                            checked = state.themeMode == ColorMode.DARK_AMOLED.value,
-                            onCheckedChange = { enabled ->
-                                viewModel.setColorMode(if (enabled) ColorMode.DARK_AMOLED else ColorMode.DARK)
-                            },
-                        )
-                    },
-                ))
-            }
-            ThemeSettingsGroup(
-                title = stringResource(R.string.theme_group_launch),
-                expanded = launchExpanded,
-                onToggle = { launchExpanded = !launchExpanded },
-            ) {
-                SegmentedColumn(content = listOf({
-                    SegmentedSwitchItem(
-                        icon = Icons.Filled.DisplaySettings,
-                        title = stringResource(R.string.theme_launch_follows_title),
-                        summary = stringResource(R.string.theme_launch_follows_subtitle),
-                        checked = state.materialLaunchFollowsTheme,
-                        onCheckedChange = viewModel::setMaterialLaunchFollowsTheme,
-                    )
-                }))
-            }
-            ThemeSettingsGroup(
-                title = stringResource(R.string.theme_group_assist),
-                expanded = assistExpanded,
-                onToggle = { assistExpanded = !assistExpanded },
-            ) {
-                SegmentedColumn(content = listOf(
-                    {
-                        SegmentedSwitchItem(
-                            icon = Icons.Filled.Tune,
-                            title = stringResource(R.string.theme_invert_title),
-                            checked = state.materialInvertColors,
-                            onCheckedChange = viewModel::setMaterialInvertColors,
-                        )
-                    },
-                    {
-                        SegmentedDropdownItem(
-                            icon = Icons.Filled.Tune,
-                            title = stringResource(R.string.theme_assist_color_vision),
-                            summary = stringResource(R.string.settings_material_color_vision_summary),
-                            items = listOf(
-                                stringResource(R.string.theme_color_blind_off),
-                                stringResource(R.string.theme_color_blind_achromatomaly),
-                                stringResource(R.string.theme_color_blind_achromatopsia),
-                                stringResource(R.string.theme_color_blind_protanomaly),
-                                stringResource(R.string.theme_color_blind_protanopia),
-                                stringResource(R.string.theme_color_blind_deuteranomaly),
-                                stringResource(R.string.theme_color_blind_deuteranopia),
-                                stringResource(R.string.theme_color_blind_tritanomaly),
-                                stringResource(R.string.theme_color_blind_tritanopia),
-                            ),
-                            selectedIndex = state.materialColorVisionMode,
-                            onItemSelected = viewModel::setMaterialColorVisionMode,
-                        )
-                    },
-                ))
-            }
-            ThemeSettingsGroup(
-                title = stringResource(R.string.theme_group_shape),
-                expanded = shapeExpanded,
-                onToggle = { shapeExpanded = !shapeExpanded },
-            ) {
+            ThemeSettingsGroup {
                 SegmentedColumn(content = listOf(
                     {
                         SegmentedDropdownItem(
@@ -288,11 +150,7 @@ fun ThemeSettingsScreenMaterial() {
                     },
                 ))
             }
-            ThemeSettingsGroup(
-                title = stringResource(R.string.theme_group_components),
-                expanded = componentsExpanded,
-                onToggle = { componentsExpanded = !componentsExpanded },
-            ) {
+            ThemeSettingsGroup {
                 SegmentedColumn(content = listOf(
                     {
                         SegmentedDropdownItem(
@@ -356,17 +214,119 @@ fun ThemeSettingsScreenMaterial() {
                     },
                 ))
             }
-            ThemeSettingsGroup(
-                title = stringResource(R.string.theme_group_shadows),
-                expanded = shadowsExpanded,
-                onToggle = { shadowsExpanded = !shadowsExpanded },
-            ) {
+            ThemeSettingsGroup {
                 SegmentedColumn(content = listOf(
                     { SegmentedSwitchItem(icon = Icons.Filled.Tune, title = stringResource(R.string.theme_shadow_container), checked = state.materialShadowContainers, onCheckedChange = viewModel::setMaterialShadowContainers) },
                     { SegmentedSwitchItem(icon = Icons.Filled.Tune, title = stringResource(R.string.theme_shadow_app_bar), checked = state.materialShadowAppBars, onCheckedChange = viewModel::setMaterialShadowAppBars) },
                     { SegmentedSwitchItem(icon = Icons.Filled.Tune, title = stringResource(R.string.theme_shadow_button), checked = state.materialShadowButtons, onCheckedChange = viewModel::setMaterialShadowButtons) },
                     { SegmentedSwitchItem(icon = Icons.Filled.Tune, title = stringResource(R.string.theme_shadow_switch), checked = state.materialShadowSwitches, onCheckedChange = viewModel::setMaterialShadowSwitches) },
                     { SegmentedSwitchItem(icon = Icons.Filled.Tune, title = stringResource(R.string.theme_shadow_slider), checked = state.materialShadowSliders, onCheckedChange = viewModel::setMaterialShadowSliders) },
+                ))
+            }
+            ThemeSettingsGroup {
+                SegmentedColumn(content = listOf(
+                    {
+                        SegmentedSwitchItem(
+                            icon = Icons.Filled.Tune,
+                            title = stringResource(R.string.theme_invert_title),
+                            checked = state.materialInvertColors,
+                            onCheckedChange = viewModel::setMaterialInvertColors,
+                        )
+                    },
+                    {
+                        SegmentedDropdownItem(
+                            icon = Icons.Filled.Tune,
+                            title = stringResource(R.string.theme_assist_color_vision),
+                            summary = stringResource(R.string.settings_material_color_vision_summary),
+                            items = listOf(
+                                stringResource(R.string.theme_color_blind_off),
+                                stringResource(R.string.theme_color_blind_achromatomaly),
+                                stringResource(R.string.theme_color_blind_achromatopsia),
+                                stringResource(R.string.theme_color_blind_protanomaly),
+                                stringResource(R.string.theme_color_blind_protanopia),
+                                stringResource(R.string.theme_color_blind_deuteranomaly),
+                                stringResource(R.string.theme_color_blind_deuteranopia),
+                                stringResource(R.string.theme_color_blind_tritanomaly),
+                                stringResource(R.string.theme_color_blind_tritanopia),
+                            ),
+                            selectedIndex = state.materialColorVisionMode,
+                            onItemSelected = viewModel::setMaterialColorVisionMode,
+                        )
+                    },
+                ))
+            }
+            ThemeSettingsGroup {
+                SegmentedColumn(content = listOf({
+                    SegmentedSwitchItem(
+                        icon = Icons.Filled.DisplaySettings,
+                        title = stringResource(R.string.theme_launch_follows_title),
+                        summary = stringResource(R.string.theme_launch_follows_subtitle),
+                        checked = state.materialLaunchFollowsTheme,
+                        onCheckedChange = viewModel::setMaterialLaunchFollowsTheme,
+                    )
+                }))
+            }
+            ThemeSettingsGroup {
+                val colorMode = ColorMode.fromValue(state.themeMode)
+                val selectedMode = when {
+                    colorMode.isSystem -> 0
+                    colorMode.isDark -> 2
+                    else -> 1
+                }
+                SegmentedColumn(content = listOf(
+                    {
+                        SegmentedDropdownItem(
+                            icon = Icons.Filled.DisplaySettings,
+                            title = stringResource(R.string.theme_group_mode),
+                            items = listOf(
+                                stringResource(R.string.theme_mode_system),
+                                stringResource(R.string.theme_mode_light),
+                                stringResource(R.string.theme_mode_dark),
+                            ),
+                            selectedIndex = selectedMode,
+                            onItemSelected = { index ->
+                                viewModel.setColorMode(
+                                    when (index) {
+                                        1 -> ColorMode.LIGHT
+                                        2 -> ColorMode.DARK
+                                        else -> ColorMode.SYSTEM
+                                    },
+                                )
+                            },
+                        )
+                    },
+                    {
+                        SegmentedSwitchItem(
+                            icon = Icons.Filled.DisplaySettings,
+                            title = stringResource(R.string.settings_pure_black_title),
+                            summary = stringResource(R.string.settings_pure_black_subtitle),
+                            checked = state.themeMode == ColorMode.DARK_AMOLED.value,
+                            onCheckedChange = { enabled ->
+                                viewModel.setColorMode(if (enabled) ColorMode.DARK_AMOLED else ColorMode.DARK)
+                            },
+                        )
+                    },
+                ))
+            }
+            ThemeSettingsGroup {
+                SegmentedColumn(content = listOf(
+                    {
+                        SegmentedSwitchItem(
+                            icon = Icons.Filled.DisplaySettings,
+                            title = stringResource(R.string.theme_nav_floating),
+                            summary = stringResource(R.string.theme_nav_floating_summary),
+                            checked = state.enableFloatingBottomBar,
+                            onCheckedChange = viewModel::setEnableFloatingBottomBar,
+                        )
+                    },
+                    {
+                        SegmentedSwitchItem(
+                            icon = Icons.Filled.Tune,
+                            title = stringResource(R.string.theme_nav_blur),
+                            checked = state.enableFloatingBottomBarBlur,
+                            onCheckedChange = viewModel::setEnableFloatingBottomBarBlur,
+                        )
+                    },
                 ))
             }
             Spacer(Modifier.height(24.dp))
@@ -376,28 +336,10 @@ fun ThemeSettingsScreenMaterial() {
 
 @Composable
 private fun ThemeSettingsGroup(
-    title: String,
-    expanded: Boolean,
-    onToggle: () -> Unit,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    Column(Modifier.padding(horizontal = 16.dp)) {
-        SegmentedColumn(content = listOf({
-            SegmentedListItem(
-                onClick = onToggle,
-                headlineContent = { Text(title, style = MaterialTheme.typography.titleMedium) },
-                leadingContent = { Icon(Icons.Filled.Palette, contentDescription = null) },
-                trailingContent = {
-                    Text(
-                        if (expanded) "−" else "+",
-                        color = MaterialTheme.colorScheme.primary,
-                        style = MaterialTheme.typography.titleLarge,
-                    )
-                },
-            )
-        }))
-        AnimatedVisibility(visible = expanded) {
-            Column(modifier = Modifier.padding(top = 4.dp), content = content)
-        }
-    }
+    Column(
+        modifier = Modifier.padding(horizontal = 16.dp),
+        content = content,
+    )
 }
