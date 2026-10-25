@@ -77,6 +77,7 @@ import com.alohaoneui.app.ui.screen.home.rememberLsposedHomeStatus
 import com.alohaoneui.app.ui.screen.status.StatusPager
 import com.alohaoneui.app.ui.screen.status.StatusCategoryScreen
 import com.alohaoneui.app.ui.screen.settings.SettingPager
+import com.alohaoneui.app.ui.screen.settings.ThemeSettingsScreenMaterial
 import com.alohaoneui.app.ui.screen.tools.ToolsPager
 import com.alohaoneui.app.ui.screen.tools.AlohaOneUICategoryScreen
 import com.alohaoneui.app.ui.screen.tools.OtherFunctionsScreen
@@ -206,6 +207,7 @@ class MainActivity : ComponentActivity() {
                             entry<Route.VersionChangelog261013>(swipeDismiss = swipeDismiss) { VersionChangelog261013Screen() }
                             entry<Route.VersionChangelog261018>(swipeDismiss = swipeDismiss) { VersionChangelog261018Screen() }
                             entry<Route.VersionChangelog261016>(swipeDismiss = swipeDismiss) { VersionChangelog261016Screen() }
+                            entry<Route.ThemeSettings>(swipeDismiss = swipeDismiss) { ThemeSettingsScreenMaterial() }
                             entry<Route.ColorPalette>(swipeDismiss = swipeDismiss) { ColorPaletteScreen() }
                             entry<Route.AlohaOneUICategory>(swipeDismiss = swipeDismiss) { key ->
                                 AlohaOneUICategoryScreen(key.category)

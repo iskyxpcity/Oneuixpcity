@@ -1,6 +1,8 @@
 package com.alohaoneui.app.ui.screen.settings
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
@@ -27,7 +29,6 @@ fun ThemeSettingsScreenMaterial() {
     val navigator = LocalNavigator.current
     val vm = viewModel<SettingsViewModel>()
     val state by vm.uiState.collectAsStateWithLifecycle()
-    var selected by rememberSaveable { mutableIntStateOf(0) }
     val sections = listOf(
         VoyageThemeSection(R.string.theme_group_design, Icons.Filled.Palette),
         VoyageThemeSection(R.string.theme_group_mode, Icons.Filled.Brightness4),
@@ -45,29 +46,25 @@ fun ThemeSettingsScreenMaterial() {
             colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface, scrolledContainerColor = MaterialTheme.colorScheme.surface),
         )
     }) { padding ->
-        BoxWithConstraints(Modifier.fillMaxSize().padding(padding)) {
-            if (maxWidth >= 600.dp) {
-                Row(Modifier.fillMaxSize()) {
-                    NavigationRail {
-                        sections.forEachIndexed { i, s ->
-                            NavigationRailItem(selected == i, { selected = i }, icon = { Icon(s.icon, null) }, label = { Text(stringResource(s.title)) }, alwaysShowLabel = true)
-                        }
-                    }
-                    ThemeSection(selected, state, vm, Modifier.weight(1f).fillMaxHeight())
-                }
-            } else {
-                Column(Modifier.fillMaxSize()) {
-                    ThemeSection(selected, state, vm, Modifier.weight(1f).fillMaxWidth())
-                    NavigationBar {
-                        sections.forEachIndexed { i, s ->
-                            NavigationBarItem(selected == i, { selected = i }, icon = { Icon(s.icon, null) }, label = { Text(stringResource(s.title)) }, alwaysShowLabel = true)
-                        }
-                    }
-                }
+        Column(
+            Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(bottom = 24.dp)
+        ) {
+            TextButton(
+                onClick = { navigator.push(com.alohaoneui.app.ui.navigation3.Route.ColorPalette) },
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+            ) { Text(stringResource(R.string.theme_scheme_title)) }
+            // Match Voyage's continuous grouped preference page and original section order.
+            listOf(0, 7, 1, 6, 5, 2, 3, 4).forEach { index ->
+                Text(
+                    text = stringResource(sections[index].title),
+                    modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 18.dp, bottom = 4.dp),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                ThemeSection(index, state, vm, Modifier.fillMaxWidth())
             }
         }
     }
-}
 
 @Composable
 private fun ThemeSection(index: Int, state: SettingsUiState, vm: SettingsViewModel, modifier: Modifier) {
