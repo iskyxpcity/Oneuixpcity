@@ -255,7 +255,22 @@ fun ColorPaletteScreenMaterial(
                             SegmentedDropdownItem(
                                 icon = Icons.Rounded.Style,
                                 title = stringResource(R.string.settings_color_style),
-                                items = styles.map { it.name },
+                                items = styles.map { style ->
+                                    stringResource(
+                                        id = when (style.name) {
+                                            "Content" -> R.string.settings_palette_style_content
+                                            "Expressive" -> R.string.settings_palette_style_expressive
+                                            "Fidelity" -> R.string.settings_palette_style_fidelity
+                                            "FruitSalad" -> R.string.settings_palette_style_fruit_salad
+                                            "Monochrome" -> R.string.settings_palette_style_monochrome
+                                            "Neutral" -> R.string.settings_palette_style_neutral
+                                            "Rainbow" -> R.string.settings_palette_style_rainbow
+                                            "TonalSpot" -> R.string.settings_palette_style_tonal_spot
+                                            "Vibrant" -> R.string.settings_palette_style_vibrant
+                                            else -> R.string.settings_palette_style_tonal_spot
+                                        }
+                                    )
+                                },
                                 selectedIndex = styles.indexOf(colorStyle),
                                 onItemSelected = { index ->
                                     actions.onSetColorStyle(styles[index].name)
