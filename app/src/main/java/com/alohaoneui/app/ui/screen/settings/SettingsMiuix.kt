@@ -34,8 +34,7 @@ import androidx.compose.material.icons.rounded.RemoveCircle
 import androidx.compose.material.icons.rounded.RemoveModerator
 import androidx.compose.material.icons.rounded.RestartAlt
 import androidx.compose.material.icons.rounded.Update
-import androidx.compose.material3.Text
-import androidx.compose.material3.MaterialTheme
+import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.material.icons.rounded.UploadFile
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
@@ -132,9 +131,10 @@ fun SettingPagerMiuix(
 
                     }
 
+                    Text(stringResource(R.string.settings_group_theme), Modifier.padding(start = 8.dp, top = 16.dp))
                     Card(
                         modifier = Modifier
-                            .padding(top = 12.dp)
+                            .padding(top = 8.dp)
                             .fillMaxWidth(),
                     ) {
                         OverlayDropdownPreference(
@@ -168,7 +168,7 @@ fun SettingPagerMiuix(
                     }
 
 
-                    Text(stringResource(R.string.settings_group_language), Modifier.padding(start = 8.dp, top = 16.dp), style = MaterialTheme.typography.titleSmall)
+                    Text(stringResource(R.string.settings_group_language), Modifier.padding(start = 8.dp, top = 16.dp))
                     Card(modifier = Modifier.padding(top = 8.dp).fillMaxWidth()) {
                         OverlayDropdownPreference(
                             title = stringResource(R.string.settings_language_title),
@@ -178,7 +178,7 @@ fun SettingPagerMiuix(
                             startAction = { Icon(Icons.Rounded.Language, modifier = Modifier.padding(end = 6.dp), contentDescription = null, tint = colorScheme.onBackground) }
                         )
                     }
-                    Text(stringResource(R.string.settings_group_display), Modifier.padding(start = 8.dp, top = 16.dp), style = MaterialTheme.typography.titleSmall)
+                    Text(stringResource(R.string.settings_group_display), Modifier.padding(start = 8.dp, top = 16.dp))
                     Card(modifier = Modifier.padding(top = 8.dp).fillMaxWidth()) {
                         OverlayDropdownPreference(
                             title = stringResource(R.string.settings_font_scale_title),
@@ -206,7 +206,7 @@ fun SettingPagerMiuix(
                             onClick = actions.onResetDisplay
                         )
                     }
-                    Text(stringResource(R.string.settings_group_behavior), Modifier.padding(start = 8.dp, top = 16.dp), style = MaterialTheme.typography.titleSmall)
+                    Text(stringResource(R.string.settings_group_behavior), Modifier.padding(start = 8.dp, top = 16.dp))
                     Card(modifier = Modifier.padding(top = 8.dp).fillMaxWidth()) {
                         OverlayDropdownPreference(
                             title = stringResource(R.string.settings_navigation_motion_title),

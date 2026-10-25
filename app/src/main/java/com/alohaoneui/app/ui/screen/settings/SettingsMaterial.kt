@@ -109,6 +109,7 @@ fun SettingPagerMaterial(
                     )
                 )
 
+            Text(stringResource(R.string.settings_group_theme), Modifier.padding(start = 16.dp, top = 12.dp), style = MaterialTheme.typography.titleSmall)
             SegmentedColumn(
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                 content = buildList {
