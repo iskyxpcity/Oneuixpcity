@@ -68,6 +68,26 @@ class SettingsRepositoryImpl : SettingsRepository {
         get() = prefs.getInt("material_navigation_motion_mode", 0).coerceIn(0, 2)
         set(value) = prefs.edit { putInt("material_navigation_motion_mode", value.coerceIn(0, 2)) }
 
+    override var materialDynamicColorEnabled: Boolean
+        get() = prefs.getBoolean("material_dynamic_color_enabled", true)
+        set(value) = prefs.edit { putBoolean("material_dynamic_color_enabled", value) }
+
+    override var materialInvertColors: Boolean
+        get() = prefs.getBoolean("material_invert_colors", false)
+        set(value) = prefs.edit { putBoolean("material_invert_colors", value) }
+
+    override var materialShapeStyle: Int
+        get() = prefs.getInt("material_shape_style", 2).coerceIn(0, 6)
+        set(value) = prefs.edit { putInt("material_shape_style", value.coerceIn(0, 6)) }
+
+    override var materialSwitchStyle: Int
+        get() = prefs.getInt("material_switch_style", 0).coerceIn(0, 7)
+        set(value) = prefs.edit { putInt("material_switch_style", value.coerceIn(0, 7)) }
+
+    override var materialSliderStyle: Int
+        get() = prefs.getInt("material_slider_style", 3).coerceIn(0, 3)
+        set(value) = prefs.edit { putInt("material_slider_style", value.coerceIn(0, 3)) }
+
     override var materialFontFamily: String
         get() = prefs.getString("material_font_family", "Default")
             ?.takeIf { it in setOf("Default", "SansSerif", "Serif", "Monospace", "Cursive") } ?: "Default"
@@ -133,6 +153,11 @@ class SettingsRepositoryImpl : SettingsRepository {
         materialFontFamily = materialFontFamily,
         materialColorVisionMode = materialColorVisionMode,
         materialNavigationMotionMode = materialNavigationMotionMode,
+        materialDynamicColorEnabled = materialDynamicColorEnabled,
+        materialInvertColors = materialInvertColors,
+        materialShapeStyle = materialShapeStyle,
+        materialSwitchStyle = materialSwitchStyle,
+        materialSliderStyle = materialSliderStyle,
         enablePredictiveBack = enablePredictiveBack,
         enableBlur = enableBlur,
         enableFloatingBottomBar = enableFloatingBottomBar,
@@ -167,6 +192,11 @@ class SettingsRepositoryImpl : SettingsRepository {
             .putString("material_font_family", snapshot.materialFontFamily.takeIf { it in setOf("Default", "SansSerif", "Serif", "Monospace", "Cursive") } ?: "Default")
             .putInt("material_color_vision_mode", snapshot.materialColorVisionMode.coerceIn(0, 4))
             .putInt("material_navigation_motion_mode", snapshot.materialNavigationMotionMode.coerceIn(0, 2))
+            .putBoolean("material_dynamic_color_enabled", snapshot.materialDynamicColorEnabled)
+            .putBoolean("material_invert_colors", snapshot.materialInvertColors)
+            .putInt("material_shape_style", snapshot.materialShapeStyle.coerceIn(0, 6))
+            .putInt("material_switch_style", snapshot.materialSwitchStyle.coerceIn(0, 7))
+            .putInt("material_slider_style", snapshot.materialSliderStyle.coerceIn(0, 3))
             .putBoolean("enable_predictive_back", snapshot.enablePredictiveBack)
             .putBoolean("enable_blur", snapshot.enableBlur)
             .putBoolean("enable_floating_bottom_bar", snapshot.enableFloatingBottomBar)

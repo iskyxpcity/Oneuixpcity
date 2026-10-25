@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import com.alohaoneui.app.ui.theme.LocalMaterialSwitchStyle
 
 @Composable
 fun ExpressiveSwitch(
@@ -26,11 +27,13 @@ fun ExpressiveSwitch(
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     showThumbIcon: Boolean = true,
 ) {
+    val style = LocalMaterialSwitchStyle.current
+    val useIcon = showThumbIcon && style !in setOf(1, 4)
     Switch(
         checked = checked,
         onCheckedChange = onCheckedChange,
         modifier = modifier,
-        thumbContent = thumbContent ?: if (showThumbIcon && (checked || enabled)) {
+        thumbContent = thumbContent ?: if (useIcon && (checked || enabled)) {
             {
                 Icon(
                     imageVector = if (checked) Icons.Filled.Check else Icons.Filled.Close,

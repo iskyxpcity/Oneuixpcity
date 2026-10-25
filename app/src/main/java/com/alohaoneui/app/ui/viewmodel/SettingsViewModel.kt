@@ -46,6 +46,11 @@ class SettingsViewModel(
             val materialFontFamily = repo.materialFontFamily
             val materialColorVisionMode = repo.materialColorVisionMode
             val materialNavigationMotionMode = repo.materialNavigationMotionMode
+            val materialDynamicColorEnabled = repo.materialDynamicColorEnabled
+            val materialInvertColors = repo.materialInvertColors
+            val materialShapeStyle = repo.materialShapeStyle
+            val materialSwitchStyle = repo.materialSwitchStyle
+            val materialSliderStyle = repo.materialSliderStyle
             val uiMode = repo.uiMode
 
             _uiState.update {
@@ -72,6 +77,11 @@ class SettingsViewModel(
                     materialFontFamily = materialFontFamily,
                     materialColorVisionMode = materialColorVisionMode,
                     materialNavigationMotionMode = materialNavigationMotionMode,
+                    materialDynamicColorEnabled = materialDynamicColorEnabled,
+                    materialInvertColors = materialInvertColors,
+                    materialShapeStyle = materialShapeStyle,
+                    materialSwitchStyle = materialSwitchStyle,
+                    materialSliderStyle = materialSliderStyle,
                 )
             }
         }
@@ -143,7 +153,8 @@ class SettingsViewModel(
 
     fun setKeyColor(color: Int) {
         repo.keyColor = color
-        _uiState.update { it.copy(keyColor = color) }
+        repo.materialDynamicColorEnabled = color == 0
+        _uiState.update { it.copy(keyColor = color, materialDynamicColorEnabled = repo.materialDynamicColorEnabled) }
     }
 
     fun setColorStyle(style: String) {
@@ -234,6 +245,35 @@ class SettingsViewModel(
         val safeMode = mode.coerceIn(0, 2)
         repo.materialNavigationMotionMode = safeMode
         _uiState.update { it.copy(materialNavigationMotionMode = safeMode) }
+    }
+
+    fun setMaterialDynamicColorEnabled(enabled: Boolean) {
+        repo.materialDynamicColorEnabled = enabled
+        if (enabled) repo.keyColor = 0 else if (repo.keyColor == 0) repo.keyColor = 0xFF6750A4.toInt()
+        _uiState.update { it.copy(materialDynamicColorEnabled = enabled, keyColor = repo.keyColor) }
+    }
+
+    fun setMaterialInvertColors(enabled: Boolean) {
+        repo.materialInvertColors = enabled
+        _uiState.update { it.copy(materialInvertColors = enabled) }
+    }
+
+    fun setMaterialShapeStyle(style: Int) {
+        val safeStyle = style.coerceIn(0, 6)
+        repo.materialShapeStyle = safeStyle
+        _uiState.update { it.copy(materialShapeStyle = safeStyle) }
+    }
+
+    fun setMaterialSwitchStyle(style: Int) {
+        val safeStyle = style.coerceIn(0, 7)
+        repo.materialSwitchStyle = safeStyle
+        _uiState.update { it.copy(materialSwitchStyle = safeStyle) }
+    }
+
+    fun setMaterialSliderStyle(style: Int) {
+        val safeStyle = style.coerceIn(0, 3)
+        repo.materialSliderStyle = safeStyle
+        _uiState.update { it.copy(materialSliderStyle = safeStyle) }
     }
 
     fun setEnablePredictiveBack(enabled: Boolean) {

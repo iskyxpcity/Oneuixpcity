@@ -19,6 +19,11 @@ interface SettingsRepository {
     var materialFontFamily: String
     var materialColorVisionMode: Int
     var materialNavigationMotionMode: Int
+    var materialDynamicColorEnabled: Boolean
+    var materialInvertColors: Boolean
+    var materialShapeStyle: Int
+    var materialSwitchStyle: Int
+    var materialSliderStyle: Int
     var enablePredictiveBack: Boolean
     var enableBlur: Boolean
     var enableFloatingBottomBar: Boolean
@@ -62,6 +67,11 @@ data class AppSettingsBackup(
     val materialFontFamily: String = "Default",
     val materialColorVisionMode: Int = 0,
     val materialNavigationMotionMode: Int = 0,
+    val materialDynamicColorEnabled: Boolean = true,
+    val materialInvertColors: Boolean = false,
+    val materialShapeStyle: Int = 2,
+    val materialSwitchStyle: Int = 0,
+    val materialSliderStyle: Int = 3,
     val enablePredictiveBack: Boolean,
     val enableBlur: Boolean,
     val enableFloatingBottomBar: Boolean,

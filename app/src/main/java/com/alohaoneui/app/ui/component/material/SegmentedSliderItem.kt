@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
+import com.alohaoneui.app.ui.theme.LocalMaterialSliderStyle
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -54,8 +56,16 @@ fun SegmentedSliderItem(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.outline,
                 )
+                val sliderStyle = LocalMaterialSliderStyle.current
+                val sliderColors = when (sliderStyle) {
+                    0 -> SliderDefaults.colors(activeTrackColor = MaterialTheme.colorScheme.tertiary, thumbColor = MaterialTheme.colorScheme.primary)
+                    1 -> SliderDefaults.colors(activeTrackColor = MaterialTheme.colorScheme.secondary, thumbColor = MaterialTheme.colorScheme.secondary)
+                    2 -> SliderDefaults.colors(activeTrackColor = MaterialTheme.colorScheme.primary, thumbColor = MaterialTheme.colorScheme.primary, inactiveTrackColor = MaterialTheme.colorScheme.surfaceVariant)
+                    else -> SliderDefaults.colors()
+                }
                 Slider(
                     value = value,
+                    colors = sliderColors,
                     onValueChange = onValueChange,
                     modifier = Modifier.fillMaxWidth(),
                     valueRange = valueRange,
