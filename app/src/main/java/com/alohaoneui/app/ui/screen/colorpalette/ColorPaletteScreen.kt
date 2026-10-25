@@ -64,6 +64,6 @@ fun ColorPaletteScreen() {
 
     when (LocalUiMode.current) {
         UiMode.Miuix -> ColorPaletteScreenMiuix(state, actions)
-        UiMode.Material -> ColorPaletteScreenMaterial(state, actions)
+        UiMode.Material -> VoyageThemeSettingsScreenMaterial(uiState, viewModel, actions.onBack)
     }
 }
