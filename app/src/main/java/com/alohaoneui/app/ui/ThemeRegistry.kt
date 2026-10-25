@@ -1,10 +1,13 @@
 package com.alohaoneui.app.ui
 
+import androidx.compose.runtime.Composable
+import com.alohaoneui.app.ui.theme.AppSettings
+import com.alohaoneui.app.ui.theme.MaterialAlohaOneUITheme
+import com.alohaoneui.app.ui.theme.MiuixAlohaOneUITheme
+
 /**
  * Identifies a visual theme implementation, not an application feature.
- *
- * Keep stable persisted values so future theme implementations can be added without
- * changing navigation, business state, or the existing Miuix preference.
+ * Persisted values are intentionally stable for backward compatibility.
  */
 enum class ThemeId(val persistedValue: String) {
     MIUIX("miuix"),
@@ -16,10 +19,7 @@ enum class ThemeId(val persistedValue: String) {
     }
 }
 
-/**
- * Capability flags let settings UI expose only controls implemented by a theme.
- * They intentionally describe presentation capabilities rather than app features.
- */
+/** Only capabilities already backed by a working implementation may be marked true. */
 data class ThemeCapabilities(
     val dynamicColor: Boolean,
     val customSeedColor: Boolean,
@@ -30,24 +30,43 @@ data class ThemeCapabilities(
     val customColorSchemes: Boolean,
 )
 
-/** Metadata for a theme adapter registered with Aloha OneUI. */
+/** A separate renderer keeps theme-specific UI implementation out of feature screens. */
+interface ThemeAdapter {
+    @Composable
+    fun Apply(appSettings: AppSettings, content: @Composable () -> Unit)
+}
+
+private object MiuixThemeAdapter : ThemeAdapter {
+    @Composable
+    override fun Apply(appSettings: AppSettings, content: @Composable () -> Unit) {
+        MiuixAlohaOneUITheme(appSettings = appSettings, content = content)
+    }
+}
+
+private object Material3ThemeAdapter : ThemeAdapter {
+    @Composable
+    override fun Apply(appSettings: AppSettings, content: @Composable () -> Unit) {
+        MaterialAlohaOneUITheme(appSettings = appSettings, content = content)
+    }
+}
+
 data class ThemeDefinition(
     val id: ThemeId,
     val displayName: String,
     val capabilities: ThemeCapabilities,
+    val adapter: ThemeAdapter,
 )
 
 /**
- * Central registry for theme implementations.
- *
- * Add future themes here and implement their adapter independently. Do not place
- * theme-specific rendering decisions in feature screens or settings business logic.
+ * Register a theme here with its own renderer. New themes can be added without changing
+ * app navigation, business logic, or the settings persistence keys.
  */
 object ThemeRegistry {
     val definitions: List<ThemeDefinition> = listOf(
         ThemeDefinition(
             id = ThemeId.MIUIX,
             displayName = "Miuix",
+            adapter = MiuixThemeAdapter,
             capabilities = ThemeCapabilities(
                 dynamicColor = true,
                 customSeedColor = true,
@@ -61,6 +80,7 @@ object ThemeRegistry {
         ThemeDefinition(
             id = ThemeId.VOYAGE_MATERIAL3,
             displayName = "Material 3",
+            adapter = Material3ThemeAdapter,
             capabilities = ThemeCapabilities(
                 dynamicColor = true,
                 customSeedColor = true,
@@ -68,7 +88,9 @@ object ThemeRegistry {
                 colorSpecSelection = true,
                 amoledBlack = true,
                 expressiveMotion = true,
-                customColorSchemes = true,
+                // Voyage has custom color-scheme editing, but that editor is not yet
+                // ported into Aloha; keep this false until the feature is implemented.
+                customColorSchemes = false,
             ),
         ),
     )
