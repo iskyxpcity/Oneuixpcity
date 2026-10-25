@@ -309,7 +309,7 @@ fun ThemeSettingsScreenMaterial() {
                                 if (index == 0 && navigator.backStackSize() > 1) navigator.pop()
                             },
                         )
-
+                    },
                 ))
             }
             ThemeSettingsGroup {
