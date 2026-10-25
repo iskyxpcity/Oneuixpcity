@@ -53,7 +53,6 @@ private data class LanguageChoice(val tag: String, val labelRes: Int)
 @Composable
 fun LanguageSettingsScreen() {
     val navigator = LocalNavigator.current
-    val context = LocalContext.current
     val choices = listOf(
         LanguageChoice("", R.string.settings_language_system),
         LanguageChoice("en", R.string.settings_language_english),
