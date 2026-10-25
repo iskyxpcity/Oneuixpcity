@@ -54,7 +54,6 @@ fun MaterialAlohaOneUITheme(
         isAmoled = amoledMode,
         style = appSettings.paletteStyle,
         specVersion = appSettings.colorSpec.effectiveFor(appSettings.paletteStyle),
-        typography = Typography,
         animate = true,
         content = content,
     )
