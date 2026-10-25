@@ -69,7 +69,7 @@ class SettingsRepositoryImpl : SettingsRepository {
         set(value) = prefs.edit { putInt("key_color", value) }
 
     override var colorStyle: String
-        get() = prefs.getString("color_style", PaletteStyle.TonalSpot.name) ?: PaletteStyle.TonalSpot.name
+        get() = prefs.getString("color_style", PaletteStyle.Expressive.name) ?: PaletteStyle.Expressive.name
         set(value) = prefs.edit { putString("color_style", value) }
 
     override var colorSpec: String
@@ -248,7 +248,7 @@ class SettingsRepositoryImpl : SettingsRepository {
     override fun restoreFromBackup(snapshot: AppSettingsBackup) {
         val restoredColorStyle = runCatching {
             PaletteStyle.valueOf(snapshot.colorStyle).name
-        }.getOrDefault(PaletteStyle.TonalSpot.name)
+        }.getOrDefault(PaletteStyle.Expressive.name)
         val restoredColorSpec = runCatching {
             ColorSpec.SpecVersion.valueOf(snapshot.colorSpec).name
         }.getOrDefault(ColorSpec.SpecVersion.SPEC_2025.name)
