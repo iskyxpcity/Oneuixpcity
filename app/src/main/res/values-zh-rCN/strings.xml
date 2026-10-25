@@ -312,4 +312,31 @@
     <string name="theme_component_border_width">描边宽度</string>
     <string name="theme_component_navigation_motion">页面切换动效</string>
 
+
+    <string name="theme_dynamic_color_title">系统动态取色</string>
+    <string name="theme_dynamic_color_subtitle">使用壁纸中的颜色</string>
+    <string name="theme_invert_title">反转颜色</string>
+    <string name="theme_shape_style_title">形状样式</string>
+    <string name="theme_shape_cut">切角</string>
+    <string name="theme_shape_notch">凹口</string>
+    <string name="theme_shape_rounded">圆角</string>
+    <string name="theme_shape_scoop">勺形</string>
+    <string name="theme_shape_smooth">平滑</string>
+    <string name="theme_shape_squircle">超椭圆</string>
+    <string name="theme_shape_wavy">波浪</string>
+    <string name="theme_switch_style_title">开关样式</string>
+    <string name="theme_switch_compose">Compose</string>
+    <string name="theme_switch_cupertino">Cupertino</string>
+    <string name="theme_switch_fluent">Fluent</string>
+    <string name="theme_switch_hyper_os">HyperOS</string>
+    <string name="theme_switch_liquid_glass">液态玻璃</string>
+    <string name="theme_switch_material_you">Material You</string>
+    <string name="theme_switch_one_ui">One UI</string>
+    <string name="theme_switch_pixel">Pixel</string>
+    <string name="theme_slider_style_title">滑块样式</string>
+    <string name="theme_slider_fancy">Fancy</string>
+    <string name="theme_slider_hyper_os">HyperOS</string>
+    <string name="theme_slider_material">Material 2</string>
+    <string name="theme_slider_material_you">Material You</string>
+
 </resources>

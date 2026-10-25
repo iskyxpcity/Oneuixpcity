@@ -107,6 +107,15 @@ fun ThemeSettingsScreenMaterial() {
                         )
                     },
                     {
+                        SegmentedSwitchItem(
+                            icon = Icons.Filled.Palette,
+                            title = stringResource(R.string.theme_dynamic_color_title),
+                            summary = stringResource(R.string.theme_dynamic_color_subtitle),
+                            checked = state.materialDynamicColorEnabled && state.keyColor == 0,
+                            onCheckedChange = viewModel::setMaterialDynamicColorEnabled,
+                        )
+                    },
+                    {
                         SegmentedListItem(
                             onClick = { navigator.push(Route.ColorPalette) },
                             headlineContent = { Text(stringResource(R.string.theme_theme_palette_entry)) },
@@ -179,39 +188,68 @@ fun ThemeSettingsScreenMaterial() {
                 expanded = assistExpanded,
                 onToggle = { assistExpanded = !assistExpanded },
             ) {
-                SegmentedColumn(content = listOf({
-                    SegmentedDropdownItem(
-                        icon = Icons.Filled.Tune,
-                        title = stringResource(R.string.theme_assist_color_vision),
-                        summary = stringResource(R.string.settings_material_color_vision_summary),
-                        items = listOf(
-                            stringResource(R.string.settings_material_color_vision_off),
-                            stringResource(R.string.settings_material_color_vision_grayscale),
-                            stringResource(R.string.settings_material_color_vision_protanopia),
-                            stringResource(R.string.settings_material_color_vision_deuteranopia),
-                            stringResource(R.string.settings_material_color_vision_tritanopia),
-                        ),
-                        selectedIndex = state.materialColorVisionMode,
-                        onItemSelected = viewModel::setMaterialColorVisionMode,
-                    )
-                }))
+                SegmentedColumn(content = listOf(
+                    {
+                        SegmentedSwitchItem(
+                            icon = Icons.Filled.Tune,
+                            title = stringResource(R.string.theme_invert_title),
+                            checked = state.materialInvertColors,
+                            onCheckedChange = viewModel::setMaterialInvertColors,
+                        )
+                    },
+                    {
+                        SegmentedDropdownItem(
+                            icon = Icons.Filled.Tune,
+                            title = stringResource(R.string.theme_assist_color_vision),
+                            summary = stringResource(R.string.settings_material_color_vision_summary),
+                            items = listOf(
+                                stringResource(R.string.settings_material_color_vision_off),
+                                stringResource(R.string.settings_material_color_vision_grayscale),
+                                stringResource(R.string.settings_material_color_vision_protanopia),
+                                stringResource(R.string.settings_material_color_vision_deuteranopia),
+                                stringResource(R.string.settings_material_color_vision_tritanopia),
+                            ),
+                            selectedIndex = state.materialColorVisionMode,
+                            onItemSelected = viewModel::setMaterialColorVisionMode,
+                        )
+                    },
+                ))
             }
             ThemeSettingsGroup(
                 title = stringResource(R.string.theme_group_shape),
                 expanded = shapeExpanded,
                 onToggle = { shapeExpanded = !shapeExpanded },
             ) {
-                SegmentedColumn(content = listOf({
-                    Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
-                        Text(stringResource(R.string.theme_shape_corner_scale))
-                        Text((state.materialCornerScale * 100).toInt().toString() + "%", style = MaterialTheme.typography.labelMedium)
-                        Slider(
-                            value = state.materialCornerScale,
-                            onValueChange = viewModel::setMaterialCornerScale,
-                            valueRange = 0.5f..1.5f,
+                SegmentedColumn(content = listOf(
+                    {
+                        SegmentedDropdownItem(
+                            icon = Icons.Filled.Tune,
+                            title = stringResource(R.string.theme_shape_style_title),
+                            items = listOf(
+                                stringResource(R.string.theme_shape_cut),
+                                stringResource(R.string.theme_shape_notch),
+                                stringResource(R.string.theme_shape_rounded),
+                                stringResource(R.string.theme_shape_scoop),
+                                stringResource(R.string.theme_shape_smooth),
+                                stringResource(R.string.theme_shape_squircle),
+                                stringResource(R.string.theme_shape_wavy),
+                            ),
+                            selectedIndex = state.materialShapeStyle,
+                            onItemSelected = viewModel::setMaterialShapeStyle,
                         )
-                    }
-                }))
+                    },
+                    {
+                        Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
+                            Text(stringResource(R.string.theme_shape_corner_scale))
+                            Text((state.materialCornerScale * 100).toInt().toString() + "%", style = MaterialTheme.typography.labelMedium)
+                            Slider(
+                                value = state.materialCornerScale,
+                                onValueChange = viewModel::setMaterialCornerScale,
+                                valueRange = 0.5f..1.5f,
+                            )
+                        }
+                    },
+                ))
             }
             ThemeSettingsGroup(
                 title = stringResource(R.string.theme_group_components),
@@ -219,6 +257,38 @@ fun ThemeSettingsScreenMaterial() {
                 onToggle = { componentsExpanded = !componentsExpanded },
             ) {
                 SegmentedColumn(content = listOf(
+                    {
+                        SegmentedDropdownItem(
+                            icon = Icons.Filled.Tune,
+                            title = stringResource(R.string.theme_switch_style_title),
+                            items = listOf(
+                                stringResource(R.string.theme_switch_compose),
+                                stringResource(R.string.theme_switch_cupertino),
+                                stringResource(R.string.theme_switch_fluent),
+                                stringResource(R.string.theme_switch_hyper_os),
+                                stringResource(R.string.theme_switch_liquid_glass),
+                                stringResource(R.string.theme_switch_material_you),
+                                stringResource(R.string.theme_switch_one_ui),
+                                stringResource(R.string.theme_switch_pixel),
+                            ),
+                            selectedIndex = state.materialSwitchStyle,
+                            onItemSelected = viewModel::setMaterialSwitchStyle,
+                        )
+                    },
+                    {
+                        SegmentedDropdownItem(
+                            icon = Icons.Filled.Tune,
+                            title = stringResource(R.string.theme_slider_style_title),
+                            items = listOf(
+                                stringResource(R.string.theme_slider_fancy),
+                                stringResource(R.string.theme_slider_hyper_os),
+                                stringResource(R.string.theme_slider_material),
+                                stringResource(R.string.theme_slider_material_you),
+                            ),
+                            selectedIndex = state.materialSliderStyle,
+                            onItemSelected = viewModel::setMaterialSliderStyle,
+                        )
+                    },
                     {
                         SegmentedDropdownItem(
                             icon = Icons.Filled.Tune,
