@@ -9,6 +9,7 @@ import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -17,6 +18,7 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.border
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
@@ -52,6 +54,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.MenuOpen
 import androidx.compose.material.icons.filled.Brightness1
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Brightness3
 import androidx.compose.material.icons.filled.Brightness4
 import androidx.compose.material.icons.filled.Brightness7
@@ -92,6 +96,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -182,6 +187,10 @@ fun ColorPaletteScreenMaterial(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
+            MaterialThemeGroup(
+                title = stringResource(R.string.theme_group_design),
+                icon = Icons.Filled.Palette,
+            ) {
             val isDark = currentColorMode.isDark || currentColorMode.isSystem && isSystemInDarkTheme()
             val isAmoled = currentColorMode.isAmoled
             ThemePreviewCard(
@@ -413,6 +422,13 @@ fun ColorPaletteScreenMaterial(
                 }
             }
 
+
+            }
+
+            MaterialThemeGroup(
+                title = stringResource(R.string.theme_group_mode),
+                icon = Icons.Filled.Brightness4,
+            ) {
                 SegmentedColumn(
                     modifier = Modifier.padding(top = 4.dp),
                     content = listOf(
@@ -494,147 +510,13 @@ fun ColorPaletteScreenMaterial(
                     }
                 }
 
-                SegmentedColumn(
-                    modifier = Modifier.padding(top = 4.dp),
-                    content = listOf(
-                        { SegmentedSwitchItem(icon = Icons.Filled.Tune, title = stringResource(R.string.theme_shadow_container), checked = uiState.materialShadowContainers, onCheckedChange = actions.onSetMaterialShadowContainers) },
-                        { SegmentedSwitchItem(icon = Icons.Filled.Tune, title = stringResource(R.string.theme_shadow_app_bar), checked = uiState.materialShadowAppBars, onCheckedChange = actions.onSetMaterialShadowAppBars) },
-                        { SegmentedSwitchItem(icon = Icons.Filled.Tune, title = stringResource(R.string.theme_shadow_button), checked = uiState.materialShadowButtons, onCheckedChange = actions.onSetMaterialShadowButtons) },
-                        { SegmentedSwitchItem(icon = Icons.Filled.Tune, title = stringResource(R.string.theme_shadow_fab), checked = uiState.materialShadowFab, onCheckedChange = actions.onSetMaterialShadowFab) },
-                        { SegmentedSwitchItem(icon = Icons.Filled.Tune, title = stringResource(R.string.theme_shadow_switch), checked = uiState.materialShadowSwitches, onCheckedChange = actions.onSetMaterialShadowSwitches) },
-                        { SegmentedSwitchItem(icon = Icons.Filled.Tune, title = stringResource(R.string.theme_shadow_slider), checked = uiState.materialShadowSliders, onCheckedChange = actions.onSetMaterialShadowSliders) },
-                    ),
-                )
 
-                SegmentedColumn(
-                    modifier = Modifier.padding(top = 4.dp),
-                    content = listOf(
-                        {
-                            val shapeLabels = listOf(
-                                stringResource(R.string.theme_shape_rounded),
-                                stringResource(R.string.theme_shape_cut),
-                                stringResource(R.string.theme_shape_squircle),
-                                stringResource(R.string.theme_shape_smooth),
-                                stringResource(R.string.theme_shape_wavy),
-                                stringResource(R.string.theme_shape_scoop),
-                                stringResource(R.string.theme_shape_notch),
-                            )
-                            SegmentedDropdownItem(
-                                icon = Icons.Filled.Tune,
-                                title = stringResource(R.string.theme_shape_style_title),
-                                items = shapeLabels,
-                                selectedIndex = uiState.materialShapeStyle.coerceIn(0, shapeLabels.lastIndex),
-                                onItemSelected = actions.onSetMaterialShapeStyle,
-                            )
-                        },
-                    ),
-                )
+            }
 
-                TonalCard(modifier = Modifier.padding(top = 4.dp)) {
-                    var cornerScale by remember(uiState.materialCornerScale) { mutableFloatStateOf(uiState.materialCornerScale) }
-                    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                            Text(text = stringResource(R.string.settings_material_corner_scale), style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
-                            Text(text = "${(cornerScale * 100).toInt()}%", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                        Slider(value = cornerScale, onValueChange = { cornerScale = it }, onValueChangeFinished = { actions.onSetMaterialCornerScale(cornerScale) }, valueRange = 0.5f..1.5f, modifier = Modifier.fillMaxWidth())
-                    }
-                }
-
-                TonalCard(modifier = Modifier.padding(top = 4.dp)) {
-                    var borderWidth by remember(uiState.materialBorderWidth) { mutableFloatStateOf(uiState.materialBorderWidth) }
-                    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                            Text(text = stringResource(R.string.theme_component_border_width), style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
-                            Text(text = String.format(java.util.Locale.ROOT, "%.1f dp", borderWidth), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                        Slider(value = borderWidth, onValueChange = { borderWidth = it }, onValueChangeFinished = { actions.onSetMaterialBorderWidth(borderWidth) }, valueRange = 0.0f..3.0f, steps = 5, modifier = Modifier.fillMaxWidth())
-                    }
-                }
-
-                SegmentedColumn(
-                    modifier = Modifier.padding(top = 4.dp),
-                    content = listOf(
-                        {
-                            val switchLabels = listOf(
-                                stringResource(R.string.theme_switch_material_you),
-                                stringResource(R.string.theme_switch_compose),
-                                stringResource(R.string.theme_switch_pixel),
-                                stringResource(R.string.theme_switch_fluent),
-                                stringResource(R.string.theme_switch_cupertino),
-                                stringResource(R.string.theme_switch_liquid_glass),
-                                stringResource(R.string.theme_switch_hyper_os),
-                                stringResource(R.string.theme_switch_one_ui),
-                            )
-                            SegmentedDropdownItem(
-                                icon = Icons.Filled.Tune,
-                                title = stringResource(R.string.theme_switch_style_title),
-                                items = switchLabels,
-                                selectedIndex = uiState.materialSwitchStyle.coerceIn(0, switchLabels.lastIndex),
-                                onItemSelected = actions.onSetMaterialSwitchStyle,
-                            )
-                        },
-                        {
-                            val sliderLabels = listOf(
-                                stringResource(R.string.theme_slider_material_you),
-                                stringResource(R.string.theme_slider_fancy),
-                                stringResource(R.string.theme_slider_material),
-                                stringResource(R.string.theme_slider_hyper_os),
-                            )
-                            SegmentedDropdownItem(
-                                icon = Icons.Filled.Tune,
-                                title = stringResource(R.string.theme_slider_style_title),
-                                items = sliderLabels,
-                                selectedIndex = uiState.materialSliderStyle.coerceIn(0, sliderLabels.lastIndex),
-                                onItemSelected = actions.onSetMaterialSliderStyle,
-                            )
-                        },
-                    ),
-                )
-
-                SegmentedColumn(
-                    modifier = Modifier.padding(top = 4.dp),
-                    content = listOf(
-                        {
-                            val fontFamilyValues = listOf("Default", "Serif")
-                            val fontFamilyLabels = listOf(
-                                stringResource(R.string.settings_material_font_family_default),
-                                stringResource(R.string.settings_material_font_family_serif),
-                            )
-                            SegmentedDropdownItem(
-                                icon = Icons.Rounded.DesignServices,
-                                title = stringResource(R.string.settings_material_font_family),
-                                items = fontFamilyLabels,
-                                selectedIndex = fontFamilyValues.indexOf(uiState.materialFontFamily).coerceAtLeast(0),
-                                onItemSelected = { index -> actions.onSetMaterialFontFamily(fontFamilyValues[index]) },
-                            )
-                        }
-                    ),
-                )
-
-                SegmentedColumn(
-                    modifier = Modifier.padding(top = 4.dp),
-                    content = listOf(
-                        {
-                            val colorVisionLabels = listOf(
-                                stringResource(R.string.settings_material_color_vision_off),
-                                stringResource(R.string.settings_material_color_vision_grayscale),
-                                stringResource(R.string.settings_material_color_vision_protanopia),
-                                stringResource(R.string.settings_material_color_vision_deuteranopia),
-                                stringResource(R.string.settings_material_color_vision_tritanopia),
-                            )
-                            SegmentedDropdownItem(
-                                icon = Icons.Rounded.DesignServices,
-                                title = stringResource(R.string.settings_material_color_vision),
-                                summary = stringResource(R.string.settings_material_color_vision_summary),
-                                items = colorVisionLabels,
-                                selectedIndex = uiState.materialColorVisionMode.coerceIn(0, colorVisionLabels.lastIndex),
-                                onItemSelected = actions.onSetMaterialColorVisionMode,
-                            )
-                        }
-                    ),
-                )
-
+            MaterialThemeGroup(
+                title = stringResource(R.string.theme_group_navigation_bar),
+                icon = Icons.AutoMirrored.Rounded.MenuOpen,
+            ) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
                     SegmentedColumn(
                         modifier = Modifier.padding(top = 4.dp),
@@ -728,6 +610,178 @@ fun ColorPaletteScreenMaterial(
                         )
                     }
                 }
+
+            }
+
+            MaterialThemeGroup(
+                title = stringResource(R.string.theme_group_assist),
+                icon = Icons.Rounded.DesignServices,
+            ) {
+                SegmentedColumn(
+                    modifier = Modifier.padding(top = 4.dp),
+                    content = listOf(
+                        {
+                            val colorVisionLabels = listOf(
+                                stringResource(R.string.settings_material_color_vision_off),
+                                stringResource(R.string.settings_material_color_vision_grayscale),
+                                stringResource(R.string.settings_material_color_vision_protanopia),
+                                stringResource(R.string.settings_material_color_vision_deuteranopia),
+                                stringResource(R.string.settings_material_color_vision_tritanopia),
+                            )
+                            SegmentedDropdownItem(
+                                icon = Icons.Rounded.DesignServices,
+                                title = stringResource(R.string.settings_material_color_vision),
+                                summary = stringResource(R.string.settings_material_color_vision_summary),
+                                items = colorVisionLabels,
+                                selectedIndex = uiState.materialColorVisionMode.coerceIn(0, colorVisionLabels.lastIndex),
+                                onItemSelected = actions.onSetMaterialColorVisionMode,
+                            )
+                        }
+                    ),
+                )
+
+
+            }
+
+            MaterialThemeGroup(
+                title = stringResource(R.string.theme_group_shape),
+                icon = Icons.Rounded.Style,
+            ) {
+                SegmentedColumn(
+                    modifier = Modifier.padding(top = 4.dp),
+                    content = listOf(
+                        {
+                            val shapeLabels = listOf(
+                                stringResource(R.string.theme_shape_rounded),
+                                stringResource(R.string.theme_shape_cut),
+                                stringResource(R.string.theme_shape_squircle),
+                                stringResource(R.string.theme_shape_smooth),
+                                stringResource(R.string.theme_shape_wavy),
+                                stringResource(R.string.theme_shape_scoop),
+                                stringResource(R.string.theme_shape_notch),
+                            )
+                            SegmentedDropdownItem(
+                                icon = Icons.Filled.Tune,
+                                title = stringResource(R.string.theme_shape_style_title),
+                                items = shapeLabels,
+                                selectedIndex = uiState.materialShapeStyle.coerceIn(0, shapeLabels.lastIndex),
+                                onItemSelected = actions.onSetMaterialShapeStyle,
+                            )
+                        },
+                    ),
+                )
+
+                TonalCard(modifier = Modifier.padding(top = 4.dp)) {
+                    var cornerScale by remember(uiState.materialCornerScale) { mutableFloatStateOf(uiState.materialCornerScale) }
+                    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                            Text(text = stringResource(R.string.settings_material_corner_scale), style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+                            Text(text = "${(cornerScale * 100).toInt()}%", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        Slider(value = cornerScale, onValueChange = { cornerScale = it }, onValueChangeFinished = { actions.onSetMaterialCornerScale(cornerScale) }, valueRange = 0.5f..1.5f, modifier = Modifier.fillMaxWidth())
+                    }
+                }
+
+
+            }
+
+            MaterialThemeGroup(
+                title = stringResource(R.string.theme_group_components),
+                icon = Icons.Filled.Tune,
+            ) {
+                TonalCard(modifier = Modifier.padding(top = 4.dp)) {
+                    var borderWidth by remember(uiState.materialBorderWidth) { mutableFloatStateOf(uiState.materialBorderWidth) }
+                    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                            Text(text = stringResource(R.string.theme_component_border_width), style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+                            Text(text = String.format(java.util.Locale.ROOT, "%.1f dp", borderWidth), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        Slider(value = borderWidth, onValueChange = { borderWidth = it }, onValueChangeFinished = { actions.onSetMaterialBorderWidth(borderWidth) }, valueRange = 0.0f..3.0f, steps = 5, modifier = Modifier.fillMaxWidth())
+                    }
+                }
+
+                SegmentedColumn(
+                    modifier = Modifier.padding(top = 4.dp),
+                    content = listOf(
+                        {
+                            val switchLabels = listOf(
+                                stringResource(R.string.theme_switch_material_you),
+                                stringResource(R.string.theme_switch_compose),
+                                stringResource(R.string.theme_switch_pixel),
+                                stringResource(R.string.theme_switch_fluent),
+                                stringResource(R.string.theme_switch_cupertino),
+                                stringResource(R.string.theme_switch_liquid_glass),
+                                stringResource(R.string.theme_switch_hyper_os),
+                                stringResource(R.string.theme_switch_one_ui),
+                            )
+                            SegmentedDropdownItem(
+                                icon = Icons.Filled.Tune,
+                                title = stringResource(R.string.theme_switch_style_title),
+                                items = switchLabels,
+                                selectedIndex = uiState.materialSwitchStyle.coerceIn(0, switchLabels.lastIndex),
+                                onItemSelected = actions.onSetMaterialSwitchStyle,
+                            )
+                        },
+                        {
+                            val sliderLabels = listOf(
+                                stringResource(R.string.theme_slider_material_you),
+                                stringResource(R.string.theme_slider_fancy),
+                                stringResource(R.string.theme_slider_material),
+                                stringResource(R.string.theme_slider_hyper_os),
+                            )
+                            SegmentedDropdownItem(
+                                icon = Icons.Filled.Tune,
+                                title = stringResource(R.string.theme_slider_style_title),
+                                items = sliderLabels,
+                                selectedIndex = uiState.materialSliderStyle.coerceIn(0, sliderLabels.lastIndex),
+                                onItemSelected = actions.onSetMaterialSliderStyle,
+                            )
+                        },
+                    ),
+                )
+
+                SegmentedColumn(
+                    modifier = Modifier.padding(top = 4.dp),
+                    content = listOf(
+                        {
+                            val fontFamilyValues = listOf("Default", "Serif")
+                            val fontFamilyLabels = listOf(
+                                stringResource(R.string.settings_material_font_family_default),
+                                stringResource(R.string.settings_material_font_family_serif),
+                            )
+                            SegmentedDropdownItem(
+                                icon = Icons.Rounded.DesignServices,
+                                title = stringResource(R.string.settings_material_font_family),
+                                items = fontFamilyLabels,
+                                selectedIndex = fontFamilyValues.indexOf(uiState.materialFontFamily).coerceAtLeast(0),
+                                onItemSelected = { index -> actions.onSetMaterialFontFamily(fontFamilyValues[index]) },
+                            )
+                        }
+                    ),
+                )
+
+
+            }
+
+            MaterialThemeGroup(
+                title = stringResource(R.string.theme_group_shadows),
+                icon = Icons.Filled.Brightness1,
+            ) {
+                SegmentedColumn(
+                    modifier = Modifier.padding(top = 4.dp),
+                    content = listOf(
+                        { SegmentedSwitchItem(icon = Icons.Filled.Tune, title = stringResource(R.string.theme_shadow_container), checked = uiState.materialShadowContainers, onCheckedChange = actions.onSetMaterialShadowContainers) },
+                        { SegmentedSwitchItem(icon = Icons.Filled.Tune, title = stringResource(R.string.theme_shadow_app_bar), checked = uiState.materialShadowAppBars, onCheckedChange = actions.onSetMaterialShadowAppBars) },
+                        { SegmentedSwitchItem(icon = Icons.Filled.Tune, title = stringResource(R.string.theme_shadow_button), checked = uiState.materialShadowButtons, onCheckedChange = actions.onSetMaterialShadowButtons) },
+                        { SegmentedSwitchItem(icon = Icons.Filled.Tune, title = stringResource(R.string.theme_shadow_fab), checked = uiState.materialShadowFab, onCheckedChange = actions.onSetMaterialShadowFab) },
+                        { SegmentedSwitchItem(icon = Icons.Filled.Tune, title = stringResource(R.string.theme_shadow_switch), checked = uiState.materialShadowSwitches, onCheckedChange = actions.onSetMaterialShadowSwitches) },
+                        { SegmentedSwitchItem(icon = Icons.Filled.Tune, title = stringResource(R.string.theme_shadow_slider), checked = uiState.materialShadowSliders, onCheckedChange = actions.onSetMaterialShadowSliders) },
+                    ),
+                )
+
+
+            }
+
             Spacer(modifier = Modifier.height(16.dp + navBars.calculateBottomPadding() + captionBar.calculateBottomPadding()))
         }
     }
@@ -735,6 +789,59 @@ fun ColorPaletteScreenMaterial(
 
 @SuppressLint("ConfigurationScreenWidthHeight")
 @Composable
+
+@Composable
+private fun MaterialThemeGroup(
+    title: String,
+    icon: ImageVector,
+    initiallyExpanded: Boolean = true,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    var expanded by remember(title) { mutableStateOf(initiallyExpanded) }
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        shape = RoundedCornerShape(28.dp),
+        color = MaterialTheme.colorScheme.surfaceContainer,
+    ) {
+        Column(modifier = Modifier.animateContentSize()) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(role = Role.Button) { expanded = !expanded }
+                    .padding(horizontal = 16.dp, vertical = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.weight(1f),
+                )
+                Icon(
+                    imageVector = if (expanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            AnimatedVisibility(visible = expanded) {
+                Column(
+                    modifier = Modifier.padding(start = 8.dp, end = 8.dp, bottom = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    content = content,
+                )
+            }
+        }
+    }
+}
+
 private fun ThemePreviewCard(
     keyColor: Int,
     isDark: Boolean,
