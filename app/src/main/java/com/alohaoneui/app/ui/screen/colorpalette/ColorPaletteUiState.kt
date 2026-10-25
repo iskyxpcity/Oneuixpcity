@@ -1,5 +1,7 @@
 package com.alohaoneui.app.ui.screen.colorpalette
 
+import com.alohaoneui.app.data.repository.MaterialColorScheme
+
 import androidx.compose.runtime.Immutable
 import com.materialkolor.PaletteStyle
 import com.materialkolor.dynamiccolor.ColorSpec
@@ -26,6 +28,9 @@ data class ColorPaletteScreenActions(
     val onSetMaterialFontScale: (Float) -> Unit,
     val onSetMaterialContrastMode: (Int) -> Unit,
     val onSetMaterialCornerScale: (Float) -> Unit,
+    val onSaveMaterialColorScheme: (String) -> Unit,
+    val onApplyMaterialColorScheme: (MaterialColorScheme) -> Unit,
+    val onDeleteMaterialColorScheme: (String) -> Unit,
     val onSetEnableBlur: (Boolean) -> Unit,
     val onSetEnableFloatingBottomBar: (Boolean) -> Unit,
     val onSetEnableFloatingBottomBarBlur: (Boolean) -> Unit,

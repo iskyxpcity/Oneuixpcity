@@ -2,6 +2,9 @@ package com.alohaoneui.app.data.repository
 
 import android.content.Context
 import androidx.core.content.edit
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import com.materialkolor.PaletteStyle
 import com.materialkolor.dynamiccolor.ColorSpec
 import com.alohaoneui.app.alohaOneUIApp
@@ -53,6 +56,16 @@ class SettingsRepositoryImpl : SettingsRepository {
         get() = prefs.getFloat("material_corner_scale", 1.0f).coerceIn(0.5f, 1.5f)
         set(value) = prefs.edit { putFloat("material_corner_scale", value.coerceIn(0.5f, 1.5f)) }
 
+    override var materialColorSchemes: List<MaterialColorScheme>
+        get() = runCatching {
+            Json.decodeFromString<List<MaterialColorScheme>>(
+                prefs.getString("material_color_schemes", "[]") ?: "[]"
+            )
+        }.getOrDefault(emptyList())
+        set(value) = prefs.edit {
+            putString("material_color_schemes", Json.encodeToString(value))
+        }
+
     override var enablePredictiveBack: Boolean
         get() = prefs.getBoolean("enable_predictive_back", false)
         set(value) = prefs.edit { putBoolean("enable_predictive_back", value) }
@@ -96,6 +109,7 @@ class SettingsRepositoryImpl : SettingsRepository {
         materialFontScale = materialFontScale,
         materialContrastMode = materialContrastMode,
         materialCornerScale = materialCornerScale,
+        materialColorSchemes = materialColorSchemes,
         enablePredictiveBack = enablePredictiveBack,
         enableBlur = enableBlur,
         enableFloatingBottomBar = enableFloatingBottomBar,
@@ -125,6 +139,7 @@ class SettingsRepositoryImpl : SettingsRepository {
             .putFloat("material_font_scale", snapshot.materialFontScale.coerceIn(0.8f, 1.3f))
             .putInt("material_contrast_mode", snapshot.materialContrastMode.coerceIn(-1, 2))
             .putFloat("material_corner_scale", snapshot.materialCornerScale.coerceIn(0.5f, 1.5f))
+            .putString("material_color_schemes", Json.encodeToString(snapshot.materialColorSchemes))
             .putBoolean("enable_predictive_back", snapshot.enablePredictiveBack)
             .putBoolean("enable_blur", snapshot.enableBlur)
             .putBoolean("enable_floating_bottom_bar", snapshot.enableFloatingBottomBar)

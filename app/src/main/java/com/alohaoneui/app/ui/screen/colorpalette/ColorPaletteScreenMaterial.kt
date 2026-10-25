@@ -267,6 +267,74 @@ fun ColorPaletteScreenMaterial(
                 }
             }
 
+            var schemeName by remember { mutableStateOf("") }
+            TonalCard(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Text(
+                        text = stringResource(R.string.theme_saved_schemes_title),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedTextField(
+                            value = schemeName,
+                            onValueChange = { schemeName = it.take(40) },
+                            modifier = Modifier.weight(1f),
+                            label = { Text(stringResource(R.string.theme_saved_scheme_name)) },
+                            singleLine = true,
+                        )
+                        Button(
+                            onClick = {
+                                actions.onSaveMaterialColorScheme(schemeName)
+                                schemeName = ""
+                            },
+                            enabled = schemeName.isNotBlank(),
+                        ) { Text(stringResource(R.string.theme_saved_scheme_save)) }
+                    }
+                    if (uiState.materialColorSchemes.isEmpty()) {
+                        Text(
+                            text = stringResource(R.string.theme_saved_schemes_empty),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.outline,
+                        )
+                    } else {
+                        uiState.materialColorSchemes.forEach { scheme ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(scheme.name, style = MaterialTheme.typography.titleSmall)
+                                    Text(
+                                        text = "${scheme.colorStyle} · ${if (scheme.keyColor == 0) stringResource(R.string.theme_saved_scheme_dynamic) else "#${scheme.keyColor.toUInt().toString(16).takeLast(6).uppercase()}"}",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.outline,
+                                    )
+                                }
+                                Button(onClick = { actions.onApplyMaterialColorScheme(scheme) }) {
+                                    Text(stringResource(R.string.theme_saved_scheme_apply))
+                                }
+                                Button(onClick = { actions.onDeleteMaterialColorScheme(scheme.name) }) {
+                                    Text(stringResource(R.string.theme_saved_scheme_delete))
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             Row(
                 modifier = Modifier
                     .fillMaxWidth()

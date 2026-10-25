@@ -14,6 +14,7 @@ interface SettingsRepository {
     var materialFontScale: Float
     var materialContrastMode: Int
     var materialCornerScale: Float
+    var materialColorSchemes: List<MaterialColorScheme>
     var enablePredictiveBack: Boolean
     var enableBlur: Boolean
     var enableFloatingBottomBar: Boolean
@@ -26,6 +27,15 @@ interface SettingsRepository {
     fun snapshotForBackup(): AppSettingsBackup
     fun restoreFromBackup(snapshot: AppSettingsBackup)
 }
+
+@Serializable
+data class MaterialColorScheme(
+    val name: String,
+    val keyColor: Int,
+    val colorStyle: String,
+    val colorSpec: String,
+    val contrastMode: Int = -1,
+)
 
 /**
  * App-level settings stored separately from the LSPosed feature Preference.
@@ -43,6 +53,7 @@ data class AppSettingsBackup(
     val materialFontScale: Float = 1.0f,
     val materialContrastMode: Int = -1,
     val materialCornerScale: Float = 1.0f,
+    val materialColorSchemes: List<MaterialColorScheme> = emptyList(),
     val enablePredictiveBack: Boolean,
     val enableBlur: Boolean,
     val enableFloatingBottomBar: Boolean,

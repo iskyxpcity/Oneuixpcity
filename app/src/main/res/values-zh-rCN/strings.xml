@@ -253,4 +253,11 @@
     <string name="changelog_2610191_fixes_body">• 修复部分设置迁移时图标缩放比例异常的问题。\n• 修复隐藏原生图标后可能残留空白的问题。\n• 优化部分系统功能的配置读取与兼容性。</string>
     <string name="settings_material_corner_scale">圆角缩放</string>
     <string name="settings_material_corner_scale_summary">调整 Material 3 组件圆角大小，范围为 50%–150%。</string>
+    <string name="theme_saved_schemes_title">已保存的配色方案</string>
+    <string name="theme_saved_scheme_name">方案名称</string>
+    <string name="theme_saved_scheme_save">保存</string>
+    <string name="theme_saved_schemes_empty">还没有保存的配色方案。</string>
+    <string name="theme_saved_scheme_dynamic">动态配色</string>
+    <string name="theme_saved_scheme_apply">应用</string>
+    <string name="theme_saved_scheme_delete">删除</string>
 </resources>

@@ -41,6 +41,7 @@ class SettingsViewModel(
             val materialFontScale = repo.materialFontScale
             val materialContrastMode = repo.materialContrastMode
             val materialCornerScale = repo.materialCornerScale
+            val materialColorSchemes = repo.materialColorSchemes
             val uiMode = repo.uiMode
 
             _uiState.update {
@@ -62,6 +63,7 @@ class SettingsViewModel(
                     materialFontScale = materialFontScale,
                     materialContrastMode = materialContrastMode,
                     materialCornerScale = materialCornerScale,
+                    materialColorSchemes = materialColorSchemes,
                 )
             }
         }
@@ -162,6 +164,44 @@ class SettingsViewModel(
         val safeScale = scale.coerceIn(0.5f, 1.5f)
         repo.materialCornerScale = safeScale
         _uiState.update { it.copy(materialCornerScale = safeScale) }
+    }
+
+    fun saveMaterialColorScheme(name: String) {
+        val safeName = name.trim().take(40)
+        if (safeName.isBlank()) return
+        val scheme = com.alohaoneui.app.data.repository.MaterialColorScheme(
+            name = safeName,
+            keyColor = repo.keyColor,
+            colorStyle = repo.colorStyle,
+            colorSpec = repo.colorSpec,
+            contrastMode = repo.materialContrastMode,
+        )
+        val updated = repo.materialColorSchemes.filterNot { it.name.equals(safeName, ignoreCase = true) } + scheme
+        repo.materialColorSchemes = updated
+        _uiState.update { it.copy(materialColorSchemes = updated) }
+    }
+
+    fun applyMaterialColorScheme(scheme: com.alohaoneui.app.data.repository.MaterialColorScheme) {
+        repo.keyColor = scheme.keyColor
+        repo.colorStyle = runCatching { com.materialkolor.PaletteStyle.valueOf(scheme.colorStyle).name }
+            .getOrDefault(com.materialkolor.PaletteStyle.TonalSpot.name)
+        repo.colorSpec = runCatching { com.materialkolor.dynamiccolor.ColorSpec.SpecVersion.valueOf(scheme.colorSpec).name }
+            .getOrDefault(com.materialkolor.dynamiccolor.ColorSpec.SpecVersion.SPEC_2025.name)
+        repo.materialContrastMode = scheme.contrastMode.coerceIn(-1, 2)
+        _uiState.update {
+            it.copy(
+                keyColor = repo.keyColor,
+                colorStyle = repo.colorStyle,
+                colorSpec = repo.colorSpec,
+                materialContrastMode = repo.materialContrastMode,
+            )
+        }
+    }
+
+    fun deleteMaterialColorScheme(name: String) {
+        val updated = repo.materialColorSchemes.filterNot { it.name == name }
+        repo.materialColorSchemes = updated
+        _uiState.update { it.copy(materialColorSchemes = updated) }
     }
 
     fun setEnablePredictiveBack(enabled: Boolean) {

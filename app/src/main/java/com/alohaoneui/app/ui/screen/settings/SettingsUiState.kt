@@ -4,6 +4,7 @@ import androidx.compose.runtime.Immutable
 import com.materialkolor.PaletteStyle
 import com.materialkolor.dynamiccolor.ColorSpec
 import com.alohaoneui.app.ui.UiMode
+import com.alohaoneui.app.data.repository.MaterialColorScheme
 
 /** AlohaOneUI appearance and application preferences. */
 @Immutable
@@ -18,6 +19,7 @@ data class SettingsUiState(
     val materialFontScale: Float = 1.0f,
     val materialContrastMode: Int = -1,
     val materialCornerScale: Float = 1.0f,
+    val materialColorSchemes: List<MaterialColorScheme> = emptyList(),
     val enablePredictiveBack: Boolean = false,
     val enableBlur: Boolean = false,
     val enableFloatingBottomBar: Boolean = false,
