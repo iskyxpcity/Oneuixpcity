@@ -8,7 +8,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Shapes
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.shape.CutCornerShape
-import androidx.compose.ui.graphics.Shape
+import androidx.compose.material3.Shapes
+import androidx.compose.foundation.shape.CornerBasedShape
 import androidx.compose.ui.unit.dp
 import androidx.compose.material3.MotionScheme
 import androidx.compose.runtime.Composable
@@ -104,7 +105,7 @@ fun MaterialAlohaOneUITheme(
 }
 
 
-private fun materialShape(style: Int, size: androidx.compose.ui.unit.Dp): Shape = when (style.coerceIn(0, 6)) {
+private fun materialShape(style: Int, size: androidx.compose.ui.unit.Dp): CornerBasedShape = when (style.coerceIn(0, 6)) {
     0 -> CutCornerShape(size)
     1 -> CutCornerShape(topStart = size * 1.5f, topEnd = size, bottomEnd = size * 1.5f, bottomStart = size)
     2 -> RoundedCornerShape(size)
