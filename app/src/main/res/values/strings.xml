@@ -263,4 +263,6 @@
     <string name="theme_saved_scheme_dynamic">Dynamic</string>
     <string name="theme_saved_scheme_apply">Apply</string>
     <string name="theme_saved_scheme_delete">Delete</string>
+    <string name="settings_material_border_width">Border width</string>
+    <string name="settings_material_border_width_summary">Set the outline width for Material 3 cards from 0 to 3 dp.</string>
 </resources>

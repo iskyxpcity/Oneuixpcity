@@ -15,6 +15,7 @@ interface SettingsRepository {
     var materialContrastMode: Int
     var materialCornerScale: Float
     var materialColorSchemes: List<MaterialColorScheme>
+    var materialBorderWidth: Float
     var enablePredictiveBack: Boolean
     var enableBlur: Boolean
     var enableFloatingBottomBar: Boolean
@@ -54,6 +55,7 @@ data class AppSettingsBackup(
     val materialContrastMode: Int = -1,
     val materialCornerScale: Float = 1.0f,
     val materialColorSchemes: List<MaterialColorScheme> = emptyList(),
+    val materialBorderWidth: Float = 0.0f,
     val enablePredictiveBack: Boolean,
     val enableBlur: Boolean,
     val enableFloatingBottomBar: Boolean,

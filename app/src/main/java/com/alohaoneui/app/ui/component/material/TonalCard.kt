@@ -1,6 +1,7 @@
 package com.alohaoneui.app.ui.component.material
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.border
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -15,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import com.alohaoneui.app.ui.theme.LocalMaterialBorderWidth
 import androidx.compose.ui.unit.dp
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -27,9 +29,11 @@ fun TonalCard(
     onClick: () -> Unit,
     content: @Composable () -> Unit,
 ) {
+    val borderWidth = LocalMaterialBorderWidth.current.coerceIn(0.0f, 3.0f)
+    val cardModifier = if (borderWidth > 0f) modifier.border(borderWidth.dp, MaterialTheme.colorScheme.outlineVariant, shape) else modifier
     Card(
         onClick = onClick,
-        modifier = modifier,
+        modifier = cardModifier,
         enabled = enabled,
         colors = CardDefaults.cardColors(
             containerColor = containerColor,
@@ -49,8 +53,10 @@ fun TonalCard(
     shape: Shape = MaterialTheme.shapes.large,
     content: @Composable () -> Unit,
 ) {
+    val borderWidth = LocalMaterialBorderWidth.current.coerceIn(0.0f, 3.0f)
+    val cardModifier = if (borderWidth > 0f) modifier.border(borderWidth.dp, MaterialTheme.colorScheme.outlineVariant, shape) else modifier
     Card(
-        modifier = modifier,
+        modifier = cardModifier,
         colors = CardDefaults.cardColors(
             containerColor = containerColor,
             contentColor = contentColorFor(containerColor),

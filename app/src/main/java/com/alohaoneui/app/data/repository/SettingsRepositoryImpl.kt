@@ -56,6 +56,10 @@ class SettingsRepositoryImpl : SettingsRepository {
         get() = prefs.getFloat("material_corner_scale", 1.0f).coerceIn(0.5f, 1.5f)
         set(value) = prefs.edit { putFloat("material_corner_scale", value.coerceIn(0.5f, 1.5f)) }
 
+    override var materialBorderWidth: Float
+        get() = prefs.getFloat("material_border_width", 0.0f).coerceIn(0.0f, 3.0f)
+        set(value) = prefs.edit { putFloat("material_border_width", value.coerceIn(0.0f, 3.0f)) }
+
     override var materialColorSchemes: List<MaterialColorScheme>
         get() = runCatching {
             Json.decodeFromString<List<MaterialColorScheme>>(
@@ -110,6 +114,7 @@ class SettingsRepositoryImpl : SettingsRepository {
         materialContrastMode = materialContrastMode,
         materialCornerScale = materialCornerScale,
         materialColorSchemes = materialColorSchemes,
+        materialBorderWidth = materialBorderWidth,
         enablePredictiveBack = enablePredictiveBack,
         enableBlur = enableBlur,
         enableFloatingBottomBar = enableFloatingBottomBar,
@@ -140,6 +145,7 @@ class SettingsRepositoryImpl : SettingsRepository {
             .putInt("material_contrast_mode", snapshot.materialContrastMode.coerceIn(-1, 2))
             .putFloat("material_corner_scale", snapshot.materialCornerScale.coerceIn(0.5f, 1.5f))
             .putString("material_color_schemes", Json.encodeToString(snapshot.materialColorSchemes))
+            .putFloat("material_border_width", snapshot.materialBorderWidth.coerceIn(0.0f, 3.0f))
             .putBoolean("enable_predictive_back", snapshot.enablePredictiveBack)
             .putBoolean("enable_blur", snapshot.enableBlur)
             .putBoolean("enable_floating_bottom_bar", snapshot.enableFloatingBottomBar)

@@ -483,6 +483,20 @@ fun ColorPaletteScreenMaterial(
                     }
                 }
 
+                TonalCard(modifier = Modifier.padding(top = 4.dp)) {
+                    var borderWidth by remember(uiState.materialBorderWidth) { mutableFloatStateOf(uiState.materialBorderWidth) }
+                    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(text = stringResource(R.string.settings_material_border_width), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
+                                Text(text = stringResource(R.string.settings_material_border_width_summary), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.outline)
+                            }
+                            Text(text = String.format(java.util.Locale.ROOT, "%.1f dp", borderWidth), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        Slider(value = borderWidth, onValueChange = { borderWidth = it }, onValueChangeFinished = { actions.onSetMaterialBorderWidth(borderWidth) }, valueRange = 0.0f..3.0f, steps = 5, modifier = Modifier.fillMaxWidth())
+                    }
+                }
+
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
                     SegmentedColumn(
                         modifier = Modifier.padding(top = 4.dp),

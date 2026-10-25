@@ -108,7 +108,7 @@ object ThemeRegistry {
                 fontFamilySelection = false,
                 fontScale = true,
                 cornerScale = true,
-                borderWidth = false,
+                borderWidth = true,
                 colorVisionMode = false,
                 contentColorExtraction = false,
                 navigationMotionSelection = false,

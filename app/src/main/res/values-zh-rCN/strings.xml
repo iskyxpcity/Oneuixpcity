@@ -260,4 +260,6 @@
     <string name="theme_saved_scheme_dynamic">动态配色</string>
     <string name="theme_saved_scheme_apply">应用</string>
     <string name="theme_saved_scheme_delete">删除</string>
+    <string name="settings_material_border_width">描边粗细</string>
+    <string name="settings_material_border_width_summary">调整 Material 3 卡片描边宽度，范围为 0–3 dp。</string>
 </resources>

@@ -42,6 +42,7 @@ class SettingsViewModel(
             val materialContrastMode = repo.materialContrastMode
             val materialCornerScale = repo.materialCornerScale
             val materialColorSchemes = repo.materialColorSchemes
+            val materialBorderWidth = repo.materialBorderWidth
             val uiMode = repo.uiMode
 
             _uiState.update {
@@ -64,6 +65,7 @@ class SettingsViewModel(
                     materialContrastMode = materialContrastMode,
                     materialCornerScale = materialCornerScale,
                     materialColorSchemes = materialColorSchemes,
+                    materialBorderWidth = materialBorderWidth,
                 )
             }
         }
@@ -202,6 +204,12 @@ class SettingsViewModel(
         val updated = repo.materialColorSchemes.filterNot { it.name == name }
         repo.materialColorSchemes = updated
         _uiState.update { it.copy(materialColorSchemes = updated) }
+    }
+
+    fun setMaterialBorderWidth(width: Float) {
+        val safeWidth = width.coerceIn(0.0f, 3.0f)
+        repo.materialBorderWidth = safeWidth
+        _uiState.update { it.copy(materialBorderWidth = safeWidth) }
     }
 
     fun setEnablePredictiveBack(enabled: Boolean) {
