@@ -144,6 +144,10 @@ class SettingsRepositoryImpl : SettingsRepository {
         get() = prefs.getBoolean("material_shadow_buttons", true)
         set(value) = prefs.edit { putBoolean("material_shadow_buttons", value) }
 
+    override var materialShadowFab: Boolean
+        get() = prefs.getBoolean("material_shadow_fab", true)
+        set(value) = prefs.edit { putBoolean("material_shadow_fab", value) }
+
     override var materialShadowSwitches: Boolean
         get() = prefs.getBoolean("material_shadow_switches", true)
         set(value) = prefs.edit { putBoolean("material_shadow_switches", value) }
@@ -228,6 +232,7 @@ class SettingsRepositoryImpl : SettingsRepository {
         materialShadowContainers = materialShadowContainers,
         materialShadowAppBars = materialShadowAppBars,
         materialShadowButtons = materialShadowButtons,
+        materialShadowFab = materialShadowFab,
         materialShadowSwitches = materialShadowSwitches,
         materialShadowSliders = materialShadowSliders,
         enablePredictiveBack = enablePredictiveBack,
@@ -274,6 +279,7 @@ class SettingsRepositoryImpl : SettingsRepository {
             .putBoolean("material_shadow_containers", snapshot.materialShadowContainers)
             .putBoolean("material_shadow_appbars", snapshot.materialShadowAppBars)
             .putBoolean("material_shadow_buttons", snapshot.materialShadowButtons)
+            .putBoolean("material_shadow_fab", snapshot.materialShadowFab)
             .putBoolean("material_shadow_switches", snapshot.materialShadowSwitches)
             .putBoolean("material_shadow_sliders", snapshot.materialShadowSliders)
             .putBoolean("enable_predictive_back", snapshot.enablePredictiveBack)

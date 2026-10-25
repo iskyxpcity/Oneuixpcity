@@ -56,6 +56,7 @@ class SettingsViewModel(
             val materialShadowContainers = repo.materialShadowContainers
             val materialShadowAppBars = repo.materialShadowAppBars
             val materialShadowButtons = repo.materialShadowButtons
+            val materialShadowFab = repo.materialShadowFab
             val materialShadowSwitches = repo.materialShadowSwitches
             val materialShadowSliders = repo.materialShadowSliders
             val uiMode = repo.uiMode
@@ -94,6 +95,7 @@ class SettingsViewModel(
                     materialShadowContainers = materialShadowContainers,
                     materialShadowAppBars = materialShadowAppBars,
                     materialShadowButtons = materialShadowButtons,
+                    materialShadowFab = materialShadowFab,
                     materialShadowSwitches = materialShadowSwitches,
                     materialShadowSliders = materialShadowSliders,
                 )
@@ -317,6 +319,11 @@ class SettingsViewModel(
     fun setMaterialShadowButtons(enabled: Boolean) {
         repo.materialShadowButtons = enabled
         _uiState.update { it.copy(materialShadowButtons = enabled) }
+    }
+
+    fun setMaterialShadowFab(enabled: Boolean) {
+        repo.materialShadowFab = enabled
+        _uiState.update { it.copy(materialShadowFab = enabled) }
     }
 
     fun setMaterialShadowSwitches(enabled: Boolean) {

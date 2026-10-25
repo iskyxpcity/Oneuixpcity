@@ -27,6 +27,7 @@ val LocalMaterialSliderStyle = staticCompositionLocalOf { 0 }
 val LocalMaterialShadowContainers = staticCompositionLocalOf { true }
 val LocalMaterialShadowAppBars = staticCompositionLocalOf { true }
 val LocalMaterialShadowButtons = staticCompositionLocalOf { true }
+val LocalMaterialShadowFab = staticCompositionLocalOf { true }
 val LocalMaterialShadowSwitches = staticCompositionLocalOf { true }
 val LocalMaterialShadowSliders = staticCompositionLocalOf { true }
 
@@ -77,6 +78,7 @@ fun MaterialAlohaOneUITheme(
         LocalMaterialShadowContainers provides appSettings.materialShadowContainers,
         LocalMaterialShadowAppBars provides appSettings.materialShadowAppBars,
         LocalMaterialShadowButtons provides appSettings.materialShadowButtons,
+        LocalMaterialShadowFab provides appSettings.materialShadowFab,
         LocalMaterialShadowSwitches provides appSettings.materialShadowSwitches,
         LocalMaterialShadowSliders provides appSettings.materialShadowSliders,
         LocalDensity provides Density(

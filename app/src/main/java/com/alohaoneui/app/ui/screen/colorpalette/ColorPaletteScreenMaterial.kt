@@ -500,6 +500,7 @@ fun ColorPaletteScreenMaterial(
                         { SegmentedSwitchItem(icon = Icons.Filled.Tune, title = stringResource(R.string.theme_shadow_container), checked = uiState.materialShadowContainers, onCheckedChange = actions.onSetMaterialShadowContainers) },
                         { SegmentedSwitchItem(icon = Icons.Filled.Tune, title = stringResource(R.string.theme_shadow_app_bar), checked = uiState.materialShadowAppBars, onCheckedChange = actions.onSetMaterialShadowAppBars) },
                         { SegmentedSwitchItem(icon = Icons.Filled.Tune, title = stringResource(R.string.theme_shadow_button), checked = uiState.materialShadowButtons, onCheckedChange = actions.onSetMaterialShadowButtons) },
+                        { SegmentedSwitchItem(icon = Icons.Filled.Tune, title = stringResource(R.string.theme_shadow_fab), checked = uiState.materialShadowFab, onCheckedChange = actions.onSetMaterialShadowFab) },
                         { SegmentedSwitchItem(icon = Icons.Filled.Tune, title = stringResource(R.string.theme_shadow_switch), checked = uiState.materialShadowSwitches, onCheckedChange = actions.onSetMaterialShadowSwitches) },
                         { SegmentedSwitchItem(icon = Icons.Filled.Tune, title = stringResource(R.string.theme_shadow_slider), checked = uiState.materialShadowSliders, onCheckedChange = actions.onSetMaterialShadowSliders) },
                     ),

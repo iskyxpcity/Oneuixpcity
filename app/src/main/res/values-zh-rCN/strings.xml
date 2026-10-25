@@ -349,6 +349,7 @@
     <string name="theme_shadow_container">容器</string>
     <string name="theme_shadow_app_bar">顶部栏</string>
     <string name="theme_shadow_button">按钮</string>
+<string name="theme_shadow_fab">悬浮操作按钮</string>
     <string name="theme_shadow_switch">开关</string>
     <string name="theme_shadow_slider">滑块</string>
 

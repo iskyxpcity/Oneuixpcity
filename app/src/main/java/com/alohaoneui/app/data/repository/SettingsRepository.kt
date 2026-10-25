@@ -29,6 +29,7 @@ interface SettingsRepository {
     var materialShadowContainers: Boolean
     var materialShadowAppBars: Boolean
     var materialShadowButtons: Boolean
+    var materialShadowFab: Boolean
     var materialShadowSwitches: Boolean
     var materialShadowSliders: Boolean
     var enablePredictiveBack: Boolean
@@ -85,6 +86,7 @@ data class AppSettingsBackup(
     val materialShadowContainers: Boolean = true,
     val materialShadowAppBars: Boolean = true,
     val materialShadowButtons: Boolean = true,
+    val materialShadowFab: Boolean = true,
     val materialShadowSwitches: Boolean = true,
     val materialShadowSliders: Boolean = true,
     val enablePredictiveBack: Boolean,
