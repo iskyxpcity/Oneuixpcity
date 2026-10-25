@@ -60,9 +60,9 @@ fun SegmentedSliderItem(
                 )
                 val sliderStyle = LocalMaterialSliderStyle.current
                 val sliderColors = when (sliderStyle) {
-                    0 -> SliderDefaults.colors(activeTrackColor = MaterialTheme.colorScheme.tertiary, thumbColor = MaterialTheme.colorScheme.primary)
-                    1 -> SliderDefaults.colors(activeTrackColor = MaterialTheme.colorScheme.secondary, thumbColor = MaterialTheme.colorScheme.secondary)
+                    1 -> SliderDefaults.colors(activeTrackColor = MaterialTheme.colorScheme.tertiary, thumbColor = MaterialTheme.colorScheme.primary)
                     2 -> SliderDefaults.colors(activeTrackColor = MaterialTheme.colorScheme.primary, thumbColor = MaterialTheme.colorScheme.primary, inactiveTrackColor = MaterialTheme.colorScheme.surfaceVariant)
+                    3 -> SliderDefaults.colors(activeTrackColor = MaterialTheme.colorScheme.secondary, thumbColor = MaterialTheme.colorScheme.secondary)
                     else -> SliderDefaults.colors()
                 }
                 Slider(
