@@ -510,6 +510,92 @@ fun ColorPaletteScreenMaterial(
                     modifier = Modifier.padding(top = 4.dp),
                     content = listOf(
                         {
+                            val shapeLabels = listOf(
+                                stringResource(R.string.theme_shape_rounded),
+                                stringResource(R.string.theme_shape_cut),
+                                stringResource(R.string.theme_shape_squircle),
+                                stringResource(R.string.theme_shape_smooth),
+                                stringResource(R.string.theme_shape_wavy),
+                                stringResource(R.string.theme_shape_scoop),
+                                stringResource(R.string.theme_shape_notch),
+                            )
+                            SegmentedDropdownItem(
+                                icon = Icons.Filled.Tune,
+                                title = stringResource(R.string.theme_shape_style_title),
+                                items = shapeLabels,
+                                selectedIndex = uiState.materialShapeStyle.coerceIn(0, shapeLabels.lastIndex),
+                                onItemSelected = actions.onSetMaterialShapeStyle,
+                            )
+                        },
+                    ),
+                )
+
+                TonalCard(modifier = Modifier.padding(top = 4.dp)) {
+                    var cornerScale by remember(uiState.materialCornerScale) { mutableFloatStateOf(uiState.materialCornerScale) }
+                    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                            Text(text = stringResource(R.string.theme_corner_scale_title), style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+                            Text(text = "${(cornerScale * 100).toInt()}%", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        Slider(value = cornerScale, onValueChange = { cornerScale = it }, onValueChangeFinished = { actions.onSetMaterialCornerScale(cornerScale) }, valueRange = 0.5f..1.5f, modifier = Modifier.fillMaxWidth())
+                    }
+                }
+
+                TonalCard(modifier = Modifier.padding(top = 4.dp)) {
+                    var borderWidth by remember(uiState.materialBorderWidth) { mutableFloatStateOf(uiState.materialBorderWidth) }
+                    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                            Text(text = stringResource(R.string.theme_border_width_title), style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+                            Text(text = String.format(java.util.Locale.ROOT, "%.1f dp", borderWidth), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        Slider(value = borderWidth, onValueChange = { borderWidth = it }, onValueChangeFinished = { actions.onSetMaterialBorderWidth(borderWidth) }, valueRange = 0.0f..3.0f, steps = 5, modifier = Modifier.fillMaxWidth())
+                    }
+                }
+
+                SegmentedColumn(
+                    modifier = Modifier.padding(top = 4.dp),
+                    content = listOf(
+                        {
+                            val switchLabels = listOf(
+                                stringResource(R.string.theme_switch_material_you),
+                                stringResource(R.string.theme_switch_compose),
+                                stringResource(R.string.theme_switch_pixel),
+                                stringResource(R.string.theme_switch_fluent),
+                                stringResource(R.string.theme_switch_cupertino),
+                                stringResource(R.string.theme_switch_liquid_glass),
+                                stringResource(R.string.theme_switch_hyper_os),
+                                stringResource(R.string.theme_switch_one_ui),
+                            )
+                            SegmentedDropdownItem(
+                                icon = Icons.Filled.Tune,
+                                title = stringResource(R.string.theme_switch_style_title),
+                                items = switchLabels,
+                                selectedIndex = uiState.materialSwitchStyle.coerceIn(0, switchLabels.lastIndex),
+                                onItemSelected = actions.onSetMaterialSwitchStyle,
+                            )
+                        },
+                        {
+                            val sliderLabels = listOf(
+                                stringResource(R.string.theme_slider_material_you),
+                                stringResource(R.string.theme_slider_fancy),
+                                stringResource(R.string.theme_slider_material),
+                                stringResource(R.string.theme_slider_hyper_os),
+                            )
+                            SegmentedDropdownItem(
+                                icon = Icons.Filled.Tune,
+                                title = stringResource(R.string.theme_slider_style_title),
+                                items = sliderLabels,
+                                selectedIndex = uiState.materialSliderStyle.coerceIn(0, sliderLabels.lastIndex),
+                                onItemSelected = actions.onSetMaterialSliderStyle,
+                            )
+                        },
+                    ),
+                )
+
+                SegmentedColumn(
+                    modifier = Modifier.padding(top = 4.dp),
+                    content = listOf(
+                        {
                             val fontFamilyValues = listOf("Default", "Serif")
                             val fontFamilyLabels = listOf(
                                 stringResource(R.string.settings_material_font_family_default),
