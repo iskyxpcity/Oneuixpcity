@@ -35,9 +35,33 @@ class SettingsViewModel(
             val enableFloatingBottomBarBlur = repo.enableFloatingBottomBarBlur
             val pageScale = repo.pageScale
             val enableSwipeBack = repo.enableSwipeBack
+            val enableHapticFeedback = repo.enableHapticFeedback
+            val materialLargeTextEnabled = repo.materialLargeTextEnabled
+            val materialBoldTextEnabled = repo.materialBoldTextEnabled
             val pagerGestureMode = repo.pagerGestureMode
             val colorStyle = repo.colorStyle
             val colorSpec = repo.colorSpec
+            val materialFontScale = repo.materialFontScale
+            val materialContrastMode = repo.materialContrastMode
+            val materialContrastLevel = repo.materialContrastLevel
+            val materialCornerScale = repo.materialCornerScale
+            val materialColorSchemes = repo.materialColorSchemes
+            val materialBorderWidth = repo.materialBorderWidth
+            val materialFontFamily = repo.materialFontFamily
+            val materialColorVisionMode = repo.materialColorVisionMode
+            val materialNavigationMotionMode = repo.materialNavigationMotionMode
+            val materialDynamicColorEnabled = repo.materialDynamicColorEnabled
+            val materialInvertColors = repo.materialInvertColors
+            val materialShapeStyle = repo.materialShapeStyle
+            val materialSwitchStyle = repo.materialSwitchStyle
+            val materialSliderStyle = repo.materialSliderStyle
+            val materialLaunchFollowsTheme = repo.materialLaunchFollowsTheme
+            val materialShadowContainers = repo.materialShadowContainers
+            val materialShadowAppBars = repo.materialShadowAppBars
+            val materialShadowButtons = repo.materialShadowButtons
+            val materialShadowFab = repo.materialShadowFab
+            val materialShadowSwitches = repo.materialShadowSwitches
+            val materialShadowSliders = repo.materialShadowSliders
             val uiMode = repo.uiMode
 
             _uiState.update {
@@ -53,9 +77,33 @@ class SettingsViewModel(
                     enableFloatingBottomBarBlur = enableFloatingBottomBarBlur,
                     pageScale = pageScale,
                     enableSwipeBack = enableSwipeBack,
+                    enableHapticFeedback = enableHapticFeedback,
+                    materialLargeTextEnabled = materialLargeTextEnabled,
+                    materialBoldTextEnabled = materialBoldTextEnabled,
                     pagerGestureMode = pagerGestureMode,
                     colorStyle = colorStyle,
                     colorSpec = colorSpec,
+                    materialFontScale = materialFontScale,
+                    materialContrastMode = materialContrastMode,
+                    materialContrastLevel = materialContrastLevel,
+                    materialCornerScale = materialCornerScale,
+                    materialColorSchemes = materialColorSchemes,
+                    materialBorderWidth = materialBorderWidth,
+                    materialFontFamily = materialFontFamily,
+                    materialColorVisionMode = materialColorVisionMode,
+                    materialNavigationMotionMode = materialNavigationMotionMode,
+                    materialDynamicColorEnabled = materialDynamicColorEnabled,
+                    materialInvertColors = materialInvertColors,
+                    materialShapeStyle = materialShapeStyle,
+                    materialSwitchStyle = materialSwitchStyle,
+                    materialSliderStyle = materialSliderStyle,
+                    materialLaunchFollowsTheme = materialLaunchFollowsTheme,
+                    materialShadowContainers = materialShadowContainers,
+                    materialShadowAppBars = materialShadowAppBars,
+                    materialShadowButtons = materialShadowButtons,
+                    materialShadowFab = materialShadowFab,
+                    materialShadowSwitches = materialShadowSwitches,
+                    materialShadowSliders = materialShadowSliders,
                 )
             }
         }
@@ -127,7 +175,8 @@ class SettingsViewModel(
 
     fun setKeyColor(color: Int) {
         repo.keyColor = color
-        _uiState.update { it.copy(keyColor = color) }
+        repo.materialDynamicColorEnabled = color == 0
+        _uiState.update { it.copy(keyColor = color, materialDynamicColorEnabled = repo.materialDynamicColorEnabled) }
     }
 
     fun setColorStyle(style: String) {
@@ -140,6 +189,179 @@ class SettingsViewModel(
         _uiState.update { it.copy(colorSpec = spec) }
     }
 
+    fun setMaterialFontScale(scale: Float) {
+        val safeScale = scale.coerceIn(0.8f, 1.5f)
+        repo.materialFontScale = safeScale
+        _uiState.update { it.copy(materialFontScale = safeScale) }
+    }
+
+    fun setMaterialContrastMode(mode: Int) {
+        val safeMode = mode.coerceIn(-1, 2)
+        repo.materialContrastMode = safeMode
+        _uiState.update { it.copy(materialContrastMode = safeMode) }
+    }
+
+    fun setMaterialContrastLevel(level: Float) {
+        val safeLevel = level.coerceIn(-1.0f, 1.0f)
+        repo.materialContrastLevel = safeLevel
+        _uiState.update { it.copy(materialContrastLevel = safeLevel) }
+    }
+
+    fun setMaterialCornerScale(scale: Float) {
+        val safeScale = scale.coerceIn(0.5f, 1.5f)
+        repo.materialCornerScale = safeScale
+        _uiState.update { it.copy(materialCornerScale = safeScale) }
+    }
+
+    fun saveMaterialColorScheme(scheme: com.alohaoneui.app.data.repository.MaterialColorScheme) {
+        val safeName = scheme.name.trim().take(40)
+        if (safeName.isBlank()) return
+        val normalized = scheme.copy(
+            name = safeName,
+            colorStyle = runCatching { com.materialkolor.PaletteStyle.valueOf(scheme.colorStyle).name }
+                .getOrDefault(com.materialkolor.PaletteStyle.Expressive.name),
+            colorSpec = runCatching { com.materialkolor.dynamiccolor.ColorSpec.SpecVersion.valueOf(scheme.colorSpec).name }
+                .getOrDefault(com.materialkolor.dynamiccolor.ColorSpec.SpecVersion.SPEC_2025.name),
+            contrastMode = scheme.contrastMode.coerceIn(-1, 2),
+            contrastLevel = scheme.contrastLevel.coerceIn(-1.0f, 1.0f),
+        )
+        val updated = repo.materialColorSchemes.filterNot { it.name.equals(safeName, ignoreCase = true) } + normalized
+        repo.materialColorSchemes = updated
+        _uiState.update { it.copy(materialColorSchemes = updated) }
+    }
+
+    fun saveMaterialColorScheme(name: String) {
+        val safeName = name.trim().take(40)
+        if (safeName.isBlank()) return
+        val scheme = com.alohaoneui.app.data.repository.MaterialColorScheme(
+            name = safeName,
+            keyColor = repo.keyColor,
+            colorStyle = repo.colorStyle,
+            colorSpec = repo.colorSpec,
+            contrastMode = repo.materialContrastMode,
+            contrastLevel = repo.materialContrastLevel,
+        )
+        val updated = repo.materialColorSchemes.filterNot { it.name.equals(safeName, ignoreCase = true) } + scheme
+        repo.materialColorSchemes = updated
+        _uiState.update { it.copy(materialColorSchemes = updated) }
+    }
+
+    fun applyMaterialColorScheme(scheme: com.alohaoneui.app.data.repository.MaterialColorScheme) {
+        repo.keyColor = scheme.keyColor
+        repo.materialDynamicColorEnabled = scheme.keyColor == 0
+        repo.colorStyle = runCatching { com.materialkolor.PaletteStyle.valueOf(scheme.colorStyle).name }
+            .getOrDefault(com.materialkolor.PaletteStyle.Expressive.name)
+        repo.colorSpec = runCatching { com.materialkolor.dynamiccolor.ColorSpec.SpecVersion.valueOf(scheme.colorSpec).name }
+            .getOrDefault(com.materialkolor.dynamiccolor.ColorSpec.SpecVersion.SPEC_2025.name)
+        repo.materialContrastMode = scheme.contrastMode.coerceIn(-1, 2)
+        repo.materialContrastLevel = scheme.contrastLevel.coerceIn(-1.0f, 1.0f)
+        _uiState.update {
+            it.copy(
+                keyColor = repo.keyColor,
+                materialDynamicColorEnabled = repo.materialDynamicColorEnabled,
+                colorStyle = repo.colorStyle,
+                colorSpec = repo.colorSpec,
+                materialContrastMode = repo.materialContrastMode,
+                materialContrastLevel = repo.materialContrastLevel,
+            )
+        }
+    }
+
+    fun deleteMaterialColorScheme(name: String) {
+        val updated = repo.materialColorSchemes.filterNot { it.name == name }
+        repo.materialColorSchemes = updated
+        _uiState.update { it.copy(materialColorSchemes = updated) }
+    }
+
+    fun setMaterialBorderWidth(width: Float) {
+        val safeWidth = width.coerceIn(0.0f, 3.0f)
+        repo.materialBorderWidth = safeWidth
+        _uiState.update { it.copy(materialBorderWidth = safeWidth) }
+    }
+
+    fun setMaterialFontFamily(family: String) {
+        val safeFamily = family.takeIf { it in setOf("Default", "SansSerif", "Serif", "Monospace", "Cursive") } ?: "Default"
+        repo.materialFontFamily = safeFamily
+        _uiState.update { it.copy(materialFontFamily = safeFamily) }
+    }
+
+    fun setMaterialColorVisionMode(mode: Int) {
+        val safeMode = mode.coerceIn(0, 8)
+        repo.materialColorVisionMode = safeMode
+        _uiState.update { it.copy(materialColorVisionMode = safeMode) }
+    }
+
+    fun setMaterialNavigationMotionMode(mode: Int) {
+        val safeMode = mode.coerceIn(0, 1)
+        repo.materialNavigationMotionMode = safeMode
+        _uiState.update { it.copy(materialNavigationMotionMode = safeMode) }
+    }
+
+    fun setMaterialDynamicColorEnabled(enabled: Boolean) {
+        repo.materialDynamicColorEnabled = enabled
+        if (enabled) repo.keyColor = 0 else if (repo.keyColor == 0) repo.keyColor = 0xFF6750A4.toInt()
+        _uiState.update { it.copy(materialDynamicColorEnabled = enabled, keyColor = repo.keyColor) }
+    }
+
+    fun setMaterialInvertColors(enabled: Boolean) {
+        repo.materialInvertColors = enabled
+        _uiState.update { it.copy(materialInvertColors = enabled) }
+    }
+
+    fun setMaterialShapeStyle(style: Int) {
+        val safeStyle = style.coerceIn(0, 6)
+        repo.materialShapeStyle = safeStyle
+        _uiState.update { it.copy(materialShapeStyle = safeStyle) }
+    }
+
+    fun setMaterialSwitchStyle(style: Int) {
+        val safeStyle = style.coerceIn(0, 7)
+        repo.materialSwitchStyle = safeStyle
+        _uiState.update { it.copy(materialSwitchStyle = safeStyle) }
+    }
+
+    fun setMaterialSliderStyle(style: Int) {
+        val safeStyle = style.coerceIn(0, 3)
+        repo.materialSliderStyle = safeStyle
+        _uiState.update { it.copy(materialSliderStyle = safeStyle) }
+    }
+
+    fun setMaterialLaunchFollowsTheme(enabled: Boolean) {
+        repo.materialLaunchFollowsTheme = enabled
+        _uiState.update { it.copy(materialLaunchFollowsTheme = enabled) }
+    }
+
+    fun setMaterialShadowContainers(enabled: Boolean) {
+        repo.materialShadowContainers = enabled
+        _uiState.update { it.copy(materialShadowContainers = enabled) }
+    }
+
+    fun setMaterialShadowAppBars(enabled: Boolean) {
+        repo.materialShadowAppBars = enabled
+        _uiState.update { it.copy(materialShadowAppBars = enabled) }
+    }
+
+    fun setMaterialShadowButtons(enabled: Boolean) {
+        repo.materialShadowButtons = enabled
+        _uiState.update { it.copy(materialShadowButtons = enabled) }
+    }
+
+    fun setMaterialShadowFab(enabled: Boolean) {
+        repo.materialShadowFab = enabled
+        _uiState.update { it.copy(materialShadowFab = enabled) }
+    }
+
+    fun setMaterialShadowSwitches(enabled: Boolean) {
+        repo.materialShadowSwitches = enabled
+        _uiState.update { it.copy(materialShadowSwitches = enabled) }
+    }
+
+    fun setMaterialShadowSliders(enabled: Boolean) {
+        repo.materialShadowSliders = enabled
+        _uiState.update { it.copy(materialShadowSliders = enabled) }
+    }
+
+
     fun setEnablePredictiveBack(enabled: Boolean) {
         repo.enablePredictiveBack = enabled
         _uiState.update { it.copy(enablePredictiveBack = enabled) }
@@ -148,6 +370,21 @@ class SettingsViewModel(
     fun setEnableSwipeBack(enabled: Boolean) {
         repo.enableSwipeBack = enabled
         _uiState.update { it.copy(enableSwipeBack = enabled) }
+    }
+
+    fun setEnableHapticFeedback(enabled: Boolean) {
+        repo.enableHapticFeedback = enabled
+        _uiState.update { it.copy(enableHapticFeedback = enabled) }
+    }
+
+    fun setMaterialLargeTextEnabled(enabled: Boolean) {
+        repo.materialLargeTextEnabled = enabled
+        _uiState.update { it.copy(materialLargeTextEnabled = enabled) }
+    }
+
+    fun setMaterialBoldTextEnabled(enabled: Boolean) {
+        repo.materialBoldTextEnabled = enabled
+        _uiState.update { it.copy(materialBoldTextEnabled = enabled) }
     }
 
     fun setPagerGestureMode(mode: Int) {

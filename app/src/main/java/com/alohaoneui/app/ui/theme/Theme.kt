@@ -9,6 +9,8 @@ import com.materialkolor.dynamiccolor.ColorSpec
 import com.alohaoneui.app.data.repository.SettingsRepository
 import com.alohaoneui.app.data.repository.SettingsRepositoryImpl
 import com.alohaoneui.app.ui.LocalUiMode
+import com.alohaoneui.app.ui.ThemeId
+import com.alohaoneui.app.ui.ThemeRegistry
 import com.alohaoneui.app.ui.UiMode
 
 enum class ColorMode(val value: Int) {
@@ -49,7 +51,36 @@ data class AppSettings(
     val keyColor: Int,
     val paletteStyle: PaletteStyle,
     val colorSpec: ColorSpec.SpecVersion,
+    val materialFontScale: Float = 1.0f,
+    val materialContrastMode: Int = -1,
+    val materialCornerScale: Float = 1.0f,
+    val materialBorderWidth: Float = 0.0f,
+    val materialFontFamily: String = "Default",
+    val materialColorVisionMode: Int = 0,
+    val materialDynamicColorEnabled: Boolean = true,
+    val materialInvertColors: Boolean = false,
+    val materialShapeStyle: Int = 0,
+    val materialSwitchStyle: Int = 0,
+    val materialSliderStyle: Int = 0,
+    val materialShadowContainers: Boolean = true,
+    val materialShadowAppBars: Boolean = true,
+    val materialShadowButtons: Boolean = true,
+    val materialShadowFab: Boolean = true,
+    val materialShadowSwitches: Boolean = true,
+    val materialShadowSliders: Boolean = true,
+    val materialNavigationMotionMode: Int = 0,
+    val materialContrastLevel: Float = 0.0f,
+    val materialLargeTextEnabled: Boolean = false,
+    val materialBoldTextEnabled: Boolean = false,
 )
+
+fun Int.toMaterialContrastLevelOverride(): Double? = when (this) {
+    -1 -> null
+    0 -> -1.0
+    1 -> 0.0
+    2 -> 1.0
+    else -> null
+}
 
 val PaletteStyle.supportsSpec2025: Boolean
     get() = this == PaletteStyle.TonalSpot ||
@@ -96,7 +127,7 @@ object ThemeController {
             ColorSpec.SpecVersion.SPEC_2025
         }
 
-        return AppSettings(colorMode, keyColor, paletteStyle, colorSpec)
+        return AppSettings(colorMode, keyColor, paletteStyle, colorSpec, repo.materialFontScale.coerceIn(0.8f, 1.5f), repo.materialContrastMode.coerceIn(-1, 2), repo.materialCornerScale.coerceIn(0.5f, 1.5f), repo.materialBorderWidth.coerceIn(0.0f, 3.0f), repo.materialFontFamily, repo.materialColorVisionMode.coerceIn(0, 8), repo.materialDynamicColorEnabled, repo.materialInvertColors, repo.materialShapeStyle, repo.materialSwitchStyle, repo.materialSliderStyle, repo.materialShadowContainers, repo.materialShadowAppBars, repo.materialShadowButtons, repo.materialShadowFab, repo.materialShadowSwitches, repo.materialShadowSliders, repo.materialNavigationMotionMode.coerceIn(0, 1), repo.materialContrastLevel.coerceIn(-1.0f, 1.0f), repo.materialLargeTextEnabled, repo.materialBoldTextEnabled)
     }
 }
 
@@ -106,17 +137,10 @@ fun AlohaOneUITheme(
     uiMode: UiMode = LocalUiMode.current,
     content: @Composable () -> Unit
 ) {
-    when (uiMode) {
-        UiMode.Miuix -> MiuixAlohaOneUITheme(
-            appSettings = appSettings,
-            content = content
-        )
-
-        UiMode.Material -> MaterialAlohaOneUITheme(
-            appSettings = appSettings,
-            content = content
-        )
-    }
+    // Theme selection is resolved through the registry; feature screens stay theme-agnostic.
+    ThemeRegistry.definition(ThemeId.fromPersistedValue(uiMode.value))
+        .adapter
+        .Apply(appSettings = appSettings, content = content)
 }
 
 @Composable
