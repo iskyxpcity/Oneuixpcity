@@ -221,7 +221,12 @@ class MainActivity : ComponentActivity() {
                             entry<Route.VersionChangelog261013>(swipeDismiss = swipeDismiss) { VersionChangelog261013Screen() }
                             entry<Route.VersionChangelog261018>(swipeDismiss = swipeDismiss) { VersionChangelog261018Screen() }
                             entry<Route.VersionChangelog261016>(swipeDismiss = swipeDismiss) { VersionChangelog261016Screen() }
-                            entry<Route.ThemeSettings>(swipeDismiss = swipeDismiss) { ThemeSettingsScreenMaterial() }
+                            entry<Route.ThemeSettings>(swipeDismiss = swipeDismiss) {
+                                when (LocalUiMode.current) {
+                                    UiMode.Material -> ThemeSettingsScreenMaterial()
+                                    UiMode.Miuix -> ColorPaletteScreen()
+                                }
+                            }
                             entry<Route.ColorPalette>(swipeDismiss = swipeDismiss) { ColorPaletteScreen() }
                             entry<Route.AlohaOneUICategory>(swipeDismiss = swipeDismiss) { key ->
                                 AlohaOneUICategoryScreen(key.category)
