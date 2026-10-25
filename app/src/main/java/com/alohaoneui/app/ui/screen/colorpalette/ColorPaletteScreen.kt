@@ -26,7 +26,7 @@ fun ColorPaletteScreen() {
     val currentPaletteStyle = try {
         PaletteStyle.valueOf(uiState.colorStyle)
     } catch (_: Exception) {
-        PaletteStyle.TonalSpot
+        PaletteStyle.Expressive
     }
     val currentColorSpec = try {
         ColorSpec.SpecVersion.valueOf(uiState.colorSpec)
