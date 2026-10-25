@@ -316,4 +316,6 @@
     <string name="settings_navigation_motion_reduced">简化</string>
     <string name="settings_reset_display_title">恢复显示默认值</string>
     <string name="settings_language_system">跟随系统</string>
+    <string name="theme_design_material3">Material 3</string>
+    <string name="theme_design_miuix">Miuix</string>
 </resources>

@@ -329,4 +329,6 @@
     <string name="settings_navigation_motion_reduced">Reduced</string>
     <string name="settings_reset_display_title">Reset display settings</string>
     <string name="settings_language_system">Follow system</string>
+    <string name="theme_design_material3">Material 3</string>
+    <string name="theme_design_miuix">Miuix</string>
 </resources>
