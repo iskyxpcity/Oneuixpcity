@@ -85,7 +85,7 @@ class SettingsRepositoryImpl : SettingsRepository {
         set(value) = prefs.edit { putInt("material_switch_style", value.coerceIn(0, 7)) }
 
     override var materialSliderStyle: Int
-        get() = prefs.getInt("material_slider_style", 3).coerceIn(0, 3)
+        get() = prefs.getInt("material_slider_style", 0).coerceIn(0, 3)
         set(value) = prefs.edit { putInt("material_slider_style", value.coerceIn(0, 3)) }
 
     override var materialLaunchFollowsTheme: Boolean
