@@ -342,4 +342,8 @@
     <string name="theme_slider_material">Material 2</string>
     <string name="theme_slider_material_you">Material You</string>
 
+
+    <string name="theme_launch_follows_title">Launch screen follows theme</string>
+    <string name="theme_launch_follows_subtitle">Launch screen uses the app colors and display mode</string>
+
 </resources>

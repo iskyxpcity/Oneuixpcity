@@ -24,6 +24,7 @@ interface SettingsRepository {
     var materialShapeStyle: Int
     var materialSwitchStyle: Int
     var materialSliderStyle: Int
+    var materialLaunchFollowsTheme: Boolean
     var enablePredictiveBack: Boolean
     var enableBlur: Boolean
     var enableFloatingBottomBar: Boolean
@@ -72,6 +73,7 @@ data class AppSettingsBackup(
     val materialShapeStyle: Int = 2,
     val materialSwitchStyle: Int = 0,
     val materialSliderStyle: Int = 3,
+    val materialLaunchFollowsTheme: Boolean = true,
     val enablePredictiveBack: Boolean,
     val enableBlur: Boolean,
     val enableFloatingBottomBar: Boolean,

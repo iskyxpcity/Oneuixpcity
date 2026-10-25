@@ -51,6 +51,7 @@ class SettingsViewModel(
             val materialShapeStyle = repo.materialShapeStyle
             val materialSwitchStyle = repo.materialSwitchStyle
             val materialSliderStyle = repo.materialSliderStyle
+            val materialLaunchFollowsTheme = repo.materialLaunchFollowsTheme
             val uiMode = repo.uiMode
 
             _uiState.update {
@@ -82,6 +83,7 @@ class SettingsViewModel(
                     materialShapeStyle = materialShapeStyle,
                     materialSwitchStyle = materialSwitchStyle,
                     materialSliderStyle = materialSliderStyle,
+                    materialLaunchFollowsTheme = materialLaunchFollowsTheme,
                 )
             }
         }
@@ -274,6 +276,11 @@ class SettingsViewModel(
         val safeStyle = style.coerceIn(0, 3)
         repo.materialSliderStyle = safeStyle
         _uiState.update { it.copy(materialSliderStyle = safeStyle) }
+    }
+
+    fun setMaterialLaunchFollowsTheme(enabled: Boolean) {
+        repo.materialLaunchFollowsTheme = enabled
+        _uiState.update { it.copy(materialLaunchFollowsTheme = enabled) }
     }
 
     fun setEnablePredictiveBack(enabled: Boolean) {

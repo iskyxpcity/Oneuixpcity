@@ -29,6 +29,7 @@ data class SettingsUiState(
     val materialShapeStyle: Int = 2,
     val materialSwitchStyle: Int = 0,
     val materialSliderStyle: Int = 3,
+    val materialLaunchFollowsTheme: Boolean = true,
     val enablePredictiveBack: Boolean = false,
     val enableBlur: Boolean = false,
     val enableFloatingBottomBar: Boolean = false,

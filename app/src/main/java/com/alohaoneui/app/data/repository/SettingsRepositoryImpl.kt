@@ -88,6 +88,10 @@ class SettingsRepositoryImpl : SettingsRepository {
         get() = prefs.getInt("material_slider_style", 3).coerceIn(0, 3)
         set(value) = prefs.edit { putInt("material_slider_style", value.coerceIn(0, 3)) }
 
+    override var materialLaunchFollowsTheme: Boolean
+        get() = prefs.getBoolean("material_launch_follows_theme", true)
+        set(value) = prefs.edit { putBoolean("material_launch_follows_theme", value) }
+
     override var materialFontFamily: String
         get() = prefs.getString("material_font_family", "Default")
             ?.takeIf { it in setOf("Default", "SansSerif", "Serif", "Monospace", "Cursive") } ?: "Default"
@@ -158,6 +162,7 @@ class SettingsRepositoryImpl : SettingsRepository {
         materialShapeStyle = materialShapeStyle,
         materialSwitchStyle = materialSwitchStyle,
         materialSliderStyle = materialSliderStyle,
+        materialLaunchFollowsTheme = materialLaunchFollowsTheme,
         enablePredictiveBack = enablePredictiveBack,
         enableBlur = enableBlur,
         enableFloatingBottomBar = enableFloatingBottomBar,
@@ -197,6 +202,7 @@ class SettingsRepositoryImpl : SettingsRepository {
             .putInt("material_shape_style", snapshot.materialShapeStyle.coerceIn(0, 6))
             .putInt("material_switch_style", snapshot.materialSwitchStyle.coerceIn(0, 7))
             .putInt("material_slider_style", snapshot.materialSliderStyle.coerceIn(0, 3))
+            .putBoolean("material_launch_follows_theme", snapshot.materialLaunchFollowsTheme)
             .putBoolean("enable_predictive_back", snapshot.enablePredictiveBack)
             .putBoolean("enable_blur", snapshot.enableBlur)
             .putBoolean("enable_floating_bottom_bar", snapshot.enableFloatingBottomBar)

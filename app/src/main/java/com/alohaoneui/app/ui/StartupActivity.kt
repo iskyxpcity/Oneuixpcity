@@ -43,7 +43,8 @@ class StartupActivity : ComponentActivity() {
         val systemDark =
             resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK ==
                 Configuration.UI_MODE_NIGHT_YES
-        val darkMode = colorMode.isDark || (colorMode.isSystem && systemDark)
+        val followsTheme = SettingsRepositoryImpl().materialLaunchFollowsTheme
+        val darkMode = followsTheme && (colorMode.isDark || (colorMode.isSystem && systemDark))
 
         configureStartupWindow(darkMode)
 

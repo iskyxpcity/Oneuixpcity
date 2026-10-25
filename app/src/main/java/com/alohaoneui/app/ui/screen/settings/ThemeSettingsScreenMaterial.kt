@@ -55,6 +55,7 @@ fun ThemeSettingsScreenMaterial() {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     var designExpanded by rememberSaveable { mutableStateOf(true) }
     var navigationExpanded by rememberSaveable { mutableStateOf(false) }
+    var launchExpanded by rememberSaveable { mutableStateOf(false) }
     var modeExpanded by rememberSaveable { mutableStateOf(false) }
     var assistExpanded by rememberSaveable { mutableStateOf(false) }
     var shapeExpanded by rememberSaveable { mutableStateOf(false) }
@@ -180,6 +181,21 @@ fun ThemeSettingsScreenMaterial() {
                                 },
                             )
                         },
+                    )
+                }))
+            }
+            ThemeSettingsGroup(
+                title = stringResource(R.string.theme_group_launch),
+                expanded = launchExpanded,
+                onToggle = { launchExpanded = !launchExpanded },
+            ) {
+                SegmentedColumn(content = listOf({
+                    SegmentedSwitchItem(
+                        icon = Icons.Filled.DisplaySettings,
+                        title = stringResource(R.string.theme_launch_follows_title),
+                        summary = stringResource(R.string.theme_launch_follows_subtitle),
+                        checked = state.materialLaunchFollowsTheme,
+                        onCheckedChange = viewModel::setMaterialLaunchFollowsTheme,
                     )
                 }))
             }

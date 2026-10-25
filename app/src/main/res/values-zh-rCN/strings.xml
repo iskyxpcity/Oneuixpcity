@@ -339,4 +339,8 @@
     <string name="theme_slider_material">Material 2</string>
     <string name="theme_slider_material_you">Material You</string>
 
+
+    <string name="theme_launch_follows_title">启动画面跟随主题</string>
+    <string name="theme_launch_follows_subtitle">启动画面使用应用的颜色和显示模式</string>
+
 </resources>
