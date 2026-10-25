@@ -231,4 +231,12 @@
     <string name="changelog_2610191_fixes_body">• Fixed abnormal icon-scale ratios during some settings migrations.\n• Fixed leftover blank space that could remain after hiding native icons.\n• Improved configuration reading and compatibility for some system functions.</string>
     <string name="alohaoneui_global_shortcut_actions_title">全局快捷动作</string>
     <string name="alohaoneui_global_shortcut_actions_summary">配置全局三指手势、悬浮球、状态栏、虚拟导航键和息屏音量键的快捷操作。</string>
+    <string name="voyage_theme_group_mode">Display mode</string>
+    <string name="voyage_theme_group_design">Interface style</string>
+    <string name="voyage_theme_group_components">Components</string>
+    <string name="voyage_theme_group_launch">Launch screen and icons</string>
+    <string name="voyage_theme_group_navigation_bar">Navigation bar</string>
+    <string name="voyage_theme_group_assist">Color assistance</string>
+    <string name="voyage_theme_group_shape">Shape</string>
+    <string name="voyage_theme_group_shadows">Shadows</string>
 </resources>
