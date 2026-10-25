@@ -289,6 +289,8 @@
     <string name="theme_group_design">界面风格</string>
     <string name="theme_group_navigation_bar">导航栏</string>
     <string name="theme_group_mode">显示模式</string>
+    <string name="settings_pure_black_title">纯黑暗色</string>
+    <string name="settings_pure_black_subtitle">在深色主题中使用纯黑背景</string>
     <string name="theme_group_launch">启动画面和图标</string>
     <string name="theme_group_assist">颜色辅助</string>
     <string name="theme_group_shape">形状</string>

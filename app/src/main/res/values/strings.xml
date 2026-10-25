@@ -292,6 +292,8 @@
     <string name="theme_group_design">Interface style</string>
     <string name="theme_group_navigation_bar">Navigation bar</string>
     <string name="theme_group_mode">Display mode</string>
+    <string name="settings_pure_black_title">Pure black dark</string>
+    <string name="settings_pure_black_subtitle">Use a pure black background in dark theme</string>
     <string name="theme_group_launch">Launch screen and icon</string>
     <string name="theme_group_assist">Color assistance</string>
     <string name="theme_group_shape">Shapes</string>

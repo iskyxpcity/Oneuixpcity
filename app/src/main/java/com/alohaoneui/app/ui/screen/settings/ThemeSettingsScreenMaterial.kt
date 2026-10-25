@@ -166,27 +166,40 @@ fun ThemeSettingsScreenMaterial() {
                     colorMode.isDark -> 2
                     else -> 1
                 }
-                SegmentedColumn(content = listOf({
-                    SegmentedDropdownItem(
-                        icon = Icons.Filled.DisplaySettings,
-                        title = stringResource(R.string.theme_group_mode),
-                        items = listOf(
-                            stringResource(R.string.theme_mode_system),
-                            stringResource(R.string.theme_mode_light),
-                            stringResource(R.string.theme_mode_dark),
-                        ),
-                        selectedIndex = selectedMode,
-                        onItemSelected = { index ->
-                            viewModel.setColorMode(
-                                when (index) {
-                                    1 -> ColorMode.LIGHT
-                                    2 -> ColorMode.DARK
-                                    else -> ColorMode.SYSTEM
-                                },
-                            )
-                        },
-                    )
-                }))
+                SegmentedColumn(content = listOf(
+                    {
+                        SegmentedDropdownItem(
+                            icon = Icons.Filled.DisplaySettings,
+                            title = stringResource(R.string.theme_group_mode),
+                            items = listOf(
+                                stringResource(R.string.theme_mode_system),
+                                stringResource(R.string.theme_mode_light),
+                                stringResource(R.string.theme_mode_dark),
+                            ),
+                            selectedIndex = selectedMode,
+                            onItemSelected = { index ->
+                                viewModel.setColorMode(
+                                    when (index) {
+                                        1 -> ColorMode.LIGHT
+                                        2 -> ColorMode.DARK
+                                        else -> ColorMode.SYSTEM
+                                    },
+                                )
+                            },
+                        )
+                    },
+                    {
+                        SegmentedSwitchItem(
+                            icon = Icons.Filled.DisplaySettings,
+                            title = stringResource(R.string.settings_pure_black_title),
+                            summary = stringResource(R.string.settings_pure_black_subtitle),
+                            checked = state.themeMode == ColorMode.DARK_AMOLED.value,
+                            onCheckedChange = { enabled ->
+                                viewModel.setColorMode(if (enabled) ColorMode.DARK_AMOLED else ColorMode.DARK)
+                            },
+                        )
+                    },
+                ))
             }
             ThemeSettingsGroup(
                 title = stringResource(R.string.theme_group_launch),
@@ -328,31 +341,6 @@ fun ThemeSettingsScreenMaterial() {
                     },
                     {
                         Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
-                            Text(stringResource(R.string.theme_component_font_scale))
-                            Text((state.materialFontScale * 100).toInt().toString() + "%", style = MaterialTheme.typography.labelMedium)
-                            Slider(
-                                value = state.materialFontScale,
-                                onValueChange = viewModel::setMaterialFontScale,
-                                valueRange = 0.8f..1.5f,
-                            )
-                        }
-                    },
-                    {
-                        SegmentedDropdownItem(
-                            icon = Icons.Filled.Tune,
-                            title = stringResource(R.string.theme_component_contrast),
-                            items = listOf(
-                                stringResource(R.string.settings_contrast_follow_system),
-                                stringResource(R.string.settings_contrast_low),
-                                stringResource(R.string.settings_contrast_normal),
-                                stringResource(R.string.settings_contrast_high),
-                            ),
-                            selectedIndex = (state.materialContrastMode + 1).coerceIn(0, 3),
-                            onItemSelected = { viewModel.setMaterialContrastMode(it - 1) },
-                        )
-                    },
-                    {
-                        Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
                             Text(stringResource(R.string.theme_component_border_width))
                             Text(String.format(java.util.Locale.ROOT, "%.1f dp", state.materialBorderWidth), style = MaterialTheme.typography.labelMedium)
                             Slider(
@@ -361,18 +349,6 @@ fun ThemeSettingsScreenMaterial() {
                                 valueRange = 0.0f..3.0f,
                             )
                         }
-                    },
-                    {
-                        SegmentedDropdownItem(
-                            icon = Icons.Filled.Tune,
-                            title = stringResource(R.string.theme_component_navigation_motion),
-                            items = listOf(
-                                stringResource(R.string.theme_motion_expressive),
-                                stringResource(R.string.theme_motion_reduced),
-                            ),
-                            selectedIndex = state.materialNavigationMotionMode,
-                            onItemSelected = viewModel::setMaterialNavigationMotionMode,
-                        )
                     },
                 ))
             }
