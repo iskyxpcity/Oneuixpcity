@@ -346,4 +346,12 @@
     <string name="theme_launch_follows_title">Launch screen follows theme</string>
     <string name="theme_launch_follows_subtitle">Launch screen uses the app colors and display mode</string>
 
+
+    <string name="theme_shadow_container">Containers</string>
+    <string name="theme_shadow_app_bar">Top bars</string>
+    <string name="theme_shadow_button">Buttons</string>
+    <string name="theme_shadow_fab">Floating buttons</string>
+    <string name="theme_shadow_switch">Switches</string>
+    <string name="theme_shadow_slider">Sliders</string>
+
 </resources>

@@ -62,6 +62,12 @@ data class AppSettings(
     val materialShapeStyle: Int = 2,
     val materialSwitchStyle: Int = 0,
     val materialSliderStyle: Int = 3,
+    val materialShadowContainers: Boolean = true,
+    val materialShadowAppBars: Boolean = true,
+    val materialShadowButtons: Boolean = true,
+    val materialShadowFab: Boolean = true,
+    val materialShadowSwitches: Boolean = true,
+    val materialShadowSliders: Boolean = true,
 )
 
 fun Int.toMaterialContrastLevelOverride(): Double? = when (this) {
@@ -117,7 +123,7 @@ object ThemeController {
             ColorSpec.SpecVersion.SPEC_2025
         }
 
-        return AppSettings(colorMode, keyColor, paletteStyle, colorSpec, repo.materialFontScale.coerceIn(0.8f, 1.3f), repo.materialContrastMode.coerceIn(-1, 2), repo.materialCornerScale.coerceIn(0.5f, 1.5f), repo.materialBorderWidth.coerceIn(0.0f, 3.0f), repo.materialFontFamily, repo.materialColorVisionMode.coerceIn(0, 4), repo.materialDynamicColorEnabled, repo.materialInvertColors, repo.materialShapeStyle, repo.materialSwitchStyle, repo.materialSliderStyle)
+        return AppSettings(colorMode, keyColor, paletteStyle, colorSpec, repo.materialFontScale.coerceIn(0.8f, 1.3f), repo.materialContrastMode.coerceIn(-1, 2), repo.materialCornerScale.coerceIn(0.5f, 1.5f), repo.materialBorderWidth.coerceIn(0.0f, 3.0f), repo.materialFontFamily, repo.materialColorVisionMode.coerceIn(0, 4), repo.materialDynamicColorEnabled, repo.materialInvertColors, repo.materialShapeStyle, repo.materialSwitchStyle, repo.materialSliderStyle, repo.materialShadowContainers, repo.materialShadowAppBars, repo.materialShadowButtons, repo.materialShadowFab, repo.materialShadowSwitches, repo.materialShadowSliders)
     }
 }
 

@@ -17,6 +17,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import com.alohaoneui.app.ui.theme.LocalMaterialBorderWidth
+import com.alohaoneui.app.ui.theme.LocalMaterialShadowContainers
 import androidx.compose.ui.unit.dp
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -40,6 +41,7 @@ fun TonalCard(
             contentColor = contentColorFor(containerColor),
         ),
         shape = shape,
+        elevation = CardDefaults.cardElevation(defaultElevation = if (LocalMaterialShadowContainers.current) 1.dp else 0.dp),
     ) {
         content()
     }
@@ -62,6 +64,7 @@ fun TonalCard(
             contentColor = contentColorFor(containerColor),
         ),
         shape = shape,
+        elevation = CardDefaults.cardElevation(defaultElevation = if (LocalMaterialShadowContainers.current) 1.dp else 0.dp),
     ) {
         content()
     }

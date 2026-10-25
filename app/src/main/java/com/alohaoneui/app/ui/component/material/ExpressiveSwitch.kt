@@ -14,6 +14,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.shadow
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.unit.dp
+import com.alohaoneui.app.ui.theme.LocalMaterialSwitchStyle
+import com.alohaoneui.app.ui.theme.LocalMaterialShadowSwitches
 import com.alohaoneui.app.ui.theme.LocalMaterialSwitchStyle
 
 @Composable
@@ -29,10 +34,13 @@ fun ExpressiveSwitch(
 ) {
     val style = LocalMaterialSwitchStyle.current
     val useIcon = showThumbIcon && style !in setOf(1, 4)
+    val style = LocalMaterialSwitchStyle.current
+    val useIcon = showThumbIcon && style !in setOf(1, 4)
+    val switchModifier = if (LocalMaterialShadowSwitches.current) modifier.shadow(1.dp, CircleShape) else modifier
     Switch(
         checked = checked,
         onCheckedChange = onCheckedChange,
-        modifier = modifier,
+        modifier = switchModifier,
         thumbContent = thumbContent ?: if (useIcon && (checked || enabled)) {
             {
                 Icon(

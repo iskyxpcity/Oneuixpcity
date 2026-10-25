@@ -9,6 +9,9 @@ import androidx.compose.material3.ToggleButtonShapes
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.shadow
+import com.alohaoneui.app.ui.theme.LocalMaterialShadowButtons
+import androidx.compose.ui.unit.dp
 
 /**
  * Material 3 Expressive toggle button styling adapted from KernelSU v3.3.1.
@@ -24,10 +27,11 @@ fun ExpressiveToggleButton(
     colors: ToggleButtonColors = expressiveToggleButtonColors(),
     content: @Composable RowScope.() -> Unit,
 ) {
+    val buttonModifier = if (LocalMaterialShadowButtons.current) modifier.shadow(2.dp, MaterialTheme.shapes.small) else modifier
     ToggleButton(
         checked = checked,
         onCheckedChange = onCheckedChange,
-        modifier = modifier,
+        modifier = buttonModifier,
         enabled = enabled,
         colors = colors,
         shapes = shapes,

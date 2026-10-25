@@ -8,6 +8,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import com.alohaoneui.app.ui.theme.LocalMaterialSliderStyle
+import com.alohaoneui.app.ui.theme.LocalMaterialShadowSliders
+import androidx.compose.ui.draw.shadow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -64,6 +66,7 @@ fun SegmentedSliderItem(
                     else -> SliderDefaults.colors()
                 }
                 Slider(
+                    modifier = Modifier.fillMaxWidth().then(if (LocalMaterialShadowSliders.current) Modifier.shadow(1.dp) else Modifier),
                     value = value,
                     colors = sliderColors,
                     onValueChange = onValueChange,

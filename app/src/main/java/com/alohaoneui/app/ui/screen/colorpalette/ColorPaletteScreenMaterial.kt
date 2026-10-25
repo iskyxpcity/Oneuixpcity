@@ -116,6 +116,8 @@ import com.alohaoneui.app.ui.component.material.SegmentedDropdownItem
 import com.alohaoneui.app.ui.component.material.SegmentedSwitchItem
 import com.alohaoneui.app.ui.component.material.TonalCard
 import com.alohaoneui.app.ui.theme.ColorMode
+import com.alohaoneui.app.ui.theme.LocalMaterialShadowAppBars
+import androidx.compose.ui.draw.shadow
 import com.alohaoneui.app.ui.theme.rememberAlohaOneUIColorScheme
 import com.alohaoneui.app.ui.theme.toMaterialContrastLevelOverride
 import com.alohaoneui.app.ui.theme.keyColorOptions
@@ -152,6 +154,7 @@ fun ColorPaletteScreenMaterial(
     Scaffold(
         topBar = {
             LargeFlexibleTopAppBar(
+                modifier = if (LocalMaterialShadowAppBars.current) Modifier.shadow(2.dp) else Modifier,
                 navigationIcon = {
                     IconButton(
                         onClick = actions.onBack

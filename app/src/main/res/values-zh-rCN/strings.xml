@@ -343,4 +343,12 @@
     <string name="theme_launch_follows_title">启动画面跟随主题</string>
     <string name="theme_launch_follows_subtitle">启动画面使用应用的颜色和显示模式</string>
 
+
+    <string name="theme_shadow_container">容器</string>
+    <string name="theme_shadow_app_bar">顶部栏</string>
+    <string name="theme_shadow_button">按钮</string>
+    <string name="theme_shadow_fab">悬浮按钮</string>
+    <string name="theme_shadow_switch">开关</string>
+    <string name="theme_shadow_slider">滑块</string>
+
 </resources>

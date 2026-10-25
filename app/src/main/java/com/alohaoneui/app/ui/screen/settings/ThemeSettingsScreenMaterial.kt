@@ -47,6 +47,8 @@ import com.alohaoneui.app.ui.navigation3.LocalNavigator
 import com.alohaoneui.app.ui.navigation3.Route
 import com.alohaoneui.app.ui.theme.ColorMode
 import com.alohaoneui.app.ui.viewmodel.SettingsViewModel
+import com.alohaoneui.app.ui.theme.LocalMaterialShadowAppBars
+import androidx.compose.ui.draw.shadow
 
 @Composable
 fun ThemeSettingsScreenMaterial() {
@@ -60,11 +62,13 @@ fun ThemeSettingsScreenMaterial() {
     var assistExpanded by rememberSaveable { mutableStateOf(false) }
     var shapeExpanded by rememberSaveable { mutableStateOf(false) }
     var componentsExpanded by rememberSaveable { mutableStateOf(false) }
+    var shadowsExpanded by rememberSaveable { mutableStateOf(false) }
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     Scaffold(
         topBar = {
             LargeFlexibleTopAppBar(
+                modifier = if (LocalMaterialShadowAppBars.current) Modifier.shadow(2.dp) else Modifier,
                 navigationIcon = {
                     IconButton(onClick = { if (navigator.backStackSize() > 1) navigator.pop() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
@@ -371,6 +375,20 @@ fun ThemeSettingsScreenMaterial() {
                             onItemSelected = viewModel::setMaterialNavigationMotionMode,
                         )
                     },
+                ))
+            }
+            ThemeSettingsGroup(
+                title = stringResource(R.string.theme_group_shadows),
+                expanded = shadowsExpanded,
+                onToggle = { shadowsExpanded = !shadowsExpanded },
+            ) {
+                SegmentedColumn(content = listOf(
+                    { SegmentedSwitchItem(icon = Icons.Filled.Tune, title = stringResource(R.string.theme_shadow_container), checked = state.materialShadowContainers, onCheckedChange = viewModel::setMaterialShadowContainers) },
+                    { SegmentedSwitchItem(icon = Icons.Filled.Tune, title = stringResource(R.string.theme_shadow_app_bar), checked = state.materialShadowAppBars, onCheckedChange = viewModel::setMaterialShadowAppBars) },
+                    { SegmentedSwitchItem(icon = Icons.Filled.Tune, title = stringResource(R.string.theme_shadow_button), checked = state.materialShadowButtons, onCheckedChange = viewModel::setMaterialShadowButtons) },
+                    { SegmentedSwitchItem(icon = Icons.Filled.Tune, title = stringResource(R.string.theme_shadow_fab), checked = state.materialShadowFab, onCheckedChange = viewModel::setMaterialShadowFab) },
+                    { SegmentedSwitchItem(icon = Icons.Filled.Tune, title = stringResource(R.string.theme_shadow_switch), checked = state.materialShadowSwitches, onCheckedChange = viewModel::setMaterialShadowSwitches) },
+                    { SegmentedSwitchItem(icon = Icons.Filled.Tune, title = stringResource(R.string.theme_shadow_slider), checked = state.materialShadowSliders, onCheckedChange = viewModel::setMaterialShadowSliders) },
                 ))
             }
             Spacer(Modifier.height(24.dp))

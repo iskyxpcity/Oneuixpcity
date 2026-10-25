@@ -52,6 +52,12 @@ class SettingsViewModel(
             val materialSwitchStyle = repo.materialSwitchStyle
             val materialSliderStyle = repo.materialSliderStyle
             val materialLaunchFollowsTheme = repo.materialLaunchFollowsTheme
+            val materialShadowContainers = repo.materialShadowContainers
+            val materialShadowAppBars = repo.materialShadowAppBars
+            val materialShadowButtons = repo.materialShadowButtons
+            val materialShadowFab = repo.materialShadowFab
+            val materialShadowSwitches = repo.materialShadowSwitches
+            val materialShadowSliders = repo.materialShadowSliders
             val uiMode = repo.uiMode
 
             _uiState.update {
@@ -84,6 +90,12 @@ class SettingsViewModel(
                     materialSwitchStyle = materialSwitchStyle,
                     materialSliderStyle = materialSliderStyle,
                     materialLaunchFollowsTheme = materialLaunchFollowsTheme,
+                    materialShadowContainers = materialShadowContainers,
+                    materialShadowAppBars = materialShadowAppBars,
+                    materialShadowButtons = materialShadowButtons,
+                    materialShadowFab = materialShadowFab,
+                    materialShadowSwitches = materialShadowSwitches,
+                    materialShadowSliders = materialShadowSliders,
                 )
             }
         }
@@ -282,6 +294,37 @@ class SettingsViewModel(
         repo.materialLaunchFollowsTheme = enabled
         _uiState.update { it.copy(materialLaunchFollowsTheme = enabled) }
     }
+
+    fun setMaterialShadowContainers(enabled: Boolean) {
+        repo.materialShadowContainers = enabled
+        _uiState.update { it.copy(materialShadowContainers = enabled) }
+    }
+
+    fun setMaterialShadowAppBars(enabled: Boolean) {
+        repo.materialShadowAppBars = enabled
+        _uiState.update { it.copy(materialShadowAppBars = enabled) }
+    }
+
+    fun setMaterialShadowButtons(enabled: Boolean) {
+        repo.materialShadowButtons = enabled
+        _uiState.update { it.copy(materialShadowButtons = enabled) }
+    }
+
+    fun setMaterialShadowFab(enabled: Boolean) {
+        repo.materialShadowFab = enabled
+        _uiState.update { it.copy(materialShadowFab = enabled) }
+    }
+
+    fun setMaterialShadowSwitches(enabled: Boolean) {
+        repo.materialShadowSwitches = enabled
+        _uiState.update { it.copy(materialShadowSwitches = enabled) }
+    }
+
+    fun setMaterialShadowSliders(enabled: Boolean) {
+        repo.materialShadowSliders = enabled
+        _uiState.update { it.copy(materialShadowSliders = enabled) }
+    }
+
 
     fun setEnablePredictiveBack(enabled: Boolean) {
         repo.enablePredictiveBack = enabled

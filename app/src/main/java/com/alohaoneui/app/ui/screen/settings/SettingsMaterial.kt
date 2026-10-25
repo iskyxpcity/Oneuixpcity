@@ -62,6 +62,8 @@ import com.alohaoneui.app.ui.component.material.SegmentedListItem
 import com.alohaoneui.app.ui.component.material.SegmentedSwitchItem
 import com.alohaoneui.app.ui.component.material.SendLogBottomSheet
 import com.alohaoneui.app.ui.component.material.SnackBarHost
+import com.alohaoneui.app.ui.theme.LocalMaterialShadowAppBars
+import androidx.compose.ui.draw.shadow
 
 /**
  * @author weishu
@@ -187,6 +189,7 @@ private fun TopBar(
     scrollBehavior: TopAppBarScrollBehavior? = null
 ) {
     LargeFlexibleTopAppBar(
+        modifier = if (LocalMaterialShadowAppBars.current) Modifier.shadow(2.dp) else Modifier,
         title = { Text(stringResource(R.string.settings)) },
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = MaterialTheme.colorScheme.surface,

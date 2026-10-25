@@ -92,6 +92,31 @@ class SettingsRepositoryImpl : SettingsRepository {
         get() = prefs.getBoolean("material_launch_follows_theme", true)
         set(value) = prefs.edit { putBoolean("material_launch_follows_theme", value) }
 
+    override var materialShadowContainers: Boolean
+        get() = prefs.getBoolean("material_shadow_containers", true)
+        set(value) = prefs.edit { putBoolean("material_shadow_containers", value) }
+
+    override var materialShadowAppBars: Boolean
+        get() = prefs.getBoolean("material_shadow_appbars", true)
+        set(value) = prefs.edit { putBoolean("material_shadow_appbars", value) }
+
+    override var materialShadowButtons: Boolean
+        get() = prefs.getBoolean("material_shadow_buttons", true)
+        set(value) = prefs.edit { putBoolean("material_shadow_buttons", value) }
+
+    override var materialShadowFab: Boolean
+        get() = prefs.getBoolean("material_shadow_fab", true)
+        set(value) = prefs.edit { putBoolean("material_shadow_fab", value) }
+
+    override var materialShadowSwitches: Boolean
+        get() = prefs.getBoolean("material_shadow_switches", true)
+        set(value) = prefs.edit { putBoolean("material_shadow_switches", value) }
+
+    override var materialShadowSliders: Boolean
+        get() = prefs.getBoolean("material_shadow_sliders", true)
+        set(value) = prefs.edit { putBoolean("material_shadow_sliders", value) }
+
+
     override var materialFontFamily: String
         get() = prefs.getString("material_font_family", "Default")
             ?.takeIf { it in setOf("Default", "SansSerif", "Serif", "Monospace", "Cursive") } ?: "Default"
@@ -163,6 +188,12 @@ class SettingsRepositoryImpl : SettingsRepository {
         materialSwitchStyle = materialSwitchStyle,
         materialSliderStyle = materialSliderStyle,
         materialLaunchFollowsTheme = materialLaunchFollowsTheme,
+        materialShadowContainers = materialShadowContainers,
+        materialShadowAppBars = materialShadowAppBars,
+        materialShadowButtons = materialShadowButtons,
+        materialShadowFab = materialShadowFab,
+        materialShadowSwitches = materialShadowSwitches,
+        materialShadowSliders = materialShadowSliders,
         enablePredictiveBack = enablePredictiveBack,
         enableBlur = enableBlur,
         enableFloatingBottomBar = enableFloatingBottomBar,
@@ -203,6 +234,12 @@ class SettingsRepositoryImpl : SettingsRepository {
             .putInt("material_switch_style", snapshot.materialSwitchStyle.coerceIn(0, 7))
             .putInt("material_slider_style", snapshot.materialSliderStyle.coerceIn(0, 3))
             .putBoolean("material_launch_follows_theme", snapshot.materialLaunchFollowsTheme)
+            .putBoolean("material_shadow_containers", snapshot.materialShadowContainers)
+            .putBoolean("material_shadow_appbars", snapshot.materialShadowAppBars)
+            .putBoolean("material_shadow_buttons", snapshot.materialShadowButtons)
+            .putBoolean("material_shadow_fab", snapshot.materialShadowFab)
+            .putBoolean("material_shadow_switches", snapshot.materialShadowSwitches)
+            .putBoolean("material_shadow_sliders", snapshot.materialShadowSliders)
             .putBoolean("enable_predictive_back", snapshot.enablePredictiveBack)
             .putBoolean("enable_blur", snapshot.enableBlur)
             .putBoolean("enable_floating_bottom_bar", snapshot.enableFloatingBottomBar)

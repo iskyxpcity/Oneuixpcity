@@ -28,6 +28,12 @@ import androidx.core.view.WindowInsetsControllerCompat
 val LocalMaterialBorderWidth = staticCompositionLocalOf { 0.0f }
 val LocalMaterialSwitchStyle = staticCompositionLocalOf { 0 }
 val LocalMaterialSliderStyle = staticCompositionLocalOf { 3 }
+val LocalMaterialShadowContainers = staticCompositionLocalOf { true }
+val LocalMaterialShadowAppBars = staticCompositionLocalOf { true }
+val LocalMaterialShadowButtons = staticCompositionLocalOf { true }
+val LocalMaterialShadowFab = staticCompositionLocalOf { true }
+val LocalMaterialShadowSwitches = staticCompositionLocalOf { true }
+val LocalMaterialShadowSliders = staticCompositionLocalOf { true }
 
 /**
  * Voyage-aligned Material 3 defaults for shapes and typography, while retaining Aloha's
@@ -73,6 +79,12 @@ fun MaterialAlohaOneUITheme(
         LocalMaterialBorderWidth provides appSettings.materialBorderWidth.coerceIn(0.0f, 3.0f),
         LocalMaterialSwitchStyle provides appSettings.materialSwitchStyle.coerceIn(0, 7),
         LocalMaterialSliderStyle provides appSettings.materialSliderStyle.coerceIn(0, 3),
+        LocalMaterialShadowContainers provides appSettings.materialShadowContainers,
+        LocalMaterialShadowAppBars provides appSettings.materialShadowAppBars,
+        LocalMaterialShadowButtons provides appSettings.materialShadowButtons,
+        LocalMaterialShadowFab provides appSettings.materialShadowFab,
+        LocalMaterialShadowSwitches provides appSettings.materialShadowSwitches,
+        LocalMaterialShadowSliders provides appSettings.materialShadowSliders,
         LocalDensity provides Density(
             density = density.density,
             fontScale = density.fontScale * appSettings.materialFontScale.coerceIn(0.8f, 1.3f),
