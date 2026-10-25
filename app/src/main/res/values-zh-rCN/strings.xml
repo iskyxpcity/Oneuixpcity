@@ -355,6 +355,7 @@
     <string name="theme_motion_expressive">表现力动效</string>
     <string name="theme_motion_reduced">减少动效</string>
 
+    <string name="theme_color_blind_off">关闭</string>
     <string name="theme_color_blind_achromatomaly">全色弱</string>
     <string name="theme_color_blind_achromatopsia">全色盲</string>
     <string name="theme_color_blind_protanomaly">红色弱</string>
