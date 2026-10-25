@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Shapes
-import androidx.compose.material3.Shapes
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.shape.CutCornerShape
 import androidx.compose.foundation.shape.CornerBasedShape
