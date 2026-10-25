@@ -55,7 +55,6 @@ class SettingsViewModel(
             val materialShadowContainers = repo.materialShadowContainers
             val materialShadowAppBars = repo.materialShadowAppBars
             val materialShadowButtons = repo.materialShadowButtons
-            val materialShadowFab = repo.materialShadowFab
             val materialShadowSwitches = repo.materialShadowSwitches
             val materialShadowSliders = repo.materialShadowSliders
             val uiMode = repo.uiMode
@@ -93,7 +92,6 @@ class SettingsViewModel(
                     materialShadowContainers = materialShadowContainers,
                     materialShadowAppBars = materialShadowAppBars,
                     materialShadowButtons = materialShadowButtons,
-                    materialShadowFab = materialShadowFab,
                     materialShadowSwitches = materialShadowSwitches,
                     materialShadowSliders = materialShadowSliders,
                 )
@@ -182,7 +180,7 @@ class SettingsViewModel(
     }
 
     fun setMaterialFontScale(scale: Float) {
-        val safeScale = scale.coerceIn(0.8f, 1.3f)
+        val safeScale = scale.coerceIn(0.8f, 1.5f)
         repo.materialFontScale = safeScale
         _uiState.update { it.copy(materialFontScale = safeScale) }
     }
@@ -256,7 +254,7 @@ class SettingsViewModel(
     }
 
     fun setMaterialNavigationMotionMode(mode: Int) {
-        val safeMode = mode.coerceIn(0, 2)
+        val safeMode = mode.coerceIn(0, 1)
         repo.materialNavigationMotionMode = safeMode
         _uiState.update { it.copy(materialNavigationMotionMode = safeMode) }
     }
@@ -308,11 +306,6 @@ class SettingsViewModel(
     fun setMaterialShadowButtons(enabled: Boolean) {
         repo.materialShadowButtons = enabled
         _uiState.update { it.copy(materialShadowButtons = enabled) }
-    }
-
-    fun setMaterialShadowFab(enabled: Boolean) {
-        repo.materialShadowFab = enabled
-        _uiState.update { it.copy(materialShadowFab = enabled) }
     }
 
     fun setMaterialShadowSwitches(enabled: Boolean) {

@@ -31,7 +31,6 @@ val LocalMaterialSliderStyle = staticCompositionLocalOf { 3 }
 val LocalMaterialShadowContainers = staticCompositionLocalOf { true }
 val LocalMaterialShadowAppBars = staticCompositionLocalOf { true }
 val LocalMaterialShadowButtons = staticCompositionLocalOf { true }
-val LocalMaterialShadowFab = staticCompositionLocalOf { true }
 val LocalMaterialShadowSwitches = staticCompositionLocalOf { true }
 val LocalMaterialShadowSliders = staticCompositionLocalOf { true }
 
@@ -82,12 +81,11 @@ fun MaterialAlohaOneUITheme(
         LocalMaterialShadowContainers provides appSettings.materialShadowContainers,
         LocalMaterialShadowAppBars provides appSettings.materialShadowAppBars,
         LocalMaterialShadowButtons provides appSettings.materialShadowButtons,
-        LocalMaterialShadowFab provides appSettings.materialShadowFab,
         LocalMaterialShadowSwitches provides appSettings.materialShadowSwitches,
         LocalMaterialShadowSliders provides appSettings.materialShadowSliders,
         LocalDensity provides Density(
             density = density.density,
-            fontScale = density.fontScale * appSettings.materialFontScale.coerceIn(0.8f, 1.3f),
+            fontScale = density.fontScale * appSettings.materialFontScale.coerceIn(0.8f, 1.5f),
         )
     ) {
         MaterialTheme(
@@ -97,7 +95,7 @@ fun MaterialAlohaOneUITheme(
                 medium = materialShape(appSettings.materialShapeStyle, 8.dp * appSettings.materialCornerScale.coerceIn(0.5f, 1.5f)),
                 large = materialShape(appSettings.materialShapeStyle, 16.dp * appSettings.materialCornerScale.coerceIn(0.5f, 1.5f)),
             ),
-            motionScheme = MotionScheme.expressive(),
+            motionScheme = if (appSettings.materialNavigationMotionMode == 1) MotionScheme.standard() else MotionScheme.expressive(),
             typography = Typography.withMaterialFontFamily(appSettings.materialFontFamily),
             content = {
                 val colorMatrix = materialColorVisionMatrix(appSettings.materialColorVisionMode, appSettings.materialInvertColors)

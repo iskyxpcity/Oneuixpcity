@@ -333,7 +333,7 @@ fun ThemeSettingsScreenMaterial() {
                             Slider(
                                 value = state.materialFontScale,
                                 onValueChange = viewModel::setMaterialFontScale,
-                                valueRange = 0.8f..1.3f,
+                                valueRange = 0.8f..1.5f,
                             )
                         }
                     },
@@ -367,9 +367,8 @@ fun ThemeSettingsScreenMaterial() {
                             icon = Icons.Filled.Tune,
                             title = stringResource(R.string.theme_component_navigation_motion),
                             items = listOf(
-                                stringResource(R.string.settings_material_navigation_motion_spring),
-                                stringResource(R.string.settings_material_navigation_motion_smooth),
-                                stringResource(R.string.settings_material_navigation_motion_instant),
+                                stringResource(R.string.theme_motion_expressive),
+                                stringResource(R.string.theme_motion_reduced),
                             ),
                             selectedIndex = state.materialNavigationMotionMode,
                             onItemSelected = viewModel::setMaterialNavigationMotionMode,
@@ -386,7 +385,6 @@ fun ThemeSettingsScreenMaterial() {
                     { SegmentedSwitchItem(icon = Icons.Filled.Tune, title = stringResource(R.string.theme_shadow_container), checked = state.materialShadowContainers, onCheckedChange = viewModel::setMaterialShadowContainers) },
                     { SegmentedSwitchItem(icon = Icons.Filled.Tune, title = stringResource(R.string.theme_shadow_app_bar), checked = state.materialShadowAppBars, onCheckedChange = viewModel::setMaterialShadowAppBars) },
                     { SegmentedSwitchItem(icon = Icons.Filled.Tune, title = stringResource(R.string.theme_shadow_button), checked = state.materialShadowButtons, onCheckedChange = viewModel::setMaterialShadowButtons) },
-                    { SegmentedSwitchItem(icon = Icons.Filled.Tune, title = stringResource(R.string.theme_shadow_fab), checked = state.materialShadowFab, onCheckedChange = viewModel::setMaterialShadowFab) },
                     { SegmentedSwitchItem(icon = Icons.Filled.Tune, title = stringResource(R.string.theme_shadow_switch), checked = state.materialShadowSwitches, onCheckedChange = viewModel::setMaterialShadowSwitches) },
                     { SegmentedSwitchItem(icon = Icons.Filled.Tune, title = stringResource(R.string.theme_shadow_slider), checked = state.materialShadowSliders, onCheckedChange = viewModel::setMaterialShadowSliders) },
                 ))

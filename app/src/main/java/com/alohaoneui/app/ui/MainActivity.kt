@@ -30,7 +30,6 @@ import androidx.compose.foundation.pager.PagerDefaults
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.animation.core.snap
-import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
@@ -320,11 +319,7 @@ fun MainScreen(
     val interceptPagerAxis = pagerGestureMode == PagerInterceptionMode.CrossAxisInterceptor.ordinal
     val pagerFlingBehavior = PagerDefaults.flingBehavior(
         state = mainPagerState.pagerState,
-        snapAnimationSpec = when (navigationMotionMode) {
-            1 -> tween(durationMillis = 320)
-            2 -> snap()
-            else -> PagerNavigationSpringSpec
-        },
+        snapAnimationSpec = if (navigationMotionMode == 1) snap() else PagerNavigationSpringSpec,
     )
     val nativePagerNestedScrollConnection = PagerDefaults.pageNestedScrollConnection(
         mainPagerState.pagerState,

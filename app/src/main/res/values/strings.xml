@@ -350,8 +350,9 @@
     <string name="theme_shadow_container">Containers</string>
     <string name="theme_shadow_app_bar">Top bars</string>
     <string name="theme_shadow_button">Buttons</string>
-    <string name="theme_shadow_fab">Floating buttons</string>
     <string name="theme_shadow_switch">Switches</string>
     <string name="theme_shadow_slider">Sliders</string>
 
+    <string name="theme_motion_expressive">Expressive</string>
+    <string name="theme_motion_reduced">Reduced</string>
 </resources>

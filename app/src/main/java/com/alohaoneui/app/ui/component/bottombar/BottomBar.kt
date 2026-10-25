@@ -47,8 +47,7 @@ class MainPagerState(
             val myJob = coroutineContext.job
             try {
                 when {
-                    !animatePageChanges || navigationMotionMode == 2 -> pagerState.scrollToPage(targetIndex)
-                    navigationMotionMode == 1 -> pagerState.animateScrollToPage(targetIndex)
+                    !animatePageChanges || navigationMotionMode == 1 -> pagerState.scrollToPage(targetIndex)
                     else -> pagerState.springAnimateToPage(targetIndex)
                 }
             } finally {

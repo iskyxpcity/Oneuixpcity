@@ -33,7 +33,6 @@ data class SettingsUiState(
     val materialShadowContainers: Boolean = true,
     val materialShadowAppBars: Boolean = true,
     val materialShadowButtons: Boolean = true,
-    val materialShadowFab: Boolean = true,
     val materialShadowSwitches: Boolean = true,
     val materialShadowSliders: Boolean = true,
     val enablePredictiveBack: Boolean = false,

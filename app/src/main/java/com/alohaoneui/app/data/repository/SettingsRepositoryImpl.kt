@@ -45,8 +45,8 @@ class SettingsRepositoryImpl : SettingsRepository {
         set(value) = prefs.edit { putString("color_spec", value) }
 
     override var materialFontScale: Float
-        get() = prefs.getFloat("material_font_scale", 1.0f).coerceIn(0.8f, 1.3f)
-        set(value) = prefs.edit { putFloat("material_font_scale", value.coerceIn(0.8f, 1.3f)) }
+        get() = prefs.getFloat("material_font_scale", 1.0f).coerceIn(0.8f, 1.5f)
+        set(value) = prefs.edit { putFloat("material_font_scale", value.coerceIn(0.8f, 1.5f)) }
 
     override var materialContrastMode: Int
         get() = prefs.getInt("material_contrast_mode", -1).coerceIn(-1, 2)
@@ -65,8 +65,8 @@ class SettingsRepositoryImpl : SettingsRepository {
         set(value) = prefs.edit { putInt("material_color_vision_mode", value.coerceIn(0, 4)) }
 
     override var materialNavigationMotionMode: Int
-        get() = prefs.getInt("material_navigation_motion_mode", 0).coerceIn(0, 2)
-        set(value) = prefs.edit { putInt("material_navigation_motion_mode", value.coerceIn(0, 2)) }
+        get() = prefs.getInt("material_navigation_motion_mode", 0).coerceIn(0, 1)
+        set(value) = prefs.edit { putInt("material_navigation_motion_mode", value.coerceIn(0, 1)) }
 
     override var materialDynamicColorEnabled: Boolean
         get() = prefs.getBoolean("material_dynamic_color_enabled", true)
@@ -103,10 +103,6 @@ class SettingsRepositoryImpl : SettingsRepository {
     override var materialShadowButtons: Boolean
         get() = prefs.getBoolean("material_shadow_buttons", true)
         set(value) = prefs.edit { putBoolean("material_shadow_buttons", value) }
-
-    override var materialShadowFab: Boolean
-        get() = prefs.getBoolean("material_shadow_fab", true)
-        set(value) = prefs.edit { putBoolean("material_shadow_fab", value) }
 
     override var materialShadowSwitches: Boolean
         get() = prefs.getBoolean("material_shadow_switches", true)
@@ -191,7 +187,6 @@ class SettingsRepositoryImpl : SettingsRepository {
         materialShadowContainers = materialShadowContainers,
         materialShadowAppBars = materialShadowAppBars,
         materialShadowButtons = materialShadowButtons,
-        materialShadowFab = materialShadowFab,
         materialShadowSwitches = materialShadowSwitches,
         materialShadowSliders = materialShadowSliders,
         enablePredictiveBack = enablePredictiveBack,
@@ -220,14 +215,14 @@ class SettingsRepositoryImpl : SettingsRepository {
             .putInt("key_color", snapshot.keyColor)
             .putString("color_style", restoredColorStyle)
             .putString("color_spec", restoredColorSpec)
-            .putFloat("material_font_scale", snapshot.materialFontScale.coerceIn(0.8f, 1.3f))
+            .putFloat("material_font_scale", snapshot.materialFontScale.coerceIn(0.8f, 1.5f))
             .putInt("material_contrast_mode", snapshot.materialContrastMode.coerceIn(-1, 2))
             .putFloat("material_corner_scale", snapshot.materialCornerScale.coerceIn(0.5f, 1.5f))
             .putString("material_color_schemes", Json.encodeToString(snapshot.materialColorSchemes))
             .putFloat("material_border_width", snapshot.materialBorderWidth.coerceIn(0.0f, 3.0f))
             .putString("material_font_family", snapshot.materialFontFamily.takeIf { it in setOf("Default", "SansSerif", "Serif", "Monospace", "Cursive") } ?: "Default")
             .putInt("material_color_vision_mode", snapshot.materialColorVisionMode.coerceIn(0, 4))
-            .putInt("material_navigation_motion_mode", snapshot.materialNavigationMotionMode.coerceIn(0, 2))
+            .putInt("material_navigation_motion_mode", snapshot.materialNavigationMotionMode.coerceIn(0, 1))
             .putBoolean("material_dynamic_color_enabled", snapshot.materialDynamicColorEnabled)
             .putBoolean("material_invert_colors", snapshot.materialInvertColors)
             .putInt("material_shape_style", snapshot.materialShapeStyle.coerceIn(0, 6))
@@ -237,7 +232,6 @@ class SettingsRepositoryImpl : SettingsRepository {
             .putBoolean("material_shadow_containers", snapshot.materialShadowContainers)
             .putBoolean("material_shadow_appbars", snapshot.materialShadowAppBars)
             .putBoolean("material_shadow_buttons", snapshot.materialShadowButtons)
-            .putBoolean("material_shadow_fab", snapshot.materialShadowFab)
             .putBoolean("material_shadow_switches", snapshot.materialShadowSwitches)
             .putBoolean("material_shadow_sliders", snapshot.materialShadowSliders)
             .putBoolean("enable_predictive_back", snapshot.enablePredictiveBack)
