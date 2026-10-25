@@ -40,6 +40,7 @@ class SettingsViewModel(
             val colorSpec = repo.colorSpec
             val materialFontScale = repo.materialFontScale
             val materialContrastMode = repo.materialContrastMode
+            val materialCornerScale = repo.materialCornerScale
             val uiMode = repo.uiMode
 
             _uiState.update {
@@ -60,6 +61,7 @@ class SettingsViewModel(
                     colorSpec = colorSpec,
                     materialFontScale = materialFontScale,
                     materialContrastMode = materialContrastMode,
+                    materialCornerScale = materialCornerScale,
                 )
             }
         }
@@ -154,6 +156,12 @@ class SettingsViewModel(
         val safeMode = mode.coerceIn(-1, 2)
         repo.materialContrastMode = safeMode
         _uiState.update { it.copy(materialContrastMode = safeMode) }
+    }
+
+    fun setMaterialCornerScale(scale: Float) {
+        val safeScale = scale.coerceIn(0.5f, 1.5f)
+        repo.materialCornerScale = safeScale
+        _uiState.update { it.copy(materialCornerScale = safeScale) }
     }
 
     fun setEnablePredictiveBack(enabled: Boolean) {

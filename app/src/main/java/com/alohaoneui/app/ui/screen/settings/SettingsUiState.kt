@@ -17,6 +17,7 @@ data class SettingsUiState(
     val colorSpec: String = ColorSpec.SpecVersion.SPEC_2025.name,
     val materialFontScale: Float = 1.0f,
     val materialContrastMode: Int = -1,
+    val materialCornerScale: Float = 1.0f,
     val enablePredictiveBack: Boolean = false,
     val enableBlur: Boolean = false,
     val enableFloatingBottomBar: Boolean = false,

@@ -25,6 +25,7 @@ data class ColorPaletteScreenActions(
     val onSetColorSpec: (String) -> Unit,
     val onSetMaterialFontScale: (Float) -> Unit,
     val onSetMaterialContrastMode: (Int) -> Unit,
+    val onSetMaterialCornerScale: (Float) -> Unit,
     val onSetEnableBlur: (Boolean) -> Unit,
     val onSetEnableFloatingBottomBar: (Boolean) -> Unit,
     val onSetEnableFloatingBottomBarBlur: (Boolean) -> Unit,

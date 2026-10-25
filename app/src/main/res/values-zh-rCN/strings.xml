@@ -251,4 +251,6 @@
     <string name="changelog_2610191_optimizations_body">• 优化状态栏组合图标布局及原生图标间距。\n• 优化原生信号图标的显示与恢复逻辑。\n• 优化图标缩放设置的保存与迁移。\n• 改进 Material、Miuix 主题及宽屏界面的适配。</string>
     <string name="changelog_2610191_fixes_title">问题修复</string>
     <string name="changelog_2610191_fixes_body">• 修复部分设置迁移时图标缩放比例异常的问题。\n• 修复隐藏原生图标后可能残留空白的问题。\n• 优化部分系统功能的配置读取与兼容性。</string>
+    <string name="settings_material_corner_scale">圆角缩放</string>
+    <string name="settings_material_corner_scale_summary">调整 Material 3 组件圆角大小，范围为 50%–150%。</string>
 </resources>

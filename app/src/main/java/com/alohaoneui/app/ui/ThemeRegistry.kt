@@ -107,7 +107,7 @@ object ThemeRegistry {
                 customColorSchemes = false,
                 fontFamilySelection = false,
                 fontScale = true,
-                cornerScale = false,
+                cornerScale = true,
                 borderWidth = false,
                 colorVisionMode = false,
                 contentColorExtraction = false,

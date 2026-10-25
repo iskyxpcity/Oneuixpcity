@@ -254,4 +254,6 @@
     <string name="changelog_2610191_fixes_body">• Fixed abnormal icon-scale ratios during some settings migrations.\n• Fixed leftover blank space that could remain after hiding native icons.\n• Improved configuration reading and compatibility for some system functions.</string>
     <string name="alohaoneui_global_shortcut_actions_title">全局快捷动作</string>
     <string name="alohaoneui_global_shortcut_actions_summary">配置全局三指手势、悬浮球、状态栏、虚拟导航键和息屏音量键的快捷操作。</string>
+    <string name="settings_material_corner_scale">Corner scale</string>
+    <string name="settings_material_corner_scale_summary">Adjust Material 3 component corner roundness from 50% to 150%.</string>
 </resources>

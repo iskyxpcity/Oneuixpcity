@@ -49,6 +49,10 @@ class SettingsRepositoryImpl : SettingsRepository {
         get() = prefs.getInt("material_contrast_mode", -1).coerceIn(-1, 2)
         set(value) = prefs.edit { putInt("material_contrast_mode", value.coerceIn(-1, 2)) }
 
+    override var materialCornerScale: Float
+        get() = prefs.getFloat("material_corner_scale", 1.0f).coerceIn(0.5f, 1.5f)
+        set(value) = prefs.edit { putFloat("material_corner_scale", value.coerceIn(0.5f, 1.5f)) }
+
     override var enablePredictiveBack: Boolean
         get() = prefs.getBoolean("enable_predictive_back", false)
         set(value) = prefs.edit { putBoolean("enable_predictive_back", value) }
@@ -91,6 +95,7 @@ class SettingsRepositoryImpl : SettingsRepository {
         colorSpec = colorSpec,
         materialFontScale = materialFontScale,
         materialContrastMode = materialContrastMode,
+        materialCornerScale = materialCornerScale,
         enablePredictiveBack = enablePredictiveBack,
         enableBlur = enableBlur,
         enableFloatingBottomBar = enableFloatingBottomBar,
@@ -119,6 +124,7 @@ class SettingsRepositoryImpl : SettingsRepository {
             .putString("color_spec", restoredColorSpec)
             .putFloat("material_font_scale", snapshot.materialFontScale.coerceIn(0.8f, 1.3f))
             .putInt("material_contrast_mode", snapshot.materialContrastMode.coerceIn(-1, 2))
+            .putFloat("material_corner_scale", snapshot.materialCornerScale.coerceIn(0.5f, 1.5f))
             .putBoolean("enable_predictive_back", snapshot.enablePredictiveBack)
             .putBoolean("enable_blur", snapshot.enableBlur)
             .putBoolean("enable_floating_bottom_bar", snapshot.enableFloatingBottomBar)

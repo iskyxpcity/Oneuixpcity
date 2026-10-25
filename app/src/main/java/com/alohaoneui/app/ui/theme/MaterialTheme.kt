@@ -4,6 +4,8 @@ import android.app.Activity
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Shapes
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.unit.dp
 import androidx.compose.material3.MotionScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -58,7 +60,11 @@ fun MaterialAlohaOneUITheme(
     ) {
         MaterialTheme(
             colorScheme = animatedColorScheme,
-            shapes = Shapes(),
+            shapes = Shapes(
+                small = RoundedCornerShape(4.dp * appSettings.materialCornerScale.coerceIn(0.5f, 1.5f)),
+                medium = RoundedCornerShape(8.dp * appSettings.materialCornerScale.coerceIn(0.5f, 1.5f)),
+                large = RoundedCornerShape(16.dp * appSettings.materialCornerScale.coerceIn(0.5f, 1.5f)),
+            ),
             motionScheme = MotionScheme.expressive(),
             typography = Typography,
             content = content,
