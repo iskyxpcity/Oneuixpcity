@@ -523,34 +523,6 @@ fun ColorPaletteScreenMaterial(
                     }
                 }
 
-                TonalCard(modifier = Modifier.padding(top = 4.dp)) {
-                    var cornerScale by remember(uiState.materialCornerScale) { mutableFloatStateOf(uiState.materialCornerScale) }
-                    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(text = stringResource(R.string.settings_material_corner_scale), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
-                                Text(text = stringResource(R.string.settings_material_corner_scale_summary), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.outline)
-                            }
-                            Text(text = "${(cornerScale * 100).toInt()}%", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                        Slider(value = cornerScale, onValueChange = { cornerScale = it }, onValueChangeFinished = { actions.onSetMaterialCornerScale(cornerScale) }, valueRange = 0.5f..1.5f, steps = 9, modifier = Modifier.fillMaxWidth())
-                    }
-                }
-
-                TonalCard(modifier = Modifier.padding(top = 4.dp)) {
-                    var borderWidth by remember(uiState.materialBorderWidth) { mutableFloatStateOf(uiState.materialBorderWidth) }
-                    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(text = stringResource(R.string.settings_material_border_width), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
-                                Text(text = stringResource(R.string.settings_material_border_width_summary), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.outline)
-                            }
-                            Text(text = String.format(java.util.Locale.ROOT, "%.1f dp", borderWidth), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                        Slider(value = borderWidth, onValueChange = { borderWidth = it }, onValueChangeFinished = { actions.onSetMaterialBorderWidth(borderWidth) }, valueRange = 0.0f..3.0f, steps = 5, modifier = Modifier.fillMaxWidth())
-                    }
-                }
-
                 SegmentedColumn(
                     modifier = Modifier.padding(top = 4.dp),
                     content = listOf(
@@ -589,27 +561,6 @@ fun ColorPaletteScreenMaterial(
                                 items = colorVisionLabels,
                                 selectedIndex = uiState.materialColorVisionMode.coerceIn(0, colorVisionLabels.lastIndex),
                                 onItemSelected = actions.onSetMaterialColorVisionMode,
-                            )
-                        }
-                    ),
-                )
-
-                SegmentedColumn(
-                    modifier = Modifier.padding(top = 4.dp),
-                    content = listOf(
-                        {
-                            val navigationMotionLabels = listOf(
-                                stringResource(R.string.settings_material_navigation_motion_spring),
-                                stringResource(R.string.settings_material_navigation_motion_smooth),
-                                stringResource(R.string.settings_material_navigation_motion_instant),
-                            )
-                            SegmentedDropdownItem(
-                                icon = Icons.Rounded.ViewCarousel,
-                                title = stringResource(R.string.settings_material_navigation_motion),
-                                summary = stringResource(R.string.settings_material_navigation_motion_summary),
-                                items = navigationMotionLabels,
-                                selectedIndex = uiState.materialNavigationMotionMode.coerceIn(0, navigationMotionLabels.lastIndex),
-                                onItemSelected = actions.onSetMaterialNavigationMotionMode,
                             )
                         }
                     ),
