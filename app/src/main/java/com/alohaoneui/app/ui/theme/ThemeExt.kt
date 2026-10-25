@@ -87,4 +87,4 @@ fun rememberAlohaOneUIColorScheme(
 
 @Composable
 fun ColorScheme.animateAsState(): ColorScheme =
-    animateColorScheme(label = "oneuixp_theme_color_animation")
+    animateColorScheme(colorScheme = this, label = "oneuixp_theme_color_animation")
