@@ -6,9 +6,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Shapes
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.shape.CutCornerShape
-import androidx.compose.foundation.shape.CornerBasedShape
 import androidx.compose.ui.unit.dp
 import androidx.compose.material3.MotionScheme
 import androidx.compose.runtime.Composable
@@ -74,9 +71,9 @@ fun MaterialAlohaOneUITheme(
     }
 
     CompositionLocalProvider(
-        LocalMaterialBorderWidth provides appSettings.materialBorderWidth.coerceIn(0.0f, 3.0f),
-        LocalMaterialSwitchStyle provides appSettings.materialSwitchStyle.coerceIn(0, 7),
-        LocalMaterialSliderStyle provides appSettings.materialSliderStyle.coerceIn(0, 3),
+        LocalMaterialBorderWidth provides 0.0f,
+        LocalMaterialSwitchStyle provides 0,
+        LocalMaterialSliderStyle provides 0,
         LocalMaterialShadowContainers provides appSettings.materialShadowContainers,
         LocalMaterialShadowAppBars provides appSettings.materialShadowAppBars,
         LocalMaterialShadowButtons provides appSettings.materialShadowButtons,
@@ -89,12 +86,8 @@ fun MaterialAlohaOneUITheme(
     ) {
         MaterialTheme(
             colorScheme = animatedColorScheme,
-            shapes = Shapes(
-                small = materialShape(appSettings.materialShapeStyle, 4.dp * appSettings.materialCornerScale.coerceIn(0.5f, 1.5f)),
-                medium = materialShape(appSettings.materialShapeStyle, 8.dp * appSettings.materialCornerScale.coerceIn(0.5f, 1.5f)),
-                large = materialShape(appSettings.materialShapeStyle, 16.dp * appSettings.materialCornerScale.coerceIn(0.5f, 1.5f)),
-            ),
-            motionScheme = if (appSettings.materialNavigationMotionMode == 1) MotionScheme.standard() else MotionScheme.expressive(),
+            shapes = Shapes(),
+            motionScheme = MotionScheme.expressive(),
             typography = Typography.withMaterialFontFamily(appSettings.materialFontFamily),
             content = {
                 val colorMatrix = materialColorVisionMatrix(appSettings.materialColorVisionMode, appSettings.materialInvertColors)
@@ -112,16 +105,6 @@ fun MaterialAlohaOneUITheme(
     }
 }
 
-
-private fun materialShape(style: Int, size: androidx.compose.ui.unit.Dp): CornerBasedShape = when (style.coerceIn(0, 6)) {
-    0 -> RoundedCornerShape(size) // Rounded
-    1 -> CutCornerShape(size) // Cut
-    2 -> RoundedCornerShape(size * 2.0f) // Squircle approximation
-    3 -> RoundedCornerShape(size * 1.4f) // Smooth
-    4 -> RoundedCornerShape(size * 1.2f) // Wavy approximation
-    5 -> RoundedCornerShape(percent = 50) // Scoop approximation
-    else -> CutCornerShape(topStart = size * 1.5f, topEnd = size, bottomEnd = size * 1.5f, bottomStart = size) // Notch
-}
 
 private fun materialColorVisionMatrix(mode: Int, invert: Boolean): ColorMatrix? {
     val identity = ColorMatrix()

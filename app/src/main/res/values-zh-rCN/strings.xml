@@ -41,7 +41,7 @@
     <string name="settings_ui_mode_summary">选择应用的界面风格</string>
     <string name="settings_page_scale">界面缩放</string>
     <string name="settings_page_scale_summary">调整全局显示比例</string>
-    <string name="settings_material_font_scale">字体缩放</string>
+    <string name="settings_material_font_scale">字体大小</string>
     <string name="settings_material_font_scale_summary">仅调整 Material 3 主题中的文字大小</string>
     <string name="settings_material_contrast">色彩对比度</string>
     <string name="settings_contrast_follow_system">跟随系统</string>

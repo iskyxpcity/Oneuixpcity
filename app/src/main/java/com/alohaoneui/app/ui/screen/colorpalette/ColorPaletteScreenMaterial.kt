@@ -531,7 +531,7 @@ fun ColorPaletteScreenMaterial(
                             }
                             Text(text = "${(fontScale * 100).toInt()}%", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
-                        Slider(value = fontScale, onValueChange = { fontScale = it }, onValueChangeFinished = { actions.onSetMaterialFontScale(fontScale) }, valueRange = 0.8f..1.3f, steps = 4, modifier = Modifier.fillMaxWidth())
+                        Slider(value = fontScale, onValueChange = { fontScale = it }, onValueChangeFinished = { actions.onSetMaterialFontScale(fontScale) }, valueRange = 0.8f..1.5f, modifier = Modifier.fillMaxWidth())
                     }
                 }
 
@@ -567,13 +567,10 @@ fun ColorPaletteScreenMaterial(
                     modifier = Modifier.padding(top = 4.dp),
                     content = listOf(
                         {
-                            val fontFamilyValues = listOf("Default", "SansSerif", "Serif", "Monospace", "Cursive")
+                            val fontFamilyValues = listOf("Default", "Serif")
                             val fontFamilyLabels = listOf(
                                 stringResource(R.string.settings_material_font_family_default),
-                                stringResource(R.string.settings_material_font_family_sans),
                                 stringResource(R.string.settings_material_font_family_serif),
-                                stringResource(R.string.settings_material_font_family_monospace),
-                                stringResource(R.string.settings_material_font_family_cursive),
                             )
                             SegmentedDropdownItem(
                                 icon = Icons.Rounded.DesignServices,

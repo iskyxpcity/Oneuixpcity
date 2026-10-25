@@ -110,70 +110,6 @@ fun ThemeSettingsScreenMaterial() {
                     {
                         SegmentedDropdownItem(
                             icon = Icons.Filled.Tune,
-                            title = stringResource(R.string.theme_shape_style_title),
-                            items = listOf(
-                                stringResource(R.string.theme_shape_rounded),
-                                stringResource(R.string.theme_shape_cut),
-                                stringResource(R.string.theme_shape_squircle),
-                                stringResource(R.string.theme_shape_smooth),
-                                stringResource(R.string.theme_shape_wavy),
-                                stringResource(R.string.theme_shape_scoop),
-                                stringResource(R.string.theme_shape_notch),
-                            ),
-                            selectedIndex = state.materialShapeStyle,
-                            onItemSelected = viewModel::setMaterialShapeStyle,
-                        )
-                    },
-                    {
-                        Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
-                            Text(stringResource(R.string.theme_shape_corner_scale))
-                            Text((state.materialCornerScale * 100).toInt().toString() + "%", style = MaterialTheme.typography.labelMedium)
-                            Slider(
-                                value = state.materialCornerScale,
-                                onValueChange = viewModel::setMaterialCornerScale,
-                                valueRange = 0.5f..1.5f,
-                            )
-                        }
-                    },
-                ))
-            }
-            ThemeSettingsGroup {
-                SegmentedColumn(content = listOf(
-                    {
-                        SegmentedDropdownItem(
-                            icon = Icons.Filled.Tune,
-                            title = stringResource(R.string.theme_switch_style_title),
-                            items = listOf(
-                                stringResource(R.string.theme_switch_material_you),
-                                stringResource(R.string.theme_switch_compose),
-                                stringResource(R.string.theme_switch_pixel),
-                                stringResource(R.string.theme_switch_fluent),
-                                stringResource(R.string.theme_switch_cupertino),
-                                stringResource(R.string.theme_switch_liquid_glass),
-                                stringResource(R.string.theme_switch_hyper_os),
-                                stringResource(R.string.theme_switch_one_ui),
-                            ),
-                            selectedIndex = state.materialSwitchStyle,
-                            onItemSelected = viewModel::setMaterialSwitchStyle,
-                        )
-                    },
-                    {
-                        SegmentedDropdownItem(
-                            icon = Icons.Filled.Tune,
-                            title = stringResource(R.string.theme_slider_style_title),
-                            items = listOf(
-                                stringResource(R.string.theme_slider_material_you),
-                                stringResource(R.string.theme_slider_fancy),
-                                stringResource(R.string.theme_slider_material),
-                                stringResource(R.string.theme_slider_hyper_os),
-                            ),
-                            selectedIndex = state.materialSliderStyle,
-                            onItemSelected = viewModel::setMaterialSliderStyle,
-                        )
-                    },
-                    {
-                        SegmentedDropdownItem(
-                            icon = Icons.Filled.Tune,
                             title = stringResource(R.string.theme_component_font_family),
                             items = listOf(
                                 stringResource(R.string.settings_material_font_family_default),
@@ -182,7 +118,7 @@ fun ThemeSettingsScreenMaterial() {
                                 stringResource(R.string.settings_material_font_family_monospace),
                                 stringResource(R.string.settings_material_font_family_cursive),
                             ),
-                            selectedIndex = listOf("Default", "SansSerif", "Serif", "Monospace", "Cursive").indexOf(state.materialFontFamily).coerceAtLeast(0),
+                            selectedIndex = listOf("Default", "Serif").indexOf(state.materialFontFamily).coerceAtLeast(0),
                             onItemSelected = { index ->
                                 viewModel.setMaterialFontFamily(listOf("Default", "SansSerif", "Serif", "Monospace", "Cursive")[index])
                             },
@@ -196,17 +132,6 @@ fun ThemeSettingsScreenMaterial() {
                                 value = state.materialFontScale,
                                 onValueChange = viewModel::setMaterialFontScale,
                                 valueRange = 0.8f..1.5f,
-                            )
-                        }
-                    },
-                    {
-                        Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
-                            Text(stringResource(R.string.theme_component_border_width))
-                            Text(String.format(java.util.Locale.ROOT, "%.1f dp", state.materialBorderWidth), style = MaterialTheme.typography.labelMedium)
-                            Slider(
-                                value = state.materialBorderWidth,
-                                onValueChange = viewModel::setMaterialBorderWidth,
-                                valueRange = 0.0f..3.0f,
                             )
                         }
                     },
