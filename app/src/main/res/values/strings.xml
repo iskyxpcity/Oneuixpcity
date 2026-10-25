@@ -51,6 +51,8 @@
     <string name="settings_palette_style_rainbow">Rainbow</string>
     <string name="settings_palette_style_tonal_spot">Tonal Spot</string>
     <string name="settings_palette_style_vibrant">Vibrant</string>
+    <string name="theme_editor_hex">HEX color</string>
+    <string name="theme_editor_apply_hex">Apply</string>
     <string name="settings_color_style">Color Style</string>
     <string name="color_blue">Blue</string>
     <string name="color_red">Red</string>
