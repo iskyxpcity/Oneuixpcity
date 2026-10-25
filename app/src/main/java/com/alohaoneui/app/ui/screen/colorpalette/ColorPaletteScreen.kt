@@ -64,6 +64,8 @@ fun ColorPaletteScreen() {
         onSetMaterialShadowSwitches = viewModel::setMaterialShadowSwitches,
         onSetMaterialShadowSliders = viewModel::setMaterialShadowSliders,
         onSetMaterialColorVisionMode = viewModel::setMaterialColorVisionMode,
+        onSetMaterialInvertColors = viewModel::setMaterialInvertColors,
+        onSetMaterialLaunchFollowsTheme = viewModel::setMaterialLaunchFollowsTheme,
         onSetMaterialNavigationMotionMode = viewModel::setMaterialNavigationMotionMode,
         onSaveMaterialColorScheme = viewModel::saveMaterialColorScheme,
         onApplyMaterialColorScheme = viewModel::applyMaterialColorScheme,

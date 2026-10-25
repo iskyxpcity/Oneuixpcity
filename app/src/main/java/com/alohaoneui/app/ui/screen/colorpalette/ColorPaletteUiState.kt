@@ -42,6 +42,8 @@ data class ColorPaletteScreenActions(
     val onSetMaterialShadowSwitches: (Boolean) -> Unit,
     val onSetMaterialShadowSliders: (Boolean) -> Unit,
     val onSetMaterialColorVisionMode: (Int) -> Unit,
+    val onSetMaterialInvertColors: (Boolean) -> Unit,
+    val onSetMaterialLaunchFollowsTheme: (Boolean) -> Unit,
     val onSetMaterialNavigationMotionMode: (Int) -> Unit,
     val onSaveMaterialColorScheme: (String) -> Unit,
     val onApplyMaterialColorScheme: (MaterialColorScheme) -> Unit,
