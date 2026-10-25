@@ -51,6 +51,14 @@ fun ThemeSettingsScreenMaterial() {
         Column(
             Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(bottom = 24.dp)
         ) {
+            ListItem(
+                headlineContent = { Text(stringResource(R.string.theme_scheme_title)) },
+                trailingContent = { Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null) },
+                colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                modifier = Modifier.fillMaxWidth().clickable {
+                    navigator.push(com.alohaoneui.app.ui.navigation3.Route.ColorPalette)
+                },
+            )
             // Match Voyage's continuous grouped preference page and original section order.
             listOf(0, 7, 1, 6, 5, 2, 3, 4).forEach { index ->
                 Text(
