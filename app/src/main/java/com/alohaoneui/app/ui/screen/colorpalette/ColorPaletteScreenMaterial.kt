@@ -511,7 +511,7 @@ fun ColorPaletteScreenMaterial(
                         },
                         {
                             SegmentedSwitchItem(
-                                icon = Icons.Rounded.BlurOn,
+                                icon = Icons.Filled.Tune,
                                 title = stringResource(R.string.theme_nav_blur),
                                 summary = stringResource(R.string.settings_enable_blur_summary),
                                 checked = uiState.enableFloatingBottomBarBlur,
