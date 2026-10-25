@@ -787,9 +787,6 @@ fun ColorPaletteScreenMaterial(
     }
 }
 
-@SuppressLint("ConfigurationScreenWidthHeight")
-@Composable
-
 @Composable
 private fun MaterialThemeGroup(
     title: String,
@@ -842,6 +839,8 @@ private fun MaterialThemeGroup(
     }
 }
 
+@SuppressLint("ConfigurationScreenWidthHeight")
+@Composable
 private fun ThemePreviewCard(
     keyColor: Int,
     isDark: Boolean,
