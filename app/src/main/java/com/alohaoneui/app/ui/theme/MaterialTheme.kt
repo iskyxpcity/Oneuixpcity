@@ -96,7 +96,7 @@ fun MaterialAlohaOneUITheme(
                 medium = materialShape(appSettings.materialShapeStyle, 8.dp * appSettings.materialCornerScale.coerceIn(0.5f, 1.5f)),
                 large = materialShape(appSettings.materialShapeStyle, 16.dp * appSettings.materialCornerScale.coerceIn(0.5f, 1.5f)),
             ),
-            motionScheme = MotionScheme.expressive(),
+            motionScheme = if (appSettings.materialNavigationMotionMode == 1) MotionScheme.standard() else MotionScheme.expressive(),
             typography = Typography.withMaterialFontFamily(appSettings.materialFontFamily, appSettings.materialBoldTextEnabled),
             content = {
                 val colorMatrix = materialColorVisionMatrix(appSettings.materialColorVisionMode, appSettings.materialInvertColors)
