@@ -21,6 +21,16 @@ class SettingsRepositoryImpl : SettingsRepository {
         // Migrate those values once to Voyage's enum order while leaving fresh installs
         // on Voyage defaults (Material You for both controls).
         val preferences = prefs
+        if (!preferences.getBoolean("material_theme_shape_voyage_order_v1", false)) {
+            preferences.edit {
+                if (preferences.contains("material_shape_style")) {
+                    val oldToVoyage = intArrayOf(1, 6, 0, 5, 3, 2, 4)
+                    val oldValue = preferences.getInt("material_shape_style", 2).coerceIn(0, 6)
+                    putInt("material_shape_style", oldToVoyage[oldValue])
+                }
+                putBoolean("material_theme_shape_voyage_order_v1", true)
+            }
+        }
         if (!preferences.getBoolean("material_control_style_voyage_order_v1", false)) {
             preferences.edit {
                 if (preferences.contains("material_switch_style")) {
@@ -99,7 +109,7 @@ class SettingsRepositoryImpl : SettingsRepository {
         set(value) = prefs.edit { putBoolean("material_invert_colors", value) }
 
     override var materialShapeStyle: Int
-        get() = prefs.getInt("material_shape_style", 2).coerceIn(0, 6)
+        get() = prefs.getInt("material_shape_style", 0).coerceIn(0, 6)
         set(value) = prefs.edit { putInt("material_shape_style", value.coerceIn(0, 6)) }
 
     override var materialSwitchStyle: Int
