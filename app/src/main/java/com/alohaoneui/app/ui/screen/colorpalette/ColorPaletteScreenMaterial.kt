@@ -520,6 +520,29 @@ fun ColorPaletteScreenMaterial(
                     ),
                 )
 
+                SegmentedColumn(
+                    modifier = Modifier.padding(top = 4.dp),
+                    content = listOf(
+                        {
+                            val colorVisionLabels = listOf(
+                                stringResource(R.string.settings_material_color_vision_off),
+                                stringResource(R.string.settings_material_color_vision_grayscale),
+                                stringResource(R.string.settings_material_color_vision_protanopia),
+                                stringResource(R.string.settings_material_color_vision_deuteranopia),
+                                stringResource(R.string.settings_material_color_vision_tritanopia),
+                            )
+                            SegmentedDropdownItem(
+                                icon = Icons.Rounded.DesignServices,
+                                title = stringResource(R.string.settings_material_color_vision),
+                                summary = stringResource(R.string.settings_material_color_vision_summary),
+                                items = colorVisionLabels,
+                                selectedIndex = uiState.materialColorVisionMode.coerceIn(0, colorVisionLabels.lastIndex),
+                                onItemSelected = actions.onSetMaterialColorVisionMode,
+                            )
+                        }
+                    ),
+                )
+
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
                     SegmentedColumn(
                         modifier = Modifier.padding(top = 4.dp),

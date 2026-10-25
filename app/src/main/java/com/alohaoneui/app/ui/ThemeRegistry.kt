@@ -109,7 +109,7 @@ object ThemeRegistry {
                 fontScale = true,
                 cornerScale = true,
                 borderWidth = true,
-                colorVisionMode = false,
+                colorVisionMode = true,
                 contentColorExtraction = false,
                 navigationMotionSelection = false,
             ),

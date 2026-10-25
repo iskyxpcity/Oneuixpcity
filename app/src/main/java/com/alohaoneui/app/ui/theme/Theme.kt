@@ -56,6 +56,7 @@ data class AppSettings(
     val materialCornerScale: Float = 1.0f,
     val materialBorderWidth: Float = 0.0f,
     val materialFontFamily: String = "Default",
+    val materialColorVisionMode: Int = 0,
 )
 
 fun Int.toMaterialContrastLevelOverride(): Double? = when (this) {
@@ -111,7 +112,7 @@ object ThemeController {
             ColorSpec.SpecVersion.SPEC_2025
         }
 
-        return AppSettings(colorMode, keyColor, paletteStyle, colorSpec, repo.materialFontScale.coerceIn(0.8f, 1.3f), repo.materialContrastMode.coerceIn(-1, 2), repo.materialCornerScale.coerceIn(0.5f, 1.5f), repo.materialBorderWidth.coerceIn(0.0f, 3.0f), repo.materialFontFamily)
+        return AppSettings(colorMode, keyColor, paletteStyle, colorSpec, repo.materialFontScale.coerceIn(0.8f, 1.3f), repo.materialContrastMode.coerceIn(-1, 2), repo.materialCornerScale.coerceIn(0.5f, 1.5f), repo.materialBorderWidth.coerceIn(0.0f, 3.0f), repo.materialFontFamily, repo.materialColorVisionMode.coerceIn(0, 4))
     }
 }
 

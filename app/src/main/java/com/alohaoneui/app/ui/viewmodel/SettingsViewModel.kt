@@ -44,6 +44,7 @@ class SettingsViewModel(
             val materialColorSchemes = repo.materialColorSchemes
             val materialBorderWidth = repo.materialBorderWidth
             val materialFontFamily = repo.materialFontFamily
+            val materialColorVisionMode = repo.materialColorVisionMode
             val uiMode = repo.uiMode
 
             _uiState.update {
@@ -68,6 +69,7 @@ class SettingsViewModel(
                     materialColorSchemes = materialColorSchemes,
                     materialBorderWidth = materialBorderWidth,
                     materialFontFamily = materialFontFamily,
+                    materialColorVisionMode = materialColorVisionMode,
                 )
             }
         }
@@ -218,6 +220,12 @@ class SettingsViewModel(
         val safeFamily = family.takeIf { it in setOf("Default", "SansSerif", "Serif", "Monospace", "Cursive") } ?: "Default"
         repo.materialFontFamily = safeFamily
         _uiState.update { it.copy(materialFontFamily = safeFamily) }
+    }
+
+    fun setMaterialColorVisionMode(mode: Int) {
+        val safeMode = mode.coerceIn(0, 4)
+        repo.materialColorVisionMode = safeMode
+        _uiState.update { it.copy(materialColorVisionMode = safeMode) }
     }
 
     fun setEnablePredictiveBack(enabled: Boolean) {

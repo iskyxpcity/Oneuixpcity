@@ -268,4 +268,11 @@
     <string name="settings_material_font_family_serif">衬线</string>
     <string name="settings_material_font_family_monospace">等宽</string>
     <string name="settings_material_font_family_cursive">手写体</string>
+    <string name="settings_material_color_vision">色觉辅助预览</string>
+    <string name="settings_material_color_vision_summary">预览 Material 3 界面的色觉差异；色觉缺陷选项仅用于模拟，并非视觉矫正。</string>
+    <string name="settings_material_color_vision_off">关闭</string>
+    <string name="settings_material_color_vision_grayscale">灰度</string>
+    <string name="settings_material_color_vision_protanopia">红色盲模拟</string>
+    <string name="settings_material_color_vision_deuteranopia">绿色盲模拟</string>
+    <string name="settings_material_color_vision_tritanopia">蓝黄色觉异常模拟</string>
 </resources>

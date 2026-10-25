@@ -60,6 +60,10 @@ class SettingsRepositoryImpl : SettingsRepository {
         get() = prefs.getFloat("material_border_width", 0.0f).coerceIn(0.0f, 3.0f)
         set(value) = prefs.edit { putFloat("material_border_width", value.coerceIn(0.0f, 3.0f)) }
 
+    override var materialColorVisionMode: Int
+        get() = prefs.getInt("material_color_vision_mode", 0).coerceIn(0, 4)
+        set(value) = prefs.edit { putInt("material_color_vision_mode", value.coerceIn(0, 4)) }
+
     override var materialFontFamily: String
         get() = prefs.getString("material_font_family", "Default")
             ?.takeIf { it in setOf("Default", "SansSerif", "Serif", "Monospace", "Cursive") } ?: "Default"
@@ -123,6 +127,7 @@ class SettingsRepositoryImpl : SettingsRepository {
         materialColorSchemes = materialColorSchemes,
         materialBorderWidth = materialBorderWidth,
         materialFontFamily = materialFontFamily,
+        materialColorVisionMode = materialColorVisionMode,
         enablePredictiveBack = enablePredictiveBack,
         enableBlur = enableBlur,
         enableFloatingBottomBar = enableFloatingBottomBar,
@@ -155,6 +160,7 @@ class SettingsRepositoryImpl : SettingsRepository {
             .putString("material_color_schemes", Json.encodeToString(snapshot.materialColorSchemes))
             .putFloat("material_border_width", snapshot.materialBorderWidth.coerceIn(0.0f, 3.0f))
             .putString("material_font_family", snapshot.materialFontFamily.takeIf { it in setOf("Default", "SansSerif", "Serif", "Monospace", "Cursive") } ?: "Default")
+            .putInt("material_color_vision_mode", snapshot.materialColorVisionMode.coerceIn(0, 4))
             .putBoolean("enable_predictive_back", snapshot.enablePredictiveBack)
             .putBoolean("enable_blur", snapshot.enableBlur)
             .putBoolean("enable_floating_bottom_bar", snapshot.enableFloatingBottomBar)

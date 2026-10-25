@@ -1,6 +1,8 @@
 package com.alohaoneui.app.ui.theme
 
 import android.app.Activity
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Shapes
@@ -12,6 +14,9 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.ColorMatrix
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
@@ -71,7 +76,47 @@ fun MaterialAlohaOneUITheme(
             ),
             motionScheme = MotionScheme.expressive(),
             typography = Typography.withMaterialFontFamily(appSettings.materialFontFamily),
-            content = content,
+            content = {
+                val colorMatrix = materialColorVisionMatrix(appSettings.materialColorVisionMode)
+                if (colorMatrix == null) {
+                    content()
+                } else {
+                    Box(
+                        modifier = androidx.compose.ui.Modifier
+                            .fillMaxSize()
+                            .graphicsLayer { colorFilter = ColorFilter.colorMatrix(colorMatrix) }
+                    ) { content() }
+                }
+            },
         )
     }
+}
+
+
+private fun materialColorVisionMatrix(mode: Int): ColorMatrix? = when (mode) {
+    1 -> ColorMatrix(floatArrayOf(
+        0.2126f, 0.7152f, 0.0722f, 0f, 0f,
+        0.2126f, 0.7152f, 0.0722f, 0f, 0f,
+        0.2126f, 0.7152f, 0.0722f, 0f, 0f,
+        0f, 0f, 0f, 1f, 0f,
+    ))
+    2 -> ColorMatrix(floatArrayOf(
+        0.567f, 0.433f, 0f, 0f, 0f,
+        0.558f, 0.442f, 0f, 0f, 0f,
+        0f, 0.242f, 0.758f, 0f, 0f,
+        0f, 0f, 0f, 1f, 0f,
+    ))
+    3 -> ColorMatrix(floatArrayOf(
+        0.625f, 0.375f, 0f, 0f, 0f,
+        0.7f, 0.3f, 0f, 0f, 0f,
+        0f, 0.3f, 0.7f, 0f, 0f,
+        0f, 0f, 0f, 1f, 0f,
+    ))
+    4 -> ColorMatrix(floatArrayOf(
+        0.95f, 0.05f, 0f, 0f, 0f,
+        0f, 0.433f, 0.567f, 0f, 0f,
+        0f, 0.475f, 0.525f, 0f, 0f,
+        0f, 0f, 0f, 1f, 0f,
+    ))
+    else -> null
 }

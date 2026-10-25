@@ -271,4 +271,11 @@
     <string name="settings_material_font_family_serif">Serif</string>
     <string name="settings_material_font_family_monospace">Monospace</string>
     <string name="settings_material_font_family_cursive">Cursive</string>
+    <string name="settings_material_color_vision">Color vision preview</string>
+    <string name="settings_material_color_vision_summary">Preview color-vision differences across the Material 3 interface. Deficiency modes are simulations, not vision correction.</string>
+    <string name="settings_material_color_vision_off">Off</string>
+    <string name="settings_material_color_vision_grayscale">Grayscale</string>
+    <string name="settings_material_color_vision_protanopia">Protanopia simulation</string>
+    <string name="settings_material_color_vision_deuteranopia">Deuteranopia simulation</string>
+    <string name="settings_material_color_vision_tritanopia">Tritanopia simulation</string>
 </resources>
