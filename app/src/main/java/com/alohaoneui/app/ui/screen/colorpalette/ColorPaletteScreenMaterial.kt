@@ -492,18 +492,6 @@ fun ColorPaletteScreenMaterial(
                                 }
                             )
                         },
-                        {
-                            val specs = ColorSpec.SpecVersion.entries
-                            SegmentedDropdownItem(
-                                icon = Icons.Rounded.DesignServices,
-                                title = stringResource(R.string.settings_color_spec),
-                                items = specs.map { it.name },
-                                selectedIndex = specs.indexOf(colorSpec).coerceAtLeast(0),
-                                onItemSelected = { index ->
-                                    actions.onSetColorSpec(specs[index].name)
-                                }
-                            )
-                        }
                     )
                 )
 
