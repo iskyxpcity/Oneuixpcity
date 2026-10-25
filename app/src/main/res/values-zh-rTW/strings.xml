@@ -68,6 +68,18 @@
     <string name="changelog_section_diagnostics_title">設定與執行診斷</string>
     <string name="changelog_section_diagnostics_body">應用程式各主要頁面依功能分類組織設定。遇到模組執行或狀態列顯示問題時，可透過「設定 → 傳送日誌」匯出執行診斷資訊，方便排查。</string>
 
+    <string name="feature_intro_version_updates_261025">Aloha OneUI 1.0.261025 主要更新</string>
+    <string name="feature_intro_version_updates_261025_summary">2026-10-25</string>
+    <string name="version_1_0_261025_title">Aloha OneUI 1.0.261025 主要更新</string>
+    <string name="version_1_0_261025_summary">2026-10-25</string>
+    <string name="changelog_261025_theme_store_region_title">主題商店地區切換</string>
+    <string name="changelog_261025_theme_store_region_body">新增主題商店地區切換選項，可選擇所需地區瀏覽對應的主題商店。</string>
+    <string name="changelog_261025_floating_ball_docking_title">修復懸浮球自動貼邊</string>
+    <string name="changelog_261025_floating_ball_docking_body">修復懸浮球移動後的自動貼邊問題，同時保留已設定的觸發動作與大小設定。</string>
+    <string name="changelog_261025_button_states_title">統一選項按鈕狀態樣式</string>
+    <string name="changelog_261025_button_states_body">統一各功能選項的選取與未選取按鈕樣式，採用「主題設定」頁三個按鈕的形態；Miuix 主題「主頁」中的裝置狀態三選項保留原有樣式。</string>
+    <string name="changelog_261025_theme_store_ui_title">優化主題商店頁面呈現</string>
+    <string name="changelog_261025_theme_store_ui_body">優化主題商店地區切換入口，並讓 Material 與 Miuix 分別沿用各自主題的原生元件呈現方式。</string>
     <string name="feature_intro_version_updates_2610191">Aloha OneUI 1.0.261019.1 主要更新</string>
     <string name="feature_intro_version_updates_2610191_summary">2026-10-19</string>
     <string name="version_1_0_2610191_title">Aloha OneUI 1.0.261019.1 主要更新</string>

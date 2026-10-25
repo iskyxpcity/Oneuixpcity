@@ -29,6 +29,31 @@ legacy_combo_markers = (
     'outSignalMarginEightDpMigrationDone', 'ringTrailingAnchorMigrationDone',
 )
 checks = {
+ 'Aloha OneUI 1.0.261025 changelog registered in both UI modes': (
+     'onOpen261025Updates' in feature_intro_source
+     and 'Route.VersionChangelog261025' in feature_intro_source
+     and 'VersionChangelog261025Screen' in main_activity_source
+     and 'entry<Route.VersionChangelog261025>' in main_activity_source
+     and feature_intro_source.count('is261025 -> R.string.version_1_0_261025_title') == 2
+     and feature_intro_source.count('is261025 -> listOf(') == 2
+ ),
+ 'Aloha OneUI 1.0.261025 changelog strings exist in every locale': all(
+     all(key in resource for key in (
+         'feature_intro_version_updates_261025',
+         'feature_intro_version_updates_261025_summary',
+         'version_1_0_261025_title',
+         'version_1_0_261025_summary',
+         'changelog_261025_theme_store_region_title',
+         'changelog_261025_theme_store_region_body',
+         'changelog_261025_floating_ball_docking_title',
+         'changelog_261025_floating_ball_docking_body',
+         'changelog_261025_button_states_title',
+         'changelog_261025_button_states_body',
+         'changelog_261025_theme_store_ui_title',
+         'changelog_261025_theme_store_ui_body',
+     ))
+     for resource in release_note_resources
+ ),
  'Gradle wrapper': (root/'gradlew').is_file(),
  'Original Miuix home': (root/'app/src/main/java/com/alohaoneui/app/ui/screen/home/HomeMiuix.kt').is_file(),
  'Original Miuix bottom bar': (root/'app/src/main/java/com/alohaoneui/app/ui/component/bottombar/BottomBarMiuix.kt').is_file(),
