@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import com.alohaoneui.app.data.repository.AppLanguageCatalog
 import com.alohaoneui.app.data.repository.SettingsRepository
 import com.alohaoneui.app.data.repository.SettingsRepositoryImpl
 import com.alohaoneui.app.ui.screen.settings.SettingsUiState
@@ -114,11 +115,7 @@ class SettingsViewModel(
     }
 
     fun setAppLanguage(index: Int) {
-        val language = when (index.coerceIn(0, 2)) {
-            1 -> "en"
-            2 -> "zh-CN"
-            else -> "system"
-        }
+        val language = AppLanguageCatalog.tagAt(index)
         repo.appLanguage = language
         AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(if (language == "system") "" else language))
         _uiState.update { it.copy(appLanguage = language) }

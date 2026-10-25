@@ -1,6 +1,7 @@
 package com.alohaoneui.app.data.repository
 
 import kotlinx.serialization.Serializable
+import java.util.Locale
 
 /** AlohaOneUI appearance, navigation and self-update preferences. */
 interface SettingsRepository {
@@ -58,6 +59,26 @@ data class MaterialColorScheme(
     val contrastMode: Int = -1,
     val contrastLevel: Float = 0.0f,
 )
+
+/**
+ * Languages supported by Aloha OneUI resources. Names are displayed in each language's
+ * native form; "system" remains a localized app string.
+ */
+object AppLanguageCatalog {
+    val tags: List<String> = listOf(
+        "en", "ar", "az", "bg", "bn-BD", "bn", "bs", "da", "de", "es", "et", "fa",
+        "fil", "fr", "gl", "hi", "hr", "hu", "id", "it", "he", "ja", "km", "kn",
+        "ko", "lt", "lv", "mr", "ms", "my", "nl", "pl", "pt-BR", "pt", "ro", "ru",
+        "sl", "sr", "te", "th", "tl", "tr", "uk", "vi", "zh-CN", "zh-HK", "zh-TW", "zh"
+    )
+    val nativeNames: List<String> = tags.map { tag ->
+        val locale = Locale.forLanguageTag(tag)
+        locale.getDisplayName(locale).replaceFirstChar { if (it.isLowerCase()) it.titlecase(locale) else it.toString() }
+    }
+    fun normalize(tag: String): String = if (tag == "system" || tag in tags) tag else "system"
+    fun indexOf(tag: String): Int = if (tag == "system") 0 else tags.indexOf(tag).let { if (it < 0) 0 else it + 1 }
+    fun tagAt(index: Int): String = if (index <= 0) "system" else tags.getOrNull(index - 1) ?: "system"
+}
 
 /**
  * App-level settings stored separately from the LSPosed feature Preference.

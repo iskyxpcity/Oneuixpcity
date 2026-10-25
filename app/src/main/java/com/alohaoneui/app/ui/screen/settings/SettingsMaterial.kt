@@ -55,6 +55,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.alohaoneui.app.R
+import com.alohaoneui.app.data.repository.AppLanguageCatalog
 import com.alohaoneui.app.ui.UiMode
 import com.alohaoneui.app.ui.component.material.SegmentedColumn
 import com.alohaoneui.app.ui.component.material.SegmentedDropdownItem

@@ -47,6 +47,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.alohaoneui.app.R
+import com.alohaoneui.app.data.repository.AppLanguageCatalog
 import com.alohaoneui.app.ui.UiMode
 import com.alohaoneui.app.ui.component.dialog.rememberLoadingDialog
 import com.alohaoneui.app.ui.component.miuix.SendLogDialog
@@ -171,8 +172,8 @@ fun SettingPagerMiuix(
                     Card(modifier = Modifier.padding(top = 8.dp).fillMaxWidth()) {
                         OverlayDropdownPreference(
                             title = stringResource(R.string.settings_language_title),
-                            items = listOf(stringResource(R.string.settings_language_system), stringResource(R.string.settings_language_english), stringResource(R.string.settings_language_chinese)),
-                            selectedIndex = when (uiState.appLanguage) { "en" -> 1; "zh-CN" -> 2; else -> 0 },
+                            items = listOf(stringResource(R.string.settings_language_system)) + AppLanguageCatalog.nativeNames,
+                            selectedIndex = AppLanguageCatalog.indexOf(uiState.appLanguage),
                             onSelectedIndexChange = actions.onSetAppLanguage,
                             startAction = { Icon(Icons.Rounded.Language, modifier = Modifier.padding(end = 6.dp), contentDescription = null, tint = colorScheme.onBackground) }
                         )

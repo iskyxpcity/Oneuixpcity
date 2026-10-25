@@ -53,8 +53,8 @@ class SettingsRepositoryImpl : SettingsRepository {
         set(value) = prefs.edit { putString("ui_mode", value) }
 
     override var appLanguage: String
-        get() = prefs.getString("app_language", "system")?.takeIf { it in setOf("system", "en", "zh-CN") } ?: "system"
-        set(value) = prefs.edit { putString("app_language", value.takeIf { it in setOf("system", "en", "zh-CN") } ?: "system") }
+        get() = AppLanguageCatalog.normalize(prefs.getString("app_language", "system") ?: "system")
+        set(value) = prefs.edit { putString("app_language", AppLanguageCatalog.normalize(value)) }
 
     override var checkUpdate: Boolean
         get() = prefs.getBoolean("check_update", true)
@@ -275,7 +275,7 @@ class SettingsRepositoryImpl : SettingsRepository {
 
         val committed = prefs.edit()
             .putString("ui_mode", UiMode.fromValue(snapshot.uiMode).value)
-            .putString("app_language", snapshot.appLanguage.takeIf { it in setOf("system", "en", "zh-CN") } ?: "system")
+            .putString("app_language", AppLanguageCatalog.normalize(snapshot.appLanguage))
             .putBoolean("check_update", snapshot.checkUpdate)
             .putInt("color_mode", snapshot.themeMode)
             .putBoolean("miuix_monet", snapshot.miuixMonet)
