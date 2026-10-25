@@ -44,7 +44,7 @@ jobs:
             grep -E 'package=|versionName|versionCode|android:label|android:theme|activity|application' "$RUNNER_TEMP/voyage-decoded/AndroidManifest.xml" | head -160 || true
             echo
             echo "=== Resource XML inventory ==="
-            find "$RUNNER_TEMP/voyage-decoded/res" -type f \( -path '*/values*/*.xml' -o -path '*/drawable*/*' -o -path '*/font/*' \) | sed "s#$RUNNER_TEMP/voyage-decoded/##" | head -500
+            find "$RUNNER_TEMP/voyage-decoded/res" -type f \( -path '*/values*/*.xml' -o -path '*/drawable*/*' -o -path '*/font/*' \) | sed "s#$RUNNER_TEMP/voyage-decoded/##" | head -500 || true
             echo
             echo "=== Theme/style/color/dimension resource definitions ==="
             grep -RniE '<(style|color|dimen|font|item).*name=|<item name="(color|shape|corner|font|text|android:)' "$RUNNER_TEMP/voyage-decoded/res/values"* 2>/dev/null | head -1200 || true
