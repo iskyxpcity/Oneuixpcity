@@ -5,10 +5,7 @@ import com.alohaoneui.app.ui.theme.AppSettings
 import com.alohaoneui.app.ui.theme.MaterialAlohaOneUITheme
 import com.alohaoneui.app.ui.theme.MiuixAlohaOneUITheme
 
-/**
- * Identifies a visual theme implementation, not an application feature.
- * Persisted values are intentionally stable for backward compatibility.
- */
+/** Identifies a visual theme implementation; persisted values remain backward-compatible. */
 enum class ThemeId(val persistedValue: String) {
     MIUIX("miuix"),
     VOYAGE_MATERIAL3("material");
@@ -19,7 +16,10 @@ enum class ThemeId(val persistedValue: String) {
     }
 }
 
-/** Only capabilities already backed by a working implementation may be marked true. */
+/**
+ * Capability inventory for implementation and future settings routing.
+ * A flag is true only when the selected renderer actually implements that capability.
+ */
 data class ThemeCapabilities(
     val dynamicColor: Boolean,
     val customSeedColor: Boolean,
@@ -28,6 +28,13 @@ data class ThemeCapabilities(
     val amoledBlack: Boolean,
     val expressiveMotion: Boolean,
     val customColorSchemes: Boolean,
+    val fontFamilySelection: Boolean,
+    val fontScale: Boolean,
+    val cornerScale: Boolean,
+    val borderWidth: Boolean,
+    val colorVisionMode: Boolean,
+    val contentColorExtraction: Boolean,
+    val navigationMotionSelection: Boolean,
 )
 
 /** A separate renderer keeps theme-specific UI implementation out of feature screens. */
@@ -57,10 +64,7 @@ data class ThemeDefinition(
     val adapter: ThemeAdapter,
 )
 
-/**
- * Register a theme here with its own renderer. New themes can be added without changing
- * app navigation, business logic, or the settings persistence keys.
- */
+/** Register new theme renderers here without changing navigation or business logic. */
 object ThemeRegistry {
     val definitions: List<ThemeDefinition> = listOf(
         ThemeDefinition(
@@ -72,9 +76,17 @@ object ThemeRegistry {
                 customSeedColor = true,
                 paletteStyleSelection = true,
                 colorSpecSelection = true,
-                amoledBlack = true,
+                // Current Miuix mapping uses MonetDark rather than a pure-black scheme.
+                amoledBlack = false,
                 expressiveMotion = false,
                 customColorSchemes = false,
+                fontFamilySelection = false,
+                fontScale = false,
+                cornerScale = false,
+                borderWidth = false,
+                colorVisionMode = false,
+                contentColorExtraction = false,
+                navigationMotionSelection = false,
             ),
         ),
         ThemeDefinition(
@@ -88,9 +100,15 @@ object ThemeRegistry {
                 colorSpecSelection = true,
                 amoledBlack = true,
                 expressiveMotion = true,
-                // Voyage has custom color-scheme editing, but that editor is not yet
-                // ported into Aloha; keep this false until the feature is implemented.
+                // Voyage supports this, but the editor has not yet been ported to Aloha.
                 customColorSchemes = false,
+                fontFamilySelection = false,
+                fontScale = false,
+                cornerScale = false,
+                borderWidth = false,
+                colorVisionMode = false,
+                contentColorExtraction = false,
+                navigationMotionSelection = false,
             ),
         ),
     )
