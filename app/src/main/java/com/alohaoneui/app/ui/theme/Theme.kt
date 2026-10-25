@@ -61,7 +61,7 @@ data class AppSettings(
     val materialInvertColors: Boolean = false,
     val materialShapeStyle: Int = 2,
     val materialSwitchStyle: Int = 0,
-    val materialSliderStyle: Int = 3,
+    val materialSliderStyle: Int = 0,
     val materialShadowContainers: Boolean = true,
     val materialShadowAppBars: Boolean = true,
     val materialShadowButtons: Boolean = true,
