@@ -283,4 +283,33 @@
     <string name="settings_material_navigation_motion_spring">弹簧动效</string>
     <string name="settings_material_navigation_motion_smooth">平滑切换</string>
     <string name="settings_material_navigation_motion_instant">即时切换</string>
+
+    <string name="settings_theme_entry_title">主题设置</string>
+    <string name="settings_theme_entry_subtitle">颜色、形状和组件</string>
+    <string name="theme_group_design">界面风格</string>
+    <string name="theme_group_navigation_bar">导航栏</string>
+    <string name="theme_group_mode">显示模式</string>
+    <string name="theme_group_launch">启动画面和图标</string>
+    <string name="theme_group_assist">颜色辅助</string>
+    <string name="theme_group_shape">形状</string>
+    <string name="theme_group_components">组件</string>
+    <string name="theme_group_shadows">阴影</string>
+    <string name="theme_design_material3">Material 3</string>
+    <string name="theme_design_miuix">Miuix</string>
+    <string name="theme_theme_palette_entry">配色方案</string>
+    <string name="theme_theme_palette_entry_summary">种子颜色、调色板样式和已保存方案</string>
+    <string name="theme_nav_floating">悬浮导航栏</string>
+    <string name="theme_nav_floating_summary">让内容在底部导航栏下方滚动。</string>
+    <string name="theme_nav_blur">导航栏模糊</string>
+    <string name="theme_mode_system">跟随系统</string>
+    <string name="theme_mode_light">浅色</string>
+    <string name="theme_mode_dark">深色</string>
+    <string name="theme_assist_color_vision">颜色视觉</string>
+    <string name="theme_shape_corner_scale">圆角大小</string>
+    <string name="theme_component_font_scale">字体大小</string>
+    <string name="theme_component_font_family">字体</string>
+    <string name="theme_component_contrast">对比度</string>
+    <string name="theme_component_border_width">描边宽度</string>
+    <string name="theme_component_navigation_motion">页面切换动效</string>
+
 </resources>

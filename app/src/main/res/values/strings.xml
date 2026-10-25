@@ -286,4 +286,33 @@
     <string name="settings_material_navigation_motion_spring">Expressive spring</string>
     <string name="settings_material_navigation_motion_smooth">Smooth</string>
     <string name="settings_material_navigation_motion_instant">Instant</string>
+
+    <string name="settings_theme_entry_title">Theme settings</string>
+    <string name="settings_theme_entry_subtitle">Colors, shapes and components</string>
+    <string name="theme_group_design">Interface style</string>
+    <string name="theme_group_navigation_bar">Navigation bar</string>
+    <string name="theme_group_mode">Display mode</string>
+    <string name="theme_group_launch">Launch screen and icon</string>
+    <string name="theme_group_assist">Color assistance</string>
+    <string name="theme_group_shape">Shapes</string>
+    <string name="theme_group_components">Components</string>
+    <string name="theme_group_shadows">Shadows</string>
+    <string name="theme_design_material3">Material 3</string>
+    <string name="theme_design_miuix">Miuix</string>
+    <string name="theme_theme_palette_entry">Color scheme</string>
+    <string name="theme_theme_palette_entry_summary">Seed color, palette style and saved schemes</string>
+    <string name="theme_nav_floating">Floating navigation bar</string>
+    <string name="theme_nav_floating_summary">Let content scroll beneath the bottom navigation bar.</string>
+    <string name="theme_nav_blur">Navigation bar blur</string>
+    <string name="theme_mode_system">Follow system</string>
+    <string name="theme_mode_light">Light</string>
+    <string name="theme_mode_dark">Dark</string>
+    <string name="theme_assist_color_vision">Color vision</string>
+    <string name="theme_shape_corner_scale">Corner size</string>
+    <string name="theme_component_font_scale">Font size</string>
+    <string name="theme_component_font_family">Typeface</string>
+    <string name="theme_component_contrast">Contrast</string>
+    <string name="theme_component_border_width">Outline width</string>
+    <string name="theme_component_navigation_motion">Transitions</string>
+
 </resources>

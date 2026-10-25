@@ -1,0 +1,321 @@
+package com.alohaoneui.app.ui.screen.settings
+
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.DisplaySettings
+import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.Tune
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LargeFlexibleTopAppBar
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Slider
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.alohaoneui.app.R
+import com.alohaoneui.app.ui.UiMode
+import com.alohaoneui.app.ui.component.material.SegmentedColumn
+import com.alohaoneui.app.ui.component.material.SegmentedDropdownItem
+import com.alohaoneui.app.ui.component.material.SegmentedListItem
+import com.alohaoneui.app.ui.component.material.SegmentedSwitchItem
+import com.alohaoneui.app.ui.navigation3.LocalNavigator
+import com.alohaoneui.app.ui.navigation3.Route
+import com.alohaoneui.app.ui.theme.ColorMode
+import com.alohaoneui.app.ui.viewmodel.SettingsViewModel
+
+@Composable
+fun ThemeSettingsScreenMaterial() {
+    val navigator = LocalNavigator.current
+    val viewModel = viewModel<SettingsViewModel>()
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+    var designExpanded by rememberSaveable { mutableStateOf(true) }
+    var navigationExpanded by rememberSaveable { mutableStateOf(false) }
+    var modeExpanded by rememberSaveable { mutableStateOf(false) }
+    var assistExpanded by rememberSaveable { mutableStateOf(false) }
+    var shapeExpanded by rememberSaveable { mutableStateOf(false) }
+    var componentsExpanded by rememberSaveable { mutableStateOf(false) }
+
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    Scaffold(
+        topBar = {
+            LargeFlexibleTopAppBar(
+                navigationIcon = {
+                    IconButton(onClick = { if (navigator.backStackSize() > 1) navigator.pop() }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
+                    }
+                },
+                title = { Text(stringResource(R.string.settings_theme_entry_title)) },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    scrolledContainerColor = MaterialTheme.colorScheme.surface,
+                ),
+                windowInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
+                scrollBehavior = scrollBehavior,
+            )
+        },
+        contentWindowInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
+    ) { padding ->
+        Column(
+            modifier = Modifier.fillMaxSize()
+                .padding(padding)
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Spacer(Modifier.height(4.dp))
+            ThemeSettingsGroup(
+                title = stringResource(R.string.theme_group_design),
+                expanded = designExpanded,
+                onToggle = { designExpanded = !designExpanded },
+            ) {
+                SegmentedColumn(content = listOf(
+                    {
+                        SegmentedDropdownItem(
+                            icon = Icons.Filled.DisplaySettings,
+                            title = stringResource(R.string.theme_group_design),
+                            summary = stringResource(R.string.settings_ui_mode_summary),
+                            items = listOf(stringResource(R.string.theme_design_miuix), stringResource(R.string.theme_design_material3)),
+                            selectedIndex = if (state.uiMode == UiMode.Material.value) 1 else 0,
+                            onItemSelected = { index ->
+                                viewModel.setUiMode(if (index == 1) UiMode.Material.value else UiMode.Miuix.value)
+                                if (index == 0 && navigator.backStackSize() > 1) navigator.pop()
+                            },
+                        )
+                    },
+                    {
+                        SegmentedListItem(
+                            onClick = { navigator.push(Route.ColorPalette) },
+                            headlineContent = { Text(stringResource(R.string.theme_theme_palette_entry)) },
+                            supportingContent = { Text(stringResource(R.string.theme_theme_palette_entry_summary)) },
+                            leadingContent = { Icon(Icons.Filled.Palette, null) },
+                        )
+                    },
+                ))
+            }
+            ThemeSettingsGroup(
+                title = stringResource(R.string.theme_group_navigation_bar),
+                expanded = navigationExpanded,
+                onToggle = { navigationExpanded = !navigationExpanded },
+            ) {
+                SegmentedColumn(content = listOf(
+                    {
+                        SegmentedSwitchItem(
+                            icon = Icons.Filled.DisplaySettings,
+                            title = stringResource(R.string.theme_nav_floating),
+                            summary = stringResource(R.string.theme_nav_floating_summary),
+                            checked = state.enableFloatingBottomBar,
+                            onCheckedChange = viewModel::setEnableFloatingBottomBar,
+                        )
+                    },
+                    {
+                        SegmentedSwitchItem(
+                            icon = Icons.Filled.Tune,
+                            title = stringResource(R.string.theme_nav_blur),
+                            checked = state.enableFloatingBottomBarBlur,
+                            onCheckedChange = viewModel::setEnableFloatingBottomBarBlur,
+                        )
+                    },
+                ))
+            }
+            ThemeSettingsGroup(
+                title = stringResource(R.string.theme_group_mode),
+                expanded = modeExpanded,
+                onToggle = { modeExpanded = !modeExpanded },
+            ) {
+                val colorMode = ColorMode.fromValue(state.themeMode)
+                val selectedMode = when {
+                    colorMode.isSystem -> 0
+                    colorMode.isDark -> 2
+                    else -> 1
+                }
+                SegmentedColumn(content = listOf({
+                    SegmentedDropdownItem(
+                        icon = Icons.Filled.DisplaySettings,
+                        title = stringResource(R.string.theme_group_mode),
+                        items = listOf(
+                            stringResource(R.string.theme_mode_system),
+                            stringResource(R.string.theme_mode_light),
+                            stringResource(R.string.theme_mode_dark),
+                        ),
+                        selectedIndex = selectedMode,
+                        onItemSelected = { index ->
+                            viewModel.setColorMode(
+                                when (index) {
+                                    1 -> ColorMode.LIGHT
+                                    2 -> ColorMode.DARK
+                                    else -> ColorMode.SYSTEM
+                                },
+                            )
+                        },
+                    )
+                }))
+            }
+            ThemeSettingsGroup(
+                title = stringResource(R.string.theme_group_assist),
+                expanded = assistExpanded,
+                onToggle = { assistExpanded = !assistExpanded },
+            ) {
+                SegmentedColumn(content = listOf({
+                    SegmentedDropdownItem(
+                        icon = Icons.Filled.Tune,
+                        title = stringResource(R.string.theme_assist_color_vision),
+                        summary = stringResource(R.string.settings_material_color_vision_summary),
+                        items = listOf(
+                            stringResource(R.string.settings_material_color_vision_off),
+                            stringResource(R.string.settings_material_color_vision_grayscale),
+                            stringResource(R.string.settings_material_color_vision_protanopia),
+                            stringResource(R.string.settings_material_color_vision_deuteranopia),
+                            stringResource(R.string.settings_material_color_vision_tritanopia),
+                        ),
+                        selectedIndex = state.materialColorVisionMode,
+                        onItemSelected = viewModel::setMaterialColorVisionMode,
+                    )
+                }))
+            }
+            ThemeSettingsGroup(
+                title = stringResource(R.string.theme_group_shape),
+                expanded = shapeExpanded,
+                onToggle = { shapeExpanded = !shapeExpanded },
+            ) {
+                SegmentedColumn(content = listOf({
+                    Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
+                        Text(stringResource(R.string.theme_shape_corner_scale))
+                        Text((state.materialCornerScale * 100).toInt().toString() + "%", style = MaterialTheme.typography.labelMedium)
+                        Slider(
+                            value = state.materialCornerScale,
+                            onValueChange = viewModel::setMaterialCornerScale,
+                            valueRange = 0.5f..1.5f,
+                        )
+                    }
+                }))
+            }
+            ThemeSettingsGroup(
+                title = stringResource(R.string.theme_group_components),
+                expanded = componentsExpanded,
+                onToggle = { componentsExpanded = !componentsExpanded },
+            ) {
+                SegmentedColumn(content = listOf(
+                    {
+                        SegmentedDropdownItem(
+                            icon = Icons.Filled.Tune,
+                            title = stringResource(R.string.theme_component_font_family),
+                            items = listOf(
+                                stringResource(R.string.settings_material_font_family_default),
+                                stringResource(R.string.settings_material_font_family_sans),
+                                stringResource(R.string.settings_material_font_family_serif),
+                                stringResource(R.string.settings_material_font_family_monospace),
+                                stringResource(R.string.settings_material_font_family_cursive),
+                            ),
+                            selectedIndex = listOf("Default", "SansSerif", "Serif", "Monospace", "Cursive").indexOf(state.materialFontFamily).coerceAtLeast(0),
+                            onItemSelected = { index ->
+                                viewModel.setMaterialFontFamily(listOf("Default", "SansSerif", "Serif", "Monospace", "Cursive")[index])
+                            },
+                        )
+                    },
+                    {
+                        Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
+                            Text(stringResource(R.string.theme_component_font_scale))
+                            Text((state.materialFontScale * 100).toInt().toString() + "%", style = MaterialTheme.typography.labelMedium)
+                            Slider(
+                                value = state.materialFontScale,
+                                onValueChange = viewModel::setMaterialFontScale,
+                                valueRange = 0.8f..1.3f,
+                            )
+                        }
+                    },
+                    {
+                        SegmentedDropdownItem(
+                            icon = Icons.Filled.Tune,
+                            title = stringResource(R.string.theme_component_contrast),
+                            items = listOf(
+                                stringResource(R.string.settings_contrast_follow_system),
+                                stringResource(R.string.settings_contrast_low),
+                                stringResource(R.string.settings_contrast_normal),
+                                stringResource(R.string.settings_contrast_high),
+                            ),
+                            selectedIndex = (state.materialContrastMode + 1).coerceIn(0, 3),
+                            onItemSelected = { viewModel.setMaterialContrastMode(it - 1) },
+                        )
+                    },
+                    {
+                        Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
+                            Text(stringResource(R.string.theme_component_border_width))
+                            Text(String.format(java.util.Locale.ROOT, "%.1f dp", state.materialBorderWidth), style = MaterialTheme.typography.labelMedium)
+                            Slider(
+                                value = state.materialBorderWidth,
+                                onValueChange = viewModel::setMaterialBorderWidth,
+                                valueRange = 0.0f..3.0f,
+                            )
+                        }
+                    },
+                    {
+                        SegmentedDropdownItem(
+                            icon = Icons.Filled.Tune,
+                            title = stringResource(R.string.theme_component_navigation_motion),
+                            items = listOf(
+                                stringResource(R.string.settings_material_navigation_motion_spring),
+                                stringResource(R.string.settings_material_navigation_motion_smooth),
+                                stringResource(R.string.settings_material_navigation_motion_instant),
+                            ),
+                            selectedIndex = state.materialNavigationMotionMode,
+                            onItemSelected = viewModel::setMaterialNavigationMotionMode,
+                        )
+                    },
+                ))
+            }
+            Spacer(Modifier.height(24.dp))
+        }
+    }
+}
+
+@Composable
+private fun ThemeSettingsGroup(
+    title: String,
+    expanded: Boolean,
+    onToggle: () -> Unit,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    Column(Modifier.padding(horizontal = 16.dp)) {
+        SegmentedColumn(content = listOf({
+            SegmentedListItem(
+                onClick = onToggle,
+                headlineContent = { Text(title, style = MaterialTheme.typography.titleMedium) },
+                leadingContent = { Icon(Icons.Filled.Palette, contentDescription = null) },
+                trailingContent = {
+                    Text(
+                        if (expanded) "−" else "+",
+                        color = MaterialTheme.colorScheme.primary,
+                        style = MaterialTheme.typography.titleLarge,
+                    )
+                },
+            )
+        }))
+        AnimatedVisibility(visible = expanded) {
+            Column(modifier = Modifier.padding(top = 4.dp), content = content)
+        }
+    }
+}
