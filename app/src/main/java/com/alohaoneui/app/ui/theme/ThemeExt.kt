@@ -2,8 +2,6 @@ package com.alohaoneui.app.ui.theme
 
 import android.app.UiModeManager
 import android.os.Build
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
@@ -13,6 +11,7 @@ import androidx.compose.ui.platform.LocalContext
 import com.materialkolor.PaletteStyle
 import com.materialkolor.dynamiccolor.ColorSpec
 import com.materialkolor.rememberDynamicColorScheme
+import com.materialkolor.ktx.animateColorScheme
 
 /**
  * Adapted from the KernelSU v3.3.1 theme layer under GPL-3.0.
@@ -87,62 +86,5 @@ fun rememberAlohaOneUIColorScheme(
 }
 
 @Composable
-fun ColorScheme.animateAsState(): ColorScheme {
-    @Composable
-    fun animateColor(color: Color): Color = animateColorAsState(
-        targetValue = color,
-        animationSpec = spring(),
-        label = "oneuixp_theme_color_animation"
-    ).value
-
-    return ColorScheme(
-        primary = animateColor(primary),
-        onPrimary = animateColor(onPrimary),
-        primaryContainer = animateColor(primaryContainer),
-        onPrimaryContainer = animateColor(onPrimaryContainer),
-        inversePrimary = animateColor(inversePrimary),
-        secondary = animateColor(secondary),
-        onSecondary = animateColor(onSecondary),
-        secondaryContainer = animateColor(secondaryContainer),
-        onSecondaryContainer = animateColor(onSecondaryContainer),
-        tertiary = animateColor(tertiary),
-        onTertiary = animateColor(onTertiary),
-        tertiaryContainer = animateColor(tertiaryContainer),
-        onTertiaryContainer = animateColor(onTertiaryContainer),
-        background = animateColor(background),
-        onBackground = animateColor(onBackground),
-        surface = animateColor(surface),
-        onSurface = animateColor(onSurface),
-        surfaceVariant = animateColor(surfaceVariant),
-        onSurfaceVariant = animateColor(onSurfaceVariant),
-        surfaceTint = animateColor(surfaceTint),
-        inverseSurface = animateColor(inverseSurface),
-        inverseOnSurface = animateColor(inverseOnSurface),
-        error = animateColor(error),
-        onError = animateColor(onError),
-        errorContainer = animateColor(errorContainer),
-        onErrorContainer = animateColor(onErrorContainer),
-        outline = animateColor(outline),
-        outlineVariant = animateColor(outlineVariant),
-        scrim = animateColor(scrim),
-        surfaceBright = animateColor(surfaceBright),
-        surfaceDim = animateColor(surfaceDim),
-        surfaceContainer = animateColor(surfaceContainer),
-        surfaceContainerHigh = animateColor(surfaceContainerHigh),
-        surfaceContainerHighest = animateColor(surfaceContainerHighest),
-        surfaceContainerLow = animateColor(surfaceContainerLow),
-        surfaceContainerLowest = animateColor(surfaceContainerLowest),
-        primaryFixed = animateColor(primaryFixed),
-        primaryFixedDim = animateColor(primaryFixedDim),
-        onPrimaryFixed = animateColor(onPrimaryFixed),
-        onPrimaryFixedVariant = animateColor(onPrimaryFixedVariant),
-        secondaryFixed = animateColor(secondaryFixed),
-        secondaryFixedDim = animateColor(secondaryFixedDim),
-        onSecondaryFixed = animateColor(onSecondaryFixed),
-        onSecondaryFixedVariant = animateColor(onSecondaryFixedVariant),
-        tertiaryFixed = animateColor(tertiaryFixed),
-        tertiaryFixedDim = animateColor(tertiaryFixedDim),
-        onTertiaryFixed = animateColor(onTertiaryFixed),
-        onTertiaryFixedVariant = animateColor(onTertiaryFixedVariant)
-    )
-}
+fun ColorScheme.animateAsState(): ColorScheme =
+    animateColorScheme(label = "aloha_material3_color_scheme")
