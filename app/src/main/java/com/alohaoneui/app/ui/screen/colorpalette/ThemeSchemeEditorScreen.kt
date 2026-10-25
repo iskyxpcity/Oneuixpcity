@@ -24,6 +24,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
@@ -40,6 +41,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -50,6 +52,7 @@ import com.alohaoneui.app.ui.navigation3.LocalNavigator
 import com.alohaoneui.app.ui.theme.keyColorOptions
 import com.alohaoneui.app.ui.viewmodel.SettingsViewModel
 import com.materialkolor.PaletteStyle
+import com.materialkolor.hct.Hct
 
 @Composable
 fun ThemeSchemeEditorScreen(index: Int) {
@@ -62,6 +65,11 @@ fun ThemeSchemeEditorScreen(index: Int) {
     var colorStyle by remember(index, existing?.colorStyle, uiState.colorStyle) { mutableStateOf(existing?.colorStyle ?: uiState.colorStyle) }
     var contrast by remember(index, existing?.contrastLevel, uiState.materialContrastLevel) { mutableFloatStateOf(existing?.contrastLevel ?: uiState.materialContrastLevel) }
     var hex by remember(keyColor) { mutableStateOf(if (keyColor == 0) "" else (keyColor and 0x00FFFFFF).toString(16).uppercase().padStart(6, '0')) }
+    val hctBase = if (keyColor == 0) MaterialTheme.colorScheme.primary.toArgb() else keyColor
+    val initialHct = remember(index, hctBase) { Hct.fromInt(hctBase) }
+    var hue by remember(index) { mutableFloatStateOf(initialHct.hue.toFloat()) }
+    var chroma by remember(index) { mutableFloatStateOf(initialHct.chroma.toFloat()) }
+    var tone by remember(index) { mutableFloatStateOf(initialHct.tone.toFloat()) }
     var selectedTab by remember { mutableIntStateOf(0) }
     var expandedStyle by remember { mutableStateOf(false) }
     val styles = listOf(PaletteStyle.Expressive, PaletteStyle.TonalSpot, PaletteStyle.Neutral, PaletteStyle.Vibrant, PaletteStyle.Rainbow, PaletteStyle.FruitSalad, PaletteStyle.Monochrome, PaletteStyle.Fidelity, PaletteStyle.Content)
@@ -79,6 +87,8 @@ fun ThemeSchemeEditorScreen(index: Int) {
         })
     }
     val parsedHex = hex.trim().removePrefix("#").takeIf { it.length == 6 && it.all { c -> c.digitToIntOrNull(16) != null } }?.toLongOrNull(16)?.toInt()?.or(0xFF000000.toInt())
+    val sliderSeedColor = Hct.from(hue = hue.toDouble(), chroma = chroma.toDouble(), tone = tone.toDouble()).toInt()
+    val previewColor = if (selectedTab == 1 && hex.isBlank()) sliderSeedColor else parsedHex ?: keyColor.takeIf { it != 0 } ?: MaterialTheme.colorScheme.primary.toArgb()
     Scaffold(
         topBar = {
             TopAppBar(
@@ -103,6 +113,7 @@ fun ThemeSchemeEditorScreen(index: Int) {
                     styles.forEachIndexed { i, style -> DropdownMenuItem(text = { Text(styleLabels[i]) }, onClick = { colorStyle = style.name; expandedStyle = false }) }
                 }
             }
+            Surface(modifier = Modifier.fillMaxWidth().height(64.dp), shape = MaterialTheme.shapes.large, color = Color(previewColor)) {}
             TabRow(selectedTabIndex = selectedTab) {
                 listOf(stringResource(R.string.theme_picker_palette), stringResource(R.string.theme_picker_sliders), stringResource(R.string.theme_picker_spectrum))
                     .forEachIndexed { i, label -> Tab(selected = selectedTab == i, onClick = { selectedTab = i }, text = { Text(label) }) }
@@ -124,21 +135,19 @@ fun ThemeSchemeEditorScreen(index: Int) {
                 }
                 1 -> {
                     Text(stringResource(R.string.theme_editor_hue), style = MaterialTheme.typography.titleMedium)
-                    var hue by remember(keyColor) { mutableFloatStateOf(0f) }
                     Text("${hue.toInt()}°")
-                    Slider(value = hue, onValueChange = { hue = it }, valueRange = 0f..360f)
+                    Slider(value = hue, onValueChange = { hue = it; hex = "" }, valueRange = 0f..360f)
                     Text(stringResource(R.string.theme_editor_chroma), style = MaterialTheme.typography.titleMedium)
-                    var chroma by remember(keyColor) { mutableFloatStateOf(48f) }
                     Text(chroma.toInt().toString())
-                    Slider(value = chroma, onValueChange = { chroma = it }, valueRange = 0f..120f)
+                    Slider(value = chroma, onValueChange = { chroma = it; hex = "" }, valueRange = 0f..120f)
                     Text(stringResource(R.string.theme_editor_tone), style = MaterialTheme.typography.titleMedium)
-                    var tone by remember(keyColor) { mutableFloatStateOf(50f) }
                     Text(tone.toInt().toString())
-                    Slider(value = tone, onValueChange = { tone = it }, valueRange = 0f..100f)
+                    Slider(value = tone, onValueChange = { tone = it; hex = "" }, valueRange = 0f..100f)
                 }
                 else -> {
                     Text(stringResource(R.string.theme_picker_spectrum), style = MaterialTheme.typography.titleMedium)
-                    keyColorOptions.forEach { color ->
+                    (0..11).forEach { step ->
+                        val color = Hct.from(hue = step * 30.0, chroma = 75.0, tone = 55.0).toInt()
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                             Button(onClick = { keyColor = color; hex = (color and 0x00FFFFFF).toString(16).uppercase().padStart(6, '0') }) { Icon(Icons.Filled.Tune, contentDescription = null, tint = Color(color)) }
                             Text("#" + (color and 0x00FFFFFF).toString(16).uppercase().padStart(6, '0'))
@@ -157,7 +166,7 @@ fun ThemeSchemeEditorScreen(index: Int) {
                     viewModel.saveMaterialColorScheme(
                         MaterialColorScheme(
                             name = name,
-                            keyColor = parsedHex ?: keyColor,
+                            keyColor = if (selectedTab == 1 && hex.isBlank()) sliderSeedColor else parsedHex ?: keyColor,
                             colorStyle = colorStyle,
                             colorSpec = existing?.colorSpec ?: uiState.colorSpec,
                             contrastMode = existing?.contrastMode ?: uiState.materialContrastMode,

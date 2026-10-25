@@ -255,6 +255,7 @@
     <string name="settings_material_corner_scale_summary">调整 Material 3 组件圆角大小，范围为 50%–150%。</string>
     <string name="theme_scheme_title">配色方案</string>
     <string name="theme_scheme_add">新建方案</string>
+    <string name="theme_editor_use_current">使用当前配色</string>
     <string name="theme_scheme_edit">编辑方案</string>
     <string name="theme_picker_palette">调色板</string>
     <string name="theme_picker_sliders">滑块</string>
@@ -262,6 +263,7 @@
     <string name="theme_saved_schemes_title">已保存的配色方案</string>
     <string name="theme_saved_scheme_name">方案名称</string>
     <string name="theme_saved_scheme_save">保存</string>
+    <string name="theme_action_save">保存</string>
     <string name="theme_saved_schemes_empty">还没有保存的配色方案。</string>
     <string name="theme_saved_scheme_dynamic">动态配色</string>
     <string name="theme_saved_scheme_apply">应用</string>
