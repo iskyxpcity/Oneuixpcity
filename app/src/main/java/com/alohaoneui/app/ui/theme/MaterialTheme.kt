@@ -2,8 +2,9 @@ package com.alohaoneui.app.ui.theme
 
 import android.app.Activity
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.material3.MaterialExpressiveTheme
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MotionScheme
+import androidx.compose.material3.Shapes
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.graphics.Color
@@ -11,7 +12,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.core.view.WindowInsetsControllerCompat
 
 /**
- * AlohaOneUI Material theme implementation using the current upstream expressive theme model.
+ * Material 3 theme baseline aligned with the verified Voyage APK implementation.
+ * Aloha-specific palette preferences and AMOLED support remain in ThemeExt.
  */
 @Composable
 fun MaterialAlohaOneUITheme(
@@ -42,8 +44,9 @@ fun MaterialAlohaOneUITheme(
         }
     }
 
-    MaterialExpressiveTheme(
+    MaterialTheme(
         colorScheme = animatedColorScheme,
+        shapes = Shapes(),
         motionScheme = MotionScheme.expressive(),
         typography = Typography,
         content = content,
