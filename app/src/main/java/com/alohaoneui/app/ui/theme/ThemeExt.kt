@@ -51,6 +51,26 @@ fun rememberAlohaOneUIColorScheme(
     } else {
         0.0
     }
+    val effectiveSpec = colorSpec.effectiveFor(paletteStyle)
+
+    // Voyage uses Android's native dynamic Material 3 scheme for its default
+    // expressive palette when the system supplies one. Keep Aloha's custom-seed,
+    // alternate-palette, spec-version, and AMOLED paths intact.
+    val usePlatformDynamicScheme =
+        seedColor == Color.Unspecified &&
+            !isAmoled &&
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+            paletteStyle == PaletteStyle.Expressive &&
+            effectiveSpec == ColorSpec.SpecVersion.SPEC_2025
+
+    if (usePlatformDynamicScheme) {
+        return (if (isDark) {
+            dynamicDarkColorScheme(context)
+        } else {
+            dynamicLightColorScheme(context)
+        }).amoledBackground(isAmoled)
+    }
+
     val seed = if (seedColor == Color.Unspecified) {
         (if (isDark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)).primary
     } else {
@@ -62,7 +82,7 @@ fun rememberAlohaOneUIColorScheme(
         isAmoled = isAmoled,
         style = paletteStyle,
         contrastLevel = contrastLevel,
-        specVersion = colorSpec.effectiveFor(paletteStyle),
+        specVersion = effectiveSpec,
     ).amoledBackground(isAmoled)
 }
 
