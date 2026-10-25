@@ -52,6 +52,10 @@ class SettingsRepositoryImpl : SettingsRepository {
         get() = prefs.getString("ui_mode", UiMode.DEFAULT_VALUE) ?: UiMode.DEFAULT_VALUE
         set(value) = prefs.edit { putString("ui_mode", value) }
 
+    override var appLanguage: String
+        get() = prefs.getString("app_language", "system")?.takeIf { it in setOf("system", "en", "zh-CN") } ?: "system"
+        set(value) = prefs.edit { putString("app_language", value.takeIf { it in setOf("system", "en", "zh-CN") } ?: "system") }
+
     override var checkUpdate: Boolean
         get() = prefs.getBoolean("check_update", true)
         set(value) = prefs.edit { putBoolean("check_update", value) }
@@ -220,6 +224,7 @@ class SettingsRepositoryImpl : SettingsRepository {
 
     override fun snapshotForBackup(): AppSettingsBackup = AppSettingsBackup(
         uiMode = uiMode,
+        appLanguage = appLanguage,
         checkUpdate = checkUpdate,
         themeMode = themeMode,
         miuixMonet = miuixMonet,
@@ -270,6 +275,7 @@ class SettingsRepositoryImpl : SettingsRepository {
 
         val committed = prefs.edit()
             .putString("ui_mode", UiMode.fromValue(snapshot.uiMode).value)
+            .putString("app_language", snapshot.appLanguage.takeIf { it in setOf("system", "en", "zh-CN") } ?: "system")
             .putBoolean("check_update", snapshot.checkUpdate)
             .putInt("color_mode", snapshot.themeMode)
             .putBoolean("miuix_monet", snapshot.miuixMonet)

@@ -312,4 +312,21 @@
     <string name="theme_liquid_glass_title">Liquid Glass</string>
     <string name="theme_liquid_glass_subtitle">The floating bar refracts and blurs the content behind it. Hold the selected tab and drag to switch.</string>
     <string name="theme_liquid_glass_needs_floating">Turn on the floating navigation bar first</string>
+    <string name="settings_language_title">App language</string>
+    <string name="settings_language_english">English</string>
+    <string name="settings_language_chinese">简体中文</string>
+    <string name="settings_font_scale_title">Font size</string>
+    <string name="settings_large_text_title">Large text</string>
+    <string name="settings_large_text_subtitle">Enlarge text and interface elements</string>
+    <string name="settings_bold_text_title">Bold text</string>
+    <string name="settings_group_behavior">Motion & haptics</string>
+    <string name="settings_group_display">Display and text</string>
+    <string name="settings_group_language">Language</string>
+    <string name="settings_haptic_feedback_title">Haptic feedback</string>
+    <string name="settings_haptic_feedback_subtitle">Vibrate lightly when you interact</string>
+    <string name="settings_navigation_motion_title">Transition motion</string>
+    <string name="settings_navigation_motion_expressive">Expressive</string>
+    <string name="settings_navigation_motion_reduced">Reduced</string>
+    <string name="settings_reset_display_title">Reset display settings</string>
+    <string name="settings_language_system">Follow system</string>
 </resources>

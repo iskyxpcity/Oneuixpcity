@@ -1,5 +1,7 @@
 package com.alohaoneui.app.ui.viewmodel
 
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -63,10 +65,12 @@ class SettingsViewModel(
             val materialShadowSwitches = repo.materialShadowSwitches
             val materialShadowSliders = repo.materialShadowSliders
             val uiMode = repo.uiMode
+            val appLanguage = repo.appLanguage
 
             _uiState.update {
                 it.copy(
                     uiMode = uiMode,
+                    appLanguage = appLanguage,
                     checkUpdate = checkUpdate,
                     themeMode = themeMode,
                     miuixMonet = miuixMonet,
@@ -107,6 +111,24 @@ class SettingsViewModel(
                 )
             }
         }
+    }
+
+    fun setAppLanguage(index: Int) {
+        val language = when (index.coerceIn(0, 2)) {
+            1 -> "en"
+            2 -> "zh-CN"
+            else -> "system"
+        }
+        repo.appLanguage = language
+        AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(if (language == "system") "" else language))
+        _uiState.update { it.copy(appLanguage = language) }
+    }
+
+    fun resetDisplaySettings() {
+        repo.materialFontScale = 1.0f
+        repo.materialLargeTextEnabled = false
+        repo.materialBoldTextEnabled = false
+        _uiState.update { it.copy(materialFontScale = 1.0f, materialLargeTextEnabled = false, materialBoldTextEnabled = false) }
     }
 
     fun setCheckUpdate(enabled: Boolean) {

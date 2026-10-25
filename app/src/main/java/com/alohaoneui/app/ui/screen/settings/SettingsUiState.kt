@@ -10,6 +10,7 @@ import com.alohaoneui.app.data.repository.MaterialColorScheme
 @Immutable
 data class SettingsUiState(
     val uiMode: String = UiMode.DEFAULT_VALUE,
+    val appLanguage: String = "system",
     val checkUpdate: Boolean = true,
     val themeMode: Int = 0,
     val miuixMonet: Boolean = false,
@@ -55,4 +56,11 @@ data class SettingsScreenActions(
     val onOpenTheme: () -> Unit,
     val onSetUiModeIndex: (Int) -> Unit,
     val onOpenAbout: () -> Unit,
+    val onSetAppLanguage: (Int) -> Unit,
+    val onSetMaterialFontScale: (Float) -> Unit,
+    val onSetMaterialLargeText: (Boolean) -> Unit,
+    val onSetMaterialBoldText: (Boolean) -> Unit,
+    val onSetNavigationMotion: (Int) -> Unit,
+    val onSetHapticFeedback: (Boolean) -> Unit,
+    val onResetDisplay: () -> Unit,
 )

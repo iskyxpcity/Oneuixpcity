@@ -299,4 +299,21 @@
     <string name="theme_liquid_glass_title">液态玻璃</string>
     <string name="theme_liquid_glass_subtitle">悬浮底栏折射并模糊后面的内容，按住选中项可左右拖动切换。</string>
     <string name="theme_liquid_glass_needs_floating">请先开启悬浮底栏</string>
+    <string name="settings_language_title">应用语言</string>
+    <string name="settings_language_english">英语</string>
+    <string name="settings_language_chinese">简体中文</string>
+    <string name="settings_font_scale_title">字体大小</string>
+    <string name="settings_large_text_title">大字版</string>
+    <string name="settings_large_text_subtitle">放大文字与界面元素</string>
+    <string name="settings_bold_text_title">粗体文字</string>
+    <string name="settings_group_behavior">动效与触感</string>
+    <string name="settings_group_display">显示与文字</string>
+    <string name="settings_group_language">语言</string>
+    <string name="settings_haptic_feedback_title">触感反馈</string>
+    <string name="settings_haptic_feedback_subtitle">操作时轻微震动</string>
+    <string name="settings_navigation_motion_title">转场动效</string>
+    <string name="settings_navigation_motion_expressive">灵动</string>
+    <string name="settings_navigation_motion_reduced">简化</string>
+    <string name="settings_reset_display_title">恢复显示默认值</string>
+    <string name="settings_language_system">跟随系统</string>
 </resources>

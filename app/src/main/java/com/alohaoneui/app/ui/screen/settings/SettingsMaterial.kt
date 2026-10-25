@@ -139,6 +139,80 @@ fun SettingPagerMaterial(
             )
 
 
+            Text(stringResource(R.string.settings_group_language), Modifier.padding(start = 16.dp, top = 12.dp), style = MaterialTheme.typography.titleSmall)
+            SegmentedColumn(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), content = listOf({
+                SegmentedDropdownItem(
+                    icon = Icons.Filled.Language,
+                    title = stringResource(R.string.settings_language_title),
+                    summary = null,
+                    items = listOf(stringResource(R.string.settings_language_system), stringResource(R.string.settings_language_english), stringResource(R.string.settings_language_chinese)),
+                    selectedIndex = when (uiState.appLanguage) { "en" -> 1; "zh-CN" -> 2; else -> 0 },
+                    onItemSelected = actions.onSetAppLanguage
+                )
+            }))
+
+            Text(stringResource(R.string.settings_group_display), Modifier.padding(start = 16.dp, top = 12.dp), style = MaterialTheme.typography.titleSmall)
+            SegmentedColumn(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), content = buildList {
+                add {
+                    SegmentedDropdownItem(
+                        icon = Icons.Filled.DisplaySettings,
+                        title = stringResource(R.string.settings_font_scale_title),
+                        summary = null,
+                        items = listOf("80%", "90%", "100%", "110%", "120%", "130%", "140%", "150%"),
+                        selectedIndex = ((uiState.materialFontScale * 10).toInt() - 8).coerceIn(0, 7),
+                        onItemSelected = { actions.onSetMaterialFontScale((it + 8) / 10f) }
+                    )
+                }
+                add {
+                    SegmentedSwitchItem(
+                        icon = Icons.Filled.DisplaySettings,
+                        title = stringResource(R.string.settings_large_text_title),
+                        summary = stringResource(R.string.settings_large_text_subtitle),
+                        checked = uiState.materialLargeTextEnabled,
+                        onCheckedChange = actions.onSetMaterialLargeText
+                    )
+                }
+                add {
+                    SegmentedSwitchItem(
+                        icon = Icons.Filled.DisplaySettings,
+                        title = stringResource(R.string.settings_bold_text_title),
+                        summary = null,
+                        checked = uiState.materialBoldTextEnabled,
+                        onCheckedChange = actions.onSetMaterialBoldText
+                    )
+                }
+                add {
+                    SegmentedListItem(
+                        onClick = actions.onResetDisplay,
+                        headlineContent = { Text(stringResource(R.string.settings_reset_display_title)) },
+                        leadingContent = { Icon(Icons.Filled.RestartAlt, null) }
+                    )
+                }
+            })
+
+            Text(stringResource(R.string.settings_group_behavior), Modifier.padding(start = 16.dp, top = 12.dp), style = MaterialTheme.typography.titleSmall)
+            SegmentedColumn(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), content = listOf(
+                {
+                    SegmentedDropdownItem(
+                        icon = Icons.Filled.RestartAlt,
+                        title = stringResource(R.string.settings_navigation_motion_title),
+                        summary = null,
+                        items = listOf(stringResource(R.string.settings_navigation_motion_expressive), stringResource(R.string.settings_navigation_motion_reduced)),
+                        selectedIndex = uiState.materialNavigationMotionMode.coerceIn(0, 1),
+                        onItemSelected = actions.onSetNavigationMotion
+                    )
+                },
+                {
+                    SegmentedSwitchItem(
+                        icon = Icons.Filled.RestartAlt,
+                        title = stringResource(R.string.settings_haptic_feedback_title),
+                        summary = stringResource(R.string.settings_haptic_feedback_subtitle),
+                        checked = uiState.enableHapticFeedback,
+                        onCheckedChange = actions.onSetHapticFeedback
+                    )
+                }
+            ))
+
             SegmentedColumn(
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                 content = listOf(

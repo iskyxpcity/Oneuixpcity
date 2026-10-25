@@ -34,6 +34,8 @@ import androidx.compose.material.icons.rounded.RemoveCircle
 import androidx.compose.material.icons.rounded.RemoveModerator
 import androidx.compose.material.icons.rounded.RestartAlt
 import androidx.compose.material.icons.rounded.Update
+import androidx.compose.material3.Text
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material.icons.rounded.UploadFile
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
@@ -164,6 +166,62 @@ fun SettingPagerMiuix(
                         )
                     }
 
+
+                    Text(stringResource(R.string.settings_group_language), Modifier.padding(start = 8.dp, top = 16.dp), style = MaterialTheme.typography.titleSmall)
+                    Card(modifier = Modifier.padding(top = 8.dp).fillMaxWidth()) {
+                        OverlayDropdownPreference(
+                            title = stringResource(R.string.settings_language_title),
+                            items = listOf(stringResource(R.string.settings_language_system), stringResource(R.string.settings_language_english), stringResource(R.string.settings_language_chinese)),
+                            selectedIndex = when (uiState.appLanguage) { "en" -> 1; "zh-CN" -> 2; else -> 0 },
+                            onSelectedIndexChange = actions.onSetAppLanguage,
+                            startAction = { Icon(Icons.Rounded.Language, modifier = Modifier.padding(end = 6.dp), contentDescription = null, tint = colorScheme.onBackground) }
+                        )
+                    }
+                    Text(stringResource(R.string.settings_group_display), Modifier.padding(start = 8.dp, top = 16.dp), style = MaterialTheme.typography.titleSmall)
+                    Card(modifier = Modifier.padding(top = 8.dp).fillMaxWidth()) {
+                        OverlayDropdownPreference(
+                            title = stringResource(R.string.settings_font_scale_title),
+                            items = listOf("80%", "90%", "100%", "110%", "120%", "130%", "140%", "150%"),
+                            selectedIndex = ((uiState.materialFontScale * 10).toInt() - 8).coerceIn(0, 7),
+                            onSelectedIndexChange = { actions.onSetMaterialFontScale((it + 8) / 10f) },
+                            startAction = { Icon(Icons.Rounded.DisplaySettings, modifier = Modifier.padding(end = 6.dp), contentDescription = null, tint = colorScheme.onBackground) }
+                        )
+                        SwitchPreference(
+                            title = stringResource(R.string.settings_large_text_title),
+                            summary = stringResource(R.string.settings_large_text_subtitle),
+                            checked = uiState.materialLargeTextEnabled,
+                            onCheckedChange = actions.onSetMaterialLargeText,
+                            startAction = { Icon(Icons.Rounded.DisplaySettings, modifier = Modifier.padding(end = 6.dp), contentDescription = null, tint = colorScheme.onBackground) }
+                        )
+                        SwitchPreference(
+                            title = stringResource(R.string.settings_bold_text_title),
+                            checked = uiState.materialBoldTextEnabled,
+                            onCheckedChange = actions.onSetMaterialBoldText,
+                            startAction = { Icon(Icons.Rounded.DisplaySettings, modifier = Modifier.padding(end = 6.dp), contentDescription = null, tint = colorScheme.onBackground) }
+                        )
+                        ArrowPreference(
+                            title = stringResource(R.string.settings_reset_display_title),
+                            startAction = { Icon(Icons.Rounded.RestartAlt, modifier = Modifier.padding(end = 6.dp), contentDescription = null, tint = colorScheme.onBackground) },
+                            onClick = actions.onResetDisplay
+                        )
+                    }
+                    Text(stringResource(R.string.settings_group_behavior), Modifier.padding(start = 8.dp, top = 16.dp), style = MaterialTheme.typography.titleSmall)
+                    Card(modifier = Modifier.padding(top = 8.dp).fillMaxWidth()) {
+                        OverlayDropdownPreference(
+                            title = stringResource(R.string.settings_navigation_motion_title),
+                            items = listOf(stringResource(R.string.settings_navigation_motion_expressive), stringResource(R.string.settings_navigation_motion_reduced)),
+                            selectedIndex = uiState.materialNavigationMotionMode.coerceIn(0, 1),
+                            onSelectedIndexChange = actions.onSetNavigationMotion,
+                            startAction = { Icon(Icons.Rounded.RestartAlt, modifier = Modifier.padding(end = 6.dp), contentDescription = null, tint = colorScheme.onBackground) }
+                        )
+                        SwitchPreference(
+                            title = stringResource(R.string.settings_haptic_feedback_title),
+                            summary = stringResource(R.string.settings_haptic_feedback_subtitle),
+                            checked = uiState.enableHapticFeedback,
+                            onCheckedChange = actions.onSetHapticFeedback,
+                            startAction = { Icon(Icons.Rounded.RestartAlt, modifier = Modifier.padding(end = 6.dp), contentDescription = null, tint = colorScheme.onBackground) }
+                        )
+                    }
 
                     Card(
                         modifier = Modifier

@@ -48,6 +48,13 @@ fun SettingPager(
             viewModel.setUiMode(if (index == 0) UiMode.Miuix.value else UiMode.Material.value)
         },
         onOpenAbout = { navigator.push(Route.About) },
+        onSetAppLanguage = viewModel::setAppLanguage,
+        onSetMaterialFontScale = viewModel::setMaterialFontScale,
+        onSetMaterialLargeText = viewModel::setMaterialLargeTextEnabled,
+        onSetMaterialBoldText = viewModel::setMaterialBoldTextEnabled,
+        onSetNavigationMotion = viewModel::setMaterialNavigationMotionMode,
+        onSetHapticFeedback = viewModel::setEnableHapticFeedback,
+        onResetDisplay = viewModel::resetDisplaySettings,
     )
 
     when (LocalUiMode.current) {

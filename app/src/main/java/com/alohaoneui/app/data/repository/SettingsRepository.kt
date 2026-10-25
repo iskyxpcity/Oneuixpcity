@@ -5,6 +5,7 @@ import kotlinx.serialization.Serializable
 /** AlohaOneUI appearance, navigation and self-update preferences. */
 interface SettingsRepository {
     var uiMode: String
+    var appLanguage: String
     var checkUpdate: Boolean
     var themeMode: Int
     var miuixMonet: Boolean
@@ -65,6 +66,7 @@ data class MaterialColorScheme(
 @Serializable
 data class AppSettingsBackup(
     val uiMode: String,
+    val appLanguage: String = "system",
     val checkUpdate: Boolean,
     val themeMode: Int,
     val miuixMonet: Boolean,
