@@ -22,7 +22,6 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
-import com.alohaoneui.app.ui.theme.toMaterialContrastLevelOverride
 import androidx.core.view.WindowInsetsControllerCompat
 
 val LocalMaterialBorderWidth = staticCompositionLocalOf { 0.0f }
@@ -62,7 +61,7 @@ fun MaterialAlohaOneUITheme(
         isAmoled = amoledMode,
         paletteStyle = appSettings.paletteStyle,
         colorSpec = appSettings.colorSpec,
-        contrastLevelOverride = appSettings.materialContrastMode.toMaterialContrastLevelOverride(),
+        contrastLevelOverride = appSettings.materialContrastLevel.toDouble(),
     )
     val animatedColorScheme = colorScheme.animateAsState()
 

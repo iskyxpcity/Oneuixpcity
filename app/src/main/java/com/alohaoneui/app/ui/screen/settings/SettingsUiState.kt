@@ -18,6 +18,7 @@ data class SettingsUiState(
     val colorSpec: String = ColorSpec.SpecVersion.SPEC_2025.name,
     val materialFontScale: Float = 1.0f,
     val materialContrastMode: Int = -1,
+    val materialContrastLevel: Float = 0.0f,
     val materialCornerScale: Float = 1.0f,
     val materialColorSchemes: List<MaterialColorScheme> = emptyList(),
     val materialBorderWidth: Float = 0.0f,

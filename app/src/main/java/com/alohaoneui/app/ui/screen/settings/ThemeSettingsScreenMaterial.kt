@@ -189,20 +189,6 @@ fun ThemeSettingsScreenMaterial() {
                         )
                     },
                     {
-                        SegmentedDropdownItem(
-                            icon = Icons.Filled.Tune,
-                            title = stringResource(R.string.theme_component_contrast),
-                            items = listOf(
-                                stringResource(R.string.settings_contrast_follow_system),
-                                stringResource(R.string.settings_contrast_low),
-                                stringResource(R.string.settings_contrast_normal),
-                                stringResource(R.string.settings_contrast_high),
-                            ),
-                            selectedIndex = (state.materialContrastMode + 1).coerceIn(0, 3),
-                            onItemSelected = { index -> viewModel.setMaterialContrastMode(index - 1) },
-                        )
-                    },
-                    {
                         Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
                             Text(stringResource(R.string.settings_material_font_scale))
                             Text(String.format(java.util.Locale.ROOT, "%.0f%%", state.materialFontScale * 100f), style = MaterialTheme.typography.labelMedium)

@@ -84,6 +84,14 @@ class SettingsRepositoryImpl : SettingsRepository {
         get() = prefs.getInt("material_contrast_mode", -1).coerceIn(-1, 2)
         set(value) = prefs.edit { putInt("material_contrast_mode", value.coerceIn(-1, 2)) }
 
+    override var materialContrastLevel: Float
+        get() = prefs.getFloat("material_contrast_level", when (materialContrastMode) {
+            0 -> -1.0f
+            2 -> 1.0f
+            else -> 0.0f
+        }).coerceIn(-1.0f, 1.0f)
+        set(value) = prefs.edit { putFloat("material_contrast_level", value.coerceIn(-1.0f, 1.0f)) }
+
     override var materialCornerScale: Float
         get() = prefs.getFloat("material_corner_scale", 1.0f).coerceIn(0.5f, 1.5f)
         set(value) = prefs.edit { putFloat("material_corner_scale", value.coerceIn(0.5f, 1.5f)) }
@@ -204,6 +212,7 @@ class SettingsRepositoryImpl : SettingsRepository {
         colorSpec = colorSpec,
         materialFontScale = materialFontScale,
         materialContrastMode = materialContrastMode,
+        materialContrastLevel = materialContrastLevel,
         materialCornerScale = materialCornerScale,
         materialColorSchemes = materialColorSchemes,
         materialBorderWidth = materialBorderWidth,
@@ -249,6 +258,7 @@ class SettingsRepositoryImpl : SettingsRepository {
             .putString("color_spec", restoredColorSpec)
             .putFloat("material_font_scale", snapshot.materialFontScale.coerceIn(0.8f, 1.5f))
             .putInt("material_contrast_mode", snapshot.materialContrastMode.coerceIn(-1, 2))
+            .putFloat("material_contrast_level", snapshot.materialContrastLevel.coerceIn(-1.0f, 1.0f))
             .putFloat("material_corner_scale", snapshot.materialCornerScale.coerceIn(0.5f, 1.5f))
             .putString("material_color_schemes", Json.encodeToString(snapshot.materialColorSchemes))
             .putFloat("material_border_width", snapshot.materialBorderWidth.coerceIn(0.0f, 3.0f))

@@ -40,6 +40,7 @@ class SettingsViewModel(
             val colorSpec = repo.colorSpec
             val materialFontScale = repo.materialFontScale
             val materialContrastMode = repo.materialContrastMode
+            val materialContrastLevel = repo.materialContrastLevel
             val materialCornerScale = repo.materialCornerScale
             val materialColorSchemes = repo.materialColorSchemes
             val materialBorderWidth = repo.materialBorderWidth
@@ -77,6 +78,7 @@ class SettingsViewModel(
                     colorSpec = colorSpec,
                     materialFontScale = materialFontScale,
                     materialContrastMode = materialContrastMode,
+                    materialContrastLevel = materialContrastLevel,
                     materialCornerScale = materialCornerScale,
                     materialColorSchemes = materialColorSchemes,
                     materialBorderWidth = materialBorderWidth,
@@ -191,6 +193,12 @@ class SettingsViewModel(
         _uiState.update { it.copy(materialContrastMode = safeMode) }
     }
 
+    fun setMaterialContrastLevel(level: Float) {
+        val safeLevel = level.coerceIn(-1.0f, 1.0f)
+        repo.materialContrastLevel = safeLevel
+        _uiState.update { it.copy(materialContrastLevel = safeLevel) }
+    }
+
     fun setMaterialCornerScale(scale: Float) {
         val safeScale = scale.coerceIn(0.5f, 1.5f)
         repo.materialCornerScale = safeScale
@@ -206,6 +214,7 @@ class SettingsViewModel(
             colorStyle = repo.colorStyle,
             colorSpec = repo.colorSpec,
             contrastMode = repo.materialContrastMode,
+            contrastLevel = repo.materialContrastLevel,
         )
         val updated = repo.materialColorSchemes.filterNot { it.name.equals(safeName, ignoreCase = true) } + scheme
         repo.materialColorSchemes = updated
@@ -219,12 +228,14 @@ class SettingsViewModel(
         repo.colorSpec = runCatching { com.materialkolor.dynamiccolor.ColorSpec.SpecVersion.valueOf(scheme.colorSpec).name }
             .getOrDefault(com.materialkolor.dynamiccolor.ColorSpec.SpecVersion.SPEC_2025.name)
         repo.materialContrastMode = scheme.contrastMode.coerceIn(-1, 2)
+        repo.materialContrastLevel = scheme.contrastLevel.coerceIn(-1.0f, 1.0f)
         _uiState.update {
             it.copy(
                 keyColor = repo.keyColor,
                 colorStyle = repo.colorStyle,
                 colorSpec = repo.colorSpec,
                 materialContrastMode = repo.materialContrastMode,
+                materialContrastLevel = repo.materialContrastLevel,
             )
         }
     }

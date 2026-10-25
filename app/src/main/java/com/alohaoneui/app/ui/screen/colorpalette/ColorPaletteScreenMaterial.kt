@@ -189,7 +189,7 @@ fun ColorPaletteScreenMaterial(
                 isAmoled = isAmoled,
                 paletteStyle = colorStyle,
                 colorSpec = colorSpec,
-                contrastMode = uiState.materialContrastMode,
+                contrastLevel = uiState.materialContrastLevel,
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -509,6 +509,20 @@ fun ColorPaletteScreenMaterial(
                 )
 
                 TonalCard(modifier = Modifier.padding(top = 4.dp)) {
+                    var contrastLevel by remember(uiState.materialContrastLevel) { mutableFloatStateOf(uiState.materialContrastLevel) }
+                    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(text = stringResource(R.string.settings_material_contrast), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
+                                Text(text = if (kotlin.math.abs(contrastLevel) < 0.01f) stringResource(R.string.settings_contrast_normal) else String.format(java.util.Locale.ROOT, "%+.1f", contrastLevel), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.outline)
+                            }
+                            Text(text = String.format(java.util.Locale.ROOT, "%+.1f", contrastLevel), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        Slider(value = contrastLevel, onValueChange = { contrastLevel = it }, onValueChangeFinished = { actions.onSetMaterialContrastLevel(contrastLevel) }, valueRange = -1.0f..1.0f, modifier = Modifier.fillMaxWidth())
+                    }
+                }
+
+                TonalCard(modifier = Modifier.padding(top = 4.dp)) {
                     var fontScale by remember(uiState.materialFontScale) { mutableFloatStateOf(uiState.materialFontScale) }
                     Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -725,7 +739,7 @@ private fun ThemePreviewCard(
     isAmoled: Boolean = false,
     paletteStyle: PaletteStyle = PaletteStyle.TonalSpot,
     colorSpec: ColorSpec.SpecVersion = ColorSpec.SpecVersion.SPEC_2025,
-    contrastMode: Int = -1,
+    contrastLevel: Float = 0.0f,
 ) {
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.toFloat()
@@ -739,7 +753,7 @@ private fun ThemePreviewCard(
         isAmoled = isAmoled,
         paletteStyle = paletteStyle,
         colorSpec = colorSpec,
-        contrastLevelOverride = contrastMode.toMaterialContrastLevelOverride(),
+        contrastLevelOverride = contrastLevel.toDouble()
     )
 
     Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.TopCenter) {

@@ -13,6 +13,7 @@ interface SettingsRepository {
     var colorSpec: String
     var materialFontScale: Float
     var materialContrastMode: Int
+    var materialContrastLevel: Float
     var materialCornerScale: Float
     var materialColorSchemes: List<MaterialColorScheme>
     var materialBorderWidth: Float
@@ -50,6 +51,7 @@ data class MaterialColorScheme(
     val colorStyle: String,
     val colorSpec: String,
     val contrastMode: Int = -1,
+    val contrastLevel: Float = 0.0f,
 )
 
 /**
@@ -67,6 +69,7 @@ data class AppSettingsBackup(
     val colorSpec: String,
     val materialFontScale: Float = 1.0f,
     val materialContrastMode: Int = -1,
+    val materialContrastLevel: Float = 0.0f,
     val materialCornerScale: Float = 1.0f,
     val materialColorSchemes: List<MaterialColorScheme> = emptyList(),
     val materialBorderWidth: Float = 0.0f,
