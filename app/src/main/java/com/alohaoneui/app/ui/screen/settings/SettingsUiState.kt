@@ -53,11 +53,6 @@ data class SettingsUiState(
 data class SettingsScreenActions(
     val onSetCheckUpdate: (Boolean) -> Unit,
     val onOpenTheme: () -> Unit,
-    val onOpenLanguage: () -> Unit,
-    val onOpenDisplayText: () -> Unit,
-    val onOpenMotionHaptics: () -> Unit,
     val onSetUiModeIndex: (Int) -> Unit,
-    val onSetThemeMode: (Int) -> Unit,
-    val onSetMaterialDynamicColorEnabled: (Boolean) -> Unit,
     val onOpenAbout: () -> Unit,
 )
