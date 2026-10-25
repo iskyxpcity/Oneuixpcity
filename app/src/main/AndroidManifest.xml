@@ -47,6 +47,7 @@
         android:hasFragileUserData="false"
         android:icon="@mipmap/ic_launcher_aloha"
         android:label="@string/app_name"
+        android:localeConfig="@xml/locales_config"
         android:supportsRtl="true"
         android:theme="@style/Theme.AlohaOneUI">
         <meta-data android:name="xposedmodule" android:value="true" />

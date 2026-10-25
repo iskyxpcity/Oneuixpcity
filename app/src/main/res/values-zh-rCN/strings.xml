@@ -390,4 +390,30 @@
     <string name="theme_color_blind_tritanomaly">蓝黄色弱</string>
     <string name="theme_color_blind_tritanopia">蓝黄色盲</string>
 
+    <string name="settings_group_language">语言</string>
+    <string name="settings_group_display">显示文字</string>
+    <string name="settings_group_behavior">动效触感</string>
+    <string name="settings_language_summary">选择 Aloha OneUI 使用的语言</string>
+    <string name="settings_display_summary">字体、文字大小和界面缩放</string>
+    <string name="settings_behavior_summary">页面动效、返回手势与触感反馈</string>
+    <string name="settings_language_system">跟随系统</string>
+    <string name="settings_language_english">English</string>
+    <string name="settings_language_chinese">简体中文</string>
+    <string name="settings_language_restart_hint">应用可能会重启以应用语言设置</string>
+    <string name="settings_language_unsupported">此设备需 Android 13 或更高版本才能切换应用语言</string>
+    <string name="settings_display_title">显示文字</string>
+    <string name="settings_behavior_title">动效触感</string>
+    <string name="settings_haptic_feedback_title">触感反馈</string>
+    <string name="settings_haptic_feedback_subtitle">操作时提供轻微振动</string>
+    <string name="settings_navigation_motion_title">页面过渡</string>
+    <string name="settings_navigation_motion_expressive">灵动</string>
+    <string name="settings_navigation_motion_reduced">减少动效</string>
+    <string name="settings_predictive_back_title">预测性返回手势</string>
+    <string name="settings_predictive_back_subtitle">滑动返回时预览上一页面</string>
+    <string name="settings_font_family_default">默认</string>
+    <string name="settings_font_family_serif">衬线</string>
+    <string name="settings_font_family_title">字体</string>
+    <string name="settings_font_scale_title">字体大小</string>
+    <string name="settings_display_scale_title">界面大小</string>
+    <string name="settings_display_preview_sample">敏捷的棕色狐狸跳过了懒狗。</string>
 </resources>

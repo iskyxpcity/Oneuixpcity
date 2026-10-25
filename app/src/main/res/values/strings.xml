@@ -393,4 +393,30 @@
     <string name="theme_color_blind_tritanomaly">Tritanomaly</string>
     <string name="theme_color_blind_tritanopia">Tritanopia</string>
 
+    <string name="settings_group_language">Language</string>
+    <string name="settings_group_display">Display and text</string>
+    <string name="settings_group_behavior">Motion &amp; haptics</string>
+    <string name="settings_language_summary">Choose the language used by Aloha OneUI</string>
+    <string name="settings_display_summary">Font family, text size and display scale</string>
+    <string name="settings_behavior_summary">Transitions, back gestures and haptic feedback</string>
+    <string name="settings_language_system">Follow system</string>
+    <string name="settings_language_english">English</string>
+    <string name="settings_language_chinese">简体中文</string>
+    <string name="settings_language_restart_hint">The app may restart to apply the language</string>
+    <string name="settings_language_unsupported">Per-app language switching requires Android 13 or later on this device</string>
+    <string name="settings_display_title">Display and text</string>
+    <string name="settings_behavior_title">Motion &amp; haptics</string>
+    <string name="settings_haptic_feedback_title">Haptic feedback</string>
+    <string name="settings_haptic_feedback_subtitle">Vibrate lightly when you interact</string>
+    <string name="settings_navigation_motion_title">Transitions</string>
+    <string name="settings_navigation_motion_expressive">Expressive</string>
+    <string name="settings_navigation_motion_reduced">Reduced</string>
+    <string name="settings_predictive_back_title">Predictive back</string>
+    <string name="settings_predictive_back_subtitle">Preview the previous screen while swiping back</string>
+    <string name="settings_font_family_default">Default</string>
+    <string name="settings_font_family_serif">Serif</string>
+    <string name="settings_font_family_title">Typeface</string>
+    <string name="settings_font_scale_title">Font size</string>
+    <string name="settings_display_scale_title">Display size</string>
+    <string name="settings_display_preview_sample">The quick brown fox jumps over the lazy dog.</string>
 </resources>

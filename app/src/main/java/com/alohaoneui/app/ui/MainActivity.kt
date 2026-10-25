@@ -74,6 +74,9 @@ import com.alohaoneui.app.ui.screen.about.VersionChangelog261016Screen
 import com.alohaoneui.app.ui.screen.colorpalette.ColorPaletteScreen
 import com.alohaoneui.app.ui.screen.colorpalette.ThemeSchemeEditorScreen
 import com.alohaoneui.app.ui.screen.settings.ThemeSettingsScreenMaterial
+import com.alohaoneui.app.ui.screen.settings.LanguageSettingsScreen
+import com.alohaoneui.app.ui.screen.settings.DisplayTextSettingsScreen
+import com.alohaoneui.app.ui.screen.settings.MotionHapticsSettingsScreen
 import com.alohaoneui.app.ui.screen.home.HomePager
 import com.alohaoneui.app.ui.screen.home.LocalLsposedHomeStatus
 import com.alohaoneui.app.ui.screen.home.rememberLsposedHomeStatus
@@ -126,6 +129,8 @@ class MainActivity : ComponentActivity() {
         // can be launched from the foreground without a background trampoline activity.
         handleUpdateInstallStatus(this, intent)
         AlohaOneUIPreferenceBridge.ensureSynchronized(application)
+        window.decorView.isHapticFeedbackEnabled = getSharedPreferences("settings", MODE_PRIVATE)
+            .getBoolean("voyage_haptic_feedback_enabled", true)
 
         setContent {
             val viewModel = viewModel<MainActivityViewModel>()
@@ -212,6 +217,9 @@ class MainActivity : ComponentActivity() {
                             entry<Route.VersionChangelog261016>(swipeDismiss = swipeDismiss) { VersionChangelog261016Screen() }
                             entry<Route.ColorPalette>(swipeDismiss = swipeDismiss) { ColorPaletteScreen() }
                             entry<Route.ThemeSettings>(swipeDismiss = swipeDismiss) { ThemeSettingsScreenMaterial() }
+                            entry<Route.LanguageSettings>(swipeDismiss = swipeDismiss) { LanguageSettingsScreen() }
+                            entry<Route.DisplayTextSettings>(swipeDismiss = swipeDismiss) { DisplayTextSettingsScreen() }
+                            entry<Route.MotionHapticsSettings>(swipeDismiss = swipeDismiss) { MotionHapticsSettingsScreen() }
                             entry<Route.ThemeSchemeEditor>(swipeDismiss = swipeDismiss) { key -> ThemeSchemeEditorScreen(key.index) }
                             entry<Route.AlohaOneUICategory>(swipeDismiss = swipeDismiss) { key ->
                                 AlohaOneUICategoryScreen(key.category)
