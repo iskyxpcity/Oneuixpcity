@@ -39,6 +39,7 @@ class SettingsViewModel(
             val colorStyle = repo.colorStyle
             val colorSpec = repo.colorSpec
             val materialFontScale = repo.materialFontScale
+            val materialContrastMode = repo.materialContrastMode
             val uiMode = repo.uiMode
 
             _uiState.update {
@@ -58,6 +59,7 @@ class SettingsViewModel(
                     colorStyle = colorStyle,
                     colorSpec = colorSpec,
                     materialFontScale = materialFontScale,
+                    materialContrastMode = materialContrastMode,
                 )
             }
         }
@@ -146,6 +148,12 @@ class SettingsViewModel(
         val safeScale = scale.coerceIn(0.8f, 1.3f)
         repo.materialFontScale = safeScale
         _uiState.update { it.copy(materialFontScale = safeScale) }
+    }
+
+    fun setMaterialContrastMode(mode: Int) {
+        val safeMode = mode.coerceIn(-1, 2)
+        repo.materialContrastMode = safeMode
+        _uiState.update { it.copy(materialContrastMode = safeMode) }
     }
 
     fun setEnablePredictiveBack(enabled: Boolean) {

@@ -52,7 +52,16 @@ data class AppSettings(
     val paletteStyle: PaletteStyle,
     val colorSpec: ColorSpec.SpecVersion,
     val materialFontScale: Float = 1.0f,
+    val materialContrastMode: Int = -1,
 )
+
+fun Int.toMaterialContrastLevelOverride(): Double? = when (this) {
+    -1 -> null
+    0 -> -1.0
+    1 -> 0.0
+    2 -> 1.0
+    else -> null
+}
 
 val PaletteStyle.supportsSpec2025: Boolean
     get() = this == PaletteStyle.TonalSpot ||
@@ -99,7 +108,7 @@ object ThemeController {
             ColorSpec.SpecVersion.SPEC_2025
         }
 
-        return AppSettings(colorMode, keyColor, paletteStyle, colorSpec, repo.materialFontScale.coerceIn(0.8f, 1.3f))
+        return AppSettings(colorMode, keyColor, paletteStyle, colorSpec, repo.materialFontScale.coerceIn(0.8f, 1.3f), repo.materialContrastMode.coerceIn(-1, 2))
     }
 }
 

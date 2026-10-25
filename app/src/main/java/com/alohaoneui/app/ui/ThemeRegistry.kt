@@ -23,6 +23,7 @@ enum class ThemeId(val persistedValue: String) {
 data class ThemeCapabilities(
     val dynamicColor: Boolean,
     val customSeedColor: Boolean,
+    val contrastPreference: Boolean,
     val paletteStyleSelection: Boolean,
     val colorSpecSelection: Boolean,
     val amoledBlack: Boolean,
@@ -74,6 +75,7 @@ object ThemeRegistry {
             capabilities = ThemeCapabilities(
                 dynamicColor = true,
                 customSeedColor = true,
+                contrastPreference = false,
                 paletteStyleSelection = true,
                 colorSpecSelection = true,
                 // Current Miuix mapping uses MonetDark rather than a pure-black scheme.
@@ -96,6 +98,7 @@ object ThemeRegistry {
             capabilities = ThemeCapabilities(
                 dynamicColor = true,
                 customSeedColor = true,
+                contrastPreference = true,
                 paletteStyleSelection = true,
                 colorSpecSelection = true,
                 amoledBlack = true,

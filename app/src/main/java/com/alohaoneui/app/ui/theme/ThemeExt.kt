@@ -37,15 +37,16 @@ fun rememberAlohaOneUIColorScheme(
     isAmoled: Boolean,
     paletteStyle: PaletteStyle,
     colorSpec: ColorSpec.SpecVersion,
+    contrastLevelOverride: Double? = null,
 ): ColorScheme {
     val context = LocalContext.current
     // Match Voyage's Material 3 theme: honor Android's system contrast preference on API 34+.
     // Keep neutral contrast on older Android versions or when the system service is unavailable.
-    val contrastLevel = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+    val contrastLevel = contrastLevelOverride ?: if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
         context.getSystemService(UiModeManager::class.java)
             ?.contrast
             ?.toDouble()
-            ?.coerceIn(0.0, 1.0)
+            ?.coerceIn(-1.0, 1.0)
             ?: 0.0
     } else {
         0.0

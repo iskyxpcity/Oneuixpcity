@@ -105,6 +105,7 @@ import com.alohaoneui.app.ui.component.material.SegmentedSwitchItem
 import com.alohaoneui.app.ui.component.material.TonalCard
 import com.alohaoneui.app.ui.theme.ColorMode
 import com.alohaoneui.app.ui.theme.rememberAlohaOneUIColorScheme
+import com.alohaoneui.app.ui.theme.toMaterialContrastLevelOverride
 import com.alohaoneui.app.ui.theme.keyColorOptions
 
 @Composable
@@ -161,6 +162,7 @@ fun ColorPaletteScreenMaterial(
                 isAmoled = isAmoled,
                 paletteStyle = colorStyle,
                 colorSpec = colorSpec,
+                contrastMode = uiState.materialContrastMode,
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -178,6 +180,7 @@ fun ColorPaletteScreenMaterial(
                         isAmoled = isAmoled,
                         paletteStyle = colorStyle,
                         colorSpec = colorSpec,
+                        contrastMode = uiState.materialContrastMode,
                         onClick = {
                             actions.onSetKeyColor(0)
                         }
@@ -192,6 +195,7 @@ fun ColorPaletteScreenMaterial(
                         isAmoled = isAmoled,
                         paletteStyle = colorStyle,
                         colorSpec = colorSpec,
+                        contrastMode = uiState.materialContrastMode,
                         onClick = {
                             actions.onSetKeyColor(color)
                         }
@@ -451,6 +455,7 @@ private fun ThemePreviewCard(
     isAmoled: Boolean = false,
     paletteStyle: PaletteStyle = PaletteStyle.TonalSpot,
     colorSpec: ColorSpec.SpecVersion = ColorSpec.SpecVersion.SPEC_2025,
+    contrastMode: Int = -1,
 ) {
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.toFloat()
@@ -464,6 +469,7 @@ private fun ThemePreviewCard(
         isAmoled = isAmoled,
         paletteStyle = paletteStyle,
         colorSpec = colorSpec,
+        contrastLevelOverride = contrastMode.toMaterialContrastLevelOverride(),
     )
 
     Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
@@ -582,6 +588,7 @@ private fun ColorButtonMaterial(
     isAmoled: Boolean = false,
     paletteStyle: PaletteStyle = PaletteStyle.TonalSpot,
     colorSpec: ColorSpec.SpecVersion = ColorSpec.SpecVersion.SPEC_2025,
+    contrastMode: Int = -1,
     onClick: () -> Unit
 ) {
     val haptic = LocalHapticFeedback.current
@@ -591,6 +598,7 @@ private fun ColorButtonMaterial(
         isAmoled = isAmoled,
         paletteStyle = paletteStyle,
         colorSpec = colorSpec,
+        contrastLevelOverride = contrastMode.toMaterialContrastLevelOverride(),
     )
 
     Surface(
