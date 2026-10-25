@@ -26,7 +26,7 @@ data class SettingsUiState(
     val materialNavigationMotionMode: Int = 0,
     val materialDynamicColorEnabled: Boolean = true,
     val materialInvertColors: Boolean = false,
-    val materialShapeStyle: Int = 2,
+    val materialShapeStyle: Int = 0,
     val materialSwitchStyle: Int = 0,
     val materialSliderStyle: Int = 0,
     val materialLaunchFollowsTheme: Boolean = true,
