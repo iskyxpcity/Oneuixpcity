@@ -115,13 +115,13 @@ fun MaterialAlohaOneUITheme(
 
 
 private fun materialShape(style: Int, size: androidx.compose.ui.unit.Dp): CornerBasedShape = when (style.coerceIn(0, 6)) {
-    0 -> CutCornerShape(size)
-    1 -> CutCornerShape(topStart = size * 1.5f, topEnd = size, bottomEnd = size * 1.5f, bottomStart = size)
-    2 -> RoundedCornerShape(size)
-    3 -> RoundedCornerShape(percent = 50)
-    4 -> RoundedCornerShape(size * 1.4f)
-    5 -> RoundedCornerShape(size * 2.0f)
-    else -> RoundedCornerShape(size * 1.2f)
+    0 -> RoundedCornerShape(size) // Rounded
+    1 -> CutCornerShape(size) // Cut
+    2 -> RoundedCornerShape(size * 2.0f) // Squircle approximation
+    3 -> RoundedCornerShape(size * 1.4f) // Smooth
+    4 -> RoundedCornerShape(size * 1.2f) // Wavy approximation
+    5 -> RoundedCornerShape(percent = 50) // Scoop approximation
+    else -> CutCornerShape(topStart = size * 1.5f, topEnd = size, bottomEnd = size * 1.5f, bottomStart = size) // Notch
 }
 
 private fun materialColorVisionMatrix(mode: Int, invert: Boolean): ColorMatrix? {
