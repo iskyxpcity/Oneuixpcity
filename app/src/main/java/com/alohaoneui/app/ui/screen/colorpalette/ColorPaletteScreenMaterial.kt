@@ -72,7 +72,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -437,7 +436,17 @@ fun ColorPaletteScreenMaterial(
                             )
                         },
                         {
-                            val styles = PaletteStyle.entries
+                            val styles = listOf(
+                                PaletteStyle.Expressive,
+                                PaletteStyle.TonalSpot,
+                                PaletteStyle.Neutral,
+                                PaletteStyle.Vibrant,
+                                PaletteStyle.Rainbow,
+                                PaletteStyle.FruitSalad,
+                                PaletteStyle.Monochrome,
+                                PaletteStyle.Fidelity,
+                                PaletteStyle.Content,
+                            )
                             SegmentedDropdownItem(
                                 icon = Icons.Rounded.Style,
                                 title = stringResource(R.string.settings_color_style),
@@ -598,19 +607,51 @@ fun ColorPaletteScreenMaterial(
                     stringResource(R.string.settings_theme_mode_light),
                     stringResource(R.string.settings_theme_mode_dark),
                 )
-                Row(
+                val themeModeIcons = listOf(
+                    Icons.Filled.Brightness4,
+                    Icons.Filled.Brightness7,
+                    Icons.Filled.Brightness3,
+                )
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 4.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     themeModeLabels.forEachIndexed { index, label ->
-                        FilterChip(
-                            selected = selectedModeIndex == index,
-                            onClick = { actions.onSetThemeMode(index) },
-                            label = { Text(label) },
-                        )
+                        val selected = selectedModeIndex == index
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable(role = Role.Button) {
+                                    if (!selected) actions.onSetThemeMode(index)
+                                },
+                            shape = RoundedCornerShape(20.dp),
+                            color = if (selected) MaterialTheme.colorScheme.secondaryContainer
+                                else MaterialTheme.colorScheme.surfaceContainerLow,
+                            contentColor = if (selected) MaterialTheme.colorScheme.onSecondaryContainer
+                                else MaterialTheme.colorScheme.onSurface,
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Icon(imageVector = themeModeIcons[index], contentDescription = null)
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Text(
+                                    text = label,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    modifier = Modifier.weight(1f),
+                                )
+                                if (selected) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.Check,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
 
@@ -736,7 +777,7 @@ fun ColorPaletteScreenMaterial(
                             Text(text = stringResource(R.string.settings_material_corner_scale), style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
                             Text(text = "${(cornerScale * 100).toInt()}%", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
-                        Slider(value = cornerScale, onValueChange = { cornerScale = it }, onValueChangeFinished = { actions.onSetMaterialCornerScale(cornerScale) }, valueRange = 0.5f..1.5f, modifier = Modifier.fillMaxWidth())
+                        Slider(value = cornerScale, onValueChange = { cornerScale = it }, onValueChangeFinished = { actions.onSetMaterialCornerScale(cornerScale) }, valueRange = 0.0f..2.0f, steps = 39, modifier = Modifier.fillMaxWidth())
                     }
                 }
 
@@ -754,7 +795,7 @@ fun ColorPaletteScreenMaterial(
                             Text(text = stringResource(R.string.theme_component_border_width), style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
                             Text(text = String.format(java.util.Locale.ROOT, "%.1f dp", borderWidth), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
-                        Slider(value = borderWidth, onValueChange = { borderWidth = it }, onValueChangeFinished = { actions.onSetMaterialBorderWidth(borderWidth) }, valueRange = 0.0f..3.0f, steps = 5, modifier = Modifier.fillMaxWidth())
+                        Slider(value = borderWidth, onValueChange = { borderWidth = it }, onValueChangeFinished = { actions.onSetMaterialBorderWidth(borderWidth) }, valueRange = 0.0f..1.5f, steps = 14, modifier = Modifier.fillMaxWidth())
                     }
                 }
 
