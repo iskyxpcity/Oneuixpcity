@@ -21,6 +21,7 @@ data class SettingsUiState(
     val materialCornerScale: Float = 1.0f,
     val materialColorSchemes: List<MaterialColorScheme> = emptyList(),
     val materialBorderWidth: Float = 0.0f,
+    val materialFontFamily: String = "Default",
     val enablePredictiveBack: Boolean = false,
     val enableBlur: Boolean = false,
     val enableFloatingBottomBar: Boolean = false,

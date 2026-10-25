@@ -51,6 +51,7 @@ fun ColorPaletteScreen() {
         onSetMaterialContrastMode = viewModel::setMaterialContrastMode,
         onSetMaterialCornerScale = viewModel::setMaterialCornerScale,
         onSetMaterialBorderWidth = viewModel::setMaterialBorderWidth,
+        onSetMaterialFontFamily = viewModel::setMaterialFontFamily,
         onSaveMaterialColorScheme = viewModel::saveMaterialColorScheme,
         onApplyMaterialColorScheme = viewModel::applyMaterialColorScheme,
         onDeleteMaterialColorScheme = viewModel::deleteMaterialColorScheme,

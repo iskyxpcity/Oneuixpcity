@@ -70,7 +70,7 @@ fun MaterialAlohaOneUITheme(
                 large = RoundedCornerShape(16.dp * appSettings.materialCornerScale.coerceIn(0.5f, 1.5f)),
             ),
             motionScheme = MotionScheme.expressive(),
-            typography = Typography,
+            typography = Typography.withMaterialFontFamily(appSettings.materialFontFamily),
             content = content,
         )
     }

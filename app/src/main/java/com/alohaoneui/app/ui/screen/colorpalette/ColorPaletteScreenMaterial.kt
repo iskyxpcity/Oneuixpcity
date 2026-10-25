@@ -497,6 +497,29 @@ fun ColorPaletteScreenMaterial(
                     }
                 }
 
+                SegmentedColumn(
+                    modifier = Modifier.padding(top = 4.dp),
+                    content = listOf(
+                        {
+                            val fontFamilyValues = listOf("Default", "SansSerif", "Serif", "Monospace", "Cursive")
+                            val fontFamilyLabels = listOf(
+                                stringResource(R.string.settings_material_font_family_default),
+                                stringResource(R.string.settings_material_font_family_sans),
+                                stringResource(R.string.settings_material_font_family_serif),
+                                stringResource(R.string.settings_material_font_family_monospace),
+                                stringResource(R.string.settings_material_font_family_cursive),
+                            )
+                            SegmentedDropdownItem(
+                                icon = Icons.Rounded.DesignServices,
+                                title = stringResource(R.string.settings_material_font_family),
+                                items = fontFamilyLabels,
+                                selectedIndex = fontFamilyValues.indexOf(uiState.materialFontFamily).coerceAtLeast(0),
+                                onItemSelected = { index -> actions.onSetMaterialFontFamily(fontFamilyValues[index]) },
+                            )
+                        }
+                    ),
+                )
+
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
                     SegmentedColumn(
                         modifier = Modifier.padding(top = 4.dp),

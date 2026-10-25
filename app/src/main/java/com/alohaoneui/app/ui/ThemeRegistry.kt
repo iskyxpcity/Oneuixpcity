@@ -105,7 +105,7 @@ object ThemeRegistry {
                 expressiveMotion = true,
                 // Voyage supports this, but the editor has not yet been ported to Aloha.
                 customColorSchemes = false,
-                fontFamilySelection = false,
+                fontFamilySelection = true,
                 fontScale = true,
                 cornerScale = true,
                 borderWidth = true,

@@ -60,6 +60,13 @@ class SettingsRepositoryImpl : SettingsRepository {
         get() = prefs.getFloat("material_border_width", 0.0f).coerceIn(0.0f, 3.0f)
         set(value) = prefs.edit { putFloat("material_border_width", value.coerceIn(0.0f, 3.0f)) }
 
+    override var materialFontFamily: String
+        get() = prefs.getString("material_font_family", "Default")
+            ?.takeIf { it in setOf("Default", "SansSerif", "Serif", "Monospace", "Cursive") } ?: "Default"
+        set(value) = prefs.edit {
+            putString("material_font_family", value.takeIf { it in setOf("Default", "SansSerif", "Serif", "Monospace", "Cursive") } ?: "Default")
+        }
+
     override var materialColorSchemes: List<MaterialColorScheme>
         get() = runCatching {
             Json.decodeFromString<List<MaterialColorScheme>>(
@@ -115,6 +122,7 @@ class SettingsRepositoryImpl : SettingsRepository {
         materialCornerScale = materialCornerScale,
         materialColorSchemes = materialColorSchemes,
         materialBorderWidth = materialBorderWidth,
+        materialFontFamily = materialFontFamily,
         enablePredictiveBack = enablePredictiveBack,
         enableBlur = enableBlur,
         enableFloatingBottomBar = enableFloatingBottomBar,
@@ -146,6 +154,7 @@ class SettingsRepositoryImpl : SettingsRepository {
             .putFloat("material_corner_scale", snapshot.materialCornerScale.coerceIn(0.5f, 1.5f))
             .putString("material_color_schemes", Json.encodeToString(snapshot.materialColorSchemes))
             .putFloat("material_border_width", snapshot.materialBorderWidth.coerceIn(0.0f, 3.0f))
+            .putString("material_font_family", snapshot.materialFontFamily.takeIf { it in setOf("Default", "SansSerif", "Serif", "Monospace", "Cursive") } ?: "Default")
             .putBoolean("enable_predictive_back", snapshot.enablePredictiveBack)
             .putBoolean("enable_blur", snapshot.enableBlur)
             .putBoolean("enable_floating_bottom_bar", snapshot.enableFloatingBottomBar)

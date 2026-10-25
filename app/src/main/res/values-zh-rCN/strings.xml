@@ -262,4 +262,10 @@
     <string name="theme_saved_scheme_delete">删除</string>
     <string name="settings_material_border_width">描边粗细</string>
     <string name="settings_material_border_width_summary">调整 Material 3 卡片描边宽度，范围为 0–3 dp。</string>
+    <string name="settings_material_font_family">字体家族</string>
+    <string name="settings_material_font_family_default">默认</string>
+    <string name="settings_material_font_family_sans">无衬线</string>
+    <string name="settings_material_font_family_serif">衬线</string>
+    <string name="settings_material_font_family_monospace">等宽</string>
+    <string name="settings_material_font_family_cursive">手写体</string>
 </resources>
