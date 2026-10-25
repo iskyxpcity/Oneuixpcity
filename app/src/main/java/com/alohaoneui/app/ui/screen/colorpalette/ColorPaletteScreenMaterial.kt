@@ -119,7 +119,6 @@ import com.alohaoneui.app.ui.theme.ColorMode
 import com.alohaoneui.app.ui.theme.LocalMaterialShadowAppBars
 import androidx.compose.ui.draw.shadow
 import com.alohaoneui.app.ui.theme.rememberAlohaOneUIColorScheme
-import com.alohaoneui.app.ui.theme.toMaterialContrastLevelOverride
 import com.alohaoneui.app.ui.theme.keyColorOptions
 
 @Composable
@@ -207,7 +206,7 @@ fun ColorPaletteScreenMaterial(
                         isAmoled = isAmoled,
                         paletteStyle = colorStyle,
                         colorSpec = colorSpec,
-                        contrastMode = uiState.materialContrastMode,
+                        contrastLevel = uiState.materialContrastLevel,
                         onClick = {
                             actions.onSetKeyColor(0)
                         }
@@ -872,7 +871,7 @@ private fun ColorButtonMaterial(
     isAmoled: Boolean = false,
     paletteStyle: PaletteStyle = PaletteStyle.TonalSpot,
     colorSpec: ColorSpec.SpecVersion = ColorSpec.SpecVersion.SPEC_2025,
-    contrastMode: Int = -1,
+    contrastLevel: Float = 0.0f,
     onClick: () -> Unit
 ) {
     val haptic = LocalHapticFeedback.current
@@ -882,7 +881,7 @@ private fun ColorButtonMaterial(
         isAmoled = isAmoled,
         paletteStyle = paletteStyle,
         colorSpec = colorSpec,
-        contrastLevelOverride = contrastMode.toMaterialContrastLevelOverride(),
+        contrastLevelOverride = contrastLevel.toDouble(),
     )
 
     Surface(
