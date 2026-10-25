@@ -157,14 +157,14 @@ private fun materialColorVisionMatrix(mode: Int, invert: Boolean): ColorMatrix? 
         return ColorMatrix(out)
     }
     val vision = when (mode) {
-        1 -> partial(grayscale, 0.5f) // Achromatomaly
-        2 -> grayscale               // Achromatopsia
-        3 -> partial(protanopia, 0.5f) // Protanomaly
-        4 -> protanopia                // Protanopia
-        5 -> partial(deuteranopia, 0.5f) // Deuteranomaly
-        6 -> deuteranopia                // Deuteranopia
-        7 -> partial(tritanopia, 0.5f) // Tritanomaly
-        8 -> tritanopia                // Tritanopia
+        1 -> partial(protanopia, 0.5f) // Protanomaly
+        2 -> partial(deuteranopia, 0.5f) // Deuteranomaly
+        3 -> partial(tritanopia, 0.5f) // Tritanomaly
+        4 -> protanopia // Protanopia
+        5 -> deuteranopia // Deuteranopia
+        6 -> tritanopia // Tritanopia
+        7 -> partial(grayscale, 0.5f) // Achromatomaly
+        8 -> grayscale // Achromatopsia
         else -> null
     }
     if (!invert) return vision
