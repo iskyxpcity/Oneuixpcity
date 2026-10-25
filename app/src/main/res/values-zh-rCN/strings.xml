@@ -60,6 +60,11 @@
     <string name="settings_palette_style_vibrant">鲜明</string>
     <string name="theme_editor_hex">色值（HEX）</string>
     <string name="theme_editor_apply_hex">应用</string>
+    <string name="theme_editor_hct_title">HCT 色彩编辑器</string>
+    <string name="theme_editor_hue">色相</string>
+    <string name="theme_editor_chroma">彩度</string>
+    <string name="theme_editor_tone">色调</string>
+    <string name="theme_editor_apply_hct">应用 HCT</string>
     <string name="settings_color_style">色彩风格</string>
     <string name="color_blue">蓝色</string>
     <string name="color_red">红色</string>

@@ -60,6 +60,11 @@
     <string name="settings_palette_style_vibrant">Vibrant</string>
     <string name="theme_editor_hex">HEX color</string>
     <string name="theme_editor_apply_hex">Apply</string>
+    <string name="theme_editor_hct_title">HCT color editor</string>
+    <string name="theme_editor_hue">Hue</string>
+    <string name="theme_editor_chroma">Chroma</string>
+    <string name="theme_editor_tone">Tone</string>
+    <string name="theme_editor_apply_hct">Apply HCT</string>
     <string name="settings_color_style">Color Style</string>
     <string name="color_blue">Blue</string>
     <string name="color_red">Red</string>

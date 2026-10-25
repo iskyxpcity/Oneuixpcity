@@ -82,6 +82,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -94,6 +95,7 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.materialkolor.PaletteStyle
+import com.materialkolor.hct.Hct
 import com.materialkolor.dynamiccolor.ColorSpec
 import com.materialkolor.rememberDynamicColorScheme
 import com.alohaoneui.app.R
@@ -212,6 +214,58 @@ fun ColorPaletteScreenMaterial(
             val parsedSeedColor = seedHex.trim().removePrefix("#").takeIf { value ->
                 value.length == 6 && value.all { it.digitToIntOrNull(16) != null }
             }?.toLongOrNull(16)?.toInt()?.or(0xFF000000.toInt())
+
+            val hctBaseColor = if (currentKeyColor == 0) MaterialTheme.colorScheme.primary.toArgb() else currentKeyColor
+            val initialHct = remember(currentKeyColor, hctBaseColor) { Hct.fromInt(hctBaseColor) }
+            var hctHue by remember(currentKeyColor, hctBaseColor) { mutableFloatStateOf(initialHct.hue.toFloat()) }
+            var hctChroma by remember(currentKeyColor, hctBaseColor) { mutableFloatStateOf(initialHct.chroma.toFloat()) }
+            var hctTone by remember(currentKeyColor, hctBaseColor) { mutableFloatStateOf(initialHct.tone.toFloat()) }
+
+            TonalCard(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = stringResource(R.string.theme_editor_hct_title),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(stringResource(R.string.theme_editor_hue), modifier = Modifier.weight(1f))
+                        Text("${hctHue.toInt()}°", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    Slider(value = hctHue, onValueChange = { hctHue = it }, valueRange = 0f..360f, modifier = Modifier.fillMaxWidth())
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(stringResource(R.string.theme_editor_chroma), modifier = Modifier.weight(1f))
+                        Text(hctChroma.toInt().toString(), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    Slider(value = hctChroma, onValueChange = { hctChroma = it }, valueRange = 0f..120f, modifier = Modifier.fillMaxWidth())
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(stringResource(R.string.theme_editor_tone), modifier = Modifier.weight(1f))
+                        Text(hctTone.toInt().toString(), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    Slider(value = hctTone, onValueChange = { hctTone = it }, valueRange = 0f..100f, modifier = Modifier.fillMaxWidth())
+                    Button(
+                        onClick = {
+                            actions.onSetKeyColor(
+                                Hct.from(
+                                    hue = hctHue.toDouble(),
+                                    chroma = hctChroma.toDouble(),
+                                    tone = hctTone.toDouble()
+                                ).toInt()
+                            )
+                        },
+                        modifier = Modifier.align(Alignment.End)
+                    ) {
+                        Text(stringResource(R.string.theme_editor_apply_hct))
+                    }
+                }
+            }
 
             Row(
                 modifier = Modifier
