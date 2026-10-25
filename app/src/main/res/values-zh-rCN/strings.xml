@@ -303,6 +303,8 @@
     <string name="theme_nav_floating">悬浮导航栏</string>
     <string name="theme_nav_floating_summary">让内容在底部导航栏下方滚动。</string>
     <string name="theme_nav_blur">导航栏模糊</string>
+    <string name="theme_floating_nav_bar_title">悬浮导航栏</string>
+    <string name="theme_floating_nav_bar_subtitle">底部导航栏悬浮于页面上方，内容可在其下方滚动。仅适用于窄屏底栏。</string>
     <string name="theme_mode_system">跟随系统</string>
     <string name="theme_mode_light">浅色</string>
     <string name="theme_mode_dark">深色</string>
