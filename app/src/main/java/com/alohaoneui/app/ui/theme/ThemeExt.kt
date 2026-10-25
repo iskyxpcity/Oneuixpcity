@@ -1,5 +1,7 @@
 package com.alohaoneui.app.ui.theme
 
+import android.app.UiModeManager
+import android.os.Build
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.material3.ColorScheme
@@ -38,6 +40,17 @@ fun rememberAlohaOneUIColorScheme(
     colorSpec: ColorSpec.SpecVersion,
 ): ColorScheme {
     val context = LocalContext.current
+    // Match Voyage's Material 3 theme: honor Android's system contrast preference on API 34+.
+    // Keep neutral contrast on older Android versions or when the system service is unavailable.
+    val contrastLevel = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+        context.getSystemService(UiModeManager::class.java)
+            ?.contrast
+            ?.toDouble()
+            ?.coerceIn(0.0, 1.0)
+            ?: 0.0
+    } else {
+        0.0
+    }
     val seed = if (seedColor == Color.Unspecified) {
         (if (isDark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)).primary
     } else {
@@ -48,6 +61,7 @@ fun rememberAlohaOneUIColorScheme(
         isDark = isDark,
         isAmoled = isAmoled,
         style = paletteStyle,
+        contrastLevel = contrastLevel,
         specVersion = colorSpec.effectiveFor(paletteStyle),
     ).amoledBackground(isAmoled)
 }
