@@ -9,6 +9,8 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Density
 import androidx.core.view.WindowInsetsControllerCompat
 import com.materialkolor.dynamiccolor.ColorSpec
 import top.yukonga.miuix.kmp.theme.ColorSchemeMode
@@ -24,6 +26,11 @@ fun MiuixAlohaOneUITheme(
     content: @Composable () -> Unit
 ) {
     val context = LocalContext.current
+    val systemDensity = LocalDensity.current
+    val appDensity = Density(
+        density = systemDensity.density * if (appSettings.materialLargeTextEnabled) 1.1f else 1.0f,
+        fontScale = systemDensity.fontScale * appSettings.materialFontScale.coerceIn(0.8f, 1.5f),
+    )
     val systemDarkTheme = isSystemInDarkTheme()
     val darkTheme = appSettings.colorMode.isDark ||
         (appSettings.colorMode.isSystem && systemDarkTheme)
@@ -77,6 +84,7 @@ fun MiuixAlohaOneUITheme(
             }
             CompositionLocalProvider(
                 LocalContentColor provides MiuixTheme.colorScheme.onBackground,
+                LocalDensity provides appDensity,
             ) {
                 content()
             }
