@@ -221,7 +221,7 @@ fun ColorPaletteScreenMaterial(
                         isAmoled = isAmoled,
                         paletteStyle = colorStyle,
                         colorSpec = colorSpec,
-                        contrastMode = uiState.materialContrastMode,
+                        contrastLevel = uiState.materialContrastLevel,
                         onClick = {
                             actions.onSetKeyColor(color)
                         }
