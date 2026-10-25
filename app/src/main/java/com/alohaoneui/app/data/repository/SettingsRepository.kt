@@ -39,8 +39,8 @@ interface SettingsRepository {
     var navigationRailExpanded: Boolean
     var pageScale: Float
     var enableSwipeBack: Boolean
-    var enableHapticFeedback: Boolean
     var pagerGestureMode: Int
+    var enableHapticFeedback: Boolean
 
     fun snapshotForBackup(): AppSettingsBackup
     fun restoreFromBackup(snapshot: AppSettingsBackup)
