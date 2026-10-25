@@ -32,7 +32,7 @@ fun ExpressiveSwitch(
     showThumbIcon: Boolean = true,
 ) {
     val style = LocalMaterialSwitchStyle.current
-    val useIcon = showThumbIcon && style !in setOf(1, 4)
+    val useIcon = showThumbIcon && style !in setOf(4, 5)
     val switchModifier = if (LocalMaterialShadowSwitches.current) modifier.shadow(1.dp, CircleShape) else modifier
     Switch(
         checked = checked,
