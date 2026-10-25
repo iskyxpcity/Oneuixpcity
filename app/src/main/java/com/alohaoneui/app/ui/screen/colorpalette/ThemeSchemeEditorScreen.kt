@@ -192,6 +192,7 @@ fun ThemeSchemeEditorScreen(index: Int) {
             when (selectedTab) {
                 0 -> {
                     Text(stringResource(R.string.theme_picker_palette), style = MaterialTheme.typography.titleMedium)
+                    Text(stringResource(R.string.theme_scheme_preset), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     keyColorOptions.chunked(4).forEach { rowColors ->
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
                             rowColors.forEach { color ->

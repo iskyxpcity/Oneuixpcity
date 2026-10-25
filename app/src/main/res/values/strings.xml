@@ -256,6 +256,9 @@
     <string name="alohaoneui_global_shortcut_actions_summary">配置全局三指手势、悬浮球、状态栏、虚拟导航键和息屏音量键的快捷操作。</string>
     <string name="settings_material_corner_scale">Corner scale</string>
     <string name="settings_material_corner_scale_summary">Adjust Material 3 component corner roundness from 50% to 150%.</string>
+    <string name="theme_scheme_delete">Delete scheme</string>
+    <string name="theme_scheme_delete_message">This cannot be undone.</string>
+    <string name="theme_scheme_preset">Preset</string>
     <string name="theme_scheme_title">Color scheme</string>
     <string name="theme_scheme_add">New scheme</string>
     <string name="theme_editor_use_current">Use current colors</string>

@@ -379,13 +379,13 @@ fun ColorPaletteScreenMaterial(
             schemePendingDelete?.let { scheme ->
                 AlertDialog(
                     onDismissRequest = { schemePendingDelete = null },
-                    title = { Text(stringResource(R.string.theme_saved_scheme_delete) + " · " + scheme.name) },
+                    title = { Text(stringResource(R.string.theme_scheme_delete) + " · " + scheme.name) },
                     text = { Text(stringResource(R.string.theme_scheme_delete_message)) },
                     confirmButton = {
                         TextButton(onClick = {
                             actions.onDeleteMaterialColorScheme(scheme.name)
                             schemePendingDelete = null
-                        }) { Text(stringResource(R.string.theme_saved_scheme_delete)) }
+                        }) { Text(stringResource(R.string.theme_scheme_delete)) }
                     },
                     dismissButton = {
                         TextButton(onClick = { schemePendingDelete = null }) {
