@@ -41,16 +41,16 @@ jobs:
             echo "SHA-256: $(sha256sum "$RUNNER_TEMP/voyage.apk" | awk '{print $1}')"
             echo
             echo "=== Manifest identity/theme/activities ==="
-            grep -E 'package=|versionName|versionCode|android:label|android:theme|activity|application' "$RUNNER_TEMP/voyage-decoded/AndroidManifest.xml" | head -160 || true
+            grep -E 'package=|versionName|versionCode|android:label|android:theme|activity|application' "$RUNNER_TEMP/voyage-decoded/AndroidManifest.xml" | sed -n '1,160p' || true
             echo
             echo "=== Resource XML inventory ==="
-            find "$RUNNER_TEMP/voyage-decoded/res" -type f \( -path '*/values*/*.xml' -o -path '*/drawable*/*' -o -path '*/font/*' \) | sed "s#$RUNNER_TEMP/voyage-decoded/##" | head -500 || true
+            find "$RUNNER_TEMP/voyage-decoded/res" -type f \( -path '*/values*/*.xml' -o -path '*/drawable*/*' -o -path '*/font/*' \) | sed "s#$RUNNER_TEMP/voyage-decoded/##" | sed -n '1,500p' || true
             echo
             echo "=== Theme/style/color/dimension resource definitions ==="
-            grep -RniE '<(style|color|dimen|font|item).*name=|<item name="(color|shape|corner|font|text|android:)' "$RUNNER_TEMP/voyage-decoded/res/values"* 2>/dev/null | head -1200 || true
+            grep -RniE '<(style|color|dimen|font|item).*name=|<item name="(color|shape|corner|font|text|android:)' "$RUNNER_TEMP/voyage-decoded/res/values"* 2>/dev/null | sed -n '1,1200p' || true
             echo
             echo "=== Material/Compose dependency clues in DEX strings ==="
-            unzip -p "$RUNNER_TEMP/voyage.apk" 'classes*.dex' 2>/dev/null | strings | grep -Ei 'MaterialTheme|material3|androidx.compose.material|dynamicDarkColorScheme|dynamicLightColorScheme|ColorScheme|Typography|Shape|tonalPalette|cornerRadius|containerColor' | sort -u | head -500 || true
+            unzip -p "$RUNNER_TEMP/voyage.apk" 'classes*.dex' 2>/dev/null | strings | grep -Ei 'MaterialTheme|material3|androidx.compose.material|dynamicDarkColorScheme|dynamicLightColorScheme|ColorScheme|Typography|Shape|tonalPalette|cornerRadius|containerColor' | sort -u | sed -n '1,500p' || true
           } > "$out"
           echo "=== INSPECTION REPORT (begin) ==="
           cat "$out"
