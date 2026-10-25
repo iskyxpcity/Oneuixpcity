@@ -358,6 +358,7 @@
     <string name="theme_motion_expressive">Expressive</string>
     <string name="theme_motion_reduced">Reduced</string>
 
+    <string name="theme_color_blind_off">Off</string>
     <string name="theme_color_blind_achromatomaly">Achromatomaly</string>
     <string name="theme_color_blind_achromatopsia">Achromatopsia</string>
     <string name="theme_color_blind_protanomaly">Protanomaly</string>
