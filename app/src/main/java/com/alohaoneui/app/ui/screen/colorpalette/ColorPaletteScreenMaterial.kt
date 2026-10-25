@@ -534,7 +534,7 @@ fun ColorPaletteScreenMaterial(
                     var cornerScale by remember(uiState.materialCornerScale) { mutableFloatStateOf(uiState.materialCornerScale) }
                     Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                            Text(text = stringResource(R.string.theme_corner_scale_title), style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+                            Text(text = stringResource(R.string.settings_material_corner_scale), style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
                             Text(text = "${(cornerScale * 100).toInt()}%", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                         Slider(value = cornerScale, onValueChange = { cornerScale = it }, onValueChangeFinished = { actions.onSetMaterialCornerScale(cornerScale) }, valueRange = 0.5f..1.5f, modifier = Modifier.fillMaxWidth())
@@ -545,7 +545,7 @@ fun ColorPaletteScreenMaterial(
                     var borderWidth by remember(uiState.materialBorderWidth) { mutableFloatStateOf(uiState.materialBorderWidth) }
                     Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                            Text(text = stringResource(R.string.theme_border_width_title), style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+                            Text(text = stringResource(R.string.theme_component_border_width), style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
                             Text(text = String.format(java.util.Locale.ROOT, "%.1f dp", borderWidth), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                         Slider(value = borderWidth, onValueChange = { borderWidth = it }, onValueChangeFinished = { actions.onSetMaterialBorderWidth(borderWidth) }, valueRange = 0.0f..3.0f, steps = 5, modifier = Modifier.fillMaxWidth())
