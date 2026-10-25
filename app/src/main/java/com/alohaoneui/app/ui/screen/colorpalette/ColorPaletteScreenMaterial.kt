@@ -72,6 +72,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -529,6 +530,32 @@ fun ColorPaletteScreenMaterial(
                 title = stringResource(R.string.theme_group_mode),
                 icon = Icons.Filled.Brightness4,
             ) {
+                val selectedModeIndex = when {
+                    currentColorMode.isSystem -> 0
+                    currentColorMode.isDark -> 2
+                    else -> 1
+                }
+                val themeModeLabels = listOf(
+                    stringResource(R.string.settings_theme_mode_system),
+                    stringResource(R.string.settings_theme_mode_light),
+                    stringResource(R.string.settings_theme_mode_dark),
+                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    themeModeLabels.forEachIndexed { index, label ->
+                        FilterChip(
+                            selected = selectedModeIndex == index,
+                            onClick = { actions.onSetThemeMode(index) },
+                            label = { Text(label) },
+                        )
+                    }
+                }
+
                 SegmentedColumn(
                     modifier = Modifier.padding(top = 4.dp),
                     content = listOf(
