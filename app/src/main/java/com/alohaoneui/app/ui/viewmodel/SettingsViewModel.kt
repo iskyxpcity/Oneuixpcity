@@ -248,7 +248,7 @@ class SettingsViewModel(
     }
 
     fun setMaterialColorVisionMode(mode: Int) {
-        val safeMode = mode.coerceIn(0, 4)
+        val safeMode = mode.coerceIn(0, 8)
         repo.materialColorVisionMode = safeMode
         _uiState.update { it.copy(materialColorVisionMode = safeMode) }
     }

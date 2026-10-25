@@ -61,8 +61,8 @@ class SettingsRepositoryImpl : SettingsRepository {
         set(value) = prefs.edit { putFloat("material_border_width", value.coerceIn(0.0f, 3.0f)) }
 
     override var materialColorVisionMode: Int
-        get() = prefs.getInt("material_color_vision_mode", 0).coerceIn(0, 4)
-        set(value) = prefs.edit { putInt("material_color_vision_mode", value.coerceIn(0, 4)) }
+        get() = prefs.getInt("material_color_vision_mode", 0).coerceIn(0, 8)
+        set(value) = prefs.edit { putInt("material_color_vision_mode", value.coerceIn(0, 8)) }
 
     override var materialNavigationMotionMode: Int
         get() = prefs.getInt("material_navigation_motion_mode", 0).coerceIn(0, 1)
@@ -221,7 +221,7 @@ class SettingsRepositoryImpl : SettingsRepository {
             .putString("material_color_schemes", Json.encodeToString(snapshot.materialColorSchemes))
             .putFloat("material_border_width", snapshot.materialBorderWidth.coerceIn(0.0f, 3.0f))
             .putString("material_font_family", snapshot.materialFontFamily.takeIf { it in setOf("Default", "SansSerif", "Serif", "Monospace", "Cursive") } ?: "Default")
-            .putInt("material_color_vision_mode", snapshot.materialColorVisionMode.coerceIn(0, 4))
+            .putInt("material_color_vision_mode", snapshot.materialColorVisionMode.coerceIn(0, 8))
             .putInt("material_navigation_motion_mode", snapshot.materialNavigationMotionMode.coerceIn(0, 1))
             .putBoolean("material_dynamic_color_enabled", snapshot.materialDynamicColorEnabled)
             .putBoolean("material_invert_colors", snapshot.materialInvertColors)

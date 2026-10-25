@@ -354,4 +354,14 @@
 
     <string name="theme_motion_expressive">表现力动效</string>
     <string name="theme_motion_reduced">减少动效</string>
+
+    <string name="theme_color_blind_achromatomaly">全色弱</string>
+    <string name="theme_color_blind_achromatopsia">全色盲</string>
+    <string name="theme_color_blind_protanomaly">红色弱</string>
+    <string name="theme_color_blind_protanopia">红色盲</string>
+    <string name="theme_color_blind_deuteranomaly">绿色弱</string>
+    <string name="theme_color_blind_deuteranopia">绿色盲</string>
+    <string name="theme_color_blind_tritanomaly">蓝黄色弱</string>
+    <string name="theme_color_blind_tritanopia">蓝黄色盲</string>
+
 </resources>

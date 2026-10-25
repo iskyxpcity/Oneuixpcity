@@ -125,32 +125,47 @@ private fun materialShape(style: Int, size: androidx.compose.ui.unit.Dp): Corner
 }
 
 private fun materialColorVisionMatrix(mode: Int, invert: Boolean): ColorMatrix? {
-    val vision = when (mode) {
-    1 -> ColorMatrix(floatArrayOf(
+    val identity = ColorMatrix()
+    val grayscale = ColorMatrix(floatArrayOf(
         0.2126f, 0.7152f, 0.0722f, 0f, 0f,
         0.2126f, 0.7152f, 0.0722f, 0f, 0f,
         0.2126f, 0.7152f, 0.0722f, 0f, 0f,
         0f, 0f, 0f, 1f, 0f,
     ))
-    2 -> ColorMatrix(floatArrayOf(
+    val protanopia = ColorMatrix(floatArrayOf(
         0.567f, 0.433f, 0f, 0f, 0f,
         0.558f, 0.442f, 0f, 0f, 0f,
         0f, 0.242f, 0.758f, 0f, 0f,
         0f, 0f, 0f, 1f, 0f,
     ))
-    3 -> ColorMatrix(floatArrayOf(
+    val deuteranopia = ColorMatrix(floatArrayOf(
         0.625f, 0.375f, 0f, 0f, 0f,
         0.7f, 0.3f, 0f, 0f, 0f,
         0f, 0.3f, 0.7f, 0f, 0f,
         0f, 0f, 0f, 1f, 0f,
     ))
-    4 -> ColorMatrix(floatArrayOf(
+    val tritanopia = ColorMatrix(floatArrayOf(
         0.95f, 0.05f, 0f, 0f, 0f,
         0f, 0.433f, 0.567f, 0f, 0f,
         0f, 0.475f, 0.525f, 0f, 0f,
         0f, 0f, 0f, 1f, 0f,
     ))
-    else -> null
+    fun partial(target: ColorMatrix, amount: Float): ColorMatrix {
+        val a = identity.values
+        val b = target.values
+        val out = FloatArray(20) { index -> a[index] * (1f - amount) + b[index] * amount }
+        return ColorMatrix(out)
+    }
+    val vision = when (mode) {
+        1 -> partial(grayscale, 0.5f) // Achromatomaly
+        2 -> grayscale               // Achromatopsia
+        3 -> partial(protanopia, 0.5f) // Protanomaly
+        4 -> protanopia                // Protanopia
+        5 -> partial(deuteranopia, 0.5f) // Deuteranomaly
+        6 -> deuteranopia                // Deuteranopia
+        7 -> partial(tritanopia, 0.5f) // Tritanomaly
+        8 -> tritanopia                // Tritanopia
+        else -> null
     }
     if (!invert) return vision
     val inversion = ColorMatrix(floatArrayOf(
@@ -162,7 +177,6 @@ private fun materialColorVisionMatrix(mode: Int, invert: Boolean): ColorMatrix? 
     if (vision == null) return inversion
     return multiplyColorMatrices(inversion, vision)
 }
-
 private fun multiplyColorMatrices(first: ColorMatrix, second: ColorMatrix): ColorMatrix {
     val a = first.values
     val b = second.values

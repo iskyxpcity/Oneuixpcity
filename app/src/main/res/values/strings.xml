@@ -357,4 +357,14 @@
 
     <string name="theme_motion_expressive">Expressive</string>
     <string name="theme_motion_reduced">Reduced</string>
+
+    <string name="theme_color_blind_achromatomaly">Achromatomaly</string>
+    <string name="theme_color_blind_achromatopsia">Achromatopsia</string>
+    <string name="theme_color_blind_protanomaly">Protanomaly</string>
+    <string name="theme_color_blind_protanopia">Protanopia</string>
+    <string name="theme_color_blind_deuteranomaly">Deuteranomaly</string>
+    <string name="theme_color_blind_deuteranopia">Deuteranopia</string>
+    <string name="theme_color_blind_tritanomaly">Tritanomaly</string>
+    <string name="theme_color_blind_tritanopia">Tritanopia</string>
+
 </resources>
