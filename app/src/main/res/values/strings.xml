@@ -319,7 +319,7 @@
     <string name="settings_large_text_title">Large text</string>
     <string name="settings_large_text_subtitle">Enlarge text and interface elements</string>
     <string name="settings_bold_text_title">Bold text</string>
-    <string name="settings_group_behavior">Motion & haptics</string>
+    <string name="settings_group_behavior">Motion &amp; haptics</string>
     <string name="settings_group_display">Display and text</string>
     <string name="settings_group_language">Language</string>
     <string name="settings_haptic_feedback_title">Haptic feedback</string>
