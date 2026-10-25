@@ -204,7 +204,7 @@ fun ThemeSettingsScreenMaterial() {
                     },
                     {
                         Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
-                            Text(stringResource(R.string.settings_font_scale_title))
+                            Text(stringResource(R.string.settings_material_font_scale))
                             Text(String.format(java.util.Locale.ROOT, "%.0f%%", state.materialFontScale * 100f), style = MaterialTheme.typography.labelMedium)
                             Slider(
                                 value = state.materialFontScale,
@@ -216,12 +216,13 @@ fun ThemeSettingsScreenMaterial() {
                     {
                         SegmentedDropdownItem(
                             icon = Icons.Filled.Tune,
-                            title = stringResource(R.string.settings_navigation_motion_title),
+                            title = stringResource(R.string.settings_material_navigation_motion),
                             items = listOf(
-                                stringResource(R.string.settings_navigation_motion_expressive),
-                                stringResource(R.string.settings_navigation_motion_reduced),
+                                stringResource(R.string.settings_material_navigation_motion_spring),
+                                stringResource(R.string.settings_material_navigation_motion_smooth),
+                                stringResource(R.string.settings_material_navigation_motion_instant),
                             ),
-                            selectedIndex = if (state.materialNavigationMotionMode == 1) 1 else 0,
+                            selectedIndex = state.materialNavigationMotionMode.coerceIn(0, 2),
                             onItemSelected = viewModel::setMaterialNavigationMotionMode,
                         )
                     },
