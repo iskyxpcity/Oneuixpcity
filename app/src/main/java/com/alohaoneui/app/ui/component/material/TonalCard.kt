@@ -60,7 +60,7 @@ fun TonalCard(
 fun TonalCard(
     modifier: Modifier = Modifier,
     containerColor: Color = MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp),
-    shape: Shape = MaterialTheme.shapes.large,
+    shape: Shape? = null,
     content: @Composable () -> Unit,
 ) {
     val actualShape = shape ?: voyageCornerShape(20.dp)
