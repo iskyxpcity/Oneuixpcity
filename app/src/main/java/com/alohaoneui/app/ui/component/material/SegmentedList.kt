@@ -66,6 +66,11 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.alohaoneui.app.ui.theme.LocalMaterialCornerScale
+import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
+import com.alohaoneui.app.ui.theme.LocalMaterialShadowContainers
+import androidx.compose.foundation.border
+import androidx.compose.ui.draw.shadow
 import kotlinx.coroutines.launch
 
 val LocalListItemShapes = compositionLocalOf<ListItemShapes?> { null }
@@ -87,24 +92,25 @@ fun voyageSegmentedShape(index: Int, count: Int, vertical: Boolean = true): Shap
     val single = count == 1 || index == -1
     val first = single || index == 0
     val last = single || index == count - 1
+    val cornerScale = LocalMaterialCornerScale.current
 
     val topStart by animateDpAsState(
-        targetValue = if (first) 16.dp else 4.dp,
+        targetValue = (if (first) 16.dp else 4.dp) * cornerScale,
         animationSpec = spring(dampingRatio = 0.4f, stiffness = 200f),
         label = "voyageSegmentTopStart",
     )
     val topEnd by animateDpAsState(
-        targetValue = if (if (vertical) first else last) 16.dp else 4.dp,
+        targetValue = (if (if (vertical) first else last) 16.dp else 4.dp) * cornerScale,
         animationSpec = spring(dampingRatio = 0.4f, stiffness = 200f),
         label = "voyageSegmentTopEnd",
     )
     val bottomEnd by animateDpAsState(
-        targetValue = if (last) 16.dp else 4.dp,
+        targetValue = (if (last) 16.dp else 4.dp) * cornerScale,
         animationSpec = spring(dampingRatio = 0.4f, stiffness = 200f),
         label = "voyageSegmentBottomEnd",
     )
     val bottomStart by animateDpAsState(
-        targetValue = if (if (vertical) last else first) 16.dp else 4.dp,
+        targetValue = (if (if (vertical) last else first) 16.dp else 4.dp) * cornerScale,
         animationSpec = spring(dampingRatio = 0.4f, stiffness = 200f),
         label = "voyageSegmentBottomStart",
     )
