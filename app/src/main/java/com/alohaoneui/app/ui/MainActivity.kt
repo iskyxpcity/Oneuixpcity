@@ -95,6 +95,7 @@ import com.alohaoneui.app.ui.theme.LocalEnableBlur
 import com.alohaoneui.app.ui.theme.LocalEnableFloatingBottomBar
 import com.alohaoneui.app.ui.theme.LocalEnableFloatingBottomBarBlur
 import com.alohaoneui.app.ui.theme.AlohaOneUITheme
+import com.alohaoneui.app.ui.util.AppLocaleContext
 import com.alohaoneui.app.ui.util.rememberBlurBackdrop
 import com.alohaoneui.app.ui.util.rememberContentReady
 import com.alohaoneui.app.ui.util.update.UpdateDialogHost
@@ -115,6 +116,10 @@ import top.yukonga.miuix.kmp.utils.PagerNavigationSpringSpec
 import top.yukonga.miuix.kmp.utils.pagerGestureOverride
 
 class MainActivity : ComponentActivity() {
+
+    override fun attachBaseContext(newBase: android.content.Context) {
+        super.attachBaseContext(AppLocaleContext.wrap(newBase))
+    }
 
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
