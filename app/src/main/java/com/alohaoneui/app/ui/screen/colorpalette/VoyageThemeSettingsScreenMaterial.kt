@@ -698,6 +698,7 @@ private fun ThemeStyleChoice(
         VoyageSlider(value.coerceIn(range.start, range.endInclusive), onChange, valueRange = range)
     }
 }
+}
 @OptIn(ExperimentalLayoutApi::class)
 @Composable private fun Drop(id: Int, selected: String, options: List<String>, onSelect: (String) -> Unit) {
     Surface(
