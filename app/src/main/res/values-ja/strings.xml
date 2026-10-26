@@ -42,4 +42,10 @@
     <string name="settings_language_chinese_traditional">繁体字中国語</string>
     <string name="settings_language_japanese">日本語</string>
     <string name="settings_language_korean">韓国語</string>
+    <string name="settings_motion_simplified">簡略化</string>
+    <string name="settings_transition_style">画面遷移スタイル</string>
+    <string name="settings_transition_aosp">AOSP</string>
+    <string name="settings_transition_miuix">MIUIX</string>
+    <string name="settings_transition_scale">拡大縮小</string>
+    <string name="settings_transition_classic">クラシック</string>
 </resources>
