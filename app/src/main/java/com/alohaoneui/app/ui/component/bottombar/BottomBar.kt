@@ -85,21 +85,22 @@ fun BottomBar(
     backdrop: Backdrop,
     modifier: Modifier = Modifier,
 ) {
-    when (LocalUiMode.current) {
-        UiMode.Miuix -> BottomBarMiuix(blurBackdrop, backdrop, modifier)
-        UiMode.Material -> BottomBarMaterial()
+    val uiMode = LocalUiMode.current
+    val enableFloatingBottomBar = LocalEnableFloatingBottomBar.current
+
+    when {
+        uiMode == UiMode.Miuix -> BottomBarMiuix(blurBackdrop, backdrop, modifier)
+        enableFloatingBottomBar -> BottomBarMiuix(blurBackdrop, backdrop, modifier)
+        else -> BottomBarMaterial()
     }
 }
 
-
 /**
- * Match KernelSU's adaptive navigation behavior:
- * Material uses a side rail in wide windows; Miuix keeps the floating bottom bar
- * when that preference is enabled, including unfolded and landscape layouts.
+ * Use the floating bar preference independently of the active visual theme.
+ * Expanded windows continue to use the side rail unless the floating bar is enabled.
  */
 @Composable
 fun useNavigationRail(
     enableFloatingBottomBar: Boolean = LocalEnableFloatingBottomBar.current,
 ): Boolean =
-    shouldShowSplitPane() &&
-        !(LocalUiMode.current == UiMode.Miuix && enableFloatingBottomBar)
+    shouldShowSplitPane() && !enableFloatingBottomBar
