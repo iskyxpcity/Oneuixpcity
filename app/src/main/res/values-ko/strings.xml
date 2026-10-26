@@ -50,4 +50,5 @@
     <string name="voyage_toolbox_title">Voyage 도구 상자</string>
     <string name="voyage_toolbox_subtitle">멀리 있어도 마음은 가까이.</string>
     <string name="voyage_theme_large_text_summary">텍스트와 화면 요소 확대</string>
+    <string name="settings_haptic_feedback_summary">화면을 조작할 때 햅틱 피드백을 제공합니다.</string>
 </resources>
