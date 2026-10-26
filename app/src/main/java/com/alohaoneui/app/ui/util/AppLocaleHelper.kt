@@ -20,7 +20,7 @@ object AppLocaleHelper {
     }
 
     fun apply(context: Context, language: String) {
-        val safeLanguage = language.takeIf { it in setOf("system", "en", "zh-CN") } ?: "system"
+        val safeLanguage = language.takeIf { it in setOf("system", "en", "zh-CN", "zh-TW", "ja", "ko") } ?: "system"
         context.getSharedPreferences("settings", Context.MODE_PRIVATE).edit().putString("app_language", safeLanguage).apply()
     }
 }
