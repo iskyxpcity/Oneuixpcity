@@ -108,6 +108,22 @@ fun VoyageThemeSettingsScreenMaterial(
                                     Toggle(R.string.voyage_theme_pure_black, stringResource(R.string.voyage_theme_pure_black_summary), uiState.themeMode == ColorMode.DARK_AMOLED.value, onChange = { enabled -> viewModel.setColorMode(if (enabled) ColorMode.DARK_AMOLED else ColorMode.DARK) })
                                 }
                                 VoyageThemeCategory.DESIGN -> {
+                                    if (!schemeEditorOnly) {
+                                        ThemeStyleChoice(
+                                            title = stringResource(R.string.theme_design_material3),
+                                            summary = stringResource(R.string.theme_design_material3_subtitle),
+                                            icon = Icons.Outlined.Palette,
+                                            selected = uiState.uiMode == UiMode.Material.value,
+                                            onClick = { viewModel.setUiMode(UiMode.Material.value) },
+                                        )
+                                        ThemeStyleChoice(
+                                            title = stringResource(R.string.theme_design_miuix),
+                                            summary = stringResource(R.string.theme_design_miuix_subtitle),
+                                            icon = Icons.Outlined.PhoneAndroid,
+                                            selected = uiState.uiMode == UiMode.Miuix.value,
+                                            onClick = { viewModel.setUiMode(UiMode.Miuix.value) },
+                                        )
+                                    }
                                     if (schemeEditorOnly) {
                                         Text(stringResource(R.string.voyage_theme_key_color), style = MaterialTheme.typography.titleMedium)
                                         val editorSeedPresets = listOf(
@@ -462,9 +478,12 @@ private fun ThemeStyleChoice(
     enabled: Boolean = true,
 ) {
     ListItem(
+        modifier = Modifier.clickable(enabled = enabled) { onChange(!checked) },
         headlineContent = { Text(stringResource(id)) },
         supportingContent = summary?.let { { Text(it) } },
-        trailingContent = { Switch(checked = checked, onCheckedChange = onChange, enabled = enabled) },
+        trailingContent = {
+            Switch(checked = checked, onCheckedChange = onChange, enabled = enabled)
+        },
     )
 }
 @Composable private fun Slide(id: Int, value: Float, range: ClosedFloatingPointRange<Float>, onChange: (Float) -> Unit) {
