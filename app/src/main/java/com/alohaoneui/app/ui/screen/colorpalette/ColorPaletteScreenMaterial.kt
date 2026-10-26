@@ -725,9 +725,16 @@ private fun ColorButtonMaterial(
             haptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
             onClick()
         },
-        shape = RoundedCornerShape(20.dp),
+        shape = voyageCornerShape(20.dp),
         color = colorScheme.surfaceContainer,
-        modifier = Modifier.size(72.dp)
+        modifier = Modifier
+            .size(72.dp)
+            .then(if (LocalMaterialShadowButtons.current) Modifier.shadow(2.dp, voyageCornerShape(20.dp)) else Modifier)
+            .then(
+                LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
+                    Modifier.border(it.dp, colorScheme.outlineVariant, voyageCornerShape(20.dp))
+                } ?: Modifier
+            )
     ) {
         Box(contentAlignment = Alignment.Center) {
             Canvas(modifier = Modifier.size(48.dp)) {
@@ -761,7 +768,11 @@ private fun ColorButtonMaterial(
                     Box(
                         modifier = Modifier
                             .size(56.dp)
-                            .border(2.dp, colorScheme.primary, CircleShape),
+                            .then(
+                                LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
+                                    Modifier.border(it.dp, colorScheme.primary, CircleShape)
+                                } ?: Modifier
+                            ),
                         contentAlignment = Alignment.Center
                     ) {
                         Box(
