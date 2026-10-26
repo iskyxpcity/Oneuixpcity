@@ -48,16 +48,22 @@ fun VoyageThemeSettingsScreenMaterial(
     viewModel: SettingsViewModel,
     onBack: () -> Unit,
     schemeEditorOnly: Boolean = false,
-    onOpenColorSchemeEditor: () -> Unit = {},
+    schemeIndex: Int = -1,
+    onOpenColorSchemeEditor: (Int) -> Unit = {},
 ) {
     var showColorEditor by rememberSaveable { mutableStateOf(false) }
     var showSaveScheme by rememberSaveable { mutableStateOf(false) }
     var pendingDeleteScheme by rememberSaveable { mutableStateOf<String?>(null) }
-    var schemeName by rememberSaveable { mutableStateOf("") }
+    var schemeName by rememberSaveable(schemeEditorOnly, schemeIndex) { mutableStateOf(uiState.materialColorSchemes.getOrNull(schemeIndex)?.name.orEmpty()) }
     var hctHue by rememberSaveable { mutableFloatStateOf(270f) }
     var hctChroma by rememberSaveable { mutableFloatStateOf(48f) }
     var hctTone by rememberSaveable { mutableFloatStateOf(55f) }
     val currentSeedColor = if (uiState.keyColor == 0) MaterialTheme.colorScheme.primary.toArgb() else uiState.keyColor
+    LaunchedEffect(schemeEditorOnly, schemeIndex, uiState.materialColorSchemes) {
+        if (schemeEditorOnly && schemeIndex in uiState.materialColorSchemes.indices) {
+            viewModel.applyMaterialColorScheme(uiState.materialColorSchemes[schemeIndex])
+        }
+    }
 
     var expandedCategories by rememberSaveable(schemeEditorOnly) {
         mutableStateOf(if (schemeEditorOnly) listOf(VoyageThemeCategory.DESIGN.name) else emptyList())
@@ -144,7 +150,7 @@ fun VoyageThemeSettingsScreenMaterial(
                                         if (uiState.materialColorSchemes.isEmpty()) {
                                             Text(stringResource(R.string.voyage_theme_saved_schemes_empty), color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         } else {
-                                            uiState.materialColorSchemes.forEach { scheme ->
+                                            uiState.materialColorSchemes.forEachIndexed { index, scheme ->
                                                 ListItem(
                                                     headlineContent = { Text(scheme.name) },
                                                     supportingContent = { Text(scheme.colorStyle) },
@@ -213,7 +219,7 @@ fun VoyageThemeSettingsScreenMaterial(
                                             Slider(uiState.materialContrastLevel.coerceIn(-1f, 1f), viewModel::setMaterialContrastLevel, valueRange = -1f..1f)
                                         }
                                         ListItem(
-                                            modifier = Modifier.clickable(onClick = onOpenColorSchemeEditor),
+                                            modifier = Modifier.clickable { onOpenColorSchemeEditor(-1) },
                                             headlineContent = { Text(stringResource(R.string.voyage_theme_scheme_title)) },
                                             trailingContent = { Icon(Icons.Outlined.Palette, contentDescription = null) },
                                         )
