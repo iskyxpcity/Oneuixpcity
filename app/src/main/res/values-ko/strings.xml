@@ -35,4 +35,10 @@
     <string name="settings_language_chinese_traditional">번체 중국어</string>
     <string name="settings_language_japanese">일본어</string>
     <string name="settings_language_korean">한국어</string>
+    <string name="settings_motion_simplified">간소화</string>
+    <string name="settings_transition_style">전환 스타일</string>
+    <string name="settings_transition_aosp">AOSP</string>
+    <string name="settings_transition_miuix">MIUIX</string>
+    <string name="settings_transition_scale">확대/축소</string>
+    <string name="settings_transition_classic">클래식</string>
 </resources>
