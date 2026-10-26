@@ -385,7 +385,7 @@ class SettingsViewModel(
     }
 
     fun setAppLanguage(language: String) {
-        val safeLanguage = language.takeIf { it in setOf("system", "en", "zh-CN") } ?: "system"
+        val safeLanguage = language.takeIf { it in setOf("system", "en", "zh-CN", "zh-TW", "ja", "ko") } ?: "system"
         repo.appLanguage = safeLanguage
         _uiState.update { it.copy(appLanguage = safeLanguage) }
     }
