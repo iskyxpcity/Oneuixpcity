@@ -53,4 +53,8 @@
     <string name="voyage_theme_content_color_summary">再生画面と読書画面にカバーの色を使用します。</string>
     <string name="voyage_theme_icon_follows">ホームアイコンをテーマに合わせる</string>
     <string name="voyage_theme_icon_follows_summary">ホームに戻ると適用されます。一部のランチャーではアイコンの位置が変わることがあります。</string>
+    <string name="voyage_theme_page_summary">配色、形状、コンポーネントのスタイル</string>
+    <string name="voyage_toolbox_title">Voyage ツールボックス</string>
+    <string name="voyage_toolbox_subtitle">遠くの友も心は近くにいる。</string>
+    <string name="voyage_theme_large_text_summary">文字と画面要素を大きくする</string>
 </resources>
