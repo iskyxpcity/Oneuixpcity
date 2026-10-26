@@ -252,4 +252,21 @@
     <string name="theme_shape_wavy">Wavy</string>
     <string name="theme_shape_scoop">Scoop</string>
     <string name="theme_shape_notch">Notch</string>
+    <string name="theme_switch_style_title">Switch style</string>
+    <string name="theme_switch_material_you">Material You</string>
+    <string name="theme_switch_compose">Compose</string>
+    <string name="theme_switch_pixel">Pixel</string>
+    <string name="theme_switch_fluent">Fluent</string>
+    <string name="theme_switch_cupertino">Cupertino</string>
+    <string name="theme_switch_liquid_glass">Liquid Glass</string>
+    <string name="theme_switch_hyper_os">HyperOS</string>
+    <string name="theme_switch_one_ui">One UI</string>
+    <string name="theme_slider_style_title">Slider style</string>
+    <string name="theme_slider_material_you">Material You</string>
+    <string name="theme_slider_fancy">Fancy</string>
+    <string name="theme_slider_material">Material 2</string>
+    <string name="theme_slider_hyper_os">HyperOS</string>
+    <string name="theme_icon_shape_title">Icon shape</string>
+    <string name="theme_icon_shape_none">None</string>
+    <string name="theme_icon_shape_random">Random</string>
 </resources>
