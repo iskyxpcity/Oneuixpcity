@@ -90,4 +90,6 @@
     <string name="changelog_2610191_optimizations_body">• 最佳化狀態列組合圖示佈局及原生圖示間距。\n• 改進原生訊號圖示的顯示與還原邏輯。\n• 改進圖示縮放設定的儲存與遷移。\n• 改進 Material、Miuix 主題及寬螢幕介面的適配。</string>
     <string name="changelog_2610191_fixes_title">問題修正</string>
     <string name="changelog_2610191_fixes_body">• 修正部分設定遷移時圖示縮放比例異常的問題。\n• 修正隱藏原生圖示後可能殘留空白的問題。\n• 改進部分系統功能的設定讀取與相容性。</string>
+    <string name="settings_language">全域語言</string>
+    <string name="settings_language_summary">選擇應用所有頁面使用的語言；語言切換功能將於後續移植階段接入。</string>
 </resources>
