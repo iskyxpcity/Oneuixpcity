@@ -82,7 +82,7 @@ fun MaterialAlohaOneUITheme(
     ) {
         DynamicMaterialExpressiveTheme(
             seedColor = seedColor,
-            motionScheme = MotionScheme.expressive(),
+            motionScheme = if (appSettings.materialNavigationMotionMode == 1) MotionScheme.standard() else MotionScheme.expressive(),
             isDark = darkTheme,
             isAmoled = amoledMode,
             style = appSettings.paletteStyle,

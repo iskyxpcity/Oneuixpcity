@@ -26,6 +26,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.alohaoneui.app.R
@@ -104,9 +105,9 @@ fun VoyageThemeSettingsScreenMaterial(
                         when (selected) {
                             VoyageThemeCategory.MODE -> {
                                 Header(R.string.voyage_theme_group_mode)
-                                Choice(R.string.settings_theme_mode_system, uiState.themeMode == ColorMode.SYSTEM.value) { viewModel.setColorMode(ColorMode.SYSTEM) }
-                                Choice(R.string.settings_theme_mode_light, uiState.themeMode == ColorMode.LIGHT.value) { viewModel.setColorMode(ColorMode.LIGHT) }
-                                Choice(R.string.settings_theme_mode_dark, uiState.themeMode == ColorMode.DARK.value) { viewModel.setColorMode(ColorMode.DARK) }
+                                Choice(R.string.settings_theme_mode_system, ColorMode.fromValue(uiState.themeMode).toNonMonetMode() == ColorMode.SYSTEM.value) { viewModel.setColorMode(ColorMode.SYSTEM) }
+                                Choice(R.string.settings_theme_mode_light, ColorMode.fromValue(uiState.themeMode).toNonMonetMode() == ColorMode.LIGHT.value) { viewModel.setColorMode(ColorMode.LIGHT) }
+                                Choice(R.string.settings_theme_mode_dark, ColorMode.fromValue(uiState.themeMode).toNonMonetMode() == ColorMode.DARK.value && uiState.themeMode != ColorMode.DARK_AMOLED.value) { viewModel.setColorMode(ColorMode.DARK) }
                                 Choice(R.string.voyage_theme_pure_black, uiState.themeMode == ColorMode.DARK_AMOLED.value) { viewModel.setColorMode(ColorMode.DARK_AMOLED) }
                             }
                             VoyageThemeCategory.DESIGN -> {
@@ -114,8 +115,14 @@ fun VoyageThemeSettingsScreenMaterial(
                                 Toggle(R.string.voyage_theme_dynamic_color, null, uiState.materialDynamicColorEnabled, viewModel::setMaterialDynamicColorEnabled)
                                 Text(stringResource(R.string.voyage_theme_key_color), style = MaterialTheme.typography.titleMedium)
                                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
-                                    ColorChoice(Color(0xFF6750A4), uiState.keyColor == 0, stringResource(R.string.voyage_theme_system_color)) { viewModel.setKeyColor(0) }
-                                    keyColorOptions.forEach { color -> ColorChoice(Color(color), uiState.keyColor == color, null) { viewModel.setKeyColor(color) } }
+                                    ColorChoice(MaterialTheme.colorScheme.primary, uiState.keyColor == 0 && uiState.materialDynamicColorEnabled, stringResource(R.string.voyage_theme_system_color)) {
+                                        viewModel.setKeyColor(0)
+                                        viewModel.setMaterialDynamicColorEnabled(true)
+                                    }
+                                    keyColorOptions.forEach { color -> ColorChoice(Color(color), uiState.keyColor == color, null) {
+                                        viewModel.setKeyColor(color)
+                                        viewModel.setMaterialDynamicColorEnabled(false)
+                                    } }
                                 }
                                 val paletteChoices = listOf(
                                     stringResource(R.string.voyage_palette_tonal_spot) to PaletteStyle.TonalSpot,
@@ -142,7 +149,7 @@ fun VoyageThemeSettingsScreenMaterial(
                                     Slider(uiState.materialContrastLevel.coerceIn(-1f, 1f), viewModel::setMaterialContrastLevel, valueRange = -1f..1f)
                                 }
                                 Button(onClick = {
-                                    val seed = if (uiState.keyColor == 0) 0xFF6750A4.toInt() else uiState.keyColor
+                                    val seed = if (uiState.keyColor == 0) MaterialTheme.colorScheme.primary.toArgb() else uiState.keyColor
                                     val hct = Hct.fromInt(seed)
                                     hctHue = hct.hue.toFloat()
                                     hctChroma = hct.chroma.toFloat()
