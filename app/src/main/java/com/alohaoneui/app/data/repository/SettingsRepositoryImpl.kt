@@ -17,6 +17,10 @@ class SettingsRepositoryImpl : SettingsRepository {
         get() = prefs.getString("ui_mode", UiMode.DEFAULT_VALUE) ?: UiMode.DEFAULT_VALUE
         set(value) = prefs.edit { putString("ui_mode", value) }
 
+    override var appLanguage: String
+        get() = prefs.getString("app_language", "system") ?: "system"
+        set(value) = prefs.edit { putString("app_language", value) }
+
     override var checkUpdate: Boolean
         get() = prefs.getBoolean("check_update", true)
         set(value) = prefs.edit { putBoolean("check_update", value) }
@@ -134,6 +138,7 @@ class SettingsRepositoryImpl : SettingsRepository {
         materialShadowSliders = materialShadowSliders,
         enableSwipeBack = enableSwipeBack,
         pagerGestureMode = pagerGestureMode,
+        appLanguage = appLanguage,
     )
 
     override fun restoreFromBackup(snapshot: AppSettingsBackup) {
@@ -169,6 +174,7 @@ class SettingsRepositoryImpl : SettingsRepository {
             .putBoolean("material_shadow_sliders", snapshot.materialShadowSliders)
             .putBoolean("enable_swipe_back", snapshot.enableSwipeBack)
             .putInt("pager_gesture_mode", snapshot.pagerGestureMode.coerceIn(0, 2))
+            .putString("app_language", snapshot.appLanguage)
             .commit()
         check(committed) { "Could not persist restored AlohaOneUI app settings." }
     }
