@@ -26,6 +26,7 @@ class SettingsViewModel(
     fun refresh() {
         viewModelScope.launch {
             val checkUpdate = repo.checkUpdate
+            val appLanguage = repo.appLanguage
             val themeMode = repo.themeMode
             val miuixMonet = repo.miuixMonet
             val keyColor = repo.keyColor
@@ -53,6 +54,7 @@ class SettingsViewModel(
                 it.copy(
                     uiMode = uiMode,
                     checkUpdate = checkUpdate,
+                    appLanguage = appLanguage,
                     themeMode = themeMode,
                     miuixMonet = miuixMonet,
                     keyColor = keyColor,
@@ -77,6 +79,12 @@ class SettingsViewModel(
                 )
             }
         }
+    }
+
+    fun setAppLanguage(language: String) {
+        val safeLanguage = language.takeIf { it in setOf("system", "zh-CN", "zh-TW", "en", "ja", "ko") } ?: "system"
+        repo.appLanguage = safeLanguage
+        _uiState.update { it.copy(appLanguage = safeLanguage) }
     }
 
     fun setCheckUpdate(enabled: Boolean) {
