@@ -46,12 +46,16 @@ fun SettingPager(
         onOpenTheme = { navigator.push(Route.VoyageThemeSettings) },
         onOpenColorPalette = { navigator.push(Route.ColorPalette) },
         onSetUiModeIndex = { index ->
-            viewModel.setUiMode(if (index == 0) UiMode.Miuix.value else UiMode.Material.value)
+            viewModel.setUiMode(if (index == 0) UiMode.Material.value else UiMode.Miuix.value)
         },
         onOpenAbout = { navigator.push(Route.About) },
         onSetThemeMode = viewModel::setThemeMode,
         onBack = { if (navigator.backStackSize() > 1) navigator.pop() },
     )
 
-    SettingPagerMaterial(uiState, actions, bottomInnerPadding)
+    if (uiState.uiMode == UiMode.Material.value) {
+        SettingPagerMaterial(uiState, actions, bottomInnerPadding)
+    } else {
+        SettingPagerMiuix(uiState, actions, bottomInnerPadding)
+    }
 }
