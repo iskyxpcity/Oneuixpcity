@@ -388,4 +388,10 @@
     <string name="settings_language_chinese_traditional">Traditional Chinese</string>
     <string name="settings_language_japanese">Japanese</string>
     <string name="settings_language_korean">Korean</string>
+    <string name="settings_motion_simplified">Simplified</string>
+    <string name="settings_transition_style">Transition style</string>
+    <string name="settings_transition_aosp">AOSP</string>
+    <string name="settings_transition_miuix">MIUIX</string>
+    <string name="settings_transition_scale">Scale</string>
+    <string name="settings_transition_classic">Classic</string>
 </resources>
