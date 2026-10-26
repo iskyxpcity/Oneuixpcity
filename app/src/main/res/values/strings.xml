@@ -244,4 +244,12 @@
     <string name="theme_shadow_slider">Sliders</string>
     <string name="settings_language">Global language</string>
     <string name="settings_language_summary">Choose the language used throughout the app.</string>
+    <string name="theme_shape_style_title">Shape style</string>
+    <string name="theme_shape_rounded">Rounded</string>
+    <string name="theme_shape_cut">Cut</string>
+    <string name="theme_shape_squircle">Squircle</string>
+    <string name="theme_shape_smooth">Smooth</string>
+    <string name="theme_shape_wavy">Wavy</string>
+    <string name="theme_shape_scoop">Scoop</string>
+    <string name="theme_shape_notch">Notch</string>
 </resources>
