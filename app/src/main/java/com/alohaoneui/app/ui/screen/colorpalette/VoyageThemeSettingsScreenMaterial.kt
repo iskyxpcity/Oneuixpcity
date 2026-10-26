@@ -633,7 +633,6 @@ private fun ThemeStyleChoice(
             Text(value.toInt().toString(), color = MaterialTheme.colorScheme.primary)
         }
         VoyageSlider(value.coerceIn(range.start, range.endInclusive), onChange, valueRange = range)
-      }
     }
 }
 

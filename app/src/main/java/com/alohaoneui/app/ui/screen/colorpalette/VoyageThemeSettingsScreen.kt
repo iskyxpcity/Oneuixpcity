@@ -98,6 +98,7 @@ fun VoyageThemeSettingsScreenMaterial(uiState: SettingsUiState, viewModel: Setti
                         VoyageThemeCategory.SHAPE -> Icons.Filled.Tune
                         VoyageThemeCategory.COMPONENTS -> Icons.Filled.Widgets
                         VoyageThemeCategory.SHADOWS -> Icons.Filled.Tune
+                        VoyageThemeCategory.PALETTE -> Icons.Filled.Palette
                     },
                     expanded = expanded,
                     onToggle = { expandedCategories = if (expanded) expandedCategories - category.name else expandedCategories + category.name },
@@ -176,7 +177,7 @@ fun VoyageThemeSettingsScreenMaterial(uiState: SettingsUiState, viewModel: Setti
                                 Toggle(R.string.voyage_shadow_switch, null, uiState.materialShadowSwitches, viewModel::setMaterialShadowSwitches)
                                 Toggle(R.string.voyage_shadow_slider, null, uiState.materialShadowSliders, viewModel::setMaterialShadowSliders)
                             }
-                        }
+                            VoyageThemeCategory.PALETTE -> {}
                     }
                 }
             }
@@ -319,6 +320,7 @@ private fun VoyageThemeSettingsScreenMiuix(
                         VoyageThemeCategory.SHAPE -> Icons.Rounded.Tune
                         VoyageThemeCategory.COMPONENTS -> Icons.Rounded.Widgets
                         VoyageThemeCategory.SHADOWS -> Icons.Rounded.Tune
+                        VoyageThemeCategory.PALETTE -> Icons.Rounded.Palette
                     },
                     expanded = expanded,
                     onToggle = { expandedCategories = if (expanded) expandedCategories - category.name else expandedCategories + category.name },
@@ -395,7 +397,7 @@ private fun VoyageThemeSettingsScreenMiuix(
                             MiuixToggle(R.string.voyage_shadow_switch, null, uiState.materialShadowSwitches, viewModel::setMaterialShadowSwitches)
                             MiuixToggle(R.string.voyage_shadow_slider, null, uiState.materialShadowSliders, viewModel::setMaterialShadowSliders)
                         }
-                    }
+                        VoyageThemeCategory.PALETTE -> {}
                 }
             }
         }
