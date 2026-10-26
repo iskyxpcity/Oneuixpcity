@@ -62,15 +62,19 @@ fun ColorPaletteScreen(schemeEditorOnly: Boolean = false, schemeIndex: Int = -1)
         onSetPageScale = viewModel::setPageScale,
     )
 
-    when (LocalUiMode.current) {
-        UiMode.Miuix -> ColorPaletteScreenMiuix(state, actions)
-        UiMode.Material -> VoyageThemeSettingsScreenMaterial(
+    if (schemeEditorOnly) {
+        VoyageColorSchemeEditorScreenMaterial(
             uiState = uiState,
             viewModel = viewModel,
             onBack = actions.onBack,
-            schemeEditorOnly = schemeEditorOnly,
+            schemeEditorOnly = true,
             schemeIndex = schemeIndex,
             onOpenColorSchemeEditor = { index -> navigator.push(com.alohaoneui.app.ui.navigation3.Route.VoyageColorSchemeEditor(index)) },
         )
+    } else {
+        when (LocalUiMode.current) {
+            UiMode.Miuix -> ColorPaletteScreenMiuix(state, actions)
+            UiMode.Material -> ColorPaletteScreenMaterial(state, actions)
+        }
     }
 }

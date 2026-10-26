@@ -45,7 +45,7 @@ import com.alohaoneui.app.ui.viewmodel.SettingsViewModel
 import com.materialkolor.PaletteStyle
 
 @Composable
-fun VoyageThemeSettingsScreenMaterial(
+fun VoyageColorSchemeEditorScreenMaterial(
     uiState: SettingsUiState,
     viewModel: SettingsViewModel,
     onBack: () -> Unit,
