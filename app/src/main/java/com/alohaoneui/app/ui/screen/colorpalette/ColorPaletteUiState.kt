@@ -30,4 +30,12 @@ data class ColorPaletteScreenActions(
     val onSetEnableSwipeBack: (Boolean) -> Unit,
     val onSetPagerGestureMode: (Int) -> Unit,
     val onSetPageScale: (Float) -> Unit,
+    val onSetMaterialCornerScale: (Float) -> Unit,
+    val onSetMaterialOutlineWidth: (Float) -> Unit,
+    val onSetMaterialShadowContainers: (Boolean) -> Unit,
+    val onSetMaterialShadowTopBars: (Boolean) -> Unit,
+    val onSetMaterialShadowButtons: (Boolean) -> Unit,
+    val onSetMaterialShadowFloatingButtons: (Boolean) -> Unit,
+    val onSetMaterialShadowSwitches: (Boolean) -> Unit,
+    val onSetMaterialShadowSliders: (Boolean) -> Unit,
 )
