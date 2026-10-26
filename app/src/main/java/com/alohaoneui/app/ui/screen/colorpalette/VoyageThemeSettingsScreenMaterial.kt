@@ -12,6 +12,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.outlined.AppShortcut
 import androidx.compose.material.icons.outlined.CallToAction
@@ -339,6 +340,34 @@ fun VoyageColorSchemeEditorScreenMaterial(
                                     Toggle(R.string.voyage_shadow_fab, null, uiState.materialShadowFab, viewModel::setMaterialShadowFab)
                                     Toggle(R.string.voyage_shadow_switch, null, uiState.materialShadowSwitches, viewModel::setMaterialShadowSwitches)
                                     Toggle(R.string.voyage_shadow_slider, null, uiState.materialShadowSliders, viewModel::setMaterialShadowSliders)
+                                    ThemeResetCard {
+                                        viewModel.setUiMode(UiMode.Material.value)
+                                        viewModel.setColorMode(ColorMode.SYSTEM)
+                                        viewModel.setKeyColor(0)
+                                        viewModel.setMaterialDynamicColorEnabled(true)
+                                        viewModel.setColorStyle(PaletteStyle.Expressive.name)
+                                        viewModel.setColorSpec(com.materialkolor.dynamiccolor.ColorSpec.SpecVersion.SPEC_2025.name)
+                                        viewModel.setMaterialContrastMode(-1)
+                                        viewModel.setMaterialContrastLevel(0f)
+                                        viewModel.setMaterialCornerScale(1f)
+                                        viewModel.setMaterialBorderWidth(0f)
+                                        viewModel.setMaterialFontFamily("Default")
+                                        viewModel.setMaterialColorVisionMode(0)
+                                        viewModel.setMaterialNavigationMotionMode(0)
+                                        viewModel.setMaterialInvertColors(false)
+                                        viewModel.setMaterialShapeStyle(0)
+                                        viewModel.setMaterialSwitchStyle(0)
+                                        viewModel.setMaterialSliderStyle(1)
+                                        viewModel.setMaterialLaunchFollowsTheme(true)
+                                        viewModel.setEnableFloatingBottomBar(false)
+                                        viewModel.setEnableFloatingBottomBarBlur(false)
+                                        viewModel.setMaterialShadowContainers(true)
+                                        viewModel.setMaterialShadowAppBars(true)
+                                        viewModel.setMaterialShadowButtons(true)
+                                        viewModel.setMaterialShadowFab(true)
+                                        viewModel.setMaterialShadowSwitches(true)
+                                        viewModel.setMaterialShadowSliders(true)
+                                    }
                                 }
                             }
                     }
@@ -504,12 +533,24 @@ private fun ThemeStyleChoice(
             Text(value.toInt().toString(), color = MaterialTheme.colorScheme.primary)
         }
         VoyageSlider(value.coerceIn(range.start, range.endInclusive), onChange, valueRange = range)
+      }
     }
 }
 
 @Composable private fun Header(id: Int) { Text(stringResource(id), style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(vertical = 8.dp)) }
 @Composable private fun Choice(id: Int, selected: Boolean, onClick: () -> Unit) {
-    ListItem(modifier = Modifier.clickable(onClick = onClick), headlineContent = { Text(stringResource(id)) }, trailingContent = { RadioButton(selected, onClick) })
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+    ) {
+        ListItem(
+            modifier = Modifier.clickable(onClick = onClick),
+            headlineContent = { Text(stringResource(id)) },
+            trailingContent = { RadioButton(selected, onClick) },
+            colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+        )
+    }
 }
 @Composable private fun Toggle(
     id: Int,
@@ -518,17 +559,29 @@ private fun ThemeStyleChoice(
     onChange: (Boolean) -> Unit,
     enabled: Boolean = true,
 ) {
-    ListItem(
-        modifier = Modifier.clickable(enabled = enabled) { onChange(!checked) },
-        headlineContent = { Text(stringResource(id)) },
-        supportingContent = summary?.let { { Text(it) } },
-        trailingContent = {
-            ExpressiveSwitch(checked = checked, onCheckedChange = onChange, enabled = enabled)
-        },
-    )
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+    ) {
+        ListItem(
+            modifier = Modifier.clickable(enabled = enabled) { onChange(!checked) },
+            headlineContent = { Text(stringResource(id)) },
+            supportingContent = summary?.let { { Text(it) } },
+            trailingContent = {
+                ExpressiveSwitch(checked = checked, onCheckedChange = onChange, enabled = enabled)
+            },
+            colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+        )
+    }
 }
 @Composable private fun Slide(id: Int, value: Float, range: ClosedFloatingPointRange<Float>, onChange: (Float) -> Unit) {
-    Column(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp)) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+    ) {
+      Column(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(stringResource(id), modifier = Modifier.weight(1f), style = MaterialTheme.typography.titleMedium)
             val valueText = if (id == R.string.voyage_theme_corner_scale) {
@@ -548,12 +601,17 @@ private fun ThemeStyleChoice(
 }
 @OptIn(ExperimentalLayoutApi::class)
 @Composable private fun Drop(id: Int, selected: String, options: List<String>, onSelect: (String) -> Unit) {
-    Column(
-        Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 2.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
     ) {
-        Text(stringResource(id), style = MaterialTheme.typography.titleMedium)
-        FlowRow(
+        Column(
+            Modifier.fillMaxWidth().padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Text(stringResource(id), style = MaterialTheme.typography.titleMedium)
+            FlowRow(
             horizontalArrangement = Arrangement.spacedBy(6.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
@@ -568,9 +626,39 @@ private fun ThemeStyleChoice(
                     ),
                 ) { Text(option, style = MaterialTheme.typography.labelLarge) }
             }
+            }
         }
     }
 }
+@Composable
+private fun ThemeResetCard(onClick: () -> Unit) {
+    Surface(
+        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(14.dp),
+        color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.72f),
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Surface(
+                modifier = Modifier.size(40.dp),
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
+                color = MaterialTheme.colorScheme.surfaceContainerHigh,
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(Icons.Filled.Refresh, contentDescription = null, tint = MaterialTheme.colorScheme.onSurface)
+                }
+            }
+            Spacer(Modifier.width(12.dp))
+            Column {
+                Text(stringResource(R.string.voyage_theme_reset_title), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onErrorContainer)
+                Text(stringResource(R.string.voyage_theme_reset_summary), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.72f))
+            }
+        }
+    }
+}
+
 @Composable private fun ColorChoice(color: Color, selected: Boolean, label: String?, onClick: () -> Unit) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Surface(Modifier.size(if (selected) 40.dp else 34.dp).clickable(onClick = onClick), shape = CircleShape, color = color, border = if (selected) androidx.compose.foundation.BorderStroke(3.dp, MaterialTheme.colorScheme.primary) else null) {}
