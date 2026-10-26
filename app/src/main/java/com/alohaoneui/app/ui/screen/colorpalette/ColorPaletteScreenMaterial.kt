@@ -415,8 +415,16 @@ fun ColorPaletteScreenMaterial(
                     content = listOf(
                         {
                             SegmentedDropdownItem(
-                                title = "Shape style",
-                                items = listOf("Rounded", "Cut", "Squircle", "Smooth", "Wavy", "Scoop", "Notch"),
+                                title = stringResource(R.string.theme_shape_style_title),
+                                items = listOf(
+                                    stringResource(R.string.theme_shape_rounded),
+                                    stringResource(R.string.theme_shape_cut),
+                                    stringResource(R.string.theme_shape_squircle),
+                                    stringResource(R.string.theme_shape_smooth),
+                                    stringResource(R.string.theme_shape_wavy),
+                                    stringResource(R.string.theme_shape_scoop),
+                                    stringResource(R.string.theme_shape_notch),
+                                ),
                                 selectedIndex = uiState.materialShapeStyle,
                                 onItemSelected = actions.onSetMaterialShapeStyle,
                             )
