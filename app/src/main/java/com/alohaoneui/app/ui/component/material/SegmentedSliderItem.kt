@@ -1,6 +1,9 @@
 package com.alohaoneui.app.ui.component.material
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.border
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.shadow
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
@@ -11,6 +14,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
+import com.alohaoneui.app.ui.theme.LocalMaterialShadowSliders
 
 /**
  * AlohaOneUI Material slider row. It participates in SegmentedColumn shaping just
@@ -57,7 +62,17 @@ fun SegmentedSliderItem(
                 Slider(
                     value = value,
                     onValueChange = onValueChange,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .then(
+                            if (LocalMaterialShadowSliders.current) Modifier.shadow(2.dp, RoundedCornerShape(50))
+                            else Modifier
+                        )
+                        .then(
+                            LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
+                                Modifier.border(it.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(50))
+                            } ?: Modifier
+                        ),
                     valueRange = valueRange,
                     steps = steps,
                     onValueChangeFinished = onValueChangeFinished,
