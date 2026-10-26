@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PrimaryTabRow
@@ -53,7 +52,7 @@ fun ExpressiveTabRow(
                 Box(
                     modifier = Modifier
                         .padding(vertical = 8.dp)
-                        .clip(CircleShape)
+                        .clip(voyageCornerShape(50.dp))
                         .indication(interactionSource, ripple()),
                     contentAlignment = Alignment.Center,
                 ) {
