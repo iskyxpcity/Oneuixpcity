@@ -3,6 +3,7 @@ package com.alohaoneui.app.ui.component.material
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,6 +24,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenuGroup
 import androidx.compose.material3.SelectableDropdownMenuItem
@@ -39,6 +41,7 @@ import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.SegmentedListItem
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
@@ -65,6 +68,8 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.Dp
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CutCornerShape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -466,6 +471,89 @@ fun SegmentedSwitchItem(
         },
         supportingContent = summary?.let { { Text(it) } }
     )
+}
+
+@Composable
+fun SegmentedChoiceDialogItem(
+    title: String,
+    summary: String? = null,
+    items: List<String>,
+    colors: ListItemColors = alohaOneUISegmentedColors(),
+    enabled: Boolean = true,
+    selectedIndex: Int,
+    onItemSelected: (Int) -> Unit,
+) {
+    val haptic = LocalHapticFeedback.current
+    var dialogVisible by remember { mutableStateOf(false) }
+    val safeIndex = selectedIndex.coerceIn(0, (items.size - 1).coerceAtLeast(0))
+
+    SegmentedListItem(
+        onClick = if (enabled && items.isNotEmpty()) {
+            {
+                haptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
+                dialogVisible = true
+            }
+        } else null,
+        enabled = enabled,
+        colors = colors,
+        headlineContent = { Text(title) },
+        supportingContent = summary?.let { { Text(it) } },
+        trailingContent = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = items.getOrNull(safeIndex).orEmpty(),
+                    textAlign = TextAlign.End,
+                    color = if (enabled) colorScheme.primary else colorScheme.onSurfaceVariant,
+                )
+                Icon(
+                    imageVector = Icons.Filled.KeyboardArrowDown,
+                    contentDescription = null,
+                    modifier = Modifier.padding(start = 4.dp).size(24.dp),
+                    tint = if (enabled) colorScheme.primary else colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+    )
+
+    if (dialogVisible) {
+        AlertDialog(
+            onDismissRequest = { dialogVisible = false },
+            title = { Text(title) },
+            text = {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState()),
+                ) {
+                    items.forEachIndexed { index, label ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    haptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
+                                    onItemSelected(index)
+                                    dialogVisible = false
+                                }
+                                .padding(horizontal = 4.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            RadioButton(
+                                selected = index == safeIndex,
+                                onClick = null,
+                                enabled = enabled,
+                            )
+                            Text(
+                                text = label,
+                                modifier = Modifier.padding(start = 12.dp),
+                                color = MaterialTheme.colorScheme.onSurface,
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {},
+        )
+    }
 }
 
 @Composable
