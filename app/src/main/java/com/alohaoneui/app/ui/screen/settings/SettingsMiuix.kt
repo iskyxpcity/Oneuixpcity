@@ -150,6 +150,24 @@ fun SettingPagerMiuix(
                             onSelectedIndexChange = actions.onSetUiModeIndex
                         )
                         ArrowPreference(
+                            title = stringResource(id = R.string.settings_language),
+                            summary = stringResource(id = R.string.settings_language_summary),
+                            startAction = { Icon(Icons.Rounded.Language, modifier = Modifier.padding(end = 6.dp), contentDescription = null, tint = colorScheme.onBackground) },
+                            onClick = actions.onOpenLanguage
+                        )
+                        ArrowPreference(
+                            title = stringResource(id = R.string.settings_display_text),
+                            summary = stringResource(id = R.string.settings_display_text_summary),
+                            startAction = { Icon(Icons.Rounded.DisplaySettings, modifier = Modifier.padding(end = 6.dp), contentDescription = null, tint = colorScheme.onBackground) },
+                            onClick = actions.onOpenDisplayText
+                        )
+                        ArrowPreference(
+                            title = stringResource(id = R.string.settings_motion_haptics),
+                            summary = stringResource(id = R.string.settings_motion_haptics_summary),
+                            startAction = { Icon(Icons.Rounded.ElectricalServices, modifier = Modifier.padding(end = 6.dp), contentDescription = null, tint = colorScheme.onBackground) },
+                            onClick = actions.onOpenMotionHaptics
+                        )
+                        ArrowPreference(
                             title = stringResource(id = R.string.settings_theme),
                             summary = stringResource(id = R.string.settings_theme_summary),
                             startAction = {

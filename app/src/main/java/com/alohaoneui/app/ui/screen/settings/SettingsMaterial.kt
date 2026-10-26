@@ -123,6 +123,33 @@ fun SettingPagerMaterial(
                     }
                     add {
                         SegmentedListItem(
+                            onClick = actions.onOpenLanguage,
+                            headlineContent = { Text(stringResource(R.string.settings_language)) },
+                            supportingContent = { Text(stringResource(R.string.settings_language_summary)) },
+                            leadingContent = { Icon(Icons.Filled.Language, stringResource(R.string.settings_language)) },
+                            trailingContent = { Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null) }
+                        )
+                    }
+                    add {
+                        SegmentedListItem(
+                            onClick = actions.onOpenDisplayText,
+                            headlineContent = { Text(stringResource(R.string.settings_display_text)) },
+                            supportingContent = { Text(stringResource(R.string.settings_display_text_summary)) },
+                            leadingContent = { Icon(Icons.Filled.DisplaySettings, stringResource(R.string.settings_display_text)) },
+                            trailingContent = { Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null) }
+                        )
+                    }
+                    add {
+                        SegmentedListItem(
+                            onClick = actions.onOpenMotionHaptics,
+                            headlineContent = { Text(stringResource(R.string.settings_motion_haptics)) },
+                            supportingContent = { Text(stringResource(R.string.settings_motion_haptics_summary)) },
+                            leadingContent = { Icon(Icons.Filled.ElectricalServices, stringResource(R.string.settings_motion_haptics)) },
+                            trailingContent = { Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null) }
+                        )
+                    }
+                    add {
+                        SegmentedListItem(
                             onClick = actions.onOpenTheme,
                             headlineContent = { Text(stringResource(id = R.string.settings_theme)) },
                             supportingContent = { Text(stringResource(id = R.string.settings_theme_summary)) },
