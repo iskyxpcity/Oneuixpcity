@@ -444,6 +444,7 @@ fun ColorPaletteScreenMaterial(
                                         onValueChange = { cornerScale = it },
                                         onValueChangeFinished = { actions.onSetMaterialCornerScale(cornerScale) },
                                         valueRange = 0.0f..2.0f,
+                                        steps = 39,
                                         modifier = Modifier
                                 .fillMaxWidth()
                                 .then(if (LocalMaterialShadowSliders.current) Modifier.shadow(2.dp, RoundedCornerShape(50)) else Modifier)
@@ -497,6 +498,7 @@ fun ColorPaletteScreenMaterial(
                                         onValueChange = { outlineWidth = it },
                                         onValueChangeFinished = { actions.onSetMaterialOutlineWidth(outlineWidth) },
                                         valueRange = 0.0f..1.5f,
+                                        steps = 14,
                                         modifier = Modifier
                                 .fillMaxWidth()
                                 .then(if (LocalMaterialShadowSliders.current) Modifier.shadow(2.dp, RoundedCornerShape(50)) else Modifier)
