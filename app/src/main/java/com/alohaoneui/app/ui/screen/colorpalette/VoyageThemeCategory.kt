@@ -13,4 +13,5 @@ enum class VoyageThemeCategory(@StringRes val titleRes: Int) {
     MODE(R.string.voyage_theme_group_mode),
     NAVIGATION_BAR(R.string.voyage_theme_group_navigation_bar),
     DESIGN(R.string.voyage_theme_group_design),
+    PALETTE(R.string.voyage_theme_group_palette),
 }
