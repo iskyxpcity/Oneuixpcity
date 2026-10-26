@@ -20,6 +20,9 @@ interface SettingsRepository {
     var pageScale: Float
     var materialCornerScale: Float
     var materialShapeStyle: Int
+    var materialSwitchStyle: Int
+    var materialSliderStyle: Int
+    var materialIconShapeStyle: Int
     var materialOutlineWidth: Float
     var materialShadowContainers: Boolean
     var materialShadowTopBars: Boolean
@@ -55,6 +58,9 @@ data class AppSettingsBackup(
     val pageScale: Float,
     val materialCornerScale: Float = 1.0f,
     val materialShapeStyle: Int = 0,
+    val materialSwitchStyle: Int = 0,
+    val materialSliderStyle: Int = 0,
+    val materialIconShapeStyle: Int = 0,
     val materialOutlineWidth: Float = 0.0f,
     val materialShadowContainers: Boolean = true,
     val materialShadowTopBars: Boolean = true,
