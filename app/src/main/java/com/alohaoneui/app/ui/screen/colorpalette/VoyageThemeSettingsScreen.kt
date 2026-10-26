@@ -68,7 +68,11 @@ fun VoyageThemeSettingsScreen() {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val onBack = { if (navigator.backStackSize() > 1) navigator.pop() }
     VoyageSettingsTheme(uiState) {
-        VoyageThemeSettingsScreenMaterial(uiState, viewModel, onBack)
+        if (uiState.uiMode == UiMode.Miuix.value) {
+            VoyageThemeSettingsScreenMiuix(uiState, viewModel, onBack)
+        } else {
+            VoyageThemeSettingsScreenMaterial(uiState, viewModel, onBack)
+        }
     }
 }
 
