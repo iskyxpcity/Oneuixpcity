@@ -3,6 +3,7 @@ package com.alohaoneui.app.ui.screen.colorpalette
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
@@ -68,7 +69,16 @@ fun VoyageColorSchemeEditorScreenMaterial(
     }
 
     var expandedCategories by rememberSaveable(schemeEditorOnly) {
-        mutableStateOf(if (schemeEditorOnly) listOf(VoyageThemeCategory.DESIGN.name) else emptyList())
+        mutableStateOf(
+            if (schemeEditorOnly) listOf(VoyageThemeCategory.DESIGN.name)
+            else listOf(
+                VoyageThemeCategory.DESIGN.name,
+                VoyageThemeCategory.MODE.name,
+                VoyageThemeCategory.NAVIGATION_BAR.name,
+                VoyageThemeCategory.LAUNCH.name,
+                VoyageThemeCategory.PALETTE.name,
+            )
+        )
     }
     Scaffold(
         topBar = {
@@ -82,13 +92,25 @@ fun VoyageColorSchemeEditorScreenMaterial(
             )
         },
     ) { padding ->
-        Column(
-            Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState())
-                .padding(horizontal = 12.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+        val columns = if (schemeEditorOnly) {
+            listOf(listOf(VoyageThemeCategory.DESIGN))
+        } else {
+            listOf(
+                listOf(VoyageThemeCategory.DESIGN, VoyageThemeCategory.MODE, VoyageThemeCategory.COMPONENTS),
+                listOf(VoyageThemeCategory.NAVIGATION_BAR, VoyageThemeCategory.LAUNCH, VoyageThemeCategory.ASSIST, VoyageThemeCategory.SHAPE, VoyageThemeCategory.SHADOWS),
+                listOf(VoyageThemeCategory.PALETTE),
+            )
+        }
+        Row(
+            modifier = Modifier.fillMaxSize().padding(padding).padding(horizontal = 5.dp, vertical = 4.dp),
+            horizontalArrangement = Arrangement.spacedBy(5.dp),
         ) {
-            val categories = if (schemeEditorOnly) listOf(VoyageThemeCategory.DESIGN) else VoyageThemeCategory.entries
-            categories.forEach { category ->
+            columns.forEach { columnCategories ->
+                Column(
+                    modifier = Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(5.dp),
+                ) {
+                    columnCategories.forEach { category ->
                 val expanded = category.name in expandedCategories
                 VoyageThemeAccordion(
                     category = category,
@@ -188,7 +210,9 @@ fun VoyageColorSchemeEditorScreenMaterial(
                                                 )
                                             }
                                         }
-                                    } else {
+                                    }
+                                }
+                                VoyageThemeCategory.PALETTE -> {
                                         Toggle(R.string.voyage_theme_dynamic_color, null, uiState.materialDynamicColorEnabled, viewModel::setMaterialDynamicColorEnabled)
                                         Text(stringResource(R.string.voyage_theme_key_color), style = MaterialTheme.typography.titleMedium)
                                         val seedPresets = listOf(
@@ -245,7 +269,6 @@ fun VoyageColorSchemeEditorScreenMaterial(
                                             trailingContent = { Icon(Icons.Outlined.Palette, contentDescription = null) },
                                         )
                                     }
-                                }
                                 VoyageThemeCategory.COMPONENTS -> {
                                     val switchStyles = listOf(
                                         stringResource(R.string.voyage_switch_material_you), stringResource(R.string.voyage_switch_compose),
@@ -318,6 +341,8 @@ fun VoyageColorSchemeEditorScreenMaterial(
                                     Toggle(R.string.voyage_shadow_slider, null, uiState.materialShadowSliders, viewModel::setMaterialShadowSliders)
                                 }
                             }
+                    }
+                }
                     }
                 }
             }
@@ -406,20 +431,31 @@ private fun VoyageThemeAccordion(
         VoyageThemeCategory.SHAPE -> Icons.Outlined.Category
         VoyageThemeCategory.COMPONENTS -> Icons.Outlined.ToggleOn
         VoyageThemeCategory.SHADOWS -> Icons.Outlined.Layers
+        VoyageThemeCategory.PALETTE -> Icons.Outlined.Palette
     }
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(18.dp),
+        color = MaterialTheme.colorScheme.surface,
+        shadowElevation = 1.dp,
     ) {
         Column {
             Row(
                 modifier = Modifier.fillMaxWidth().clickable(onClick = onToggle)
-                    .padding(8.dp),
+                    .padding(horizontal = 8.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(24.dp))
-                Spacer(Modifier.width(12.dp))
+                Surface(
+                    modifier = Modifier.size(38.dp),
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(10.dp),
+                    color = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(icon, contentDescription = null, modifier = Modifier.size(24.dp))
+                    }
+                }
+                Spacer(Modifier.width(8.dp))
                 Text(
                     text = stringResource(category.titleRes),
                     modifier = Modifier.weight(1f),
@@ -429,7 +465,7 @@ private fun VoyageThemeAccordion(
                 Icon(
                     Icons.Filled.ExpandMore,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    tint = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.graphicsLayer { rotationZ = if (expanded) 180f else 0f },
                 )
             }
@@ -492,29 +528,48 @@ private fun ThemeStyleChoice(
     )
 }
 @Composable private fun Slide(id: Int, value: Float, range: ClosedFloatingPointRange<Float>, onChange: (Float) -> Unit) {
-    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp)) {
+    Column(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(stringResource(id), modifier = Modifier.weight(1f))
-            Text(String.format("%.1f", value), color = MaterialTheme.colorScheme.primary)
+            Text(stringResource(id), modifier = Modifier.weight(1f), style = MaterialTheme.typography.titleMedium)
+            val valueText = if (id == R.string.voyage_theme_corner_scale) {
+                "\${String.format(\"%.1f\", value).removeSuffix(\".0\")}×"
+            } else {
+                "\${String.format(\"%.1f\", value).removeSuffix(\".0\")} dp"
+            }
+            Surface(
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(50),
+                color = MaterialTheme.colorScheme.surfaceContainerLow,
+            ) {
+                Text(valueText, modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp), color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
         }
         VoyageSlider(value.coerceIn(range.start, range.endInclusive), onChange, valueRange = range)
     }
 }
+@OptIn(ExperimentalLayoutApi::class)
 @Composable private fun Drop(id: Int, selected: String, options: List<String>, onSelect: (String) -> Unit) {
-    var expanded by rememberSaveable(id) { mutableStateOf(false) }
-    ListItem(
-        modifier = Modifier.clickable { expanded = true },
-        headlineContent = { Text(stringResource(id)) },
-        supportingContent = { Text(selected) },
-        trailingContent = {
-            Box {
-                TextButton(onClick = { expanded = true }) { Text(selected) }
-                DropdownMenu(expanded, { expanded = false }) {
-                    options.forEach { option -> DropdownMenuItem(text = { Text(option) }, onClick = { onSelect(option); expanded = false }) }
-                }
+    Column(
+        Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 2.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Text(stringResource(id), style = MaterialTheme.typography.titleMedium)
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            options.forEach { option ->
+                val active = option == selected
+                FilledTonalButton(
+                    onClick = { onSelect(option) },
+                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
+                    colors = ButtonDefaults.filledTonalButtonColors(
+                        containerColor = if (active) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh,
+                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                    ),
+                ) { Text(option, style = MaterialTheme.typography.labelLarge) }
             }
-        },
-    )
+        }
+    }
 }
 @Composable private fun ColorChoice(color: Color, selected: Boolean, label: String?, onClick: () -> Unit) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
