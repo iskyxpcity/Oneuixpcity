@@ -8,6 +8,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AccessibilityNew
+import androidx.compose.material.icons.filled.Brightness1
+import androidx.compose.material.icons.filled.Brightness3
+import androidx.compose.material.icons.filled.Brightness4
+import androidx.compose.material.icons.filled.Brightness7
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Launch
 import androidx.compose.material.icons.filled.Navigation
@@ -89,9 +93,9 @@ fun VoyageThemeSettingsScreenMaterial(uiState: SettingsUiState, viewModel: Setti
                                 Toggle(R.string.voyage_theme_liquid_glass_title, liquidSummary, uiState.enableFloatingBottomBarBlur, viewModel::setEnableFloatingBottomBarBlur, enabled = Build.VERSION.SDK_INT >= 33 && uiState.enableFloatingBottomBar)
                             }
                             VoyageThemeCategory.MODE -> {
-                                Choice(R.string.settings_theme_mode_system, ColorMode.fromValue(uiState.themeMode).toNonMonetMode() == ColorMode.SYSTEM.value) { viewModel.setColorMode(ColorMode.SYSTEM) }
-                                Choice(R.string.settings_theme_mode_light, ColorMode.fromValue(uiState.themeMode).toNonMonetMode() == ColorMode.LIGHT.value) { viewModel.setColorMode(ColorMode.LIGHT) }
-                                Choice(R.string.settings_theme_mode_dark, ColorMode.fromValue(uiState.themeMode).toNonMonetMode() == ColorMode.DARK.value) { viewModel.setColorMode(ColorMode.DARK) }
+                                ThemeStyleChoice(stringResource(R.string.settings_theme_mode_system), "", ColorMode.fromValue(uiState.themeMode).toNonMonetMode() == ColorMode.SYSTEM.value, Icons.Filled.Brightness4) { viewModel.setColorMode(ColorMode.SYSTEM) }
+                                ThemeStyleChoice(stringResource(R.string.settings_theme_mode_light), "", ColorMode.fromValue(uiState.themeMode).toNonMonetMode() == ColorMode.LIGHT.value, Icons.Filled.Brightness7) { viewModel.setColorMode(ColorMode.LIGHT) }
+                                ThemeStyleChoice(stringResource(R.string.settings_theme_mode_dark), "", ColorMode.fromValue(uiState.themeMode).toNonMonetMode() == ColorMode.DARK.value, Icons.Filled.Brightness3) { viewModel.setColorMode(ColorMode.DARK) }
                                 Toggle(R.string.voyage_theme_pure_black, R.string.voyage_theme_pure_black_summary, uiState.themeMode == ColorMode.DARK_AMOLED.value) { enabled -> viewModel.setColorMode(if (enabled) ColorMode.DARK_AMOLED else ColorMode.DARK) }
                             }
                             VoyageThemeCategory.LAUNCH -> Toggle(R.string.voyage_theme_launch_follows, R.string.voyage_theme_launch_follows_summary, uiState.materialLaunchFollowsTheme, viewModel::setMaterialLaunchFollowsTheme)
@@ -117,8 +121,10 @@ fun VoyageThemeSettingsScreenMaterial(uiState: SettingsUiState, viewModel: Setti
                                     stringResource(R.string.voyage_shape_wavy), stringResource(R.string.voyage_shape_scoop),
                                     stringResource(R.string.voyage_shape_notch),
                                 )
-                                Drop(R.string.voyage_theme_shape_style, labels[uiState.materialShapeStyle.coerceIn(0, labels.lastIndex)], labels) { viewModel.setMaterialShapeStyle(labels.indexOf(it).coerceAtLeast(0)) }
-                                Slide(R.string.voyage_theme_corner_scale, uiState.materialCornerScale, 0f..2f, viewModel::setMaterialCornerScale)
+                                val materialEnabled = uiState.uiMode == UiMode.Material.value
+                                if (!materialEnabled) Text(stringResource(R.string.theme_design_overridden), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+                                Drop(R.string.voyage_theme_shape_style, labels[uiState.materialShapeStyle.coerceIn(0, labels.lastIndex)], labels, enabled = materialEnabled) { viewModel.setMaterialShapeStyle(labels.indexOf(it).coerceAtLeast(0)) }
+                                Slide(R.string.voyage_theme_corner_scale, uiState.materialCornerScale, 0f..2f, viewModel::setMaterialCornerScale, enabled = materialEnabled)
                             }
                             VoyageThemeCategory.COMPONENTS -> {
                                 val switches = listOf(
@@ -127,13 +133,15 @@ fun VoyageThemeSettingsScreenMaterial(uiState: SettingsUiState, viewModel: Setti
                                     stringResource(R.string.voyage_switch_cupertino), stringResource(R.string.voyage_switch_liquid_glass),
                                     stringResource(R.string.voyage_switch_hyper_os), stringResource(R.string.voyage_switch_one_ui),
                                 )
-                                Drop(R.string.voyage_theme_switch_style, switches[uiState.materialSwitchStyle.coerceIn(0, switches.lastIndex)], switches) { viewModel.setMaterialSwitchStyle(switches.indexOf(it).coerceAtLeast(0)) }
+                                val materialEnabled = uiState.uiMode == UiMode.Material.value
+                                if (!materialEnabled) Text(stringResource(R.string.theme_design_overridden), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+                                Drop(R.string.voyage_theme_switch_style, switches[uiState.materialSwitchStyle.coerceIn(0, switches.lastIndex)], switches, enabled = materialEnabled) { viewModel.setMaterialSwitchStyle(switches.indexOf(it).coerceAtLeast(0)) }
                                 val sliders = listOf(
                                     stringResource(R.string.voyage_slider_material_you), stringResource(R.string.voyage_slider_fancy),
                                     stringResource(R.string.voyage_slider_material), stringResource(R.string.voyage_slider_hyper_os),
                                 )
-                                Drop(R.string.voyage_theme_slider_style, sliders[uiState.materialSliderStyle.coerceIn(0, sliders.lastIndex)], sliders) { viewModel.setMaterialSliderStyle(sliders.indexOf(it).coerceAtLeast(0)) }
-                                Slide(R.string.voyage_theme_border_width, uiState.materialBorderWidth, 0f..1.5f, viewModel::setMaterialBorderWidth)
+                                Drop(R.string.voyage_theme_slider_style, sliders[uiState.materialSliderStyle.coerceIn(0, sliders.lastIndex)], sliders, enabled = materialEnabled) { viewModel.setMaterialSliderStyle(sliders.indexOf(it).coerceAtLeast(0)) }
+                                Slide(R.string.voyage_theme_border_width, uiState.materialBorderWidth, 0f..1.5f, viewModel::setMaterialBorderWidth, enabled = materialEnabled)
                             }
                             VoyageThemeCategory.SHADOWS -> {
                                 Toggle(R.string.voyage_shadow_container, null, uiState.materialShadowContainers, viewModel::setMaterialShadowContainers)
@@ -152,13 +160,22 @@ fun VoyageThemeSettingsScreenMaterial(uiState: SettingsUiState, viewModel: Setti
 }
 
 @Composable private fun ThemeStyleChoice(title: String, summary: String, selected: Boolean, icon: androidx.compose.ui.graphics.vector.ImageVector, onClick: () -> Unit) {
-    ListItem(
-        modifier = Modifier.clickable(onClick = onClick),
-        headlineContent = { Text(title) },
-        supportingContent = { Text(summary) },
-        leadingContent = { Icon(icon, contentDescription = null) },
-        trailingContent = { RadioButton(selected, onClick) },
-    )
+    val container = if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.14f) else MaterialTheme.colorScheme.surfaceContainerLow
+    Surface(
+        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
+        shape = MaterialTheme.shapes.large,
+        color = container,
+    ) {
+        Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+            Icon(icon, contentDescription = null, tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
+            Spacer(Modifier.width(12.dp))
+            Column(Modifier.weight(1f)) {
+                Text(title, style = MaterialTheme.typography.titleMedium)
+                if (summary.isNotBlank()) Text(summary, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            RadioButton(selected = selected, onClick = onClick)
+        }
+    }
 }
 @Composable private fun Choice(id: Int, selected: Boolean, onClick: () -> Unit) {
     ListItem(modifier = Modifier.clickable(onClick = onClick), headlineContent = { Text(stringResource(id)) }, trailingContent = { RadioButton(selected, onClick) })
@@ -171,25 +188,25 @@ fun VoyageThemeSettingsScreenMaterial(uiState: SettingsUiState, viewModel: Setti
         modifier = Modifier.clickable(enabled = enabled) { onChange(!checked) },
     )
 }
-@Composable private fun Slide(id: Int, value: Float, range: ClosedFloatingPointRange<Float>, onChange: (Float) -> Unit) {
+@Composable private fun Slide(id: Int, value: Float, range: ClosedFloatingPointRange<Float>, onChange: (Float) -> Unit, enabled: Boolean = true) {
     Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(stringResource(id), modifier = Modifier.weight(1f))
             Text(String.format("%.1f", value), color = MaterialTheme.colorScheme.primary)
         }
-        Slider(value.coerceIn(range.start, range.endInclusive), onChange, valueRange = range)
+        Slider(value.coerceIn(range.start, range.endInclusive), onChange, valueRange = range, enabled = enabled)
     }
 }
-@Composable private fun Drop(id: Int, selected: String, options: List<String>, onSelect: (String) -> Unit) {
+@Composable private fun Drop(id: Int, selected: String, options: List<String>, enabled: Boolean = true, onSelect: (String) -> Unit) {
     var expanded by rememberSaveable(id) { mutableStateOf(false) }
     ListItem(
-        modifier = Modifier.clickable { expanded = true },
+        modifier = Modifier.clickable(enabled = enabled) { expanded = true },
         headlineContent = { Text(stringResource(id)) },
         supportingContent = { Text(selected) },
         trailingContent = {
             Box {
-                TextButton(onClick = { expanded = true }) { Text(selected) }
-                DropdownMenu(expanded, { expanded = false }) {
+                TextButton(onClick = { expanded = true }, enabled = enabled) { Text(selected) }
+                DropdownMenu(expanded && enabled, { expanded = false }) {
                     options.forEach { option -> DropdownMenuItem(text = { Text(option) }, onClick = { onSelect(option); expanded = false }) }
                 }
             }
