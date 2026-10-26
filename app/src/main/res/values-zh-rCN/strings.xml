@@ -385,4 +385,10 @@
     <string name="settings_language_chinese_traditional">繁体中文</string>
     <string name="settings_language_japanese">日语</string>
     <string name="settings_language_korean">韩语</string>
+    <string name="settings_motion_simplified">简化</string>
+    <string name="settings_transition_style">转场样式</string>
+    <string name="settings_transition_aosp">AOSP</string>
+    <string name="settings_transition_miuix">MIUIX</string>
+    <string name="settings_transition_scale">缩放</string>
+    <string name="settings_transition_classic">经典</string>
 </resources>
