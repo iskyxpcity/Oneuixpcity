@@ -399,4 +399,8 @@
     <string name="voyage_theme_content_color_summary">Playback and reading pages use colors from the cover.</string>
     <string name="voyage_theme_icon_follows">Desktop icon follows theme</string>
     <string name="voyage_theme_icon_follows_summary">Takes effect when you return to home. Some launchers may move the icon.</string>
+    <string name="voyage_theme_page_summary">Colors, shapes, and component styles</string>
+    <string name="voyage_toolbox_title">Voyage Toolbox</string>
+    <string name="voyage_toolbox_subtitle">A friend afar brings a distant land near.</string>
+    <string name="voyage_theme_large_text_summary">Increase text and interface elements</string>
 </resources>
