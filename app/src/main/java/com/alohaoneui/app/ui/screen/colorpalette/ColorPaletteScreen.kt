@@ -61,6 +61,7 @@ fun ColorPaletteScreen() {
         onSetPagerGestureMode = viewModel::setPagerGestureMode,
         onSetPageScale = viewModel::setPageScale,
         onSetMaterialCornerScale = viewModel::setMaterialCornerScale,
+        onSetMaterialShapeStyle = viewModel::setMaterialShapeStyle,
         onSetMaterialOutlineWidth = viewModel::setMaterialOutlineWidth,
         onSetMaterialShadowContainers = viewModel::setMaterialShadowContainers,
         onSetMaterialShadowTopBars = viewModel::setMaterialShadowTopBars,
