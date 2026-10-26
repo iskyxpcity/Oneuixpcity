@@ -375,4 +375,5 @@
     <string name="voyage_color_blind_tritanopia">Tritanopia</string>
     <string name="voyage_color_blind_achromatomaly">Achromatomaly</string>
     <string name="voyage_color_blind_achromatopsia">Achromatopsia</string>
+    <string name="theme_design_overridden">Miuix style controls these components</string>
 </resources>
