@@ -1,6 +1,9 @@
 package com.alohaoneui.app.ui.component.material
 
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.border
+import androidx.compose.ui.draw.shadow
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
@@ -14,6 +17,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
+import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
+import com.alohaoneui.app.ui.theme.LocalMaterialShadowSwitches
 
 @Composable
 fun ExpressiveSwitch(
@@ -26,10 +32,20 @@ fun ExpressiveSwitch(
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     showThumbIcon: Boolean = true,
 ) {
+    val switchShape = RoundedCornerShape(50)
+    val styledModifier = modifier
+        .then(
+            if (LocalMaterialShadowSwitches.current) Modifier.shadow(2.dp, switchShape) else Modifier
+        )
+        .then(
+            LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
+                Modifier.border(it.dp, MaterialTheme.colorScheme.outlineVariant, switchShape)
+            } ?: Modifier
+        )
     Switch(
         checked = checked,
         onCheckedChange = onCheckedChange,
-        modifier = modifier,
+        modifier = styledModifier,
         thumbContent = thumbContent ?: if (showThumbIcon && (checked || enabled)) {
             {
                 Icon(
