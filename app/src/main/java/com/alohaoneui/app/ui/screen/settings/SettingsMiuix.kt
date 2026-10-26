@@ -4,6 +4,11 @@ import android.os.Build
 import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clip
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
@@ -36,6 +41,8 @@ import com.alohaoneui.app.R
 import com.alohaoneui.app.ui.UiMode
 import com.alohaoneui.app.ui.component.dialog.rememberLoadingDialog
 import com.alohaoneui.app.ui.component.miuix.SendLogDialog
+import com.alohaoneui.app.ui.theme.keyColorOptions
+import com.materialkolor.PaletteStyle
 import com.alohaoneui.app.ui.theme.LocalEnableBlur
 import com.alohaoneui.app.ui.util.AppLocaleHelper
 import com.alohaoneui.app.ui.util.BlurredBar
@@ -125,17 +132,46 @@ fun SettingPagerMiuix(
                         )
                     }
                     MiuixSettingsGroup(stringResource(R.string.settings_theme), Icons.Rounded.Palette, themeExpanded, { themeExpanded = !themeExpanded }) {
+                        val uiModeLabels = listOf(stringResource(R.string.theme_design_material3), stringResource(R.string.theme_design_miuix))
+                        OverlayDropdownPreference(
+                            title = stringResource(R.string.settings_ui_mode),
+                            summary = stringResource(R.string.settings_ui_mode_summary),
+                            items = uiModeLabels,
+                            selectedIndex = if (uiState.uiMode == UiMode.Material.value) 0 else 1,
+                            onSelectedIndexChange = { actions.onSetUiModeIndex(if (it == 0) 1 else 0) },
+                        )
                         ArrowPreference(
-                            title = stringResource(R.string.settings_theme),
+                            title = stringResource(R.string.voyage_theme_page_title),
                             summary = stringResource(R.string.settings_theme_summary),
                             startAction = { Icon(Icons.Rounded.Palette, modifier = Modifier.padding(end = 6.dp), contentDescription = null, tint = colorScheme.onBackground) },
                             onClick = actions.onOpenTheme,
                         )
                     }
                     MiuixSettingsGroup(stringResource(R.string.voyage_settings_group_color), Icons.Rounded.Palette, colorExpanded, { colorExpanded = !colorExpanded }) {
+                        SwitchPreference(
+                            title = stringResource(R.string.voyage_theme_dynamic_color),
+                            summary = stringResource(R.string.voyage_theme_dynamic_color_summary),
+                            checked = uiState.materialDynamicColorEnabled,
+                            onCheckedChange = viewModel::setMaterialDynamicColorEnabled,
+                        )
+                        Text(stringResource(R.string.voyage_theme_key_color), modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
+                        Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 12.dp), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
+                            MiuixSettingsColorChoice(Color(0xFF6750A4), uiState.keyColor == 0, stringResource(R.string.voyage_theme_system_color)) { viewModel.setKeyColor(0) }
+                            keyColorOptions.forEach { color ->
+                                MiuixSettingsColorChoice(Color(color), uiState.keyColor == color, null) { viewModel.setKeyColor(color) }
+                            }
+                        }
+                        val paletteStyles = PaletteStyle.entries.map { it.name }
+                        OverlayDropdownPreference(
+                            title = stringResource(R.string.settings_color_style),
+                            items = paletteStyles,
+                            selectedIndex = paletteStyles.indexOf(uiState.colorStyle).coerceAtLeast(0),
+                            onSelectedIndexChange = { viewModel.setColorStyle(paletteStyles[it]) },
+                        )
+                        Text(stringResource(R.string.voyage_theme_contrast) + " · " + String.format("%.1f", uiState.materialContrastLevel), modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
+                        MiuixSlider(value = uiState.materialContrastLevel.coerceIn(-1f, 1f), onValueChange = viewModel::setMaterialContrastLevel, valueRange = -1f..1f, showKeyPoints = true, keyPoints = listOf(-1f, -0.5f, 0f, 0.5f, 1f), hapticEffect = SliderDefaults.SliderHapticEffect.Step)
                         ArrowPreference(
-                            title = stringResource(R.string.voyage_settings_group_color),
-                            summary = stringResource(R.string.settings_theme_summary),
+                            title = stringResource(R.string.voyage_theme_color_editor),
                             startAction = { Icon(Icons.Rounded.Palette, modifier = Modifier.padding(end = 6.dp), contentDescription = null, tint = colorScheme.onBackground) },
                             onClick = actions.onOpenColorPalette,
                         )
@@ -196,5 +232,20 @@ private fun MiuixSettingsGroup(
         AnimatedVisibility(visible = expanded) {
             Column(content = content)
         }
+    }
+}
+
+
+@Composable
+private fun MiuixSettingsColorChoice(color: Color, selected: Boolean, label: String?, onClick: () -> Unit) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Box(
+            Modifier.size(if (selected) 40.dp else 34.dp)
+                .clip(CircleShape)
+                .background(color)
+                .border(if (selected) 3.dp else 0.dp, if (selected) colorScheme.primary else Color.Transparent, CircleShape)
+                .clickable(onClick = onClick),
+        )
+        if (label != null) Text(label)
     }
 }
