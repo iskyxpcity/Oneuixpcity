@@ -1,6 +1,7 @@
 package com.alohaoneui.app.ui.screen.settings
 
 import android.app.Activity
+import android.content.ContextWrapper
 import androidx.compose.ui.platform.LocalContext
 
 import androidx.compose.runtime.Composable
@@ -49,7 +50,7 @@ fun SettingPager(
         onSetCheckUpdate = viewModel::setCheckUpdate,
         onSetAppLanguage = { language ->
             viewModel.setAppLanguage(language)
-            (context as? Activity)?.recreate()
+            context.findActivity()?.recreate()
         },
         onOpenTheme = { navigator.push(Route.ColorPalette) },
         onSetUiModeIndex = { index ->
@@ -62,4 +63,14 @@ fun SettingPager(
         UiMode.Miuix -> SettingPagerMiuix(uiState, actions, bottomInnerPadding)
         UiMode.Material -> SettingPagerMaterial(uiState, actions, bottomInnerPadding)
     }
+}
+
+
+private fun android.content.Context.findActivity(): Activity? {
+    var current: android.content.Context? = this
+    while (current != null) {
+        if (current is Activity) return current
+        current = (current as? ContextWrapper)?.baseContext
+    }
+    return null
 }
