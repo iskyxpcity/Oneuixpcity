@@ -104,4 +104,8 @@
     <string name="voyage_theme_content_color_summary">播放與閱讀頁面使用封面配色</string>
     <string name="voyage_theme_icon_follows">桌面圖示跟隨主題</string>
     <string name="voyage_theme_icon_follows_summary">返回桌面後生效，部分啟動器可能會調整圖示位置。</string>
+    <string name="voyage_theme_page_summary">配色、形狀與元件樣式</string>
+    <string name="voyage_toolbox_title">Voyage 工具箱</string>
+    <string name="voyage_toolbox_subtitle">海內存知己，天涯若比鄰。</string>
+    <string name="voyage_theme_large_text_summary">放大文字與介面元素</string>
 </resources>
