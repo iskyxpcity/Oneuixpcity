@@ -32,6 +32,9 @@ import androidx.compose.material.icons.filled.RemoveCircle
 import androidx.compose.material.icons.filled.RemoveModerator
 import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material.icons.filled.Update
+import androidx.compose.material.icons.outlined.Animation
+import androidx.compose.material.icons.outlined.TextFields
+import androidx.compose.material.icons.outlined.Translate
 import androidx.compose.material.icons.rounded.Dashboard
 import androidx.compose.material.icons.rounded.UploadFile
 import androidx.compose.material3.Icon
@@ -76,6 +79,9 @@ fun SettingPagerMaterial(
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
     val snackBarHost = remember { SnackbarHostState() }
     var showBottomSheet by remember { mutableStateOf(false) }
+    var languageExpanded by rememberSaveable { mutableStateOf(false) }
+    var displayExpanded by rememberSaveable { mutableStateOf(false) }
+    var behaviorExpanded by rememberSaveable { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -108,63 +114,79 @@ fun SettingPagerMaterial(
                     )
                 )
 
-            SegmentedColumn(
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                content = buildList {
-                    add {
-                        SegmentedDropdownItem(
-                            icon = Icons.Filled.DisplaySettings,
-                            title = stringResource(id = R.string.settings_ui_mode),
-                            summary = stringResource(id = R.string.settings_ui_mode_summary),
-                            items = UiMode.entries.map { it.name },
-                            selectedIndex = if (uiState.uiMode == UiMode.Material.value) 1 else 0,
-                            onItemSelected = actions.onSetUiModeIndex
-                        )
-                    }
-                    add {
-                        SegmentedListItem(
-                            onClick = actions.onOpenLanguage,
-                            headlineContent = { Text(stringResource(R.string.settings_language)) },
-                            supportingContent = { Text(stringResource(R.string.settings_language_summary)) },
-                            leadingContent = { Icon(Icons.Filled.Language, stringResource(R.string.settings_language)) },
-                            trailingContent = { Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null) }
-                        )
-                    }
-                    add {
-                        SegmentedListItem(
-                            onClick = actions.onOpenTheme,
-                            headlineContent = { Text(stringResource(id = R.string.settings_theme)) },
-                            supportingContent = { Text(stringResource(id = R.string.settings_theme_summary)) },
-                            leadingContent = { Icon(Icons.Filled.Palette, stringResource(id = R.string.settings_theme)) },
-                            trailingContent = {
-                                Icon(
-                                    Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                                    null
-                                )
-                            }
-                        )
-                    }
-                    add {
-                        SegmentedListItem(
-                            onClick = actions.onOpenDisplayText,
-                            headlineContent = { Text(stringResource(R.string.settings_display_text)) },
-                            supportingContent = { Text(stringResource(R.string.settings_display_text_summary)) },
-                            leadingContent = { Icon(Icons.Filled.DisplaySettings, stringResource(R.string.settings_display_text)) },
-                            trailingContent = { Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null) }
-                        )
-                    }
-                    add {
-                        SegmentedListItem(
-                            onClick = actions.onOpenMotionHaptics,
-                            headlineContent = { Text(stringResource(R.string.settings_motion_haptics)) },
-                            supportingContent = { Text(stringResource(R.string.settings_motion_haptics_summary)) },
-                            leadingContent = { Icon(Icons.Filled.ElectricalServices, stringResource(R.string.settings_motion_haptics)) },
-                            trailingContent = { Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null) }
-                        )
-                    }
-
+            Column(
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp),
+            ) {
+                VoyageSettingsAccordion(
+                    title = stringResource(R.string.settings_group_language),
+                    icon = Icons.Outlined.Translate,
+                    expanded = languageExpanded,
+                    onToggle = { languageExpanded = !languageExpanded },
+                ) {
+                    SegmentedColumn(
+                        modifier = Modifier.fillMaxWidth(),
+                        content = listOf({
+                            SegmentedListItem(
+                                onClick = actions.onOpenLanguage,
+                                headlineContent = { Text(stringResource(R.string.settings_language)) },
+                                supportingContent = { Text(stringResource(R.string.settings_language_summary)) },
+                                leadingContent = { Icon(Icons.Filled.Language, stringResource(R.string.settings_language)) },
+                                trailingContent = { Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null) },
+                            )
+                        }),
+                    )
                 }
-            )
+                VoyageSettingsAccordion(
+                    title = stringResource(R.string.settings_group_display),
+                    icon = Icons.Outlined.TextFields,
+                    expanded = displayExpanded,
+                    onToggle = { displayExpanded = !displayExpanded },
+                ) {
+                    SegmentedColumn(
+                        modifier = Modifier.fillMaxWidth(),
+                        content = listOf(
+                            {
+                                SegmentedListItem(
+                                    onClick = actions.onOpenTheme,
+                                    headlineContent = { Text(stringResource(R.string.settings_theme)) },
+                                    supportingContent = { Text(stringResource(R.string.settings_theme_summary)) },
+                                    leadingContent = { Icon(Icons.Filled.Palette, stringResource(R.string.settings_theme)) },
+                                    trailingContent = { Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null) },
+                                )
+                            },
+                            {
+                                SegmentedListItem(
+                                    onClick = actions.onOpenDisplayText,
+                                    headlineContent = { Text(stringResource(R.string.settings_display_text)) },
+                                    supportingContent = { Text(stringResource(R.string.settings_display_text_summary)) },
+                                    leadingContent = { Icon(Icons.Filled.DisplaySettings, stringResource(R.string.settings_display_text)) },
+                                    trailingContent = { Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null) },
+                                )
+                            },
+                        ),
+                    )
+                }
+                VoyageSettingsAccordion(
+                    title = stringResource(R.string.settings_group_behavior),
+                    icon = Icons.Outlined.Animation,
+                    expanded = behaviorExpanded,
+                    onToggle = { behaviorExpanded = !behaviorExpanded },
+                ) {
+                    SegmentedColumn(
+                        modifier = Modifier.fillMaxWidth(),
+                        content = listOf({
+                            SegmentedListItem(
+                                onClick = actions.onOpenMotionHaptics,
+                                headlineContent = { Text(stringResource(R.string.settings_motion_haptics)) },
+                                supportingContent = { Text(stringResource(R.string.settings_motion_haptics_summary)) },
+                                leadingContent = { Icon(Icons.Filled.ElectricalServices, stringResource(R.string.settings_motion_haptics)) },
+                                trailingContent = { Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null) },
+                            )
+                        }),
+                    )
+                }
+            }
 
 
             SegmentedColumn(

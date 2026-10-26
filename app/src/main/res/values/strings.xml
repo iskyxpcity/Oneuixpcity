@@ -354,4 +354,7 @@
     <string name="theme_design_material3_subtitle">Google Material You design with customizable shapes, switch and slider styles, shadows and borders.</string>
     <string name="theme_design_miuix">Miuix</string>
     <string name="theme_design_miuix_subtitle">HyperOS-style interface using Miuix switches, sliders, buttons, dialogs, top bars and lists.</string>
+    <string name="settings_group_language">Language</string>
+    <string name="settings_group_display">Display and text</string>
+    <string name="settings_group_behavior">Motion &amp; haptics</string>
 </resources>
