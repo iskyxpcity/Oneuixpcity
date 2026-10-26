@@ -112,9 +112,14 @@ fun AlohaOneUITheme(
             content = content
         )
 
-        UiMode.Material -> MaterialAlohaOneUITheme(
+        UiMode.Material -> MiuixAlohaOneUITheme(
             appSettings = appSettings,
-            content = content
+            content = {
+                MaterialAlohaOneUITheme(
+                    appSettings = appSettings,
+                    content = content
+                )
+            }
         )
     }
 }
