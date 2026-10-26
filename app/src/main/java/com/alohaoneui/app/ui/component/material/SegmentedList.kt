@@ -478,7 +478,7 @@ fun SegmentedSwitchItem(
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun SegmentedChoiceDialogItem(
+fun SegmentedChoiceOptionsItem(
     title: String,
     summary: String? = null,
     items: List<String>,
