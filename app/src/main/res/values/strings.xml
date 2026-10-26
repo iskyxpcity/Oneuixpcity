@@ -358,4 +358,21 @@
     <string name="settings_group_display">Display and text</string>
     <string name="settings_group_behavior">Motion &amp; haptics</string>
     <string name="voyage_settings_group_aloha">Aloha OneUI</string>
+    <string name="voyage_settings_group_color">Color</string>
+    <string name="voyage_theme_floating_nav_bar_title">Floating navigation bar</string>
+    <string name="voyage_theme_floating_nav_bar_subtitle">The bottom navigation bar floats above the page, with content extending beneath it. Applies only to bottom navigation on narrow screens.</string>
+    <string name="voyage_theme_liquid_glass_title">Liquid Glass</string>
+    <string name="voyage_theme_liquid_glass_subtitle">The floating navigation bar refracts and blurs content behind it; hold a selected item and drag horizontally to switch.</string>
+    <string name="voyage_theme_liquid_glass_needs_floating">Enable the floating navigation bar first</string>
+    <string name="voyage_theme_liquid_glass_unsupported">Requires Android 13 or later</string>
+    <string name="voyage_theme_launch_follows_summary">The launch screen uses the app color scheme and display mode</string>
+    <string name="voyage_color_blind_off">Off</string>
+    <string name="voyage_color_blind_protanomaly">Protanomaly</string>
+    <string name="voyage_color_blind_deuteranomaly">Deuteranomaly</string>
+    <string name="voyage_color_blind_tritanomaly">Tritanomaly</string>
+    <string name="voyage_color_blind_protanopia">Protanopia</string>
+    <string name="voyage_color_blind_deuteranopia">Deuteranopia</string>
+    <string name="voyage_color_blind_tritanopia">Tritanopia</string>
+    <string name="voyage_color_blind_achromatomaly">Achromatomaly</string>
+    <string name="voyage_color_blind_achromatopsia">Achromatopsia</string>
 </resources>

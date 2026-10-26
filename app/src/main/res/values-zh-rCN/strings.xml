@@ -355,4 +355,21 @@
     <string name="settings_group_display">显示与文字</string>
     <string name="settings_group_behavior">动效与触感</string>
     <string name="voyage_settings_group_aloha">Aloha OneUI</string>
+    <string name="voyage_settings_group_color">配色</string>
+    <string name="voyage_theme_floating_nav_bar_title">悬浮底栏</string>
+    <string name="voyage_theme_floating_nav_bar_subtitle">底部导航栏悬浮在页面之上，页面内容延伸到它下方。仅对窄屏的底部导航生效。</string>
+    <string name="voyage_theme_liquid_glass_title">液态玻璃</string>
+    <string name="voyage_theme_liquid_glass_subtitle">悬浮底栏折射并模糊后面的内容，按住选中项可左右拖动切换。</string>
+    <string name="voyage_theme_liquid_glass_needs_floating">请先开启悬浮底栏</string>
+    <string name="voyage_theme_liquid_glass_unsupported">需要 Android 13 及以上</string>
+    <string name="voyage_theme_launch_follows_summary">启动画面使用应用配色与显示模式</string>
+    <string name="voyage_color_blind_off">关闭</string>
+    <string name="voyage_color_blind_protanomaly">红色弱</string>
+    <string name="voyage_color_blind_deuteranomaly">绿色弱</string>
+    <string name="voyage_color_blind_tritanomaly">蓝色弱</string>
+    <string name="voyage_color_blind_protanopia">红色盲</string>
+    <string name="voyage_color_blind_deuteranopia">绿色盲</string>
+    <string name="voyage_color_blind_tritanopia">蓝色盲</string>
+    <string name="voyage_color_blind_achromatomaly">全色弱</string>
+    <string name="voyage_color_blind_achromatopsia">全色盲</string>
 </resources>
