@@ -21,6 +21,7 @@ data class SettingsUiState(
     val enableFloatingBottomBarBlur: Boolean = false,
     val pageScale: Float = 1.0f,
     val materialCornerScale: Float = 1.0f,
+    val materialShapeStyle: Int = 0,
     val materialOutlineWidth: Float = 0.0f,
     val materialShadowContainers: Boolean = true,
     val materialShadowTopBars: Boolean = true,
