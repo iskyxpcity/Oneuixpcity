@@ -532,9 +532,9 @@ private fun ThemeStyleChoice(
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(stringResource(id), modifier = Modifier.weight(1f), style = MaterialTheme.typography.titleMedium)
             val valueText = if (id == R.string.voyage_theme_corner_scale) {
-                "\${String.format(\"%.1f\", value).removeSuffix(\".0\")}×"
+                "${String.format("%.1f", value).removeSuffix(".0")}×"
             } else {
-                "\${String.format(\"%.1f\", value).removeSuffix(\".0\")} dp"
+                "${String.format("%.1f", value).removeSuffix(".0")} dp"
             }
             Surface(
                 shape = androidx.compose.foundation.shape.RoundedCornerShape(50),
