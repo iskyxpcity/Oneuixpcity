@@ -467,7 +467,7 @@ private fun ThemeStyleChoice(
             Text(stringResource(id), modifier = Modifier.weight(1f))
             Text(value.toInt().toString(), color = MaterialTheme.colorScheme.primary)
         }
-        VoyageSlider(value.coerceIn(range.start, range.endInclusive), onChange, valueRange = range)
+        VoyageVoyageSlider(value.coerceIn(range.start, range.endInclusive), onChange, valueRange = range)
     }
 }
 

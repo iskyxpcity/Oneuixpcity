@@ -42,6 +42,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.alohaoneui.app.AlohaOneUIApplication
 import com.alohaoneui.app.R
 import com.alohaoneui.app.ui.component.material.SendLogBottomSheet
+import com.alohaoneui.app.ui.component.material.ExpressiveSwitch
+import com.alohaoneui.app.ui.component.material.VoyageSlider
 import com.alohaoneui.app.ui.component.material.SnackBarHost
 import com.alohaoneui.app.ui.util.AppLocaleHelper
 import com.alohaoneui.app.ui.viewmodel.SettingsViewModel
