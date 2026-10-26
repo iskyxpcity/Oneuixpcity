@@ -126,6 +126,20 @@ fun SettingPagerMaterial(
                         )
                     }
                     add {
+                        val languageOptions = listOf(
+                            "Follow system", "简体中文", "繁體中文", "English", "日本語", "한국어"
+                        )
+                        val languageValues = listOf("system", "zh-CN", "zh-TW", "en", "ja", "ko")
+                        SegmentedDropdownItem(
+                            icon = Icons.Filled.Language,
+                            title = stringResource(R.string.settings_language),
+                            summary = stringResource(R.string.settings_language_summary),
+                            items = languageOptions,
+                            selectedIndex = languageValues.indexOf(uiState.appLanguage).coerceAtLeast(0),
+                            onItemSelected = { index -> actions.onSetAppLanguage(languageValues[index]) }
+                        )
+                    }
+                    add {
                         SegmentedListItem(
                             onClick = actions.onOpenTheme,
                             headlineContent = { Text(stringResource(id = R.string.settings_theme)) },
