@@ -1,6 +1,11 @@
 package com.alohaoneui.app.ui.component.material
 
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.border
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.unit.dp
+import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
+import com.alohaoneui.app.ui.theme.LocalMaterialShadowButtons
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ToggleButton
 import androidx.compose.material3.ToggleButtonColors
@@ -24,10 +29,19 @@ fun ExpressiveToggleButton(
     colors: ToggleButtonColors = expressiveToggleButtonColors(),
     content: @Composable RowScope.() -> Unit,
 ) {
+    val styledModifier = modifier
+        .then(
+            if (LocalMaterialShadowButtons.current) Modifier.shadow(2.dp, shapes.shape) else Modifier
+        )
+        .then(
+            LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
+                Modifier.border(it.dp, MaterialTheme.colorScheme.outlineVariant, shapes.shape)
+            } ?: Modifier
+        )
     ToggleButton(
         checked = checked,
         onCheckedChange = onCheckedChange,
-        modifier = modifier,
+        modifier = styledModifier,
         enabled = enabled,
         colors = colors,
         shapes = shapes,
