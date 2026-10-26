@@ -46,4 +46,8 @@
     <string name="voyage_theme_content_color_summary">재생 및 읽기 화면에서 표지 색상을 사용합니다.</string>
     <string name="voyage_theme_icon_follows">홈 화면 아이콘 테마 적용</string>
     <string name="voyage_theme_icon_follows_summary">홈 화면으로 돌아오면 적용됩니다. 일부 런처에서는 아이콘 위치가 바뀔 수 있습니다.</string>
+    <string name="voyage_theme_page_summary">색상, 모양 및 구성 요소 스타일</string>
+    <string name="voyage_toolbox_title">Voyage 도구 상자</string>
+    <string name="voyage_toolbox_subtitle">멀리 있어도 마음은 가까이.</string>
+    <string name="voyage_theme_large_text_summary">텍스트와 화면 요소 확대</string>
 </resources>
