@@ -100,7 +100,6 @@ import com.alohaoneui.app.R
 import com.alohaoneui.app.ui.component.bottombar.useNavigationRail
 import com.alohaoneui.app.ui.component.material.ExpressiveToggleButton
 import com.alohaoneui.app.ui.component.material.SegmentedColumn
-import com.alohaoneui.app.ui.component.material.SegmentedDropdownItem
 import com.alohaoneui.app.ui.component.material.SegmentedChoiceOptionsItem
 import com.alohaoneui.app.ui.component.material.SegmentedSwitchItem
 import com.alohaoneui.app.ui.component.material.SegmentedSliderItem
@@ -280,8 +279,7 @@ fun ColorPaletteScreenMaterial(
                     content = listOf(
                         {
                             val styles = PaletteStyle.entries
-                            SegmentedDropdownItem(
-                                icon = Icons.Rounded.Style,
+                            SegmentedChoiceOptionsItem(
                                 title = stringResource(R.string.settings_color_style),
                                 items = styles.map { it.name },
                                 selectedIndex = styles.indexOf(colorStyle),
@@ -292,8 +290,7 @@ fun ColorPaletteScreenMaterial(
                         },
                         {
                             val specs = ColorSpec.SpecVersion.entries
-                            SegmentedDropdownItem(
-                                icon = Icons.Rounded.DesignServices,
+                            SegmentedChoiceOptionsItem(
                                 title = stringResource(R.string.settings_color_spec),
                                 items = specs.map { it.name },
                                 selectedIndex = specs.indexOf(colorSpec).coerceAtLeast(0),
@@ -340,8 +337,7 @@ fun ColorPaletteScreenMaterial(
                                 stringResource(R.string.settings_page_gesture_cross_axis),
                                 stringResource(R.string.settings_page_gesture_ios_like),
                             )
-                            SegmentedDropdownItem(
-                                icon = Icons.Rounded.ViewCarousel,
+                            SegmentedChoiceOptionsItem(
                                 title = stringResource(R.string.settings_page_gesture_mode),
                                 items = pagerGestureOptions,
                                 selectedIndex = uiState.pagerGestureMode.coerceIn(0, pagerGestureOptions.lastIndex),
