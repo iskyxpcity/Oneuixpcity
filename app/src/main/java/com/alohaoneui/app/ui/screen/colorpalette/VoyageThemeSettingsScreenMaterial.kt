@@ -301,6 +301,7 @@ fun VoyageColorSchemeEditorScreenMaterial(
                                         0xFFE079B0.toInt(), 0xFFE2C2F9.toInt(), 0xFFB28DF0.toInt(), 0xFF768DB1.toInt(),
                                         0xFFF4F7FA.toInt(), 0xFF75787B.toInt(),
                                     )
+                                    val defaultSeedColor = MaterialTheme.colorScheme.primary.toArgb()
                                     ColorPaletteGrid(
                                         colors = seedColors,
                                         selectedColor = uiState.keyColor,
@@ -310,7 +311,7 @@ fun VoyageColorSchemeEditorScreenMaterial(
                                             viewModel.setMaterialDynamicColorEnabled(false)
                                         },
                                         onAdd = {
-                                            val seed = if (uiState.keyColor == 0) MaterialTheme.colorScheme.primary.toArgb() else uiState.keyColor
+                                            val seed = if (uiState.keyColor == 0) defaultSeedColor else uiState.keyColor
                                             val hct = Hct.fromInt(seed)
                                             hctHue = hct.hue.toFloat()
                                             hctChroma = hct.chroma.toFloat()
