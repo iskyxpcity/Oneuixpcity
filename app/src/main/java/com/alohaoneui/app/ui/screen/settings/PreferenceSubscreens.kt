@@ -35,6 +35,7 @@ import com.alohaoneui.app.ui.viewmodel.SettingsViewModel
 import top.yukonga.miuix.kmp.basic.Card as MiuixCard
 import top.yukonga.miuix.kmp.basic.Scaffold as MiuixScaffold
 import top.yukonga.miuix.kmp.basic.TopAppBar as MiuixTopAppBar
+import top.yukonga.miuix.kmp.basic.Text as MiuixText
 import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
 import top.yukonga.miuix.kmp.preference.SwitchPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme as miuixColors
@@ -45,7 +46,8 @@ fun LanguageSettingsScreen() {
     val context = LocalContext.current
     val activity = LocalActivity.current
     val viewModel = viewModel<SettingsViewModel>()
-    var selectedLanguage by rememberSaveable { mutableStateOf(AppLocaleHelper.getLanguage(context)) }
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val selectedLanguage = state.appLanguage
     val options = listOf(stringResource(R.string.settings_language_system), stringResource(R.string.settings_language_english), stringResource(R.string.settings_language_chinese_simplified))
     val tags = listOf("system", "en", "zh-CN")
     val selected = tags.indexOf(selectedLanguage).coerceAtLeast(0)
@@ -57,8 +59,9 @@ fun LanguageSettingsScreen() {
                         title = stringResource(R.string.settings_language), summary = options[selected],
                         items = options, selectedIndex = selected,
                         onSelectedIndexChange = { index ->
-                            selectedLanguage = tags[index.coerceIn(tags.indices)]
-                            AppLocaleHelper.apply(context, selectedLanguage)
+                            val language = tags[index.coerceIn(tags.indices)]
+                            viewModel.setAppLanguage(language)
+                            AppLocaleHelper.apply(context, language)
                             activity?.recreate()
                         },
                     )
@@ -71,8 +74,8 @@ fun LanguageSettingsScreen() {
                 options.forEachIndexed { index, label ->
                     ListItem(
                         modifier = Modifier.clickable {
-                            selectedLanguage = tags[index]
-                            AppLocaleHelper.apply(context, selectedLanguage)
+                            viewModel.setAppLanguage(tags[index])
+                            AppLocaleHelper.apply(context, tags[index])
                             activity?.recreate()
                         },
                         headlineContent = { Text(label) },
@@ -93,19 +96,29 @@ fun DisplayTextSettingsScreen() {
     val navigator = LocalNavigator.current
     val viewModel = viewModel<SettingsViewModel>()
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    val scaleOptions = (80..150 step 5).map { "$it%" }
-    val scaleValues = (80..150 step 5).map { it / 100f }
-    val selected = scaleValues.indices.minByOrNull { kotlin.math.abs(scaleValues[it] - state.materialFontScale) } ?: 4
+    val fontScaleOptions = (80..150 step 5).map { "$it%" }
+    val fontScaleValues = (80..150 step 5).map { it / 100f }
+    val displayScaleOptions = (85..125 step 5).map { "$it%" }
+    val displayScaleValues = (85..125 step 5).map { it / 100f }
+    val fontScaleIndex = fontScaleValues.indices.minByOrNull { kotlin.math.abs(fontScaleValues[it] - state.materialFontScale) } ?: 4
+    val displayScaleIndex = displayScaleValues.indices.minByOrNull { kotlin.math.abs(displayScaleValues[it] - state.materialDisplayScale) } ?: 3
     if (LocalUiMode.current == UiMode.Miuix) {
         MiuixScaffold(topBar = { MiuixTopAppBar(color = miuixColors.surface, title = stringResource(R.string.settings_display_text)) }, popupHost = {}) { padding ->
             Column(Modifier.fillMaxSize().padding(padding).padding(horizontal = 12.dp).verticalScroll(rememberScrollState())) {
                 MiuixCard(modifier = Modifier.fillMaxWidth().padding(top = 12.dp)) {
                     OverlayDropdownPreference(
                         title = stringResource(R.string.settings_font_scale_title),
-                        items = scaleOptions,
-                        selectedIndex = selected,
-                        onSelectedIndexChange = { viewModel.setMaterialFontScale(scaleValues[it.coerceIn(scaleValues.indices)]) },
+                        items = fontScaleOptions,
+                        selectedIndex = fontScaleIndex,
+                        onSelectedIndexChange = { viewModel.setMaterialFontScale(fontScaleValues[it.coerceIn(fontScaleValues.indices)]) },
                     )
+                    OverlayDropdownPreference(
+                        title = stringResource(R.string.settings_display_scale_title),
+                        items = displayScaleOptions,
+                        selectedIndex = displayScaleIndex,
+                        onSelectedIndexChange = { viewModel.setMaterialDisplayScale(displayScaleValues[it.coerceIn(displayScaleValues.indices)]) },
+                    )
+                    MiuixText(text = stringResource(R.string.settings_display_preview_sample), modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp))
                     SwitchPreference(title = stringResource(R.string.settings_bold_text_title), checked = state.materialBoldTextEnabled, onCheckedChange = viewModel::setMaterialBoldTextEnabled)
                 }
             }
@@ -118,6 +131,11 @@ fun DisplayTextSettingsScreen() {
                     Text("${(state.materialFontScale * 100).toInt()}%")
                 }
                 Slider(state.materialFontScale, viewModel::setMaterialFontScale, valueRange = 0.8f..1.5f)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(stringResource(R.string.settings_display_scale_title), modifier = Modifier.weight(1f))
+                    Text("${(state.materialDisplayScale * 100).toInt()}%")
+                }
+                Slider(state.materialDisplayScale, viewModel::setMaterialDisplayScale, valueRange = 0.85f..1.25f)
                 Text(stringResource(R.string.settings_display_preview_sample), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp))
                 ListItem(headlineContent = { Text(stringResource(R.string.settings_bold_text_title)) }, trailingContent = { Switch(state.materialBoldTextEnabled, viewModel::setMaterialBoldTextEnabled) })
             }
