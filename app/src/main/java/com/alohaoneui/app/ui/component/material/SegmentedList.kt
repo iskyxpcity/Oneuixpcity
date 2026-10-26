@@ -58,6 +58,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CutCornerShape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -67,6 +68,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.alohaoneui.app.ui.theme.LocalMaterialCornerScale
+import com.alohaoneui.app.ui.theme.LocalMaterialShapeStyle
 import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
 import com.alohaoneui.app.ui.theme.LocalMaterialShadowContainers
 import androidx.compose.foundation.border
@@ -76,8 +78,15 @@ import kotlinx.coroutines.launch
 val LocalListItemShapes = compositionLocalOf<ListItemShapes?> { null }
 
 @Composable
-fun voyageCornerShape(radius: androidx.compose.ui.unit.Dp): Shape =
-    RoundedCornerShape(radius * LocalMaterialCornerScale.current.coerceIn(0f, 1f))
+fun voyageCornerShape(radius: androidx.compose.ui.unit.Dp): Shape {
+    val scaledRadius = radius * LocalMaterialCornerScale.current.coerceIn(0f, 1f)
+    // Keep shape selection in the shared component layer so every nested screen
+    // using voyageCornerShape responds to the same persisted theme setting.
+    return when (LocalMaterialShapeStyle.current) {
+        1 -> CutCornerShape(scaledRadius)
+        else -> RoundedCornerShape(scaledRadius)
+    }
+}
 
 @Composable
 fun alohaOneUISegmentedColors(): ListItemColors = ListItemDefaults.segmentedColors().copy(
@@ -121,12 +130,20 @@ fun voyageSegmentedShape(index: Int, count: Int, vertical: Boolean = true): Shap
         label = "voyageSegmentBottomStart",
     )
 
-    return RoundedCornerShape(
-        topStart = topStart,
-        topEnd = topEnd,
-        bottomEnd = bottomEnd,
-        bottomStart = bottomStart,
-    )
+    return when (LocalMaterialShapeStyle.current) {
+        1 -> CutCornerShape(
+            topStart = topStart,
+            topEnd = topEnd,
+            bottomEnd = bottomEnd,
+            bottomStart = bottomStart,
+        )
+        else -> RoundedCornerShape(
+            topStart = topStart,
+            topEnd = topEnd,
+            bottomEnd = bottomEnd,
+            bottomStart = bottomStart,
+        )
+    }
 }
 
 @Composable
