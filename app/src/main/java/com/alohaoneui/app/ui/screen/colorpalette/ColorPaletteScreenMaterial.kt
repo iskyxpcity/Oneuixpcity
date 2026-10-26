@@ -66,6 +66,7 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.ToggleButtonDefaults
 import androidx.compose.material3.ToggleButtonShapes
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
@@ -234,6 +235,10 @@ fun ColorPaletteScreenMaterial(
                                     .weight(1f)
                                     .padding(horizontal = 8.dp)
                                     .semantics { role = Role.RadioButton },
+                                colors = ToggleButtonDefaults.colors(
+                                    checkedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
+                                    containerColor = MaterialTheme.colorScheme.surface,
+                                ),
                                 shapes = ToggleButtonShapes(
                                     shape = sourceShape,
                                     pressedShape = sourceShape,
