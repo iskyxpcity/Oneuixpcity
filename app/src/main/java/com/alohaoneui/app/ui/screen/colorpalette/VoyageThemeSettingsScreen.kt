@@ -318,7 +318,7 @@ private fun VoyageThemeSettingsScreenMiuix(
                         VoyageThemeCategory.ASSIST -> Icons.Rounded.AccessibilityNew
                         VoyageThemeCategory.SHAPE -> Icons.Rounded.Tune
                         VoyageThemeCategory.COMPONENTS -> Icons.Rounded.Widgets
-                        VoyageThemeCategory.SHADOWS -> MiuixTuneIcon
+                        VoyageThemeCategory.SHADOWS -> Icons.Rounded.Tune
                     },
                     expanded = expanded,
                     onToggle = { expandedCategories = if (expanded) expandedCategories - category.name else expandedCategories + category.name },
