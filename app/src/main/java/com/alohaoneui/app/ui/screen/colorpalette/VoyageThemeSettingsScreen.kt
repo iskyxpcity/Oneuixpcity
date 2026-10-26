@@ -5,14 +5,6 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.icons.rounded.AccessibilityNew as MiuixAssistIcon
-import androidx.compose.material.icons.rounded.DarkMode as MiuixModeIcon
-import androidx.compose.material.icons.rounded.ExpandMore as MiuixExpandIcon
-import androidx.compose.material.icons.rounded.Launch as MiuixLaunchIcon
-import androidx.compose.material.icons.rounded.Navigation as MiuixNavigationIcon
-import androidx.compose.material.icons.rounded.Palette as MiuixPaletteIcon
-import androidx.compose.material.icons.rounded.Tune as MiuixTuneIcon
-import androidx.compose.material.icons.rounded.Widgets as MiuixWidgetsIcon
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -305,19 +297,19 @@ private fun VoyageThemeSettingsScreenMiuix(
                 .nestedScroll(scrollBehavior.nestedScrollConnection).overScrollVertical()
                 .padding(horizontal = 12.dp, vertical = 8.dp),
         ) {
-            androidx.compose.material3.TextButton(onClick = onBack) { androidx.compose.material3.Text(stringResource(R.string.back)) }
+            androidx.compose.material3.TextButton(onClick = onBack) { androidx.compose.material3.Text(stringResource(R.string.voyage_theme_back)) }
             categories.forEach { category ->
                 val expanded = category.name in expandedCategories
                 MiuixVoyageAccordion(
                     title = stringResource(category.titleRes),
                     icon = when (category) {
-                        VoyageThemeCategory.DESIGN -> MiuixPaletteIcon
-                        VoyageThemeCategory.NAVIGATION_BAR -> MiuixNavigationIcon
-                        VoyageThemeCategory.MODE -> MiuixModeIcon
-                        VoyageThemeCategory.LAUNCH -> MiuixLaunchIcon
-                        VoyageThemeCategory.ASSIST -> MiuixAssistIcon
-                        VoyageThemeCategory.SHAPE -> MiuixTuneIcon
-                        VoyageThemeCategory.COMPONENTS -> MiuixWidgetsIcon
+                        VoyageThemeCategory.DESIGN -> Icons.Rounded.Palette
+                        VoyageThemeCategory.NAVIGATION_BAR -> Icons.Rounded.Navigation
+                        VoyageThemeCategory.MODE -> Icons.Rounded.DarkMode
+                        VoyageThemeCategory.LAUNCH -> Icons.Rounded.Launch
+                        VoyageThemeCategory.ASSIST -> Icons.Rounded.AccessibilityNew
+                        VoyageThemeCategory.SHAPE -> Icons.Rounded.Tune
+                        VoyageThemeCategory.COMPONENTS -> Icons.Rounded.Widgets
                         VoyageThemeCategory.SHADOWS -> MiuixTuneIcon
                     },
                     expanded = expanded,
@@ -415,7 +407,7 @@ private fun MiuixVoyageAccordion(
             Row(Modifier.fillMaxWidth().clickable(onClick = onToggle).padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
                 MiuixIcon(icon, contentDescription = null, tint = miuixColorScheme.onBackground, modifier = Modifier.padding(end = 10.dp))
                 MiuixText(title, modifier = Modifier.weight(1f))
-                MiuixIcon(MiuixExpandIcon, contentDescription = null, tint = miuixColorScheme.onBackground)
+                MiuixIcon(Icons.Rounded.ExpandMore, contentDescription = null, tint = miuixColorScheme.onBackground)
             }
             AnimatedVisibility(visible = expanded) { Column(content = content) }
         }
