@@ -537,7 +537,7 @@ private fun ThemePreviewCard(
                 .fillMaxWidth(0.4f)
                 .aspectRatio(screenRatio),
             color = colorScheme.surfaceContainer,
-            shape = RoundedCornerShape(20.dp),
+            shape = voyageCornerShape(20.dp),
             border = LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
                 BorderStroke(it.dp, color = colorScheme.outlineVariant)
             }
