@@ -37,6 +37,9 @@ class SettingsViewModel(
             val pageScale = repo.pageScale
             val materialCornerScale = repo.materialCornerScale
             val materialShapeStyle = repo.materialShapeStyle
+            val materialSwitchStyle = repo.materialSwitchStyle
+            val materialSliderStyle = repo.materialSliderStyle
+            val materialIconShapeStyle = repo.materialIconShapeStyle
             val materialOutlineWidth = repo.materialOutlineWidth
             val materialShadowContainers = repo.materialShadowContainers
             val materialShadowTopBars = repo.materialShadowTopBars
@@ -65,6 +68,9 @@ class SettingsViewModel(
                     pageScale = pageScale,
                     materialCornerScale = materialCornerScale,
                     materialShapeStyle = materialShapeStyle,
+                    materialSwitchStyle = materialSwitchStyle,
+                    materialSliderStyle = materialSliderStyle,
+                    materialIconShapeStyle = materialIconShapeStyle,
                     materialOutlineWidth = materialOutlineWidth,
                     materialShadowContainers = materialShadowContainers,
                     materialShadowTopBars = materialShadowTopBars,
@@ -206,6 +212,24 @@ class SettingsViewModel(
         val safe = style.coerceIn(0, 6)
         repo.materialShapeStyle = safe
         _uiState.update { it.copy(materialShapeStyle = safe) }
+    }
+
+    fun setMaterialSwitchStyle(style: Int) {
+        val safe = style.coerceIn(0, 7)
+        repo.materialSwitchStyle = safe
+        _uiState.update { it.copy(materialSwitchStyle = safe) }
+    }
+
+    fun setMaterialSliderStyle(style: Int) {
+        val safe = style.coerceIn(0, 3)
+        repo.materialSliderStyle = safe
+        _uiState.update { it.copy(materialSliderStyle = safe) }
+    }
+
+    fun setMaterialIconShapeStyle(style: Int) {
+        val safe = style.coerceIn(0, 1)
+        repo.materialIconShapeStyle = safe
+        _uiState.update { it.copy(materialIconShapeStyle = safe) }
     }
 
     fun setMaterialCornerScale(scale: Float) {
