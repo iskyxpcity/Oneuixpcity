@@ -68,12 +68,11 @@ fun SettingPagerMaterial(
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
     val snackBarHost = remember { SnackbarHostState() }
     var showBottomSheet by remember { mutableStateOf(false) }
-    var languageExpanded by rememberSaveable { mutableStateOf(false) }
-    var themeExpanded by rememberSaveable { mutableStateOf(false) }
-    var colorExpanded by rememberSaveable { mutableStateOf(false) }
+    var languageExpanded by rememberSaveable { mutableStateOf(true) }
+    var themeExpanded by rememberSaveable { mutableStateOf(true) }
     var paletteStyleExpanded by rememberSaveable { mutableStateOf(false) }
-    var displayExpanded by rememberSaveable { mutableStateOf(false) }
-    var behaviorExpanded by rememberSaveable { mutableStateOf(false) }
+    var displayExpanded by rememberSaveable { mutableStateOf(true) }
+    var behaviorExpanded by rememberSaveable { mutableStateOf(true) }
     var alohaExpanded by rememberSaveable { mutableStateOf(false) }
     var fontMenu by remember { mutableStateOf(false) }
     var gestureMenu by remember { mutableStateOf(false) }
@@ -81,10 +80,13 @@ fun SettingPagerMaterial(
 
     val languageLabels = listOf(
         stringResource(R.string.settings_language_system),
-        stringResource(R.string.settings_language_english),
         stringResource(R.string.settings_language_chinese_simplified),
+        stringResource(R.string.settings_language_chinese_traditional),
+        stringResource(R.string.settings_language_english),
+        stringResource(R.string.settings_language_japanese),
+        stringResource(R.string.settings_language_korean),
     )
-    val languageTags = listOf("system", "en", "zh-CN")
+    val languageTags = listOf("system", "zh-CN", "zh-TW", "en", "ja", "ko")
     val selectedLanguageIndex = languageTags.indexOf(uiState.appLanguage).coerceAtLeast(0)
     val fontLabels = listOf(stringResource(R.string.voyage_font_default), stringResource(R.string.voyage_font_serif))
     val gestureLabels = listOf(
@@ -134,43 +136,7 @@ fun SettingPagerMaterial(
                 }
             }
 
-            val themeSection: @Composable () -> Unit = {
-                VoyageSettingsAccordion(
-                    title = stringResource(R.string.settings_theme),
-                    icon = Icons.Filled.Palette,
-                    expanded = themeExpanded,
-                    onToggle = { themeExpanded = !themeExpanded },
-                ) {
-                    SettingsThemeStyleChoice(
-                        title = stringResource(R.string.theme_design_material3),
-                        summary = stringResource(R.string.theme_design_material3_subtitle),
-                        selected = uiState.uiMode == UiMode.Material.value,
-                        icon = Icons.Filled.Palette,
-                        onClick = { actions.onSetUiModeIndex(1) },
-                    )
-                    SettingsThemeStyleChoice(
-                        title = stringResource(R.string.theme_design_miuix),
-                        summary = stringResource(R.string.theme_design_miuix_subtitle),
-                        selected = uiState.uiMode == UiMode.Miuix.value,
-                        icon = Icons.Filled.Widgets,
-                        onClick = { actions.onSetUiModeIndex(0) },
-                    )
-                    ListItem(
-                        modifier = Modifier.clickable(onClick = actions.onOpenTheme),
-                        headlineContent = { Text(stringResource(R.string.voyage_theme_page_title)) },
-                        supportingContent = { Text(stringResource(R.string.settings_theme_summary)) },
-                        trailingContent = { Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null) },
-                    )
-                }
-            }
-
-            val colorSection: @Composable () -> Unit = {
-                VoyageSettingsAccordion(
-                    title = stringResource(R.string.voyage_settings_group_color),
-                    icon = Icons.Filled.Palette,
-                    expanded = colorExpanded,
-                    onToggle = { colorExpanded = !colorExpanded },
-                ) {
+            val themeColorControls: @Composable ColumnScope.() -> Unit = {
                     ListItem(
                         headlineContent = { Text(stringResource(R.string.voyage_theme_dynamic_color)) },
                         supportingContent = { Text(stringResource(R.string.voyage_theme_dynamic_color_summary)) },
@@ -211,6 +177,37 @@ fun SettingPagerMaterial(
                         headlineContent = { Text(stringResource(R.string.voyage_theme_color_editor)) },
                         trailingContent = { Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null) },
                     )
+            }
+
+
+            val themeSection: @Composable () -> Unit = {
+                VoyageSettingsAccordion(
+                    title = stringResource(R.string.settings_theme),
+                    icon = Icons.Filled.Palette,
+                    expanded = themeExpanded,
+                    onToggle = { themeExpanded = !themeExpanded },
+                ) {
+                    SettingsThemeStyleChoice(
+                        title = stringResource(R.string.theme_design_material3),
+                        summary = stringResource(R.string.theme_design_material3_subtitle),
+                        selected = uiState.uiMode == UiMode.Material.value,
+                        icon = Icons.Filled.Palette,
+                        onClick = { actions.onSetUiModeIndex(1) },
+                    )
+                    SettingsThemeStyleChoice(
+                        title = stringResource(R.string.theme_design_miuix),
+                        summary = stringResource(R.string.theme_design_miuix_subtitle),
+                        selected = uiState.uiMode == UiMode.Miuix.value,
+                        icon = Icons.Filled.Widgets,
+                        onClick = { actions.onSetUiModeIndex(0) },
+                    )
+                    ListItem(
+                        modifier = Modifier.clickable(onClick = actions.onOpenTheme),
+                        headlineContent = { Text(stringResource(R.string.voyage_theme_page_title)) },
+                        supportingContent = { Text(stringResource(R.string.settings_theme_summary)) },
+                        trailingContent = { Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null) },
+                    )
+                    Column(content = themeColorControls)
                 }
             }
 
@@ -320,7 +317,6 @@ fun SettingPagerMaterial(
                         }
                         Column(Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState()).nestedScroll(scrollBehavior.nestedScrollConnection)) {
                             themeSection()
-                            colorSection()
                             Spacer(Modifier.height(bottomInnerPadding))
                         }
                         Column(Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState()).nestedScroll(scrollBehavior.nestedScrollConnection)) {
@@ -340,7 +336,6 @@ fun SettingPagerMaterial(
                         }
                         Column(Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState()).nestedScroll(scrollBehavior.nestedScrollConnection)) {
                             themeSection()
-                            colorSection()
                             displaySection()
                             alohaSection()
                             Spacer(Modifier.height(bottomInnerPadding))
@@ -351,7 +346,6 @@ fun SettingPagerMaterial(
                     ) {
                         languageSection()
                         themeSection()
-                        colorSection()
                         displaySection()
                         behaviorSection()
                         alohaSection()
