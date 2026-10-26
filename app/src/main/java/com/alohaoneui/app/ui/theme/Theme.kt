@@ -49,6 +49,14 @@ data class AppSettings(
     val keyColor: Int,
     val paletteStyle: PaletteStyle,
     val colorSpec: ColorSpec.SpecVersion,
+    val materialCornerScale: Float = 1.0f,
+    val materialOutlineWidth: Float = 0.0f,
+    val materialShadowContainers: Boolean = true,
+    val materialShadowTopBars: Boolean = true,
+    val materialShadowButtons: Boolean = true,
+    val materialShadowFloatingButtons: Boolean = true,
+    val materialShadowSwitches: Boolean = true,
+    val materialShadowSliders: Boolean = true,
 )
 
 val PaletteStyle.supportsSpec2025: Boolean
@@ -96,7 +104,20 @@ object ThemeController {
             ColorSpec.SpecVersion.SPEC_2025
         }
 
-        return AppSettings(colorMode, keyColor, paletteStyle, colorSpec)
+        return AppSettings(
+            colorMode = colorMode,
+            keyColor = keyColor,
+            paletteStyle = paletteStyle,
+            colorSpec = colorSpec,
+            materialCornerScale = repo.materialCornerScale,
+            materialOutlineWidth = repo.materialOutlineWidth,
+            materialShadowContainers = repo.materialShadowContainers,
+            materialShadowTopBars = repo.materialShadowTopBars,
+            materialShadowButtons = repo.materialShadowButtons,
+            materialShadowFloatingButtons = repo.materialShadowFloatingButtons,
+            materialShadowSwitches = repo.materialShadowSwitches,
+            materialShadowSliders = repo.materialShadowSliders,
+        )
     }
 }
 
@@ -141,3 +162,11 @@ val LocalEnableBlur = staticCompositionLocalOf { false }
 val LocalEnableFloatingBottomBar = staticCompositionLocalOf { false }
 
 val LocalEnableFloatingBottomBarBlur = staticCompositionLocalOf { false }
+val LocalMaterialCornerScale = staticCompositionLocalOf { 1.0f }
+val LocalMaterialOutlineWidth = staticCompositionLocalOf { 0.0f }
+val LocalMaterialShadowContainers = staticCompositionLocalOf { true }
+val LocalMaterialShadowTopBars = staticCompositionLocalOf { true }
+val LocalMaterialShadowButtons = staticCompositionLocalOf { true }
+val LocalMaterialShadowFloatingButtons = staticCompositionLocalOf { true }
+val LocalMaterialShadowSwitches = staticCompositionLocalOf { true }
+val LocalMaterialShadowSliders = staticCompositionLocalOf { true }
