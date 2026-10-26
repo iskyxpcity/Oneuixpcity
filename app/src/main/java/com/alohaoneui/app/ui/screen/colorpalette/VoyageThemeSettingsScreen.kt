@@ -329,7 +329,10 @@ private fun VoyageThemeSettingsScreenMiuix(
                 .nestedScroll(scrollBehavior.nestedScrollConnection).overScrollVertical()
                 .padding(horizontal = 12.dp, vertical = 8.dp),
         ) {
-            androidx.compose.material3.TextButton(onClick = onBack) { androidx.compose.material3.Text(stringResource(R.string.voyage_theme_back)) }
+            ArrowPreference(
+                title = stringResource(R.string.voyage_theme_back),
+                onClick = onBack,
+            )
             categories.forEach { category ->
                 val expanded = category.name in expandedCategories
                 MiuixVoyageAccordion(
