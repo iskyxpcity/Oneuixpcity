@@ -129,7 +129,7 @@ fun SettingPagerMaterial(
                         val languageOptions = listOf(
                             "Follow system", "简体中文", "繁體中文", "English", "日本語", "한국어"
                         )
-                        val languageValues = listOf("system", "zh-CN", "zh-TW", "en", "ja", "ko")
+                        val languageValues = listOf("system", "zh-Hans", "zh-Hant", "en", "ja", "ko")
                         SegmentedDropdownItem(
                             icon = Icons.Filled.Language,
                             title = stringResource(R.string.settings_language),
