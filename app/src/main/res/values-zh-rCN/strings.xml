@@ -318,4 +318,10 @@
     <string name="voyage_color_vision_tritanopia">蓝色盲</string>
     <string name="voyage_color_vision_achromatomaly">全色弱</string>
     <string name="voyage_color_vision_achromatopsia">全色盲</string>
+    <string name="voyage_seed_wisteria">紫藤</string>
+    <string name="voyage_seed_ocean">海蓝</string>
+    <string name="voyage_seed_forest">森绿</string>
+    <string name="voyage_seed_amber">琥珀</string>
+    <string name="voyage_seed_coral">珊瑚</string>
+    <string name="voyage_seed_indigo">靛蓝</string>
 </resources>

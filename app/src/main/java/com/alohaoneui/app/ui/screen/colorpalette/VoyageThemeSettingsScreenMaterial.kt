@@ -1,6 +1,7 @@
 package com.alohaoneui.app.ui.screen.colorpalette
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -34,7 +35,6 @@ import androidx.compose.ui.unit.dp
 import com.alohaoneui.app.R
 import com.alohaoneui.app.ui.screen.settings.SettingsUiState
 import com.alohaoneui.app.ui.theme.ColorMode
-import com.alohaoneui.app.ui.theme.keyColorOptions
 import com.alohaoneui.app.ui.viewmodel.SettingsViewModel
 import com.materialkolor.PaletteStyle
 
@@ -99,25 +99,39 @@ fun VoyageThemeSettingsScreenMaterial(
     
                                     Toggle(R.string.voyage_theme_dynamic_color, null, uiState.materialDynamicColorEnabled, viewModel::setMaterialDynamicColorEnabled)
                                     Text(stringResource(R.string.voyage_theme_key_color), style = MaterialTheme.typography.titleMedium)
-                                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
+                                    val seedPresets = listOf(
+                                        stringResource(R.string.voyage_seed_wisteria) to 0xFF6750A4.toInt(),
+                                        stringResource(R.string.voyage_seed_ocean) to 0xFF006A6A.toInt(),
+                                        stringResource(R.string.voyage_seed_forest) to 0xFF426900.toInt(),
+                                        stringResource(R.string.voyage_seed_amber) to 0xFF8C5000.toInt(),
+                                        stringResource(R.string.voyage_seed_coral) to 0xFF9C4146.toInt(),
+                                        stringResource(R.string.voyage_seed_indigo) to 0xFF4054A4.toInt(),
+                                    )
+                                    Row(
+                                        Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                    ) {
                                         ColorChoice(MaterialTheme.colorScheme.primary, uiState.keyColor == 0 && uiState.materialDynamicColorEnabled, stringResource(R.string.voyage_theme_system_color)) {
                                             viewModel.setKeyColor(0)
                                             viewModel.setMaterialDynamicColorEnabled(true)
                                         }
-                                        keyColorOptions.forEach { color -> ColorChoice(Color(color), uiState.keyColor == color, null) {
-                                            viewModel.setKeyColor(color)
-                                            viewModel.setMaterialDynamicColorEnabled(false)
-                                        } }
+                                        seedPresets.forEach { (label, color) ->
+                                            ColorChoice(Color(color), uiState.keyColor == color, label) {
+                                                viewModel.setKeyColor(color)
+                                                viewModel.setMaterialDynamicColorEnabled(false)
+                                            }
+                                        }
                                     }
                                     val paletteChoices = listOf(
                                         stringResource(R.string.voyage_palette_tonal_spot) to PaletteStyle.TonalSpot,
+                                        stringResource(R.string.voyage_palette_neutral) to PaletteStyle.Neutral,
+                                        stringResource(R.string.voyage_palette_vibrant) to PaletteStyle.Vibrant,
                                         stringResource(R.string.voyage_palette_expressive) to PaletteStyle.Expressive,
-                                        stringResource(R.string.voyage_palette_fidelity) to PaletteStyle.Fidelity,
+                                        stringResource(R.string.voyage_palette_rainbow) to PaletteStyle.Rainbow,
                                         stringResource(R.string.voyage_palette_fruit_salad) to PaletteStyle.FruitSalad,
                                         stringResource(R.string.voyage_palette_monochrome) to PaletteStyle.Monochrome,
-                                        stringResource(R.string.voyage_palette_neutral) to PaletteStyle.Neutral,
-                                        stringResource(R.string.voyage_palette_rainbow) to PaletteStyle.Rainbow,
-                                        stringResource(R.string.voyage_palette_vibrant) to PaletteStyle.Vibrant,
+                                        stringResource(R.string.voyage_palette_fidelity) to PaletteStyle.Fidelity,
                                         stringResource(R.string.voyage_palette_content) to PaletteStyle.Content,
                                     )
                                     val currentPaletteLabel = paletteChoices.firstOrNull { it.second.name == uiState.colorStyle }?.first ?: paletteChoices.first().first
@@ -133,8 +147,9 @@ fun VoyageThemeSettingsScreenMaterial(
                                         }
                                         Slider(uiState.materialContrastLevel.coerceIn(-1f, 1f), viewModel::setMaterialContrastLevel, valueRange = -1f..1f)
                                     }
+                                    val currentPrimaryArgb = MaterialTheme.colorScheme.primary.toArgb()
                                     Button(onClick = {
-                                        val seed = if (uiState.keyColor == 0) MaterialTheme.colorScheme.primary.toArgb() else uiState.keyColor
+                                        val seed = if (uiState.keyColor == 0) currentPrimaryArgb else uiState.keyColor
                                         val hct = Hct.fromInt(seed)
                                         hctHue = hct.hue.toFloat()
                                         hctChroma = hct.chroma.toFloat()

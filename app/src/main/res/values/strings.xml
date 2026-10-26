@@ -321,4 +321,10 @@
     <string name="voyage_color_vision_tritanopia">Tritanopia</string>
     <string name="voyage_color_vision_achromatomaly">Achromatomaly</string>
     <string name="voyage_color_vision_achromatopsia">Achromatopsia</string>
+    <string name="voyage_seed_wisteria">Wisteria</string>
+    <string name="voyage_seed_ocean">Ocean</string>
+    <string name="voyage_seed_forest">Forest</string>
+    <string name="voyage_seed_amber">Amber</string>
+    <string name="voyage_seed_coral">Coral</string>
+    <string name="voyage_seed_indigo">Indigo</string>
 </resources>
