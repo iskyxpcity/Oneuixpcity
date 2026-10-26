@@ -444,8 +444,18 @@ private fun ThemeStyleChoice(
 @Composable private fun Choice(id: Int, selected: Boolean, onClick: () -> Unit) {
     ListItem(modifier = Modifier.clickable(onClick = onClick), headlineContent = { Text(stringResource(id)) }, trailingContent = { RadioButton(selected, onClick) })
 }
-@Composable private fun Toggle(id: Int, summary: String?, checked: Boolean, onChange: (Boolean) -> Unit) {
-    ListItem(headlineContent = { Text(stringResource(id)) }, supportingContent = summary?.let { { Text(it) } }, trailingContent = { Switch(checked, onChange) })
+@Composable private fun Toggle(
+    id: Int,
+    summary: String?,
+    checked: Boolean,
+    onChange: (Boolean) -> Unit,
+    enabled: Boolean = true,
+) {
+    ListItem(
+        headlineContent = { Text(stringResource(id)) },
+        supportingContent = summary?.let { { Text(it) } },
+        trailingContent = { Switch(checked = checked, onCheckedChange = onChange, enabled = enabled) },
+    )
 }
 @Composable private fun Slide(id: Int, value: Float, range: ClosedFloatingPointRange<Float>, onChange: (Float) -> Unit) {
     Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp)) {
