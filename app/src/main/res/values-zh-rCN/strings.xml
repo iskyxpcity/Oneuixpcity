@@ -230,6 +230,9 @@
     <string name="changelog_2610191_fixes_body">• 修复部分设置迁移时图标缩放比例异常的问题。\n• 修复隐藏原生图标后可能残留空白的问题。\n• 优化部分系统功能的配置读取与兼容性。</string>
     <string name="voyage_theme_group_mode">显示模式</string>
     <string name="voyage_theme_group_palette">配色</string>
+    <string name="voyage_theme_wallpaper_colors">壁纸取色</string>
+    <string name="voyage_theme_follow_system">跟随系统</string>
+    <string name="voyage_theme_scheme_dynamic_disabled">系统动态色开启时不可用</string>
     <string name="voyage_theme_reset_title">恢复主题默认值</string>
     <string name="voyage_theme_reset_summary">主题相关设置回到初始状态</string>
     <string name="voyage_theme_group_design">界面风格</string>
