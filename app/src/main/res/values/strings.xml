@@ -242,4 +242,6 @@
     <string name="theme_shadow_fab">Floating buttons</string>
     <string name="theme_shadow_switch">Switches</string>
     <string name="theme_shadow_slider">Sliders</string>
+    <string name="settings_language">Global language</string>
+    <string name="settings_language_summary">Choose the language used throughout the app. Language switching will be connected in the next migration stage.</string>
 </resources>
