@@ -10,6 +10,7 @@ import com.alohaoneui.app.ui.UiMode
 data class SettingsUiState(
     val uiMode: String = UiMode.DEFAULT_VALUE,
     val checkUpdate: Boolean = true,
+    val appLanguage: String = "system",
     val themeMode: Int = 0,
     val miuixMonet: Boolean = false,
     val keyColor: Int = 0,
@@ -36,6 +37,7 @@ data class SettingsUiState(
 @Immutable
 data class SettingsScreenActions(
     val onSetCheckUpdate: (Boolean) -> Unit,
+    val onSetAppLanguage: (String) -> Unit,
     val onOpenTheme: () -> Unit,
     val onSetUiModeIndex: (Int) -> Unit,
     val onOpenAbout: () -> Unit,
