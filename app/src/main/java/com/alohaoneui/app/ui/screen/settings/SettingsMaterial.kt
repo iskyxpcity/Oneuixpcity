@@ -246,6 +246,17 @@ fun SettingPagerMaterial(
                     }
                     ListItem(headlineContent = { Text(stringResource(R.string.voyage_theme_large_text)) }, trailingContent = { ExpressiveSwitch(uiState.materialLargeTextEnabled, viewModel::setMaterialLargeTextEnabled) })
                     ListItem(headlineContent = { Text(stringResource(R.string.settings_bold_text_title)) }, trailingContent = { ExpressiveSwitch(uiState.materialBoldTextEnabled, viewModel::setMaterialBoldTextEnabled) })
+                    ListItem(
+                        modifier = Modifier.clickable {
+                            viewModel.setMaterialFontScale(1.0f)
+                            viewModel.setMaterialDisplayScale(1.0f)
+                            viewModel.setMaterialFontFamily("Default")
+                            viewModel.setMaterialLargeTextEnabled(false)
+                            viewModel.setMaterialBoldTextEnabled(false)
+                        },
+                        leadingContent = { Icon(Icons.Filled.SystemUpdate, contentDescription = null) },
+                        headlineContent = { Text(stringResource(R.string.settings_display_restore_defaults)) },
+                    )
                 }
             }
 
@@ -280,6 +291,20 @@ fun SettingPagerMaterial(
                             }
                         }) },
                     )
+
+                }
+            }
+
+            val alohaSection: @Composable () -> Unit = {
+                VoyageSettingsAccordion(
+                    title = stringResource(R.string.voyage_settings_group_aloha),
+                    icon = Icons.Filled.Dashboard,
+                    expanded = alohaExpanded,
+                    onToggle = { alohaExpanded = !alohaExpanded },
+                ) {
+                    ListItem(headlineContent = { Text(stringResource(R.string.settings_check_update)) }, supportingContent = { Text(stringResource(R.string.settings_check_update_summary)) }, trailingContent = { ExpressiveSwitch(uiState.checkUpdate, actions.onSetCheckUpdate) })
+                    ListItem(modifier = Modifier.clickable { showBottomSheet = true }, headlineContent = { Text(stringResource(R.string.send_log)) }, trailingContent = { Icon(Icons.Filled.BugReport, contentDescription = null) })
+                    ListItem(modifier = Modifier.clickable(onClick = actions.onOpenAbout), headlineContent = { Text(stringResource(R.string.about)) }, trailingContent = { Icon(Icons.Filled.Info, contentDescription = null) })
                     ListItem(headlineContent = { Text(stringResource(R.string.settings_enable_swipe_back)) }, supportingContent = { Text(stringResource(R.string.settings_enable_swipe_back_summary)) }, trailingContent = { ExpressiveSwitch(uiState.enableSwipeBack, viewModel::setEnableSwipeBack) })
                     ListItem(
                         modifier = Modifier.clickable { gestureMenu = true },
@@ -299,19 +324,6 @@ fun SettingPagerMaterial(
                             DropdownMenuItem(text = { Text(percent.toString() + "%") }, onClick = { viewModel.setPageScale(percent / 100f); pageScaleMenu = false })
                         }
                     }
-                }
-            }
-
-            val alohaSection: @Composable () -> Unit = {
-                VoyageSettingsAccordion(
-                    title = stringResource(R.string.voyage_settings_group_aloha),
-                    icon = Icons.Filled.Dashboard,
-                    expanded = alohaExpanded,
-                    onToggle = { alohaExpanded = !alohaExpanded },
-                ) {
-                    ListItem(headlineContent = { Text(stringResource(R.string.settings_check_update)) }, supportingContent = { Text(stringResource(R.string.settings_check_update_summary)) }, trailingContent = { ExpressiveSwitch(uiState.checkUpdate, actions.onSetCheckUpdate) })
-                    ListItem(modifier = Modifier.clickable { showBottomSheet = true }, headlineContent = { Text(stringResource(R.string.send_log)) }, trailingContent = { Icon(Icons.Filled.BugReport, contentDescription = null) })
-                    ListItem(modifier = Modifier.clickable(onClick = actions.onOpenAbout), headlineContent = { Text(stringResource(R.string.about)) }, trailingContent = { Icon(Icons.Filled.Info, contentDescription = null) })
                 }
             }
 
