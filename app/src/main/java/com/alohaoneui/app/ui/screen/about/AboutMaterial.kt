@@ -1,6 +1,8 @@
 package com.alohaoneui.app.ui.screen.about
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.border
+import androidx.compose.ui.draw.shadow
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -33,6 +35,8 @@ import com.alohaoneui.app.R
 import com.alohaoneui.app.ui.component.material.SegmentedColumn
 import com.alohaoneui.app.ui.component.material.SegmentedListItem
 import com.alohaoneui.app.ui.component.material.TopBarBackButton
+import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
+import com.alohaoneui.app.ui.theme.LocalMaterialShadowTopBars
 
 @Composable
 fun AboutScreenMaterial(
@@ -44,6 +48,13 @@ fun AboutScreenMaterial(
     Scaffold(
         topBar = {
             LargeFlexibleTopAppBar(
+                modifier = Modifier
+                    .then(if (LocalMaterialShadowTopBars.current) Modifier.shadow(2.dp) else Modifier)
+                    .then(
+                        LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
+                            Modifier.border(it.dp, MaterialTheme.colorScheme.outlineVariant)
+                        } ?: Modifier
+                    ),
                 title = { Text(state.title) },
                 navigationIcon = {
                     TopBarBackButton(onClick = actions.onBack)
