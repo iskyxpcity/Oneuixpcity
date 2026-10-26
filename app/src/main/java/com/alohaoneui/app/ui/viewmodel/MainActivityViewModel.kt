@@ -64,6 +64,7 @@ class MainActivityViewModel(
             "color_spec",
             "page_scale",
             "material_corner_scale",
+            "material_shape_style",
             "material_outline_width",
             "material_shadow_containers",
             "material_shadow_top_bars",
