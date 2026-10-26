@@ -31,6 +31,7 @@ data class ColorPaletteScreenActions(
     val onSetPagerGestureMode: (Int) -> Unit,
     val onSetPageScale: (Float) -> Unit,
     val onSetMaterialCornerScale: (Float) -> Unit,
+    val onSetMaterialShapeStyle: (Int) -> Unit,
     val onSetMaterialOutlineWidth: (Float) -> Unit,
     val onSetMaterialShadowContainers: (Boolean) -> Unit,
     val onSetMaterialShadowTopBars: (Boolean) -> Unit,
