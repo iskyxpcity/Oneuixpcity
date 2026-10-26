@@ -49,4 +49,8 @@
     <string name="settings_transition_scale">拡大縮小</string>
     <string name="settings_transition_classic">クラシック</string>
     <string name="settings_display_restore_defaults">表示設定を初期値に戻す</string>
+    <string name="voyage_theme_content_color">コンテンツカラー</string>
+    <string name="voyage_theme_content_color_summary">再生画面と読書画面にカバーの色を使用します。</string>
+    <string name="voyage_theme_icon_follows">ホームアイコンをテーマに合わせる</string>
+    <string name="voyage_theme_icon_follows_summary">ホームに戻ると適用されます。一部のランチャーではアイコンの位置が変わることがあります。</string>
 </resources>

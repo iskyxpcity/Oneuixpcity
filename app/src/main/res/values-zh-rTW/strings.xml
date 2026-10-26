@@ -100,4 +100,8 @@
     <string name="settings_transition_scale">縮放</string>
     <string name="settings_transition_classic">經典</string>
     <string name="settings_display_restore_defaults">還原顯示預設值</string>
+    <string name="voyage_theme_content_color">內容顏色</string>
+    <string name="voyage_theme_content_color_summary">播放與閱讀頁面使用封面配色</string>
+    <string name="voyage_theme_icon_follows">桌面圖示跟隨主題</string>
+    <string name="voyage_theme_icon_follows_summary">返回桌面後生效，部分啟動器可能會調整圖示位置。</string>
 </resources>

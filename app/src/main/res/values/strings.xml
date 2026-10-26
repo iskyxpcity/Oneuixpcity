@@ -395,4 +395,8 @@
     <string name="settings_transition_scale">Scale</string>
     <string name="settings_transition_classic">Classic</string>
     <string name="settings_display_restore_defaults">Restore display defaults</string>
+    <string name="voyage_theme_content_color">Content color</string>
+    <string name="voyage_theme_content_color_summary">Playback and reading pages use colors from the cover.</string>
+    <string name="voyage_theme_icon_follows">Desktop icon follows theme</string>
+    <string name="voyage_theme_icon_follows_summary">Takes effect when you return to home. Some launchers may move the icon.</string>
 </resources>

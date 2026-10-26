@@ -60,6 +60,8 @@ class SettingsViewModel(
             val materialSwitchStyle = repo.materialSwitchStyle
             val materialSliderStyle = repo.materialSliderStyle
             val materialLaunchFollowsTheme = repo.materialLaunchFollowsTheme
+            val materialIconFollowsTheme = repo.materialIconFollowsTheme
+            val materialContentColorEnabled = repo.materialContentColorEnabled
             val materialShadowContainers = repo.materialShadowContainers
             val materialShadowAppBars = repo.materialShadowAppBars
             val materialShadowButtons = repo.materialShadowButtons
@@ -106,6 +108,8 @@ class SettingsViewModel(
                     materialSwitchStyle = materialSwitchStyle,
                     materialSliderStyle = materialSliderStyle,
                     materialLaunchFollowsTheme = materialLaunchFollowsTheme,
+                    materialIconFollowsTheme = materialIconFollowsTheme,
+                    materialContentColorEnabled = materialContentColorEnabled,
                     materialShadowContainers = materialShadowContainers,
                     materialShadowAppBars = materialShadowAppBars,
                     materialShadowButtons = materialShadowButtons,
@@ -349,6 +353,16 @@ class SettingsViewModel(
     fun setMaterialLaunchFollowsTheme(enabled: Boolean) {
         repo.materialLaunchFollowsTheme = enabled
         _uiState.update { it.copy(materialLaunchFollowsTheme = enabled) }
+    }
+
+    fun setMaterialIconFollowsTheme(enabled: Boolean) {
+        repo.materialIconFollowsTheme = enabled
+        _uiState.update { it.copy(materialIconFollowsTheme = enabled) }
+    }
+
+    fun setMaterialContentColorEnabled(enabled: Boolean) {
+        repo.materialContentColorEnabled = enabled
+        _uiState.update { it.copy(materialContentColorEnabled = enabled) }
     }
 
     fun setMaterialShadowContainers(enabled: Boolean) {

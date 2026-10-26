@@ -33,6 +33,8 @@ data class SettingsUiState(
     val materialSwitchStyle: Int = 0,
     val materialSliderStyle: Int = 0,
     val materialLaunchFollowsTheme: Boolean = true,
+    val materialIconFollowsTheme: Boolean = true,
+    val materialContentColorEnabled: Boolean = false,
     val materialShadowContainers: Boolean = true,
     val materialShadowAppBars: Boolean = true,
     val materialShadowButtons: Boolean = true,

@@ -36,6 +36,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -46,6 +47,7 @@ import com.alohaoneui.app.ui.navigation3.LocalNavigator
 import com.alohaoneui.app.ui.screen.settings.SettingsUiState
 import com.alohaoneui.app.ui.theme.ColorMode
 import com.alohaoneui.app.ui.viewmodel.SettingsViewModel
+import com.alohaoneui.app.ui.util.AppIconHelper
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
@@ -72,6 +74,7 @@ fun VoyageThemeSettingsScreen() {
 
 @Composable
 fun VoyageThemeSettingsScreenMaterial(uiState: SettingsUiState, viewModel: SettingsViewModel, onBack: () -> Unit) {
+    val context = LocalContext.current
     var expandedCategories by rememberSaveable { mutableStateOf(emptyList<String>()) }
     Scaffold(
         topBar = {
@@ -124,7 +127,18 @@ fun VoyageThemeSettingsScreenMaterial(uiState: SettingsUiState, viewModel: Setti
                                 ThemeStyleChoice(stringResource(R.string.settings_theme_mode_dark), "", ColorMode.fromValue(uiState.themeMode).toNonMonetMode() == ColorMode.DARK.value, Icons.Filled.Brightness3) { viewModel.setColorMode(ColorMode.DARK) }
                                 Toggle(R.string.voyage_theme_pure_black, R.string.voyage_theme_pure_black_summary, uiState.themeMode == ColorMode.DARK_AMOLED.value, onChange = { enabled -> viewModel.setColorMode(if (enabled) ColorMode.DARK_AMOLED else ColorMode.DARK) })
                             }
-                            VoyageThemeCategory.LAUNCH -> Toggle(R.string.voyage_theme_launch_follows, R.string.voyage_theme_launch_follows_summary, uiState.materialLaunchFollowsTheme, viewModel::setMaterialLaunchFollowsTheme)
+                            VoyageThemeCategory.LAUNCH -> {
+                                Toggle(R.string.voyage_theme_launch_follows, R.string.voyage_theme_launch_follows_summary, uiState.materialLaunchFollowsTheme, viewModel::setMaterialLaunchFollowsTheme)
+                                Toggle(
+                                    R.string.voyage_theme_icon_follows,
+                                    R.string.voyage_theme_icon_follows_summary,
+                                    uiState.materialIconFollowsTheme,
+                                    onChange = { enabled ->
+                                        viewModel.setMaterialIconFollowsTheme(enabled)
+                                        AppIconHelper.applyThemeIcon(context, enabled)
+                                    },
+                                )
+                            }
                             VoyageThemeCategory.ASSIST -> {
                                 Toggle(R.string.voyage_theme_invert, null, uiState.materialInvertColors, viewModel::setMaterialInvertColors)
                                 val labels = listOf(
@@ -177,7 +191,9 @@ fun VoyageThemeSettingsScreenMaterial(uiState: SettingsUiState, viewModel: Setti
                                 Toggle(R.string.voyage_shadow_switch, null, uiState.materialShadowSwitches, viewModel::setMaterialShadowSwitches)
                                 Toggle(R.string.voyage_shadow_slider, null, uiState.materialShadowSliders, viewModel::setMaterialShadowSliders)
                             }
-                            VoyageThemeCategory.PALETTE -> {}
+                            VoyageThemeCategory.PALETTE -> {
+                                Toggle(R.string.voyage_theme_content_color, R.string.voyage_theme_content_color_summary, uiState.materialContentColorEnabled, viewModel::setMaterialContentColorEnabled)
+                            }
                     }
                 }
             }
@@ -280,6 +296,7 @@ private fun VoyageThemeSettingsScreenMiuix(
     viewModel: SettingsViewModel,
     onBack: () -> Unit,
 ) {
+    val context = LocalContext.current
     val scrollBehavior = MiuixScrollBehavior()
     var expandedCategories by rememberSaveable { mutableStateOf(emptyList<String>()) }
     val categories = VoyageThemeCategory.entries
@@ -350,7 +367,17 @@ private fun VoyageThemeSettingsScreenMiuix(
                             }
                             MiuixToggle(R.string.voyage_theme_pure_black, R.string.voyage_theme_pure_black_summary, uiState.themeMode == ColorMode.DARK_AMOLED.value) { enabled -> viewModel.setColorMode(if (enabled) ColorMode.DARK_AMOLED else ColorMode.DARK) }
                         }
-                        VoyageThemeCategory.LAUNCH -> MiuixToggle(R.string.voyage_theme_launch_follows, R.string.voyage_theme_launch_follows_summary, uiState.materialLaunchFollowsTheme, viewModel::setMaterialLaunchFollowsTheme)
+                        VoyageThemeCategory.LAUNCH -> {
+                            MiuixToggle(R.string.voyage_theme_launch_follows, R.string.voyage_theme_launch_follows_summary, uiState.materialLaunchFollowsTheme, viewModel::setMaterialLaunchFollowsTheme)
+                            MiuixToggle(
+                                R.string.voyage_theme_icon_follows,
+                                R.string.voyage_theme_icon_follows_summary,
+                                uiState.materialIconFollowsTheme,
+                            ) { enabled ->
+                                viewModel.setMaterialIconFollowsTheme(enabled)
+                                AppIconHelper.applyThemeIcon(context, enabled)
+                            }
+                        }
                         VoyageThemeCategory.ASSIST -> {
                             MiuixToggle(R.string.voyage_theme_invert, null, uiState.materialInvertColors, viewModel::setMaterialInvertColors)
                             val labels = listOf(
@@ -399,7 +426,9 @@ private fun VoyageThemeSettingsScreenMiuix(
                             MiuixToggle(R.string.voyage_shadow_switch, null, uiState.materialShadowSwitches, viewModel::setMaterialShadowSwitches)
                             MiuixToggle(R.string.voyage_shadow_slider, null, uiState.materialShadowSliders, viewModel::setMaterialShadowSliders)
                         }
-                        VoyageThemeCategory.PALETTE -> {}
+                        VoyageThemeCategory.PALETTE -> {
+                            MiuixToggle(R.string.voyage_theme_content_color, R.string.voyage_theme_content_color_summary, uiState.materialContentColorEnabled, viewModel::setMaterialContentColorEnabled)
+                        }
                 }
             }
         }

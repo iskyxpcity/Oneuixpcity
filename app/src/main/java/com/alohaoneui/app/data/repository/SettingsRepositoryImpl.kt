@@ -140,6 +140,14 @@ class SettingsRepositoryImpl : SettingsRepository {
         get() = prefs.getBoolean("material_launch_follows_theme", true)
         set(value) = prefs.edit { putBoolean("material_launch_follows_theme", value) }
 
+    override var materialIconFollowsTheme: Boolean
+        get() = prefs.getBoolean("material_icon_follows_theme", true)
+        set(value) = prefs.edit { putBoolean("material_icon_follows_theme", value) }
+
+    override var materialContentColorEnabled: Boolean
+        get() = prefs.getBoolean("material_content_color_enabled", false)
+        set(value) = prefs.edit { putBoolean("material_content_color_enabled", value) }
+
     override var materialShadowContainers: Boolean
         get() = prefs.getBoolean("material_shadow_containers", true)
         set(value) = prefs.edit { putBoolean("material_shadow_containers", value) }
@@ -259,6 +267,8 @@ class SettingsRepositoryImpl : SettingsRepository {
         materialSwitchStyle = materialSwitchStyle,
         materialSliderStyle = materialSliderStyle,
         materialLaunchFollowsTheme = materialLaunchFollowsTheme,
+        materialIconFollowsTheme = materialIconFollowsTheme,
+        materialContentColorEnabled = materialContentColorEnabled,
         materialShadowContainers = materialShadowContainers,
         materialShadowAppBars = materialShadowAppBars,
         materialShadowButtons = materialShadowButtons,
@@ -313,6 +323,8 @@ class SettingsRepositoryImpl : SettingsRepository {
             .putInt("material_switch_style", snapshot.materialSwitchStyle.coerceIn(0, 7))
             .putInt("material_slider_style", snapshot.materialSliderStyle.coerceIn(0, 3))
             .putBoolean("material_launch_follows_theme", snapshot.materialLaunchFollowsTheme)
+            .putBoolean("material_icon_follows_theme", snapshot.materialIconFollowsTheme)
+            .putBoolean("material_content_color_enabled", snapshot.materialContentColorEnabled)
             .putBoolean("material_shadow_containers", snapshot.materialShadowContainers)
             .putBoolean("material_shadow_appbars", snapshot.materialShadowAppBars)
             .putBoolean("material_shadow_buttons", snapshot.materialShadowButtons)

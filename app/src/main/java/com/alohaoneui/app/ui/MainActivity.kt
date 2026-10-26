@@ -97,10 +97,12 @@ import com.alohaoneui.app.ui.theme.LocalEnableBlur
 import com.alohaoneui.app.ui.theme.LocalEnableFloatingBottomBar
 import com.alohaoneui.app.ui.theme.LocalEnableFloatingBottomBarBlur
 import com.alohaoneui.app.ui.theme.AlohaOneUITheme
+import com.alohaoneui.app.ui.util.AppIconHelper
 import com.alohaoneui.app.ui.util.rememberBlurBackdrop
 import com.alohaoneui.app.ui.util.rememberContentReady
 import com.alohaoneui.app.ui.util.update.UpdateDialogHost
 import com.alohaoneui.app.ui.util.update.handleUpdateInstallStatus
+import com.alohaoneui.app.data.repository.SettingsRepositoryImpl
 import com.alohaoneui.app.ui.viewmodel.MainActivityViewModel
 import com.alohaoneui.app.ui.viewmodel.SettingsViewModel
 import com.alohaoneui.app.ui.viewmodel.MainPagerConfig
@@ -137,6 +139,12 @@ class MainActivity : ComponentActivity() {
             val viewModel = viewModel<MainActivityViewModel>()
             val settingsViewModel = viewModel<SettingsViewModel>()
             val settingsState by settingsViewModel.uiState.collectAsStateWithLifecycle()
+            LaunchedEffect(Unit) {
+                AppIconHelper.applyThemeIcon(
+                    this@MainActivity,
+                    SettingsRepositoryImpl().materialIconFollowsTheme,
+                )
+            }
             val uiState by viewModel.uiState.collectAsStateWithLifecycle()
             val selectedMainPage by viewModel.selectedMainPage.collectAsStateWithLifecycle()
             val appSettings = uiState.appSettings

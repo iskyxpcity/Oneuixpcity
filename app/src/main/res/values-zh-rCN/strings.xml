@@ -392,4 +392,8 @@
     <string name="settings_transition_scale">缩放</string>
     <string name="settings_transition_classic">经典</string>
     <string name="settings_display_restore_defaults">恢复显示默认值</string>
+    <string name="voyage_theme_content_color">内容颜色</string>
+    <string name="voyage_theme_content_color_summary">播放和阅读页面使用封面配色</string>
+    <string name="voyage_theme_icon_follows">桌面图标跟随主题</string>
+    <string name="voyage_theme_icon_follows_summary">返回桌面后生效，部分启动器可能会调整图标位置。</string>
 </resources>
