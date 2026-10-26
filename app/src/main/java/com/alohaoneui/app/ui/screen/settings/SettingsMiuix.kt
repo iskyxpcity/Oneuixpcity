@@ -1,60 +1,53 @@
 package com.alohaoneui.app.ui.screen.settings
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.WindowInsetsSides
-import androidx.compose.foundation.layout.add
-import androidx.compose.foundation.layout.displayCutout
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.only
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.systemBars
+import android.os.Build
+import androidx.activity.compose.LocalActivity
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.Article
-import androidx.compose.material.icons.rounded.Adb
+import androidx.compose.material.icons.rounded.Animation
 import androidx.compose.material.icons.rounded.BugReport
-import androidx.compose.material.icons.rounded.ContactPage
 import androidx.compose.material.icons.rounded.Dashboard
-import androidx.compose.material.icons.rounded.Delete
-import androidx.compose.material.icons.rounded.DeveloperMode
 import androidx.compose.material.icons.rounded.DisplaySettings
-import androidx.compose.material.icons.rounded.Info
-import androidx.compose.material.icons.rounded.SystemUpdate
 import androidx.compose.material.icons.rounded.ElectricalServices
-import androidx.compose.material.icons.rounded.Fence
-import androidx.compose.material.icons.rounded.FolderDelete
+import androidx.compose.material.icons.rounded.ExpandMore
+import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Language
 import androidx.compose.material.icons.rounded.Palette
-import androidx.compose.material.icons.rounded.Policy
-import androidx.compose.material.icons.rounded.RemoveCircle
-import androidx.compose.material.icons.rounded.RemoveModerator
-import androidx.compose.material.icons.rounded.RestartAlt
-import androidx.compose.material.icons.rounded.Update
-import androidx.compose.material.icons.rounded.UploadFile
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.material.icons.rounded.SystemUpdate
+import androidx.compose.material.icons.rounded.TextFields
+import androidx.compose.material.icons.rounded.Translate
+import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.alohaoneui.app.AlohaOneUIApplication
 import com.alohaoneui.app.R
 import com.alohaoneui.app.ui.UiMode
 import com.alohaoneui.app.ui.component.dialog.rememberLoadingDialog
 import com.alohaoneui.app.ui.component.miuix.SendLogDialog
 import com.alohaoneui.app.ui.theme.LocalEnableBlur
+import com.alohaoneui.app.ui.util.AppLocaleHelper
 import com.alohaoneui.app.ui.util.BlurredBar
 import com.alohaoneui.app.ui.util.rememberBlurBackdrop
+import com.alohaoneui.app.ui.viewmodel.SettingsViewModel
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.basic.Scaffold
+import top.yukonga.miuix.kmp.basic.Slider as MiuixSlider
+import top.yukonga.miuix.kmp.basic.SliderDefaults
+import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TopAppBar
 import top.yukonga.miuix.kmp.blur.layerBackdrop
 import top.yukonga.miuix.kmp.preference.ArrowPreference
@@ -64,32 +57,45 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme
 import top.yukonga.miuix.kmp.utils.overScrollVertical
 import top.yukonga.miuix.kmp.utils.scrollEndHaptic
 
-/**
- * @author weishu
- * @date 2023/1/1.
- */
 @Composable
 fun SettingPagerMiuix(
     uiState: SettingsUiState,
     actions: SettingsScreenActions,
     bottomInnerPadding: Dp,
 ) {
+    val viewModel = viewModel<SettingsViewModel>()
+    val context = LocalContext.current
+    val activity = LocalActivity.current
     val scrollBehavior = MiuixScrollBehavior()
     val enableBlur = LocalEnableBlur.current
     val backdrop = rememberBlurBackdrop(enableBlur)
-    val blurActive = backdrop != null
-    val barColor = if (blurActive) Color.Transparent else colorScheme.surface
+    val barColor = if (backdrop != null) Color.Transparent else colorScheme.surface
     val loadingDialog = rememberLoadingDialog()
     val showSendLogDialog = rememberSaveable { mutableStateOf(false) }
+    var languageExpanded by rememberSaveable { mutableStateOf(false) }
+    var themeExpanded by rememberSaveable { mutableStateOf(false) }
+    var displayExpanded by rememberSaveable { mutableStateOf(false) }
+    var behaviorExpanded by rememberSaveable { mutableStateOf(false) }
+    var alohaExpanded by rememberSaveable { mutableStateOf(false) }
+
+    val languageLabels = listOf(
+        stringResource(R.string.settings_language_system),
+        stringResource(R.string.settings_language_english),
+        stringResource(R.string.settings_language_chinese_simplified),
+    )
+    val languageTags = listOf("system", "en", "zh-CN")
+    val fontLabels = listOf(stringResource(R.string.voyage_font_default), stringResource(R.string.voyage_font_serif))
+    val gestureLabels = listOf(
+        stringResource(R.string.settings_page_gesture_default),
+        stringResource(R.string.settings_page_gesture_cross_axis),
+        stringResource(R.string.settings_page_gesture_ios_like),
+    )
+    val motionLabels = listOf(stringResource(R.string.settings_motion_expressive), stringResource(R.string.settings_motion_standard))
 
     Scaffold(
         topBar = {
             BlurredBar(backdrop) {
-                TopAppBar(
-                    color = barColor,
-                    title = stringResource(R.string.settings),
-                    scrollBehavior = scrollBehavior
-                )
+                TopAppBar(color = barColor, title = stringResource(R.string.settings), scrollBehavior = scrollBehavior)
             }
         },
         popupHost = { },
@@ -97,132 +103,89 @@ fun SettingPagerMiuix(
     ) { innerPadding ->
         Box(modifier = if (backdrop != null) Modifier.layerBackdrop(backdrop) else Modifier) {
             LazyColumn(
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .scrollEndHaptic()
-                    .overScrollVertical()
-                    .nestedScroll(scrollBehavior.nestedScrollConnection)
-                    .padding(horizontal = 12.dp),
+                modifier = Modifier.fillMaxHeight().scrollEndHaptic().overScrollVertical()
+                    .nestedScroll(scrollBehavior.nestedScrollConnection).padding(horizontal = 12.dp),
                 contentPadding = innerPadding,
                 overscrollEffect = null,
             ) {
                 item {
-                    Card(
-                        modifier = Modifier
-                            .padding(top = 12.dp)
-                            .fillMaxWidth(),
-                    ) {
-                        SwitchPreference(
-                            title = stringResource(id = R.string.settings_check_update),
-                            summary = stringResource(id = R.string.settings_check_update_summary),
-                            startAction = {
-                                Icon(
-                                    Icons.Rounded.SystemUpdate,
-                                    modifier = Modifier.padding(end = 6.dp),
-                                    contentDescription = stringResource(id = R.string.settings_check_update),
-                                    tint = colorScheme.onBackground
-                                )
-                            },
-                            checked = uiState.checkUpdate,
-                            onCheckedChange = actions.onSetCheckUpdate
-                        )
-
-                    }
-
-                    Card(
-                        modifier = Modifier
-                            .padding(top = 12.dp)
-                            .fillMaxWidth(),
-                    ) {
+                    MiuixSettingsGroup(stringResource(R.string.settings_group_language), Icons.Rounded.Translate, languageExpanded, { languageExpanded = !languageExpanded }) {
                         OverlayDropdownPreference(
-                            title = stringResource(id = R.string.settings_ui_mode),
-                            summary = stringResource(id = R.string.settings_ui_mode_summary),
-                            items = UiMode.entries.map { it.name },
-                            startAction = {
-                                Icon(
-                                    Icons.Rounded.DisplaySettings,
-                                    modifier = Modifier.padding(end = 6.dp),
-                                    contentDescription = stringResource(id = R.string.settings_ui_mode),
-                                    tint = colorScheme.onBackground
-                                )
+                            title = stringResource(R.string.settings_language),
+                            summary = stringResource(R.string.settings_language_summary),
+                            items = languageLabels,
+                            selectedIndex = languageTags.indexOf(uiState.appLanguage).coerceAtLeast(0),
+                            onSelectedIndexChange = { index ->
+                                val language = languageTags[index]
+                                viewModel.setAppLanguage(language)
+                                AppLocaleHelper.apply(context, language)
+                                activity?.recreate()
                             },
-                            selectedIndex = if (uiState.uiMode == UiMode.Material.value) 1 else 0,
-                            onSelectedIndexChange = actions.onSetUiModeIndex
                         )
-                        ArrowPreference(
-                            title = stringResource(id = R.string.settings_language),
-                            summary = stringResource(id = R.string.settings_language_summary),
-                            startAction = { Icon(Icons.Rounded.Language, modifier = Modifier.padding(end = 6.dp), contentDescription = null, tint = colorScheme.onBackground) },
-                            onClick = actions.onOpenLanguage
-                        )
-                        ArrowPreference(
-                            title = stringResource(id = R.string.settings_theme),
-                            summary = stringResource(id = R.string.settings_theme_summary),
-                            startAction = {
-                                Icon(
-                                    Icons.Rounded.Palette,
-                                    modifier = Modifier.padding(end = 6.dp),
-                                    contentDescription = stringResource(id = R.string.settings_theme),
-                                    tint = colorScheme.onBackground
-                                )
-                            },
-                            onClick = actions.onOpenTheme
-                        )
-                        ArrowPreference(
-                            title = stringResource(id = R.string.settings_display_text),
-                            summary = stringResource(id = R.string.settings_display_text_summary),
-                            startAction = { Icon(Icons.Rounded.DisplaySettings, modifier = Modifier.padding(end = 6.dp), contentDescription = null, tint = colorScheme.onBackground) },
-                            onClick = actions.onOpenDisplayText
-                        )
-                        ArrowPreference(
-                            title = stringResource(id = R.string.settings_motion_haptics),
-                            summary = stringResource(id = R.string.settings_motion_haptics_summary),
-                            startAction = { Icon(Icons.Rounded.ElectricalServices, modifier = Modifier.padding(end = 6.dp), contentDescription = null, tint = colorScheme.onBackground) },
-                            onClick = actions.onOpenMotionHaptics
-                        )
-
                     }
-
-
-                    Card(
-                        modifier = Modifier
-                            .padding(vertical = 12.dp)
-                            .fillMaxWidth(),
-                    ) {
+                    MiuixSettingsGroup(stringResource(R.string.settings_theme), Icons.Rounded.Palette, themeExpanded, { themeExpanded = !themeExpanded }) {
                         ArrowPreference(
-                            title = stringResource(id = R.string.send_log),
-                            startAction = {
-                                Icon(
-                                    Icons.Rounded.BugReport,
-                                    modifier = Modifier.padding(end = 6.dp),
-                                    contentDescription = stringResource(id = R.string.send_log),
-                                    tint = colorScheme.onBackground
-                                )
-                            },
-                            onClick = { showSendLogDialog.value = true },
+                            title = stringResource(R.string.settings_theme),
+                            summary = stringResource(R.string.settings_theme_summary),
+                            startAction = { Icon(Icons.Rounded.Palette, modifier = Modifier.padding(end = 6.dp), contentDescription = null, tint = colorScheme.onBackground) },
+                            onClick = actions.onOpenTheme,
                         )
-                        SendLogDialog(
-                            show = showSendLogDialog.value,
-                            onDismissRequest = { showSendLogDialog.value = false },
-                            loadingDialog = loadingDialog
-                        )
-                        val about = stringResource(id = R.string.about)
-                        ArrowPreference(
-                            title = about,
-                            startAction = {
-                                Icon(
-                                    Icons.Rounded.Info,
-                                    modifier = Modifier.padding(end = 6.dp),
-                                    contentDescription = about,
-                                    tint = colorScheme.onBackground
-                                )
-                            },
-                            onClick = actions.onOpenAbout,
-                        )
+                    }
+                    MiuixSettingsGroup(stringResource(R.string.settings_group_display), Icons.Rounded.TextFields, displayExpanded, { displayExpanded = !displayExpanded }) {
+                        Text(stringResource(R.string.settings_font_scale_title) + " · " + (uiState.materialFontScale * 100).toInt().toString() + "%", modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp))
+                        MiuixSlider(value = uiState.materialFontScale, onValueChange = viewModel::setMaterialFontScale, valueRange = 0.8f..1.5f, showKeyPoints = true, keyPoints = listOf(0.8f, 1.0f, 1.2f, 1.5f), hapticEffect = SliderDefaults.SliderHapticEffect.Step)
+                        Text(stringResource(R.string.settings_display_scale_title) + " · " + (uiState.materialDisplayScale * 100).toInt().toString() + "%", modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp))
+                        MiuixSlider(value = uiState.materialDisplayScale, onValueChange = viewModel::setMaterialDisplayScale, valueRange = 0.85f..1.25f, showKeyPoints = true, keyPoints = listOf(0.85f, 0.95f, 1.05f, 1.15f, 1.25f), hapticEffect = SliderDefaults.SliderHapticEffect.Step)
+                        Text(stringResource(R.string.settings_display_preview_sample), modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp))
+                        OverlayDropdownPreference(title = stringResource(R.string.voyage_theme_font_family), items = fontLabels, selectedIndex = if (uiState.materialFontFamily == "Serif") 1 else 0, onSelectedIndexChange = { viewModel.setMaterialFontFamily(if (it == 1) "Serif" else "Default") })
+                        SwitchPreference(title = stringResource(R.string.voyage_theme_large_text), checked = uiState.materialLargeTextEnabled, onCheckedChange = viewModel::setMaterialLargeTextEnabled)
+                        SwitchPreference(title = stringResource(R.string.settings_bold_text_title), checked = uiState.materialBoldTextEnabled, onCheckedChange = viewModel::setMaterialBoldTextEnabled)
+                    }
+                    MiuixSettingsGroup(stringResource(R.string.settings_group_behavior), Icons.Rounded.Animation, behaviorExpanded, { behaviorExpanded = !behaviorExpanded }) {
+                        OverlayDropdownPreference(title = stringResource(R.string.settings_motion_haptics), items = motionLabels, selectedIndex = uiState.materialNavigationMotionMode.coerceIn(0, 1), onSelectedIndexChange = viewModel::setMaterialNavigationMotionMode)
+                        SwitchPreference(title = stringResource(R.string.settings_haptic_feedback), checked = uiState.enableHapticFeedback, onCheckedChange = viewModel::setEnableHapticFeedback)
+                        SwitchPreference(title = stringResource(R.string.settings_enable_predictive_back), summary = stringResource(R.string.settings_enable_predictive_back_summary), checked = uiState.enablePredictiveBack, onCheckedChange = { enabled ->
+                            viewModel.setEnablePredictiveBack(enabled)
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                                AlohaOneUIApplication.applyEnableOnBackInvokedCallback(context, enabled)
+                                activity?.recreate()
+                            }
+                        })
+                        SwitchPreference(title = stringResource(R.string.settings_enable_swipe_back), summary = stringResource(R.string.settings_enable_swipe_back_summary), checked = uiState.enableSwipeBack, onCheckedChange = viewModel::setEnableSwipeBack)
+                        OverlayDropdownPreference(title = stringResource(R.string.settings_page_gesture_mode), items = gestureLabels, selectedIndex = uiState.pagerGestureMode.coerceIn(0, 2), onSelectedIndexChange = viewModel::setPagerGestureMode)
+                        val pageScaleLabels = listOf("80%", "90%", "100%", "110%", "120%")
+                        OverlayDropdownPreference(title = stringResource(R.string.settings_page_scale), items = pageScaleLabels, selectedIndex = ((uiState.pageScale * 100).toInt() / 10 - 8).coerceIn(0, 4), onSelectedIndexChange = { viewModel.setPageScale((80 + it * 10) / 100f) })
+                    }
+                    MiuixSettingsGroup(stringResource(R.string.voyage_settings_group_aloha), Icons.Rounded.Dashboard, alohaExpanded, { alohaExpanded = !alohaExpanded }) {
+                        OverlayDropdownPreference(title = stringResource(R.string.settings_ui_mode), summary = stringResource(R.string.settings_ui_mode_summary), items = UiMode.entries.map { it.name }, selectedIndex = if (uiState.uiMode == UiMode.Material.value) 1 else 0, onSelectedIndexChange = actions.onSetUiModeIndex)
+                        SwitchPreference(title = stringResource(R.string.settings_check_update), summary = stringResource(R.string.settings_check_update_summary), startAction = { Icon(Icons.Rounded.SystemUpdate, modifier = Modifier.padding(end = 6.dp), contentDescription = null, tint = colorScheme.onBackground) }, checked = uiState.checkUpdate, onCheckedChange = actions.onSetCheckUpdate)
+                        ArrowPreference(title = stringResource(R.string.send_log), startAction = { Icon(Icons.Rounded.BugReport, modifier = Modifier.padding(end = 6.dp), contentDescription = null, tint = colorScheme.onBackground) }, onClick = { showSendLogDialog.value = true })
+                        ArrowPreference(title = stringResource(R.string.about), startAction = { Icon(Icons.Rounded.Info, modifier = Modifier.padding(end = 6.dp), contentDescription = null, tint = colorScheme.onBackground) }, onClick = actions.onOpenAbout)
+                        SendLogDialog(show = showSendLogDialog.value, onDismissRequest = { showSendLogDialog.value = false }, loadingDialog = loadingDialog)
                     }
                     Spacer(Modifier.height(bottomInnerPadding))
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun MiuixSettingsGroup(
+    title: String,
+    icon: ImageVector,
+    expanded: Boolean,
+    onToggle: () -> Unit,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    Card(modifier = Modifier.padding(top = 12.dp).fillMaxWidth()) {
+        Row(modifier = Modifier.fillMaxWidth().clickable(onClick = onToggle).padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+            Icon(icon, modifier = Modifier.padding(end = 10.dp), contentDescription = null, tint = colorScheme.onBackground)
+            Text(title, modifier = Modifier.weight(1f))
+            Icon(Icons.Rounded.ExpandMore, contentDescription = null, tint = colorScheme.onBackground)
+        }
+        AnimatedVisibility(visible = expanded) {
+            Column(content = content)
         }
     }
 }
