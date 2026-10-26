@@ -39,7 +39,12 @@ class StartupActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val colorMode = ColorMode.fromValue(SettingsRepositoryImpl().themeMode)
+        val settings = SettingsRepositoryImpl()
+        val colorMode = if (settings.materialLaunchFollowsTheme) {
+            ColorMode.fromValue(settings.themeMode)
+        } else {
+            ColorMode.LIGHT
+        }
         val systemDark =
             resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK ==
                 Configuration.UI_MODE_NIGHT_YES
