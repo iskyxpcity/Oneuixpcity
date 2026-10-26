@@ -56,6 +56,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -77,14 +78,13 @@ fun alohaOneUISegmentedColors(): ListItemColors = ListItemDefaults.segmentedColo
 )
 
 /**
- * Voyage's segmented settings rows use animated 16dp outer corners and 4dp inner
- * corners (decompiled from zee0.m147825O). Keep the source's spring response so
- * adjacent rows join into the same container instead of using the library default.
+ * Direct port of Voyage's zee0.m147825O shape rule:
+ * 16dp outer / 4dp inner corners, animated with dampingRatio=0.4 and stiffness=200.
+ * vertical=true joins rows top-to-bottom; false joins selection buttons left-to-right.
  */
 @Composable
-private fun defaultSingleSegmentedShape(index: Int, count: Int): ListItemShapes {
-    val base = ListItemDefaults.segmentedShapes(index, count)
-    val single = count <= 1 || index < 0
+fun voyageSegmentedShape(index: Int, count: Int, vertical: Boolean = true): Shape {
+    val single = count == 1 || index == -1
     val first = single || index == 0
     val last = single || index == count - 1
 
@@ -94,7 +94,7 @@ private fun defaultSingleSegmentedShape(index: Int, count: Int): ListItemShapes 
         label = "voyageSegmentTopStart",
     )
     val topEnd by animateDpAsState(
-        targetValue = if (first) 16.dp else 4.dp,
+        targetValue = if (if (vertical) first else last) 16.dp else 4.dp,
         animationSpec = spring(dampingRatio = 0.4f, stiffness = 200f),
         label = "voyageSegmentTopEnd",
     )
@@ -104,20 +104,24 @@ private fun defaultSingleSegmentedShape(index: Int, count: Int): ListItemShapes 
         label = "voyageSegmentBottomEnd",
     )
     val bottomStart by animateDpAsState(
-        targetValue = if (last) 16.dp else 4.dp,
+        targetValue = if (if (vertical) last else first) 16.dp else 4.dp,
         animationSpec = spring(dampingRatio = 0.4f, stiffness = 200f),
         label = "voyageSegmentBottomStart",
     )
 
-    return base.copy(
-        shape = RoundedCornerShape(
-            topStart = topStart,
-            topEnd = topEnd,
-            bottomEnd = bottomEnd,
-            bottomStart = bottomStart,
-        )
+    return RoundedCornerShape(
+        topStart = topStart,
+        topEnd = topEnd,
+        bottomEnd = bottomEnd,
+        bottomStart = bottomStart,
     )
 }
+
+@Composable
+private fun defaultSingleSegmentedShape(index: Int, count: Int): ListItemShapes =
+    ListItemDefaults.segmentedShapes(index, count).copy(
+        shape = voyageSegmentedShape(index, count, vertical = true)
+    )
 
 @Composable
 fun SegmentedColumn(

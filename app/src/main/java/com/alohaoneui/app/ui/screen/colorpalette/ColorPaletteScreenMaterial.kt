@@ -66,6 +66,7 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.ToggleButtonShapes
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.rememberTopAppBarState
@@ -100,6 +101,7 @@ import com.alohaoneui.app.ui.component.material.SegmentedColumn
 import com.alohaoneui.app.ui.component.material.SegmentedDropdownItem
 import com.alohaoneui.app.ui.component.material.SegmentedSwitchItem
 import com.alohaoneui.app.ui.component.material.TonalCard
+import com.alohaoneui.app.ui.component.material.voyageSegmentedShape
 import com.alohaoneui.app.ui.theme.ColorMode
 import com.alohaoneui.app.ui.theme.rememberAlohaOneUIColorScheme
 import com.alohaoneui.app.ui.theme.keyColorOptions
@@ -215,6 +217,11 @@ fun ColorPaletteScreenMaterial(
                         horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)
                     ) {
                         rowOptions.forEachIndexed { index, (modes, label) ->
+                            val sourceShape = voyageSegmentedShape(
+                                index = index,
+                                count = rowOptions.size,
+                                vertical = false,
+                            )
                             ExpressiveToggleButton(
                                 checked = currentColorMode in modes,
                                 onCheckedChange = {
@@ -225,12 +232,13 @@ fun ColorPaletteScreenMaterial(
                                 },
                                 modifier = Modifier
                                     .weight(1f)
+                                    .padding(horizontal = 8.dp)
                                     .semantics { role = Role.RadioButton },
-                                shapes = when (index) {
-                                    0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
-                                    rowOptions.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
-                                    else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
-                                },
+                                shapes = ToggleButtonShapes(
+                                    shape = sourceShape,
+                                    pressedShape = sourceShape,
+                                    checkedShape = sourceShape,
+                                ),
                             ) {
                                 Icon(
                                     imageVector = when (modes.first()) {
