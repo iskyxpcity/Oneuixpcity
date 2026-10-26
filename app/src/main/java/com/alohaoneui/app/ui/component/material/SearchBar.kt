@@ -1,6 +1,7 @@
 package com.alohaoneui.app.ui.component.material
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -47,12 +48,15 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
+import com.alohaoneui.app.ui.theme.LocalMaterialShadowTopBars
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 
@@ -177,7 +181,20 @@ fun SearchAppBar(
         Column(
             modifier = Modifier.fillMaxWidth()
         ) {
+            val topBarShape = voyageCornerShape(16.dp)
+            val topBarModifier = Modifier
+                .then(
+                    if (LocalMaterialShadowTopBars.current) {
+                        Modifier.shadow(3.dp, topBarShape)
+                    } else Modifier
+                )
+                .then(
+                    LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
+                        Modifier.border(it.dp, MaterialTheme.colorScheme.outlineVariant, topBarShape)
+                    } ?: Modifier
+                )
             LargeFlexibleTopAppBar(
+                modifier = topBarModifier,
                 title = title,
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface,
