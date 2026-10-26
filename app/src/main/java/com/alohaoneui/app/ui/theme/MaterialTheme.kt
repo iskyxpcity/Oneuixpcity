@@ -66,7 +66,7 @@ fun MaterialAlohaOneUITheme(
     }
 
     CompositionLocalProvider(
-        LocalMaterialBorderWidth provides 0.0f,
+        LocalMaterialBorderWidth provides appSettings.materialBorderWidth.coerceIn(0.0f, 1.5f),
         LocalMaterialSwitchStyle provides appSettings.materialSwitchStyle.coerceIn(0, 7),
         LocalMaterialSliderStyle provides appSettings.materialSliderStyle.coerceIn(0, 3),
         LocalMaterialShadowContainers provides appSettings.materialShadowContainers,

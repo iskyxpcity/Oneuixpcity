@@ -122,7 +122,9 @@ fun VoyageThemeSettingsScreenMaterial(
                     stringResource(R.string.voyage_slider_material), stringResource(R.string.voyage_slider_hyper_os),
                 )
                 Drop(R.string.voyage_theme_slider_style, sliderStyles[uiState.materialSliderStyle.coerceIn(0, 3)], sliderStyles) { viewModel.setMaterialSliderStyle(sliderStyles.indexOf(it).coerceAtLeast(0)) }
-                                Drop(R.string.voyage_theme_font_family, if (uiState.materialFontFamily == "Serif") stringResource(R.string.voyage_font_serif) else stringResource(R.string.voyage_font_default), listOf(stringResource(R.string.voyage_font_default), stringResource(R.string.voyage_font_serif))) { viewModel.setMaterialFontFamily(if (it == stringResource(R.string.voyage_font_serif)) "Serif" else "Default") }
+                                val defaultFontLabel = stringResource(R.string.voyage_font_default)
+                val serifFontLabel = stringResource(R.string.voyage_font_serif)
+                Drop(R.string.voyage_theme_font_family, if (uiState.materialFontFamily == "Serif") serifFontLabel else defaultFontLabel, listOf(defaultFontLabel, serifFontLabel)) { viewModel.setMaterialFontFamily(if (it == serifFontLabel) "Serif" else "Default") }
                                 Slide(R.string.voyage_theme_font_scale, uiState.materialFontScale, 0.8f..1.5f, viewModel::setMaterialFontScale)
                                 Slide(R.string.voyage_theme_border_width, uiState.materialBorderWidth, 0f..1.5f, viewModel::setMaterialBorderWidth)
                                 Toggle(R.string.voyage_theme_large_text, null, uiState.materialLargeTextEnabled, viewModel::setMaterialLargeTextEnabled)
