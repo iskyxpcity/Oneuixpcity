@@ -6,6 +6,7 @@ import kotlinx.serialization.Serializable
 interface SettingsRepository {
     var uiMode: String
     var checkUpdate: Boolean
+    var appLanguage: String
     var themeMode: Int
     var miuixMonet: Boolean
     var keyColor: Int
@@ -63,4 +64,5 @@ data class AppSettingsBackup(
     val materialShadowSliders: Boolean = true,
     val enableSwipeBack: Boolean,
     val pagerGestureMode: Int,
+    val appLanguage: String = "system",
 )
