@@ -119,6 +119,8 @@ fun DisplayTextSettingsScreen() {
                         onSelectedIndexChange = { viewModel.setMaterialDisplayScale(displayScaleValues[it.coerceIn(displayScaleValues.indices)]) },
                     )
                     MiuixText(text = stringResource(R.string.settings_display_preview_sample), modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp))
+                    OverlayDropdownPreference(title = stringResource(R.string.settings_font_family_title), items = listOf(stringResource(R.string.settings_font_family_default), stringResource(R.string.settings_font_family_serif)), selectedIndex = if (state.materialFontFamily == "Serif") 1 else 0, onSelectedIndexChange = { viewModel.setMaterialFontFamily(if (it == 1) "Serif" else "Default") })
+                    SwitchPreference(title = stringResource(R.string.settings_large_text_title), summary = stringResource(R.string.settings_large_text_subtitle), checked = state.materialLargeTextEnabled, onCheckedChange = viewModel::setMaterialLargeTextEnabled)
                     SwitchPreference(title = stringResource(R.string.settings_bold_text_title), checked = state.materialBoldTextEnabled, onCheckedChange = viewModel::setMaterialBoldTextEnabled)
                 }
             }
@@ -137,6 +139,13 @@ fun DisplayTextSettingsScreen() {
                 }
                 Slider(state.materialDisplayScale, viewModel::setMaterialDisplayScale, valueRange = 0.85f..1.25f)
                 Text(stringResource(R.string.settings_display_preview_sample), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp))
+                var fontExpanded by remember { mutableStateOf(false) }
+                ListItem(modifier = Modifier.clickable { fontExpanded = true }, headlineContent = { Text(stringResource(R.string.settings_font_family_title)) }, supportingContent = { Text(if (state.materialFontFamily == "Serif") stringResource(R.string.settings_font_family_serif) else stringResource(R.string.settings_font_family_default)) })
+                DropdownMenu(fontExpanded, { fontExpanded = false }) {
+                    DropdownMenuItem(text = { Text(stringResource(R.string.settings_font_family_default)) }, onClick = { viewModel.setMaterialFontFamily("Default"); fontExpanded = false })
+                    DropdownMenuItem(text = { Text(stringResource(R.string.settings_font_family_serif)) }, onClick = { viewModel.setMaterialFontFamily("Serif"); fontExpanded = false })
+                }
+                ListItem(headlineContent = { Text(stringResource(R.string.settings_large_text_title)) }, supportingContent = { Text(stringResource(R.string.settings_large_text_subtitle)) }, trailingContent = { Switch(state.materialLargeTextEnabled, viewModel::setMaterialLargeTextEnabled) })
                 ListItem(headlineContent = { Text(stringResource(R.string.settings_bold_text_title)) }, trailingContent = { Switch(state.materialBoldTextEnabled, viewModel::setMaterialBoldTextEnabled) })
             }
         }
@@ -155,6 +164,10 @@ fun MotionHapticsSettingsScreen() {
                 MiuixCard(modifier = Modifier.fillMaxWidth().padding(top = 12.dp)) {
                     OverlayDropdownPreference(title = stringResource(R.string.settings_motion_style), items = motionOptions, selectedIndex = state.materialNavigationMotionMode.coerceIn(0, 1), onSelectedIndexChange = { viewModel.setMaterialNavigationMotionMode(it.coerceIn(0, 1)) })
                     SwitchPreference(title = stringResource(R.string.settings_haptic_feedback), checked = state.enableHapticFeedback, onCheckedChange = viewModel::setEnableHapticFeedback)
+                    SwitchPreference(title = stringResource(R.string.settings_enable_predictive_back), summary = stringResource(R.string.settings_enable_predictive_back_summary), checked = state.enablePredictiveBack, onCheckedChange = viewModel::setEnablePredictiveBack)
+                    SwitchPreference(title = stringResource(R.string.settings_enable_swipe_back), summary = stringResource(R.string.settings_enable_swipe_back_summary), checked = state.enableSwipeBack, onCheckedChange = viewModel::setEnableSwipeBack)
+                    OverlayDropdownPreference(title = stringResource(R.string.settings_page_gesture_mode), items = listOf(stringResource(R.string.settings_page_gesture_default), stringResource(R.string.settings_page_gesture_cross_axis), stringResource(R.string.settings_page_gesture_ios_like)), selectedIndex = state.pagerGestureMode.coerceIn(0, 2), onSelectedIndexChange = { viewModel.setPagerGestureMode(it.coerceIn(0, 2)) })
+                    OverlayDropdownPreference(title = stringResource(R.string.settings_page_scale), items = listOf("80%", "90%", "100%", "110%", "120%"), selectedIndex = ((state.pageScale * 100).toInt() / 10 - 8).coerceIn(0, 4), onSelectedIndexChange = { viewModel.setPageScale((80 + it * 10) / 100f) })
                 }
             }
         }
@@ -164,6 +177,15 @@ fun MotionHapticsSettingsScreen() {
                 Choice(R.string.settings_motion_expressive, state.materialNavigationMotionMode == 0) { viewModel.setMaterialNavigationMotionMode(0) }
                 Choice(R.string.settings_motion_standard, state.materialNavigationMotionMode == 1) { viewModel.setMaterialNavigationMotionMode(1) }
                 ListItem(headlineContent = { Text(stringResource(R.string.settings_haptic_feedback)) }, trailingContent = { Switch(state.enableHapticFeedback, viewModel::setEnableHapticFeedback) })
+                ListItem(headlineContent = { Text(stringResource(R.string.settings_enable_predictive_back)) }, supportingContent = { Text(stringResource(R.string.settings_enable_predictive_back_summary)) }, trailingContent = { Switch(state.enablePredictiveBack, viewModel::setEnablePredictiveBack) })
+                ListItem(headlineContent = { Text(stringResource(R.string.settings_enable_swipe_back)) }, supportingContent = { Text(stringResource(R.string.settings_enable_swipe_back_summary)) }, trailingContent = { Switch(state.enableSwipeBack, viewModel::setEnableSwipeBack) })
+                var gestureExpanded by remember { mutableStateOf(false) }
+                val gestureLabels = listOf(stringResource(R.string.settings_page_gesture_default), stringResource(R.string.settings_page_gesture_cross_axis), stringResource(R.string.settings_page_gesture_ios_like))
+                ListItem(modifier = Modifier.clickable { gestureExpanded = true }, headlineContent = { Text(stringResource(R.string.settings_page_gesture_mode)) }, supportingContent = { Text(gestureLabels[state.pagerGestureMode.coerceIn(0, 2)]) })
+                DropdownMenu(gestureExpanded, { gestureExpanded = false }) { gestureLabels.forEachIndexed { index, label -> DropdownMenuItem(text = { Text(label) }, onClick = { viewModel.setPagerGestureMode(index); gestureExpanded = false }) } }
+                var pageScaleExpanded by remember { mutableStateOf(false) }
+                ListItem(modifier = Modifier.clickable { pageScaleExpanded = true }, headlineContent = { Text(stringResource(R.string.settings_page_scale)) }, supportingContent = { Text((state.pageScale * 100).toInt().toString() + "%") })
+                DropdownMenu(pageScaleExpanded, { pageScaleExpanded = false }) { listOf(80, 90, 100, 110, 120).forEach { percent -> DropdownMenuItem(text = { Text(percent.toString() + "%") }, onClick = { viewModel.setPageScale(percent / 100f); pageScaleExpanded = false }) } }
             }
         }
     }
