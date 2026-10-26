@@ -45,6 +45,7 @@ interface SettingsRepository {
 data class AppSettingsBackup(
     val uiMode: String,
     val checkUpdate: Boolean,
+    val appLanguage: String = "system",
     val themeMode: Int,
     val miuixMonet: Boolean,
     val keyColor: Int,
@@ -70,5 +71,4 @@ data class AppSettingsBackup(
     val materialShadowSliders: Boolean = true,
     val enableSwipeBack: Boolean,
     val pagerGestureMode: Int,
-    val appLanguage: String = "system",
 )
