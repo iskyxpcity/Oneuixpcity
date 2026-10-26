@@ -93,12 +93,12 @@ class SettingsRepositoryImpl : SettingsRepository {
         set(value) = prefs.edit { putFloat("material_contrast_level", value.coerceIn(-1.0f, 1.0f)) }
 
     override var materialCornerScale: Float
-        get() = prefs.getFloat("material_corner_scale", 1.0f).coerceIn(0.5f, 1.5f)
-        set(value) = prefs.edit { putFloat("material_corner_scale", value.coerceIn(0.5f, 1.5f)) }
+        get() = prefs.getFloat("material_corner_scale", 1.0f).coerceIn(0.0f, 2.0f)
+        set(value) = prefs.edit { putFloat("material_corner_scale", value.coerceIn(0.0f, 2.0f)) }
 
     override var materialBorderWidth: Float
-        get() = prefs.getFloat("material_border_width", 0.0f).coerceIn(0.0f, 3.0f)
-        set(value) = prefs.edit { putFloat("material_border_width", value.coerceIn(0.0f, 3.0f)) }
+        get() = prefs.getFloat("material_border_width", 0.0f).coerceIn(0.0f, 1.5f)
+        set(value) = prefs.edit { putFloat("material_border_width", value.coerceIn(0.0f, 1.5f)) }
 
     override var materialColorVisionMode: Int
         get() = prefs.getInt("material_color_vision_mode", 0).coerceIn(0, 8)
@@ -289,9 +289,9 @@ class SettingsRepositoryImpl : SettingsRepository {
             .putFloat("material_font_scale", snapshot.materialFontScale.coerceIn(0.8f, 1.5f))
             .putInt("material_contrast_mode", snapshot.materialContrastMode.coerceIn(-1, 2))
             .putFloat("material_contrast_level", snapshot.materialContrastLevel.coerceIn(-1.0f, 1.0f))
-            .putFloat("material_corner_scale", snapshot.materialCornerScale.coerceIn(0.5f, 1.5f))
+            .putFloat("material_corner_scale", snapshot.materialCornerScale.coerceIn(0.0f, 2.0f))
             .putString("material_color_schemes", Json.encodeToString(snapshot.materialColorSchemes))
-            .putFloat("material_border_width", snapshot.materialBorderWidth.coerceIn(0.0f, 3.0f))
+            .putFloat("material_border_width", snapshot.materialBorderWidth.coerceIn(0.0f, 1.5f))
             .putString("material_font_family", snapshot.materialFontFamily.takeIf { it in setOf("Default", "SansSerif", "Serif", "Monospace", "Cursive") } ?: "Default")
             .putInt("material_color_vision_mode", snapshot.materialColorVisionMode.coerceIn(0, 8))
             .putInt("material_navigation_motion_mode", snapshot.materialNavigationMotionMode.coerceIn(0, 1))

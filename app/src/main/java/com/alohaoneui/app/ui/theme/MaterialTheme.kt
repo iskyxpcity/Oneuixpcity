@@ -193,7 +193,7 @@ private fun materialColorVisionMatrix(mode: Int, invert: Boolean): ColorMatrix? 
  * shape primitives.
  */
 private fun voyageShapes(style: Int, scale: Float): Shapes {
-    val factor = scale.coerceIn(0.5f, 1.5f)
+    val factor = scale.coerceIn(0.0f, 2.0f)
     fun shape(radius: Float): CornerBasedShape {
         val corner = (radius * factor).dp
         return when (style.coerceIn(0, 6)) {

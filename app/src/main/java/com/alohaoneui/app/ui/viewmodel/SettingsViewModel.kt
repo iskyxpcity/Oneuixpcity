@@ -212,7 +212,7 @@ class SettingsViewModel(
     }
 
     fun setMaterialCornerScale(scale: Float) {
-        val safeScale = scale.coerceIn(0.5f, 1.5f)
+        val safeScale = scale.coerceIn(0.0f, 2.0f)
         repo.materialCornerScale = safeScale
         _uiState.update { it.copy(materialCornerScale = safeScale) }
     }
@@ -278,7 +278,7 @@ class SettingsViewModel(
     }
 
     fun setMaterialBorderWidth(width: Float) {
-        val safeWidth = width.coerceIn(0.0f, 3.0f)
+        val safeWidth = width.coerceIn(0.0f, 1.5f)
         repo.materialBorderWidth = safeWidth
         _uiState.update { it.copy(materialBorderWidth = safeWidth) }
     }
