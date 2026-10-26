@@ -51,6 +51,7 @@ data class AppSettings(
     val paletteStyle: PaletteStyle,
     val colorSpec: ColorSpec.SpecVersion,
     val materialCornerScale: Float = 1.0f,
+    val materialShapeStyle: Int = 0,
     val materialOutlineWidth: Float = 0.0f,
     val materialShadowContainers: Boolean = true,
     val materialShadowTopBars: Boolean = true,
@@ -111,6 +112,7 @@ object ThemeController {
             paletteStyle = paletteStyle,
             colorSpec = colorSpec,
             materialCornerScale = repo.materialCornerScale,
+            materialShapeStyle = repo.materialShapeStyle,
             materialOutlineWidth = repo.materialOutlineWidth,
             materialShadowContainers = repo.materialShadowContainers,
             materialShadowTopBars = repo.materialShadowTopBars,
@@ -139,6 +141,7 @@ fun AlohaOneUITheme(
             content = {
                 CompositionLocalProvider(
                     LocalMaterialCornerScale provides appSettings.materialCornerScale,
+                    LocalMaterialShapeStyle provides appSettings.materialShapeStyle,
                     LocalMaterialOutlineWidth provides appSettings.materialOutlineWidth,
                     LocalMaterialShadowContainers provides appSettings.materialShadowContainers,
                     LocalMaterialShadowTopBars provides appSettings.materialShadowTopBars,
@@ -175,6 +178,7 @@ val LocalEnableFloatingBottomBar = staticCompositionLocalOf { false }
 
 val LocalEnableFloatingBottomBarBlur = staticCompositionLocalOf { false }
 val LocalMaterialCornerScale = staticCompositionLocalOf { 1.0f }
+val LocalMaterialShapeStyle = staticCompositionLocalOf { 0 }
 val LocalMaterialOutlineWidth = staticCompositionLocalOf { 0.0f }
 val LocalMaterialShadowContainers = staticCompositionLocalOf { true }
 val LocalMaterialShadowTopBars = staticCompositionLocalOf { true }
