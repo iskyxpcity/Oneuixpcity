@@ -84,7 +84,7 @@ fun VoyageThemeSettingsScreenMaterial(
                     },
                 ) {
                     Column(
-                        Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
+                        Modifier.fillMaxWidth().padding(8.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                             when (category) {
@@ -338,13 +338,13 @@ private fun VoyageThemeAccordion(
     }
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.large,
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp),
         color = MaterialTheme.colorScheme.surfaceContainerLow,
     ) {
         Column {
             Row(
                 modifier = Modifier.fillMaxWidth().clickable(onClick = onToggle)
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                    .padding(8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(24.dp))
