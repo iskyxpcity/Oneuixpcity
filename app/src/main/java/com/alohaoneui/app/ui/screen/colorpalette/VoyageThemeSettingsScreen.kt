@@ -2,7 +2,7 @@ package com.alohaoneui.app.ui.screen.colorpalette
 
 import android.os.Build
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.nestedScroll
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.rounded.AccessibilityNew as MiuixAssistIcon
