@@ -341,5 +341,4 @@
     <string name="settings_motion_standard">标准</string>
     <string name="settings_haptic_feedback">触觉反馈</string>
     <string name="settings_display_scale_title">显示大小</string>
-    <string name="settings_display_preview_sample">海内存知己，天涯若比邻。</string>
 </resources>

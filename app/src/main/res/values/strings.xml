@@ -344,5 +344,4 @@
     <string name="settings_motion_standard">Standard</string>
     <string name="settings_haptic_feedback">Haptic feedback</string>
     <string name="settings_display_scale_title">Display size</string>
-    <string name="settings_display_preview_sample">A friend afar brings a distant land near.</string>
 </resources>
