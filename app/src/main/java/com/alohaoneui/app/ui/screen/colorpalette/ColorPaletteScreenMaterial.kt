@@ -398,10 +398,10 @@ fun ColorPaletteScreenMaterial(
                             valueRange = 0.8f..1.1f,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .then(if (LocalMaterialShadowSliders.current) Modifier.shadow(2.dp, RoundedCornerShape(50)) else Modifier)
+                                .then(if (LocalMaterialShadowSliders.current) Modifier.shadow(2.dp, voyageCornerShape(50.dp)) else Modifier)
                                 .then(
                                     LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
-                                        Modifier.border(it.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(50))
+                                        Modifier.border(it.dp, MaterialTheme.colorScheme.outlineVariant, voyageCornerShape(50.dp))
                                     } ?: Modifier
                                 )
                         )
