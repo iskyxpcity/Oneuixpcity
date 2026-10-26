@@ -80,6 +80,7 @@ import com.alohaoneui.app.ui.screen.settings.SettingPager
 import com.alohaoneui.app.ui.screen.settings.LanguageSettingsScreen
 import com.alohaoneui.app.ui.screen.settings.DisplayTextSettingsScreen
 import com.alohaoneui.app.ui.screen.settings.MotionHapticsSettingsScreen
+import com.alohaoneui.app.ui.util.AppLocaleHelper
 import com.alohaoneui.app.ui.screen.tools.ToolsPager
 import com.alohaoneui.app.ui.screen.tools.AlohaOneUICategoryScreen
 import com.alohaoneui.app.ui.screen.tools.OtherFunctionsScreen
@@ -118,6 +119,10 @@ import top.yukonga.miuix.kmp.utils.PagerNavigationSpringSpec
 import top.yukonga.miuix.kmp.utils.pagerGestureOverride
 
 class MainActivity : ComponentActivity() {
+    override fun attachBaseContext(newBase: android.content.Context) {
+        super.attachBaseContext(AppLocaleHelper.wrap(newBase))
+    }
+
 
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
