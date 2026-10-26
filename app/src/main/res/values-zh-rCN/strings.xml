@@ -249,4 +249,21 @@
     <string name="theme_shape_wavy">波浪</string>
     <string name="theme_shape_scoop">凹弧</string>
     <string name="theme_shape_notch">缺口</string>
+    <string name="theme_switch_style_title">开关样式</string>
+    <string name="theme_switch_material_you">Material You</string>
+    <string name="theme_switch_compose">Compose</string>
+    <string name="theme_switch_pixel">Pixel</string>
+    <string name="theme_switch_fluent">Fluent</string>
+    <string name="theme_switch_cupertino">Cupertino</string>
+    <string name="theme_switch_liquid_glass">Liquid Glass</string>
+    <string name="theme_switch_hyper_os">HyperOS</string>
+    <string name="theme_switch_one_ui">One UI</string>
+    <string name="theme_slider_style_title">滑条样式</string>
+    <string name="theme_slider_material_you">Material You</string>
+    <string name="theme_slider_fancy">Fancy</string>
+    <string name="theme_slider_material">Material 2</string>
+    <string name="theme_slider_hyper_os">HyperOS</string>
+    <string name="theme_icon_shape_title">图标形状</string>
+    <string name="theme_icon_shape_none">无</string>
+    <string name="theme_icon_shape_random">随机</string>
 </resources>
