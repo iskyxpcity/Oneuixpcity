@@ -10,6 +10,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Refresh
@@ -23,6 +24,9 @@ import androidx.compose.material.icons.outlined.Style
 import androidx.compose.material.icons.outlined.ToggleOn
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material3.*
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.MaterialShapes
+import androidx.compose.material3.toShape
 import com.materialkolor.hct.Hct
 import com.alohaoneui.app.data.repository.MaterialColorScheme
 import androidx.compose.runtime.*
@@ -31,6 +35,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
@@ -214,62 +219,116 @@ fun VoyageColorSchemeEditorScreenMaterial(
                                     }
                                 }
                                 VoyageThemeCategory.PALETTE -> {
-                                        Toggle(R.string.voyage_theme_dynamic_color, null, uiState.materialDynamicColorEnabled, viewModel::setMaterialDynamicColorEnabled)
-                                        Text(stringResource(R.string.voyage_theme_key_color), style = MaterialTheme.typography.titleMedium)
-                                        val seedPresets = listOf(
-                                            stringResource(R.string.voyage_seed_wisteria) to 0xFF6750A4.toInt(),
-                                            stringResource(R.string.voyage_seed_ocean) to 0xFF006A6A.toInt(),
-                                            stringResource(R.string.voyage_seed_forest) to 0xFF426900.toInt(),
-                                            stringResource(R.string.voyage_seed_amber) to 0xFF8C5000.toInt(),
-                                            stringResource(R.string.voyage_seed_coral) to 0xFF9C4146.toInt(),
-                                            stringResource(R.string.voyage_seed_indigo) to 0xFF4054A4.toInt(),
-                                        )
-                                        Row(
-                                            Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-                                            horizontalArrangement = Arrangement.spacedBy(10.dp),
-                                            verticalAlignment = Alignment.CenterVertically,
-                                        ) {
-                                            ColorChoice(MaterialTheme.colorScheme.primary, uiState.keyColor == 0 && uiState.materialDynamicColorEnabled, stringResource(R.string.voyage_theme_system_color)) {
+                                    Text(stringResource(R.string.voyage_theme_wallpaper_colors), style = MaterialTheme.typography.titleMedium)
+                                    val wallpaperColors = listOf(
+                                        MaterialTheme.colorScheme.primary,
+                                        MaterialTheme.colorScheme.secondary,
+                                        MaterialTheme.colorScheme.tertiary,
+                                        MaterialTheme.colorScheme.surfaceVariant,
+                                    )
+                                    Row(
+                                        Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                    ) {
+                                        wallpaperColors.forEach { color ->
+                                            Surface(
+                                                modifier = Modifier.weight(1f).height(28.dp).clickable {
+                                                    viewModel.setKeyColor(color.toArgb())
+                                                    viewModel.setMaterialDynamicColorEnabled(false)
+                                                },
+                                                shape = androidx.compose.foundation.shape.RoundedCornerShape(10.dp),
+                                                color = color,
+                                            ) {}
+                                        }
+                                    }
+                                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                        val expressive = stringResource(R.string.voyage_palette_expressive)
+                                        FilledTonalButton(
+                                            onClick = { viewModel.setColorStyle(PaletteStyle.Expressive.name) },
+                                            colors = ButtonDefaults.filledTonalButtonColors(
+                                                containerColor = if (uiState.colorStyle == PaletteStyle.Expressive.name) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh,
+                                            ),
+                                        ) { Text(expressive) }
+                                        FilledTonalButton(
+                                            onClick = {
                                                 viewModel.setKeyColor(0)
                                                 viewModel.setMaterialDynamicColorEnabled(true)
-                                            }
-                                            seedPresets.forEach { (label, color) ->
-                                                ColorChoice(Color(color), uiState.keyColor == color, label) {
-                                                    viewModel.setKeyColor(color)
-                                                    viewModel.setMaterialDynamicColorEnabled(false)
-                                                }
-                                            }
-                                        }
-                                        val paletteChoices = listOf(
-                                            stringResource(R.string.voyage_palette_tonal_spot) to PaletteStyle.TonalSpot,
-                                            stringResource(R.string.voyage_palette_neutral) to PaletteStyle.Neutral,
-                                            stringResource(R.string.voyage_palette_vibrant) to PaletteStyle.Vibrant,
-                                            stringResource(R.string.voyage_palette_expressive) to PaletteStyle.Expressive,
-                                            stringResource(R.string.voyage_palette_rainbow) to PaletteStyle.Rainbow,
-                                            stringResource(R.string.voyage_palette_fruit_salad) to PaletteStyle.FruitSalad,
-                                            stringResource(R.string.voyage_palette_monochrome) to PaletteStyle.Monochrome,
-                                            stringResource(R.string.voyage_palette_fidelity) to PaletteStyle.Fidelity,
-                                            stringResource(R.string.voyage_palette_content) to PaletteStyle.Content,
-                                        )
-                                        val currentPaletteLabel = paletteChoices.firstOrNull { it.second.name == uiState.colorStyle }?.first ?: paletteChoices.first().first
-                                        Drop(R.string.settings_color_style, currentPaletteLabel, paletteChoices.map { it.first }) { label ->
-                                            viewModel.setColorStyle(paletteChoices.first { it.first == label }.second.name)
-                                        }
-                                        Column(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
-                                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                                Text(stringResource(R.string.voyage_theme_contrast), modifier = Modifier.weight(1f))
-                                                TextButton(onClick = { viewModel.setMaterialContrastLevel(0f) }) {
-                                                    Text(stringResource(R.string.voyage_theme_contrast_standard))
-                                                }
-                                            }
-                                            VoyageSlider(uiState.materialContrastLevel.coerceIn(-1f, 1f), viewModel::setMaterialContrastLevel, valueRange = -1f..1f)
-                                        }
-                                        ListItem(
-                                            modifier = Modifier.clickable { onOpenColorSchemeEditor(-1) },
-                                            headlineContent = { Text(stringResource(R.string.voyage_theme_scheme_title)) },
-                                            trailingContent = { Icon(Icons.Outlined.Palette, contentDescription = null) },
-                                        )
+                                            },
+                                            colors = ButtonDefaults.filledTonalButtonColors(
+                                                containerColor = if (uiState.materialDynamicColorEnabled) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh,
+                                            ),
+                                        ) { Text(stringResource(R.string.voyage_theme_follow_system)) }
                                     }
+                                    Toggle(
+                                        R.string.voyage_theme_dynamic_color,
+                                        stringResource(R.string.voyage_theme_dynamic_color_summary),
+                                        uiState.materialDynamicColorEnabled,
+                                        viewModel::setMaterialDynamicColorEnabled,
+                                    )
+                                    ListItem(
+                                        modifier = Modifier.clickable(
+                                            enabled = !uiState.materialDynamicColorEnabled,
+                                            onClick = { onOpenColorSchemeEditor(-1) },
+                                        ),
+                                        headlineContent = { Text(stringResource(R.string.voyage_theme_scheme_title)) },
+                                        supportingContent = {
+                                            if (uiState.materialDynamicColorEnabled) {
+                                                Text(stringResource(R.string.voyage_theme_scheme_dynamic_disabled))
+                                            }
+                                        },
+                                        trailingContent = { Icon(Icons.Filled.Edit, contentDescription = null) },
+                                        colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
+                                    )
+                                    val seedColors = listOf(
+                                        0xFFA8A0CD.toInt(), 0xFF75ADB0.toInt(), 0xFF96AC7B.toInt(), 0xFFBBA07B.toInt(),
+                                        0xFFC3989E.toInt(), 0xFF95A2CD.toInt(), 0xFFF08181.toInt(), 0xFFB27880.toInt(),
+                                        0xFFBA957B.toInt(), 0xFFF4B47B.toInt(), 0xFFF2F38B.toInt(), 0xFFB9E68B.toInt(),
+                                        0xFF80D0B2.toInt(), 0xFF75C8CC.toInt(), 0xFF75A7FA.toInt(), 0xFFF1AAEB.toInt(),
+                                        0xFFE079B0.toInt(), 0xFFE2C2F9.toInt(), 0xFFB28DF0.toInt(), 0xFF768DB1.toInt(),
+                                        0xFFF4F7FA.toInt(), 0xFF75787B.toInt(),
+                                    )
+                                    ColorPaletteGrid(
+                                        colors = seedColors,
+                                        selectedColor = uiState.keyColor,
+                                        dynamicSelected = uiState.materialDynamicColorEnabled,
+                                        onSelect = { color ->
+                                            viewModel.setKeyColor(color)
+                                            viewModel.setMaterialDynamicColorEnabled(false)
+                                        },
+                                        onAdd = {
+                                            val seed = if (uiState.keyColor == 0) MaterialTheme.colorScheme.primary.toArgb() else uiState.keyColor
+                                            val hct = Hct.fromInt(seed)
+                                            hctHue = hct.hue.toFloat()
+                                            hctChroma = hct.chroma.toFloat()
+                                            hctTone = hct.tone.toFloat()
+                                            showColorEditor = true
+                                        },
+                                    )
+                                    val paletteChoices = listOf(
+                                        stringResource(R.string.voyage_palette_tonal_spot) to PaletteStyle.TonalSpot,
+                                        stringResource(R.string.voyage_palette_neutral) to PaletteStyle.Neutral,
+                                        stringResource(R.string.voyage_palette_vibrant) to PaletteStyle.Vibrant,
+                                        stringResource(R.string.voyage_palette_expressive) to PaletteStyle.Expressive,
+                                        stringResource(R.string.voyage_palette_rainbow) to PaletteStyle.Rainbow,
+                                        stringResource(R.string.voyage_palette_fruit_salad) to PaletteStyle.FruitSalad,
+                                        stringResource(R.string.voyage_palette_monochrome) to PaletteStyle.Monochrome,
+                                        stringResource(R.string.voyage_palette_fidelity) to PaletteStyle.Fidelity,
+                                        stringResource(R.string.voyage_palette_content) to PaletteStyle.Content,
+                                    )
+                                    val currentPaletteLabel = paletteChoices.firstOrNull { it.second.name == uiState.colorStyle }?.first ?: paletteChoices.first().first
+                                    Drop(R.string.settings_color_style, currentPaletteLabel, paletteChoices.map { it.first }) { label ->
+                                        viewModel.setColorStyle(paletteChoices.first { it.first == label }.second.name)
+                                    }
+                                    Column(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Text(stringResource(R.string.voyage_theme_contrast), modifier = Modifier.weight(1f))
+                                            TextButton(onClick = { viewModel.setMaterialContrastLevel(0f) }) {
+                                                Text(stringResource(R.string.voyage_theme_contrast_standard))
+                                            }
+                                        }
+                                        VoyageSlider(uiState.materialContrastLevel.coerceIn(-1f, 1f), viewModel::setMaterialContrastLevel, valueRange = -1f..1f)
+                                    }
+                                }
                                 VoyageThemeCategory.COMPONENTS -> {
                                     val switchStyles = listOf(
                                         stringResource(R.string.voyage_switch_material_you), stringResource(R.string.voyage_switch_compose),
@@ -659,9 +718,56 @@ private fun ThemeResetCard(onClick: () -> Unit) {
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun ColorPaletteGrid(
+    colors: List<Int>,
+    selectedColor: Int,
+    dynamicSelected: Boolean,
+    onSelect: (Int) -> Unit,
+    onAdd: () -> Unit,
+) {
+    FlowRow(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(2.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        maxItemsInEachRow = 4,
+    ) {
+        colors.forEachIndexed { index, value ->
+            ColorChoice(
+                color = Color(value),
+                selected = if (dynamicSelected) index == 0 else value == selectedColor,
+                label = null,
+                onClick = { onSelect(value) },
+            )
+        }
+        Surface(
+            modifier = Modifier.size(52.dp).clickable(onClick = onAdd),
+            shape = MaterialShapes.Cookie12Sided.toShape(),
+            color = MaterialTheme.colorScheme.surfaceContainerLow,
+            shadowElevation = 1.dp,
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.voyage_theme_color_editor), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable private fun ColorChoice(color: Color, selected: Boolean, label: String?, onClick: () -> Unit) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Surface(Modifier.size(if (selected) 40.dp else 34.dp).clickable(onClick = onClick), shape = CircleShape, color = color, border = if (selected) androidx.compose.foundation.BorderStroke(3.dp, MaterialTheme.colorScheme.primary) else null) {}
+        Surface(
+            modifier = Modifier.size(52.dp).clickable(onClick = onClick),
+            shape = MaterialShapes.Cookie12Sided.toShape(),
+            color = MaterialTheme.colorScheme.surfaceContainerLow,
+            shadowElevation = 1.dp,
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Surface(Modifier.size(40.dp), shape = CircleShape, color = color) {}
+                if (selected) Icon(Icons.Filled.Check, contentDescription = null, tint = if (color.luminance() < 0.5f) Color.White else MaterialTheme.colorScheme.onSurface)
+            }
+        }
         if (label != null) Text(label, style = MaterialTheme.typography.labelSmall)
     }
 }
