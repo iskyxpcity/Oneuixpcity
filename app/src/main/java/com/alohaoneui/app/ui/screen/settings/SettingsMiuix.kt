@@ -208,7 +208,7 @@ fun SettingPagerMiuix(
                     MiuixSettingsGroup(stringResource(R.string.settings_group_behavior), Icons.Rounded.Animation, behaviorExpanded, { behaviorExpanded = !behaviorExpanded }) {
                         OverlayDropdownPreference(title = stringResource(R.string.settings_motion_haptics), items = motionLabels, selectedIndex = uiState.materialNavigationMotionMode.coerceIn(0, 1), onSelectedIndexChange = viewModel::setMaterialNavigationMotionMode)
                         OverlayDropdownPreference(title = stringResource(R.string.settings_transition_style), items = transitionLabels, selectedIndex = uiState.materialTransitionStyle.coerceIn(0, 3), onSelectedIndexChange = viewModel::setMaterialTransitionStyle)
-                        SwitchPreference(title = stringResource(R.string.settings_haptic_feedback), checked = uiState.enableHapticFeedback, onCheckedChange = viewModel::setEnableHapticFeedback)
+                        SwitchPreference(title = stringResource(R.string.settings_haptic_feedback), summary = stringResource(R.string.settings_haptic_feedback_summary), checked = uiState.enableHapticFeedback, onCheckedChange = viewModel::setEnableHapticFeedback)
                         SwitchPreference(title = stringResource(R.string.settings_enable_predictive_back), summary = stringResource(R.string.settings_enable_predictive_back_summary), checked = uiState.enablePredictiveBack, onCheckedChange = { enabled ->
                             viewModel.setEnablePredictiveBack(enabled)
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
