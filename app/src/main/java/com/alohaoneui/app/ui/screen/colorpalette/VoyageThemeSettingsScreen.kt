@@ -46,6 +46,7 @@ import com.alohaoneui.app.ui.UiMode
 import com.alohaoneui.app.ui.navigation3.LocalNavigator
 import com.alohaoneui.app.ui.screen.settings.SettingsUiState
 import com.alohaoneui.app.ui.theme.ColorMode
+import com.alohaoneui.app.ui.theme.VoyageSettingsTheme
 import com.alohaoneui.app.ui.viewmodel.SettingsViewModel
 import com.alohaoneui.app.ui.util.AppIconHelper
 import top.yukonga.miuix.kmp.basic.Card
@@ -66,9 +67,8 @@ fun VoyageThemeSettingsScreen() {
     val viewModel = viewModel<SettingsViewModel>()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val onBack = { if (navigator.backStackSize() > 1) navigator.pop() }
-    when (LocalUiMode.current) {
-        UiMode.Material -> VoyageThemeSettingsScreenMaterial(uiState, viewModel, onBack)
-        UiMode.Miuix -> VoyageThemeSettingsScreenMiuix(uiState, viewModel, onBack)
+    VoyageSettingsTheme(uiState) {
+        VoyageThemeSettingsScreenMaterial(uiState, viewModel, onBack)
     }
 }
 
