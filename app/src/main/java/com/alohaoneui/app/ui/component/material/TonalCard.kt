@@ -1,6 +1,8 @@
 package com.alohaoneui.app.ui.component.material
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.ui.draw.shadow
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -16,6 +18,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.dp
+import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
+import com.alohaoneui.app.ui.theme.LocalMaterialShadowContainers
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -29,8 +33,17 @@ fun TonalCard(
 ) {
     Card(
         onClick = onClick,
-        modifier = modifier,
+        modifier = modifier.shadow(
+            elevation = if (LocalMaterialShadowContainers.current) 2.dp else 0.dp,
+            shape = shape,
+        ),
         enabled = enabled,
+        border = LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
+            BorderStroke(it.dp, MaterialTheme.colorScheme.outlineVariant)
+        },
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = if (LocalMaterialShadowContainers.current) 2.dp else 0.dp
+        ),
         colors = CardDefaults.cardColors(
             containerColor = containerColor,
             contentColor = contentColorFor(containerColor),
@@ -50,7 +63,16 @@ fun TonalCard(
     content: @Composable () -> Unit,
 ) {
     Card(
-        modifier = modifier,
+        modifier = modifier.shadow(
+            elevation = if (LocalMaterialShadowContainers.current) 2.dp else 0.dp,
+            shape = shape,
+        ),
+        border = LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
+            BorderStroke(it.dp, MaterialTheme.colorScheme.outlineVariant)
+        },
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = if (LocalMaterialShadowContainers.current) 2.dp else 0.dp
+        ),
         colors = CardDefaults.cardColors(
             containerColor = containerColor,
             contentColor = contentColorFor(containerColor),
