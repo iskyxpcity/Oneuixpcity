@@ -69,6 +69,10 @@ class SettingsRepositoryImpl : SettingsRepository {
         get() = prefs.getFloat("material_corner_scale", 1.0f).coerceIn(0.0f, 2.0f)
         set(value) = prefs.edit { putFloat("material_corner_scale", value.coerceIn(0.0f, 2.0f)) }
 
+    override var materialShapeStyle: Int
+        get() = prefs.getInt("material_shape_style", 0).coerceIn(0, 6)
+        set(value) = prefs.edit { putInt("material_shape_style", value.coerceIn(0, 6)) }
+
     override var materialOutlineWidth: Float
         get() = prefs.getFloat("material_outline_width", 0.0f).coerceIn(0.0f, 1.5f)
         set(value) = prefs.edit { putFloat("material_outline_width", value.coerceIn(0.0f, 1.5f)) }
@@ -120,6 +124,7 @@ class SettingsRepositoryImpl : SettingsRepository {
         navigationRailExpanded = navigationRailExpanded,
         pageScale = pageScale,
         materialCornerScale = materialCornerScale,
+        materialShapeStyle = materialShapeStyle,
         materialOutlineWidth = materialOutlineWidth,
         materialShadowContainers = materialShadowContainers,
         materialShadowTopBars = materialShadowTopBars,
@@ -154,6 +159,7 @@ class SettingsRepositoryImpl : SettingsRepository {
             .putBoolean("nav_rail_expanded", snapshot.navigationRailExpanded)
             .putFloat("page_scale", snapshot.pageScale)
             .putFloat("material_corner_scale", snapshot.materialCornerScale.coerceIn(0.0f, 2.0f))
+            .putInt("material_shape_style", snapshot.materialShapeStyle.coerceIn(0, 6))
             .putFloat("material_outline_width", snapshot.materialOutlineWidth.coerceIn(0.0f, 1.5f))
             .putBoolean("material_shadow_containers", snapshot.materialShadowContainers)
             .putBoolean("material_shadow_top_bars", snapshot.materialShadowTopBars)
