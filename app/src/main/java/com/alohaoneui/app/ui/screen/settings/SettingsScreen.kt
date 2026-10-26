@@ -44,6 +44,9 @@ fun SettingPager(
     val actions = SettingsScreenActions(
         onSetCheckUpdate = viewModel::setCheckUpdate,
         onOpenTheme = { navigator.push(Route.ColorPalette) },
+        onOpenLanguage = { navigator.push(Route.LanguageSettings) },
+        onOpenDisplayText = { navigator.push(Route.DisplayTextSettings) },
+        onOpenMotionHaptics = { navigator.push(Route.MotionHapticsSettings) },
         onSetUiModeIndex = { index ->
             viewModel.setUiMode(if (index == 0) UiMode.Miuix.value else UiMode.Material.value)
         },
