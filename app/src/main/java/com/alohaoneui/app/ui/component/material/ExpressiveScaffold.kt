@@ -1,6 +1,9 @@
 package com.alohaoneui.app.ui.component.material
 
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.MaterialTheme
@@ -11,6 +14,10 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.unit.dp
+import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
+import com.alohaoneui.app.ui.theme.LocalMaterialShadowTopBars
 import androidx.compose.ui.graphics.Color
 
 @Composable
@@ -28,7 +35,24 @@ fun ExpressiveScaffold(
 ) {
     Scaffold(
         modifier = modifier,
-        topBar = topBar,
+        topBar = {
+            val topBarShape = voyageCornerShape(16.dp)
+            val topBarModifier = Modifier
+                .fillMaxWidth()
+                .then(
+                    if (LocalMaterialShadowTopBars.current) {
+                        Modifier.shadow(3.dp, topBarShape)
+                    } else Modifier
+                )
+                .then(
+                    LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
+                        Modifier.border(it.dp, MaterialTheme.colorScheme.outlineVariant, topBarShape)
+                    } ?: Modifier
+                )
+            Box(modifier = topBarModifier) {
+                topBar()
+            }
+        },
         bottomBar = bottomBar,
         snackbarHost = snackbarHost,
         floatingActionButton = floatingActionButton,
