@@ -143,12 +143,12 @@ fun SettingPagerMaterial(
                     Text(stringResource(R.string.settings_font_scale_title), modifier = Modifier.weight(1f))
                     Text((uiState.materialFontScale * 100).toInt().toString() + "%")
                 }
-                Slider(uiState.materialFontScale, viewModel::setMaterialFontScale, valueRange = 0.8f..1.5f, steps = 13, modifier = Modifier.padding(horizontal = 12.dp))
+                VoyageSlider(uiState.materialFontScale, viewModel::setMaterialFontScale, valueRange = 0.8f..1.5f, steps = 13, modifier = Modifier.padding(horizontal = 12.dp))
                 Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text(stringResource(R.string.settings_display_scale_title), modifier = Modifier.weight(1f))
                     Text((uiState.materialDisplayScale * 100).toInt().toString() + "%")
                 }
-                Slider(uiState.materialDisplayScale, viewModel::setMaterialDisplayScale, valueRange = 0.85f..1.25f, steps = 7, modifier = Modifier.padding(horizontal = 12.dp))
+                VoyageSlider(uiState.materialDisplayScale, viewModel::setMaterialDisplayScale, valueRange = 0.85f..1.25f, steps = 7, modifier = Modifier.padding(horizontal = 12.dp))
                 Text(stringResource(R.string.settings_display_preview_sample), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp))
                 ListItem(
                     modifier = Modifier.clickable { fontMenu = true },
@@ -164,8 +164,8 @@ fun SettingPagerMaterial(
                         })
                     }
                 }
-                ListItem(headlineContent = { Text(stringResource(R.string.voyage_theme_large_text)) }, trailingContent = { Switch(uiState.materialLargeTextEnabled, viewModel::setMaterialLargeTextEnabled) })
-                ListItem(headlineContent = { Text(stringResource(R.string.settings_bold_text_title)) }, trailingContent = { Switch(uiState.materialBoldTextEnabled, viewModel::setMaterialBoldTextEnabled) })
+                ListItem(headlineContent = { Text(stringResource(R.string.voyage_theme_large_text)) }, trailingContent = { ExpressiveSwitch(uiState.materialLargeTextEnabled, viewModel::setMaterialLargeTextEnabled) })
+                ListItem(headlineContent = { Text(stringResource(R.string.settings_bold_text_title)) }, trailingContent = { ExpressiveSwitch(uiState.materialBoldTextEnabled, viewModel::setMaterialBoldTextEnabled) })
             }
             VoyageSettingsAccordion(
                 title = stringResource(R.string.settings_group_behavior),
@@ -175,11 +175,11 @@ fun SettingPagerMaterial(
             ) {
                 Choice(R.string.settings_motion_expressive, uiState.materialNavigationMotionMode == 0) { viewModel.setMaterialNavigationMotionMode(0) }
                 Choice(R.string.settings_motion_standard, uiState.materialNavigationMotionMode == 1) { viewModel.setMaterialNavigationMotionMode(1) }
-                ListItem(headlineContent = { Text(stringResource(R.string.settings_haptic_feedback)) }, trailingContent = { Switch(uiState.enableHapticFeedback, viewModel::setEnableHapticFeedback) })
+                ListItem(headlineContent = { Text(stringResource(R.string.settings_haptic_feedback)) }, trailingContent = { ExpressiveSwitch(uiState.enableHapticFeedback, viewModel::setEnableHapticFeedback) })
                 ListItem(
                     headlineContent = { Text(stringResource(R.string.settings_enable_predictive_back)) },
                     supportingContent = { Text(stringResource(R.string.settings_enable_predictive_back_summary)) },
-                    trailingContent = { Switch(uiState.enablePredictiveBack, { enabled ->
+                    trailingContent = { ExpressiveSwitch(uiState.enablePredictiveBack, { enabled ->
                         viewModel.setEnablePredictiveBack(enabled)
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
                             AlohaOneUIApplication.applyEnableOnBackInvokedCallback(context, enabled)
@@ -187,7 +187,7 @@ fun SettingPagerMaterial(
                         }
                     }) },
                 )
-                ListItem(headlineContent = { Text(stringResource(R.string.settings_enable_swipe_back)) }, supportingContent = { Text(stringResource(R.string.settings_enable_swipe_back_summary)) }, trailingContent = { Switch(uiState.enableSwipeBack, viewModel::setEnableSwipeBack) })
+                ListItem(headlineContent = { Text(stringResource(R.string.settings_enable_swipe_back)) }, supportingContent = { Text(stringResource(R.string.settings_enable_swipe_back_summary)) }, trailingContent = { ExpressiveSwitch(uiState.enableSwipeBack, viewModel::setEnableSwipeBack) })
                 ListItem(
                     modifier = Modifier.clickable { gestureMenu = true },
                     headlineContent = { Text(stringResource(R.string.settings_page_gesture_mode)) },
@@ -213,7 +213,7 @@ fun SettingPagerMaterial(
                 expanded = alohaExpanded,
                 onToggle = { alohaExpanded = !alohaExpanded },
             ) {
-                ListItem(headlineContent = { Text(stringResource(R.string.settings_check_update)) }, supportingContent = { Text(stringResource(R.string.settings_check_update_summary)) }, trailingContent = { Switch(uiState.checkUpdate, actions.onSetCheckUpdate) })
+                ListItem(headlineContent = { Text(stringResource(R.string.settings_check_update)) }, supportingContent = { Text(stringResource(R.string.settings_check_update_summary)) }, trailingContent = { ExpressiveSwitch(uiState.checkUpdate, actions.onSetCheckUpdate) })
                 ListItem(modifier = Modifier.clickable { showBottomSheet = true }, headlineContent = { Text(stringResource(R.string.send_log)) }, trailingContent = { Icon(Icons.Filled.BugReport, contentDescription = null) })
                 ListItem(modifier = Modifier.clickable(onClick = actions.onOpenAbout), headlineContent = { Text(stringResource(R.string.about)) }, trailingContent = { Icon(Icons.Filled.Info, contentDescription = null) })
             }

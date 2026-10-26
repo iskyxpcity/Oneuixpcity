@@ -8,6 +8,9 @@ import androidx.compose.material3.ToggleButtonDefaults
 import androidx.compose.material3.ToggleButtonShapes
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.unit.dp
+import com.alohaoneui.app.ui.theme.LocalMaterialShadowButtons
 import androidx.compose.ui.graphics.Color
 
 /**
@@ -27,7 +30,7 @@ fun ExpressiveToggleButton(
     ToggleButton(
         checked = checked,
         onCheckedChange = onCheckedChange,
-        modifier = modifier,
+        modifier = if (LocalMaterialShadowButtons.current) modifier.shadow(1.dp, MaterialTheme.shapes.small) else modifier,
         enabled = enabled,
         colors = colors,
         shapes = shapes,

@@ -39,6 +39,8 @@ import androidx.compose.material.icons.outlined.PhoneAndroid
 import com.alohaoneui.app.R
 import com.alohaoneui.app.ui.screen.settings.SettingsUiState
 import com.alohaoneui.app.ui.theme.ColorMode
+import com.alohaoneui.app.ui.component.material.ExpressiveSwitch
+import com.alohaoneui.app.ui.component.material.VoyageSlider
 import com.alohaoneui.app.ui.viewmodel.SettingsViewModel
 import com.materialkolor.PaletteStyle
 
@@ -235,7 +237,7 @@ fun VoyageThemeSettingsScreenMaterial(
                                                     Text(stringResource(R.string.voyage_theme_contrast_standard))
                                                 }
                                             }
-                                            Slider(uiState.materialContrastLevel.coerceIn(-1f, 1f), viewModel::setMaterialContrastLevel, valueRange = -1f..1f)
+                                            VoyageSlider(uiState.materialContrastLevel.coerceIn(-1f, 1f), viewModel::setMaterialContrastLevel, valueRange = -1f..1f)
                                         }
                                         ListItem(
                                             modifier = Modifier.clickable { onOpenColorSchemeEditor(-1) },
@@ -465,7 +467,7 @@ private fun ThemeStyleChoice(
             Text(stringResource(id), modifier = Modifier.weight(1f))
             Text(value.toInt().toString(), color = MaterialTheme.colorScheme.primary)
         }
-        Slider(value.coerceIn(range.start, range.endInclusive), onChange, valueRange = range)
+        VoyageSlider(value.coerceIn(range.start, range.endInclusive), onChange, valueRange = range)
     }
 }
 
@@ -485,7 +487,7 @@ private fun ThemeStyleChoice(
         headlineContent = { Text(stringResource(id)) },
         supportingContent = summary?.let { { Text(it) } },
         trailingContent = {
-            Switch(checked = checked, onCheckedChange = onChange, enabled = enabled)
+            ExpressiveSwitch(checked = checked, onCheckedChange = onChange, enabled = enabled)
         },
     )
 }
