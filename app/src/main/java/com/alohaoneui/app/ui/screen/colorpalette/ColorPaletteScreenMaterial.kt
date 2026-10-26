@@ -336,7 +336,10 @@ fun ColorPaletteScreenMaterial(
                     ),
                 )
 
-                TonalCard(modifier = Modifier.padding(top = 4.dp)) {
+                TonalCard(
+                    modifier = Modifier.padding(top = 4.dp),
+                    shape = RoundedCornerShape(20.dp),
+                ) {
                     var sliderValue by remember(uiState.pageScale) { mutableFloatStateOf(uiState.pageScale) }
 
                     Column(
