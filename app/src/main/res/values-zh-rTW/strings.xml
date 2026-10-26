@@ -93,4 +93,10 @@
     <string name="settings_language_chinese_traditional">繁體中文</string>
     <string name="settings_language_japanese">日文</string>
     <string name="settings_language_korean">韓文</string>
+    <string name="settings_motion_simplified">簡化</string>
+    <string name="settings_transition_style">轉場樣式</string>
+    <string name="settings_transition_aosp">AOSP</string>
+    <string name="settings_transition_miuix">MIUIX</string>
+    <string name="settings_transition_scale">縮放</string>
+    <string name="settings_transition_classic">經典</string>
 </resources>
