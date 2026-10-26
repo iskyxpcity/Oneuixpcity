@@ -62,6 +62,7 @@ import com.alohaoneui.app.ui.component.material.SegmentedColumn
 import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
 import com.alohaoneui.app.ui.theme.LocalMaterialShadowTopBars
 import com.alohaoneui.app.ui.component.material.SegmentedDropdownItem
+import com.alohaoneui.app.ui.component.material.SegmentedChoiceOptionsItem
 import com.alohaoneui.app.ui.component.material.SegmentedListItem
 import com.alohaoneui.app.ui.component.material.SegmentedSwitchItem
 import com.alohaoneui.app.ui.component.material.SendLogBottomSheet
@@ -130,8 +131,7 @@ fun SettingPagerMaterial(
                             "Follow system", "简体中文", "繁體中文", "English", "日本語", "한국어"
                         )
                         val languageValues = listOf("system", "zh-Hans", "zh-Hant", "en", "ja", "ko")
-                        SegmentedDropdownItem(
-                            icon = Icons.Filled.Language,
+                        SegmentedChoiceOptionsItem(
                             title = stringResource(R.string.settings_language),
                             summary = stringResource(R.string.settings_language_summary),
                             items = languageOptions,
