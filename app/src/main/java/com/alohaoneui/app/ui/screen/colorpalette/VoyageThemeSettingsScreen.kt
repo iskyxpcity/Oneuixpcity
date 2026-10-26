@@ -1,6 +1,7 @@
 package com.alohaoneui.app.ui.screen.colorpalette
 
 import android.os.Build
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -13,6 +14,7 @@ import androidx.compose.material.icons.filled.Brightness3
 import androidx.compose.material.icons.filled.Brightness4
 import androidx.compose.material.icons.filled.Brightness7
 import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Launch
 import androidx.compose.material.icons.filled.Navigation
 import androidx.compose.material.icons.filled.Palette
@@ -23,6 +25,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -31,7 +34,6 @@ import com.alohaoneui.app.R
 import com.alohaoneui.app.ui.UiMode
 import com.alohaoneui.app.ui.navigation3.LocalNavigator
 import com.alohaoneui.app.ui.screen.settings.SettingsUiState
-import com.alohaoneui.app.ui.screen.settings.VoyageSettingsAccordionComponent
 import com.alohaoneui.app.ui.theme.ColorMode
 import com.alohaoneui.app.ui.viewmodel.SettingsViewModel
 
@@ -62,7 +64,7 @@ fun VoyageThemeSettingsScreenMaterial(uiState: SettingsUiState, viewModel: Setti
         ) {
             VoyageThemeCategory.entries.forEach { category ->
                 val expanded = category.name in expandedCategories
-                VoyageSettingsAccordionComponent(
+                VoyageThemeAccordion(
                     title = stringResource(category.titleRes),
                     icon = when (category) {
                         VoyageThemeCategory.DESIGN -> Icons.Filled.Palette
@@ -212,4 +214,35 @@ fun VoyageThemeSettingsScreenMaterial(uiState: SettingsUiState, viewModel: Setti
             }
         },
     )
+}
+
+
+@Composable
+private fun VoyageThemeAccordion(
+    title: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    expanded: Boolean,
+    onToggle: () -> Unit,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+    ) {
+        Column {
+            Row(
+                modifier = Modifier.fillMaxWidth().clickable(onClick = onToggle).padding(horizontal = 16.dp, vertical = 14.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(24.dp))
+                Spacer(Modifier.width(12.dp))
+                Text(title, modifier = Modifier.weight(1f), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
+                Icon(Icons.Filled.ExpandMore, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.graphicsLayer { rotationZ = if (expanded) 180f else 0f })
+            }
+            AnimatedVisibility(visible = expanded) {
+                Column(Modifier.fillMaxWidth().padding(start = 8.dp, end = 8.dp, bottom = 8.dp), content = content)
+            }
+        }
+    }
 }
