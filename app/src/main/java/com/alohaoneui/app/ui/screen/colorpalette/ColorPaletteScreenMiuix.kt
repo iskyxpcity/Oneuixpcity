@@ -446,52 +446,6 @@ fun ColorPaletteScreenMiuix(
                     }
                 }
                 item {
-                    Card(
-                        modifier = Modifier
-                            .padding(top = 12.dp)
-                            .fillMaxWidth(),
-                    ) {
-                        val switchStyleOptions = listOf(
-                            stringResource(R.string.theme_switch_material_you),
-                            stringResource(R.string.theme_switch_compose),
-                            stringResource(R.string.theme_switch_pixel),
-                            stringResource(R.string.theme_switch_fluent),
-                            stringResource(R.string.theme_switch_cupertino),
-                            stringResource(R.string.theme_switch_liquid_glass),
-                            stringResource(R.string.theme_switch_hyper_os),
-                            stringResource(R.string.theme_switch_one_ui),
-                        )
-                        OverlayDropdownPreference(
-                            title = stringResource(R.string.theme_switch_style_title),
-                            items = switchStyleOptions,
-                            selectedIndex = uiState.materialSwitchStyle.coerceIn(0, switchStyleOptions.lastIndex),
-                            onSelectedIndexChange = actions.onSetMaterialSwitchStyle,
-                        )
-                        val sliderStyleOptions = listOf(
-                            stringResource(R.string.theme_slider_material_you),
-                            stringResource(R.string.theme_slider_fancy),
-                            stringResource(R.string.theme_slider_material),
-                            stringResource(R.string.theme_slider_hyper_os),
-                        )
-                        OverlayDropdownPreference(
-                            title = stringResource(R.string.theme_slider_style_title),
-                            items = sliderStyleOptions,
-                            selectedIndex = uiState.materialSliderStyle.coerceIn(0, sliderStyleOptions.lastIndex),
-                            onSelectedIndexChange = actions.onSetMaterialSliderStyle,
-                        )
-                        val iconShapeOptions = listOf(
-                            stringResource(R.string.theme_icon_shape_none),
-                            stringResource(R.string.theme_icon_shape_random),
-                        )
-                        OverlayDropdownPreference(
-                            title = stringResource(R.string.theme_icon_shape_title),
-                            items = iconShapeOptions,
-                            selectedIndex = uiState.materialIconShapeStyle.coerceIn(0, iconShapeOptions.lastIndex),
-                            onSelectedIndexChange = actions.onSetMaterialIconShapeStyle,
-                        )
-                    }
-                }
-                item {
                     Spacer(
                         Modifier.height(
                             WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() +
