@@ -1,5 +1,8 @@
 package com.alohaoneui.app.ui.screen.settings
 
+import android.app.Activity
+import androidx.compose.ui.platform.LocalContext
+
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.LaunchedEffect
@@ -22,6 +25,7 @@ fun SettingPager(
     bottomInnerPadding: Dp,
     isCurrentPage: Boolean = true,
 ) {
+    val context = LocalContext.current
     val viewModel = viewModel<SettingsViewModel>()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val latestIsCurrentPage by rememberUpdatedState(isCurrentPage)
@@ -43,7 +47,10 @@ fun SettingPager(
 
     val actions = SettingsScreenActions(
         onSetCheckUpdate = viewModel::setCheckUpdate,
-        onSetAppLanguage = viewModel::setAppLanguage,
+        onSetAppLanguage = { language ->
+            viewModel.setAppLanguage(language)
+            (context as? Activity)?.recreate()
+        },
         onOpenTheme = { navigator.push(Route.ColorPalette) },
         onSetUiModeIndex = { index ->
             viewModel.setUiMode(if (index == 0) UiMode.Miuix.value else UiMode.Material.value)
