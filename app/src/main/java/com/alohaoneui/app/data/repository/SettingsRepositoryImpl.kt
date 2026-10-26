@@ -65,6 +65,38 @@ class SettingsRepositoryImpl : SettingsRepository {
         get() = prefs.getFloat("page_scale", 1.0f)
         set(value) = prefs.edit { putFloat("page_scale", value) }
 
+    override var materialCornerScale: Float
+        get() = prefs.getFloat("material_corner_scale", 1.0f).coerceIn(0.0f, 2.0f)
+        set(value) = prefs.edit { putFloat("material_corner_scale", value.coerceIn(0.0f, 2.0f)) }
+
+    override var materialOutlineWidth: Float
+        get() = prefs.getFloat("material_outline_width", 0.0f).coerceIn(0.0f, 1.5f)
+        set(value) = prefs.edit { putFloat("material_outline_width", value.coerceIn(0.0f, 1.5f)) }
+
+    override var materialShadowContainers: Boolean
+        get() = prefs.getBoolean("material_shadow_containers", true)
+        set(value) = prefs.edit { putBoolean("material_shadow_containers", value) }
+
+    override var materialShadowTopBars: Boolean
+        get() = prefs.getBoolean("material_shadow_top_bars", true)
+        set(value) = prefs.edit { putBoolean("material_shadow_top_bars", value) }
+
+    override var materialShadowButtons: Boolean
+        get() = prefs.getBoolean("material_shadow_buttons", true)
+        set(value) = prefs.edit { putBoolean("material_shadow_buttons", value) }
+
+    override var materialShadowFloatingButtons: Boolean
+        get() = prefs.getBoolean("material_shadow_floating_buttons", true)
+        set(value) = prefs.edit { putBoolean("material_shadow_floating_buttons", value) }
+
+    override var materialShadowSwitches: Boolean
+        get() = prefs.getBoolean("material_shadow_switches", true)
+        set(value) = prefs.edit { putBoolean("material_shadow_switches", value) }
+
+    override var materialShadowSliders: Boolean
+        get() = prefs.getBoolean("material_shadow_sliders", true)
+        set(value) = prefs.edit { putBoolean("material_shadow_sliders", value) }
+
     override var enableSwipeBack: Boolean
         get() = prefs.getBoolean("enable_swipe_back", false)
         set(value) = prefs.edit { putBoolean("enable_swipe_back", value) }
@@ -87,6 +119,14 @@ class SettingsRepositoryImpl : SettingsRepository {
         enableFloatingBottomBarBlur = enableFloatingBottomBarBlur,
         navigationRailExpanded = navigationRailExpanded,
         pageScale = pageScale,
+        materialCornerScale = materialCornerScale,
+        materialOutlineWidth = materialOutlineWidth,
+        materialShadowContainers = materialShadowContainers,
+        materialShadowTopBars = materialShadowTopBars,
+        materialShadowButtons = materialShadowButtons,
+        materialShadowFloatingButtons = materialShadowFloatingButtons,
+        materialShadowSwitches = materialShadowSwitches,
+        materialShadowSliders = materialShadowSliders,
         enableSwipeBack = enableSwipeBack,
         pagerGestureMode = pagerGestureMode,
     )
@@ -113,6 +153,14 @@ class SettingsRepositoryImpl : SettingsRepository {
             .putBoolean("enable_floating_bottom_bar_blur", snapshot.enableFloatingBottomBarBlur)
             .putBoolean("nav_rail_expanded", snapshot.navigationRailExpanded)
             .putFloat("page_scale", snapshot.pageScale)
+            .putFloat("material_corner_scale", snapshot.materialCornerScale.coerceIn(0.0f, 2.0f))
+            .putFloat("material_outline_width", snapshot.materialOutlineWidth.coerceIn(0.0f, 1.5f))
+            .putBoolean("material_shadow_containers", snapshot.materialShadowContainers)
+            .putBoolean("material_shadow_top_bars", snapshot.materialShadowTopBars)
+            .putBoolean("material_shadow_buttons", snapshot.materialShadowButtons)
+            .putBoolean("material_shadow_floating_buttons", snapshot.materialShadowFloatingButtons)
+            .putBoolean("material_shadow_switches", snapshot.materialShadowSwitches)
+            .putBoolean("material_shadow_sliders", snapshot.materialShadowSliders)
             .putBoolean("enable_swipe_back", snapshot.enableSwipeBack)
             .putInt("pager_gesture_mode", snapshot.pagerGestureMode.coerceIn(0, 2))
             .commit()
