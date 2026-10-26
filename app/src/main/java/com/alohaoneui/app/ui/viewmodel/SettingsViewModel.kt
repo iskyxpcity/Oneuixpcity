@@ -34,6 +34,14 @@ class SettingsViewModel(
             val enableFloatingBottomBar = repo.enableFloatingBottomBar
             val enableFloatingBottomBarBlur = repo.enableFloatingBottomBarBlur
             val pageScale = repo.pageScale
+            val materialCornerScale = repo.materialCornerScale
+            val materialOutlineWidth = repo.materialOutlineWidth
+            val materialShadowContainers = repo.materialShadowContainers
+            val materialShadowTopBars = repo.materialShadowTopBars
+            val materialShadowButtons = repo.materialShadowButtons
+            val materialShadowFloatingButtons = repo.materialShadowFloatingButtons
+            val materialShadowSwitches = repo.materialShadowSwitches
+            val materialShadowSliders = repo.materialShadowSliders
             val enableSwipeBack = repo.enableSwipeBack
             val pagerGestureMode = repo.pagerGestureMode
             val colorStyle = repo.colorStyle
@@ -52,6 +60,14 @@ class SettingsViewModel(
                     enableFloatingBottomBar = enableFloatingBottomBar,
                     enableFloatingBottomBarBlur = enableFloatingBottomBarBlur,
                     pageScale = pageScale,
+                    materialCornerScale = materialCornerScale,
+                    materialOutlineWidth = materialOutlineWidth,
+                    materialShadowContainers = materialShadowContainers,
+                    materialShadowTopBars = materialShadowTopBars,
+                    materialShadowButtons = materialShadowButtons,
+                    materialShadowFloatingButtons = materialShadowFloatingButtons,
+                    materialShadowSwitches = materialShadowSwitches,
+                    materialShadowSliders = materialShadowSliders,
                     enableSwipeBack = enableSwipeBack,
                     pagerGestureMode = pagerGestureMode,
                     colorStyle = colorStyle,
@@ -174,6 +190,48 @@ class SettingsViewModel(
     fun setPageScale(scale: Float) {
         repo.pageScale = scale
         _uiState.update { it.copy(pageScale = scale) }
+    }
+
+    fun setMaterialCornerScale(scale: Float) {
+        val safe = scale.coerceIn(0.0f, 2.0f)
+        repo.materialCornerScale = safe
+        _uiState.update { it.copy(materialCornerScale = safe) }
+    }
+
+    fun setMaterialOutlineWidth(width: Float) {
+        val safe = width.coerceIn(0.0f, 1.5f)
+        repo.materialOutlineWidth = safe
+        _uiState.update { it.copy(materialOutlineWidth = safe) }
+    }
+
+    fun setMaterialShadowContainers(enabled: Boolean) {
+        repo.materialShadowContainers = enabled
+        _uiState.update { it.copy(materialShadowContainers = enabled) }
+    }
+
+    fun setMaterialShadowTopBars(enabled: Boolean) {
+        repo.materialShadowTopBars = enabled
+        _uiState.update { it.copy(materialShadowTopBars = enabled) }
+    }
+
+    fun setMaterialShadowButtons(enabled: Boolean) {
+        repo.materialShadowButtons = enabled
+        _uiState.update { it.copy(materialShadowButtons = enabled) }
+    }
+
+    fun setMaterialShadowFloatingButtons(enabled: Boolean) {
+        repo.materialShadowFloatingButtons = enabled
+        _uiState.update { it.copy(materialShadowFloatingButtons = enabled) }
+    }
+
+    fun setMaterialShadowSwitches(enabled: Boolean) {
+        repo.materialShadowSwitches = enabled
+        _uiState.update { it.copy(materialShadowSwitches = enabled) }
+    }
+
+    fun setMaterialShadowSliders(enabled: Boolean) {
+        repo.materialShadowSliders = enabled
+        _uiState.update { it.copy(materialShadowSliders = enabled) }
     }
 
 
