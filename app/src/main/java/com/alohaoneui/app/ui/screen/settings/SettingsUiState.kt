@@ -64,4 +64,5 @@ data class SettingsScreenActions(
     val onSetThemeMode: (Int) -> Unit = {},
     val onSetMaterialDynamicColorEnabled: (Boolean) -> Unit = {},
     val onOpenAbout: () -> Unit,
+    val onBack: () -> Unit = {},
 )
