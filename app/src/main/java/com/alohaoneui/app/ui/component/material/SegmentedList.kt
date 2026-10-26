@@ -105,7 +105,7 @@ private class VoyagePathShape(
         val path = Path()
         when (style) {
             2 -> {
-                val smooth = 0.55f
+                val smooth = 0.234f
                 path.moveTo(tl, 0f)
                 path.lineTo(w - tr, 0f)
                 path.cubicTo(w - tr * smooth, 0f, w, tr * smooth, w, tr)
@@ -152,7 +152,7 @@ private class VoyagePathShape(
                 ))
             }
         }
-        if (!path.isClosed) path.close()
+        path.close()
         return Outline.Generic(path)
     }
 }
