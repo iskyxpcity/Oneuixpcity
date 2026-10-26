@@ -312,4 +312,13 @@
     <string name="voyage_palette_neutral">Neutral</string>
     <string name="voyage_palette_vibrant">Vibrant</string>
     <string name="voyage_palette_expressive">Expressive</string>
+    <string name="voyage_color_vision_off">Off</string>
+    <string name="voyage_color_vision_protanomaly">Protanomaly</string>
+    <string name="voyage_color_vision_deuteranomaly">Deuteranomaly</string>
+    <string name="voyage_color_vision_tritanomaly">Tritanomaly</string>
+    <string name="voyage_color_vision_protanopia">Protanopia</string>
+    <string name="voyage_color_vision_deuteranopia">Deuteranopia</string>
+    <string name="voyage_color_vision_tritanopia">Tritanopia</string>
+    <string name="voyage_color_vision_achromatomaly">Achromatomaly</string>
+    <string name="voyage_color_vision_achromatopsia">Achromatopsia</string>
 </resources>

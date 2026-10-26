@@ -7,7 +7,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.AccessibilityNew
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
@@ -20,13 +19,6 @@ import androidx.compose.material.icons.outlined.Layers
 import androidx.compose.material.icons.outlined.Style
 import androidx.compose.material.icons.outlined.ToggleOn
 import androidx.compose.material.icons.outlined.Visibility
-import androidx.compose.material.icons.filled.Brush
-import androidx.compose.material.icons.filled.DarkMode
-import androidx.compose.material.icons.filled.Launch
-import androidx.compose.material.icons.filled.Navigation
-import androidx.compose.material.icons.filled.Palette
-import androidx.compose.material.icons.filled.Tune
-import androidx.compose.material.icons.filled.Widgets
 import androidx.compose.material3.*
 import com.materialkolor.hct.Hct
 import com.alohaoneui.app.data.repository.MaterialColorScheme

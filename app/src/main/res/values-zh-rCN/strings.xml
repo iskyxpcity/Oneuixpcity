@@ -309,4 +309,13 @@
     <string name="voyage_palette_neutral">中性</string>
     <string name="voyage_palette_vibrant">鲜明</string>
     <string name="voyage_palette_expressive">灵动</string>
+    <string name="voyage_color_vision_off">关闭</string>
+    <string name="voyage_color_vision_protanomaly">红色弱</string>
+    <string name="voyage_color_vision_deuteranomaly">绿色弱</string>
+    <string name="voyage_color_vision_tritanomaly">蓝色弱</string>
+    <string name="voyage_color_vision_protanopia">红色盲</string>
+    <string name="voyage_color_vision_deuteranopia">绿色盲</string>
+    <string name="voyage_color_vision_tritanopia">蓝色盲</string>
+    <string name="voyage_color_vision_achromatomaly">全色弱</string>
+    <string name="voyage_color_vision_achromatopsia">全色盲</string>
 </resources>
