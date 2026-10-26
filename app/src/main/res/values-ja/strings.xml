@@ -48,4 +48,5 @@
     <string name="settings_transition_miuix">MIUIX</string>
     <string name="settings_transition_scale">拡大縮小</string>
     <string name="settings_transition_classic">クラシック</string>
+    <string name="settings_display_restore_defaults">表示設定を初期値に戻す</string>
 </resources>
