@@ -54,9 +54,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.Dp
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.shape.CutCornerShape
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -77,13 +84,86 @@ import kotlinx.coroutines.launch
 
 val LocalListItemShapes = compositionLocalOf<ListItemShapes?> { null }
 
+private class VoyagePathShape(
+    private val style: Int,
+    private val topStart: Dp,
+    private val topEnd: Dp,
+    private val bottomEnd: Dp,
+    private val bottomStart: Dp,
+) : Shape {
+    override fun createOutline(size: Size, layoutDirection: LayoutDirection, density: Density): Outline {
+        val ts = with(density) { topStart.toPx() }.coerceIn(0f, minOf(size.width, size.height) / 2f)
+        val te = with(density) { topEnd.toPx() }.coerceIn(0f, minOf(size.width, size.height) / 2f)
+        val be = with(density) { bottomEnd.toPx() }.coerceIn(0f, minOf(size.width, size.height) / 2f)
+        val bs = with(density) { bottomStart.toPx() }.coerceIn(0f, minOf(size.width, size.height) / 2f)
+        val tl = if (layoutDirection == LayoutDirection.Ltr) ts else te
+        val tr = if (layoutDirection == LayoutDirection.Ltr) te else ts
+        val br = if (layoutDirection == LayoutDirection.Ltr) be else bs
+        val bl = if (layoutDirection == LayoutDirection.Ltr) bs else be
+        val w = size.width
+        val h = size.height
+        val path = Path()
+        when (style) {
+            2 -> {
+                val smooth = 0.55f
+                path.moveTo(tl, 0f)
+                path.lineTo(w - tr, 0f)
+                path.cubicTo(w - tr * smooth, 0f, w, tr * smooth, w, tr)
+                path.lineTo(w, h - br)
+                path.cubicTo(w, h - br * smooth, w - br * smooth, h, w - br, h)
+                path.lineTo(bl, h)
+                path.cubicTo(bl * smooth, h, 0f, h - bl * smooth, 0f, h - bl)
+                path.lineTo(0f, tl)
+                path.cubicTo(0f, tl * smooth, tl * smooth, 0f, tl, 0f)
+            }
+            5 -> {
+                path.moveTo(tl, 0f)
+                path.lineTo(w - tr, 0f)
+                path.arcTo(Rect(w - tr, -tr, w + tr, tr), 180f, -90f, false)
+                path.lineTo(w, h - br)
+                path.arcTo(Rect(w - br, h - br, w + br, h + br), -90f, -90f, false)
+                path.lineTo(bl, h)
+                path.arcTo(Rect(-bl, h - bl, bl, h + bl), 0f, -90f, false)
+                path.lineTo(0f, tl)
+                path.arcTo(Rect(-tl, -tl, tl, tl), 90f, -90f, false)
+            }
+            6 -> {
+                path.moveTo(tl, 0f)
+                path.lineTo(w - tr, 0f)
+                path.lineTo(w - tr, tr)
+                path.lineTo(w, tr)
+                path.lineTo(w, h - br)
+                path.lineTo(w - br, h - br)
+                path.lineTo(w - br, h)
+                path.lineTo(bl, h)
+                path.lineTo(bl, h - bl)
+                path.lineTo(0f, h - bl)
+                path.lineTo(0f, tl)
+                path.lineTo(tl, tl)
+                path.close()
+            }
+            else -> {
+                path.addRoundRect(androidx.compose.ui.geometry.RoundRect(
+                    left = 0f, top = 0f, right = w, bottom = h,
+                    topLeftCornerRadius = androidx.compose.ui.geometry.CornerRadius(tl, tl),
+                    topRightCornerRadius = androidx.compose.ui.geometry.CornerRadius(tr, tr),
+                    bottomRightCornerRadius = androidx.compose.ui.geometry.CornerRadius(br, br),
+                    bottomLeftCornerRadius = androidx.compose.ui.geometry.CornerRadius(bl, bl),
+                ))
+            }
+        }
+        if (!path.isClosed) path.close()
+        return Outline.Generic(path)
+    }
+}
+
 @Composable
 fun voyageCornerShape(radius: androidx.compose.ui.unit.Dp): Shape {
     val scaledRadius = radius * LocalMaterialCornerScale.current.coerceIn(0f, 1f)
-    // Keep shape selection in the shared component layer so every nested screen
-    // using voyageCornerShape responds to the same persisted theme setting.
-    return when (LocalMaterialShapeStyle.current) {
+    val style = LocalMaterialShapeStyle.current
+    return when (style) {
         1 -> CutCornerShape(scaledRadius)
+        2, 5, 6 -> VoyagePathShape(style, scaledRadius, scaledRadius, scaledRadius, scaledRadius)
         else -> RoundedCornerShape(scaledRadius)
     }
 }
@@ -131,18 +211,9 @@ fun voyageSegmentedShape(index: Int, count: Int, vertical: Boolean = true): Shap
     )
 
     return when (LocalMaterialShapeStyle.current) {
-        1 -> CutCornerShape(
-            topStart = topStart,
-            topEnd = topEnd,
-            bottomEnd = bottomEnd,
-            bottomStart = bottomStart,
-        )
-        else -> RoundedCornerShape(
-            topStart = topStart,
-            topEnd = topEnd,
-            bottomEnd = bottomEnd,
-            bottomStart = bottomStart,
-        )
+        1 -> CutCornerShape(topStart, topEnd, bottomEnd, bottomStart)
+        2, 5, 6 -> VoyagePathShape(LocalMaterialShapeStyle.current, topStart, topEnd, bottomEnd, bottomStart)
+        else -> RoundedCornerShape(topStart, topEnd, bottomEnd, bottomStart)
     }
 }
 
