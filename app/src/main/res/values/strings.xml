@@ -327,4 +327,20 @@
     <string name="voyage_seed_amber">Amber</string>
     <string name="voyage_seed_coral">Coral</string>
     <string name="voyage_seed_indigo">Indigo</string>
+    <string name="settings_language">Language</string>
+    <string name="settings_language_summary">Choose the app language</string>
+    <string name="settings_language_system">Follow system</string>
+    <string name="settings_language_english">English</string>
+    <string name="settings_language_chinese_simplified">Simplified Chinese</string>
+    <string name="settings_display_text">Display text</string>
+    <string name="settings_display_text_summary">Font size and weight</string>
+    <string name="settings_font_scale_title">Font size</string>
+    <string name="settings_display_preview_sample">A friend afar brings a distant land near.</string>
+    <string name="settings_bold_text_title">Bold text</string>
+    <string name="settings_motion_haptics">Motion &amp; haptics</string>
+    <string name="settings_motion_haptics_summary">Animation and haptic feedback</string>
+    <string name="settings_motion_style">Motion style</string>
+    <string name="settings_motion_expressive">Expressive</string>
+    <string name="settings_motion_standard">Standard</string>
+    <string name="settings_haptic_feedback">Haptic feedback</string>
 </resources>

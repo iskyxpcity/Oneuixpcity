@@ -324,4 +324,20 @@
     <string name="voyage_seed_amber">琥珀</string>
     <string name="voyage_seed_coral">珊瑚</string>
     <string name="voyage_seed_indigo">靛蓝</string>
+    <string name="settings_language">语言</string>
+    <string name="settings_language_summary">选择应用语言</string>
+    <string name="settings_language_system">跟随系统</string>
+    <string name="settings_language_english">英语</string>
+    <string name="settings_language_chinese_simplified">简体中文</string>
+    <string name="settings_display_text">显示文字</string>
+    <string name="settings_display_text_summary">字体大小与字重</string>
+    <string name="settings_font_scale_title">字体大小</string>
+    <string name="settings_display_preview_sample">海内存知己，天涯若比邻。</string>
+    <string name="settings_bold_text_title">粗体文字</string>
+    <string name="settings_motion_haptics">动效与触感</string>
+    <string name="settings_motion_haptics_summary">动画与触觉反馈</string>
+    <string name="settings_motion_style">动效样式</string>
+    <string name="settings_motion_expressive">灵动</string>
+    <string name="settings_motion_standard">标准</string>
+    <string name="settings_haptic_feedback">触觉反馈</string>
 </resources>
