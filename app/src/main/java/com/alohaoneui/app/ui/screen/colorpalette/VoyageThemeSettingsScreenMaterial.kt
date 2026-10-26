@@ -124,8 +124,9 @@ fun VoyageThemeSettingsScreenMaterial(
                                                 }
                                             }
                                         }
+                                        val currentPrimaryArgb = MaterialTheme.colorScheme.primary.toArgb()
                                         Button(onClick = {
-                                            val seed = if (uiState.keyColor == 0) MaterialTheme.colorScheme.primary.toArgb() else uiState.keyColor
+                                            val seed = if (uiState.keyColor == 0) currentPrimaryArgb else uiState.keyColor
                                             val hct = Hct.fromInt(seed)
                                             hctHue = hct.hue.toFloat()
                                             hctChroma = hct.chroma.toFloat()
