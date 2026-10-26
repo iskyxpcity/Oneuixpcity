@@ -30,7 +30,7 @@ import androidx.compose.ui.unit.dp
 
 /** Shared accordion container modeled on Voyage's vfw0.m137940Oo settings-group component. */
 @Composable
-fun VoyageSettingsAccordion(
+fun VoyageSettingsAccordionComponent(
     title: String,
     icon: ImageVector,
     expanded: Boolean,

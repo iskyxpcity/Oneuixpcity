@@ -357,4 +357,5 @@
     <string name="settings_group_language">Language</string>
     <string name="settings_group_display">Display and text</string>
     <string name="settings_group_behavior">Motion &amp; haptics</string>
+    <string name="voyage_settings_group_aloha">Aloha OneUI</string>
 </resources>
