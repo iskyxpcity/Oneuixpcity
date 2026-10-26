@@ -25,6 +25,7 @@ import androidx.activity.ComponentActivity
 import androidx.annotation.RequiresApi
 import com.alohaoneui.app.R
 import com.alohaoneui.app.data.repository.SettingsRepositoryImpl
+import com.alohaoneui.app.ui.util.AppLocaleContext
 import com.alohaoneui.app.ui.component.miuix.effect.BgEffectConfig
 import com.alohaoneui.app.ui.component.miuix.effect.DeviceType
 import com.alohaoneui.app.ui.component.miuix.effect.OS3_BG_FRAG
@@ -35,6 +36,10 @@ import kotlin.math.roundToInt
 import kotlin.math.sin
 
 class StartupActivity : ComponentActivity() {
+
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(AppLocaleContext.wrap(newBase))
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
