@@ -1,6 +1,8 @@
 package com.alohaoneui.app.ui.screen.settings
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.border
+import androidx.compose.ui.draw.shadow
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -57,6 +59,8 @@ import androidx.compose.ui.unit.dp
 import com.alohaoneui.app.R
 import com.alohaoneui.app.ui.UiMode
 import com.alohaoneui.app.ui.component.material.SegmentedColumn
+import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
+import com.alohaoneui.app.ui.theme.LocalMaterialShadowTopBars
 import com.alohaoneui.app.ui.component.material.SegmentedDropdownItem
 import com.alohaoneui.app.ui.component.material.SegmentedListItem
 import com.alohaoneui.app.ui.component.material.SegmentedSwitchItem
@@ -187,6 +191,13 @@ private fun TopBar(
     scrollBehavior: TopAppBarScrollBehavior? = null
 ) {
     LargeFlexibleTopAppBar(
+        modifier = Modifier
+            .then(if (LocalMaterialShadowTopBars.current) Modifier.shadow(2.dp) else Modifier)
+            .then(
+                LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
+                    Modifier.border(it.dp, MaterialTheme.colorScheme.outlineVariant)
+                } ?: Modifier
+            ),
         title = { Text(stringResource(R.string.settings)) },
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = MaterialTheme.colorScheme.surface,
