@@ -26,6 +26,8 @@ class SettingsViewModel(
     fun refresh() {
         viewModelScope.launch {
             val checkUpdate = repo.checkUpdate
+            val appLanguage = repo.appLanguage
+            val materialDisplayScale = repo.materialDisplayScale
             val themeMode = repo.themeMode
             val miuixMonet = repo.miuixMonet
             val keyColor = repo.keyColor
@@ -68,6 +70,8 @@ class SettingsViewModel(
                 it.copy(
                     uiMode = uiMode,
                     checkUpdate = checkUpdate,
+                    appLanguage = appLanguage,
+                    materialDisplayScale = materialDisplayScale,
                     themeMode = themeMode,
                     miuixMonet = miuixMonet,
                     keyColor = keyColor,
@@ -370,6 +374,18 @@ class SettingsViewModel(
     fun setEnableSwipeBack(enabled: Boolean) {
         repo.enableSwipeBack = enabled
         _uiState.update { it.copy(enableSwipeBack = enabled) }
+    }
+
+    fun setAppLanguage(language: String) {
+        val safeLanguage = language.takeIf { it in setOf("system", "en", "zh-CN") } ?: "system"
+        repo.appLanguage = safeLanguage
+        _uiState.update { it.copy(appLanguage = safeLanguage) }
+    }
+
+    fun setMaterialDisplayScale(scale: Float) {
+        val safeScale = scale.coerceIn(0.85f, 1.25f)
+        repo.materialDisplayScale = safeScale
+        _uiState.update { it.copy(materialDisplayScale = safeScale) }
     }
 
     fun setEnableHapticFeedback(enabled: Boolean) {

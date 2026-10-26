@@ -47,6 +47,8 @@ data class SettingsUiState(
     val materialLargeTextEnabled: Boolean = false,
     val materialBoldTextEnabled: Boolean = false,
     val pagerGestureMode: Int = 0,
+    val appLanguage: String = "system",
+    val materialDisplayScale: Float = 1.0f,
 )
 
 @Immutable

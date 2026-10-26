@@ -43,6 +43,8 @@ interface SettingsRepository {
     var enableHapticFeedback: Boolean
     var materialLargeTextEnabled: Boolean
     var materialBoldTextEnabled: Boolean
+    var appLanguage: String
+    var materialDisplayScale: Float
 
     fun snapshotForBackup(): AppSettingsBackup
     fun restoreFromBackup(snapshot: AppSettingsBackup)
@@ -103,4 +105,6 @@ data class AppSettingsBackup(
     val enableHapticFeedback: Boolean = true,
     val materialLargeTextEnabled: Boolean = false,
     val materialBoldTextEnabled: Boolean = false,
+    val appLanguage: String = "system",
+    val materialDisplayScale: Float = 1.0f,
 )
