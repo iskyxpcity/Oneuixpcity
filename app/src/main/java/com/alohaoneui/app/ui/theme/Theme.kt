@@ -2,6 +2,7 @@ package com.alohaoneui.app.ui.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.staticCompositionLocalOf
 import com.materialkolor.PaletteStyle
@@ -136,10 +137,21 @@ fun AlohaOneUITheme(
         UiMode.Material -> MiuixAlohaOneUITheme(
             appSettings = appSettings,
             content = {
-                MaterialAlohaOneUITheme(
-                    appSettings = appSettings,
-                    content = content
-                )
+                CompositionLocalProvider(
+                    LocalMaterialCornerScale provides appSettings.materialCornerScale,
+                    LocalMaterialOutlineWidth provides appSettings.materialOutlineWidth,
+                    LocalMaterialShadowContainers provides appSettings.materialShadowContainers,
+                    LocalMaterialShadowTopBars provides appSettings.materialShadowTopBars,
+                    LocalMaterialShadowButtons provides appSettings.materialShadowButtons,
+                    LocalMaterialShadowFloatingButtons provides appSettings.materialShadowFloatingButtons,
+                    LocalMaterialShadowSwitches provides appSettings.materialShadowSwitches,
+                    LocalMaterialShadowSliders provides appSettings.materialShadowSliders,
+                ) {
+                    MaterialAlohaOneUITheme(
+                        appSettings = appSettings,
+                        content = content
+                    )
+                }
             }
         )
     }
