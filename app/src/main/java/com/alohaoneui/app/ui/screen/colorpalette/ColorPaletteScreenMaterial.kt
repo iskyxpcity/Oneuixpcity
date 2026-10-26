@@ -12,6 +12,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.ui.draw.shadow
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -104,6 +105,9 @@ import com.alohaoneui.app.ui.component.material.SegmentedSwitchItem
 import com.alohaoneui.app.ui.component.material.TonalCard
 import com.alohaoneui.app.ui.component.material.voyageSegmentedShape
 import com.alohaoneui.app.ui.theme.ColorMode
+import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
+import com.alohaoneui.app.ui.theme.LocalMaterialShadowTopBars
+import com.alohaoneui.app.ui.theme.LocalMaterialShadowSliders
 import com.alohaoneui.app.ui.theme.rememberAlohaOneUIColorScheme
 import com.alohaoneui.app.ui.theme.keyColorOptions
 
@@ -127,6 +131,13 @@ fun ColorPaletteScreenMaterial(
     Scaffold(
         topBar = {
             LargeFlexibleTopAppBar(
+                modifier = Modifier
+                    .then(if (LocalMaterialShadowTopBars.current) Modifier.shadow(2.dp) else Modifier)
+                    .then(
+                        LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
+                            Modifier.border(it.dp, MaterialTheme.colorScheme.outlineVariant)
+                        } ?: Modifier
+                    ),
                 navigationIcon = {
                     IconButton(
                         onClick = actions.onBack
