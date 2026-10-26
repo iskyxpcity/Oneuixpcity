@@ -39,4 +39,7 @@
     <string name="color_blue_grey">ブルーグレー</string>
     <string name="color_sakura">桜</string>
     <string name="alohaoneui_tools">Tools</string>
+    <string name="settings_language_chinese_traditional">繁体字中国語</string>
+    <string name="settings_language_japanese">日本語</string>
+    <string name="settings_language_korean">韓国語</string>
 </resources>
