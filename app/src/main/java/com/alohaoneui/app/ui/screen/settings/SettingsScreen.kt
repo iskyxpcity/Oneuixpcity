@@ -49,10 +49,9 @@ fun SettingPager(
             viewModel.setUiMode(if (index == 0) UiMode.Miuix.value else UiMode.Material.value)
         },
         onOpenAbout = { navigator.push(Route.About) },
+        onSetThemeMode = viewModel::setThemeMode,
+        onBack = { if (navigator.backStackSize() > 1) navigator.pop() },
     )
 
-    when (LocalUiMode.current) {
-        UiMode.Miuix -> SettingPagerMiuix(uiState, actions, bottomInnerPadding)
-        UiMode.Material -> SettingPagerMaterial(uiState, actions, bottomInnerPadding)
-    }
+    SettingPagerMaterial(uiState, actions, bottomInnerPadding)
 }
