@@ -99,4 +99,5 @@
     <string name="settings_transition_miuix">MIUIX</string>
     <string name="settings_transition_scale">縮放</string>
     <string name="settings_transition_classic">經典</string>
+    <string name="settings_display_restore_defaults">還原顯示預設值</string>
 </resources>
