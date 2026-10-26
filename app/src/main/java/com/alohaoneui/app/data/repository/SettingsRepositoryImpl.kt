@@ -108,6 +108,10 @@ class SettingsRepositoryImpl : SettingsRepository {
         get() = prefs.getInt("material_navigation_motion_mode", 0).coerceIn(0, 1)
         set(value) = prefs.edit { putInt("material_navigation_motion_mode", value.coerceIn(0, 1)) }
 
+    override var materialTransitionStyle: Int
+        get() = prefs.getInt("material_transition_style", 0).coerceIn(0, 3)
+        set(value) = prefs.edit { putInt("material_transition_style", value.coerceIn(0, 3)) }
+
     override var materialDynamicColorEnabled: Boolean
         get() = prefs.getBoolean("material_dynamic_color_enabled", true)
         set(value) = prefs.edit { putBoolean("material_dynamic_color_enabled", value) }
@@ -247,6 +251,7 @@ class SettingsRepositoryImpl : SettingsRepository {
         materialFontFamily = materialFontFamily,
         materialColorVisionMode = materialColorVisionMode,
         materialNavigationMotionMode = materialNavigationMotionMode,
+        materialTransitionStyle = materialTransitionStyle,
         materialDynamicColorEnabled = materialDynamicColorEnabled,
         materialInvertColors = materialInvertColors,
         materialShapeStyle = materialShapeStyle,
@@ -300,6 +305,7 @@ class SettingsRepositoryImpl : SettingsRepository {
             .putString("material_font_family", snapshot.materialFontFamily.takeIf { it in setOf("Default", "SansSerif", "Serif", "Monospace", "Cursive") } ?: "Default")
             .putInt("material_color_vision_mode", snapshot.materialColorVisionMode.coerceIn(0, 8))
             .putInt("material_navigation_motion_mode", snapshot.materialNavigationMotionMode.coerceIn(0, 1))
+            .putInt("material_transition_style", snapshot.materialTransitionStyle.coerceIn(0, 3))
             .putBoolean("material_dynamic_color_enabled", snapshot.materialDynamicColorEnabled)
             .putBoolean("material_invert_colors", snapshot.materialInvertColors)
             .putInt("material_shape_style", snapshot.materialShapeStyle.coerceIn(0, 6))
