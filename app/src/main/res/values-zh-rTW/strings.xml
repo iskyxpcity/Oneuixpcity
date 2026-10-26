@@ -108,4 +108,5 @@
     <string name="voyage_toolbox_title">Voyage 工具箱</string>
     <string name="voyage_toolbox_subtitle">海內存知己，天涯若比鄰。</string>
     <string name="voyage_theme_large_text_summary">放大文字與介面元素</string>
+    <string name="settings_haptic_feedback_summary">操作介面時提供觸覺回饋。</string>
 </resources>
