@@ -102,6 +102,7 @@ import com.alohaoneui.app.ui.component.material.ExpressiveToggleButton
 import com.alohaoneui.app.ui.component.material.SegmentedColumn
 import com.alohaoneui.app.ui.component.material.SegmentedDropdownItem
 import com.alohaoneui.app.ui.component.material.SegmentedSwitchItem
+import com.alohaoneui.app.ui.component.material.SegmentedSliderItem
 import com.alohaoneui.app.ui.component.material.TonalCard
 import com.alohaoneui.app.ui.component.material.voyageSegmentedShape
 import com.alohaoneui.app.ui.component.material.voyageCornerShape
@@ -407,7 +408,7 @@ fun ColorPaletteScreenMaterial(
                     }
                 }
 
-                // Voyage SHAPE group: corner scale is a shared theme token, not a page-local radius.
+                // Voyage SHAPE group: the slider remains a row in the source-style group.
                 SegmentedColumn(
                     modifier = Modifier.padding(top = 4.dp),
                     title = stringResource(R.string.theme_group_shape),
@@ -416,52 +417,20 @@ fun ColorPaletteScreenMaterial(
                             var cornerScale by remember(uiState.materialCornerScale) {
                                 mutableFloatStateOf(uiState.materialCornerScale)
                             }
-                            TonalCard(
-                                modifier = Modifier.padding(top = 4.dp),
-                                shape = voyageCornerShape(20.dp),
-                            ) {
-                                Column(
-                                    modifier = Modifier.padding(16.dp),
-                                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Text(
-                                            text = stringResource(R.string.theme_corner_scale_title),
-                                            style = MaterialTheme.typography.titleMedium,
-                                            color = MaterialTheme.colorScheme.onSurface,
-                                            modifier = Modifier.weight(1f)
-                                        )
-                                        Text(
-                                            text = String.format(java.util.Locale.ROOT, "%.2f", cornerScale),
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                    }
-                                    Slider(
-                                        value = cornerScale,
-                                        onValueChange = { cornerScale = it },
-                                        onValueChangeFinished = { actions.onSetMaterialCornerScale(cornerScale) },
-                                        valueRange = 0.0f..2.0f,
-                                        steps = 39,
-                                        modifier = Modifier
-                                .fillMaxWidth()
-                                .then(if (LocalMaterialShadowSliders.current) Modifier.shadow(2.dp, RoundedCornerShape(50)) else Modifier)
-                                .then(
-                                    LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
-                                        Modifier.border(it.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(50))
-                                    } ?: Modifier
-                                )
-                                    )
-                                }
-                            }
+                            SegmentedSliderItem(
+                                title = stringResource(R.string.theme_corner_scale_title),
+                                valueLabel = String.format(java.util.Locale.ROOT, "%.2f", cornerScale),
+                                value = cornerScale,
+                                onValueChange = { cornerScale = it },
+                                valueRange = 0.0f..2.0f,
+                                steps = 39,
+                                onValueChangeFinished = { actions.onSetMaterialCornerScale(cornerScale) },
+                            )
                         }
                     )
                 )
 
-                // Voyage COMPONENTS group: outline width is shared by themed Material components.
+                // Voyage COMPONENTS group: outline width is another source-style slider row.
                 SegmentedColumn(
                     modifier = Modifier.padding(top = 4.dp),
                     title = stringResource(R.string.theme_group_components),
@@ -470,47 +439,15 @@ fun ColorPaletteScreenMaterial(
                             var outlineWidth by remember(uiState.materialOutlineWidth) {
                                 mutableFloatStateOf(uiState.materialOutlineWidth)
                             }
-                            TonalCard(
-                                modifier = Modifier.padding(top = 4.dp),
-                                shape = RoundedCornerShape(20.dp),
-                            ) {
-                                Column(
-                                    modifier = Modifier.padding(16.dp),
-                                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Text(
-                                            text = stringResource(R.string.theme_border_width_title),
-                                            style = MaterialTheme.typography.titleMedium,
-                                            color = MaterialTheme.colorScheme.onSurface,
-                                            modifier = Modifier.weight(1f)
-                                        )
-                                        Text(
-                                            text = String.format(java.util.Locale.ROOT, "%.1f", outlineWidth),
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                    }
-                                    Slider(
-                                        value = outlineWidth,
-                                        onValueChange = { outlineWidth = it },
-                                        onValueChangeFinished = { actions.onSetMaterialOutlineWidth(outlineWidth) },
-                                        valueRange = 0.0f..1.5f,
-                                        steps = 14,
-                                        modifier = Modifier
-                                .fillMaxWidth()
-                                .then(if (LocalMaterialShadowSliders.current) Modifier.shadow(2.dp, RoundedCornerShape(50)) else Modifier)
-                                .then(
-                                    LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
-                                        Modifier.border(it.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(50))
-                                    } ?: Modifier
-                                )
-                                    )
-                                }
-                            }
+                            SegmentedSliderItem(
+                                title = stringResource(R.string.theme_border_width_title),
+                                valueLabel = String.format(java.util.Locale.ROOT, "%.1f", outlineWidth),
+                                value = outlineWidth,
+                                onValueChange = { outlineWidth = it },
+                                valueRange = 0.0f..1.5f,
+                                steps = 14,
+                                onValueChangeFinished = { actions.onSetMaterialOutlineWidth(outlineWidth) },
+                            )
                         }
                     )
                 )
