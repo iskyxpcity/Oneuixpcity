@@ -25,9 +25,6 @@ sealed interface Route : NavKey, Parcelable {
     @Parcelize @Serializable data object VersionChangelog261013 : Route
     @Parcelize @Serializable data object ColorPalette : Route
     @Parcelize @Serializable data class VoyageColorSchemeEditor(val index: Int = -1) : Route
-    @Parcelize @Serializable data object LanguageSettings : Route
-    @Parcelize @Serializable data object DisplayTextSettings : Route
-    @Parcelize @Serializable data object MotionHapticsSettings : Route
     @Parcelize @Serializable data class AlohaOneUICategory(val category: String) : Route
     @Parcelize @Serializable data class StatusCategory(val category: String) : Route
     @Parcelize @Serializable data object OtherFunctions : Route
