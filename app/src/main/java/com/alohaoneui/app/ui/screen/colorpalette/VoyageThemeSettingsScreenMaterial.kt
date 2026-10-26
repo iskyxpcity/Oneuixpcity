@@ -99,7 +99,7 @@ fun VoyageThemeSettingsScreenMaterial(
                                     Choice(R.string.settings_theme_mode_system, ColorMode.fromValue(uiState.themeMode).toNonMonetMode() == ColorMode.SYSTEM.value) { viewModel.setColorMode(ColorMode.SYSTEM) }
                                     Choice(R.string.settings_theme_mode_light, ColorMode.fromValue(uiState.themeMode).toNonMonetMode() == ColorMode.LIGHT.value) { viewModel.setColorMode(ColorMode.LIGHT) }
                                     Choice(R.string.settings_theme_mode_dark, ColorMode.fromValue(uiState.themeMode).toNonMonetMode() == ColorMode.DARK.value) { viewModel.setColorMode(ColorMode.DARK) }
-                                    Toggle(R.string.voyage_theme_pure_black, stringResource(R.string.voyage_theme_pure_black_summary), uiState.themeMode == ColorMode.DARK_AMOLED.value) { enabled -> viewModel.setColorMode(if (enabled) ColorMode.DARK_AMOLED else ColorMode.DARK) }
+                                    Toggle(R.string.voyage_theme_pure_black, stringResource(R.string.voyage_theme_pure_black_summary), uiState.themeMode == ColorMode.DARK_AMOLED.value, onChange = { enabled -> viewModel.setColorMode(if (enabled) ColorMode.DARK_AMOLED else ColorMode.DARK) })
                                 }
                                 VoyageThemeCategory.DESIGN -> {
                                     if (schemeEditorOnly) {
