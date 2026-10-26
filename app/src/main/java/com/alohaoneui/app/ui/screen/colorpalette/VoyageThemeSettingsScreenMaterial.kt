@@ -51,6 +51,7 @@ fun VoyageThemeSettingsScreenMaterial(
     var hctHue by rememberSaveable { mutableFloatStateOf(270f) }
     var hctChroma by rememberSaveable { mutableFloatStateOf(48f) }
     var hctTone by rememberSaveable { mutableFloatStateOf(55f) }
+    val currentSeedColor = if (uiState.keyColor == 0) MaterialTheme.colorScheme.primary.toArgb() else uiState.keyColor
 
     val isCompact = androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp < 600
     var expandedCategories by rememberSaveable(isCompact) {
