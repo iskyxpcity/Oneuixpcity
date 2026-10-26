@@ -99,17 +99,30 @@ fun VoyageColorSchemeEditorScreenMaterial(
             )
         },
     ) { padding ->
-        val columns = if (schemeEditorOnly) {
-            listOf(listOf(VoyageThemeCategory.DESIGN))
-        } else {
-            listOf(
-                listOf(VoyageThemeCategory.DESIGN, VoyageThemeCategory.MODE, VoyageThemeCategory.COMPONENTS),
-                listOf(VoyageThemeCategory.NAVIGATION_BAR, VoyageThemeCategory.LAUNCH, VoyageThemeCategory.ASSIST, VoyageThemeCategory.SHAPE, VoyageThemeCategory.SHADOWS),
-                listOf(VoyageThemeCategory.PALETTE),
-            )
-        }
-        Row(
-            modifier = Modifier.fillMaxSize().padding(padding).padding(horizontal = 5.dp, vertical = 4.dp),
+        BoxWithConstraints(modifier = Modifier.fillMaxSize().padding(padding)) {
+            val columns = when {
+                schemeEditorOnly -> listOf(listOf(VoyageThemeCategory.DESIGN))
+                maxWidth >= 600.dp -> listOf(
+                    listOf(VoyageThemeCategory.DESIGN, VoyageThemeCategory.MODE, VoyageThemeCategory.COMPONENTS),
+                    listOf(VoyageThemeCategory.NAVIGATION_BAR, VoyageThemeCategory.LAUNCH, VoyageThemeCategory.ASSIST, VoyageThemeCategory.SHAPE, VoyageThemeCategory.SHADOWS),
+                    listOf(VoyageThemeCategory.PALETTE),
+                )
+                else -> listOf(
+                    listOf(
+                        VoyageThemeCategory.DESIGN,
+                        VoyageThemeCategory.MODE,
+                        VoyageThemeCategory.NAVIGATION_BAR,
+                        VoyageThemeCategory.LAUNCH,
+                        VoyageThemeCategory.PALETTE,
+                        VoyageThemeCategory.ASSIST,
+                        VoyageThemeCategory.SHAPE,
+                        VoyageThemeCategory.COMPONENTS,
+                        VoyageThemeCategory.SHADOWS,
+                    )
+                )
+            }
+            Row(
+                modifier = Modifier.fillMaxSize().padding(horizontal = 5.dp, vertical = 4.dp),
             horizontalArrangement = Arrangement.spacedBy(5.dp),
         ) {
             columns.forEach { columnCategories ->
@@ -441,6 +454,7 @@ fun VoyageColorSchemeEditorScreenMaterial(
                 }
                     }
                 }
+            }
             }
         }
     }

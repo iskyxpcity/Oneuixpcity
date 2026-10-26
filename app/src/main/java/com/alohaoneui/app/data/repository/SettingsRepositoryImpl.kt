@@ -303,7 +303,7 @@ class SettingsRepositoryImpl : SettingsRepository {
             .putBoolean("material_dynamic_color_enabled", snapshot.materialDynamicColorEnabled)
             .putBoolean("material_invert_colors", snapshot.materialInvertColors)
             .putInt("material_shape_style", snapshot.materialShapeStyle.coerceIn(0, 6))
-            .putInt("material_icon_shape", snapshot.materialIconShape.coerceIn(0, 32))
+            .putInt("material_icon_shape", snapshot.materialIconShape.coerceIn(0, 34))
             .putInt("material_switch_style", snapshot.materialSwitchStyle.coerceIn(0, 7))
             .putInt("material_slider_style", snapshot.materialSliderStyle.coerceIn(0, 3))
             .putBoolean("material_launch_follows_theme", snapshot.materialLaunchFollowsTheme)
