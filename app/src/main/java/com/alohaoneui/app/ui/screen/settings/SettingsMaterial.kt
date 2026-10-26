@@ -62,6 +62,7 @@ fun SettingPagerMaterial(
     var showBottomSheet by remember { mutableStateOf(false) }
     var languageExpanded by rememberSaveable { mutableStateOf(false) }
     var themeExpanded by rememberSaveable { mutableStateOf(false) }
+    var colorExpanded by rememberSaveable { mutableStateOf(false) }
     var displayExpanded by rememberSaveable { mutableStateOf(false) }
     var behaviorExpanded by rememberSaveable { mutableStateOf(false) }
     var alohaExpanded by rememberSaveable { mutableStateOf(false) }
@@ -131,6 +132,19 @@ fun SettingPagerMaterial(
                 ListItem(
                     modifier = Modifier.clickable(onClick = actions.onOpenTheme),
                     headlineContent = { Text(stringResource(R.string.settings_theme)) },
+                    supportingContent = { Text(stringResource(R.string.settings_theme_summary)) },
+                    trailingContent = { Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null) },
+                )
+            }
+            VoyageSettingsAccordion(
+                title = stringResource(R.string.voyage_settings_group_color),
+                icon = Icons.Outlined.Palette,
+                expanded = colorExpanded,
+                onToggle = { colorExpanded = !colorExpanded },
+            ) {
+                ListItem(
+                    modifier = Modifier.clickable(onClick = actions.onOpenColorPalette),
+                    headlineContent = { Text(stringResource(R.string.voyage_settings_group_color)) },
                     supportingContent = { Text(stringResource(R.string.settings_theme_summary)) },
                     trailingContent = { Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null) },
                 )

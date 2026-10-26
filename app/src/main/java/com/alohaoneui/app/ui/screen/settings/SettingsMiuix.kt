@@ -74,6 +74,7 @@ fun SettingPagerMiuix(
     val showSendLogDialog = rememberSaveable { mutableStateOf(false) }
     var languageExpanded by rememberSaveable { mutableStateOf(false) }
     var themeExpanded by rememberSaveable { mutableStateOf(false) }
+    var colorExpanded by rememberSaveable { mutableStateOf(false) }
     var displayExpanded by rememberSaveable { mutableStateOf(false) }
     var behaviorExpanded by rememberSaveable { mutableStateOf(false) }
     var alohaExpanded by rememberSaveable { mutableStateOf(false) }
@@ -129,6 +130,14 @@ fun SettingPagerMiuix(
                             summary = stringResource(R.string.settings_theme_summary),
                             startAction = { Icon(Icons.Rounded.Palette, modifier = Modifier.padding(end = 6.dp), contentDescription = null, tint = colorScheme.onBackground) },
                             onClick = actions.onOpenTheme,
+                        )
+                    }
+                    MiuixSettingsGroup(stringResource(R.string.voyage_settings_group_color), Icons.Rounded.Palette, colorExpanded, { colorExpanded = !colorExpanded }) {
+                        ArrowPreference(
+                            title = stringResource(R.string.voyage_settings_group_color),
+                            summary = stringResource(R.string.settings_theme_summary),
+                            startAction = { Icon(Icons.Rounded.Palette, modifier = Modifier.padding(end = 6.dp), contentDescription = null, tint = colorScheme.onBackground) },
+                            onClick = actions.onOpenColorPalette,
                         )
                     }
                     MiuixSettingsGroup(stringResource(R.string.settings_group_display), Icons.Rounded.TextFields, displayExpanded, { displayExpanded = !displayExpanded }) {
