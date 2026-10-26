@@ -403,4 +403,5 @@
     <string name="voyage_toolbox_title">Voyage Toolbox</string>
     <string name="voyage_toolbox_subtitle">A friend afar brings a distant land near.</string>
     <string name="voyage_theme_large_text_summary">Increase text and interface elements</string>
+    <string name="settings_haptic_feedback_summary">Vibration when interacting with the interface.</string>
 </resources>
