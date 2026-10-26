@@ -2,7 +2,6 @@ package com.alohaoneui.app.ui.component.material
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.ui.draw.shadow
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -34,10 +33,7 @@ fun TonalCard(
     val actualShape = shape ?: voyageCornerShape(20.dp)
     Card(
         onClick = onClick,
-        modifier = modifier.shadow(
-            elevation = if (LocalMaterialShadowContainers.current) 2.dp else 0.dp,
-            shape = actualShape,
-        ),
+        modifier = modifier,
         enabled = enabled,
         border = LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
             BorderStroke(it.dp, MaterialTheme.colorScheme.outlineVariant)
@@ -65,10 +61,7 @@ fun TonalCard(
 ) {
     val actualShape = shape ?: voyageCornerShape(20.dp)
     Card(
-        modifier = modifier.shadow(
-            elevation = if (LocalMaterialShadowContainers.current) 2.dp else 0.dp,
-            shape = actualShape,
-        ),
+        modifier = modifier,
         border = LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
             BorderStroke(it.dp, MaterialTheme.colorScheme.outlineVariant)
         },
