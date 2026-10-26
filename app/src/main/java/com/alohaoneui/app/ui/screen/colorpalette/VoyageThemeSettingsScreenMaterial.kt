@@ -159,7 +159,7 @@ fun VoyageThemeSettingsScreenMaterial(
                                             Spacer(Modifier.width(8.dp))
                                             Text(stringResource(R.string.voyage_theme_color_editor))
                                         }
-                                        Button(onClick = { schemeName = ""; showSaveScheme = true }, modifier = Modifier.fillMaxWidth()) {
+                                        Button(onClick = { if (schemeIndex < 0) schemeName = ""; showSaveScheme = true }, modifier = Modifier.fillMaxWidth()) {
                                             Text(stringResource(R.string.voyage_theme_save_scheme))
                                         }
                                         Text(stringResource(R.string.voyage_theme_saved_schemes), style = MaterialTheme.typography.titleMedium)
@@ -172,6 +172,9 @@ fun VoyageThemeSettingsScreenMaterial(
                                                     supportingContent = { Text(scheme.colorStyle) },
                                                     trailingContent = {
                                                         Row {
+                                                            IconButton(onClick = { onOpenColorSchemeEditor(index) }) {
+                                                                Icon(Icons.Filled.Edit, contentDescription = stringResource(R.string.voyage_theme_color_editor))
+                                                            }
                                                             IconButton(onClick = { viewModel.applyMaterialColorScheme(scheme) }) {
                                                                 Icon(Icons.Filled.Check, contentDescription = stringResource(R.string.voyage_theme_apply_scheme))
                                                             }
