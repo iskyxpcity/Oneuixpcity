@@ -39,4 +39,18 @@
     <string name="color_blue_grey">ブルーグレー</string>
     <string name="color_sakura">桜</string>
     <string name="alohaoneui_tools">Tools</string>
+    <string name="settings_language_chinese_traditional">繁体字中国語</string>
+    <string name="settings_language_japanese">日本語</string>
+    <string name="settings_language_korean">韓国語</string>
+    <string name="settings_motion_simplified">簡略化</string>
+    <string name="settings_transition_style">画面遷移スタイル</string>
+    <string name="settings_transition_aosp">AOSP</string>
+    <string name="settings_transition_miuix">MIUIX</string>
+    <string name="settings_transition_scale">拡大縮小</string>
+    <string name="settings_transition_classic">クラシック</string>
+    <string name="settings_display_restore_defaults">表示設定を初期値に戻す</string>
+    <string name="voyage_theme_content_color">コンテンツカラー</string>
+    <string name="voyage_theme_content_color_summary">再生画面と読書画面にカバーの色を使用します。</string>
+    <string name="voyage_theme_icon_follows">ホームアイコンをテーマに合わせる</string>
+    <string name="voyage_theme_icon_follows_summary">ホームに戻ると適用されます。一部のランチャーではアイコンの位置が変わることがあります。</string>
 </resources>
