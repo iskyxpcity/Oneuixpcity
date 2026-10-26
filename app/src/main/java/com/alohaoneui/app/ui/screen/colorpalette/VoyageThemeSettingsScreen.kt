@@ -2,8 +2,17 @@ package com.alohaoneui.app.ui.screen.colorpalette
 
 import android.os.Build
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.nestedScroll
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.rounded.AccessibilityNew as MiuixAssistIcon
+import androidx.compose.material.icons.rounded.DarkMode as MiuixModeIcon
+import androidx.compose.material.icons.rounded.ExpandMore as MiuixExpandIcon
+import androidx.compose.material.icons.rounded.Launch as MiuixLaunchIcon
+import androidx.compose.material.icons.rounded.Navigation as MiuixNavigationIcon
+import androidx.compose.material.icons.rounded.Palette as MiuixPaletteIcon
+import androidx.compose.material.icons.rounded.Tune as MiuixTuneIcon
+import androidx.compose.material.icons.rounded.Widgets as MiuixWidgetsIcon
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -31,19 +40,33 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.alohaoneui.app.R
+import com.alohaoneui.app.ui.LocalUiMode
 import com.alohaoneui.app.ui.UiMode
 import com.alohaoneui.app.ui.navigation3.LocalNavigator
 import com.alohaoneui.app.ui.screen.settings.SettingsUiState
 import com.alohaoneui.app.ui.theme.ColorMode
 import com.alohaoneui.app.ui.viewmodel.SettingsViewModel
+import top.yukonga.miuix.kmp.basic.Card
+import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
+import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
+import top.yukonga.miuix.kmp.basic.Scaffold as MiuixScaffold
+import top.yukonga.miuix.kmp.basic.Slider as MiuixSlider
+import top.yukonga.miuix.kmp.basic.Text as MiuixText
+import top.yukonga.miuix.kmp.basic.TopAppBar as MiuixTopAppBar
+import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
+import top.yukonga.miuix.kmp.preference.SwitchPreference
+import top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme as miuixColorScheme
+import top.yukonga.miuix.kmp.utils.overScrollVertical
 
 @Composable
 fun VoyageThemeSettingsScreen() {
     val navigator = LocalNavigator.current
     val viewModel = viewModel<SettingsViewModel>()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    VoyageThemeSettingsScreenMaterial(uiState, viewModel) {
-        if (navigator.backStackSize() > 1) navigator.pop()
+    val onBack = { if (navigator.backStackSize() > 1) navigator.pop() }
+    when (LocalUiMode.current) {
+        UiMode.Material -> VoyageThemeSettingsScreenMaterial(uiState, viewModel, onBack)
+        UiMode.Miuix -> VoyageThemeSettingsScreenMiuix(uiState, viewModel, onBack)
     }
 }
 
@@ -244,5 +267,186 @@ private fun VoyageThemeAccordion(
                 Column(Modifier.fillMaxWidth().padding(start = 8.dp, end = 8.dp, bottom = 8.dp), content = content)
             }
         }
+    }
+}
+
+
+@Composable
+private fun VoyageThemeSettingsScreenMiuix(
+    uiState: SettingsUiState,
+    viewModel: SettingsViewModel,
+    onBack: () -> Unit,
+) {
+    val scrollBehavior = MiuixScrollBehavior()
+    var expandedCategories by rememberSaveable { mutableStateOf(emptyList<String>()) }
+    val categories = VoyageThemeCategory.entries
+    val modeLabels = listOf(
+        stringResource(R.string.settings_theme_mode_system),
+        stringResource(R.string.settings_theme_mode_light),
+        stringResource(R.string.settings_theme_mode_dark),
+    )
+    val modeIndex = when (ColorMode.fromValue(uiState.themeMode).toNonMonetMode()) {
+        ColorMode.LIGHT.value -> 1
+        ColorMode.DARK.value -> 2
+        else -> 0
+    }
+    MiuixScaffold(
+        topBar = {
+            MiuixTopAppBar(
+                color = miuixColorScheme.surface,
+                title = stringResource(R.string.settings_theme),
+                scrollBehavior = scrollBehavior,
+            )
+        },
+        popupHost = {},
+    ) { padding ->
+        Column(
+            Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState())
+                .nestedScroll(scrollBehavior.nestedScrollConnection).overScrollVertical()
+                .padding(horizontal = 12.dp, vertical = 8.dp),
+        ) {
+            androidx.compose.material3.TextButton(onClick = onBack) { androidx.compose.material3.Text(stringResource(R.string.back)) }
+            categories.forEach { category ->
+                val expanded = category.name in expandedCategories
+                MiuixVoyageAccordion(
+                    title = stringResource(category.titleRes),
+                    icon = when (category) {
+                        VoyageThemeCategory.DESIGN -> MiuixPaletteIcon
+                        VoyageThemeCategory.NAVIGATION_BAR -> MiuixNavigationIcon
+                        VoyageThemeCategory.MODE -> MiuixModeIcon
+                        VoyageThemeCategory.LAUNCH -> MiuixLaunchIcon
+                        VoyageThemeCategory.ASSIST -> MiuixAssistIcon
+                        VoyageThemeCategory.SHAPE -> MiuixTuneIcon
+                        VoyageThemeCategory.COMPONENTS -> MiuixWidgetsIcon
+                        VoyageThemeCategory.SHADOWS -> MiuixTuneIcon
+                    },
+                    expanded = expanded,
+                    onToggle = { expandedCategories = if (expanded) expandedCategories - category.name else expandedCategories + category.name },
+                ) {
+                    when (category) {
+                        VoyageThemeCategory.DESIGN -> MiuixDrop(
+                            title = stringResource(R.string.theme_design_material3),
+                            summary = stringResource(R.string.theme_design_material3_subtitle),
+                            items = listOf(stringResource(R.string.theme_design_material3), stringResource(R.string.theme_design_miuix)),
+                            selectedIndex = if (uiState.uiMode == UiMode.Material.value) 0 else 1,
+                            onSelected = { viewModel.setUiMode(if (it == 0) UiMode.Material.value else UiMode.Miuix.value) },
+                        )
+                        VoyageThemeCategory.NAVIGATION_BAR -> {
+                            MiuixToggle(R.string.voyage_theme_floating_nav_bar_title, R.string.voyage_theme_floating_nav_bar_subtitle, uiState.enableFloatingBottomBar, viewModel::setEnableFloatingBottomBar)
+                            val liquidSummary = when {
+                                Build.VERSION.SDK_INT < 33 -> R.string.voyage_theme_liquid_glass_unsupported
+                                !uiState.enableFloatingBottomBar -> R.string.voyage_theme_liquid_glass_needs_floating
+                                else -> R.string.voyage_theme_liquid_glass_subtitle
+                            }
+                            MiuixToggle(R.string.voyage_theme_liquid_glass_title, liquidSummary, uiState.enableFloatingBottomBarBlur, viewModel::setEnableFloatingBottomBarBlur)
+                        }
+                        VoyageThemeCategory.MODE -> {
+                            MiuixDrop(stringResource(R.string.settings_theme_mode_system), "", modeLabels, modeIndex) { index ->
+                                viewModel.setColorMode(when (index) { 1 -> ColorMode.LIGHT; 2 -> ColorMode.DARK; else -> ColorMode.SYSTEM })
+                            }
+                            MiuixToggle(R.string.voyage_theme_pure_black, R.string.voyage_theme_pure_black_summary, uiState.themeMode == ColorMode.DARK_AMOLED.value) { enabled -> viewModel.setColorMode(if (enabled) ColorMode.DARK_AMOLED else ColorMode.DARK) }
+                        }
+                        VoyageThemeCategory.LAUNCH -> MiuixToggle(R.string.voyage_theme_launch_follows, R.string.voyage_theme_launch_follows_summary, uiState.materialLaunchFollowsTheme, viewModel::setMaterialLaunchFollowsTheme)
+                        VoyageThemeCategory.ASSIST -> {
+                            MiuixToggle(R.string.voyage_theme_invert, null, uiState.materialInvertColors, viewModel::setMaterialInvertColors)
+                            val labels = listOf(
+                                stringResource(R.string.voyage_color_blind_off),
+                                stringResource(R.string.voyage_color_blind_protanomaly),
+                                stringResource(R.string.voyage_color_blind_deuteranomaly),
+                                stringResource(R.string.voyage_color_blind_tritanomaly),
+                                stringResource(R.string.voyage_color_blind_protanopia),
+                                stringResource(R.string.voyage_color_blind_deuteranopia),
+                                stringResource(R.string.voyage_color_blind_tritanopia),
+                                stringResource(R.string.voyage_color_blind_achromatomaly),
+                                stringResource(R.string.voyage_color_blind_achromatopsia),
+                            )
+                            MiuixDrop(stringResource(R.string.voyage_theme_color_vision), "", labels, uiState.materialColorVisionMode.coerceIn(0, labels.lastIndex), viewModel::setMaterialColorVisionMode)
+                        }
+                        VoyageThemeCategory.SHAPE -> {
+                            val labels = listOf(
+                                stringResource(R.string.voyage_shape_rounded), stringResource(R.string.voyage_shape_cut),
+                                stringResource(R.string.voyage_shape_squircle), stringResource(R.string.voyage_shape_smooth),
+                                stringResource(R.string.voyage_shape_wavy), stringResource(R.string.voyage_shape_scoop),
+                                stringResource(R.string.voyage_shape_notch),
+                            )
+                            MiuixDrop(stringResource(R.string.voyage_theme_shape_style), "", labels, uiState.materialShapeStyle.coerceIn(0, labels.lastIndex), { viewModel.setMaterialShapeStyle(it) })
+                            MiuixSlide(R.string.voyage_theme_corner_scale, uiState.materialCornerScale, 0f..2f, viewModel::setMaterialCornerScale)
+                        }
+                        VoyageThemeCategory.COMPONENTS -> {
+                            val switches = listOf(
+                                stringResource(R.string.voyage_switch_material_you), stringResource(R.string.voyage_switch_compose),
+                                stringResource(R.string.voyage_switch_pixel), stringResource(R.string.voyage_switch_fluent),
+                                stringResource(R.string.voyage_switch_cupertino), stringResource(R.string.voyage_switch_liquid_glass),
+                                stringResource(R.string.voyage_switch_hyper_os), stringResource(R.string.voyage_switch_one_ui),
+                            )
+                            MiuixDrop(stringResource(R.string.voyage_theme_switch_style), "", switches, uiState.materialSwitchStyle.coerceIn(0, switches.lastIndex), { viewModel.setMaterialSwitchStyle(it) })
+                            val sliders = listOf(
+                                stringResource(R.string.voyage_slider_material_you), stringResource(R.string.voyage_slider_fancy),
+                                stringResource(R.string.voyage_slider_material), stringResource(R.string.voyage_slider_hyper_os),
+                            )
+                            MiuixDrop(stringResource(R.string.voyage_theme_slider_style), "", sliders, uiState.materialSliderStyle.coerceIn(0, sliders.lastIndex), { viewModel.setMaterialSliderStyle(it) })
+                            MiuixSlide(R.string.voyage_theme_border_width, uiState.materialBorderWidth, 0f..1.5f, viewModel::setMaterialBorderWidth)
+                        }
+                        VoyageThemeCategory.SHADOWS -> {
+                            MiuixToggle(R.string.voyage_shadow_container, null, uiState.materialShadowContainers, viewModel::setMaterialShadowContainers)
+                            MiuixToggle(R.string.voyage_shadow_app_bar, null, uiState.materialShadowAppBars, viewModel::setMaterialShadowAppBars)
+                            MiuixToggle(R.string.voyage_shadow_button, null, uiState.materialShadowButtons, viewModel::setMaterialShadowButtons)
+                            MiuixToggle(R.string.voyage_shadow_fab, null, uiState.materialShadowFab, viewModel::setMaterialShadowFab)
+                            MiuixToggle(R.string.voyage_shadow_switch, null, uiState.materialShadowSwitches, viewModel::setMaterialShadowSwitches)
+                            MiuixToggle(R.string.voyage_shadow_slider, null, uiState.materialShadowSliders, viewModel::setMaterialShadowSliders)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun MiuixVoyageAccordion(
+    title: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    expanded: Boolean,
+    onToggle: () -> Unit,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    Card(modifier = Modifier.padding(top = 8.dp).fillMaxWidth()) {
+        Column {
+            Row(Modifier.fillMaxWidth().clickable(onClick = onToggle).padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                MiuixIcon(icon, contentDescription = null, tint = miuixColorScheme.onBackground, modifier = Modifier.padding(end = 10.dp))
+                MiuixText(title, modifier = Modifier.weight(1f))
+                MiuixIcon(MiuixExpandIcon, contentDescription = null, tint = miuixColorScheme.onBackground)
+            }
+            AnimatedVisibility(visible = expanded) { Column(content = content) }
+        }
+    }
+}
+
+@Composable
+private fun MiuixToggle(id: Int, summaryId: Int?, checked: Boolean, onChange: (Boolean) -> Unit) {
+    SwitchPreference(
+        title = stringResource(id),
+        summary = summaryId?.let { stringResource(it) } ?: "",
+        checked = checked,
+        onCheckedChange = onChange,
+    )
+}
+
+@Composable
+private fun MiuixDrop(title: String, summary: String, items: List<String>, selectedIndex: Int, onSelected: (Int) -> Unit) {
+    OverlayDropdownPreference(
+        title = title,
+        summary = summary,
+        items = items,
+        selectedIndex = selectedIndex.coerceIn(0, items.lastIndex),
+        onSelectedIndexChange = onSelected,
+    )
+}
+
+@Composable
+private fun MiuixSlide(id: Int, value: Float, range: ClosedFloatingPointRange<Float>, onChange: (Float) -> Unit) {
+    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
+        MiuixText(stringResource(id) + " · " + String.format("%.1f", value))
+        MiuixSlider(value = value.coerceIn(range.start, range.endInclusive), onValueChange = onChange, valueRange = range)
     }
 }
