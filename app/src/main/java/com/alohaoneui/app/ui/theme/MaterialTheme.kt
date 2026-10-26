@@ -196,7 +196,11 @@ private fun voyageShapes(style: Int, scale: Float): Shapes {
     val factor = scale.coerceIn(0.5f, 1.5f)
     fun shape(radius: Float): CornerBasedShape {
         val corner = (radius * factor).dp
-        return if (style == 1) CutCornerShape(corner) else RoundedCornerShape(corner)
+        return when (style.coerceIn(0, 6)) {
+            0 -> RoundedCornerShape(corner)
+            1 -> CutCornerShape(corner)
+            else -> VoyageExpressiveCornerShape(style.coerceIn(0, 6), corner)
+        }
     }
     return Shapes(
         shape(8f),
