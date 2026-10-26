@@ -192,7 +192,7 @@ private fun materialColorVisionMatrix(mode: Int, invert: Boolean): ColorMatrix? 
  * apply the user's corner scale. The rounded and cut treatments use their matching Compose
  * shape primitives.
  */
-private fun voyageShapes(style: Int, scale: Float): Shapes {
+internal fun voyageShapes(style: Int, scale: Float): Shapes {
     val factor = scale.coerceIn(0.0f, 2.0f)
     fun shape(radius: Float): CornerBasedShape {
         val corner = (radius * factor).dp
