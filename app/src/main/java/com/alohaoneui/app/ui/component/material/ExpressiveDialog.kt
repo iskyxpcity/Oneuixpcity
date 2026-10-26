@@ -1,5 +1,6 @@
 package com.alohaoneui.app.ui.component.material
 
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -13,6 +14,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.Dp
@@ -28,23 +30,29 @@ fun ExpressiveDialog(
     icon: (@Composable () -> Unit)? = null,
     title: (@Composable () -> Unit)? = null,
     text: (@Composable () -> Unit)? = null,
-    shape: Shape = MaterialTheme.shapes.extraLarge,
+    shape: Shape? = null,
     containerColor: Color = AlertDialogDefaults.containerColor,
     iconContentColor: Color = AlertDialogDefaults.iconContentColor,
     titleContentColor: Color = AlertDialogDefaults.titleContentColor,
     textContentColor: Color = AlertDialogDefaults.textContentColor,
     tonalElevation: Dp = AlertDialogDefaults.TonalElevation,
     properties: DialogProperties = DialogProperties(),
-) {
+ ) {
+    val dialogShape = shape ?: voyageCornerShape(28.dp)
+    val dialogModifier = modifier.then(
+        LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
+            Modifier.border(it.dp, MaterialTheme.colorScheme.outlineVariant, dialogShape)
+        } ?: Modifier
+    )
     AlertDialog(
         onDismissRequest = onDismissRequest,
         confirmButton = confirmButton,
-        modifier = modifier,
+        modifier = dialogModifier,
         dismissButton = dismissButton,
         icon = icon,
         title = title,
         text = text,
-        shape = shape,
+        shape = dialogShape,
         containerColor = containerColor,
         iconContentColor = iconContentColor,
         titleContentColor = titleContentColor,
@@ -89,14 +97,20 @@ fun ExpressiveContentDialog(
     properties: DialogProperties = DialogProperties(),
     content: @Composable ColumnScope.() -> Unit,
 ) {
+    val dialogShape = voyageCornerShape(28.dp)
+    val dialogModifier = modifier.then(
+        LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
+            Modifier.border(it.dp, MaterialTheme.colorScheme.outlineVariant, dialogShape)
+        } ?: Modifier
+    )
     BasicAlertDialog(
         onDismissRequest = onDismissRequest,
-        modifier = modifier,
+        modifier = dialogModifier,
         properties = properties,
     ) {
         Surface(
             modifier = Modifier.fillMaxWidth(),
-            shape = MaterialTheme.shapes.extraLarge,
+            shape = dialogShape,
             color = AlertDialogDefaults.containerColor,
             contentColor = AlertDialogDefaults.textContentColor,
             tonalElevation = AlertDialogDefaults.TonalElevation,
