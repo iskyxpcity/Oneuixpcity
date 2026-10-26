@@ -233,6 +233,9 @@
     <string name="alohaoneui_global_shortcut_actions_summary">配置全局三指手势、悬浮球、状态栏、虚拟导航键和息屏音量键的快捷操作。</string>
     <string name="voyage_theme_group_mode">Display mode</string>
     <string name="voyage_theme_group_palette">Color scheme</string>
+    <string name="voyage_theme_wallpaper_colors">Wallpaper colors</string>
+    <string name="voyage_theme_follow_system">Follow system</string>
+    <string name="voyage_theme_scheme_dynamic_disabled">Unavailable while system dynamic color is on</string>
     <string name="voyage_theme_reset_title">Restore theme defaults</string>
     <string name="voyage_theme_reset_summary">Return theme settings to their initial state</string>
     <string name="voyage_theme_group_design">Interface style</string>
