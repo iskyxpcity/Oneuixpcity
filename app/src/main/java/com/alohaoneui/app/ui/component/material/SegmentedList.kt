@@ -372,11 +372,25 @@ fun SegmentedListItem(
     trailingContent: @Composable (() -> Unit)? = null,
     onLongClick: (() -> Unit)? = null,
 ) {
+    val itemShapes = LocalListItemShapes.current ?: ListItemDefaults.segmentedShapes(0, 1)
+    // Selected/radio rows must inherit the same container outline and shadow settings
+    // as the default and checkbox overloads; otherwise theme settings are skipped here.
+    val styledModifier = modifier
+        .then(
+            if (LocalMaterialShadowContainers.current) {
+                Modifier.shadow(1.dp, itemShapes.shape)
+            } else Modifier
+        )
+        .then(
+            LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
+                Modifier.border(it.dp, colorScheme.outlineVariant, itemShapes.shape)
+            } ?: Modifier
+        )
     SegmentedListItem(
         selected = selected,
         onClick = onClick,
-        shapes = LocalListItemShapes.current ?: ListItemDefaults.segmentedShapes(0, 1),
-        modifier = modifier,
+        shapes = itemShapes,
+        modifier = styledModifier,
         enabled = enabled,
         colors = colors,
         interactionSource = interactionSource,
