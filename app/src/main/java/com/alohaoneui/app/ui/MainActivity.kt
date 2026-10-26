@@ -71,12 +71,14 @@ import com.alohaoneui.app.ui.screen.about.VersionChangelog261013Screen
 import com.alohaoneui.app.ui.screen.about.VersionChangelog261018Screen
 import com.alohaoneui.app.ui.screen.about.VersionChangelog261016Screen
 import com.alohaoneui.app.ui.screen.colorpalette.ColorPaletteScreen
+import com.alohaoneui.app.ui.screen.colorpalette.VoyageThemeSettingsScreen
 import com.alohaoneui.app.ui.screen.home.HomePager
 import com.alohaoneui.app.ui.screen.home.LocalLsposedHomeStatus
 import com.alohaoneui.app.ui.screen.home.rememberLsposedHomeStatus
 import com.alohaoneui.app.ui.screen.status.StatusPager
 import com.alohaoneui.app.ui.screen.status.StatusCategoryScreen
 import com.alohaoneui.app.ui.screen.settings.SettingPager
+import com.alohaoneui.app.ui.util.AppLocaleHelper
 import com.alohaoneui.app.ui.screen.tools.ToolsPager
 import com.alohaoneui.app.ui.screen.tools.AlohaOneUICategoryScreen
 import com.alohaoneui.app.ui.screen.tools.OtherFunctionsScreen
@@ -95,11 +97,14 @@ import com.alohaoneui.app.ui.theme.LocalEnableBlur
 import com.alohaoneui.app.ui.theme.LocalEnableFloatingBottomBar
 import com.alohaoneui.app.ui.theme.LocalEnableFloatingBottomBarBlur
 import com.alohaoneui.app.ui.theme.AlohaOneUITheme
+import com.alohaoneui.app.ui.util.AppIconHelper
 import com.alohaoneui.app.ui.util.rememberBlurBackdrop
 import com.alohaoneui.app.ui.util.rememberContentReady
 import com.alohaoneui.app.ui.util.update.UpdateDialogHost
 import com.alohaoneui.app.ui.util.update.handleUpdateInstallStatus
+import com.alohaoneui.app.data.repository.SettingsRepositoryImpl
 import com.alohaoneui.app.ui.viewmodel.MainActivityViewModel
+import com.alohaoneui.app.ui.viewmodel.SettingsViewModel
 import com.alohaoneui.app.ui.viewmodel.MainPagerConfig
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.blur.layerBackdrop
@@ -109,12 +114,18 @@ import top.yukonga.miuix.kmp.nav.core.NavDisplay
 import top.yukonga.miuix.kmp.nav.core.NavDisplayEffects
 import top.yukonga.miuix.kmp.nav.core.rememberNavSystemCornerRadius
 import top.yukonga.miuix.kmp.nav.transition.NavSwipeDirection
+import top.yukonga.miuix.kmp.nav.transition.NavTransitions
+import top.yukonga.miuix.kmp.nav.transition.navGraphicsTransition
 import top.yukonga.miuix.kmp.utils.PagerGestureNestedScrollConnection
 import top.yukonga.miuix.kmp.utils.PagerInterceptionMode
 import top.yukonga.miuix.kmp.utils.PagerNavigationSpringSpec
 import top.yukonga.miuix.kmp.utils.pagerGestureOverride
 
 class MainActivity : ComponentActivity() {
+    override fun attachBaseContext(newBase: android.content.Context) {
+        super.attachBaseContext(AppLocaleHelper.wrap(newBase))
+    }
+
 
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -126,6 +137,14 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val viewModel = viewModel<MainActivityViewModel>()
+            val settingsViewModel = viewModel<SettingsViewModel>()
+            val settingsState by settingsViewModel.uiState.collectAsStateWithLifecycle()
+            LaunchedEffect(Unit) {
+                AppIconHelper.applyThemeIcon(
+                    this@MainActivity,
+                    SettingsRepositoryImpl().materialIconFollowsTheme,
+                )
+            }
             val uiState by viewModel.uiState.collectAsStateWithLifecycle()
             val selectedMainPage by viewModel.selectedMainPage.collectAsStateWithLifecycle()
             val appSettings = uiState.appSettings
@@ -187,9 +206,27 @@ class MainActivity : ComponentActivity() {
                         NavSwipeDirection.None
                     }
 
+                    val navigationTransition = remember(settingsState.materialTransitionStyle) {
+                        when (settingsState.materialTransitionStyle) {
+                            1 -> NavTransitions.MiuixDefault
+                            2 -> navGraphicsTransition { scope ->
+                                val scale = 1f - 0.08f * kotlin.math.abs(scope.relativeDepth).coerceIn(0f, 1f)
+                                scaleX = scale
+                                scaleY = scale
+                            }
+                            3 -> navGraphicsTransition { scope ->
+                                alpha = (1f - kotlin.math.abs(scope.relativeDepth)).coerceIn(0f, 1f)
+                            }
+                            else -> navGraphicsTransition { scope ->
+                                translationX = -scope.relativeDepth * scope.layoutSize.width.toFloat()
+                            }
+                        }
+                    }
+
                     val navDisplay = @Composable {
                         NavDisplay(
                             backStack = navigator.backStack,
+                            transition = navigationTransition,
                             effects = NavDisplayEffects(
                                 cornerClipRadius = rememberNavSystemCornerRadius(),
                             ),
@@ -207,6 +244,8 @@ class MainActivity : ComponentActivity() {
                             entry<Route.VersionChangelog261018>(swipeDismiss = swipeDismiss) { VersionChangelog261018Screen() }
                             entry<Route.VersionChangelog261016>(swipeDismiss = swipeDismiss) { VersionChangelog261016Screen() }
                             entry<Route.ColorPalette>(swipeDismiss = swipeDismiss) { ColorPaletteScreen() }
+                            entry<Route.VoyageThemeSettings>(swipeDismiss = swipeDismiss) { VoyageThemeSettingsScreen() }
+                            entry<Route.VoyageColorSchemeEditor>(swipeDismiss = swipeDismiss) { key -> ColorPaletteScreen(schemeEditorOnly = true, schemeIndex = key.index) }
                             entry<Route.AlohaOneUICategory>(swipeDismiss = swipeDismiss) { key ->
                                 AlohaOneUICategoryScreen(key.category)
                             }
