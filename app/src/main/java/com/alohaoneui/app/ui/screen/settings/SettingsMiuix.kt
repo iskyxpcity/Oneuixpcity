@@ -82,17 +82,19 @@ fun SettingPagerMiuix(
     val showSendLogDialog = rememberSaveable { mutableStateOf(false) }
     var languageExpanded by rememberSaveable { mutableStateOf(false) }
     var themeExpanded by rememberSaveable { mutableStateOf(false) }
-    var colorExpanded by rememberSaveable { mutableStateOf(false) }
     var displayExpanded by rememberSaveable { mutableStateOf(false) }
     var behaviorExpanded by rememberSaveable { mutableStateOf(false) }
     var alohaExpanded by rememberSaveable { mutableStateOf(false) }
 
     val languageLabels = listOf(
         stringResource(R.string.settings_language_system),
-        stringResource(R.string.settings_language_english),
         stringResource(R.string.settings_language_chinese_simplified),
+        stringResource(R.string.settings_language_chinese_traditional),
+        stringResource(R.string.settings_language_english),
+        stringResource(R.string.settings_language_japanese),
+        stringResource(R.string.settings_language_korean),
     )
-    val languageTags = listOf("system", "en", "zh-CN")
+    val languageTags = listOf("system", "zh-CN", "zh-TW", "en", "ja", "ko")
     val fontLabels = listOf(stringResource(R.string.voyage_font_default), stringResource(R.string.voyage_font_serif))
     val gestureLabels = listOf(
         stringResource(R.string.settings_page_gesture_default),
@@ -147,8 +149,7 @@ fun SettingPagerMiuix(
                             startAction = { Icon(Icons.Rounded.Palette, modifier = Modifier.padding(end = 6.dp), contentDescription = null, tint = colorScheme.onBackground) },
                             onClick = actions.onOpenTheme,
                         )
-                    }
-                    MiuixSettingsGroup(stringResource(R.string.voyage_settings_group_color), Icons.Rounded.Palette, colorExpanded, { colorExpanded = !colorExpanded }) {
+                        // Theme color controls remain inside the Theme section, alongside the UI style and theme page entry.
                         SwitchPreference(
                             title = stringResource(R.string.voyage_theme_dynamic_color),
                             summary = stringResource(R.string.voyage_theme_dynamic_color_summary),
@@ -203,7 +204,6 @@ fun SettingPagerMiuix(
                         OverlayDropdownPreference(title = stringResource(R.string.settings_page_scale), items = pageScaleLabels, selectedIndex = ((uiState.pageScale * 100).toInt() / 10 - 8).coerceIn(0, 4), onSelectedIndexChange = { viewModel.setPageScale((80 + it * 10) / 100f) })
                     }
                     MiuixSettingsGroup(stringResource(R.string.voyage_settings_group_aloha), Icons.Rounded.Dashboard, alohaExpanded, { alohaExpanded = !alohaExpanded }) {
-                        OverlayDropdownPreference(title = stringResource(R.string.settings_ui_mode), summary = stringResource(R.string.settings_ui_mode_summary), items = UiMode.entries.map { it.name }, selectedIndex = if (uiState.uiMode == UiMode.Material.value) 1 else 0, onSelectedIndexChange = actions.onSetUiModeIndex)
                         SwitchPreference(title = stringResource(R.string.settings_check_update), summary = stringResource(R.string.settings_check_update_summary), startAction = { Icon(Icons.Rounded.SystemUpdate, modifier = Modifier.padding(end = 6.dp), contentDescription = null, tint = colorScheme.onBackground) }, checked = uiState.checkUpdate, onCheckedChange = actions.onSetCheckUpdate)
                         ArrowPreference(title = stringResource(R.string.send_log), startAction = { Icon(Icons.Rounded.BugReport, modifier = Modifier.padding(end = 6.dp), contentDescription = null, tint = colorScheme.onBackground) }, onClick = { showSendLogDialog.value = true })
                         ArrowPreference(title = stringResource(R.string.about), startAction = { Icon(Icons.Rounded.Info, modifier = Modifier.padding(end = 6.dp), contentDescription = null, tint = colorScheme.onBackground) }, onClick = actions.onOpenAbout)
