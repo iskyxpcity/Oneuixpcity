@@ -215,6 +215,7 @@ class MainActivity : ComponentActivity() {
                             entry<Route.VersionChangelog261018>(swipeDismiss = swipeDismiss) { VersionChangelog261018Screen() }
                             entry<Route.VersionChangelog261016>(swipeDismiss = swipeDismiss) { VersionChangelog261016Screen() }
                             entry<Route.ColorPalette>(swipeDismiss = swipeDismiss) { ColorPaletteScreen() }
+                            entry<Route.VoyageColorSchemeEditor>(swipeDismiss = swipeDismiss) { ColorPaletteScreen(schemeEditorOnly = true) }
                             entry<Route.LanguageSettings>(swipeDismiss = swipeDismiss) { LanguageSettingsScreen() }
                             entry<Route.DisplayTextSettings>(swipeDismiss = swipeDismiss) { DisplayTextSettingsScreen() }
                             entry<Route.MotionHapticsSettings>(swipeDismiss = swipeDismiss) { MotionHapticsSettingsScreen() }

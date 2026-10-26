@@ -341,4 +341,14 @@
     <string name="settings_motion_standard">标准</string>
     <string name="settings_haptic_feedback">触觉反馈</string>
     <string name="settings_display_scale_title">显示大小</string>
+    <string name="voyage_theme_scheme_title">配色方案</string>
+    <string name="voyage_theme_pure_black_summary">深色下用纯黑背景</string>
+    <string name="voyage_theme_floating_bar_summary">底部导航栏悬浮在页面之上，页面内容延伸到它下方。仅对窄屏的底部导航生效。</string>
+    <string name="voyage_theme_floating_bar_blur_summary">悬浮底栏折射并模糊后面的内容，按住选中项可左右拖动切换。</string>
+    <string name="voyage_theme_floating_bar_blur_requires_floating">请先开启悬浮底栏</string>
+    <string name="voyage_theme_floating_bar_blur_unsupported">需要 Android 13 及以上</string>
+    <string name="theme_design_material3">Material 3</string>
+    <string name="theme_design_material3_subtitle">Google Material You 设计，可自定义形状、开关与滑条样式、阴影和描边。</string>
+    <string name="theme_design_miuix">Miuix</string>
+    <string name="theme_design_miuix_subtitle">HyperOS 风格界面，开关、滑条、按钮、对话框、顶栏与列表改用 MIUIX 组件。</string>
 </resources>

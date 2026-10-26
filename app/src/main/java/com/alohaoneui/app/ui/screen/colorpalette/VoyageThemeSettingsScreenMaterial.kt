@@ -29,9 +29,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.alohaoneui.app.ui.UiMode
+import androidx.compose.material.icons.outlined.Palette
+import androidx.compose.material.icons.outlined.PhoneAndroid
 import com.alohaoneui.app.R
 import com.alohaoneui.app.ui.screen.settings.SettingsUiState
 import com.alohaoneui.app.ui.theme.ColorMode
@@ -43,6 +47,8 @@ fun VoyageThemeSettingsScreenMaterial(
     uiState: SettingsUiState,
     viewModel: SettingsViewModel,
     onBack: () -> Unit,
+    schemeEditorOnly: Boolean = false,
+    onOpenColorSchemeEditor: () -> Unit = {},
 ) {
     var showColorEditor by rememberSaveable { mutableStateOf(false) }
     var showSaveScheme by rememberSaveable { mutableStateOf(false) }
@@ -53,9 +59,8 @@ fun VoyageThemeSettingsScreenMaterial(
     var hctTone by rememberSaveable { mutableFloatStateOf(55f) }
     val currentSeedColor = if (uiState.keyColor == 0) MaterialTheme.colorScheme.primary.toArgb() else uiState.keyColor
 
-    val isCompact = androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp < 600
-    var expandedCategories by rememberSaveable(isCompact) {
-        mutableStateOf(if (isCompact) VoyageThemeCategory.entries.map { it.name } else emptyList())
+    var expandedCategories by rememberSaveable(schemeEditorOnly) {
+        mutableStateOf(if (schemeEditorOnly) listOf(VoyageThemeCategory.DESIGN.name) else emptyList())
     }
     Scaffold(
         topBar = {
@@ -65,7 +70,7 @@ fun VoyageThemeSettingsScreenMaterial(
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
                     }
                 },
-                title = { Text(stringResource(R.string.voyage_theme_page_title)) },
+                title = { Text(stringResource(if (schemeEditorOnly) R.string.voyage_theme_color_editor else R.string.voyage_theme_page_title)) },
             )
         },
     ) { padding ->
@@ -74,7 +79,8 @@ fun VoyageThemeSettingsScreenMaterial(
                 .padding(horizontal = 12.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            VoyageThemeCategory.entries.forEach { category ->
+            val categories = if (schemeEditorOnly) listOf(VoyageThemeCategory.DESIGN) else VoyageThemeCategory.entries
+            categories.forEach { category ->
                 val expanded = category.name in expandedCategories
                 VoyageThemeAccordion(
                     category = category,
@@ -90,141 +96,159 @@ fun VoyageThemeSettingsScreenMaterial(
                     ) {
                             when (category) {
                                 VoyageThemeCategory.MODE -> {
-    
                                     Choice(R.string.settings_theme_mode_system, ColorMode.fromValue(uiState.themeMode).toNonMonetMode() == ColorMode.SYSTEM.value) { viewModel.setColorMode(ColorMode.SYSTEM) }
                                     Choice(R.string.settings_theme_mode_light, ColorMode.fromValue(uiState.themeMode).toNonMonetMode() == ColorMode.LIGHT.value) { viewModel.setColorMode(ColorMode.LIGHT) }
-                                    Choice(R.string.settings_theme_mode_dark, ColorMode.fromValue(uiState.themeMode).toNonMonetMode() == ColorMode.DARK.value && uiState.themeMode != ColorMode.DARK_AMOLED.value) { viewModel.setColorMode(ColorMode.DARK) }
-                                    Choice(R.string.voyage_theme_pure_black, uiState.themeMode == ColorMode.DARK_AMOLED.value) { viewModel.setColorMode(ColorMode.DARK_AMOLED) }
+                                    Choice(R.string.settings_theme_mode_dark, ColorMode.fromValue(uiState.themeMode).toNonMonetMode() == ColorMode.DARK.value) { viewModel.setColorMode(ColorMode.DARK) }
+                                    Toggle(R.string.voyage_theme_pure_black, stringResource(R.string.voyage_theme_pure_black_summary), uiState.themeMode == ColorMode.DARK_AMOLED.value) { enabled -> viewModel.setColorMode(if (enabled) ColorMode.DARK_AMOLED else ColorMode.DARK) }
                                 }
                                 VoyageThemeCategory.DESIGN -> {
-    
-                                    Toggle(R.string.voyage_theme_dynamic_color, null, uiState.materialDynamicColorEnabled, viewModel::setMaterialDynamicColorEnabled)
-                                    Text(stringResource(R.string.voyage_theme_key_color), style = MaterialTheme.typography.titleMedium)
-                                    val seedPresets = listOf(
-                                        stringResource(R.string.voyage_seed_wisteria) to 0xFF6750A4.toInt(),
-                                        stringResource(R.string.voyage_seed_ocean) to 0xFF006A6A.toInt(),
-                                        stringResource(R.string.voyage_seed_forest) to 0xFF426900.toInt(),
-                                        stringResource(R.string.voyage_seed_amber) to 0xFF8C5000.toInt(),
-                                        stringResource(R.string.voyage_seed_coral) to 0xFF9C4146.toInt(),
-                                        stringResource(R.string.voyage_seed_indigo) to 0xFF4054A4.toInt(),
-                                    )
-                                    Row(
-                                        Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-                                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                    ) {
-                                        ColorChoice(MaterialTheme.colorScheme.primary, uiState.keyColor == 0 && uiState.materialDynamicColorEnabled, stringResource(R.string.voyage_theme_system_color)) {
-                                            viewModel.setKeyColor(0)
-                                            viewModel.setMaterialDynamicColorEnabled(true)
-                                        }
-                                        seedPresets.forEach { (label, color) ->
-                                            ColorChoice(Color(color), uiState.keyColor == color, label) {
-                                                viewModel.setKeyColor(color)
-                                                viewModel.setMaterialDynamicColorEnabled(false)
-                                            }
-                                        }
-                                    }
-                                    val paletteChoices = listOf(
-                                        stringResource(R.string.voyage_palette_tonal_spot) to PaletteStyle.TonalSpot,
-                                        stringResource(R.string.voyage_palette_neutral) to PaletteStyle.Neutral,
-                                        stringResource(R.string.voyage_palette_vibrant) to PaletteStyle.Vibrant,
-                                        stringResource(R.string.voyage_palette_expressive) to PaletteStyle.Expressive,
-                                        stringResource(R.string.voyage_palette_rainbow) to PaletteStyle.Rainbow,
-                                        stringResource(R.string.voyage_palette_fruit_salad) to PaletteStyle.FruitSalad,
-                                        stringResource(R.string.voyage_palette_monochrome) to PaletteStyle.Monochrome,
-                                        stringResource(R.string.voyage_palette_fidelity) to PaletteStyle.Fidelity,
-                                        stringResource(R.string.voyage_palette_content) to PaletteStyle.Content,
-                                    )
-                                    val currentPaletteLabel = paletteChoices.firstOrNull { it.second.name == uiState.colorStyle }?.first ?: paletteChoices.first().first
-                                    Drop(R.string.settings_color_style, currentPaletteLabel, paletteChoices.map { it.first }) { label ->
-                                        viewModel.setColorStyle(paletteChoices.first { it.first == label }.second.name)
-                                    }
-                                    Column(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
-                                        Row(verticalAlignment = Alignment.CenterVertically) {
-                                            Text(stringResource(R.string.voyage_theme_contrast), modifier = Modifier.weight(1f))
-                                            TextButton(onClick = { viewModel.setMaterialContrastLevel(0f) }) {
-                                                Text(stringResource(R.string.voyage_theme_contrast_standard))
-                                            }
-                                        }
-                                        Slider(uiState.materialContrastLevel.coerceIn(-1f, 1f), viewModel::setMaterialContrastLevel, valueRange = -1f..1f)
-                                    }
-                                    val currentPrimaryArgb = MaterialTheme.colorScheme.primary.toArgb()
-                                    Button(onClick = {
-                                        val seed = if (uiState.keyColor == 0) currentPrimaryArgb else uiState.keyColor
-                                        val hct = Hct.fromInt(seed)
-                                        hctHue = hct.hue.toFloat()
-                                        hctChroma = hct.chroma.toFloat()
-                                        hctTone = hct.tone.toFloat()
-                                        showColorEditor = true
-                                    }, modifier = Modifier.fillMaxWidth()) {
-                                        Icon(Icons.Filled.Edit, contentDescription = null)
-                                        Spacer(Modifier.width(8.dp))
-                                        Text(stringResource(R.string.voyage_theme_color_editor))
-                                    }
-                                    Button(onClick = { schemeName = ""; showSaveScheme = true }, modifier = Modifier.fillMaxWidth()) {
-                                        Text(stringResource(R.string.voyage_theme_save_scheme))
-                                    }
-                                    Text(stringResource(R.string.voyage_theme_saved_schemes), style = MaterialTheme.typography.titleMedium)
-                                    if (uiState.materialColorSchemes.isEmpty()) {
-                                        Text(stringResource(R.string.voyage_theme_saved_schemes_empty), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    if (schemeEditorOnly) {
+                                        
+                                            
+                                                                            Toggle(R.string.voyage_theme_dynamic_color, null, uiState.materialDynamicColorEnabled, viewModel::setMaterialDynamicColorEnabled)
+                                                                            Text(stringResource(R.string.voyage_theme_key_color), style = MaterialTheme.typography.titleMedium)
+                                                                            val seedPresets = listOf(
+                                                                                stringResource(R.string.voyage_seed_wisteria) to 0xFF6750A4.toInt(),
+                                                                                stringResource(R.string.voyage_seed_ocean) to 0xFF006A6A.toInt(),
+                                                                                stringResource(R.string.voyage_seed_forest) to 0xFF426900.toInt(),
+                                                                                stringResource(R.string.voyage_seed_amber) to 0xFF8C5000.toInt(),
+                                                                                stringResource(R.string.voyage_seed_coral) to 0xFF9C4146.toInt(),
+                                                                                stringResource(R.string.voyage_seed_indigo) to 0xFF4054A4.toInt(),
+                                                                            )
+                                                                            Row(
+                                                                                Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                                                                                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                                                                verticalAlignment = Alignment.CenterVertically,
+                                                                            ) {
+                                                                                ColorChoice(MaterialTheme.colorScheme.primary, uiState.keyColor == 0 && uiState.materialDynamicColorEnabled, stringResource(R.string.voyage_theme_system_color)) {
+                                                                                    viewModel.setKeyColor(0)
+                                                                                    viewModel.setMaterialDynamicColorEnabled(true)
+                                                                                }
+                                                                                seedPresets.forEach { (label, color) ->
+                                                                                    ColorChoice(Color(color), uiState.keyColor == color, label) {
+                                                                                        viewModel.setKeyColor(color)
+                                                                                        viewModel.setMaterialDynamicColorEnabled(false)
+                                                                                    }
+                                                                                }
+                                                                            }
+                                                                            val paletteChoices = listOf(
+                                                                                stringResource(R.string.voyage_palette_tonal_spot) to PaletteStyle.TonalSpot,
+                                                                                stringResource(R.string.voyage_palette_neutral) to PaletteStyle.Neutral,
+                                                                                stringResource(R.string.voyage_palette_vibrant) to PaletteStyle.Vibrant,
+                                                                                stringResource(R.string.voyage_palette_expressive) to PaletteStyle.Expressive,
+                                                                                stringResource(R.string.voyage_palette_rainbow) to PaletteStyle.Rainbow,
+                                                                                stringResource(R.string.voyage_palette_fruit_salad) to PaletteStyle.FruitSalad,
+                                                                                stringResource(R.string.voyage_palette_monochrome) to PaletteStyle.Monochrome,
+                                                                                stringResource(R.string.voyage_palette_fidelity) to PaletteStyle.Fidelity,
+                                                                                stringResource(R.string.voyage_palette_content) to PaletteStyle.Content,
+                                                                            )
+                                                                            val currentPaletteLabel = paletteChoices.firstOrNull { it.second.name == uiState.colorStyle }?.first ?: paletteChoices.first().first
+                                                                            Drop(R.string.settings_color_style, currentPaletteLabel, paletteChoices.map { it.first }) { label ->
+                                                                                viewModel.setColorStyle(paletteChoices.first { it.first == label }.second.name)
+                                                                            }
+                                                                            Column(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+                                                                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                                                                    Text(stringResource(R.string.voyage_theme_contrast), modifier = Modifier.weight(1f))
+                                                                                    TextButton(onClick = { viewModel.setMaterialContrastLevel(0f) }) {
+                                                                                        Text(stringResource(R.string.voyage_theme_contrast_standard))
+                                                                                    }
+                                                                                }
+                                                                                Slider(uiState.materialContrastLevel.coerceIn(-1f, 1f), viewModel::setMaterialContrastLevel, valueRange = -1f..1f)
+                                                                            }
+                                                                            val currentPrimaryArgb = MaterialTheme.colorScheme.primary.toArgb()
+                                                                            Button(onClick = {
+                                                                                val seed = if (uiState.keyColor == 0) currentPrimaryArgb else uiState.keyColor
+                                                                                val hct = Hct.fromInt(seed)
+                                                                                hctHue = hct.hue.toFloat()
+                                                                                hctChroma = hct.chroma.toFloat()
+                                                                                hctTone = hct.tone.toFloat()
+                                                                                showColorEditor = true
+                                                                            }, modifier = Modifier.fillMaxWidth()) {
+                                                                                Icon(Icons.Filled.Edit, contentDescription = null)
+                                                                                Spacer(Modifier.width(8.dp))
+                                                                                Text(stringResource(R.string.voyage_theme_color_editor))
+                                                                            }
+                                                                            Button(onClick = { schemeName = ""; showSaveScheme = true }, modifier = Modifier.fillMaxWidth()) {
+                                                                                Text(stringResource(R.string.voyage_theme_save_scheme))
+                                                                            }
+                                                                            Text(stringResource(R.string.voyage_theme_saved_schemes), style = MaterialTheme.typography.titleMedium)
+                                                                            if (uiState.materialColorSchemes.isEmpty()) {
+                                                                                Text(stringResource(R.string.voyage_theme_saved_schemes_empty), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                                                            } else {
+                                                                                uiState.materialColorSchemes.forEach { scheme ->
+                                                                                    ListItem(
+                                                                                        headlineContent = { Text(scheme.name) },
+                                                                                        supportingContent = { Text(scheme.colorStyle) },
+                                                                                        trailingContent = {
+                                                                                            Row {
+                                                                                                IconButton(onClick = { viewModel.applyMaterialColorScheme(scheme) }) {
+                                                                                                    Icon(Icons.Filled.Check, contentDescription = stringResource(R.string.voyage_theme_apply_scheme))
+                                                                                                }
+                                                                                                IconButton(onClick = { pendingDeleteScheme = scheme.name }) {
+                                                                                                    Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.voyage_theme_delete_scheme))
+                                                                                                }
+                                                                                            }
+                                                                                        },
+                                                                                    )
+                                                                                }
+                                                                            }
+                                                                        
                                     } else {
-                                        uiState.materialColorSchemes.forEach { scheme ->
-                                            ListItem(
-                                                headlineContent = { Text(scheme.name) },
-                                                supportingContent = { Text(scheme.colorStyle) },
-                                                trailingContent = {
-                                                    Row {
-                                                        IconButton(onClick = { viewModel.applyMaterialColorScheme(scheme) }) {
-                                                            Icon(Icons.Filled.Check, contentDescription = stringResource(R.string.voyage_theme_apply_scheme))
-                                                        }
-                                                        IconButton(onClick = { pendingDeleteScheme = scheme.name }) {
-                                                            Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.voyage_theme_delete_scheme))
-                                                        }
-                                                    }
-                                                },
-                                            )
-                                        }
+                                        ThemeStyleChoice(
+                                            title = stringResource(R.string.theme_design_material3),
+                                            summary = stringResource(R.string.theme_design_material3_subtitle),
+                                            icon = Icons.Outlined.Palette,
+                                            selected = uiState.uiMode == UiMode.Material.value,
+                                            onClick = { viewModel.setUiMode(UiMode.Material.value) },
+                                        )
+                                        ThemeStyleChoice(
+                                            title = stringResource(R.string.theme_design_miuix),
+                                            summary = stringResource(R.string.theme_design_miuix_subtitle),
+                                            icon = Icons.Outlined.PhoneAndroid,
+                                            selected = uiState.uiMode == UiMode.Miuix.value,
+                                            onClick = { viewModel.setUiMode(UiMode.Miuix.value) },
+                                        )
+                                        ListItem(
+                                            modifier = Modifier.clickable(onClick = onOpenColorSchemeEditor),
+                                            headlineContent = { Text(stringResource(R.string.voyage_theme_scheme_title)) },
+                                            trailingContent = { Icon(Icons.Outlined.Palette, contentDescription = null) },
+                                        )
                                     }
                                 }
                                 VoyageThemeCategory.COMPONENTS -> {
-    
                                     val switchStyles = listOf(
-                        stringResource(R.string.voyage_switch_material_you), stringResource(R.string.voyage_switch_compose),
-                        stringResource(R.string.voyage_switch_pixel), stringResource(R.string.voyage_switch_fluent),
-                        stringResource(R.string.voyage_switch_cupertino), stringResource(R.string.voyage_switch_liquid_glass),
-                        stringResource(R.string.voyage_switch_hyper_os), stringResource(R.string.voyage_switch_one_ui),
-                    )
-                    Drop(R.string.voyage_theme_switch_style, switchStyles[uiState.materialSwitchStyle.coerceIn(0, 7)], switchStyles) { viewModel.setMaterialSwitchStyle(switchStyles.indexOf(it).coerceAtLeast(0)) }
+                                        stringResource(R.string.voyage_switch_material_you), stringResource(R.string.voyage_switch_compose),
+                                        stringResource(R.string.voyage_switch_pixel), stringResource(R.string.voyage_switch_fluent),
+                                        stringResource(R.string.voyage_switch_cupertino), stringResource(R.string.voyage_switch_liquid_glass),
+                                        stringResource(R.string.voyage_switch_hyper_os), stringResource(R.string.voyage_switch_one_ui),
+                                    )
+                                    Drop(R.string.voyage_theme_switch_style, switchStyles[uiState.materialSwitchStyle.coerceIn(0, 7)], switchStyles) { viewModel.setMaterialSwitchStyle(switchStyles.indexOf(it).coerceAtLeast(0)) }
                                     val sliderStyles = listOf(
-                        stringResource(R.string.voyage_slider_material_you), stringResource(R.string.voyage_slider_fancy),
-                        stringResource(R.string.voyage_slider_material), stringResource(R.string.voyage_slider_hyper_os),
-                    )
-                    Drop(R.string.voyage_theme_slider_style, sliderStyles[uiState.materialSliderStyle.coerceIn(0, 3)], sliderStyles) { viewModel.setMaterialSliderStyle(sliderStyles.indexOf(it).coerceAtLeast(0)) }
-                                    val defaultFontLabel = stringResource(R.string.voyage_font_default)
-                    val serifFontLabel = stringResource(R.string.voyage_font_serif)
-                    Drop(R.string.voyage_theme_font_family, if (uiState.materialFontFamily == "Serif") serifFontLabel else defaultFontLabel, listOf(defaultFontLabel, serifFontLabel)) { viewModel.setMaterialFontFamily(if (it == serifFontLabel) "Serif" else "Default") }
-                                    Slide(R.string.voyage_theme_font_scale, uiState.materialFontScale, 0.8f..1.5f, viewModel::setMaterialFontScale)
+                                        stringResource(R.string.voyage_slider_material_you), stringResource(R.string.voyage_slider_fancy),
+                                        stringResource(R.string.voyage_slider_material), stringResource(R.string.voyage_slider_hyper_os),
+                                    )
+                                    Drop(R.string.voyage_theme_slider_style, sliderStyles[uiState.materialSliderStyle.coerceIn(0, 3)], sliderStyles) { viewModel.setMaterialSliderStyle(sliderStyles.indexOf(it).coerceAtLeast(0)) }
                                     Slide(R.string.voyage_theme_border_width, uiState.materialBorderWidth, 0f..1.5f, viewModel::setMaterialBorderWidth)
-                                    Toggle(R.string.voyage_theme_large_text, null, uiState.materialLargeTextEnabled, viewModel::setMaterialLargeTextEnabled)
-                                    Toggle(R.string.voyage_theme_bold_text, null, uiState.materialBoldTextEnabled, viewModel::setMaterialBoldTextEnabled)
                                 }
                                 VoyageThemeCategory.LAUNCH -> {
     
                                     Toggle(R.string.voyage_theme_launch_follows, null, uiState.materialLaunchFollowsTheme, viewModel::setMaterialLaunchFollowsTheme)
                                 }
                                 VoyageThemeCategory.NAVIGATION_BAR -> {
-    
-                                    Toggle(R.string.voyage_theme_floating_bar, null, uiState.enableFloatingBottomBar, viewModel::setEnableFloatingBottomBar)
-                                    Toggle(R.string.voyage_theme_floating_bar_blur, null, uiState.enableFloatingBottomBarBlur, viewModel::setEnableFloatingBottomBarBlur)
-                                    Toggle(R.string.settings_enable_predictive_back, stringResource(R.string.settings_enable_predictive_back_summary), uiState.enablePredictiveBack, viewModel::setEnablePredictiveBack)
-                                    Toggle(R.string.settings_enable_swipe_back, stringResource(R.string.settings_enable_swipe_back_summary), uiState.enableSwipeBack, viewModel::setEnableSwipeBack)
-    val pagerGestureOptions = listOf(
-                                        stringResource(R.string.settings_page_gesture_default),
-                                        stringResource(R.string.settings_page_gesture_cross_axis),
-                                        stringResource(R.string.settings_page_gesture_ios_like),
+                                    Toggle(R.string.voyage_theme_floating_bar, stringResource(R.string.voyage_theme_floating_bar_summary), uiState.enableFloatingBottomBar, viewModel::setEnableFloatingBottomBar)
+                                    Toggle(
+                                        R.string.voyage_theme_floating_bar_blur,
+                                        stringResource(
+                                            when {
+                                                android.os.Build.VERSION.SDK_INT < 33 -> R.string.voyage_theme_floating_bar_blur_unsupported
+                                                !uiState.enableFloatingBottomBar -> R.string.voyage_theme_floating_bar_blur_requires_floating
+                                                else -> R.string.voyage_theme_floating_bar_blur_summary
+                                            }
+                                        ),
+                                        uiState.enableFloatingBottomBarBlur,
+                                        viewModel::setEnableFloatingBottomBarBlur,
+                                        enabled = android.os.Build.VERSION.SDK_INT >= 33 && uiState.enableFloatingBottomBar,
                                     )
-                                    Drop(R.string.settings_page_gesture_mode, pagerGestureOptions[uiState.pagerGestureMode.coerceIn(0, pagerGestureOptions.lastIndex)], pagerGestureOptions) { viewModel.setPagerGestureMode(pagerGestureOptions.indexOf(it).coerceAtLeast(0)) }
-                                    Slide(R.string.settings_page_scale, uiState.pageScale, 0.8f..1.2f, viewModel::setPageScale)
                                 }
                                 VoyageThemeCategory.ASSIST -> {
     
@@ -387,6 +411,23 @@ private fun VoyageThemeAccordion(
             }
         }
     }
+}
+
+@Composable
+private fun ThemeStyleChoice(
+    title: String,
+    summary: String,
+    icon: ImageVector,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
+    ListItem(
+        modifier = Modifier.clickable(onClick = onClick),
+        headlineContent = { Text(title) },
+        supportingContent = { Text(summary) },
+        leadingContent = { Icon(icon, contentDescription = null) },
+        trailingContent = { RadioButton(selected = selected, onClick = onClick) },
+    )
 }
 
 @Composable private fun HctSlider(id: Int, value: Float, range: ClosedFloatingPointRange<Float>, onChange: (Float) -> Unit) {

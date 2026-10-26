@@ -344,4 +344,14 @@
     <string name="settings_motion_standard">Standard</string>
     <string name="settings_haptic_feedback">Haptic feedback</string>
     <string name="settings_display_scale_title">Display size</string>
+    <string name="voyage_theme_scheme_title">Color schemes</string>
+    <string name="voyage_theme_pure_black_summary">Use a pure black background in dark mode</string>
+    <string name="voyage_theme_floating_bar_summary">The bottom navigation floats above the page; content extends beneath it. Only applies to compact bottom navigation.</string>
+    <string name="voyage_theme_floating_bar_blur_summary">Refract and blur content behind the floating navigation bar; long-press the selected item to switch pages.</string>
+    <string name="voyage_theme_floating_bar_blur_requires_floating">Enable the floating navigation bar first</string>
+    <string name="voyage_theme_floating_bar_blur_unsupported">Requires Android 13 or later</string>
+    <string name="theme_design_material3">Material 3</string>
+    <string name="theme_design_material3_subtitle">Google Material You design with customizable shapes, switch and slider styles, shadows and borders.</string>
+    <string name="theme_design_miuix">Miuix</string>
+    <string name="theme_design_miuix_subtitle">HyperOS-style interface using Miuix switches, sliders, buttons, dialogs, top bars and lists.</string>
 </resources>
