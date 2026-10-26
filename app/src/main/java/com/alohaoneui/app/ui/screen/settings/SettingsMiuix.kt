@@ -139,7 +139,7 @@ fun SettingPagerMiuix(
                             summary = stringResource(R.string.settings_ui_mode_summary),
                             items = uiModeLabels,
                             selectedIndex = if (uiState.uiMode == UiMode.Material.value) 0 else 1,
-                            onSelectedIndexChange = { actions.onSetUiModeIndex(if (it == 0) 1 else 0) },
+                            onSelectedIndexChange = actions.onSetUiModeIndex,
                         )
                         ArrowPreference(
                             title = stringResource(R.string.voyage_theme_page_title),
