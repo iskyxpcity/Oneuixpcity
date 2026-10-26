@@ -119,8 +119,8 @@ fun DisplayTextSettingsScreen() {
                         onSelectedIndexChange = { viewModel.setMaterialDisplayScale(displayScaleValues[it.coerceIn(displayScaleValues.indices)]) },
                     )
                     MiuixText(text = stringResource(R.string.settings_display_preview_sample), modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp))
-                    OverlayDropdownPreference(title = stringResource(R.string.settings_font_family_title), items = listOf(stringResource(R.string.settings_font_family_default), stringResource(R.string.settings_font_family_serif)), selectedIndex = if (state.materialFontFamily == "Serif") 1 else 0, onSelectedIndexChange = { viewModel.setMaterialFontFamily(if (it == 1) "Serif" else "Default") })
-                    SwitchPreference(title = stringResource(R.string.settings_large_text_title), summary = stringResource(R.string.settings_large_text_subtitle), checked = state.materialLargeTextEnabled, onCheckedChange = viewModel::setMaterialLargeTextEnabled)
+                    OverlayDropdownPreference(title = stringResource(R.string.voyage_theme_font_family), items = listOf(stringResource(R.string.voyage_font_default), stringResource(R.string.voyage_font_serif)), selectedIndex = if (state.materialFontFamily == "Serif") 1 else 0, onSelectedIndexChange = { viewModel.setMaterialFontFamily(if (it == 1) "Serif" else "Default") })
+                    SwitchPreference(title = stringResource(R.string.voyage_theme_large_text), checked = state.materialLargeTextEnabled, onCheckedChange = viewModel::setMaterialLargeTextEnabled)
                     SwitchPreference(title = stringResource(R.string.settings_bold_text_title), checked = state.materialBoldTextEnabled, onCheckedChange = viewModel::setMaterialBoldTextEnabled)
                 }
             }
@@ -140,12 +140,12 @@ fun DisplayTextSettingsScreen() {
                 Slider(state.materialDisplayScale, viewModel::setMaterialDisplayScale, valueRange = 0.85f..1.25f)
                 Text(stringResource(R.string.settings_display_preview_sample), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp))
                 var fontExpanded by remember { mutableStateOf(false) }
-                ListItem(modifier = Modifier.clickable { fontExpanded = true }, headlineContent = { Text(stringResource(R.string.settings_font_family_title)) }, supportingContent = { Text(if (state.materialFontFamily == "Serif") stringResource(R.string.settings_font_family_serif) else stringResource(R.string.settings_font_family_default)) })
+                ListItem(modifier = Modifier.clickable { fontExpanded = true }, headlineContent = { Text(stringResource(R.string.voyage_theme_font_family)) }, supportingContent = { Text(if (state.materialFontFamily == "Serif") stringResource(R.string.voyage_font_serif) else stringResource(R.string.voyage_font_default)) })
                 DropdownMenu(fontExpanded, { fontExpanded = false }) {
-                    DropdownMenuItem(text = { Text(stringResource(R.string.settings_font_family_default)) }, onClick = { viewModel.setMaterialFontFamily("Default"); fontExpanded = false })
-                    DropdownMenuItem(text = { Text(stringResource(R.string.settings_font_family_serif)) }, onClick = { viewModel.setMaterialFontFamily("Serif"); fontExpanded = false })
+                    DropdownMenuItem(text = { Text(stringResource(R.string.voyage_font_default)) }, onClick = { viewModel.setMaterialFontFamily("Default"); fontExpanded = false })
+                    DropdownMenuItem(text = { Text(stringResource(R.string.voyage_font_serif)) }, onClick = { viewModel.setMaterialFontFamily("Serif"); fontExpanded = false })
                 }
-                ListItem(headlineContent = { Text(stringResource(R.string.settings_large_text_title)) }, supportingContent = { Text(stringResource(R.string.settings_large_text_subtitle)) }, trailingContent = { Switch(state.materialLargeTextEnabled, viewModel::setMaterialLargeTextEnabled) })
+                ListItem(headlineContent = { Text(stringResource(R.string.voyage_theme_large_text)) }, trailingContent = { Switch(state.materialLargeTextEnabled, viewModel::setMaterialLargeTextEnabled) })
                 ListItem(headlineContent = { Text(stringResource(R.string.settings_bold_text_title)) }, trailingContent = { Switch(state.materialBoldTextEnabled, viewModel::setMaterialBoldTextEnabled) })
             }
         }
