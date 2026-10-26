@@ -41,4 +41,23 @@
     <string name="alohaoneui_tools">Tools</string>
     <string name="settings_language">アプリ全体の言語</string>
     <string name="settings_language_summary">アプリ全体で使用する言語を選択します。</string>
+    <string name="theme_group_shape">形状</string>
+    <string name="theme_group_components">コンポーネント</string>
+    <string name="theme_group_shadows">影</string>
+    <string name="theme_corner_scale_title">角のサイズ</string>
+    <string name="theme_border_width_title">輪郭線の幅</string>
+    <string name="theme_shadow_container">コンテナ</string>
+    <string name="theme_shadow_app_bar">トップバー</string>
+    <string name="theme_shadow_button">ボタン</string>
+    <string name="theme_shadow_fab">フローティングボタン</string>
+    <string name="theme_shadow_switch">スイッチ</string>
+    <string name="theme_shadow_slider">スライダー</string>
+    <string name="theme_shape_style_title">形状スタイル</string>
+    <string name="theme_shape_rounded">角丸</string>
+    <string name="theme_shape_cut">カット</string>
+    <string name="theme_shape_squircle">スクワークル</string>
+    <string name="theme_shape_smooth">スムーズ</string>
+    <string name="theme_shape_wavy">ウェーブ</string>
+    <string name="theme_shape_scoop">スクープ</string>
+    <string name="theme_shape_notch">ノッチ</string>
 </resources>
