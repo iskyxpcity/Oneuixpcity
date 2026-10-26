@@ -104,6 +104,7 @@ import com.alohaoneui.app.ui.component.material.SegmentedDropdownItem
 import com.alohaoneui.app.ui.component.material.SegmentedSwitchItem
 import com.alohaoneui.app.ui.component.material.TonalCard
 import com.alohaoneui.app.ui.component.material.voyageSegmentedShape
+import com.alohaoneui.app.ui.component.material.voyageCornerShape
 import com.alohaoneui.app.ui.theme.ColorMode
 import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
 import com.alohaoneui.app.ui.theme.LocalMaterialShadowTopBars
@@ -349,7 +350,7 @@ fun ColorPaletteScreenMaterial(
 
                 TonalCard(
                     modifier = Modifier.padding(top = 4.dp),
-                    shape = RoundedCornerShape(20.dp),
+                    shape = voyageCornerShape(20.dp),
                 ) {
                     var sliderValue by remember(uiState.pageScale) { mutableFloatStateOf(uiState.pageScale) }
 
@@ -416,7 +417,7 @@ fun ColorPaletteScreenMaterial(
                             }
                             TonalCard(
                                 modifier = Modifier.padding(top = 4.dp),
-                                shape = RoundedCornerShape(20.dp),
+                                shape = voyageCornerShape(20.dp),
                             ) {
                                 Column(
                                     modifier = Modifier.padding(16.dp),
@@ -597,7 +598,9 @@ private fun ThemePreviewCard(
                 .aspectRatio(screenRatio),
             color = colorScheme.surfaceContainer,
             shape = RoundedCornerShape(20.dp),
-            border = BorderStroke(1.dp, color = colorScheme.outlineVariant)
+            border = LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
+                BorderStroke(it.dp, color = colorScheme.outlineVariant)
+            }
         ) {
             val content: @Composable ColumnScope.() -> Unit = {
                 // top bar
@@ -634,7 +637,7 @@ private fun ThemePreviewCard(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(40.dp),
-                            shape = RoundedCornerShape(8.dp),
+                            shape = voyageCornerShape(8.dp),
                             content = { }
                         )
                         if (showInfoCard) {
@@ -643,7 +646,7 @@ private fun ThemePreviewCard(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .weight(1f),
-                                shape = RoundedCornerShape(8.dp),
+                                shape = voyageCornerShape(8.dp),
                                 content = { }
                             )
                         }
