@@ -94,7 +94,8 @@ fun SettingPagerMaterial(
         stringResource(R.string.settings_page_gesture_cross_axis),
         stringResource(R.string.settings_page_gesture_ios_like),
     )
-    val motionLabels = listOf(stringResource(R.string.settings_motion_expressive), stringResource(R.string.settings_motion_standard))
+    val motionLabels = listOf(stringResource(R.string.settings_motion_expressive), stringResource(R.string.settings_motion_simplified))
+    val transitionLabels = listOf(R.string.settings_transition_aosp, R.string.settings_transition_miuix, R.string.settings_transition_scale, R.string.settings_transition_classic)
 
     Scaffold(
         topBar = { TopBar(scrollBehavior = scrollBehavior) },
@@ -256,7 +257,17 @@ fun SettingPagerMaterial(
                     onToggle = { behaviorExpanded = !behaviorExpanded },
                 ) {
                     Choice(R.string.settings_motion_expressive, uiState.materialNavigationMotionMode == 0) { viewModel.setMaterialNavigationMotionMode(0) }
-                    Choice(R.string.settings_motion_standard, uiState.materialNavigationMotionMode == 1) { viewModel.setMaterialNavigationMotionMode(1) }
+                    Choice(R.string.settings_motion_simplified, uiState.materialNavigationMotionMode == 1) { viewModel.setMaterialNavigationMotionMode(1) }
+                    Text(stringResource(R.string.settings_transition_style), style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
+                    Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        transitionLabels.forEachIndexed { index, labelId ->
+                            FilterChip(
+                                selected = uiState.materialTransitionStyle == index,
+                                onClick = { viewModel.setMaterialTransitionStyle(index) },
+                                label = { Text(stringResource(labelId)) },
+                            )
+                        }
+                    }
                     ListItem(headlineContent = { Text(stringResource(R.string.settings_haptic_feedback)) }, trailingContent = { ExpressiveSwitch(uiState.enableHapticFeedback, viewModel::setEnableHapticFeedback) })
                     ListItem(
                         headlineContent = { Text(stringResource(R.string.settings_enable_predictive_back)) },
