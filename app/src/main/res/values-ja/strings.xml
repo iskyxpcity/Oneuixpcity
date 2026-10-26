@@ -39,4 +39,6 @@
     <string name="color_blue_grey">ブルーグレー</string>
     <string name="color_sakura">桜</string>
     <string name="alohaoneui_tools">Tools</string>
+    <string name="settings_language">アプリ全体の言語</string>
+    <string name="settings_language_summary">アプリ全体で使用する言語を選択します。言語切り替えは後続の移植段階で接続します。</string>
 </resources>
