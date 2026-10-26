@@ -414,6 +414,14 @@ fun ColorPaletteScreenMaterial(
                     title = stringResource(R.string.theme_group_shape),
                     content = listOf(
                         {
+                            SegmentedDropdownItem(
+                                title = "Shape style",
+                                items = listOf("Rounded", "Cut", "Squircle", "Smooth", "Wavy", "Scoop", "Notch"),
+                                selectedIndex = uiState.materialShapeStyle,
+                                onItemSelected = actions.onSetMaterialShapeStyle,
+                            )
+                        },
+                        {
                             var cornerScale by remember(uiState.materialCornerScale) {
                                 mutableFloatStateOf(uiState.materialCornerScale)
                             }
