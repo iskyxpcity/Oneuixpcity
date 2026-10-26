@@ -8,6 +8,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AccessibilityNew
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Brush
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Launch
@@ -16,6 +19,8 @@ import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.Widgets
 import androidx.compose.material3.*
+import com.materialkolor.hct.Hct
+import com.alohaoneui.app.data.repository.MaterialColorScheme
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -38,6 +43,13 @@ fun VoyageThemeSettingsScreenMaterial(
 ) {
     var selectedName by rememberSaveable { mutableStateOf(VoyageThemeCategory.DESIGN.name) }
     var categoryListVisible by rememberSaveable { mutableStateOf(true) }
+    var showColorEditor by rememberSaveable { mutableStateOf(false) }
+    var showSaveScheme by rememberSaveable { mutableStateOf(false) }
+    var pendingDeleteScheme by rememberSaveable { mutableStateOf<String?>(null) }
+    var schemeName by rememberSaveable { mutableStateOf("") }
+    var hctHue by rememberSaveable { mutableFloatStateOf(270f) }
+    var hctChroma by rememberSaveable { mutableFloatStateOf(48f) }
+    var hctTone by rememberSaveable { mutableFloatStateOf(55f) }
     val selected = VoyageThemeCategory.valueOf(selectedName)
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val wide = maxWidth >= 840.dp
@@ -48,7 +60,7 @@ fun VoyageThemeSettingsScreenMaterial(
                         if (!wide && !categoryListVisible) categoryListVisible = true else onBack()
                     }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null) }
                 },
-                title = { Text(if (!wide && !categoryListVisible) stringResource(selected.titleRes) else stringResource(R.string.settings_theme)) },
+                title = { Text(if (!wide && !categoryListVisible) stringResource(selected.titleRes) else stringResource(R.string.voyage_theme_page_title)) },
             )
         }) { padding ->
             Row(Modifier.fillMaxSize().padding(padding)) {
@@ -105,8 +117,66 @@ fun VoyageThemeSettingsScreenMaterial(
                                     ColorChoice(Color(0xFF6750A4), uiState.keyColor == 0, stringResource(R.string.voyage_theme_system_color)) { viewModel.setKeyColor(0) }
                                     keyColorOptions.forEach { color -> ColorChoice(Color(color), uiState.keyColor == color, null) { viewModel.setKeyColor(color) } }
                                 }
-                                Drop(R.string.settings_color_style, uiState.colorStyle, PaletteStyle.entries.map { it.name }, viewModel::setColorStyle)
-                                Slide(R.string.voyage_theme_contrast, uiState.materialContrastLevel, -1f..1f, viewModel::setMaterialContrastLevel)
+                                val paletteChoices = listOf(
+                                    stringResource(R.string.voyage_palette_tonal_spot) to PaletteStyle.TonalSpot,
+                                    stringResource(R.string.voyage_palette_fidelity) to PaletteStyle.Fidelity,
+                                    stringResource(R.string.voyage_palette_content) to PaletteStyle.Content,
+                                    stringResource(R.string.voyage_palette_rainbow) to PaletteStyle.Rainbow,
+                                    stringResource(R.string.voyage_palette_fruit_salad) to PaletteStyle.FruitSalad,
+                                    stringResource(R.string.voyage_palette_monochrome) to PaletteStyle.Monochrome,
+                                    stringResource(R.string.voyage_palette_neutral) to PaletteStyle.Neutral,
+                                    stringResource(R.string.voyage_palette_vibrant) to PaletteStyle.Vibrant,
+                                    stringResource(R.string.voyage_palette_expressive) to PaletteStyle.Expressive,
+                                )
+                                val currentPaletteLabel = paletteChoices.firstOrNull { it.second.name == uiState.colorStyle }?.first ?: paletteChoices.first().first
+                                Drop(R.string.settings_color_style, currentPaletteLabel, paletteChoices.map { it.first }) { label ->
+                                    viewModel.setColorStyle(paletteChoices.first { it.first == label }.second.name)
+                                }
+                                Column(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text(stringResource(R.string.voyage_theme_contrast), modifier = Modifier.weight(1f))
+                                        TextButton(onClick = { viewModel.setMaterialContrastLevel(0f) }) {
+                                            Text(stringResource(R.string.voyage_theme_contrast_standard))
+                                        }
+                                    }
+                                    Slider(uiState.materialContrastLevel.coerceIn(-1f, 1f), viewModel::setMaterialContrastLevel, valueRange = -1f..1f)
+                                }
+                                Button(onClick = {
+                                    val seed = if (uiState.keyColor == 0) 0xFF6750A4.toInt() else uiState.keyColor
+                                    val hct = Hct.fromInt(seed)
+                                    hctHue = hct.hue.toFloat()
+                                    hctChroma = hct.chroma.toFloat()
+                                    hctTone = hct.tone.toFloat()
+                                    showColorEditor = true
+                                }, modifier = Modifier.fillMaxWidth()) {
+                                    Icon(Icons.Filled.Edit, contentDescription = null)
+                                    Spacer(Modifier.width(8.dp))
+                                    Text(stringResource(R.string.voyage_theme_color_editor))
+                                }
+                                Button(onClick = { schemeName = ""; showSaveScheme = true }, modifier = Modifier.fillMaxWidth()) {
+                                    Text(stringResource(R.string.voyage_theme_save_scheme))
+                                }
+                                Text(stringResource(R.string.voyage_theme_saved_schemes), style = MaterialTheme.typography.titleMedium)
+                                if (uiState.materialColorSchemes.isEmpty()) {
+                                    Text(stringResource(R.string.voyage_theme_saved_schemes_empty), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                } else {
+                                    uiState.materialColorSchemes.forEach { scheme ->
+                                        ListItem(
+                                            headlineContent = { Text(scheme.name) },
+                                            supportingContent = { Text(scheme.colorStyle) },
+                                            trailingContent = {
+                                                Row {
+                                                    IconButton(onClick = { viewModel.applyMaterialColorScheme(scheme) }) {
+                                                        Icon(Icons.Filled.Check, contentDescription = stringResource(R.string.voyage_theme_apply_scheme))
+                                                    }
+                                                    IconButton(onClick = { pendingDeleteScheme = scheme.name }) {
+                                                        Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.voyage_theme_delete_scheme))
+                                                    }
+                                                }
+                                            },
+                                        )
+                                    }
+                                }
                             }
                             VoyageThemeCategory.COMPONENTS -> {
                                 Header(R.string.voyage_theme_group_components)
@@ -174,6 +244,81 @@ fun VoyageThemeSettingsScreenMaterial(
                 }
             }
         }
+    }
+
+    if (showColorEditor) {
+        AlertDialog(
+            onDismissRequest = { showColorEditor = false },
+            title = { Text(stringResource(R.string.voyage_theme_color_editor)) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Surface(Modifier.fillMaxWidth().height(44.dp), color = Color(Hct.from(hctHue.toDouble(), hctChroma.toDouble(), hctTone.toDouble()).toInt()), shape = MaterialTheme.shapes.medium) {}
+                    HctSlider(R.string.voyage_theme_hue, hctHue, 0f..360f) { hctHue = it }
+                    HctSlider(R.string.voyage_theme_chroma, hctChroma, 0f..100f) { hctChroma = it }
+                    HctSlider(R.string.voyage_theme_tone, hctTone, 0f..100f) { hctTone = it }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.setKeyColor(Hct.from(hctHue.toDouble(), hctChroma.toDouble(), hctTone.toDouble()).toInt())
+                    viewModel.setMaterialDynamicColorEnabled(false)
+                    showColorEditor = false
+                }) { Text(stringResource(R.string.voyage_theme_apply_color)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showColorEditor = false }) { Text(stringResource(R.string.voyage_theme_cancel)) }
+            },
+        )
+    }
+    if (showSaveScheme) {
+        AlertDialog(
+            onDismissRequest = { showSaveScheme = false },
+            title = { Text(stringResource(R.string.voyage_theme_save_scheme)) },
+            text = {
+                OutlinedTextField(
+                    value = schemeName,
+                    onValueChange = { schemeName = it },
+                    label = { Text(stringResource(R.string.voyage_theme_scheme_name)) },
+                    singleLine = true,
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    if (schemeName.isNotBlank()) {
+                        viewModel.saveMaterialColorScheme(schemeName.trim())
+                        showSaveScheme = false
+                    }
+                }, enabled = schemeName.isNotBlank()) { Text(stringResource(R.string.voyage_theme_confirm)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showSaveScheme = false }) { Text(stringResource(R.string.voyage_theme_cancel)) }
+            },
+        )
+    }
+    pendingDeleteScheme?.let { name ->
+        AlertDialog(
+            onDismissRequest = { pendingDeleteScheme = null },
+            title = { Text(stringResource(R.string.voyage_theme_delete_scheme_title)) },
+            text = { Text(stringResource(R.string.voyage_theme_delete_scheme_message)) },
+            confirmButton = {
+                TextButton(onClick = { viewModel.deleteMaterialColorScheme(name); pendingDeleteScheme = null }) {
+                    Text(stringResource(R.string.voyage_theme_delete_scheme))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { pendingDeleteScheme = null }) { Text(stringResource(R.string.voyage_theme_cancel)) }
+            },
+        )
+    }
+}
+
+@Composable private fun HctSlider(id: Int, value: Float, range: ClosedFloatingPointRange<Float>, onChange: (Float) -> Unit) {
+    Column {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(stringResource(id), modifier = Modifier.weight(1f))
+            Text(value.toInt().toString(), color = MaterialTheme.colorScheme.primary)
+        }
+        Slider(value.coerceIn(range.start, range.endInclusive), onChange, valueRange = range)
     }
 }
 
