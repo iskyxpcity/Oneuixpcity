@@ -1,7 +1,7 @@
 name: Aloha OneUI Android APK build
 on:
   push:
-    branches: [main, 'test/**', 'migration/**']
+    branches: [main, 'migration/**']
   workflow_dispatch:
 concurrency:
   group: alohaoneui-build-${{ github.ref }}
@@ -301,7 +301,7 @@ jobs:
           fi
 
       - name: Publish signed APK to GitHub release
-        if: success() && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/migration/'))
+        if: success() && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/migration/alohaoneui-rename-20261020' || github.ref == 'refs/heads/migration/alohaoneui-full-identity-20261020' || startsWith(github.ref, 'refs/heads/test/'))
         env:
           SOURCE_REPO_TOKEN: ${{ github.token }}
         run: |
