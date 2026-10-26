@@ -240,5 +240,5 @@
     <string name="theme_shadow_switch">开关</string>
     <string name="theme_shadow_slider">滑条</string>
     <string name="settings_language">全局语言</string>
-    <string name="settings_language_summary">选择应用所有页面使用的语言；语言切换功能将在后续移植阶段接入。</string>
+    <string name="settings_language_summary">选择应用所有页面使用的语言。</string>
 </resources>
