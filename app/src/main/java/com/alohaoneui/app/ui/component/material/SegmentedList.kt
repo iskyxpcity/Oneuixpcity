@@ -77,7 +77,7 @@ val LocalListItemShapes = compositionLocalOf<ListItemShapes?> { null }
 
 @Composable
 fun voyageCornerShape(radius: androidx.compose.ui.unit.Dp): Shape =
-    RoundedCornerShape(radius * LocalMaterialCornerScale.current)
+    RoundedCornerShape(radius * LocalMaterialCornerScale.current.coerceIn(0f, 1f))
 
 @Composable
 fun alohaOneUISegmentedColors(): ListItemColors = ListItemDefaults.segmentedColors().copy(
@@ -96,7 +96,9 @@ fun voyageSegmentedShape(index: Int, count: Int, vertical: Boolean = true): Shap
     val single = count == 1 || index == -1
     val first = single || index == 0
     val last = single || index == count - 1
-    val cornerScale = LocalMaterialCornerScale.current
+    // Voyage vk7.m138245I only scales corner geometry when the factor is below 1.0;
+    // factors at or above 1.0 keep the original shape rather than enlarging its corners.
+    val cornerScale = LocalMaterialCornerScale.current.coerceIn(0f, 1f)
 
     val topStart by animateDpAsState(
         targetValue = (if (first) 16.dp else 4.dp) * cornerScale,
