@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -24,7 +26,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenuGroup
 import androidx.compose.material3.SelectableDropdownMenuItem
@@ -473,6 +476,7 @@ fun SegmentedSwitchItem(
     )
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun SegmentedChoiceDialogItem(
     title: String,
@@ -484,75 +488,49 @@ fun SegmentedChoiceDialogItem(
     onItemSelected: (Int) -> Unit,
 ) {
     val haptic = LocalHapticFeedback.current
-    var dialogVisible by remember { mutableStateOf(false) }
     val safeIndex = selectedIndex.coerceIn(0, (items.size - 1).coerceAtLeast(0))
 
-    SegmentedListItem(
-        onClick = if (enabled && items.isNotEmpty()) {
-            {
-                haptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
-                dialogVisible = true
-            }
-        } else null,
-        enabled = enabled,
-        colors = colors,
-        headlineContent = { Text(title) },
-        supportingContent = summary?.let { { Text(it) } },
-        trailingContent = {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = items.getOrNull(safeIndex).orEmpty(),
-                    textAlign = TextAlign.End,
-                    color = if (enabled) colorScheme.primary else colorScheme.onSurfaceVariant,
-                )
-                Icon(
-                    imageVector = Icons.Filled.KeyboardArrowDown,
-                    contentDescription = null,
-                    modifier = Modifier.padding(start = 4.dp).size(24.dp),
-                    tint = if (enabled) colorScheme.primary else colorScheme.onSurfaceVariant,
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleSmall,
+            color = if (enabled) colorScheme.onSurface else colorScheme.onSurfaceVariant,
+        )
+        summary?.let {
+            Text(
+                text = it,
+                style = MaterialTheme.typography.bodySmall,
+                color = colorScheme.onSurfaceVariant,
+            )
+        }
+        FlowRow(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            items.forEachIndexed { index, label ->
+                FilterChip(
+                    selected = index == safeIndex,
+                    onClick = {
+                        if (enabled && index != safeIndex) {
+                            haptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
+                            onItemSelected(index)
+                        }
+                    },
+                    enabled = enabled,
+                    label = { Text(label) },
+                    leadingIcon = if (index == safeIndex) {
+                        { Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(18.dp)) }
+                    } else null,
+                    colors = FilterChipDefaults.filterChipColors(),
                 )
             }
         }
-    )
-
-    if (dialogVisible) {
-        AlertDialog(
-            onDismissRequest = { dialogVisible = false },
-            title = { Text(title) },
-            text = {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .verticalScroll(rememberScrollState()),
-                ) {
-                    items.forEachIndexed { index, label ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    haptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
-                                    onItemSelected(index)
-                                    dialogVisible = false
-                                }
-                                .padding(horizontal = 4.dp, vertical = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            RadioButton(
-                                selected = index == safeIndex,
-                                onClick = null,
-                                enabled = enabled,
-                            )
-                            Text(
-                                text = label,
-                                modifier = Modifier.padding(start = 12.dp),
-                                color = MaterialTheme.colorScheme.onSurface,
-                            )
-                        }
-                    }
-                }
-            },
-            confirmButton = {},
-        )
     }
 }
 
