@@ -80,7 +80,7 @@ fun MaterialAlohaOneUITheme(
         LocalMaterialShadowSwitches provides appSettings.materialShadowSwitches,
         LocalMaterialShadowSliders provides appSettings.materialShadowSliders,
         LocalDensity provides Density(
-            density = density.density * if (appSettings.materialLargeTextEnabled) 1.12f else 1f,
+            density = density.density * appSettings.materialDisplayScale.coerceIn(0.85f, 1.25f) * if (appSettings.materialLargeTextEnabled) 1.12f else 1f,
             fontScale = density.fontScale * appSettings.materialFontScale.coerceIn(0.8f, 1.5f) *
                 if (appSettings.materialLargeTextEnabled) 1.12f else 1f,
         ),

@@ -2,6 +2,13 @@ package com.alohaoneui.app.ui.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
+import androidx.compose.ui.hapticfeedback.HapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.unit.Density
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.staticCompositionLocalOf
 import com.materialkolor.PaletteStyle
@@ -70,6 +77,8 @@ data class AppSettings(
     val materialContrastLevel: Float = 0.0f,
     val materialLargeTextEnabled: Boolean = false,
     val materialBoldTextEnabled: Boolean = false,
+    val materialDisplayScale: Float = 1.0f,
+    val enableHapticFeedback: Boolean = true,
 )
 
 fun Int.toMaterialContrastLevelOverride(): Double? = when (this) {
@@ -125,7 +134,7 @@ object ThemeController {
             ColorSpec.SpecVersion.SPEC_2025
         }
 
-        return AppSettings(colorMode, keyColor, paletteStyle, colorSpec, repo.materialFontScale.coerceIn(0.8f, 1.5f), repo.materialContrastMode.coerceIn(-1, 2), repo.materialCornerScale.coerceIn(0.5f, 1.5f), repo.materialBorderWidth.coerceIn(0.0f, 3.0f), repo.materialFontFamily, repo.materialColorVisionMode.coerceIn(0, 8), repo.materialDynamicColorEnabled, repo.materialInvertColors, repo.materialShapeStyle, repo.materialSwitchStyle, repo.materialSliderStyle, repo.materialShadowContainers, repo.materialShadowAppBars, repo.materialShadowButtons, repo.materialShadowFab, repo.materialShadowSwitches, repo.materialShadowSliders, repo.materialNavigationMotionMode.coerceIn(0, 1), repo.materialContrastLevel.coerceIn(-1.0f, 1.0f), repo.materialLargeTextEnabled, repo.materialBoldTextEnabled)
+        return AppSettings(colorMode, keyColor, paletteStyle, colorSpec, repo.materialFontScale.coerceIn(0.8f, 1.5f), repo.materialContrastMode.coerceIn(-1, 2), repo.materialCornerScale.coerceIn(0.5f, 1.5f), repo.materialBorderWidth.coerceIn(0.0f, 3.0f), repo.materialFontFamily, repo.materialColorVisionMode.coerceIn(0, 8), repo.materialDynamicColorEnabled, repo.materialInvertColors, repo.materialShapeStyle, repo.materialSwitchStyle, repo.materialSliderStyle, repo.materialShadowContainers, repo.materialShadowAppBars, repo.materialShadowButtons, repo.materialShadowFab, repo.materialShadowSwitches, repo.materialShadowSliders, repo.materialNavigationMotionMode.coerceIn(0, 1), repo.materialContrastLevel.coerceIn(-1.0f, 1.0f), repo.materialLargeTextEnabled, repo.materialBoldTextEnabled, repo.materialDisplayScale.coerceIn(0.85f, 1.25f), repo.enableHapticFeedback)
     }
 }
 
@@ -135,9 +144,28 @@ fun AlohaOneUITheme(
     uiMode: UiMode = LocalUiMode.current,
     content: @Composable () -> Unit
 ) {
-    when (uiMode) {
-        UiMode.Miuix -> MiuixAlohaOneUITheme(appSettings = appSettings, content = content)
-        UiMode.Material -> MaterialAlohaOneUITheme(appSettings = appSettings, content = content)
+    val baseDensity = LocalDensity.current
+    val platformHaptics = LocalHapticFeedback.current
+    val filteredHaptics = remember(appSettings.enableHapticFeedback, platformHaptics) {
+        object : HapticFeedback {
+            override fun performHapticFeedback(hapticFeedbackType: HapticFeedbackType) {
+                if (appSettings.enableHapticFeedback) platformHaptics.performHapticFeedback(hapticFeedbackType)
+            }
+        }
+    }
+    val largeTextScale = if (appSettings.materialLargeTextEnabled) 1.12f else 1.0f
+    CompositionLocalProvider(LocalHapticFeedback provides filteredHaptics) {
+        when (uiMode) {
+            UiMode.Miuix -> CompositionLocalProvider(
+                LocalDensity provides Density(
+                    density = baseDensity.density * appSettings.materialDisplayScale.coerceIn(0.85f, 1.25f) * largeTextScale,
+                    fontScale = baseDensity.fontScale * appSettings.materialFontScale.coerceIn(0.8f, 1.5f) * largeTextScale,
+                ),
+            ) {
+                MiuixAlohaOneUITheme(appSettings = appSettings, content = content)
+            }
+            UiMode.Material -> MaterialAlohaOneUITheme(appSettings = appSettings, content = content)
+        }
     }
 }
 
