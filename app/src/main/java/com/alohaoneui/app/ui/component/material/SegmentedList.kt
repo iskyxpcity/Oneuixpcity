@@ -76,6 +76,10 @@ import kotlinx.coroutines.launch
 val LocalListItemShapes = compositionLocalOf<ListItemShapes?> { null }
 
 @Composable
+fun voyageCornerShape(radius: androidx.compose.ui.unit.Dp): Shape =
+    RoundedCornerShape(radius * LocalMaterialCornerScale.current)
+
+@Composable
 fun alohaOneUISegmentedColors(): ListItemColors = ListItemDefaults.segmentedColors().copy(
     containerColor = colorScheme.surfaceColorAtElevation(1.dp),
     disabledContainerColor = colorScheme.surfaceColorAtElevation(1.dp),
