@@ -35,6 +35,7 @@ class SettingsViewModel(
             val enableFloatingBottomBarBlur = repo.enableFloatingBottomBarBlur
             val pageScale = repo.pageScale
             val materialCornerScale = repo.materialCornerScale
+            val materialShapeStyle = repo.materialShapeStyle
             val materialOutlineWidth = repo.materialOutlineWidth
             val materialShadowContainers = repo.materialShadowContainers
             val materialShadowTopBars = repo.materialShadowTopBars
@@ -61,6 +62,7 @@ class SettingsViewModel(
                     enableFloatingBottomBarBlur = enableFloatingBottomBarBlur,
                     pageScale = pageScale,
                     materialCornerScale = materialCornerScale,
+                    materialShapeStyle = materialShapeStyle,
                     materialOutlineWidth = materialOutlineWidth,
                     materialShadowContainers = materialShadowContainers,
                     materialShadowTopBars = materialShadowTopBars,
@@ -190,6 +192,12 @@ class SettingsViewModel(
     fun setPageScale(scale: Float) {
         repo.pageScale = scale
         _uiState.update { it.copy(pageScale = scale) }
+    }
+
+    fun setMaterialShapeStyle(style: Int) {
+        val safe = style.coerceIn(0, 6)
+        repo.materialShapeStyle = safe
+        _uiState.update { it.copy(materialShapeStyle = safe) }
     }
 
     fun setMaterialCornerScale(scale: Float) {
