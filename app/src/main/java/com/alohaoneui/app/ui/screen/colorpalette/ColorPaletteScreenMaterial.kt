@@ -386,6 +386,148 @@ fun ColorPaletteScreenMaterial(
                         )
                     }
                 }
+
+                // Voyage SHAPE group: corner scale is a shared theme token, not a page-local radius.
+                SegmentedColumn(
+                    modifier = Modifier.padding(top = 4.dp),
+                    title = stringResource(R.string.theme_group_shape),
+                    content = listOf(
+                        {
+                            var cornerScale by remember(uiState.materialCornerScale) {
+                                mutableFloatStateOf(uiState.materialCornerScale)
+                            }
+                            TonalCard(
+                                modifier = Modifier.padding(top = 4.dp),
+                                shape = RoundedCornerShape(20.dp),
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(16.dp),
+                                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = stringResource(R.string.theme_corner_scale_title),
+                                            style = MaterialTheme.typography.titleMedium,
+                                            color = MaterialTheme.colorScheme.onSurface,
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                        Text(
+                                            text = String.format(java.util.Locale.ROOT, "%.2f", cornerScale),
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                    Slider(
+                                        value = cornerScale,
+                                        onValueChange = { cornerScale = it },
+                                        onValueChangeFinished = { actions.onSetMaterialCornerScale(cornerScale) },
+                                        valueRange = 0.0f..2.0f,
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                }
+                            }
+                        }
+                    )
+                )
+
+                // Voyage COMPONENTS group: outline width is shared by themed Material components.
+                SegmentedColumn(
+                    modifier = Modifier.padding(top = 4.dp),
+                    title = stringResource(R.string.theme_group_components),
+                    content = listOf(
+                        {
+                            var outlineWidth by remember(uiState.materialOutlineWidth) {
+                                mutableFloatStateOf(uiState.materialOutlineWidth)
+                            }
+                            TonalCard(
+                                modifier = Modifier.padding(top = 4.dp),
+                                shape = RoundedCornerShape(20.dp),
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(16.dp),
+                                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = stringResource(R.string.theme_border_width_title),
+                                            style = MaterialTheme.typography.titleMedium,
+                                            color = MaterialTheme.colorScheme.onSurface,
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                        Text(
+                                            text = String.format(java.util.Locale.ROOT, "%.1f", outlineWidth),
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                    Slider(
+                                        value = outlineWidth,
+                                        onValueChange = { outlineWidth = it },
+                                        onValueChangeFinished = { actions.onSetMaterialOutlineWidth(outlineWidth) },
+                                        valueRange = 0.0f..1.5f,
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                }
+                            }
+                        }
+                    )
+                )
+
+                // Voyage SHADOWS group exposes six independent component switches.
+                SegmentedColumn(
+                    modifier = Modifier.padding(top = 4.dp),
+                    title = stringResource(R.string.theme_group_shadows),
+                    content = listOf(
+                        {
+                            SegmentedSwitchItem(
+                                title = stringResource(R.string.theme_shadow_container),
+                                checked = uiState.materialShadowContainers,
+                                onCheckedChange = actions.onSetMaterialShadowContainers,
+                            )
+                        },
+                        {
+                            SegmentedSwitchItem(
+                                title = stringResource(R.string.theme_shadow_app_bar),
+                                checked = uiState.materialShadowTopBars,
+                                onCheckedChange = actions.onSetMaterialShadowTopBars,
+                            )
+                        },
+                        {
+                            SegmentedSwitchItem(
+                                title = stringResource(R.string.theme_shadow_button),
+                                checked = uiState.materialShadowButtons,
+                                onCheckedChange = actions.onSetMaterialShadowButtons,
+                            )
+                        },
+                        {
+                            SegmentedSwitchItem(
+                                title = stringResource(R.string.theme_shadow_fab),
+                                checked = uiState.materialShadowFloatingButtons,
+                                onCheckedChange = actions.onSetMaterialShadowFloatingButtons,
+                            )
+                        },
+                        {
+                            SegmentedSwitchItem(
+                                title = stringResource(R.string.theme_shadow_switch),
+                                checked = uiState.materialShadowSwitches,
+                                onCheckedChange = actions.onSetMaterialShadowSwitches,
+                            )
+                        },
+                        {
+                            SegmentedSwitchItem(
+                                title = stringResource(R.string.theme_shadow_slider),
+                                checked = uiState.materialShadowSliders,
+                                onCheckedChange = actions.onSetMaterialShadowSliders,
+                            )
+                        },
+                    )
+                )
             }
 
             Spacer(modifier = Modifier.height(16.dp + navBars.calculateBottomPadding() + captionBar.calculateBottomPadding()))
