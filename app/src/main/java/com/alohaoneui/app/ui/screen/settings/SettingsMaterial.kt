@@ -2,43 +2,67 @@ package com.alohaoneui.app.ui.screen.settings
 
 import android.os.Build
 import androidx.activity.compose.LocalActivity
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.BugReport
-import androidx.compose.material.icons.filled.Dashboard
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Animation
 import androidx.compose.material.icons.filled.DisplaySettings
-import androidx.compose.material.icons.filled.ElectricalServices
 import androidx.compose.material.icons.filled.ExpandMore
-import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.FontDownload
+import androidx.compose.material.icons.filled.FormatBold
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Palette
-import androidx.compose.material.icons.filled.Widgets
-import androidx.compose.material.icons.filled.SystemUpdate
-import androidx.compose.material.icons.outlined.Animation
-import androidx.compose.material.icons.outlined.TextFields
-import androidx.compose.material.icons.outlined.Translate
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.TextFields
+import androidx.compose.material.icons.filled.Vibration
+import androidx.compose.material.icons.filled.Wallpaper
+import androidx.compose.material.icons.filled.ZoomIn
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LargeFlexibleTopAppBar
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Slider
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberTopAppBarState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalActivity
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
@@ -46,16 +70,15 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.alohaoneui.app.AlohaOneUIApplication
 import com.alohaoneui.app.R
-import com.alohaoneui.app.ui.component.material.SendLogBottomSheet
-import com.alohaoneui.app.ui.component.material.ExpressiveSwitch
-import com.alohaoneui.app.ui.component.material.VoyageSlider
-import com.alohaoneui.app.ui.component.material.SnackBarHost
+import com.alohaoneui.app.ui.UiMode
+import com.alohaoneui.app.ui.theme.ColorMode
+import com.alohaoneui.app.ui.theme.VoyageSettingsTheme
+import com.alohaoneui.app.ui.theme.keyColorOptions
 import com.alohaoneui.app.ui.util.AppLocaleHelper
 import com.alohaoneui.app.ui.viewmodel.SettingsViewModel
-import com.alohaoneui.app.ui.UiMode
-import com.alohaoneui.app.ui.theme.keyColorOptions
 import com.materialkolor.PaletteStyle
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun SettingPagerMaterial(
     uiState: SettingsUiState,
@@ -66,17 +89,10 @@ fun SettingPagerMaterial(
     val context = LocalContext.current
     val activity = LocalActivity.current
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
-    val snackBarHost = remember { SnackbarHostState() }
-    var showBottomSheet by remember { mutableStateOf(false) }
     var languageExpanded by rememberSaveable { mutableStateOf(true) }
     var themeExpanded by rememberSaveable { mutableStateOf(true) }
-    var paletteStyleExpanded by rememberSaveable { mutableStateOf(false) }
     var displayExpanded by rememberSaveable { mutableStateOf(true) }
-    var behaviorExpanded by rememberSaveable { mutableStateOf(true) }
-    var alohaExpanded by rememberSaveable { mutableStateOf(false) }
-    var fontMenu by remember { mutableStateOf(false) }
-    var gestureMenu by remember { mutableStateOf(false) }
-    var pageScaleMenu by remember { mutableStateOf(false) }
+    var motionExpanded by rememberSaveable { mutableStateOf(true) }
 
     val languageLabels = listOf(
         stringResource(R.string.settings_language_system),
@@ -88,382 +104,567 @@ fun SettingPagerMaterial(
     )
     val languageTags = listOf("system", "zh-CN", "zh-TW", "en", "ja", "ko")
     val selectedLanguageIndex = languageTags.indexOf(uiState.appLanguage).coerceAtLeast(0)
-    val fontLabels = listOf(stringResource(R.string.voyage_font_default), stringResource(R.string.voyage_font_serif))
-    val gestureLabels = listOf(
-        stringResource(R.string.settings_page_gesture_default),
-        stringResource(R.string.settings_page_gesture_cross_axis),
-        stringResource(R.string.settings_page_gesture_ios_like),
+    val transitionLabels = listOf(
+        R.string.settings_transition_aosp,
+        R.string.settings_transition_miuix,
+        R.string.settings_transition_scale,
+        R.string.settings_transition_classic,
     )
-    val motionLabels = listOf(stringResource(R.string.settings_motion_expressive), stringResource(R.string.settings_motion_simplified))
-    val transitionLabels = listOf(R.string.settings_transition_aosp, R.string.settings_transition_miuix, R.string.settings_transition_scale, R.string.settings_transition_classic)
+    val paletteStyle = runCatching { PaletteStyle.valueOf(uiState.colorStyle) }
+        .getOrDefault(PaletteStyle.Expressive)
+    val colorMode = ColorMode.fromValue(uiState.themeMode)
 
-    Scaffold(
-        topBar = { TopBar(scrollBehavior = scrollBehavior) },
-        snackbarHost = { SnackBarHost(hostState = snackBarHost, modifier = Modifier.padding(bottom = bottomInnerPadding)) },
-        contentWindowInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier.fillMaxSize().padding(paddingValues)
-                .nestedScroll(scrollBehavior.nestedScrollConnection),
-        ) {
-            Spacer(Modifier.height(8.dp))
-            val languageSection: @Composable () -> Unit = {
-                VoyageSettingsAccordion(
-                    title = stringResource(R.string.settings_group_language),
-                    icon = Icons.Outlined.Translate,
-                    expanded = languageExpanded,
-                    onToggle = { languageExpanded = !languageExpanded },
-                ) {
-                    languageLabels.forEachIndexed { index, label ->
-                        ListItem(
-                            modifier = Modifier.clickable {
-                                viewModel.setAppLanguage(languageTags[index])
-                                AppLocaleHelper.apply(context, languageTags[index])
-                                activity?.recreate()
-                            },
-                            headlineContent = { Text(label) },
-                            trailingContent = {
-                                RadioButton(
-                                    selected = selectedLanguageIndex == index,
+    VoyageSettingsTheme(uiState) {
+        Scaffold(
+            containerColor = MaterialTheme.colorScheme.surface,
+            topBar = {
+                LargeFlexibleTopAppBar(
+                    navigationIcon = {
+                        IconButton(onClick = actions.onBack) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
+                        }
+                    },
+                    title = { Text(stringResource(R.string.settings)) },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                        scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+                    ),
+                    scrollBehavior = scrollBehavior,
+                )
+            },
+            contentWindowInsets = WindowInsets.safeDrawing.only(
+                WindowInsetsSides.Top + WindowInsetsSides.Horizontal,
+            ),
+        ) { padding ->
+            BoxWithConstraints(
+                Modifier.fillMaxSize()
+                    .padding(padding)
+                    .nestedScroll(scrollBehavior.nestedScrollConnection),
+            ) {
+                val wide = maxWidth >= 840.dp
+                val medium = maxWidth >= 600.dp
+                val sectionModifier = Modifier.padding(horizontal = if (wide) 10.dp else 16.dp)
+
+                val language: @Composable ColumnScope.() -> Unit = {
+                    VoyageSettingsGroup(
+                        title = stringResource(R.string.settings_group_language),
+                        icon = Icons.Filled.Language,
+                        expanded = languageExpanded,
+                        onToggle = { languageExpanded = !languageExpanded },
+                        modifier = sectionModifier,
+                    ) {
+                        languageLabels.forEachIndexed { index, label ->
+                            VoyageSettingCard {
+                                VoyageSettingRow(
+                                    title = label,
+                                    icon = Icons.Filled.Language,
                                     onClick = {
                                         viewModel.setAppLanguage(languageTags[index])
                                         AppLocaleHelper.apply(context, languageTags[index])
                                         activity?.recreate()
                                     },
+                                    trailing = {
+                                        RadioButton(
+                                            selected = selectedLanguageIndex == index,
+                                            onClick = {
+                                                viewModel.setAppLanguage(languageTags[index])
+                                                AppLocaleHelper.apply(context, languageTags[index])
+                                                activity?.recreate()
+                                            },
+                                        )
+                                    },
                                 )
-                            },
-                        )
-                    }
-                }
-            }
-
-            val themeColorControls: @Composable ColumnScope.() -> Unit = {
-                    ListItem(
-                        headlineContent = { Text(stringResource(R.string.voyage_theme_dynamic_color)) },
-                        supportingContent = { Text(stringResource(R.string.voyage_theme_dynamic_color_summary)) },
-                        trailingContent = { Switch(uiState.materialDynamicColorEnabled, viewModel::setMaterialDynamicColorEnabled) },
-                    )
-                    Text(stringResource(R.string.voyage_theme_key_color), style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
-                    Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 12.dp), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
-                        SettingsColorChoice(Color(0xFF6750A4), uiState.keyColor == 0, stringResource(R.string.voyage_theme_system_color)) { viewModel.setKeyColor(0) }
-                        keyColorOptions.forEach { color ->
-                            SettingsColorChoice(Color(color), uiState.keyColor == color, null) { viewModel.setKeyColor(color) }
+                            }
                         }
                     }
-                    val paletteStyles = PaletteStyle.entries.map { it.name }
-                    ListItem(
-                        modifier = Modifier.clickable { paletteStyleExpanded = true },
-                        headlineContent = { Text(stringResource(R.string.settings_color_style)) },
-                        supportingContent = { Text(uiState.colorStyle) },
-                        trailingContent = {
-                            Box {
-                                TextButton(onClick = { paletteStyleExpanded = true }) { Text(uiState.colorStyle) }
-                                DropdownMenu(expanded = paletteStyleExpanded, onDismissRequest = { paletteStyleExpanded = false }) {
-                                    paletteStyles.forEach { style ->
-                                        DropdownMenuItem(text = { Text(style) }, onClick = { viewModel.setColorStyle(style); paletteStyleExpanded = false })
+                }
+
+                val theme: @Composable ColumnScope.() -> Unit = {
+                    VoyageSettingsGroup(
+                        title = stringResource(R.string.settings_theme),
+                        icon = Icons.Filled.Palette,
+                        expanded = themeExpanded,
+                        onToggle = { themeExpanded = !themeExpanded },
+                        modifier = sectionModifier,
+                    ) {
+                        VoyageSettingCard {
+                            Column(Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 16.dp)) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        Icons.Filled.Wallpaper,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                    Spacer(Modifier.width(12.dp))
+                                    Text(
+                                        stringResource(R.string.voyage_theme_wallpaper_colors),
+                                        style = MaterialTheme.typography.titleMedium,
+                                    )
+                                }
+                                Spacer(Modifier.height(14.dp))
+                                Row(
+                                    Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                ) {
+                                    listOf(
+                                        MaterialTheme.colorScheme.primary,
+                                        MaterialTheme.colorScheme.secondary,
+                                        MaterialTheme.colorScheme.tertiary,
+                                        MaterialTheme.colorScheme.surfaceVariant,
+                                    ).forEachIndexed { index, color ->
+                                        Surface(
+                                            modifier = Modifier.weight(if (index == 0) 1.4f else 0.9f)
+                                                .height(52.dp)
+                                                .clickable {
+                                                    viewModel.setKeyColor(
+                                                        if (index == 0) 0
+                                                        else keyColorOptions.getOrElse(index - 1) { 0 },
+                                                    )
+                                                },
+                                            shape = RoundedCornerShape(18.dp),
+                                            color = color,
+                                            tonalElevation = 1.dp,
+                                        ) {}
                                     }
                                 }
+                                Spacer(Modifier.height(12.dp))
+                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    VoyageChoiceChip(
+                                        label = stringResource(R.string.settings_motion_expressive),
+                                        selected = paletteStyle == PaletteStyle.Expressive,
+                                        onClick = { viewModel.setColorStyle(PaletteStyle.Expressive.name) },
+                                    )
+                                    VoyageChoiceChip(
+                                        label = stringResource(R.string.voyage_theme_follow_system),
+                                        selected = colorMode.isSystem,
+                                        onClick = { actions.onSetThemeMode(0) },
+                                    )
+                                }
                             }
-                        },
-                    )
-                    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(stringResource(R.string.voyage_theme_contrast), modifier = Modifier.weight(1f))
-                            Text(String.format("%.1f", uiState.materialContrastLevel), color = MaterialTheme.colorScheme.primary)
                         }
-                        Slider(uiState.materialContrastLevel.coerceIn(-1f, 1f), viewModel::setMaterialContrastLevel, valueRange = -1f..1f)
-                    }
-                    ListItem(
-                        modifier = Modifier.clickable(onClick = actions.onOpenColorPalette),
-                        headlineContent = { Text(stringResource(R.string.voyage_theme_color_editor)) },
-                        trailingContent = { Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null) },
-                    )
-            }
 
+                        VoyageChoicePanel(
+                            title = stringResource(R.string.voyage_theme_group_design),
+                            options = listOf(
+                                stringResource(R.string.theme_design_material3),
+                                stringResource(R.string.theme_design_miuix),
+                            ),
+                            selectedIndex = if (uiState.uiMode == UiMode.Material.value) 0 else 1,
+                            onSelected = actions.onSetUiModeIndex,
+                        )
 
-            val themeSection: @Composable () -> Unit = {
-                VoyageSettingsAccordion(
-                    title = stringResource(R.string.settings_theme),
-                    icon = Icons.Filled.Palette,
-                    expanded = themeExpanded,
-                    onToggle = { themeExpanded = !themeExpanded },
-                ) {
-                    SettingsThemeStyleChoice(
-                        title = stringResource(R.string.theme_design_material3),
-                        summary = stringResource(R.string.theme_design_material3_subtitle),
-                        selected = uiState.uiMode == UiMode.Material.value,
-                        icon = Icons.Filled.Palette,
-                        onClick = { actions.onSetUiModeIndex(1) },
-                    )
-                    SettingsThemeStyleChoice(
-                        title = stringResource(R.string.theme_design_miuix),
-                        summary = stringResource(R.string.theme_design_miuix_subtitle),
-                        selected = uiState.uiMode == UiMode.Miuix.value,
-                        icon = Icons.Filled.Widgets,
-                        onClick = { actions.onSetUiModeIndex(0) },
-                    )
-                    ListItem(
-                        modifier = Modifier.clickable(onClick = actions.onOpenTheme),
-                        headlineContent = { Text(stringResource(R.string.voyage_theme_page_title)) },
-                        supportingContent = { Text(stringResource(R.string.settings_theme_summary)) },
-                        trailingContent = { Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null) },
-                    )
-                    Column(content = themeColorControls)
-                }
-            }
+                        VoyageChoicePanel(
+                            title = stringResource(R.string.voyage_theme_group_mode),
+                            options = listOf(
+                                stringResource(R.string.voyage_theme_follow_system),
+                                stringResource(R.string.settings_theme_mode_light),
+                                stringResource(R.string.settings_theme_mode_dark),
+                            ),
+                            selectedIndex = when {
+                                colorMode.isSystem -> 0
+                                colorMode.isDark -> 2
+                                else -> 1
+                            },
+                            onSelected = actions.onSetThemeMode,
+                        )
 
-            val displaySection: @Composable () -> Unit = {
-                VoyageSettingsAccordion(
-                    title = stringResource(R.string.settings_group_display),
-                    icon = Icons.Outlined.TextFields,
-                    expanded = displayExpanded,
-                    onToggle = { displayExpanded = !displayExpanded },
-                ) {
-                    Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Text(stringResource(R.string.settings_font_scale_title), modifier = Modifier.weight(1f))
-                        Text((uiState.materialFontScale * 100).toInt().toString() + "%")
-                    }
-                    VoyageSlider(uiState.materialFontScale, viewModel::setMaterialFontScale, valueRange = 0.8f..1.5f, steps = 13, modifier = Modifier.padding(horizontal = 12.dp))
-                    Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Text(stringResource(R.string.settings_display_scale_title), modifier = Modifier.weight(1f))
-                        Text((uiState.materialDisplayScale * 100).toInt().toString() + "%")
-                    }
-                    VoyageSlider(uiState.materialDisplayScale, viewModel::setMaterialDisplayScale, valueRange = 0.85f..1.25f, steps = 7, modifier = Modifier.padding(horizontal = 12.dp))
-                    Text(stringResource(R.string.settings_display_preview_sample), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp))
-                    ListItem(
-                        modifier = Modifier.clickable { fontMenu = true },
-                        headlineContent = { Text(stringResource(R.string.voyage_theme_font_family)) },
-                        supportingContent = { Text(fontLabels[if (uiState.materialFontFamily == "Serif") 1 else 0]) },
-                        trailingContent = { TextButton(onClick = { fontMenu = true }) { Text(fontLabels[if (uiState.materialFontFamily == "Serif") 1 else 0]) } },
-                    )
-                    DropdownMenu(fontMenu, { fontMenu = false }) {
-                        fontLabels.forEachIndexed { index, label ->
-                            DropdownMenuItem(text = { Text(label) }, onClick = {
-                                viewModel.setMaterialFontFamily(if (index == 1) "Serif" else "Default")
-                                fontMenu = false
-                            })
+                        VoyageSettingCard {
+                            VoyageSettingRow(
+                                title = stringResource(R.string.voyage_theme_dynamic_color),
+                                summary = stringResource(R.string.voyage_theme_dynamic_color_summary),
+                                icon = Icons.Filled.Wallpaper,
+                                trailing = {
+                                    Switch(
+                                        checked = uiState.materialDynamicColorEnabled,
+                                        onCheckedChange = viewModel::setMaterialDynamicColorEnabled,
+                                    )
+                                },
+                            )
                         }
-                    }
-                    ListItem(headlineContent = { Text(stringResource(R.string.voyage_theme_large_text)) }, trailingContent = { ExpressiveSwitch(uiState.materialLargeTextEnabled, viewModel::setMaterialLargeTextEnabled) })
-                    ListItem(headlineContent = { Text(stringResource(R.string.settings_bold_text_title)) }, trailingContent = { ExpressiveSwitch(uiState.materialBoldTextEnabled, viewModel::setMaterialBoldTextEnabled) })
-                    ListItem(
-                        modifier = Modifier.clickable {
-                            viewModel.setMaterialFontScale(1.0f)
-                            viewModel.setMaterialDisplayScale(1.0f)
-                            viewModel.setMaterialFontFamily("Default")
-                            viewModel.setMaterialLargeTextEnabled(false)
-                            viewModel.setMaterialBoldTextEnabled(false)
-                        },
-                        leadingContent = { Icon(Icons.Filled.SystemUpdate, contentDescription = null) },
-                        headlineContent = { Text(stringResource(R.string.settings_display_restore_defaults)) },
-                    )
-                }
-            }
-
-            val behaviorSection: @Composable () -> Unit = {
-                VoyageSettingsAccordion(
-                    title = stringResource(R.string.settings_group_behavior),
-                    icon = Icons.Outlined.Animation,
-                    expanded = behaviorExpanded,
-                    onToggle = { behaviorExpanded = !behaviorExpanded },
-                ) {
-                    Choice(R.string.settings_motion_expressive, uiState.materialNavigationMotionMode == 0) { viewModel.setMaterialNavigationMotionMode(0) }
-                    Choice(R.string.settings_motion_simplified, uiState.materialNavigationMotionMode == 1) { viewModel.setMaterialNavigationMotionMode(1) }
-                    Text(stringResource(R.string.settings_transition_style), style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
-                    Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        transitionLabels.forEachIndexed { index, labelId ->
-                            FilterChip(
-                                selected = uiState.materialTransitionStyle == index,
-                                onClick = { viewModel.setMaterialTransitionStyle(index) },
-                                label = { Text(stringResource(labelId)) },
+                        VoyageSettingCard {
+                            VoyageSettingRow(
+                                title = stringResource(R.string.voyage_theme_page_title),
+                                summary = stringResource(R.string.voyage_theme_page_summary),
+                                icon = Icons.Filled.Palette,
+                                onClick = actions.onOpenTheme,
+                                trailing = {
+                                    Icon(
+                                        Icons.Filled.ExpandMore,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.graphicsLayer { rotationZ = -90f },
+                                    )
+                                },
                             )
                         }
                     }
-                    ListItem(headlineContent = { Text(stringResource(R.string.settings_haptic_feedback)) }, trailingContent = { ExpressiveSwitch(uiState.enableHapticFeedback, viewModel::setEnableHapticFeedback) })
-                    ListItem(
-                        headlineContent = { Text(stringResource(R.string.settings_enable_predictive_back)) },
-                        supportingContent = { Text(stringResource(R.string.settings_enable_predictive_back_summary)) },
-                        trailingContent = { ExpressiveSwitch(uiState.enablePredictiveBack, { enabled ->
-                            viewModel.setEnablePredictiveBack(enabled)
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                                AlohaOneUIApplication.applyEnableOnBackInvokedCallback(context, enabled)
-                                activity?.recreate()
-                            }
-                        }) },
-                    )
-
                 }
-            }
 
-            val alohaSection: @Composable () -> Unit = {
-                VoyageSettingsAccordion(
-                    title = stringResource(R.string.voyage_settings_group_aloha),
-                    icon = Icons.Filled.Dashboard,
-                    expanded = alohaExpanded,
-                    onToggle = { alohaExpanded = !alohaExpanded },
-                ) {
-                    ListItem(headlineContent = { Text(stringResource(R.string.settings_check_update)) }, supportingContent = { Text(stringResource(R.string.settings_check_update_summary)) }, trailingContent = { ExpressiveSwitch(uiState.checkUpdate, actions.onSetCheckUpdate) })
-                    ListItem(modifier = Modifier.clickable { showBottomSheet = true }, headlineContent = { Text(stringResource(R.string.send_log)) }, trailingContent = { Icon(Icons.Filled.BugReport, contentDescription = null) })
-                    ListItem(modifier = Modifier.clickable(onClick = actions.onOpenAbout), headlineContent = { Text(stringResource(R.string.about)) }, trailingContent = { Icon(Icons.Filled.Info, contentDescription = null) })
-                    ListItem(headlineContent = { Text(stringResource(R.string.settings_enable_swipe_back)) }, supportingContent = { Text(stringResource(R.string.settings_enable_swipe_back_summary)) }, trailingContent = { ExpressiveSwitch(uiState.enableSwipeBack, viewModel::setEnableSwipeBack) })
-                    ListItem(
-                        modifier = Modifier.clickable { gestureMenu = true },
-                        headlineContent = { Text(stringResource(R.string.settings_page_gesture_mode)) },
-                        supportingContent = { Text(gestureLabels[uiState.pagerGestureMode.coerceIn(0, 2)]) },
-                    )
-                    DropdownMenu(gestureMenu, { gestureMenu = false }) {
-                        gestureLabels.forEachIndexed { index, label -> DropdownMenuItem(text = { Text(label) }, onClick = { viewModel.setPagerGestureMode(index); gestureMenu = false }) }
-                    }
-                    ListItem(
-                        modifier = Modifier.clickable { pageScaleMenu = true },
-                        headlineContent = { Text(stringResource(R.string.settings_page_scale)) },
-                        supportingContent = { Text((uiState.pageScale * 100).toInt().toString() + "%") },
-                    )
-                    DropdownMenu(pageScaleMenu, { pageScaleMenu = false }) {
-                        listOf(80, 90, 100, 110, 120).forEach { percent ->
-                            DropdownMenuItem(text = { Text(percent.toString() + "%") }, onClick = { viewModel.setPageScale(percent / 100f); pageScaleMenu = false })
+                val display: @Composable ColumnScope.() -> Unit = {
+                    VoyageSettingsGroup(
+                        title = stringResource(R.string.settings_group_display),
+                        icon = Icons.Filled.TextFields,
+                        expanded = displayExpanded,
+                        onToggle = { displayExpanded = !displayExpanded },
+                        modifier = sectionModifier,
+                    ) {
+                        VoyageSettingCard {
+                            VoyageSettingRow(
+                                title = stringResource(R.string.voyage_toolbox_title),
+                                summary = stringResource(R.string.voyage_toolbox_subtitle),
+                                icon = Icons.Filled.TextFields,
+                            )
+                        }
+                        VoyageSettingCard {
+                            VoyageSettingRow(
+                                title = stringResource(R.string.voyage_theme_large_text),
+                                summary = stringResource(R.string.voyage_theme_large_text_summary),
+                                icon = Icons.Filled.TextFields,
+                                trailing = {
+                                    Switch(
+                                        checked = uiState.materialLargeTextEnabled,
+                                        onCheckedChange = viewModel::setMaterialLargeTextEnabled,
+                                    )
+                                },
+                            )
+                        }
+                        VoyageSliderCard(
+                            title = stringResource(R.string.settings_font_scale_title),
+                            icon = Icons.Filled.FontDownload,
+                            value = uiState.materialFontScale,
+                            valueRange = 0.8f..1.5f,
+                            steps = 13,
+                            onValueChange = viewModel::setMaterialFontScale,
+                        )
+                        VoyageSliderCard(
+                            title = stringResource(R.string.settings_display_scale_title),
+                            icon = Icons.Filled.ZoomIn,
+                            value = uiState.materialDisplayScale,
+                            valueRange = 0.85f..1.25f,
+                            steps = 7,
+                            onValueChange = viewModel::setMaterialDisplayScale,
+                        )
+                        VoyageSettingCard {
+                            VoyageSettingRow(
+                                title = stringResource(R.string.settings_bold_text_title),
+                                icon = Icons.Filled.FormatBold,
+                                trailing = {
+                                    Switch(
+                                        checked = uiState.materialBoldTextEnabled,
+                                        onCheckedChange = viewModel::setMaterialBoldTextEnabled,
+                                    )
+                                },
+                            )
+                        }
+                        VoyageChoicePanel(
+                            title = stringResource(R.string.voyage_theme_font_family),
+                            options = listOf(
+                                stringResource(R.string.voyage_font_default),
+                                stringResource(R.string.voyage_font_serif),
+                            ),
+                            selectedIndex = if (uiState.materialFontFamily == "Serif") 1 else 0,
+                            onSelected = {
+                                viewModel.setMaterialFontFamily(if (it == 1) "Serif" else "Default")
+                            },
+                        )
+                        VoyageSettingCard {
+                            VoyageSettingRow(
+                                title = stringResource(R.string.settings_display_restore_defaults),
+                                icon = Icons.Filled.DisplaySettings,
+                                onClick = {
+                                    viewModel.setMaterialFontScale(1f)
+                                    viewModel.setMaterialDisplayScale(1f)
+                                    viewModel.setMaterialFontFamily("Default")
+                                    viewModel.setMaterialLargeTextEnabled(false)
+                                    viewModel.setMaterialBoldTextEnabled(false)
+                                },
+                            )
                         }
                     }
                 }
-            }
 
-            BoxWithConstraints(Modifier.fillMaxWidth().weight(1f)) {
+                val motion: @Composable ColumnScope.() -> Unit = {
+                    VoyageSettingsGroup(
+                        title = stringResource(R.string.settings_group_behavior),
+                        icon = Icons.Filled.Animation,
+                        expanded = motionExpanded,
+                        onToggle = { motionExpanded = !motionExpanded },
+                        modifier = sectionModifier,
+                    ) {
+                        VoyageChoicePanel(
+                            title = stringResource(R.string.settings_motion_style),
+                            options = listOf(
+                                stringResource(R.string.settings_motion_expressive),
+                                stringResource(R.string.settings_motion_simplified),
+                            ),
+                            selectedIndex = uiState.materialNavigationMotionMode.coerceIn(0, 1),
+                            onSelected = viewModel::setMaterialNavigationMotionMode,
+                        )
+                        VoyageChoicePanel(
+                            title = stringResource(R.string.settings_transition_style),
+                            options = transitionLabels.map { stringResource(it) },
+                            selectedIndex = uiState.materialTransitionStyle.coerceIn(0, 3),
+                            onSelected = viewModel::setMaterialTransitionStyle,
+                        )
+                        VoyageSettingCard {
+                            VoyageSettingRow(
+                                title = stringResource(R.string.settings_enable_predictive_back),
+                                summary = stringResource(R.string.settings_enable_predictive_back_summary),
+                                icon = Icons.AutoMirrored.Filled.ArrowBack,
+                                trailing = {
+                                    Switch(
+                                        checked = uiState.enablePredictiveBack,
+                                        onCheckedChange = { enabled ->
+                                            viewModel.setEnablePredictiveBack(enabled)
+                                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                                                AlohaOneUIApplication.applyEnableOnBackInvokedCallback(context, enabled)
+                                                activity?.recreate()
+                                            }
+                                        },
+                                    )
+                                },
+                            )
+                        }
+                        VoyageSettingCard {
+                            VoyageSettingRow(
+                                title = stringResource(R.string.settings_haptic_feedback),
+                                summary = stringResource(R.string.settings_haptic_feedback_summary),
+                                icon = Icons.Filled.Vibration,
+                                trailing = {
+                                    Switch(
+                                        checked = uiState.enableHapticFeedback,
+                                        onCheckedChange = viewModel::setEnableHapticFeedback,
+                                    )
+                                },
+                            )
+                        }
+                    }
+                }
+
                 when {
-                    maxWidth >= 840.dp -> Row(
-                        Modifier.fillMaxSize(),
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    wide -> Row(
+                        Modifier.fillMaxSize().padding(horizontal = 8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        Column(Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState()).nestedScroll(scrollBehavior.nestedScrollConnection)) {
-                            languageSection()
-                            behaviorSection()
+                        Column(Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                            language()
+                            motion()
                             Spacer(Modifier.height(bottomInnerPadding))
                         }
-                        Column(Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState()).nestedScroll(scrollBehavior.nestedScrollConnection)) {
-                            themeSection()
+                        Column(Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                            theme()
                             Spacer(Modifier.height(bottomInnerPadding))
                         }
-                        Column(Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState()).nestedScroll(scrollBehavior.nestedScrollConnection)) {
-                            displaySection()
-                            alohaSection()
+                        Column(Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                            display()
                             Spacer(Modifier.height(bottomInnerPadding))
                         }
                     }
-                    maxWidth >= 600.dp -> Row(
-                        Modifier.fillMaxSize(),
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    medium -> Row(
+                        Modifier.fillMaxSize().padding(horizontal = 8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        Column(Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState()).nestedScroll(scrollBehavior.nestedScrollConnection)) {
-                            languageSection()
-                            behaviorSection()
+                        Column(Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                            language()
+                            motion()
                             Spacer(Modifier.height(bottomInnerPadding))
                         }
-                        Column(Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState()).nestedScroll(scrollBehavior.nestedScrollConnection)) {
-                            themeSection()
-                            displaySection()
-                            alohaSection()
+                        Column(Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                            theme()
+                            display()
                             Spacer(Modifier.height(bottomInnerPadding))
                         }
                     }
                     else -> Column(
-                        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).nestedScroll(scrollBehavior.nestedScrollConnection),
+                        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(top = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        languageSection()
-                        themeSection()
-                        displaySection()
-                        behaviorSection()
-                        alohaSection()
+                        language()
+                        theme()
+                        display()
+                        motion()
                         Spacer(Modifier.height(bottomInnerPadding))
                     }
                 }
             }
-
-            if (showBottomSheet) {
-                SendLogBottomSheet(onDismiss = { showBottomSheet = false }, snackbarHostState = snackBarHost)
-            }
         }
     }
 }
 
 @Composable
-private fun VoyageSettingsAccordion(
+private fun VoyageSettingsGroup(
     title: String,
     icon: ImageVector,
     expanded: Boolean,
     onToggle: () -> Unit,
+    modifier: Modifier = Modifier,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    Surface(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp),
-        shape = RoundedCornerShape(20.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
-    ) {
-        Column {
-            Row(
-                modifier = Modifier.fillMaxWidth().clickable(onClick = onToggle).padding(8.dp),
-                verticalAlignment = Alignment.CenterVertically,
+    Column(modifier.fillMaxWidth()) {
+        Row(
+            Modifier.fillMaxWidth().clickable(onClick = onToggle).padding(vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Surface(
+                modifier = Modifier.size(46.dp),
+                shape = RoundedCornerShape(15.dp),
+                color = MaterialTheme.colorScheme.primary,
             ) {
-                Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(24.dp))
-                Spacer(Modifier.width(12.dp))
-                Text(title, modifier = Modifier.weight(1f), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
-                Icon(Icons.Filled.ExpandMore, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.graphicsLayer { rotationZ = if (expanded) 180f else 0f })
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary)
+                }
             }
-            AnimatedVisibility(visible = expanded, enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
-                Column(content = content)
-            }
+            Spacer(Modifier.width(12.dp))
+            Text(title, modifier = Modifier.weight(1f), style = MaterialTheme.typography.titleLarge)
+            Icon(
+                imageVector = Icons.Filled.ExpandMore,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.graphicsLayer { rotationZ = if (expanded) 180f else 0f },
+            )
+        }
+        if (expanded) {
+            Column(
+                Modifier.fillMaxWidth().padding(top = 4.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+                content = content,
+            )
         }
     }
 }
 
 @Composable
-private fun Choice(id: Int, selected: Boolean, onClick: () -> Unit) {
-    ListItem(modifier = Modifier.clickable(onClick = onClick), headlineContent = { Text(stringResource(id)) }, trailingContent = { RadioButton(selected, onClick) })
-}
-
-@Composable
-private fun TopBar(scrollBehavior: TopAppBarScrollBehavior? = null) {
-    LargeFlexibleTopAppBar(
-        title = { Text(stringResource(R.string.settings)) },
-        colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.surface,
-            scrolledContainerColor = MaterialTheme.colorScheme.surface,
-        ),
-        windowInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
-        scrollBehavior = scrollBehavior,
+private fun VoyageSettingCard(content: @Composable ColumnScope.() -> Unit) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(18.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        tonalElevation = 1.dp,
+        content = { Column(content = content) },
     )
 }
 
-
 @Composable
-private fun SettingsThemeStyleChoice(
+private fun VoyageSettingRow(
     title: String,
-    summary: String,
-    selected: Boolean,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    onClick: () -> Unit,
+    summary: String? = null,
+    icon: ImageVector? = null,
+    onClick: (() -> Unit)? = null,
+    trailing: (@Composable () -> Unit)? = null,
 ) {
-    val container = if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.14f) else MaterialTheme.colorScheme.surfaceContainerLow
-    Surface(modifier = Modifier.fillMaxWidth().clickable(onClick = onClick), shape = MaterialTheme.shapes.large, color = container) {
-        Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-            Icon(icon, contentDescription = null, tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
-            Spacer(Modifier.width(12.dp))
-            Column(Modifier.weight(1f)) {
-                Text(title, style = MaterialTheme.typography.titleMedium)
+    Row(
+        modifier = Modifier.fillMaxWidth()
+            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
+            .padding(horizontal = 16.dp, vertical = 13.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (icon != null) {
+            Surface(
+                modifier = Modifier.size(42.dp),
+                shape = RoundedCornerShape(14.dp),
+                color = MaterialTheme.colorScheme.primaryContainer,
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimaryContainer)
+                }
+            }
+            Spacer(Modifier.width(14.dp))
+        }
+        Column(Modifier.weight(1f)) {
+            Text(title, style = MaterialTheme.typography.titleMedium)
+            if (summary != null) {
+                Spacer(Modifier.height(2.dp))
                 Text(summary, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            RadioButton(selected = selected, onClick = onClick)
+        }
+        if (trailing != null) {
+            Spacer(Modifier.width(12.dp))
+            trailing()
         }
     }
 }
 
 @Composable
-private fun SettingsColorChoice(color: Color, selected: Boolean, label: String?, onClick: () -> Unit) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Surface(
-            modifier = Modifier.size(if (selected) 40.dp else 34.dp).clickable(onClick = onClick),
-            shape = CircleShape,
-            color = color,
-            border = if (selected) BorderStroke(3.dp, MaterialTheme.colorScheme.primary) else null,
-        ) {}
-        if (label != null) Text(label, style = MaterialTheme.typography.labelSmall)
+private fun VoyageChoiceChip(label: String, selected: Boolean, onClick: () -> Unit) {
+    FilterChip(
+        selected = selected,
+        onClick = onClick,
+        label = { Text(label) },
+    )
+}
+
+@Composable
+private fun VoyageChoicePanel(
+    title: String,
+    options: List<String>,
+    selectedIndex: Int,
+    onSelected: (Int) -> Unit,
+) {
+    VoyageSettingCard {
+        Column(
+            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Text(title, style = MaterialTheme.typography.titleMedium)
+            Spacer(Modifier.height(12.dp))
+            Row(
+                Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.Center,
+            ) {
+                options.forEachIndexed { index, label ->
+                    FilterChip(
+                        selected = selectedIndex == index,
+                        onClick = { onSelected(index) },
+                        label = { Text(label) },
+                    )
+                    if (index < options.lastIndex) Spacer(Modifier.width(6.dp))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun VoyageSliderCard(
+    title: String,
+    icon: ImageVector,
+    value: Float,
+    valueRange: ClosedFloatingPointRange<Float>,
+    steps: Int,
+    onValueChange: (Float) -> Unit,
+) {
+    VoyageSettingCard {
+        Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Surface(
+                    modifier = Modifier.size(42.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    color = MaterialTheme.colorScheme.primaryContainer,
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimaryContainer)
+                    }
+                }
+                Spacer(Modifier.width(14.dp))
+                Text(title, modifier = Modifier.weight(1f), style = MaterialTheme.typography.titleMedium)
+                Surface(
+                    shape = RoundedCornerShape(24.dp),
+                    color = MaterialTheme.colorScheme.surfaceContainerHighest,
+                ) {
+                    Text(
+                        if (kotlin.math.abs(value - 1f) < 0.01f) stringResource(R.string.voyage_theme_contrast_standard)
+                        else "\${(value * 100).toInt()}%",
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                        style = MaterialTheme.typography.labelLarge,
+                    )
+                }
+            }
+            Slider(
+                value = value.coerceIn(valueRange),
+                onValueChange = onValueChange,
+                valueRange = valueRange,
+                steps = steps,
+            )
+        }
     }
 }
