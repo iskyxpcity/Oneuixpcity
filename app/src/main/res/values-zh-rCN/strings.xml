@@ -241,4 +241,12 @@
     <string name="theme_shadow_slider">滑条</string>
     <string name="settings_language">全局语言</string>
     <string name="settings_language_summary">选择应用所有页面使用的语言。</string>
+    <string name="theme_shape_style_title">形状样式</string>
+    <string name="theme_shape_rounded">圆角</string>
+    <string name="theme_shape_cut">切角</string>
+    <string name="theme_shape_squircle">超椭圆</string>
+    <string name="theme_shape_smooth">平滑</string>
+    <string name="theme_shape_wavy">波浪</string>
+    <string name="theme_shape_scoop">凹弧</string>
+    <string name="theme_shape_notch">缺口</string>
 </resources>
