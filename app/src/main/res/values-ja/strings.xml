@@ -57,4 +57,5 @@
     <string name="voyage_toolbox_title">Voyage ツールボックス</string>
     <string name="voyage_toolbox_subtitle">遠くの友も心は近くにいる。</string>
     <string name="voyage_theme_large_text_summary">文字と画面要素を大きくする</string>
+    <string name="settings_haptic_feedback_summary">画面を操作したときに触覚フィードバックを行います。</string>
 </resources>
