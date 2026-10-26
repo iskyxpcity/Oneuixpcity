@@ -101,7 +101,7 @@ import com.alohaoneui.app.ui.component.bottombar.useNavigationRail
 import com.alohaoneui.app.ui.component.material.ExpressiveToggleButton
 import com.alohaoneui.app.ui.component.material.SegmentedColumn
 import com.alohaoneui.app.ui.component.material.SegmentedDropdownItem
-import com.alohaoneui.app.ui.component.material.SegmentedChoiceDialogItem
+import com.alohaoneui.app.ui.component.material.SegmentedChoiceOptionsItem
 import com.alohaoneui.app.ui.component.material.SegmentedSwitchItem
 import com.alohaoneui.app.ui.component.material.SegmentedSliderItem
 import com.alohaoneui.app.ui.component.material.TonalCard
@@ -415,7 +415,7 @@ fun ColorPaletteScreenMaterial(
                     title = stringResource(R.string.theme_group_shape),
                     content = listOf(
                         {
-                            SegmentedChoiceDialogItem(
+                            SegmentedChoiceOptionsItem(
                                 title = stringResource(R.string.theme_shape_style_title),
                                 items = listOf(
                                     stringResource(R.string.theme_shape_rounded),
@@ -453,7 +453,7 @@ fun ColorPaletteScreenMaterial(
                     title = stringResource(R.string.theme_group_components),
                     content = listOf(
                         {
-                            SegmentedChoiceDialogItem(
+                            SegmentedChoiceOptionsItem(
                                 title = stringResource(R.string.theme_switch_style_title),
                                 items = listOf(
                                     stringResource(R.string.theme_switch_material_you),
@@ -470,7 +470,7 @@ fun ColorPaletteScreenMaterial(
                             )
                         },
                         {
-                            SegmentedChoiceDialogItem(
+                            SegmentedChoiceOptionsItem(
                                 title = stringResource(R.string.theme_slider_style_title),
                                 items = listOf(
                                     stringResource(R.string.theme_slider_material_you),
@@ -483,7 +483,7 @@ fun ColorPaletteScreenMaterial(
                             )
                         },
                         {
-                            SegmentedChoiceDialogItem(
+                            SegmentedChoiceOptionsItem(
                                 title = stringResource(R.string.theme_icon_shape_title),
                                 items = listOf(
                                     stringResource(R.string.theme_icon_shape_none),
