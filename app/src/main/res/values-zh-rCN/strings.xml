@@ -278,8 +278,8 @@
     <string name="voyage_switch_hyper_os">HyperOS</string>
     <string name="voyage_switch_one_ui">One UI</string>
     <string name="voyage_slider_material_you">Material You</string>
-    <string name="voyage_slider_fancy">灵动</string>
-    <string name="voyage_slider_material">Material</string>
+    <string name="voyage_slider_fancy">花式</string>
+    <string name="voyage_slider_material">Material 2</string>
     <string name="voyage_slider_hyper_os">HyperOS</string>
     <string name="voyage_font_default">默认</string>
     <string name="voyage_font_serif">衬线</string>
@@ -344,7 +344,7 @@
     <string name="voyage_theme_scheme_title">配色方案</string>
     <string name="voyage_theme_pure_black_summary">深色下用纯黑背景</string>
     <string name="voyage_theme_floating_bar_summary">底部导航栏悬浮在页面之上，页面内容延伸到它下方。仅对窄屏的底部导航生效。</string>
-    <string name="voyage_theme_floating_bar_blur_summary">悬浮底栏折射并模糊后面的内容，按住选中项可左右拖动切换。</string>
+    <string name="voyage_theme_floating_bar_blur_summary">模糊悬浮底栏后方的内容。</string>
     <string name="voyage_theme_floating_bar_blur_requires_floating">请先开启悬浮底栏</string>
     <string name="voyage_theme_floating_bar_blur_unsupported">需要 Android 13 及以上</string>
     <string name="theme_design_material3">Material 3</string>

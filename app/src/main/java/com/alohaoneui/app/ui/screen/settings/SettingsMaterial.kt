@@ -41,7 +41,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.alohaoneui.app.AlohaOneUIApplication
 import com.alohaoneui.app.R
-import com.alohaoneui.app.ui.UiMode
 import com.alohaoneui.app.ui.component.material.SendLogBottomSheet
 import com.alohaoneui.app.ui.component.material.SnackBarHost
 import com.alohaoneui.app.ui.util.AppLocaleHelper
@@ -65,7 +64,6 @@ fun SettingPagerMaterial(
     var behaviorExpanded by rememberSaveable { mutableStateOf(false) }
     var alohaExpanded by rememberSaveable { mutableStateOf(false) }
     var fontMenu by remember { mutableStateOf(false) }
-    var uiModeMenu by remember { mutableStateOf(false) }
     var gestureMenu by remember { mutableStateOf(false) }
     var pageScaleMenu by remember { mutableStateOf(false) }
 
@@ -215,17 +213,6 @@ fun SettingPagerMaterial(
                 expanded = alohaExpanded,
                 onToggle = { alohaExpanded = !alohaExpanded },
             ) {
-                ListItem(
-                    modifier = Modifier.clickable { uiModeMenu = true },
-                    headlineContent = { Text(stringResource(R.string.settings_ui_mode)) },
-                    supportingContent = { Text(stringResource(R.string.settings_ui_mode_summary)) },
-                    trailingContent = { TextButton(onClick = { uiModeMenu = true }) { Text(UiMode.entries.getOrNull(if (uiState.uiMode == UiMode.Material.value) 1 else 0)?.name ?: UiMode.DEFAULT_VALUE) } },
-                )
-                DropdownMenu(uiModeMenu, { uiModeMenu = false }) {
-                    UiMode.entries.forEachIndexed { index, mode ->
-                        DropdownMenuItem(text = { Text(mode.name) }, onClick = { actions.onSetUiModeIndex(index); uiModeMenu = false })
-                    }
-                }
                 ListItem(headlineContent = { Text(stringResource(R.string.settings_check_update)) }, supportingContent = { Text(stringResource(R.string.settings_check_update_summary)) }, trailingContent = { Switch(uiState.checkUpdate, actions.onSetCheckUpdate) })
                 ListItem(modifier = Modifier.clickable { showBottomSheet = true }, headlineContent = { Text(stringResource(R.string.send_log)) }, trailingContent = { Icon(Icons.Filled.BugReport, contentDescription = null) })
                 ListItem(modifier = Modifier.clickable(onClick = actions.onOpenAbout), headlineContent = { Text(stringResource(R.string.about)) }, trailingContent = { Icon(Icons.Filled.Info, contentDescription = null) })
