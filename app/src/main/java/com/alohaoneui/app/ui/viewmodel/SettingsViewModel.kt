@@ -52,6 +52,7 @@ class SettingsViewModel(
             val materialFontFamily = repo.materialFontFamily
             val materialColorVisionMode = repo.materialColorVisionMode
             val materialNavigationMotionMode = repo.materialNavigationMotionMode
+            val materialTransitionStyle = repo.materialTransitionStyle
             val materialDynamicColorEnabled = repo.materialDynamicColorEnabled
             val materialInvertColors = repo.materialInvertColors
             val materialShapeStyle = repo.materialShapeStyle
@@ -97,6 +98,7 @@ class SettingsViewModel(
                     materialFontFamily = materialFontFamily,
                     materialColorVisionMode = materialColorVisionMode,
                     materialNavigationMotionMode = materialNavigationMotionMode,
+                    materialTransitionStyle = materialTransitionStyle,
                     materialDynamicColorEnabled = materialDynamicColorEnabled,
                     materialInvertColors = materialInvertColors,
                     materialShapeStyle = materialShapeStyle,
@@ -301,6 +303,12 @@ class SettingsViewModel(
         val safeMode = mode.coerceIn(0, 1)
         repo.materialNavigationMotionMode = safeMode
         _uiState.update { it.copy(materialNavigationMotionMode = safeMode) }
+    }
+
+    fun setMaterialTransitionStyle(style: Int) {
+        val safeStyle = style.coerceIn(0, 3)
+        repo.materialTransitionStyle = safeStyle
+        _uiState.update { it.copy(materialTransitionStyle = safeStyle) }
     }
 
     fun setMaterialDynamicColorEnabled(enabled: Boolean) {
