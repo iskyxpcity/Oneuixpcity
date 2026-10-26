@@ -101,7 +101,13 @@ fun SettingPagerMiuix(
         stringResource(R.string.settings_page_gesture_cross_axis),
         stringResource(R.string.settings_page_gesture_ios_like),
     )
-    val motionLabels = listOf(stringResource(R.string.settings_motion_expressive), stringResource(R.string.settings_motion_standard))
+    val motionLabels = listOf(stringResource(R.string.settings_motion_expressive), stringResource(R.string.settings_motion_simplified))
+    val transitionLabels = listOf(
+        stringResource(R.string.settings_transition_aosp),
+        stringResource(R.string.settings_transition_miuix),
+        stringResource(R.string.settings_transition_scale),
+        stringResource(R.string.settings_transition_classic),
+    )
 
     Scaffold(
         topBar = {
@@ -187,9 +193,21 @@ fun SettingPagerMiuix(
                         OverlayDropdownPreference(title = stringResource(R.string.voyage_theme_font_family), items = fontLabels, selectedIndex = if (uiState.materialFontFamily == "Serif") 1 else 0, onSelectedIndexChange = { viewModel.setMaterialFontFamily(if (it == 1) "Serif" else "Default") })
                         SwitchPreference(title = stringResource(R.string.voyage_theme_large_text), checked = uiState.materialLargeTextEnabled, onCheckedChange = viewModel::setMaterialLargeTextEnabled)
                         SwitchPreference(title = stringResource(R.string.settings_bold_text_title), checked = uiState.materialBoldTextEnabled, onCheckedChange = viewModel::setMaterialBoldTextEnabled)
+                        ArrowPreference(
+                            title = stringResource(R.string.settings_display_restore_defaults),
+                            startAction = { Icon(Icons.Rounded.DisplaySettings, modifier = Modifier.padding(end = 6.dp), contentDescription = null, tint = colorScheme.onBackground) },
+                            onClick = {
+                                viewModel.setMaterialFontScale(1f)
+                                viewModel.setMaterialDisplayScale(1f)
+                                viewModel.setMaterialFontFamily("Default")
+                                viewModel.setMaterialLargeTextEnabled(false)
+                                viewModel.setMaterialBoldTextEnabled(false)
+                            },
+                        )
                     }
                     MiuixSettingsGroup(stringResource(R.string.settings_group_behavior), Icons.Rounded.Animation, behaviorExpanded, { behaviorExpanded = !behaviorExpanded }) {
                         OverlayDropdownPreference(title = stringResource(R.string.settings_motion_haptics), items = motionLabels, selectedIndex = uiState.materialNavigationMotionMode.coerceIn(0, 1), onSelectedIndexChange = viewModel::setMaterialNavigationMotionMode)
+                        OverlayDropdownPreference(title = stringResource(R.string.settings_transition_style), items = transitionLabels, selectedIndex = uiState.materialTransitionStyle.coerceIn(0, 3), onSelectedIndexChange = viewModel::setMaterialTransitionStyle)
                         SwitchPreference(title = stringResource(R.string.settings_haptic_feedback), checked = uiState.enableHapticFeedback, onCheckedChange = viewModel::setEnableHapticFeedback)
                         SwitchPreference(title = stringResource(R.string.settings_enable_predictive_back), summary = stringResource(R.string.settings_enable_predictive_back_summary), checked = uiState.enablePredictiveBack, onCheckedChange = { enabled ->
                             viewModel.setEnablePredictiveBack(enabled)
