@@ -138,7 +138,7 @@ fun SettingPagerMaterial(
             }
             VoyageSettingsAccordion(
                 title = stringResource(R.string.voyage_settings_group_color),
-                icon = Icons.Outlined.Palette,
+                icon = Icons.Filled.Palette,
                 expanded = colorExpanded,
                 onToggle = { colorExpanded = !colorExpanded },
             ) {

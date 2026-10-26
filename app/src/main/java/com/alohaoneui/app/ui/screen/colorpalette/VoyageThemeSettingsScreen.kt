@@ -98,7 +98,7 @@ fun VoyageThemeSettingsScreenMaterial(uiState: SettingsUiState, viewModel: Setti
                                 ThemeStyleChoice(stringResource(R.string.settings_theme_mode_system), "", ColorMode.fromValue(uiState.themeMode).toNonMonetMode() == ColorMode.SYSTEM.value, Icons.Filled.Brightness4) { viewModel.setColorMode(ColorMode.SYSTEM) }
                                 ThemeStyleChoice(stringResource(R.string.settings_theme_mode_light), "", ColorMode.fromValue(uiState.themeMode).toNonMonetMode() == ColorMode.LIGHT.value, Icons.Filled.Brightness7) { viewModel.setColorMode(ColorMode.LIGHT) }
                                 ThemeStyleChoice(stringResource(R.string.settings_theme_mode_dark), "", ColorMode.fromValue(uiState.themeMode).toNonMonetMode() == ColorMode.DARK.value, Icons.Filled.Brightness3) { viewModel.setColorMode(ColorMode.DARK) }
-                                Toggle(R.string.voyage_theme_pure_black, R.string.voyage_theme_pure_black_summary, uiState.themeMode == ColorMode.DARK_AMOLED.value) { enabled -> viewModel.setColorMode(if (enabled) ColorMode.DARK_AMOLED else ColorMode.DARK) }
+                                Toggle(R.string.voyage_theme_pure_black, R.string.voyage_theme_pure_black_summary, uiState.themeMode == ColorMode.DARK_AMOLED.value, onChange = { enabled -> viewModel.setColorMode(if (enabled) ColorMode.DARK_AMOLED else ColorMode.DARK) })
                             }
                             VoyageThemeCategory.LAUNCH -> Toggle(R.string.voyage_theme_launch_follows, R.string.voyage_theme_launch_follows_summary, uiState.materialLaunchFollowsTheme, viewModel::setMaterialLaunchFollowsTheme)
                             VoyageThemeCategory.ASSIST -> {

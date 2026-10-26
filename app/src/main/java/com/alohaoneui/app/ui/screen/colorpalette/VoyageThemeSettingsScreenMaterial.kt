@@ -497,7 +497,7 @@ private fun ThemeStyleChoice(
             Text(stringResource(id), modifier = Modifier.weight(1f))
             Text(String.format("%.1f", value), color = MaterialTheme.colorScheme.primary)
         }
-        Slider(value.coerceIn(range.start, range.endInclusive), onChange, valueRange = range)
+        VoyageSlider(value.coerceIn(range.start, range.endInclusive), onChange, valueRange = range)
     }
 }
 @Composable private fun Drop(id: Int, selected: String, options: List<String>, onSelect: (String) -> Unit) {
