@@ -161,10 +161,10 @@ fun SettingPagerMiuix(
                                     tint = colorScheme.onBackground
                                 )
                             },
-                            selectedIndex = listOf("system", "zh-CN", "zh-TW", "en", "ja", "ko")
+                            selectedIndex = listOf("system", "zh-Hans", "zh-Hant", "en", "ja", "ko")
                                 .indexOf(uiState.appLanguage).coerceAtLeast(0),
                             onSelectedIndexChange = { index ->
-                                actions.onSetAppLanguage(listOf("system", "zh-CN", "zh-TW", "en", "ja", "ko")[index])
+                                actions.onSetAppLanguage(listOf("system", "zh-Hans", "zh-Hant", "en", "ja", "ko")[index])
                             }
                         )
                         ArrowPreference(
