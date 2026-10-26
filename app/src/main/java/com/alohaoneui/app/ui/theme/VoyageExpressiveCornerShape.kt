@@ -5,6 +5,7 @@ import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.Dp
 
 /**
@@ -14,27 +15,50 @@ import androidx.compose.ui.unit.Dp
  * additional squircle, smooth, wavy, scoop and notch variants so changing the setting
  * changes the actual component outline rather than only the selected label.
  */
-internal class VoyageExpressiveCornerShape(
+internal class VoyageExpressiveCornerShape private constructor(
     private val style: Int,
-    radius: Dp,
+    topStart: CornerSize,
+    topEnd: CornerSize,
+    bottomEnd: CornerSize,
+    bottomStart: CornerSize,
 ) : CornerBasedShape(
-    topStart = CornerSize(radius),
-    topEnd = CornerSize(radius),
-    bottomEnd = CornerSize(radius),
-    bottomStart = CornerSize(radius),
+    topStart = topStart,
+    topEnd = topEnd,
+    bottomEnd = bottomEnd,
+    bottomStart = bottomStart,
 ) {
+    constructor(style: Int, radius: Dp) : this(
+        style,
+        CornerSize(radius),
+        CornerSize(radius),
+        CornerSize(radius),
+        CornerSize(radius),
+    )
+
+    override fun copy(
+        topStart: CornerSize,
+        topEnd: CornerSize,
+        bottomEnd: CornerSize,
+        bottomStart: CornerSize,
+    ): CornerBasedShape = VoyageExpressiveCornerShape(style, topStart, topEnd, bottomEnd, bottomStart)
+
     override fun createOutline(
         size: Size,
         topStart: Float,
         topEnd: Float,
         bottomEnd: Float,
         bottomStart: Float,
+        layoutDirection: LayoutDirection,
     ): Outline {
+        val physicalTopStart = if (layoutDirection == LayoutDirection.Ltr) topStart else topEnd
+        val physicalTopEnd = if (layoutDirection == LayoutDirection.Ltr) topEnd else topStart
+        val physicalBottomEnd = if (layoutDirection == LayoutDirection.Ltr) bottomEnd else bottomStart
+        val physicalBottomStart = if (layoutDirection == LayoutDirection.Ltr) bottomStart else bottomEnd
         val limit = minOf(size.width, size.height) / 2f
-        val tl = topStart.coerceIn(0f, limit)
-        val tr = topEnd.coerceIn(0f, limit)
-        val br = bottomEnd.coerceIn(0f, limit)
-        val bl = bottomStart.coerceIn(0f, limit)
+        val tl = physicalTopStart.coerceIn(0f, limit)
+        val tr = physicalTopEnd.coerceIn(0f, limit)
+        val br = physicalBottomEnd.coerceIn(0f, limit)
+        val bl = physicalBottomStart.coerceIn(0f, limit)
         val w = size.width
         val h = size.height
         val path = Path()
