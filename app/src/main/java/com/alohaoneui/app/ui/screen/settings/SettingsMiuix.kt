@@ -149,6 +149,24 @@ fun SettingPagerMiuix(
                             selectedIndex = if (uiState.uiMode == UiMode.Material.value) 1 else 0,
                             onSelectedIndexChange = actions.onSetUiModeIndex
                         )
+                        OverlayDropdownPreference(
+                            title = stringResource(id = R.string.settings_language),
+                            summary = stringResource(id = R.string.settings_language_summary),
+                            items = listOf("Follow system", "简体中文", "繁體中文", "English", "日本語", "한국어"),
+                            startAction = {
+                                Icon(
+                                    Icons.Rounded.Language,
+                                    modifier = Modifier.padding(end = 6.dp),
+                                    contentDescription = stringResource(id = R.string.settings_language),
+                                    tint = colorScheme.onBackground
+                                )
+                            },
+                            selectedIndex = listOf("system", "zh-CN", "zh-TW", "en", "ja", "ko")
+                                .indexOf(uiState.appLanguage).coerceAtLeast(0),
+                            onSelectedIndexChange = { index ->
+                                actions.onSetAppLanguage(listOf("system", "zh-CN", "zh-TW", "en", "ja", "ko")[index])
+                            }
+                        )
                         ArrowPreference(
                             title = stringResource(id = R.string.settings_theme),
                             summary = stringResource(id = R.string.settings_theme_summary),
