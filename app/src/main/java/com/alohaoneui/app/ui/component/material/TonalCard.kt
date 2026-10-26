@@ -1,6 +1,7 @@
 package com.alohaoneui.app.ui.component.material
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -16,6 +17,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.dp
+import com.alohaoneui.app.ui.theme.LocalMaterialBorderWidth
+import com.alohaoneui.app.ui.theme.LocalMaterialShadowContainers
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -27,6 +30,9 @@ fun TonalCard(
     onClick: () -> Unit,
     content: @Composable () -> Unit,
 ) {
+    val borderWidth = LocalMaterialBorderWidth.current.coerceIn(0f, 1.5f)
+    val border = if (borderWidth > 0f) BorderStroke(borderWidth.dp, MaterialTheme.colorScheme.outlineVariant) else null
+    val elevation = CardDefaults.cardElevation(defaultElevation = if (LocalMaterialShadowContainers.current) 1.dp else 0.dp)
     Card(
         onClick = onClick,
         modifier = modifier,
@@ -36,6 +42,8 @@ fun TonalCard(
             contentColor = contentColorFor(containerColor),
         ),
         shape = shape,
+        border = border,
+        elevation = elevation,
     ) {
         content()
     }
@@ -49,6 +57,9 @@ fun TonalCard(
     shape: Shape = MaterialTheme.shapes.large,
     content: @Composable () -> Unit,
 ) {
+    val borderWidth = LocalMaterialBorderWidth.current.coerceIn(0f, 1.5f)
+    val border = if (borderWidth > 0f) BorderStroke(borderWidth.dp, MaterialTheme.colorScheme.outlineVariant) else null
+    val elevation = CardDefaults.cardElevation(defaultElevation = if (LocalMaterialShadowContainers.current) 1.dp else 0.dp)
     Card(
         modifier = modifier,
         colors = CardDefaults.cardColors(
@@ -56,6 +67,8 @@ fun TonalCard(
             contentColor = contentColorFor(containerColor),
         ),
         shape = shape,
+        border = border,
+        elevation = elevation,
     ) {
         content()
     }
