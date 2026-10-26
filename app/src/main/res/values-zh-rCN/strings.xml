@@ -228,4 +228,15 @@
     <string name="changelog_2610191_optimizations_body">• 优化状态栏组合图标布局及原生图标间距。\n• 优化原生信号图标的显示与恢复逻辑。\n• 优化图标缩放设置的保存与迁移。\n• 改进 Material、Miuix 主题及宽屏界面的适配。</string>
     <string name="changelog_2610191_fixes_title">问题修复</string>
     <string name="changelog_2610191_fixes_body">• 修复部分设置迁移时图标缩放比例异常的问题。\n• 修复隐藏原生图标后可能残留空白的问题。\n• 优化部分系统功能的配置读取与兼容性。</string>
+    <string name="theme_group_shape">形状</string>
+    <string name="theme_group_components">组件</string>
+    <string name="theme_group_shadows">阴影</string>
+    <string name="theme_corner_scale_title">圆角大小</string>
+    <string name="theme_border_width_title">描边宽度</string>
+    <string name="theme_shadow_container">容器</string>
+    <string name="theme_shadow_app_bar">顶栏</string>
+    <string name="theme_shadow_button">按钮</string>
+    <string name="theme_shadow_fab">悬浮按钮</string>
+    <string name="theme_shadow_switch">开关</string>
+    <string name="theme_shadow_slider">滑条</string>
 </resources>
