@@ -3,7 +3,6 @@ package com.alohaoneui.app.ui.component.material
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.border
 import androidx.compose.ui.draw.shadow
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
@@ -32,7 +31,7 @@ fun ExpressiveSwitch(
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     showThumbIcon: Boolean = true,
 ) {
-    val switchShape = RoundedCornerShape(50)
+    val switchShape = voyageCornerShape(50.dp)
     val styledModifier = modifier
         .then(
             if (LocalMaterialShadowSwitches.current) Modifier.shadow(2.dp, switchShape) else Modifier
