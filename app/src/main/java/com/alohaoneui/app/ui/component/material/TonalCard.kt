@@ -26,16 +26,17 @@ import com.alohaoneui.app.ui.theme.LocalMaterialShadowContainers
 fun TonalCard(
     modifier: Modifier = Modifier,
     containerColor: Color = MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp),
-    shape: Shape = MaterialTheme.shapes.large,
+    shape: Shape? = null,
     enabled: Boolean = true,
     onClick: () -> Unit,
     content: @Composable () -> Unit,
 ) {
+    val actualShape = shape ?: voyageCornerShape(20.dp)
     Card(
         onClick = onClick,
         modifier = modifier.shadow(
             elevation = if (LocalMaterialShadowContainers.current) 2.dp else 0.dp,
-            shape = shape,
+            shape = actualShape,
         ),
         enabled = enabled,
         border = LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
@@ -48,7 +49,7 @@ fun TonalCard(
             containerColor = containerColor,
             contentColor = contentColorFor(containerColor),
         ),
-        shape = shape,
+        shape = actualShape,
     ) {
         content()
     }
@@ -62,10 +63,11 @@ fun TonalCard(
     shape: Shape = MaterialTheme.shapes.large,
     content: @Composable () -> Unit,
 ) {
+    val actualShape = shape ?: voyageCornerShape(20.dp)
     Card(
         modifier = modifier.shadow(
             elevation = if (LocalMaterialShadowContainers.current) 2.dp else 0.dp,
-            shape = shape,
+            shape = actualShape,
         ),
         border = LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
             BorderStroke(it.dp, MaterialTheme.colorScheme.outlineVariant)
@@ -77,7 +79,7 @@ fun TonalCard(
             containerColor = containerColor,
             contentColor = contentColorFor(containerColor),
         ),
-        shape = shape,
+        shape = actualShape,
     ) {
         content()
     }
