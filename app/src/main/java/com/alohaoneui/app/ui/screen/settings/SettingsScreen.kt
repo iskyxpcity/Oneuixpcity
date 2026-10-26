@@ -3,7 +3,6 @@ package com.alohaoneui.app.ui.screen.settings
 import android.app.Activity
 import android.content.ContextWrapper
 import androidx.compose.ui.platform.LocalContext
-
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.LaunchedEffect
@@ -18,6 +17,7 @@ import com.alohaoneui.app.ui.LocalUiMode
 import com.alohaoneui.app.ui.UiMode
 import com.alohaoneui.app.ui.navigation3.Navigator
 import com.alohaoneui.app.ui.navigation3.Route
+import com.alohaoneui.app.ui.util.AppLocaleContext
 import com.alohaoneui.app.ui.viewmodel.SettingsViewModel
 
 @Composable
@@ -33,15 +33,11 @@ fun SettingPager(
     val initialResumeHandled = rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(isCurrentPage) {
-        if (isCurrentPage) {
-            viewModel.refresh()
-        }
+        if (isCurrentPage) viewModel.refresh()
     }
 
     LifecycleResumeEffect(Unit) {
-        if (initialResumeHandled.value && latestIsCurrentPage) {
-            viewModel.refresh()
-        }
+        if (initialResumeHandled.value && latestIsCurrentPage) viewModel.refresh()
         initialResumeHandled.value = true
         onPauseOrDispose { }
     }
@@ -50,6 +46,7 @@ fun SettingPager(
         onSetCheckUpdate = viewModel::setCheckUpdate,
         onSetAppLanguage = { language ->
             viewModel.setAppLanguage(language)
+            AppLocaleContext.apply(context, language)
             context.findActivity()?.recreate()
         },
         onOpenTheme = { navigator.push(Route.ColorPalette) },
@@ -64,7 +61,6 @@ fun SettingPager(
         UiMode.Material -> SettingPagerMaterial(uiState, actions, bottomInnerPadding)
     }
 }
-
 
 private fun android.content.Context.findActivity(): Activity? {
     var current: android.content.Context? = this
