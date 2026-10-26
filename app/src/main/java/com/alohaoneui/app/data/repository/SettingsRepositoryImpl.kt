@@ -214,6 +214,14 @@ class SettingsRepositoryImpl : SettingsRepository {
         get() = prefs.getBoolean("material_bold_text_enabled", false)
         set(value) = prefs.edit { putBoolean("material_bold_text_enabled", value) }
 
+    override var appLanguage: String
+        get() = prefs.getString("app_language", "system")?.takeIf { it in setOf("system", "en", "zh-CN") } ?: "system"
+        set(value) = prefs.edit { putString("app_language", value.takeIf { it in setOf("system", "en", "zh-CN") } ?: "system") }
+
+    override var materialDisplayScale: Float
+        get() = prefs.getFloat("material_display_scale", 1.0f).coerceIn(0.85f, 1.25f)
+        set(value) = prefs.edit { putFloat("material_display_scale", value.coerceIn(0.85f, 1.25f)) }
+
     override var pagerGestureMode: Int
         get() = prefs.getInt("pager_gesture_mode", 0).coerceIn(0, 2)
         set(value) = prefs.edit { putInt("pager_gesture_mode", value.coerceIn(0, 2)) }
@@ -258,6 +266,8 @@ class SettingsRepositoryImpl : SettingsRepository {
         enableHapticFeedback = enableHapticFeedback,
         materialLargeTextEnabled = materialLargeTextEnabled,
         materialBoldTextEnabled = materialBoldTextEnabled,
+        appLanguage = appLanguage,
+        materialDisplayScale = materialDisplayScale,
     )
 
     override fun restoreFromBackup(snapshot: AppSettingsBackup) {
@@ -308,6 +318,8 @@ class SettingsRepositoryImpl : SettingsRepository {
             .putBoolean("enable_haptic_feedback", snapshot.enableHapticFeedback)
             .putBoolean("material_large_text_enabled", snapshot.materialLargeTextEnabled)
             .putBoolean("material_bold_text_enabled", snapshot.materialBoldTextEnabled)
+            .putString("app_language", snapshot.appLanguage.takeIf { it in setOf("system", "en", "zh-CN") } ?: "system")
+            .putFloat("material_display_scale", snapshot.materialDisplayScale.coerceIn(0.85f, 1.25f))
             .commit()
         check(committed) { "Could not persist restored AlohaOneUI app settings." }
     }
