@@ -80,8 +80,8 @@ fun LanguageSettingsScreen() {
                         },
                         headlineContent = { Text(label) },
                         trailingContent = { RadioButton(selected = selected == index, onClick = {
-                            selectedLanguage = tags[index]
-                            AppLocaleHelper.apply(context, selectedLanguage)
+                            viewModel.setAppLanguage(tags[index])
+                            AppLocaleHelper.apply(context, tags[index])
                             activity?.recreate()
                         }) },
                     )
