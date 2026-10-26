@@ -185,6 +185,8 @@ fun VoyageThemeSettingsScreenMaterial(uiState: SettingsUiState, viewModel: Setti
     }
 }
 
+}
+
 @Composable private fun ThemeStyleChoice(title: String, summary: String, selected: Boolean, icon: androidx.compose.ui.graphics.vector.ImageVector, onClick: () -> Unit) {
     val container = if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.14f) else MaterialTheme.colorScheme.surfaceContainerLow
     Surface(
@@ -402,6 +404,8 @@ private fun VoyageThemeSettingsScreenMiuix(
             }
         }
     }
+}
+
 }
 
 @Composable
