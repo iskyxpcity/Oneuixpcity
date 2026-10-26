@@ -17,7 +17,7 @@ import com.alohaoneui.app.ui.theme.ColorMode
 import com.alohaoneui.app.ui.viewmodel.SettingsViewModel
 
 @Composable
-fun ColorPaletteScreen() {
+fun ColorPaletteScreen(schemeEditorOnly: Boolean = false, schemeIndex: Int = -1) {
     val navigator = LocalNavigator.current
     val context = LocalContext.current
     val activity = LocalActivity.current
@@ -62,8 +62,19 @@ fun ColorPaletteScreen() {
         onSetPageScale = viewModel::setPageScale,
     )
 
-    when (LocalUiMode.current) {
-        UiMode.Miuix -> ColorPaletteScreenMiuix(state, actions)
-        UiMode.Material -> ColorPaletteScreenMaterial(state, actions)
+    if (schemeEditorOnly) {
+        VoyageColorSchemeEditorScreenMaterial(
+            uiState = uiState,
+            viewModel = viewModel,
+            onBack = actions.onBack,
+            schemeEditorOnly = true,
+            schemeIndex = schemeIndex,
+            onOpenColorSchemeEditor = { index -> navigator.push(com.alohaoneui.app.ui.navigation3.Route.VoyageColorSchemeEditor(index)) },
+        )
+    } else {
+        when (LocalUiMode.current) {
+            UiMode.Miuix -> ColorPaletteScreenMiuix(state, actions)
+            UiMode.Material -> ColorPaletteScreenMaterial(state, actions)
+        }
     }
 }

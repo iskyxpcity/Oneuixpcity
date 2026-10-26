@@ -18,3 +18,33 @@ val Typography = Typography(
         letterSpacing = 0.5.sp
     )
 )
+
+
+/** Applies Voyage's exposed font-family and bold-text preferences to Material typography. */
+fun androidx.compose.material3.Typography.withMaterialFontFamily(
+    family: String,
+    bold: Boolean,
+): androidx.compose.material3.Typography {
+    val selectedFamily = if (family.equals("Serif", ignoreCase = true)) FontFamily.Serif else FontFamily.Default
+    fun TextStyle.withFont() = copy(
+        fontFamily = selectedFamily,
+        fontWeight = if (bold) FontWeight.Bold else fontWeight,
+    )
+    return copy(
+        displayLarge = displayLarge.withFont(),
+        displayMedium = displayMedium.withFont(),
+        displaySmall = displaySmall.withFont(),
+        headlineLarge = headlineLarge.withFont(),
+        headlineMedium = headlineMedium.withFont(),
+        headlineSmall = headlineSmall.withFont(),
+        titleLarge = titleLarge.withFont(),
+        titleMedium = titleMedium.withFont(),
+        titleSmall = titleSmall.withFont(),
+        bodyLarge = bodyLarge.withFont(),
+        bodyMedium = bodyMedium.withFont(),
+        bodySmall = bodySmall.withFont(),
+        labelLarge = labelLarge.withFont(),
+        labelMedium = labelMedium.withFont(),
+        labelSmall = labelSmall.withFont(),
+    )
+}
