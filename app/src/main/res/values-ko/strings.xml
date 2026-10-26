@@ -32,4 +32,7 @@
     <string name="color_pink">분홍</string>
     <string name="color_brown">갈색</string>
     <string name="alohaoneui_tools">Tools</string>
+    <string name="settings_language_chinese_traditional">번체 중국어</string>
+    <string name="settings_language_japanese">일본어</string>
+    <string name="settings_language_korean">한국어</string>
 </resources>
