@@ -132,6 +132,20 @@ fun SettingPagerMaterial(
                     }
                     add {
                         SegmentedListItem(
+                            onClick = actions.onOpenTheme,
+                            headlineContent = { Text(stringResource(id = R.string.settings_theme)) },
+                            supportingContent = { Text(stringResource(id = R.string.settings_theme_summary)) },
+                            leadingContent = { Icon(Icons.Filled.Palette, stringResource(id = R.string.settings_theme)) },
+                            trailingContent = {
+                                Icon(
+                                    Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                    null
+                                )
+                            }
+                        )
+                    }
+                    add {
+                        SegmentedListItem(
                             onClick = actions.onOpenDisplayText,
                             headlineContent = { Text(stringResource(R.string.settings_display_text)) },
                             supportingContent = { Text(stringResource(R.string.settings_display_text_summary)) },
@@ -148,20 +162,7 @@ fun SettingPagerMaterial(
                             trailingContent = { Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null) }
                         )
                     }
-                    add {
-                        SegmentedListItem(
-                            onClick = actions.onOpenTheme,
-                            headlineContent = { Text(stringResource(id = R.string.settings_theme)) },
-                            supportingContent = { Text(stringResource(id = R.string.settings_theme_summary)) },
-                            leadingContent = { Icon(Icons.Filled.Palette, stringResource(id = R.string.settings_theme)) },
-                            trailingContent = {
-                                Icon(
-                                    Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                                    null
-                                )
-                            }
-                        )
-                    }
+
                 }
             )
 
