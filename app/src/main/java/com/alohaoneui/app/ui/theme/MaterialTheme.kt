@@ -6,6 +6,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MotionScheme
 import androidx.compose.material3.Shapes
+import androidx.compose.foundation.shape.CornerBasedShape
+import androidx.compose.foundation.shape.CutCornerShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -18,6 +21,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
@@ -76,8 +80,9 @@ fun MaterialAlohaOneUITheme(
         LocalMaterialShadowSwitches provides appSettings.materialShadowSwitches,
         LocalMaterialShadowSliders provides appSettings.materialShadowSliders,
         LocalDensity provides Density(
-            density = density.density,
-            fontScale = density.fontScale * appSettings.materialFontScale.coerceIn(0.8f, 1.5f),
+            density = density.density * if (appSettings.materialLargeTextEnabled) 1.12f else 1f,
+            fontScale = density.fontScale * appSettings.materialFontScale.coerceIn(0.8f, 1.5f) *
+                if (appSettings.materialLargeTextEnabled) 1.12f else 1f,
         ),
     ) {
         DynamicMaterialExpressiveTheme(
@@ -88,7 +93,7 @@ fun MaterialAlohaOneUITheme(
             style = appSettings.paletteStyle,
             contrastLevel = appSettings.materialContrastLevel.toDouble(),
             specVersion = appSettings.colorSpec.effectiveFor(appSettings.paletteStyle),
-            shapes = Shapes(),
+            shapes = voyageShapes(appSettings.materialShapeStyle, appSettings.materialCornerScale),
             typography = Typography.withMaterialFontFamily(
                 appSettings.materialFontFamily,
                 appSettings.materialBoldTextEnabled,
@@ -179,4 +184,28 @@ private fun materialColorVisionMatrix(mode: Int, invert: Boolean): ColorMatrix? 
         out[row * 5 + 4] = offset
     }
     return ColorMatrix(out)
+}
+
+
+/**
+ * Voyage's theme uses eight expressive shape tokens. Preserve the original token radii and
+ * apply the user's corner scale. The rounded and cut treatments use their matching Compose
+ * shape primitives.
+ */
+private fun voyageShapes(style: Int, scale: Float): Shapes {
+    val factor = scale.coerceIn(0.5f, 1.5f)
+    fun shape(radius: Float): CornerBasedShape {
+        val corner = (radius * factor).dp
+        return if (style == 1) CutCornerShape(corner) else RoundedCornerShape(corner)
+    }
+    return Shapes(
+        shape(8f),
+        shape(12f),
+        shape(20f),
+        shape(28f),
+        shape(36f),
+        shape(32f),
+        shape(42f),
+        shape(52f),
+    )
 }
