@@ -23,6 +23,7 @@ interface SettingsRepository {
     var materialDynamicColorEnabled: Boolean
     var materialInvertColors: Boolean
     var materialShapeStyle: Int
+    var materialIconShape: Int
     var materialSwitchStyle: Int
     var materialSliderStyle: Int
     var materialLaunchFollowsTheme: Boolean
@@ -85,6 +86,7 @@ data class AppSettingsBackup(
     val materialDynamicColorEnabled: Boolean = true,
     val materialInvertColors: Boolean = false,
     val materialShapeStyle: Int = 0,
+    val materialIconShape: Int = 0,
     val materialSwitchStyle: Int = 0,
     val materialSliderStyle: Int = 0,
     val materialLaunchFollowsTheme: Boolean = true,

@@ -14,6 +14,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.outlined.AppShortcut
 import androidx.compose.material.icons.outlined.CallToAction
@@ -390,6 +391,12 @@ fun VoyageColorSchemeEditorScreenMaterial(
                                     )
                                     Drop(R.string.voyage_theme_shape_style, labels[uiState.materialShapeStyle.coerceIn(0, labels.lastIndex)], labels) { viewModel.setMaterialShapeStyle(labels.indexOf(it).coerceAtLeast(0)) }
                                     Slide(R.string.voyage_theme_corner_scale, uiState.materialCornerScale, 0.5f..1.5f, viewModel::setMaterialCornerScale)
+                                    IconShapeGallery(
+                                        selectedShape = uiState.materialIconShape,
+                                        title = stringResource(R.string.voyage_theme_icon_shape_title),
+                                        randomDescription = stringResource(R.string.voyage_theme_icon_shape_random),
+                                        onSelect = viewModel::setMaterialIconShape,
+                                    )
                                 }
                                 VoyageThemeCategory.SHADOWS -> {
     
@@ -415,6 +422,7 @@ fun VoyageColorSchemeEditorScreenMaterial(
                                         viewModel.setMaterialNavigationMotionMode(0)
                                         viewModel.setMaterialInvertColors(false)
                                         viewModel.setMaterialShapeStyle(0)
+                                        viewModel.setMaterialIconShape(0)
                                         viewModel.setMaterialSwitchStyle(0)
                                         viewModel.setMaterialSliderStyle(1)
                                         viewModel.setMaterialLaunchFollowsTheme(true)
@@ -732,6 +740,83 @@ private fun ThemeResetCard(onClick: () -> Unit) {
             Column {
                 Text(stringResource(R.string.voyage_theme_reset_title), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onErrorContainer)
                 Text(stringResource(R.string.voyage_theme_reset_summary), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.72f))
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun IconShapeGallery(
+    selectedShape: Int,
+    title: String,
+    randomDescription: String,
+    onSelect: (Int) -> Unit,
+) {
+    val polygons = listOf(
+        MaterialShapes.Square, MaterialShapes.Slanted, MaterialShapes.Arch, MaterialShapes.Fan, MaterialShapes.Arrow,
+        MaterialShapes.SemiCircle, MaterialShapes.Oval, MaterialShapes.Pill, MaterialShapes.Triangle, MaterialShapes.Diamond,
+        MaterialShapes.ClamShell, MaterialShapes.Pentagon, MaterialShapes.Gem, MaterialShapes.VerySunny, MaterialShapes.Sunny,
+        MaterialShapes.Cookie4Sided, MaterialShapes.Cookie6Sided, MaterialShapes.Cookie7Sided, MaterialShapes.Cookie9Sided, MaterialShapes.Cookie12Sided,
+        MaterialShapes.Ghostish, MaterialShapes.Clover4Leaf, MaterialShapes.Clover8Leaf, MaterialShapes.Burst, MaterialShapes.SoftBurst,
+        MaterialShapes.Boom, MaterialShapes.SoftBoom, MaterialShapes.Flower, MaterialShapes.Puffy, MaterialShapes.PuffyDiamond,
+        MaterialShapes.PixelCircle, MaterialShapes.PixelTriangle, MaterialShapes.Bun, MaterialShapes.Heart,
+    )
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(title, style = MaterialTheme.typography.titleMedium)
+        FlowRow(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(2.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+            maxItemsInEachRow = 5,
+        ) {
+            Surface(
+                modifier = Modifier.size(40.dp).clickable { onSelect(0) },
+                shape = MaterialShapes.Cookie12Sided.toShape(),
+                color = if (selectedShape == 0) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh,
+                shadowElevation = 1.dp,
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Surface(
+                        modifier = Modifier.size(28.dp),
+                        shape = androidx.compose.foundation.shape.RoundedCornerShape(6.dp),
+                        color = Color.Transparent,
+                        border = androidx.compose.foundation.BorderStroke(2.dp, MaterialTheme.colorScheme.onSurfaceVariant),
+                    ) {}
+                }
+            }
+            polygons.forEachIndexed { index, polygon ->
+                val storedIndex = index + 1
+                Surface(
+                    modifier = Modifier.size(40.dp).clickable { onSelect(storedIndex) },
+                    shape = MaterialShapes.Cookie12Sided.toShape(),
+                    color = if (selectedShape == storedIndex) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh,
+                    shadowElevation = 1.dp,
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Surface(
+                            modifier = Modifier.size(28.dp),
+                            shape = polygon.toShape(),
+                            color = Color.Transparent,
+                            border = androidx.compose.foundation.BorderStroke(
+                                width = 2.dp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            ),
+                        ) {}
+                    }
+                }
+            }
+            Surface(
+                modifier = Modifier.size(40.dp).clickable {
+                    onSelect(kotlin.random.Random.nextInt(1, polygons.size + 1))
+                },
+                shape = MaterialShapes.Cookie12Sided.toShape(),
+                color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                shadowElevation = 1.dp,
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(Icons.Filled.Shuffle, contentDescription = randomDescription, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
             }
         }
     }

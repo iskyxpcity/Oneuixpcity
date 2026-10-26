@@ -120,6 +120,10 @@ class SettingsRepositoryImpl : SettingsRepository {
         get() = prefs.getInt("material_shape_style", 0).coerceIn(0, 6)
         set(value) = prefs.edit { putInt("material_shape_style", value.coerceIn(0, 6)) }
 
+    override var materialIconShape: Int
+        get() = prefs.getInt("material_icon_shape", 0).coerceIn(0, 32)
+        set(value) = prefs.edit { putInt("material_icon_shape", value.coerceIn(0, 32)) }
+
     override var materialSwitchStyle: Int
         get() = prefs.getInt("material_switch_style", 0).coerceIn(0, 7)
         set(value) = prefs.edit { putInt("material_switch_style", value.coerceIn(0, 7)) }
@@ -246,6 +250,7 @@ class SettingsRepositoryImpl : SettingsRepository {
         materialDynamicColorEnabled = materialDynamicColorEnabled,
         materialInvertColors = materialInvertColors,
         materialShapeStyle = materialShapeStyle,
+        materialIconShape = materialIconShape,
         materialSwitchStyle = materialSwitchStyle,
         materialSliderStyle = materialSliderStyle,
         materialLaunchFollowsTheme = materialLaunchFollowsTheme,
@@ -298,6 +303,7 @@ class SettingsRepositoryImpl : SettingsRepository {
             .putBoolean("material_dynamic_color_enabled", snapshot.materialDynamicColorEnabled)
             .putBoolean("material_invert_colors", snapshot.materialInvertColors)
             .putInt("material_shape_style", snapshot.materialShapeStyle.coerceIn(0, 6))
+            .putInt("material_icon_shape", snapshot.materialIconShape.coerceIn(0, 32))
             .putInt("material_switch_style", snapshot.materialSwitchStyle.coerceIn(0, 7))
             .putInt("material_slider_style", snapshot.materialSliderStyle.coerceIn(0, 3))
             .putBoolean("material_launch_follows_theme", snapshot.materialLaunchFollowsTheme)

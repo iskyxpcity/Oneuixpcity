@@ -28,6 +28,7 @@ data class SettingsUiState(
     val materialDynamicColorEnabled: Boolean = true,
     val materialInvertColors: Boolean = false,
     val materialShapeStyle: Int = 0,
+    val materialIconShape: Int = 0,
     val materialSwitchStyle: Int = 0,
     val materialSliderStyle: Int = 0,
     val materialLaunchFollowsTheme: Boolean = true,

@@ -243,6 +243,8 @@
     <string name="voyage_theme_group_launch">Launch screen and icon</string>
     <string name="voyage_theme_group_navigation_bar">Navigation bar</string>
     <string name="voyage_theme_group_assist">Color assistance</string>
+    <string name="voyage_theme_icon_shape_title">Icon backdrop</string>
+    <string name="voyage_theme_icon_shape_random">Random icon shape</string>
     <string name="voyage_theme_group_shape">Shapes</string>
     <string name="voyage_theme_group_shadows">Shadows</string>
     <string name="voyage_theme_dynamic_color">System dynamic color</string>

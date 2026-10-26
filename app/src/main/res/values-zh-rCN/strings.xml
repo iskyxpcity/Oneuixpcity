@@ -240,6 +240,8 @@
     <string name="voyage_theme_group_launch">启动画面与图标</string>
     <string name="voyage_theme_group_navigation_bar">导航栏</string>
     <string name="voyage_theme_group_assist">色彩辅助</string>
+    <string name="voyage_theme_icon_shape_title">图标底衬</string>
+    <string name="voyage_theme_icon_shape_random">随机形状</string>
     <string name="voyage_theme_group_shape">形状</string>
     <string name="voyage_theme_group_shadows">阴影</string>
     <string name="voyage_theme_dynamic_color">系统动态色</string>

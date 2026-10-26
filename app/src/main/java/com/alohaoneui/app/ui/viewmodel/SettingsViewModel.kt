@@ -55,6 +55,7 @@ class SettingsViewModel(
             val materialDynamicColorEnabled = repo.materialDynamicColorEnabled
             val materialInvertColors = repo.materialInvertColors
             val materialShapeStyle = repo.materialShapeStyle
+            val materialIconShape = repo.materialIconShape
             val materialSwitchStyle = repo.materialSwitchStyle
             val materialSliderStyle = repo.materialSliderStyle
             val materialLaunchFollowsTheme = repo.materialLaunchFollowsTheme
@@ -99,6 +100,7 @@ class SettingsViewModel(
                     materialDynamicColorEnabled = materialDynamicColorEnabled,
                     materialInvertColors = materialInvertColors,
                     materialShapeStyle = materialShapeStyle,
+                    materialIconShape = materialIconShape,
                     materialSwitchStyle = materialSwitchStyle,
                     materialSliderStyle = materialSliderStyle,
                     materialLaunchFollowsTheme = materialLaunchFollowsTheme,
@@ -316,6 +318,12 @@ class SettingsViewModel(
         val safeStyle = style.coerceIn(0, 6)
         repo.materialShapeStyle = safeStyle
         _uiState.update { it.copy(materialShapeStyle = safeStyle) }
+    }
+
+    fun setMaterialIconShape(shape: Int) {
+        val safeShape = shape.coerceIn(0, 32)
+        repo.materialIconShape = safeShape
+        _uiState.update { it.copy(materialIconShape = safeShape) }
     }
 
     fun setMaterialSwitchStyle(style: Int) {
