@@ -212,7 +212,7 @@ jobs:
           ./gradlew "$APP_ASSEMBLE_TASK" -PALOHAONEUI_PACKAGE_NAME=com.alohaoneui.app -PALOHAONEUI_NAME="Aloha OneUI" --stacktrace --no-daemon 2>&1 | tee diagnostics/gradle-build.log
 
       - name: Validate optimized release candidate
-        if: success() && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/migration/alohaoneui-rename-20261020' || github.ref == 'refs/heads/migration/alohaoneui-full-identity-20261020' || startsWith(github.ref, 'refs/heads/test/'))
+        if: success() && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/migration/alohaoneui-rename-20261020' || github.ref == 'refs/heads/migration/alohaoneui-full-identity-20261020')
         env:
           ALOHAONEUI_KEYSTORE_PATH: ${{ github.workspace }}/app/owner.keystore
           ALOHAONEUI_KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
@@ -301,7 +301,7 @@ jobs:
           fi
 
       - name: Publish signed APK to GitHub release
-        if: success() && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/migration/'))
+        if: success() && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/migration/alohaoneui-rename-20261020' || github.ref == 'refs/heads/migration/alohaoneui-full-identity-20261020' || startsWith(github.ref, 'refs/heads/test/'))
         env:
           SOURCE_REPO_TOKEN: ${{ github.token }}
         run: |
