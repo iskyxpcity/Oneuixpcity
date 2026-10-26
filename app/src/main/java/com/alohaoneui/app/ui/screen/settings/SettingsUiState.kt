@@ -25,6 +25,7 @@ data class SettingsUiState(
     val materialFontFamily: String = "Default",
     val materialColorVisionMode: Int = 0,
     val materialNavigationMotionMode: Int = 0,
+    val materialTransitionStyle: Int = 0,
     val materialDynamicColorEnabled: Boolean = true,
     val materialInvertColors: Boolean = false,
     val materialShapeStyle: Int = 0,
