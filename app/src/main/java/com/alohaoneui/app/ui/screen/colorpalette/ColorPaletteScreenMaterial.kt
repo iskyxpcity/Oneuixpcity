@@ -452,6 +452,47 @@ fun ColorPaletteScreenMaterial(
                     title = stringResource(R.string.theme_group_components),
                     content = listOf(
                         {
+                            SegmentedDropdownItem(
+                                title = stringResource(R.string.theme_switch_style_title),
+                                items = listOf(
+                                    stringResource(R.string.theme_switch_material_you),
+                                    stringResource(R.string.theme_switch_compose),
+                                    stringResource(R.string.theme_switch_pixel),
+                                    stringResource(R.string.theme_switch_fluent),
+                                    stringResource(R.string.theme_switch_cupertino),
+                                    stringResource(R.string.theme_switch_liquid_glass),
+                                    stringResource(R.string.theme_switch_hyper_os),
+                                    stringResource(R.string.theme_switch_one_ui),
+                                ),
+                                selectedIndex = uiState.materialSwitchStyle,
+                                onItemSelected = actions.onSetMaterialSwitchStyle,
+                            )
+                        },
+                        {
+                            SegmentedDropdownItem(
+                                title = stringResource(R.string.theme_slider_style_title),
+                                items = listOf(
+                                    stringResource(R.string.theme_slider_material_you),
+                                    stringResource(R.string.theme_slider_fancy),
+                                    stringResource(R.string.theme_slider_material),
+                                    stringResource(R.string.theme_slider_hyper_os),
+                                ),
+                                selectedIndex = uiState.materialSliderStyle,
+                                onItemSelected = actions.onSetMaterialSliderStyle,
+                            )
+                        },
+                        {
+                            SegmentedDropdownItem(
+                                title = stringResource(R.string.theme_icon_shape_title),
+                                items = listOf(
+                                    stringResource(R.string.theme_icon_shape_none),
+                                    stringResource(R.string.theme_icon_shape_random),
+                                ),
+                                selectedIndex = uiState.materialIconShapeStyle,
+                                onItemSelected = actions.onSetMaterialIconShapeStyle,
+                            )
+                        },
+                        {
                             var outlineWidth by remember(uiState.materialOutlineWidth) {
                                 mutableFloatStateOf(uiState.materialOutlineWidth)
                             }
