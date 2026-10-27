@@ -1,6 +1,7 @@
 package com.alohaoneui.app.ui.component.material
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
@@ -22,6 +23,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -32,6 +34,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import com.alohaoneui.app.ui.theme.LocalMaterialSliderStyle
+import com.alohaoneui.app.ui.theme.LocalMaterialShadowSliders
+import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
 
 /**
  * Four selectable slider component families. Interaction, range handling and
@@ -113,7 +117,24 @@ fun SegmentedSliderItem(
                         sliderState.value = newValue
                         onValueChange(newValue)
                     },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .then(
+                            if (LocalMaterialShadowSliders.current) {
+                                Modifier.shadow(2.dp, voyageCornerShape(50.dp))
+                            } else {
+                                Modifier
+                            }
+                        )
+                        .then(
+                            LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
+                                Modifier.border(
+                                    width = it.dp,
+                                    color = MaterialTheme.colorScheme.outlineVariant,
+                                    shape = voyageCornerShape(50.dp),
+                                )
+                            } ?: Modifier
+                        ),
                     onValueChangeFinished = onValueChangeFinished,
                     interactionSource = interactionSource,
                     thumb = {
