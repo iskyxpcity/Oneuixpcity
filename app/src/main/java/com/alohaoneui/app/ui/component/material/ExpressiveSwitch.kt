@@ -53,6 +53,7 @@ fun ExpressiveSwitch(
     val style = LocalMaterialSwitchStyle.current.coerceIn(0, 7)
     val scheme = MaterialTheme.colorScheme
     val checkedTrack = when (style) {
+        0 -> colors.checkedTrackColor
         1 -> scheme.primary
         2 -> scheme.primaryContainer
         3 -> scheme.secondary
@@ -63,11 +64,13 @@ fun ExpressiveSwitch(
         else -> scheme.primary
     }
     val uncheckedTrack = when (style) {
+        0 -> colors.uncheckedTrackColor
         4 -> Color(0xFF8E8E93)
         5 -> scheme.surfaceVariant
         else -> scheme.surfaceContainerHighest
     }
     val checkedThumb = when (style) {
+        0 -> colors.checkedThumbColor
         1 -> scheme.onPrimary
         2 -> scheme.primary
         3 -> scheme.onSecondary
@@ -76,6 +79,7 @@ fun ExpressiveSwitch(
         else -> Color.White
     }
     val uncheckedThumb = when (style) {
+        0 -> colors.uncheckedThumbColor
         1, 2 -> scheme.outline
         3, 5, 6, 7 -> scheme.surface
         else -> Color.White
@@ -176,7 +180,11 @@ fun ExpressiveSwitch(
                 center = Offset(cx, cy),
             )
             if (showThumbIcon && thumbContent == null && style in setOf(0, 2, 3, 5, 6, 7)) {
-                val iconColor = if (checked) checkedTrack else uncheckedTrack
+                val iconColor = if (checked) {
+                    if (style == 0) colors.checkedIconColor else checkedTrack
+                } else {
+                    if (style == 0) colors.uncheckedIconColor else uncheckedTrack
+                }
                 val stroke = (h * 0.065f).coerceAtLeast(1.4.dp.toPx())
                 if (checked) {
                     drawLine(iconColor, Offset(cx - thumbRadius * 0.38f, cy), Offset(cx - thumbRadius * 0.08f, cy + thumbRadius * 0.24f), stroke, StrokeCap.Round)
