@@ -76,10 +76,7 @@ fun ExpressiveSwitch(
         7 -> scheme.primary
         else -> scheme.primary
     }
-    val uncheckedTrack = when (style) {
-        0 -> colors.uncheckedTrackColor
-        else -> scheme.surfaceContainerHighest
-    }
+    val uncheckedTrack = Color(0xFF45464A)
     val checkedThumb = when (style) {
         0 -> colors.checkedThumbColor
         1 -> scheme.onPrimary
