@@ -1,27 +1,43 @@
 package com.alohaoneui.app.ui.component.material
 
-import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.border
-import androidx.compose.ui.draw.shadow
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.Icon
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchColors
 import androidx.compose.material3.SwitchDefaults
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
-import com.alohaoneui.app.ui.theme.LocalMaterialSwitchStyle
 import com.alohaoneui.app.ui.theme.LocalMaterialShadowSwitches
+import com.alohaoneui.app.ui.theme.LocalMaterialSwitchStyle
 
+/**
+ * Voyage's eight selectable switch families. The selector changes the actual
+ * track/thumb geometry and palette rather than applying a cosmetic scale to
+ * the platform Material switch. Toggle semantics and animated thumb travel
+ * remain shared across all styles.
+ */
 @Composable
 fun ExpressiveSwitch(
     checked: Boolean,
@@ -35,51 +51,140 @@ fun ExpressiveSwitch(
 ) {
     val style = LocalMaterialSwitchStyle.current.coerceIn(0, 7)
     val scheme = MaterialTheme.colorScheme
-    val switchShape = when (style) {
-        3 -> androidx.compose.foundation.shape.RoundedCornerShape(6.dp)
-        4 -> androidx.compose.foundation.shape.CircleShape
-        5 -> androidx.compose.foundation.shape.RoundedCornerShape(18.dp)
-        6 -> androidx.compose.foundation.shape.RoundedCornerShape(10.dp)
-        7 -> androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
-        else -> voyageCornerShape(50.dp)
+    val checkedTrack = when (style) {
+        1 -> scheme.primary
+        2 -> scheme.primaryContainer
+        3 -> scheme.secondary
+        4 -> Color(0xFF34C759)
+        5 -> scheme.tertiaryContainer
+        6 -> Color(0xFF1684FC)
+        7 -> scheme.primary
+        else -> scheme.primary
     }
-    val styleColors = when (style) {
-        1 -> SwitchDefaults.colors(checkedThumbColor = scheme.onPrimary, checkedTrackColor = scheme.primary, uncheckedThumbColor = scheme.outline, uncheckedTrackColor = scheme.surfaceContainerHighest, checkedBorderColor = scheme.primary, uncheckedBorderColor = scheme.outlineVariant, checkedIconColor = scheme.primary, uncheckedIconColor = scheme.surfaceContainerHighest)
-        2 -> SwitchDefaults.colors(checkedThumbColor = scheme.primary, checkedTrackColor = scheme.primaryContainer, uncheckedThumbColor = scheme.outline, uncheckedTrackColor = scheme.surfaceContainerHighest, checkedBorderColor = scheme.primaryContainer, uncheckedBorderColor = scheme.outlineVariant, checkedIconColor = scheme.onPrimary, uncheckedIconColor = scheme.surfaceContainerHighest)
-        3 -> SwitchDefaults.colors(checkedThumbColor = scheme.onSecondary, checkedTrackColor = scheme.secondary, uncheckedThumbColor = scheme.surface, uncheckedTrackColor = scheme.surfaceContainerHighest, checkedBorderColor = scheme.secondary, uncheckedBorderColor = scheme.outline, checkedIconColor = scheme.secondary, uncheckedIconColor = scheme.outline)
-        4 -> SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = Color(0xFF34C759), uncheckedThumbColor = Color.White, uncheckedTrackColor = Color(0xFF8E8E93), checkedBorderColor = Color(0xFF34C759), uncheckedBorderColor = Color(0xFF8E8E93), checkedIconColor = Color(0xFF34C759), uncheckedIconColor = Color(0xFF8E8E93))
-        5 -> SwitchDefaults.colors(checkedThumbColor = scheme.onTertiaryContainer, checkedTrackColor = scheme.tertiaryContainer, uncheckedThumbColor = scheme.surface, uncheckedTrackColor = scheme.surfaceVariant, checkedBorderColor = scheme.tertiary, uncheckedBorderColor = scheme.outlineVariant, checkedIconColor = scheme.tertiary, uncheckedIconColor = scheme.outline)
-        6 -> SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = Color(0xFF1684FC), uncheckedThumbColor = scheme.surface, uncheckedTrackColor = scheme.surfaceContainerHighest, checkedBorderColor = Color(0xFF1684FC), uncheckedBorderColor = scheme.outlineVariant, checkedIconColor = Color(0xFF1684FC), uncheckedIconColor = scheme.outline)
-        7 -> SwitchDefaults.colors(checkedThumbColor = scheme.onPrimary, checkedTrackColor = scheme.primary, uncheckedThumbColor = scheme.surface, uncheckedTrackColor = scheme.surfaceContainerHighest, checkedBorderColor = scheme.primary, uncheckedBorderColor = scheme.outlineVariant, checkedIconColor = scheme.primary, uncheckedIconColor = scheme.outline)
-        else -> colors
+    val uncheckedTrack = when (style) {
+        4 -> Color(0xFF8E8E93)
+        5 -> scheme.surfaceVariant
+        else -> scheme.surfaceContainerHighest
     }
-    val styledModifier = modifier
-        .then(when (style) { 3 -> Modifier.graphicsLayer { scaleX = 1.04f }; 5 -> Modifier.graphicsLayer { alpha = 0.96f }; else -> Modifier })
-        .then(
-            if (LocalMaterialShadowSwitches.current) Modifier.shadow(2.dp, switchShape) else Modifier
-        )
-        .then(
-            LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
-                Modifier.border(it.dp, MaterialTheme.colorScheme.outlineVariant, switchShape)
-            } ?: Modifier
-        )
-    Switch(
-        checked = checked,
-        onCheckedChange = onCheckedChange,
-        modifier = styledModifier,
-        thumbContent = thumbContent ?: if (showThumbIcon && (checked || enabled) && style in setOf(0, 2, 3, 5, 6, 7)) {
-            {
-                Icon(
-                    imageVector = if (checked) Icons.Filled.Check else Icons.Filled.Close,
-                    contentDescription = null,
-                    modifier = Modifier.size(SwitchDefaults.IconSize),
+    val checkedThumb = when (style) {
+        1 -> scheme.onPrimary
+        2 -> scheme.primary
+        3 -> scheme.onSecondary
+        5 -> scheme.onTertiaryContainer
+        7 -> scheme.onPrimary
+        else -> Color.White
+    }
+    val uncheckedThumb = when (style) {
+        1, 2 -> scheme.outline
+        3, 5, 6, 7 -> scheme.surface
+        else -> Color.White
+    }
+    val checkedBorder = when (style) {
+        2 -> scheme.primaryContainer
+        3 -> scheme.secondary
+        4 -> Color(0xFF34C759)
+        5 -> scheme.tertiary
+        6 -> Color(0xFF1684FC)
+        else -> checkedTrack
+    }
+    val uncheckedBorder = when (style) {
+        4 -> Color(0xFF8E8E93)
+        3 -> scheme.outline
+        else -> scheme.outlineVariant
+    }
+    val cornerFraction = when (style) {
+        2 -> 0.28f // Pixel-style squarer track
+        3 -> 0.20f // Fluent-style track
+        4 -> 0.50f // Cupertino pill
+        5 -> 0.50f // Liquid-glass pill
+        6 -> 0.30f // HyperOS rounded rectangle
+        7 -> 0.38f // One UI track
+        else -> 0.50f
+    }
+    val thumbRadiusFraction = when (style) {
+        1 -> 0.30f
+        2 -> 0.30f
+        3 -> 0.31f
+        4 -> 0.36f
+        5 -> 0.31f
+        6 -> 0.32f
+        7 -> 0.31f
+        else -> 0.31f
+    }
+    val travel by animateFloatAsState(
+        targetValue = if (checked) 1f else 0f,
+        animationSpec = spring(dampingRatio = 0.78f, stiffness = 620f),
+        label = "voyageSwitchThumb",
+    )
+    val pressed by interactionSource.collectIsPressedAsState()
+    val trackShape = androidx.compose.foundation.shape.RoundedCornerShape((32f * cornerFraction).dp)
+    val borderWidth = LocalMaterialOutlineWidth.current
+    Box(
+        modifier = modifier
+            .size(width = if (style == 4) 52.dp else 52.dp, height = 32.dp)
+            .then(if (LocalMaterialShadowSwitches.current && style in setOf(2, 5, 6)) Modifier.shadow(2.dp, trackShape) else Modifier)
+            .toggleable(
+                value = checked,
+                enabled = enabled && onCheckedChange != null,
+                role = Role.Switch,
+                interactionSource = interactionSource,
+                indication = null,
+                onValueChange = { onCheckedChange?.invoke(it) },
+            ),
+        contentAlignment = Alignment.Center,
+    ) {
+        Canvas(Modifier.fillMaxSize()) {
+            val w = size.width
+            val h = size.height
+            val trackColor = (if (checked) checkedTrack else uncheckedTrack).let {
+                if (enabled) it else it.copy(alpha = 0.38f)
+            }
+            val radius = h * cornerFraction
+            drawRoundRect(
+                color = trackColor,
+                topLeft = Offset.Zero,
+                size = Size(w, h),
+                cornerRadius = CornerRadius(radius, radius),
+            )
+            if (style == 1 || style == 2 || style == 3 || style == 6 || style == 7) {
+                drawRoundRect(
+                    color = (if (checked) checkedBorder else uncheckedBorder).copy(alpha = if (enabled) 1f else 0.45f),
+                    topLeft = Offset(borderWidth.dp.toPx() / 2f, borderWidth.dp.toPx() / 2f),
+                    size = Size(w - borderWidth.dp.toPx(), h - borderWidth.dp.toPx()),
+                    cornerRadius = CornerRadius(radius, radius),
+                    style = Stroke(width = (if (style == 3) 1.5f else maxOf(borderWidth, 1f)).dp.toPx()),
                 )
             }
-        } else null,
-        enabled = enabled,
-        colors = styleColors,
-        interactionSource = interactionSource
-    )
+            val thumbRadius = h * thumbRadiusFraction * (if (pressed) 0.96f else 1f)
+            val inset = when (style) { 4 -> h * 0.12f; 5 -> h * 0.10f; else -> h * 0.13f }
+            val left = inset + thumbRadius
+            val right = w - inset - thumbRadius
+            val cx = left + (right - left) * travel
+            val cy = h / 2f
+            if (style == 5) {
+                drawCircle(color = Color.White.copy(alpha = if (checked) 0.22f else 0.10f), radius = thumbRadius + 2.dp.toPx(), center = Offset(cx, cy))
+            }
+            drawCircle(
+                color = (if (checked) checkedThumb else uncheckedThumb).let { if (enabled) it else it.copy(alpha = 0.65f) },
+                radius = thumbRadius,
+                center = Offset(cx, cy),
+            )
+            if (showThumbIcon && thumbContent == null && style in setOf(0, 2, 3, 5, 6, 7)) {
+                val iconColor = if (checked) checkedTrack else uncheckedTrack
+                val stroke = (h * 0.065f).coerceAtLeast(1.4.dp.toPx())
+                if (checked) {
+                    drawLine(iconColor, Offset(cx - thumbRadius * 0.38f, cy), Offset(cx - thumbRadius * 0.08f, cy + thumbRadius * 0.24f), stroke, StrokeCap.Round)
+                    drawLine(iconColor, Offset(cx - thumbRadius * 0.08f, cy + thumbRadius * 0.24f), Offset(cx + thumbRadius * 0.42f, cy - thumbRadius * 0.30f), stroke, StrokeCap.Round)
+                } else if (style == 2 || style == 3 || style == 6 || style == 7) {
+                    drawLine(iconColor, Offset(cx - thumbRadius * 0.25f, cy - thumbRadius * 0.25f), Offset(cx + thumbRadius * 0.25f, cy + thumbRadius * 0.25f), stroke, StrokeCap.Round)
+                    drawLine(iconColor, Offset(cx + thumbRadius * 0.25f, cy - thumbRadius * 0.25f), Offset(cx - thumbRadius * 0.25f, cy + thumbRadius * 0.25f), stroke, StrokeCap.Round)
+                }
+            }
+        }
+        if (thumbContent != null) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { thumbContent() }
+        }
+    }
 }
 
 @Composable
