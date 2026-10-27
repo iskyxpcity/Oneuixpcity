@@ -85,3 +85,14 @@
 - APK：`AlohaOneUI_1.0.261025_BUILD_1661.apk`，大小 `28,748,245` bytes；SHA-256：`55fcd9907c8cc57d8bbcf80db57d38bfeebf35385dd5aede7f906122becc8436`。
 - 验收：Artifact ZIP 与 APK `unzip -t` 均通过；`SHA256SUMS` 校验通过；包名 `com.alohaoneui.app`，versionName `1.0.261025`，versionCode `16`；V2 签名验证通过，证书 SHA-256 为 `93bf61a6493c6b336383832eb41301bd8fe061f43566e7e384e3fdd9fc1c26a1`。
 - 当前最新产品 APK 为 Build #1661。后续继续处理 Voyage 原始 Switch/Slider 绘制路径、真实图标形状与 Smooth G²；在还原原始方法体并验证参数前，不将手写近似样式标记为原版移植完成。
+
+
+## Build #1663：Switch 全局描边宽度修复
+
+- 产品源码提交：`e507579e98f2a8e772bf5e6d348eaf2259c4f0f4`。
+- 在 `ExpressiveSwitch.kt` 中修正全局轮廓宽度行为：此前部分样式在宽度为 0 时仍会画出至少 1dp 的边线，而另一些样式不响应全局描边宽度。现改为仅当 `LocalMaterialOutlineWidth > 0` 时绘制统一的全局描边，并直接使用设定宽度。
+- Build #1663：Actions Run `40493483230`，结论 `success`，head SHA `e507579e98f2a8e772bf5e6d348eaf2259c4f0f4`。
+- Artifact ID：`12729931602`；Artifact ZIP SHA-256：`3e5c5c36dfc5b48b075d4ad1f62b60fc1f90a56237dbf0b9b534c4fac6c10618`。
+- APK：`AlohaOneUI_1.0.261025_BUILD_1663.apk`，大小 `28,748,245` bytes；SHA-256：`b5e2a1f078fdd8a53e4747401f2753185e21dec7febe76d55104d091d9d0450e`。
+- 验收：Artifact ZIP 和 APK 的 `unzip -t` 通过；`SHA256SUMS` 校验通过；包名 `com.alohaoneui.app`、versionName `1.0.261025`、versionCode `16`；V2 签名通过，签名证书 SHA-256 `93bf61a6493c6b336383832eb41301bd8fe061f43566e7e384e3fdd9fc1c26a1`。
+- Build #1663 包含 #1661 的“所有开关样式遵循全局阴影”修复与本次“全局描边宽度统一”修复。以上均为 Aloha 组件设置一致性修复，不能替代 Voyage 原版绘制路径的 1:1 移植。
