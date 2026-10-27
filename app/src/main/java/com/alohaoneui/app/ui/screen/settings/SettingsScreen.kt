@@ -47,7 +47,12 @@ fun SettingPager(
         onSetAppLanguage = { language ->
             viewModel.setAppLanguage(language)
             AppLocaleContext.apply(context, language)
-            context.findActivity()?.recreate()
+            // Android 13+ LocaleManager automatically recreates the Activity for
+            // application locale changes. Explicit recreation here causes a second
+            // configuration transition and the observed black-screen flash.
+            if (android.os.Build.VERSION.SDK_INT < 33) {
+                context.findActivity()?.recreate()
+            }
         },
         onOpenTheme = { navigator.push(Route.ColorPalette) },
         onSetUiModeIndex = { index ->
