@@ -41,3 +41,13 @@
 - 验收：外层 Artifact ZIP 与 APK 的 `unzip -t` 均通过；APK 包名 `com.alohaoneui.app`，versionName `1.0.261025`，versionCode `16`；V2 签名验证通过，证书 SHA-256 为 `93bf61a6493c6b336383832eb41301bd8fe061f43566e7e384e3fdd9fc1c26a1`。
 - 该包确实包含图标形状索引持久化范围修复，并撤销了上述两项无原版证据的间距猜测；但仍只是阶段性测试包。50 个图形仍为算法生成轮廓，Switch/Slider 与 Smooth G² 尚未完成 Voyage 原始绘制路径逐项移植，不得标记为 1:1 最终版。
 - 下一步继续定位并对照 Voyage 的实际渲染实现，优先 Switch/Slider 与形状路径；原始方法体无法可靠读取前，不提交猜测性的视觉参数。后续产品改动必须在同一测试分支完成构建与 APK 验收，`main` 保持不动。
+
+
+## Build #1656 验收与最新状态
+
+- Actions Run：`40488342757`（Build #1656），状态 `success`；对应 HEAD `f05c80d37e2ae5709db6e4681fbaa8bce20941be`，这是维护记录更新提交，未包含新的产品源码改动。
+- Artifact ID：`12727255451`，Artifact ZIP SHA-256：`181e80cfa70bae49b49e592e43fea31e69b95abe389fe86f4c6e9829118765b5`。
+- APK：`AlohaOneUI_1.0.261025_BUILD_1656.apk`，大小 `28,747,517` bytes；SHA-256 与 Build #1655 完全相同：`1a98ce182c89c5f4d67358caddc67d1aa4226f3e4b35b44e2f9213da9a8fe91e`。这说明本次仅维护记录变化，不能声称生成了新的产品二进制。
+- 验收：Artifact ZIP 与 APK 的 `unzip -t` 均通过；包名 `com.alohaoneui.app`、versionName `1.0.261025`、versionCode `16`；V2 签名通过，证书 SHA-256 仍为 `93bf61a6493c6b336383832eb41301bd8fe061f43566e7e384e3fdd9fc1c26a1`。
+- 重新核查 `OneUiFeatureIcon.kt`：图标形状设置目前确实用于该共享功能图标的裁切；形状生成仍为项目内 `geometricIconShape` 算法，不是 Voyage 原版 50 条路径。不能把索引持久化修复说成轮廓移植完成。
+- 当前没有新的产品源码提交；下一步仍须获得/恢复可可靠读取 Voyage 原始绘制方法的路径，再进行有证据的批量移植。不得为了产生新提交而随意更改视觉参数。
