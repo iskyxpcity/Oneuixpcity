@@ -29,7 +29,6 @@ import com.alohaoneui.app.ui.LocalUiMode
 import com.alohaoneui.app.ui.UiMode
 import androidx.compose.material3.Slider as MaterialSlider
 import androidx.compose.material3.rememberSliderState
-import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import com.alohaoneui.app.ui.component.material.VoyageSliderThumb
 import com.alohaoneui.app.ui.component.material.VoyageSliderTrack
