@@ -460,3 +460,9 @@
 - 已核对当前测试分支上的 `SegmentedSliderItem.kt`（当前文件 blob SHA：`715e0356c4b09360aea201c1ee1107a0ffa91abd`）：文件已经不再导入或调用不可解析的 `drawOutline`，改为本地 `DrawScope.drawVoyageOutline()`，分别处理 `Outline.Rectangle`、`Outline.Rounded` 和 `Outline.Generic`。这说明失败点在当前文件中已被改写，但仍须由新的真实构建确认没有后续编译问题，不能仅凭源码推断成功。
 - 本次运行只生成诊断 Artifact `AlohaOneUI-Build-Diagnostics`（Artifact ID `12763389345`，ZIP SHA-256：`54bcdd3054484558b7a83a2e82bcef75a9bfc56dec9762b2ed92431592474b6e`）；它不是 APK。
 - 后续操作：以当前测试分支最新代码重新触发/检查 Actions，若出现新的编译错误继续按日志修复。必须等新的构建成功并取得该次 run 的 APK Artifact 后，再验证包名、版本、签名和 SHA-256。不得修改或合并 `main`。
+
+## 2026-10-27 构建故障定位与第三轮修复：drawscope 类型包与 Switch 形状联动
+
+- Build #1733 / Run `40569571885` 失败；Build #1734 / Run `40569677922` 也失败。两次都在 `:app:compileDebugKotlin` 结束，精确错误为 `DrawStyle` 与 `Fill` 的导入包不正确（它们属于 `androidx.compose.ui.graphics.drawscope`）。本提交已把导入修正到该包；先前两个失败 run 均没有产出 APK。
+- 本批把 `drawVoyageOutline` 提升为同包可复用的 `internal` 绘制扩展，并用于八种 Switch 的轨道填充、轨道轮廓、thumb 与 Liquid Glass halo；thumbContent 也使用同一个 `thumbShape` 裁切。每个风格原有的源尺寸、角半径基值、交互尺寸、颜色分支和图标分支保留，只替换原先绕过 Shape 系统的圆角矩形/圆形绘制。
+- 这让全局 Shape Style / Corner Scale 真正影响 Switch 与 Slider 的轨道和 thumb。该改动仍是联动修复，不代表八种开关及四种滑条的所有源动画、颜色角色和图标路径已完成 1:1。当前提交后的 Actions 结果待验证。

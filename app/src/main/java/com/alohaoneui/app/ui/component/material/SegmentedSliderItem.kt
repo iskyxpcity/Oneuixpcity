@@ -31,8 +31,8 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.DrawStyle
-import androidx.compose.ui.graphics.Fill
+import androidx.compose.ui.graphics.drawscope.DrawStyle
+import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
@@ -312,7 +312,7 @@ internal fun VoyageSliderTrack(
  * project's pinned Compose version. Rounded outlines are converted to a Path
  * so asymmetric corners and custom Voyage paths are preserved.
  */
-private fun DrawScope.drawVoyageOutline(
+internal fun DrawScope.drawVoyageOutline(
     outline: Outline,
     color: Color,
     style: DrawStyle = Fill,

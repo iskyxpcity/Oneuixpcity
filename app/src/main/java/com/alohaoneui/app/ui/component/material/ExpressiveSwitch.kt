@@ -22,11 +22,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.semantics.Role
@@ -151,6 +152,8 @@ fun ExpressiveSwitch(
         label = "voyageSwitchThumb",
     )
     val trackShape = voyageCornerShape(trackCornerRadius)
+    val thumbShape = voyageCornerShape(thumbDiameter / 2f)
+    val haloShape = voyageCornerShape(thumbDiameter / 2f + 2.dp)
     val borderWidth = LocalMaterialOutlineWidth.current
     Box(
         modifier = modifier
@@ -177,21 +180,28 @@ fun ExpressiveSwitch(
             } else {
                 (if (checked) checkedTrack else uncheckedTrack).copy(alpha = 0.38f)
             }
-            val radius = trackCornerRadius.toPx()
-            drawRoundRect(
-                color = trackColor,
-                topLeft = Offset.Zero,
+            // The actual outline, not a hard-coded rounded rectangle, keeps the
+            // global Voyage shape family and corner scale linked to each style.
+            val trackOutline = trackShape.createOutline(
                 size = Size(w, h),
-                cornerRadius = CornerRadius(radius, radius),
+                layoutDirection = layoutDirection,
+                density = this,
             )
-            if (borderWidth > 0f) {
-                drawRoundRect(
-                    color = (if (checked) checkedBorder else uncheckedBorder).copy(alpha = if (enabled) 1f else 0.45f),
-                    topLeft = Offset(borderWidth.dp.toPx() / 2f, borderWidth.dp.toPx() / 2f),
-                    size = Size(w - borderWidth.dp.toPx(), h - borderWidth.dp.toPx()),
-                    cornerRadius = CornerRadius(radius, radius),
-                    style = Stroke(width = borderWidth.dp.toPx()),
+            drawVoyageOutline(trackOutline, trackColor)
+            val borderPx = borderWidth.dp.toPx()
+            if (borderPx > 0f) {
+                val borderOutline = trackShape.createOutline(
+                    size = Size((w - borderPx).coerceAtLeast(0f), (h - borderPx).coerceAtLeast(0f)),
+                    layoutDirection = layoutDirection,
+                    density = this,
                 )
+                withTransform({ translate(borderPx / 2f, borderPx / 2f) }) {
+                    drawVoyageOutline(
+                        borderOutline,
+                        (if (checked) checkedBorder else uncheckedBorder).copy(alpha = if (enabled) 1f else 0.45f),
+                        style = Stroke(width = borderPx),
+                    )
+                }
             }
             val thumbRadius = thumbDiameter.toPx() / 2f
             val inset = thumbInset.toPx()
@@ -200,19 +210,35 @@ fun ExpressiveSwitch(
             val cx = left + (right - left) * travel
             val cy = h / 2f
             if (style == 5) {
-                drawCircle(color = Color.White.copy(alpha = if (checked) 0.22f else 0.10f), radius = thumbRadius + 2.dp.toPx(), center = Offset(cx, cy))
+                val haloSize = thumbDiameter.toPx() + 4.dp.toPx()
+                val haloOutline = haloShape.createOutline(
+                    size = Size(haloSize, haloSize),
+                    layoutDirection = layoutDirection,
+                    density = this,
+                )
+                withTransform({ translate(cx - haloSize / 2f, cy - haloSize / 2f) }) {
+                    drawVoyageOutline(
+                        haloOutline,
+                        Color.White.copy(alpha = if (checked) 0.22f else 0.10f),
+                    )
+                }
             }
-            drawCircle(
-                color = if (enabled) {
-                    if (checked) checkedThumb else uncheckedThumb
-                } else if (style == 0) {
-                    if (checked) colors.disabledCheckedThumbColor else colors.disabledUncheckedThumbColor
-                } else {
-                    (if (checked) checkedThumb else uncheckedThumb).copy(alpha = 0.65f)
-                },
-                radius = thumbRadius,
-                center = Offset(cx, cy),
+            val thumbSizePx = thumbDiameter.toPx()
+            val thumbOutline = thumbShape.createOutline(
+                size = Size(thumbSizePx, thumbSizePx),
+                layoutDirection = layoutDirection,
+                density = this,
             )
+            val thumbColor = if (enabled) {
+                if (checked) checkedThumb else uncheckedThumb
+            } else if (style == 0) {
+                if (checked) colors.disabledCheckedThumbColor else colors.disabledUncheckedThumbColor
+            } else {
+                (if (checked) checkedThumb else uncheckedThumb).copy(alpha = 0.65f)
+            }
+            withTransform({ translate(cx - thumbRadius, cy - thumbRadius) }) {
+                drawVoyageOutline(thumbOutline, thumbColor)
+            }
             if (showThumbIcon && thumbContent == null && style in setOf(0, 2, 3, 5, 6, 7)) {
                 val iconColor = if (checked) {
                     if (style == 0) colors.checkedIconColor else checkedTrack
@@ -235,7 +261,8 @@ fun ExpressiveSwitch(
                 modifier = Modifier
                     .align(Alignment.Center)
                     .offset(x = thumbTravel * travel - thumbTravel / 2f)
-                    .size(thumbDiameter),
+                    .size(thumbDiameter)
+                    .clip(thumbShape),
                 contentAlignment = Alignment.Center,
             ) {
                 thumbContent()
