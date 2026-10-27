@@ -180,9 +180,21 @@ private class VoyagePathShape(
                     for (i in 1 until perimeter.size) {
                         val previous = perimeter[i - 1]
                         val current = perimeter[i]
-                        path.quadraticTo(previous.x, previous.y, (previous.x + current.x) / 2f, (previous.y + current.y) / 2f)
+                        // Mirrors Voyage wgo0.m140361lo: each displaced sample is
+                        // joined with a quadratic whose control point is the prior
+                        // sample and whose endpoint is the midpoint of the samples.
+                        path.quadraticTo(
+                            previous.x,
+                            previous.y,
+                            (previous.x + current.x) / 2f,
+                            (previous.y + current.y) / 2f
+                        )
                     }
-                    path.lineTo(perimeter.last().x, perimeter.last().y)
+                    // Voyage closes the sampled contour with the same quadratic
+                    // join helper rather than a straight segment to the last sample.
+                    val last = perimeter.last()
+                    val first = perimeter.first()
+                    path.quadraticTo(last.x, last.y, (last.x + first.x) / 2f, (last.y + first.y) / 2f)
                     path.close()
                 }
             }
