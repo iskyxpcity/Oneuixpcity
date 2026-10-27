@@ -656,3 +656,15 @@
 - 语言选择：Material 与 Miuix 语言列表此前使用 `zh-Hans/zh-Hant`，而 ViewModel 持久化白名单使用 `zh-CN/zh-TW`，导致选择态与保存值不匹配；统一列表值为 `zh-CN/zh-TW`，由 `AppLocaleContext` 映射到 Android LocaleManager 使用的规范语言标签。
 - 黑屏闪烁：保留 Android 13+ 由 LocaleManager 触发的系统语言配置切换路径，并避免额外手动 recreate；本次同时修复 locale tag 不一致。仍需真实设备复测语言切换过程，不能仅凭编译宣称闪屏已完全消失。
 - 验证：等待本轮新提交的 GitHub Actions 编译与 APK artifact；不得以旧构建代替本轮产物。
+
+
+## 2026-10-27 — 开关外形、波浪形状性能、语言反馈与滑条细节第二轮修复
+
+- 本轮继续只提交到 `test/voyage-theme-1to1-20261026`，没有修改或合并 `main`。基线为已成功构建的 `a716a11cdeeec59a0756f2cb9d7b9040c7d98c4b`。
+- Switch：`ExpressiveSwitch.kt` 将各样式轨道高度略微收窄、宽度略微增加；内部胶囊高度固定为轨道高度的 85%，横向占比由 65% 增至 70%，两端内缩改为 1.5dp。关闭状态轨道使用深色 `#45464A`，thumb 继续使用主题主色。提交：`760245d81172a4e10209f1e83c40e03190de34b5` 与 `08f8082aeba3ccad99e3a57e5e4f511133673512`。
+- Slider 不再受全局组件描边影响：移除外层容器与 HyperOS 轨道上的描边绘制/调用；描边宽度设置仍可用于其他组件。底色阴影改由既有 `LocalMaterialShadowSliders` 控制：Material You、Fancy、Material 2 的外层容器使用 2dp 阴影，HyperOS 的粗轨道也使用相同偏好控制的 2dp 阴影。相关提交：`65dcac621e35652eee46d7320cb23427ea8e3248`、`6300d7eb21850a93bf3f591dfb95c3af60bab14e`。
+- Material You 滑块：共享 `VoyageSliderThumb` 在 style 0 分支改为调用 Compose Material 3 的 `SliderDefaults.Thumb`，使用官方滑块实现；其他三种样式仍保留各自的自定义绘制。共享入口和设置页入口分别按样式索引使用 `key(style)` / `key(materialSliderStyle)` 包裹 Slider 子树，以便切换样式时立即重建对应轨道与 thumb，而不是等待用户拖动才看见变化。相关提交：`6300d7eb21850a93bf3f591dfb95c3af60bab14e`、`5e8987736d556763361e0b4256b8e0320900ffb3`、`e92579f741cf3eda9c693ea0164ee84995640b7c`。
+- 波浪形状仍存在全局卡顿反馈，因此进一步降低波浪路径的采样/分配开销：每波弧段采样预算从 8 降至 6，总路径采样预算从 180 降至 96，最小采样间距从 1.5px 提高到 2.5px；共享 LRU 缓存仍保留。提交：`0d024e293cf152527e8795d5fe4bbd5f399155e2`。这项优化需要真机确认流畅度和边缘波纹是否仍符合原版观感。
+- 语言选择：Material 设置语言列表每个当前选项现在显示主题色勾选图标，补强选中态。提交：`79f2d42034d6752bf804e059a81cb0277bb590f4`。
+- 语言黑屏：设置语言动作现在先比较当前保存值与目标值；重复选择当前语言时不再重新写入 LocaleManager 或触发旧版 Activity recreate，避免无意义的重建闪屏。真正切换语言仍由 Android 13+ LocaleManager 管理配置切换；低版本只执行一次必要的 Activity recreate。提交：`2a06b73f548a3ac9c992104fb03b50ef1fb1eb94`。该修复不能代替真机确认，若切换到不同语言仍黑屏，需要继续检查 Activity 窗口背景与系统语言配置重建过程。
+- 验证边界：本节所有改动均为已推送源码，当前仍待最新 HEAD 的 Actions 编译终态、APK artifact 和设备视觉/交互复测；未宣称本轮已通过新构建或已完成真机验收。不得用旧 APK 作为本轮交付物。
