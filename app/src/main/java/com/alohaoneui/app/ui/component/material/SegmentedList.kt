@@ -829,13 +829,12 @@ fun SegmentedSwitchItem(
                 ExpressiveSwitch(
                     checked = checked,
                     enabled = enabled,
-                    onCheckedChange = if (onRowClick != null) {
-                        { value ->
-                            haptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
-                            onCheckedChange(value)
-                        }
-                    } else {
-                        null
+                    // The trailing switch must remain independently clickable even
+                    // when the whole row also toggles the same setting. Compose consumes
+                    // the child's click so the parent row does not apply a second toggle.
+                    onCheckedChange = { value ->
+                        haptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
+                        onCheckedChange(value)
                     },
                     interactionSource = switchInteractionSource,
                 )
