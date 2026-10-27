@@ -27,6 +27,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -231,31 +232,27 @@ internal fun VoyageSliderThumb(
     inactiveColor: Color,
     shadowEnabled: Boolean = false,
     interactionSource: MutableInteractionSource? = null,
+    valueFraction: Float = 0f,
 ) {
-    // Voyage's vhf.m138081l uses 1dp at rest and 6dp while its interaction
-    // list is non-empty. Slider drags are DragInteraction events, not Press
-    // events, so observe the full set of supported interaction states here.
+    // HyperOSSlider source deliberately supplies an empty thumb; the wide
+    // 30dp track itself is the control surface.
+    if (style == 3) return
+
     val effectiveInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
     val pressed by effectiveInteractionSource.collectIsPressedAsState()
     val dragged by effectiveInteractionSource.collectIsDraggedAsState()
     val hovered by effectiveInteractionSource.collectIsHoveredAsState()
     val focused by effectiveInteractionSource.collectIsFocusedAsState()
     val interacting = pressed || dragged || hovered || focused
+    val thumbShape = voyageCornerShape(minOf(size.width, size.height) / 2f)
 
-    // Keep the 20dp source thumb slot, but use the shared Voyage shape factory
-    // for its actual fill, clip and shadow silhouette. Shape style and corner
-    // scale changes therefore update the thumb itself, not just its parent.
-    val visualThumbSize = DpSize(
-        width = (size.width - 4.dp).coerceAtLeast(1.dp),
-        height = (size.height - 4.dp).coerceAtLeast(1.dp),
-    )
-    val thumbShape = voyageCornerShape(minOf(visualThumbSize.width, visualThumbSize.height) / 2f)
     Box(
         Modifier.size(width = size.width, height = size.height),
         contentAlignment = androidx.compose.ui.Alignment.Center,
     ) {
         val thumbModifier = Modifier
-            .size(width = visualThumbSize.width, height = visualThumbSize.height)
+            .size(width = size.width, height = size.height)
+            .then(if (style == 1) Modifier.rotate(1080f * valueFraction) else Modifier)
             .then(
                 if (shadowEnabled) {
                     Modifier.shadow(
@@ -278,7 +275,7 @@ internal fun VoyageSliderTrack(
     range: ClosedFloatingPointRange<Float>,
     steps: Int,
     height: androidx.compose.ui.unit.Dp,
-    innerInset: androidx.compose.ui.unit.Dp,
+    containerColor: Color,
     thumbWidth: androidx.compose.ui.unit.Dp,
     activeColor: Color,
     inactiveColor: Color,
@@ -286,154 +283,78 @@ internal fun VoyageSliderTrack(
     outlineColor: Color,
     shadowEnabled: Boolean = false,
 ) {
-    val passedTickColor = when (style) {
-        1 -> MaterialTheme.colorScheme.onTertiary
-        2 -> MaterialTheme.colorScheme.onSecondary
-        else -> MaterialTheme.colorScheme.onPrimary
-    }
+    val passedTickColor = MaterialTheme.colorScheme.onPrimary
     val futureTickColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.65f)
-    // All four styles keep a roomy 32dp color-container behind the rail,
-    // but the rail geometry is style-specific rather than one shared capsule.
-    // The original Voyage DEX methods are still being matched; these branches
-    // are deliberately isolated so each can be corrected against the source.
-    val containerShape = voyageCornerShape(height / 2f)
+    val fraction = if (range.endInclusive > range.start) {
+        ((state.value - range.start) / (range.endInclusive - range.start)).coerceIn(0f, 1f)
+    } else 0f
+    val trackShape = voyageCornerShape(height / 2f)
     Canvas(
         Modifier
             .fillMaxWidth()
             .height(height)
-            .then(if (shadowEnabled) Modifier.shadow(1.dp, containerShape, clip = false) else Modifier)
+            .then(if (style == 3) Modifier.background(containerColor, trackShape) else Modifier)
+            .then(if (shadowEnabled && style == 3) Modifier.shadow(1.dp, trackShape, clip = false) else Modifier)
     ) {
         val h = size.height
-        val insetPx = innerInset.toPx()
-        val fraction = if (range.endInclusive > range.start) {
-            ((state.value - range.start) / (range.endInclusive - range.start)).coerceIn(0f, 1f)
-        } else 0f
-        val outlinePx = outlineWidth.toPx()
-        val width = size.width
-
-        // Secondary/tertiary container is a separate outer surface; it never
-        // shares the thumb's accent fill. Global Voyage shape/corner scale
-        // continues to control the outside silhouette.
-        drawVoyageOutline(
-            containerShape.createOutline(Size(width, h), layoutDirection, this),
-            inactiveColor,
-        )
+        val y = h / 2f
+        val end = Offset(size.width, y)
+        val start = Offset(0f, y)
+        val cap = if (style == 3) StrokeCap.Butt else StrokeCap.Round
+        val trackThickness = h
 
         when (style) {
             0 -> {
-                // Material You: inset, full-height pill rail with a pill-shaped
-                // active fill. This is intentionally not the thin Material 2 line.
-                val left = insetPx
-                val railWidth = (width - 2f * insetPx).coerceAtLeast(1f)
-                val railHeight = (h - 2f * insetPx).coerceAtLeast(1f)
-                val railShape = voyageCornerShape(railHeight.toDp() / 2f)
-                val railOutline = railShape.createOutline(Size(railWidth, railHeight), layoutDirection, this)
-                withTransform({ translate(left, insetPx) }) {
-                    drawVoyageOutline(railOutline, inactiveColor.copy(alpha = 0.62f))
-                    val activeWidth = railWidth * fraction
-                    if (activeWidth > 0f) {
-                        clipRect(left = 0f, top = 0f, right = activeWidth, bottom = railHeight) {
-                            drawVoyageOutline(railOutline, activeColor)
-                        }
-                    }
-                    if (outlinePx > 0f) drawVoyageOutline(railOutline, outlineColor, Stroke(outlinePx))
+                // Material You: stock Material 3 line track (4dp) with round caps.
+                drawLine(inactiveColor, start, end, trackThickness, StrokeCap.Round)
+                if (fraction > 0f) {
+                    drawLine(activeColor, start, Offset(size.width * fraction, y), trackThickness, StrokeCap.Round)
                 }
             }
             1 -> {
-                // Fancy: a broad inset rail with a slimmer centered channel;
-                // the active end is clipped from the same channel to avoid
-                // changing the surrounding secondary/tertiary container.
-                val channelHeight = (h * 0.56f).coerceAtLeast(1f)
-                val top = (h - channelHeight) / 2f
-                val left = (insetPx * 0.65f).coerceAtLeast(1f)
-                val channelWidth = (width - left * 2f).coerceAtLeast(1f)
-                val channelShape = voyageCornerShape(channelHeight.toDp() / 2f)
-                val channelOutline = channelShape.createOutline(Size(channelWidth, channelHeight), layoutDirection, this)
-                withTransform({ translate(left, top) }) {
-                    drawVoyageOutline(channelOutline, inactiveColor.copy(alpha = 0.72f))
-                    val activeWidth = channelWidth * fraction
-                    if (activeWidth > 0f) {
-                        clipRect(left = 0f, top = 0f, right = activeWidth, bottom = channelHeight) {
-                            drawVoyageOutline(channelOutline, activeColor)
-                        }
-                    }
-                    if (outlinePx > 0f) drawVoyageOutline(channelOutline, outlineColor, Stroke(outlinePx))
+                // Fancy: source FancyTrack uses a 38dp capsule and extends each
+                // segment by the cap radius so the fill reaches the thumb center.
+                drawRoundRect(
+                    color = inactiveColor,
+                    topLeft = Offset(0f, 0f),
+                    size = Size(size.width, h),
+                    cornerRadius = CornerRadius(h / 2f, h / 2f),
+                )
+                val activeWidth = (size.width * fraction + h / 2f).coerceAtMost(size.width + h / 2f)
+                if (fraction > 0f) {
+                    drawRoundRect(
+                        color = activeColor,
+                        topLeft = Offset(-h / 2f, 0f),
+                        size = Size(activeWidth, h),
+                        cornerRadius = CornerRadius(h / 2f, h / 2f),
+                    )
                 }
             }
             2 -> {
-                // Material 2: classic narrow 4dp active/inactive line centered
-                // inside the wider colored holder; circular end caps are retained.
-                val railHeight = 4.dp.toPx()
-                val top = (h - railHeight) / 2f
-                val left = insetPx
-                val railWidth = (width - 2f * insetPx).coerceAtLeast(1f)
-                drawRoundRect(
-                    color = inactiveColor.copy(alpha = 0.78f),
-                    topLeft = Offset(left, top),
-                    size = Size(railWidth, railHeight),
-                    cornerRadius = CornerRadius(railHeight / 2f, railHeight / 2f),
-                )
-                val activeWidth = railWidth * fraction
-                if (activeWidth > 0f) {
-                    drawRoundRect(
-                        color = activeColor,
-                        topLeft = Offset(left, top),
-                        size = Size(activeWidth, railHeight),
-                        cornerRadius = CornerRadius(railHeight / 2f, railHeight / 2f),
-                    )
-                }
-                if (steps > 0) {
-                    val count = steps + 1
-                    for (i in 0..count) {
-                        val x = left + railWidth * i / count
-                        drawCircle(
-                            color = if (i.toFloat() / count <= fraction) passedTickColor else futureTickColor,
-                            radius = 1.dp.toPx(),
-                            center = Offset(x, h / 2f),
-                        )
-                    }
+                // Material 2: source M2Slider uses a 4dp custom track.
+                drawLine(inactiveColor, start, end, trackThickness, StrokeCap.Round)
+                if (fraction > 0f) {
+                    drawLine(activeColor, start, Offset(size.width * fraction, y), trackThickness, StrokeCap.Round)
                 }
             }
             else -> {
-                // HyperOS: thick, edge-to-edge pill channel. It has a separate
-                // geometry branch so its filled track does not inherit Fancy's
-                // inset channel or Material 2's hairline rail.
-                val left = (insetPx * 0.45f).coerceAtLeast(1f)
-                val railWidth = (width - 2f * left).coerceAtLeast(1f)
-                val railHeight = (h * 0.78f).coerceAtLeast(1f)
-                val top = (h - railHeight) / 2f
-                val railShape = voyageCornerShape(railHeight.toDp() / 2f)
-                val railOutline = railShape.createOutline(Size(railWidth, railHeight), layoutDirection, this)
-                withTransform({ translate(left, top) }) {
-                    drawVoyageOutline(railOutline, inactiveColor.copy(alpha = 0.82f))
-                    val activeWidth = railWidth * fraction
-                    if (activeWidth > 0f) {
-                        clipRect(left = 0f, top = 0f, right = activeWidth, bottom = railHeight) {
-                            drawVoyageOutline(railOutline, activeColor)
-                        }
-                    }
-                    if (outlinePx > 0f) drawVoyageOutline(railOutline, outlineColor, Stroke(outlinePx))
+                // HyperOS: source HyperOSSlider uses a 30dp track with Butt caps
+                // and no visible thumb, giving the track its own broad silhouette.
+                drawLine(inactiveColor, start, end, trackThickness, cap)
+                if (fraction > 0f) {
+                    drawLine(activeColor, start, Offset(size.width * fraction, y), trackThickness, cap)
                 }
             }
         }
 
-        // Preserve discrete tick marks for all four styles. Material 2 draws
-        // its marks on the classic line above; the other families align marks
-        // to the center of their own track channel.
-        if (steps > 0 && style != 2) {
+        if (steps > 0) {
             val count = steps + 1
-            val tickInset = when (style) {
-                1 -> (insetPx * 0.65f).coerceAtLeast(1f)
-                3 -> (insetPx * 0.45f).coerceAtLeast(1f)
-                else -> insetPx
-            }
-            val tickWidth = (width - tickInset * 2f).coerceAtLeast(1f)
             for (i in 0..count) {
-                val x = tickInset + tickWidth * i / count
+                val tickFraction = i.toFloat() / count
                 drawCircle(
-                    color = if (i.toFloat() / count <= fraction) passedTickColor else futureTickColor,
+                    color = if (tickFraction <= fraction) passedTickColor else futureTickColor,
                     radius = 1.dp.toPx(),
-                    center = Offset(x, h / 2f),
+                    center = Offset(size.width * tickFraction, y),
                 )
             }
         }
