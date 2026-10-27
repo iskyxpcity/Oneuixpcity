@@ -45,13 +45,17 @@ fun SettingPager(
     val actions = SettingsScreenActions(
         onSetCheckUpdate = viewModel::setCheckUpdate,
         onSetAppLanguage = { language ->
+            val previousLanguage = uiState.appLanguage.ifBlank { "system" }
             viewModel.setAppLanguage(language)
-            AppLocaleContext.apply(context, language)
-            // Android 13+ LocaleManager automatically recreates the Activity for
-            // application locale changes. Explicit recreation here causes a second
-            // configuration transition and the observed black-screen flash.
-            if (android.os.Build.VERSION.SDK_INT < 33) {
-                context.findActivity()?.recreate()
+            // Do not reapply the same locale: LocaleManager may recreate the Activity
+            // even when the user taps the already-selected language.
+            if (previousLanguage != language) {
+                AppLocaleContext.apply(context, language)
+                // Android 13+ owns locale recreation. Older versions need one
+                // Activity recreation so attachBaseContext can apply the saved locale.
+                if (android.os.Build.VERSION.SDK_INT < 33) {
+                    context.findActivity()?.recreate()
+                }
             }
         },
         onOpenTheme = { navigator.push(Route.ColorPalette) },
