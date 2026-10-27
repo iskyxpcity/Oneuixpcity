@@ -149,6 +149,7 @@ fun AlohaOneUISlider(
                     range = valueRange,
                     steps = effectiveSteps,
                     height = materialTrackHeight,
+                    innerInset = materialAppearance.innerInset,
                     thumbWidth = materialThumbSize.width,
                     activeColor = materialActiveColor,
                     inactiveColor = materialInactiveColor,
