@@ -39,7 +39,8 @@ fun TonalCard(
             BorderStroke(it.dp, MaterialTheme.colorScheme.outlineVariant)
         },
         elevation = CardDefaults.cardElevation(
-            defaultElevation = if (LocalMaterialShadowContainers.current) 2.dp else 0.dp
+            defaultElevation = if (LocalMaterialShadowContainers.current) 2.dp else 0.dp,
+            pressedElevation = if (LocalMaterialShadowContainers.current) 3.dp else 0.dp,
         ),
         colors = CardDefaults.cardColors(
             containerColor = containerColor,

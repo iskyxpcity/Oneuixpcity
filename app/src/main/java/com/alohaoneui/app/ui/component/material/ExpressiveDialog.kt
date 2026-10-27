@@ -15,6 +15,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
+import com.alohaoneui.app.ui.theme.LocalMaterialShadowContainers
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.Dp
@@ -57,7 +58,7 @@ fun ExpressiveDialog(
         iconContentColor = iconContentColor,
         titleContentColor = titleContentColor,
         textContentColor = textContentColor,
-        tonalElevation = tonalElevation,
+        tonalElevation = if (LocalMaterialShadowContainers.current) tonalElevation else 0.dp,
         properties = properties,
     )
 }
@@ -113,7 +114,7 @@ fun ExpressiveContentDialog(
             shape = dialogShape,
             color = AlertDialogDefaults.containerColor,
             contentColor = AlertDialogDefaults.textContentColor,
-            tonalElevation = AlertDialogDefaults.TonalElevation,
+            tonalElevation = if (LocalMaterialShadowContainers.current) AlertDialogDefaults.TonalElevation else 0.dp,
         ) {
             Column(
                 modifier = Modifier.padding(24.dp),

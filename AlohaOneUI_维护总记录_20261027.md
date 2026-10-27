@@ -190,3 +190,18 @@
   3. `ColorPaletteScreenMaterial.kt`：主题颜色选项卡增加按压缩放和动态阴影，并复用同一 interaction source；原有选色回调、触觉反馈、选中指示动画和全局描边设置保持不变。
 - 本次改动仍只写入测试分支，不改 `main`。这次针对“主题设置页各级选项按钮框体、按压动效与阴影”扩大到开关模式按钮、图标形状条目与颜色选项卡；Voyage 原版几何和视觉参数仍需以原始实现逐项核对，不能把通用动效接入等同于 1:1 验收。
 - 构建监测：Run `40500736929` / Build #1677 结论为 `failure`，失败发生在 Kotlin 编译阶段，owner 签名和 APK 产物步骤被跳过。下一次提交将包含本次修复与记录更新，并触发新构建；继续检查新 HEAD 对应 Actions 和诊断日志，不交付旧 APK。
+
+
+## 2026-10-27 后续推进：主题页选择器动效批次构建成功
+
+- 产品源码提交：`56cbd4db4a5e96ec4e33af0ed6365ffd669a339e`（`fix: animate theme selector controls and unify outline handling`），测试分支 `test/voyage-theme-1to1-20261026`，未修改 `main`。
+- 该批次修复了 Build #1677 的缺失 `getValue` 导入，并为 ToggleButton、图标形状选项、主题颜色选项接入统一按压动效、动态阴影和全局描边消费。
+- Build #1678：Actions Run `40501789348`，head SHA `56cbd4db4a5e96ec4e33af0ed6365ffd669a339e`，结论 `success`；build job `122181009263` 完成且无失败步骤。签名 APK artifact ID `12733067342`，名称 `AlohaOneUI-Signed-Test-APK`，大小 27,768,341 bytes，Artifact ZIP SHA-256 `ec7313956bb3681a77acd8c0c94dd1645eaedfa4bd5506877b6f72df2775e635`。
+- 本记录只确认该 HEAD 构建成功且产生签名 APK artifact；尚未把它标记为最终交付包，因为当前继续开发会产生新的 HEAD，且该 APK 的包名、版本、证书与 APK 本体 SHA-256 仍需在最终 HEAD 上再次核验。
+
+## 2026-10-27 后续推进：返回按钮、可点击卡片和对话框容器阴影统一
+
+- `TopBarBackButton.kt`：增加可访问的交互源、spring 按压缩放、动态按钮阴影；阴影仍受 `LocalMaterialShadowButtons` 控制，描边继续消费 `LocalMaterialOutlineWidth`。
+- `TonalCard.kt`：可点击卡片的 pressedElevation 与容器阴影开关联动，按压时由 2dp 动态过渡到 3dp；关闭全局容器阴影时默认/按压 elevation 都为 0dp。非点击展示卡片维持原有静态容器阴影逻辑。
+- `ExpressiveDialog.kt`：标准与自定义内容对话框的 tonal elevation 均消费 `LocalMaterialShadowContainers`；关闭容器阴影时不再保留默认 tonal elevation，描边设置仍独立生效。
+- 本批次继续只修改测试分支，不改 `main`。这些修改覆盖返回按钮、可点击详情卡片和弹窗容器，不等同于所有 Voyage 页面已完成逐像素复刻。提交后继续监测新 Actions，发现编译问题即按日志修复。
