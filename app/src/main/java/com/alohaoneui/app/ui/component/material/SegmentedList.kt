@@ -261,25 +261,36 @@ private class VoyagePathShape(
         )
 
         if (style == 4) {
+            // Never build the sampled Wavy path while holding the shared cache lock.
+            // A cache miss can require hundreds of samples; doing that under the
+            // global lock serializes every Wavy component during shape animations.
             synchronized(wavyOutlineCache) {
                 wavyOutlineCache[key]?.let { return it }
-                val outline = createVoyageOutline(size, layoutDirection, density)
-                wavyOutlineCache[key] = outline
-                return outline
+            }
+            val generated = createVoyageOutline(size, layoutDirection, density)
+            synchronized(wavyOutlineCache) {
+                wavyOutlineCache[key]?.let { return it }
+                wavyOutlineCache[key] = generated
+                return generated
             }
         }
 
         synchronized(outlineCache) {
             outlineCache[key]?.let { return it }
-            val outline = createVoyageOutline(size, layoutDirection, density)
-            outlineCache[key] = outline
-            return outline
+        }
+        val generated = createVoyageOutline(size, layoutDirection, density)
+        synchronized(outlineCache) {
+            outlineCache[key]?.let { return it }
+            outlineCache[key] = generated
+            return generated
         }
     }
 
     private companion object {
-        private val wavyOutlineCache = object : java.util.LinkedHashMap<OutlineKey, Outline>(64, 0.75f, true) {
-            override fun removeEldestEntry(eldest: MutableMap.MutableEntry<OutlineKey, Outline>?): Boolean = size > 160
+        // A settings screen can contain many distinct Wavy dimensions at once.
+        // Keep enough entries to avoid thrashing the shared cache while radii animate.
+        private val wavyOutlineCache = object : java.util.LinkedHashMap<OutlineKey, Outline>(128, 0.75f, true) {
+            override fun removeEldestEntry(eldest: MutableMap.MutableEntry<OutlineKey, Outline>?): Boolean = size > 768
         }
     }
 
