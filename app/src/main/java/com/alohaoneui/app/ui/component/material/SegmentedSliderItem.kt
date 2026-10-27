@@ -4,6 +4,9 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsDraggedAsState
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,6 +33,9 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.graphics.drawscope.drawOutline
+import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
@@ -185,20 +191,26 @@ internal fun VoyageSliderThumb(
     shadowEnabled: Boolean = false,
     interactionSource: MutableInteractionSource? = null,
 ) {
-    // Voyage's vhf.m138081l uses a 1dp resting shadow and raises it to 6dp
-    // while the interaction source is active. Keep this on the thumb only,
-    // never on the whole Slider/touch target.
-    val pressed by (interactionSource?.collectIsPressedAsState()
-        ?: remember { androidx.compose.runtime.mutableStateOf(false) })
-    // The thumb is a theme component, not a fixed circle: use the same shared
-    // shape factory as settings rows so shape style and corner scale update it.
+    // Voyage's vhf.m138081l uses 1dp at rest and 6dp while its interaction
+    // list is non-empty. Slider drags are DragInteraction events, not Press
+    // events, so observe the full set of supported interaction states here.
+    val effectiveInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
+    val pressed by effectiveInteractionSource.collectIsPressedAsState()
+    val dragged by effectiveInteractionSource.collectIsDraggedAsState()
+    val hovered by effectiveInteractionSource.collectIsHoveredAsState()
+    val focused by effectiveInteractionSource.collectIsFocusedAsState()
+    val interacting = pressed || dragged || hovered || focused
+
+    // Keep the 20dp source thumb slot, but use the shared Voyage shape factory
+    // for its actual fill, clip and shadow silhouette. Shape style and corner
+    // scale changes therefore update the thumb itself, not just its parent.
     val thumbShape = voyageCornerShape(minOf(size.width, size.height) / 2f)
     val thumbModifier = Modifier
         .size(width = size.width, height = size.height)
         .then(
             if (shadowEnabled) {
                 Modifier.shadow(
-                    elevation = if (pressed) 6.dp else 1.dp,
+                    elevation = if (interacting) 6.dp else 1.dp,
                     shape = thumbShape,
                     clip = false,
                 )
@@ -233,74 +245,59 @@ internal fun VoyageSliderTrack(
     // Keep the track linked to the shared shape system without adding elevation
     // that is not present in the source draw path.
     val trackShape = voyageCornerShape(height / 2f)
-    Canvas(Modifier.fillMaxWidth().height(height).clip(trackShape)) {
+    Canvas(Modifier.fillMaxWidth().height(height)) {
         val h = size.height
         val centerY = h / 2f
-        // Keep the visual track endpoints aligned with the actual thumb center.
-        // The Material Slider positions the thumb center half a thumb-width from
-        // either end of its track slot.
-        val inset = thumbWidth.toPx() / 2f
-        val left = inset
-        val right = (size.width - inset).coerceAtLeast(left)
+        // Material reserves half a thumb slot at each end. Draw the track outline
+        // inside that measured span so its ends remain aligned with the thumb.
+        val thumbInsetPx = thumbWidth.toPx() / 2f
+        val left = thumbInsetPx
+        val right = (size.width - thumbInsetPx).coerceAtLeast(left)
+        val trackWidthPx = (right - left).coerceAtLeast(0f)
         val fraction = if (range.endInclusive > range.start) {
             ((state.value - range.start) / (range.endInclusive - range.start)).coerceIn(0f, 1f)
         } else 0f
-        val activeRight = left + (right - left) * fraction
-        val radius = when (style) {
-            1 -> h / 2f
-            2 -> h * 0.22f
-            3 -> h * 0.36f
-            else -> h / 2f
-        }
-        drawRoundRect(
-            color = inactiveColor,
-            topLeft = Offset(left, centerY - h / 2f),
-            size = Size(right - left, h),
-            cornerRadius = CornerRadius(radius, radius),
+        val activeWidthPx = trackWidthPx * fraction
+        // Use the Shape's real Outline rather than drawing a separate rounded
+        // rectangle and merely clipping it. This is what makes Wavy, Smooth G²,
+        // cut-corner and the other shared shape presets visibly affect the track.
+        val trackOutline = trackShape.createOutline(
+            size = Size(trackWidthPx, h),
+            layoutDirection = layoutDirection,
+            density = this,
         )
-        if (activeRight > left) {
-            drawRoundRect(
-                color = activeColor,
-                topLeft = Offset(left, centerY - h / 2f),
-                size = Size(activeRight - left, h),
-                cornerRadius = CornerRadius(radius, radius),
-            )
-        }
-        // The outline belongs to the visible track, not the Slider's full-height
-        // touch target. Drawing it here prevents a large pill-shaped frame around
-        // the entire slider row when the global outline width is enabled.
-        val outlinePx = outlineWidth.toPx()
-        if (outlinePx > 0f) {
-            val inset = outlinePx / 2f
-            val outlineHeight = (h - outlinePx).coerceAtLeast(0f)
-            val outlineWidthPx = (right - left - outlinePx).coerceAtLeast(0f)
-            drawRoundRect(
-                color = outlineColor,
-                topLeft = Offset(left + inset, centerY - outlineHeight / 2f),
-                size = Size(outlineWidthPx, outlineHeight),
-                cornerRadius = CornerRadius(
-                    (radius - inset).coerceAtLeast(0f),
-                    (radius - inset).coerceAtLeast(0f),
-                ),
-                style = Stroke(width = outlinePx),
-            )
-        }
-        if (steps > 0) {
-            val count = steps + 1
-            for (index in 0..count) {
-                val x = left + (right - left) * (index.toFloat() / count)
-                val passed = index.toFloat() / count <= fraction
-                val tickColor = if (passed) passedTickColor else futureTickColor
-                val tickRadius = when (style) {
-                    1 -> h * 0.16f
-                    2 -> h * 0.12f
-                    else -> h * 0.14f
+        withTransform({ translate(left, 0f) }) {
+            drawOutline(trackOutline, inactiveColor)
+            if (activeWidthPx > 0f) {
+                clipRect(left = 0f, top = 0f, right = activeWidthPx, bottom = h) {
+                    drawOutline(trackOutline, activeColor)
                 }
-                drawCircle(
-                    color = tickColor,
-                    radius = tickRadius,
-                    center = Offset(x, centerY),
+            }
+
+            // The source track draws its outline as a distinct layer. Keep the
+            // global outline setting attached to this track geometry only.
+            val outlinePx = outlineWidth.toPx()
+            if (outlinePx > 0f) {
+                drawOutline(
+                    outline = trackOutline,
+                    color = outlineColor,
+                    style = Stroke(width = outlinePx),
                 )
+            }
+
+            if (steps > 0) {
+                val count = steps + 1
+                for (index in 0..count) {
+                    val x = trackWidthPx * (index.toFloat() / count)
+                    val passed = index.toFloat() / count <= fraction
+                    val tickColor = if (passed) passedTickColor else futureTickColor
+                    // vhf.m138077ll uses a 2dp tick diameter (radius 1dp).
+                    drawCircle(
+                        color = tickColor,
+                        radius = 1.dp.toPx(),
+                        center = Offset(x, centerY),
+                    )
+                }
             }
         }
     }

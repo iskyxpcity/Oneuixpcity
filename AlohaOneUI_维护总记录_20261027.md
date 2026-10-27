@@ -436,3 +436,12 @@
 - **真实构建验证通过**：GitHub Actions [Build #1728](https://github.com/iskyxpcity/Oneuixpcity/actions/runs/40565117750)，run ID `40565117750`，对应产品代码提交 `908b228305dc700358d5185f1ae67ff8bf31c739`。Compile、owner signing key load、signed APK build、package/stable-certificate verification、artifact retention 均成功。
 - 该次测试 APK 已从 artifact 下载并校验：`AlohaOneUI_1.0.261025_BUILD_1728.apk`，包名 `com.alohaoneui.app`，versionCode `16`，versionName `1.0.261025`，大小 **28,773,833 bytes**，SHA-256 `9f90a6beefd602f09129ee30dcb2c4f141b337f794387e34cb4dfca775fb4919`；签名证书 SHA-256 `93bf61a6493c6b336383832eb41301bd8fe061f43566e7e384e3fdd9fc1c26a1`。artifact 名称 `AlohaOneUI-Signed-Test-APK`，ID `12763026483`。这是一份已验证的**测试分支构建产物**，并非 Voyage 主题迁移最终版；本次运行没有发布新的 GitHub Release 资产。
 - 当前仍未完成的事项必须继续按原版逐项核实：`IconShapePresetPicker.kt` 的 51 个形状目前仍使用临时几何生成器，尚未 1:1 复刻 `vqp.java` / `shq.java` / `ewm.java` / `qha0.java` 的原始形状目录；四种 Slider 的轨道、thumb、颜色和描边仍未逐条对照 `kdj0.java` / `h7w0.java` / `y8f0.java` 与四条实际实现；Wavy、Smooth G² 与其他形状也仍需完成整套截图/数值核对。不得把本次 Switch 几何修正或测试 APK 宣称为整体迁移完成。
+
+## 2026-10-27 后续推进：滑条真实形状轮廓与交互阴影联动
+
+- 原始依据：已重新下载并校验 Voyage 检查归档 Actions artifact `12586213779`（`voyage-inspection-report.zip`，约 204 MB）。直接核对 `decompiled/sources/p000/vhf.java`：`f288572I` 是 20×20dp 槽位，`f288573O=1dp` 为静止阴影，`f288576o=6dp` 为交互阴影，`f288575ll=2dp` 是刻度绘制直径；`m138081l` 根据非空 interaction list 在两种阴影层级间切换，`m138077ll` 将轨道线段与刻度分开绘制。
+- 本批只修改 `SegmentedSliderItem.kt` 的共享滑条实现：滑块阴影从只观察 Press 改为同时观察 Press、Drag、Hover、Focus，避免实际拖动时仍停留在 1dp；设置页和通用 Material Slider 共用此入口，因此两处同步生效。
+- 轨道不再只靠 `clip(trackShape)` 裁切一条另行硬编码圆角的矩形；现在按 `voyageCornerShape` 生成的真实 Outline 绘制未活动轨道、活动轨道和轮廓。这样全局 Material Shape Style / Corner Scale 改变时，Wavy、Smooth G²、切角及其他共享形状会直接改变轨道外形。离散刻度半径统一为源码可确认的 1dp。
+- **未完成边界：**这一步修复的是共享形状轮廓和交互阴影的断链，不代表四种 Voyage Slider 的完整 1:1。四条分支的轨道线宽、具体颜色角色、thumb 本体填充/描边以及状态动画仍需按 `kdj0.java`、`h7w0.java`、`ncw0.java`、`y3w0.java`、`w3w0.java`、`v2t0.java`、`y8f0.java`、`vhf.java` 和对应 slot 继续核对。
+- 当前修改只计划写入 `test/voyage-theme-1to1-20261026`，未修改/合并 `main`。本批 Actions 构建结果待实际运行后追加；旧 Build #1731 不能证明本批代码已通过编译。
+
