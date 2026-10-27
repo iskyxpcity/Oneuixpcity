@@ -242,6 +242,7 @@
     <string name="theme_shadow_fab">Floating buttons</string>
     <string name="theme_shadow_switch">Switches</string>
     <string name="theme_shadow_slider">Sliders</string>
+    <string name="settings_group_language">Language</string>
     <string name="settings_language">Global language</string>
     <string name="settings_language_summary">Choose the language used throughout the app.</string>
     <string name="theme_shape_style_title">Shape style</string>
