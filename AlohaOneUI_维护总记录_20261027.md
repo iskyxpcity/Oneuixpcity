@@ -135,3 +135,12 @@
 - 提交后重新读取源码确认新增的 `interactionSource`、按压动画、`voyageCornerShape` 与 `LocalMaterialShadowButtons` 已写入分支。当前可用的 commit workflow 查询仅返回空列表，combined status 也没有状态项；不能据此判定构建成功或失败。当前尚无与此 HEAD 对应的已验证 APK，不得复用 Build #1663 作为本次产物。
 - 主题设置页的列表/详情框体仍需逐页核查：尤其页面分组外框、行项目首尾圆角、详情选择器框体、选中/未选中颜色、框体边线与阴影是否在所有重载中一致。此提交只处理 `SegmentedChoiceOptionsItem` 的选项按钮，不代表整个设置页框体问题已完成。
 - 后续继续：定位实际主题设置页面源码并逐页核对列表/详情框架；检查列表行、下拉选项、Radio/Checkbox、页内操作按钮是否全部消费对应全局阴影和动效设置；再进行最新 HEAD 的构建、编译错误修复和 APK 元数据/签名/SHA-256 验收。
+
+
+## 同一轮追加修复：主题选项按钮框体描边统一
+
+- 产品源码提交：`c4d838a438f03d31f19fba13844e4ffe4a67c0a5`（`fix: apply global outline width to theme option chips`），测试分支独立提交，`main` 未修改。
+- 在上一项选项按钮阴影/动效修复基础上，继续发现 `SegmentedChoiceOptionsItem` 的 `FilterChip` 仍未消费 `LocalMaterialOutlineWidth`。因此，即使全局轮廓宽度已启用，主题选项按钮仍可能缺少与列表行一致的框体描边。
+- 已为每个选项按钮接入全局描边宽度：宽度大于 0 时，按当前选项的 `voyageCornerShape(8.dp)` 绘制 `outlineVariant` 描边；宽度为 0 或负值时不绘制描边。保留上一个提交的全局按钮阴影与按压缩放动画。
+- 目前已实际覆盖该选项控件的三项全局视觉设置：按钮阴影、轮廓宽度、主题形状风格；这只证明 Aloha 当前通用选项控件的设置消费链已接入，不证明这些 dp 参数已通过 Voyage 原版像素对照。
+- 本次产品源码最新提交为 `c4d838a438f03d31f19fba13844e4ffe4a67c0a5`。当前可用的 workflow 查询接口未返回该提交对应的构建运行记录，combined status 也无状态项；构建状态未知，尚无可核验的新 APK。必须继续验证编译与产物，不能把旧 APK 当成包含这两项修改的交付包。
