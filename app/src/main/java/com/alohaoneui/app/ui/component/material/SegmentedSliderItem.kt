@@ -10,8 +10,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.SliderState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -81,6 +83,12 @@ fun SegmentedSliderItem(
         else -> 4.dp
     }
     val interactionSource = remember { MutableInteractionSource() }
+    val sliderState = remember(valueRange, steps) {
+        SliderState(value = value, steps = steps, valueRange = valueRange)
+    }
+    LaunchedEffect(value) {
+        sliderState.value = value
+    }
 
     SegmentedListItem(
         leadingContent = icon?.let { imageVector ->
@@ -109,11 +117,9 @@ fun SegmentedSliderItem(
                     color = MaterialTheme.colorScheme.outline,
                 )
                 Slider(
-                    value = value,
+                    state = sliderState,
                     onValueChange = onValueChange,
                     modifier = Modifier.fillMaxWidth(),
-                    valueRange = valueRange,
-                    steps = steps,
                     onValueChangeFinished = onValueChangeFinished,
                     colors = styleColors,
                     interactionSource = interactionSource,
