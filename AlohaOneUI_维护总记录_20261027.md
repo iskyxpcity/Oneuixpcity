@@ -205,3 +205,16 @@
 - `TonalCard.kt`：可点击卡片的 pressedElevation 与容器阴影开关联动，按压时由 2dp 动态过渡到 3dp；关闭全局容器阴影时默认/按压 elevation 都为 0dp。非点击展示卡片维持原有静态容器阴影逻辑。
 - `ExpressiveDialog.kt`：标准与自定义内容对话框的 tonal elevation 均消费 `LocalMaterialShadowContainers`；关闭容器阴影时不再保留默认 tonal elevation，描边设置仍独立生效。
 - 本批次继续只修改测试分支，不改 `main`。这些修改覆盖返回按钮、可点击详情卡片和弹窗容器，不等同于所有 Voyage 页面已完成逐像素复刻。提交后继续监测新 Actions，发现编译问题即按日志修复。
+
+
+## 2026-10-27 后续推进：返回按钮/卡片/对话框阴影批次构建成功
+
+- 产品源码提交：`ebc848d70e7c1f2b6d0d1f2b7ae222a5ca669c89`（`fix: animate back button and unify container shadow settings`），测试分支 `test/voyage-theme-1to1-20261026`，未修改 `main`。
+- Build #1679：Actions Run `40502441349`，head SHA `ebc848d70e7c1f2b6d0d1f2b7ae222a5ca669c89`，结论 `success`；build job `122183204091` 成功且没有失败步骤。签名 APK artifact ID `12734020169`，名称 `AlohaOneUI-Signed-Test-APK`，大小 27,770,526 bytes，Artifact ZIP SHA-256 `bbd9f5a3c8a7faa8bb8c448c63790fca71a94d884ccad132acddd5a0b2af3e46`。该 APK 尚不是最终交付物，需等最终 HEAD 并完成 APK 本体验证。
+- 上批次修复：返回按钮按压缩放/动态阴影；可点击卡片按压时提升 elevation；标准与自定义内容对话框遵循全局容器阴影开关。全局描边设置保持独立。
+
+## 2026-10-27 后续推进：下拉详情菜单框体统一
+
+- 继续核查主题设置与其他子页面使用的下拉选项：原先 `SegmentedDropdownItem` 和 `OffsetAnchoredExpressiveMenu` 的 `DropdownMenuGroup` 都沿用默认 popup 阴影和默认边框，导致全局“容器阴影/轮廓宽度”在列表行可见，却在展开的详情选项菜单里不生效。
+- 已为这两处菜单组统一接入 `LocalMaterialShadowContainers` 与 `LocalMaterialOutlineWidth`：开启容器阴影时使用 Material 3 菜单组的默认 shadow elevation，关闭时 elevation 归零；全局轮廓宽度大于 0 时使用 `outlineVariant` 绘制组框边线，宽度为 0 时不添加边线。菜单项目原有的 selected 状态、形状组与回调不变。
+- 修改仅写入测试分支，不改 `main`。这次针对的是弹出的详情选项菜单框体；仍需继续检查设置页面的其他容器/按钮，并以 Voyage 原版对照结果校准视觉参数。

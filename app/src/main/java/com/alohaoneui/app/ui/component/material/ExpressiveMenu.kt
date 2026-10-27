@@ -1,5 +1,6 @@
 package com.alohaoneui.app.ui.component.material
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Box
@@ -9,6 +10,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.DropdownMenuGroup
 import androidx.compose.material3.DropdownMenuPopup
 import androidx.compose.material3.MenuDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -16,6 +18,9 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.dp
+import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
+import com.alohaoneui.app.ui.theme.LocalMaterialShadowContainers
 
 @Composable
 fun OffsetAnchoredExpressiveMenu(
@@ -40,6 +45,12 @@ fun OffsetAnchoredExpressiveMenu(
             DropdownMenuGroup(
                 shapes = MenuDefaults.groupShape(index = 0, count = 1),
                 modifier = Modifier.verticalScroll(rememberScrollState()),
+                shadowElevation = if (LocalMaterialShadowContainers.current) {
+                    MenuDefaults.ShadowElevation
+                } else 0.dp,
+                border = LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
+                    BorderStroke(it.dp, MaterialTheme.colorScheme.outlineVariant)
+                },
                 content = content,
             )
         }

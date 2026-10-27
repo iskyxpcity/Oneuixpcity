@@ -1036,7 +1036,15 @@ fun SegmentedDropdownItem(
                     expanded = expanded,
                     onDismissRequest = { expanded = false }
                 ) {
-                    DropdownMenuGroup(shapes = MenuDefaults.groupShapes()) {
+                    DropdownMenuGroup(
+                        shapes = MenuDefaults.groupShapes(),
+                        shadowElevation = if (LocalMaterialShadowContainers.current) {
+                            MenuDefaults.ShadowElevation
+                        } else 0.dp,
+                        border = LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
+                            BorderStroke(it.dp, colorScheme.outlineVariant)
+                        },
+                    ) {
                         items.forEachIndexed { index, text ->
                             SelectableDropdownMenuItem(
                                 text = { Text(text) },
