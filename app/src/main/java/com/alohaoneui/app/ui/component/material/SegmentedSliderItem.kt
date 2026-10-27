@@ -84,7 +84,7 @@ fun SegmentedSliderItem(
     }
     val interactionSource = remember { MutableInteractionSource() }
     val sliderState = remember(valueRange, steps) {
-        SliderState(value, valueRange, steps)
+        SliderState(value = value, steps = steps, trackRange = valueRange)
     }
     LaunchedEffect(value) {
         sliderState.value = value
@@ -118,7 +118,10 @@ fun SegmentedSliderItem(
                 )
                 Slider(
                     state = sliderState,
-                    onValueChange = onValueChange,
+                    onValueChange = { newValue ->
+                        sliderState.value = newValue
+                        onValueChange(newValue)
+                    },
                     modifier = Modifier.fillMaxWidth(),
                     onValueChangeFinished = onValueChangeFinished,
                     colors = styleColors,
