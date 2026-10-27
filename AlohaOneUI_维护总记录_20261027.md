@@ -96,3 +96,13 @@
 - APK：`AlohaOneUI_1.0.261025_BUILD_1663.apk`，大小 `28,748,245` bytes；SHA-256：`b5e2a1f078fdd8a53e4747401f2753185e21dec7febe76d55104d091d9d0450e`。
 - 验收：Artifact ZIP 和 APK 的 `unzip -t` 通过；`SHA256SUMS` 校验通过；包名 `com.alohaoneui.app`、versionName `1.0.261025`、versionCode `16`；V2 签名通过，签名证书 SHA-256 `93bf61a6493c6b336383832eb41301bd8fe061f43566e7e384e3fdd9fc1c26a1`。
 - Build #1663 包含 #1661 的“所有开关样式遵循全局阴影”修复与本次“全局描边宽度统一”修复。以上均为 Aloha 组件设置一致性修复，不能替代 Voyage 原版绘制路径的 1:1 移植。
+
+
+## 2026-10-27 本轮接续核查（未生成新产品构建）
+
+- 已重新读取本维护总记录，并从 GitHub 提交记录核验 `735e3cee7b45cde58a227763401bae843e08ad2b` 为 Build #1663 维护记录提交；对应产品源码提交仍为 `e507579e98f2a8e772bf5e6d348eaf2259c4f0f4`。测试分支仍为 `test/voyage-theme-1to1-20261026`，未对 `main` 执行写入。
+- 重新读取 `Theme.kt`，确认 `AppSettings`、`ThemeController.getAppSettings()` 与 `CompositionLocalProvider` 已传递 `materialShadowFloatingButtons` 到 `LocalMaterialShadowFloatingButtons`。这只能证明设置值被传递，不能证明存在实际消费该值的浮动按钮组件；尚未找到该组件的真实调用路径，因此本轮不将它套用到 `FloatingBottomBar` 或其他未经证实的控件。
+- 复核 `MaterialTheme.kt`：当前 Material 主题根仍使用 `Shapes()` 与 `MotionScheme.expressive()`；该文件本身没有提供 Voyage 原版八种 Switch、四种 Slider、50 条图标路径或 Smooth G² 绘制参数的证据，因此未据此伪造原版实现。
+- 再次查询 Build #1663 对应的 Actions artifact：Run `40493483230`，分支 `test/voyage-theme-1to1-20261026`，head SHA `e507579e98f2a8e772bf5e6d348eaf2259c4f0f4`；Artifact ID `12729931602`，ZIP SHA-256 `3e5c5c36dfc5b48b075d4ad1f62b60fc1f90a56237dbf0b9b534c4fac6c10618`。这是已知阶段性产物，不是本轮新构建，也不代表 1:1 完成。
+- 当前 GitHub 文件读取接口对本轮尝试的四个猜测组件路径返回 404，且仓库文件搜索接口没有返回分支源码结果；因此本轮无法可靠确认这些组件的实际仓库路径及其最新实现，不能在错误路径上创建同名文件或提交猜测性代码。此限制不代表项目文件不存在。
+- 本轮没有产品源码修改，也没有新的 APK；不把维护记录提交当成产品修复。后续必须先取得测试分支实际 HEAD/树与真实组件路径，再继续有源码依据的批量修复。仍未完成：Voyage Switch/Slider 原始绘制、真实图标路径、Smooth G²、浮动按钮阴影消费链、主题页面 1:1 核对及最终 APK 验收。
