@@ -388,3 +388,19 @@
 - 相关提交：`18299643ebf30218886dd350503713eb6d90a601`（设置页轨道阴影）；`ef477acb608c80267d5575f95fb5b51ab4fb6901`（通用滑条入口同步）。
 - 这是一项针对用户指出的“轨道背景之后还有阴影，阴影滑条开关控制开关”的第一步代码修改，不代表已完成 Voyage 1:1。当前轨道/滑块几何映射仍有硬编码，后续需继续从 Voyage 原始实现与录屏逐项校准；尤其滑块形状、圆角、尺寸及颜色的全局联动尚未完成。
 - 验收状态：代码已提交到测试分支；尚未确认新提交对应的 Actions 构建结果，也未完成 APK 下载、签名/包名/版本/SHA-256 验收。不得将旧构建当成本轮交付。
+
+
+## 2026-10-27 后续推进：滑块与轨道接入全局主题形状联动
+
+- 本批产品代码只写入 `test/voyage-theme-1to1-20261026`，未修改或合并 `main`。
+- 在复核 `SegmentedSliderItem.kt` 与 `AlohaOneUISlider.kt` 时，确认滑块本体仍固定用 `drawCircle` 绘制，阴影固定使用 `CircleShape`；轨道外形也通过 slider style 索引固定映射为 50%、22%、36% 圆角。这样全局 Material 形状样式/圆角比例变化时，滑块与轨道阴影外形不跟随共享主题形状工厂，造成组件联动断开。
+- 修改 `app/src/main/java/com/alohaoneui/app/ui/component/material/SegmentedSliderItem.kt`：滑块本体改为使用共享 `voyageCornerShape(size.minDimension / 2f)`，将同一个 Shape 同时用于滑块阴影、裁切和填充；轨道/轨道阴影使用 `voyageCornerShape(height / 2f)`，并在可见轨道层应用相同 Shape 的 clip。全局形状样式和圆角比例因此会传递到设置页滑块本体及轨道容器，不再强制画成圆形/胶囊形。
+- 修改 `app/src/main/java/com/alohaoneui/mod/ui/component/AlohaOneUISlider.kt`：通用 Material Slider 继续复用 `VoyageSliderThumb` / `VoyageSliderTrack`，因此普通设置页和详情子页面使用相同的主题形状绘制入口，避免两处各自维护不同的滑块几何。
+- 相关提交（均在目标测试分支）：
+  - `9b59c7201aa919f11891fec66e0f4f0977398e60` — `fix: link slider thumb and track to shared theme shape`
+  - `2980fd16b23d63ec77c94fc060e45aa503034806` — `fix: link generic slider to shared theme shape factory`
+  - `f6a9f00571bc68aa35c7f120c9b1ba8b79c31d00` — 清理不再使用的固定形状导入
+  - `40edb3973e077cffc690596c5434a6e184d5a32c` — 清理通用滑条文件中的未使用导入
+- 验证边界：该批修复的是“全局形状样式/圆角设置必须联动到滑块与轨道容器”的明确断链，不代表四种 Voyage Slider 原版绘制路径已完整移植。活动/非活动轨道颜色、四种样式的实际轨道尺寸与内部绘制参数、thumb 的原版填充/描边颜色仍需按 `kdj0`、`h7w0`、`y8f0` 及四条实现路径逐项核对，不能将当前遗留的颜色/轨道参数映射宣称为原版数值。
+- 构建状态：提交 `40edb3973e077cffc690596c5434a6e184d5a32c` 的 combined status 返回空状态列表，commit workflow 查询也未返回关联运行；因此当前**不能**认定 CI 已通过，也没有新的 APK 可交付。下一步必须继续查找该分支对应的 Actions run/构建产物；如果没有触发构建，应在确认 workflow 配置后触发真实构建，再按日志修复并核验 APK。
+- 下一步：继续恢复并对照四种 Slider 的原版颜色/几何/轨道阴影绘制；完成后继续处理八种 Switch、50 条原版图标路径和 Smooth G²，并持续检查主题页面状态与组件共享联动。最终 APK 仍须匹配最终 HEAD，核验包名/版本、固定 Owner 签名、V2 签名、APK/ZIP 完整性及 SHA-256。
