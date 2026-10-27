@@ -169,7 +169,7 @@ private class VoyagePathShape(
                     val xTopEnd = if (tr > 0f) xRight - rtr else w
                     val yRightStart = if (tr > 0f) aTL + rtr else 0f
                     val yRightEnd = if (br > 0f) yBottom - rbr else h
-                    val xBottomStart = if (br > 0f) w - rbr else w
+                    val xBottomStart = if (br > 0f) xRight - rbr else w
                     val xBottomEnd = if (bl > 0f) aBL + rbl else 0f
                     val yLeftStart = if (bl > 0f) h - rbl else h
                     val yLeftEnd = if (tl > 0f) aTL + rtl else 0f
@@ -259,7 +259,7 @@ private class VoyagePathShape(
                         addArc(w - rtr, aTL + rtr, rtr, -90f, 90f)
                         addLine(w, yRightStart, w, yRightEnd, 1f, 0f, rightLength, aTR)
                         addArc(w - rbr, h - rbr, rbr, 0f, 90f)
-                        addLine(xBottomStart, h, xBottomEnd, h, 0f, 1f, bottomLength, aBR)
+                        addLine(xBottomStart, yBottom, xBottomEnd, yBottom, 0f, 1f, bottomLength, aBR)
                         addArc(aBL + rbl, h - rbl, rbl, 90f, 90f)
                         addLine(aBL, yLeftStart, aBL, yLeftEnd, -1f, 0f, leftLength, aBL)
                         addArc(aBL + rtl, aTL + rtl, rtl, 180f, 90f)
