@@ -330,3 +330,11 @@
 - 提交 `fc6e6cccaed7d2495cb36d986dbfc726ac8e766b` 为 `VoyagePathShape` 增加 24 项 LRU Outline 缓存，缓存键包含尺寸、density、布局方向和四角半径；`voyageCornerShape` 使用 `remember(style, scaledRadius)` 复用 Shape 实例，减少 Wavy 切换/滚动时反复采样整圈波形、分配采样点和生成二次曲线造成的卡顿。
 - 完成度边界：本批修复通用 Material 滑条的样式接线、轨道底色/阴影位置与 Wavy 重复计算；仍须依据 Voyage 的 `kdj0.java`、`h7w0.m99521O`、`gaf0/jaf0/iaf0/haf0`、`y8f0.m144819Il/m144822lo` 核验四种滑条的真实几何、颜色、thumb 造型和交互状态。当前绘制器仍是 Aloha 共用适配，不应标记为 Voyage 1:1 已验收。
 - 本次只修改测试分支 `test/voyage-theme-1to1-20261026`，未修改 `main`。必须监测最新 Actions；构建失败时继续按真实日志修复。
+
+
+## 2026-10-27 构建故障记录与修复：滑条自定义绘制 API
+
+- 第一次接入通用滑条的提交 HEAD `edb376f4b4bd1bec1d3d10140a47cee995ac50b8` 对应 Build #1696 / Run `40510263954` 失败。真实日志指出 `SegmentedSliderItem.kt:177,185` 在 Canvas 绘制 lambda 内读取了 Composable MaterialTheme；`AlohaOneUISlider.kt:137` 使用了不匹配的 Slider 重载，导致自定义 thumb/track lambda 的类型推断和 Composable 上下文连带失败。
+- 修复提交 `fe87bddcb633a454a9c2b892d31e28dfbbd1dbe4` 将 surface 色彩角色提前在 Composable 上下文读取并传入绘制作用域；提交 `d9776ddb8b34af02a91555de59f5244352a9bda2` 改用 `rememberSliderState` 对应的自定义 track/thumb 重载，并同步 controlled value。
+- Build #1698 / Run `40510728838` 对 HEAD `d9776ddb8b34af02a91555de59f5244352a9bda2` 最终结论 `completed / success`。以下步骤均成功：源码校验、`:app:compileDebugKotlin`、加载 owner 签名密钥、构建签名 APK、包名/稳定证书校验、Actions Artifact 上传。
+- 成功产物 artifact ID `12737106641`，名称 `AlohaOneUI-Signed-Test-APK`，大小 `27,772,892` bytes，Artifact ZIP SHA-256 `4e0f515f38cb66e61db6c5e2af8c7ff9208601568ac72d74bef6c74f313eed4c`。这证明该 HEAD 构建成功，不代表四种滑条的源码级视觉 1:1 已完成；本阶段仍需继续做原始几何与交互对照。
