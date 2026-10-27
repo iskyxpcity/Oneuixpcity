@@ -581,3 +581,12 @@
   - 活动进度绘制为外轨道内部向内缩 4dp 的内层轨道，跟随主题活动色与共享 Shape 样式；刻度和描边也移入内层轨道。阴影设置仍可控制外轨道和 thumb 的阴影。
   - 额外修正：内层 Voyage Shape 在 Canvas 绘制开始前预先创建，避免在非 Composable 绘制回调内调用 Composable Shape 工厂。
 - 验证边界：源码改动已推送，尚未确认本批最新 HEAD 的 Actions 编译终态，也没有设备录屏确认。接下来必须检查构建日志；如有编译错误继续修复，并在设备上确认开关两端留白、90% 高度及 Slider 外底色包裹效果。不可宣称设备验收完成，也不可用旧 APK 作为本批最新交付物。
+
+## 2026-10-27 用户反馈：列表选项卡间距收紧，凹弧与缺口形状默认深度减半
+
+- 源码提交：`5e1e7bd1c202cd40a57bbb66b7f62a83e7ccfb29`（`ui: tighten list card spacing and soften concave/notch shapes`）。
+- 修改文件：`app/src/main/java/com/alohaoneui/app/ui/component/material/SegmentedList.kt`。
+- 列表选项卡/分组条目之间的默认间距由 `6.dp` 调整为 `4.dp`，减少条目间的空隙，其他内部内容间距不变。
+- Voyage 形状样式 5（凹弧）与样式 6（缺口）的有效几何深度减半：在绘制轮廓时将四角相关尺寸乘以 `0.5f`。因此凹弧凹入/外凸幅度和缺口的切入深度都会相应缩小；全局 Corner Scale 仍会继续作用于新尺寸，其他形状样式不受影响。
+- 本次改动只提交至 `test/voyage-theme-1to1-20261026`，没有修改或合并 `main`。
+- 验证边界：源码已提交，需以本次提交后的最新 HEAD 检查 GitHub Actions 构建结果，并在设备上确认列表间距、凹弧与缺口形状在不同 Corner Scale 下的实际观感；未完成这些检查前不宣称设备验收通过，也不使用旧 APK 作为本轮交付物。
