@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="settings_group_language">언어</string>
     <string name="home">홈</string>
     <string name="reboot">다시 시작</string>
     <string name="settings">설정</string>
