@@ -218,3 +218,11 @@
 - 继续核查主题设置与其他子页面使用的下拉选项：原先 `SegmentedDropdownItem` 和 `OffsetAnchoredExpressiveMenu` 的 `DropdownMenuGroup` 都沿用默认 popup 阴影和默认边框，导致全局“容器阴影/轮廓宽度”在列表行可见，却在展开的详情选项菜单里不生效。
 - 已为这两处菜单组统一接入 `LocalMaterialShadowContainers` 与 `LocalMaterialOutlineWidth`：开启容器阴影时使用 Material 3 菜单组的默认 shadow elevation，关闭时 elevation 归零；全局轮廓宽度大于 0 时使用 `outlineVariant` 绘制组框边线，宽度为 0 时不添加边线。菜单项目原有的 selected 状态、形状组与回调不变。
 - 修改仅写入测试分支，不改 `main`。这次针对的是弹出的详情选项菜单框体；仍需继续检查设置页面的其他容器/按钮，并以 Voyage 原版对照结果校准视觉参数。
+
+
+## 2026-10-27 后续推进：修复下拉菜单框体构建错误并补齐选项 Chip 动态阴影
+
+- Build #1680 / Run `40503070353` 编译失败。已下载并检查诊断 artifact `12734015948`，唯一 Kotlin 错误为 `SegmentedList.kt:1045:29 Unresolved reference 'BorderStroke'`。
+- 根因：在 `SegmentedList.kt` 中新增下拉菜单组描边时，上一批次的导入插入规则没有匹配到该文件真实 import 区，因此调用已写入但 `androidx.compose.foundation.BorderStroke` 未导入。本批次直接在文件包声明后补入正确 import，保留菜单组的全局描边与阴影行为。
+- 同时补齐 `SegmentedChoiceOptionsItem` 的按钮阴影过渡：按压且可用时 elevation 动态升至 3dp，选中态 2dp，普通态 1dp；动画使用 spring，并继续受 `LocalMaterialShadowButtons` 控制。此前只缩放按钮，阴影在按压过程中是固定值。
+- 修改仅写入测试分支，不改 `main`。提交后继续监测新 HEAD 构建；如果出现新错误，继续按真实日志修复。当前无本批次新 APK。

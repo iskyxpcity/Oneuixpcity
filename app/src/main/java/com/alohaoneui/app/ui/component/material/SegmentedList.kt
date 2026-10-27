@@ -1,5 +1,6 @@
 package com.alohaoneui.app.ui.component.material
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
@@ -942,6 +943,15 @@ fun SegmentedChoiceOptionsItem(
                     animationSpec = spring(),
                     label = "voyageChoiceChipPress",
                 )
+                val chipShadowElevation by animateDpAsState(
+                    targetValue = when {
+                        pressed && enabled -> 3.dp
+                        selected -> 2.dp
+                        else -> 1.dp
+                    },
+                    animationSpec = spring(dampingRatio = 0.62f, stiffness = 520f),
+                    label = "voyageChoiceChipShadow",
+                )
                 val chipShape = voyageCornerShape(8.dp)
                 FilterChip(
                     selected = selected,
@@ -954,7 +964,7 @@ fun SegmentedChoiceOptionsItem(
                     modifier = Modifier
                         .then(
                             if (LocalMaterialShadowButtons.current) {
-                                Modifier.shadow(if (selected) 2.dp else 1.dp, chipShape)
+                                Modifier.shadow(chipShadowElevation, chipShape)
                             } else Modifier
                         )
                         .then(
