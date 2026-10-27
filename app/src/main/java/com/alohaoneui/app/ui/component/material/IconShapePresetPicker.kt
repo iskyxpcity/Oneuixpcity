@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import kotlin.math.pow
 import com.alohaoneui.app.R
 
 internal const val ICON_SHAPE_NONE = 0
@@ -165,4 +166,4 @@ private fun geometricIconShape(index: Int): Shape {
     }
 }
 
-private fun Float.pow(power: Float): Float = kotlin.math.pow(this, power)
+private fun Float.pow(power: Float): Float = this.toDouble().pow(power.toDouble()).toFloat()
