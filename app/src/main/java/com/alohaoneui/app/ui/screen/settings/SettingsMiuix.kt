@@ -195,7 +195,7 @@ fun SettingPagerMiuix(
                             )
                             Text(
                                 text = stringResource(id = R.string.settings_group_language),
-                                style = MiuixTheme.textStyles.body1,
+                                style = MiuixTheme.textStyles.subtitle,
                                 color = colorScheme.onBackground,
                                 modifier = Modifier.weight(1f)
                             )
