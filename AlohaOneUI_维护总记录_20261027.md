@@ -73,3 +73,15 @@
 - APK `AlohaOneUI_1.0.261025_BUILD_1659.apk`，大小 `28,747,517` bytes；SHA-256：`87b7780faee1ece9a139e5a5fae341e6cd7c9e0c2f65d2b0feca706aaafaecff`。
 - 验收：Artifact ZIP 与 APK `unzip -t` 通过；包名 `com.alohaoneui.app`，versionName `1.0.261025`，versionCode `16`；V2 签名通过，证书 SHA-256 `93bf61a6493c6b336383832eb41301bd8fe061f43566e7e384e3fdd9fc1c26a1`。
 - 该修复是 Aloha 通用控件的设置接入修复，不代表 Voyage 原版 Slider 绘制已经 1:1 完成。后续仍须以已定位的原始 `Ly8f0;` 绘制调用链恢复四种样式的实际几何与颜色参数。
+
+
+## Build #1661：Switch 全局阴影设置接入修复
+
+- 产品源码提交：`b1da7a3488c28f4f90138edb33faad7b8154bdc1`。
+- 在 `ExpressiveSwitch.kt` 中确认开关阴影设置 `LocalMaterialShadowSwitches` 原先仅在样式索引 2、5、6 生效，导致用户启用“开关阴影”后，其他样式不会遵循这个全局设置。已去除不一致的样式白名单，改为所有开关样式统一受该设置控制；阴影开关关闭时所有样式都不应用该阴影修饰符。
+- 此修复解决的是 Aloha 当前全局设置与实际控件之间的不一致；它不是对 Voyage 原版八种 Switch 绘制外观的 1:1 还原证明。
+- GitHub Actions Run `40492886129`（Build #1661）结论 `success`，head SHA 为 `b1da7a3488c28f4f90138edb33faad7b8154bdc1`。
+- Artifact ID `12730190238`；Artifact ZIP SHA-256：`d31fead1065495ccc67feaea4b0d87ec618ce82314bd0f41ad0cfacb44a2be2d`。
+- APK：`AlohaOneUI_1.0.261025_BUILD_1661.apk`，大小 `28,748,245` bytes；SHA-256：`55fcd9907c8cc57d8bbcf80db57d38bfeebf35385dd5aede7f906122becc8436`。
+- 验收：Artifact ZIP 与 APK `unzip -t` 均通过；`SHA256SUMS` 校验通过；包名 `com.alohaoneui.app`，versionName `1.0.261025`，versionCode `16`；V2 签名验证通过，证书 SHA-256 为 `93bf61a6493c6b336383832eb41301bd8fe061f43566e7e384e3fdd9fc1c26a1`。
+- 当前最新产品 APK 为 Build #1661。后续继续处理 Voyage 原始 Switch/Slider 绘制路径、真实图标形状与 Smooth G²；在还原原始方法体并验证参数前，不将手写近似样式标记为原版移植完成。
