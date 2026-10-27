@@ -64,29 +64,48 @@ internal data class VoyageSliderAppearance(
     val inactiveColor: Color,
     val thumbSize: DpSize,
     val trackHeight: androidx.compose.ui.unit.Dp,
+    val innerInset: androidx.compose.ui.unit.Dp,
 )
 
 @Composable
 internal fun voyageSliderAppearance(requestedStyle: Int): VoyageSliderAppearance {
     val style = requestedStyle.coerceIn(0, 3)
     val scheme = MaterialTheme.colorScheme
+    // Keep the four named Voyage families visually distinct. The enclosing rail
+    // uses a secondary/tertiary container tone; it must never reuse the thumb fill.
     val active = when (style) {
         1 -> scheme.tertiary
         2 -> scheme.secondary
+        3 -> scheme.primary
         else -> scheme.primary
     }
-    // Slider's unfilled track uses the same neutral container tone as the
-    // switch's off-state track, while preserving theme/dynamic color updates.
-    val inactive = scheme.surfaceContainerHighest
-    // The neutral track is an outer capsule that surrounds the thumb, like a
-    // switch track. The active progress is drawn as an inset inner rail.
-    val trackHeight = 24.dp
+    val inactive = when (style) {
+        1, 3 -> scheme.tertiaryContainer
+        else -> scheme.secondaryContainer
+    }
+    // Voyage uses a visibly substantial outer rail (32dp), not a thin line.
+    // Per-family inset and thumb proportions differentiate Material You/Fancy/
+    // Material/Hyper OS while the shared Voyage shape setting still controls shape.
+    val trackHeight = 32.dp
+    val thumbSize = when (style) {
+        1 -> DpSize(22.dp, 22.dp) // Fancy: slightly larger thumb.
+        2 -> DpSize(18.dp, 18.dp) // Material: compact thumb.
+        3 -> DpSize(20.dp, 24.dp) // Hyper OS: vertically elongated thumb.
+        else -> DpSize(20.dp, 20.dp) // Material You.
+    }
+    val innerInset = when (style) {
+        1 -> 3.dp
+        2 -> 5.dp
+        3 -> 4.dp
+        else -> 4.dp
+    }
     return VoyageSliderAppearance(
         style = style,
         activeColor = active,
         inactiveColor = inactive,
-        thumbSize = DpSize(20.dp, 20.dp),
+        thumbSize = thumbSize,
         trackHeight = trackHeight,
+        innerInset = innerInset,
     )
 }
 
@@ -111,6 +130,7 @@ fun SegmentedSliderItem(
     // The 16dp and 32dp values belong to separate track containers, not thumbs.
     val thumbSize = appearance.thumbSize
     val trackHeight = appearance.trackHeight
+    val trackInset = appearance.innerInset
     val interactionSource = remember { MutableInteractionSource() }
     val sliderState = rememberSliderState(
         value = value,
@@ -167,6 +187,7 @@ fun SegmentedSliderItem(
                             range = valueRange,
                             steps = steps,
                             height = trackHeight,
+                            innerInset = trackInset,
                             thumbWidth = thumbSize.width,
                             activeColor = active,
                             inactiveColor = inactive,
@@ -236,6 +257,7 @@ internal fun VoyageSliderTrack(
     range: ClosedFloatingPointRange<Float>,
     steps: Int,
     height: androidx.compose.ui.unit.Dp,
+    innerInset: androidx.compose.ui.unit.Dp,
     thumbWidth: androidx.compose.ui.unit.Dp,
     activeColor: Color,
     inactiveColor: Color,
@@ -254,7 +276,7 @@ internal fun VoyageSliderTrack(
     // Keep the track linked to the shared shape system without adding elevation
     // that is not present in the source draw path.
     val trackShape = voyageCornerShape(height / 2f)
-    val innerShape = voyageCornerShape((height - 8.dp).coerceAtLeast(2.dp) / 2f)
+    val innerShape = voyageCornerShape((height - innerInset * 2f).coerceAtLeast(2.dp) / 2f)
     Canvas(
         Modifier
             .fillMaxWidth()
@@ -271,9 +293,9 @@ internal fun VoyageSliderTrack(
         )
         drawVoyageOutline(outerOutline, inactiveColor)
 
-        val innerInset = 4.dp.toPx()
-        val innerHeight = (h - innerInset * 2f).coerceAtLeast(1f)
-        val innerWidth = (size.width - innerInset * 2f).coerceAtLeast(1f)
+        val insetPx = innerInset.toPx()
+        val innerHeight = (h - insetPx * 2f).coerceAtLeast(1f)
+        val innerWidth = (size.width - insetPx * 2f).coerceAtLeast(1f)
         val fraction = if (range.endInclusive > range.start) {
             ((state.value - range.start) / (range.endInclusive - range.start)).coerceIn(0f, 1f)
         } else 0f
@@ -283,7 +305,7 @@ internal fun VoyageSliderTrack(
             layoutDirection = layoutDirection,
             density = this,
         )
-        withTransform({ translate(innerInset, innerInset) }) {
+        withTransform({ translate(insetPx, insetPx) }) {
             if (activeWidthPx >= innerHeight) {
                 val activeOutline = innerShape.createOutline(
                     size = Size(activeWidthPx, innerHeight),
