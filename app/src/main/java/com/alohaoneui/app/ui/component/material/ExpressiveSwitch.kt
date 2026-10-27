@@ -25,6 +25,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -204,7 +207,16 @@ fun ExpressiveSwitch(
                 layoutDirection = layoutDirection,
                 density = this,
             )
-            drawVoyageOutline(trackOutline, trackColor)
+            if (style == 5) {
+                drawVoyageGlassOutline(
+                    outline = trackOutline,
+                    bounds = Size(w, h),
+                    tint = trackColor,
+                    alpha = if (checked) 0.78f else 0.56f,
+                )
+            } else {
+                drawVoyageOutline(trackOutline, trackColor)
+            }
             val borderPx = borderWidth.dp.toPx()
             if (borderPx > 0f) {
                 val borderOutline = trackShape.createOutline(
@@ -254,7 +266,30 @@ fun ExpressiveSwitch(
                 (if (checked) checkedThumb else uncheckedThumb).copy(alpha = 0.65f)
             }
             withTransform({ translate(cx - thumbRadius, cy - thumbRadius) }) {
-                drawVoyageOutline(thumbOutline, thumbColor)
+                if (style == 5) {
+                    drawVoyageGlassOutline(
+                        outline = thumbOutline,
+                        bounds = Size(thumbSizePx, thumbSizePx),
+                        tint = thumbColor,
+                        alpha = if (checked) 0.96f else 0.88f,
+                    )
+                    // Tight specular rim and a soft top reflection give the thumb
+                    // a glass volume instead of the previous flat white disc.
+                    drawVoyageOutline(
+                        thumbOutline,
+                        Color.White.copy(alpha = if (checked) 0.86f else 0.62f),
+                        style = Stroke(width = 0.8.dp.toPx()),
+                    )
+                    drawLine(
+                        color = Color.White.copy(alpha = 0.72f),
+                        start = Offset(thumbSizePx * 0.28f, thumbSizePx * 0.23f),
+                        end = Offset(thumbSizePx * 0.68f, thumbSizePx * 0.23f),
+                        strokeWidth = 1.dp.toPx(),
+                        cap = StrokeCap.Round,
+                    )
+                } else {
+                    drawVoyageOutline(thumbOutline, thumbColor)
+                }
             }
             // Switch thumb icons/checkmarks are intentionally omitted; the
             // thumb itself communicates the on/off state by position and color.
@@ -273,6 +308,43 @@ fun ExpressiveSwitch(
             }
         }
     }
+}
+
+/** Draw a lightweight Liquid Glass treatment using translucent vertical layers
+ * and specular edge reflections. This is intentionally shader-free so the switch
+ * remains inexpensive while scrolling lists of settings.
+ */
+private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawVoyageGlassOutline(
+    outline: Outline,
+    bounds: Size,
+    tint: Color,
+    alpha: Float,
+) {
+    val path = Path().apply {
+        when (outline) {
+            is Outline.Rectangle -> addRect(outline.rect)
+            is Outline.Rounded -> addRoundRect(outline.roundRect)
+            is Outline.Generic -> addPath(outline.path)
+        }
+    }
+    drawPath(
+        path = path,
+        brush = Brush.verticalGradient(
+            colors = listOf(
+                Color.White.copy(alpha = 0.66f * alpha),
+                tint.copy(alpha = 0.42f * alpha),
+                tint.copy(alpha = 0.76f * alpha),
+                Color.White.copy(alpha = 0.18f * alpha),
+            ),
+            startY = 0f,
+            endY = bounds.height.coerceAtLeast(1f),
+        ),
+    )
+    drawPath(
+        path = path,
+        color = Color.White.copy(alpha = 0.78f * alpha),
+        style = Stroke(width = 0.9.dp.toPx()),
+    )
 }
 
 @Composable
