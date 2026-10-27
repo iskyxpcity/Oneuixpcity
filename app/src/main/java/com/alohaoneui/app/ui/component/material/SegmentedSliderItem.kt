@@ -22,6 +22,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -115,15 +117,7 @@ fun SegmentedSliderItem(
                         sliderState.value = newValue
                         onValueChange(newValue)
                     },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .then(
-                            if (LocalMaterialShadowSliders.current) {
-                                Modifier.shadow(2.dp, voyageCornerShape(50.dp))
-                            } else {
-                                Modifier
-                            }
-                        ),
+                    modifier = Modifier.fillMaxWidth(),
                     onValueChangeFinished = onValueChangeFinished,
                     interactionSource = interactionSource,
                     thumb = {
@@ -132,6 +126,7 @@ fun SegmentedSliderItem(
                             size = thumbSize,
                             activeColor = active,
                             inactiveColor = inactive,
+                            shadowEnabled = LocalMaterialShadowSliders.current,
                         )
                     },
                     track = { state ->
@@ -155,13 +150,23 @@ fun SegmentedSliderItem(
 }
 
 @Composable
-private fun VoyageSliderThumb(
+internal fun VoyageSliderThumb(
     style: Int,
     size: DpSize,
     activeColor: Color,
     inactiveColor: Color,
+    shadowEnabled: Boolean = true,
 ) {
-    Box(Modifier.size(width = size.width, height = size.height)) {
+    val thumbShape = when (style) {
+        2 -> RoundedCornerShape(5.dp)
+        3 -> RoundedCornerShape(7.dp)
+        else -> CircleShape
+    }
+    Box(
+        Modifier
+            .size(width = size.width, height = size.height)
+            .then(if (shadowEnabled) Modifier.shadow(2.dp, thumbShape) else Modifier)
+    ) {
         Canvas(Modifier.fillMaxSize()) {
             val d = minOf(size.width.toPx(), size.height.toPx())
             val center = Offset(this.size.width / 2f, this.size.height / 2f)
@@ -169,7 +174,7 @@ private fun VoyageSliderThumb(
                 1 -> {
                     drawCircle(activeColor.copy(alpha = 0.18f), radius = d * 0.50f, center = center)
                     drawCircle(activeColor, radius = d * 0.36f, center = center)
-                    drawCircle(Color.White, radius = d * 0.12f, center = center)
+                    drawCircle(MaterialTheme.colorScheme.surface, radius = d * 0.12f, center = center)
                 }
                 2 -> {
                     drawCircle(activeColor, radius = d * 0.34f, center = center)
@@ -177,7 +182,7 @@ private fun VoyageSliderThumb(
                 }
                 3 -> {
                     drawCircle(activeColor, radius = d * 0.46f, center = center)
-                    drawCircle(Color.White.copy(alpha = 0.95f), radius = d * 0.20f, center = center)
+                    drawCircle(MaterialTheme.colorScheme.surface.copy(alpha = 0.95f), radius = d * 0.20f, center = center)
                 }
                 else -> {
                     drawCircle(activeColor, radius = d * 0.40f, center = center)
@@ -189,7 +194,7 @@ private fun VoyageSliderThumb(
 }
 
 @Composable
-private fun VoyageSliderTrack(
+internal fun VoyageSliderTrack(
     style: Int,
     state: SliderState,
     range: ClosedFloatingPointRange<Float>,
