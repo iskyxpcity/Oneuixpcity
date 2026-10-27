@@ -106,3 +106,15 @@
 - 再次查询 Build #1663 对应的 Actions artifact：Run `40493483230`，分支 `test/voyage-theme-1to1-20261026`，head SHA `e507579e98f2a8e772bf5e6d348eaf2259c4f0f4`；Artifact ID `12729931602`，ZIP SHA-256 `3e5c5c36dfc5b48b075d4ad1f62b60fc1f90a56237dbf0b9b534c4fac6c10618`。这是已知阶段性产物，不是本轮新构建，也不代表 1:1 完成。
 - 当前 GitHub 文件读取接口对本轮尝试的四个猜测组件路径返回 404，且仓库文件搜索接口没有返回分支源码结果；因此本轮无法可靠确认这些组件的实际仓库路径及其最新实现，不能在错误路径上创建同名文件或提交猜测性代码。此限制不代表项目文件不存在。
 - 本轮没有产品源码修改，也没有新的 APK；不把维护记录提交当成产品修复。后续必须先取得测试分支实际 HEAD/树与真实组件路径，再继续有源码依据的批量修复。仍未完成：Voyage Switch/Slider 原始绘制、真实图标路径、Smooth G²、浮动按钮阴影消费链、主题页面 1:1 核对及最终 APK 验收。
+
+
+## 2026-10-27 后续推进：修正图标形状 None 预览的裁切
+
+- 产品源码提交：`3450efee6eef33de152d39e74be62b64cc2f0549`（`fix: render None icon shape preview without clipping`）。仅提交到 `test/voyage-theme-1to1-20261026`，未修改 `main`。
+- 修改文件：`app/src/main/java/com/alohaoneui/app/ui/component/material/IconShapePresetPicker.kt`。
+- 源码依据：该文件将 `ICON_SHAPE_NONE = 0` 定义为“未遮罩”，`iconShapeForStyle(0)` 返回 `null`；但预览列表把空形状回退成 `RoundedCornerShape(12.dp)`，随后仍对预览 tile 调用 `clip(shape)`，使 None 项视觉上继续被圆角裁切，与本文件的 None 语义矛盾。
+- 修复：以 `RectangleShape` 替换 None 预览的圆角回退形状，并移除不再使用的 `RoundedCornerShape` 导入。没有更改 50 个几何轮廓，也没有声称它们已与 Voyage 原版路径匹配。
+- 交叉核对真实源码路径后，确认本项目组件实际位于 `ui/component/material/`（单数 component），此前猜测的 `ui/components/` 路径错误；这只是定位纠正，不代表源码不存在。
+- 本次源码提交后立即查询到的 combined status 尚未返回状态项，不能据此判定 CI 成功或失败；仍需继续核对该提交触发的 Actions 运行、构建日志和产物。当前没有新 APK 可交付，不得复用 Build #1663 冒充本次构建。
+- 本轮重新确认：`SegmentedSliderItem.kt` 四种样式目前仍使用手写颜色、轨道高度、拇指尺寸和路径；`ExpressiveSwitch.kt` 八种样式仍是 Aloha 手写分支；`IconShapePresetPicker.kt` 的 50 个轮廓仍来自 `geometricIconShape` 算法。这些实现继续标记为待 Voyage 原始实现逐项对照，不视为 1:1 完成。
+- 仍未完成：恢复 Voyage Switch/Slider 的原始方法体与参数、50 个原版图标路径/顺序/None(-1)/Random 映射、Smooth G² 的 cubic→arc→cubic 分支、`LocalMaterialShadowFloatingButtons` 的真实组件消费路径、设置页面视觉与层级对照，以及最终 HEAD 的构建和 APK 元数据/签名/SHA-256 验收。
