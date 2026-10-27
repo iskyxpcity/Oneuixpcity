@@ -420,3 +420,10 @@
 - 最新产品代码修正提交：`fd0aca9f1f4f8cdf4178709b97b55bf129d0eb3e`。复核 `VoyageSliderThumb` 时补正 Compose Box 的空内容 lambda，并用 `minOf(size.width, size.height)` 计算圆形基准半径，避免依赖不必要的 DpSize 扩展属性。
 - 当前滑块的阴影、裁切和填充共用 `voyageCornerShape` 返回的主题 Shape；轨道的阴影与可见层也共用同一主题 Shape。设置页与通用 Material Slider 共用 `voyageSliderAppearance()` 配置入口。
 - 当前最新维护记录提交之前，针对产品提交 `fd0aca9f1f4f8cdf4178709b97b55bf129d0eb3e` 查询到的 combined status 为空，commit workflow 查询没有关联运行。**尚未进行真实编译验收**；这不是成功构建记录。必须继续找到可查询的最新 Actions run 或可用的构建触发路径，构建失败时按真实日志修复。
+
+
+## 2026-10-27 本批滑条改动的源码收尾与 CI 查询边界
+
+- 最后清理提交：`66f6089f568c7cba7fe7274f99558d49d32709c0`（移除滑条文件不再使用的 `fillMaxSize` 导入）、`62a770e2a2906362fea911bae7c128ed3c85b640`（移除通用滑条文件不再使用的 `DpSize` 导入）。修改均在 `test/voyage-theme-1to1-20261026`。
+- 已读取仓库的 `.github/workflows/build.yml`，确认 workflow 配置了对 `main`、`test/**`、`migration/**` 分支 push 的触发条件，并有 `workflow_dispatch`。当前可用 GitHub 查询接口未提供“按分支列出所有 push-triggered runs”的列表操作；对产品提交查询 combined status 为空，commit workflow 查询仅覆盖 PR-triggered runs，因此无法从这两项空结果推断 push 构建没有运行，也不能据此宣称构建成功。
+- 当前尚无本批 HEAD 对应的、可核验的真实构建终态和 APK 产物。下一步必须通过 Actions 实际 run/job/artifact 记录核验构建结果；若失败，读取诊断日志继续修复。最终 APK 需与最终 HEAD 一致，不能拿 Build #1708 或更早的阶段包代替。
