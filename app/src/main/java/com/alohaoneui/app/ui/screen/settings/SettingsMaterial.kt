@@ -28,6 +28,8 @@ import androidx.compose.material.icons.filled.ElectricalServices
 import androidx.compose.material.icons.filled.Fence
 import androidx.compose.material.icons.filled.FolderDelete
 import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Policy
 import androidx.compose.material.icons.filled.RemoveCircle
@@ -81,6 +83,7 @@ fun SettingPagerMaterial(
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
     val snackBarHost = remember { SnackbarHostState() }
     var showBottomSheet by remember { mutableStateOf(false) }
+    var languageExpanded by rememberSaveable { mutableStateOf(true) }
 
     Scaffold(
         topBar = {
@@ -145,7 +148,7 @@ fun SettingPagerMaterial(
 
 
             val languageOptions = listOf(
-                "Follow system" to "system",
+                stringResource(R.string.settings_theme_mode_system) to "system",
                 "简体中文" to "zh-Hans",
                 "繁體中文" to "zh-Hant",
                 "English" to "en",
@@ -154,15 +157,36 @@ fun SettingPagerMaterial(
             )
             SegmentedColumn(
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                title = stringResource(R.string.settings_group_language),
-                content = languageOptions.map { (label, value) ->
-                    {
+                content = buildList {
+                    add {
                         SegmentedListItem(
-                            selected = uiState.appLanguage == value ||
-                                (value == "system" && uiState.appLanguage.isBlank()),
-                            onClick = { actions.onSetAppLanguage(value) },
-                            headlineContent = { Text(label) },
+                            onClick = { languageExpanded = !languageExpanded },
+                            leadingContent = {
+                                Icon(
+                                    Icons.Filled.Language,
+                                    contentDescription = stringResource(R.string.settings_group_language)
+                                )
+                            },
+                            headlineContent = { Text(stringResource(R.string.settings_group_language)) },
+                            trailingContent = {
+                                Icon(
+                                    if (languageExpanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
+                                    contentDescription = null
+                                )
+                            }
                         )
+                    }
+                    if (languageExpanded) {
+                        languageOptions.forEach { (label, value) ->
+                            add {
+                                SegmentedListItem(
+                                    selected = uiState.appLanguage == value ||
+                                        (value == "system" && uiState.appLanguage.isBlank()),
+                                    onClick = { actions.onSetAppLanguage(value) },
+                                    headlineContent = { Text(label) },
+                                )
+                            }
+                        }
                     }
                 }
             )
