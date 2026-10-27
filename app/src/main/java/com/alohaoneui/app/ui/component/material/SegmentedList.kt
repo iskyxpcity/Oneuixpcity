@@ -252,7 +252,7 @@ private class VoyagePathShape(
 
     override fun createOutline(size: Size, layoutDirection: LayoutDirection, density: Density): Outline {
         fun cacheRadius(value: Float): Float =
-            if (style == 4) kotlin.math.round(value * 2f) / 2f else value
+            if (style == 4) kotlin.math.round(value) else value
 
         val key = OutlineKey(
             style, size.width, size.height, density.density, layoutDirection,
@@ -460,11 +460,11 @@ private class VoyagePathShape(
                         val waveCount = kotlin.math.ceil(perimeterLength / targetWaveLength).toInt().coerceAtLeast(1)
                         val waveLength = perimeterLength / waveCount
                         val sourceArcSubdivisions = 8f
-                        val sourcePathSubdivisions = 360f
+                        val sourcePathSubdivisions = 180f
                         val sampleStep = maxOf(
                             waveLength / sourceArcSubdivisions,
                             perimeterLength / sourcePathSubdivisions,
-                            1f
+                            1.5f
                         )
                         class WaveSample(
                             val point: androidx.compose.ui.geometry.Offset,
