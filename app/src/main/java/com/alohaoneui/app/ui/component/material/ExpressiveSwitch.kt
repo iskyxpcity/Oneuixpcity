@@ -146,8 +146,12 @@ fun ExpressiveSwitch(
         Canvas(Modifier.fillMaxSize()) {
             val w = size.width
             val h = size.height
-            val trackColor = (if (checked) checkedTrack else uncheckedTrack).let {
-                if (enabled) it else it.copy(alpha = 0.38f)
+            val trackColor = if (enabled) {
+                if (checked) checkedTrack else uncheckedTrack
+            } else if (style == 0) {
+                if (checked) colors.disabledCheckedTrackColor else colors.disabledUncheckedTrackColor
+            } else {
+                (if (checked) checkedTrack else uncheckedTrack).copy(alpha = 0.38f)
             }
             val radius = h * cornerFraction
             drawRoundRect(
@@ -175,7 +179,13 @@ fun ExpressiveSwitch(
                 drawCircle(color = Color.White.copy(alpha = if (checked) 0.22f else 0.10f), radius = thumbRadius + 2.dp.toPx(), center = Offset(cx, cy))
             }
             drawCircle(
-                color = (if (checked) checkedThumb else uncheckedThumb).let { if (enabled) it else it.copy(alpha = 0.65f) },
+                color = if (enabled) {
+                    if (checked) checkedThumb else uncheckedThumb
+                } else if (style == 0) {
+                    if (checked) colors.disabledCheckedThumbColor else colors.disabledUncheckedThumbColor
+                } else {
+                    (if (checked) checkedThumb else uncheckedThumb).copy(alpha = 0.65f)
+                },
                 radius = thumbRadius,
                 center = Offset(cx, cy),
             )
