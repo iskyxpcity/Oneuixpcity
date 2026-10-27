@@ -154,9 +154,10 @@ private data class VoyageG2Profile(
         val c1y = p0.y + maxOf(0.0, p2.y * firstControlScale)
         val c2x = p1.x - maxOf(0.0, p3.x * secondControlScale)
         val c2y = p1.y - maxOf(0.0, p3.y * secondControlScale)
-        // wcf stores p0, p1, p2, p3 in that order. Voyage's path builder
-        // passes p3 to cubicTo; p2 remains the second control point.
-        return Cubic(p0, Point(c1x, c1y), Point(c2x, c2y), p3)
+        // fqw0.m95419o() returns wcf(p0, solvedControl1, solvedControl2, p1):
+        // in this general branch p1 is the cubic endpoint; p2/p3 are tangent
+        // direction points used to solve the controls, not the endpoint.
+        return Cubic(p0, Point(c1x, c1y), Point(c2x, c2y), p1)
     }
 
     /**
