@@ -276,7 +276,20 @@ internal fun VoyageSliderTrack(
         )
         withTransform({ translate(left, 0f) }) {
             drawVoyageOutline(trackOutline, inactiveColor)
-            if (activeWidthPx > 0f) {
+            if (activeWidthPx >= h) {
+                // Draw the filled segment as its own Voyage-shaped outline so
+                // its leading edge stays rounded instead of being cut flat by
+                // a rectangular clip. The outline remains tied to the global
+                // shape family and corner-scale settings.
+                val activeOutline = trackShape.createOutline(
+                    size = Size(activeWidthPx, h),
+                    layoutDirection = layoutDirection,
+                    density = this,
+                )
+                drawVoyageOutline(activeOutline, activeColor)
+            } else if (activeWidthPx > 0f) {
+                // At the very start of the range, keep the fill proportional
+                // rather than forcing a full-height capsule into the track.
                 clipRect(left = 0f, top = 0f, right = activeWidthPx, bottom = h) {
                     drawVoyageOutline(trackOutline, activeColor)
                 }
