@@ -139,8 +139,8 @@ private fun geometricIconShape(index: Int): Shape {
             }
             val x = kotlin.math.cos(angle) * base
             val y = kotlin.math.sin(angle) * base
-            val shapedX = kotlin.math.sign(x) * kotlin.math.abs(x).toFloat().let { it.pow(exponent) }
-            val shapedY = kotlin.math.sign(y) * kotlin.math.abs(y).toFloat().let { it.pow(exponent) }
+            val shapedX = (kotlin.math.sign(x) * kotlin.math.abs(x).pow(exponent.toDouble())).toFloat()
+            val shapedY = (kotlin.math.sign(y) * kotlin.math.abs(y).pow(exponent.toDouble())).toFloat()
             pathPoints += androidx.compose.ui.geometry.Offset(
                 cx + shapedX * cx * (0.94f - variant * 0.006f),
                 cy + shapedY * cy * (0.94f - variant * 0.006f),
@@ -166,4 +166,3 @@ private fun geometricIconShape(index: Int): Shape {
     }
 }
 
-private fun Float.pow(power: Float): Float = this.toDouble().pow(power.toDouble()).toFloat()
