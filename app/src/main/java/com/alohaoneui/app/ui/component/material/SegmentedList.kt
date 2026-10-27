@@ -934,7 +934,6 @@ fun SegmentedSwitchItem(
     )
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun SegmentedChoiceOptionsItem(
     title: String,
@@ -945,81 +944,17 @@ fun SegmentedChoiceOptionsItem(
     selectedIndex: Int,
     onItemSelected: (Int) -> Unit,
 ) {
-    val haptic = LocalHapticFeedback.current
-    val safeIndex = selectedIndex.coerceIn(0, (items.size - 1).coerceAtLeast(0))
-
-    SegmentedOptionFrame {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleSmall,
-            color = if (enabled) colorScheme.onSurface else colorScheme.onSurfaceVariant,
-        )
-        summary?.let {
-            Text(
-                text = it,
-                style = MaterialTheme.typography.bodySmall,
-                color = colorScheme.onSurfaceVariant,
-            )
-        }
-        FlowRow(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            items.forEachIndexed { index, label ->
-                val selected = index == safeIndex
-                val interactionSource = remember(index) { MutableInteractionSource() }
-                val pressed by interactionSource.collectIsPressedAsState()
-                val pressScale by animateFloatAsState(
-                    targetValue = if (pressed && enabled) 0.96f else 1f,
-                    animationSpec = spring(),
-                    label = "voyageChoiceChipPress",
-                )
-                val chipShadowElevation by animateDpAsState(
-                    targetValue = when {
-                        pressed && enabled -> 3.dp
-                        selected -> 2.dp
-                        else -> 1.dp
-                    },
-                    animationSpec = spring(dampingRatio = 0.62f, stiffness = 520f),
-                    label = "voyageChoiceChipShadow",
-                )
-                val chipShape = voyageCornerShape(8.dp)
-                FilterChip(
-                    selected = selected,
-                    onClick = {
-                        if (enabled && index != safeIndex) {
-                            haptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
-                            onItemSelected(index)
-                        }
-                    },
-                    modifier = Modifier
-                        .then(
-                            if (LocalMaterialShadowButtons.current) {
-                                Modifier.shadow(chipShadowElevation, chipShape)
-                            } else Modifier
-                        )
-                        .then(
-                            LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
-                                Modifier.border(it.dp, colorScheme.outlineVariant, chipShape)
-                            } ?: Modifier
-                        )
-                        .graphicsLayer {
-                            scaleX = pressScale
-                            scaleY = pressScale
-                        },
-                    enabled = enabled,
-                    interactionSource = interactionSource,
-                    shape = chipShape,
-                    label = { Text(label) },
-                    leadingIcon = if (selected) {
-                        { Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(18.dp)) }
-                    } else null,
-                    colors = FilterChipDefaults.filterChipColors(),
-                )
-            }
-        }
-    }
+    // Voyage k9t0.m108317Il / vfw0.m137946o renders a framed setting row,
+    // then opens the native choice surface. It does not render a permanent FlowRow of chips.
+    SegmentedDropdownItem(
+        title = title,
+        summary = summary,
+        items = items,
+        colors = colors,
+        enabled = enabled,
+        selectedIndex = selectedIndex,
+        onItemSelected = onItemSelected,
+    )
 }
 
 @Composable
