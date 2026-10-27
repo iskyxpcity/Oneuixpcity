@@ -31,3 +31,13 @@
 - 在 `SettingsRepositoryImpl.kt` 中发现明确的索引范围不一致：读取 getter 允许 `0..51`，但 setter 和设置快照恢复时都把 `material_icon_shape_style` 截断到 `0..1`。这会导致选择 50 个预设中的项目后，保存/恢复时被改回前两项，直接破坏选择器持久化。
 - 已把 setter 与快照恢复两处范围统一修正为 `0..51`，与当前选择器的 50 个预设及 None/Random 项范围保持一致。该修复依据当前代码中的明确范围矛盾，不代表 50 个图形路径已经与 Voyage 原版逐项还原。
 - 当前最新产品源码提交为 `9747ebc31ae85083b481fc8ca1f054813a9ae35e`。尚未核验该提交对应的 GitHub Actions 构建与 APK；后续必须先确认编译结果，再继续批量移植。不得把前一阶段 APK 当作包含此修复的新包。
+
+
+## 最新构建验收：Build #1655
+
+- GitHub Actions：`40487579007`，Run #1655，head SHA 为维护记录提交 `668a95738f37935215619e71244a3a0f29d5c653`；该提交包含前序产品修复 `9747ebc31ae85083b481fc8ca1f054813a9ae35e`。构建结论 `success`，build job 与签名验证步骤均成功。
+- Artifact ID：`12726210569`，名称 `AlohaOneUI-Signed-Test-APK`；Artifact ZIP SHA-256：`c1862e83dc8c9ea0f944d5523d2cb071e8f14a076c078e186c80af55478cb357`。
+- APK：`AlohaOneUI_1.0.261025_BUILD_1655.apk`，大小 `28,747,517` bytes；SHA-256：`1a98ce182c89c5f4d67358caddc67d1aa4226f3e4b35b44e2f9213da9a8fe91e`。
+- 验收：外层 Artifact ZIP 与 APK 的 `unzip -t` 均通过；APK 包名 `com.alohaoneui.app`，versionName `1.0.261025`，versionCode `16`；V2 签名验证通过，证书 SHA-256 为 `93bf61a6493c6b336383832eb41301bd8fe061f43566e7e384e3fdd9fc1c26a1`。
+- 该包确实包含图标形状索引持久化范围修复，并撤销了上述两项无原版证据的间距猜测；但仍只是阶段性测试包。50 个图形仍为算法生成轮廓，Switch/Slider 与 Smooth G² 尚未完成 Voyage 原始绘制路径逐项移植，不得标记为 1:1 最终版。
+- 下一步继续定位并对照 Voyage 的实际渲染实现，优先 Switch/Slider 与形状路径；原始方法体无法可靠读取前，不提交猜测性的视觉参数。后续产品改动必须在同一测试分支完成构建与 APK 验收，`main` 保持不动。
