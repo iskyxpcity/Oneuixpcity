@@ -199,19 +199,22 @@ private class VoyagePathShape(
                 path.cubicTo(0f, tl * smooth, tl * smooth, 0f, tl, 0f)
             }
             3 -> {
-                // Voyage e7g0 / b2t0: SquircleShape with the source preset smoothing=48.
-                // The source converts smoothing to the corner control-point factor:
-                // 1 - ((48 / 100) * 0.45 + 0.55) = 0.234.
-                val smooth = 1f - ((48f / 100f) * 0.45f + 0.55f)
+                // Voyage G² Smooth profile: use the control-point scale derived from
+                // dan.m88494l() rather than reusing the Squircle smoothing=48 shortcut.
+                // The profile is source-defined (dan.f104767lI); its second control
+                // point supplies the tangent scale used at each radius-sized corner.
+                val profile = VoyageG2Profile.smooth.cubic()
+                val tangentScale = profile.p2.x.toFloat().coerceIn(0f, 1f)
+                val controlInset = 1f - tangentScale
                 path.moveTo(tl, 0f)
                 path.lineTo(w - tr, 0f)
-                path.cubicTo(w - tr * smooth, 0f, w, tr * smooth, w, tr)
+                path.cubicTo(w - tr * controlInset, 0f, w, tr * controlInset, w, tr)
                 path.lineTo(w, h - br)
-                path.cubicTo(w, h - br * smooth, w - br * smooth, h, w - br, h)
+                path.cubicTo(w, h - br * controlInset, w - br * controlInset, h, w - br, h)
                 path.lineTo(bl, h)
-                path.cubicTo(bl * smooth, h, 0f, h - bl * smooth, 0f, h - bl)
+                path.cubicTo(bl * controlInset, h, 0f, h - bl * controlInset, 0f, h - bl)
                 path.lineTo(0f, tl)
-                path.cubicTo(0f, tl * smooth, tl * smooth, 0f, tl, 0f)
+                path.cubicTo(0f, tl * controlInset, tl * controlInset, 0f, tl, 0f)
             }
             4 -> {
                 // Voyage source: p000/wgo0.java, mo5154ll + m140359lI/m140360lO/
