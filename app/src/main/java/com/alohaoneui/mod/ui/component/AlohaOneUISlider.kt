@@ -34,7 +34,6 @@ import com.alohaoneui.app.ui.component.material.VoyageSliderThumb
 import com.alohaoneui.app.ui.component.material.VoyageSliderTrack
 import com.alohaoneui.app.ui.theme.LocalMaterialSliderStyle
 import com.alohaoneui.app.ui.theme.LocalMaterialShadowSliders
-import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
 import androidx.compose.ui.graphics.Color
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import kotlin.math.abs
@@ -135,8 +134,6 @@ fun AlohaOneUISlider(
                     com.alohaoneui.app.ui.component.material.voyageSliderContainerModifier(
                         style = materialSliderStyle,
                         containerColor = materialAppearance.containerColor,
-                        outlineWidth = LocalMaterialOutlineWidth.current.dp,
-                        outlineColor = materialScheme.outlineVariant,
                     )
                 ),
             onValueChangeFinished = handleValueChangeFinished,
@@ -167,8 +164,6 @@ fun AlohaOneUISlider(
                     thumbWidth = materialThumbSize.width,
                     activeColor = materialActiveColor,
                     inactiveColor = materialInactiveColor,
-                    outlineWidth = LocalMaterialOutlineWidth.current.dp,
-                    outlineColor = materialScheme.outlineVariant,
                 )
             },
         )
