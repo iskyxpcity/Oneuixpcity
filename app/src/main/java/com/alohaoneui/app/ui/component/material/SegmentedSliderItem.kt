@@ -75,12 +75,9 @@ internal fun voyageSliderAppearance(requestedStyle: Int): VoyageSliderAppearance
         2 -> scheme.secondary
         else -> scheme.primary
     }
-    val inactive = when (style) {
-        1 -> scheme.tertiaryContainer
-        2 -> scheme.surfaceVariant
-        3 -> scheme.surfaceContainerHighest
-        else -> scheme.secondaryContainer
-    }
+    // Slider's unfilled track uses the same neutral container tone as the
+    // switch's off-state track, while preserving theme/dynamic color updates.
+    val inactive = scheme.surfaceContainerHighest
     val trackHeight = when (style) {
         1 -> 8.dp
         2 -> 4.dp
@@ -178,6 +175,7 @@ fun SegmentedSliderItem(
                             inactiveColor = inactive,
                             outlineWidth = LocalMaterialOutlineWidth.current.dp,
                             outlineColor = MaterialTheme.colorScheme.outlineVariant,
+                            shadowEnabled = LocalMaterialShadowSliders.current,
                         )
                     },
                 )
@@ -237,6 +235,7 @@ internal fun VoyageSliderTrack(
     inactiveColor: Color,
     outlineWidth: androidx.compose.ui.unit.Dp,
     outlineColor: Color,
+    shadowEnabled: Boolean = false,
 ) {
     val passedTickColor = when (style) {
         1 -> MaterialTheme.colorScheme.onTertiary
@@ -249,7 +248,12 @@ internal fun VoyageSliderTrack(
     // Keep the track linked to the shared shape system without adding elevation
     // that is not present in the source draw path.
     val trackShape = voyageCornerShape(height / 2f)
-    Canvas(Modifier.fillMaxWidth().height(height)) {
+    Canvas(
+        Modifier
+            .fillMaxWidth()
+            .height(height)
+            .then(if (shadowEnabled) Modifier.shadow(1.dp, trackShape, clip = false) else Modifier)
+    ) {
         val h = size.height
         val centerY = h / 2f
         // Material reserves half a thumb slot at each end. Draw the track outline
