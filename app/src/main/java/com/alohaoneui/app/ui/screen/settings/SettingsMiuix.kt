@@ -84,6 +84,7 @@ fun SettingPagerMiuix(
     val barColor = if (blurActive) Color.Transparent else colorScheme.surface
     val loadingDialog = rememberLoadingDialog()
     val showSendLogDialog = rememberSaveable { mutableStateOf(false) }
+    val languageExpanded = rememberSaveable { mutableStateOf(true) }
 
     Scaffold(
         topBar = {
@@ -173,27 +174,35 @@ fun SettingPagerMiuix(
                             .padding(top = 12.dp)
                             .fillMaxWidth(),
                     ) {
-                        Text(
-                            text = stringResource(id = R.string.settings_group_language),
-                            style = MiuixTheme.textStyles.subtitle,
-                            color = colorScheme.primary,
-                            modifier = Modifier.padding(start = 16.dp, top = 12.dp, bottom = 8.dp)
+                        ArrowPreference(
+                            title = stringResource(id = R.string.settings_group_language),
+                            startAction = {
+                                Icon(
+                                    Icons.Rounded.Language,
+                                    modifier = Modifier.padding(end = 6.dp),
+                                    contentDescription = stringResource(id = R.string.settings_group_language),
+                                    tint = colorScheme.onBackground
+                                )
+                            },
+                            onClick = { languageExpanded.value = !languageExpanded.value }
                         )
-                        val languageOptions = listOf(
-                            "Follow system" to "system",
-                            "简体中文" to "zh-Hans",
-                            "繁體中文" to "zh-Hant",
-                            "English" to "en",
-                            "日本語" to "ja",
-                            "한국어" to "ko",
-                        )
-                        languageOptions.forEach { (label, value) ->
-                            RadioButtonPreference(
-                                title = label,
-                                selected = uiState.appLanguage == value ||
-                                    (value == "system" && uiState.appLanguage.isBlank()),
-                                onClick = { actions.onSetAppLanguage(value) },
+                        if (languageExpanded.value) {
+                            val languageOptions = listOf(
+                                stringResource(R.string.settings_theme_mode_system) to "system",
+                                "简体中文" to "zh-Hans",
+                                "繁體中文" to "zh-Hant",
+                                "English" to "en",
+                                "日本語" to "ja",
+                                "한국어" to "ko",
                             )
+                            languageOptions.forEach { (label, value) ->
+                                RadioButtonPreference(
+                                    title = label,
+                                    selected = uiState.appLanguage == value ||
+                                        (value == "system" && uiState.appLanguage.isBlank()),
+                                    onClick = { actions.onSetAppLanguage(value) },
+                                )
+                            }
                         }
                     }
 
