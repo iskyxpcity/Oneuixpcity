@@ -536,7 +536,7 @@ private class VoyagePathShape(
 
 @Composable
 fun voyageCornerShape(radius: androidx.compose.ui.unit.Dp): Shape {
-    val scaledRadius = radius * LocalMaterialCornerScale.current.coerceIn(0f, 1f)
+    val scaledRadius = radius * LocalMaterialCornerScale.current.coerceIn(0f, 2f)
     val style = LocalMaterialShapeStyle.current
     return when (style) {
         1 -> CutCornerShape(scaledRadius)
@@ -562,9 +562,9 @@ fun voyageSegmentedShape(index: Int, count: Int, vertical: Boolean = true): Shap
     val single = count == 1 || index == -1
     val first = single || index == 0
     val last = single || index == count - 1
-    // Voyage vk7.m138245I only scales corner geometry when the factor is below 1.0;
-    // factors at or above 1.0 keep the original shape rather than enlarging its corners.
-    val cornerScale = LocalMaterialCornerScale.current.coerceIn(0f, 1f)
+    // The setting exposes a 0.0..2.0 scale. Preserve the full range so values
+    // above 1.0 enlarge corner geometry instead of silently behaving like 1.0.
+    val cornerScale = LocalMaterialCornerScale.current.coerceIn(0f, 2f)
 
     val topStart by animateDpAsState(
         targetValue = (if (first) 16.dp else 4.dp) * cornerScale,
