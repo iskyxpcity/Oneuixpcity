@@ -237,21 +237,50 @@ private class VoyagePathShape(
     private val bottomStart: Dp,
 ) : Shape {
     private data class OutlineKey(
+        val style: Int,
         val width: Float, val height: Float, val density: Float, val direction: LayoutDirection,
         val topStart: Float, val topEnd: Float, val bottomEnd: Float, val bottomStart: Float,
     )
+
+    // Wavy shapes are used by many rows at once. A per-instance cache misses on
+    // every animated shape frame because each row owns a different Shape instance.
+    // Share a small LRU across instances and quantize only Wavy corner radii to
+    // half-dp buckets; this bounds path rebuilds during the corner spring animation.
     private val outlineCache = object : java.util.LinkedHashMap<OutlineKey, Outline>(16, 0.75f, true) {
         override fun removeEldestEntry(eldest: MutableMap.MutableEntry<OutlineKey, Outline>?): Boolean = size > 24
     }
 
-    @Synchronized
     override fun createOutline(size: Size, layoutDirection: LayoutDirection, density: Density): Outline {
+        fun cacheRadius(value: Float): Float =
+            if (style == 4) kotlin.math.round(value * 2f) / 2f else value
+
         val key = OutlineKey(
-            size.width, size.height, density.density, layoutDirection,
-            topStart.value, topEnd.value, bottomEnd.value, bottomStart.value,
+            style, size.width, size.height, density.density, layoutDirection,
+            cacheRadius(topStart.value), cacheRadius(topEnd.value),
+            cacheRadius(bottomEnd.value), cacheRadius(bottomStart.value),
         )
-        outlineCache[key]?.let { return it }
-        return createVoyageOutline(size, layoutDirection, density).also { outlineCache[key] = it }
+
+        if (style == 4) {
+            synchronized(wavyOutlineCache) {
+                wavyOutlineCache[key]?.let { return it }
+                val outline = createVoyageOutline(size, layoutDirection, density)
+                wavyOutlineCache[key] = outline
+                return outline
+            }
+        }
+
+        synchronized(outlineCache) {
+            outlineCache[key]?.let { return it }
+            val outline = createVoyageOutline(size, layoutDirection, density)
+            outlineCache[key] = outline
+            return outline
+        }
+    }
+
+    private companion object {
+        private val wavyOutlineCache = object : java.util.LinkedHashMap<OutlineKey, Outline>(64, 0.75f, true) {
+            override fun removeEldestEntry(eldest: MutableMap.MutableEntry<OutlineKey, Outline>?): Boolean = size > 160
+        }
     }
 
     private fun createVoyageOutline(size: Size, layoutDirection: LayoutDirection, density: Density): Outline {
