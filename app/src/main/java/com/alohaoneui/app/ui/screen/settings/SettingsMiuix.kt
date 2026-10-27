@@ -150,6 +150,12 @@ fun SettingPagerMiuix(
                             selectedIndex = if (uiState.uiMode == UiMode.Material.value) 1 else 0,
                             onSelectedIndexChange = actions.onSetUiModeIndex
                         )
+                        Text(
+                            text = stringResource(id = R.string.settings_group_language),
+                            style = MaterialTheme.typography.titleSmall,
+                            color = colorScheme.primary,
+                            modifier = Modifier.padding(start = 16.dp, top = 12.dp, bottom = 8.dp)
+                        )
                         val languageOptions = listOf(
                             "Follow system" to "system",
                             "简体中文" to "zh-Hans",
