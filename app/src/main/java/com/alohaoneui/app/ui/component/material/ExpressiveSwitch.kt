@@ -197,7 +197,7 @@ fun ExpressiveSwitch(
         }
         if (thumbContent != null) {
             val thumbDiameter = 32.dp * (thumbRadiusFraction * 2f)
-            val thumbTravel = 52.dp - 2f * (32.dp * (thumbInsetFraction + thumbRadiusFraction))
+            val thumbTravel = 52.dp - (32.dp * (thumbInsetFraction + thumbRadiusFraction) * 2f)
             Box(
                 modifier = Modifier
                     .align(Alignment.Center)
