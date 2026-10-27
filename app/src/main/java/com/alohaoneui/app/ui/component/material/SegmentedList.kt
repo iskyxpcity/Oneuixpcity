@@ -272,13 +272,13 @@ private class VoyagePathShape(
                     // tangent-direction construction points in fqw0.m95419o()).
                     // The old p2.x lookup was always 1.0 and therefore collapsed
                     // every corner to the same arbitrary 8% inset.
-                    val xSpan = (cubic.p1.x - cubic.p0.x).let { kotlin.math.abs(it) }
-                    val ySpan = (cubic.p1.y - cubic.p0.y).let { kotlin.math.abs(it) }
+                    val xSpan = (cubic.p3.x - cubic.p0.x).let { kotlin.math.abs(it) }
+                    val ySpan = (cubic.p3.y - cubic.p0.y).let { kotlin.math.abs(it) }
                     val horizontal = if (xSpan > 1e-9) {
-                        kotlin.math.abs(cubic.c1.x - cubic.p0.x) / xSpan
+                        kotlin.math.abs(cubic.p1.x - cubic.p0.x) / xSpan
                     } else 0.0
                     val vertical = if (ySpan > 1e-9) {
-                        kotlin.math.abs(cubic.p1.y - cubic.c2.y) / ySpan
+                        kotlin.math.abs(cubic.p3.y - cubic.p2.y) / ySpan
                     } else 0.0
                     return ProfileInsets(
                         horizontal.coerceIn(0.0, 1.0).toFloat(),
