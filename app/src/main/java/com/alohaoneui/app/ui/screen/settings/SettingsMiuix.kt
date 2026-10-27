@@ -207,8 +207,8 @@ fun SettingPagerMiuix(
                         if (languageExpanded.value) {
                             val languageOptions = listOf(
                                 stringResource(R.string.settings_theme_mode_system) to "system",
-                                "简体中文" to "zh-Hans",
-                                "繁體中文" to "zh-Hant",
+                                "简体中文" to "zh-CN",
+                                "繁體中文" to "zh-TW",
                                 "English" to "en",
                                 "日本語" to "ja",
                                 "한국어" to "ko",
