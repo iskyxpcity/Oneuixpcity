@@ -668,3 +668,14 @@
 - 语言选择：Material 设置语言列表每个当前选项现在显示主题色勾选图标，补强选中态。提交：`79f2d42034d6752bf804e059a81cb0277bb590f4`。
 - 语言黑屏：设置语言动作现在先比较当前保存值与目标值；重复选择当前语言时不再重新写入 LocaleManager 或触发旧版 Activity recreate，避免无意义的重建闪屏。真正切换语言仍由 Android 13+ LocaleManager 管理配置切换；低版本只执行一次必要的 Activity recreate。提交：`2a06b73f548a3ac9c992104fb03b50ef1fb1eb94`。该修复不能代替真机确认，若切换到不同语言仍黑屏，需要继续检查 Activity 窗口背景与系统语言配置重建过程。
 - 验证边界：本节所有改动均为已推送源码，当前仍待最新 HEAD 的 Actions 编译终态、APK artifact 和设备视觉/交互复测；未宣称本轮已通过新构建或已完成真机验收。不得用旧 APK 作为本轮交付物。
+
+
+## 2026-10-27 — Run #1803 构建验证结果
+
+- GitHub Actions Run #1803：`40591312502`，结果 `success`，对应产品源码提交 `4157133de953ef60498b1afc693c9d9f02ea7ae3`。Compile、签名 APK 构建、包名/签名验证及 Actions Artifact 保存步骤均成功。
+- Artifact：`AlohaOneUI-Signed-Test-APK`，Artifact ID `12773174792`；下载 ZIP 内的 APK 文件为 `AlohaOneUI_1.0.261025_BUILD_1803.apk`，大小 28,788,313 bytes（约 27.45 MiB）。
+- APK package：`com.alohaoneui.app`；versionName `1.0.261025`，versionCode `16`；SDK 31–36，编译 SDK 37。
+- APK SHA-256：`b61956d574b8bb1f9a669129fcb8d87c9320b3196e6ae59725f96101da8cb900`。
+- 签名验证：APK Signature Scheme v2 验证通过；证书 SHA-256 `93bf61a6493c6b336383832eb41301bd8fe061f43566e7e384e3fdd9fc1c26a1`，与该构建的签名检查文件一致。
+- 本次是测试分支的 signed test APK；workflow 的 optimized release validation 与 GitHub Release publish 步骤被跳过，因此交付以 Actions Artifact / APK 文件为准，不宣称已发布正式 Release。
+- 设备验收仍未完成：构建成功只能证明源码编译、APK 签名与包信息验证通过，不能代替真机检查波浪形状流畅度、语言切换闪屏、开关/滑条观感及切换即时生效。
