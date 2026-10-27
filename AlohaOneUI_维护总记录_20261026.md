@@ -264,3 +264,12 @@
 - GitHub Actions Run #1642（commit `18984c5b4722b4b9c65fb9dc8657ce85442c7d1a`）编译成功并产出已签名 APK。APK：`AlohaOneUI_1.0.261025_BUILD_1642.apk`，大小 28,747,569 bytes，SHA-256 `d919c326f2513d25d90c49bcbf16730b83622178511168ce43c06d2cbf7b742d`；包名 `com.alohaoneui.app`，versionName `1.0.261025`，versionCode `16`；APK v2 签名有效，证书 SHA-256 `93bf61a6493c6b336383832eb41301bd8fe061f43566e7e384e3fdd9fc1c26a1`。
 - 50 个几何预设的选择、预览、持久化及功能图标遮罩链路已实现，但仍需从 Voyage 原版逐项还原真实形状数据才能宣称视觉 1:1。Smooth G² 的源参数曲线算法已存在于 `SegmentedList.kt`，采用独立的 Voyage G² profile，与 Squircle 曲线分离；本轮没有用近似算法替换它。
 - 本次为测试分支 APK，不是正式发布版本；`main` 未修改。维护记录继续按日期文件更新，不新建带时间戳的重复文件。
+
+## 2026-10-26 继续整批修复：开关点击与圆角缩放
+
+- 分支：`test/voyage-theme-1to1-20261026`；未修改 `main`。
+- 修复 1：`SegmentedList.kt` 中 `SegmentedSwitchItem` 的尾部开关，在未提供 `onRowClick` 时原先把 `ExpressiveSwitch.onCheckedChange` 设为 `null`，导致用户直接点击开关本体无法切换。现恢复开关自身的点击回调，并保留触觉反馈及设置状态回写。
+- 修复 2：`voyageCornerShape`、`voyageSegmentedShape` 等角半径缩放逻辑曾把 `LocalMaterialCornerScale` 限制在 `0.0..1.0`，但设置滑条实际范围为 `0.0..2.0`，造成 1.0 以上数值显示变化、几何却不再增大。现按设置的完整 `0.0..2.0` 范围应用缩放。
+- 代码提交：`58baf1cb15b1db79bf2f7fecc74fdc3b26a98e3a`（开关点击）；`ff26b7f7b4784023ffcf8e584fa02bc76b5aabe5`（圆角缩放）。
+- 验收状态：以上是根据代码确认的缺陷修复，尚需 GitHub Actions 编译通过；设备实测及 Voyage 原版逐项视觉对照仍未完成，不能宣称主题 1:1 移植已完成。
+- 后续仍须处理：阴影类别中其余长按/点击行为核查、主题详情页/导航栏/语言/显示与文字/动效与触感页面移植、父标题矢量图标与底纹、列表框架间距、8 种开关和 4 种滑条的原版外观、50 个真实图标形状、全局组件主题接入。继续只在测试分支工作。
