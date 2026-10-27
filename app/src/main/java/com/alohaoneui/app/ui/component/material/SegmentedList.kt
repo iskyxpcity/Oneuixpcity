@@ -171,15 +171,40 @@ private data class VoyageG2Profile(
             extendedFraction).coerceIn(0.0, 1.0)
     }
 
-    /** Linear profile interpolation used by ban.m5206I() between capsule and smooth. */
-    fun interpolateFromCapsule(progress: Double): VoyageG2Profile {
+    /**
+     * Direct parameter interpolation from ban.m5206I(). The source does not
+     * interpolate a single profile per corner: it computes an aspect progress
+     * for each adjacent half-extent, uses the pair minimum for the shared
+     * corner profile, then scales the extended/arc/Bezier values independently.
+     */
+    fun interpolateFromCapsule(progress: Double, sharedCornerProgress: Double = progress): VoyageG2Profile {
         val t = progress.coerceIn(0.0, 1.0)
-        fun mix(from: Double, to: Double) = from + (to - from) * t
+        val shared = sharedCornerProgress.coerceIn(0.0, 1.0)
+        fun mix(from: Double, to: Double, amount: Double) = from + (to - from) * amount
         return VoyageG2Profile(
-            extendedFraction = mix(capsule.extendedFraction, smooth.extendedFraction),
-            arcFraction = mix(capsule.arcFraction, smooth.arcFraction),
-            bezierCurvatureScale = mix(capsule.bezierCurvatureScale, smooth.bezierCurvatureScale),
-            arcCurvatureScale = mix(capsule.arcCurvatureScale, smooth.arcCurvatureScale),
+            extendedFraction = mix(capsule.extendedFraction, smooth.extendedFraction, shared) * t,
+            arcFraction = mix(capsule.arcFraction, smooth.arcFraction, t),
+            bezierCurvatureScale = mix(capsule.bezierCurvatureScale, smooth.bezierCurvatureScale, t),
+            arcCurvatureScale = mix(capsule.arcCurvatureScale, smooth.arcCurvatureScale, shared),
+        )
+    }
+
+    /** Eight progress values in the same TL/TR/BR/BL paired order as ban.m5206I(). */
+    fun cornerProgresses(
+        width: Float, height: Float,
+        topStart: Float, topEnd: Float, bottomEnd: Float, bottomStart: Float,
+    ): DoubleArray {
+        val halfWidth = width.toDouble() / 2.0
+        val halfHeight = height.toDouble() / 2.0
+        return doubleArrayOf(
+            aspectProgress(halfHeight.toFloat(), topStart),
+            aspectProgress(halfWidth.toFloat(), topStart),
+            aspectProgress(halfWidth.toFloat(), topEnd),
+            aspectProgress(halfHeight.toFloat(), topEnd),
+            aspectProgress(halfHeight.toFloat(), bottomEnd),
+            aspectProgress(halfWidth.toFloat(), bottomEnd),
+            aspectProgress(halfWidth.toFloat(), bottomStart),
+            aspectProgress(halfHeight.toFloat(), bottomStart),
         )
     }
 
@@ -231,24 +256,32 @@ private class VoyagePathShape(
                 // point supplies the tangent scale used at each radius-sized corner.
                 data class CornerInsets(val horizontal: Float, val vertical: Float)
 
-                fun cornerInsets(radius: Float): CornerInsets {
-                    if (radius <= 0f || w <= 0f || h <= 0f) return CornerInsets(0f, 0f)
-                    // Keep the horizontal and vertical aspect progress independent.
-                    // Voyage ban.m5206I() derives eight progress values rather than
-                    // collapsing a non-square surface to one limiting-axis value.
-                    fun inset(progress: Double): Float {
-                        val profile = VoyageG2Profile.smooth.interpolateFromCapsule(progress).cubic()
-                        return (1.0 - profile.p2.x).toFloat().coerceIn(0.08f, 0.92f)
-                    }
-                    val horizontalProgress = VoyageG2Profile.smooth.aspectProgress(w / 2f, radius)
-                    val verticalProgress = VoyageG2Profile.smooth.aspectProgress(h / 2f, radius)
-                    return CornerInsets(inset(horizontalProgress), inset(verticalProgress))
+                val progress = VoyageG2Profile.smooth.cornerProgresses(w, h, tl, tr, br, bl)
+                val tlShared = minOf(progress[0], progress[1])
+                val trShared = minOf(progress[2], progress[3])
+                val brShared = minOf(progress[4], progress[5])
+                val blShared = minOf(progress[6], progress[7])
+
+                fun profileInset(axisProgress: Double, cornerProgress: Double): Float {
+                    val profile = VoyageG2Profile.smooth
+                        .interpolateFromCapsule(axisProgress, cornerProgress)
+                        .cubic()
+                    // Use the generated source profile's tangent/control data in
+                    // each axis rather than deriving both axes from one progress.
+                    return (1.0 - profile.p2.x).toFloat().coerceIn(0.08f, 0.92f)
                 }
 
-                val tlInset = cornerInsets(tl)
-                val trInset = cornerInsets(tr)
-                val brInset = cornerInsets(br)
-                val blInset = cornerInsets(bl)
+                fun cornerInsets(horizontalIndex: Int, verticalIndex: Int, shared: Double): CornerInsets {
+                    return CornerInsets(
+                        horizontal = profileInset(progress[horizontalIndex], shared),
+                        vertical = profileInset(progress[verticalIndex], shared),
+                    )
+                }
+
+                val tlInset = cornerInsets(1, 0, tlShared)
+                val trInset = cornerInsets(2, 3, trShared)
+                val brInset = cornerInsets(5, 4, brShared)
+                val blInset = cornerInsets(6, 7, blShared)
                 path.moveTo(tl, 0f)
                 path.lineTo(w - tr, 0f)
                 if (tr > 0f) path.cubicTo(w - tr * trInset.horizontal, 0f, w, tr * trInset.vertical, w, tr)
