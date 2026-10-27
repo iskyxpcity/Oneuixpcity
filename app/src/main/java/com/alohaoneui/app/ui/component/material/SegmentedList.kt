@@ -183,7 +183,10 @@ private data class VoyageG2Profile(
         fun mix(from: Double, to: Double, amount: Double) = from + (to - from) * amount
         return VoyageG2Profile(
             extendedFraction = mix(capsule.extendedFraction, smooth.extendedFraction, shared) * t,
-            arcFraction = mix(capsule.arcFraction, smooth.arcFraction, t),
+            // ban.m5206I() derives d65/d66/d67/d68 from the shared
+            // minimum of the two adjacent axis-progress values, not from
+            // the per-axis progress. This matters for asymmetric corners.
+            arcFraction = mix(capsule.arcFraction, smooth.arcFraction, shared),
             bezierCurvatureScale = mix(capsule.bezierCurvatureScale, smooth.bezierCurvatureScale, t),
             arcCurvatureScale = mix(capsule.arcCurvatureScale, smooth.arcCurvatureScale, shared),
         )
