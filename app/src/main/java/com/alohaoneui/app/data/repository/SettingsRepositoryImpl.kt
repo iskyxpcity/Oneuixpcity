@@ -86,8 +86,8 @@ class SettingsRepositoryImpl : SettingsRepository {
         set(value) = prefs.edit { putInt("material_slider_style", value.coerceIn(0, 3)) }
 
     override var materialIconShapeStyle: Int
-        get() = prefs.getInt("material_icon_shape_style", 0).coerceIn(0, 51)
-        set(value) = prefs.edit { putInt("material_icon_shape_style", value.coerceIn(0, 51)) }
+        get() = prefs.getInt("material_icon_shape_style", -1).coerceIn(-1, 50)
+        set(value) = prefs.edit { putInt("material_icon_shape_style", value.coerceIn(-1, 50)) }
 
     override var materialOutlineWidth: Float
         get() = prefs.getFloat("material_outline_width", 0.0f).coerceIn(0.0f, 1.5f)
@@ -182,7 +182,7 @@ class SettingsRepositoryImpl : SettingsRepository {
             .putInt("material_shape_style", snapshot.materialShapeStyle.coerceIn(0, 6))
             .putInt("material_switch_style", snapshot.materialSwitchStyle.coerceIn(0, 7))
             .putInt("material_slider_style", snapshot.materialSliderStyle.coerceIn(0, 3))
-            .putInt("material_icon_shape_style", snapshot.materialIconShapeStyle.coerceIn(0, 51))
+            .putInt("material_icon_shape_style", snapshot.materialIconShapeStyle.coerceIn(-1, 50))
             .putFloat("material_outline_width", snapshot.materialOutlineWidth.coerceIn(0.0f, 1.5f))
             .putBoolean("material_shadow_containers", snapshot.materialShadowContainers)
             .putBoolean("material_shadow_top_bars", snapshot.materialShadowTopBars)

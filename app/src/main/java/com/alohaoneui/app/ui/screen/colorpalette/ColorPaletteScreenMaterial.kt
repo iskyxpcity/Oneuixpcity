@@ -2,6 +2,7 @@ package com.alohaoneui.app.ui.screen.colorpalette
 
 import android.annotation.SuppressLint
 import android.os.Build
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -131,6 +132,19 @@ fun ColorPaletteScreenMaterial(
     val colorStyle = state.currentPaletteStyle
     val colorSpec = state.currentColorSpec
     val haptic = LocalHapticFeedback.current
+    var showIconShapeDetails by remember { mutableStateOf(false) }
+    BackHandler(enabled = showIconShapeDetails) { showIconShapeDetails = false }
+    if (showIconShapeDetails) {
+        IconShapePresetDetailScreen(
+            selectedIndex = uiState.materialIconShapeStyle,
+            onSelected = { style ->
+                actions.onSetMaterialIconShapeStyle(style)
+                showIconShapeDetails = false
+            },
+            onBack = { showIconShapeDetails = false },
+        )
+        return
+    }
 
     LaunchedEffect(Unit) {
         scrollBehavior.state.heightOffset = scrollBehavior.state.heightOffsetLimit
@@ -514,7 +528,7 @@ fun ColorPaletteScreenMaterial(
                         {
                             IconShapePresetPicker(
                                 selectedIndex = uiState.materialIconShapeStyle,
-                                onSelected = actions.onSetMaterialIconShapeStyle,
+                                onOpen = { showIconShapeDetails = true },
                             )
                         },
                         {

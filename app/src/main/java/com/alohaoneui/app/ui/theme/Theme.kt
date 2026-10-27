@@ -54,7 +54,7 @@ data class AppSettings(
     val materialShapeStyle: Int = 0,
     val materialSwitchStyle: Int = 0,
     val materialSliderStyle: Int = 0,
-    val materialIconShapeStyle: Int = 0,
+    val materialIconShapeStyle: Int = -1,
     val materialOutlineWidth: Float = 0.0f,
     val materialShadowContainers: Boolean = true,
     val materialShadowTopBars: Boolean = true,
@@ -190,7 +190,7 @@ val LocalMaterialCornerScale = staticCompositionLocalOf { 1.0f }
 val LocalMaterialShapeStyle = staticCompositionLocalOf { 0 }
 val LocalMaterialSwitchStyle = staticCompositionLocalOf { 0 }
 val LocalMaterialSliderStyle = staticCompositionLocalOf { 0 }
-val LocalMaterialIconShapeStyle = staticCompositionLocalOf { 0 }
+val LocalMaterialIconShapeStyle = staticCompositionLocalOf { -1 }
 val LocalMaterialOutlineWidth = staticCompositionLocalOf { 0.0f }
 val LocalMaterialShadowContainers = staticCompositionLocalOf { true }
 val LocalMaterialShadowTopBars = staticCompositionLocalOf { true }
