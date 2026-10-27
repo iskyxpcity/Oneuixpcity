@@ -166,7 +166,11 @@ private data class VoyageG2Profile(
      * to [0, 1]. A zero radius is handled separately by the path builder.
      */
     fun aspectProgress(halfExtent: Float, cornerRadius: Float): Double {
-        if (cornerRadius <= 0f || !cornerRadius.isFinite() || !halfExtent.isFinite()) return 0.0
+        if (!cornerRadius.isFinite() || !halfExtent.isFinite()) return 0.0
+        // In ban.m5206I(), a zero radius with a positive half-extent produces
+        // +infinity before clamping, so its aspect progress is 1 (not 0).
+        // Keep a zero-sized degenerate shape finite.
+        if (cornerRadius <= 0f) return if (halfExtent > 0f) 1.0 else 0.0
         return (((halfExtent.toDouble() / cornerRadius.toDouble()) - 1.0) /
             extendedFraction).coerceIn(0.0, 1.0)
     }
