@@ -124,23 +124,27 @@ fun ExpressiveSwitch(
         7 -> DpSize(39.dp, 22.dp)
         else -> DpSize(52.dp, 32.dp)
     }
-    // Thumb slots are style-specific in the original composables; interaction
-    // expansion is driven by the shared interaction source, not checked state.
-    val thumbDiameter = when (style) {
-        0 -> 20.dp // z4v0.m147162ll: fixed 20dp thumb slot.
+    // Preserve source interaction-state distinctions, while giving the visible
+    // thumb a fuller capsule silhouette that occupies about 65% of track width.
+    val sourceThumbDiameter = when (style) {
+        0 -> 20.dp
         1 -> when {
-            pressed -> 28.dp // frt0.m95463l expands the thumb while interacting.
+            pressed -> 28.dp
             checked || thumbContent != null -> 24.dp
             else -> 16.dp
         }
-        2 -> 20.dp // it70.m103876l: 20dp thumb, separate from its 16dp icon.
-        3 -> if (enabled && pressedOrHovered) 17.dp else 12.dp // ckw0.m9293l reacts to press/hover.
-        4, 5 -> 20.dp // rdf.m127934l / m127933O.
-        6 -> if (enabled && interactive) 23.dp else 20.dp // y2t0.m144445l reacts to press/hover/focus.
-        7 -> 22.dp // l140.m110104l.
+        2 -> 20.dp
+        3 -> if (enabled && pressedOrHovered) 17.dp else 12.dp
+        4, 5 -> 20.dp
+        6 -> if (enabled && interactive) 23.dp else 20.dp
+        7 -> 22.dp
         else -> 20.dp
     }
-    val thumbInset = ((trackSize.height - thumbDiameter) / 2f).coerceAtLeast(0.dp)
+    val thumbWidth = minOf(trackSize.width * 0.65f, trackSize.width)
+    val thumbHeight = minOf(
+        trackSize.height * 0.82f,
+        sourceThumbDiameter.coerceAtLeast(trackSize.height * 0.72f),
+    )
     val trackCornerRadius = when (style) {
         2 -> 14.dp
         3 -> 4.dp
@@ -165,14 +169,14 @@ fun ExpressiveSwitch(
         voyageCornerShape(trackCornerRadius)
     }
     val thumbShape = if (com.alohaoneui.app.ui.theme.LocalMaterialShapeStyle.current == 3) {
-        remember(thumbDiameter) { RoundedCornerShape(thumbDiameter / 2f) }
+        remember(thumbHeight) { RoundedCornerShape(thumbHeight / 2f) }
     } else {
-        voyageCornerShape(thumbDiameter / 2f)
+        voyageCornerShape(thumbHeight / 2f)
     }
     val haloShape = if (com.alohaoneui.app.ui.theme.LocalMaterialShapeStyle.current == 3) {
-        remember(thumbDiameter) { RoundedCornerShape(thumbDiameter / 2f + 2.dp) }
+        remember(thumbHeight) { RoundedCornerShape(thumbHeight / 2f + 2.dp) }
     } else {
-        voyageCornerShape(thumbDiameter / 2f + 2.dp)
+        voyageCornerShape(thumbHeight / 2f + 2.dp)
     }
     val borderWidth = LocalMaterialOutlineWidth.current
     Box(
@@ -232,29 +236,29 @@ fun ExpressiveSwitch(
                     )
                 }
             }
-            val thumbRadius = thumbDiameter.toPx() / 2f
-            val inset = thumbInset.toPx()
-            val left = inset + thumbRadius
-            val right = w - inset - thumbRadius
+            val thumbWidthPx = thumbWidth.toPx()
+            val thumbHeightPx = thumbHeight.toPx()
+            val left = thumbWidthPx / 2f
+            val right = w - thumbWidthPx / 2f
             val cx = left + (right - left) * travel
             val cy = h / 2f
             if (style == 5) {
-                val haloSize = thumbDiameter.toPx() + 4.dp.toPx()
+                val haloWidth = thumbWidthPx + 4.dp.toPx()
+                val haloHeight = thumbHeightPx + 4.dp.toPx()
                 val haloOutline = haloShape.createOutline(
-                    size = Size(haloSize, haloSize),
+                    size = Size(haloWidth, haloHeight),
                     layoutDirection = layoutDirection,
                     density = this,
                 )
-                withTransform({ translate(cx - haloSize / 2f, cy - haloSize / 2f) }) {
+                withTransform({ translate(cx - haloWidth / 2f, cy - haloHeight / 2f) }) {
                     drawVoyageOutline(
                         haloOutline,
                         Color.White.copy(alpha = if (checked) 0.22f else 0.10f),
                     )
                 }
             }
-            val thumbSizePx = thumbDiameter.toPx()
             val thumbOutline = thumbShape.createOutline(
-                size = Size(thumbSizePx, thumbSizePx),
+                size = Size(thumbWidthPx, thumbHeightPx),
                 layoutDirection = layoutDirection,
                 density = this,
             )
@@ -265,11 +269,11 @@ fun ExpressiveSwitch(
             } else {
                 (if (checked) checkedThumb else uncheckedThumb).copy(alpha = 0.65f)
             }
-            withTransform({ translate(cx - thumbRadius, cy - thumbRadius) }) {
+            withTransform({ translate(cx - thumbWidthPx / 2f, cy - thumbHeightPx / 2f) }) {
                 if (style == 5) {
                     drawVoyageGlassOutline(
                         outline = thumbOutline,
-                        bounds = Size(thumbSizePx, thumbSizePx),
+                        bounds = Size(thumbWidthPx, thumbHeightPx),
                         tint = thumbColor,
                         alpha = if (checked) 0.96f else 0.88f,
                     )
@@ -282,8 +286,8 @@ fun ExpressiveSwitch(
                     )
                     drawLine(
                         color = Color.White.copy(alpha = 0.72f),
-                        start = Offset(thumbSizePx * 0.28f, thumbSizePx * 0.23f),
-                        end = Offset(thumbSizePx * 0.68f, thumbSizePx * 0.23f),
+                        start = Offset(thumbWidthPx * 0.28f, thumbHeightPx * 0.23f),
+                        end = Offset(thumbWidthPx * 0.68f, thumbHeightPx * 0.23f),
                         strokeWidth = 1.dp.toPx(),
                         cap = StrokeCap.Round,
                     )
@@ -295,12 +299,12 @@ fun ExpressiveSwitch(
             // thumb itself communicates the on/off state by position and color.
         }
         if (thumbContent != null) {
-            val thumbTravel = trackSize.width - thumbDiameter - (thumbInset * 2f)
+            val thumbTravel = trackSize.width - thumbWidth
             Box(
                 modifier = Modifier
                     .align(Alignment.Center)
                     .offset(x = thumbTravel * travel - thumbTravel / 2f)
-                    .size(thumbDiameter)
+                    .size(width = thumbWidth, height = thumbHeight)
                     .clip(thumbShape),
                 contentAlignment = Alignment.Center,
             ) {
