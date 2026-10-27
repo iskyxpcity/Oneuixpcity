@@ -6,6 +6,8 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -53,6 +55,10 @@ fun ExpressiveSwitch(
 ) {
     val style = LocalMaterialSwitchStyle.current.coerceIn(0, 7)
     val pressed by interactionSource.collectIsPressedAsState()
+    val hovered by interactionSource.collectIsHoveredAsState()
+    val focused by interactionSource.collectIsFocusedAsState()
+    val pressedOrHovered = pressed || hovered
+    val interactive = pressed || hovered || focused
     val scheme = MaterialTheme.colorScheme
     val checkedTrack = when (style) {
         0 -> colors.checkedTrackColor
@@ -123,9 +129,9 @@ fun ExpressiveSwitch(
             else -> 16.dp
         }
         2 -> 20.dp // it70.m103876l: 20dp thumb, separate from its 16dp icon.
-        3 -> if (enabled && pressed) 17.dp else 12.dp // ckw0.m9293l.
+        3 -> if (enabled && pressedOrHovered) 17.dp else 12.dp // ckw0.m9293l reacts to press/hover.
         4, 5 -> 20.dp // rdf.m127934l / m127933O.
-        6 -> if (enabled && pressed) 23.dp else 20.dp // y2t0.m144445l.
+        6 -> if (enabled && interactive) 23.dp else 20.dp // y2t0.m144445l reacts to press/hover/focus.
         7 -> 22.dp // l140.m110104l.
         else -> 20.dp
     }
