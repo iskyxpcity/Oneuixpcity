@@ -78,7 +78,7 @@ fun ExpressiveSwitch(
     }
     val uncheckedTrack = when (style) {
         0 -> colors.uncheckedTrackColor
-        else -> scheme.onSurface.copy(alpha = 0.24f)
+        else -> scheme.surfaceContainerHighest
     }
     val checkedThumb = when (style) {
         0 -> colors.checkedThumbColor
@@ -111,13 +111,13 @@ fun ExpressiveSwitch(
     // 4 rdf.m127934l = 51x31; 5 rdf.m127933O -> m127932I = 64x28;
     // 6 y2t0.m144445l = 50x28.5; 7 l140.m110104l = 39x22.
     val trackSize = when (style) {
-        2 -> DpSize(58.dp, 26.dp)
-        3 -> DpSize(50.dp, 22.dp)
-        4 -> DpSize(53.dp, 29.dp)
-        5 -> DpSize(66.dp, 26.dp)
-        6 -> DpSize(52.dp, 26.5.dp)
-        7 -> DpSize(41.dp, 20.dp)
-        else -> DpSize(54.dp, 30.dp)
+        2 -> DpSize(60.dp, 24.dp)
+        3 -> DpSize(52.dp, 20.dp)
+        4 -> DpSize(55.dp, 27.dp)
+        5 -> DpSize(68.dp, 24.dp)
+        6 -> DpSize(54.dp, 24.5.dp)
+        7 -> DpSize(43.dp, 18.dp)
+        else -> DpSize(56.dp, 28.dp)
     }
     // Preserve source interaction-state distinctions, while giving the visible
     // thumb a fuller capsule silhouette that occupies about 65% of track width.
@@ -135,14 +135,11 @@ fun ExpressiveSwitch(
         7 -> 22.dp
         else -> 20.dp
     }
-    val thumbWidth = minOf(trackSize.width * 0.65f, trackSize.width)
+    val thumbWidth = minOf(trackSize.width * 0.70f, trackSize.width)
     // Keep a small, even horizontal inset at both switch ends and let the
     // thumb fill 90% of the track height, as requested.
-    val thumbHeight = minOf(
-        trackSize.height * 0.85f,
-        sourceThumbDiameter.coerceAtLeast(trackSize.height * 0.85f),
-    )
-    val thumbEdgeInset = 2.dp
+    val thumbHeight = trackSize.height * 0.85f
+    val thumbEdgeInset = 1.5.dp
     val trackCornerRadius = when (style) {
         2 -> 14.dp
         3 -> 4.dp
