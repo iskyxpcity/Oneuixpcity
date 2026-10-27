@@ -62,51 +62,66 @@ internal data class VoyageSliderAppearance(
     val style: Int,
     val activeColor: Color,
     val inactiveColor: Color,
+    val containerColor: Color,
     val thumbSize: DpSize,
     val trackHeight: androidx.compose.ui.unit.Dp,
-    val innerInset: androidx.compose.ui.unit.Dp,
 )
 
 @Composable
 internal fun voyageSliderAppearance(requestedStyle: Int): VoyageSliderAppearance {
     val style = requestedStyle.coerceIn(0, 3)
     val scheme = MaterialTheme.colorScheme
-    // Keep the four named Voyage families visually distinct. The enclosing rail
-    // uses a secondary/tertiary container tone; it must never reuse the thumb fill.
-    val active = when (style) {
-        1 -> scheme.tertiary
-        2 -> scheme.secondary
-        3 -> scheme.primary
-        else -> scheme.primary
+    // All four families use the same theme-driven progress/thumb accent; their
+    // rail geometry is taken from the corresponding upstream slider family.
+    val active = scheme.primary
+    val inactive = scheme.surfaceContainerHighest
+    val container = when (style) {
+        0 -> scheme.tertiaryContainer.copy(alpha = 0.20f) // Material You
+        1 -> scheme.secondaryContainer.copy(alpha = 0.30f) // Fancy
+        2 -> scheme.tertiaryContainer.copy(alpha = 0.20f) // Material 2
+        else -> scheme.secondaryContainer.copy(alpha = 0.30f) // HyperOS
     }
-    val inactive = when (style) {
-        1, 3 -> scheme.tertiaryContainer
-        else -> scheme.secondaryContainer
-    }
-    // Voyage uses a visibly substantial outer rail (32dp), not a thin line.
-    // Per-family inset and thumb proportions differentiate Material You/Fancy/
-    // Material/Hyper OS while the shared Voyage shape setting still controls shape.
-    val trackHeight = 32.dp
     val thumbSize = when (style) {
-        1 -> DpSize(22.dp, 22.dp) // Fancy: slightly larger thumb.
-        2 -> DpSize(18.dp, 18.dp) // Material: compact thumb.
-        3 -> DpSize(20.dp, 24.dp) // Hyper OS: vertically elongated thumb.
-        else -> DpSize(20.dp, 20.dp) // Material You.
+        1 -> DpSize(26.dp, 26.dp) // FancySlider source
+        else -> DpSize(20.dp, 20.dp) // M3/M2 default thumb slot; HyperOS hides it
     }
-    val innerInset = when (style) {
-        1 -> 3.dp
-        2 -> 5.dp
-        3 -> 4.dp
-        else -> 4.dp
+    val trackHeight = when (style) {
+        1 -> 38.dp // FancyTrack source
+        2 -> 4.dp  // M2Slider source
+        3 -> 30.dp // HyperOSSlider source
+        else -> 4.dp // Material 3 default track
     }
     return VoyageSliderAppearance(
         style = style,
         activeColor = active,
         inactiveColor = inactive,
+        containerColor = container,
         thumbSize = thumbSize,
         trackHeight = trackHeight,
-        innerInset = innerInset,
     )
+}
+
+/** The source families wrap their track differently; keep that outer surface
+ * separate from the active/inactive rail so the rail is never painted in the
+ * same color as the thumb. HyperOS wraps the 30dp track itself. */
+internal fun voyageSliderContainerModifier(
+    style: Int,
+    containerColor: Color,
+): Modifier {
+    val containerShape = voyageCornerShape(20.dp)
+    return when (style) {
+        0 -> Modifier
+            .padding(vertical = 2.dp)
+            .background(containerColor, containerShape)
+            .padding(horizontal = 12.dp, vertical = 6.dp)
+        1 -> Modifier
+            .background(containerColor, voyageCornerShape(50.dp))
+            .padding(horizontal = 6.dp)
+        2 -> Modifier
+            .background(containerColor, voyageCornerShape(50.dp))
+            .padding(horizontal = 12.dp)
+        else -> Modifier
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -130,7 +145,6 @@ fun SegmentedSliderItem(
     // The 16dp and 32dp values belong to separate track containers, not thumbs.
     val thumbSize = appearance.thumbSize
     val trackHeight = appearance.trackHeight
-    val trackInset = appearance.innerInset
     val interactionSource = remember { MutableInteractionSource() }
     val sliderState = rememberSliderState(
         value = value,
@@ -167,10 +181,16 @@ fun SegmentedSliderItem(
                         sliderState.value = newValue
                         onValueChange(newValue)
                     },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .then(voyageSliderContainerModifier(style, appearance.containerColor)),
                     onValueChangeFinished = onValueChangeFinished,
                     interactionSource = interactionSource,
-                    thumb = {
+                    thumb = { thumbState ->
+                        val valueFraction = if (valueRange.endInclusive > valueRange.start) {
+                            ((thumbState.value - valueRange.start) /
+                                (valueRange.endInclusive - valueRange.start)).coerceIn(0f, 1f)
+                        } else 0f
                         VoyageSliderThumb(
                             style = style,
                             size = thumbSize,
@@ -178,6 +198,7 @@ fun SegmentedSliderItem(
                             inactiveColor = inactive,
                             shadowEnabled = LocalMaterialShadowSliders.current,
                             interactionSource = interactionSource,
+                            valueFraction = valueFraction,
                         )
                     },
                     track = { state ->
@@ -187,7 +208,7 @@ fun SegmentedSliderItem(
                             range = valueRange,
                             steps = steps,
                             height = trackHeight,
-                            innerInset = trackInset,
+                            containerColor = appearance.containerColor,
                             thumbWidth = thumbSize.width,
                             activeColor = active,
                             inactiveColor = inactive,
