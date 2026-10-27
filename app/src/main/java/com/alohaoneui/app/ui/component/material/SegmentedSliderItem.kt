@@ -8,11 +8,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
-import androidx.compose.material3.SliderColors
 import androidx.compose.material3.SliderState
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberSliderState
@@ -31,7 +32,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import com.alohaoneui.app.ui.theme.LocalMaterialSliderStyle
-import kotlin.math.roundToInt
 
 /**
  * Four selectable slider component families. Interaction, range handling and
@@ -81,7 +81,7 @@ fun SegmentedSliderItem(
     val sliderState = rememberSliderState(
         value = value,
         steps = steps,
-        valueRange = valueRange,
+        trackRange = valueRange,
     )
     LaunchedEffect(value, valueRange, steps) {
         sliderState.value = value.coerceIn(valueRange.start, valueRange.endInclusive)
@@ -152,12 +152,8 @@ private fun VoyageSliderThumb(
 ) {
     val pressed by interactionSource.collectIsPressedAsState()
     val diameter = if (pressed) size.width * 0.94f else size.width
-    Box(Modifier.height(size.height).fillMaxWidth()) {
-        Canvas(
-            Modifier
-                .height(diameter)
-                .fillMaxWidth(),
-        ) {
+    Box(Modifier.size(width = size.width, height = size.height)) {
+        Canvas(Modifier.fillMaxSize()) {
             val d = minOf(size.width.toPx(), size.height.toPx()) * if (pressed) 0.94f else 1f
             val center = Offset(this.size.width / 2f, this.size.height / 2f)
             when (style) {
@@ -193,6 +189,12 @@ private fun VoyageSliderTrack(
     activeColor: Color,
     inactiveColor: Color,
 ) {
+    val passedTickColor = when (style) {
+        1 -> MaterialTheme.colorScheme.onTertiary
+        2 -> MaterialTheme.colorScheme.onSecondary
+        else -> MaterialTheme.colorScheme.onPrimary
+    }
+    val futureTickColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.65f)
     Canvas(Modifier.fillMaxWidth().height(height)) {
         val h = size.height
         val centerY = h / 2f
@@ -233,15 +235,7 @@ private fun VoyageSliderTrack(
             for (index in 0..count) {
                 val x = left + (right - left) * (index.toFloat() / count)
                 val passed = index.toFloat() / count <= fraction
-                val tickColor = if (passed) {
-                    when (style) {
-                        1 -> MaterialTheme.colorScheme.onTertiary
-                        2 -> MaterialTheme.colorScheme.onSecondary
-                        else -> MaterialTheme.colorScheme.onPrimary
-                    }
-                } else {
-                    MaterialTheme.colorScheme.outline.copy(alpha = 0.65f)
-                }
+                val tickColor = if (passed) passedTickColor else futureTickColor
                 val tickRadius = when (style) {
                     1 -> h * 0.16f
                     2 -> h * 0.12f
