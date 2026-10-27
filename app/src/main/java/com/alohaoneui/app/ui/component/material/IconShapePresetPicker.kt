@@ -10,7 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.RectangleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -52,7 +52,7 @@ internal fun IconShapePresetPicker(
             items(ICON_SHAPE_OPTION_COUNT) { option ->
                 val shape = remember(option) {
                     iconShapeForStyle(if (option < 2) option else option, seed = option * 17 + 3)
-                        ?: RoundedCornerShape(12.dp)
+                        ?: RectangleShape
                 }
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
