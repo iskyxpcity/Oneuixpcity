@@ -459,12 +459,12 @@ private class VoyagePathShape(
                         // the total path length. Keep the source constants explicit.
                         val waveCount = kotlin.math.ceil(perimeterLength / targetWaveLength).toInt().coerceAtLeast(1)
                         val waveLength = perimeterLength / waveCount
-                        val sourceArcSubdivisions = 8f
-                        val sourcePathSubdivisions = 180f
+                        val sourceArcSubdivisions = 6f
+                        val sourcePathSubdivisions = 96f
                         val sampleStep = maxOf(
                             waveLength / sourceArcSubdivisions,
                             perimeterLength / sourcePathSubdivisions,
-                            1.5f
+                            2.5f
                         )
                         class WaveSample(
                             val point: androidx.compose.ui.geometry.Offset,
