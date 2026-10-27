@@ -395,6 +395,27 @@ internal fun VoyageSliderTrack(
                 }
             }
         }
+
+        // Preserve discrete tick marks for all four styles. Material 2 draws
+        // its marks on the classic line above; the other families align marks
+        // to the center of their own track channel.
+        if (steps > 0 && style != 2) {
+            val count = steps + 1
+            val tickInset = when (style) {
+                1 -> (insetPx * 0.65f).coerceAtLeast(1f)
+                3 -> (insetPx * 0.45f).coerceAtLeast(1f)
+                else -> insetPx
+            }
+            val tickWidth = (width - tickInset * 2f).coerceAtLeast(1f)
+            for (i in 0..count) {
+                val x = tickInset + tickWidth * i / count
+                drawCircle(
+                    color = if (i.toFloat() / count <= fraction) passedTickColor else futureTickColor,
+                    radius = 1.dp.toPx(),
+                    center = Offset(x, h / 2f),
+                )
+            }
+        }
     }
 }
 
