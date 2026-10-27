@@ -10,7 +10,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
-import androidx.compose.material3.SliderState
+import androidx.compose.material3.rememberSliderState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -83,9 +83,11 @@ fun SegmentedSliderItem(
         else -> 4.dp
     }
     val interactionSource = remember { MutableInteractionSource() }
-    val sliderState = remember(valueRange, steps) {
-        SliderState(value = value, steps = steps, trackRange = valueRange)
-    }
+    val sliderState = rememberSliderState(
+        value = value,
+        steps = steps,
+        trackRange = valueRange,
+    )
     LaunchedEffect(value) {
         sliderState.value = value
     }
