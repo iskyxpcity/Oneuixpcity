@@ -132,7 +132,7 @@ fun ExpressiveSwitch(
     Box(
         modifier = modifier
             .size(width = if (style == 4) 52.dp else 52.dp, height = 32.dp)
-            .then(if (LocalMaterialShadowSwitches.current && style in setOf(2, 5, 6)) Modifier.shadow(2.dp, trackShape) else Modifier)
+            .then(if (LocalMaterialShadowSwitches.current) Modifier.shadow(2.dp, trackShape) else Modifier)
             .toggleable(
                 value = checked,
                 enabled = enabled && onCheckedChange != null,
