@@ -124,6 +124,21 @@ private class VoyagePathShape(
                 path.lineTo(0f, tl)
                 path.cubicTo(0f, tl * smooth, tl * smooth, 0f, tl, 0f)
             }
+            3 -> {
+                // Voyage e7g0 / b2t0: SquircleShape with the source preset smoothing=48.
+                // The source converts smoothing to the corner control-point factor:
+                // 1 - ((48 / 100) * 0.45 + 0.55) = 0.234.
+                val smooth = 1f - ((48f / 100f) * 0.45f + 0.55f)
+                path.moveTo(tl, 0f)
+                path.lineTo(w - tr, 0f)
+                path.cubicTo(w - tr * smooth, 0f, w, tr * smooth, w, tr)
+                path.lineTo(w, h - br)
+                path.cubicTo(w, h - br * smooth, w - br * smooth, h, w - br, h)
+                path.lineTo(bl, h)
+                path.cubicTo(bl * smooth, h, 0f, h - bl * smooth, 0f, h - bl)
+                path.lineTo(0f, tl)
+                path.cubicTo(0f, tl * smooth, tl * smooth, 0f, tl, 0f)
+            }
             4 -> {
                 // Voyage Wavy: sample the rounded perimeter and displace each point
                 // along its outward normal. The source defaults are period=12dp,
@@ -245,7 +260,7 @@ fun voyageCornerShape(radius: androidx.compose.ui.unit.Dp): Shape {
     val style = LocalMaterialShapeStyle.current
     return when (style) {
         1 -> CutCornerShape(scaledRadius)
-        2, 4, 5, 6 -> VoyagePathShape(style, scaledRadius, scaledRadius, scaledRadius, scaledRadius)
+        2, 3, 4, 5, 6 -> VoyagePathShape(style, scaledRadius, scaledRadius, scaledRadius, scaledRadius)
         else -> RoundedCornerShape(scaledRadius)
     }
 }
@@ -294,7 +309,7 @@ fun voyageSegmentedShape(index: Int, count: Int, vertical: Boolean = true): Shap
 
     return when (LocalMaterialShapeStyle.current) {
         1 -> CutCornerShape(topStart, topEnd, bottomEnd, bottomStart)
-        2, 4, 5, 6 -> VoyagePathShape(LocalMaterialShapeStyle.current, topStart, topEnd, bottomEnd, bottomStart)
+        2, 3, 4, 5, 6 -> VoyagePathShape(LocalMaterialShapeStyle.current, topStart, topEnd, bottomEnd, bottomStart)
         else -> RoundedCornerShape(topStart, topEnd, bottomEnd, bottomStart)
     }
 }
