@@ -106,29 +106,15 @@ fun AlohaOneUISlider(
     }
     val effectiveSteps = if (stepSize != null && stepSize > 0f) 0 else steps
 
-    val materialSliderStyle = LocalMaterialSliderStyle.current.coerceIn(0, 3)
+    val materialAppearance = com.alohaoneui.app.ui.component.material.voyageSliderAppearance(
+        LocalMaterialSliderStyle.current,
+    )
+    val materialSliderStyle = materialAppearance.style
     val materialScheme = androidx.compose.material3.MaterialTheme.colorScheme
-    val materialActiveColor = when (materialSliderStyle) {
-        1 -> materialScheme.tertiary
-        2 -> materialScheme.secondary
-        3 -> materialScheme.primary
-        else -> materialScheme.primary
-    }
-    val materialInactiveColor = when (materialSliderStyle) {
-        1 -> materialScheme.tertiaryContainer
-        2 -> materialScheme.surfaceVariant
-        3 -> materialScheme.surfaceContainerHighest
-        else -> materialScheme.secondaryContainer
-    }
-    // Voyage source applies a 20dp x 20dp thumb slot in j5v0.m105238O
-    // and z4v0.m147159l. Track heights are configured independently.
-    val materialThumbSize = DpSize(20.dp, 20.dp)
-    val materialTrackHeight = when (materialSliderStyle) {
-        1 -> 8.dp
-        2 -> 4.dp
-        3 -> 6.dp
-        else -> 4.dp
-    }
+    val materialActiveColor = materialAppearance.activeColor
+    val materialInactiveColor = materialAppearance.inactiveColor
+    val materialThumbSize = materialAppearance.thumbSize
+    val materialTrackHeight = materialAppearance.trackHeight
     val materialInteractionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
     val materialSliderState = rememberSliderState(
         value = controlledValue,
