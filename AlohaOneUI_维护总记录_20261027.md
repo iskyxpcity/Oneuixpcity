@@ -118,3 +118,20 @@
 - 本次源码提交后立即查询到的 combined status 尚未返回状态项，不能据此判定 CI 成功或失败；仍需继续核对该提交触发的 Actions 运行、构建日志和产物。当前没有新 APK 可交付，不得复用 Build #1663 冒充本次构建。
 - 本轮重新确认：`SegmentedSliderItem.kt` 四种样式目前仍使用手写颜色、轨道高度、拇指尺寸和路径；`ExpressiveSwitch.kt` 八种样式仍是 Aloha 手写分支；`IconShapePresetPicker.kt` 的 50 个轮廓仍来自 `geometricIconShape` 算法。这些实现继续标记为待 Voyage 原始实现逐项对照，不视为 1:1 完成。
 - 仍未完成：恢复 Voyage Switch/Slider 的原始方法体与参数、50 个原版图标路径/顺序/None(-1)/Random 映射、Smooth G² 的 cubic→arc→cubic 分支、`LocalMaterialShadowFloatingButtons` 的真实组件消费路径、设置页面视觉与层级对照，以及最终 HEAD 的构建和 APK 元数据/签名/SHA-256 验收。
+
+
+## 2026-10-27 后续推进：主题选项按钮动效与阴影接入
+
+- 产品源码提交：`72c8577ce387d2b6f543e4246e70fba562c14274`（`fix: animate theme option chips and honor button shadow setting`），只写入测试分支 `test/voyage-theme-1to1-20261026`，未修改 `main`。
+- 重点文件：`app/src/main/java/com/alohaoneui/app/ui/component/material/SegmentedList.kt`，组件 `SegmentedChoiceOptionsItem`。
+- 发现的问题：主题设置中的多选一选项按钮使用 `FilterChip`，原有实现没有把 `LocalMaterialShadowButtons` 接入这些按钮，也没有提供明确的按压缩放反馈；这会造成“按钮阴影”全局设置在此类选项上不生效，触摸反馈与其他可交互控件不一致。
+- 已做的修改：
+  1. 将每个选项按钮的 `MutableInteractionSource` 接入按压状态；
+  2. 使用 Compose spring 动画在按压时缩放至 0.96，松开恢复 1.0；
+  3. 选项按钮按当前全局 `LocalMaterialShapeStyle` 通过 `voyageCornerShape(8.dp)` 取得框体形状；
+  4. 按 `LocalMaterialShadowButtons` 控制阴影：关闭时不添加阴影，开启时未选中为 1dp、选中为 2dp；
+  5. 保留原有选中状态、勾选图标、触觉反馈及选择回调。
+- 这是对当前选项按钮交互/全局阴影设置消费链的实际修复，不声称 0.96 缩放、1/2dp 阴影或当前 Chip 框体参数已经通过 Voyage 原版像素级对照。若后续原版源码/实测确认了不同参数，仍应以 Voyage 为准。
+- 提交后重新读取源码确认新增的 `interactionSource`、按压动画、`voyageCornerShape` 与 `LocalMaterialShadowButtons` 已写入分支。当前可用的 commit workflow 查询仅返回空列表，combined status 也没有状态项；不能据此判定构建成功或失败。当前尚无与此 HEAD 对应的已验证 APK，不得复用 Build #1663 作为本次产物。
+- 主题设置页的列表/详情框体仍需逐页核查：尤其页面分组外框、行项目首尾圆角、详情选择器框体、选中/未选中颜色、框体边线与阴影是否在所有重载中一致。此提交只处理 `SegmentedChoiceOptionsItem` 的选项按钮，不代表整个设置页框体问题已完成。
+- 后续继续：定位实际主题设置页面源码并逐页核对列表/详情框架；检查列表行、下拉选项、Radio/Checkbox、页内操作按钮是否全部消费对应全局阴影和动效设置；再进行最新 HEAD 的构建、编译错误修复和 APK 元数据/签名/SHA-256 验收。
