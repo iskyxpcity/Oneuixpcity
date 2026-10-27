@@ -129,10 +129,21 @@ fun AlohaOneUISlider(
             state = materialSliderState,
             enabled = enabled,
             onValueChange = ::emit,
-            modifier = modifier.fillMaxWidth(),
+            modifier = modifier
+                .fillMaxWidth()
+                .then(
+                    com.alohaoneui.app.ui.component.material.voyageSliderContainerModifier(
+                        materialSliderStyle,
+                        materialAppearance.containerColor,
+                    )
+                ),
             onValueChangeFinished = handleValueChangeFinished,
             interactionSource = materialInteractionSource,
-            thumb = {
+            thumb = { thumbState ->
+                val valueFraction = if (valueRange.endInclusive > valueRange.start) {
+                    ((thumbState.value - valueRange.start) /
+                        (valueRange.endInclusive - valueRange.start)).coerceIn(0f, 1f)
+                } else 0f
                 VoyageSliderThumb(
                     style = materialSliderStyle,
                     size = materialThumbSize,
@@ -140,6 +151,7 @@ fun AlohaOneUISlider(
                     inactiveColor = materialInactiveColor,
                     shadowEnabled = LocalMaterialShadowSliders.current,
                     interactionSource = materialInteractionSource,
+                    valueFraction = valueFraction,
                 )
             },
             track = { state ->
@@ -149,7 +161,7 @@ fun AlohaOneUISlider(
                     range = valueRange,
                     steps = effectiveSteps,
                     height = materialTrackHeight,
-                    innerInset = materialAppearance.innerInset,
+                    containerColor = materialAppearance.containerColor,
                     thumbWidth = materialThumbSize.width,
                     activeColor = materialActiveColor,
                     inactiveColor = materialInactiveColor,
