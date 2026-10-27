@@ -144,3 +144,12 @@
 - 已为每个选项按钮接入全局描边宽度：宽度大于 0 时，按当前选项的 `voyageCornerShape(8.dp)` 绘制 `outlineVariant` 描边；宽度为 0 或负值时不绘制描边。保留上一个提交的全局按钮阴影与按压缩放动画。
 - 目前已实际覆盖该选项控件的三项全局视觉设置：按钮阴影、轮廓宽度、主题形状风格；这只证明 Aloha 当前通用选项控件的设置消费链已接入，不证明这些 dp 参数已通过 Voyage 原版像素对照。
 - 本次产品源码最新提交为 `c4d838a438f03d31f19fba13844e4ffe4a67c0a5`。当前可用的 workflow 查询接口未返回该提交对应的构建运行记录，combined status 也无状态项；构建状态未知，尚无可核验的新 APK。必须继续验证编译与产物，不能把旧 APK 当成包含这两项修改的交付包。
+
+
+## 2026-10-27 构建失败定位与修复：RectangleShape 导入包错误
+
+- 失败运行：GitHub Actions Run [40497133882](https://github.com/iskyxpcity/Oneuixpcity/actions/runs/40497133882)，build job ID `122165966812`，结论为 `failure`。
+- 失败步骤：`Compile Aloha OneUI before the owner-signing gate`（步骤 10）；源码身份校验等前置步骤成功，APK 签名和产物发布因编译失败而跳过。
+- 日志中的确切错误：`IconShapePresetPicker.kt:13:42` 与 `IconShapePresetPicker.kt:55:28` 均报 `Unresolved reference 'RectangleShape'`。根因是导入写成 `androidx.compose.foundation.shape.RectangleShape`，但当前 Compose API 的 `RectangleShape` 应从 `androidx.compose.ui.graphics.RectangleShape` 导入。
+- 已修复产品源码并提交到测试分支：`67769c6fe925511b9a6b6208f52aa5c2baf3372b`（`fix: import Compose RectangleShape from graphics package`）。修改仅纠正 import，不改变 None 预览使用矩形、不裁切的原意；未修改 `main`。
+- 当前状态：修复提交已写入分支，新的 Actions 运行结果仍待核验。此刻不宣称构建通过，也没有可交付的新 APK。必须继续读取后续运行日志；若再失败，按新日志继续修复，直到成功构建并验证 APK 包名、版本、签名与 SHA-256。
