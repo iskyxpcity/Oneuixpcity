@@ -78,12 +78,9 @@ internal fun voyageSliderAppearance(requestedStyle: Int): VoyageSliderAppearance
     // Slider's unfilled track uses the same neutral container tone as the
     // switch's off-state track, while preserving theme/dynamic color updates.
     val inactive = scheme.surfaceContainerHighest
-    val trackHeight = when (style) {
-        1 -> 8.dp
-        2 -> 4.dp
-        3 -> 6.dp
-        else -> 4.dp
-    }
+    // The neutral track is an outer capsule that surrounds the thumb, like a
+    // switch track. The active progress is drawn as an inset inner rail.
+    val trackHeight = 24.dp
     return VoyageSliderAppearance(
         style = style,
         activeColor = active,
@@ -206,21 +203,30 @@ internal fun VoyageSliderThumb(
     // Keep the 20dp source thumb slot, but use the shared Voyage shape factory
     // for its actual fill, clip and shadow silhouette. Shape style and corner
     // scale changes therefore update the thumb itself, not just its parent.
-    val thumbShape = voyageCornerShape(minOf(size.width, size.height) / 2f)
-    val thumbModifier = Modifier
-        .size(width = size.width, height = size.height)
-        .then(
-            if (shadowEnabled) {
-                Modifier.shadow(
-                    elevation = if (interacting) 6.dp else 1.dp,
-                    shape = thumbShape,
-                    clip = false,
-                )
-            } else Modifier
-        )
-        .clip(thumbShape)
-        .background(activeColor, thumbShape)
-    Box(thumbModifier) {}
+    val visualThumbSize = DpSize(
+        width = (size.width - 4.dp).coerceAtLeast(1.dp),
+        height = (size.height - 4.dp).coerceAtLeast(1.dp),
+    )
+    val thumbShape = voyageCornerShape(minOf(visualThumbSize.width, visualThumbSize.height) / 2f)
+    Box(
+        Modifier.size(width = size.width, height = size.height),
+        contentAlignment = androidx.compose.ui.Alignment.Center,
+    ) {
+        val thumbModifier = Modifier
+            .size(width = visualThumbSize.width, height = visualThumbSize.height)
+            .then(
+                if (shadowEnabled) {
+                    Modifier.shadow(
+                        elevation = if (interacting) 6.dp else 1.dp,
+                        shape = thumbShape,
+                        clip = false,
+                    )
+                } else Modifier
+            )
+            .clip(thumbShape)
+            .background(activeColor, thumbShape)
+        Box(thumbModifier) {}
+    }
 }
 
 @Composable
@@ -255,52 +261,46 @@ internal fun VoyageSliderTrack(
             .then(if (shadowEnabled) Modifier.shadow(1.dp, trackShape, clip = false) else Modifier)
     ) {
         val h = size.height
-        val centerY = h / 2f
-        // Material reserves half a thumb slot at each end. Draw the track outline
-        // inside that measured span so its ends remain aligned with the thumb.
-        val thumbInsetPx = thumbWidth.toPx() / 2f
-        val left = thumbInsetPx
-        val right = (size.width - thumbInsetPx).coerceAtLeast(left)
-        val trackWidthPx = (right - left).coerceAtLeast(0f)
-        val fraction = if (range.endInclusive > range.start) {
-            ((state.value - range.start) / (range.endInclusive - range.start)).coerceIn(0f, 1f)
-        } else 0f
-        val activeWidthPx = trackWidthPx * fraction
-        // Use the Shape's real Outline rather than drawing a separate rounded
-        // rectangle and merely clipping it. This is what makes Wavy, Smooth G²,
-        // cut-corner and the other shared shape presets visibly affect the track.
-        val trackOutline = trackShape.createOutline(
-            size = Size(trackWidthPx, h),
+        // The neutral container is the full outer rail. The thumb travels inside
+        // this capsule rather than sitting over a thin line as in stock Material.
+        val outerOutline = trackShape.createOutline(
+            size = Size(size.width, h),
             layoutDirection = layoutDirection,
             density = this,
         )
-        withTransform({ translate(left, 0f) }) {
-            drawVoyageOutline(trackOutline, inactiveColor)
-            if (activeWidthPx >= h) {
-                // Draw the filled segment as its own Voyage-shaped outline so
-                // its leading edge stays rounded instead of being cut flat by
-                // a rectangular clip. The outline remains tied to the global
-                // shape family and corner-scale settings.
-                val activeOutline = trackShape.createOutline(
-                    size = Size(activeWidthPx, h),
+        drawVoyageOutline(outerOutline, inactiveColor)
+
+        val innerInset = 4.dp.toPx()
+        val innerHeight = (h - innerInset * 2f).coerceAtLeast(1f)
+        val innerWidth = (size.width - innerInset * 2f).coerceAtLeast(1f)
+        val fraction = if (range.endInclusive > range.start) {
+            ((state.value - range.start) / (range.endInclusive - range.start)).coerceIn(0f, 1f)
+        } else 0f
+        val activeWidthPx = innerWidth * fraction
+        val innerShape = voyageCornerShape(with(this) { (innerHeight / density).dp / 2f })
+        val innerOutline = innerShape.createOutline(
+            size = Size(innerWidth, innerHeight),
+            layoutDirection = layoutDirection,
+            density = this,
+        )
+        withTransform({ translate(innerInset, innerInset) }) {
+            if (activeWidthPx >= innerHeight) {
+                val activeOutline = innerShape.createOutline(
+                    size = Size(activeWidthPx, innerHeight),
                     layoutDirection = layoutDirection,
                     density = this,
                 )
                 drawVoyageOutline(activeOutline, activeColor)
             } else if (activeWidthPx > 0f) {
-                // At the very start of the range, keep the fill proportional
-                // rather than forcing a full-height capsule into the track.
-                clipRect(left = 0f, top = 0f, right = activeWidthPx, bottom = h) {
-                    drawVoyageOutline(trackOutline, activeColor)
+                clipRect(left = 0f, top = 0f, right = activeWidthPx, bottom = innerHeight) {
+                    drawVoyageOutline(innerOutline, activeColor)
                 }
             }
 
-            // The source track draws its outline as a distinct layer. Keep the
-            // global outline setting attached to this track geometry only.
             val outlinePx = outlineWidth.toPx()
             if (outlinePx > 0f) {
                 drawVoyageOutline(
-                    outline = trackOutline,
+                    outline = innerOutline,
                     color = outlineColor,
                     style = Stroke(width = outlinePx),
                 )
@@ -308,15 +308,12 @@ internal fun VoyageSliderTrack(
 
             if (steps > 0) {
                 val count = steps + 1
-                for (index in 0..count) {
-                    val x = trackWidthPx * (index.toFloat() / count)
-                    val passed = index.toFloat() / count <= fraction
-                    val tickColor = if (passed) passedTickColor else futureTickColor
-                    // vhf.m138077ll uses a 2dp tick diameter (radius 1dp).
+                for (i in 0..count) {
+                    val x = if (count > 0) innerWidth * i / count else 0f
                     drawCircle(
-                        color = tickColor,
+                        color = if (x <= activeWidthPx) passedTickColor else futureTickColor,
                         radius = 1.dp.toPx(),
-                        center = Offset(x, centerY),
+                        center = Offset(x, innerHeight / 2f),
                     )
                 }
             }
