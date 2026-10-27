@@ -46,6 +46,7 @@ import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.SegmentedListItem
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.VerticalDivider
@@ -638,6 +639,37 @@ fun SegmentedColumn(
     }
 }
 
+
+/**
+ * Shared frame for option groups that contain their own chips/tiles instead of a single ListItem.
+ * It inherits the row's segmented shape and consumes the same global container shadow/outline
+ * settings as neighboring settings rows.
+ */
+@Composable
+internal fun SegmentedOptionFrame(
+    content: @Composable androidx.compose.foundation.layout.ColumnScope.() -> Unit,
+) {
+    val itemShapes = LocalListItemShapes.current ?: ListItemDefaults.segmentedShapes(0, 1)
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = itemShapes.shape,
+        color = colorScheme.surfaceColorAtElevation(1.dp),
+        tonalElevation = 0.dp,
+        shadowElevation = if (LocalMaterialShadowContainers.current) 1.dp else 0.dp,
+        border = LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
+            BorderStroke(it.dp, colorScheme.outlineVariant)
+        },
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            content = content,
+        )
+    }
+}
+
 @Composable
 fun SegmentedItem(
     index: Int,
@@ -911,12 +943,7 @@ fun SegmentedChoiceOptionsItem(
     val haptic = LocalHapticFeedback.current
     val safeIndex = selectedIndex.coerceIn(0, (items.size - 1).coerceAtLeast(0))
 
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
+    SegmentedOptionFrame {
         Text(
             text = title,
             style = MaterialTheme.typography.titleSmall,

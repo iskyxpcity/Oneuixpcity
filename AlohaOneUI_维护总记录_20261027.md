@@ -239,3 +239,12 @@
 - 继续核查 `ColorPaletteScreenMaterial`（主题/配色设置页）发现其导航返回按钮仍直接使用无交互源的原生 `IconButton`，没有消费全局按钮阴影/描边设置，也没有与其他主题选项一致的按压缩放。
 - 已在返回按钮中接入独立 `MutableInteractionSource`、spring 按压缩放、按压时动态阴影，并按 `LocalMaterialShadowButtons` 控制阴影显示、按 `LocalMaterialOutlineWidth` 控制圆形描边；保留原有返回回调、图标和触摸语义。
 - 仅修改测试分支，不改 `main`。该修改用于补齐主题子页面导航控件与其他选项按钮的一致性；继续检查其余页面的直接按钮调用，避免只修复封装组件而漏掉页面内的原生按钮。
+
+
+## 2026-10-27 后续推进：主题导航按钮构建错误修复与选项组外框统一
+
+- Build #1682 / Run `40504157522` 编译失败；诊断 artifact `12734236742` 指出 `ColorPaletteScreenMaterial.kt:19:48` 与 `:21:48` 重复导入 `MutableInteractionSource`，以及同一组 `collectIsPressedAsState` 重复导入。根因是本次新增导航返回按钮时重复插入了此前已存在的 imports。本批次去除重复导入，保留新增返回按钮交互代码。
+- 继续定位主题设置页选项框体不一致：`SegmentedChoiceOptionsItem` 和 `IconShapePresetPicker` 都是直接绘制内部标题/芯片的 Column，而不是标准 `SegmentedListItem`，所以在 `SegmentedColumn` 分组中缺少与相邻行一致的外框、容器阴影和全局描边消费。
+- 新增共用 `SegmentedOptionFrame`：读取当前分组的 `LocalListItemShapes`，继承同一分段形状；背景沿用 `surfaceColorAtElevation(1.dp)`；容器阴影受 `LocalMaterialShadowContainers` 控制；描边受 `LocalMaterialOutlineWidth` 控制。将主题多选一选项组和图标形状选项条目统一包入该框体，内部 chips/图标 tile 的独立点击、选中态与按压动效保持不变。
+- 本次仅修改测试分支，不改 `main`。目标是让原先缺少行容器框体的复杂选项与普通列表/详情行共用一致的框架规则；构建后还需按实际页面效果核对有无重复嵌套框体，并以 Voyage 原版层级为准调整。
+- 当前 Build #1682 未通过，签名和 APK 产物步骤跳过；此提交包含导入修复与选项组框体统一，必须监测新 HEAD 的 Actions。当前没有本批次新 APK。

@@ -8,6 +8,7 @@ import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
@@ -51,14 +52,14 @@ internal fun IconShapePresetPicker(
     selectedIndex: Int,
     onSelected: (Int) -> Unit,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    SegmentedOptionFrame {
         Text(
             text = stringResource(R.string.theme_icon_shape_title),
             style = MaterialTheme.typography.titleSmall,
         )
         LazyRow(
             horizontalArrangement = Arrangement.spacedBy(10.dp),
-            modifier = Modifier.padding(vertical = 4.dp),
+            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
         ) {
             items(ICON_SHAPE_OPTION_COUNT) { option ->
                 val shape = remember(option) {
