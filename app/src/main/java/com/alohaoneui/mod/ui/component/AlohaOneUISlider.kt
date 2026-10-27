@@ -28,6 +28,13 @@ import androidx.compose.ui.unit.dp
 import com.alohaoneui.app.ui.LocalUiMode
 import com.alohaoneui.app.ui.UiMode
 import androidx.compose.material3.Slider as MaterialSlider
+import androidx.compose.ui.unit.DpSize
+import androidx.compose.ui.unit.dp
+import com.alohaoneui.app.ui.component.material.VoyageSliderThumb
+import com.alohaoneui.app.ui.component.material.VoyageSliderTrack
+import com.alohaoneui.app.ui.theme.LocalMaterialSliderStyle
+import com.alohaoneui.app.ui.theme.LocalMaterialShadowSliders
+import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
 import androidx.compose.ui.graphics.Color
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import kotlin.math.abs
@@ -98,15 +105,67 @@ fun AlohaOneUISlider(
     }
     val effectiveSteps = if (stepSize != null && stepSize > 0f) 0 else steps
 
+    val materialSliderStyle = LocalMaterialSliderStyle.current.coerceIn(0, 3)
+    val materialScheme = androidx.compose.material3.MaterialTheme.colorScheme
+    val materialActiveColor = when (materialSliderStyle) {
+        1 -> materialScheme.tertiary
+        2 -> materialScheme.secondary
+        3 -> materialScheme.primary
+        else -> materialScheme.primary
+    }
+    val materialInactiveColor = when (materialSliderStyle) {
+        1 -> materialScheme.tertiaryContainer
+        2 -> materialScheme.surfaceVariant
+        3 -> materialScheme.surfaceContainerHighest
+        else -> materialScheme.secondaryContainer
+    }
+    val materialThumbSize = when (materialSliderStyle) {
+        1 -> DpSize(24.dp, 24.dp)
+        2 -> DpSize(16.dp, 16.dp)
+        3 -> DpSize(20.dp, 20.dp)
+        else -> DpSize(20.dp, 20.dp)
+    }
+    val materialTrackHeight = when (materialSliderStyle) {
+        1 -> 8.dp
+        2 -> 4.dp
+        3 -> 6.dp
+        else -> 4.dp
+    }
+    val materialInteractionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+
     when (LocalUiMode.current) {
         UiMode.Material -> MaterialSlider(
             value = controlledValue,
             enabled = enabled,
             onValueChange = ::emit,
-            modifier = modifier,
+            modifier = modifier.fillMaxWidth(),
             valueRange = valueRange,
             steps = effectiveSteps,
             onValueChangeFinished = handleValueChangeFinished,
+            interactionSource = materialInteractionSource,
+            thumb = {
+                VoyageSliderThumb(
+                    style = materialSliderStyle,
+                    size = materialThumbSize,
+                    activeColor = materialActiveColor,
+                    inactiveColor = materialInactiveColor,
+                    shadowEnabled = LocalMaterialShadowSliders.current,
+                )
+            },
+            track = { state ->
+                VoyageSliderTrack(
+                    style = materialSliderStyle,
+                    state = state,
+                    range = valueRange,
+                    steps = effectiveSteps,
+                    height = materialTrackHeight,
+                    thumbWidth = materialThumbSize.width,
+                    activeColor = materialActiveColor,
+                    inactiveColor = materialInactiveColor,
+                    outlineWidth = LocalMaterialOutlineWidth.current.dp,
+                    outlineColor = materialScheme.outlineVariant,
+                )
+            },
         )
         UiMode.Miuix -> {
             val reverse = LocalLayoutDirection.current == LayoutDirection.Rtl
