@@ -293,13 +293,10 @@ private class VoyagePathShape(
                                     (previous.y + current.y) / 2f
                                 )
                             }
-                            val last = displaced.last()
-                            val first = displaced.first()
-                            path.quadraticTo(
-                                last.x, last.y,
-                                (last.x + first.x) / 2f,
-                                (last.y + first.y) / 2f
-                            )
+                            // Voyage's m140361lo emits quadratic segments only while
+                            // advancing through the sampled path. The source then closes
+                            // the path directly; it does not add an extra last-to-first
+                            // quadratic segment.
                             path.close()
                         }
                     }
