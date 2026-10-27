@@ -165,7 +165,7 @@ private class VoyagePathShape(
                     // corner's amplitude and the wave then reaches the original bounds.
                     val xRight = w - aTR
                     val yBottom = h - aBR
-                    val xTopStart = aBL + rtl
+                    val xTopStart = if (tl > 0f) aBL + rtl else 0f
                     val xTopEnd = if (tr > 0f) xRight - rtr else w
                     val yRightStart = if (tr > 0f) aTL + rtr else 0f
                     val yRightEnd = if (br > 0f) yBottom - rbr else h
@@ -247,12 +247,12 @@ private class VoyagePathShape(
                         // bottom, BL arc, left, TL arc. Distances are accumulated
                         // by the source segment lengths, not sample-to-sample chords.
                         addLine(xTopStart, aTL, xTopEnd, aTL, 0f, -1f, topLength, aTL)
-                        addArc(xTopEnd - rtr, aTL + rtr, rtr, -90f, 90f)
+                        addArc(xTopEnd, yRightStart, rtr, -90f, 90f)
                         addLine(xRight, yRightStart, xRight, yRightEnd, 1f, 0f, rightLength, aTR)
-                        addArc(xRight - rbr, yRightEnd, rbr, 0f, 90f)
+                        addArc(xBottomStart, yRightEnd, rbr, 0f, 90f)
                         addLine(xBottomStart, yBottom, xBottomEnd, yBottom, 0f, 1f, bottomLength, aBR)
-                        addArc(xBottomEnd, yBottom - rbl, rbl, 90f, 90f)
-                        addLine(0f, yLeftStart, 0f, yLeftEnd, -1f, 0f, leftLength, aBL)
+                        addArc(xBottomEnd, yLeftStart, rbl, 90f, 90f)
+                        addLine(aBL, yLeftStart, aBL, yLeftEnd, -1f, 0f, leftLength, aBL)
                         addArc(aBL + rtl, aTL + rtl, rtl, 180f, 90f)
 
                         val displaced = samples.map { sample ->
