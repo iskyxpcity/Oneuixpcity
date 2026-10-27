@@ -133,8 +133,10 @@ fun AlohaOneUISlider(
                 .fillMaxWidth()
                 .then(
                     com.alohaoneui.app.ui.component.material.voyageSliderContainerModifier(
-                        materialSliderStyle,
-                        materialAppearance.containerColor,
+                        style = materialSliderStyle,
+                        containerColor = materialAppearance.containerColor,
+                        outlineWidth = LocalMaterialOutlineWidth.current.dp,
+                        outlineColor = materialScheme.outlineVariant,
                     )
                 ),
             onValueChangeFinished = handleValueChangeFinished,
