@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import com.alohaoneui.app.ui.LocalUiMode
 import com.alohaoneui.app.ui.UiMode
 import androidx.compose.material3.Slider as MaterialSlider
+import androidx.compose.material3.rememberSliderState
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import com.alohaoneui.app.ui.component.material.VoyageSliderThumb
@@ -132,15 +133,21 @@ fun AlohaOneUISlider(
         else -> 4.dp
     }
     val materialInteractionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+    val materialSliderState = rememberSliderState(
+        value = controlledValue,
+        steps = effectiveSteps,
+        trackRange = valueRange,
+    )
+    LaunchedEffect(controlledValue, valueRange, effectiveSteps) {
+        materialSliderState.value = controlledValue
+    }
 
     when (LocalUiMode.current) {
         UiMode.Material -> MaterialSlider(
-            value = controlledValue,
+            state = materialSliderState,
             enabled = enabled,
             onValueChange = ::emit,
             modifier = modifier.fillMaxWidth(),
-            valueRange = valueRange,
-            steps = effectiveSteps,
             onValueChangeFinished = handleValueChangeFinished,
             interactionSource = materialInteractionSource,
             thumb = {
