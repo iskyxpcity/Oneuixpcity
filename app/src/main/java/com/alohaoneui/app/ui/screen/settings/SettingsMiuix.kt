@@ -1,6 +1,10 @@
 package com.alohaoneui.app.ui.screen.settings
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
@@ -28,6 +32,8 @@ import androidx.compose.material.icons.rounded.ElectricalServices
 import androidx.compose.material.icons.rounded.Fence
 import androidx.compose.material.icons.rounded.FolderDelete
 import androidx.compose.material.icons.rounded.Language
+import androidx.compose.material.icons.rounded.KeyboardArrowDown
+import androidx.compose.material.icons.rounded.KeyboardArrowUp
 import androidx.compose.material.icons.rounded.Palette
 import androidx.compose.material.icons.rounded.Policy
 import androidx.compose.material.icons.rounded.RemoveCircle
@@ -174,18 +180,31 @@ fun SettingPagerMiuix(
                             .padding(top = 12.dp)
                             .fillMaxWidth(),
                     ) {
-                        ArrowPreference(
-                            title = stringResource(id = R.string.settings_group_language),
-                            startAction = {
-                                Icon(
-                                    Icons.Rounded.Language,
-                                    modifier = Modifier.padding(end = 6.dp),
-                                    contentDescription = stringResource(id = R.string.settings_group_language),
-                                    tint = colorScheme.onBackground
-                                )
-                            },
-                            onClick = { languageExpanded.value = !languageExpanded.value }
-                        )
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { languageExpanded.value = !languageExpanded.value }
+                                .padding(horizontal = 16.dp, vertical = 14.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Icon(
+                                Icons.Rounded.Language,
+                                modifier = Modifier.padding(end = 12.dp),
+                                contentDescription = stringResource(id = R.string.settings_group_language),
+                                tint = colorScheme.onBackground
+                            )
+                            Text(
+                                text = stringResource(id = R.string.settings_group_language),
+                                style = MiuixTheme.textStyles.body1,
+                                color = colorScheme.onBackground,
+                                modifier = Modifier.weight(1f)
+                            )
+                            Icon(
+                                if (languageExpanded.value) Icons.Rounded.KeyboardArrowUp else Icons.Rounded.KeyboardArrowDown,
+                                contentDescription = null,
+                                tint = colorScheme.onBackground
+                            )
+                        }
                         if (languageExpanded.value) {
                             val languageOptions = listOf(
                                 stringResource(R.string.settings_theme_mode_system) to "system",
