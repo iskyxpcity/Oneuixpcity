@@ -69,11 +69,12 @@ fun SegmentedSliderItem(
         3 -> scheme.surfaceContainerHighest
         else -> scheme.secondaryContainer
     }
+    // Voyage's source dispatches styles through h7w0.m99521O(...):
+    // the y8f0 path uses a 16dp visual slot, while vhf.m138079I /
+    // vhf.m138080O use a 32dp slot. Do not invent intermediate thumb sizes.
     val thumbSize = when (style) {
-        1 -> DpSize(24.dp, 24.dp)
-        2 -> DpSize(16.dp, 16.dp)
-        3 -> DpSize(20.dp, 20.dp)
-        else -> DpSize(20.dp, 20.dp)
+        0, 1 -> DpSize(16.dp, 16.dp)
+        else -> DpSize(32.dp, 32.dp)
     }
     val trackHeight = when (style) {
         1 -> 8.dp
@@ -155,41 +156,20 @@ internal fun VoyageSliderThumb(
     size: DpSize,
     activeColor: Color,
     inactiveColor: Color,
-    shadowEnabled: Boolean = true,
+    shadowEnabled: Boolean = false,
 ) {
-    val thumbShape = when (style) {
-        2 -> RoundedCornerShape(5.dp)
-        3 -> RoundedCornerShape(7.dp)
-        else -> CircleShape
-    }
-    val surfaceColor = MaterialTheme.colorScheme.surface
-    Box(
-        Modifier
-            .size(width = size.width, height = size.height)
-            .then(if (shadowEnabled) Modifier.shadow(2.dp, thumbShape) else Modifier)
-    ) {
+    // The decompiled thumb paths are selected by h7w0.m99521O and routed
+    // through y8f0.m144829o / vhf.m138079I / vhf.m138080O. The previous
+    // concentric rings and arbitrary rounded-square variants were not in
+    // those paths, so keep the thumb as a single filled source-sized shape
+    // until each style's exact path is ported.
+    Box(Modifier.size(width = size.width, height = size.height)) {
         Canvas(Modifier.fillMaxSize()) {
-            val d = minOf(size.width.toPx(), size.height.toPx())
-            val center = Offset(this.size.width / 2f, this.size.height / 2f)
-            when (style) {
-                1 -> {
-                    drawCircle(activeColor.copy(alpha = 0.18f), radius = d * 0.50f, center = center)
-                    drawCircle(activeColor, radius = d * 0.36f, center = center)
-                    drawCircle(surfaceColor, radius = d * 0.12f, center = center)
-                }
-                2 -> {
-                    drawCircle(activeColor, radius = d * 0.34f, center = center)
-                    drawCircle(inactiveColor, radius = d * 0.34f, center = center, style = Stroke(width = 1.dp.toPx()))
-                }
-                3 -> {
-                    drawCircle(activeColor, radius = d * 0.46f, center = center)
-                    drawCircle(surfaceColor.copy(alpha = 0.95f), radius = d * 0.20f, center = center)
-                }
-                else -> {
-                    drawCircle(activeColor, radius = d * 0.40f, center = center)
-                    drawCircle(activeColor.copy(alpha = 0.20f), radius = d * 0.50f, center = center, style = Stroke(width = 1.dp.toPx()))
-                }
-            }
+            drawCircle(
+                color = activeColor,
+                radius = minOf(this.size.width, this.size.height) / 2f,
+                center = Offset(this.size.width / 2f, this.size.height / 2f),
+            )
         }
     }
 }
