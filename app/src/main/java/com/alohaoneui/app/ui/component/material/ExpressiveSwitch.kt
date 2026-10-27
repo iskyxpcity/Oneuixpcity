@@ -78,9 +78,7 @@ fun ExpressiveSwitch(
     }
     val uncheckedTrack = when (style) {
         0 -> colors.uncheckedTrackColor
-        4 -> Color(0xFF8E8E93)
-        5 -> scheme.surfaceVariant
-        else -> scheme.surfaceContainerHighest
+        else -> scheme.onSurface.copy(alpha = 0.24f)
     }
     val checkedThumb = when (style) {
         0 -> colors.checkedThumbColor
@@ -92,10 +90,7 @@ fun ExpressiveSwitch(
         else -> Color.White
     }
     val uncheckedThumb = when (style) {
-        0 -> colors.uncheckedThumbColor
-        1, 2 -> scheme.outline
-        3, 5, 6, 7 -> scheme.surface
-        else -> Color.White
+        else -> scheme.primary
     }
     val checkedBorder = when (style) {
         2 -> scheme.primaryContainer
@@ -116,13 +111,13 @@ fun ExpressiveSwitch(
     // 4 rdf.m127934l = 51x31; 5 rdf.m127933O -> m127932I = 64x28;
     // 6 y2t0.m144445l = 50x28.5; 7 l140.m110104l = 39x22.
     val trackSize = when (style) {
-        2 -> DpSize(56.dp, 28.dp)
-        3 -> DpSize(48.dp, 24.dp)
-        4 -> DpSize(51.dp, 31.dp)
-        5 -> DpSize(64.dp, 28.dp)
-        6 -> DpSize(50.dp, 28.5.dp)
-        7 -> DpSize(39.dp, 22.dp)
-        else -> DpSize(52.dp, 32.dp)
+        2 -> DpSize(58.dp, 26.dp)
+        3 -> DpSize(50.dp, 22.dp)
+        4 -> DpSize(53.dp, 29.dp)
+        5 -> DpSize(66.dp, 26.dp)
+        6 -> DpSize(52.dp, 26.5.dp)
+        7 -> DpSize(41.dp, 20.dp)
+        else -> DpSize(54.dp, 30.dp)
     }
     // Preserve source interaction-state distinctions, while giving the visible
     // thumb a fuller capsule silhouette that occupies about 65% of track width.
@@ -144,8 +139,8 @@ fun ExpressiveSwitch(
     // Keep a small, even horizontal inset at both switch ends and let the
     // thumb fill 90% of the track height, as requested.
     val thumbHeight = minOf(
-        trackSize.height * 0.90f,
-        sourceThumbDiameter.coerceAtLeast(trackSize.height * 0.90f),
+        trackSize.height * 0.85f,
+        sourceThumbDiameter.coerceAtLeast(trackSize.height * 0.85f),
     )
     val thumbEdgeInset = 2.dp
     val trackCornerRadius = when (style) {
