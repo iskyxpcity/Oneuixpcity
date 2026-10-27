@@ -299,10 +299,14 @@ private class VoyagePathShape(
         val te = with(density) { topEnd.toPx() }.coerceIn(0f, minOf(size.width, size.height) / 2f)
         val be = with(density) { bottomEnd.toPx() }.coerceIn(0f, minOf(size.width, size.height) / 2f)
         val bs = with(density) { bottomStart.toPx() }.coerceIn(0f, minOf(size.width, size.height) / 2f)
-        val tl = if (layoutDirection == LayoutDirection.Ltr) ts else te
-        val tr = if (layoutDirection == LayoutDirection.Ltr) te else ts
-        val br = if (layoutDirection == LayoutDirection.Ltr) be else bs
-        val bl = if (layoutDirection == LayoutDirection.Ltr) bs else be
+        // Voyage concave-arc (style 5) and notch (style 6) defaults were visually
+        // too deep. Halve only these styles' effective geometry; the shared corner-scale
+        // setting remains multiplicative and other shape styles keep their original values.
+        val depthScale = if (style == 5 || style == 6) 0.5f else 1f
+        val tl = (if (layoutDirection == LayoutDirection.Ltr) ts else te) * depthScale
+        val tr = (if (layoutDirection == LayoutDirection.Ltr) te else ts) * depthScale
+        val br = (if (layoutDirection == LayoutDirection.Ltr) be else bs) * depthScale
+        val bl = (if (layoutDirection == LayoutDirection.Ltr) bs else be) * depthScale
         val w = size.width
         val h = size.height
 
@@ -688,7 +692,7 @@ fun SegmentedColumn(
                 modifier = Modifier.padding(start = 16.dp, bottom = 8.dp)
             )
         }
-        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             content.forEachIndexed { index, itemContent ->
                 CompositionLocalProvider(
                     LocalListItemShapes provides defaultSingleSegmentedShape(
