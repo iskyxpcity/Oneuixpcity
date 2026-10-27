@@ -624,3 +624,17 @@
 - 将 `colorpalette/ColorPaletteScreenMaterial.kt` 中仍直接调用 Material3 默认 `Slider` 的“界面缩放”控件改为 `AlohaOneUISlider`，让它与其他 Material 设置滑条共用 Voyage 四种轨道样式选择、共享轨道/拇指组件及当前数值保存回调。
 - 该入口原先直接调用系统默认 Slider，主题中选择 Material You/Fancy/Material 2/HyperOS 时不会跟随自定义轨道。现在已接入共享入口；尚需确认编译、拖动/保存行为和真机视觉表现。
 - 当前工作仍只在 `test/voyage-theme-1to1-20261026`。CI 应以本节产品提交及后续维护记录提交对应的最新 HEAD 为准；旧的失败构建不能作为新代码验收。
+
+
+## 2026-10-27 — 按上游四类 Slider 源码校正轨道几何
+
+- 重要源代码定位：通过公开的 `T8RIN/ImageToolbox` 上游仓库找到与 Voyage 四个滑条名称一致的实现文件：
+  - `M3Slider.kt`（Material You）：使用 Material 3 标准 Slider，并在外部增加容器与水平/垂直 padding；
+  - `FancySlider.kt`：`FancyTrack` 高度为 `38.dp`，拇指 `26.dp`，随进度旋转 `1080f * fraction`；
+  - `M2Slider.kt`：自定义轨道高度为 `4.dp`，容器水平 padding 为 `12.dp`；
+  - `HyperOSSlider.kt`：轨道高度为 `30.dp`，`StrokeCap.Butt`，thumb composable 为空（不显示拇指）。
+- 依据上述真实实现，修正先前根据视觉反馈临时设定的几何参数。产品提交 `e3a5b4d20029c865f3e2eeeee563a64432e53e04` 更新了各类型轨道高度、拇指尺寸及独立容器颜色；提交 `a0a25dbb17b0187415aed54ee0231468be2c9992` 按四类各自的轨道绘制方式重新实现；提交 `906d018e184cfc288503efc71c20d84856306a73` 将这些容器和拇指逻辑接入另一个共用入口 `AlohaOneUISlider.kt`。
+- 当前映射：Material You 4dp 标准圆端轨道、外层容器与 12dp/6dp 内边距；Fancy 38dp 胶囊轨道、26dp 拇指与旋转动画、外层 6dp 水平内边距；Material 2 4dp 圆端细轨道、外层 12dp 水平内边距；HyperOS 30dp 粗轨道、方端笔帽、不显示拇指。四种轨道不再共用同一套轨道轮廓。
+- 外层容器色与 active track/thumb 色分离，容器从 `secondaryContainer` / `tertiaryContainer` 色系取值，进度和拇指使用主题强调色。全局 Voyage 形状工厂继续用于轨道/容器轮廓，以保留用户要求的形状和圆角联动。
+- 上游文件可从 `https://github.com/T8RIN/ImageToolbox/tree/master/core/ui/src/main/kotlin/com/t8rin/imagetoolbox/core/ui/widget/sliders` 核查。它提供了四类同名 Slider 的具体尺寸/绘制逻辑；最终仍需对照 Voyage 当前版本 DEX/录屏确认是否存在版本分叉，不能仅因名称相同就声称像素级验收完成。
+- 最新源码已提交到 `test/voyage-theme-1to1-20261026`，没有触碰 `main`。需检查后续最新 HEAD 的 Actions 编译结果；如有失败继续修复，不以旧 APK 交付。
