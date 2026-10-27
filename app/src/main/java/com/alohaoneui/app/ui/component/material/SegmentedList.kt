@@ -236,7 +236,25 @@ private class VoyagePathShape(
     private val bottomEnd: Dp,
     private val bottomStart: Dp,
 ) : Shape {
+    private data class OutlineKey(
+        val width: Float, val height: Float, val density: Float, val direction: LayoutDirection,
+        val topStart: Float, val topEnd: Float, val bottomEnd: Float, val bottomStart: Float,
+    )
+    private val outlineCache = object : java.util.LinkedHashMap<OutlineKey, Outline>(16, 0.75f, true) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<OutlineKey, Outline>?): Boolean = size > 24
+    }
+
+    @Synchronized
     override fun createOutline(size: Size, layoutDirection: LayoutDirection, density: Density): Outline {
+        val key = OutlineKey(
+            size.width, size.height, density.density, layoutDirection,
+            topStart.value, topEnd.value, bottomEnd.value, bottomStart.value,
+        )
+        outlineCache[key]?.let { return it }
+        return createVoyageOutline(size, layoutDirection, density).also { outlineCache[key] = it }
+    }
+
+    private fun createVoyageOutline(size: Size, layoutDirection: LayoutDirection, density: Density): Outline {
         val ts = with(density) { topStart.toPx() }.coerceIn(0f, minOf(size.width, size.height) / 2f)
         val te = with(density) { topEnd.toPx() }.coerceIn(0f, minOf(size.width, size.height) / 2f)
         val be = with(density) { bottomEnd.toPx() }.coerceIn(0f, minOf(size.width, size.height) / 2f)
@@ -546,9 +564,11 @@ fun voyageCornerShape(radius: androidx.compose.ui.unit.Dp): Shape {
     val scaledRadius = radius * LocalMaterialCornerScale.current.coerceIn(0f, 2f)
     val style = LocalMaterialShapeStyle.current
     return when (style) {
-        1 -> CutCornerShape(scaledRadius)
-        2, 3, 4, 5, 6 -> VoyagePathShape(style, scaledRadius, scaledRadius, scaledRadius, scaledRadius)
-        else -> RoundedCornerShape(scaledRadius)
+        1 -> remember(style, scaledRadius) { CutCornerShape(scaledRadius) }
+        2, 3, 4, 5, 6 -> remember(style, scaledRadius) {
+            VoyagePathShape(style, scaledRadius, scaledRadius, scaledRadius, scaledRadius)
+        }
+        else -> remember(style, scaledRadius) { RoundedCornerShape(scaledRadius) }
     }
 }
 
