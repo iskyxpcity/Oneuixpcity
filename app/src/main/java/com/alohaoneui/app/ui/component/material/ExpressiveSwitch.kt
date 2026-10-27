@@ -19,6 +19,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.offset
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
@@ -28,6 +29,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.toDp
 import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
 import com.alohaoneui.app.ui.theme.LocalMaterialShadowSwitches
 import com.alohaoneui.app.ui.theme.LocalMaterialSwitchStyle
@@ -182,7 +184,17 @@ fun ExpressiveSwitch(
             }
         }
         if (thumbContent != null) {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { thumbContent() }
+            val thumbDiameter = (h * thumbRadiusFraction * 2f).toDp()
+            val thumbTravel = (w - 2f * (inset + thumbRadius)).toDp()
+            Box(
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .offset(x = thumbTravel * travel - thumbTravel / 2f)
+                    .size(thumbDiameter),
+                contentAlignment = Alignment.Center,
+            ) {
+                thumbContent()
+            }
         }
     }
 }
