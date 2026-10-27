@@ -313,3 +313,10 @@
 - 继续审计 Material 组件目录后发现 `ExpressiveTabRow.kt` 仍有先前通用化添加的 0.96 按压缩放和动态按压阴影。按原版页面控件的 ripple/选择状态逻辑移除这组无来源依据的缩放曲线，保留 Material 3 Tab 的选择指示器、ripple、主题动态文字颜色与全局按钮阴影开关；选中/未选中阴影按静态层级显示。
 - 目前本批已覆盖：主题设置共用选择行/弹出选项、图标形状详情页、设置行、顶部返回按钮、ToggleButton、颜色选项、开关、滑条、标签页的框体/交互。仍继续逐项核对 Voyage 原始几何/样式参数；图标形状 50 条真实路径尚未完成移植。
 - 本次只修改测试分支，不改 `main`。提交后继续监控 Actions。
+
+
+## 2026-10-27 后续推进：详情子页面滚动与返回按钮接入共享框体
+
+- Build #1690 / Run `40509173337` 对提交 `d9206c0c76620df87f0d8228ea0920d88edbadd7` 结论为 `success`，build job `122206215760` 成功且无失败步骤。签名 APK artifact ID `12736277758`，大小 27,767,503 bytes，ZIP SHA-256 `2c9e9c3b8e5473c5c20f398bb4e4c8f1ad8a1bd3aa9dec243a38b44f6e6e0fed`。该 APK 只对应标签页交互修正之前的 HEAD，不是当前产物。
+- 图标形状详情子页面的滚动容器现已接入 `TopAppBarDefaults.exitUntilCollapsedScrollBehavior` 的 nested scroll connection，避免标题栏声明了滚动行为却不随列表滚动；返回按钮改用共享 `TopBarBackButton`，因此遵循全局按钮阴影/轮廓设置，不再出现详情页返回按钮与其他设置页风格分离。
+- 本次仍只修改测试分支，不改 `main`；继续检查新 Actions。
