@@ -361,3 +361,11 @@
 - 代码提交 `d482f9a8e0cc20c850c9ae7f29cb6f4de72f3e23` 与 `153944624a2a2d788868ca8afb62ba3b5012c6b5`：设置页专用 Slider 与通用 `AlohaOneUISlider` 的 thumb 槽统一改为源码可确认的 20dp × 20dp；轨道高度仍单独配置，不再从轨道尺寸推导滑块尺寸。
 - 当前只确认并修正 thumb 尺寸/命中槽；thumb 本体的填充形状、描边、颜色状态、按压/拖动动画仍需继续追踪各实现的实际 slot 和 Canvas/Modifier 链。现有 `VoyageSliderThumb` 的单圆形只是临时占位，不能视为源码级完成；本条记录不把它标记为 1:1 验收。
 - 本次仅在测试分支 `test/voyage-theme-1to1-20261026` 修改，未触碰 `main`。接下来监测当前 HEAD 的 Actions，并继续追踪 thumb 的真实绘制入口。
+
+
+## 2026-10-27 用户反馈：滑块缺少背景与阴影，恢复源码可确认的交互阴影
+
+- 用户实际反馈当前滑块视觉变化不明显，背景和阴影缺失。复查当前 HEAD 后确认：VoyageSliderThumb 的 shadowEnabled 参数此前没有用于任何 Modifier，因而全局滑块阴影开关虽然传入组件，实际 thumb 仍完全没有阴影；通用 AlohaOneUISlider 也未把共享 MutableInteractionSource 传入 thumb。
+- 再次核对 Voyage 反编译 vhf.m138081l(...)：该方法将实际 20dp thumb 交互槽与阴影 modifier 连接；交互列表为空时采用 1dp 阴影，交互进行时采用 6dp 阴影，并受启用状态控制。当前修复提交 3ad1aae5f8c0ef0d04bc532af5c40fa63bc9ad5d 将按下状态接入 thumb 的阴影层，并确保阴影只作用于滑块本体，不覆盖整条 Slider 触摸区域；72089c469446068eeba5f1926a737836af00ecaa 将通用 Material Slider 的 interaction source 接线到共享 thumb。
+- 未完成项必须明确：当前只修复已查实的阴影缺失。四种 Voyage 样式各自的 thumb 本体背景/填充、描边与 enabled/active 颜色映射尚未全部从 qhf、y8f0 及四条组件路径逐项还原；轨道背景色与刻度绘制也仍需对照原始参数验收。因此本次不能声称视觉 1:1 完成，后续需继续源码追踪并在构建日志通过后验证 APK。
+- 仅更新测试分支 test/voyage-theme-1to1-20261026，未修改 main。本次源代码改动后必须检查最新 Actions；若编译失败，按真实错误修复。
