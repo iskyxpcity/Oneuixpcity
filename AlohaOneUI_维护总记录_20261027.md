@@ -450,3 +450,13 @@
 - Build #1732 / Run `40569099232` 对提交 `c294b364df1dd969104c3f3ab5c84b5235652d26` 的真实结果为 `failure`，失败步骤为 `:app:compileDebugKotlin`。诊断日志只有一类编译错误：`SegmentedSliderItem.kt` 中 `drawOutline` 在导入处及 3 个调用点均为 unresolved reference；不是签名密钥、包名或 APK 打包故障。
 - 修复方案：改为使用当前项目 Compose 版本确实提供的 `DrawScope.drawRect/drawPath`，增加本地 `drawVoyageOutline` 适配器，分别处理 `Outline.Rectangle`、`Outline.Rounded`（保留四角路径）和 `Outline.Generic`（直接绘制 Voyage 自定义路径），继续保留轨道形状联动意图，不回退到固定圆角矩形。
 - 本次修复只写测试分支；修复提交后的 Actions 尚待运行。不得把 Build #1732 标为成功，也不得把旧 APK 当作本批产物。
+
+
+## 2026-10-27：Actions Run 40569099232 构建失败诊断
+
+- 已直接读取 [Actions run 40569099232](https://github.com/iskyxpcity/Oneuixpcity/actions/runs/40569099232) 的 build job 日志及 Artifact 元数据。
+- 运行对应分支：`test/voyage-theme-1to1-20261026`；运行 HEAD：`c294b364df1dd969104c3f3ab5c84b5235652d26`。
+- 真实失败原因：`SegmentedSliderItem.kt` 第 37、270、273、281 行调用了当前项目 Compose 依赖中无法解析的 `drawOutline`，编译器报 `Unresolved reference 'drawOutline'`。失败发生在 `Compile Aloha OneUI before the owner-signing gate`，因此签名 APK、release 验证和最终 Artifact 均被跳过；本次运行**没有产出可交付 APK**。
+- 已核对当前测试分支上的 `SegmentedSliderItem.kt`（当前文件 blob SHA：`715e0356c4b09360aea201c1ee1107a0ffa91abd`）：文件已经不再导入或调用不可解析的 `drawOutline`，改为本地 `DrawScope.drawVoyageOutline()`，分别处理 `Outline.Rectangle`、`Outline.Rounded` 和 `Outline.Generic`。这说明失败点在当前文件中已被改写，但仍须由新的真实构建确认没有后续编译问题，不能仅凭源码推断成功。
+- 本次运行只生成诊断 Artifact `AlohaOneUI-Build-Diagnostics`（Artifact ID `12763389345`，ZIP SHA-256：`54bcdd3054484558b7a83a2e82bcef75a9bfc56dec9762b2ed92431592474b6e`）；它不是 APK。
+- 后续操作：以当前测试分支最新代码重新触发/检查 Actions，若出现新的编译错误继续按日志修复。必须等新的构建成功并取得该次 run 的 APK Artifact 后，再验证包名、版本、签名和 SHA-256。不得修改或合并 `main`。
