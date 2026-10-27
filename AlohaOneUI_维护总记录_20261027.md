@@ -352,3 +352,12 @@
 - 已提交 `53bfaa36aca6236ead6e0553023dce0aecbc300a`：删除未经源码证实的多层圆环、中心点和方块造型，按反编译调用链所见的 16dp / 32dp 绘制槽尺寸调整 thumb 尺寸分组。已提交 `d2cfbf799342ae79d65c14fdefbbf571ab677107`：同步修正通用 `AlohaOneUISlider`，避免普通页面与详情页继续使用旧的猜测尺寸。
 - **重要验收边界：**本次先撤销明显错误的手工造型并依据源码调用尺寸校正；四条路径的最终 Canvas 几何、颜色状态与动态行为仍需继续逐段移植，不能标记为滑块 1:1 完成。源码中 `vhf.m138077ll` 还使用 2dp 绘制宽度、enabled/active 多组颜色以及 tick positions；需要把这些行为和对应槽位准确区分，不能把轨道/tick 绘制误当成 thumb 本体。
 - 只改 `test/voyage-theme-1to1-20261026`，未修改 `main`。下一步检查本次最新 Actions，编译错误按日志修复；同时继续追踪每条样式的 thumb slot 与 track slot 对应关系，再做真正源码移植。
+
+
+## 2026-10-27 滑块继续移植：纠正 thumb 尺寸与 track 尺寸混淆
+
+- 继续逐段读取 `voyage-apk-theme-inspection.zip` 中四种 Slider 分支。反编译的 `h7w0.m99521O(...)` 确认四条实现入口分别为 `ncw0.m116420I`、`y3w0.m144516l`、`w3w0.m139521l`、`v2t0.m136842l`。
+- 进一步核对 `j5v0.m105238O` 第 144 行与 `z4v0.m147159l` 第 695 行：两处都对实际 thumb 交互/命中槽应用 `Modifier.size(20.dp, 20.dp)`。此前把 `y8f0` 的 16dp 轨道高度与 `vhf` 的 32dp 轨道容器误当成 thumb 尺寸，这个判断已纠正。
+- 代码提交 `d482f9a8e0cc20c850c9ae7f29cb6f4de72f3e23` 与 `153944624a2a2d788868ca8afb62ba3b5012c6b5`：设置页专用 Slider 与通用 `AlohaOneUISlider` 的 thumb 槽统一改为源码可确认的 20dp × 20dp；轨道高度仍单独配置，不再从轨道尺寸推导滑块尺寸。
+- 当前只确认并修正 thumb 尺寸/命中槽；thumb 本体的填充形状、描边、颜色状态、按压/拖动动画仍需继续追踪各实现的实际 slot 和 Canvas/Modifier 链。现有 `VoyageSliderThumb` 的单圆形只是临时占位，不能视为源码级完成；本条记录不把它标记为 1:1 验收。
+- 本次仅在测试分支 `test/voyage-theme-1to1-20261026` 修改，未触碰 `main`。接下来监测当前 HEAD 的 Actions，并继续追踪 thumb 的真实绘制入口。
