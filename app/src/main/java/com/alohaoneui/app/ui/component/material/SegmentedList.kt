@@ -909,6 +909,11 @@ fun SegmentedChoiceOptionsItem(
                                 Modifier.shadow(if (selected) 2.dp else 1.dp, chipShape)
                             } else Modifier
                         )
+                        .then(
+                            LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
+                                Modifier.border(it.dp, colorScheme.outlineVariant, chipShape)
+                            } ?: Modifier
+                        )
                         .graphicsLayer {
                             scaleX = pressScale
                             scaleY = pressScale
