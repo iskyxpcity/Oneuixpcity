@@ -320,3 +320,13 @@
 - Build #1690 / Run `40509173337` 对提交 `d9206c0c76620df87f0d8228ea0920d88edbadd7` 结论为 `success`，build job `122206215760` 成功且无失败步骤。签名 APK artifact ID `12736277758`，大小 27,767,503 bytes，ZIP SHA-256 `2c9e9c3b8e5473c5c20f398bb4e4c8f1ad8a1bd3aa9dec243a38b44f6e6e0fed`。该 APK 只对应标签页交互修正之前的 HEAD，不是当前产物。
 - 图标形状详情子页面的滚动容器现已接入 `TopAppBarDefaults.exitUntilCollapsedScrollBehavior` 的 nested scroll connection，避免标题栏声明了滚动行为却不随列表滚动；返回按钮改用共享 `TopBarBackButton`，因此遵循全局按钮阴影/轮廓设置，不再出现详情页返回按钮与其他设置页风格分离。
 - 本次仍只修改测试分支，不改 `main`；继续检查新 Actions。
+
+
+## 2026-10-27 后续推进：修正全局滑条样式接线与波浪形状缓存
+
+- 核查确认通用 `AlohaOneUISlider` 的 Material 分支此前仍使用默认 Material Slider，因而普通设置页与详情子页面并不会随 `LocalMaterialSliderStyle` 变化；设置阴影的 modifier 也覆盖整条 Slider 触摸区域，容易形成灰色前景投影且压低轨道底色。
+- 提交 `7b005d338c68b04db9f9f1d84137d686cbd026dd` 将四种样式共享绘制器接入通用 `AlohaOneUISlider` 的 Material 分支；提交 `8be42e1e9647d735085601ae8d5e1965200fd844` 将阴影从整条 Slider 移至实际滑块，并将两个组件共享的轨道/滑块绘制器开放为 internal。普通 Material 设置页与子页面凡使用通用滑条，都读取 `LocalMaterialSliderStyle` 绘制活动/未活动轨道、滑块、离散刻度与全局轮廓描边。
+- 滑块阴影保持稳定 2dp，并受 `LocalMaterialShadowSliders` 控制；不添加未在 Voyage 源码中确认的按压缩放或按压阴影动画。滑块内层颜色改用 Material `surface` 角色，避免固定白色不随系统明暗模式变化。
+- 提交 `fc6e6cccaed7d2495cb36d986dbfc726ac8e766b` 为 `VoyagePathShape` 增加 24 项 LRU Outline 缓存，缓存键包含尺寸、density、布局方向和四角半径；`voyageCornerShape` 使用 `remember(style, scaledRadius)` 复用 Shape 实例，减少 Wavy 切换/滚动时反复采样整圈波形、分配采样点和生成二次曲线造成的卡顿。
+- 完成度边界：本批修复通用 Material 滑条的样式接线、轨道底色/阴影位置与 Wavy 重复计算；仍须依据 Voyage 的 `kdj0.java`、`h7w0.m99521O`、`gaf0/jaf0/iaf0/haf0`、`y8f0.m144819Il/m144822lo` 核验四种滑条的真实几何、颜色、thumb 造型和交互状态。当前绘制器仍是 Aloha 共用适配，不应标记为 Voyage 1:1 已验收。
+- 本次只修改测试分支 `test/voyage-theme-1to1-20261026`，未修改 `main`。必须监测最新 Actions；构建失败时继续按真实日志修复。
