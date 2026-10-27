@@ -1,7 +1,6 @@
 package com.alohaoneui.app.ui.component.material
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.border
 import androidx.compose.foundation.background
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -110,25 +109,18 @@ internal fun voyageSliderAppearance(requestedStyle: Int): VoyageSliderAppearance
 internal fun voyageSliderContainerModifier(
     style: Int,
     containerColor: Color,
-    outlineWidth: androidx.compose.ui.unit.Dp = 0.dp,
-    outlineColor: Color = Color.Unspecified,
 ): Modifier {
     val containerShape = voyageCornerShape(20.dp)
-    fun Modifier.withOutline(shape: androidx.compose.ui.graphics.Shape): Modifier =
-        then(if (outlineWidth > 0.dp) Modifier.border(outlineWidth, outlineColor, shape) else Modifier)
     return when (style) {
         0 -> Modifier
             .padding(vertical = 2.dp)
             .background(containerColor, containerShape)
-            .withOutline(containerShape)
             .padding(horizontal = 12.dp, vertical = 6.dp)
         1 -> Modifier
             .background(containerColor, voyageCornerShape(50.dp))
-            .withOutline(voyageCornerShape(50.dp))
             .padding(horizontal = 6.dp)
         2 -> Modifier
             .background(containerColor, voyageCornerShape(50.dp))
-            .withOutline(voyageCornerShape(50.dp))
             .padding(horizontal = 12.dp)
         else -> Modifier
     }
@@ -196,8 +188,6 @@ fun SegmentedSliderItem(
                         .then(voyageSliderContainerModifier(
                             style = style,
                             containerColor = appearance.containerColor,
-                            outlineWidth = LocalMaterialOutlineWidth.current.dp,
-                            outlineColor = MaterialTheme.colorScheme.outlineVariant,
                         )),
                     onValueChangeFinished = onValueChangeFinished,
                     interactionSource = interactionSource,
@@ -227,8 +217,6 @@ fun SegmentedSliderItem(
                             thumbWidth = thumbSize.width,
                             activeColor = active,
                             inactiveColor = inactive,
-                            outlineWidth = LocalMaterialOutlineWidth.current.dp,
-                            outlineColor = MaterialTheme.colorScheme.outlineVariant,
                             shadowEnabled = LocalMaterialShadowSliders.current,
                         )
                     },
@@ -293,8 +281,6 @@ internal fun VoyageSliderTrack(
     thumbWidth: androidx.compose.ui.unit.Dp,
     activeColor: Color,
     inactiveColor: Color,
-    outlineWidth: androidx.compose.ui.unit.Dp,
-    outlineColor: Color,
     shadowEnabled: Boolean = false,
 ) {
     val passedTickColor = MaterialTheme.colorScheme.onPrimary
@@ -308,7 +294,6 @@ internal fun VoyageSliderTrack(
             .fillMaxWidth()
             .height(height)
             .then(if (style == 3) Modifier.background(containerColor, trackShape) else Modifier)
-            .then(if (style == 3 && outlineWidth > 0.dp) Modifier.border(outlineWidth, outlineColor, trackShape) else Modifier)
             .then(if (shadowEnabled && style == 3) Modifier.shadow(1.dp, trackShape, clip = false) else Modifier)
     ) {
         val h = size.height
