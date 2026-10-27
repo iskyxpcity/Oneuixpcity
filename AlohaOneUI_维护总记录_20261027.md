@@ -413,3 +413,10 @@
 - 这次统一的是配置入口与状态联动，不把现有颜色/高度映射说成已确认的 Voyage 原版数值。共享函数注释已明确：在四条原始 draw path 逐项核实之前，当前映射只是兼容现有项目状态；下一步要继续依据反编译方法和资源校正数据本身，而不是让两处重复保持同一份未验证硬编码。
 - 当前最新产品源码提交为 `3ba9ff26b58d551c33702b11d61fededd03ddc44`。截至查询时，GitHub combined status 返回空状态列表，commit workflow 查询也未返回运行记录；没有可验证的当前 HEAD 构建结果或新 APK。不得把之前 Build #1708 或更早 Artifact 当作包含本批修改的产物。
 - 后续继续：检查当前分支 Actions 触发方式与最新运行；修复任何实际编译问题；随后从 `kdj0` / `h7w0` / `y8f0` 和四条实现类逐项恢复 Slider 的真实颜色、轨道、thumb、描边、阴影及启用状态行为。完成后继续其他主题组件，不停在配置抽取这一步。
+
+
+## 2026-10-27 滑条共享绘制入口的编译前自检
+
+- 最新产品代码修正提交：`fd0aca9f1f4f8cdf4178709b97b55bf129d0eb3e`。复核 `VoyageSliderThumb` 时补正 Compose Box 的空内容 lambda，并用 `minOf(size.width, size.height)` 计算圆形基准半径，避免依赖不必要的 DpSize 扩展属性。
+- 当前滑块的阴影、裁切和填充共用 `voyageCornerShape` 返回的主题 Shape；轨道的阴影与可见层也共用同一主题 Shape。设置页与通用 Material Slider 共用 `voyageSliderAppearance()` 配置入口。
+- 当前最新维护记录提交之前，针对产品提交 `fd0aca9f1f4f8cdf4178709b97b55bf129d0eb3e` 查询到的 combined status 为空，commit workflow 查询没有关联运行。**尚未进行真实编译验收**；这不是成功构建记录。必须继续找到可查询的最新 Actions run 或可用的构建触发路径，构建失败时按真实日志修复。
