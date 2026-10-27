@@ -650,15 +650,20 @@ internal fun SegmentedOptionFrame(
     content: @Composable androidx.compose.foundation.layout.ColumnScope.() -> Unit,
 ) {
     val itemShapes = LocalListItemShapes.current ?: ListItemDefaults.segmentedShapes(0, 1)
+    val configuredOutline = LocalMaterialOutlineWidth.current
+    val frameBorder = if (configuredOutline > 0f) {
+        BorderStroke(configuredOutline.dp, colorScheme.outlineVariant)
+    } else {
+        // Keep the structural option frame visible even when optional control outlines are disabled.
+        BorderStroke(0.5.dp, colorScheme.outlineVariant.copy(alpha = 0.45f))
+    }
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = itemShapes.shape,
-        color = colorScheme.surfaceColorAtElevation(1.dp),
+        color = colorScheme.surfaceContainerHigh,
         tonalElevation = 0.dp,
         shadowElevation = if (LocalMaterialShadowContainers.current) 1.dp else 0.dp,
-        border = LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
-            BorderStroke(it.dp, colorScheme.outlineVariant)
-        },
+        border = frameBorder,
     ) {
         Column(
             modifier = Modifier

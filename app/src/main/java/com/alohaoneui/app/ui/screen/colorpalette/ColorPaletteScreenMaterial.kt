@@ -314,7 +314,7 @@ fun ColorPaletteScreenMaterial(
                             val styles = PaletteStyle.entries
                             SegmentedChoiceOptionsItem(
                                 title = stringResource(R.string.settings_color_style),
-                                items = styles.map { it.name },
+                                items = styles.map { paletteStyleLabel(it.name) },
                                 selectedIndex = styles.indexOf(colorStyle),
                                 onItemSelected = { index ->
                                     actions.onSetColorStyle(styles[index].name)
@@ -325,7 +325,7 @@ fun ColorPaletteScreenMaterial(
                             val specs = ColorSpec.SpecVersion.entries
                             SegmentedChoiceOptionsItem(
                                 title = stringResource(R.string.settings_color_spec),
-                                items = specs.map { it.name },
+                                items = specs.map { colorSpecLabel(it.name) },
                                 selectedIndex = specs.indexOf(colorSpec).coerceAtLeast(0),
                                 onItemSelected = { index ->
                                     actions.onSetColorSpec(specs[index].name)
@@ -722,6 +722,28 @@ private fun ThemePreviewCard(
 }
 
 
+
+@Composable
+private fun paletteStyleLabel(name: String): String = when (name) {
+    "TonalSpot" -> stringResource(R.string.palette_style_tonal_spot)
+    "Neutral" -> stringResource(R.string.palette_style_neutral)
+    "Vibrant" -> stringResource(R.string.palette_style_vibrant)
+    "Expressive" -> stringResource(R.string.palette_style_expressive)
+    "Rainbow" -> stringResource(R.string.palette_style_rainbow)
+    "FruitSalad" -> stringResource(R.string.palette_style_fruit_salad)
+    "Monochrome" -> stringResource(R.string.palette_style_monochrome)
+    "Fidelity" -> stringResource(R.string.palette_style_fidelity)
+    "Content" -> stringResource(R.string.palette_style_content)
+    "Cmf" -> stringResource(R.string.palette_style_cmf)
+    else -> name.replace('_', ' ').lowercase().replaceFirstChar { it.uppercase() }
+}
+
+@Composable
+private fun colorSpecLabel(name: String): String = when (name) {
+    "SPEC_2021" -> stringResource(R.string.color_spec_2021)
+    "SPEC_2025" -> stringResource(R.string.color_spec_2025)
+    else -> name.replace("SPEC_", "").replace('_', ' ')
+}
 
 @Composable
 private fun ColorButtonMaterial(

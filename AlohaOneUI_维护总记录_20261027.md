@@ -248,3 +248,12 @@
 - 新增共用 `SegmentedOptionFrame`：读取当前分组的 `LocalListItemShapes`，继承同一分段形状；背景沿用 `surfaceColorAtElevation(1.dp)`；容器阴影受 `LocalMaterialShadowContainers` 控制；描边受 `LocalMaterialOutlineWidth` 控制。将主题多选一选项组和图标形状选项条目统一包入该框体，内部 chips/图标 tile 的独立点击、选中态与按压动效保持不变。
 - 本次仅修改测试分支，不改 `main`。目标是让原先缺少行容器框体的复杂选项与普通列表/详情行共用一致的框架规则；构建后还需按实际页面效果核对有无重复嵌套框体，并以 Voyage 原版层级为准调整。
 - 当前 Build #1682 未通过，签名和 APK 产物步骤跳过；此提交包含导入修复与选项组框体统一，必须监测新 HEAD 的 Actions。当前没有本批次新 APK。
+
+
+## 2026-10-27 后续推进：主题选项结构框体可见性与色彩选项本地化
+
+- 用户再次明确优先项：色彩风格、色彩标准、页面切换手势、形状样式、开关样式、滑条样式、图标形状必须具有清晰可见的框体，并继承父级分段列表的形状层级；同时所有页面子页面按钮的点击动效/阴影必须继续按 Voyage 原实现逐项对照，不能把通用动画冒充完成了源码移植。
+- 核查后确认上述选项均使用 `SegmentedOptionFrame` 或 `SegmentedChoiceOptionsItem`，但旧框体背景使用 `surfaceColorAtElevation(1.dp)`，在当前系统主题与默认 0dp 轮廓设置下对比度过低，造成“没有框体”的实际观感。本批次将框体背景改为跟随 Material 主题的 `surfaceContainerHigh`，继承 `LocalListItemShapes` 的父级分段形状；当用户将可选描边宽度设为 0 时，仍保留低对比度 0.5dp 结构边线以明确显示容器边界；配置了正描边宽度时则严格使用该值和主题 `outlineVariant`。容器阴影继续受全局容器阴影设置控制。
+- `ColorPaletteScreenMaterial.kt` 原先把调色板风格和色彩标准直接显示成枚举名（如 `TonalSpot`、`SPEC_2025`），因此系统语言切换时不会显示本地化文字。本批次将它们改为资源映射，并新增英文默认资源与简体中文资源；其他语言沿用 Android 默认英文回退，之后可继续补齐各语言翻译。标题、说明和选项色彩继续使用 Material 动态色彩角色，随系统明暗模式/当前色彩方案更新。
+- 本次只修改测试分支，不改 `main`。这批处理结构框体可见性和色彩选项文字本地化，不代表已完成全部 Voyage 源码对照；按钮点击曲线、各控件原始形状/阴影数值仍要逐项核验。
+- 构建状态以本批提交后的最新 Actions 为准；此前 Build #1683（Run `40504818929`，head `2b58baf71db27e7961aa2a8da17d0069d90450e4`）已成功，签名 APK artifact ID `12734020169` 只对应旧 HEAD，不能当成本批次交付包。
