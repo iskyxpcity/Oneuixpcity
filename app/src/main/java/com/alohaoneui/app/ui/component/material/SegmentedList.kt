@@ -262,19 +262,36 @@ private class VoyagePathShape(
                 val brShared = minOf(progress[4], progress[5])
                 val blShared = minOf(progress[6], progress[7])
 
-                fun profileInset(axisProgress: Double, cornerProgress: Double): Float {
+                data class ProfileInsets(val horizontal: Float, val vertical: Float)
+
+                fun profileInsets(axisProgress: Double, cornerProgress: Double): ProfileInsets {
                     val profile = VoyageG2Profile.smooth
                         .interpolateFromCapsule(axisProgress, cornerProgress)
-                        .cubic()
-                    // Use the generated source profile's tangent/control data in
-                    // each axis rather than deriving both axes from one progress.
-                    return (1.0 - profile.p2.x).toFloat().coerceIn(0.08f, 0.92f)
+                    val cubic = profile.cubic()
+                    // Use the solved Bezier controls, not p2/p3 (which are
+                    // tangent-direction construction points in fqw0.m95419o()).
+                    // The old p2.x lookup was always 1.0 and therefore collapsed
+                    // every corner to the same arbitrary 8% inset.
+                    val xSpan = (cubic.p1.x - cubic.p0.x).let { kotlin.math.abs(it) }
+                    val ySpan = (cubic.p1.y - cubic.p0.y).let { kotlin.math.abs(it) }
+                    val horizontal = if (xSpan > 1e-9) {
+                        kotlin.math.abs(cubic.c1.x - cubic.p0.x) / xSpan
+                    } else 0.0
+                    val vertical = if (ySpan > 1e-9) {
+                        kotlin.math.abs(cubic.p1.y - cubic.c2.y) / ySpan
+                    } else 0.0
+                    return ProfileInsets(
+                        horizontal.coerceIn(0.0, 1.0).toFloat(),
+                        vertical.coerceIn(0.0, 1.0).toFloat(),
+                    )
                 }
 
                 fun cornerInsets(horizontalIndex: Int, verticalIndex: Int, shared: Double): CornerInsets {
+                    val horizontal = profileInsets(progress[horizontalIndex], shared)
+                    val vertical = profileInsets(progress[verticalIndex], shared)
                     return CornerInsets(
-                        horizontal = profileInset(progress[horizontalIndex], shared),
-                        vertical = profileInset(progress[verticalIndex], shared),
+                        horizontal = horizontal.horizontal,
+                        vertical = vertical.vertical,
                     )
                 }
 
