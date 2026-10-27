@@ -2,12 +2,8 @@ package com.alohaoneui.app.ui.component.material
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.RowScope
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
@@ -36,20 +32,10 @@ fun ExpressiveToggleButton(
     content: @Composable RowScope.() -> Unit,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
-    val pressed by interactionSource.collectIsPressedAsState()
-    val pressScale by animateFloatAsState(
-        targetValue = if (pressed && enabled) 0.96f else 1f,
-        animationSpec = spring(dampingRatio = 0.58f, stiffness = 560f),
-        label = "voyageToggleButtonPress",
-    )
-    val styledModifier = modifier.graphicsLayer {
-        scaleX = pressScale
-        scaleY = pressScale
-    }
     ToggleButton(
         checked = checked,
         onCheckedChange = onCheckedChange,
-        modifier = styledModifier,
+        modifier = modifier,
         enabled = enabled,
         colors = colors,
         shapes = shapes,

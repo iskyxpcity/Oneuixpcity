@@ -86,8 +86,32 @@ class SettingsRepositoryImpl : SettingsRepository {
         set(value) = prefs.edit { putInt("material_slider_style", value.coerceIn(0, 3)) }
 
     override var materialIconShapeStyle: Int
-        get() = prefs.getInt("material_icon_shape_style", -1).coerceIn(-1, 50)
-        set(value) = prefs.edit { putInt("material_icon_shape_style", value.coerceIn(-1, 50)) }
+        get() {
+            val key = "material_icon_shape_style"
+            val migrationKey = "material_icon_shape_style_index_v2"
+            if (prefs.getBoolean(migrationKey, false)) {
+                return prefs.getInt(key, -1).coerceIn(-1, 50)
+            }
+            val migrated = if (!prefs.contains(key)) {
+                -1
+            } else {
+                when (val legacy = prefs.getInt(key, 0)) {
+                    0 -> -1
+                    1 -> 50
+                    in 2..51 -> legacy - 2
+                    else -> -1
+                }
+            }
+            prefs.edit {
+                putInt(key, migrated)
+                putBoolean(migrationKey, true)
+            }
+            return migrated
+        }
+        set(value) = prefs.edit {
+            putInt("material_icon_shape_style", value.coerceIn(-1, 50))
+            putBoolean("material_icon_shape_style_index_v2", true)
+        }
 
     override var materialOutlineWidth: Float
         get() = prefs.getFloat("material_outline_width", 0.0f).coerceIn(0.0f, 1.5f)
@@ -183,6 +207,7 @@ class SettingsRepositoryImpl : SettingsRepository {
             .putInt("material_switch_style", snapshot.materialSwitchStyle.coerceIn(0, 7))
             .putInt("material_slider_style", snapshot.materialSliderStyle.coerceIn(0, 3))
             .putInt("material_icon_shape_style", snapshot.materialIconShapeStyle.coerceIn(-1, 50))
+            .putBoolean("material_icon_shape_style_index_v2", true)
             .putFloat("material_outline_width", snapshot.materialOutlineWidth.coerceIn(0.0f, 1.5f))
             .putBoolean("material_shadow_containers", snapshot.materialShadowContainers)
             .putBoolean("material_shadow_top_bars", snapshot.materialShadowTopBars)

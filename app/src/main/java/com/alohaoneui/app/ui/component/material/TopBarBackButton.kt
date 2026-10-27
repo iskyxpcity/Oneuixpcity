@@ -1,15 +1,10 @@
 package com.alohaoneui.app.ui.component.material
 
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.border
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material3.Icon
@@ -31,25 +26,10 @@ fun TopBarBackButton(
     contentDescription: String? = null,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
-    val pressed by interactionSource.collectIsPressedAsState()
-    val pressScale by animateFloatAsState(
-        targetValue = if (pressed) 0.94f else 1f,
-        animationSpec = spring(dampingRatio = 0.58f, stiffness = 560f),
-        label = "voyageTopBarBackPress",
-    )
-    val shadowElevation by animateDpAsState(
-        targetValue = if (pressed) 3.dp else 2.dp,
-        animationSpec = spring(dampingRatio = 0.62f, stiffness = 520f),
-        label = "voyageTopBarBackShadow",
-    )
     IconButton(
         modifier = modifier
             .padding(horizontal = 10.dp)
-            .graphicsLayer {
-                scaleX = pressScale
-                scaleY = pressScale
-            }
-            .then(if (LocalMaterialShadowButtons.current) Modifier.shadow(shadowElevation, CircleShape) else Modifier)
+            .then(if (LocalMaterialShadowButtons.current) Modifier.shadow(2.dp, CircleShape) else Modifier)
             .then(
                 LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
                     Modifier.border(it.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape)

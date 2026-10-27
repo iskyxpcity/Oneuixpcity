@@ -288,3 +288,12 @@
   - `ColorPaletteScreenMaterial.kt:135`：新增子页面状态缺少 `androidx.compose.runtime.mutableStateOf` 导入。
   - `ColorPaletteScreenMaterial.kt:138`：调用新详情页但未导入 `IconShapePresetDetailScreen`。
 - 已按日志修正以上导入，未撤销本轮图标形状入口/索引移植。修复提交后继续检查最新 Actions，失败继续按日志修复；不得交付旧 APK。
+
+
+## 2026-10-27 后续推进：按 Voyage 交互源码撤除无依据的整行缩放曲线
+
+- Build #1687 / Run `40507612809` 对修复提交 `e5880c020c12802462496e5f6b4fb405fb7b5188` 结论为 `success`，build job `122200846389` 无失败步骤。签名 APK artifact ID `12734959611`，大小 27,774,681 bytes，ZIP SHA-256 `4551c300a800a7fd2cbd91cf22ffeddcff22033a4e6a6d5b570713c0751ee581`。该包只用于确认图标形状详情页导入修复，不是最终交付包。
+- 对照 `bhu0.m6094l` → `vhw0.m138133o` → `vhw0.m138132lo` 以及 `d8t0.m88393lO` 的真实交互实现后，确认原版使用 ripple/clickable、启用状态 alpha、父级分段形状的 spring morph；未发现之前自加的整行 0.985/0.96 按压缩放曲线。因此本批次撤除 `SegmentedListItem`、顶部返回按钮、Material 3 ToggleButton、调色板返回按钮和颜色选项的通用按压缩放/按压阴影动画，保留原生交互反馈、形状 morph、选中状态动画及全局阴影开关；按钮/容器阴影改为稳定静态层级，不再伪称为 Voyage 原始按压曲线。
+- `alohaOneUISegmentedColors` 的行容器颜色改为 `surfaceContainerHigh`，确保父子分段行在系统浅色/深色方案下有可辨识的框体底色；行框体仍继承 `LocalListItemShapes`，全局描边宽度与容器阴影开关保持有效。
+- 图标形状详情页选择某一形状后保持停留在详情页，避免每次点击选项都被提前关闭。索引升级增加一次性迁移标记：旧版 0→None(-1)、1→Random(50)、2..51→基础形状 0..49；设置写入和备份恢复会标记新索引格式，避免升级后旧值错位。
+- 本次改动仍仅限测试分支，不修改 `main`。本次提交后继续检查最新 Actions，编译/签名失败则按日志修复。

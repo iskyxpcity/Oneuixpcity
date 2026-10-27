@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.os.Build
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
@@ -18,7 +17,6 @@ import androidx.compose.foundation.border
 import androidx.compose.ui.draw.shadow
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -141,7 +139,6 @@ fun ColorPaletteScreenMaterial(
             selectedIndex = uiState.materialIconShapeStyle,
             onSelected = { style ->
                 actions.onSetMaterialIconShapeStyle(style)
-                showIconShapeDetails = false
             },
             onBack = { showIconShapeDetails = false },
         )
@@ -164,26 +161,11 @@ fun ColorPaletteScreenMaterial(
                     ),
                 navigationIcon = {
                     val backInteractionSource = remember { MutableInteractionSource() }
-                    val backPressed by backInteractionSource.collectIsPressedAsState()
-                    val backPressScale by animateFloatAsState(
-                        targetValue = if (backPressed) 0.94f else 1f,
-                        animationSpec = spring(dampingRatio = 0.58f, stiffness = 560f),
-                        label = "voyageThemeBackPress",
-                    )
-                    val backShadowElevation by animateDpAsState(
-                        targetValue = if (backPressed) 3.dp else 2.dp,
-                        animationSpec = spring(dampingRatio = 0.62f, stiffness = 520f),
-                        label = "voyageThemeBackShadow",
-                    )
                     IconButton(
                         modifier = Modifier
-                            .graphicsLayer {
-                                scaleX = backPressScale
-                                scaleY = backPressScale
-                            }
                             .then(
                                 if (LocalMaterialShadowButtons.current) {
-                                    Modifier.shadow(backShadowElevation, CircleShape)
+                                    Modifier.shadow(2.dp, CircleShape)
                                 } else Modifier
                             )
                             .then(
@@ -773,21 +755,6 @@ private fun ColorButtonMaterial(
 ) {
     val haptic = LocalHapticFeedback.current
     val interactionSource = remember { MutableInteractionSource() }
-    val pressed by interactionSource.collectIsPressedAsState()
-    val pressScale by animateFloatAsState(
-        targetValue = if (pressed) 0.96f else 1f,
-        animationSpec = spring(dampingRatio = 0.58f, stiffness = 560f),
-        label = "voyagePaletteColorPress",
-    )
-    val shadowElevation by animateDpAsState(
-        targetValue = when {
-            pressed -> 3.dp
-            isSelected -> 2.dp
-            else -> 1.dp
-        },
-        animationSpec = spring(dampingRatio = 0.62f, stiffness = 520f),
-        label = "voyagePaletteColorShadow",
-    )
     val colorScheme = rememberAlohaOneUIColorScheme(
         seedColor = color,
         isDark = isDark,
@@ -806,13 +773,9 @@ private fun ColorButtonMaterial(
         color = colorScheme.surfaceContainer,
         modifier = Modifier
             .size(72.dp)
-            .graphicsLayer {
-                scaleX = pressScale
-                scaleY = pressScale
-            }
             .then(
                 if (LocalMaterialShadowButtons.current) {
-                    Modifier.shadow(shadowElevation, voyageCornerShape(20.dp))
+                    Modifier.shadow(if (isSelected) 2.dp else 1.dp, voyageCornerShape(20.dp))
                 } else Modifier
             )
             .then(
