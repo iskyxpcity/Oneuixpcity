@@ -152,6 +152,27 @@ fun SettingPagerMiuix(
                             selectedIndex = if (uiState.uiMode == UiMode.Material.value) 1 else 0,
                             onSelectedIndexChange = actions.onSetUiModeIndex
                         )
+                        ArrowPreference(
+                            title = stringResource(id = R.string.settings_theme),
+                            summary = stringResource(id = R.string.settings_theme_summary),
+                            startAction = {
+                                Icon(
+                                    Icons.Rounded.Palette,
+                                    modifier = Modifier.padding(end = 6.dp),
+                                    contentDescription = stringResource(id = R.string.settings_theme),
+                                    tint = colorScheme.onBackground
+                                )
+                            },
+                            onClick = actions.onOpenTheme
+                        )
+                    }
+
+
+                    Card(
+                        modifier = Modifier
+                            .padding(top = 12.dp)
+                            .fillMaxWidth(),
+                    ) {
                         Text(
                             text = stringResource(id = R.string.settings_group_language),
                             style = MiuixTheme.textStyles.subtitle,
@@ -174,21 +195,7 @@ fun SettingPagerMiuix(
                                 onClick = { actions.onSetAppLanguage(value) },
                             )
                         }
-                        ArrowPreference(
-                            title = stringResource(id = R.string.settings_theme),
-                            summary = stringResource(id = R.string.settings_theme_summary),
-                            startAction = {
-                                Icon(
-                                    Icons.Rounded.Palette,
-                                    modifier = Modifier.padding(end = 6.dp),
-                                    contentDescription = stringResource(id = R.string.settings_theme),
-                                    tint = colorScheme.onBackground
-                                )
-                            },
-                            onClick = actions.onOpenTheme
-                        )
                     }
-
 
                     Card(
                         modifier = Modifier
