@@ -590,3 +590,13 @@
 - Voyage 形状样式 5（凹弧）与样式 6（缺口）的有效几何深度减半：在绘制轮廓时将四角相关尺寸乘以 `0.5f`。因此凹弧凹入/外凸幅度和缺口的切入深度都会相应缩小；全局 Corner Scale 仍会继续作用于新尺寸，其他形状样式不受影响。
 - 本次改动只提交至 `test/voyage-theme-1to1-20261026`，没有修改或合并 `main`。
 - 验证边界：源码已提交，需以本次提交后的最新 HEAD 检查 GitHub Actions 构建结果，并在设备上确认列表间距、凹弧与缺口形状在不同 Corner Scale 下的实际观感；未完成这些检查前不宣称设备验收通过，也不使用旧 APK 作为本轮交付物。
+
+## 2026-10-27 用户反馈：四种滑条需分别呈现对应样式，包裹轨道底色加宽并使用次色/第三色容器色
+
+- 源码提交：`e69a25f80c88e869f4ddbba29a8906462f0b6789`（`ui: distinguish four slider families and widen colored rail`）。
+- 修改文件：`app/src/main/java/com/alohaoneui/app/ui/component/material/SegmentedSliderItem.kt`。
+- 纠正之前所有样式共用同一种轨道外观的问题：四个可选样式（Material You、Fancy、Material、Hyper OS）现在分别配置可见滑块尺寸、内层轨道留白及配色；Material You 使用标准 20dp 滑块，Fancy 使用 22dp 滑块，Material 使用 18dp 紧凑滑块，Hyper OS 使用 20×24dp 竖向滑块。各样式对应的轨道内缩分别为 4dp、3dp、5dp、4dp。
+- 包裹滑轨的外层轨道高度从 24dp 增至 32dp，让底色上下更宽、更明显。外层底色不再使用中性色 `surfaceContainerHighest`，改为随主题动态变化的 `secondaryContainer` 或 `tertiaryContainer`；滑块/已填充进度仍使用对应的 primary、secondary 或 tertiary 色，避免外层底色与滑块同色。
+- 继续使用共享 Voyage 形状工厂生成轨道与滑块形状，使全局形状样式及圆角缩放设置仍可联动影响组件。滑条交互、范围与步进仍交给 Material `SliderState` 处理。
+- 参考边界：本轮检索未找到可直接查看的那段历史录屏附件，因此没有声称已逐帧对照视频；本次依据用户在当前消息中明确指出的四种样式应各自不同、轨道底色用次色/第三色且上下更宽来修正。仍需核对 Voyage 原版四种样式各自的完整绘制路径，并在设备上对照录屏检查视觉细节。
+- 只修改测试分支 `test/voyage-theme-1to1-20261026`，未修改或合并 `main`。本提交的 CI 构建与设备验收待确认；不得把旧 APK 当作本轮交付版本。
