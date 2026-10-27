@@ -229,31 +229,35 @@ private class VoyagePathShape(
                 // dan.m88494l() rather than reusing the Squircle smoothing=48 shortcut.
                 // The profile is source-defined (dan.f104767lI); its second control
                 // point supplies the tangent scale used at each radius-sized corner.
-                fun cornerInset(radius: Float): Float {
-                    if (radius <= 0f || w <= 0f || h <= 0f) return 0f
-                    // ban.m5206I() derives the corner profile from both half extents;
-                    // use the limiting axis so wide and tall surfaces do not share
-                    // one hard-coded curve when their aspect ratios differ.
-                    val widthProgress = VoyageG2Profile.smooth.aspectProgress(w / 2f, radius)
-                    val heightProgress = VoyageG2Profile.smooth.aspectProgress(h / 2f, radius)
-                    val profile = VoyageG2Profile.smooth.interpolateFromCapsule(
-                        minOf(widthProgress, heightProgress)
-                    ).cubic()
-                    return (1.0 - profile.p2.x).toFloat().coerceIn(0.08f, 0.92f)
+                data class CornerInsets(val horizontal: Float, val vertical: Float)
+
+                fun cornerInsets(radius: Float): CornerInsets {
+                    if (radius <= 0f || w <= 0f || h <= 0f) return CornerInsets(0f, 0f)
+                    // Keep the horizontal and vertical aspect progress independent.
+                    // Voyage ban.m5206I() derives eight progress values rather than
+                    // collapsing a non-square surface to one limiting-axis value.
+                    fun inset(progress: Double): Float {
+                        val profile = VoyageG2Profile.smooth.interpolateFromCapsule(progress).cubic()
+                        return (1.0 - profile.p2.x).toFloat().coerceIn(0.08f, 0.92f)
+                    }
+                    val horizontalProgress = VoyageG2Profile.smooth.aspectProgress(w / 2f, radius)
+                    val verticalProgress = VoyageG2Profile.smooth.aspectProgress(h / 2f, radius)
+                    return CornerInsets(inset(horizontalProgress), inset(verticalProgress))
                 }
-                val tlInset = cornerInset(tl)
-                val trInset = cornerInset(tr)
-                val brInset = cornerInset(br)
-                val blInset = cornerInset(bl)
+
+                val tlInset = cornerInsets(tl)
+                val trInset = cornerInsets(tr)
+                val brInset = cornerInsets(br)
+                val blInset = cornerInsets(bl)
                 path.moveTo(tl, 0f)
                 path.lineTo(w - tr, 0f)
-                if (tr > 0f) path.cubicTo(w - tr * trInset, 0f, w, tr * trInset, w, tr)
+                if (tr > 0f) path.cubicTo(w - tr * trInset.horizontal, 0f, w, tr * trInset.vertical, w, tr)
                 path.lineTo(w, h - br)
-                if (br > 0f) path.cubicTo(w, h - br * brInset, w - br * brInset, h, w - br, h)
+                if (br > 0f) path.cubicTo(w, h - br * brInset.vertical, w - br * brInset.horizontal, h, w - br, h)
                 path.lineTo(bl, h)
-                if (bl > 0f) path.cubicTo(bl * blInset, h, 0f, h - bl * blInset, 0f, h - bl)
+                if (bl > 0f) path.cubicTo(bl * blInset.horizontal, h, 0f, h - bl * blInset.vertical, 0f, h - bl)
                 path.lineTo(0f, tl)
-                if (tl > 0f) path.cubicTo(0f, tl * tlInset, tl * tlInset, 0f, tl, 0f)
+                if (tl > 0f) path.cubicTo(0f, tl * tlInset.vertical, tl * tlInset.horizontal, 0f, tl, 0f)
             }
             4 -> {
                 // Voyage source: p000/wgo0.java, mo5154ll + m140359lI/m140360lO/
