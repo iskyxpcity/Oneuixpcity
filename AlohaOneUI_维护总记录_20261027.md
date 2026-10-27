@@ -369,3 +369,12 @@
 - 再次核对 Voyage 反编译 vhf.m138081l(...)：该方法将实际 20dp thumb 交互槽与阴影 modifier 连接；交互列表为空时采用 1dp 阴影，交互进行时采用 6dp 阴影，并受启用状态控制。当前修复提交 3ad1aae5f8c0ef0d04bc532af5c40fa63bc9ad5d 将按下状态接入 thumb 的阴影层，并确保阴影只作用于滑块本体，不覆盖整条 Slider 触摸区域；72089c469446068eeba5f1926a737836af00ecaa 将通用 Material Slider 的 interaction source 接线到共享 thumb。
 - 未完成项必须明确：当前只修复已查实的阴影缺失。四种 Voyage 样式各自的 thumb 本体背景/填充、描边与 enabled/active 颜色映射尚未全部从 qhf、y8f0 及四条组件路径逐项还原；轨道背景色与刻度绘制也仍需对照原始参数验收。因此本次不能声称视觉 1:1 完成，后续需继续源码追踪并在构建日志通过后验证 APK。
 - 仅更新测试分支 test/voyage-theme-1to1-20261026，未修改 main。本次源代码改动后必须检查最新 Actions；若编译失败，按真实错误修复。
+
+
+## 2026-10-27 继续移植：复核滑块阴影作用域与样式差异（未冒进修改参数）
+
+- 本轮重新读取当前测试分支 `SegmentedSliderItem.kt`、`AlohaOneUISlider.kt`、`ExpressiveSwitch.kt` 以及最新 Actions。当前 Build #1708 / Run `40518891979` 对 HEAD `be424b0da70fe532cf490c27000d37be3e978a67` 结论为 success；这是编译结果，不是原版视觉验收。
+- 当前 `VoyageSliderThumb` 已把 shadow modifier 放在 20dp thumb Box 上，而不是整条 Slider modifier；通用 `AlohaOneUISlider` 也已传入同一 `MutableInteractionSource`。但用户反馈的实际画面仍是滑块阴影不明显/轨道呈现异常，说明仅凭 Modifier 接线不能确认原版阴影效果已复现。下一步应继续沿 Voyage `vhf.m138081l`、四条 Slider 入口与父级布局/裁切链逐项核实，尤其区分 thumb hit slot、thumb 绘制内容、track 绘制层及其父级 clipping/elevation；未确认前不继续叠加新的阴影或形状猜测。
+- 复核 `SegmentedSliderItem.kt` 与 `AlohaOneUISlider.kt` 后，确认两处仍共享手写的样式索引颜色映射和轨道高度映射（4/8/4/6dp）；`VoyageSliderTrack` 仍以单一 Canvas 的圆角轨道与刻度绘制概括多种样式。此实现目前不是四条 Voyage 原始路径的完整移植。接下来需把原版 `kdj0` 四个枚举到 `ncw0/y3w0/w3w0/v2t0` 的实际调用链逐条映射，再按各自绘制参数分开实现，而不是继续共用一套推断参数。
+- `ExpressiveSwitch.kt` 仍包含按样式索引选择的硬编码颜色、corner fraction、thumb radius/inset 与统一 Canvas 轨道/圆形 thumb。用户录屏展示原版八种开关有明显不同的几何形状；当前实现不能据此认定 8 种已还原。后续以 Voyage `j7w0.java` 八条分支的真实绘制方法和参数为依据替换，不以调节现有 fraction 代替移植。
+- 本轮没有把未经证实的值写入产品源码；维护记录仅记录当前 HEAD 的真实差距与下一步取证路径。测试分支保持 `test/voyage-theme-1to1-20261026`，未修改 `main`。Build #1708 仍不得作为最终交付 APK；所有未完成样式完成后，需对最终 HEAD 构建、签名、包名/版本、SHA-256 与 APK 完整性重新验收。
