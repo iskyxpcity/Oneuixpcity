@@ -168,7 +168,6 @@ fun SegmentedSliderItem(
                             inactiveColor = inactive,
                             outlineWidth = LocalMaterialOutlineWidth.current.dp,
                             outlineColor = MaterialTheme.colorScheme.outlineVariant,
-                            shadowEnabled = LocalMaterialShadowSliders.current,
                         )
                     },
                 )
@@ -222,7 +221,6 @@ internal fun VoyageSliderTrack(
     inactiveColor: Color,
     outlineWidth: androidx.compose.ui.unit.Dp,
     outlineColor: Color,
-    shadowEnabled: Boolean = false,
 ) {
     val passedTickColor = when (style) {
         1 -> MaterialTheme.colorScheme.onTertiary
@@ -230,17 +228,12 @@ internal fun VoyageSliderTrack(
         else -> MaterialTheme.colorScheme.onPrimary
     }
     val futureTickColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.65f)
-    // Share the app-wide Voyage shape system with the visible track and its
-    // shadow. Do not freeze the track as a pill when the user changes shape.
+    // Voyage's vhf.m138081l applies elevation to the 20dp thumb, while
+    // vhf.m138077ll draws the track segments and ticks without a track shadow.
+    // Keep the track linked to the shared shape system without adding elevation
+    // that is not present in the source draw path.
     val trackShape = voyageCornerShape(height / 2f)
-    // Keep the track's elevation on the visible track layer, not the full
-    // Slider touch target. The same global shadow switch controls thumb + track.
-    val trackModifier = Modifier
-        .fillMaxWidth()
-        .height(height)
-        .then(if (shadowEnabled) Modifier.shadow(1.dp, trackShape, clip = false) else Modifier)
-        .clip(trackShape)
-    Canvas(trackModifier) {
+    Canvas(Modifier.fillMaxWidth().height(height).clip(trackShape)) {
         val h = size.height
         val centerY = h / 2f
         // Keep the visual track endpoints aligned with the actual thumb center.

@@ -5,6 +5,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -12,10 +13,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.rounded.Block
+import androidx.compose.material.icons.rounded.Shuffle
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
@@ -37,6 +41,8 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.material3.ripple
 import com.alohaoneui.app.R
@@ -45,7 +51,7 @@ import com.alohaoneui.app.ui.theme.LocalMaterialShadowTopBars
 import kotlin.math.pow
 
 internal const val ICON_SHAPE_NONE = -1
-internal const val ICON_SHAPE_PRESET_COUNT = 50
+internal const val ICON_SHAPE_PRESET_COUNT = 51
 internal const val ICON_SHAPE_RANDOM = ICON_SHAPE_PRESET_COUNT
 internal const val ICON_SHAPE_OPTION_COUNT = ICON_SHAPE_PRESET_COUNT + 2
 
@@ -121,9 +127,14 @@ internal fun IconShapePresetDetailScreen(
             )
         },
     ) { paddingValues ->
-        LazyColumn(
-            modifier = Modifier.fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection).padding(paddingValues),
-            contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
+        LazyVerticalGrid(
+            columns = GridCells.Adaptive(minSize = 52.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .nestedScroll(scrollBehavior.nestedScrollConnection)
+                .padding(paddingValues),
+            contentPadding = PaddingValues(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             items(ICON_SHAPE_OPTION_COUNT) { option ->
@@ -133,8 +144,12 @@ internal fun IconShapePresetDetailScreen(
                     else -> ICON_SHAPE_NONE
                 }
                 val selected = selectedIndex == style
-                val shape = remember(style) {
-                    iconShapeForStyle(style, seed = style * 17 + 3) ?: RectangleShape
+                val previewShape = remember(style) {
+                    if (style in 0 until ICON_SHAPE_PRESET_COUNT) {
+                        iconShapeForStyle(style) ?: RectangleShape
+                    } else {
+                        RectangleShape
+                    }
                 }
                 val label = when (style) {
                     ICON_SHAPE_NONE -> stringResource(R.string.theme_icon_shape_none)
@@ -142,49 +157,63 @@ internal fun IconShapePresetDetailScreen(
                     else -> "${stringResource(R.string.theme_icon_shape_title)} ${style + 1}"
                 }
                 val interactionSource = remember(style) { MutableInteractionSource() }
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(52.dp)
-                        .clip(voyageCornerShape(8.dp))
-                        .background(
-                            if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
-                            else MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
-                        )
-                        .clickable(
-                            interactionSource = interactionSource,
-                            indication = ripple(),
-                            onClick = {
-                                haptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
-                                onSelected(style)
-                            },
-                        )
-                        .padding(horizontal = 16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                val tileShape = voyageCornerShape(14.dp)
+                val previewColor = if (selected) {
+                    MaterialTheme.colorScheme.onPrimary
+                } else {
+                    MaterialTheme.colorScheme.primary
+                }
+                Box(
+                    modifier = Modifier.fillMaxWidth().height(52.dp),
+                    contentAlignment = Alignment.Center,
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(26.dp)
-                            .clip(shape)
+                            .size(52.dp)
+                            .clip(tileShape)
                             .background(
-                                if (selected) MaterialTheme.colorScheme.onPrimary
-                                else MaterialTheme.colorScheme.primary
-                            ),
-                    )
-                    Text(
-                        text = label,
-                        color = if (selected) MaterialTheme.colorScheme.onPrimary
-                        else MaterialTheme.colorScheme.onSurface,
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
+                                if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
+                                else MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                            )
+                            .clickable(
+                                interactionSource = interactionSource,
+                                indication = ripple(),
+                                onClick = {
+                                    haptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
+                                    onSelected(style)
+                                },
+                            )
+                            .semantics { contentDescription = label },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        when (style) {
+                            ICON_SHAPE_NONE -> Icon(
+                                imageVector = Icons.Rounded.Block,
+                                contentDescription = null,
+                                modifier = Modifier.size(48.dp),
+                                tint = previewColor,
+                            )
+                            ICON_SHAPE_RANDOM -> Icon(
+                                imageVector = Icons.Rounded.Shuffle,
+                                contentDescription = null,
+                                modifier = Modifier.size(26.dp),
+                                tint = previewColor,
+                            )
+                            else -> Box(
+                                modifier = Modifier
+                                    .size(26.dp)
+                                    .clip(previewShape)
+                                    .border(2.dp, previewColor, previewShape),
+                            )
+                        }
+                    }
                 }
             }
         }
     }
 }
 
-/** Placeholder shape geometry until all fifty original Voyage paths are ported exactly. */
+/** Temporary geometry only; this catalog is not yet a source-faithful replacement for Voyage's 51 shape entries. */
 internal fun iconShapeForStyle(style: Int, seed: Int = 0): Shape? {
     if (style == ICON_SHAPE_NONE) return null
     val presetIndex = if (style == ICON_SHAPE_RANDOM) {

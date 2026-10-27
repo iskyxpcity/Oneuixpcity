@@ -154,7 +154,6 @@ fun AlohaOneUISlider(
                     inactiveColor = materialInactiveColor,
                     outlineWidth = LocalMaterialOutlineWidth.current.dp,
                     outlineColor = materialScheme.outlineVariant,
-                    shadowEnabled = LocalMaterialShadowSliders.current,
                 )
             },
         )
