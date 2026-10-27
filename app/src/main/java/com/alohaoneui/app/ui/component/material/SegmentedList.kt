@@ -160,18 +160,18 @@ private class VoyagePathShape(
                     val rbr = (br - amplitude).coerceAtLeast(0f)
                     val rbl = (bl - amplitude).coerceAtLeast(0f)
 
-                    // Voyage first computes the straight lengths after reducing each
-                    // corner by the wave amplitude; the path is inset by each adjacent
-                    // corner's amplitude and the wave then reaches the original bounds.
+                    // Direct translation of Voyage p000/wgo0.java:
+                    // each corner's wave amplitude is enabled only when either
+                    // adjacent corner radius is non-zero.
                     val xRight = w - aTR
                     val yBottom = h - aBR
                     val xTopStart = if (tl > 0f) aBL + rtl else 0f
                     val xTopEnd = if (tr > 0f) xRight - rtr else w
                     val yRightStart = if (tr > 0f) aTL + rtr else 0f
                     val yRightEnd = if (br > 0f) yBottom - rbr else h
-                    val xBottomStart = if (br > 0f) xRight - rbr else w
+                    val xBottomStart = if (br > 0f) w - rbr else w
                     val xBottomEnd = if (bl > 0f) aBL + rbl else 0f
-                    val yLeftStart = if (bl > 0f) yBottom - rbl else h
+                    val yLeftStart = if (bl > 0f) h - rbl else h
                     val yLeftEnd = if (tl > 0f) aTL + rtl else 0f
                     val topLength = (xTopEnd - xTopStart).coerceAtLeast(0f)
                     val rightLength = (yRightEnd - yRightStart).coerceAtLeast(0f)
@@ -256,11 +256,11 @@ private class VoyagePathShape(
                         // bottom, BL arc, left, TL arc. Distances are accumulated
                         // by the source segment lengths, not sample-to-sample chords.
                         addLine(xTopStart, aTL, xTopEnd, aTL, 0f, -1f, topLength, aTL)
-                        addArc(xRight - rtr, yRightStart, rtr, -90f, 90f)
-                        addLine(xRight, yRightStart, xRight, yRightEnd, 1f, 0f, rightLength, aTR)
-                        addArc(xRight - rbr, yBottom - rbr, rbr, 0f, 90f)
-                        addLine(xBottomStart, yBottom, xBottomEnd, yBottom, 0f, 1f, bottomLength, aBR)
-                        addArc(xBottomEnd, yBottom - rbl, rbl, 90f, 90f)
+                        addArc(w - rtr, aTL + rtr, rtr, -90f, 90f)
+                        addLine(w, yRightStart, w, yRightEnd, 1f, 0f, rightLength, aTR)
+                        addArc(w - rbr, h - rbr, rbr, 0f, 90f)
+                        addLine(xBottomStart, h, xBottomEnd, h, 0f, 1f, bottomLength, aBR)
+                        addArc(aBL + rbl, h - rbl, rbl, 90f, 90f)
                         addLine(aBL, yLeftStart, aBL, yLeftEnd, -1f, 0f, leftLength, aBL)
                         addArc(aBL + rtl, aTL + rtl, rtl, 180f, 90f)
 
