@@ -1,7 +1,9 @@
 package com.alohaoneui.app.ui.component.material
 
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
@@ -82,6 +84,12 @@ fun SegmentedSliderItem(
         else -> 4.dp
     }
     val interactionSource = remember { MutableInteractionSource() }
+    val sliderPressed by interactionSource.collectIsPressedAsState()
+    val sliderShadowElevation by animateDpAsState(
+        targetValue = if (sliderPressed) 4.dp else 2.dp,
+        animationSpec = spring(dampingRatio = 0.72f, stiffness = 420f),
+        label = "voyageSliderShadow",
+    )
     val sliderState = rememberSliderState(
         value = value,
         steps = steps,
@@ -121,19 +129,10 @@ fun SegmentedSliderItem(
                         .fillMaxWidth()
                         .then(
                             if (LocalMaterialShadowSliders.current) {
-                                Modifier.shadow(2.dp, voyageCornerShape(50.dp))
+                                Modifier.shadow(sliderShadowElevation, voyageCornerShape(50.dp))
                             } else {
                                 Modifier
                             }
-                        )
-                        .then(
-                            LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
-                                Modifier.border(
-                                    width = it.dp,
-                                    color = MaterialTheme.colorScheme.outlineVariant,
-                                    shape = voyageCornerShape(50.dp),
-                                )
-                            } ?: Modifier
                         ),
                     onValueChangeFinished = onValueChangeFinished,
                     interactionSource = interactionSource,
@@ -156,6 +155,8 @@ fun SegmentedSliderItem(
                             thumbWidth = thumbSize.width,
                             activeColor = active,
                             inactiveColor = inactive,
+                            outlineWidth = LocalMaterialOutlineWidth.current,
+                            outlineColor = MaterialTheme.colorScheme.outlineVariant,
                         )
                     },
                 )
@@ -173,9 +174,14 @@ private fun VoyageSliderThumb(
     interactionSource: MutableInteractionSource,
 ) {
     val pressed by interactionSource.collectIsPressedAsState()
+    val thumbScale by animateFloatAsState(
+        targetValue = if (pressed) 0.94f else 1f,
+        animationSpec = spring(dampingRatio = 0.58f, stiffness = 560f),
+        label = "voyageSliderThumbPress",
+    )
     Box(Modifier.size(width = size.width, height = size.height)) {
         Canvas(Modifier.fillMaxSize()) {
-            val d = minOf(size.width.toPx(), size.height.toPx()) * if (pressed) 0.94f else 1f
+            val d = minOf(size.width.toPx(), size.height.toPx()) * thumbScale
             val center = Offset(this.size.width / 2f, this.size.height / 2f)
             when (style) {
                 1 -> {
@@ -210,6 +216,8 @@ private fun VoyageSliderTrack(
     thumbWidth: androidx.compose.ui.unit.Dp,
     activeColor: Color,
     inactiveColor: Color,
+    outlineWidth: androidx.compose.ui.unit.Dp,
+    outlineColor: Color,
 ) {
     val passedTickColor = when (style) {
         1 -> MaterialTheme.colorScheme.onTertiary
@@ -248,6 +256,25 @@ private fun VoyageSliderTrack(
                 topLeft = Offset(left, centerY - h / 2f),
                 size = Size(activeRight - left, h),
                 cornerRadius = CornerRadius(radius, radius),
+            )
+        }
+        // The outline belongs to the visible track, not the Slider's full-height
+        // touch target. Drawing it here prevents a large pill-shaped frame around
+        // the entire slider row when the global outline width is enabled.
+        val outlinePx = outlineWidth.toPx()
+        if (outlinePx > 0f) {
+            val inset = outlinePx / 2f
+            val outlineHeight = (h - outlinePx).coerceAtLeast(0f)
+            val outlineWidthPx = (right - left - outlinePx).coerceAtLeast(0f)
+            drawRoundRect(
+                color = outlineColor,
+                topLeft = Offset(left + inset, centerY - outlineHeight / 2f),
+                size = Size(outlineWidthPx, outlineHeight),
+                cornerRadius = CornerRadius(
+                    (radius - inset).coerceAtLeast(0f),
+                    (radius - inset).coerceAtLeast(0f),
+                ),
+                style = Stroke(width = outlinePx),
             )
         }
         if (steps > 0) {
