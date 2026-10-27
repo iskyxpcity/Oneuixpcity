@@ -618,7 +618,7 @@ fun SegmentedColumn(
                 modifier = Modifier.padding(start = 16.dp, bottom = 8.dp)
             )
         }
-        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             content.forEachIndexed { index, itemContent ->
                 CompositionLocalProvider(
                     LocalListItemShapes provides defaultSingleSegmentedShape(
