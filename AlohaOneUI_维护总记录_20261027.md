@@ -485,3 +485,12 @@
 - 说明：这批是根据用户最新录屏反馈做的定向视觉修正。Switch 滑块的 0.40 比例属于本轮调整值，仍需对照 Voyage 原始录屏/DEX 再确认，不将其宣称为已经验证的原版精确值。
 - 验证状态：当前还没有本批最新 HEAD 对应的真实构建终态和 APK；必须继续获取 Actions 的真实 job 日志/构建产物并修复可能的编译问题。不能把本轮提交描述成已构建通过。
 - 下一步：检查滑条背景底色是否与 Voyage 的 Switch 关闭轨道实际同源；核实轨道阴影在主题开关开启/关闭时的表现、thumb/track 形状联动与描边；继续检查其它主题组件联动，并最终构建、签名与校验 APK。
+
+
+## 2026-10-27 用户反馈：增大列表选项卡上下间距
+
+- 产品源码提交：`94ce989ac9aa55f69596bf966bc0320363fdb7fa`（`ui: increase vertical spacing between list option cards`）。
+- 修改文件：`app/src/main/java/com/alohaoneui/app/ui/component/material/SegmentedList.kt`。
+- 将共享列表容器 `SegmentedColumn` 中相邻选项卡的垂直间距从 `2.dp` 增至 `6.dp`，让卡片之间更有呼吸感，同时不改动单个卡片内部排版、形状或点击行为。该共享容器覆盖使用 `SegmentedColumn` 的选项列表页面。
+- 本次修改已提交到 `test/voyage-theme-1to1-20261026` 测试分支；`main` 未修改。
+- 构建状态：本次产品提交之后尚未核验对应 GitHub Actions 运行与 APK 产物，因此不能宣称已编译通过或已有新 APK。后续需检查最新 HEAD 的构建结果，并在交付前验收 APK。
