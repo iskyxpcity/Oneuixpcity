@@ -278,3 +278,13 @@
 - 同步修正图标形状索引模型以对应原版数据：None 使用 `-1`，50 个基础形状使用 `0..49`，Random sentinel 使用 `50`；设置读取、保存、导入快照、ViewModel、AppSettings 和 CompositionLocal 的范围/默认值已同步改为 `-1..50`。详情列表顺序为 50 个形状、Random、None。
 - 仍有明确未完成项：`iconShapeForStyle` 的几何生成目前仍是算法近似，尚未逐项移植 `ewm.m92955ol()` 的 50 个真实路径；本次只校正父子页面层级、索引语义和可见交互，不标记图标形状 1:1 完成。
 - 本批次仅修改测试分支，不改 `main`。前一提交 `5cf517b2bdecc110b237410b65eba54bafdc3c3b` 对应 Build #1685 / Run `40506732543` 已成功，签名 APK artifact ID `12735422060`（27,771,186 bytes；ZIP SHA-256 `15b644bcd36f1979190089d2ac7ef5c4ace857b0f0ff91a024538c48a9cad296`）仅对应前一 HEAD，不是本批次产物。本次提交后必须继续检查新 Actions。
+
+
+## 2026-10-27 构建失败定位与修复：图标形状详情页导入缺失
+
+- Build #1686 / Run `40507254852` 对提交 `a0d0d9c5e558d3da7771ff3659e51decc8c6042f` 结论为 `failure`，失败在 Kotlin 编译阶段，owner 签名与 APK 产物步骤未运行。
+- 日志定位到三类导入问题：
+  - `IconShapePresetPicker.kt:16,144`：`RectangleShape` 实际应导入 `androidx.compose.ui.graphics.RectangleShape`，不是 `androidx.compose.foundation.shape.RectangleShape`。
+  - `ColorPaletteScreenMaterial.kt:135`：新增子页面状态缺少 `androidx.compose.runtime.mutableStateOf` 导入。
+  - `ColorPaletteScreenMaterial.kt:138`：调用新详情页但未导入 `IconShapePresetDetailScreen`。
+- 已按日志修正以上导入，未撤销本轮图标形状入口/索引移植。修复提交后继续检查最新 Actions，失败继续按日志修复；不得交付旧 APK。
