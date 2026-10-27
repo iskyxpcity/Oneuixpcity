@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import com.alohaoneui.app.ui.component.material.VoyageSliderThumb
 import com.alohaoneui.app.ui.component.material.VoyageSliderTrack
+import com.alohaoneui.app.ui.component.material.voyageCornerShape
 import com.alohaoneui.app.ui.theme.LocalMaterialSliderStyle
 import com.alohaoneui.app.ui.theme.LocalMaterialShadowSliders
 import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
