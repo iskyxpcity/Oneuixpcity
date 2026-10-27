@@ -679,3 +679,11 @@
 - 签名验证：APK Signature Scheme v2 验证通过；证书 SHA-256 `93bf61a6493c6b336383832eb41301bd8fe061f43566e7e384e3fdd9fc1c26a1`，与该构建的签名检查文件一致。
 - 本次是测试分支的 signed test APK；workflow 的 optimized release validation 与 GitHub Release publish 步骤被跳过，因此交付以 Actions Artifact / APK 文件为准，不宣称已发布正式 Release。
 - 设备验收仍未完成：构建成功只能证明源码编译、APK 签名与包信息验证通过，不能代替真机检查波浪形状流畅度、语言切换闪屏、开关/滑条观感及切换即时生效。
+
+
+## 2026-10-27 — 语言切换黑屏的窗口背景补强
+
+- 继续针对不同语言切换时的黑屏闪帧排查：发现主 Activity 的 `Theme.AlohaOneUI` 在日间/夜间主题里都没有显式设置 `android:windowBackground`，系统在 LocaleManager 导致 Activity 配置重建时可能短暂显示平台默认黑色窗口背景。
+- 在 `app/src/main/res/values/themes.xml` 与 `app/src/main/res/values-night/themes.xml` 的 `Theme.AlohaOneUI` 中增加 `android:windowBackground=?android:attr/colorBackground`，让 Activity 重建期间的窗口底色跟随平台日间/夜间主题背景，避免默认黑色空窗。提交：`375f4361b512ff60e366c5ee763e012b18a93e5e`、`7b64d39b742ce7b7a1131141fae31080eac943d1`。
+- 该设置不改 Startup Activity 的透明启动窗口，也不替代系统 LocaleManager 的配置切换流程。必须以最新 HEAD 构建成功后在真机上切换不同语言验证；源码推断不能代替设备确认。
+- 上一节 Run #1803 的 APK 证明此前源码版本可编译、签名和包信息验证成功；但该 APK 不包含本节窗口背景改动，因此不能作为最新修复版本交付。等待最新 HEAD 的 Actions 构建与 Artifact。
