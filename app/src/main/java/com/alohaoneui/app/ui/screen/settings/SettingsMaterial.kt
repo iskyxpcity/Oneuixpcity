@@ -127,19 +127,6 @@ fun SettingPagerMaterial(
                         )
                     }
                     add {
-                        val languageOptions = listOf(
-                            "Follow system", "简体中文", "繁體中文", "English", "日本語", "한국어"
-                        )
-                        val languageValues = listOf("system", "zh-Hans", "zh-Hant", "en", "ja", "ko")
-                        SegmentedChoiceOptionsItem(
-                            title = stringResource(R.string.settings_language),
-                            summary = stringResource(R.string.settings_language_summary),
-                            items = languageOptions,
-                            selectedIndex = languageValues.indexOf(uiState.appLanguage).coerceAtLeast(0),
-                            onItemSelected = { index -> actions.onSetAppLanguage(languageValues[index]) }
-                        )
-                    }
-                    add {
                         SegmentedListItem(
                             onClick = actions.onOpenTheme,
                             headlineContent = { Text(stringResource(id = R.string.settings_theme)) },
@@ -156,6 +143,29 @@ fun SettingPagerMaterial(
                 }
             )
 
+
+            val languageOptions = listOf(
+                "Follow system" to "system",
+                "简体中文" to "zh-Hans",
+                "繁體中文" to "zh-Hant",
+                "English" to "en",
+                "日本語" to "ja",
+                "한국어" to "ko",
+            )
+            SegmentedColumn(
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                title = stringResource(R.string.settings_group_language),
+                content = languageOptions.map { (label, value) ->
+                    {
+                        SegmentedListItem(
+                            selected = uiState.appLanguage == value ||
+                                (value == "system" && uiState.appLanguage.isBlank()),
+                            onClick = { actions.onSetAppLanguage(value) },
+                            headlineContent = { Text(label) },
+                        )
+                    }
+                }
+            )
 
             SegmentedColumn(
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
