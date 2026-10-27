@@ -84,7 +84,7 @@ fun SegmentedSliderItem(
     }
     val interactionSource = remember { MutableInteractionSource() }
     val sliderState = remember(valueRange, steps) {
-        SliderState(value = value, steps = steps, valueRange = valueRange)
+        SliderState(value, valueRange, steps)
     }
     LaunchedEffect(value) {
         sliderState.value = value
