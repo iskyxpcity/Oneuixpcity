@@ -2,6 +2,7 @@ package com.alohaoneui.app.ui.component.material
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -125,6 +126,7 @@ fun SegmentedSliderItem(
                             activeColor = active,
                             inactiveColor = inactive,
                             shadowEnabled = LocalMaterialShadowSliders.current,
+                            interactionSource = interactionSource,
                         )
                     },
                     track = { state ->
@@ -154,13 +156,25 @@ internal fun VoyageSliderThumb(
     activeColor: Color,
     inactiveColor: Color,
     shadowEnabled: Boolean = false,
+    interactionSource: MutableInteractionSource? = null,
 ) {
-    // The decompiled thumb paths are selected by h7w0.m99521O and routed
-    // through y8f0.m144829o / vhf.m138079I / vhf.m138080O. The previous
-    // concentric rings and arbitrary rounded-square variants were not in
-    // those paths, so keep the thumb as a single filled source-sized shape
-    // until each style's exact path is ported.
-    Box(Modifier.size(width = size.width, height = size.height)) {
+    // Voyage's vhf.m138081l uses a 1dp resting shadow and raises it to 6dp
+    // while the interaction source is active. Keep this on the thumb only,
+    // never on the whole Slider/touch target.
+    val pressed by (interactionSource?.collectIsPressedAsState()
+        ?: remember { androidx.compose.runtime.mutableStateOf(false) })
+    val thumbModifier = Modifier
+        .size(width = size.width, height = size.height)
+        .then(
+            if (shadowEnabled) {
+                Modifier.shadow(
+                    elevation = if (pressed) 6.dp else 1.dp,
+                    shape = CircleShape,
+                    clip = false,
+                )
+            } else Modifier
+        )
+    Box(thumbModifier) {
         Canvas(Modifier.fillMaxSize()) {
             drawCircle(
                 color = activeColor,
