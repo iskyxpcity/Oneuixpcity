@@ -254,6 +254,7 @@ internal fun VoyageSliderTrack(
     // Keep the track linked to the shared shape system without adding elevation
     // that is not present in the source draw path.
     val trackShape = voyageCornerShape(height / 2f)
+    val innerShape = voyageCornerShape((height - 8.dp).coerceAtLeast(2.dp) / 2f)
     Canvas(
         Modifier
             .fillMaxWidth()
@@ -277,7 +278,6 @@ internal fun VoyageSliderTrack(
             ((state.value - range.start) / (range.endInclusive - range.start)).coerceIn(0f, 1f)
         } else 0f
         val activeWidthPx = innerWidth * fraction
-        val innerShape = voyageCornerShape(with(this) { (innerHeight / density).dp / 2f })
         val innerOutline = innerShape.createOutline(
             size = Size(innerWidth, innerHeight),
             layoutDirection = layoutDirection,
