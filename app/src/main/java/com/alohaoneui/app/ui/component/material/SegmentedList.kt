@@ -240,6 +240,22 @@ private class VoyagePathShape(
         val bl = if (layoutDirection == LayoutDirection.Ltr) bs else be
         val w = size.width
         val h = size.height
+
+        // Voyage ban.m5206I() delegates equal-radius shapes that touch a full
+        // half-extent to m5208l(). Its square branch is a true circular outline,
+        // not the generic four-cubic approximation used for ordinary G² corners.
+        // Preserve that degenerate case before constructing the general path.
+        if (style == 3 && w > 0f && w == h &&
+            tl == tr && tr == br && br == bl && tl * 2f == w
+        ) {
+            return Outline.Rounded(
+                androidx.compose.ui.geometry.RoundRect(
+                    0f, 0f, w, h,
+                    androidx.compose.ui.geometry.CornerRadius(w / 2f, h / 2f),
+                ),
+            )
+        }
+
         val path = Path()
         when (style) {
             2 -> {
