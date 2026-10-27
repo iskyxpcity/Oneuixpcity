@@ -59,6 +59,7 @@ import top.yukonga.miuix.kmp.basic.TopAppBar
 import top.yukonga.miuix.kmp.blur.layerBackdrop
 import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
+import top.yukonga.miuix.kmp.preference.RadioButtonPreference
 import top.yukonga.miuix.kmp.preference.SwitchPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme
 import top.yukonga.miuix.kmp.utils.overScrollVertical
@@ -149,24 +150,22 @@ fun SettingPagerMiuix(
                             selectedIndex = if (uiState.uiMode == UiMode.Material.value) 1 else 0,
                             onSelectedIndexChange = actions.onSetUiModeIndex
                         )
-                        OverlayDropdownPreference(
-                            title = stringResource(id = R.string.settings_language),
-                            summary = stringResource(id = R.string.settings_language_summary),
-                            items = listOf("Follow system", "简体中文", "繁體中文", "English", "日本語", "한국어"),
-                            startAction = {
-                                Icon(
-                                    Icons.Rounded.Language,
-                                    modifier = Modifier.padding(end = 6.dp),
-                                    contentDescription = stringResource(id = R.string.settings_language),
-                                    tint = colorScheme.onBackground
-                                )
-                            },
-                            selectedIndex = listOf("system", "zh-Hans", "zh-Hant", "en", "ja", "ko")
-                                .indexOf(uiState.appLanguage).coerceAtLeast(0),
-                            onSelectedIndexChange = { index ->
-                                actions.onSetAppLanguage(listOf("system", "zh-Hans", "zh-Hant", "en", "ja", "ko")[index])
-                            }
+                        val languageOptions = listOf(
+                            "Follow system" to "system",
+                            "简体中文" to "zh-Hans",
+                            "繁體中文" to "zh-Hant",
+                            "English" to "en",
+                            "日本語" to "ja",
+                            "한국어" to "ko",
                         )
+                        languageOptions.forEach { (label, value) ->
+                            RadioButtonPreference(
+                                title = label,
+                                selected = uiState.appLanguage == value ||
+                                    (value == "system" && uiState.appLanguage.isBlank()),
+                                onClick = { actions.onSetAppLanguage(value) },
+                            )
+                        }
                         ArrowPreference(
                             title = stringResource(id = R.string.settings_theme),
                             summary = stringResource(id = R.string.settings_theme_summary),
