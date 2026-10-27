@@ -31,10 +31,14 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.DrawStyle
+import androidx.compose.ui.graphics.Fill
+import androidx.compose.ui.graphics.Outline
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipRect
-import androidx.compose.ui.graphics.drawscope.drawOutline
 import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.DpSize
@@ -267,10 +271,10 @@ internal fun VoyageSliderTrack(
             density = this,
         )
         withTransform({ translate(left, 0f) }) {
-            drawOutline(trackOutline, inactiveColor)
+            drawVoyageOutline(trackOutline, inactiveColor)
             if (activeWidthPx > 0f) {
                 clipRect(left = 0f, top = 0f, right = activeWidthPx, bottom = h) {
-                    drawOutline(trackOutline, activeColor)
+                    drawVoyageOutline(trackOutline, activeColor)
                 }
             }
 
@@ -278,7 +282,7 @@ internal fun VoyageSliderTrack(
             // global outline setting attached to this track geometry only.
             val outlinePx = outlineWidth.toPx()
             if (outlinePx > 0f) {
-                drawOutline(
+                drawVoyageOutline(
                     outline = trackOutline,
                     color = outlineColor,
                     style = Stroke(width = outlinePx),
@@ -302,3 +306,34 @@ internal fun VoyageSliderTrack(
         }
     }
 }
+
+/**
+ * Draw a Compose Shape outline using the Canvas primitives available in the
+ * project's pinned Compose version. Rounded outlines are converted to a Path
+ * so asymmetric corners and custom Voyage paths are preserved.
+ */
+private fun DrawScope.drawVoyageOutline(
+    outline: Outline,
+    color: Color,
+    style: DrawStyle = Fill,
+) {
+    when (outline) {
+        is Outline.Rectangle -> drawRect(
+            color = color,
+            topLeft = outline.rect.topLeft,
+            size = outline.rect.size,
+            style = style,
+        )
+        is Outline.Rounded -> drawPath(
+            path = Path().apply { addRoundRect(outline.roundRect) },
+            color = color,
+            style = style,
+        )
+        is Outline.Generic -> drawPath(
+            path = outline.path,
+            color = color,
+            style = style,
+        )
+    }
+}
+

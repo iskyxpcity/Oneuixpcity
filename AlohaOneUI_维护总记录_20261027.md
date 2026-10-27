@@ -445,3 +445,8 @@
 - **未完成边界：**这一步修复的是共享形状轮廓和交互阴影的断链，不代表四种 Voyage Slider 的完整 1:1。四条分支的轨道线宽、具体颜色角色、thumb 本体填充/描边以及状态动画仍需按 `kdj0.java`、`h7w0.java`、`ncw0.java`、`y3w0.java`、`w3w0.java`、`v2t0.java`、`y8f0.java`、`vhf.java` 和对应 slot 继续核对。
 - 当前修改只计划写入 `test/voyage-theme-1to1-20261026`，未修改/合并 `main`。本批 Actions 构建结果待实际运行后追加；旧 Build #1731 不能证明本批代码已通过编译。
 
+## 2026-10-27 构建故障定位：当前 Compose 版本不暴露 drawOutline 扩展
+
+- Build #1732 / Run `40569099232` 对提交 `c294b364df1dd969104c3f3ab5c84b5235652d26` 的真实结果为 `failure`，失败步骤为 `:app:compileDebugKotlin`。诊断日志只有一类编译错误：`SegmentedSliderItem.kt` 中 `drawOutline` 在导入处及 3 个调用点均为 unresolved reference；不是签名密钥、包名或 APK 打包故障。
+- 修复方案：改为使用当前项目 Compose 版本确实提供的 `DrawScope.drawRect/drawPath`，增加本地 `drawVoyageOutline` 适配器，分别处理 `Outline.Rectangle`、`Outline.Rounded`（保留四角路径）和 `Outline.Generic`（直接绘制 Voyage 自定义路径），继续保留轨道形状联动意图，不回退到固定圆角矩形。
+- 本次修复只写测试分支；修复提交后的 Actions 尚待运行。不得把 Build #1732 标为成功，也不得把旧 APK 当作本批产物。
