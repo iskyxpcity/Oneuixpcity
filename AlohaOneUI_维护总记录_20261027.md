@@ -378,3 +378,13 @@
 - 复核 `SegmentedSliderItem.kt` 与 `AlohaOneUISlider.kt` 后，确认两处仍共享手写的样式索引颜色映射和轨道高度映射（4/8/4/6dp）；`VoyageSliderTrack` 仍以单一 Canvas 的圆角轨道与刻度绘制概括多种样式。此实现目前不是四条 Voyage 原始路径的完整移植。接下来需把原版 `kdj0` 四个枚举到 `ncw0/y3w0/w3w0/v2t0` 的实际调用链逐条映射，再按各自绘制参数分开实现，而不是继续共用一套推断参数。
 - `ExpressiveSwitch.kt` 仍包含按样式索引选择的硬编码颜色、corner fraction、thumb radius/inset 与统一 Canvas 轨道/圆形 thumb。用户录屏展示原版八种开关有明显不同的几何形状；当前实现不能据此认定 8 种已还原。后续以 Voyage `j7w0.java` 八条分支的真实绘制方法和参数为依据替换，不以调节现有 fraction 代替移植。
 - 本轮没有把未经证实的值写入产品源码；维护记录仅记录当前 HEAD 的真实差距与下一步取证路径。测试分支保持 `test/voyage-theme-1to1-20261026`，未修改 `main`。Build #1708 仍不得作为最终交付 APK；所有未完成样式完成后，需对最终 HEAD 构建、签名、包名/版本、SHA-256 与 APK 完整性重新验收。
+
+
+## 2026-10-27 继续移植：滑条轨道阴影联动第一步
+
+- 分支仍为 `test/voyage-theme-1to1-20261026`，未修改 `main`。
+- 修改 `app/src/main/java/com/alohaoneui/app/ui/component/material/SegmentedSliderItem.kt`：为可见轨道层加入独立阴影 modifier；阴影形状随现有轨道形状参数分支变化；轨道阴影读取 `LocalMaterialShadowSliders`，与滑块共用同一开关，不再只控制滑块。
+- 修改 `app/src/main/java/com/alohaoneui/mod/ui/component/AlohaOneUISlider.kt`：通用 Material 滑条入口也把相同阴影开关传入轨道绘制层，避免设置页和通用控件入口状态不一致。
+- 相关提交：`18299643ebf30218886dd350503713eb6d90a601`（设置页轨道阴影）；`ef477acb608c80267d5575f95fb5b51ab4fb6901`（通用滑条入口同步）。
+- 这是一项针对用户指出的“轨道背景之后还有阴影，阴影滑条开关控制开关”的第一步代码修改，不代表已完成 Voyage 1:1。当前轨道/滑块几何映射仍有硬编码，后续需继续从 Voyage 原始实现与录屏逐项校准；尤其滑块形状、圆角、尺寸及颜色的全局联动尚未完成。
+- 验收状态：代码已提交到测试分支；尚未确认新提交对应的 Actions 构建结果，也未完成 APK 下载、签名/包名/版本/SHA-256 验收。不得将旧构建当成本轮交付。
