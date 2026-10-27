@@ -475,3 +475,13 @@
 - Artifact：`AlohaOneUI-Signed-Test-APK`，ID `12764733250`，链接为 [Actions artifact](https://github.com/iskyxpcity/Oneuixpcity/actions/runs/40570224070/artifacts/12764733250)。该 run 是测试构建，**没有发布新的 GitHub Release**，也不代表 Voyage 1:1 迁移完成。
 - 源码依据：`shq.m130523I(p7r)` 在 random sentinel 被解析时从非 random shape 列表随机返回一个实际 shape。因此图标形状网格中的 Random 预览不应显示独立 Shuffle 图标；本批改为显示一个稳定的代表性 shape 轮廓，None 仍显示 Block 图标。真实 51 个预设的几何替换仍未完成：`iconShapeForStyle` 当前仍调用临时 `geometricIconShape`，后续必须按 `vqp.java` 的 26 个基础 shape 与 25 个 `qha0` RoundedPolygon 数据逐项移植。
 - 当前所有修改仅在 `test/voyage-theme-1to1-20261026`，未修改/合并 `main`。
+
+
+## 2026-10-27 用户反馈跟进：滑条未填充轨道底色/阴影与 Switch 滑块尺寸
+
+- 本批产品代码提交，均只在 `test/voyage-theme-1to1-20261026`：
+  - `bdba534d7b3e60288d88aa44364ce643c64feec8` — `SegmentedSliderItem.kt`：未填充轨道颜色改为主题 `surfaceContainerHighest`，与 Switch 关闭轨道采用相同的中性容器底色来源；将 `LocalMaterialShadowSliders` 开关传入共享 `VoyageSliderTrack`，在轨道自身几何与共享形状上添加 1dp 阴影，阴影开关关闭时不绘制该阴影。轨道形状继续使用 `voyageCornerShape()`，因此仍由共享主题形状工厂驱动。
+  - `08351676be79465ec95f8180ea89c4844b88bafc` — `ExpressiveSwitch.kt`：把八种 Switch 风格的滑块半径从约 0.30–0.36 倍轨道高度统一增至 0.40 倍，使开/关滑块明显加大；删除 Canvas 内绘制对勾/叉号的图形分支，状态改由滑块位置和颜色表达。外部传入的 `thumbContent` 插槽仍保留，以免破坏调用方自定义内容。
+- 说明：这批是根据用户最新录屏反馈做的定向视觉修正。Switch 滑块的 0.40 比例属于本轮调整值，仍需对照 Voyage 原始录屏/DEX 再确认，不将其宣称为已经验证的原版精确值。
+- 验证状态：当前还没有本批最新 HEAD 对应的真实构建终态和 APK；必须继续获取 Actions 的真实 job 日志/构建产物并修复可能的编译问题。不能把本轮提交描述成已构建通过。
+- 下一步：检查滑条背景底色是否与 Voyage 的 Switch 关闭轨道实际同源；核实轨道阴影在主题开关开启/关闭时的表现、thumb/track 形状联动与描边；继续检查其它主题组件联动，并最终构建、签名与校验 APK。
