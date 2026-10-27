@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="settings_group_language">語言</string>
     <string name="home">主頁</string>
     <string name="reboot">重新啟動</string>
     <string name="settings">設定</string>
