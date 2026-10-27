@@ -140,31 +140,43 @@ private class VoyagePathShape(
                 path.cubicTo(0f, tl * smooth, tl * smooth, 0f, tl, 0f)
             }
             4 -> {
-                // Ported from Voyage p000/wgo0.java (m140354/359/360/361 path):
-                // period=12dp, amplitude=0.9dp, target sampling=8dp, max phase
-                // subdivision=360; the source scales these against small outlines.
+                // Voyage source: p000/wgo0.java, mo5154ll + m140359lI/m140360lO/
+                // m140361lo. Keep its density scaling, radius shrink, phase length,
+                // adaptive sampling and quadratic sample joins.
                 val minDimension = minOf(w, h)
                 if (w <= 0f || h <= 0f || minDimension <= 0f) {
                     path.addRoundRect(androidx.compose.ui.geometry.RoundRect(0f, 0f, w, h))
                 } else {
-                    val densityScale = minDimension / (48f * density.density)
-                    val shapeScale = densityScale.coerceIn(0.42f, 1f)
-                    val period = (12f * density.density * shapeScale).coerceAtLeast(1f)
-                    val amplitude = (0.9f * density.density * shapeScale)
+                    val scale = (minDimension / (48f * density.density)).coerceIn(0.42f, 1f)
+                    val period = (12f * density.density * scale).coerceAtLeast(1f)
+                    val amplitude = (0.9f * density.density * scale)
                         .coerceIn(0f, minDimension / 4f)
-                    val cornerTL = if (tl > 0f || tr > 0f) amplitude else 0f
-                    val cornerTR = if (tr > 0f || br > 0f) amplitude else 0f
-                    val cornerBR = if (br > 0f || bl > 0f) amplitude else 0f
-                    val cornerBL = if (bl > 0f || tl > 0f) amplitude else 0f
+                    val aTL = if (tl > 0f || tr > 0f) amplitude else 0f
+                    val aTR = if (tr > 0f || br > 0f) amplitude else 0f
+                    val aBR = if (br > 0f || bl > 0f) amplitude else 0f
+                    val aBL = if (bl > 0f || tl > 0f) amplitude else 0f
                     val rtl = (tl - amplitude).coerceAtLeast(0f)
                     val rtr = (tr - amplitude).coerceAtLeast(0f)
                     val rbr = (br - amplitude).coerceAtLeast(0f)
                     val rbl = (bl - amplitude).coerceAtLeast(0f)
 
-                    val topLength = (w - cornerTR - cornerBL - rtr - rtl).coerceAtLeast(0f)
-                    val rightLength = (h - cornerTR - cornerBR - rtr - rbr).coerceAtLeast(0f)
-                    val bottomLength = (w - cornerBR - cornerBL - rbr - rbl).coerceAtLeast(0f)
-                    val leftLength = (h - cornerBR - cornerTL - rbr - rtl).coerceAtLeast(0f)
+                    // Voyage first computes the straight lengths after reducing each
+                    // corner by the wave amplitude; the path is inset by each adjacent
+                    // corner's amplitude and the wave then reaches the original bounds.
+                    val xRight = w - aTR
+                    val yBottom = h - aBR
+                    val xTopStart = aBL + rtl
+                    val xTopEnd = if (tr > 0f) xRight - rtr else w
+                    val yRightStart = if (tr > 0f) aTL + rtr else 0f
+                    val yRightEnd = if (br > 0f) yBottom - rbr else h
+                    val xBottomStart = if (br > 0f) xRight - rbr else w
+                    val xBottomEnd = if (bl > 0f) aBL + rbl else 0f
+                    val yLeftStart = if (bl > 0f) yBottom - rbl else h
+                    val yLeftEnd = if (tl > 0f) aTL + rtl else 0f
+                    val topLength = (xTopEnd - xTopStart).coerceAtLeast(0f)
+                    val rightLength = (yRightEnd - yRightStart).coerceAtLeast(0f)
+                    val bottomLength = (xBottomStart - xBottomEnd).coerceAtLeast(0f)
+                    val leftLength = (yLeftStart - yLeftEnd).coerceAtLeast(0f)
                     val perimeterLength = topLength + rightLength + bottomLength + leftLength +
                         (rtl + rtr + rbr + rbl) * (Math.PI.toFloat() / 2f)
 
@@ -184,13 +196,14 @@ private class VoyagePathShape(
                             val point: androidx.compose.ui.geometry.Offset,
                             val normal: androidx.compose.ui.geometry.Offset,
                             val phaseDistance: Float,
+                            val localAmplitude: Float,
                         )
                         val samples = mutableListOf<WaveSample>()
                         var phaseDistance = 0f
 
                         fun addLine(
                             x0: Float, y0: Float, x1: Float, y1: Float,
-                            nx: Float, ny: Float, length: Float,
+                            nx: Float, ny: Float, length: Float, localAmplitude: Float,
                         ) {
                             val count = kotlin.math.ceil(length / sampleStep).toInt().coerceAtLeast(1)
                             for (i in 0..count) {
@@ -201,7 +214,8 @@ private class VoyagePathShape(
                                         y0 + (y1 - y0) * t
                                     ),
                                     androidx.compose.ui.geometry.Offset(nx, ny),
-                                    phaseDistance + length * t
+                                    phaseDistance + length * t,
+                                    localAmplitude
                                 )
                             }
                             phaseDistance += length
@@ -222,24 +236,27 @@ private class VoyagePathShape(
                                 samples += WaveSample(
                                     androidx.compose.ui.geometry.Offset(cx + radius * nx, cy + radius * ny),
                                     androidx.compose.ui.geometry.Offset(nx, ny),
-                                    phaseDistance + arcLength * t
+                                    phaseDistance + arcLength * t,
+                                    amplitude
                                 )
                             }
                             phaseDistance += arcLength
                         }
 
-                        // Voyage's perimeter order and corner-center offsets.
-                        addLine(cornerBL + rtl, 0f, w - cornerTR - rtr, 0f, 0f, -1f, topLength)
-                        addArc(w - cornerTR - rtr, cornerTR + rtr, rtr, -90f, 90f)
-                        addLine(w, cornerTR + rtr, w, h - cornerBR - rbr, 1f, 0f, rightLength)
-                        addArc(w - cornerBR - rbr, h - cornerBR - rbr, rbr, 0f, 90f)
-                        addLine(w - cornerBR - rbr, h, cornerBL + rbl, h, 0f, 1f, bottomLength)
-                        addArc(cornerBL + rbl, h - cornerBL - rbl, rbl, 90f, 90f)
-                        addLine(0f, h - cornerBL - rbl, 0f, cornerTL + rtl, -1f, 0f, leftLength)
-                        addArc(cornerTL + rtl, cornerTL + rtl, rtl, 180f, 90f)
+                        // Voyage's perimeter order: top, TR arc, right, BR arc,
+                        // bottom, BL arc, left, TL arc. Distances are accumulated
+                        // by the source segment lengths, not sample-to-sample chords.
+                        addLine(xTopStart, aTL, xTopEnd, aTL, 0f, -1f, topLength, aTL)
+                        addArc(xTopEnd - rtr, aTL + rtr, rtr, -90f, 90f)
+                        addLine(xRight, yRightStart, xRight, yRightEnd, 1f, 0f, rightLength, aTR)
+                        addArc(xRight - rbr, yRightEnd, rbr, 0f, 90f)
+                        addLine(xBottomStart, yBottom, xBottomEnd, yBottom, 0f, 1f, bottomLength, aBR)
+                        addArc(xBottomEnd, yBottom - rbl, rbl, 90f, 90f)
+                        addLine(0f, yLeftStart, 0f, yLeftEnd, -1f, 0f, leftLength, aBL)
+                        addArc(aBL + rtl, aTL + rtl, rtl, 180f, 90f)
 
                         val displaced = samples.map { sample ->
-                            val wave = amplitude * kotlin.math.sin(
+                            val wave = sample.localAmplitude * kotlin.math.sin(
                                 sample.phaseDistance * 2f * Math.PI.toFloat() / period
                             )
                             androidx.compose.ui.geometry.Offset(
