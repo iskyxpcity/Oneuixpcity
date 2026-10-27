@@ -243,3 +243,10 @@
 - 当前仍属于主题组件实现阶段，四种视觉尚未与 Voyage 原始 APK 完成逐像素验收；不得将其标注为已完成 1:1。
 - 最新提交已触发 GitHub Actions，需等待该分支最新代码的构建结果；若失败，读取日志并修复后再继续批量实现。
 - 下一批仍按既定顺序推进 50 种图标形状预设，再处理 Smooth G²；不触碰 `main`。
+
+## 2026-10-26 HST 续查：Slider 构建确认与 50 种图标形状预审
+
+- 检查最新工作流 Run #1637（ID `40469136995`），当前 HEAD `47ceff6d7eaf3a4e96ef7a64160ed44cb3400c58` 的 build job 为 `completed / success`。较早的 Slider 首版提交曾在 Kotlin 编译阶段失败，错误涉及 `rememberSliderState` 参数名和 Canvas 绘制作用域中的 Composable 调用；后续 API 修正已包含在当前 HEAD 并通过编译。该结果只确认当前代码可编译，不等于 Voyage 原版视觉 1:1 验收。
+- 开始下一顺序任务前，对图标形状设置链路做了预审：`ColorPaletteScreenMaterial.kt` 目前只提供 `None` 与 `Random` 两项；`SettingsRepositoryImpl.kt` 将 `materialIconShapeStyle` 限制在 `0..1`；`LocalMaterialIconShapeStyle` 已由主题提供，但 50 个原版形状预设、逐项预览和对应应用行为尚未移植完成。
+- Voyage 原 APK 可供本地检查，但当前取得的拆分材料主要是 DEX 与资源框架 XML，目标逻辑使用混淆类名。后续必须继续核对原版形状数据与 `None=-1`、`Random` sentinel 的实际索引/保存行为；不以临时生成的近似形状冒充原版。
+- 本轮继续严格按既定顺序：先完成四种 Slider 的原版对照，再推进 50 种图标形状，Smooth G² 仍最后处理。分支约束不变：只改 `test/voyage-theme-1to1-20261026`，不改 `main`。
