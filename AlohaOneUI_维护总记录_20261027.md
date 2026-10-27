@@ -687,3 +687,14 @@
 - 在 `app/src/main/res/values/themes.xml` 与 `app/src/main/res/values-night/themes.xml` 的 `Theme.AlohaOneUI` 中增加 `android:windowBackground=?android:attr/colorBackground`，让 Activity 重建期间的窗口底色跟随平台日间/夜间主题背景，避免默认黑色空窗。提交：`375f4361b512ff60e366c5ee763e012b18a93e5e`、`7b64d39b742ce7b7a1131141fae31080eac943d1`。
 - 该设置不改 Startup Activity 的透明启动窗口，也不替代系统 LocaleManager 的配置切换流程。必须以最新 HEAD 构建成功后在真机上切换不同语言验证；源码推断不能代替设备确认。
 - 上一节 Run #1803 的 APK 证明此前源码版本可编译、签名和包信息验证成功；但该 APK 不包含本节窗口背景改动，因此不能作为最新修复版本交付。等待最新 HEAD 的 Actions 构建与 Artifact。
+
+
+## 2026-10-27 — Run #1807：包含窗口背景修复的最新构建
+
+- 最新源码 HEAD：`452b12a43bae86e7da125a0f77d71e81aec1a69c`（本维护记录更新前的 HEAD）；GitHub Actions Run #1807 / ID `40592035710` 成功。
+- 本次构建包含日间与夜间 `Theme.AlohaOneUI` 的 `android:windowBackground` 修复，以及本节之前记录的 Switch、Slider、波浪路径采样、语言选择与语言重建优化。Compile、owner-signed APK 构建、包信息/签名验证和 Artifact 保存均成功。
+- 最新 Artifact ID：`12775365629`，名称 `AlohaOneUI-Signed-Test-APK`。APK：`AlohaOneUI_1.0.261025_BUILD_1807.apk`，大小 28,788,337 bytes。
+- APK SHA-256：`3ebe5feda548e711fa7c1946cb93f8444a76088e40b4f5e91662b625c1f50292`。
+- 包名 `com.alohaoneui.app`；versionName `1.0.261025`；versionCode `16`；签名证书 SHA-256 `93bf61a6493c6b336383832eb41301bd8fe061f43566e7e384e3fdd9fc1c26a1`。
+- 直接 APK 文件已从 Artifact ZIP 中提取，并在工作环境重新计算 SHA-256，与 Artifact 内的 `SHA256SUMS` 完全一致。该构建仍是测试分支 signed test APK，workflow 未发布 GitHub Release。
+- 真机验收仍待完成。尤其要在 Android 13+ 设备上切换到不同语言观察是否仍出现闪帧，并实际检查波浪样式流畅度与 Slider 样式即时切换；构建成功不等于这些视觉/交互问题已在设备上彻底解决。
