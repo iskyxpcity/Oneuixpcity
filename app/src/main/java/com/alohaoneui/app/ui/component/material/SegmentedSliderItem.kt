@@ -69,13 +69,10 @@ fun SegmentedSliderItem(
         3 -> scheme.surfaceContainerHighest
         else -> scheme.secondaryContainer
     }
-    // Voyage's source dispatches styles through h7w0.m99521O(...):
-    // the y8f0 path uses a 16dp visual slot, while vhf.m138079I /
-    // vhf.m138080O use a 32dp slot. Do not invent intermediate thumb sizes.
-    val thumbSize = when (style) {
-        0, 1 -> DpSize(16.dp, 16.dp)
-        else -> DpSize(32.dp, 32.dp)
-    }
+    // Source check: j5v0.m105238O and z4v0.m147159l both apply
+    // Modifier.size(20.dp, 20.dp) to the thumb hit/visual slot.
+    // The 16dp and 32dp values belong to separate track containers, not thumbs.
+    val thumbSize = DpSize(20.dp, 20.dp)
     val trackHeight = when (style) {
         1 -> 8.dp
         2 -> 4.dp
