@@ -124,6 +124,68 @@ private class VoyagePathShape(
                 path.lineTo(0f, tl)
                 path.cubicTo(0f, tl * smooth, tl * smooth, 0f, tl, 0f)
             }
+            4 -> {
+                // Voyage Wavy: sample the rounded perimeter and displace each point
+                // along its outward normal. The source defaults are period=12dp,
+                // amplitude=0.9dp and sample step=8dp.
+                val period = with(density) { 12.dp.toPx() }.coerceAtLeast(1f)
+                val amplitude = with(density) { 0.9.dp.toPx() }
+                val step = with(density) { 8.dp.toPx() }.coerceAtLeast(1f)
+                val points = mutableListOf<Pair<androidx.compose.ui.geometry.Offset, androidx.compose.ui.geometry.Offset>>()
+                fun addEdge(x0: Float, y0: Float, x1: Float, y1: Float, nx: Float, ny: Float) {
+                    val length = kotlin.math.hypot(x1 - x0, y1 - y0)
+                    val count = kotlin.math.ceil(length / step).toInt().coerceAtLeast(1)
+                    for (i in 0..count) {
+                        val t = i.toFloat() / count
+                        points += androidx.compose.ui.geometry.Offset(x0 + (x1 - x0) * t, y0 + (y1 - y0) * t) to
+                            androidx.compose.ui.geometry.Offset(nx, ny)
+                    }
+                }
+                fun addCorner(cx: Float, cy: Float, radius: Float, start: Float, sweep: Float, nxSign: Float, nySign: Float) {
+                    if (radius <= 0f) return
+                    val arcLength = kotlin.math.PI.toFloat() * radius / 2f
+                    val count = kotlin.math.ceil(arcLength / step).toInt().coerceAtLeast(2)
+                    for (i in 0..count) {
+                        val angle = Math.toRadians((start + sweep * i.toFloat() / count).toDouble())
+                        val nx = kotlin.math.cos(angle).toFloat()
+                        val ny = kotlin.math.sin(angle).toFloat()
+                        points += androidx.compose.ui.geometry.Offset(cx + radius * nx, cy + radius * ny) to
+                            androidx.compose.ui.geometry.Offset(nx * nxSign, ny * nySign)
+                    }
+                }
+                // Clockwise perimeter: top edge, top-right corner, right edge, etc.
+                addEdge(tl, 0f, w - tr, 0f, 0f, -1f)
+                addCorner(w - tr, tr, tr, -90f, 90f, 1f, 1f)
+                addEdge(w, tr, w, h - br, 1f, 0f)
+                addCorner(w - br, h - br, br, 0f, 90f, 1f, 1f)
+                addEdge(w - br, h, bl, h, 0f, 1f)
+                addCorner(bl, h - bl, bl, 90f, 90f, 1f, 1f)
+                addEdge(0f, h - bl, 0f, tl, -1f, 0f)
+                addCorner(tl, tl, tl, 180f, 90f, 1f, 1f)
+                if (points.isNotEmpty()) {
+                    val perimeter = mutableListOf<androidx.compose.ui.geometry.Offset>()
+                    var distance = 0f
+                    points.forEachIndexed { index, pair ->
+                        if (index > 0) {
+                            val previous = points[index - 1].first
+                            distance += kotlin.math.hypot(pair.first.x - previous.x, pair.first.y - previous.y)
+                        }
+                        val wave = amplitude * kotlin.math.sin(distance * 2f * Math.PI.toFloat() / period)
+                        perimeter += androidx.compose.ui.geometry.Offset(
+                            pair.first.x + pair.second.x * wave,
+                            pair.first.y + pair.second.y * wave
+                        )
+                    }
+                    path.moveTo(perimeter.first().x, perimeter.first().y)
+                    for (i in 1 until perimeter.size) {
+                        val previous = perimeter[i - 1]
+                        val current = perimeter[i]
+                        path.quadraticTo(previous.x, previous.y, (previous.x + current.x) / 2f, (previous.y + current.y) / 2f)
+                    }
+                    path.lineTo(perimeter.last().x, perimeter.last().y)
+                    path.close()
+                }
+            }
             5 -> {
                 path.moveTo(tl, 0f)
                 path.lineTo(w - tr, 0f)
@@ -171,7 +233,7 @@ fun voyageCornerShape(radius: androidx.compose.ui.unit.Dp): Shape {
     val style = LocalMaterialShapeStyle.current
     return when (style) {
         1 -> CutCornerShape(scaledRadius)
-        2, 5, 6 -> VoyagePathShape(style, scaledRadius, scaledRadius, scaledRadius, scaledRadius)
+        2, 4, 5, 6 -> VoyagePathShape(style, scaledRadius, scaledRadius, scaledRadius, scaledRadius)
         else -> RoundedCornerShape(scaledRadius)
     }
 }
@@ -220,7 +282,7 @@ fun voyageSegmentedShape(index: Int, count: Int, vertical: Boolean = true): Shap
 
     return when (LocalMaterialShapeStyle.current) {
         1 -> CutCornerShape(topStart, topEnd, bottomEnd, bottomStart)
-        2, 5, 6 -> VoyagePathShape(LocalMaterialShapeStyle.current, topStart, topEnd, bottomEnd, bottomStart)
+        2, 4, 5, 6 -> VoyagePathShape(LocalMaterialShapeStyle.current, topStart, topEnd, bottomEnd, bottomStart)
         else -> RoundedCornerShape(topStart, topEnd, bottomEnd, bottomStart)
     }
 }
