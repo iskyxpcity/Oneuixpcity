@@ -153,3 +153,17 @@
 - 日志中的确切错误：`IconShapePresetPicker.kt:13:42` 与 `IconShapePresetPicker.kt:55:28` 均报 `Unresolved reference 'RectangleShape'`。根因是导入写成 `androidx.compose.foundation.shape.RectangleShape`，但当前 Compose API 的 `RectangleShape` 应从 `androidx.compose.ui.graphics.RectangleShape` 导入。
 - 已修复产品源码并提交到测试分支：`67769c6fe925511b9a6b6208f52aa5c2baf3372b`（`fix: import Compose RectangleShape from graphics package`）。修改仅纠正 import，不改变 None 预览使用矩形、不裁切的原意；未修改 `main`。
 - 当前状态：修复提交已写入分支，新的 Actions 运行结果仍待核验。此刻不宣称构建通过，也没有可交付的新 APK。必须继续读取后续运行日志；若再失败，按新日志继续修复，直到成功构建并验证 APK 包名、版本、签名与 SHA-256。
+
+
+## 2026-10-27 后续推进：主题设置列表行按压动效与动态阴影统一
+
+- 产品源码提交：`0c8d789fd9efac1d68d077891e07e344221ea4a7`（`fix: animate Voyage settings list rows and container shadows`），仅写入 `test/voyage-theme-1to1-20261026`，未修改 `main`。
+- 重点文件：`app/src/main/java/com/alohaoneui/app/ui/component/material/SegmentedList.kt`，覆盖普通列表行、复选状态行、选中/单选状态行三个公开重载。
+- 本次修复：
+  1. 为三个重载统一解析并复用 `MutableInteractionSource`，使列表行本身能够读取按压状态，不再依赖调用方恰好传入 interaction source。
+  2. 接入 spring 按压缩放，按压时缩至 `0.985f`、释放后回到 `1.0f`；三个重载使用独立动画 label，避免同一页面多行之间状态混淆。
+  3. 在 `LocalMaterialShadowContainers` 开启时，将容器阴影从固定 1dp 改为随按压状态由 1dp 过渡到 2dp；关闭时不绘制容器阴影。
+  4. 保留各行基于 `voyageSegmentedShape` 的框体、`LocalMaterialOutlineWidth` 的全局描边和原有选中/点击回调；没有改变行项目文本、数据或设置行为。
+- 本次针对用户指出的“主题设置页列表/详情选项框架与各按钮动效、阴影”优先修复列表行交互层。它并不表示页面分组框体、详情面板布局、所有控件阴影或 Voyage 原版像素级参数已全部完成；后续仍须逐项对照真实 Voyage 组件与设置页结构。
+- 构建监测：此前 RectangleShape 修复所在的 Run `40498179981`（Build #1673）在查询时为 `in_progress`，编译步骤正在运行；本次源码 push 可能因分支 workflow 的 `cancel-in-progress` 策略取消该旧 run 并触发新 run。必须以本次提交或包含它的最新 HEAD 对应 run 为准，继续监测编译、签名、APK 验证与 artifact，不可将旧 APK 当作本次产物。
+- 当前阶段结论：源码已提交，构建尚未验收；无新 APK 可交付。若 CI 失败，按最新失败日志修复并再次构建；只有确认成功并核验包名、版本、签名证书与 SHA-256 后才可标记完成。
