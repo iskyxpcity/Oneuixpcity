@@ -276,7 +276,7 @@ fun ColorPaletteScreenMaterial(
                 }
 
                 SegmentedColumn(
-                    modifier = Modifier.padding(top = 8.dp),
+                    modifier = Modifier.padding(top = 4.dp),
                     content = listOf(
                         {
                             val styles = PaletteStyle.entries
@@ -305,7 +305,7 @@ fun ColorPaletteScreenMaterial(
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
                     SegmentedColumn(
-                        modifier = Modifier.padding(top = 8.dp),
+                        modifier = Modifier.padding(top = 4.dp),
                         content = listOf(
                             {
                                 SegmentedSwitchItem(
@@ -321,7 +321,7 @@ fun ColorPaletteScreenMaterial(
                 }
 
                 SegmentedColumn(
-                    modifier = Modifier.padding(top = 8.dp),
+                    modifier = Modifier.padding(top = 4.dp),
                     content = listOf(
                         {
                             SegmentedSwitchItem(
@@ -349,7 +349,7 @@ fun ColorPaletteScreenMaterial(
                 )
 
                 TonalCard(
-                    modifier = Modifier.padding(top = 8.dp),
+                    modifier = Modifier.padding(top = 4.dp),
                     shape = voyageCornerShape(20.dp),
                 ) {
                     var sliderValue by remember(uiState.pageScale) { mutableFloatStateOf(uiState.pageScale) }
@@ -408,7 +408,7 @@ fun ColorPaletteScreenMaterial(
 
                 // Voyage SHAPE group: the slider remains a row in the source-style group.
                 SegmentedColumn(
-                    modifier = Modifier.padding(top = 8.dp),
+                    modifier = Modifier.padding(top = 4.dp),
                     title = stringResource(R.string.theme_group_shape),
                     content = listOf(
                         {
@@ -446,7 +446,7 @@ fun ColorPaletteScreenMaterial(
 
                 // Voyage COMPONENTS group: outline width is another source-style slider row.
                 SegmentedColumn(
-                    modifier = Modifier.padding(top = 8.dp),
+                    modifier = Modifier.padding(top = 4.dp),
                     title = stringResource(R.string.theme_group_components),
                     content = listOf(
                         {
@@ -504,7 +504,7 @@ fun ColorPaletteScreenMaterial(
 
                 // Voyage SHADOWS group exposes six independent component switches.
                 SegmentedColumn(
-                    modifier = Modifier.padding(top = 8.dp),
+                    modifier = Modifier.padding(top = 4.dp),
                     title = stringResource(R.string.theme_group_shadows),
                     content = listOf(
                         {
