@@ -566,3 +566,18 @@
 - **验证边界：**这是针对缓存锁争用与容量不足的进一步性能修复，尚无本次提交对应的设备帧时间/录屏验证，不能宣称全界面卡顿已彻底解决；必须检查新的 Actions 构建，并在设备上继续验证选择 Wavy、形状过渡动画和页面滚动。
 - 界面缩放滑条：已检查当前分支的 `SegmentedSliderItem.kt`，它是统一 Material Slider/Thumb/Track 组件；但现有 `ScaleDialog.kt` 是 Miuix 数字输入对话框，不能据此把它误认成用户反馈的界面缩放滑条。当前还需定位实际承载 `pageScale` 修改入口的控件，确认其当前实现后再接入共享 Material Slider，避免在错误页面新增或替换控件。该项尚未完成，不记录为已修复。
 - 下一步：定位实际调用 `SettingsViewModel.setPageScale` 的 UI 控件，把界面缩放轨道和滑块改为共用 `SegmentedSliderItem` / `VoyageSliderThumb` / `VoyageSliderTrack` 组件；随后检查本轮 Actions 的真实构建结果。不得使用旧 APK 作为最新产物，也不得合并 `main`。
+
+
+## 2026-10-27 用户进一步明确 Switch 内滑块间距与 Slider 外层底色结构
+
+- 所有修改仅提交到 `test/voyage-theme-1to1-20261026`，没有修改或合并 `main`。
+- Switch 提交 `93c8693967620fa1762eddb0b138389163a8ca1c`（`ui: inset switch thumb and fill 90 percent of track height`）：
+  - 内部 thumb 的可见高度改为轨道高度的 90%，而不是此前的 72%–82%，使滑块上下更饱满。
+  - 开关两端各增加 2dp 水平内缩，关闭/开启位置都不再让滑块胶囊边缘贴死外轨道边缘；thumbContent 插槽同步使用新的行程。
+  - 保持横向约 65% 轨道宽度的设计，仍由共享 Voyage Shape 样式控制形状。
+- Slider 提交 `c4a17d2996933822c7ef07da8203444372a2fcc5`（`ui: wrap slider rail around inset thumb like switch`），并由 `4eed5f96e1d312e70a390af11e32fcac06315347` 修正内层 Shape 的创建时机：
+  - 原先滑条底色是 4–8dp 的细轨道，滑块叠在细线之上；这与用户描述的“底色包裹整个滑轨、滑块在底色里面，像开关”不符。
+  - 现在外层中性底色是 24dp 高的完整胶囊轨道，使用 `surfaceContainerHighest` 并跟随全局 Voyage 形状；滑块保留 20dp Material 测量槽，但可见填充缩至 16dp，在外层底色中留出均匀间距。
+  - 活动进度绘制为外轨道内部向内缩 4dp 的内层轨道，跟随主题活动色与共享 Shape 样式；刻度和描边也移入内层轨道。阴影设置仍可控制外轨道和 thumb 的阴影。
+  - 额外修正：内层 Voyage Shape 在 Canvas 绘制开始前预先创建，避免在非 Composable 绘制回调内调用 Composable Shape 工厂。
+- 验证边界：源码改动已推送，尚未确认本批最新 HEAD 的 Actions 编译终态，也没有设备录屏确认。接下来必须检查构建日志；如有编译错误继续修复，并在设备上确认开关两端留白、90% 高度及 Slider 外底色包裹效果。不可宣称设备验收完成，也不可用旧 APK 作为本批最新交付物。
