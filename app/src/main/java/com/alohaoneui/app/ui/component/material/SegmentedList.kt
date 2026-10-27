@@ -113,6 +113,8 @@ private class VoyagePathShape(
         val path = Path()
         when (style) {
             2 -> {
+                // Voyage Squircle is the smoothing-profile path in e7g0/b2t0,
+                // not the G² Smooth corner family.
                 val smooth = 0.234f
                 path.moveTo(tl, 0f)
                 path.lineTo(w - tr, 0f)
@@ -257,7 +259,7 @@ private class VoyagePathShape(
                         // by the source segment lengths, not sample-to-sample chords.
                         addLine(xTopStart, aTL, xTopEnd, aTL, 0f, -1f, topLength, aTL)
                         addArc(w - rtr, aTL + rtr, rtr, -90f, 90f)
-                        addLine(w, yRightStart, w, yRightEnd, 1f, 0f, rightLength, aTR)
+                        addLine(xRight, yRightStart, xRight, yRightEnd, 1f, 0f, rightLength, aTR)
                         addArc(w - rbr, h - rbr, rbr, 0f, 90f)
                         addLine(xBottomStart, yBottom, xBottomEnd, yBottom, 0f, 1f, bottomLength, aBR)
                         addArc(aBL + rbl, h - rbl, rbl, 90f, 90f)
