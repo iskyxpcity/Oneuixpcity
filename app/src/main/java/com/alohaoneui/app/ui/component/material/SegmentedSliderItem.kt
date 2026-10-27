@@ -194,7 +194,7 @@ internal fun VoyageSliderThumb(
         ?: remember { androidx.compose.runtime.mutableStateOf(false) })
     // The thumb is a theme component, not a fixed circle: use the same shared
     // shape factory as settings rows so shape style and corner scale update it.
-    val thumbShape = voyageCornerShape(size.minDimension / 2f)
+    val thumbShape = voyageCornerShape(minOf(size.width, size.height) / 2f)
     val thumbModifier = Modifier
         .size(width = size.width, height = size.height)
         .then(
@@ -208,7 +208,7 @@ internal fun VoyageSliderThumb(
         )
         .clip(thumbShape)
         .background(activeColor, thumbShape)
-    Box(thumbModifier)
+    Box(thumbModifier) {}
 }
 
 @Composable
