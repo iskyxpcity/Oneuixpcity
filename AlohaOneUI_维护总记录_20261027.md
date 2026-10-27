@@ -616,3 +616,11 @@
 - 样式来源核对参考：Android 官方 Compose Material 3 Slider 组件文档与 Material Components Slider anatomy 文档，分别说明轨道、拇指、刻度和 active/inactive track 的组成；这些通用资料仅用于理解控件结构，不能替代 Voyage APK 原始方法与用户录屏的最终对照。
 - **准确性边界：**四种轨道现已在代码结构上真正分开，但当前几何比例仍属于可独立校正的实现阶段；尚未声称与 Voyage 原版像素级 1:1，也未完成真机视觉验收。下一步继续从 Voyage DEX/调用链追踪四种轨道的原始绘制分支，检查颜色映射与全局形状/圆角联动，再以最新成功构建验证。
 - 分支边界不变：只更新 `test/voyage-theme-1to1-20261026`，未修改或合并 `main`。
+
+
+## 2026-10-27 — 统一界面缩放滑块入口
+
+- 产品提交：`f8f6b9eafec93b717ee7beb69e3d3a6c5dd8e704`。
+- 将 `colorpalette/ColorPaletteScreenMaterial.kt` 中仍直接调用 Material3 默认 `Slider` 的“界面缩放”控件改为 `AlohaOneUISlider`，让它与其他 Material 设置滑条共用 Voyage 四种轨道样式选择、共享轨道/拇指组件及当前数值保存回调。
+- 该入口原先直接调用系统默认 Slider，主题中选择 Material You/Fancy/Material 2/HyperOS 时不会跟随自定义轨道。现在已接入共享入口；尚需确认编译、拖动/保存行为和真机视觉表现。
+- 当前工作仍只在 `test/voyage-theme-1to1-20261026`。CI 应以本节产品提交及后续维护记录提交对应的最新 HEAD 为准；旧的失败构建不能作为新代码验收。
