@@ -600,3 +600,19 @@
 - 继续使用共享 Voyage 形状工厂生成轨道与滑块形状，使全局形状样式及圆角缩放设置仍可联动影响组件。滑条交互、范围与步进仍交给 Material `SliderState` 处理。
 - 参考边界：本轮检索未找到可直接查看的那段历史录屏附件，因此没有声称已逐帧对照视频；本次依据用户在当前消息中明确指出的四种样式应各自不同、轨道底色用次色/第三色且上下更宽来修正。仍需核对 Voyage 原版四种样式各自的完整绘制路径，并在设备上对照录屏检查视觉细节。
 - 只修改测试分支 `test/voyage-theme-1to1-20261026`，未修改或合并 `main`。本提交的 CI 构建与设备验收待确认；不得把旧 APK 当作本轮交付版本。
+
+
+## 2026-10-27 — 四类 Slider 独立轨道绘制分支
+
+- 产品代码提交：`63d04d464856b79a245a6eb918b47cc75d1cc069`，文件 `SegmentedSliderItem.kt`。
+- 不再让 Material You、Fancy、Material 2、HyperOS 四种滑条只共用同一种轨道几何。现在每个样式拥有独立绘制分支：
+  - Material You：32dp 外层容器内的完整高度圆角轨道；
+  - Fancy：独立的居中较窄通道；
+  - Material 2：经典 4dp 细轨道，保留外层次色/第三色容器；
+  - HyperOS：较厚的独立胶囊通道。
+- 四种样式的外层轨道仍由次色/第三色容器色承担，拇指与进度填充继续使用强调色，避免外层底色与滑块同色。外层维持 32dp 高度，使底色上下留白不再过窄；全局 Voyage Shape/Corner Scale 继续参与轨道外轮廓和各通道轮廓。
+- 为不丢失离散步进反馈，非 Material 2 分支增加了按各自通道位置绘制的刻度；Material 2 刻度仍沿经典细轨道绘制。代码提交：`bb31cdb04a747df010c1a5b930c1359479e9b154`。
+- 构建检查发现此前共享组件增加 `innerInset` 后，另一个调用点 `AlohaOneUISlider.kt` 未传入该参数，导致 Run `40585120152` 编译失败（`No value passed for parameter 'innerInset'`）。已补上传入 `materialAppearance.innerInset`，修复提交：`48cffbb5e11011af08b2c831a48339a2a75cdda7`。新代码提交后仍需重新确认 CI 编译结果。
+- 样式来源核对参考：Android 官方 Compose Material 3 Slider 组件文档与 Material Components Slider anatomy 文档，分别说明轨道、拇指、刻度和 active/inactive track 的组成；这些通用资料仅用于理解控件结构，不能替代 Voyage APK 原始方法与用户录屏的最终对照。
+- **准确性边界：**四种轨道现已在代码结构上真正分开，但当前几何比例仍属于可独立校正的实现阶段；尚未声称与 Voyage 原版像素级 1:1，也未完成真机视觉验收。下一步继续从 Voyage DEX/调用链追踪四种轨道的原始绘制分支，检查颜色映射与全局形状/圆角联动，再以最新成功构建验证。
+- 分支边界不变：只更新 `test/voyage-theme-1to1-20261026`，未修改或合并 `main`。
