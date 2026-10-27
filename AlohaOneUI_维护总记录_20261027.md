@@ -61,3 +61,15 @@
 - 原始 G² 相关类 `Lban;`、`Ldan;`、`Lwcf;`、`Lfqw0;`、`Lopw0;` 也已定位到具体方法及 code_item 偏移。当前自制解码器只可靠恢复了方法边界与部分调用引用，尚不足以重建完整控制流、绘制参数或 G² 路径；不能把这份草稿当作可直接移植的源码。
 - 因缺少可用 JADX/baksmali 工具，且现有解码尚未达到逐项核验绘制路径的可靠程度，本轮没有改写 Switch/Slider/G² 的视觉常量，也没有提交伪称 1:1 的近似实现。
 - 下一步继续从已定位的原始方法体恢复分支、浮点常量、颜色/路径构造与枚举到绘制分支的映射；只有在调用链和参数含义能被验证后，才批量移植到测试分支。当前产品最新有效二进制仍与 Build #1655 相同。
+
+
+## 本轮实际产品修复：滑块全局阴影/描边设置未接入通用控件
+
+- 源码提交：`d3937c8db61b6491452a8901717f436292bffd22`。
+- 对照 `ColorPaletteScreenMaterial.kt` 中页面缩放滑块的既有实现，确认该预览会依据 `LocalMaterialShadowSliders` 添加 `Modifier.shadow(2.dp, voyageCornerShape(50.dp)))，并依据 `LocalMaterialOutlineWidth` 添加轮廓描边；但通用 `SegmentedSliderItem.kt` 的实际 Slider 组件之前完全没有读取这两个 CompositionLocal，导致用户关闭/开启“滑块阴影”或调整全局描边时，通用滑块没有同步应用设置。
+- 已在 `SegmentedSliderItem.kt` 的实际 Slider modifier 中接入同一阴影条件与同一轮廓宽度设置，沿用现有项目预览的形状与参数，未引入新的猜测性数值。
+- Build #1659：Actions Run `40490743739`，head SHA `d3937c8db61b6491452a8901717f436292bffd22`，结论 `success`。
+- Artifact ID `12727872553`；Artifact ZIP SHA-256：`ca411229929b25089a7692fd5a905037342e3a9d0707022c67a3059e584501a3`。
+- APK `AlohaOneUI_1.0.261025_BUILD_1659.apk`，大小 `28,747,517` bytes；SHA-256：`87b7780faee1ece9a139e5a5fae341e6cd7c9e0c2f65d2b0feca706aaafaecff`。
+- 验收：Artifact ZIP 与 APK `unzip -t` 通过；包名 `com.alohaoneui.app`，versionName `1.0.261025`，versionCode `16`；V2 签名通过，证书 SHA-256 `93bf61a6493c6b336383832eb41301bd8fe061f43566e7e384e3fdd9fc1c26a1`。
+- 该修复是 Aloha 通用控件的设置接入修复，不代表 Voyage 原版 Slider 绘制已经 1:1 完成。后续仍须以已定位的原始 `Ly8f0;` 绘制调用链恢复四种样式的实际几何与颜色参数。
