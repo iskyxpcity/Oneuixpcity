@@ -556,3 +556,13 @@
   - 这让活动/未活动轨道的端部形状更协调，并继续跟随全局 Shape Style / Corner Scale；没有改变已核实的 20dp Slider thumb 交互槽，也没有伪造四种 Slider 的原始轨道高度参数。
 - 原始依据与未完成边界：维护记录中已核实 Voyage `vhf.m138081l` 的 20×20dp thumb 槽、静止 1dp/交互 6dp 阴影，以及 `vhf.m138077ll` 的轨道段与刻度绘制路径。但四种 Slider 分支（`ncw0/y3w0/w3w0/v2t0`）的轨道宽度、thumb 填充/描边、颜色角色与动画仍需继续逐条比对用户已提供的录屏及反编译分支。不能把本次轨道端部修正记作 1:1 完成。
 - 构建/设备验证：本轮两个源码提交之后的最新 HEAD 仍须检查对应 GitHub Actions 最终结果，并在设备上比较开关八种样式与四种滑条的外观/拖动效果。没有新的终态证据前，不声称构建通过，也不把旧 APK 当成本轮产物。
+
+
+## 2026-10-27 用户反馈跟进：Wavy 仍导致全界面卡顿，界面缩放滑条统一 Material 控件
+
+- 本轮性能修复提交：`3280779067184f6662cb5361e86a249bee1bbe9b`（`perf: avoid serializing Wavy outline generation`），仅修改 `SegmentedList.kt`，仍在 `test/voyage-theme-1to1-20261026`，未改动 `main`。
+- 复查发现先前共享 Wavy Outline LRU 虽然能命中缓存，但缓存未命中时仍在共享缓存锁内部同步生成波浪路径。Wavy 路径每次需要沿周边采样并生成大量路径段；形状切换动画期间，多种尺寸的组件会频繁触发未命中，导致昂贵路径生成被全局锁串行化。
+- 本轮修复将路径生成移出共享缓存锁：先在锁内查询，未命中后在锁外计算，再回到锁内二次检查并写入，避免不同组件的 Wavy 路径生成互相阻塞；共享 Wavy 缓存容量从 160 增至 768，降低一屏多个尺寸控件及动画过程中的缓存抖动。路径采样/波浪轮廓算法未被删除或改成普通圆角。
+- **验证边界：**这是针对缓存锁争用与容量不足的进一步性能修复，尚无本次提交对应的设备帧时间/录屏验证，不能宣称全界面卡顿已彻底解决；必须检查新的 Actions 构建，并在设备上继续验证选择 Wavy、形状过渡动画和页面滚动。
+- 界面缩放滑条：已检查当前分支的 `SegmentedSliderItem.kt`，它是统一 Material Slider/Thumb/Track 组件；但现有 `ScaleDialog.kt` 是 Miuix 数字输入对话框，不能据此把它误认成用户反馈的界面缩放滑条。当前还需定位实际承载 `pageScale` 修改入口的控件，确认其当前实现后再接入共享 Material Slider，避免在错误页面新增或替换控件。该项尚未完成，不记录为已修复。
+- 下一步：定位实际调用 `SettingsViewModel.setPageScale` 的 UI 控件，把界面缩放轨道和滑块改为共用 `SegmentedSliderItem` / `VoyageSliderThumb` / `VoyageSliderTrack` 组件；随后检查本轮 Actions 的真实构建结果。不得使用旧 APK 作为最新产物，也不得合并 `main`。
