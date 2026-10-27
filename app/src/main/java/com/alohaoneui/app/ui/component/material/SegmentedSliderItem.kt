@@ -141,6 +141,7 @@ fun SegmentedSliderItem(
                             inactiveColor = inactive,
                             outlineWidth = LocalMaterialOutlineWidth.current.dp,
                             outlineColor = MaterialTheme.colorScheme.outlineVariant,
+                            shadowEnabled = LocalMaterialShadowSliders.current,
                         )
                     },
                 )
@@ -197,6 +198,7 @@ internal fun VoyageSliderTrack(
     inactiveColor: Color,
     outlineWidth: androidx.compose.ui.unit.Dp,
     outlineColor: Color,
+    shadowEnabled: Boolean = false,
 ) {
     val passedTickColor = when (style) {
         1 -> MaterialTheme.colorScheme.onTertiary
@@ -204,7 +206,19 @@ internal fun VoyageSliderTrack(
         else -> MaterialTheme.colorScheme.onPrimary
     }
     val futureTickColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.65f)
-    Canvas(Modifier.fillMaxWidth().height(height)) {
+    val trackShape = when (style) {
+        1 -> RoundedCornerShape(percent = 50)
+        2 -> RoundedCornerShape(percent = 22)
+        3 -> RoundedCornerShape(percent = 36)
+        else -> RoundedCornerShape(percent = 50)
+    }
+    // Keep the track's elevation on the visible track layer, not the full
+    // Slider touch target. The same global shadow switch controls thumb + track.
+    val trackModifier = Modifier
+        .fillMaxWidth()
+        .height(height)
+        .then(if (shadowEnabled) Modifier.shadow(1.dp, trackShape, clip = false) else Modifier)
+    Canvas(trackModifier) {
         val h = size.height
         val centerY = h / 2f
         // Keep the visual track endpoints aligned with the actual thumb center.
