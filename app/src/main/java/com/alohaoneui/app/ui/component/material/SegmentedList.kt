@@ -154,7 +154,33 @@ private data class VoyageG2Profile(
         val c1y = p0.y + maxOf(0.0, p2.y * firstControlScale)
         val c2x = p1.x - maxOf(0.0, p3.x * secondControlScale)
         val c2y = p1.y - maxOf(0.0, p3.y * secondControlScale)
-        return Cubic(p0, Point(c1x, c1y), Point(c2x, c2y), p3)
+        // fqw0.m95419o() returns its third input (1, 0) as the cubic
+        // endpoint. The arc tangent point (cos, sin) is used to solve the
+        // second control point; it is not the cubic endpoint.
+        return Cubic(p0, Point(c1x, c1y), Point(c2x, c2y), p2)
+    }
+
+    /**
+     * ban.m5206I() computes eight independent width/height progress values:
+     * ((halfExtent / cornerRadius) - 1) / smooth.extendedFraction, clamped
+     * to [0, 1]. A zero radius is handled separately by the path builder.
+     */
+    fun aspectProgress(halfExtent: Float, cornerRadius: Float): Double {
+        if (cornerRadius <= 0f || !cornerRadius.isFinite() || !halfExtent.isFinite()) return 0.0
+        return (((halfExtent.toDouble() / cornerRadius.toDouble()) - 1.0) /
+            extendedFraction).coerceIn(0.0, 1.0)
+    }
+
+    /** Linear profile interpolation used by ban.m5206I() between capsule and smooth. */
+    fun interpolateFromCapsule(progress: Double): VoyageG2Profile {
+        val t = progress.coerceIn(0.0, 1.0)
+        fun mix(from: Double, to: Double) = from + (to - from) * t
+        return VoyageG2Profile(
+            extendedFraction = mix(capsule.extendedFraction, smooth.extendedFraction),
+            arcFraction = mix(capsule.arcFraction, smooth.arcFraction),
+            bezierCurvatureScale = mix(capsule.bezierCurvatureScale, smooth.bezierCurvatureScale),
+            arcCurvatureScale = mix(capsule.arcCurvatureScale, smooth.arcCurvatureScale),
+        )
     }
 
     companion object {
