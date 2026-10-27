@@ -167,3 +167,15 @@
 - 本次针对用户指出的“主题设置页列表/详情选项框架与各按钮动效、阴影”优先修复列表行交互层。它并不表示页面分组框体、详情面板布局、所有控件阴影或 Voyage 原版像素级参数已全部完成；后续仍须逐项对照真实 Voyage 组件与设置页结构。
 - 构建监测：此前 RectangleShape 修复所在的 Run `40498179981`（Build #1673）在查询时为 `in_progress`，编译步骤正在运行；本次源码 push 可能因分支 workflow 的 `cancel-in-progress` 策略取消该旧 run 并触发新 run。必须以本次提交或包含它的最新 HEAD 对应 run 为准，继续监测编译、签名、APK 验证与 artifact，不可将旧 APK 当作本次产物。
 - 当前阶段结论：源码已提交，构建尚未验收；无新 APK 可交付。若 CI 失败，按最新失败日志修复并再次构建；只有确认成功并核验包名、版本、签名证书与 SHA-256 后才可标记完成。
+
+
+## 2026-10-27 后续推进：滑块描边类型修复与开关/标签按钮按压动效统一
+
+- 最新源码基线：此前提交 `8459efba6cfe14478a3ff8953af9798a8bbe7d24`（`fix: animate slider thumb and keep outline on visible track`）。该提交的 Build #1676 / Run `40499299889` 编译失败；已下载并检查该次 Actions 诊断产物，明确错误为 `SegmentedSliderItem.kt:158:44 Argument type mismatch: actual type is 'Float', but 'Dp' was expected`。
+- 根因：`LocalMaterialOutlineWidth.current` 的类型是 Float，而 `VoyageSliderTrack` 接收 `Dp`。已在调用处转换为 `LocalMaterialOutlineWidth.current.dp`，保持实际数值不变，修复编译类型不匹配。
+- 同一提交批次继续补齐常用交互组件的动效和全局视觉设置消费：
+  1. `ExpressiveSwitch.kt`：开关按压时增加 spring 缩放，拇指按压缩放由即时条件切换改为动画；开关阴影在按压时由 2dp 过渡到 3dp，仍由 `LocalMaterialShadowSwitches` 控制是否显示。
+  2. `ExpressiveTabRow.kt`：标签按钮增加 spring 按压缩放和动态阴影；阴影继续受 `LocalMaterialShadowButtons` 控制，并将 `LocalMaterialOutlineWidth` 应用于标签胶囊框体，避免全局描边设置只覆盖列表项而漏掉标签按钮。
+  3. `SegmentedSliderItem.kt`：修复上次滑轨描边接线的 Dp 类型错误；滑轨轮廓仍绘制在可见轨道范围，不再包围整行触摸区域。
+- 本批次仅修改 `test/voyage-theme-1to1-20261026`，不修改 `main`。这些是通用控件层面的统一处理，仍需继续逐页检查详情面板/分组框体、下拉菜单和对话框按钮，不能据此声称所有页面已经完成 Voyage 像素级还原。
+- 构建监测：Build #1676 / Run `40499299889` 已结束且结论为 `failure`；签名、APK 验证和产物步骤均因编译失败跳过。本记录与上述代码修复将合并在单次提交中，随后必须监测新 HEAD 的 Actions；若仍失败，读取诊断 artifact 并继续修复。当前无可交付的新 APK。

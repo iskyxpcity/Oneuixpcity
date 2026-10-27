@@ -155,7 +155,7 @@ fun SegmentedSliderItem(
                             thumbWidth = thumbSize.width,
                             activeColor = active,
                             inactiveColor = inactive,
-                            outlineWidth = LocalMaterialOutlineWidth.current,
+                            outlineWidth = LocalMaterialOutlineWidth.current.dp,
                             outlineColor = MaterialTheme.colorScheme.outlineVariant,
                         )
                     },

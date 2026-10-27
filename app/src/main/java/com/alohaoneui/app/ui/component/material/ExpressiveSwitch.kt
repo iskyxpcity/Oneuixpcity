@@ -1,5 +1,6 @@
 package com.alohaoneui.app.ui.component.material
 
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Canvas
@@ -22,6 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.geometry.CornerRadius
@@ -127,12 +129,22 @@ fun ExpressiveSwitch(
         label = "voyageSwitchThumb",
     )
     val pressed by interactionSource.collectIsPressedAsState()
+    val thumbPressScale by animateFloatAsState(
+        targetValue = if (pressed && enabled) 0.96f else 1f,
+        animationSpec = spring(dampingRatio = 0.58f, stiffness = 560f),
+        label = "voyageSwitchThumbPress",
+    )
+    val shadowElevation by animateDpAsState(
+        targetValue = if (pressed && enabled) 3.dp else 2.dp,
+        animationSpec = spring(dampingRatio = 0.62f, stiffness = 520f),
+        label = "voyageSwitchShadow",
+    )
     val trackShape = androidx.compose.foundation.shape.RoundedCornerShape((32f * cornerFraction).dp)
     val borderWidth = LocalMaterialOutlineWidth.current
     Box(
         modifier = modifier
-            .size(width = if (style == 4) 52.dp else 52.dp, height = 32.dp)
-            .then(if (LocalMaterialShadowSwitches.current) Modifier.shadow(2.dp, trackShape) else Modifier)
+            .size(width = 52.dp, height = 32.dp)
+            .then(if (LocalMaterialShadowSwitches.current) Modifier.shadow(shadowElevation, trackShape) else Modifier)
             .toggleable(
                 value = checked,
                 enabled = enabled && onCheckedChange != null,
@@ -140,7 +152,12 @@ fun ExpressiveSwitch(
                 interactionSource = interactionSource,
                 indication = null,
                 onValueChange = { onCheckedChange?.invoke(it) },
-            ),
+            )
+            .graphicsLayer {
+                val scale = if (pressed && enabled) 0.985f else 1f
+                scaleX = scale
+                scaleY = scale
+            },
         contentAlignment = Alignment.Center,
     ) {
         Canvas(Modifier.fillMaxSize()) {
@@ -169,7 +186,7 @@ fun ExpressiveSwitch(
                     style = Stroke(width = borderWidth.dp.toPx()),
                 )
             }
-            val thumbRadius = h * thumbRadiusFraction * (if (pressed) 0.96f else 1f)
+            val thumbRadius = h * thumbRadiusFraction * thumbPressScale
             val inset = h * thumbInsetFraction
             val left = inset + thumbRadius
             val right = w - inset - thumbRadius
@@ -212,7 +229,11 @@ fun ExpressiveSwitch(
                 modifier = Modifier
                     .align(Alignment.Center)
                     .offset(x = thumbTravel * travel - thumbTravel / 2f)
-                    .size(thumbDiameter),
+                    .size(thumbDiameter)
+                    .graphicsLayer {
+                        scaleX = thumbPressScale
+                        scaleY = thumbPressScale
+                    },
                 contentAlignment = Alignment.Center,
             ) {
                 thumbContent()

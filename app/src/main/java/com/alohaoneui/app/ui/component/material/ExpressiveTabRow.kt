@@ -1,7 +1,12 @@
 package com.alohaoneui.app.ui.component.material
 
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.border
 import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.padding
@@ -16,9 +21,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
+import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
+import com.alohaoneui.app.ui.theme.LocalMaterialShadowButtons
 
 @Composable
 fun ExpressiveTabRow(
@@ -37,9 +46,34 @@ fun ExpressiveTabRow(
         tabs.forEachIndexed { index, label ->
             val selected = safeIndex == index
             val interactionSource = remember { MutableInteractionSource() }
+            val pressed by interactionSource.collectIsPressedAsState()
+            val pressScale by animateFloatAsState(
+                targetValue = if (pressed) 0.96f else 1f,
+                animationSpec = spring(dampingRatio = 0.58f, stiffness = 560f),
+                label = "voyageTabPress",
+            )
+            val shadowElevation by animateDpAsState(
+                targetValue = when {
+                    pressed -> 3.dp
+                    selected -> 2.dp
+                    else -> 1.dp
+                },
+                animationSpec = spring(dampingRatio = 0.62f, stiffness = 520f),
+                label = "voyageTabShadow",
+            )
+            val tabShape = voyageCornerShape(50.dp)
             Box(
                 modifier = Modifier
                     .fillMaxHeight()
+                    .then(
+                        if (LocalMaterialShadowButtons.current) {
+                            Modifier.shadow(shadowElevation, tabShape)
+                        } else Modifier
+                    )
+                    .graphicsLayer {
+                        scaleX = pressScale
+                        scaleY = pressScale
+                    }
                     .selectable(
                         selected = selected,
                         interactionSource = interactionSource,
@@ -52,7 +86,12 @@ fun ExpressiveTabRow(
                 Box(
                     modifier = Modifier
                         .padding(vertical = 8.dp)
-                        .clip(voyageCornerShape(50.dp))
+                        .clip(tabShape)
+                        .then(
+                            LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
+                                Modifier.border(it.dp, MaterialTheme.colorScheme.outlineVariant, tabShape)
+                            } ?: Modifier
+                        )
                         .indication(interactionSource, ripple()),
                     contentAlignment = Alignment.Center,
                 ) {
