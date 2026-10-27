@@ -638,3 +638,11 @@
 - 外层容器色与 active track/thumb 色分离，容器从 `secondaryContainer` / `tertiaryContainer` 色系取值，进度和拇指使用主题强调色。全局 Voyage 形状工厂继续用于轨道/容器轮廓，以保留用户要求的形状和圆角联动。
 - 上游文件可从 `https://github.com/T8RIN/ImageToolbox/tree/master/core/ui/src/main/kotlin/com/t8rin/imagetoolbox/core/ui/widget/sliders` 核查。它提供了四类同名 Slider 的具体尺寸/绘制逻辑；最终仍需对照 Voyage 当前版本 DEX/录屏确认是否存在版本分叉，不能仅因名称相同就声称像素级验收完成。
 - 最新源码已提交到 `test/voyage-theme-1to1-20261026`，没有触碰 `main`。需检查后续最新 HEAD 的 Actions 编译结果；如有失败继续修复，不以旧 APK 交付。
+
+
+## 2026-10-27 — 轨道容器描边联动与编译前检查
+
+- 产品提交 `601d006aa47dfd4015b4e412f4332ef6b4242816`：将 `voyageSliderContainerModifier` 标记为 `@Composable`，因为它需要调用读取全局形状/圆角 CompositionLocal 的 `voyageCornerShape`。
+- 产品提交 `7be4fab4218ccb3e71b43375e5b7fc7352345753` 与 `2fadf1b08ea95d489baf92bf81b6099f81e8890c`：把全局描边宽度与 outlineVariant 颜色应用到 Material You/Fancy/Material 2 的外层容器；HyperOS 则在 30dp 轨道容器上应用描边，避免描边错误地只画在内部进度线上。
+- 已将界面缩放滑块入口接入共享滑条组件，因此 Material 主题中的滑条样式选择会覆盖该入口；Miuix 现有分支保留独立绘制行为。
+- 构建状态：之前 Run `40585120152` 已明确因 `AlohaOneUISlider.kt` 漏传 `innerInset` 编译失败，后续已补齐后又按上游源代码移除该临时参数。当前最新源码提交之后的 CI 仍需等待并核实，不能用较早 HEAD 的构建结果代替。
