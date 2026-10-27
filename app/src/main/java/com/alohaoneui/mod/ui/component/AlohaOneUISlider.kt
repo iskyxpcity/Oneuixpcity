@@ -22,6 +22,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.key
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -124,7 +125,7 @@ fun AlohaOneUISlider(
     }
 
     when (LocalUiMode.current) {
-        UiMode.Material -> MaterialSlider(
+        UiMode.Material -> key(materialSliderStyle) { MaterialSlider(
             state = materialSliderState,
             enabled = enabled,
             onValueChange = ::emit,
@@ -166,7 +167,7 @@ fun AlohaOneUISlider(
                     inactiveColor = materialInactiveColor,
                 )
             },
-        )
+        ) }
         UiMode.Miuix -> {
             val reverse = LocalLayoutDirection.current == LayoutDirection.Rtl
             val palette = MiuixTheme.colorScheme
