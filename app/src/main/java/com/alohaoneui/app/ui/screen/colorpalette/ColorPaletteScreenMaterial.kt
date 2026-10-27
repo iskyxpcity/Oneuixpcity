@@ -3,7 +3,9 @@ package com.alohaoneui.app.ui.screen.colorpalette
 import android.annotation.SuppressLint
 import android.os.Build
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -14,6 +16,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.ui.draw.shadow
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -702,6 +706,22 @@ private fun ColorButtonMaterial(
     onClick: () -> Unit
 ) {
     val haptic = LocalHapticFeedback.current
+    val interactionSource = remember { MutableInteractionSource() }
+    val pressed by interactionSource.collectIsPressedAsState()
+    val pressScale by animateFloatAsState(
+        targetValue = if (pressed) 0.96f else 1f,
+        animationSpec = spring(dampingRatio = 0.58f, stiffness = 560f),
+        label = "voyagePaletteColorPress",
+    )
+    val shadowElevation by animateDpAsState(
+        targetValue = when {
+            pressed -> 3.dp
+            isSelected -> 2.dp
+            else -> 1.dp
+        },
+        animationSpec = spring(dampingRatio = 0.62f, stiffness = 520f),
+        label = "voyagePaletteColorShadow",
+    )
     val colorScheme = rememberAlohaOneUIColorScheme(
         seedColor = color,
         isDark = isDark,
@@ -715,11 +735,20 @@ private fun ColorButtonMaterial(
             haptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
             onClick()
         },
+        interactionSource = interactionSource,
         shape = voyageCornerShape(20.dp),
         color = colorScheme.surfaceContainer,
         modifier = Modifier
             .size(72.dp)
-            .then(if (LocalMaterialShadowButtons.current) Modifier.shadow(2.dp, voyageCornerShape(20.dp)) else Modifier)
+            .graphicsLayer {
+                scaleX = pressScale
+                scaleY = pressScale
+            }
+            .then(
+                if (LocalMaterialShadowButtons.current) {
+                    Modifier.shadow(shadowElevation, voyageCornerShape(20.dp))
+                } else Modifier
+            )
             .then(
                 LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
                     Modifier.border(it.dp, colorScheme.outlineVariant, voyageCornerShape(20.dp))

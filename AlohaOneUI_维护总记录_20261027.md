@@ -179,3 +179,14 @@
   3. `SegmentedSliderItem.kt`：修复上次滑轨描边接线的 Dp 类型错误；滑轨轮廓仍绘制在可见轨道范围，不再包围整行触摸区域。
 - 本批次仅修改 `test/voyage-theme-1to1-20261026`，不修改 `main`。这些是通用控件层面的统一处理，仍需继续逐页检查详情面板/分组框体、下拉菜单和对话框按钮，不能据此声称所有页面已经完成 Voyage 像素级还原。
 - 构建监测：Build #1676 / Run `40499299889` 已结束且结论为 `failure`；签名、APK 验证和产物步骤均因编译失败跳过。本记录与上述代码修复将合并在单次提交中，随后必须监测新 HEAD 的 Actions；若仍失败，读取诊断 artifact 并继续修复。当前无可交付的新 APK。
+
+
+## 2026-10-27 后续推进：修复标签动效编译错误并补齐主题页选择按钮框体/阴影
+
+- 上一批次提交 `ad4f70ce516bb7e2d1dc29f7012d07b1032d2557` 的 Build #1677 / Run `40500736929` 编译失败。诊断 artifact `12732691769` 已下载检查，明确错误为 `ExpressiveTabRow.kt` 的三个 delegated state 缺少 `androidx.compose.runtime.getValue` 导入；本批次补上该导入。
+- 继续覆盖主题设置页里之前没有统一消费按钮动效/阴影的选择器：
+  1. `ExpressiveToggleButton.kt`：使用同一个 `MutableInteractionSource` 让按压缩放与 Material 3 ToggleButton 的交互状态同步；全局按钮阴影关闭时传入 `elevation = null`，开启时使用组件自身的交互式 elevation；描边改为组件原生 `border` 参数，以便形状/描边随按钮交互统一。
+  2. `IconShapePresetPicker.kt`：图标形状选项增加 spring 按压缩放、动态阴影、ripple；选中和未选中选项均消费全局描边宽度，选中态使用 primary 描边、未选中态使用 outlineVariant，去除原来硬编码的 2dp 边线。None 项仍保持 RectangleShape、不裁切。
+  3. `ColorPaletteScreenMaterial.kt`：主题颜色选项卡增加按压缩放和动态阴影，并复用同一 interaction source；原有选色回调、触觉反馈、选中指示动画和全局描边设置保持不变。
+- 本次改动仍只写入测试分支，不改 `main`。这次针对“主题设置页各级选项按钮框体、按压动效与阴影”扩大到开关模式按钮、图标形状条目与颜色选项卡；Voyage 原版几何和视觉参数仍需以原始实现逐项核对，不能把通用动效接入等同于 1:1 验收。
+- 构建监测：Run `40500736929` / Build #1677 结论为 `failure`，失败发生在 Kotlin 编译阶段，owner 签名和 APK 产物步骤被跳过。下一次提交将包含本次修复与记录更新，并触发新构建；继续检查新 HEAD 对应 Actions 和诊断日志，不交付旧 APK。
