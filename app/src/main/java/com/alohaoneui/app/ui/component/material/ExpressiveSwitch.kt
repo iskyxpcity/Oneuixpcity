@@ -27,6 +27,7 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
 import com.alohaoneui.app.ui.theme.LocalMaterialShadowSwitches
@@ -96,40 +97,45 @@ fun ExpressiveSwitch(
         3 -> scheme.outline
         else -> scheme.outlineVariant
     }
-    val cornerFraction = when (style) {
-        2 -> 0.28f // Pixel-style squarer track
-        3 -> 0.20f // Fluent-style track
-        4 -> 0.50f // Cupertino pill
-        5 -> 0.50f // Liquid-glass pill
-        6 -> 0.30f // HyperOS rounded rectangle
-        7 -> 0.38f // One UI track
-        else -> 0.50f
+    // Track dimensions are taken from the original Voyage style composables:
+    // Material You / Compose 52x32 (frt0.m95463l), Pixel 56x28 (it70.m103876l),
+    // Fluent 48x24 (ckw0.m9293l), Cupertino / Liquid Glass 51x31 (rdf),
+    // HyperOS 50x28.5 (y2t0.m144445l), and One UI 39x22 (l140.m110104l).
+    val trackSize = when (style) {
+        2 -> DpSize(56.dp, 28.dp)
+        3 -> DpSize(48.dp, 24.dp)
+        4, 5 -> DpSize(51.dp, 31.dp)
+        6 -> DpSize(50.dp, 28.5.dp)
+        7 -> DpSize(39.dp, 22.dp)
+        else -> DpSize(52.dp, 32.dp)
     }
-    val thumbRadiusFraction = when (style) {
-        1 -> 0.30f
-        2 -> 0.30f
-        3 -> 0.31f
-        4 -> 0.36f
-        5 -> 0.31f
-        6 -> 0.32f
-        7 -> 0.31f
-        else -> 0.31f
+    val thumbDiameter = when (style) {
+        0, 1 -> if (checked || thumbContent != null) 24.dp else 16.dp
+        2, 3 -> 16.dp
+        4, 5 -> 20.dp
+        6 -> if (checked) 26.dp else 24.dp
+        7 -> 22.dp
+        else -> 16.dp
     }
-    val thumbInsetFraction = when (style) {
-        4 -> 0.12f
-        5 -> 0.10f
-        else -> 0.13f
+    val thumbInset = ((trackSize.height - thumbDiameter) / 2f).coerceAtLeast(0.dp)
+    val trackCornerRadius = when (style) {
+        2 -> 14.dp
+        3 -> 4.dp
+        4, 5 -> 15.5.dp
+        6 -> 14.25.dp
+        7 -> 11.dp
+        else -> 16.dp
     }
     val travel by animateFloatAsState(
         targetValue = if (checked) 1f else 0f,
         animationSpec = spring(dampingRatio = 0.78f, stiffness = 620f),
         label = "voyageSwitchThumb",
     )
-    val trackShape = androidx.compose.foundation.shape.RoundedCornerShape((32f * cornerFraction).dp)
+    val trackShape = voyageCornerShape(trackCornerRadius)
     val borderWidth = LocalMaterialOutlineWidth.current
     Box(
         modifier = modifier
-            .size(width = 52.dp, height = 32.dp)
+            .size(width = trackSize.width, height = trackSize.height)
             .then(if (LocalMaterialShadowSwitches.current) Modifier.shadow(2.dp, trackShape) else Modifier)
             .toggleable(
                 value = checked,
@@ -152,7 +158,7 @@ fun ExpressiveSwitch(
             } else {
                 (if (checked) checkedTrack else uncheckedTrack).copy(alpha = 0.38f)
             }
-            val radius = h * cornerFraction
+            val radius = trackCornerRadius.toPx()
             drawRoundRect(
                 color = trackColor,
                 topLeft = Offset.Zero,
@@ -168,8 +174,8 @@ fun ExpressiveSwitch(
                     style = Stroke(width = borderWidth.dp.toPx()),
                 )
             }
-            val thumbRadius = h * thumbRadiusFraction
-            val inset = h * thumbInsetFraction
+            val thumbRadius = thumbDiameter.toPx() / 2f
+            val inset = thumbInset.toPx()
             val left = inset + thumbRadius
             val right = w - inset - thumbRadius
             val cx = left + (right - left) * travel
@@ -205,8 +211,7 @@ fun ExpressiveSwitch(
             }
         }
         if (thumbContent != null) {
-            val thumbDiameter = 32.dp * (thumbRadiusFraction * 2f)
-            val thumbTravel = 52.dp - (32.dp * (thumbInsetFraction + thumbRadiusFraction) * 2f)
+            val thumbTravel = trackSize.width - thumbDiameter - (thumbInset * 2f)
             Box(
                 modifier = Modifier
                     .align(Alignment.Center)
