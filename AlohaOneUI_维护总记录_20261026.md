@@ -257,3 +257,10 @@
 - 连接设置页面、偏好存储与 ViewModel 的取值范围，并让 Aloha OneUI 功能图标响应所选遮罩；`Random` 按图标类型稳定选择，避免重组时图形跳变。
 - 说明：本次实现了完整的 50 项选择/预览/保存应用链路，但这些几何遮罩是新构造的参数化图形，尚未从 Voyage 混淆 DEX 中逐项还原并与原版截图逐项核对；因此不能标记为 Voyage 1:1 验收完成。后续仍需原版形状表精确对照。
 - 当前构建基线：Slider 端点修正提交 `abcc91145342be0b4ae13505cdfdb65e36fbaefb` 的工作流 Run #1639 已通过。下一批仍按既定顺序处理 Smooth G²（最后）。
+
+## 2026-10-26 整批构建检查点（Build #1642）
+
+- 图标形状选择器已接入主题设置：`None`、`Random` 与 50 个几何预设；存储、ViewModel、设置页面与功能图标遮罩均已连接。随后修复了 Kotlin 几何计算中的 Double/Float 类型转换。
+- GitHub Actions Run #1642（commit `18984c5b4722b4b9c65fb9dc8657ce85442c7d1a`）编译成功并产出已签名 APK。APK：`AlohaOneUI_1.0.261025_BUILD_1642.apk`，大小 28,747,569 bytes，SHA-256 `d919c326f2513d25d90c49bcbf16730b83622178511168ce43c06d2cbf7b742d`；包名 `com.alohaoneui.app`，versionName `1.0.261025`，versionCode `16`；APK v2 签名有效，证书 SHA-256 `93bf61a6493c6b336383832eb41301bd8fe061f43566e7e384e3fdd9fc1c26a1`。
+- 50 个几何预设的选择、预览、持久化及功能图标遮罩链路已实现，但仍需从 Voyage 原版逐项还原真实形状数据才能宣称视觉 1:1。Smooth G² 的源参数曲线算法已存在于 `SegmentedList.kt`，采用独立的 Voyage G² profile，与 Squircle 曲线分离；本轮没有用近似算法替换它。
+- 本次为测试分支 APK，不是正式发布版本；`main` 未修改。维护记录继续按日期文件更新，不新建带时间戳的重复文件。
