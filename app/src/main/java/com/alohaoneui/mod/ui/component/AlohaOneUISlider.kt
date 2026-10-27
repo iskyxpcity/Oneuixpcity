@@ -154,6 +154,7 @@ fun AlohaOneUISlider(
                     activeColor = materialActiveColor,
                     inactiveColor = materialInactiveColor,
                     shadowEnabled = LocalMaterialShadowSliders.current,
+                    interactionSource = materialInteractionSource,
                 )
             },
             track = { state ->
