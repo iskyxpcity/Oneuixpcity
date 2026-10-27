@@ -192,7 +192,7 @@ private class VoyagePathShape(
                         val waveCount = kotlin.math.ceil(perimeterLength / period).toInt().coerceAtLeast(1)
                         val waveLength = perimeterLength / waveCount
                         val sampleStep = maxOf(waveLength / 8f, perimeterLength / 360f, 1f)
-                        data class WaveSample(
+                        class WaveSample(
                             val point: androidx.compose.ui.geometry.Offset,
                             val normal: androidx.compose.ui.geometry.Offset,
                             val phaseDistance: Float,
