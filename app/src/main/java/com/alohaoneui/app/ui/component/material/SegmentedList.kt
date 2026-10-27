@@ -1,8 +1,10 @@
 package com.alohaoneui.app.ui.component.material
 
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -88,6 +90,8 @@ import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
 import com.alohaoneui.app.ui.theme.LocalMaterialShadowContainers
 import androidx.compose.foundation.border
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.graphicsLayer
+import com.alohaoneui.app.ui.theme.LocalMaterialShadowButtons
 import kotlinx.coroutines.launch
 
 val LocalListItemShapes = compositionLocalOf<ListItemShapes?> { null }
@@ -882,17 +886,38 @@ fun SegmentedChoiceOptionsItem(
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             items.forEachIndexed { index, label ->
+                val selected = index == safeIndex
+                val interactionSource = remember(index) { MutableInteractionSource() }
+                val pressed by interactionSource.collectIsPressedAsState()
+                val pressScale by animateFloatAsState(
+                    targetValue = if (pressed && enabled) 0.96f else 1f,
+                    animationSpec = spring(),
+                    label = "voyageChoiceChipPress",
+                )
+                val chipShape = voyageCornerShape(8.dp)
                 FilterChip(
-                    selected = index == safeIndex,
+                    selected = selected,
                     onClick = {
                         if (enabled && index != safeIndex) {
                             haptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
                             onItemSelected(index)
                         }
                     },
+                    modifier = Modifier
+                        .then(
+                            if (LocalMaterialShadowButtons.current) {
+                                Modifier.shadow(if (selected) 2.dp else 1.dp, chipShape)
+                            } else Modifier
+                        )
+                        .graphicsLayer {
+                            scaleX = pressScale
+                            scaleY = pressScale
+                        },
                     enabled = enabled,
+                    interactionSource = interactionSource,
+                    shape = chipShape,
                     label = { Text(label) },
-                    leadingIcon = if (index == safeIndex) {
+                    leadingIcon = if (selected) {
                         { Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(18.dp)) }
                     } else null,
                     colors = FilterChipDefaults.filterChipColors(),
