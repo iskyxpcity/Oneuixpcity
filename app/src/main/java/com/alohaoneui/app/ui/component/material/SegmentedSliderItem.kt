@@ -105,6 +105,7 @@ internal fun voyageSliderAppearance(requestedStyle: Int): VoyageSliderAppearance
 /** The source families wrap their track differently; keep that outer surface
  * separate from the active/inactive rail so the rail is never painted in the
  * same color as the thumb. HyperOS wraps the 30dp track itself. */
+@Composable
 internal fun voyageSliderContainerModifier(
     style: Int,
     containerColor: Color,
