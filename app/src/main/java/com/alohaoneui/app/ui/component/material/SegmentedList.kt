@@ -154,10 +154,9 @@ private data class VoyageG2Profile(
         val c1y = p0.y + maxOf(0.0, p2.y * firstControlScale)
         val c2x = p1.x - maxOf(0.0, p3.x * secondControlScale)
         val c2y = p1.y - maxOf(0.0, p3.y * secondControlScale)
-        // fqw0.m95419o() returns its third input (1, 0) as the cubic
-        // endpoint. The arc tangent point (cos, sin) is used to solve the
-        // second control point; it is not the cubic endpoint.
-        return Cubic(p0, Point(c1x, c1y), Point(c2x, c2y), p2)
+        // wcf stores p0, p1, p2, p3 in that order. Voyage's path builder
+        // passes p3 to cubicTo; p2 remains the second control point.
+        return Cubic(p0, Point(c1x, c1y), Point(c2x, c2y), p3)
     }
 
     /**
@@ -229,18 +228,31 @@ private class VoyagePathShape(
                 // dan.m88494l() rather than reusing the Squircle smoothing=48 shortcut.
                 // The profile is source-defined (dan.f104767lI); its second control
                 // point supplies the tangent scale used at each radius-sized corner.
-                val profile = VoyageG2Profile.smooth.cubic()
-                val tangentScale = profile.p2.x.toFloat().coerceIn(0f, 1f)
-                val controlInset = 1f - tangentScale
+                fun cornerInset(radius: Float): Float {
+                    if (radius <= 0f || w <= 0f || h <= 0f) return 0f
+                    // ban.m5206I() derives the corner profile from both half extents;
+                    // use the limiting axis so wide and tall surfaces do not share
+                    // one hard-coded curve when their aspect ratios differ.
+                    val widthProgress = VoyageG2Profile.smooth.aspectProgress(w / 2f, radius)
+                    val heightProgress = VoyageG2Profile.smooth.aspectProgress(h / 2f, radius)
+                    val profile = VoyageG2Profile.smooth.interpolateFromCapsule(
+                        minOf(widthProgress, heightProgress)
+                    ).cubic()
+                    return (1.0 - profile.p2.x).toFloat().coerceIn(0.08f, 0.92f)
+                }
+                val tlInset = cornerInset(tl)
+                val trInset = cornerInset(tr)
+                val brInset = cornerInset(br)
+                val blInset = cornerInset(bl)
                 path.moveTo(tl, 0f)
                 path.lineTo(w - tr, 0f)
-                path.cubicTo(w - tr * controlInset, 0f, w, tr * controlInset, w, tr)
+                if (tr > 0f) path.cubicTo(w - tr * trInset, 0f, w, tr * trInset, w, tr)
                 path.lineTo(w, h - br)
-                path.cubicTo(w, h - br * controlInset, w - br * controlInset, h, w - br, h)
+                if (br > 0f) path.cubicTo(w, h - br * brInset, w - br * brInset, h, w - br, h)
                 path.lineTo(bl, h)
-                path.cubicTo(bl * controlInset, h, 0f, h - bl * controlInset, 0f, h - bl)
+                if (bl > 0f) path.cubicTo(bl * blInset, h, 0f, h - bl * blInset, 0f, h - bl)
                 path.lineTo(0f, tl)
-                path.cubicTo(0f, tl * controlInset, tl * controlInset, 0f, tl, 0f)
+                if (tl > 0f) path.cubicTo(0f, tl * tlInset, tl * tlInset, 0f, tl, 0f)
             }
             4 -> {
                 // Voyage source: p000/wgo0.java, mo5154ll + m140359lI/m140360lO/
