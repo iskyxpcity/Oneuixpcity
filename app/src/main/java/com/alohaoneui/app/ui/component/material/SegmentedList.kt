@@ -366,7 +366,10 @@ private class VoyagePathShape(
                     path.addRoundRect(androidx.compose.ui.geometry.RoundRect(0f, 0f, w, h))
                 } else {
                     val scale = (minDimension / (48f * density.density)).coerceIn(0.42f, 1f)
-                    val period = (12f * density.density * scale).coerceAtLeast(1f)
+                    // wgo0.mo5154ll uses 12dp as the target wave length only to
+                    // choose an integer wave count; m140361lo receives the adjusted
+                    // perimeterLength / waveCount as its actual sine period.
+                    val targetWaveLength = (12f * density.density * scale).coerceAtLeast(1f)
                     val amplitude = (0.9f * density.density * scale)
                         .coerceIn(0f, minDimension / 4f)
                     val aTL = if (tl > 0f || tr > 0f) amplitude else 0f
@@ -410,7 +413,7 @@ private class VoyagePathShape(
                         // Voyage wgo0.java: split the perimeter into waves first,
                         // then choose subdivisions from BOTH the per-wave length and
                         // the total path length. Keep the source constants explicit.
-                        val waveCount = kotlin.math.ceil(perimeterLength / period).toInt().coerceAtLeast(1)
+                        val waveCount = kotlin.math.ceil(perimeterLength / targetWaveLength).toInt().coerceAtLeast(1)
                         val waveLength = perimeterLength / waveCount
                         val sourceArcSubdivisions = 8f
                         val sourcePathSubdivisions = 360f
@@ -491,7 +494,7 @@ private class VoyagePathShape(
 
                         val displaced = samples.map { sample ->
                             val wave = sample.localAmplitude * kotlin.math.sin(
-                                sample.phaseDistance * 2f * Math.PI.toFloat() / period
+                                sample.phaseDistance * 2f * Math.PI.toFloat() / waveLength
                             )
                             androidx.compose.ui.geometry.Offset(
                                 sample.point.x + sample.normal.x * wave,
