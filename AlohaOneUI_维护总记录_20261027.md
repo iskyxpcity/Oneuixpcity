@@ -503,3 +503,13 @@
 - 修复：Wavy Outline 使用跨 Shape 实例共享、容量上限 160 的 LRU 缓存；缓存键包含样式、控件尺寸、密度、布局方向和四角半径。Wavy 动画半径按 0.5dp 分桶以便同帧多个同尺寸列表项复用已生成的轮廓；其他形状仍走原有实例缓存路径，波浪路径的采样/位移算法没有删减。
 - 修改只提交到 `test/voyage-theme-1to1-20261026`，没有修改或合并 `main`。
 - 验证状态：目前已完成源码级性能优化，但尚未获得本次提交对应的真实 Actions 构建结果，也没有设备帧时间/录屏实测数据；不能先行宣称卡顿已完全消除。后续必须先检查编译和 APK 构建，再在设备上验证 Wavy 切换、动画过程及滚动性能。若仍卡顿，继续优化采样/动画路径并对照 Voyage 外观，不能直接移除波浪形状。
+
+
+## 2026-10-27 用户反馈：形状样式为 Smooth 时开关不可见
+
+- 修复提交：`7e419dc6faf42f948f3110f5f571ebb6916035ed`（`fix: keep switches visible with smooth shape style`）。
+- 修改文件：`app/src/main/java/com/alohaoneui/app/ui/component/material/ExpressiveSwitch.kt`。
+- 开关轨道、滑块和样式 5 的 halo 在全局形状样式为 Smooth（索引 3）时，改用稳定的胶囊形 `RoundedCornerShape`；其他形状样式继续走 `voyageCornerShape`。开关的开/关颜色、尺寸、滑动动画、点击语义、描边及阴影逻辑保持不变。
+- 这是针对开关控件的安全回退，避免 Smooth 的自定义 G² 路径在开关这类胶囊尺寸下发生退化而导致开关无法绘制；不改变全局 Smooth 样式在其他组件上的使用。
+- 本次修改只提交到 `test/voyage-theme-1to1-20261026`，没有修改或合并 `main`。
+- 验证状态：已提交源码修复，仍需以真实构建和设备运行确认开关重新显示且交互正常；当前不能声称 APK 已构建通过。
