@@ -665,10 +665,22 @@ fun SegmentedListItem(
     trailingContent: @Composable (() -> Unit)? = null,
 ) {
     val itemShapes = LocalListItemShapes.current ?: ListItemDefaults.segmentedShapes(0, 1)
+    val resolvedInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
+    val pressed by resolvedInteractionSource.collectIsPressedAsState()
+    val pressScale by animateFloatAsState(
+        targetValue = if (pressed && enabled) 0.985f else 1f,
+        animationSpec = spring(dampingRatio = 0.62f, stiffness = 520f),
+        label = "voyageSegmentedRowPress",
+    )
+    val shadowElevation by animateDpAsState(
+        targetValue = if (pressed && enabled) 2.dp else 1.dp,
+        animationSpec = spring(dampingRatio = 0.62f, stiffness = 520f),
+        label = "voyageSegmentedRowShadow",
+    )
     val styledModifier = modifier
         .then(
             if (LocalMaterialShadowContainers.current) {
-                Modifier.shadow(1.dp, itemShapes.shape)
+                Modifier.shadow(shadowElevation, itemShapes.shape)
             } else Modifier
         )
         .then(
@@ -676,12 +688,16 @@ fun SegmentedListItem(
                 Modifier.border(it.dp, colorScheme.outlineVariant, itemShapes.shape)
             } ?: Modifier
         )
+        .graphicsLayer {
+            scaleX = pressScale
+            scaleY = pressScale
+        }
     SegmentedListItem(
         onClick = onClick ?: {},
         onLongClick = onLongClick,
         enabled = enabled,
         colors = colors,
-        interactionSource = interactionSource,
+        interactionSource = resolvedInteractionSource,
         shapes = itemShapes,
         modifier = styledModifier,
         leadingContent = leadingContent,
@@ -709,10 +725,22 @@ fun SegmentedListItem(
     onLongClick: (() -> Unit)? = null,
 ) {
     val itemShapes = LocalListItemShapes.current ?: ListItemDefaults.segmentedShapes(0, 1)
+    val resolvedInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
+    val pressed by resolvedInteractionSource.collectIsPressedAsState()
+    val pressScale by animateFloatAsState(
+        targetValue = if (pressed && enabled) 0.985f else 1f,
+        animationSpec = spring(dampingRatio = 0.62f, stiffness = 520f),
+        label = "voyageSegmentedCheckRowPress",
+    )
+    val shadowElevation by animateDpAsState(
+        targetValue = if (pressed && enabled) 2.dp else 1.dp,
+        animationSpec = spring(dampingRatio = 0.62f, stiffness = 520f),
+        label = "voyageSegmentedCheckRowShadow",
+    )
     val styledModifier = modifier
         .then(
             if (LocalMaterialShadowContainers.current) {
-                Modifier.shadow(1.dp, itemShapes.shape)
+                Modifier.shadow(shadowElevation, itemShapes.shape)
             } else Modifier
         )
         .then(
@@ -720,6 +748,10 @@ fun SegmentedListItem(
                 Modifier.border(it.dp, colorScheme.outlineVariant, itemShapes.shape)
             } ?: Modifier
         )
+        .graphicsLayer {
+            scaleX = pressScale
+            scaleY = pressScale
+        }
     SegmentedListItem(
         checked = checked,
         onCheckedChange = onCheckedChange,
@@ -727,7 +759,7 @@ fun SegmentedListItem(
         modifier = styledModifier,
         enabled = enabled,
         colors = colors,
-        interactionSource = interactionSource,
+        interactionSource = resolvedInteractionSource,
         leadingContent = leadingContent,
         trailingContent = trailingContent,
         overlineContent = overlineContent,
@@ -754,12 +786,24 @@ fun SegmentedListItem(
     onLongClick: (() -> Unit)? = null,
 ) {
     val itemShapes = LocalListItemShapes.current ?: ListItemDefaults.segmentedShapes(0, 1)
-    // Selected/radio rows must inherit the same container outline and shadow settings
-    // as the default and checkbox overloads; otherwise theme settings are skipped here.
+    // Selected/radio rows share the same pressed motion, animated container shadow,
+    // and outline as ordinary rows so the theme settings remain consistent.
+    val resolvedInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
+    val pressed by resolvedInteractionSource.collectIsPressedAsState()
+    val pressScale by animateFloatAsState(
+        targetValue = if (pressed && enabled) 0.985f else 1f,
+        animationSpec = spring(dampingRatio = 0.62f, stiffness = 520f),
+        label = "voyageSegmentedSelectedRowPress",
+    )
+    val shadowElevation by animateDpAsState(
+        targetValue = if (pressed && enabled) 2.dp else 1.dp,
+        animationSpec = spring(dampingRatio = 0.62f, stiffness = 520f),
+        label = "voyageSegmentedSelectedRowShadow",
+    )
     val styledModifier = modifier
         .then(
             if (LocalMaterialShadowContainers.current) {
-                Modifier.shadow(1.dp, itemShapes.shape)
+                Modifier.shadow(shadowElevation, itemShapes.shape)
             } else Modifier
         )
         .then(
@@ -767,6 +811,10 @@ fun SegmentedListItem(
                 Modifier.border(it.dp, colorScheme.outlineVariant, itemShapes.shape)
             } ?: Modifier
         )
+        .graphicsLayer {
+            scaleX = pressScale
+            scaleY = pressScale
+        }
     SegmentedListItem(
         selected = selected,
         onClick = onClick,
@@ -774,7 +822,7 @@ fun SegmentedListItem(
         modifier = styledModifier,
         enabled = enabled,
         colors = colors,
-        interactionSource = interactionSource,
+        interactionSource = resolvedInteractionSource,
         leadingContent = leadingContent,
         trailingContent = trailingContent,
         overlineContent = overlineContent,
