@@ -66,7 +66,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
@@ -109,6 +108,7 @@ import com.alohaoneui.app.ui.component.material.SegmentedColumn
 import com.alohaoneui.app.ui.component.material.SegmentedChoiceOptionsItem
 import com.alohaoneui.app.ui.component.material.SegmentedSwitchItem
 import com.alohaoneui.app.ui.component.material.SegmentedSliderItem
+import com.alohaoneui.mod.ui.component.AlohaOneUISlider
 import com.alohaoneui.app.ui.component.material.TonalCard
 import com.alohaoneui.app.ui.component.material.voyageSegmentedShape
 import com.alohaoneui.app.ui.component.material.voyageCornerShape
@@ -419,19 +419,12 @@ fun ColorPaletteScreenMaterial(
                             )
                         }
 
-                        Slider(
+                        AlohaOneUISlider(
                             value = sliderValue,
                             onValueChange = { sliderValue = it },
                             onValueChangeFinished = { actions.onSetPageScale(sliderValue) },
                             valueRange = 0.8f..1.1f,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .then(if (LocalMaterialShadowSliders.current) Modifier.shadow(2.dp, voyageCornerShape(50.dp)) else Modifier)
-                                .then(
-                                    LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
-                                        Modifier.border(it.dp, MaterialTheme.colorScheme.outlineVariant, voyageCornerShape(50.dp))
-                                    } ?: Modifier
-                                )
+                            modifier = Modifier.fillMaxWidth(),
                         )
                     }
                 }
