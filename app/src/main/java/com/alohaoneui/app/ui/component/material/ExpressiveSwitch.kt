@@ -160,13 +160,13 @@ fun ExpressiveSwitch(
                 size = Size(w, h),
                 cornerRadius = CornerRadius(radius, radius),
             )
-            if (style == 1 || style == 2 || style == 3 || style == 6 || style == 7) {
+            if (borderWidth > 0f) {
                 drawRoundRect(
                     color = (if (checked) checkedBorder else uncheckedBorder).copy(alpha = if (enabled) 1f else 0.45f),
                     topLeft = Offset(borderWidth.dp.toPx() / 2f, borderWidth.dp.toPx() / 2f),
                     size = Size(w - borderWidth.dp.toPx(), h - borderWidth.dp.toPx()),
                     cornerRadius = CornerRadius(radius, radius),
-                    style = Stroke(width = (if (style == 3) 1.5f else maxOf(borderWidth, 1f)).dp.toPx()),
+                    style = Stroke(width = borderWidth.dp.toPx()),
                 )
             }
             val thumbRadius = h * thumbRadiusFraction * (if (pressed) 0.96f else 1f)
