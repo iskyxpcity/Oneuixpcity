@@ -44,6 +44,49 @@ import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
  * visible track and thumb are drawn here so styling is not limited to the
  * stock Material thumb/track defaults.
  */
+
+/** Shared style inputs for both the settings-row and generic Material sliders.
+ * Values in this adapter preserve the current app mapping until each original
+ * Voyage branch is fully matched to its decompiled draw path.
+ */
+internal data class VoyageSliderAppearance(
+    val style: Int,
+    val activeColor: Color,
+    val inactiveColor: Color,
+    val thumbSize: DpSize,
+    val trackHeight: androidx.compose.ui.unit.Dp,
+)
+
+@Composable
+internal fun voyageSliderAppearance(requestedStyle: Int): VoyageSliderAppearance {
+    val style = requestedStyle.coerceIn(0, 3)
+    val scheme = MaterialTheme.colorScheme
+    val active = when (style) {
+        1 -> scheme.tertiary
+        2 -> scheme.secondary
+        else -> scheme.primary
+    }
+    val inactive = when (style) {
+        1 -> scheme.tertiaryContainer
+        2 -> scheme.surfaceVariant
+        3 -> scheme.surfaceContainerHighest
+        else -> scheme.secondaryContainer
+    }
+    val trackHeight = when (style) {
+        1 -> 8.dp
+        2 -> 4.dp
+        3 -> 6.dp
+        else -> 4.dp
+    }
+    return VoyageSliderAppearance(
+        style = style,
+        activeColor = active,
+        inactiveColor = inactive,
+        thumbSize = DpSize(20.dp, 20.dp),
+        trackHeight = trackHeight,
+    )
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SegmentedSliderItem(
@@ -56,30 +99,15 @@ fun SegmentedSliderItem(
     steps: Int = 0,
     onValueChangeFinished: (() -> Unit)? = null,
 ) {
-    val style = LocalMaterialSliderStyle.current.coerceIn(0, 3)
-    val scheme = MaterialTheme.colorScheme
-    val active = when (style) {
-        1 -> scheme.tertiary
-        2 -> scheme.secondary
-        3 -> scheme.primary
-        else -> scheme.primary
-    }
-    val inactive = when (style) {
-        1 -> scheme.tertiaryContainer
-        2 -> scheme.surfaceVariant
-        3 -> scheme.surfaceContainerHighest
-        else -> scheme.secondaryContainer
-    }
+    val appearance = voyageSliderAppearance(LocalMaterialSliderStyle.current)
+    val style = appearance.style
+    val active = appearance.activeColor
+    val inactive = appearance.inactiveColor
     // Source check: j5v0.m105238O and z4v0.m147159l both apply
     // Modifier.size(20.dp, 20.dp) to the thumb hit/visual slot.
     // The 16dp and 32dp values belong to separate track containers, not thumbs.
-    val thumbSize = DpSize(20.dp, 20.dp)
-    val trackHeight = when (style) {
-        1 -> 8.dp
-        2 -> 4.dp
-        3 -> 6.dp
-        else -> 4.dp
-    }
+    val thumbSize = appearance.thumbSize
+    val trackHeight = appearance.trackHeight
     val interactionSource = remember { MutableInteractionSource() }
     val sliderState = rememberSliderState(
         value = value,
