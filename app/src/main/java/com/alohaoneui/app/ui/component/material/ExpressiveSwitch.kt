@@ -6,6 +6,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
@@ -51,6 +52,7 @@ fun ExpressiveSwitch(
     showThumbIcon: Boolean = true,
 ) {
     val style = LocalMaterialSwitchStyle.current.coerceIn(0, 7)
+    val pressed by interactionSource.collectIsPressedAsState()
     val scheme = MaterialTheme.colorScheme
     val checkedTrack = when (style) {
         0 -> colors.checkedTrackColor
@@ -97,31 +99,42 @@ fun ExpressiveSwitch(
         3 -> scheme.outline
         else -> scheme.outlineVariant
     }
-    // Track dimensions are taken from the original Voyage style composables:
-    // Material You / Compose 52x32 (frt0.m95463l), Pixel 56x28 (it70.m103876l),
-    // Fluent 48x24 (ckw0.m9293l), Cupertino / Liquid Glass 51x31 (rdf),
-    // HyperOS 50x28.5 (y2t0.m144445l), and One UI 39x22 (l140.m110104l).
+    // Exact outer slot dimensions from Voyage's j7w0.m105365O dispatch:
+    // 0 z4v0.m147164o = 52x32; 1 frt0.m95463l = 52x32;
+    // 2 it70.m103876l = 56x28; 3 ckw0.m9293l = 48x24;
+    // 4 rdf.m127934l = 51x31; 5 rdf.m127933O -> m127932I = 64x28;
+    // 6 y2t0.m144445l = 50x28.5; 7 l140.m110104l = 39x22.
     val trackSize = when (style) {
         2 -> DpSize(56.dp, 28.dp)
         3 -> DpSize(48.dp, 24.dp)
-        4, 5 -> DpSize(51.dp, 31.dp)
+        4 -> DpSize(51.dp, 31.dp)
+        5 -> DpSize(64.dp, 28.dp)
         6 -> DpSize(50.dp, 28.5.dp)
         7 -> DpSize(39.dp, 22.dp)
         else -> DpSize(52.dp, 32.dp)
     }
+    // Thumb slots are style-specific in the original composables; interaction
+    // expansion is driven by the shared interaction source, not checked state.
     val thumbDiameter = when (style) {
-        0, 1 -> if (checked || thumbContent != null) 24.dp else 16.dp
-        2, 3 -> 16.dp
-        4, 5 -> 20.dp
-        6 -> if (checked) 26.dp else 24.dp
-        7 -> 22.dp
-        else -> 16.dp
+        0 -> 20.dp // z4v0.m147162ll: fixed 20dp thumb slot.
+        1 -> when {
+            pressed -> 28.dp // frt0.m95463l expands the thumb while interacting.
+            checked || thumbContent != null -> 24.dp
+            else -> 16.dp
+        }
+        2 -> 20.dp // it70.m103876l: 20dp thumb, separate from its 16dp icon.
+        3 -> if (enabled && pressed) 17.dp else 12.dp // ckw0.m9293l.
+        4, 5 -> 20.dp // rdf.m127934l / m127933O.
+        6 -> if (enabled && pressed) 23.dp else 20.dp // y2t0.m144445l.
+        7 -> 22.dp // l140.m110104l.
+        else -> 20.dp
     }
     val thumbInset = ((trackSize.height - thumbDiameter) / 2f).coerceAtLeast(0.dp)
     val trackCornerRadius = when (style) {
         2 -> 14.dp
         3 -> 4.dp
-        4, 5 -> 15.5.dp
+        4 -> 15.5.dp
+        5 -> 14.dp
         6 -> 14.25.dp
         7 -> 11.dp
         else -> 16.dp
