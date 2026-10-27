@@ -189,9 +189,18 @@ private class VoyagePathShape(
                             bottomLeftCornerRadius = androidx.compose.ui.geometry.CornerRadius(bl, bl),
                         ))
                     } else {
+                        // Voyage wgo0.java: split the perimeter into waves first,
+                        // then choose subdivisions from BOTH the per-wave length and
+                        // the total path length. Keep the source constants explicit.
                         val waveCount = kotlin.math.ceil(perimeterLength / period).toInt().coerceAtLeast(1)
                         val waveLength = perimeterLength / waveCount
-                        val sampleStep = maxOf(waveLength / 8f, perimeterLength / 360f, 1f)
+                        val sourceArcSubdivisions = 8f
+                        val sourcePathSubdivisions = 360f
+                        val sampleStep = maxOf(
+                            waveLength / sourceArcSubdivisions,
+                            perimeterLength / sourcePathSubdivisions,
+                            1f
+                        )
                         class WaveSample(
                             val point: androidx.compose.ui.geometry.Offset,
                             val normal: androidx.compose.ui.geometry.Offset,
