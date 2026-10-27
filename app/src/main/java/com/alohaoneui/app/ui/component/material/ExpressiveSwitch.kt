@@ -29,7 +29,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.toDp
 import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
 import com.alohaoneui.app.ui.theme.LocalMaterialShadowSwitches
 import com.alohaoneui.app.ui.theme.LocalMaterialSwitchStyle
@@ -113,6 +112,11 @@ fun ExpressiveSwitch(
         7 -> 0.31f
         else -> 0.31f
     }
+    val thumbInsetFraction = when (style) {
+        4 -> 0.12f
+        5 -> 0.10f
+        else -> 0.13f
+    }
     val travel by animateFloatAsState(
         targetValue = if (checked) 1f else 0f,
         animationSpec = spring(dampingRatio = 0.78f, stiffness = 620f),
@@ -158,7 +162,7 @@ fun ExpressiveSwitch(
                 )
             }
             val thumbRadius = h * thumbRadiusFraction * (if (pressed) 0.96f else 1f)
-            val inset = when (style) { 4 -> h * 0.12f; 5 -> h * 0.10f; else -> h * 0.13f }
+            val inset = h * thumbInsetFraction
             val left = inset + thumbRadius
             val right = w - inset - thumbRadius
             val cx = left + (right - left) * travel
@@ -184,8 +188,8 @@ fun ExpressiveSwitch(
             }
         }
         if (thumbContent != null) {
-            val thumbDiameter = (h * thumbRadiusFraction * 2f).toDp()
-            val thumbTravel = (w - 2f * (inset + thumbRadius)).toDp()
+            val thumbDiameter = 32.dp * (thumbRadiusFraction * 2f)
+            val thumbTravel = 52.dp - 2f * (32.dp * (thumbInsetFraction + thumbRadiusFraction))
             Box(
                 modifier = Modifier
                     .align(Alignment.Center)
