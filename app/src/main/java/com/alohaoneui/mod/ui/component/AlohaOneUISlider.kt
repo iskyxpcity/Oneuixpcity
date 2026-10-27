@@ -120,11 +120,9 @@ fun AlohaOneUISlider(
         3 -> materialScheme.surfaceContainerHighest
         else -> materialScheme.secondaryContainer
     }
-    // Source-derived thumb slots: y8f0 path = 16dp; vhf variants = 32dp.
-    val materialThumbSize = when (materialSliderStyle) {
-        0, 1 -> DpSize(16.dp, 16.dp)
-        else -> DpSize(32.dp, 32.dp)
-    }
+    // Voyage source applies a 20dp x 20dp thumb slot in j5v0.m105238O
+    // and z4v0.m147159l. Track heights are configured independently.
+    val materialThumbSize = DpSize(20.dp, 20.dp)
     val materialTrackHeight = when (materialSliderStyle) {
         1 -> 8.dp
         2 -> 4.dp
