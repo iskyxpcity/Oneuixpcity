@@ -132,6 +132,7 @@ fun SegmentedSliderItem(
                             range = valueRange,
                             steps = steps,
                             height = trackHeight,
+                            thumbWidth = thumbSize.width,
                             activeColor = active,
                             inactiveColor = inactive,
                         )
@@ -151,7 +152,6 @@ private fun VoyageSliderThumb(
     interactionSource: MutableInteractionSource,
 ) {
     val pressed by interactionSource.collectIsPressedAsState()
-    val diameter = if (pressed) size.width * 0.94f else size.width
     Box(Modifier.size(width = size.width, height = size.height)) {
         Canvas(Modifier.fillMaxSize()) {
             val d = minOf(size.width.toPx(), size.height.toPx()) * if (pressed) 0.94f else 1f
@@ -186,6 +186,7 @@ private fun VoyageSliderTrack(
     range: ClosedFloatingPointRange<Float>,
     steps: Int,
     height: androidx.compose.ui.unit.Dp,
+    thumbWidth: androidx.compose.ui.unit.Dp,
     activeColor: Color,
     inactiveColor: Color,
 ) {
@@ -198,12 +199,10 @@ private fun VoyageSliderTrack(
     Canvas(Modifier.fillMaxWidth().height(height)) {
         val h = size.height
         val centerY = h / 2f
-        val inset = when (style) {
-            1 -> h * 0.08f
-            2 -> h * 0.30f
-            3 -> h * 0.12f
-            else -> h * 0.25f
-        }
+        // Keep the visual track endpoints aligned with the actual thumb center.
+        // The Material Slider positions the thumb center half a thumb-width from
+        // either end of its track slot.
+        val inset = thumbWidth.toPx() / 2f
         val left = inset
         val right = (size.width - inset).coerceAtLeast(left)
         val fraction = if (range.endInclusive > range.start) {
