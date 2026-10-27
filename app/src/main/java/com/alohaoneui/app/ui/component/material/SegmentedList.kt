@@ -106,41 +106,55 @@ private data class VoyageG2Profile(
     val bezierCurvatureScale: Double,
     val arcCurvatureScale: Double,
 ) {
-    data class Point(val x: Double, val y: Double)
+    data class Point(val x: Double, val y: Double) {
+        operator fun plus(other: Point) = Point(x + other.x, y + other.y)
+        operator fun minus(other: Point) = Point(x - other.x, y - other.y)
+        operator fun times(scale: Double) = Point(x * scale, y * scale)
+    }
+
     data class Cubic(val p0: Point, val p1: Point, val p2: Point, val p3: Point)
 
+    /**
+     * Direct port of dan.m88494l() and fqw0.m95419o(): the returned cubic is
+     * the Bezier segment that joins the G² profile to its circular arc.
+     */
     fun cubic(): Cubic {
-        val halfPi = Math.PI / 2.0
-        val angle = arcFraction * halfPi
+        val angle = arcFraction * Math.PI / 2.0
         val sin = kotlin.math.sin(angle)
         val cos = kotlin.math.cos(angle)
+        val p0 = Point(-extendedFraction, 0.0)
         if (bezierCurvatureScale == 1.0 && arcCurvatureScale == 1.0) {
             val denominator = cos + 1.0
             val tangent = sin / denominator
             return Cubic(
-                Point(-extendedFraction, 0.0),
+                p0,
                 Point((1.0 - 1.5 / denominator) * tangent, 0.0),
                 Point(tangent, 0.0),
                 Point(sin, 1.0 - cos),
             )
         }
-        // Direct equivalent of dan.m88494l()'s general-profile branch.
-        val inverseCurvature = 1.0 / arcCurvatureScale
+
+        val inverseArcCurvature = 1.0 / arcCurvatureScale
         val diagonal = 1.0 / kotlin.math.sqrt(2.0)
-        val p1x = 1.0 + diagonal * (1.0 - inverseCurvature) + sin * inverseCurvature
-        val p1y = 1.0 - diagonal * (1.0 - inverseCurvature) - cos * inverseCurvature
-        val tangent = sin / (cos + 1.0)
-        return Cubic(
-            Point(-extendedFraction, 0.0),
-            Point((1.0 - 1.5 / (cos + 1.0)) * tangent, 0.0),
-            Point(tangent, 0.0),
-            Point(sin, 1.0 - cos),
-        ).let { cubic ->
-            // Keep the source curvature scale explicit in the profile representation.
-            // ban.m5206I() subsequently applies the interpolated curvature parameters
-            // and radius/aspect-ratio scaling before the profile is consumed.
-            if (p1x.isFinite() && p1y.isFinite()) cubic else cubic
-        }
+        val p1 = Point(0.0, 1.0) +
+            Point(diagonal, -diagonal) * (1.0 - inverseArcCurvature) +
+            Point(sin, -cos) * inverseArcCurvature
+        val p2 = Point(1.0, 0.0)
+        val p3 = Point(cos, sin)
+
+        val dx = p2.x - p0.x
+        val dy = p2.y - p0.y
+        val determinant = (p1.x * p3.y) - (p1.y * p3.x)
+        val tangentNumerator = (dx * p1.y) + (-dy * p1.x)
+        val curvatureTerm = (((1.5 * bezierCurvatureScale) * tangentNumerator * tangentNumerator) /
+            determinant / determinant / determinant)
+        val secondTangent = (-((dy * p3.x) - (dx * p3.y)) / determinant) - curvatureTerm
+        val firstTangent = (-tangentNumerator) / determinant
+        val c1x = (p0.x + maxOf(0.0, p3.x * secondTangent))
+        val c1y = (p0.y + maxOf(0.0, p3.y * secondTangent))
+        val c2x = p2.x - maxOf(0.0, p0.x * firstTangent)
+        val c2y = p2.y - maxOf(0.0, p0.y * firstTangent)
+        return Cubic(p0, Point(c1x, c1y), Point(c2x, c2y), p3)
     }
 
     companion object {
