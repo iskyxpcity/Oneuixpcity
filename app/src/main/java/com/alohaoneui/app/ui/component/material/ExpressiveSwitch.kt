@@ -141,10 +141,13 @@ fun ExpressiveSwitch(
         else -> 20.dp
     }
     val thumbWidth = minOf(trackSize.width * 0.65f, trackSize.width)
+    // Keep a small, even horizontal inset at both switch ends and let the
+    // thumb fill 90% of the track height, as requested.
     val thumbHeight = minOf(
-        trackSize.height * 0.82f,
-        sourceThumbDiameter.coerceAtLeast(trackSize.height * 0.72f),
+        trackSize.height * 0.90f,
+        sourceThumbDiameter.coerceAtLeast(trackSize.height * 0.90f),
     )
+    val thumbEdgeInset = 2.dp
     val trackCornerRadius = when (style) {
         2 -> 14.dp
         3 -> 4.dp
@@ -238,8 +241,9 @@ fun ExpressiveSwitch(
             }
             val thumbWidthPx = thumbWidth.toPx()
             val thumbHeightPx = thumbHeight.toPx()
-            val left = thumbWidthPx / 2f
-            val right = w - thumbWidthPx / 2f
+            val edgeInsetPx = thumbEdgeInset.toPx()
+            val left = thumbWidthPx / 2f + edgeInsetPx
+            val right = w - thumbWidthPx / 2f - edgeInsetPx
             val cx = left + (right - left) * travel
             val cy = h / 2f
             if (style == 5) {
@@ -299,7 +303,7 @@ fun ExpressiveSwitch(
             // thumb itself communicates the on/off state by position and color.
         }
         if (thumbContent != null) {
-            val thumbTravel = trackSize.width - thumbWidth
+            val thumbTravel = trackSize.width - thumbWidth - thumbEdgeInset * 2
             Box(
                 modifier = Modifier
                     .align(Alignment.Center)
