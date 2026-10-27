@@ -427,3 +427,12 @@
 - 最后清理提交：`66f6089f568c7cba7fe7274f99558d49d32709c0`（移除滑条文件不再使用的 `fillMaxSize` 导入）、`62a770e2a2906362fea911bae7c128ed3c85b640`（移除通用滑条文件不再使用的 `DpSize` 导入）。修改均在 `test/voyage-theme-1to1-20261026`。
 - 已读取仓库的 `.github/workflows/build.yml`，确认 workflow 配置了对 `main`、`test/**`、`migration/**` 分支 push 的触发条件，并有 `workflow_dispatch`。当前可用 GitHub 查询接口未提供“按分支列出所有 push-triggered runs”的列表操作；对产品提交查询 combined status 为空，commit workflow 查询仅覆盖 PR-triggered runs，因此无法从这两项空结果推断 push 构建没有运行，也不能据此宣称构建成功。
 - 当前尚无本批 HEAD 对应的、可核验的真实构建终态和 APK 产物。下一步必须通过 Actions 实际 run/job/artifact 记录核验构建结果；若失败，读取诊断日志继续修复。最终 APK 需与最终 HEAD 一致，不能拿 Build #1708 或更早的阶段包代替。
+
+## 2026-10-27 八种 Switch 源尺寸与交互 thumb 几何校正
+
+- 已恢复并校验 Voyage 原始检查归档：Actions artifact `12586213779` 下载为 `voyage-inspection-report.zip`，ZIP 完整性检查通过；本批直接对照其中的 `p000/j7w0.java` 分派和 `z4v0.java`、`frt0.java`、`it70.java`、`ckw0.java`、`rdf.java`、`y2t0.java`、`l140.java` 原始实现，没有用猜测代替尺寸来源。
+- 本批代码提交：`908b228305dc700358d5185f1ae67ff8bf31c739`，仅位于 `test/voyage-theme-1to1-20261026`，未修改/合并 `main`。修正了第 6 种 Liquid Glass 开关：原始 `rdf.m127933O → m127932I` 的轨道是 **64×28dp**，此前错误地与第 5 种 Cupertino 一起使用 51×31dp；同时把该轨道圆角半径修正为 14dp。
+- 修正了源代码可核实的 thumb slot 尺寸与交互扩展：第 0 种 `z4v0.m147162ll` 为固定 20dp；第 1 种 `frt0.m95463l` 为静止时 16/24dp、交互时扩展至 28dp；第 2 种 `it70.m103876l` 为 20dp；第 3 种 `ckw0.m9293l` 为静止 12dp、交互时 17dp；第 5 种 `rdf` 为 20dp；第 6 种 `y2t0.m144445l` 为静止 20dp、交互时 23dp；第 7 种 `l140.m110104l` 为 22dp。交互扩展现在观察共享 `MutableInteractionSource` 的 pressed 状态，不再错误地仅随 checked 状态改变。
+- **真实构建验证通过**：GitHub Actions [Build #1728](https://github.com/iskyxpcity/Oneuixpcity/actions/runs/40565117750)，run ID `40565117750`，对应产品代码提交 `908b228305dc700358d5185f1ae67ff8bf31c739`。Compile、owner signing key load、signed APK build、package/stable-certificate verification、artifact retention 均成功。
+- 该次测试 APK 已从 artifact 下载并校验：`AlohaOneUI_1.0.261025_BUILD_1728.apk`，包名 `com.alohaoneui.app`，versionCode `16`，versionName `1.0.261025`，大小 **28,773,833 bytes**，SHA-256 `9f90a6beefd602f09129ee30dcb2c4f141b337f794387e34cb4dfca775fb4919`；签名证书 SHA-256 `93bf61a6493c6b336383832eb41301bd8fe061f43566e7e384e3fdd9fc1c26a1`。artifact 名称 `AlohaOneUI-Signed-Test-APK`，ID `12763026483`。这是一份已验证的**测试分支构建产物**，并非 Voyage 主题迁移最终版；本次运行没有发布新的 GitHub Release 资产。
+- 当前仍未完成的事项必须继续按原版逐项核实：`IconShapePresetPicker.kt` 的 51 个形状目前仍使用临时几何生成器，尚未 1:1 复刻 `vqp.java` / `shq.java` / `ewm.java` / `qha0.java` 的原始形状目录；四种 Slider 的轨道、thumb、颜色和描边仍未逐条对照 `kdj0.java` / `h7w0.java` / `y8f0.java` 与四条实际实现；Wavy、Smooth G² 与其他形状也仍需完成整套截图/数值核对。不得把本次 Switch 几何修正或测试 APK 宣称为整体迁移完成。
