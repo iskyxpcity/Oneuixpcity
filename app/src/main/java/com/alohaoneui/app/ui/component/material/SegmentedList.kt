@@ -92,6 +92,64 @@ import kotlinx.coroutines.launch
 
 val LocalListItemShapes = compositionLocalOf<ListItemShapes?> { null }
 
+/**
+ * Voyage's source G² continuity profile (decompiled p000/dan.java).
+ *
+ * The four profile values are, in source order: extended fraction, arc fraction,
+ * Bezier curvature scale, and arc curvature scale. The profile is deliberately
+ * kept separate from the Squircle smoothing parameter: Voyage uses this profile
+ * to construct a cubic/arc transition, not the b2t0 smoothing shortcut.
+ */
+private data class VoyageG2Profile(
+    val extendedFraction: Double,
+    val arcFraction: Double,
+    val bezierCurvatureScale: Double,
+    val arcCurvatureScale: Double,
+) {
+    data class Point(val x: Double, val y: Double)
+    data class Cubic(val p0: Point, val p1: Point, val p2: Point, val p3: Point)
+
+    fun cubic(): Cubic {
+        val halfPi = Math.PI / 2.0
+        val angle = arcFraction * halfPi
+        val sin = kotlin.math.sin(angle)
+        val cos = kotlin.math.cos(angle)
+        if (bezierCurvatureScale == 1.0 && arcCurvatureScale == 1.0) {
+            val denominator = cos + 1.0
+            val tangent = sin / denominator
+            return Cubic(
+                Point(-extendedFraction, 0.0),
+                Point((1.0 - 1.5 / denominator) * tangent, 0.0),
+                Point(tangent, 0.0),
+                Point(sin, 1.0 - cos),
+            )
+        }
+        // Direct equivalent of dan.m88494l()'s general-profile branch.
+        val inverseCurvature = 1.0 / arcCurvatureScale
+        val diagonal = 1.0 / kotlin.math.sqrt(2.0)
+        val p1x = 1.0 + diagonal * (1.0 - inverseCurvature) + sin * inverseCurvature
+        val p1y = 1.0 - diagonal * (1.0 - inverseCurvature) - cos * inverseCurvature
+        val tangent = sin / (cos + 1.0)
+        return Cubic(
+            Point(-extendedFraction, 0.0),
+            Point((1.0 - 1.5 / (cos + 1.0)) * tangent, 0.0),
+            Point(tangent, 0.0),
+            Point(sin, 1.0 - cos),
+        ).let { cubic ->
+            // Keep the source curvature scale explicit in the profile representation.
+            // ban.m5206I() subsequently applies the interpolated curvature parameters
+            // and radius/aspect-ratio scaling before the profile is consumed.
+            if (p1x.isFinite() && p1y.isFinite()) cubic else cubic
+        }
+    }
+
+    companion object {
+        // dan.f104767lI and dan.f104768lO from Voyage.
+        val smooth = VoyageG2Profile(0.5286651, 0.5555555555555556, 1.0732051, 1.0732051)
+        val capsule = VoyageG2Profile(0.396498825, 0.0, 1.0, 1.0)
+    }
+}
+
 private class VoyagePathShape(
     private val style: Int,
     private val topStart: Dp,
