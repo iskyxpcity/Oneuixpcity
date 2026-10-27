@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SwitchColors
 import androidx.compose.material3.SwitchDefaults
@@ -151,9 +152,25 @@ fun ExpressiveSwitch(
         animationSpec = spring(dampingRatio = 0.78f, stiffness = 620f),
         label = "voyageSwitchThumb",
     )
-    val trackShape = voyageCornerShape(trackCornerRadius)
-    val thumbShape = voyageCornerShape(thumbDiameter / 2f)
-    val haloShape = voyageCornerShape(thumbDiameter / 2f + 2.dp)
+    // Voyage G² Smooth's general profile can degenerate at the near-capsule
+    // dimensions used by switch tracks/thumbs. Keep the Smooth family visually
+    // continuous with a capsule outline for switches, rather than letting a
+    // degenerate custom path make the Canvas fail to draw every switch.
+    val trackShape = if (com.alohaoneui.app.ui.theme.LocalMaterialShapeStyle.current == 3) {
+        remember(trackCornerRadius) { RoundedCornerShape(trackCornerRadius) }
+    } else {
+        voyageCornerShape(trackCornerRadius)
+    }
+    val thumbShape = if (com.alohaoneui.app.ui.theme.LocalMaterialShapeStyle.current == 3) {
+        remember(thumbDiameter) { RoundedCornerShape(thumbDiameter / 2f) }
+    } else {
+        voyageCornerShape(thumbDiameter / 2f)
+    }
+    val haloShape = if (com.alohaoneui.app.ui.theme.LocalMaterialShapeStyle.current == 3) {
+        remember(thumbDiameter) { RoundedCornerShape(thumbDiameter / 2f + 2.dp) }
+    } else {
+        voyageCornerShape(thumbDiameter / 2f + 2.dp)
+    }
     val borderWidth = LocalMaterialOutlineWidth.current
     Box(
         modifier = modifier
