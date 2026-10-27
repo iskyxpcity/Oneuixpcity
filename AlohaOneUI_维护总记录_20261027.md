@@ -338,3 +338,17 @@
 - 修复提交 `fe87bddcb633a454a9c2b892d31e28dfbbd1dbe4` 将 surface 色彩角色提前在 Composable 上下文读取并传入绘制作用域；提交 `d9776ddb8b34af02a91555de59f5244352a9bda2` 改用 `rememberSliderState` 对应的自定义 track/thumb 重载，并同步 controlled value。
 - Build #1698 / Run `40510728838` 对 HEAD `d9776ddb8b34af02a91555de59f5244352a9bda2` 最终结论 `completed / success`。以下步骤均成功：源码校验、`:app:compileDebugKotlin`、加载 owner 签名密钥、构建签名 APK、包名/稳定证书校验、Actions Artifact 上传。
 - 成功产物 artifact ID `12737106641`，名称 `AlohaOneUI-Signed-Test-APK`，大小 `27,772,892` bytes，Artifact ZIP SHA-256 `4e0f515f38cb66e61db6c5e2af8c7ff9208601568ac72d74bef6c74f313eed4c`。这证明该 HEAD 构建成功，不代表四种滑条的源码级视觉 1:1 已完成；本阶段仍需继续做原始几何与交互对照。
+
+
+## 2026-10-27 后续修正：撤掉未经源码证实的滑块外形
+
+- 用户指出滑条滑块仍未按反编译源码移植；复核后确认前一版 `VoyageSliderThumb` 中同心圆环、内嵌圆点、圆角方块以及 20/24/16dp 的混合尺寸都是自行推导的近似绘制，不应作为 Voyage 原版交付。
+- 已直接从本地提供的 `voyage-apk-theme-inspection.zip` 读取真实反编译文件：
+  - `decompiled/sources/p000/kdj0.java`：4 个样式枚举；
+  - `h7w0.java:m99521O(...)`：实际分派到四条组件实现；
+  - `y8f0.java:m144825l/m144829o/m144826lI`：其中一条绘制路径；
+  - `vhf.java:m138079I/m138080O/m138077ll` 与 `rhf.java`：另两条路径的绘制实现，默认绘制容器尺寸 32dp；
+  - `ncw0.java`、`y3w0.java`、`w3w0.java`、`v2t0.java`：样式分流后的组件入口。
+- 已提交 `53bfaa36aca6236ead6e0553023dce0aecbc300a`：删除未经源码证实的多层圆环、中心点和方块造型，按反编译调用链所见的 16dp / 32dp 绘制槽尺寸调整 thumb 尺寸分组。已提交 `d2cfbf799342ae79d65c14fdefbbf571ab677107`：同步修正通用 `AlohaOneUISlider`，避免普通页面与详情页继续使用旧的猜测尺寸。
+- **重要验收边界：**本次先撤销明显错误的手工造型并依据源码调用尺寸校正；四条路径的最终 Canvas 几何、颜色状态与动态行为仍需继续逐段移植，不能标记为滑块 1:1 完成。源码中 `vhf.m138077ll` 还使用 2dp 绘制宽度、enabled/active 多组颜色以及 tick positions；需要把这些行为和对应槽位准确区分，不能把轨道/tick 绘制误当成 thumb 本体。
+- 只改 `test/voyage-theme-1to1-20261026`，未修改 `main`。下一步检查本次最新 Actions，编译错误按日志修复；同时继续追踪每条样式的 thumb slot 与 track slot 对应关系，再做真正源码移植。
