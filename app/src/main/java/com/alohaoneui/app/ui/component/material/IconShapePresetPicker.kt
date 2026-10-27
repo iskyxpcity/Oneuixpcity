@@ -19,7 +19,6 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.Block
-import androidx.compose.material.icons.rounded.Shuffle
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
@@ -145,8 +144,8 @@ internal fun IconShapePresetDetailScreen(
                 }
                 val selected = selectedIndex == style
                 val previewShape = remember(style) {
-                    if (style in 0 until ICON_SHAPE_PRESET_COUNT) {
-                        iconShapeForStyle(style) ?: RectangleShape
+                    if (style in 0 until ICON_SHAPE_PRESET_COUNT || style == ICON_SHAPE_RANDOM) {
+                        iconShapeForStyle(style, seed = style) ?: RectangleShape
                     } else {
                         RectangleShape
                     }
@@ -191,12 +190,6 @@ internal fun IconShapePresetDetailScreen(
                                 imageVector = Icons.Rounded.Block,
                                 contentDescription = null,
                                 modifier = Modifier.size(48.dp),
-                                tint = previewColor,
-                            )
-                            ICON_SHAPE_RANDOM -> Icon(
-                                imageVector = Icons.Rounded.Shuffle,
-                                contentDescription = null,
-                                modifier = Modifier.size(26.dp),
                                 tint = previewColor,
                             )
                             else -> Box(

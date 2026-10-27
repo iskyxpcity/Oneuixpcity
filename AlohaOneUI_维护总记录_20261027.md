@@ -466,3 +466,12 @@
 - Build #1733 / Run `40569571885` 失败；Build #1734 / Run `40569677922` 也失败。两次都在 `:app:compileDebugKotlin` 结束，精确错误为 `DrawStyle` 与 `Fill` 的导入包不正确（它们属于 `androidx.compose.ui.graphics.drawscope`）。本提交已把导入修正到该包；先前两个失败 run 均没有产出 APK。
 - 本批把 `drawVoyageOutline` 提升为同包可复用的 `internal` 绘制扩展，并用于八种 Switch 的轨道填充、轨道轮廓、thumb 与 Liquid Glass halo；thumbContent 也使用同一个 `thumbShape` 裁切。每个风格原有的源尺寸、角半径基值、交互尺寸、颜色分支和图标分支保留，只替换原先绕过 Shape 系统的圆角矩形/圆形绘制。
 - 这让全局 Shape Style / Corner Scale 真正影响 Switch 与 Slider 的轨道和 thumb。该改动仍是联动修复，不代表八种开关及四种滑条的所有源动画、颜色角色和图标路径已完成 1:1。当前提交后的 Actions 结果待验证。
+
+## 2026-10-27：Build #1735 签名测试 APK 已验证；图标形状随机预览修正
+
+- GitHub Actions：[#1735 / Run 40570224070](https://github.com/iskyxpcity/Oneuixpcity/actions/runs/40570224070)，对应产品代码提交 `b70124ae89f5181301ad42177e43a52e7f56323f`，结果 `success`。
+- 真实构建步骤均通过：源代码校验、Kotlin 编译、加载现有 owner signing key、构建 owner-signed APK、包名/稳定证书校验、保存签名 APK Artifact。
+- APK：`AlohaOneUI_1.0.261025_BUILD_1735.apk`，28,777,069 bytes；SHA-256 `9d9bad0abe53f1fe559047ba112de319a4fbf1bb287af6d0b628e759ac84796c`；签名证书 SHA-256 `93bf61a6493c6b336383832eb41301bd8fe061f43566e7e384e3fdd9fc1c26a1`。Manifest 验证：包名 `com.alohaoneui.app`、versionCode `16`、versionName `1.0.261025`、minSdk 31、targetSdk 36、compileSdk 37。
+- Artifact：`AlohaOneUI-Signed-Test-APK`，ID `12764733250`，链接为 [Actions artifact](https://github.com/iskyxpcity/Oneuixpcity/actions/runs/40570224070/artifacts/12764733250)。该 run 是测试构建，**没有发布新的 GitHub Release**，也不代表 Voyage 1:1 迁移完成。
+- 源码依据：`shq.m130523I(p7r)` 在 random sentinel 被解析时从非 random shape 列表随机返回一个实际 shape。因此图标形状网格中的 Random 预览不应显示独立 Shuffle 图标；本批改为显示一个稳定的代表性 shape 轮廓，None 仍显示 Block 图标。真实 51 个预设的几何替换仍未完成：`iconShapeForStyle` 当前仍调用临时 `geometricIconShape`，后续必须按 `vqp.java` 的 26 个基础 shape 与 25 个 `qha0` RoundedPolygon 数据逐项移植。
+- 当前所有修改仅在 `test/voyage-theme-1to1-20261026`，未修改/合并 `main`。
