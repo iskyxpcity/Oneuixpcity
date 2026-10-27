@@ -8,12 +8,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
+import com.alohaoneui.app.ui.theme.LocalMaterialSliderStyle
 import com.alohaoneui.app.ui.theme.LocalMaterialShadowSliders
 
 /**
@@ -32,6 +34,20 @@ fun SegmentedSliderItem(
     steps: Int = 0,
     onValueChangeFinished: (() -> Unit)? = null,
 ) {
+    val style = LocalMaterialSliderStyle.current.coerceIn(0, 3)
+    val scheme = MaterialTheme.colorScheme
+    val styleColors = when (style) {
+        1 -> SliderDefaults.colors(thumbColor = scheme.tertiary, activeTrackColor = scheme.tertiary, inactiveTrackColor = scheme.tertiaryContainer, activeTickColor = scheme.onTertiary, inactiveTickColor = scheme.onTertiaryContainer)
+        2 -> SliderDefaults.colors(thumbColor = scheme.secondary, activeTrackColor = scheme.secondary, inactiveTrackColor = scheme.surfaceVariant, activeTickColor = scheme.onSecondary, inactiveTickColor = scheme.onSurfaceVariant)
+        3 -> SliderDefaults.colors(thumbColor = scheme.primary, activeTrackColor = scheme.primary, inactiveTrackColor = scheme.surfaceContainerHighest, activeTickColor = scheme.onPrimary, inactiveTickColor = scheme.outline)
+        else -> SliderDefaults.colors(thumbColor = scheme.primary, activeTrackColor = scheme.primary, inactiveTrackColor = scheme.secondaryContainer, activeTickColor = scheme.onPrimary, inactiveTickColor = scheme.onSecondaryContainer)
+    }
+    val sliderShape = when (style) {
+        1 -> androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
+        2 -> androidx.compose.foundation.shape.RoundedCornerShape(4.dp)
+        3 -> androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
+        else -> voyageCornerShape(50.dp)
+    }
     SegmentedListItem(
         leadingContent = icon?.let { imageVector ->
             {
@@ -64,17 +80,18 @@ fun SegmentedSliderItem(
                     modifier = Modifier
                         .fillMaxWidth()
                         .then(
-                            if (LocalMaterialShadowSliders.current) Modifier.shadow(2.dp, voyageCornerShape(50.dp))
+                            if (LocalMaterialShadowSliders.current) Modifier.shadow(2.dp, sliderShape)
                             else Modifier
                         )
                         .then(
                             LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
-                                Modifier.border(it.dp, MaterialTheme.colorScheme.outlineVariant, voyageCornerShape(50.dp))
+                                Modifier.border(it.dp, MaterialTheme.colorScheme.outlineVariant, sliderShape)
                             } ?: Modifier
                         ),
                     valueRange = valueRange,
                     steps = steps,
                     onValueChangeFinished = onValueChangeFinished,
+                    colors = styleColors,
                 )
             }
         },
