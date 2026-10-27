@@ -226,3 +226,16 @@
 - 根因：在 `SegmentedList.kt` 中新增下拉菜单组描边时，上一批次的导入插入规则没有匹配到该文件真实 import 区，因此调用已写入但 `androidx.compose.foundation.BorderStroke` 未导入。本批次直接在文件包声明后补入正确 import，保留菜单组的全局描边与阴影行为。
 - 同时补齐 `SegmentedChoiceOptionsItem` 的按钮阴影过渡：按压且可用时 elevation 动态升至 3dp，选中态 2dp，普通态 1dp；动画使用 spring，并继续受 `LocalMaterialShadowButtons` 控制。此前只缩放按钮，阴影在按压过程中是固定值。
 - 修改仅写入测试分支，不改 `main`。提交后继续监测新 HEAD 构建；如果出现新错误，继续按真实日志修复。当前无本批次新 APK。
+
+
+## 2026-10-27 后续推进：下拉详情菜单框体批次构建成功
+
+- 产品源码提交：`b200090463dd9c7c078bb646ae2a75ab28622283`（`fix: import menu BorderStroke and animate choice chip shadows`），测试分支 `test/voyage-theme-1to1-20261026`，未修改 `main`。
+- Build #1681：Actions Run `40503555329`，head SHA `b200090463dd9c7c078bb646ae2a75ab28622283`，结论 `success`；build job `122187029797` 成功且没有失败步骤。签名 APK artifact ID `12733598689`，名称 `AlohaOneUI-Signed-Test-APK`，大小 27,771,488 bytes，Artifact ZIP SHA-256 `e427917d1f28dcf56325f575eddcaa7ce334d526d700ea3fd6e6263160f73c9e`。这不是最终交付 APK，仍需对最终 HEAD 重新构建并验证 APK 本体。
+- 该批次修复 `BorderStroke` 导入错误，并让 `SegmentedChoiceOptionsItem` 的阴影随按压状态动态过渡；下拉菜单组的全局描边/阴影消费已进入可成功构建的 HEAD。
+
+## 2026-10-27 后续推进：主题详情页导航返回按钮动效统一
+
+- 继续核查 `ColorPaletteScreenMaterial`（主题/配色设置页）发现其导航返回按钮仍直接使用无交互源的原生 `IconButton`，没有消费全局按钮阴影/描边设置，也没有与其他主题选项一致的按压缩放。
+- 已在返回按钮中接入独立 `MutableInteractionSource`、spring 按压缩放、按压时动态阴影，并按 `LocalMaterialShadowButtons` 控制阴影显示、按 `LocalMaterialOutlineWidth` 控制圆形描边；保留原有返回回调、图标和触摸语义。
+- 仅修改测试分支，不改 `main`。该修改用于补齐主题子页面导航控件与其他选项按钮的一致性；继续检查其余页面的直接按钮调用，避免只修复封装组件而漏掉页面内的原生按钮。

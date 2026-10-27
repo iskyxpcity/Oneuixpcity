@@ -18,6 +18,8 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -147,8 +149,36 @@ fun ColorPaletteScreenMaterial(
                         } ?: Modifier
                     ),
                 navigationIcon = {
+                    val backInteractionSource = remember { MutableInteractionSource() }
+                    val backPressed by backInteractionSource.collectIsPressedAsState()
+                    val backPressScale by animateFloatAsState(
+                        targetValue = if (backPressed) 0.94f else 1f,
+                        animationSpec = spring(dampingRatio = 0.58f, stiffness = 560f),
+                        label = "voyageThemeBackPress",
+                    )
+                    val backShadowElevation by animateDpAsState(
+                        targetValue = if (backPressed) 3.dp else 2.dp,
+                        animationSpec = spring(dampingRatio = 0.62f, stiffness = 520f),
+                        label = "voyageThemeBackShadow",
+                    )
                     IconButton(
-                        onClick = actions.onBack
+                        modifier = Modifier
+                            .graphicsLayer {
+                                scaleX = backPressScale
+                                scaleY = backPressScale
+                            }
+                            .then(
+                                if (LocalMaterialShadowButtons.current) {
+                                    Modifier.shadow(backShadowElevation, CircleShape)
+                                } else Modifier
+                            )
+                            .then(
+                                LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
+                                    Modifier.border(it.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape)
+                                } ?: Modifier
+                            ),
+                        onClick = actions.onBack,
+                        interactionSource = backInteractionSource,
                     ) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null) }
                 },
                 title = { Text(stringResource(R.string.settings_theme)) },
