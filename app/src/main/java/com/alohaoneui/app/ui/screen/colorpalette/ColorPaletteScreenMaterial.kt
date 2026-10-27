@@ -479,14 +479,9 @@ fun ColorPaletteScreenMaterial(
                             )
                         },
                         {
-                            SegmentedChoiceOptionsItem(
-                                title = stringResource(R.string.theme_icon_shape_title),
-                                items = listOf(
-                                    stringResource(R.string.theme_icon_shape_none),
-                                    stringResource(R.string.theme_icon_shape_random),
-                                ),
+                            IconShapePresetPicker(
                                 selectedIndex = uiState.materialIconShapeStyle,
-                                onItemSelected = actions.onSetMaterialIconShapeStyle,
+                                onSelected = actions.onSetMaterialIconShapeStyle,
                             )
                         },
                         {

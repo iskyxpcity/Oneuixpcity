@@ -250,3 +250,10 @@
 - 开始下一顺序任务前，对图标形状设置链路做了预审：`ColorPaletteScreenMaterial.kt` 目前只提供 `None` 与 `Random` 两项；`SettingsRepositoryImpl.kt` 将 `materialIconShapeStyle` 限制在 `0..1`；`LocalMaterialIconShapeStyle` 已由主题提供，但 50 个原版形状预设、逐项预览和对应应用行为尚未移植完成。
 - Voyage 原 APK 可供本地检查，但当前取得的拆分材料主要是 DEX 与资源框架 XML，目标逻辑使用混淆类名。后续必须继续核对原版形状数据与 `None=-1`、`Random` sentinel 的实际索引/保存行为；不以临时生成的近似形状冒充原版。
 - 本轮继续严格按既定顺序：先完成四种 Slider 的原版对照，再推进 50 种图标形状，Smooth G² 仍最后处理。分支约束不变：只改 `test/voyage-theme-1to1-20261026`，不改 `main`。
+
+## 2026-10-26 整批推进：图标形状选择器与持久化扩展
+
+- 新增图标形状选择器：保留 `None`、`Random`，并加入 50 个可选几何遮罩预览；选项索引范围扩展至 0..51。
+- 连接设置页面、偏好存储与 ViewModel 的取值范围，并让 Aloha OneUI 功能图标响应所选遮罩；`Random` 按图标类型稳定选择，避免重组时图形跳变。
+- 说明：本次实现了完整的 50 项选择/预览/保存应用链路，但这些几何遮罩是新构造的参数化图形，尚未从 Voyage 混淆 DEX 中逐项还原并与原版截图逐项核对；因此不能标记为 Voyage 1:1 验收完成。后续仍需原版形状表精确对照。
+- 当前构建基线：Slider 端点修正提交 `abcc91145342be0b4ae13505cdfdb65e36fbaefb` 的工作流 Run #1639 已通过。下一批仍按既定顺序处理 Smooth G²（最后）。

@@ -227,7 +227,7 @@ class SettingsViewModel(
     }
 
     fun setMaterialIconShapeStyle(style: Int) {
-        val safe = style.coerceIn(0, 1)
+        val safe = style.coerceIn(0, 51)
         repo.materialIconShapeStyle = safe
         _uiState.update { it.copy(materialIconShapeStyle = safe) }
     }

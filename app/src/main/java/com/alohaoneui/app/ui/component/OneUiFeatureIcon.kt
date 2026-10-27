@@ -2,6 +2,10 @@ package com.alohaoneui.app.ui.component
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.size
+import androidx.compose.ui.draw.clip
+import androidx.compose.runtime.remember
+import com.alohaoneui.app.ui.theme.LocalMaterialIconShapeStyle
+import com.alohaoneui.app.ui.component.material.iconShapeForStyle
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
@@ -37,6 +41,10 @@ internal fun OneUiFeatureIcon(
     size: Dp = 48.dp,
     contentDescription: String? = null,
 ) {
+    val iconShapeStyle = LocalMaterialIconShapeStyle.current
+    val iconShape = remember(iconShapeStyle, kind) {
+        iconShapeForStyle(iconShapeStyle, seed = kind.ordinal)
+    }
     val palette = when (kind) {
         OneUiFeatureIconKind.OtherFunctions -> listOf(Color(0xFF12D0AE), Color(0xFF128ED8), Color(0xFF4C5CE4))
         OneUiFeatureIconKind.GlobalShortcuts -> listOf(Color(0xFF27C9EF), Color(0xFF3C79EE), Color(0xFF7650E8))
@@ -56,7 +64,7 @@ internal fun OneUiFeatureIcon(
     }
 
     Canvas(
-        modifier = Modifier.size(size).semantics {
+        modifier = Modifier.size(size).then(iconShape?.let { Modifier.clip(it) } ?: Modifier).semantics {
             contentDescription?.let { this.contentDescription = it }
         },
     ) {

@@ -86,7 +86,7 @@ class SettingsRepositoryImpl : SettingsRepository {
         set(value) = prefs.edit { putInt("material_slider_style", value.coerceIn(0, 3)) }
 
     override var materialIconShapeStyle: Int
-        get() = prefs.getInt("material_icon_shape_style", 0).coerceIn(0, 1)
+        get() = prefs.getInt("material_icon_shape_style", 0).coerceIn(0, 51)
         set(value) = prefs.edit { putInt("material_icon_shape_style", value.coerceIn(0, 1)) }
 
     override var materialOutlineWidth: Float
