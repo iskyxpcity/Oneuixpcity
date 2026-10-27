@@ -142,18 +142,18 @@ private data class VoyageG2Profile(
         val p2 = Point(1.0, 0.0)
         val p3 = Point(cos, sin)
 
-        val dx = p2.x - p0.x
-        val dy = p2.y - p0.y
-        val determinant = (p1.x * p3.y) - (p1.y * p3.x)
-        val tangentNumerator = (dx * p1.y) + (-dy * p1.x)
+        val dx = p1.x - p0.x
+        val dy = p1.y - p0.y
+        val determinant = (p2.x * p3.y) - (p2.y * p3.x)
+        val tangentNumerator = (dx * p2.y) + (-dy * p2.x)
         val curvatureTerm = (((1.5 * bezierCurvatureScale) * tangentNumerator * tangentNumerator) /
             determinant / determinant / determinant)
-        val secondTangent = (-((dy * p3.x) - (dx * p3.y)) / determinant) - curvatureTerm
-        val firstTangent = (-tangentNumerator) / determinant
-        val c1x = (p0.x + maxOf(0.0, p3.x * secondTangent))
-        val c1y = (p0.y + maxOf(0.0, p3.y * secondTangent))
-        val c2x = p2.x - maxOf(0.0, p0.x * firstTangent)
-        val c2y = p2.y - maxOf(0.0, p0.y * firstTangent)
+        val firstControlScale = (-((dy * p3.x) - (dx * p3.y)) / determinant) - curvatureTerm
+        val secondControlScale = (-tangentNumerator) / determinant
+        val c1x = p0.x + maxOf(0.0, p2.x * firstControlScale)
+        val c1y = p0.y + maxOf(0.0, p2.y * firstControlScale)
+        val c2x = p1.x - maxOf(0.0, p3.x * secondControlScale)
+        val c2y = p1.y - maxOf(0.0, p3.y * secondControlScale)
         return Cubic(p0, Point(c1x, c1y), Point(c2x, c2y), p3)
     }
 
