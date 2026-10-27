@@ -162,6 +162,7 @@ internal fun VoyageSliderThumb(
         3 -> RoundedCornerShape(7.dp)
         else -> CircleShape
     }
+    val surfaceColor = MaterialTheme.colorScheme.surface
     Box(
         Modifier
             .size(width = size.width, height = size.height)
@@ -174,7 +175,7 @@ internal fun VoyageSliderThumb(
                 1 -> {
                     drawCircle(activeColor.copy(alpha = 0.18f), radius = d * 0.50f, center = center)
                     drawCircle(activeColor, radius = d * 0.36f, center = center)
-                    drawCircle(MaterialTheme.colorScheme.surface, radius = d * 0.12f, center = center)
+                    drawCircle(surfaceColor, radius = d * 0.12f, center = center)
                 }
                 2 -> {
                     drawCircle(activeColor, radius = d * 0.34f, center = center)
@@ -182,7 +183,7 @@ internal fun VoyageSliderThumb(
                 }
                 3 -> {
                     drawCircle(activeColor, radius = d * 0.46f, center = center)
-                    drawCircle(MaterialTheme.colorScheme.surface.copy(alpha = 0.95f), radius = d * 0.20f, center = center)
+                    drawCircle(surfaceColor.copy(alpha = 0.95f), radius = d * 0.20f, center = center)
                 }
                 else -> {
                     drawCircle(activeColor, radius = d * 0.40f, center = center)
