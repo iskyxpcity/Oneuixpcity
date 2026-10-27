@@ -217,7 +217,11 @@ private class VoyagePathShape(
                             nx: Float, ny: Float, length: Float, localAmplitude: Float,
                         ) {
                             val count = kotlin.math.ceil(length / sampleStep).toInt().coerceAtLeast(1)
-                            for (i in 0..count) {
+                            // Voyage's shared path-start flag makes only the very first
+                            // segment emit t=0; every later segment begins at its t=1/count
+                            // sample so adjacent edges do not duplicate their join point.
+                            val firstSample = if (samples.isEmpty()) 0 else 1
+                            for (i in firstSample..count) {
                                 val t = i.toFloat() / count
                                 samples += WaveSample(
                                     androidx.compose.ui.geometry.Offset(
@@ -236,10 +240,13 @@ private class VoyagePathShape(
                             cx: Float, cy: Float, radius: Float,
                             startDegrees: Float, sweepDegrees: Float,
                         ) {
-                            if (radius <= 0f) return
+                            // Voyage still samples a zero-radius quarter arc: it has
+                            // zero perimeter length, but its terminal normal can affect the
+                            // displaced sample. Keep that source edge case instead of skipping it.
                             val arcLength = kotlin.math.PI.toFloat() * radius / 2f
                             val count = kotlin.math.ceil(arcLength / sampleStep).toInt().coerceAtLeast(1)
-                            for (i in 0..count) {
+                            val firstSample = if (samples.isEmpty()) 0 else 1
+                            for (i in firstSample..count) {
                                 val t = i.toFloat() / count
                                 val angle = Math.toRadians((startDegrees + sweepDegrees * t).toDouble())
                                 val nx = kotlin.math.cos(angle).toFloat()
