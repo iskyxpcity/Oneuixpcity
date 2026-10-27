@@ -239,21 +239,8 @@ fun ExpressiveSwitch(
             withTransform({ translate(cx - thumbRadius, cy - thumbRadius) }) {
                 drawVoyageOutline(thumbOutline, thumbColor)
             }
-            if (showThumbIcon && thumbContent == null && style in setOf(0, 2, 3, 5, 6, 7)) {
-                val iconColor = if (checked) {
-                    if (style == 0) colors.checkedIconColor else checkedTrack
-                } else {
-                    if (style == 0) colors.uncheckedIconColor else uncheckedTrack
-                }
-                val stroke = (h * 0.065f).coerceAtLeast(1.4.dp.toPx())
-                if (checked) {
-                    drawLine(iconColor, Offset(cx - thumbRadius * 0.38f, cy), Offset(cx - thumbRadius * 0.08f, cy + thumbRadius * 0.24f), stroke, StrokeCap.Round)
-                    drawLine(iconColor, Offset(cx - thumbRadius * 0.08f, cy + thumbRadius * 0.24f), Offset(cx + thumbRadius * 0.42f, cy - thumbRadius * 0.30f), stroke, StrokeCap.Round)
-                } else if (style == 2 || style == 3 || style == 6 || style == 7) {
-                    drawLine(iconColor, Offset(cx - thumbRadius * 0.25f, cy - thumbRadius * 0.25f), Offset(cx + thumbRadius * 0.25f, cy + thumbRadius * 0.25f), stroke, StrokeCap.Round)
-                    drawLine(iconColor, Offset(cx + thumbRadius * 0.25f, cy - thumbRadius * 0.25f), Offset(cx - thumbRadius * 0.25f, cy + thumbRadius * 0.25f), stroke, StrokeCap.Round)
-                }
-            }
+            // Switch thumb icons/checkmarks are intentionally omitted; the
+            // thumb itself communicates the on/off state by position and color.
         }
         if (thumbContent != null) {
             val thumbTravel = trackSize.width - thumbDiameter - (thumbInset * 2f)
