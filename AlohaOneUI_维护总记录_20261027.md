@@ -646,3 +646,13 @@
 - 产品提交 `7be4fab4218ccb3e71b43375e5b7fc7352345753` 与 `2fadf1b08ea95d489baf92bf81b6099f81e8890c`：把全局描边宽度与 outlineVariant 颜色应用到 Material You/Fancy/Material 2 的外层容器；HyperOS 则在 30dp 轨道容器上应用描边，避免描边错误地只画在内部进度线上。
 - 已将界面缩放滑块入口接入共享滑条组件，因此 Material 主题中的滑条样式选择会覆盖该入口；Miuix 现有分支保留独立绘制行为。
 - 构建状态：之前 Run `40585120152` 已明确因 `AlohaOneUISlider.kt` 漏传 `innerInset` 编译失败，后续已补齐后又按上游源代码移除该临时参数。当前最新源码提交之后的 CI 仍需等待并核实，不能用较早 HEAD 的构建结果代替。
+
+
+## 2026-10-27 — 开关比例、波浪形状性能与语言选择修复
+
+- 分支：`test/voyage-theme-1to1-20261026`；基于已通过构建的 `a716a11cdeeec59a0756f2cb9d7b9040c7d98c4b` 继续修改，未改动 `main`。
+- 开关尺寸：各样式整体宽度略增、高度略减；滑块高度调整为轨道高度的约 85%。关闭状态轨道使用较暗的 `onSurface` 半透明色，滑块在关闭状态仍保留主题主色。
+- 波浪形状性能：保留 Voyage 波浪路径轮廓与共享 LRU 缓存；将波浪半径缓存量化由 0.5dp 改为 1dp，降低形状动画时缓存键变化与路径重建；将总路径采样预算从 360 降至 180，并提高最小采样间距，以减少所有组件同时使用波浪形状时的 CPU/分配压力。需要在设备上确认视觉与流畅度。
+- 语言选择：Material 与 Miuix 语言列表此前使用 `zh-Hans/zh-Hant`，而 ViewModel 持久化白名单使用 `zh-CN/zh-TW`，导致选择态与保存值不匹配；统一列表值为 `zh-CN/zh-TW`，由 `AppLocaleContext` 映射到 Android LocaleManager 使用的规范语言标签。
+- 黑屏闪烁：保留 Android 13+ 由 LocaleManager 触发的系统语言配置切换路径，并避免额外手动 recreate；本次同时修复 locale tag 不一致。仍需真实设备复测语言切换过程，不能仅凭编译宣称闪屏已完全消失。
+- 验证：等待本轮新提交的 GitHub Actions 编译与 APK artifact；不得以旧构建代替本轮产物。
