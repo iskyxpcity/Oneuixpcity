@@ -128,4 +128,16 @@
     <string name="theme_icon_shape_title">圖示形狀</string>
     <string name="theme_icon_shape_none">無</string>
     <string name="theme_icon_shape_random">隨機</string>
+    <string name="palette_style_tonal_spot">色調點綴</string>
+    <string name="palette_style_neutral">中性</string>
+    <string name="palette_style_vibrant">鮮豔</string>
+    <string name="palette_style_expressive">表現力</string>
+    <string name="palette_style_rainbow">彩虹</string>
+    <string name="palette_style_fruit_salad">果蔬混合</string>
+    <string name="palette_style_monochrome">單色</string>
+    <string name="palette_style_fidelity">忠實原色</string>
+    <string name="palette_style_content">內容色彩</string>
+    <string name="palette_style_cmf">CMF</string>
+    <string name="color_spec_2021">2021 標準</string>
+    <string name="color_spec_2025">2025 標準</string>
 </resources>

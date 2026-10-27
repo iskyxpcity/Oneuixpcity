@@ -1,11 +1,7 @@
 package com.alohaoneui.app.ui.component.material
 
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -84,12 +80,6 @@ fun SegmentedSliderItem(
         else -> 4.dp
     }
     val interactionSource = remember { MutableInteractionSource() }
-    val sliderPressed by interactionSource.collectIsPressedAsState()
-    val sliderShadowElevation by animateDpAsState(
-        targetValue = if (sliderPressed) 4.dp else 2.dp,
-        animationSpec = spring(dampingRatio = 0.72f, stiffness = 420f),
-        label = "voyageSliderShadow",
-    )
     val sliderState = rememberSliderState(
         value = value,
         steps = steps,
@@ -129,7 +119,7 @@ fun SegmentedSliderItem(
                         .fillMaxWidth()
                         .then(
                             if (LocalMaterialShadowSliders.current) {
-                                Modifier.shadow(sliderShadowElevation, voyageCornerShape(50.dp))
+                                Modifier.shadow(2.dp, voyageCornerShape(50.dp))
                             } else {
                                 Modifier
                             }
@@ -142,7 +132,6 @@ fun SegmentedSliderItem(
                             size = thumbSize,
                             activeColor = active,
                             inactiveColor = inactive,
-                            interactionSource = interactionSource,
                         )
                     },
                     track = { state ->
@@ -171,17 +160,10 @@ private fun VoyageSliderThumb(
     size: DpSize,
     activeColor: Color,
     inactiveColor: Color,
-    interactionSource: MutableInteractionSource,
 ) {
-    val pressed by interactionSource.collectIsPressedAsState()
-    val thumbScale by animateFloatAsState(
-        targetValue = if (pressed) 0.94f else 1f,
-        animationSpec = spring(dampingRatio = 0.58f, stiffness = 560f),
-        label = "voyageSliderThumbPress",
-    )
     Box(Modifier.size(width = size.width, height = size.height)) {
         Canvas(Modifier.fillMaxSize()) {
-            val d = minOf(size.width.toPx(), size.height.toPx()) * thumbScale
+            val d = minOf(size.width.toPx(), size.height.toPx())
             val center = Offset(this.size.width / 2f, this.size.height / 2f)
             when (style) {
                 1 -> {
