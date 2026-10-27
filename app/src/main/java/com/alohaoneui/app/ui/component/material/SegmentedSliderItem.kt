@@ -1,6 +1,8 @@
 package com.alohaoneui.app.ui.component.material
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
@@ -164,26 +166,23 @@ internal fun VoyageSliderThumb(
     // never on the whole Slider/touch target.
     val pressed by (interactionSource?.collectIsPressedAsState()
         ?: remember { androidx.compose.runtime.mutableStateOf(false) })
+    // The thumb is a theme component, not a fixed circle: use the same shared
+    // shape factory as settings rows so shape style and corner scale update it.
+    val thumbShape = voyageCornerShape(size.minDimension / 2f)
     val thumbModifier = Modifier
         .size(width = size.width, height = size.height)
         .then(
             if (shadowEnabled) {
                 Modifier.shadow(
                     elevation = if (pressed) 6.dp else 1.dp,
-                    shape = CircleShape,
+                    shape = thumbShape,
                     clip = false,
                 )
             } else Modifier
         )
-    Box(thumbModifier) {
-        Canvas(Modifier.fillMaxSize()) {
-            drawCircle(
-                color = activeColor,
-                radius = minOf(this.size.width, this.size.height) / 2f,
-                center = Offset(this.size.width / 2f, this.size.height / 2f),
-            )
-        }
-    }
+        .clip(thumbShape)
+        .background(activeColor, thumbShape)
+    Box(thumbModifier)
 }
 
 @Composable
@@ -206,18 +205,16 @@ internal fun VoyageSliderTrack(
         else -> MaterialTheme.colorScheme.onPrimary
     }
     val futureTickColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.65f)
-    val trackShape = when (style) {
-        1 -> RoundedCornerShape(percent = 50)
-        2 -> RoundedCornerShape(percent = 22)
-        3 -> RoundedCornerShape(percent = 36)
-        else -> RoundedCornerShape(percent = 50)
-    }
+    // Share the app-wide Voyage shape system with the visible track and its
+    // shadow. Do not freeze the track as a pill when the user changes shape.
+    val trackShape = voyageCornerShape(height / 2f)
     // Keep the track's elevation on the visible track layer, not the full
     // Slider touch target. The same global shadow switch controls thumb + track.
     val trackModifier = Modifier
         .fillMaxWidth()
         .height(height)
         .then(if (shadowEnabled) Modifier.shadow(1.dp, trackShape, clip = false) else Modifier)
+        .clip(trackShape)
     Canvas(trackModifier) {
         val h = size.height
         val centerY = h / 2f
