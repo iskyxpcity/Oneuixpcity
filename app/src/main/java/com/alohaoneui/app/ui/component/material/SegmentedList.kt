@@ -173,7 +173,7 @@ private class VoyagePathShape(
                     val yRightEnd = if (br > 0f) yBottom - rbr else h
                     val xBottomStart = if (br > 0f) xRight - rbr else w
                     val xBottomEnd = if (bl > 0f) aBL + rbl else 0f
-                    val yLeftStart = if (bl > 0f) h - rbl else h
+                    val yLeftStart = if (bl > 0f) yBottom - rbl else h
                     val yLeftEnd = if (tl > 0f) aTL + rtl else 0f
                     val topLength = (xTopEnd - xTopStart).coerceAtLeast(0f)
                     val rightLength = (yRightEnd - yRightStart).coerceAtLeast(0f)
