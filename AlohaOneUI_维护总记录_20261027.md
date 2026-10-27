@@ -404,3 +404,12 @@
 - 验证边界：该批修复的是“全局形状样式/圆角设置必须联动到滑块与轨道容器”的明确断链，不代表四种 Voyage Slider 原版绘制路径已完整移植。活动/非活动轨道颜色、四种样式的实际轨道尺寸与内部绘制参数、thumb 的原版填充/描边颜色仍需按 `kdj0`、`h7w0`、`y8f0` 及四条实现路径逐项核对，不能将当前遗留的颜色/轨道参数映射宣称为原版数值。
 - 构建状态：提交 `40edb3973e077cffc690596c5434a6e184d5a32c` 的 combined status 返回空状态列表，commit workflow 查询也未返回关联运行；因此当前**不能**认定 CI 已通过，也没有新的 APK 可交付。下一步必须继续查找该分支对应的 Actions run/构建产物；如果没有触发构建，应在确认 workflow 配置后触发真实构建，再按日志修复并核验 APK。
 - 下一步：继续恢复并对照四种 Slider 的原版颜色/几何/轨道阴影绘制；完成后继续处理八种 Switch、50 条原版图标路径和 Smooth G²，并持续检查主题页面状态与组件共享联动。最终 APK 仍须匹配最终 HEAD，核验包名/版本、固定 Owner 签名、V2 签名、APK/ZIP 完整性及 SHA-256。
+
+
+## 2026-10-27 后续推进：统一两处滑条的样式参数来源
+
+- 产品源码提交：`2fd8ffa45e6933747fa2ea15624ed38ce16d321e` 与 `3ba9ff26b58d551c33702b11d61fededd03ddc44`，均只写入测试分支 `test/voyage-theme-1to1-20261026`。
+- 新增共享的 `VoyageSliderAppearance` / `voyageSliderAppearance()`，把 Material 滑条当前的样式索引归一化、主题活动/非活动颜色、20dp thumb slot 和轨道高度集中到 `SegmentedSliderItem.kt` 一个入口；设置页滑条与 `AlohaOneUISlider.kt` 的通用 Material 分支都改为消费该共享配置，不再各自复制同一套 `when(style)` 参数表。
+- 这次统一的是配置入口与状态联动，不把现有颜色/高度映射说成已确认的 Voyage 原版数值。共享函数注释已明确：在四条原始 draw path 逐项核实之前，当前映射只是兼容现有项目状态；下一步要继续依据反编译方法和资源校正数据本身，而不是让两处重复保持同一份未验证硬编码。
+- 当前最新产品源码提交为 `3ba9ff26b58d551c33702b11d61fededd03ddc44`。截至查询时，GitHub combined status 返回空状态列表，commit workflow 查询也未返回运行记录；没有可验证的当前 HEAD 构建结果或新 APK。不得把之前 Build #1708 或更早 Artifact 当作包含本批修改的产物。
+- 后续继续：检查当前分支 Actions 触发方式与最新运行；修复任何实际编译问题；随后从 `kdj0` / `h7w0` / `y8f0` 和四条实现类逐项恢复 Slider 的真实颜色、轨道、thumb、描边、阴影及启用状态行为。完成后继续其他主题组件，不停在配置抽取这一步。
