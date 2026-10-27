@@ -111,15 +111,21 @@ internal fun voyageSliderContainerModifier(
     containerColor: Color,
 ): Modifier {
     val containerShape = voyageCornerShape(20.dp)
+    val containerShadow = if (LocalMaterialShadowSliders.current) {
+        Modifier.shadow(2.dp, containerShape, clip = false)
+    } else Modifier
     return when (style) {
         0 -> Modifier
             .padding(vertical = 2.dp)
+            .then(containerShadow)
             .background(containerColor, containerShape)
             .padding(horizontal = 12.dp, vertical = 6.dp)
         1 -> Modifier
+            .then(containerShadow)
             .background(containerColor, voyageCornerShape(50.dp))
             .padding(horizontal = 6.dp)
         2 -> Modifier
+            .then(containerShadow)
             .background(containerColor, voyageCornerShape(50.dp))
             .padding(horizontal = 12.dp)
         else -> Modifier
@@ -246,6 +252,14 @@ internal fun VoyageSliderThumb(
     val hovered by effectiveInteractionSource.collectIsHoveredAsState()
     val focused by effectiveInteractionSource.collectIsFocusedAsState()
     val interacting = pressed || dragged || hovered || focused
+    if (style == 0 && interactionSource != null) {
+        androidx.compose.material3.SliderDefaults.Thumb(
+            interactionSource = interactionSource,
+            colors = androidx.compose.material3.SliderDefaults.colors(thumbColor = activeColor),
+            enabled = true,
+        )
+        return
+    }
     val thumbShape = voyageCornerShape(minOf(size.width, size.height) / 2f)
 
     Box(
@@ -294,7 +308,7 @@ internal fun VoyageSliderTrack(
             .fillMaxWidth()
             .height(height)
             .then(if (style == 3) Modifier.background(containerColor, trackShape) else Modifier)
-            .then(if (shadowEnabled && style == 3) Modifier.shadow(1.dp, trackShape, clip = false) else Modifier)
+            .then(if (shadowEnabled && style == 3) Modifier.shadow(2.dp, trackShape, clip = false) else Modifier)
     ) {
         val h = size.height
         val y = h / 2f
