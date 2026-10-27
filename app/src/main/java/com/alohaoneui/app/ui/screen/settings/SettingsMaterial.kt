@@ -18,6 +18,7 @@ import androidx.compose.material.icons.automirrored.filled.Article
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Adb
 import androidx.compose.material.icons.filled.BugReport
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ContactPage
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DeveloperMode
@@ -184,6 +185,17 @@ fun SettingPagerMaterial(
                                         (value == "system" && uiState.appLanguage.isBlank()),
                                     onClick = { actions.onSetAppLanguage(value) },
                                     headlineContent = { Text(label) },
+                                    trailingContent = {
+                                        if (uiState.appLanguage == value ||
+                                            (value == "system" && uiState.appLanguage.isBlank())
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Filled.Check,
+                                                contentDescription = null,
+                                                tint = MaterialTheme.colorScheme.primary,
+                                            )
+                                        }
+                                    },
                                 )
                             }
                         }
