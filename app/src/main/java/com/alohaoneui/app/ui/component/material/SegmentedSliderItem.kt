@@ -271,72 +271,127 @@ internal fun VoyageSliderTrack(
         else -> MaterialTheme.colorScheme.onPrimary
     }
     val futureTickColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.65f)
-    // Voyage's vhf.m138081l applies elevation to the 20dp thumb, while
-    // vhf.m138077ll draws the track segments and ticks without a track shadow.
-    // Keep the track linked to the shared shape system without adding elevation
-    // that is not present in the source draw path.
-    val trackShape = voyageCornerShape(height / 2f)
-    val innerShape = voyageCornerShape((height - innerInset * 2f).coerceAtLeast(2.dp) / 2f)
+    // All four styles keep a roomy 32dp color-container behind the rail,
+    // but the rail geometry is style-specific rather than one shared capsule.
+    // The original Voyage DEX methods are still being matched; these branches
+    // are deliberately isolated so each can be corrected against the source.
+    val containerShape = voyageCornerShape(height / 2f)
     Canvas(
         Modifier
             .fillMaxWidth()
             .height(height)
-            .then(if (shadowEnabled) Modifier.shadow(1.dp, trackShape, clip = false) else Modifier)
+            .then(if (shadowEnabled) Modifier.shadow(1.dp, containerShape, clip = false) else Modifier)
     ) {
         val h = size.height
-        // The neutral container is the full outer rail. The thumb travels inside
-        // this capsule rather than sitting over a thin line as in stock Material.
-        val outerOutline = trackShape.createOutline(
-            size = Size(size.width, h),
-            layoutDirection = layoutDirection,
-            density = this,
-        )
-        drawVoyageOutline(outerOutline, inactiveColor)
-
         val insetPx = innerInset.toPx()
-        val innerHeight = (h - insetPx * 2f).coerceAtLeast(1f)
-        val innerWidth = (size.width - insetPx * 2f).coerceAtLeast(1f)
         val fraction = if (range.endInclusive > range.start) {
             ((state.value - range.start) / (range.endInclusive - range.start)).coerceIn(0f, 1f)
         } else 0f
-        val activeWidthPx = innerWidth * fraction
-        val innerOutline = innerShape.createOutline(
-            size = Size(innerWidth, innerHeight),
-            layoutDirection = layoutDirection,
-            density = this,
+        val outlinePx = outlineWidth.toPx()
+        val width = size.width
+
+        // Secondary/tertiary container is a separate outer surface; it never
+        // shares the thumb's accent fill. Global Voyage shape/corner scale
+        // continues to control the outside silhouette.
+        drawVoyageOutline(
+            containerShape.createOutline(Size(width, h), layoutDirection, this),
+            inactiveColor,
         )
-        withTransform({ translate(insetPx, insetPx) }) {
-            if (activeWidthPx >= innerHeight) {
-                val activeOutline = innerShape.createOutline(
-                    size = Size(activeWidthPx, innerHeight),
-                    layoutDirection = layoutDirection,
-                    density = this,
-                )
-                drawVoyageOutline(activeOutline, activeColor)
-            } else if (activeWidthPx > 0f) {
-                clipRect(left = 0f, top = 0f, right = activeWidthPx, bottom = innerHeight) {
-                    drawVoyageOutline(innerOutline, activeColor)
+
+        when (style) {
+            0 -> {
+                // Material You: inset, full-height pill rail with a pill-shaped
+                // active fill. This is intentionally not the thin Material 2 line.
+                val left = insetPx
+                val railWidth = (width - 2f * insetPx).coerceAtLeast(1f)
+                val railHeight = (h - 2f * insetPx).coerceAtLeast(1f)
+                val railShape = voyageCornerShape(railHeight.toDp() / 2f)
+                val railOutline = railShape.createOutline(Size(railWidth, railHeight), layoutDirection, this)
+                withTransform({ translate(left, insetPx) }) {
+                    drawVoyageOutline(railOutline, inactiveColor.copy(alpha = 0.62f))
+                    val activeWidth = railWidth * fraction
+                    if (activeWidth > 0f) {
+                        clipRect(left = 0f, top = 0f, right = activeWidth, bottom = railHeight) {
+                            drawVoyageOutline(railOutline, activeColor)
+                        }
+                    }
+                    if (outlinePx > 0f) drawVoyageOutline(railOutline, outlineColor, Stroke(outlinePx))
                 }
             }
-
-            val outlinePx = outlineWidth.toPx()
-            if (outlinePx > 0f) {
-                drawVoyageOutline(
-                    outline = innerOutline,
-                    color = outlineColor,
-                    style = Stroke(width = outlinePx),
-                )
+            1 -> {
+                // Fancy: a broad inset rail with a slimmer centered channel;
+                // the active end is clipped from the same channel to avoid
+                // changing the surrounding secondary/tertiary container.
+                val channelHeight = (h * 0.56f).coerceAtLeast(1f)
+                val top = (h - channelHeight) / 2f
+                val left = (insetPx * 0.65f).coerceAtLeast(1f)
+                val channelWidth = (width - left * 2f).coerceAtLeast(1f)
+                val channelShape = voyageCornerShape(channelHeight.toDp() / 2f)
+                val channelOutline = channelShape.createOutline(Size(channelWidth, channelHeight), layoutDirection, this)
+                withTransform({ translate(left, top) }) {
+                    drawVoyageOutline(channelOutline, inactiveColor.copy(alpha = 0.72f))
+                    val activeWidth = channelWidth * fraction
+                    if (activeWidth > 0f) {
+                        clipRect(left = 0f, top = 0f, right = activeWidth, bottom = channelHeight) {
+                            drawVoyageOutline(channelOutline, activeColor)
+                        }
+                    }
+                    if (outlinePx > 0f) drawVoyageOutline(channelOutline, outlineColor, Stroke(outlinePx))
+                }
             }
-
-            if (steps > 0) {
-                val count = steps + 1
-                for (i in 0..count) {
-                    val x = if (count > 0) innerWidth * i / count else 0f
-                    drawCircle(
-                        color = if (x <= activeWidthPx) passedTickColor else futureTickColor,
-                        radius = 1.dp.toPx(),
-                        center = Offset(x, innerHeight / 2f),
+            2 -> {
+                // Material 2: classic narrow 4dp active/inactive line centered
+                // inside the wider colored holder; circular end caps are retained.
+                val railHeight = 4.dp.toPx()
+                val top = (h - railHeight) / 2f
+                val left = insetPx
+                val railWidth = (width - 2f * insetPx).coerceAtLeast(1f)
+                drawRoundRect(
+                    color = inactiveColor.copy(alpha = 0.78f),
+                    topLeft = Offset(left, top),
+                    size = Size(railWidth, railHeight),
+                    cornerRadius = CornerRadius(railHeight / 2f, railHeight / 2f),
+                )
+                val activeWidth = railWidth * fraction
+                if (activeWidth > 0f) {
+                    drawRoundRect(
+                        color = activeColor,
+                        topLeft = Offset(left, top),
+                        size = Size(activeWidth, railHeight),
+                        cornerRadius = CornerRadius(railHeight / 2f, railHeight / 2f),
                     )
+                }
+                if (steps > 0) {
+                    val count = steps + 1
+                    for (i in 0..count) {
+                        val x = left + railWidth * i / count
+                        drawCircle(
+                            color = if (i.toFloat() / count <= fraction) passedTickColor else futureTickColor,
+                            radius = 1.dp.toPx(),
+                            center = Offset(x, h / 2f),
+                        )
+                    }
+                }
+            }
+            else -> {
+                // HyperOS: thick, edge-to-edge pill channel. It has a separate
+                // geometry branch so its filled track does not inherit Fancy's
+                // inset channel or Material 2's hairline rail.
+                val left = (insetPx * 0.45f).coerceAtLeast(1f)
+                val railWidth = (width - 2f * left).coerceAtLeast(1f)
+                val railHeight = (h * 0.78f).coerceAtLeast(1f)
+                val top = (h - railHeight) / 2f
+                val railShape = voyageCornerShape(railHeight.toDp() / 2f)
+                val railOutline = railShape.createOutline(Size(railWidth, railHeight), layoutDirection, this)
+                withTransform({ translate(left, top) }) {
+                    drawVoyageOutline(railOutline, inactiveColor.copy(alpha = 0.82f))
+                    val activeWidth = railWidth * fraction
+                    if (activeWidth > 0f) {
+                        clipRect(left = 0f, top = 0f, right = activeWidth, bottom = railHeight) {
+                            drawVoyageOutline(railOutline, activeColor)
+                        }
+                    }
+                    if (outlinePx > 0f) drawVoyageOutline(railOutline, outlineColor, Stroke(outlinePx))
                 }
             }
         }
