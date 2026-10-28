@@ -689,13 +689,24 @@ fun ColorPaletteScreenMaterial(
                                             outlineWidthInput = String.format(java.util.Locale.ROOT, "%.1f", outlineWidth)
                                             showOutlineValueDialog = true
                                         },
+                                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 0.dp),
                                         modifier = Modifier
+                                            .height(32.dp)
+                                            .then(
+                                                if (LocalMaterialShadowButtons.current) {
+                                                    Modifier.shadow(2.dp, voyageCornerShape(12.dp))
+                                                } else Modifier
+                                            )
                                             .clip(voyageCornerShape(12.dp))
                                             .background(MaterialTheme.colorScheme.primaryContainer)
-                                            .border(
-                                                1.dp,
-                                                MaterialTheme.colorScheme.primary.copy(alpha = 0.45f),
-                                                voyageCornerShape(12.dp),
+                                            .then(
+                                                LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
+                                                    Modifier.border(
+                                                        it.dp,
+                                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.45f),
+                                                        voyageCornerShape(12.dp),
+                                                    )
+                                                } ?: Modifier
                                             ),
                                     ) {
                                         Text(
