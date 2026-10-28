@@ -707,3 +707,15 @@
 - 已参考 Google 官方 Material 3 Slider API 文档，确认官方 Slider 的轨道与拇指分别由 `SliderDefaults.Track` / `SliderDefaults.Thumb` 提供，并使用主题色角色配置。后续将继续把 Material You 轨道实现与官方 Compose Material 3 行为逐项对齐，同时单独核对 Material 2 的轨道、拇指、刻度与状态色，避免两者只在名称或尺寸上有区别。
 - 开关后续按每个样式的名称与来源实现独立几何、状态与动画，颜色仍取 Aloha OneUI 自身主题色。波浪形状则继续以 Voyage 原始路径与录屏观感为准，在不破坏波形的前提下优化性能。
 - 验证状态：当前只确认阴影层级修改已提交；该提交之后的 CI 构建及真机显示尚未验证。不得将本次记录当作整个开关/滑条/波浪校正已完成，也不得以旧 APK 冒充最新产物。
+
+
+## 2026-10-27 — Material You 开关滑块几何与 Slider 前景阴影第二轮
+
+- 开关提交：`44dd104f4aaac6eec65876a8b0f74745c71135d9`，修改 `ExpressiveSwitch.kt`。
+  - Material You 样式（style 0）现在使用 52×32dp 的外轨道，并按状态将圆形 thumb 设置为未选中 16dp、选中 24dp、按压 28dp；不再错误地把该样式的滑块也拉成长胶囊。
+  - 其余样式按各自分支使用不同的可见 thumb 宽度比例，继续保留原有样式差异和 Aloha OneUI 主题色。该比例是本轮代码校正，不等于已证实的所有 Voyage 原版像素值，仍需逐个样式对照录屏/原始分支。
+- Slider 阴影提交：`20358bc866dd4a97c5833c44571f2b7fa1173f36`，修改 `SegmentedSliderItem.kt`。
+  - 移除拇指自身的第二层 elevation shadow，避免 thumb 的阴影作为前景叠在轨道容器底色上；阴影由轨道/外层容器负责，目标是让投影处于底色表面之后。
+  - HyperOS 轨道另由 `a1c9550eb7e7111d1c5b388d656ad658b9c7bb4e` 调整 Modifier 顺序，使阴影在容器底色前方的错误层级得到修正。
+- 官方依据：Google Material 3 Slider API 公开了官方 `SliderDefaults.Thumb` 与 `SliderDefaults.Track`，Material 2 的 Compose Slider API 亦提供其自身默认轨道/拇指实现。现有 Material You thumb 已使用官方 M3 thumb；Material You track 仍需继续校正，不能将本轮称为完整官方 1:1。尝试直接接入官方 Track 的文件更新未成功提交，因此没有把该项记录为完成。
+- 验证状态：上述提交已进入测试分支，但尚未确认这些新提交的 Actions 构建和真机表现。重点验收 Material You 开关的圆形 thumb 状态尺寸、其余开关样式差异，以及 Slider 阴影是否完全位于背景底色下方；没有真机证据前不宣称验收完成。
