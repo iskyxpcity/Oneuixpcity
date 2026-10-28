@@ -76,12 +76,17 @@ internal fun voyageSliderAppearance(requestedStyle: Int): VoyageSliderAppearance
     val scheme = MaterialTheme.colorScheme
     // Progress and thumb colors follow separate Material theme roles.
     val active = when (style) {
-        0, 1 -> scheme.secondary
+        0 -> scheme.tertiary
+        1 -> scheme.secondary
         2 -> scheme.primary
         else -> scheme.tertiary
     }
     val thumb = scheme.primary
-    val inactive = if (style == 1) Color(0xFFD9D9D9) else scheme.surfaceContainerHighest
+    val inactive = when (style) {
+        0 -> scheme.surfaceContainerHighest
+        1 -> Color(0xFFD9D9D9)
+        else -> scheme.surfaceContainerHighest
+    }
     val container = when (style) {
         0 -> scheme.tertiaryContainer.copy(alpha = 0.20f) // Material You
         1 -> scheme.secondaryContainer.copy(alpha = 0.30f) // Fancy
@@ -93,10 +98,10 @@ internal fun voyageSliderAppearance(requestedStyle: Int): VoyageSliderAppearance
         else -> DpSize(20.dp, 20.dp) // M3/M2 default thumb slot; HyperOS hides it
     }
     val trackHeight = when (style) {
+        0 -> 4.dp  // Material 3 standard active/inactive rail
         1 -> 38.dp // FancyTrack source
         2 -> 4.dp  // M2Slider source
-        3 -> 30.dp // HyperOSSlider source
-        else -> 16.dp // Material You: 4x the previous 4dp rail
+        else -> 30.dp // HyperOSSlider source
     }
     return VoyageSliderAppearance(
         style = style,
@@ -122,11 +127,9 @@ internal fun voyageSliderContainerModifier(
         Modifier.shadow(2.dp, containerShape, clip = false)
     } else Modifier
     return when (style) {
+        // Material 3 uses a bare rail and native thumb, not a tinted capsule
+        // behind an oversized progress line. Keep the elevation on the rail.
         0 -> Modifier
-            .padding(vertical = 2.dp)
-            .then(containerShadow)
-            .background(containerColor, containerShape)
-            .padding(horizontal = 12.dp, vertical = 6.dp)
         1 -> Modifier
             .then(containerShadow)
             .background(containerColor, voyageCornerShape(50.dp))
@@ -304,8 +307,16 @@ internal fun VoyageSliderTrack(
     inactiveColor: Color,
     shadowEnabled: Boolean = false,
 ) {
-    val passedTickColor = if (style == 1) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onPrimary
-    val futureTickColor = if (style == 1) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline.copy(alpha = 0.65f)
+    val passedTickColor = when (style) {
+        0 -> MaterialTheme.colorScheme.onSurfaceVariant
+        1 -> MaterialTheme.colorScheme.primary
+        else -> MaterialTheme.colorScheme.onPrimary
+    }
+    val futureTickColor = when (style) {
+        0 -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
+        1 -> MaterialTheme.colorScheme.primary
+        else -> MaterialTheme.colorScheme.outline.copy(alpha = 0.65f)
+    }
     val fraction = if (range.endInclusive > range.start) {
         ((state.value - range.start) / (range.endInclusive - range.start)).coerceIn(0f, 1f)
     } else 0f
@@ -317,23 +328,38 @@ internal fun VoyageSliderTrack(
             // Elevation belongs to the back layer: draw its shadow first, then
             // paint the container surface over it. Putting shadow() after
             // background() made the HyperOS rail shadow appear above its tint.
-            .then(if (shadowEnabled && style == 3) Modifier.shadow(2.dp, trackShape, clip = false) else Modifier)
+            .then(if (shadowEnabled && (style == 0 || style == 3)) Modifier.shadow(2.dp, trackShape, clip = false) else Modifier)
             .then(if (style == 3) Modifier.background(containerColor, trackShape) else Modifier)
     ) {
         val h = size.height
         val y = h / 2f
-        val end = Offset(size.width, y)
-        val start = Offset(0f, y)
+        val m3Inset = if (style == 0) 10.dp.toPx() else 0f
+        val railWidth = (size.width - 2f * m3Inset).coerceAtLeast(0f)
+        val start = Offset(m3Inset, y)
+        val end = Offset(m3Inset + railWidth, y)
         val cap = if (style == 3) StrokeCap.Butt else StrokeCap.Round
-        val trackThickness = h
+        val trackThickness = if (style == 0) 4.dp.toPx() else h
 
         when (style) {
             0 -> {
-                // Material You: keep the progress accent only. The large outer
-                // themed surface is the background; do not paint a second,
-                // smaller inactive rail over it.
+                // Material 3 geometry: a slim 4dp active/inactive rail, inset
+                // by the native 10dp thumb radius. Progress uses the tertiary
+                // theme role; the native Material thumb keeps its own elevation.
+                drawLine(
+                    color = inactiveColor,
+                    start = start,
+                    end = end,
+                    strokeWidth = trackThickness,
+                    cap = StrokeCap.Round,
+                )
                 if (fraction > 0f) {
-                    drawLine(activeColor, start, Offset(size.width * fraction, y), trackThickness, StrokeCap.Round)
+                    drawLine(
+                        color = activeColor,
+                        start = start,
+                        end = Offset(m3Inset + railWidth * fraction, y),
+                        strokeWidth = trackThickness,
+                        cap = StrokeCap.Round,
+                    )
                 }
             }
             1 -> {
@@ -375,10 +401,15 @@ internal fun VoyageSliderTrack(
             val count = steps + 1
             for (i in 0..count) {
                 val tickFraction = i.toFloat() / count
+                val tickX = if (style == 0) {
+                    m3Inset + railWidth * tickFraction
+                } else {
+                    size.width * tickFraction
+                }
                 drawCircle(
                     color = if (tickFraction <= fraction) passedTickColor else futureTickColor,
-                    radius = 1.dp.toPx(),
-                    center = Offset(size.width * tickFraction, y),
+                    radius = if (style == 0) 1.dp.toPx() else 1.dp.toPx(),
+                    center = Offset(tickX, y),
                 )
             }
         }
