@@ -58,7 +58,7 @@ fun ExpressiveDialog(
         iconContentColor = iconContentColor,
         titleContentColor = titleContentColor,
         textContentColor = textContentColor,
-        tonalElevation = if (LocalMaterialShadowContainers.current) tonalElevation else 0.dp,
+        // Material 3 tonal elevation changes the surface color; it is not a shadow toggle.\n        // Keep the requested tonal level independent from the global shadow preference.\n        tonalElevation = tonalElevation,
         properties = properties,
     )
 }
@@ -114,7 +114,7 @@ fun ExpressiveContentDialog(
             shape = dialogShape,
             color = AlertDialogDefaults.containerColor,
             contentColor = AlertDialogDefaults.textContentColor,
-            tonalElevation = if (LocalMaterialShadowContainers.current) AlertDialogDefaults.TonalElevation else 0.dp,
+            // Keep M3 tonal elevation (surface tint) independent from cast shadow.\n            tonalElevation = AlertDialogDefaults.TonalElevation,\n            shadowElevation = if (LocalMaterialShadowContainers.current) 6.dp else 0.dp,
         ) {
             Column(
                 modifier = Modifier.padding(24.dp),
