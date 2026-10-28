@@ -148,7 +148,7 @@ fun AlohaOneUISlider(
                 VoyageSliderThumb(
                     style = materialSliderStyle,
                     size = materialThumbSize,
-                    activeColor = materialActiveColor,
+                    activeColor = materialThumbColor,
                     inactiveColor = materialInactiveColor,
                     shadowEnabled = LocalMaterialShadowSliders.current,
                     interactionSource = materialInteractionSource,
