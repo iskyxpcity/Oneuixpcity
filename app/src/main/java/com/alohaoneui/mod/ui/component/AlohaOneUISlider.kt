@@ -251,6 +251,17 @@ fun AlohaOneUISlider(
                     strokeWidth = size.height,
                     cap = StrokeCap.Round,
                 )
+                // Keep the scale visible for continuous and stepped sliders alike.
+                // Marks follow the effective direction, including RTL layouts.
+                for (i in 0..20) {
+                    val tickFraction = i / 20f
+                    val passed = tickFraction <= effectiveFraction
+                    drawCircle(
+                        color = if (passed) thumbColor else trackForeground,
+                        radius = 1.dp.toPx(),
+                        center = Offset(size.width * tickFraction, size.height / 2f),
+                    )
+                }
                 drawCircle(
                     color = thumbColor,
                     radius = thumbRadius * 0.72f,
