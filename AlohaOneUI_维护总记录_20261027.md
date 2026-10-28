@@ -756,3 +756,13 @@
 - 产品源码提交：993c7e85073aa09b714152669ec64f21b64edd4c，文件：app/src/main/java/com/alohaoneui/app/ui/viewmodel/MainActivityViewModel.kt。
 - 所有修改仅在 test/voyage-theme-1to1-20261026；没有修改或合并 main。
 - 验证边界：已确认存储键名、状态监听键列表和主题状态读取链相互对应，并已推送修复。仍需检查此 HEAD 的 GitHub Actions 编译结果；构建通过后还要在设备上分别切换开关样式与滑条样式，确认预览即时变化且不会影响当前控件值。此时尚不能宣称 CI 或真机验收已通过。
+
+
+## 2026-10-27 — 语言切换黑屏闪帧与选中项整行底色二次修复
+
+- 用户复测反馈：语言切换仍会短暂黑屏，且当前语言选中态的颜色没有覆盖完整选项行。上一轮虽已给日间/夜间 Theme.AlohaOneUI 设置 windowBackground，但真机反馈说明仍不足以消除黑色预览帧，因此继续处理，不将旧修复视为已验收。
+- 语言选中态：SettingsMaterial.kt 的语言选项显式传入 alohaOneUISegmentedColors().copy(selectedContainerColor = MaterialTheme.colorScheme.secondaryContainer)，使选中底色明确使用主题 secondaryContainer，并由整行 SegmentedListItem 的选中容器绘制，而不只依赖勾选图标体现选中状态。修改仅作用于语言选项，避免改变其他设置列表的选中配色。
+- 黑屏闪帧：在 values/themes.xml 与 values-night/themes.xml 的主 Theme.AlohaOneUI 中，在现有 windowBackground 跟随系统日/夜背景的基础上增加 android:windowDisablePreview=true，尝试阻止 LocaleManager 触发 Activity 配置重建时显示旧窗口预览黑帧；Startup Activity 的透明主题不变。语言切换仍由 Android 13+ LocaleManager 负责，不额外调用 Activity.recreate()。
+- 提交：语言选中整行底色 37fa9b0f5446a8d146ee45ba3c212c830dfc14d3；日间窗口主题 940582993711299b25da9732e16f50d12569fcd1；夜间窗口主题 f4a4a2a777a80d75a57cb826fd40d4312792105a。
+- 所有修改仅在 test/voyage-theme-1to1-20261026，没有修改或合并 main。
+- 验证边界：源码更新已推送，尚未完成最新 HEAD 的 CI 编译与真机复测。需确认 Kotlin 的 ListItemColors.copy(selectedContainerColor) 可编译，并在设备上切换不同语言确认黑屏闪帧消失、选中底色从行首覆盖到行尾且圆角符合当前形状设置。若黑帧仍出现，应继续基于设备录像定位系统 LocaleManager 重建时序，不应仅凭主题属性推断问题已解决。
