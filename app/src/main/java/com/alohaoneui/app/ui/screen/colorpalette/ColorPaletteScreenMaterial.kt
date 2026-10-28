@@ -755,7 +755,23 @@ fun ColorPaletteScreenMaterial(
                                                     outlineWidthInput = input
                                                 }
                                             },
-                                            modifier = Modifier.fillMaxWidth(),
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .then(
+                                                    if (LocalMaterialShadowButtons.current) {
+                                                        Modifier.shadow(2.dp, voyageCornerShape(12.dp))
+                                                    } else Modifier
+                                                )
+                                                .then(
+                                                    LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
+                                                        Modifier.border(
+                                                            it.dp,
+                                                            MaterialTheme.colorScheme.primary.copy(alpha = 0.45f),
+                                                            voyageCornerShape(12.dp),
+                                                        )
+                                                    } ?: Modifier
+                                                ),
+                                            shape = voyageCornerShape(12.dp),
                                             singleLine = true,
                                             textStyle = MaterialTheme.typography.titleMedium.copy(
                                                 textAlign = TextAlign.Center,
