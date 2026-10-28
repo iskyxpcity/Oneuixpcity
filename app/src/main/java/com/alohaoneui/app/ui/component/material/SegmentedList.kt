@@ -242,17 +242,12 @@ private class VoyagePathShape(
         val topStart: Float, val topEnd: Float, val bottomEnd: Float, val bottomStart: Float,
     )
 
-    // Wavy shapes are used by many rows at once. A per-instance cache misses on
-    // every animated shape frame because each row owns a different Shape instance.
-    // Share a small LRU across instances and quantize only Wavy corner radii to
-    // half-dp buckets; this bounds path rebuilds during the corner spring animation.
-    private val outlineCache = object : java.util.LinkedHashMap<OutlineKey, Outline>(16, 0.75f, true) {
-        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<OutlineKey, Outline>?): Boolean = size > 24
-    }
-
+    // Share generated outlines across all instances. During radius adjustment many
+    // rows use the same dimensions and radii; a per-instance cache rebuilt on every
+    // animated value causes redundant Path allocation and frame drops.
     override fun createOutline(size: Size, layoutDirection: LayoutDirection, density: Density): Outline {
         fun cacheRadius(value: Float): Float =
-            if (style == 4) kotlin.math.round(value) else value
+            if (style == 4) kotlin.math.round(value * 2f) / 2f else value
 
         val key = OutlineKey(
             style, size.width, size.height, density.density, layoutDirection,
@@ -260,24 +255,11 @@ private class VoyagePathShape(
             cacheRadius(bottomEnd.value), cacheRadius(bottomStart.value),
         )
 
-        if (style == 4) {
-            // Never build the sampled Wavy path while holding the shared cache lock.
-            // A cache miss can require hundreds of samples; doing that under the
-            // global lock serializes every Wavy component during shape animations.
-            synchronized(wavyOutlineCache) {
-                wavyOutlineCache[key]?.let { return it }
-            }
-            val generated = createVoyageOutline(size, layoutDirection, density)
-            synchronized(wavyOutlineCache) {
-                wavyOutlineCache[key]?.let { return it }
-                wavyOutlineCache[key] = generated
-                return generated
-            }
-        }
-
         synchronized(outlineCache) {
             outlineCache[key]?.let { return it }
         }
+        // Build outside the shared lock: complex Wavy outlines must not block
+        // other shape lookups while the radius slider is being dragged.
         val generated = createVoyageOutline(size, layoutDirection, density)
         synchronized(outlineCache) {
             outlineCache[key]?.let { return it }
@@ -287,9 +269,9 @@ private class VoyagePathShape(
     }
 
     private companion object {
-        // A settings screen can contain many distinct Wavy dimensions at once.
-        // Keep enough entries to avoid thrashing the shared cache while radii animate.
-        private val wavyOutlineCache = object : java.util.LinkedHashMap<OutlineKey, Outline>(128, 0.75f, true) {
+        // Bounded process-wide LRU: reuse equal outlines across rows/components,
+        // while limiting retained Path objects when users explore many radii.
+        private val outlineCache = object : java.util.LinkedHashMap<OutlineKey, Outline>(128, 0.75f, true) {
             override fun removeEldestEntry(eldest: MutableMap.MutableEntry<OutlineKey, Outline>?): Boolean = size > 768
         }
     }
