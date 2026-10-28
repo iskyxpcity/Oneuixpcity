@@ -929,3 +929,7 @@
   - `66ea85a79e4d1727bda8fecaedc03da9bda4ab1f` — 圆角数值按钮与主题弹窗。
   - `a7e302344670cd28f3ed66fc36124c81b79b9709` — 修正圆角步进按最近 0.05 取整。
 - 验证状态：以上是源码提交结果，尚未取得这些最新提交对应的 Android 构建终态，也尚未在实体设备确认刻度可见度、弹窗输入键盘、主题颜色联动及数值持久化。必须继续检查最新 Actions；若编译失败需修复后再交付 APK，不以提交成功代替构建通过。
+
+
+- 构建复核补记：Actions Run #1874（HEAD `85fef43ebb1b3932d58b8482c9882d1168e3c7ea`）在 Kotlin 编译阶段失败，明确错误为 `ColorPaletteScreenMaterial.kt:97` 与 `:559` 的 `KeyboardOptions` 未解析。根因是 Compose 版本中 `KeyboardOptions` 应从 `androidx.compose.foundation.text.KeyboardOptions` 导入，而不是 `androidx.compose.ui.text.input.KeyboardOptions`。
+- 已提交修复 `44234a5e9562f7daac066541fd3127ee3410aa7a`，只调整上述 import；`KeyboardType` 仍使用 `androidx.compose.ui.text.input.KeyboardType`。修复后的构建尚待 Actions 验证，不能把本次 import 修正视为编译通过。
