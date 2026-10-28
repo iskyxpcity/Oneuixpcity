@@ -81,7 +81,7 @@ internal fun voyageSliderAppearance(requestedStyle: Int): VoyageSliderAppearance
     // independent roles so theme changes propagate without making them identical.
     val active = when (style) {
         0 -> scheme.secondary                 // Material You: filled segment
-        1 -> scheme.secondary                 // Fancy: theme-linked secondary progress
+        1 -> scheme.tertiary                 // Fancy: third theme color for progress
         2 -> scheme.tertiary                 // Material 2: thin accent line
         else -> scheme.secondary             // HyperOS: filled thick segment
     }
@@ -282,15 +282,19 @@ internal fun VoyageSliderThumb(
             // shaped core. The selected shape still follows Voyage's shared
             // shape setting and rotates in the source direction while dragging.
             Box(
-                modifier = Modifier.size(32.dp),
+                // The halo is 4dp wider than the 40dp rail, then clipped to
+                // the rail's height so no glow is visible beyond its edges.
+                modifier = Modifier
+                    .size(width = 32.dp, height = 40.dp)
+                    .clipToBounds(),
                 contentAlignment = androidx.compose.ui.Alignment.Center,
             ) {
                 if (haloVisible) {
                     Box(
                         Modifier
-                            .size(32.dp)
+                            .size(44.dp)
                             .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.secondary.copy(alpha = 0.24f)),
+                            .background(MaterialTheme.colorScheme.tertiary.copy(alpha = 0.24f)),
                     )
                 }
                 Box(
@@ -397,7 +401,10 @@ internal fun VoyageSliderTrack(
                 )
                 withTransform({ translate(left = -extension, top = 0f) }) {
                     drawVoyageOutline(fullRailOutline, scheme.surfaceContainerHighest)
-                    val progressWidth = (size.width * fraction - 4.dp.toPx()).coerceAtLeast(0f)
+                    // The core is shifted left by 4dp; extend the tertiary
+                    // progress through the core and 4dp past its right edge.
+                    val progressWidth = (size.width * fraction + thumbWidth.toPx() / 2f)
+                        .coerceIn(0f, size.width + extension)
                     if (progressWidth > 0f) {
                         val progressOutline = trackShape.createOutline(
                             size = Size(progressWidth + extension, h),
