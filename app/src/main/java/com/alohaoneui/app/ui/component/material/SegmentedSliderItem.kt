@@ -1,6 +1,7 @@
 package com.alohaoneui.app.ui.component.material
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.background
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -104,7 +106,7 @@ internal fun voyageSliderAppearance(requestedStyle: Int): VoyageSliderAppearance
     }
     val trackHeight = when (style) {
         0 -> 16.dp                           // Material You pill track + marker
-        1 -> 28.dp                           // Fancy wide rail wraps its thumb
+        1 -> 40.dp                           // Fancy rail expanded by 12dp total
         2 -> 6.dp                            // Material 2 fine rail
         else -> 24.dp                        // HyperOS thick rail
     }
@@ -127,28 +129,18 @@ internal fun voyageSliderContainerModifier(
     style: Int,
     containerColor: Color,
 ): Modifier {
+    // Fancy has no outer container: its rail itself is the complete visual surface.
+    if (style == 1) return Modifier
     val containerShape = voyageCornerShape(20.dp)
     val containerShadow = if (LocalMaterialShadowSliders.current) {
         Modifier.shadow(2.dp, containerShape, clip = false)
     } else Modifier
     return Modifier
-        // Voyage's preview shows the elevation behind the slider surface. Draw
-        // that surface over the shadow instead of placing a shadow above progress.
         .then(containerShadow)
         .background(containerColor, voyageCornerShape(20.dp))
         .padding(
-            horizontal = when (style) {
-                0 -> 10.dp
-                1 -> 6.dp
-                2 -> 10.dp
-                else -> 6.dp
-            },
-            vertical = when (style) {
-                0 -> 6.dp
-                1 -> 4.dp
-                2 -> 6.dp
-                else -> 4.dp
-            },
+            horizontal = when (style) { 0 -> 10.dp; 2 -> 10.dp; else -> 6.dp },
+            vertical = when (style) { 0 -> 6.dp; 2 -> 6.dp; else -> 4.dp },
         )
 }
 
@@ -292,12 +284,13 @@ internal fun VoyageSliderThumb(
                 Box(
                     Modifier
                         .size(32.dp)
-                        .clip(voyageCornerShape(16.dp))
-                        .background(MaterialTheme.colorScheme.secondaryContainer),
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.secondary.copy(alpha = 0.24f)),
                 )
                 Box(
                     Modifier
                         .size(width = size.width, height = size.height)
+                        .offset(x = (-4).dp)
                         .then(Modifier.rotate(-1080f * valueFraction))
                         .clip(thumbShape)
                         .background(MaterialTheme.colorScheme.primary),
@@ -387,21 +380,26 @@ internal fun VoyageSliderTrack(
                 }
             }
             1 -> {
-                // Fancy: fixed light-gray full rail, softer secondary-container
-                // progress, primary shaped thumb, and primary ticks on the fill.
-                drawRoundRect(
-                    color = scheme.surfaceContainerHighest,
-                    topLeft = Offset.Zero,
-                    size = Size(size.width, h),
-                    cornerRadius = CornerRadius(h / 2f, h / 2f),
+                // Fancy: no outer container. Extend the shaped rail beneath and
+                // beyond the thumb so both ends visually contain the 32dp halo.
+                val extension = thumbWidth.toPx() / 2f
+                val fullRailSize = Size(size.width + extension * 2f, h)
+                val fullRailOutline = trackShape.createOutline(
+                    size = fullRailSize,
+                    layoutDirection = layoutDirection,
+                    density = this,
                 )
-                if (fraction > 0f) {
-                    drawRoundRect(
-                        color = activeColor,
-                        topLeft = Offset.Zero,
-                        size = Size(activeWidth, h),
-                        cornerRadius = CornerRadius(h / 2f, h / 2f),
-                    )
+                withTransform({ translate(left = -extension, top = 0f) }) {
+                    drawVoyageOutline(fullRailOutline, scheme.surfaceContainerHighest)
+                    val progressWidth = (size.width * fraction - 4.dp.toPx()).coerceAtLeast(0f)
+                    if (progressWidth > 0f) {
+                        val progressOutline = trackShape.createOutline(
+                            size = Size(progressWidth + extension, h),
+                            layoutDirection = layoutDirection,
+                            density = this,
+                        )
+                        drawVoyageOutline(progressOutline, activeColor)
+                    }
                 }
             }
             2 -> {
