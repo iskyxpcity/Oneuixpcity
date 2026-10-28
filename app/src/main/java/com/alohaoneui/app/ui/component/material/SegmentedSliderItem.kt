@@ -167,6 +167,8 @@ fun SegmentedSliderItem(
     val thumbSize = appearance.thumbSize
     val trackHeight = appearance.trackHeight
     val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val isDragged by interactionSource.collectIsDraggedAsState()
     val sliderState = rememberSliderState(
         value = value,
         steps = steps,
@@ -223,6 +225,7 @@ fun SegmentedSliderItem(
                             inactiveColor = inactive,
                             shadowEnabled = LocalMaterialShadowSliders.current,
                             interactionSource = interactionSource,
+                            haloVisible = isPressed || isDragged,
                             valueFraction = valueFraction,
                         )
                     },
@@ -255,6 +258,7 @@ internal fun VoyageSliderThumb(
     inactiveColor: Color,
     shadowEnabled: Boolean = false,
     interactionSource: MutableInteractionSource? = null,
+    haloVisible: Boolean = false,
     valueFraction: Float = 0f,
 ) {
     // HyperOS uses the thick track itself as its handle surface.
@@ -281,12 +285,14 @@ internal fun VoyageSliderThumb(
                 modifier = Modifier.size(32.dp),
                 contentAlignment = androidx.compose.ui.Alignment.Center,
             ) {
-                Box(
-                    Modifier
-                        .size(32.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.secondary.copy(alpha = 0.24f)),
-                )
+                if (haloVisible) {
+                    Box(
+                        Modifier
+                            .size(32.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.secondary.copy(alpha = 0.24f)),
+                    )
+                }
                 Box(
                     Modifier
                         .size(width = size.width, height = size.height)
