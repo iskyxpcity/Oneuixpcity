@@ -283,10 +283,10 @@ internal fun VoyageSliderThumb(
             // shaped core. The selected shape still follows Voyage's shared
             // shape setting and rotates in the source direction while dragging.
             Box(
-                // The halo is 4dp wider than the 40dp rail, then clipped to
-                // the rail's height so no glow is visible beyond its edges.
+                // Keep the halo's full 44dp width, clipping only vertically
+                // to the 40dp rail so the circular glow is not squeezed sideways.
                 modifier = Modifier
-                    .size(width = 32.dp, height = 40.dp)
+                    .size(width = 44.dp, height = 40.dp)
                     .clipToBounds(),
                 contentAlignment = androidx.compose.ui.Alignment.Center,
             ) {
@@ -391,9 +391,10 @@ internal fun VoyageSliderTrack(
                 }
             }
             1 -> {
-                // Fancy: no outer container. Extend the shaped rail beneath and
-                // beyond the thumb so both ends visually contain the 32dp halo.
-                val extension = thumbWidth.toPx() / 2f
+                // Fancy: the rail begins 22dp before the thumb-center range.
+                // The shaped core is offset left by 4dp, so this leaves exactly
+                // 6dp between the left rail edge and the core at fraction zero.
+                val extension = thumbWidth.toPx() / 2f + 10.dp.toPx()
                 val fullRailSize = Size(size.width + extension * 2f, h)
                 val fullRailOutline = trackShape.createOutline(
                     size = fullRailSize,
@@ -402,17 +403,24 @@ internal fun VoyageSliderTrack(
                 )
                 withTransform({ translate(left = -extension, top = 0f) }) {
                     drawVoyageOutline(fullRailOutline, scheme.surfaceContainerHighest)
-                    // The core is shifted left by 4dp; extend the tertiary
-                    // progress through the core and 4dp past its right edge.
-                    val progressWidth = (size.width * fraction + thumbWidth.toPx() / 2f)
+                    // The core is 24dp square and shifted left by 4dp. The
+                    // progress pill is 36dp high and ends 6dp beyond the core's
+                    // right edge, giving 6dp of progress color on all four sides.
+                    val progressWidth = (size.width * fraction + thumbWidth.toPx() / 2f + 2.dp.toPx())
                         .coerceIn(0f, size.width + extension)
-                    if (progressWidth > 0f) {
-                        val progressOutline = trackShape.createOutline(
-                            size = Size(progressWidth + extension, h),
+                    val progressHeight = (h - 4.dp.toPx()).coerceAtLeast(0f)
+                    if (progressWidth > 0f && progressHeight > 0f) {
+                        val progressShape = voyageCornerShape(18.dp)
+                        val progressOutline = progressShape.createOutline(
+                            size = Size(progressWidth + extension, progressHeight),
                             layoutDirection = layoutDirection,
                             density = this,
                         )
-                        drawVoyageOutline(progressOutline, activeColor)
+                        withTransform({
+                            translate(top = (h - progressHeight) / 2f)
+                        }) {
+                            drawVoyageOutline(progressOutline, activeColor)
+                        }
                     }
                 }
             }
