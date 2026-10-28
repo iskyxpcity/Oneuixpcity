@@ -477,35 +477,29 @@ fun ColorPaletteScreenMaterial(
                                 steps = 39,
                                 onValueChangeFinished = { actions.onSetMaterialCornerScale(cornerScale) },
                                 titleTrailingContent = {
-                                    TextButton(
+                                    Surface(
                                         onClick = {
                                             cornerScaleInput = String.format(java.util.Locale.ROOT, "%.2f", cornerScale)
                                             showCornerValueDialog = true
                                         },
-                                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 0.dp),
-                                        modifier = Modifier
-                                            .requiredHeight(32.dp)
-                                            .then(
-                                                if (LocalMaterialShadowButtons.current) {
-                                                    Modifier.shadow(2.dp, voyageCornerShape(12.dp))
-                                                } else Modifier
-                                            )
-                                            .clip(voyageCornerShape(12.dp))
-                                            .background(MaterialTheme.colorScheme.primaryContainer)
-                                            .then(
-                                                LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
-                                                    Modifier.border(
-                                                        it.dp,
-                                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.45f),
-                                                        voyageCornerShape(12.dp),
-                                                    )
-                                                } ?: Modifier
-                                            ),
+                                        modifier = Modifier.requiredHeight(32.dp),
+                                        shape = voyageCornerShape(12.dp),
+                                        color = MaterialTheme.colorScheme.primaryContainer,
+                                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                        shadowElevation = if (LocalMaterialShadowButtons.current) 2.dp else 0.dp,
+                                        border = LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
+                                            BorderStroke(it.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.45f))
+                                        },
                                     ) {
-                                        Text(
-                                            text = String.format(java.util.Locale.ROOT, "%.2f", cornerScale),
-                                            color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                        )
+                                        Box(
+                                            modifier = Modifier.fillMaxHeight().padding(horizontal = 10.dp),
+                                            contentAlignment = Alignment.Center,
+                                        ) {
+                                            Text(
+                                                text = String.format(java.util.Locale.ROOT, "%.2f", cornerScale),
+                                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                            )
+                                        }
                                     }
                                 },
                             )
@@ -685,35 +679,29 @@ fun ColorPaletteScreenMaterial(
                                 steps = 14,
                                 onValueChangeFinished = { actions.onSetMaterialOutlineWidth(outlineWidth) },
                                 titleTrailingContent = {
-                                    TextButton(
+                                    Surface(
                                         onClick = {
                                             outlineWidthInput = String.format(java.util.Locale.ROOT, "%.1f", outlineWidth)
                                             showOutlineValueDialog = true
                                         },
-                                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 0.dp),
-                                        modifier = Modifier
-                                            .requiredHeight(32.dp)
-                                            .then(
-                                                if (LocalMaterialShadowButtons.current) {
-                                                    Modifier.shadow(2.dp, voyageCornerShape(12.dp))
-                                                } else Modifier
-                                            )
-                                            .clip(voyageCornerShape(12.dp))
-                                            .background(MaterialTheme.colorScheme.primaryContainer)
-                                            .then(
-                                                LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
-                                                    Modifier.border(
-                                                        it.dp,
-                                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.45f),
-                                                        voyageCornerShape(12.dp),
-                                                    )
-                                                } ?: Modifier
-                                            ),
+                                        modifier = Modifier.requiredHeight(32.dp),
+                                        shape = voyageCornerShape(12.dp),
+                                        color = MaterialTheme.colorScheme.primaryContainer,
+                                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                        shadowElevation = if (LocalMaterialShadowButtons.current) 2.dp else 0.dp,
+                                        border = LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
+                                            BorderStroke(it.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.45f))
+                                        },
                                     ) {
-                                        Text(
-                                            text = String.format(java.util.Locale.ROOT, "%.1f", outlineWidth),
-                                            color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                        )
+                                        Box(
+                                            modifier = Modifier.fillMaxHeight().padding(horizontal = 10.dp),
+                                            contentAlignment = Alignment.Center,
+                                        ) {
+                                            Text(
+                                                text = String.format(java.util.Locale.ROOT, "%.1f", outlineWidth),
+                                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                            )
+                                        }
                                     }
                                 },
                             )
