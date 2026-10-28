@@ -308,8 +308,12 @@ internal fun VoyageSliderThumb(
             Box(
                 Modifier
                     .size(width = size.width, height = size.height)
-                    .clip(voyageCornerShape(size.width / 2f))
-                    .background(MaterialTheme.colorScheme.primary),
+                    // Material 2's small wavy circular thumb uses the same global
+                    // Voyage shape style as the rest of the UI. Rotate the outline
+                    // with value progress so the wave reads as a rolling thumb.
+                    .then(Modifier.rotate(-720f * valueFraction))
+                    .clip(thumbShape)
+                    .background(activeColor),
             )
         }
     }
