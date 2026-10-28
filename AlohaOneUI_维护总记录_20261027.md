@@ -858,3 +858,13 @@
 - `SegmentedList.kt`：原非 Wavy 轮廓缓存属于每个 `VoyagePathShape` 实例；圆角比例变化时，新的 Shape 实例无法复用其他列表行已经生成的同尺寸轮廓，导致重复创建 Path。现改为所有 VoyagePathShape 样式共用一个有上限的 768 项 LRU 缓存，并在缓存锁外生成轮廓，减少滑动调节时的重复分配和锁竞争。Wavy 形状仍按 0.5dp 桶复用，其他形状保留精确圆角值以避免新增可见阶梯。
 - 产品提交：`90411e4a1b427289f86e40cb95540611d5373ade`（轮廓缓存优化）；`ef296aeaf6c99528a578099c00b71cac1c429cca`（圆角比例连续滑动）。仅在 `test/voyage-theme-1to1-20261026`，未修改/合并 `main`。
 - 验证边界：源码已提交，必须继续检查最新 HEAD 的 CI 构建结果。还需在设备上反复拖动 0.0–2.0 圆角比例、切换 Wavy/Smooth 等形状并观察帧率；若仍闪退，应收集 Android 崩溃堆栈（FATAL EXCEPTION / native crash）以确定具体根因。当前不能声称闪退已彻底修复，也没有新的已验收 APK。
+
+
+
+## 2026-10-27 — Wavy 圆角量化导致阶梯感的定点修正
+
+- 实际源码复核确认：`SegmentedList.kt` 的 `VoyagePathShape.createOutline()` 将 style 4（Wavy）的圆角半径量化为 `round(value * 2) / 2`，即按 0.5dp 桶生成 `OutlineKey`。连续滑动时，数值虽连续更新，但缓存键与实际轮廓半径每跨越半桶才变化一次，直接造成可见的阶梯式跳变。
+- 已移除 Wavy 专属的半 dp 量化，所有样式现在都以实际 Float 圆角值作为缓存键；保留原有 768 项进程级 LRU、双重检查和锁外 Path/Outline 生成，不是删除缓存，也没有把复杂路径生成放进全局锁。此修复直接针对可验证的阶梯感来源，同时保留缓存上限以控制长期内存占用。
+- 产品源码提交：`51365250ca07e59339ca9a201f4797b16c58cc6f`，文件 `app/src/main/java/com/alohaoneui/app/ui/component/material/SegmentedList.kt`，仅提交至 `test/voyage-theme-1to1-20261026`；未修改或合并 `main`。
+- 闪退排查边界：此处量化可解释形状变化跳阶，但不能据此认定它是闪退根因。当前尚未获得对应设备的 FATAL EXCEPTION/native crash 堆栈；仍需继续检查路径生成的尺寸/浮点边界，并以最新 Actions 构建日志验证编译。若闪退复现，需提供发生时刻附近的完整崩溃堆栈，而不是只提供应用退出现象。
+- 验证状态：本次源代码提交已创建；当前还未确认此提交的 GitHub Actions 终态或新 APK 产物。不可将提交成功当作构建成功，也不可把之前 Build #1663 或更早 APK 当作包含本修复的包。
