@@ -63,6 +63,7 @@ import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
 internal data class VoyageSliderAppearance(
     val style: Int,
     val activeColor: Color,
+    val thumbColor: Color,
     val inactiveColor: Color,
     val containerColor: Color,
     val thumbSize: DpSize,
@@ -73,10 +74,14 @@ internal data class VoyageSliderAppearance(
 internal fun voyageSliderAppearance(requestedStyle: Int): VoyageSliderAppearance {
     val style = requestedStyle.coerceIn(0, 3)
     val scheme = MaterialTheme.colorScheme
-    // All four families use the same theme-driven progress/thumb accent; their
-    // rail geometry is taken from the corresponding upstream slider family.
-    val active = scheme.primary
-    val inactive = scheme.surfaceContainerHighest
+    // Progress and thumb colors follow separate Material theme roles.
+    val active = when (style) {
+        0, 1 -> scheme.secondary
+        2 -> scheme.primary
+        else -> scheme.tertiary
+    }
+    val thumb = scheme.primary
+    val inactive = if (style == 1) Color(0xFFD9D9D9) else scheme.surfaceContainerHighest
     val container = when (style) {
         0 -> scheme.tertiaryContainer.copy(alpha = 0.20f) // Material You
         1 -> scheme.secondaryContainer.copy(alpha = 0.30f) // Fancy
@@ -96,6 +101,7 @@ internal fun voyageSliderAppearance(requestedStyle: Int): VoyageSliderAppearance
     return VoyageSliderAppearance(
         style = style,
         activeColor = active,
+        thumbColor = thumb,
         inactiveColor = inactive,
         containerColor = container,
         thumbSize = thumbSize,
@@ -148,6 +154,7 @@ fun SegmentedSliderItem(
     val appearance = voyageSliderAppearance(LocalMaterialSliderStyle.current)
     val style = appearance.style
     val active = appearance.activeColor
+    val thumb = appearance.thumbColor
     val inactive = appearance.inactiveColor
     // Source check: j5v0.m105238O and z4v0.m147159l both apply
     // Modifier.size(20.dp, 20.dp) to the thumb hit/visual slot.
@@ -271,7 +278,7 @@ internal fun VoyageSliderThumb(
     ) {
         val thumbModifier = Modifier
             .size(width = size.width, height = size.height)
-            .then(if (style == 1) Modifier.rotate(1080f * valueFraction) else Modifier)
+            .then(if (style == 1) Modifier.rotate(-1080f * valueFraction) else Modifier)
             .then(
                 // Slider elevation is supplied by the outer rail container.
                 // Do not add another elevated layer here: it would cast a foreground
@@ -297,8 +304,8 @@ internal fun VoyageSliderTrack(
     inactiveColor: Color,
     shadowEnabled: Boolean = false,
 ) {
-    val passedTickColor = MaterialTheme.colorScheme.onPrimary
-    val futureTickColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.65f)
+    val passedTickColor = if (style == 1) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onPrimary
+    val futureTickColor = if (style == 1) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline.copy(alpha = 0.65f)
     val fraction = if (range.endInclusive > range.start) {
         ((state.value - range.start) / (range.endInclusive - range.start)).coerceIn(0f, 1f)
     } else 0f
