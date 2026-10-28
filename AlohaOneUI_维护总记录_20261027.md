@@ -876,3 +876,12 @@
 - 交互光环改为 44dp 圆形、第三主题色 24% alpha；光环容器高度为 40dp 并使用 `clipToBounds()`，因此光环虽比 40dp 滑轨高 4dp，超出滑轨上下边缘的部分会被裁切，不会显示在滑轨之外。仍沿用 `isPressed || isDragged` 控制，静止隐藏、按压/拖动显示。
 - 产品源码提交：`e3dbf6cf3c8fd5421c2f7ca5c22d1885d3dea753`（Fancy 进度与光环调整）；`59b7596468bf2886598b1dad0c04550edfd713b4`（补齐 `clipToBounds` import）。仅提交到 `test/voyage-theme-1to1-20261026`，未修改或合并 `main`。
 - 需要构建与设备视觉复核：确认 Compose Slider 对 thumb slot 的实际裁切/测量行为符合预期，确认进度尾端相对偏移后的滑块核心恰好多出 4dp，并验证滑块靠近两端时不会出现突兀跳变。当前不宣称已通过编译或真机验收。
+
+## 2026-10-27 — Fancy 滑条 6dp 包围间距与颜色系统复核
+
+- 根据最新反馈修正 Fancy（style 1）几何：轨道绘制向滑块中心范围两侧各延展 22dp；滑块核心为 24dp、视觉位置左偏 4dp，因此在进度为 0 时，轨道左缘到核心左缘为 6dp。
+- 进度色形状改为垂直居中的 36dp 高区域；核心为 24dp，进度色区域在核心上、下各多出 6dp。进度端点相对核心右缘多出 6dp，且进度起点与延展后的轨道左缘对齐，因此在最左端时核心四周均由进度色留出 6dp 包围间距。
+- 交互光环容器从 32×40dp 调整为 44×40dp，保留 44dp 圆形本身，仅裁切垂直方向超出 40dp 轨道的部分，避免光环被容器左右压窄。
+- 本轮产品源码提交：`9d49c3bdbffbe685559beae1bd6e6602d0e47885`，只提交至 `test/voyage-theme-1to1-20261026`，未修改或合并 `main`。
+- 颜色系统复核：`MaterialTheme.kt` 将种子色、深浅色、AMOLED、PaletteStyle 和 ColorSpec 传入 `rememberAlohaOneUIColorScheme(...)`，然后对整个 ColorScheme 做 `animateAsState()`。滑条当前确实按 `colorScheme.secondary` / `colorScheme.tertiary` 取色，但这不足以证明调色板生成结果正确。仍需定位并审计 `rememberAlohaOneUIColorScheme` 的实现及设置页颜色预览/保存映射，确认第二、第三角色是否被生成或映射错位；在根因确认前不宣称颜色系统已修复。
+- 验证状态：本次提交的 combined status 与 commit workflow-runs 接口均未返回任何状态/工作流记录；这不是 CI 通过的证据。仍需获取可验证的构建结果，并在设备上检查最左端 6dp、四周包围间距、主题切换和拖动动画。
