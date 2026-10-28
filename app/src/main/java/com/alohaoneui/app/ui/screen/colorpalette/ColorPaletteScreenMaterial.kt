@@ -37,6 +37,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -483,7 +484,7 @@ fun ColorPaletteScreenMaterial(
                                         },
                                         contentPadding = PaddingValues(horizontal = 10.dp, vertical = 0.dp),
                                         modifier = Modifier
-                                            .height(32.dp)
+                                            .requiredHeight(32.dp)
                                             .then(
                                                 if (LocalMaterialShadowButtons.current) {
                                                     Modifier.shadow(2.dp, voyageCornerShape(12.dp))
@@ -691,7 +692,7 @@ fun ColorPaletteScreenMaterial(
                                         },
                                         contentPadding = PaddingValues(horizontal = 10.dp, vertical = 0.dp),
                                         modifier = Modifier
-                                            .height(32.dp)
+                                            .requiredHeight(32.dp)
                                             .then(
                                                 if (LocalMaterialShadowButtons.current) {
                                                     Modifier.shadow(2.dp, voyageCornerShape(12.dp))
