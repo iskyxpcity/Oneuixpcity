@@ -816,3 +816,17 @@
 - `SegmentedList.kt`：针对全局 Wavy 形状，将目标波长从 6dp 调整为 8dp、振幅从 0.45dp 调整为 0.7dp，并保留尺寸缩放因子。目的是减少过密细波纹，让轮廓更平滑、起伏更可见；此改动会影响所有使用全局 Wavy 样式的组件，需要实际设备对照检查，若与参考效果不符继续校准。
 - 参考 Google 官方 Compose Shapes 文档中的自定义 Shape/Path 与平滑轮廓实践；官方 Material 3 Slider API 支持自定义 thumb 和 track，但没有提供内置的“波浪滑块”样式，因此波浪轮廓仍由 Aloha OneUI 的共享 Shape 实现，颜色继续来自当前主题。
 - 本轮只修改测试分支 `test/voyage-theme-1to1-20261026`，不改 `main`。构建与真机滚动/波浪轮廓验证仍待完成，不将源码提交视为视觉验收。
+
+
+## 2026-10-27：开始按官方 Material 3 阴影/高度语义修正
+
+- 官方依据：Google Android Developers 的 Compose 阴影文档明确区分基于高度的投影阴影（`Modifier.shadow()` / Material 3 `shadowElevation`）与可自定义投影；Material 3 主题文档及 M2→M3 迁移文档明确区分 `shadowElevation`（投射阴影）和 `tonalElevation`（表面色调叠加），两者不能互相替代。
+- 本轮开始在测试分支 `test/voyage-theme-1to1-20261026` 修正这一语义混用，`main` 未修改。
+- 产品提交 `c6cb6d87b8c5e1041599a759d20b0aa4914421a1`：在 `ExpressiveDialog.kt` 中，先把对话框的 `tonalElevation` 从“容器阴影”开关中分离；但提交中换行格式有误，随后立即由提交 `15aa28a6450cfa3eb49576410f1e10e3bb9c59f7` 修正源码格式。最终文件中标准 `AlertDialog` 保留调用方指定的 tonal elevation；自定义内容对话框的 Material 3 `Surface` 保留默认 tonal elevation，并由容器阴影开关控制 `shadowElevation`（6dp/0dp）。
+- 这只是第一处已确认的语义错误修复，不代表全项目阴影审计完成。标准 `AlertDialog` API 当前封装未暴露独立的 `shadowElevation` 参数，因此其投影阴影仍需进一步改为可单独控制的 Material 3 Surface/对话框实现；不能把 tonal elevation 关闭当作关闭投影阴影。
+- 接下来继续逐一审计页面容器、顶部栏、普通按钮、浮动按钮、Switch、Slider、菜单、卡片和所有子页面：检查每类开关是否控制正确组件，投影高度是否通过 Material 3 elevation API 表达，tonal elevation 是否保持独立，关闭阴影后是否仅移除投影而不错误改变表面颜色。还需核对 Miuix 分支与 Material 分支的适用范围。
+- Google 官方参考：
+  - https://developer.android.com/develop/ui/compose/graphics/draw/shadows
+  - https://developer.android.com/develop/ui/compose/designsystems/material3
+  - https://developer.android.com/develop/ui/compose/designsystems/material2-material3
+- 当前提交尚未完成 Actions/编译验证；不可据此宣称构建成功或已有新 APK。必须继续检查最新 HEAD 的 CI，修复编译错误并在构建通过后验收 APK。
