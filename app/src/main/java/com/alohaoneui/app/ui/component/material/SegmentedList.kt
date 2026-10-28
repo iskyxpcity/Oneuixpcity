@@ -246,8 +246,11 @@ private class VoyagePathShape(
     // rows use the same dimensions and radii; a per-instance cache rebuilt on every
     // animated value causes redundant Path allocation and frame drops.
     override fun createOutline(size: Size, layoutDirection: LayoutDirection, density: Density): Outline {
-        fun cacheRadius(value: Float): Float =
-            if (style == 4) kotlin.math.round(value * 2f) / 2f else value
+        // Keep the cache key at the exact Float radius. Quantizing Wavy
+        // radii to 0.5dp made the outline jump in visible half-dp steps while
+        // the user dragged the continuous corner-scale slider. The bounded LRU
+        // still limits retained outlines; exact keys preserve continuous geometry.
+        fun cacheRadius(value: Float): Float = value
 
         val key = OutlineKey(
             style, size.width, size.height, density.density, layoutDirection,
