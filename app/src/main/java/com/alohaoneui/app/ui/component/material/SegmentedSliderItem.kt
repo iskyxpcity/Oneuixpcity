@@ -273,13 +273,10 @@ internal fun VoyageSliderThumb(
             .size(width = size.width, height = size.height)
             .then(if (style == 1) Modifier.rotate(1080f * valueFraction) else Modifier)
             .then(
-                if (shadowEnabled) {
-                    Modifier.shadow(
-                        elevation = if (interacting) 6.dp else 1.dp,
-                        shape = thumbShape,
-                        clip = false,
-                    )
-                } else Modifier
+                // Slider elevation is supplied by the outer rail container.
+                // Do not add another elevated layer here: it would cast a foreground
+                // shadow over the tinted track/background.
+                Modifier
             )
             .clip(thumbShape)
             .background(activeColor, thumbShape)
