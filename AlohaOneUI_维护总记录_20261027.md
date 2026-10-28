@@ -766,3 +766,16 @@
 - 提交：语言选中整行底色 37fa9b0f5446a8d146ee45ba3c212c830dfc14d3；日间窗口主题 940582993711299b25da9732e16f50d12569fcd1；夜间窗口主题 f4a4a2a777a80d75a57cb826fd40d4312792105a。
 - 所有修改仅在 test/voyage-theme-1to1-20261026，没有修改或合并 main。
 - 验证边界：源码更新已推送，尚未完成最新 HEAD 的 CI 编译与真机复测。需确认 Kotlin 的 ListItemColors.copy(selectedContainerColor) 可编译，并在设备上切换不同语言确认黑屏闪帧消失、选中底色从行首覆盖到行尾且圆角符合当前形状设置。若黑帧仍出现，应继续基于设备录像定位系统 LocaleManager 重建时序，不应仅凭主题属性推断问题已解决。
+
+
+## 2026-10-27 — Slider 阴影位置与 Material 3 轨道二次修正
+
+- 用户复测指出：滑条阴影仍未落在轨道下方、进度色不符合次色/第三色要求，Material You 轨道仍不像 Material 3。已查看用户上传的 `Screen_Recording_20261027_171519_Voyage Toolbox.mp4`；录屏中 Material You 分支仍表现为粗大的彩色胶囊式进度段，并带主题背景胶囊，不是 M3 的细轨道结构。
+- 产品源码提交 `283c8f272f7e194a20cce3418a69fd348a4ea04f`（`SegmentedSliderItem.kt`）：
+  1. Material You 轨道由 16dp 改回 Material 3 标准 4dp 轨道，取消该分支额外的主题色胶囊背景与内边距。
+  2. 轨道按 M3 几何绘制完整 inactive rail 与 active rail；轨道两端按 10dp thumb 半径内缩，进度段使用主题 tertiary，未选中轨道使用 `surfaceContainerHighest`。
+  3. Material You 保留官方 `SliderDefaults.Thumb`，避免用自绘大胶囊取代 M3 圆形拇指。
+  4. 将可选阴影移到细轨道绘制层后方，不再把 Material You 的投影只放在外层大背景胶囊上；其他样式保持原有几何分支。
+- 通用滑条入口产品源码提交 `b518180a2a4b535c35d88f0b2a3538b4adf5dd50`（`AlohaOneUISlider.kt`）：此前虽然调用共享轨道组件，但没有把 `LocalMaterialShadowSliders.current` 传给 `VoyageSliderTrack`，导致该入口的轨道阴影开关实际上没有生效；现已补上传递。
+- 两项产品源码改动均只提交到 `test/voyage-theme-1to1-20261026`，未修改或合并 `main`。
+- 验证边界：录屏确认了用户指出的外观差异；源码修改已提交。尚未确认这两个最新提交对应的最终 HEAD 构建结果，也未在真机安装新 APK 复测。接下来需核查 CI 编译与签名产物，并验证 M3 轨道厚度、进度第三色、圆形 thumb 及阴影是否确实落在轨道下方。不能将源码提交等同于视觉验收完成。
