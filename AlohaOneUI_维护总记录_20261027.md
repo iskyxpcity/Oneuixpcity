@@ -779,3 +779,9 @@
 - 通用滑条入口产品源码提交 `b518180a2a4b535c35d88f0b2a3538b4adf5dd50`（`AlohaOneUISlider.kt`）：此前虽然调用共享轨道组件，但没有把 `LocalMaterialShadowSliders.current` 传给 `VoyageSliderTrack`，导致该入口的轨道阴影开关实际上没有生效；现已补上传递。
 - 两项产品源码改动均只提交到 `test/voyage-theme-1to1-20261026`，未修改或合并 `main`。
 - 验证边界：录屏确认了用户指出的外观差异；源码修改已提交。尚未确认这两个最新提交对应的最终 HEAD 构建结果，也未在真机安装新 APK 复测。接下来需核查 CI 编译与签名产物，并验证 M3 轨道厚度、进度第三色、圆形 thumb 及阴影是否确实落在轨道下方。不能将源码提交等同于视觉验收完成。
+
+
+### Material 3 离散刻度对比色补正
+
+- 产品源码提交 `33bb43a92b39544e443e77c7a6a71660e2138e76`：Material You 的已通过刻度点使用 `onTertiary`，确保刻度点与第三色进度轨道有正确对比；未通过刻度继续使用低透明度的 `onSurfaceVariant`。
+- 此提交只在测试分支；CI 需以最新 HEAD 重新构建。真机验收仍待完成。
