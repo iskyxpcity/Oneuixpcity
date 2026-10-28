@@ -398,7 +398,7 @@ private class VoyagePathShape(
                         with(density) { 0.8.dp.toPx() },
                         minDimension * 0.035f
                     )
-                    val halfWaveLength = with(density) { 6.dp.toPx() }.coerceAtLeast(1f)
+                    val halfWaveLength = with(density) { 8.dp.toPx() }.coerceAtLeast(1f)
 
                     fun waveEdge(
                         startX: Float, startY: Float,
