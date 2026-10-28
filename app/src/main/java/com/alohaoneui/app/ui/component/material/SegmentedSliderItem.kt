@@ -353,6 +353,7 @@ internal fun VoyageSliderTrack(
         ((state.value - range.start) / (range.endInclusive - range.start)).coerceIn(0f, 1f)
     } else 0f
     val trackShape = voyageCornerShape(height / 2f)
+    val fancyProgressShape = if (style == 1) voyageCornerShape(18.dp) else trackShape
     Canvas(
         Modifier
             .fillMaxWidth()
@@ -410,7 +411,7 @@ internal fun VoyageSliderTrack(
                         .coerceIn(0f, size.width + extension)
                     val progressHeight = (h - 4.dp.toPx()).coerceAtLeast(0f)
                     if (progressWidth > 0f && progressHeight > 0f) {
-                        val progressShape = voyageCornerShape(18.dp)
+                        val progressShape = fancyProgressShape
                         val progressOutline = progressShape.createOutline(
                             size = Size(progressWidth + extension, progressHeight),
                             layoutDirection = layoutDirection,
