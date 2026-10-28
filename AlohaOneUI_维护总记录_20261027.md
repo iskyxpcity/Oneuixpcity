@@ -797,3 +797,5 @@
 - 四种样式共用的 `voyageSliderAppearance`、`VoyageSliderThumb`、`VoyageSliderTrack` 和容器 modifier 已同步修改，因此设置列表预览与通用 `AlohaOneUISlider` 入口会使用同一套四分支绘制。通用入口原有 `LocalMaterialShadowSliders` 传递保留。
 - 产品源码提交：`5b279fd6ff1acc10bdc43fe07643037fcd5279c5`，只提交至 `test/voyage-theme-1to1-20261026`，没有修改或合并 `main`。
 - 验证边界：本轮已按录屏重做绘制分支并推送源码，但仍需确认最新 HEAD 的 CI 编译与 APK artifact；编译成功后还需要在设备上对照四种样式、拖动位置、主题色切换和阴影层级。未完成这些验证前不宣称已达到 1:1。
+
+- 逐帧复核后又补正 Material You 轨道：进度段和未选段现在在当前值标记两侧分别绘制，并留出 4dp 间隔，不再把进度色直接涂满整条底轨；提交 `f104d341a46981a8163185ca8d70d86707875296`。此补正仍只在测试分支，等待最终 HEAD 构建验证。
