@@ -799,3 +799,11 @@
 - 验证边界：本轮已按录屏重做绘制分支并推送源码，但仍需确认最新 HEAD 的 CI 编译与 APK artifact；编译成功后还需要在设备上对照四种样式、拖动位置、主题色切换和阴影层级。未完成这些验证前不宣称已达到 1:1。
 
 - 逐帧复核后又补正 Material You 轨道：进度段和未选段现在在当前值标记两侧分别绘制，并留出 4dp 间隔，不再把进度色直接涂满整条底轨；提交 `f104d341a46981a8163185ca8d70d86707875296`。此补正仍只在测试分支，等待最终 HEAD 构建验证。
+
+
+## 2026-10-27 — 滑条颜色联动修正（撤销固定色）
+
+- 用户明确指出 Voyage 录像只作为外观/交互参考，不应把颜色或组件参数写死；Aloha OneUI 的所有控件颜色必须跟随当前动态主题联动。本轮据此修正四种滑条绘制：Fancy 底轨从固定 `Color(0xFFD9D9D9)` 改为 `MaterialTheme.colorScheme.surfaceContainerHighest`；进度改用主题 `secondary`；外侧光环使用 `secondaryContainer`；刻度对比色改用 `onSecondary` / `onSurface` 等主题角色，移除白色常量。其它样式继续从 `primary`、`secondary`、`tertiary`、`tertiaryContainer` 和 surface 角色取色。
+- 代码提交：`be8fa8ea2b1669f6eff462ca6367d0529eea38a7`，只在 `test/voyage-theme-1to1-20261026`。
+- 后续对照原则：视频用于理解形状、层级、轨道/滑块关系、动画和相对比例；颜色必须来自 AlohaOneUI 当前主题角色，尺寸/圆角必须继续检查是否应连接现有全局控件参数，不能因参考画面而把主题联动切断。
+- 验证状态：等待此最新提交的 CI；尚未完成设备端主题切换联动测试。
