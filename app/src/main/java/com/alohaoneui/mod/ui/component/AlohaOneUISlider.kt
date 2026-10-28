@@ -111,6 +111,7 @@ fun AlohaOneUISlider(
     val materialSliderStyle = materialAppearance.style
     val materialScheme = androidx.compose.material3.MaterialTheme.colorScheme
     val materialActiveColor = materialAppearance.activeColor
+    val materialThumbColor = materialAppearance.thumbColor
     val materialInactiveColor = materialAppearance.inactiveColor
     val materialThumbSize = materialAppearance.thumbSize
     val materialTrackHeight = materialAppearance.trackHeight
