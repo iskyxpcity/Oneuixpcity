@@ -337,14 +337,19 @@ internal fun VoyageSliderTrack(
                 }
             }
             1 -> {
-                // Fancy: draw only the active capsule over the large themed
-                // container. The inactive capsule would create an unwanted
-                // second background layer inside the slider.
-                val activeWidth = (size.width * fraction + h / 2f).coerceAtMost(size.width + h / 2f)
+                // Fancy: fixed light-gray rail wraps the thumb. Progress uses
+                // the secondary role; the thumb and all tick dots use primary.
+                drawRoundRect(
+                    color = Color(0xFFD9D9D9),
+                    topLeft = Offset.Zero,
+                    size = Size(size.width, h),
+                    cornerRadius = CornerRadius(h / 2f, h / 2f),
+                )
+                val activeWidth = (size.width * fraction).coerceIn(0f, size.width)
                 if (fraction > 0f) {
                     drawRoundRect(
                         color = activeColor,
-                        topLeft = Offset(-h / 2f, 0f),
+                        topLeft = Offset.Zero,
                         size = Size(activeWidth, h),
                         cornerRadius = CornerRadius(h / 2f, h / 2f),
                     )
