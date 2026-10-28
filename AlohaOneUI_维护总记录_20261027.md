@@ -933,3 +933,8 @@
 
 - 构建复核补记：Actions Run #1874（HEAD `85fef43ebb1b3932d58b8482c9882d1168e3c7ea`）在 Kotlin 编译阶段失败，明确错误为 `ColorPaletteScreenMaterial.kt:97` 与 `:559` 的 `KeyboardOptions` 未解析。根因是 Compose 版本中 `KeyboardOptions` 应从 `androidx.compose.foundation.text.KeyboardOptions` 导入，而不是 `androidx.compose.ui.text.input.KeyboardOptions`。
 - 已提交修复 `44234a5e9562f7daac066541fd3127ee3410aa7a`，只调整上述 import；`KeyboardType` 仍使用 `androidx.compose.ui.text.input.KeyboardType`。修复后的构建尚待 Actions 验证，不能把本次 import 修正视为编译通过。
+
+
+- 最终构建验证补记：GitHub Actions Run #1876，HEAD `855146273eb8c213b25f16dbe5390ace432f59d7`，已完成且结论为 `success`。Kotlin 编译、加载现有签名密钥、构建签名 APK、包名/签名校验、保存构建产物步骤全部成功。
+- 构建产物：`AlohaOneUI-Signed-Test-APK`，Artifact ID `12805509779`，ZIP 约 27.8 MB；下载页：`https://github.com/iskyxpcity/Oneuixpcity/actions/runs/40666169540/artifacts/12805509779`。此 artifact 对应测试分支当前圆角输入与刻度实现，可用于安装验证。
+- 尚未完成的验收：真机检查刻度点在不同轨道样式中的清晰度/遮挡、0.05 步进边界、弹窗输入和保存、图标形状预览与主题颜色切换；源码构建成功不等于真机视觉验收完成。
