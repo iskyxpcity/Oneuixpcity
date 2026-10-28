@@ -830,3 +830,14 @@
   - https://developer.android.com/develop/ui/compose/designsystems/material3
   - https://developer.android.com/develop/ui/compose/designsystems/material2-material3
 - 当前提交尚未完成 Actions/编译验证；不可据此宣称构建成功或已有新 APK。必须继续检查最新 HEAD 的 CI，修复编译错误并在构建通过后验收 APK。
+
+
+## 2026-10-27：Fancy 滑条轨道与滑块细节修正
+
+- 在测试分支 `test/voyage-theme-1to1-20261026` 修改 `SegmentedSliderItem.kt`，没有触碰 `main`。
+- Fancy 样式（style 1）取消外围容器背景、容器圆角和容器阴影，避免滑条外面再套一层框体。
+- Fancy 轨道高度由 28dp 调整为 40dp（总高度增加 12dp），并通过左右延展的轨道绘制让轨道包住滑块光环；进度端点比滑块中心略向左 4dp，滑块核心也向左偏移 4dp，避免滑块贴住进度色右边缘。
+- Fancy 进度色继续使用主题第二颜色（Material 3 `colorScheme.secondary`）；滑块外侧光环改为圆形，并使用第二颜色 24% alpha 半透明填充，内核继续按全局 Voyage 形状样式裁切与旋转。
+- Fancy 轨道的未完成段与进度段都通过全局 `voyageCornerShape` 生成轮廓绘制，因此会跟随全局形状样式，而不是固定使用圆角矩形。
+- 已提交：`0062c879597a71d9d9298d2dcf7e9b0f64c4058f`（`ui: refine Fancy slider rail and thumb geometry`）。
+- 尚待 CI 编译验证和设备视觉复核；尤其需检查轨道端部延展、拖动命中区域与滑块视觉偏移是否符合录屏参考。未通过编译前不视为完成，也不发布 APK。
