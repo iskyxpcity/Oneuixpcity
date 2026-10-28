@@ -66,6 +66,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -482,15 +483,16 @@ fun ColorPaletteScreenMaterial(
                                         },
                                         modifier = Modifier
                                             .clip(voyageCornerShape(12.dp))
+                                            .background(MaterialTheme.colorScheme.primaryContainer)
                                             .border(
                                                 1.dp,
-                                                MaterialTheme.colorScheme.outlineVariant,
+                                                MaterialTheme.colorScheme.primary.copy(alpha = 0.45f),
                                                 voyageCornerShape(12.dp),
                                             ),
                                     ) {
                                         Text(
                                             text = String.format(java.util.Locale.ROOT, "%.2f", cornerScale),
-                                            color = MaterialTheme.colorScheme.primary,
+                                            color = MaterialTheme.colorScheme.onPrimaryContainer,
                                         )
                                     }
                                 },
@@ -543,6 +545,11 @@ fun ColorPaletteScreenMaterial(
                                                 }
                                             }
                                         }
+                                        Text(
+                                            text = "输入 0 至 2 之间的数值",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        )
                                         OutlinedTextField(
                                             value = cornerScaleInput,
                                             onValueChange = { input ->
@@ -552,9 +559,18 @@ fun ColorPaletteScreenMaterial(
                                             },
                                             modifier = Modifier.fillMaxWidth(),
                                             singleLine = true,
-                                            label = { Text("0.00 – 2.00") },
                                             textStyle = MaterialTheme.typography.titleMedium.copy(
                                                 textAlign = TextAlign.Center,
+                                                color = MaterialTheme.colorScheme.onSurface,
+                                            ),
+                                            colors = OutlinedTextFieldDefaults.colors(
+                                                focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                                                unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                                                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                                unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                                                cursorColor = MaterialTheme.colorScheme.primary,
+                                                focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                                                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
                                             ),
                                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                                         )
@@ -633,15 +649,127 @@ fun ColorPaletteScreenMaterial(
                             var outlineWidth by remember(uiState.materialOutlineWidth) {
                                 mutableFloatStateOf(uiState.materialOutlineWidth)
                             }
+                            var showOutlineValueDialog by remember { mutableStateOf(false) }
+                            var outlineWidthInput by remember { mutableStateOf("") }
+                            val outlinePreviewShape = iconShapeForStyle(uiState.materialIconShapeStyle)
+                                ?: RoundedCornerShape(14.dp)
                             SegmentedSliderItem(
                                 title = stringResource(R.string.theme_border_width_title),
-                                valueLabel = String.format(java.util.Locale.ROOT, "%.1f", outlineWidth),
+                                valueLabel = "",
                                 value = outlineWidth,
-                                onValueChange = { outlineWidth = it },
+                                onValueChange = { outlineWidth = kotlin.math.round(it * 10f) / 10f },
                                 valueRange = 0.0f..1.5f,
                                 steps = 14,
                                 onValueChangeFinished = { actions.onSetMaterialOutlineWidth(outlineWidth) },
+                                titleTrailingContent = {
+                                    TextButton(
+                                        onClick = {
+                                            outlineWidthInput = String.format(java.util.Locale.ROOT, "%.1f", outlineWidth)
+                                            showOutlineValueDialog = true
+                                        },
+                                        modifier = Modifier
+                                            .clip(voyageCornerShape(12.dp))
+                                            .background(MaterialTheme.colorScheme.primaryContainer)
+                                            .border(
+                                                1.dp,
+                                                MaterialTheme.colorScheme.primary.copy(alpha = 0.45f),
+                                                voyageCornerShape(12.dp),
+                                            ),
+                                    ) {
+                                        Text(
+                                            text = String.format(java.util.Locale.ROOT, "%.1f", outlineWidth),
+                                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                        )
+                                    }
+                                },
                             )
+                            if (showOutlineValueDialog) {
+                                ExpressiveContentDialog(
+                                    onDismissRequest = { showOutlineValueDialog = false },
+                                ) {
+                                    Column(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                                    ) {
+                                        Text(
+                                            text = stringResource(R.string.theme_border_width_title),
+                                            style = MaterialTheme.typography.titleLarge,
+                                            color = MaterialTheme.colorScheme.onSurface,
+                                        )
+                                        Box(
+                                            modifier = Modifier
+                                                .size(56.dp)
+                                                .clip(outlinePreviewShape)
+                                                .background(MaterialTheme.colorScheme.primary),
+                                            contentAlignment = Alignment.Center,
+                                        ) {
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.spacedBy(3.dp),
+                                            ) {
+                                                Text("1", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onPrimary)
+                                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                                    Text("2", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onPrimary)
+                                                    Text("2", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onPrimary)
+                                                }
+                                            }
+                                        }
+                                        Text(
+                                            text = "输入 0 至 1.5 之间的数值",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        )
+                                        OutlinedTextField(
+                                            value = outlineWidthInput,
+                                            onValueChange = { input ->
+                                                if (input.length <= 5 && input.all { it.isDigit() || it == '.' }) {
+                                                    outlineWidthInput = input
+                                                }
+                                            },
+                                            modifier = Modifier.fillMaxWidth(),
+                                            singleLine = true,
+                                            textStyle = MaterialTheme.typography.titleMedium.copy(
+                                                textAlign = TextAlign.Center,
+                                                color = MaterialTheme.colorScheme.onSurface,
+                                            ),
+                                            colors = OutlinedTextFieldDefaults.colors(
+                                                focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                                                unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                                                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                                unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                                                cursorColor = MaterialTheme.colorScheme.primary,
+                                                focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                                                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                                            ),
+                                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                                        )
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.End,
+                                            verticalAlignment = Alignment.CenterVertically,
+                                        ) {
+                                            TextButton(onClick = { showOutlineValueDialog = false }) {
+                                                Text(stringResource(android.R.string.cancel))
+                                            }
+                                            TextButton(
+                                                onClick = {
+                                                    val parsed = outlineWidthInput.toFloatOrNull()
+                                                    if (parsed != null && parsed.isFinite() && parsed in 0f..1.5f) {
+                                                        val snapped = (kotlin.math.round(parsed * 10f) / 10f)
+                                                            .coerceIn(0f, 1.5f)
+                                                        outlineWidth = snapped
+                                                        actions.onSetMaterialOutlineWidth(snapped)
+                                                        showOutlineValueDialog = false
+                                                    }
+                                                },
+                                            ) {
+                                                Text(stringResource(android.R.string.ok))
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         }
                     )
                 )
