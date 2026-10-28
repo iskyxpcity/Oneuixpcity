@@ -3,6 +3,7 @@
 
     <style name="Theme.AlohaOneUI" parent="android:Theme.Material.NoActionBar">
         <item name="android:windowBackground">?android:attr/colorBackground</item>
+        <item name="android:windowDisablePreview">true</item>
         <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
     </style>
 
