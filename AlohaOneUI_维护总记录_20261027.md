@@ -901,3 +901,17 @@
 - 已在产品源码提交 `424532320724fcb4bc3aca4833cc2eb4d65d8e20` 修复：将 Fancy 进度形状提前在 `VoyageSliderTrack` 的 Composable 函数作用域创建为 `fancyProgressShape`，Canvas 绘制时只读取已创建的 Shape，不在 DrawScope 内调用 Composable。几何、颜色和进度计算保持不变。
 - 修复仅提交到 `test/voyage-theme-1to1-20261026`，未修改/合并 `main`。
 - 验证状态：已定位并修复本次明确的编译错误；新提交的 Actions 构建结果仍需检查。当前不能声称构建已通过或有新 APK。构建通过后还要继续验证此前 Fancy 滑条/开关配色改动。
+
+
+## 2026-10-27 — 重做 Wavy 波浪形状并审计主题组件调用
+
+- 用户反馈：主题设置页使用波浪形状时手机明显发热，且开关的波浪外观与设置框体不一致。确认旧 Wavy 实现来自 Voyage 反编译路径，包含周长采样、每采样点对象、正弦/余弦位移、第二份位移列表及大量二次曲线段；共享 LRU 缓存无法避免连续调节尺寸/圆角时的缓存未命中。
+- SegmentedList.kt 的 VoyagePathShape style 4 已替换为轻量静态路径：直边使用固定 dp 波长的三次贝塞尔波段，四角使用圆弧；移除旧的 WaveSample、逐点三角函数运算、临时采样列表与位移列表。波幅限制为 min(0.8dp, 最小边长 × 0.035)，半波段长度为 8dp，不引入无限动画。样式仍通过全局 voyageCornerShape() 和 LocalMaterialShapeStyle 分发，不绑定到开关专属逻辑。
+- 组件调用审计：
+  - 主题设置页“形状样式”选项顺序为圆角 0、切角 1、Squircle 2、Smooth 3、Wavy 4、Scoop 5、Notch 6，与 VoyagePathShape 的样式索引一致。
+  - voyageCornerShape() 在 style 4 时统一返回 VoyagePathShape(4, ...)；主题设置页中的预览框、调色板卡片、分组/容器形状均调用该入口。
+  - ExpressiveSwitch.kt 的轨道、滑块与光环也通过 voyageCornerShape() 取得形状；只有 Smooth（style 3）保留独立圆角胶囊回退，Wavy（style 4）不会被绕过，因而会走统一的新 Wavy 几何。
+  - SegmentedSliderItem.kt 的容器、轨道和 Fancy 进度形状通过 voyageCornerShape() 获取当前全局形状。波浪样式会应用于这些 Shape 入口；滑块本身为小型圆形/胶囊轮廓，受尺寸限制后波浪视觉幅度自然较弱。
+  - voyageSegmentedShape() 的分组行/分段选项也将 style 4 路由到同一个 VoyagePathShape。
+- 相关产品提交：6cf25639664932bacfc8a6d385756c8978155e9b（首次替换旧波浪算法）；2844cf73c847e5ccb72256bc7f57ea4ce85adb65（降低曲线密度、统一波长）。均仅提交至 test/voyage-theme-1to1-20261026，没有修改或合并 main。
+- 验证状态：已完成源码级调用审计；尚未取得这两个新提交对应的成功 Android 构建结果，也未在实体设备上测量温度/帧率或对比截图。因此只能确认旧采样算法已替换且相关入口路由一致，不能提前宣称发热与外观差异已彻底解决。下一步需要检查 GitHub Actions/编译结果，再在手机上验证主题设置页滚动、圆角滑条拖动、开关和框体四边波浪外观。
