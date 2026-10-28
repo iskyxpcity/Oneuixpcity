@@ -114,12 +114,17 @@ fun ExpressiveSwitch(
         5 -> DpSize(68.dp, 24.dp)
         6 -> DpSize(54.dp, 24.5.dp)
         7 -> DpSize(43.dp, 18.dp)
+        0 -> DpSize(52.dp, 32.dp)
         else -> DpSize(56.dp, 28.dp)
     }
     // Preserve source interaction-state distinctions, while giving the visible
     // thumb a fuller capsule silhouette that occupies about 65% of track width.
     val sourceThumbDiameter = when (style) {
-        0 -> 20.dp
+        0 -> when {
+            pressed -> 28.dp
+            checked -> 24.dp
+            else -> 16.dp
+        }
         1 -> when {
             pressed -> 28.dp
             checked || thumbContent != null -> 24.dp
@@ -132,10 +137,17 @@ fun ExpressiveSwitch(
         7 -> 22.dp
         else -> 20.dp
     }
-    val thumbWidth = minOf(trackSize.width * 0.70f, trackSize.width)
+    val thumbWidth = when (style) {
+        // Material You follows the official M3 circular handle states.
+        0 -> sourceThumbDiameter
+        1, 5 -> minOf(trackSize.width * 0.70f, trackSize.width)
+        2, 6 -> minOf(trackSize.width * 0.62f, trackSize.width)
+        3 -> minOf(trackSize.width * 0.58f, trackSize.width)
+        else -> minOf(trackSize.width * 0.65f, trackSize.width)
+    }
     // Keep a small, even horizontal inset at both switch ends and let the
     // thumb fill 90% of the track height, as requested.
-    val thumbHeight = trackSize.height * 0.85f
+    val thumbHeight = if (style == 0) sourceThumbDiameter else trackSize.height * 0.85f
     val thumbEdgeInset = 1.5.dp
     val trackCornerRadius = when (style) {
         2 -> 14.dp
