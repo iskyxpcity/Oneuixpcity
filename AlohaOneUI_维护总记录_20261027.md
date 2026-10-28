@@ -868,3 +868,11 @@
 - 产品源码提交：`51365250ca07e59339ca9a201f4797b16c58cc6f`，文件 `app/src/main/java/com/alohaoneui/app/ui/component/material/SegmentedList.kt`，仅提交至 `test/voyage-theme-1to1-20261026`；未修改或合并 `main`。
 - 闪退排查边界：此处量化可解释形状变化跳阶，但不能据此认定它是闪退根因。当前尚未获得对应设备的 FATAL EXCEPTION/native crash 堆栈；仍需继续检查路径生成的尺寸/浮点边界，并以最新 Actions 构建日志验证编译。若闪退复现，需提供发生时刻附近的完整崩溃堆栈，而不是只提供应用退出现象。
 - 验证状态：本次源代码提交已创建；当前还未确认此提交的 GitHub Actions 终态或新 APK 产物。不可将提交成功当作构建成功，也不可把之前 Build #1663 或更早 APK 当作包含本修复的包。
+
+
+## 2026-10-27 — Fancy 滑条进度包裹与裁切光环调整
+
+- 按用户最新要求调整 Fancy（style 1）滑条：进度色从第二主题色改为第三主题色（Material 3 `colorScheme.tertiary`）；滑块核心继续向左偏移 4dp；进度段长度改为随滑块中心延展至核心右侧 4dp，令滑块处于进度色内部而不是进度端点外侧。
+- 交互光环改为 44dp 圆形、第三主题色 24% alpha；光环容器高度为 40dp 并使用 `clipToBounds()`，因此光环虽比 40dp 滑轨高 4dp，超出滑轨上下边缘的部分会被裁切，不会显示在滑轨之外。仍沿用 `isPressed || isDragged` 控制，静止隐藏、按压/拖动显示。
+- 产品源码提交：`e3dbf6cf3c8fd5421c2f7ca5c22d1885d3dea753`（Fancy 进度与光环调整）；`59b7596468bf2886598b1dad0c04550edfd713b4`（补齐 `clipToBounds` import）。仅提交到 `test/voyage-theme-1to1-20261026`，未修改或合并 `main`。
+- 需要构建与设备视觉复核：确认 Compose Slider 对 thumb slot 的实际裁切/测量行为符合预期，确认进度尾端相对偏移后的滑块核心恰好多出 4dp，并验证滑块靠近两端时不会出现突兀跳变。当前不宣称已通过编译或真机验收。
