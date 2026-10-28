@@ -736,3 +736,13 @@
 - ExpressiveSwitch.kt 的轨道、thumb 与 SegmentedSliderItem.kt 的轨道/拇指都经 voyageCornerShape(...) 使用共享形状工厂，因此本次修改应同时作用于开关与滑条，避免两处保留不同版本的波浪参数。源码检查显示 Switch 并没有另一套独立的波浪绘制算法；若真机仍显示旧波形，需继续排查形状选择索引、组件重组与实际安装包版本。
 - 产品源码提交：29dc161ccf8f40e7b05f12599c0d5a69bd35212d，只提交至 test/voyage-theme-1to1-20261026，未修改或合并 main。
 - 验证边界：参数修改已推送；当前尚未完成最新 HEAD 的 CI 构建与真机视觉验收。需确认新 APK 中波浪确实变细、Switch 与 Slider 同步更新且其他形状样式未受影响；不得把旧 APK 当成本轮产物。
+
+
+## 2026-10-27 — Material You / Fancy 滑条轨道与配色校正
+
+- 按用户反馈，在共享滑条组件和通用滑条入口同步调整：Material You 轨道高度从 4dp 增至 16dp（4 倍），进度轨道使用主题色系统的 secondary；thumb 保持 primary。通用 `AlohaOneUISlider` 和设置列表 `SegmentedSliderItem` 都调用同一共享外观参数。
+- Fancy 滑块旋转动画方向由 `1080f * valueFraction` 改为 `-1080f * valueFraction`，反转滚动方向。
+- Fancy 轨道恢复完整胶囊底轨，使用固定浅灰 `#D9D9D9` 并位于滑块后方，厚度仍为 Fancy 的 38dp，使轨道视觉上包裹滑块。已加数值的进度段改用主题 secondary；Fancy thumb 和刻度点改用主题 primary，不再让 thumb 与进度段同色。
+- `voyageSliderAppearance` 增加独立 `thumbColor`，避免轨道进度与滑块被同一个颜色参数绑在一起；其他样式的既有色彩映射保持原逻辑（HyperOS 进度使用 tertiary，Material 2 使用 primary）。
+- 相关源码提交：`89e7f3c60e8727c6a46fc7437937b4fa2b5df80f`、`76f2970824d675b626ad9e0f7d8731b014a97a0d`、`90e964db331083f94b80a9d1c9850a0c50118066`、`ca7940e22b501206732ea88a9765f2f37abf6e70`、`cb54b8abbe87445e2d532788038e509128c5eb71`、`a7645a2decdb7e2ea5d6a926eff2dd8ed86116f6`。所有更改仅在 `test/voyage-theme-1to1-20261026`，没有修改或合并 `main`。
+- 验证边界：上述为源码层修改；仍需检查最新 HEAD 的 CI 编译和 APK artifact，并在设备上确认 Material You 轨道实际显示 16dp、Fancy 旋转方向正常、浅灰底轨完整包裹滑块、主色/次色区分正确。构建与真机验收未完成前，不宣称视觉验收通过。
