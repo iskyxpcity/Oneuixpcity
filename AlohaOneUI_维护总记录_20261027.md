@@ -727,3 +727,12 @@
 - Material You、Fancy、Material 2 与 HyperOS 滑条不再绘制未选中部分的第二层小轨道底色；保留外层大背景表面，并让进度色直接显示在该表面上。HyperOS 仍保留其 30dp 宽轨道自身作为大背景容器，不再叠加额外的 inactiveColor 轨道。
 - 阴影层级维持在大背景容器之后/之下：外层容器 Modifier 先绘制阴影，再绘制主题背景；thumb 不再附加独立前景阴影。此项改动目标是去掉用户指出的小背景色，并让阴影由大背景承接。
 - 验证边界：源码已提交，仍需等待最新 HEAD 的 GitHub Actions 编译和 APK artifact，并在设备上检查各样式。因未进行真机复测，暂不宣称视觉验收完成。
+
+
+## 2026-10-27 — 统一缩小全局波浪形状（Slider 与 Switch 共用）
+
+- 按用户反馈，形状样式中的波浪轮廓当前过大，且开关似乎仍显示旧波浪。本轮在共享形状工厂 VoyagePathShape（SegmentedList.kt）中修正波浪分支参数，而不是只改滑条或开关某一处。
+- 波浪目标长度从 12dp × density × scale 调整为 6dp × density × scale；波幅从 0.9dp × density × scale 调整为 0.45dp × density × scale。目标是让波峰/波谷更细小，同时保持全局形状样式与圆角缩放的联动逻辑。
+- ExpressiveSwitch.kt 的轨道、thumb 与 SegmentedSliderItem.kt 的轨道/拇指都经 voyageCornerShape(...) 使用共享形状工厂，因此本次修改应同时作用于开关与滑条，避免两处保留不同版本的波浪参数。源码检查显示 Switch 并没有另一套独立的波浪绘制算法；若真机仍显示旧波形，需继续排查形状选择索引、组件重组与实际安装包版本。
+- 产品源码提交：29dc161ccf8f40e7b05f12599c0d5a69bd35212d，只提交至 test/voyage-theme-1to1-20261026，未修改或合并 main。
+- 验证边界：参数修改已推送；当前尚未完成最新 HEAD 的 CI 构建与真机视觉验收。需确认新 APK 中波浪确实变细、Switch 与 Slider 同步更新且其他形状样式未受影响；不得把旧 APK 当成本轮产物。
