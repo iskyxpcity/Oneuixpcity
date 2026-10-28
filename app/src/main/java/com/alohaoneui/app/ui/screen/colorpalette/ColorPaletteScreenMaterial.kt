@@ -460,7 +460,8 @@ fun ColorPaletteScreenMaterial(
                                 value = cornerScale,
                                 onValueChange = { cornerScale = it },
                                 valueRange = 0.0f..2.0f,
-                                steps = 39,
+                                // Continuous adjustment avoids the visible 0.05-step jumps.
+                                steps = 0,
                                 onValueChangeFinished = { actions.onSetMaterialCornerScale(cornerScale) },
                             )
                         }
