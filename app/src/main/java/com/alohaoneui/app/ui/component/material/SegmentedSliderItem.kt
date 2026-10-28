@@ -214,7 +214,7 @@ fun SegmentedSliderItem(
                         VoyageSliderThumb(
                             style = style,
                             size = thumbSize,
-                            activeColor = active,
+                            activeColor = thumb,
                             inactiveColor = inactive,
                             shadowEnabled = LocalMaterialShadowSliders.current,
                             interactionSource = interactionSource,
