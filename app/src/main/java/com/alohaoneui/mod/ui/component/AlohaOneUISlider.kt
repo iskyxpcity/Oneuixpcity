@@ -166,6 +166,7 @@ fun AlohaOneUISlider(
                     thumbWidth = materialThumbSize.width,
                     activeColor = materialActiveColor,
                     inactiveColor = materialInactiveColor,
+                    shadowEnabled = LocalMaterialShadowSliders.current,
                 )
             },
         ) }
