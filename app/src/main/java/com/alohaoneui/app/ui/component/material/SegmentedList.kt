@@ -413,8 +413,8 @@ private class VoyagePathShape(
                     // wgo0.mo5154ll uses 12dp as the target wave length only to
                     // choose an integer wave count; m140361lo receives the adjusted
                     // perimeterLength / waveCount as its actual sine period.
-                    val targetWaveLength = (6f * density.density * scale).coerceAtLeast(1f)
-                    val amplitude = (0.45f * density.density * scale)
+                    val targetWaveLength = (8f * density.density * scale).coerceAtLeast(1f)
+                    val amplitude = (0.7f * density.density * scale)
                         .coerceIn(0f, minDimension / 4f)
                     val aTL = if (tl > 0f || tr > 0f) amplitude else 0f
                     val aTR = if (tr > 0f || br > 0f) amplitude else 0f
