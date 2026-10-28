@@ -360,19 +360,24 @@ internal fun VoyageSliderTrack(
 
         when (style) {
             0 -> {
-                // Material You: a thick rounded segmented rail with a narrow
-                // vertical marker. Filled ticks invert for contrast on progress.
-                drawRoundRect(
-                    color = inactiveColor,
-                    topLeft = Offset.Zero,
-                    size = Size(size.width, h),
-                    cornerRadius = CornerRadius(h / 2f, h / 2f),
-                )
-                if (fraction > 0f) {
+                // Material You: two separately rounded rail segments stop on
+                // either side of the slim vertical value marker, as in Voyage.
+                val markerGap = 4.dp.toPx()
+                val leftEnd = (activeWidth - markerGap / 2f).coerceAtLeast(0f)
+                val rightStart = (activeWidth + markerGap / 2f).coerceAtMost(size.width)
+                if (leftEnd > 0f) {
                     drawRoundRect(
                         color = activeColor,
                         topLeft = Offset.Zero,
-                        size = Size(activeWidth, h),
+                        size = Size(leftEnd, h),
+                        cornerRadius = CornerRadius(h / 2f, h / 2f),
+                    )
+                }
+                if (rightStart < size.width) {
+                    drawRoundRect(
+                        color = inactiveColor,
+                        topLeft = Offset(rightStart, 0f),
+                        size = Size(size.width - rightStart, h),
                         cornerRadius = CornerRadius(h / 2f, h / 2f),
                     )
                 }
