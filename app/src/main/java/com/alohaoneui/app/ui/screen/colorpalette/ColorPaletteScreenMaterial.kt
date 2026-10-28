@@ -481,13 +481,24 @@ fun ColorPaletteScreenMaterial(
                                             cornerScaleInput = String.format(java.util.Locale.ROOT, "%.2f", cornerScale)
                                             showCornerValueDialog = true
                                         },
+                                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 0.dp),
                                         modifier = Modifier
+                                            .height(32.dp)
+                                            .then(
+                                                if (LocalMaterialShadowButtons.current) {
+                                                    Modifier.shadow(2.dp, voyageCornerShape(12.dp))
+                                                } else Modifier
+                                            )
                                             .clip(voyageCornerShape(12.dp))
                                             .background(MaterialTheme.colorScheme.primaryContainer)
-                                            .border(
-                                                1.dp,
-                                                MaterialTheme.colorScheme.primary.copy(alpha = 0.45f),
-                                                voyageCornerShape(12.dp),
+                                            .then(
+                                                LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
+                                                    Modifier.border(
+                                                        it.dp,
+                                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.45f),
+                                                        voyageCornerShape(12.dp),
+                                                    )
+                                                } ?: Modifier
                                             ),
                                     ) {
                                         Text(
@@ -506,11 +517,6 @@ fun ColorPaletteScreenMaterial(
                                         horizontalAlignment = Alignment.CenterHorizontally,
                                         verticalArrangement = Arrangement.spacedBy(16.dp),
                                     ) {
-                                        Text(
-                                            text = stringResource(R.string.theme_corner_scale_title),
-                                            style = MaterialTheme.typography.titleLarge,
-                                            color = MaterialTheme.colorScheme.onSurface,
-                                        )
                                         // Vector-style preview: the selected icon-shape is the
                                         // background silhouette; 1 sits left of two stacked 2s.
                                         Box(
@@ -557,7 +563,23 @@ fun ColorPaletteScreenMaterial(
                                                     cornerScaleInput = input
                                                 }
                                             },
-                                            modifier = Modifier.fillMaxWidth(),
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .then(
+                                                    if (LocalMaterialShadowButtons.current) {
+                                                        Modifier.shadow(2.dp, voyageCornerShape(12.dp))
+                                                    } else Modifier
+                                                )
+                                                .then(
+                                                    LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
+                                                        Modifier.border(
+                                                            it.dp,
+                                                            MaterialTheme.colorScheme.primary.copy(alpha = 0.45f),
+                                                            voyageCornerShape(12.dp),
+                                                        )
+                                                    } ?: Modifier
+                                                ),
+                                            shape = voyageCornerShape(12.dp),
                                             singleLine = true,
                                             textStyle = MaterialTheme.typography.titleMedium.copy(
                                                 textAlign = TextAlign.Center,
@@ -692,11 +714,6 @@ fun ColorPaletteScreenMaterial(
                                         horizontalAlignment = Alignment.CenterHorizontally,
                                         verticalArrangement = Arrangement.spacedBy(16.dp),
                                     ) {
-                                        Text(
-                                            text = stringResource(R.string.theme_border_width_title),
-                                            style = MaterialTheme.typography.titleLarge,
-                                            color = MaterialTheme.colorScheme.onSurface,
-                                        )
                                         Box(
                                             modifier = Modifier
                                                 .size(56.dp)
