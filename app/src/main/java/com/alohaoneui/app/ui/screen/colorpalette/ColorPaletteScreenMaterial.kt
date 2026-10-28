@@ -65,6 +65,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -92,6 +94,9 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
@@ -102,6 +107,7 @@ import com.materialkolor.rememberDynamicColorScheme
 import com.alohaoneui.app.R
 import com.alohaoneui.app.ui.component.bottombar.useNavigationRail
 import com.alohaoneui.app.ui.component.material.ExpressiveToggleButton
+import com.alohaoneui.app.ui.component.material.ExpressiveContentDialog
 import com.alohaoneui.app.ui.component.material.IconShapePresetPicker
 import com.alohaoneui.app.ui.component.material.IconShapePresetDetailScreen
 import com.alohaoneui.app.ui.component.material.SegmentedColumn
@@ -112,6 +118,7 @@ import com.alohaoneui.mod.ui.component.AlohaOneUISlider
 import com.alohaoneui.app.ui.component.material.TonalCard
 import com.alohaoneui.app.ui.component.material.voyageSegmentedShape
 import com.alohaoneui.app.ui.component.material.voyageCornerShape
+import com.alohaoneui.app.ui.component.material.iconShapeForStyle
 import com.alohaoneui.app.ui.theme.ColorMode
 import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
 import com.alohaoneui.app.ui.theme.LocalMaterialShadowButtons
@@ -454,16 +461,129 @@ fun ColorPaletteScreenMaterial(
                             var cornerScale by remember(uiState.materialCornerScale) {
                                 mutableFloatStateOf(uiState.materialCornerScale)
                             }
+                            var showCornerValueDialog by remember { mutableStateOf(false) }
+                            var cornerScaleInput by remember { mutableStateOf("") }
+                            val cornerPreviewShape = iconShapeForStyle(uiState.materialIconShapeStyle)
+                                ?: RoundedCornerShape(14.dp)
                             SegmentedSliderItem(
                                 title = stringResource(R.string.theme_corner_scale_title),
-                                valueLabel = String.format(java.util.Locale.ROOT, "%.2f", cornerScale),
+                                valueLabel = "",
                                 value = cornerScale,
-                                onValueChange = { cornerScale = it },
+                                onValueChange = { cornerScale = (it * 20f).toInt() / 20f },
                                 valueRange = 0.0f..2.0f,
-                                // Continuous adjustment avoids the visible 0.05-step jumps.
-                                steps = 0,
+                                // 39 inner stops produce 0.05 increments over 0.0–2.0.
+                                steps = 39,
                                 onValueChangeFinished = { actions.onSetMaterialCornerScale(cornerScale) },
+                                titleTrailingContent = {
+                                    TextButton(
+                                        onClick = {
+                                            cornerScaleInput = String.format(java.util.Locale.ROOT, "%.2f", cornerScale)
+                                            showCornerValueDialog = true
+                                        },
+                                        modifier = Modifier
+                                            .clip(voyageCornerShape(12.dp))
+                                            .border(
+                                                1.dp,
+                                                MaterialTheme.colorScheme.outlineVariant,
+                                                voyageCornerShape(12.dp),
+                                            ),
+                                    ) {
+                                        Text(
+                                            text = String.format(java.util.Locale.ROOT, "%.2f", cornerScale),
+                                            color = MaterialTheme.colorScheme.primary,
+                                        )
+                                    }
+                                },
                             )
+                            if (showCornerValueDialog) {
+                                ExpressiveContentDialog(
+                                    onDismissRequest = { showCornerValueDialog = false },
+                                ) {
+                                    Column(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                                    ) {
+                                        Text(
+                                            text = stringResource(R.string.theme_corner_scale_title),
+                                            style = MaterialTheme.typography.titleLarge,
+                                            color = MaterialTheme.colorScheme.onSurface,
+                                        )
+                                        // Vector-style preview: the selected icon-shape is the
+                                        // background silhouette; 1 sits left of two stacked 2s.
+                                        Box(
+                                            modifier = Modifier
+                                                .size(56.dp)
+                                                .clip(cornerPreviewShape)
+                                                .background(MaterialTheme.colorScheme.primary),
+                                            contentAlignment = Alignment.Center,
+                                        ) {
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.spacedBy(3.dp),
+                                            ) {
+                                                Text(
+                                                    text = "1",
+                                                    style = MaterialTheme.typography.titleLarge,
+                                                    color = MaterialTheme.colorScheme.onPrimary,
+                                                )
+                                                Column(
+                                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                                ) {
+                                                    Text(
+                                                        text = "2",
+                                                        style = MaterialTheme.typography.labelMedium,
+                                                        color = MaterialTheme.colorScheme.onPrimary,
+                                                    )
+                                                    Text(
+                                                        text = "2",
+                                                        style = MaterialTheme.typography.labelMedium,
+                                                        color = MaterialTheme.colorScheme.onPrimary,
+                                                    )
+                                                }
+                                            }
+                                        }
+                                        OutlinedTextField(
+                                            value = cornerScaleInput,
+                                            onValueChange = { input ->
+                                                if (input.length <= 6 && input.all { it.isDigit() || it == '.' }) {
+                                                    cornerScaleInput = input
+                                                }
+                                            },
+                                            modifier = Modifier.fillMaxWidth(),
+                                            singleLine = true,
+                                            label = { Text("0.00 – 2.00") },
+                                            textStyle = MaterialTheme.typography.titleMedium.copy(
+                                                textAlign = TextAlign.Center,
+                                            ),
+                                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                                        )
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.End,
+                                            verticalAlignment = Alignment.CenterVertically,
+                                        ) {
+                                            TextButton(onClick = { showCornerValueDialog = false }) {
+                                                Text(stringResource(android.R.string.cancel))
+                                            }
+                                            TextButton(
+                                                onClick = {
+                                                    val parsed = cornerScaleInput.toFloatOrNull()
+                                                    if (parsed != null && parsed.isFinite() && parsed in 0f..2f) {
+                                                        val snapped = (kotlin.math.round(parsed * 20f) / 20f)
+                                                            .coerceIn(0f, 2f)
+                                                        cornerScale = snapped
+                                                        actions.onSetMaterialCornerScale(snapped)
+                                                        showCornerValueDialog = false
+                                                    }
+                                                },
+                                            ) {
+                                                Text(stringResource(android.R.string.ok))
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         }
                     )
                 )
