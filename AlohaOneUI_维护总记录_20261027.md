@@ -892,3 +892,12 @@
 - `ExpressiveSwitch.kt`：移除关闭轨道硬编码深灰 `Color(0xFF45464A)`，关闭轨道恢复主题 `surfaceContainerHighest`；关闭滑块从错误的 `primary` 改为主题 `outline`；关闭描边统一使用主题 `outline`，不再让某些样式依赖固定灰色或不一致的 outlineVariant。禁用态仍沿用原有 disabled alpha/Material SwitchColors 处理路径。
 - 产品提交：滑条 `7af58bc3c76987d9b280cca6b08361a44ab1ec98`；开关关闭态 `49a2c08759e2c52404110c92fe0b2107ae829fa0`。均只提交至 `test/voyage-theme-1to1-20261026`，未修改/合并 `main`。
 - 验证状态：需要检查当前最新 HEAD 的 CI/Actions 与实际 APK，并在浅色、深色、AMOLED、动态主题下检查 Fancy 进度/滑块的颜色反转，以及八种开关关闭态的轨道、滑块、描边。当前尚未确认编译成功，不将源码提交视为构建或设备验收完成。
+
+
+## 2026-10-28 — 修复 Fancy 滑条导致 Kotlin 编译失败的问题
+
+- GitHub Actions Run `40648082781`（分支 `test/voyage-theme-1to1-20261026`，HEAD `15e8cc606a4467dee45e5b514c022557def23f5f`）失败于 `:app:compileDebugKotlin`，具体错误位于 `SegmentedSliderItem.kt:413:45`：`@Composable invocations can only happen from the context of a @Composable function`。
+- 根因：Fancy 轨道的 Canvas 绘制 lambda 内直接调用了 `voyageCornerShape(18.dp)`。该函数需要在 Compose 的 Composable 上下文中求值，而 Canvas 的 DrawScope 不是 Composable 上下文。
+- 已在产品源码提交 `424532320724fcb4bc3aca4833cc2eb4d65d8e20` 修复：将 Fancy 进度形状提前在 `VoyageSliderTrack` 的 Composable 函数作用域创建为 `fancyProgressShape`，Canvas 绘制时只读取已创建的 Shape，不在 DrawScope 内调用 Composable。几何、颜色和进度计算保持不变。
+- 修复仅提交到 `test/voyage-theme-1to1-20261026`，未修改/合并 `main`。
+- 验证状态：已定位并修复本次明确的编译错误；新提交的 Actions 构建结果仍需检查。当前不能声称构建已通过或有新 APK。构建通过后还要继续验证此前 Fancy 滑条/开关配色改动。
