@@ -719,3 +719,11 @@
   - HyperOS 轨道另由 `a1c9550eb7e7111d1c5b388d656ad658b9c7bb4e` 调整 Modifier 顺序，使阴影在容器底色前方的错误层级得到修正。
 - 官方依据：Google Material 3 Slider API 公开了官方 `SliderDefaults.Thumb` 与 `SliderDefaults.Track`，Material 2 的 Compose Slider API 亦提供其自身默认轨道/拇指实现。现有 Material You thumb 已使用官方 M3 thumb；Material You track 仍需继续校正，不能将本轮称为完整官方 1:1。尝试直接接入官方 Track 的文件更新未成功提交，因此没有把该项记录为完成。
 - 验证状态：上述提交已进入测试分支，但尚未确认这些新提交的 Actions 构建和真机表现。重点验收 Material You 开关的圆形 thumb 状态尺寸、其余开关样式差异，以及 Slider 阴影是否完全位于背景底色下方；没有真机证据前不宣称验收完成。
+
+
+## 2026-10-27 — Slider 重复小背景层移除
+
+- 按用户明确反馈，修正提交 `19aa08fbfc20ccc153c9fec5f7d6c69d2a95d5ff`，仅修改 `SegmentedSliderItem.kt`，推送到 `test/voyage-theme-1to1-20261026`；未修改或合并 `main`。
+- Material You、Fancy、Material 2 与 HyperOS 滑条不再绘制未选中部分的第二层小轨道底色；保留外层大背景表面，并让进度色直接显示在该表面上。HyperOS 仍保留其 30dp 宽轨道自身作为大背景容器，不再叠加额外的 inactiveColor 轨道。
+- 阴影层级维持在大背景容器之后/之下：外层容器 Modifier 先绘制阴影，再绘制主题背景；thumb 不再附加独立前景阴影。此项改动目标是去掉用户指出的小背景色，并让阴影由大背景承接。
+- 验证边界：源码已提交，仍需等待最新 HEAD 的 GitHub Actions 编译和 APK artifact，并在设备上检查各样式。因未进行真机复测，暂不宣称视觉验收完成。
