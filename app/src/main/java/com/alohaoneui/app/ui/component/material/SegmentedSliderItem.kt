@@ -12,6 +12,7 @@ import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -46,6 +47,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import com.alohaoneui.app.ui.theme.LocalMaterialSliderStyle
@@ -156,6 +158,7 @@ fun SegmentedSliderItem(
     valueRange: ClosedFloatingPointRange<Float>,
     steps: Int = 0,
     onValueChangeFinished: (() -> Unit)? = null,
+    titleTrailingContent: (@Composable () -> Unit)? = null,
 ) {
     val appearance = voyageSliderAppearance(LocalMaterialSliderStyle.current)
     val style = appearance.style
@@ -192,13 +195,29 @@ fun SegmentedSliderItem(
                     .padding(vertical = 2.dp),
             ) {
                 if (!title.isNullOrEmpty()) {
-                    Text(text = title, style = MaterialTheme.typography.bodyLarge)
+                    if (titleTrailingContent == null) {
+                        Text(text = title, style = MaterialTheme.typography.bodyLarge)
+                    } else {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                text = title,
+                                modifier = Modifier.weight(1f),
+                                style = MaterialTheme.typography.bodyLarge,
+                            )
+                            titleTrailingContent()
+                        }
+                    }
                 }
-                Text(
-                    text = valueLabel,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.outline,
-                )
+                if (valueLabel.isNotEmpty()) {
+                    Text(
+                        text = valueLabel,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.outline,
+                    )
+                }
                 key(style) {
                 Slider(
                     state = sliderState,
@@ -463,10 +482,11 @@ internal fun VoyageSliderTrack(
             }
         }
 
-        if (steps > 0) {
-            val count = steps + 1
-            for (i in 0..count) {
-                val tickFraction = i.toFloat() / count
+        // Always draw visible scale marks, even for continuous sliders. For
+        // discrete sliders the marks align with the actual selectable stops.
+        val tickIntervals = if (steps > 0) steps + 1 else 20
+        for (i in 0..tickIntervals) {
+                val tickFraction = i.toFloat() / tickIntervals
                 val tickX = size.width * tickFraction
                 val passed = tickFraction <= fraction
                 val color = when (style) {
@@ -485,7 +505,6 @@ internal fun VoyageSliderTrack(
                     },
                     center = Offset(tickX, y),
                 )
-            }
         }
     }
 }
