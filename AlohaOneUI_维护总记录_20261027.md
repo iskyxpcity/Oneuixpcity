@@ -698,3 +698,12 @@
 - 包名 `com.alohaoneui.app`；versionName `1.0.261025`；versionCode `16`；签名证书 SHA-256 `93bf61a6493c6b336383832eb41301bd8fe061f43566e7e384e3fdd9fc1c26a1`。
 - 直接 APK 文件已从 Artifact ZIP 中提取，并在工作环境重新计算 SHA-256，与 Artifact 内的 `SHA256SUMS` 完全一致。该构建仍是测试分支 signed test APK，workflow 未发布 GitHub Release。
 - 真机验收仍待完成。尤其要在 Android 13+ 设备上切换到不同语言观察是否仍出现闪帧，并实际检查波浪样式流畅度与 Slider 样式即时切换；构建成功不等于这些视觉/交互问题已在设备上彻底解决。
+
+
+## 2026-10-27 — Slider 阴影层级修正与官方控件对照继续
+
+- 修复提交：`a1c9550eb7e7111d1c5b388d656ad658b9c7bb4e`，仅修改 `SegmentedSliderItem.kt`，提交到 `test/voyage-theme-1to1-20261026`，未修改 `main`。
+- 修正 HyperOS 粗轨道的 Modifier 绘制顺序：阴影 Modifier 现在位于背景色 Modifier 外层，先作为底层投影绘制，再由轨道容器底色绘制覆盖；此前顺序可能令阴影与背景色的前后关系不符合预期。
+- 已参考 Google 官方 Material 3 Slider API 文档，确认官方 Slider 的轨道与拇指分别由 `SliderDefaults.Track` / `SliderDefaults.Thumb` 提供，并使用主题色角色配置。后续将继续把 Material You 轨道实现与官方 Compose Material 3 行为逐项对齐，同时单独核对 Material 2 的轨道、拇指、刻度与状态色，避免两者只在名称或尺寸上有区别。
+- 开关后续按每个样式的名称与来源实现独立几何、状态与动画，颜色仍取 Aloha OneUI 自身主题色。波浪形状则继续以 Voyage 原始路径与录屏观感为准，在不破坏波形的前提下优化性能。
+- 验证状态：当前只确认阴影层级修改已提交；该提交之后的 CI 构建及真机显示尚未验证。不得将本次记录当作整个开关/滑条/波浪校正已完成，也不得以旧 APK 冒充最新产物。
