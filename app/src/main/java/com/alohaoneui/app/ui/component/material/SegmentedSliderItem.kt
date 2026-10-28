@@ -308,7 +308,7 @@ internal fun VoyageSliderTrack(
     shadowEnabled: Boolean = false,
 ) {
     val passedTickColor = when (style) {
-        0 -> MaterialTheme.colorScheme.onSurfaceVariant
+        0 -> MaterialTheme.colorScheme.onTertiary
         1 -> MaterialTheme.colorScheme.primary
         else -> MaterialTheme.colorScheme.onPrimary
     }
