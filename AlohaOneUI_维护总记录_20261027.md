@@ -746,3 +746,13 @@
 - `voyageSliderAppearance` 增加独立 `thumbColor`，避免轨道进度与滑块被同一个颜色参数绑在一起；其他样式的既有色彩映射保持原逻辑（HyperOS 进度使用 tertiary，Material 2 使用 primary）。
 - 相关源码提交：`89e7f3c60e8727c6a46fc7437937b4fa2b5df80f`、`76f2970824d675b626ad9e0f7d8731b014a97a0d`、`90e964db331083f94b80a9d1c9850a0c50118066`、`ca7940e22b501206732ea88a9765f2f37abf6e70`、`cb54b8abbe87445e2d532788038e509128c5eb71`、`a7645a2decdb7e2ea5d6a926eff2dd8ed86116f6`。所有更改仅在 `test/voyage-theme-1to1-20261026`，没有修改或合并 `main`。
 - 验证边界：上述为源码层修改；仍需检查最新 HEAD 的 CI 编译和 APK artifact，并在设备上确认 Material You 轨道实际显示 16dp、Fancy 旋转方向正常、浅灰底轨完整包裹滑块、主色/次色区分正确。构建与真机验收未完成前，不宣称视觉验收通过。
+
+
+## 2026-10-27 — 修复“开关样式 / 滑条样式”选择后不即时生效
+
+- 用户反馈：在主题设置中更改“开关样式”或“滑条样式”后，预览控件不会立即切换，必须再手动点一次开关或滑条才显示新样式。
+- 根因已在 MainActivityViewModel.kt 中确认：SettingsRepositoryImpl 保存到 SharedPreferences 的键名分别是 material_switch_style 和 material_slider_style，ThemeController.getAppSettings() 也会读取这两个值；但 MainActivityViewModel.observedKeys 没有包含这两个键。因此设置写入后，SharedPreferences.OnSharedPreferenceChangeListener 不会刷新 MainActivityUiState，根主题传递给 LocalMaterialSwitchStyle / LocalMaterialSliderStyle 的值仍是旧值。随后手动点击控件触发内部重组，才意外显示新样式。
+- 已修复：将 material_switch_style 与 material_slider_style 加入 observedKeys。设置保存后，监听器会立即重新读取 AppSettings 并更新 StateFlow，触发主题 CompositionLocal 与控件重组；无需再手动点控件。未改动样式绘制参数或设置保存格式。
+- 产品源码提交：993c7e85073aa09b714152669ec64f21b64edd4c，文件：app/src/main/java/com/alohaoneui/app/ui/viewmodel/MainActivityViewModel.kt。
+- 所有修改仅在 test/voyage-theme-1to1-20261026；没有修改或合并 main。
+- 验证边界：已确认存储键名、状态监听键列表和主题状态读取链相互对应，并已推送修复。仍需检查此 HEAD 的 GitHub Actions 编译结果；构建通过后还要在设备上分别切换开关样式与滑条样式，确认预览即时变化且不会影响当前控件值。此时尚不能宣称 CI 或真机验收已通过。
