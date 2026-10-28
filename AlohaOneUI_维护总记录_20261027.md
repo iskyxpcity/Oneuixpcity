@@ -885,3 +885,10 @@
 - 本轮产品源码提交：`9d49c3bdbffbe685559beae1bd6e6602d0e47885`，只提交至 `test/voyage-theme-1to1-20261026`，未修改或合并 `main`。
 - 颜色系统复核：`MaterialTheme.kt` 将种子色、深浅色、AMOLED、PaletteStyle 和 ColorSpec 传入 `rememberAlohaOneUIColorScheme(...)`，然后对整个 ColorScheme 做 `animateAsState()`。滑条当前确实按 `colorScheme.secondary` / `colorScheme.tertiary` 取色，但这不足以证明调色板生成结果正确。仍需定位并审计 `rememberAlohaOneUIColorScheme` 的实现及设置页颜色预览/保存映射，确认第二、第三角色是否被生成或映射错位；在根因确认前不宣称颜色系统已修复。
 - 验证状态：本次提交的 combined status 与 commit workflow-runs 接口均未返回任何状态/工作流记录；这不是 CI 通过的证据。仍需获取可验证的构建结果，并在设备上检查最左端 6dp、四周包围间距、主题切换和拖动动画。
+
+## 2026-10-27 — Fancy 滑条颜色反转复用开关配色，并恢复开关关闭态主题色
+
+- Fancy 滑条（style 1）进度色从第三主题色改为标准开关开启态的滑块颜色 `colorScheme.onPrimary`；滑条滑块使用开关开启态轨道颜色 `colorScheme.primary`。也就是按用户要求交换开关“滑块色/轨道色”在 Fancy 滑条中的用途，不再让 Fancy 依赖 tertiary 角色。
+- `ExpressiveSwitch.kt`：移除关闭轨道硬编码深灰 `Color(0xFF45464A)`，关闭轨道恢复主题 `surfaceContainerHighest`；关闭滑块从错误的 `primary` 改为主题 `outline`；关闭描边统一使用主题 `outline`，不再让某些样式依赖固定灰色或不一致的 outlineVariant。禁用态仍沿用原有 disabled alpha/Material SwitchColors 处理路径。
+- 产品提交：滑条 `7af58bc3c76987d9b280cca6b08361a44ab1ec98`；开关关闭态 `49a2c08759e2c52404110c92fe0b2107ae829fa0`。均只提交至 `test/voyage-theme-1to1-20261026`，未修改/合并 `main`。
+- 验证状态：需要检查当前最新 HEAD 的 CI/Actions 与实际 APK，并在浅色、深色、AMOLED、动态主题下检查 Fancy 进度/滑块的颜色反转，以及八种开关关闭态的轨道、滑块、描边。当前尚未确认编译成功，不将源码提交视为构建或设备验收完成。
