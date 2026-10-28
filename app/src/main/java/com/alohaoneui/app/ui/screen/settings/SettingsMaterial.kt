@@ -62,6 +62,7 @@ import androidx.compose.ui.unit.dp
 import com.alohaoneui.app.R
 import com.alohaoneui.app.ui.UiMode
 import com.alohaoneui.app.ui.component.material.SegmentedColumn
+import com.alohaoneui.app.ui.component.material.alohaOneUISegmentedColors
 import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
 import com.alohaoneui.app.ui.theme.LocalMaterialShadowTopBars
 import com.alohaoneui.app.ui.component.material.SegmentedDropdownItem
@@ -183,6 +184,9 @@ fun SettingPagerMaterial(
                                 SegmentedListItem(
                                     selected = uiState.appLanguage == value ||
                                         (value == "system" && uiState.appLanguage.isBlank()),
+                                    colors = alohaOneUISegmentedColors().copy(
+                                        selectedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+                                    ),
                                     onClick = { actions.onSetAppLanguage(value) },
                                     headlineContent = { Text(label) },
                                     trailingContent = {
