@@ -387,167 +387,63 @@ private class VoyagePathShape(
                 if (tl > 0f) path.cubicTo(0f, tl * tlInset.vertical, tl * tlInset.horizontal, 0f, tl, 0f)
             }
             4 -> {
-                // Voyage source: p000/wgo0.java, mo5154ll + m140359lI/m140360lO/
-                // m140361lo. Keep its density scaling, radius shrink, phase length,
-                // adaptive sampling and quadratic sample joins.
+                // Lightweight shared Wavy geometry: fixed dp-based cubic waves on
+                // straight edges and rounded corner arcs. Avoid perimeter sampling,
+                // per-sample objects, trigonometry and intermediate displacement lists.
                 val minDimension = minOf(w, h)
                 if (w <= 0f || h <= 0f || minDimension <= 0f) {
                     path.addRoundRect(androidx.compose.ui.geometry.RoundRect(0f, 0f, w, h))
                 } else {
-                    val scale = (minDimension / (48f * density.density)).coerceIn(0.42f, 1f)
-                    // wgo0.mo5154ll uses 12dp as the target wave length only to
-                    // choose an integer wave count; m140361lo receives the adjusted
-                    // perimeterLength / waveCount as its actual sine period.
-                    val targetWaveLength = (8f * density.density * scale).coerceAtLeast(1f)
-                    val amplitude = (0.7f * density.density * scale)
-                        .coerceIn(0f, minDimension / 4f)
-                    val aTL = if (tl > 0f || tr > 0f) amplitude else 0f
-                    val aTR = if (tr > 0f || br > 0f) amplitude else 0f
-                    val aBR = if (br > 0f || bl > 0f) amplitude else 0f
-                    val aBL = if (bl > 0f || tl > 0f) amplitude else 0f
-                    val rtl = (tl - amplitude).coerceAtLeast(0f)
-                    val rtr = (tr - amplitude).coerceAtLeast(0f)
-                    val rbr = (br - amplitude).coerceAtLeast(0f)
-                    val rbl = (bl - amplitude).coerceAtLeast(0f)
+                    val amplitude = minOf(
+                        with(density) { 0.8.dp.toPx() },
+                        minDimension * 0.035f
+                    )
+                    val halfWaveLength = with(density) { 6.dp.toPx() }.coerceAtLeast(1f)
 
-                    // Direct translation of Voyage p000/wgo0.java:
-                    // each corner's wave amplitude is enabled only when either
-                    // adjacent corner radius is non-zero.
-                    val xRight = w - aTR
-                    val yBottom = h - aBR
-                    val xTopStart = if (tl > 0f) aBL + rtl else 0f
-                    val xTopEnd = if (tr > 0f) xRight - rtr else w
-                    val yRightStart = if (tr > 0f) aTL + rtr else 0f
-                    val yRightEnd = if (br > 0f) yBottom - rbr else h
-                    val xBottomStart = if (br > 0f) xRight - rbr else w
-                    val xBottomEnd = if (bl > 0f) aBL + rbl else 0f
-                    val yLeftStart = if (bl > 0f) yBottom - rbl else h
-                    val yLeftEnd = if (tl > 0f) aTL + rtl else 0f
-                    val topLength = (xTopEnd - xTopStart).coerceAtLeast(0f)
-                    val rightLength = (yRightEnd - yRightStart).coerceAtLeast(0f)
-                    val bottomLength = (xBottomStart - xBottomEnd).coerceAtLeast(0f)
-                    val leftLength = (yLeftStart - yLeftEnd).coerceAtLeast(0f)
-                    val perimeterLength = topLength + rightLength + bottomLength + leftLength +
-                        (rtl + rtr + rbr + rbl) * (Math.PI.toFloat() / 2f)
-
-                    if (amplitude <= 0f || perimeterLength <= 0f) {
-                        path.addRoundRect(androidx.compose.ui.geometry.RoundRect(
-                            left = 0f, top = 0f, right = w, bottom = h,
-                            topLeftCornerRadius = androidx.compose.ui.geometry.CornerRadius(tl, tl),
-                            topRightCornerRadius = androidx.compose.ui.geometry.CornerRadius(tr, tr),
-                            bottomRightCornerRadius = androidx.compose.ui.geometry.CornerRadius(br, br),
-                            bottomLeftCornerRadius = androidx.compose.ui.geometry.CornerRadius(bl, bl),
-                        ))
-                    } else {
-                        // Voyage wgo0.java: split the perimeter into waves first,
-                        // then choose subdivisions from BOTH the per-wave length and
-                        // the total path length. Keep the source constants explicit.
-                        val waveCount = kotlin.math.ceil(perimeterLength / targetWaveLength).toInt().coerceAtLeast(1)
-                        val waveLength = perimeterLength / waveCount
-                        val sourceArcSubdivisions = 6f
-                        val sourcePathSubdivisions = 96f
-                        val sampleStep = maxOf(
-                            waveLength / sourceArcSubdivisions,
-                            perimeterLength / sourcePathSubdivisions,
-                            2.5f
-                        )
-                        class WaveSample(
-                            val point: androidx.compose.ui.geometry.Offset,
-                            val normal: androidx.compose.ui.geometry.Offset,
-                            val phaseDistance: Float,
-                            val localAmplitude: Float,
-                        )
-                        val samples = mutableListOf<WaveSample>()
-                        var phaseDistance = 0f
-
-                        fun addLine(
-                            x0: Float, y0: Float, x1: Float, y1: Float,
-                            nx: Float, ny: Float, length: Float, localAmplitude: Float,
-                        ) {
-                            val count = kotlin.math.ceil(length / sampleStep).toInt().coerceAtLeast(1)
-                            // Voyage's shared path-start flag makes only the very first
-                            // segment emit t=0; every later segment begins at its t=1/count
-                            // sample so adjacent edges do not duplicate their join point.
-                            val firstSample = if (samples.isEmpty()) 0 else 1
-                            for (i in firstSample..count) {
-                                val t = i.toFloat() / count
-                                samples += WaveSample(
-                                    androidx.compose.ui.geometry.Offset(
-                                        x0 + (x1 - x0) * t,
-                                        y0 + (y1 - y0) * t
-                                    ),
-                                    androidx.compose.ui.geometry.Offset(nx, ny),
-                                    phaseDistance + length * t,
-                                    localAmplitude
-                                )
-                            }
-                            phaseDistance += length
+                    fun waveEdge(
+                        startX: Float, startY: Float,
+                        endX: Float, endY: Float,
+                        normalX: Float, normalY: Float,
+                    ) {
+                        val dx = endX - startX
+                        val dy = endY - startY
+                        val length = kotlin.math.sqrt(dx * dx + dy * dy)
+                        if (length <= 0.5f) {
+                            path.lineTo(endX, endY)
+                            return
                         }
-
-                        fun addArc(
-                            cx: Float, cy: Float, radius: Float,
-                            startDegrees: Float, sweepDegrees: Float,
-                        ) {
-                            // Voyage still samples a zero-radius quarter arc: it has
-                            // zero perimeter length, but its terminal normal can affect the
-                            // displaced sample. Keep that source edge case instead of skipping it.
-                            val arcLength = kotlin.math.PI.toFloat() * radius / 2f
-                            val count = kotlin.math.ceil(arcLength / sampleStep).toInt().coerceAtLeast(1)
-                            val firstSample = if (samples.isEmpty()) 0 else 1
-                            for (i in firstSample..count) {
-                                val t = i.toFloat() / count
-                                val angle = Math.toRadians((startDegrees + sweepDegrees * t).toDouble())
-                                val nx = kotlin.math.cos(angle).toFloat()
-                                val ny = kotlin.math.sin(angle).toFloat()
-                                samples += WaveSample(
-                                    androidx.compose.ui.geometry.Offset(cx + radius * nx, cy + radius * ny),
-                                    androidx.compose.ui.geometry.Offset(nx, ny),
-                                    phaseDistance + arcLength * t,
-                                    amplitude
-                                )
-                            }
-                            phaseDistance += arcLength
-                        }
-
-                        // Voyage's perimeter order: top, TR arc, right, BR arc,
-                        // bottom, BL arc, left, TL arc. Distances are accumulated
-                        // by the source segment lengths, not sample-to-sample chords.
-                        addLine(xTopStart, aTL, xTopEnd, aTL, 0f, -1f, topLength, aTL)
-                        addArc(xRight - rtr, aTL + rtr, rtr, -90f, 90f)
-                        addLine(xRight, yRightStart, xRight, yRightEnd, 1f, 0f, rightLength, aTR)
-                        addArc(xRight - rbr, h - rbr, rbr, 0f, 90f)
-                        addLine(xBottomStart, yBottom, xBottomEnd, yBottom, 0f, 1f, bottomLength, aBR)
-                        addArc(aBL + rbl, h - rbl, rbl, 90f, 90f)
-                        addLine(aBL, yLeftStart, aBL, yLeftEnd, -1f, 0f, leftLength, aBL)
-                        addArc(aBL + rtl, aTL + rtl, rtl, 180f, 90f)
-
-                        val displaced = samples.map { sample ->
-                            val wave = sample.localAmplitude * kotlin.math.sin(
-                                sample.phaseDistance * 2f * Math.PI.toFloat() / waveLength
+                        val count = kotlin.math.ceil(length / halfWaveLength).toInt().coerceAtLeast(1)
+                        val stepX = dx / count
+                        val stepY = dy / count
+                        for (i in 0 until count) {
+                            val x0 = startX + stepX * i
+                            val y0 = startY + stepY * i
+                            val x1 = startX + stepX * (i + 1)
+                            val y1 = startY + stepY * (i + 1)
+                            val sign = if (i % 2 == 0) 1f else -1f
+                            path.cubicTo(
+                                x0 + stepX / 3f + normalX * amplitude * sign,
+                                y0 + stepY / 3f + normalY * amplitude * sign,
+                                x0 + stepX * 2f / 3f + normalX * amplitude * sign,
+                                y0 + stepY * 2f / 3f + normalY * amplitude * sign,
+                                x1, y1
                             )
-                            androidx.compose.ui.geometry.Offset(
-                                sample.point.x + sample.normal.x * wave,
-                                sample.point.y + sample.normal.y * wave
-                            )
-                        }
-                        if (displaced.isNotEmpty()) {
-                            path.moveTo(displaced.first().x, displaced.first().y)
-                            for (i in 1 until displaced.size) {
-                                val previous = displaced[i - 1]
-                                val current = displaced[i]
-                                path.quadraticTo(
-                                    previous.x, previous.y,
-                                    (previous.x + current.x) / 2f,
-                                    (previous.y + current.y) / 2f
-                                )
-                            }
-                            // Voyage's m140361lo emits quadratic segments only while
-                            // advancing through the sampled path. The source then closes
-                            // the path directly; it does not add an extra last-to-first
-                            // quadratic segment.
-                            path.close()
                         }
                     }
+
+                    path.moveTo(tl, 0f)
+                    waveEdge(tl, 0f, w - tr, 0f, 0f, -1f)
+                    if (tr > 0f) path.arcTo(Rect(w - 2f * tr, 0f, w, 2f * tr), -90f, 90f, false)
+                    else path.lineTo(w, 0f)
+                    waveEdge(w, tr, w, h - br, 1f, 0f)
+                    if (br > 0f) path.arcTo(Rect(w - 2f * br, h - 2f * br, w, h), 0f, 90f, false)
+                    else path.lineTo(w, h)
+                    waveEdge(w - br, h, bl, h, 0f, 1f)
+                    if (bl > 0f) path.arcTo(Rect(0f, h - 2f * bl, 2f * bl, h), 90f, 90f, false)
+                    else path.lineTo(0f, h)
+                    waveEdge(0f, h - bl, 0f, tl, -1f, 0f)
+                    if (tl > 0f) path.arcTo(Rect(0f, 0f, 2f * tl, 2f * tl), 180f, 90f, false)
+                    else path.lineTo(0f, 0f)
                 }
             }
             5 -> {
