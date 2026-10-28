@@ -974,3 +974,10 @@
 - 修正：在 `ColorPaletteScreenMaterial.kt` 中，将这两个按钮的高度约束都改为 `.requiredHeight(32.dp)`，并补充对应 Compose 布局导入；阴影开关和描边宽度仍保持独立联动，不再依赖这些装饰是否启用来决定按钮尺寸。
 - 逐项检查：圆角大小按钮和描边粗细按钮均已使用 `.requiredHeight(32.dp)`，未只修改其中一个。
 - 产品代码提交：`77c7feed20e5e0a09b73488e706e591cdcbeb22c`。本次提交后仍需以最新 GitHub Actions 构建结果确认编译，并继续提供对应 APK；不可把代码提交等同于构建通过。
+
+## 2026-10-28｜再次修正关闭阴影时两个数值按钮高度失效
+- 用户复测指出：此前即使把两个 `TextButton` 的 modifier 改为 `.requiredHeight(32.dp)`，关闭阴影时仍未得到预期高度。上一轮修正没有真正解决问题。
+- 根因方向：继续依赖 Material 3 `TextButton` 的默认最小尺寸/内部布局约束不够可靠；不再用 TextButton 承载这两个定制数值按钮。
+- 本次改为直接使用可点击的 Material 3 `Surface`，外层明确 `Modifier.requiredHeight(32.dp)`；按钮背景、圆角、文字颜色、点击行为保留，横向内边距放到内部内容容器；阴影通过 `shadowElevation = if (LocalMaterialShadowButtons.current) 2.dp else 0.dp` 单独控制，描边使用全局描边宽度构建 `BorderStroke`。这样关闭阴影/描边时不再依赖条件 modifier 来决定高度。
+- 已逐项复核圆角大小与描边粗细两个按钮都使用同一结构和固定高度。
+- 本次产品代码提交：`21460eab9f3665dc15cab1878ecd47d4aff197e5`。必须等待最新 Actions 验证编译，再确认实际 APK；之前构建未包含本次改动，不可当作本次修正已通过。
