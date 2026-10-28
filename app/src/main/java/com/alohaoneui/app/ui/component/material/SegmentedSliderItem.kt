@@ -74,34 +74,39 @@ internal data class VoyageSliderAppearance(
 internal fun voyageSliderAppearance(requestedStyle: Int): VoyageSliderAppearance {
     val style = requestedStyle.coerceIn(0, 3)
     val scheme = MaterialTheme.colorScheme
-    // Progress and thumb colors follow separate Material theme roles.
+    // Match the four Voyage preview families rather than applying one generic
+    // Material rail to all of them. Track progress, inactive rail and thumb are
+    // independent roles so theme changes propagate without making them identical.
     val active = when (style) {
-        0 -> scheme.tertiary
-        1 -> scheme.secondary
-        2 -> scheme.primary
-        else -> scheme.tertiary
+        0 -> scheme.secondary                 // Material You: filled segment
+        1 -> scheme.secondaryContainer        // Fancy: soft mint progress
+        2 -> scheme.tertiary                 // Material 2: thin accent line
+        else -> scheme.secondary             // HyperOS: filled thick segment
     }
     val thumb = scheme.primary
     val inactive = when (style) {
-        0 -> scheme.surfaceContainerHighest
-        1 -> Color(0xFFD9D9D9)
-        else -> scheme.surfaceContainerHighest
+        0 -> scheme.tertiaryContainer        // Material You: tinted inactive rail
+        1 -> Color(0xFFD9D9D9)              // Fancy: fixed light-gray rail
+        2 -> scheme.tertiaryContainer        // Material 2: fine tinted rail
+        else -> scheme.tertiaryContainer    // HyperOS: tinted inactive rail
     }
     val container = when (style) {
-        0 -> scheme.tertiaryContainer.copy(alpha = 0.20f) // Material You
-        1 -> scheme.secondaryContainer.copy(alpha = 0.30f) // Fancy
-        2 -> scheme.tertiaryContainer.copy(alpha = 0.20f) // Material 2
-        else -> scheme.secondaryContainer.copy(alpha = 0.30f) // HyperOS
+        0 -> scheme.surfaceContainerLow
+        1 -> scheme.surfaceContainerLow
+        2 -> scheme.surfaceContainerLow
+        else -> scheme.surfaceContainerLow
     }
     val thumbSize = when (style) {
-        1 -> DpSize(26.dp, 26.dp) // FancySlider source
-        else -> DpSize(20.dp, 20.dp) // M3/M2 default thumb slot; HyperOS hides it
+        0 -> DpSize(2.dp, 32.dp)             // Material You vertical marker
+        1 -> DpSize(24.dp, 24.dp)            // Fancy shaped thumb with halo
+        2 -> DpSize(20.dp, 20.dp)            // Material 2 circular thumb
+        else -> DpSize(0.dp, 0.dp)           // HyperOS has no separate thumb
     }
     val trackHeight = when (style) {
-        0 -> 4.dp  // Material 3 standard active/inactive rail
-        1 -> 38.dp // FancyTrack source
-        2 -> 4.dp  // M2Slider source
-        else -> 30.dp // HyperOSSlider source
+        0 -> 16.dp                           // Material You pill track + marker
+        1 -> 28.dp                           // Fancy wide rail wraps its thumb
+        2 -> 6.dp                            // Material 2 fine rail
+        else -> 24.dp                        // HyperOS thick rail
     }
     return VoyageSliderAppearance(
         style = style,
@@ -126,20 +131,25 @@ internal fun voyageSliderContainerModifier(
     val containerShadow = if (LocalMaterialShadowSliders.current) {
         Modifier.shadow(2.dp, containerShape, clip = false)
     } else Modifier
-    return when (style) {
-        // Material 3 uses a bare rail and native thumb, not a tinted capsule
-        // behind an oversized progress line. Keep the elevation on the rail.
-        0 -> Modifier
-        1 -> Modifier
-            .then(containerShadow)
-            .background(containerColor, voyageCornerShape(50.dp))
-            .padding(horizontal = 6.dp)
-        2 -> Modifier
-            .then(containerShadow)
-            .background(containerColor, voyageCornerShape(50.dp))
-            .padding(horizontal = 12.dp)
-        else -> Modifier
-    }
+    return Modifier
+        // Voyage's preview shows the elevation behind the slider surface. Draw
+        // that surface over the shadow instead of placing a shadow above progress.
+        .then(containerShadow)
+        .background(containerColor, voyageCornerShape(20.dp))
+        .padding(
+            horizontal = when (style) {
+                0 -> 10.dp
+                1 -> 6.dp
+                2 -> 10.dp
+                else -> 6.dp
+            },
+            vertical = when (style) {
+                0 -> 6.dp
+                1 -> 4.dp
+                2 -> 6.dp
+                else -> 4.dp
+            },
+        )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -255,42 +265,53 @@ internal fun VoyageSliderThumb(
     interactionSource: MutableInteractionSource? = null,
     valueFraction: Float = 0f,
 ) {
-    // HyperOSSlider source deliberately supplies an empty thumb; the wide
-    // 30dp track itself is the control surface.
+    // HyperOS uses the thick track itself as its handle surface.
     if (style == 3) return
 
-    val effectiveInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
-    val pressed by effectiveInteractionSource.collectIsPressedAsState()
-    val dragged by effectiveInteractionSource.collectIsDraggedAsState()
-    val hovered by effectiveInteractionSource.collectIsHoveredAsState()
-    val focused by effectiveInteractionSource.collectIsFocusedAsState()
-    val interacting = pressed || dragged || hovered || focused
-    if (style == 0 && interactionSource != null) {
-        androidx.compose.material3.SliderDefaults.Thumb(
-            interactionSource = interactionSource,
-            colors = androidx.compose.material3.SliderDefaults.colors(thumbColor = activeColor),
-            enabled = true,
-        )
-        return
-    }
     val thumbShape = voyageCornerShape(minOf(size.width, size.height) / 2f)
-
-    Box(
-        Modifier.size(width = size.width, height = size.height),
-        contentAlignment = androidx.compose.ui.Alignment.Center,
-    ) {
-        val thumbModifier = Modifier
-            .size(width = size.width, height = size.height)
-            .then(if (style == 1) Modifier.rotate(-1080f * valueFraction) else Modifier)
-            .then(
-                // Slider elevation is supplied by the outer rail container.
-                // Do not add another elevated layer here: it would cast a foreground
-                // shadow over the tinted track/background.
+    when (style) {
+        0 -> {
+            // Voyage Material You preview uses a slim vertical position marker,
+            // not the stock circular M3 thumb. The track and tick marks remain
+            // visible on both sides of this marker.
+            Box(
                 Modifier
+                    .size(width = size.width, height = size.height)
+                    .clip(voyageCornerShape(1.dp))
+                    .background(MaterialTheme.colorScheme.primary),
             )
-            .clip(thumbShape)
-            .background(activeColor, thumbShape)
-        Box(thumbModifier) {}
+        }
+        1 -> {
+            // Fancy's thumb has a soft mint halo surrounding the theme-primary
+            // shaped core. The selected shape still follows Voyage's shared
+            // shape setting and rotates in the source direction while dragging.
+            Box(
+                modifier = Modifier.size(32.dp),
+                contentAlignment = androidx.compose.ui.Alignment.Center,
+            ) {
+                Box(
+                    Modifier
+                        .size(32.dp)
+                        .clip(voyageCornerShape(16.dp))
+                        .background(MaterialTheme.colorScheme.secondary),
+                )
+                Box(
+                    Modifier
+                        .size(width = size.width, height = size.height)
+                        .then(Modifier.rotate(-1080f * valueFraction))
+                        .clip(thumbShape)
+                        .background(MaterialTheme.colorScheme.primary),
+                )
+            }
+        }
+        else -> {
+            Box(
+                Modifier
+                    .size(width = size.width, height = size.height)
+                    .clip(voyageCornerShape(size.width / 2f))
+                    .background(MaterialTheme.colorScheme.primary),
+            )
+        }
     }
 }
 
@@ -307,15 +328,18 @@ internal fun VoyageSliderTrack(
     inactiveColor: Color,
     shadowEnabled: Boolean = false,
 ) {
+    val scheme = MaterialTheme.colorScheme
     val passedTickColor = when (style) {
-        0 -> MaterialTheme.colorScheme.onTertiary
-        1 -> MaterialTheme.colorScheme.primary
-        else -> MaterialTheme.colorScheme.onPrimary
+        0 -> scheme.onSecondary
+        1 -> scheme.primary
+        2 -> scheme.primary
+        else -> scheme.onSecondary
     }
     val futureTickColor = when (style) {
-        0 -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
-        1 -> MaterialTheme.colorScheme.primary
-        else -> MaterialTheme.colorScheme.outline.copy(alpha = 0.65f)
+        0 -> scheme.primary
+        1 -> Color.White.copy(alpha = 0.90f)
+        2 -> scheme.primary
+        else -> scheme.primary
     }
     val fraction = if (range.endInclusive > range.start) {
         ((state.value - range.start) / (range.endInclusive - range.start)).coerceIn(0f, 1f)
@@ -325,53 +349,43 @@ internal fun VoyageSliderTrack(
         Modifier
             .fillMaxWidth()
             .height(height)
-            // Elevation belongs to the back layer: draw its shadow first, then
-            // paint the container surface over it. Putting shadow() after
-            // background() made the HyperOS rail shadow appear above its tint.
-            .then(if (shadowEnabled && (style == 0 || style == 3)) Modifier.shadow(2.dp, trackShape, clip = false) else Modifier)
-            .then(if (style == 3) Modifier.background(containerColor, trackShape) else Modifier)
+            // Elevation is cast by the rail's back layer; Canvas paints every
+            // active/inactive surface afterward, so the shadow cannot sit above it.
+            .then(if (shadowEnabled) Modifier.shadow(2.dp, trackShape, clip = false) else Modifier)
     ) {
         val h = size.height
         val y = h / 2f
-        val m3Inset = if (style == 0) 10.dp.toPx() else 0f
-        val railWidth = (size.width - 2f * m3Inset).coerceAtLeast(0f)
-        val start = Offset(m3Inset, y)
-        val end = Offset(m3Inset + railWidth, y)
-        val cap = if (style == 3) StrokeCap.Butt else StrokeCap.Round
-        val trackThickness = if (style == 0) 4.dp.toPx() else h
+        val cap = StrokeCap.Round
+        val activeWidth = (size.width * fraction).coerceIn(0f, size.width)
 
         when (style) {
             0 -> {
-                // Material 3 geometry: a slim 4dp active/inactive rail, inset
-                // by the native 10dp thumb radius. Progress uses the tertiary
-                // theme role; the native Material thumb keeps its own elevation.
-                drawLine(
+                // Material You: a thick rounded segmented rail with a narrow
+                // vertical marker. Filled ticks invert for contrast on progress.
+                drawRoundRect(
                     color = inactiveColor,
-                    start = start,
-                    end = end,
-                    strokeWidth = trackThickness,
-                    cap = StrokeCap.Round,
+                    topLeft = Offset.Zero,
+                    size = Size(size.width, h),
+                    cornerRadius = CornerRadius(h / 2f, h / 2f),
                 )
                 if (fraction > 0f) {
-                    drawLine(
+                    drawRoundRect(
                         color = activeColor,
-                        start = start,
-                        end = Offset(m3Inset + railWidth * fraction, y),
-                        strokeWidth = trackThickness,
-                        cap = StrokeCap.Round,
+                        topLeft = Offset.Zero,
+                        size = Size(activeWidth, h),
+                        cornerRadius = CornerRadius(h / 2f, h / 2f),
                     )
                 }
             }
             1 -> {
-                // Fancy: fixed light-gray rail wraps the thumb. Progress uses
-                // the secondary role; the thumb and all tick dots use primary.
+                // Fancy: fixed light-gray full rail, softer secondary-container
+                // progress, primary shaped thumb, and primary ticks on the fill.
                 drawRoundRect(
                     color = Color(0xFFD9D9D9),
                     topLeft = Offset.Zero,
                     size = Size(size.width, h),
                     cornerRadius = CornerRadius(h / 2f, h / 2f),
                 )
-                val activeWidth = (size.width * fraction).coerceIn(0f, size.width)
                 if (fraction > 0f) {
                     drawRoundRect(
                         color = activeColor,
@@ -382,17 +396,39 @@ internal fun VoyageSliderTrack(
                 }
             }
             2 -> {
-                // Material 2: progress only; let the large outer surface show
-                // through instead of drawing a second inactive rail.
+                // Material 2: a thin accent rail and primary circular thumb.
+                drawLine(
+                    color = inactiveColor,
+                    start = Offset.Zero.copy(y = y),
+                    end = Offset(size.width, y),
+                    strokeWidth = h,
+                    cap = cap,
+                )
                 if (fraction > 0f) {
-                    drawLine(activeColor, start, Offset(size.width * fraction, y), trackThickness, StrokeCap.Round)
+                    drawLine(
+                        color = activeColor,
+                        start = Offset.Zero.copy(y = y),
+                        end = Offset(activeWidth, y),
+                        strokeWidth = h,
+                        cap = cap,
+                    )
                 }
             }
             else -> {
-                // HyperOS: the wide 30dp container is the background surface.
-                // Do not overlay a second inactive-colored rail inside it.
+                // HyperOS: thick full-width pill; no separate thumb is rendered.
+                drawRoundRect(
+                    color = inactiveColor,
+                    topLeft = Offset.Zero,
+                    size = Size(size.width, h),
+                    cornerRadius = CornerRadius(h / 2f, h / 2f),
+                )
                 if (fraction > 0f) {
-                    drawLine(activeColor, start, Offset(size.width * fraction, y), trackThickness, cap)
+                    drawRoundRect(
+                        color = activeColor,
+                        topLeft = Offset.Zero,
+                        size = Size(activeWidth, h),
+                        cornerRadius = CornerRadius(h / 2f, h / 2f),
+                    )
                 }
             }
         }
@@ -401,14 +437,22 @@ internal fun VoyageSliderTrack(
             val count = steps + 1
             for (i in 0..count) {
                 val tickFraction = i.toFloat() / count
-                val tickX = if (style == 0) {
-                    m3Inset + railWidth * tickFraction
-                } else {
-                    size.width * tickFraction
+                val tickX = size.width * tickFraction
+                val passed = tickFraction <= fraction
+                val color = when (style) {
+                    0 -> if (passed) Color.White else scheme.primary
+                    1 -> if (passed) scheme.primary else Color.White.copy(alpha = 0.90f)
+                    2 -> scheme.primary
+                    else -> if (passed) Color.White else scheme.primary
                 }
                 drawCircle(
-                    color = if (tickFraction <= fraction) passedTickColor else futureTickColor,
-                    radius = if (style == 0) 1.dp.toPx() else 1.dp.toPx(),
+                    color = color,
+                    radius = when (style) {
+                        0 -> 1.1.dp.toPx()
+                        1 -> 1.dp.toPx()
+                        2 -> 0.9.dp.toPx()
+                        else -> 1.dp.toPx()
+                    },
                     center = Offset(tickX, y),
                 )
             }
