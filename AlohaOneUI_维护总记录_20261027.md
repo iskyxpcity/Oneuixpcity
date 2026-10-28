@@ -841,3 +841,11 @@
 - Fancy 轨道的未完成段与进度段都通过全局 `voyageCornerShape` 生成轮廓绘制，因此会跟随全局形状样式，而不是固定使用圆角矩形。
 - 已提交：`0062c879597a71d9d9298d2dcf7e9b0f64c4058f`（`ui: refine Fancy slider rail and thumb geometry`）。
 - 尚待 CI 编译验证和设备视觉复核；尤其需检查轨道端部延展、拖动命中区域与滑块视觉偏移是否符合录屏参考。未通过编译前不视为完成，也不发布 APK。
+
+
+## 2026-10-27 — Fancy 滑条光环改为仅交互时显示
+
+- 用户补充明确要求：Fancy 滑条的圆形半透明光环只在按压或拖动滑块时出现，静止状态不显示光环。
+- 在 `SegmentedSliderItem.kt` 中通过同一个 `MutableInteractionSource` 读取 `collectIsPressedAsState()` 与 `collectIsDraggedAsState()`，并把 `isPressed || isDragged` 传给 Fancy thumb；光环仅在该状态为真时绘制，半透明第二主题色、圆形外形和尺寸保持不变。
+- 产品源码提交：`6f23bf264b5b228cbbbb82e49317b28a9428689f`，仅写入 `test/voyage-theme-1to1-20261026`，没有修改或合并 `main`。
+- 验证状态：源码提交完成，尚需核验该提交对应的 Actions 编译结果，并在设备上确认静止时光环消失、按压/拖动时出现、松开后消失。
