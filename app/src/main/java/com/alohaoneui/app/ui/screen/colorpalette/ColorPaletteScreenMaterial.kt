@@ -469,7 +469,7 @@ fun ColorPaletteScreenMaterial(
                                 title = stringResource(R.string.theme_corner_scale_title),
                                 valueLabel = "",
                                 value = cornerScale,
-                                onValueChange = { cornerScale = (it * 20f).toInt() / 20f },
+                                onValueChange = { cornerScale = kotlin.math.round(it * 20f) / 20f },
                                 valueRange = 0.0f..2.0f,
                                 // 39 inner stops produce 0.05 increments over 0.0–2.0.
                                 steps = 39,
