@@ -76,7 +76,7 @@ fun ExpressiveSwitch(
         7 -> scheme.primary
         else -> scheme.primary
     }
-    val uncheckedTrack = Color(0xFF45464A)
+    val uncheckedTrack = scheme.surfaceContainerHighest
     val checkedThumb = when (style) {
         0 -> colors.checkedThumbColor
         1 -> scheme.onPrimary
@@ -86,9 +86,7 @@ fun ExpressiveSwitch(
         7 -> scheme.onPrimary
         else -> Color.White
     }
-    val uncheckedThumb = when (style) {
-        else -> scheme.primary
-    }
+    val uncheckedThumb = scheme.outline
     val checkedBorder = when (style) {
         2 -> scheme.primaryContainer
         3 -> scheme.secondary
@@ -97,11 +95,7 @@ fun ExpressiveSwitch(
         6 -> Color(0xFF1684FC)
         else -> checkedTrack
     }
-    val uncheckedBorder = when (style) {
-        4 -> Color(0xFF8E8E93)
-        3 -> scheme.outline
-        else -> scheme.outlineVariant
-    }
+    val uncheckedBorder = scheme.outline
     // Exact outer slot dimensions from Voyage's j7w0.m105365O dispatch:
     // 0 z4v0.m147164o = 52x32; 1 frt0.m95463l = 52x32;
     // 2 it70.m103876l = 56x28; 3 ckw0.m9293l = 48x24;
