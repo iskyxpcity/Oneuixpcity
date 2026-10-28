@@ -849,3 +849,12 @@
 - 在 `SegmentedSliderItem.kt` 中通过同一个 `MutableInteractionSource` 读取 `collectIsPressedAsState()` 与 `collectIsDraggedAsState()`，并把 `isPressed || isDragged` 传给 Fancy thumb；光环仅在该状态为真时绘制，半透明第二主题色、圆形外形和尺寸保持不变。
 - 产品源码提交：`6f23bf264b5b228cbbbb82e49317b28a9428689f`，仅写入 `test/voyage-theme-1to1-20261026`，没有修改或合并 `main`。
 - 验证状态：源码提交完成，尚需核验该提交对应的 Actions 编译结果，并在设备上确认静止时光环消失、按压/拖动时出现、松开后消失。
+
+
+## 2026-10-27 — 圆角比例连续调节与轮廓缓存优化
+
+- 用户反馈：圆角大小数值调整不够顺滑，应用偶发闪退。本轮先修正可从源码确认的两个高风险点；闪退根因仍需结合设备崩溃日志确认，不能仅凭代码推断已经彻底解决。
+- `ColorPaletteScreenMaterial.kt`：圆角比例滑条范围保持 0.0–2.0，但将离散的 39 steps 改为连续滑动（`steps = 0`），消除每 0.05 一档的跳变。数值仍在拖动结束时持久化，避免拖动期间每一帧都写入设置存储。
+- `SegmentedList.kt`：原非 Wavy 轮廓缓存属于每个 `VoyagePathShape` 实例；圆角比例变化时，新的 Shape 实例无法复用其他列表行已经生成的同尺寸轮廓，导致重复创建 Path。现改为所有 VoyagePathShape 样式共用一个有上限的 768 项 LRU 缓存，并在缓存锁外生成轮廓，减少滑动调节时的重复分配和锁竞争。Wavy 形状仍按 0.5dp 桶复用，其他形状保留精确圆角值以避免新增可见阶梯。
+- 产品提交：`90411e4a1b427289f86e40cb95540611d5373ade`（轮廓缓存优化）；`ef296aeaf6c99528a578099c00b71cac1c429cca`（圆角比例连续滑动）。仅在 `test/voyage-theme-1to1-20261026`，未修改/合并 `main`。
+- 验证边界：源码已提交，必须继续检查最新 HEAD 的 CI 构建结果。还需在设备上反复拖动 0.0–2.0 圆角比例、切换 Wavy/Smooth 等形状并观察帧率；若仍闪退，应收集 Android 崩溃堆栈（FATAL EXCEPTION / native crash）以确定具体根因。当前不能声称闪退已彻底修复，也没有新的已验收 APK。
