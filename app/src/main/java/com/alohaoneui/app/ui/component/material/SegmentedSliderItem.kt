@@ -310,8 +310,11 @@ internal fun VoyageSliderTrack(
         Modifier
             .fillMaxWidth()
             .height(height)
-            .then(if (style == 3) Modifier.background(containerColor, trackShape) else Modifier)
+            // Elevation belongs to the back layer: draw its shadow first, then
+            // paint the container surface over it. Putting shadow() after
+            // background() made the HyperOS rail shadow appear above its tint.
             .then(if (shadowEnabled && style == 3) Modifier.shadow(2.dp, trackShape, clip = false) else Modifier)
+            .then(if (style == 3) Modifier.background(containerColor, trackShape) else Modifier)
     ) {
         val h = size.height
         val y = h / 2f
