@@ -785,3 +785,15 @@
 
 - 产品源码提交 `33bb43a92b39544e443e77c7a6a71660e2138e76`：Material You 的已通过刻度点使用 `onTertiary`，确保刻度点与第三色进度轨道有正确对比；未通过刻度继续使用低透明度的 `onSurfaceVariant`。
 - 此提交只在测试分支；CI 需以最新 HEAD 重新构建。真机验收仍待完成。
+
+
+## 2026-10-27 — 按 Voyage Toolbox 录屏逐帧重做四种滑条
+
+- 用户明确说明 `Screen_Recording_20261027_171519_Voyage Toolbox.mp4` 是 Voyage 正确效果的参考录像，不是问题演示。本轮按录像逐帧查看四种滑条的切换与拖动过程，依据画面分别重做 Material You、灵动/Fancy、Material 2、HyperOS 四个分支；不再把 Material You 直接等同于系统默认的 4dp Material 3 细线滑条。
+- Material You（style 0）：录屏中是带圆角的较厚胶囊轨道，已选进度与未选轨道颜色不同，轨道内有刻度点，当前值由一条窄的竖向标记指示；本轮轨道高度调整为 16dp，进度使用主题 secondary，未选部分使用 tertiaryContainer，标记使用 primary，已选/未选刻度分别反白与主题 primary。轨道与外层容器的阴影都由背景层先绘制，之后才绘制轨道/进度，避免阴影浮在进度色上。
+- 灵动/Fancy（style 1）：录屏显示固定浅灰色完整底轨、柔和薄荷色进度、主色不规则形状滑块及外侧薄荷色光环；轨道高度调整为 28dp，进度使用 secondaryContainer，滑块核心和已选刻度使用 primary，未选刻度为浅色。保留滑块随进度旋转的方向修正。
+- Material 2（style 2）：录屏显示独立的细轨道、主色圆形滑块与主色刻度，外层保留圆角容器；轨道高度调整为 6dp，进度使用 tertiary，滑块使用 primary。
+- HyperOS（style 3）：录屏显示较厚的圆角整轨、主题色进度和刻度，不单独显示滑块；轨道高度调整为 24dp，进度使用 secondary，未选轨道使用 tertiaryContainer。
+- 四种样式共用的 `voyageSliderAppearance`、`VoyageSliderThumb`、`VoyageSliderTrack` 和容器 modifier 已同步修改，因此设置列表预览与通用 `AlohaOneUISlider` 入口会使用同一套四分支绘制。通用入口原有 `LocalMaterialShadowSliders` 传递保留。
+- 产品源码提交：`5b279fd6ff1acc10bdc43fe07643037fcd5279c5`，只提交至 `test/voyage-theme-1to1-20261026`，没有修改或合并 `main`。
+- 验证边界：本轮已按录屏重做绘制分支并推送源码，但仍需确认最新 HEAD 的 CI 编译与 APK artifact；编译成功后还需要在设备上对照四种样式、拖动位置、主题色切换和阴影层级。未完成这些验证前不宣称已达到 1:1。
