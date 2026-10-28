@@ -322,21 +322,17 @@ internal fun VoyageSliderTrack(
 
         when (style) {
             0 -> {
-                // Material You: stock Material 3 line track (4dp) with round caps.
-                drawLine(inactiveColor, start, end, trackThickness, StrokeCap.Round)
+                // Material You: keep the progress accent only. The large outer
+                // themed surface is the background; do not paint a second,
+                // smaller inactive rail over it.
                 if (fraction > 0f) {
                     drawLine(activeColor, start, Offset(size.width * fraction, y), trackThickness, StrokeCap.Round)
                 }
             }
             1 -> {
-                // Fancy: source FancyTrack uses a 38dp capsule and extends each
-                // segment by the cap radius so the fill reaches the thumb center.
-                drawRoundRect(
-                    color = inactiveColor,
-                    topLeft = Offset(0f, 0f),
-                    size = Size(size.width, h),
-                    cornerRadius = CornerRadius(h / 2f, h / 2f),
-                )
+                // Fancy: draw only the active capsule over the large themed
+                // container. The inactive capsule would create an unwanted
+                // second background layer inside the slider.
                 val activeWidth = (size.width * fraction + h / 2f).coerceAtMost(size.width + h / 2f)
                 if (fraction > 0f) {
                     drawRoundRect(
@@ -348,16 +344,15 @@ internal fun VoyageSliderTrack(
                 }
             }
             2 -> {
-                // Material 2: source M2Slider uses a 4dp custom track.
-                drawLine(inactiveColor, start, end, trackThickness, StrokeCap.Round)
+                // Material 2: progress only; let the large outer surface show
+                // through instead of drawing a second inactive rail.
                 if (fraction > 0f) {
                     drawLine(activeColor, start, Offset(size.width * fraction, y), trackThickness, StrokeCap.Round)
                 }
             }
             else -> {
-                // HyperOS: source HyperOSSlider uses a 30dp track with Butt caps
-                // and no visible thumb, giving the track its own broad silhouette.
-                drawLine(inactiveColor, start, end, trackThickness, cap)
+                // HyperOS: the wide 30dp container is the background surface.
+                // Do not overlay a second inactive-colored rail inside it.
                 if (fraction > 0f) {
                     drawLine(activeColor, start, Offset(size.width * fraction, y), trackThickness, cap)
                 }
