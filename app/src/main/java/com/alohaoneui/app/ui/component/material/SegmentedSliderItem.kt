@@ -79,14 +79,14 @@ internal fun voyageSliderAppearance(requestedStyle: Int): VoyageSliderAppearance
     // independent roles so theme changes propagate without making them identical.
     val active = when (style) {
         0 -> scheme.secondary                 // Material You: filled segment
-        1 -> scheme.secondaryContainer        // Fancy: soft mint progress
+        1 -> scheme.secondary                 // Fancy: theme-linked secondary progress
         2 -> scheme.tertiary                 // Material 2: thin accent line
         else -> scheme.secondary             // HyperOS: filled thick segment
     }
     val thumb = scheme.primary
     val inactive = when (style) {
         0 -> scheme.tertiaryContainer        // Material You: tinted inactive rail
-        1 -> Color(0xFFD9D9D9)              // Fancy: fixed light-gray rail
+        1 -> scheme.surfaceContainerHighest // Fancy: theme-linked neutral rail
         2 -> scheme.tertiaryContainer        // Material 2: fine tinted rail
         else -> scheme.tertiaryContainer    // HyperOS: tinted inactive rail
     }
@@ -293,7 +293,7 @@ internal fun VoyageSliderThumb(
                     Modifier
                         .size(32.dp)
                         .clip(voyageCornerShape(16.dp))
-                        .background(MaterialTheme.colorScheme.secondary),
+                        .background(MaterialTheme.colorScheme.secondaryContainer),
                 )
                 Box(
                     Modifier
@@ -337,7 +337,7 @@ internal fun VoyageSliderTrack(
     }
     val futureTickColor = when (style) {
         0 -> scheme.primary
-        1 -> Color.White.copy(alpha = 0.90f)
+        1 -> scheme.onSurface.copy(alpha = 0.90f)
         2 -> scheme.primary
         else -> scheme.primary
     }
@@ -386,7 +386,7 @@ internal fun VoyageSliderTrack(
                 // Fancy: fixed light-gray full rail, softer secondary-container
                 // progress, primary shaped thumb, and primary ticks on the fill.
                 drawRoundRect(
-                    color = Color(0xFFD9D9D9),
+                    color = scheme.surfaceContainerHighest,
                     topLeft = Offset.Zero,
                     size = Size(size.width, h),
                     cornerRadius = CornerRadius(h / 2f, h / 2f),
@@ -445,10 +445,10 @@ internal fun VoyageSliderTrack(
                 val tickX = size.width * tickFraction
                 val passed = tickFraction <= fraction
                 val color = when (style) {
-                    0 -> if (passed) Color.White else scheme.primary
-                    1 -> if (passed) scheme.primary else Color.White.copy(alpha = 0.90f)
+                    0 -> if (passed) scheme.onSecondary else scheme.primary
+                    1 -> if (passed) scheme.primary else scheme.onSurface.copy(alpha = 0.90f)
                     2 -> scheme.primary
-                    else -> if (passed) Color.White else scheme.primary
+                    else -> if (passed) scheme.onSecondary else scheme.primary
                 }
                 drawCircle(
                     color = color,
