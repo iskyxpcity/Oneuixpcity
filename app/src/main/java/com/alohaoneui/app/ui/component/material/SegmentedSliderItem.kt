@@ -91,7 +91,7 @@ internal fun voyageSliderAppearance(requestedStyle: Int): VoyageSliderAppearance
         1 -> 38.dp // FancyTrack source
         2 -> 4.dp  // M2Slider source
         3 -> 30.dp // HyperOSSlider source
-        else -> 4.dp // Material 3 default track
+        else -> 16.dp // Material You: 4x the previous 4dp rail
     }
     return VoyageSliderAppearance(
         style = style,
