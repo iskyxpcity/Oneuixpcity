@@ -46,8 +46,10 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.withTransform
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import com.alohaoneui.app.ui.theme.LocalMaterialSliderStyle
@@ -109,7 +111,7 @@ internal fun voyageSliderAppearance(requestedStyle: Int): VoyageSliderAppearance
     }
     val trackHeight = when (style) {
         0 -> 16.dp                           // Material You pill track + marker
-        1 -> 40.dp                           // Fancy rail expanded by 12dp total
+        1 -> 38.dp                           // Fancy rail reduced by 2dp; progress remains 36dp
         2 -> 6.dp                            // Material 2 fine rail
         else -> 24.dp                        // HyperOS thick rail
     }
@@ -373,18 +375,40 @@ internal fun VoyageSliderTrack(
     } else 0f
     val trackShape = voyageCornerShape(height / 2f)
     val fancyProgressShape = if (style == 1) voyageCornerShape(18.dp) else trackShape
-    Canvas(
-        Modifier
-            .fillMaxWidth()
-            .height(height)
-            // Elevation is cast by the rail's back layer; Canvas paints every
-            // active/inactive surface afterward, so the shadow cannot sit above it.
-            .then(if (shadowEnabled) Modifier.shadow(2.dp, trackShape, clip = false) else Modifier)
-    ) {
+    val fancyExtension = if (style == 1) thumbWidth / 2f + 10.dp else 0.dp
+    val trackModifier = Modifier
+        .then(
+            if (style == 1) {
+                Modifier.layout { measurable, constraints ->
+                    val extensionPx = fancyExtension.roundToPx()
+                    val horizontalExtension = extensionPx * 2
+                    val expandedConstraints = constraints.copy(
+                        minWidth = constraints.minWidth + horizontalExtension,
+                        maxWidth = if (constraints.hasBoundedWidth) {
+                            constraints.maxWidth + horizontalExtension
+                        } else {
+                            Constraints.Infinity
+                        },
+                    )
+                    val placeable = measurable.measure(expandedConstraints)
+                    layout(placeable.width - horizontalExtension, placeable.height) {
+                        placeable.place(-extensionPx, 0)
+                    }
+                }
+            } else {
+                Modifier
+            },
+        )
+        .fillMaxWidth()
+        .height(height)
+        .then(if (shadowEnabled) Modifier.shadow(2.dp, trackShape, clip = false) else Modifier)
+    Canvas(trackModifier) {
         val h = size.height
         val y = h / 2f
         val cap = StrokeCap.Round
-        val activeWidth = (size.width * fraction).coerceIn(0f, size.width)
+        val extension = fancyExtension.toPx()
+        val baseTrackWidth = (size.width - extension * 2f).coerceAtLeast(0f)
+        val activeWidth = (baseTrackWidth * fraction).coerceIn(0f, baseTrackWidth)
 
         when (style) {
             0 -> {
@@ -414,33 +438,27 @@ internal fun VoyageSliderTrack(
                 // Fancy: the rail begins 22dp before the thumb-center range.
                 // The shaped core is offset left by 4dp, so this leaves exactly
                 // 6dp between the left rail edge and the core at fraction zero.
-                val extension = thumbWidth.toPx() / 2f + 10.dp.toPx()
-                val fullRailSize = Size(size.width + extension * 2f, h)
                 val fullRailOutline = trackShape.createOutline(
-                    size = fullRailSize,
+                    size = Size(size.width, h),
                     layoutDirection = layoutDirection,
                     density = this,
                 )
-                withTransform({ translate(left = -extension, top = 0f) }) {
-                    drawVoyageOutline(fullRailOutline, scheme.surfaceContainerHighest)
-                    // The core is 24dp square and shifted left by 4dp. The
-                    // progress pill is 36dp high and ends 6dp beyond the core's
-                    // right edge, giving 6dp of progress color on all four sides.
-                    val progressWidth = (size.width * fraction + thumbWidth.toPx() / 2f + 2.dp.toPx())
-                        .coerceIn(0f, size.width + extension)
-                    val progressHeight = (h - 4.dp.toPx()).coerceAtLeast(0f)
-                    if (progressWidth > 0f && progressHeight > 0f) {
-                        val progressShape = fancyProgressShape
-                        val progressOutline = progressShape.createOutline(
-                            size = Size(progressWidth + extension, progressHeight),
-                            layoutDirection = layoutDirection,
-                            density = this,
-                        )
-                        withTransform({
-                            translate(top = (h - progressHeight) / 2f)
-                        }) {
-                            drawVoyageOutline(progressOutline, activeColor)
-                        }
+                drawVoyageOutline(fullRailOutline, scheme.surfaceContainerHighest)
+                val progressWidth = (
+                    baseTrackWidth * fraction + thumbWidth.toPx() / 2f +
+                        2.dp.toPx() + extension
+                    ).coerceIn(0f, size.width)
+                val progressHeight = 36.dp.toPx().coerceAtMost(h)
+                if (progressWidth > 0f && progressHeight > 0f) {
+                    val progressOutline = fancyProgressShape.createOutline(
+                        size = Size(progressWidth, progressHeight),
+                        layoutDirection = layoutDirection,
+                        density = this,
+                    )
+                    withTransform({
+                        translate(top = (h - progressHeight) / 2f)
+                    }) {
+                        drawVoyageOutline(progressOutline, activeColor)
                     }
                 }
             }
@@ -487,7 +505,11 @@ internal fun VoyageSliderTrack(
         val tickIntervals = if (steps > 0) steps + 1 else 20
         for (i in 0..tickIntervals) {
                 val tickFraction = i.toFloat() / tickIntervals
-                val tickX = size.width * tickFraction
+                val tickX = if (style == 1) {
+                    extension + baseTrackWidth * tickFraction
+                } else {
+                    size.width * tickFraction
+                }
                 val passed = tickFraction <= fraction
                 val color = when (style) {
                     0 -> if (passed) scheme.onSecondary else scheme.primary
