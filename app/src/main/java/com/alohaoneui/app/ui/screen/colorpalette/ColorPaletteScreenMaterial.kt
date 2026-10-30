@@ -73,6 +73,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SegmentedListItem
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
@@ -418,23 +419,27 @@ fun ColorPaletteScreenMaterial(
                     var showPageScaleValueDialog by remember { mutableStateOf(false) }
                     var pageScaleInput by remember { mutableStateOf("") }
 
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
+                    SegmentedListItem(
+                        leadingContent = {
                             Icon(
                                 Icons.Rounded.AspectRatio,
                                 contentDescription = stringResource(id = R.string.settings_page_scale),
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
-                            Spacer(modifier = Modifier.width(12.dp))
+                        },
+                        headlineContent = {
                             Column(
-                                modifier = Modifier.weight(1f)
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 8.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp),
                             ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    Column(
+                                        modifier = Modifier.weight(1f)
+                                    ) {
                                 Text(
                                     text = stringResource(R.string.settings_page_scale),
                                     style = MaterialTheme.typography.titleMedium,
@@ -472,14 +477,16 @@ fun ColorPaletteScreenMaterial(
                             }
                         }
 
-                        AlohaOneUISlider(
-                            value = sliderValue,
-                            onValueChange = { sliderValue = it },
-                            onValueChangeFinished = { actions.onSetPageScale(sliderValue) },
-                            valueRange = 0.8f..1.1f,
-                            modifier = Modifier.fillMaxWidth(),
-                        )
-                    }
+                                AlohaOneUISlider(
+                                    value = sliderValue,
+                                    onValueChange = { sliderValue = it },
+                                    onValueChangeFinished = { actions.onSetPageScale(sliderValue) },
+                                    valueRange = 0.8f..1.1f,
+                                    modifier = Modifier.fillMaxWidth(),
+                                )
+                            }
+                        },
+                    )
 
                     if (showPageScaleValueDialog) {
                         ExpressiveContentDialog(
