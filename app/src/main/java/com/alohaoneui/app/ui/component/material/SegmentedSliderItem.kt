@@ -448,7 +448,7 @@ internal fun VoyageSliderTrack(
                     baseTrackWidth * fraction + thumbWidth.toPx() / 2f +
                         2.dp.toPx() + extension
                     ).coerceIn(0f, size.width)
-                val progressHeight = 36.dp.toPx().coerceAtMost(h)
+                val progressHeight = 38.dp.toPx().coerceAtMost(h)
                 if (progressWidth > 0f && progressHeight > 0f) {
                     val progressOutline = fancyProgressShape.createOutline(
                         size = Size(progressWidth, progressHeight),
