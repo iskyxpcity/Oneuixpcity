@@ -322,7 +322,7 @@ internal fun VoyageSliderThumb(
                 Box(
                     Modifier
                         .size(width = size.width, height = size.height)
-                        .offset(x = 0.dp)
+                        .offset(x = 2.dp)
                         .then(Modifier.rotate(-1080f * valueFraction))
                         .clip(thumbShape)
                         .background(MaterialTheme.colorScheme.primary),
@@ -446,7 +446,7 @@ internal fun VoyageSliderTrack(
                 drawVoyageOutline(fullRailOutline, scheme.surfaceContainerHighest)
                 val progressWidth = (
                     baseTrackWidth * fraction + thumbWidth.toPx() / 2f +
-                        2.dp.toPx() + extension
+                        8.dp.toPx() + extension
                     ).coerceIn(0f, size.width)
                 val progressHeight = 38.dp.toPx().coerceAtMost(h)
                 if (progressWidth > 0f && progressHeight > 0f) {
@@ -455,14 +455,8 @@ internal fun VoyageSliderTrack(
                         layoutDirection = layoutDirection,
                         density = this,
                     )
-                    // Resolve dp in DrawScope before entering DrawTransform,
-                    // whose receiver does not provide Density.toPx().
-                    val progressOffsetX = 4.dp.toPx()
                     withTransform({
-                        translate(
-                            left = progressOffsetX,
-                            top = (h - progressHeight) / 2f,
-                        )
+                        translate(top = (h - progressHeight) / 2f)
                     }) {
                         drawVoyageOutline(progressOutline, activeColor)
                     }
