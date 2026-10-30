@@ -907,7 +907,8 @@ private class VoyagePathShape(
             amplitude: Float,
         ) {
             val steps = kotlin.math.ceil(length / wavePeriod).toInt().coerceAtLeast(1)
-            for (index in 1..steps) {
+            val firstIndex = if (started) 1 else 0
+            for (index in firstIndex..steps) {
                 val fraction = index.toFloat() / steps
                 appendWavePoint(
                     x = startX + (endX - startX) * fraction,
@@ -918,6 +919,8 @@ private class VoyagePathShape(
                     amplitude = amplitude,
                 )
             }
+            // wgo0.lO() advances the shared phase by the straight-edge length.
+            phaseOffset += length
         }
 
         fun appendWaveArc(
@@ -928,7 +931,8 @@ private class VoyagePathShape(
         ) {
             val arcLength = quarterTurn * radius
             val steps = kotlin.math.ceil(arcLength / wavePeriod).toInt().coerceAtLeast(1)
-            for (index in 1..steps) {
+            val firstIndex = if (started) 1 else 0
+            for (index in firstIndex..steps) {
                 val fraction = index.toFloat() / steps
                 val angle = startAngle + quarterTurn * fraction
                 val normalX = kotlin.math.cos(angle.toDouble()).toFloat()
@@ -942,8 +946,7 @@ private class VoyagePathShape(
                     amplitude = waveAmplitude,
                 )
             }
-            // wgo0.lI() advances the phase after each quarter-circle. Its
-            // straight-edge sampler intentionally starts from that corner phase.
+            // wgo0.lI() advances the shared phase by each quarter-circle arc.
             phaseOffset += arcLength
         }
 
