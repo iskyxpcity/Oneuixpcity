@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -304,17 +303,17 @@ internal fun VoyageSliderThumb(
             // shaped core. The selected shape still follows Voyage's shared
             // shape setting and rotates in the source direction while dragging.
             Box(
-                // Keep the halo's full 44dp width, clipping only vertically
-                // to the 40dp rail so the circular glow is not squeezed sideways.
+                // Extend the thumb's visual/hit region by 6dp in width without
+                // translating its center; the core remains centered in this slot.
                 modifier = Modifier
-                    .size(width = 44.dp, height = 40.dp)
+                    .size(width = 50.dp, height = 40.dp)
                     .clipToBounds(),
                 contentAlignment = androidx.compose.ui.Alignment.Center,
             ) {
                 if (haloVisible) {
                     Box(
                         Modifier
-                            .size(44.dp)
+                            .size(50.dp)
                             .clip(CircleShape)
                             .background(MaterialTheme.colorScheme.tertiary.copy(alpha = 0.24f)),
                     )
@@ -322,7 +321,6 @@ internal fun VoyageSliderThumb(
                 Box(
                     Modifier
                         .size(width = size.width, height = size.height)
-                        .offset(x = 2.dp)
                         .then(Modifier.rotate(-1080f * valueFraction))
                         .clip(thumbShape)
                         .background(MaterialTheme.colorScheme.primary),
@@ -436,8 +434,8 @@ internal fun VoyageSliderTrack(
             }
             1 -> {
                 // Fancy: the rail begins 22dp before the thumb-center range.
-                // The shaped core is offset left by 4dp, so this leaves exactly
-                // 6dp between the left rail edge and the core at fraction zero.
+                // The thumb slot itself is widened independently; its center is
+                // not translated when the active segment receives its extra 6dp.
                 val fullRailOutline = trackShape.createOutline(
                     size = Size(size.width, h),
                     layoutDirection = layoutDirection,
