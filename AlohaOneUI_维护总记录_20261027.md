@@ -1120,3 +1120,12 @@
 - 动效通过 `graphicsLayer` 实现，不改变布局测量尺寸；只对启用状态的列表项生效。未启用项仍维持原有半透明显示，不触发按压脉冲。原有主题 Shape、按压/选择轮廓、主题颜色和点击/长按回调均保留。
 - 本次产品源码提交：`086f811a897cb714e5ac9a84adfccd0754dc4d6f`，文件：`app/src/main/java/com/alohaoneui/app/ui/component/material/SegmentedList.kt`。仅修改测试分支 `test/voyage-theme-1to1-20261026`，未修改或合并 `main`。
 - 验证状态：源码已提交；仍需检查 Actions Kotlin 编译与 APK 签名/Artifact，并在真机分别验证轻触、长按、快速连续点击时的放大回弹观感和触控响应。当前不宣称构建或真机动效验收通过。
+
+
+## 2026-10-30｜更正详情列表卡片按压动效：按住持续放大，松手后缩回
+
+- 用户进一步明确交互语义：动效作用对象是整张卡片；按下（包括轻触和长按）时卡片扩大，并在手指持续按住期间保持扩大；松手或触摸取消时才缩回原始大小。此前“按下后自动扩大再缩回、即使仍按住也缩回”的脉冲实现不符合要求，本条更正并取代上一节的脉冲行为描述。
+- 已将 `alohaPressPulse()` 改为 `alohaPressScale()`：直接通过同一 `MutableInteractionSource` 的 `collectIsPressedAsState()` 取得真实按压状态，以 `animateFloatAsState` 将卡片整体 scale 在 1.0 与 1.035 之间平滑过渡。按压状态为 true 时保持 1.035；收到 Release 或 Cancel 后状态恢复 false，动画缩回 1.0。
+- 三种详情列表项重载（普通点击/长按、复选、单选）仍使用各自传给 Material 3 行组件的同一个交互源；未启用项不触发放大。Shape、阴影、描边及主题颜色逻辑未改动。
+- 产品源码修正提交：`2b04ab8d1ed7afba96d8f0828d07c1c3199faeb3`，文件：`app/src/main/java/com/alohaoneui/app/ui/component/material/SegmentedList.kt`。仅提交至 `test/voyage-theme-1to1-20261026`，未修改或合并 `main`。
+- 验证状态：源码更新已提交；Kotlin 编译、GitHub Actions 构建、APK 签名/Artifact 与真机按下保持放大、松手缩回验收尚未完成，不将本次修改视为已构建或真机验收通过。
