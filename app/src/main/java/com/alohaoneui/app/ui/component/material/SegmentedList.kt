@@ -8,6 +8,7 @@ import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateListOf
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collect
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -687,11 +688,11 @@ private fun MutableInteractionSource.collectIsPressedWithMinimumDuration(
         interactions.collect { interaction ->
             when (interaction) {
                 is PressInteraction.Press -> activePresses.add(interaction)
-                is PressInteraction.Release -> {
+                is PressInteraction.Release -> launch {
                     delay(minimumPressedMillis)
                     activePresses.remove(interaction.press)
                 }
-                is PressInteraction.Cancel -> {
+                is PressInteraction.Cancel -> launch {
                     delay(minimumPressedMillis)
                     activePresses.remove(interaction.press)
                 }
