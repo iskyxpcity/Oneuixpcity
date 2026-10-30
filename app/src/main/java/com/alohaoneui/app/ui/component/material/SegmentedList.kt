@@ -761,7 +761,7 @@ fun SegmentedListItem(
                 Modifier.border(it.dp, colorScheme.outlineVariant, outlineShape)
             } ?: Modifier
         )
-        .then(if (enabled) Modifier.alohaPressPulse(resolvedInteractionSource) else Modifier.alpha(0.5f))
+        .then(if (enabled) Modifier.alohaPressScale(resolvedInteractionSource) else Modifier.alpha(0.5f))
     SegmentedListItem(
         checked = checked,
         onCheckedChange = onCheckedChange,
@@ -811,7 +811,7 @@ fun SegmentedListItem(
                 Modifier.border(it.dp, colorScheme.outlineVariant, outlineShape)
             } ?: Modifier
         )
-        .then(if (enabled) Modifier.alohaPressPulse(resolvedInteractionSource) else Modifier.alpha(0.5f))
+        .then(if (enabled) Modifier.alohaPressScale(resolvedInteractionSource) else Modifier.alpha(0.5f))
     SegmentedListItem(
         selected = selected,
         onClick = onClick,
