@@ -194,6 +194,7 @@ fun SegmentedSliderItem(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 2.dp),
+                verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp),
             ) {
                 if (!title.isNullOrEmpty()) {
                     if (titleTrailingContent == null) {
