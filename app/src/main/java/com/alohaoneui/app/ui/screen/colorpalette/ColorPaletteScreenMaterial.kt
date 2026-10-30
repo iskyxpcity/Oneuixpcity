@@ -120,7 +120,7 @@ import com.alohaoneui.app.ui.component.material.SegmentedChoiceOptionsItem
 import com.alohaoneui.app.ui.component.material.SegmentedSwitchItem
 import com.alohaoneui.app.ui.component.material.SegmentedSliderItem
 import com.alohaoneui.mod.ui.component.AlohaOneUISlider
-import com.alohaoneui.app.ui.component.material.TonalCard
+import com.alohaoneui.app.ui.component.material.SegmentedOptionFrame
 import com.alohaoneui.app.ui.component.material.voyageSegmentedShape
 import com.alohaoneui.app.ui.component.material.voyageCornerShape
 import com.alohaoneui.app.ui.component.material.iconShapeForStyle
@@ -418,13 +418,9 @@ fun ColorPaletteScreenMaterial(
                     var showPageScaleValueDialog by remember { mutableStateOf(false) }
                     var pageScaleInput by remember { mutableStateOf("") }
 
-                    TonalCard(
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
+                    SegmentedOptionFrame {
                         Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
+                            modifier = Modifier.fillMaxWidth(),
                             verticalArrangement = Arrangement.spacedBy(8.dp),
                         ) {
                             Row(
