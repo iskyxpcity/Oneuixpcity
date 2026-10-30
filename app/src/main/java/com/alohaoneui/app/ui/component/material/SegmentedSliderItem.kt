@@ -322,7 +322,7 @@ internal fun VoyageSliderThumb(
                 Box(
                     Modifier
                         .size(width = size.width, height = size.height)
-                        .offset(x = (-4).dp)
+                        .offset(x = 0.dp)
                         .then(Modifier.rotate(-1080f * valueFraction))
                         .clip(thumbShape)
                         .background(MaterialTheme.colorScheme.primary),
@@ -456,7 +456,10 @@ internal fun VoyageSliderTrack(
                         density = this,
                     )
                     withTransform({
-                        translate(top = (h - progressHeight) / 2f)
+                        translate(
+                            left = 4.dp.toPx(),
+                            top = (h - progressHeight) / 2f,
+                        )
                     }) {
                         drawVoyageOutline(progressOutline, activeColor)
                     }
