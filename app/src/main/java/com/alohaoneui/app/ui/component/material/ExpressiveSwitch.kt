@@ -101,56 +101,73 @@ fun ExpressiveSwitch(
     // 2 it70.m103876l = 56x28; 3 ckw0.m9293l = 48x24;
     // 4 rdf.m127934l = 51x31; 5 rdf.m127933O -> m127932I = 64x28;
     // 6 y2t0.m144445l = 50x28.5; 7 l140.m110104l = 39x22.
+    // Voyage source track bounds. Styles 4 and 7 have a larger outer slot;
+    // their actual painted tracks remain the smaller inner dimensions.
     val trackSize = when (style) {
-        2 -> DpSize(60.dp, 24.dp)
-        3 -> DpSize(52.dp, 20.dp)
-        4 -> DpSize(55.dp, 27.dp)
-        5 -> DpSize(68.dp, 24.dp)
-        6 -> DpSize(54.dp, 24.5.dp)
-        7 -> DpSize(43.dp, 18.dp)
-        0 -> DpSize(52.dp, 32.dp)
-        else -> DpSize(56.dp, 28.dp)
+        0, 1 -> DpSize(52.dp, 32.dp)
+        2 -> DpSize(56.dp, 28.dp)
+        3 -> DpSize(48.dp, 24.dp)
+        4 -> DpSize(48.dp, 28.dp)
+        5 -> DpSize(64.dp, 28.dp)
+        6 -> DpSize(50.dp, 28.5.dp)
+        7 -> DpSize(35.dp, 18.5.dp)
+        else -> DpSize(52.dp, 32.dp)
+    }
+    val slotSize = when (style) {
+        4 -> DpSize(51.dp, 31.dp)
+        7 -> DpSize(39.dp, 22.dp)
+        else -> trackSize
     }
     // Preserve source interaction-state distinctions, while giving the visible
     // thumb a fuller capsule silhouette that occupies about 65% of track width.
+    // Source thumb diameters by Voyage renderer state:
+    // z4v0/frt0 16/24/28; it70 20; ckw0 12/14/17;
+    // rdf.l 20; rdf.I 24; y2t0 20/23/26; l140 14/16/18.
     val sourceThumbDiameter = when (style) {
-        0 -> when {
+        0, 1 -> when {
             pressed -> 28.dp
-            checked -> 24.dp
-            else -> 16.dp
-        }
-        1 -> when {
-            pressed -> 28.dp
-            checked || thumbContent != null -> 24.dp
+            checked || (style == 1 && thumbContent != null) -> 24.dp
             else -> 16.dp
         }
         2 -> 20.dp
-        3 -> if (enabled && pressedOrHovered) 17.dp else 12.dp
-        4, 5 -> 20.dp
-        6 -> if (enabled && interactive) 23.dp else 20.dp
-        7 -> 22.dp
+        3 -> when {
+            enabled && pressedOrHovered -> 17.dp
+            checked -> 14.dp
+            else -> 12.dp
+        }
+        4 -> 20.dp
+        5 -> 24.dp
+        6 -> when {
+            enabled && pressedOrHovered -> 26.dp
+            checked -> 23.dp
+            else -> 20.dp
+        }
+        7 -> when {
+            enabled && pressedOrHovered -> 18.dp
+            checked -> 16.dp
+            else -> 14.dp
+        }
         else -> 20.dp
     }
-    val thumbWidth = when (style) {
-        // Material You follows the official M3 circular handle states.
-        0 -> sourceThumbDiameter
-        1, 5 -> minOf(trackSize.width * 0.70f, trackSize.width)
-        2, 6 -> minOf(trackSize.width * 0.62f, trackSize.width)
-        3 -> minOf(trackSize.width * 0.58f, trackSize.width)
-        else -> minOf(trackSize.width * 0.65f, trackSize.width)
-    }
-    // Keep a small, even horizontal inset at both switch ends and let the
-    // thumb fill 90% of the track height, as requested.
-    val thumbHeight = if (style == 0) sourceThumbDiameter else trackSize.height * 0.85f
-    val thumbEdgeInset = 1.5.dp
+    // These source renderers use circular thumb diameters, not a width derived
+    // from a percentage of the track. Style 7 retains its 22dp outer thumb slot.
+    val thumbWidth = sourceThumbDiameter
+    val thumbHeight = sourceThumbDiameter
+    val thumbSlotWidth = if (style == 7) 22.dp else sourceThumbDiameter + 3.dp
+    val thumbSlotHeight = if (style == 7) 22.dp else sourceThumbDiameter + 3.dp
     val trackCornerRadius = when (style) {
         2 -> 14.dp
         3 -> 4.dp
-        4 -> 15.5.dp
+        4 -> 14.dp
         5 -> 14.dp
         6 -> 14.25.dp
-        7 -> 11.dp
+        7 -> 9.25.dp
         else -> 16.dp
+    }
+    val slotCornerRadius = when (style) {
+        4 -> 15.5.dp
+        7 -> 11.dp
+        else -> trackCornerRadius
     }
     val travel by animateFloatAsState(
         targetValue = if (checked) 1f else 0f,
@@ -166,6 +183,11 @@ fun ExpressiveSwitch(
     } else {
         voyageCornerShape(trackCornerRadius)
     }
+    val slotShape = if (com.alohaoneui.app.ui.theme.LocalMaterialShapeStyle.current == 3) {
+        remember(slotCornerRadius) { RoundedCornerShape(slotCornerRadius) }
+    } else {
+        voyageCornerShape(slotCornerRadius)
+    }
     val thumbShape = if (com.alohaoneui.app.ui.theme.LocalMaterialShapeStyle.current == 3) {
         remember(thumbHeight) { RoundedCornerShape(thumbHeight / 2f) }
     } else {
@@ -176,11 +198,16 @@ fun ExpressiveSwitch(
     } else {
         voyageCornerShape(thumbHeight / 2f + 2.dp)
     }
+    val thumbSlotShape = if (com.alohaoneui.app.ui.theme.LocalMaterialShapeStyle.current == 3) {
+        remember(thumbSlotHeight) { RoundedCornerShape(thumbSlotHeight / 2f) }
+    } else {
+        voyageCornerShape(thumbSlotHeight / 2f)
+    }
     val borderWidth = LocalMaterialOutlineWidth.current
     Box(
         modifier = modifier
-            .size(width = trackSize.width, height = trackSize.height)
-            .then(if (LocalMaterialShadowSwitches.current) Modifier.shadow(2.dp, trackShape) else Modifier)
+            .size(width = slotSize.width, height = slotSize.height)
+            .then(if (LocalMaterialShadowSwitches.current) Modifier.shadow(2.dp, slotShape) else Modifier)
             .toggleable(
                 value = checked,
                 enabled = enabled && onCheckedChange != null,
@@ -195,6 +222,10 @@ fun ExpressiveSwitch(
         Canvas(Modifier.fillMaxSize()) {
             val w = size.width
             val h = size.height
+            val trackWidthPx = trackSize.width.toPx()
+            val trackHeightPx = trackSize.height.toPx()
+            val trackLeft = (w - trackWidthPx) / 2f
+            val trackTop = (h - trackHeightPx) / 2f
             val trackColor = if (enabled) {
                 if (checked) checkedTrack else uncheckedTrack
             } else if (style == 0) {
@@ -205,28 +236,30 @@ fun ExpressiveSwitch(
             // The actual outline, not a hard-coded rounded rectangle, keeps the
             // global Voyage shape family and corner scale linked to each style.
             val trackOutline = trackShape.createOutline(
-                size = Size(w, h),
+                size = Size(trackWidthPx, trackHeightPx),
                 layoutDirection = layoutDirection,
                 density = this,
             )
-            if (style == 5) {
-                drawVoyageGlassOutline(
-                    outline = trackOutline,
-                    bounds = Size(w, h),
-                    tint = trackColor,
-                    alpha = if (checked) 0.78f else 0.56f,
-                )
-            } else {
-                drawVoyageOutline(trackOutline, trackColor)
+            withTransform({ translate(trackLeft, trackTop) }) {
+                if (style == 5) {
+                    drawVoyageGlassOutline(
+                        outline = trackOutline,
+                        bounds = Size(trackWidthPx, trackHeightPx),
+                        tint = trackColor,
+                        alpha = if (checked) 0.78f else 0.56f,
+                    )
+                } else {
+                    drawVoyageOutline(trackOutline, trackColor)
+                }
             }
             val borderPx = borderWidth.dp.toPx()
             if (borderPx > 0f) {
                 val borderOutline = trackShape.createOutline(
-                    size = Size((w - borderPx).coerceAtLeast(0f), (h - borderPx).coerceAtLeast(0f)),
+                    size = Size((trackWidthPx - borderPx).coerceAtLeast(0f), (trackHeightPx - borderPx).coerceAtLeast(0f)),
                     layoutDirection = layoutDirection,
                     density = this,
                 )
-                withTransform({ translate(borderPx / 2f, borderPx / 2f) }) {
+                withTransform({ translate(trackLeft + borderPx / 2f, trackTop + borderPx / 2f) }) {
                     drawVoyageOutline(
                         borderOutline,
                         (if (checked) checkedBorder else uncheckedBorder).copy(alpha = if (enabled) 1f else 0.45f),
@@ -236,11 +269,11 @@ fun ExpressiveSwitch(
             }
             val thumbWidthPx = thumbWidth.toPx()
             val thumbHeightPx = thumbHeight.toPx()
-            val edgeInsetPx = thumbEdgeInset.toPx()
-            val left = thumbWidthPx / 2f + edgeInsetPx
-            val right = w - thumbWidthPx / 2f - edgeInsetPx
+            val thumbSlotWidthPx = thumbSlotWidth.toPx()
+            val left = trackLeft + thumbSlotWidthPx / 2f
+            val right = trackLeft + trackWidthPx - thumbSlotWidthPx / 2f
             val cx = left + (right - left) * travel
-            val cy = h / 2f
+            val cy = trackTop + trackHeightPx / 2f
             if (style == 5) {
                 val haloWidth = thumbWidthPx + 4.dp.toPx()
                 val haloHeight = thumbHeightPx + 4.dp.toPx()
@@ -298,13 +331,13 @@ fun ExpressiveSwitch(
             // thumb itself communicates the on/off state by position and color.
         }
         if (thumbContent != null) {
-            val thumbTravel = trackSize.width - thumbWidth - thumbEdgeInset * 2
+            val thumbTravel = trackSize.width - thumbSlotWidth
             Box(
                 modifier = Modifier
                     .align(Alignment.Center)
                     .offset(x = thumbTravel * travel - thumbTravel / 2f)
-                    .size(width = thumbWidth, height = thumbHeight)
-                    .clip(thumbShape),
+                    .size(width = thumbSlotWidth, height = thumbSlotHeight)
+                    .clip(thumbSlotShape),
                 contentAlignment = Alignment.Center,
             ) {
                 thumbContent()
