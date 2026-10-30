@@ -551,22 +551,22 @@ fun voyageSegmentedShape(index: Int, count: Int, vertical: Boolean = true, press
 
     val topStart by animateDpAsState(
         targetValue = (pressedRadius ?: if (first) 16.dp else 4.dp) * cornerScale,
-        animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing),
+        animationSpec = tween(durationMillis = 500, easing = FastOutSlowInEasing),
         label = "voyageSegmentTopStart",
     )
     val topEnd by animateDpAsState(
         targetValue = (pressedRadius ?: if (if (vertical) first else last) 16.dp else 4.dp) * cornerScale,
-        animationSpec = spring(dampingRatio = 0.4f, stiffness = 800f),
+        animationSpec = tween(durationMillis = 500, easing = FastOutSlowInEasing),
         label = "voyageSegmentTopEnd",
     )
     val bottomEnd by animateDpAsState(
         targetValue = (pressedRadius ?: if (last) 16.dp else 4.dp) * cornerScale,
-        animationSpec = spring(dampingRatio = 0.4f, stiffness = 800f),
+        animationSpec = tween(durationMillis = 500, easing = FastOutSlowInEasing),
         label = "voyageSegmentBottomEnd",
     )
     val bottomStart by animateDpAsState(
         targetValue = (pressedRadius ?: if (if (vertical) last else first) 16.dp else 4.dp) * cornerScale,
-        animationSpec = spring(dampingRatio = 0.4f, stiffness = 800f),
+        animationSpec = tween(durationMillis = 500, easing = FastOutSlowInEasing),
         label = "voyageSegmentBottomStart",
     )
 
