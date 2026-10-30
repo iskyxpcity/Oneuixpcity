@@ -424,6 +424,8 @@ fun ColorPaletteScreenMaterial(
                     shape = voyageCornerShape(20.dp),
                 ) {
                     var sliderValue by remember(uiState.pageScale) { mutableFloatStateOf(uiState.pageScale) }
+                    var showPageScaleValueDialog by remember { mutableStateOf(false) }
+                    var pageScaleInput by remember { mutableStateOf("") }
 
                     Column(
                         modifier = Modifier.padding(16.dp),
@@ -453,11 +455,30 @@ fun ColorPaletteScreenMaterial(
                                     color = MaterialTheme.colorScheme.outline
                                 )
                             }
-                            Text(
-                                text = "${(sliderValue * 100).toInt()}%",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                            Surface(
+                                onClick = {
+                                    pageScaleInput = ((sliderValue * 100).toInt()).toString()
+                                    showPageScaleValueDialog = true
+                                },
+                                modifier = Modifier.requiredHeight(32.dp),
+                                shape = voyageCornerShape(12.dp),
+                                color = MaterialTheme.colorScheme.primaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                shadowElevation = if (LocalMaterialShadowButtons.current) 2.dp else 0.dp,
+                                border = LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
+                                    BorderStroke(it.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.45f))
+                                },
+                            ) {
+                                Box(
+                                    modifier = Modifier.fillMaxHeight().padding(horizontal = 10.dp),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Text(
+                                        text = "${(sliderValue * 100).toInt()}%",
+                                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    )
+                                }
+                            }
                         }
 
                         AlohaOneUISlider(
@@ -467,6 +488,96 @@ fun ColorPaletteScreenMaterial(
                             valueRange = 0.8f..1.1f,
                             modifier = Modifier.fillMaxWidth(),
                         )
+                    }
+
+                    if (showPageScaleValueDialog) {
+                        ExpressiveContentDialog(
+                            onDismissRequest = { showPageScaleValueDialog = false },
+                        ) {
+                            Column(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(16.dp),
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.settings_page_scale),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                )
+                                Text(
+                                    text = "输入 80 至 110 之间的数值",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                                OutlinedTextField(
+                                    value = pageScaleInput,
+                                    onValueChange = { input ->
+                                        if (input.length <= 3 && input.all { it.isDigit() }) {
+                                            pageScaleInput = input
+                                        }
+                                    },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .then(
+                                            if (LocalMaterialShadowButtons.current) {
+                                                Modifier.shadow(2.dp, voyageCornerShape(12.dp))
+                                            } else Modifier
+                                        )
+                                        .then(
+                                            LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
+                                                Modifier.border(
+                                                    it.dp,
+                                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.45f),
+                                                    voyageCornerShape(12.dp),
+                                                )
+                                            } ?: Modifier
+                                        ),
+                                    shape = voyageCornerShape(12.dp),
+                                    singleLine = true,
+                                    textStyle = MaterialTheme.typography.titleMedium.copy(
+                                        textAlign = TextAlign.Center,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                    ),
+                                    trailingIcon = {
+                                        Text(
+                                            text = "%",
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        )
+                                    },
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                                        unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                        unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                                        cursorColor = MaterialTheme.colorScheme.primary,
+                                        focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                                    ),
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                )
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.End,
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    TextButton(onClick = { showPageScaleValueDialog = false }) {
+                                        Text(stringResource(android.R.string.cancel))
+                                    }
+                                    TextButton(
+                                        onClick = {
+                                            val parsed = pageScaleInput.toIntOrNull()
+                                            if (parsed != null && parsed in 80..110) {
+                                                sliderValue = parsed / 100f
+                                                actions.onSetPageScale(sliderValue)
+                                                showPageScaleValueDialog = false
+                                            }
+                                        },
+                                    ) {
+                                        Text(stringResource(android.R.string.ok))
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
 
