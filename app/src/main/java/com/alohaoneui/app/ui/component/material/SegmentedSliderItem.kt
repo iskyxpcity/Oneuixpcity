@@ -85,7 +85,7 @@ internal fun voyageSliderAppearance(requestedStyle: Int): VoyageSliderAppearance
     // independent roles so theme changes propagate without making them identical.
     val active = when (style) {
         0 -> scheme.secondary                 // Material You: filled segment
-        1 -> scheme.tertiaryContainer        // Fancy progress uses the same color as its inactive rail
+        1 -> scheme.secondary               // Fancy progress is the second theme color; thumb stays primary
         2 -> scheme.tertiary                 // Material 2: thin accent line
         else -> scheme.secondary             // HyperOS: filled thick segment
     }
@@ -133,18 +133,19 @@ internal fun voyageSliderContainerModifier(
     style: Int,
     containerColor: Color,
 ): Modifier {
-    // Fancy has no outer container: its rail itself is the complete visual surface.
-    if (style == 1) return Modifier
-    val containerShape = voyageCornerShape(20.dp)
+    // Voyage y3w0 applies the Fancy surface before 12dp horizontal / 6dp
+    // vertical content insets; the rail remains a separate drawing layer.
+    val containerRadius = if (style == 1) 14.dp else 20.dp
+    val containerShape = voyageCornerShape(containerRadius)
     val containerShadow = if (LocalMaterialShadowSliders.current) {
         Modifier.shadow(2.dp, containerShape, clip = false)
     } else Modifier
     return Modifier
         .then(containerShadow)
-        .background(containerColor, voyageCornerShape(20.dp))
+        .background(containerColor, containerShape)
         .padding(
-            horizontal = when (style) { 0 -> 10.dp; 2 -> 10.dp; else -> 6.dp },
-            vertical = when (style) { 0 -> 6.dp; 2 -> 6.dp; else -> 4.dp },
+            horizontal = when (style) { 0 -> 10.dp; 1 -> 12.dp; 2 -> 10.dp; else -> 6.dp },
+            vertical = when (style) { 0 -> 6.dp; 1 -> 6.dp; 2 -> 6.dp; else -> 4.dp },
         )
 }
 
@@ -262,7 +263,7 @@ fun SegmentedSliderItem(
                             thumbWidth = thumbSize.width,
                             activeColor = active,
                             inactiveColor = inactive,
-                            shadowEnabled = LocalMaterialShadowSliders.current,
+                            shadowEnabled = LocalMaterialShadowSliders.current && style != 1,
                         )
                     },
                 )
