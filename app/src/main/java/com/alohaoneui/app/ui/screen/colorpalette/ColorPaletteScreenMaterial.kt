@@ -374,11 +374,11 @@ fun ColorPaletteScreenMaterial(
                     }
                 )
 
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                    SegmentedColumn(
-                        modifier = Modifier.padding(top = 4.dp),
-                        content = listOf(
-                            {
+                SegmentedColumn(
+                    modifier = Modifier.padding(top = 4.dp),
+                    content = buildList {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                            add {
                                 SegmentedSwitchItem(
                                     icon = Icons.AutoMirrored.Rounded.MenuOpen,
                                     title = stringResource(id = R.string.settings_enable_predictive_back),
@@ -387,14 +387,9 @@ fun ColorPaletteScreenMaterial(
                                     onCheckedChange = actions.onSetEnablePredictiveBack
                                 )
                             }
-                        )
-                    )
-                }
+                        }
 
-                SegmentedColumn(
-                    modifier = Modifier.padding(top = 4.dp),
-                    content = listOf(
-                        {
+                        add {
                             SegmentedSwitchItem(
                                 icon = Icons.Rounded.Swipe,
                                 title = stringResource(R.string.settings_enable_swipe_back),
@@ -402,8 +397,8 @@ fun ColorPaletteScreenMaterial(
                                 checked = uiState.enableSwipeBack,
                                 onCheckedChange = actions.onSetEnableSwipeBack,
                             )
-                        },
-                        {
+                        }
+                        add {
                             val pagerGestureOptions = listOf(
                                 stringResource(R.string.settings_page_gesture_default),
                                 stringResource(R.string.settings_page_gesture_cross_axis),
@@ -415,14 +410,9 @@ fun ColorPaletteScreenMaterial(
                                 selectedIndex = uiState.pagerGestureMode.coerceIn(0, pagerGestureOptions.lastIndex),
                                 onItemSelected = actions.onSetPagerGestureMode,
                             )
-                        },
-                    ),
-                )
+                        }
 
-                TonalCard(
-                    modifier = Modifier.padding(top = 4.dp),
-                    shape = voyageCornerShape(20.dp),
-                ) {
+                        add {
                     var sliderValue by remember(uiState.pageScale) { mutableFloatStateOf(uiState.pageScale) }
                     var showPageScaleValueDialog by remember { mutableStateOf(false) }
                     var pageScaleInput by remember { mutableStateOf("") }
@@ -579,7 +569,9 @@ fun ColorPaletteScreenMaterial(
                             }
                         }
                     }
-                }
+                        }
+                    }
+                )
 
                 // Voyage SHAPE group: the slider remains a row in the source-style group.
                 SegmentedColumn(
