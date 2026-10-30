@@ -56,11 +56,14 @@ import androidx.compose.material.icons.filled.Brightness4
 import androidx.compose.material.icons.filled.Brightness7
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.rounded.AspectRatio
+import androidx.compose.material.icons.rounded.BlurOn
+import androidx.compose.material.icons.rounded.CallToAction
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.DesignServices
 import androidx.compose.material.icons.rounded.Style
 import androidx.compose.material.icons.rounded.Swipe
 import androidx.compose.material.icons.rounded.ViewCarousel
+import androidx.compose.material.icons.rounded.WaterDrop
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -329,6 +332,45 @@ fun ColorPaletteScreenMaterial(
                             )
                         }
                     )
+                )
+
+                SegmentedColumn(
+                    modifier = Modifier.padding(top = 4.dp),
+                    content = buildList {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            add {
+                                SegmentedSwitchItem(
+                                    icon = Icons.Rounded.BlurOn,
+                                    title = stringResource(R.string.settings_enable_blur),
+                                    summary = stringResource(R.string.settings_enable_blur_summary),
+                                    checked = uiState.enableBlur,
+                                    onCheckedChange = actions.onSetEnableBlur,
+                                )
+                            }
+                        }
+                        add {
+                            SegmentedSwitchItem(
+                                icon = Icons.Rounded.CallToAction,
+                                title = stringResource(R.string.settings_floating_bottom_bar),
+                                summary = stringResource(R.string.settings_floating_bottom_bar_summary),
+                                checked = uiState.enableFloatingBottomBar,
+                                onCheckedChange = actions.onSetEnableFloatingBottomBar,
+                            )
+                        }
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            if (uiState.enableFloatingBottomBar) {
+                                add {
+                                    SegmentedSwitchItem(
+                                        icon = Icons.Rounded.WaterDrop,
+                                        title = stringResource(R.string.settings_enable_glass),
+                                        summary = stringResource(R.string.settings_enable_glass_summary),
+                                        checked = uiState.enableFloatingBottomBarBlur,
+                                        onCheckedChange = actions.onSetEnableFloatingBottomBarBlur,
+                                    )
+                                }
+                            }
+                        }
+                    }
                 )
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
