@@ -303,8 +303,8 @@ internal fun VoyageSliderThumb(
             // shaped core. The selected shape still follows Voyage's shared
             // shape setting and rotates in the source direction while dragging.
             Box(
-                // Extend the thumb's visual/hit region by 6dp in width without
-                // translating its center; the core remains centered in this slot.
+                // Keep the existing slider slot dimensions so the rail geometry
+                // stays unchanged; the 52dp halo can draw beyond this slot.
                 modifier = Modifier
                     .size(width = 50.dp, height = 40.dp),
                 contentAlignment = androidx.compose.ui.Alignment.Center,
@@ -312,14 +312,14 @@ internal fun VoyageSliderThumb(
                 if (haloVisible) {
                     Box(
                         Modifier
-                             .size(52.dp)
+                            .size(52.dp)
                             .clip(CircleShape)
                             .background(MaterialTheme.colorScheme.tertiary.copy(alpha = 0.24f)),
                     )
                 }
                 Box(
                     Modifier
-                         .size(width = size.width, height = size.height)
+                        .size(width = size.width, height = size.height)
                         .then(if (shadowEnabled) Modifier.shadow(4.dp, thumbShape, clip = false) else Modifier)
                         .then(Modifier.rotate(-1080f * valueFraction))
                         .clip(thumbShape)
