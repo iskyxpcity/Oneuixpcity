@@ -171,17 +171,6 @@ fun ColorPaletteScreenMaterial(
                 navigationIcon = {
                     val backInteractionSource = remember { MutableInteractionSource() }
                     IconButton(
-                        modifier = Modifier
-                            .then(
-                                if (LocalMaterialShadowButtons.current) {
-                                    Modifier.shadow(2.dp, CircleShape)
-                                } else Modifier
-                            )
-                            .then(
-                                LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
-                                    Modifier.border(it.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape)
-                                } ?: Modifier
-                            ),
                         onClick = actions.onBack,
                         interactionSource = backInteractionSource,
                     ) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null) }
