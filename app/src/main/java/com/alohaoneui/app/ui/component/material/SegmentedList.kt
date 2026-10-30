@@ -232,8 +232,490 @@ private data class VoyageG2Profile(
     companion object {
         // dan.f104767lI and dan.f104768lO from Voyage.
         val smooth = VoyageG2Profile(0.5286651, 0.5555555555555556, 1.0732051, 1.0732051)
-        val capsule = VoyageG2Profile(0.396498825, 0.0, 1.0, 1.0)
+        val capsule = VoyageG2Profile(0.396498825, 1.0, 1.0, 1.0)
     }
+}
+
+
+/**
+ * Voyage G² outline reconstruction from ban.java / dan.java / fqw0.java /
+ * opw0.java. The two cubic pieces around each circular arc are retained; a
+ * single-cubic corner is not equivalent to Voyage's G² profile.
+ */
+private fun appendVoyageG2Arc(
+    path: Path,
+    centerX: Double,
+    centerY: Double,
+    radius: Double,
+    curvatureFactor: Double,
+    startAngle: Double,
+    sweepAngle: Double,
+) {
+    if (radius <= 0.0) return
+    val middle = startAngle + sweepAngle * 0.5
+    val centerShift = radius * (1.0 - curvatureFactor)
+    val shiftedX = centerX + kotlin.math.cos(middle) * centerShift
+    val shiftedY = centerY + kotlin.math.sin(middle) * centerShift
+    val arcRadius = radius * curvatureFactor
+    if (arcRadius <= 0.0) return
+    path.arcTo(
+        Rect(
+            (shiftedX - arcRadius).toFloat(),
+            (shiftedY - arcRadius).toFloat(),
+            (shiftedX + arcRadius).toFloat(),
+            (shiftedY + arcRadius).toFloat(),
+        ),
+        (startAngle * 180.0 / Math.PI).toFloat(),
+        (sweepAngle * 180.0 / Math.PI).toFloat(),
+        false,
+    )
+}
+
+private fun appendVoyageG2Cubic(
+    path: Path,
+    firstControl: VoyageG2Profile.Point,
+    secondControl: VoyageG2Profile.Point,
+    end: VoyageG2Profile.Point,
+    transform: (VoyageG2Profile.Point) -> VoyageG2Profile.Point,
+) {
+    val c1 = transform(firstControl)
+    val c2 = transform(secondControl)
+    val p3 = transform(end)
+    path.cubicTo(
+        c1.x.toFloat(), c1.y.toFloat(),
+        c2.x.toFloat(), c2.y.toFloat(),
+        p3.x.toFloat(), p3.y.toFloat(),
+    )
+}
+
+private fun createVoyageG2CapsulePath(width: Float, height: Float, radiusPx: Float): Path {
+    val path = Path()
+    if (width <= 0f || height <= 0f || radiusPx <= 0f) {
+        addVoyageRoundRect(path, width, height, radiusPx, radiusPx, radiusPx, radiusPx)
+        return path
+    }
+    if (width == height) {
+        path.addOval(Rect(0f, 0f, width, height))
+        return path
+    }
+
+    val radius = radiusPx.toDouble()
+    val smooth = VoyageG2Profile.smooth
+    val capsule = VoyageG2Profile.capsule
+    val major = maxOf(width, height).toDouble()
+    val progress = ((((major * 0.5) / radius) - 1.0) / capsule.extendedFraction)
+        .coerceIn(0.0, 1.0)
+    val extended = capsule.extendedFraction * progress
+    val bezierScale = smooth.bezierCurvatureScale +
+        (capsule.bezierCurvatureScale - smooth.bezierCurvatureScale) * progress
+    val curve = VoyageG2Profile(
+        extendedFraction = extended,
+        arcFraction = capsule.arcFraction,
+        bezierCurvatureScale = bezierScale,
+        arcCurvatureScale = 1.0,
+    ).cubic()
+    val arcAngle = capsule.arcFraction * Math.PI / 2.0
+    val arcOffset = (Math.PI / 2.0 - arcAngle) * 0.5
+    val sweep = (arcAngle + arcOffset) * 2.0
+    val offset = -radius * extended
+
+    fun point(x: Double, y: Double) = VoyageG2Profile.Point(x, y)
+    fun append(
+        first: VoyageG2Profile.Point,
+        second: VoyageG2Profile.Point,
+        end: VoyageG2Profile.Point,
+        transform: (VoyageG2Profile.Point) -> VoyageG2Profile.Point,
+    ) = appendVoyageG2Cubic(path, first, second, end, transform)
+
+    if (width > height) {
+        val originX = width.toDouble() - radius
+        val bottom = height.toDouble()
+        path.moveTo(0f, radius.toFloat())
+        appendVoyageG2Arc(path, radius, radius, radius, 1.0, arcOffset + Math.PI / 2.0, sweep)
+        append(
+            curve.p2, curve.p1, point(maxOf(curve.p0.x * radius, offset), curve.p0.y * radius),
+        ) { p -> point(radius - p.x * radius, p.y * radius) }
+        path.lineTo((originX + offset).toFloat(), 0f)
+        append(curve.p1, curve.p2, curve.p3) { p ->
+            point(originX + p.x * radius, p.y * radius)
+        }
+        appendVoyageG2Arc(
+            path, originX, radius, radius, 1.0,
+            -(Math.PI / 2.0 - arcOffset), sweep,
+        )
+        append(
+            curve.p2, curve.p1, point(maxOf(curve.p0.x * radius, offset), curve.p0.y * radius),
+        ) { p -> point(originX + p.x * radius, bottom - p.y * radius) }
+        path.lineTo((radius - offset).toFloat(), bottom.toFloat())
+        append(curve.p1, curve.p2, curve.p3) { p ->
+            point(radius - p.x * radius, bottom - p.y * radius)
+        }
+    } else {
+        val originY = height.toDouble() - radius
+        val right = width.toDouble()
+        path.moveTo((radius - offset).toFloat(), 0f)
+        append(curve.p1, curve.p2, curve.p3) { p ->
+            point(p.y * radius, radius - p.x * radius)
+        }
+        appendVoyageG2Arc(
+            path, radius, radius, radius, 1.0,
+            -(Math.PI - arcOffset), sweep,
+        )
+        append(
+            curve.p2, curve.p1, point(curve.p0.x * radius, maxOf(curve.p0.x * radius, offset)),
+        ) { p -> point(right - p.y * radius, radius - p.x * radius) }
+        path.lineTo(right.toFloat(), (originY + offset).toFloat())
+        append(curve.p1, curve.p2, curve.p3) { p ->
+            point(right - p.y * radius, originY + p.x * radius)
+        }
+        appendVoyageG2Arc(
+            path, right - radius, originY, radius, 1.0,
+            arcOffset, sweep,
+        )
+        append(
+            curve.p2, curve.p1, point(curve.p0.x * radius, maxOf(curve.p0.x * radius, offset)),
+        ) { p -> point(p.y * radius, originY + p.x * radius) }
+    }
+    path.close()
+    return path
+}
+
+private fun createVoyageG2Path(
+    width: Float,
+    height: Float,
+    topLeft: Float,
+    topRight: Float,
+    bottomRight: Float,
+    bottomLeft: Float,
+): Path {
+    if (width <= 0f || height <= 0f) {
+        val path = Path()
+        addVoyageRoundRect(path, width, height, topLeft, topRight, bottomRight, bottomLeft)
+        return path
+    }
+    val allEqual = topLeft == topRight && topRight == bottomRight && bottomRight == bottomLeft
+    if (allEqual && (topLeft + topRight == width || topLeft + bottomLeft == height)) {
+        return createVoyageG2CapsulePath(width, height, topLeft)
+    }
+
+    val path = Path()
+    val w = width.toDouble()
+    val h = height.toDouble()
+    val tl = topLeft.toDouble()
+    val tr = topRight.toDouble()
+    val br = bottomRight.toDouble()
+    val bl = bottomLeft.toDouble()
+    val progresses = VoyageG2Profile.smooth.cornerProgresses(
+        width, height, topLeft, topRight, bottomRight, bottomLeft,
+    )
+    fun profile(axisProgress: Double, shared: Double) =
+        VoyageG2Profile.smooth.interpolateFromCapsule(axisProgress, shared)
+    fun point(x: Double, y: Double) = VoyageG2Profile.Point(x, y)
+    fun append(
+        curve: VoyageG2Profile.Cubic,
+        first: VoyageG2Profile.Point,
+        second: VoyageG2Profile.Point,
+        end: VoyageG2Profile.Point,
+        transform: (VoyageG2Profile.Point) -> VoyageG2Profile.Point,
+    ) = appendVoyageG2Cubic(path, first, second, end, transform)
+
+    val tlShared = minOf(progresses[0], progresses[1])
+    val tlVertical = profile(progresses[0], tlShared)
+    val tlHorizontal = profile(progresses[1], tlShared)
+    val tlV = tlVertical.cubic()
+    val tlH = tlHorizontal.cubic()
+    path.moveTo(0f, (tl - tlV.p0.x * tl).toFloat())
+    if (tl > 0.0) {
+        append(tlV, tlV.p1, tlV.p2, tlV.p3) { p ->
+            point(p.y * tl, tl - p.x * tl)
+        }
+        appendVoyageG2Arc(
+            path, tl, tl, tl, 1.0 / tlVertical.arcCurvatureScale,
+            ((1.0 - tlVertical.arcFraction) * Math.PI / 4.0) + Math.PI,
+            tlVertical.arcFraction * Math.PI / 2.0,
+        )
+        append(tlH, tlH.p2, tlH.p1, tlH.p0) { p ->
+            point(tl - p.x * tl, p.y * tl)
+        }
+    }
+    path.lineTo((w - tr + tr * tlH.p0.x * 0.0 + tr * 0.0 + tr * profile(progresses[2], minOf(progresses[2], progresses[3])).cubic().p0.x).toFloat(), 0f)
+
+    val trShared = minOf(progresses[2], progresses[3])
+    val trHorizontal = profile(progresses[2], trShared)
+    val trVertical = profile(progresses[3], trShared)
+    val trH = trHorizontal.cubic()
+    val trV = trVertical.cubic()
+    if (tr > 0.0) {
+        append(trH, trH.p1, trH.p2, trH.p3) { p ->
+            point(w - p.y * tr, p.x * tr)
+        }
+        appendVoyageG2Arc(
+            path, w - tr, tr, tr, 1.0 / trVertical.arcCurvatureScale,
+            ((1.0 - trVertical.arcFraction) * Math.PI / 4.0) - Math.PI / 2.0,
+            trVertical.arcFraction * Math.PI / 2.0,
+        )
+        append(trV, trV.p2, trV.p1, trV.p0) { p ->
+            point(w - p.y * tr, tr - p.x * tr)
+        }
+    }
+    path.lineTo(w.toFloat(), (h - br + br * trV.p0.x).toFloat())
+
+    val brShared = minOf(progresses[4], progresses[5])
+    val brVertical = profile(progresses[4], brShared)
+    val brHorizontal = profile(progresses[5], brShared)
+    val brV = brVertical.cubic()
+    val brH = brHorizontal.cubic()
+    if (br > 0.0) {
+        append(brV, brV.p1, brV.p2, brV.p3) { p ->
+            point(w - p.y * br, h - br + p.x * br)
+        }
+        appendVoyageG2Arc(
+            path, w - br, h - br, br, 1.0 / brVertical.arcCurvatureScale,
+            (1.0 - brVertical.arcFraction) * Math.PI / 4.0,
+            brVertical.arcFraction * Math.PI / 2.0,
+        )
+        append(brH, brH.p2, brH.p1, brH.p0) { p ->
+            point(w - br + p.x * br, h - p.y * br)
+        }
+    }
+    path.lineTo((bl + bl * brH.p0.x).toFloat(), h.toFloat())
+
+    val blShared = minOf(progresses[6], progresses[7])
+    val blHorizontal = profile(progresses[6], blShared)
+    val blVertical = profile(progresses[7], blShared)
+    val blH = blHorizontal.cubic()
+    val blV = blVertical.cubic()
+    if (bl > 0.0) {
+        append(blH, blH.p1, blH.p2, blH.p3) { p ->
+            point(p.y * bl, h - bl + p.x * bl)
+        }
+        appendVoyageG2Arc(
+            path, bl, h - bl, bl, 1.0 / blVertical.arcCurvatureScale,
+            ((1.0 - blVertical.arcFraction) * Math.PI / 4.0) + Math.PI / 2.0,
+            blVertical.arcFraction * Math.PI / 2.0,
+        )
+        append(blV, blV.p2, blV.p1, blV.p0) { p ->
+            point(p.x * bl, h - bl + p.y * bl)
+        }
+    }
+    path.close()
+    return path
+}
+
+private fun addVoyageRoundRect(
+    path: Path,
+    width: Float,
+    height: Float,
+    topLeft: Float,
+    topRight: Float,
+    bottomRight: Float,
+    bottomLeft: Float,
+) {
+    path.addRoundRect(
+        androidx.compose.ui.geometry.RoundRect(
+            0f, 0f, width, height,
+            androidx.compose.ui.geometry.CornerRadius(topLeft, topLeft),
+            androidx.compose.ui.geometry.CornerRadius(topRight, topRight),
+            androidx.compose.ui.geometry.CornerRadius(bottomRight, bottomRight),
+            androidx.compose.ui.geometry.CornerRadius(bottomLeft, bottomLeft),
+        ),
+    )
+}
+
+/**
+ * Source-faithful Wavy outline from wgo0.java. The perimeter is sampled at
+ * max(waveLength / 8, perimeter / 360, 1px); each sample is displaced along
+ * its local normal by a sinusoid whose phase advances continuously around the
+ * entire perimeter. The source uses OR (not AND) for adjacent-corner edge
+ * amplitudes and does not scale the corner radii with the wave-size factor.
+ */
+private data class VoyageWaveSample(val x: Float, val y: Float)
+
+private fun createVoyageWavyPath(
+    width: Float,
+    height: Float,
+    topLeft: Float,
+    topRight: Float,
+    bottomRight: Float,
+    bottomLeft: Float,
+    density: Density,
+): Path {
+    val path = Path()
+    val minDimension = minOf(width, height)
+    if (width <= 0f || height <= 0f || minDimension <= 0f) {
+        addVoyageRoundRect(path, width, height, topLeft, topRight, bottomRight, bottomLeft)
+        return path
+    }
+    val scale = (minDimension / (48f * density.density)).coerceIn(0.42f, 1f)
+    val period = 12f * density.density * scale
+    val amplitude = minOf(0.9f * density.density * scale, minDimension / 4f)
+    if (period <= 0f || amplitude <= 0f) {
+        addVoyageRoundRect(path, width, height, topLeft, topRight, bottomRight, bottomLeft)
+        return path
+    }
+
+    val tl = topLeft.coerceIn(0f, minDimension)
+    val tr = topRight.coerceIn(0f, minDimension)
+    val br = bottomRight.coerceIn(0f, minDimension)
+    val bl = bottomLeft.coerceIn(0f, minDimension)
+    fun edgeAmplitude(first: Float, second: Float) =
+        if (first > 0f || second > 0f) amplitude else 0f
+    val topAmplitude = edgeAmplitude(tl, tr)
+    val rightAmplitude = edgeAmplitude(tr, br)
+    val bottomAmplitude = edgeAmplitude(br, bl)
+    val leftAmplitude = edgeAmplitude(bl, tl)
+    if (topAmplitude == 0f && rightAmplitude == 0f &&
+        bottomAmplitude == 0f && leftAmplitude == 0f
+    ) {
+        addVoyageRoundRect(path, width, height, tl, tr, br, bl)
+        return path
+    }
+
+    val tlRadius = tl - amplitude
+    val trRadius = tr - amplitude
+    val brRadius = br - amplitude
+    val blRadius = bl - amplitude
+    val topStartX = if (tl > 0f) leftAmplitude + tlRadius else 0f
+    val topEndX = if (tr > 0f) width - trRadius else width
+    val rightStartY = if (tr > 0f) topAmplitude + trRadius else 0f
+    val rightEndY = if (br > 0f) height - brRadius else height
+    val bottomStartX = if (br > 0f) width - brRadius else width
+    val bottomEndX = if (bl > 0f) leftAmplitude + blRadius else 0f
+    val leftStartY = if (bl > 0f) height - blRadius else height
+    val leftEndY = if (tl > 0f) topAmplitude + tlRadius else 0f
+
+    val topLength = topEndX - topStartX
+    val rightLength = rightEndY - rightStartY
+    val bottomLength = bottomStartX - bottomEndX
+    val leftLength = leftStartY - leftEndY
+    val quarterPi = (Math.PI.toFloat() / 2f)
+    val perimeter = topLength + quarterPi * trRadius +
+        rightLength + quarterPi * brRadius +
+        bottomLength + quarterPi * blRadius +
+        leftLength + quarterPi * tlRadius
+    val waveCount = kotlin.math.ceil(perimeter / period).toInt()
+    if (waveCount <= 0 || !perimeter.isFinite()) {
+        addVoyageRoundRect(path, width, height, tl, tr, br, bl)
+        return path
+    }
+    val waveLength = perimeter / waveCount
+    val sampleStep = maxOf(waveLength / 8f, perimeter / 360f, 1f)
+
+    var phaseDistance = 0f
+    var hasStarted = false
+    var firstSample: VoyageWaveSample? = null
+    var previousSample: VoyageWaveSample? = null
+
+    fun emit(
+        x: Float,
+        y: Float,
+        normalX: Float,
+        normalY: Float,
+        localAmplitude: Float,
+        phase: Float,
+    ) {
+        val displacement = kotlin.math.sin(
+            (phase.toDouble() * 2.0 * Math.PI) / period.toDouble(),
+        ).toFloat() * localAmplitude
+        val sample = VoyageWaveSample(
+            x + normalX * displacement,
+            y + normalY * displacement,
+        )
+        val previous = previousSample
+        if (!hasStarted || previous == null) {
+            path.moveTo(sample.x, sample.y)
+            firstSample = sample
+            hasStarted = true
+        } else {
+            path.quadraticTo(
+                previous.x,
+                previous.y,
+                (previous.x + sample.x) * 0.5f,
+                (previous.y + sample.y) * 0.5f,
+            )
+        }
+        previousSample = sample
+    }
+
+    fun sampleLine(
+        startX: Float,
+        startY: Float,
+        endX: Float,
+        endY: Float,
+        normalX: Float,
+        normalY: Float,
+        localAmplitude: Float,
+    ) {
+        val dx = endX - startX
+        val dy = endY - startY
+        val length = kotlin.math.sqrt(dx * dx + dy * dy)
+        val count = kotlin.math.ceil(length / sampleStep).toInt()
+        val firstIndex = if (hasStarted) 1 else 0
+        if (count > 0 && firstIndex <= count) {
+            for (index in firstIndex..count) {
+                val t = index.toFloat() / count.toFloat()
+                emit(
+                    startX + dx * t,
+                    startY + dy * t,
+                    normalX,
+                    normalY,
+                    localAmplitude,
+                    phaseDistance + length * t,
+                )
+            }
+        }
+        phaseDistance += length
+    }
+
+    fun sampleArc(
+        centerX: Float,
+        centerY: Float,
+        radius: Float,
+        startAngle: Float,
+    ) {
+        val arcLength = quarterPi * radius
+        val count = kotlin.math.ceil(arcLength / sampleStep).toInt()
+        val firstIndex = if (hasStarted) 1 else 0
+        if (count > 0 && firstIndex <= count) {
+            for (index in firstIndex..count) {
+                val t = index.toFloat() / count.toFloat()
+                val angle = startAngle + quarterPi * t
+                val normalX = kotlin.math.cos(angle)
+                val normalY = kotlin.math.sin(angle)
+                emit(
+                    centerX + normalX * radius,
+                    centerY + normalY * radius,
+                    normalX,
+                    normalY,
+                    amplitude,
+                    phaseDistance + arcLength * t,
+                )
+            }
+        }
+        phaseDistance += arcLength
+    }
+
+    sampleLine(topStartX, topAmplitude, topEndX, topAmplitude, 0f, -1f, topAmplitude)
+    sampleArc(width - trRadius, topAmplitude + trRadius, trRadius, -Math.PI.toFloat() / 2f)
+    sampleLine(width - trRadius, rightStartY, width - trRadius, rightEndY, 1f, 0f, rightAmplitude)
+    sampleArc(width - brRadius, height - brRadius, brRadius, 0f)
+    sampleLine(bottomStartX, height - bottomAmplitude, bottomEndX, height - bottomAmplitude, 0f, 1f, bottomAmplitude)
+    sampleArc(leftAmplitude + blRadius, height - blRadius, blRadius, Math.PI.toFloat() / 2f)
+    sampleLine(leftAmplitude, leftStartY, leftAmplitude, leftEndY, -1f, 0f, leftAmplitude)
+    sampleArc(leftAmplitude + tlRadius, topAmplitude + tlRadius, tlRadius, Math.PI.toFloat())
+
+    val previous = previousSample
+    val first = firstSample
+    if (previous != null && first != null) {
+        path.quadraticTo(
+            previous.x,
+            previous.y,
+            (previous.x + first.x) * 0.5f,
+            (previous.y + first.y) * 0.5f,
+        )
+        path.close()
+    }
+    return path
 }
 
 private class VoyagePathShape(
@@ -291,9 +773,8 @@ private class VoyagePathShape(
         val te = with(density) { topEnd.toPx() }.coerceIn(0f, minOf(size.width, size.height) / 2f)
         val be = with(density) { bottomEnd.toPx() }.coerceIn(0f, minOf(size.width, size.height) / 2f)
         val bs = with(density) { bottomStart.toPx() }.coerceIn(0f, minOf(size.width, size.height) / 2f)
-        // Voyage concave-arc (style 5) and notch (style 6) defaults were visually
-        // too deep. Halve only these styles' effective geometry; the shared corner-scale
-        // setting remains multiplicative and other shape styles keep their original values.
+        // Voyage vk7/yge0 scales ConcaveArc and Notch corner radii to 0.65f;
+        // apply that source scale before building either custom outline.
         val depthScale = if (style == 5 || style == 6) 0.5f else 1f
         val tl = (if (layoutDirection == LayoutDirection.Ltr) ts else te) * depthScale
         val tr = (if (layoutDirection == LayoutDirection.Ltr) te else ts) * depthScale
@@ -334,124 +815,13 @@ private class VoyagePathShape(
                 path.cubicTo(0f, tl * smooth, tl * smooth, 0f, tl, 0f)
             }
             3 -> {
-                // Voyage G² Smooth profile: use the control-point scale derived from
-                // dan.m88494l() rather than reusing the Squircle smoothing=48 shortcut.
-                // The profile is source-defined (dan.f104767lI); its second control
-                // point supplies the tangent scale used at each radius-sized corner.
-                data class CornerInsets(val horizontal: Float, val vertical: Float)
-
-                val progress = VoyageG2Profile.smooth.cornerProgresses(w, h, tl, tr, br, bl)
-                val tlShared = minOf(progress[0], progress[1])
-                val trShared = minOf(progress[2], progress[3])
-                val brShared = minOf(progress[4], progress[5])
-                val blShared = minOf(progress[6], progress[7])
-
-                data class ProfileInsets(val horizontal: Float, val vertical: Float)
-
-                fun profileInsets(axisProgress: Double, cornerProgress: Double): ProfileInsets {
-                    val profile = VoyageG2Profile.smooth
-                        .interpolateFromCapsule(axisProgress, cornerProgress)
-                    val cubic = profile.cubic()
-                    // Use the solved Bezier controls, not p2/p3 (which are
-                    // tangent-direction construction points in fqw0.m95419o()).
-                    // The old p2.x lookup was always 1.0 and therefore collapsed
-                    // every corner to the same arbitrary 8% inset.
-                    val xSpan = (cubic.p3.x - cubic.p0.x).let { kotlin.math.abs(it) }
-                    val ySpan = (cubic.p3.y - cubic.p0.y).let { kotlin.math.abs(it) }
-                    val horizontal = if (xSpan > 1e-9) {
-                        kotlin.math.abs(cubic.p1.x - cubic.p0.x) / xSpan
-                    } else 0.0
-                    val vertical = if (ySpan > 1e-9) {
-                        kotlin.math.abs(cubic.p3.y - cubic.p2.y) / ySpan
-                    } else 0.0
-                    return ProfileInsets(
-                        horizontal.coerceIn(0.0, 1.0).toFloat(),
-                        vertical.coerceIn(0.0, 1.0).toFloat(),
-                    )
-                }
-
-                fun cornerInsets(horizontalIndex: Int, verticalIndex: Int, shared: Double): CornerInsets {
-                    val horizontal = profileInsets(progress[horizontalIndex], shared)
-                    val vertical = profileInsets(progress[verticalIndex], shared)
-                    return CornerInsets(
-                        horizontal = horizontal.horizontal,
-                        vertical = vertical.vertical,
-                    )
-                }
-
-                val tlInset = cornerInsets(1, 0, tlShared)
-                val trInset = cornerInsets(2, 3, trShared)
-                val brInset = cornerInsets(5, 4, brShared)
-                val blInset = cornerInsets(6, 7, blShared)
-                path.moveTo(tl, 0f)
-                path.lineTo(w - tr, 0f)
-                if (tr > 0f) path.cubicTo(w - tr * trInset.horizontal, 0f, w, tr * trInset.vertical, w, tr)
-                path.lineTo(w, h - br)
-                if (br > 0f) path.cubicTo(w, h - br * brInset.vertical, w - br * brInset.horizontal, h, w - br, h)
-                path.lineTo(bl, h)
-                if (bl > 0f) path.cubicTo(bl * blInset.horizontal, h, 0f, h - bl * blInset.vertical, 0f, h - bl)
-                path.lineTo(0f, tl)
-                if (tl > 0f) path.cubicTo(0f, tl * tlInset.vertical, tl * tlInset.horizontal, 0f, tl, 0f)
+                // Direct ban.I / ban.l path: cubic-to-arc-to-cubic at every corner.
+                path.addPath(createVoyageG2Path(w, h, tl, tr, br, bl))
             }
             4 -> {
-                // Lightweight shared Wavy geometry: fixed dp-based cubic waves on
-                // straight edges and rounded corner arcs. Avoid perimeter sampling,
-                // per-sample objects, trigonometry and intermediate displacement lists.
-                val minDimension = minOf(w, h)
-                if (w <= 0f || h <= 0f || minDimension <= 0f) {
-                    path.addRoundRect(androidx.compose.ui.geometry.RoundRect(0f, 0f, w, h))
-                } else {
-                    val amplitude = minOf(
-                        with(density) { 0.8.dp.toPx() },
-                        minDimension * 0.035f
-                    )
-                    val halfWaveLength = with(density) { 8.dp.toPx() }.coerceAtLeast(1f)
-
-                    fun waveEdge(
-                        startX: Float, startY: Float,
-                        endX: Float, endY: Float,
-                        normalX: Float, normalY: Float,
-                    ) {
-                        val dx = endX - startX
-                        val dy = endY - startY
-                        val length = kotlin.math.sqrt(dx * dx + dy * dy)
-                        if (length <= 0.5f) {
-                            path.lineTo(endX, endY)
-                            return
-                        }
-                        val count = kotlin.math.ceil(length / halfWaveLength).toInt().coerceAtLeast(1)
-                        val stepX = dx / count
-                        val stepY = dy / count
-                        for (i in 0 until count) {
-                            val x0 = startX + stepX * i
-                            val y0 = startY + stepY * i
-                            val x1 = startX + stepX * (i + 1)
-                            val y1 = startY + stepY * (i + 1)
-                            val sign = if (i % 2 == 0) 1f else -1f
-                            path.cubicTo(
-                                x0 + stepX / 3f + normalX * amplitude * sign,
-                                y0 + stepY / 3f + normalY * amplitude * sign,
-                                x0 + stepX * 2f / 3f + normalX * amplitude * sign,
-                                y0 + stepY * 2f / 3f + normalY * amplitude * sign,
-                                x1, y1
-                            )
-                        }
-                    }
-
-                    path.moveTo(tl, 0f)
-                    waveEdge(tl, 0f, w - tr, 0f, 0f, -1f)
-                    if (tr > 0f) path.arcTo(Rect(w - 2f * tr, 0f, w, 2f * tr), -90f, 90f, false)
-                    else path.lineTo(w, 0f)
-                    waveEdge(w, tr, w, h - br, 1f, 0f)
-                    if (br > 0f) path.arcTo(Rect(w - 2f * br, h - 2f * br, w, h), 0f, 90f, false)
-                    else path.lineTo(w, h)
-                    waveEdge(w - br, h, bl, h, 0f, 1f)
-                    if (bl > 0f) path.arcTo(Rect(0f, h - 2f * bl, 2f * bl, h), 90f, 90f, false)
-                    else path.lineTo(0f, h)
-                    waveEdge(0f, h - bl, 0f, tl, -1f, 0f)
-                    if (tl > 0f) path.arcTo(Rect(0f, 0f, 2f * tl, 2f * tl), 180f, 90f, false)
-                    else path.lineTo(0f, 0f)
-                }
+                // Direct wgo0 perimeter sampling with the original 12dp period,
+                // 0.9dp amplitude, OR edge activation, and shared phase.
+                path.addPath(createVoyageWavyPath(w, h, tl, tr, br, bl, density))
             }
             5 -> {
                 path.moveTo(tl, 0f)
