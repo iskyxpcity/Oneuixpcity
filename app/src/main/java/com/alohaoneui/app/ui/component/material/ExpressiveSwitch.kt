@@ -160,11 +160,11 @@ fun ExpressiveSwitch(
         else -> 20.dp
     }
     val thumbSizeAnimationSpec = when (style) {
-        1 -> spring(dampingRatio = 0.78f, stiffness = 620f)
-        3 -> tween(600, easing = FastOutSlowInEasing)
-        4 -> tween(300, easing = FastOutSlowInEasing)
-        6 -> spring(dampingRatio = 0.75f, stiffness = 1500f)
-        else -> tween(150)
+        1 -> spring<Dp>(dampingRatio = 0.78f, stiffness = 620f)
+        3 -> tween<Dp>(600, easing = FastOutSlowInEasing)
+        4 -> tween<Dp>(300, easing = FastOutSlowInEasing)
+        6 -> spring<Dp>(dampingRatio = 0.75f, stiffness = 1500f)
+        else -> tween<Dp>(150)
     }
     val thumbWidth by animateDpAsState(
         targetValue = targetThumbWidth,
