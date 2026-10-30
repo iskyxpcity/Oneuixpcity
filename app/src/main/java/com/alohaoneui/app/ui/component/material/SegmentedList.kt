@@ -558,10 +558,18 @@ fun voyageSegmentedShape(index: Int, count: Int, vertical: Boolean = true): Shap
 }
 
 @Composable
-private fun defaultSingleSegmentedShape(index: Int, count: Int): ListItemShapes =
-    ListItemDefaults.segmentedShapes(index, count).copy(
-        shape = voyageSegmentedShape(index, count, vertical = true)
+private fun defaultSingleSegmentedShape(index: Int, count: Int): ListItemShapes {
+    // Material 3 resolves shape independently for default, pressed and selected
+    // states. Apply Aloha's live theme shape to all three slots; otherwise the
+    // row silently falls back to Material 3 defaults as soon as it is pressed
+    // or selected, even though the normal state follows Voyage/Aloha settings.
+    val themeShape = voyageSegmentedShape(index, count, vertical = true)
+    return ListItemDefaults.segmentedShapes(index, count).copy(
+        shape = themeShape,
+        pressedShape = themeShape,
+        selectedShape = themeShape,
     )
+}
 
 @Composable
 fun SegmentedColumn(
