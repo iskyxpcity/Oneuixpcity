@@ -1198,3 +1198,71 @@ Continue from the full source archive: finish the eight switch renderers and fou
 - 四种滑条仍需继续对照 ncw0/y3w0/w3w0/v2t0 的轨道、进度、thumb、刻度与动画细节；本次只去除了源码中不存在的旋转。
 - 主题设置页仍需逐组核对 Voyage 的 Display/Design/Shape/Components/Shadows/Navigation/Launch/Assist 分组与实际条目，不能仅凭资源字符串补造功能。
 - 本提交后的 GitHub Actions 构建与 APK 校验待完成；此前基线 run 41112020825（build #2216）通过，但不作为本次提交的构建证明。
+
+
+## K.473 — 2026-10-30：Voyage 图标形状目录/选择器源码移植、Fancy 滑条编译修复与签名测试 APK
+
+### 本轮完成的源码核对与实现
+
+1. **图标形状目录**
+   - 直接对照原始 Voyage 反编译源码 vqp.java、qha0.java，确认原始顺序为 **26 个基础 Shape + 25 个 RoundedPolygon，共 51 个预设**；Random 与 None 是独立选项，不计入 51 个预设。
+   - 新增 VoyageIconShapePresets.kt：按原始目录顺序实现 51 个形状；基础路径取自 Voyage 的 gop/VectorPath 数据，后 25 个形状使用 qha0 的顶点、逐顶点圆角/平滑参数、对称变换与归一化逻辑。没有用通用多边形替代源码数据。
+   - 原始 Voyage APK 的 META-INF/androidx.graphics_graphics-shapes.version 确认为 **1.1.0**；项目增加 androidx.graphics:graphics-shapes:1.1.0 与 androidx.core:core-ktx，避免使用与原 APK 不同的 Shapes API 版本。
+
+2. **图标形状选择器**
+   - IconShapePresetPicker.kt 改为 51 项原始顺序，并保留 Random、None 两个末尾选项。
+   - 对照 d8t0.java：选择器外层固定使用 c9c0.lo（目录索引 8 的 Voyage 基础形状），52dp 框体；选中背景 primaryContainer，未选中背景 surfaceContainerHigh；选中/未选中边线分别使用 onPrimaryContainer / onSecondaryContainer，宽度 0.7dp / 0.1dp；形状预览为 26dp 透明底、2dp 描边；Random/None 图标为 48dp。
+   - 既有设置索引迁移和持久化入口未改动；本轮完成的是目录数据及选择器 UI 的源码移植。持久化仍需真机端到端验证。
+
+3. **Fancy 滑条调用兼容**
+   - SegmentedSliderItem.kt 的 VoyageSliderThumb 增加 valueFraction 参数，匹配现有 AlohaOneUISlider.kt 调用点，修复 Kotlin 编译错误。
+   - Thumb 从 interactionSource 读取 pressed 状态；Fancy halo 只在按压期间显示。该参数不用于进度旋转，保持原源码没有进度驱动旋转的行为。
+   - 继续核对 ncw0、n8f0、qhf：Fancy 的 active progress 与 thumb 是不同颜色通道；active track 取 qhf.I(..., true)，thumb 取独立 thumb palette；源码轨道厚度为 16dp、圆角参数为 6dp，halo 由 pressed 状态触发。完整四种滑条绘制移植尚未完成。
+
+### 八种 Switch 的原始派发顺序与已确认尺寸（本轮完成源码定位，尚未宣称绘制移植完成）
+
+gfj0 与 j7w0 确认顺序及 renderer：
+0. Material You → z3w0.I / z4v0.o：52×32dp 轨道、20dp thumb、2dp 描边。
+1. Compose → frt0.l：52×32dp 轨道、20dp slot；thumb 按 checked/icon/pressed 为 16/24/28dp；2dp 描边。
+2. Pixel → it70.l：56×28dp 轨道、16dp slot、20dp thumb、1.8dp 描边、500ms 动画。
+3. Fluent → ckw0.l：48×24dp 轨道、thumb 常态 12×12dp，按压/悬停扩展至 17×14dp；1dp 描边。
+4. Cupertino → rdf.l：51×31dp 轨道、20dp thumb，按压/悬停 1.25 倍缩放；2dp 描边。
+5. Liquid Glass → rdf.O / Android 33+ 的 ixv0.lo：64×28dp 轨道、20dp thumb。
+6. HyperOS → y2t0.l：50×28.5dp 轨道、20/23dp thumb，位置 tween 与弹簧尺寸动画分开。
+7. One UI → l140.l：35×18.5dp 轨道、22dp thumb、39×22dp 外槽、0.1dp 描边、250ms 动画。
+
+以上尺寸和派发类来自原始源码；ExpressiveSwitch.kt 的八种绘制/颜色/动画尚未全部按这些数据重写，不能标记为 1:1 完成。
+
+### 提交与构建验证
+
+本轮测试分支提交：
+- 7549558005a2 — Port Voyage 51 icon shape presets from source
+- f3f328425276 — Match Voyage icon shape list and selection layout
+- 9f80c6843e57 — Add Voyage-matched graphics-shapes 1.1.0
+- f67462b457f5 — Match Voyage icon-shape tile geometry and source colors
+- 0f86c6442840 — Fix slider thumb API and press-only Fancy halo
+
+GitHub Actions：
+- Build #2229 / Run 41122207369：**success**
+- Preflight：:common:assembleDebug、:stub:assembleDebug、:hook:assembleDebug、:app:compileDebugKotlin 成功。
+- 完整 :app:assembleDebug 成功。
+- APK v2 签名验证、包名/版本号、Manifest 与 Xposed 元数据检查通过。
+- 本 workflow 未运行单元测试；不能把本次结果描述为单元测试通过。
+
+已验证产物：
+- 文件：AlohaOneUI_1.0.261025_BUILD_2229.apk
+- versionName=1.0.261025，versionCode=16
+- 包名：com.alohaoneui.app；targetSdk=36
+- 类型：**Owner 证书签名的 debug/test APK**（debuggable=true），不是 release-optimized APK。
+- 大小：28,843,833 bytes
+- APK SHA-256：8e75ab61166454b8da33587ed06187bd4ff623c6cebe3b44766c7adea9c17cbf
+- Owner 证书 SHA-256：93bf61a6493c6b336383832eb41301bd8fe061f43566e7e384e3fdd9fc1c26a1
+- Actions artifact：AlohaOneUI-Signed-Test-APK，artifact ID 13010145202。
+
+### 当前状态与剩余工作
+
+- 图标形状 51 项目录与选择器 UI 已实现并通过本轮编译/打包；仍需真机检查预览、选择、随机项、None 与重启持久化。
+- 八种 Switch 的 renderer 已定位并记录精确尺寸/状态参数；ExpressiveSwitch.kt 仍需按上述八个源码实现逐一完成几何、颜色、描边和动画。
+- 四种 Slider 仍需完成 jaf0/gaf0/iaf0/haf0 对应的 Material You/Fancy/Material 2/HyperOS 完整轨道、进度、thumb、刻度及动效移植。
+- Voyage 设置页的 Display/Design/Shape/Components/Shadows/Navigation/Launch/Assist 分组及各级菜单仍需逐项对照源码。
+- 本轮未修改、未合并 main；所有改动仅在 test/voyage-theme-1to1-20261026。
