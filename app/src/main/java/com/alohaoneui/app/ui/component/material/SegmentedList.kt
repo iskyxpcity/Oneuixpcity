@@ -5,6 +5,7 @@ import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.Spring
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.runtime.LaunchedEffect
@@ -551,22 +552,22 @@ fun voyageSegmentedShape(index: Int, count: Int, vertical: Boolean = true, press
 
     val topStart by animateDpAsState(
         targetValue = (pressedRadius ?: if (first) 16.dp else 4.dp) * cornerScale,
-        animationSpec = tween(durationMillis = 250, easing = FastOutSlowInEasing),
+        animationSpec = spring(dampingRatio = 0.72f, stiffness = 800f),
         label = "voyageSegmentTopStart",
     )
     val topEnd by animateDpAsState(
         targetValue = (pressedRadius ?: if (if (vertical) first else last) 16.dp else 4.dp) * cornerScale,
-        animationSpec = tween(durationMillis = 250, easing = FastOutSlowInEasing),
+        animationSpec = spring(dampingRatio = 0.72f, stiffness = 800f),
         label = "voyageSegmentTopEnd",
     )
     val bottomEnd by animateDpAsState(
         targetValue = (pressedRadius ?: if (last) 16.dp else 4.dp) * cornerScale,
-        animationSpec = tween(durationMillis = 250, easing = FastOutSlowInEasing),
+        animationSpec = spring(dampingRatio = 0.72f, stiffness = 800f),
         label = "voyageSegmentBottomEnd",
     )
     val bottomStart by animateDpAsState(
         targetValue = (pressedRadius ?: if (if (vertical) last else first) 16.dp else 4.dp) * cornerScale,
-        animationSpec = tween(durationMillis = 250, easing = FastOutSlowInEasing),
+        animationSpec = spring(dampingRatio = 0.72f, stiffness = 800f),
         label = "voyageSegmentBottomStart",
     )
 
