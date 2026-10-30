@@ -1022,3 +1022,16 @@
 - 已将测试分支 `test/voyage-theme-1to1-20261026` 的 Git ref 从 `76dfc83984868f3b3082ee31a8fd4ba021da641c` 回退至目标提交 `4df08577e073cd0e2bd3043cacf758cf5415366c`，采用 force-with-lease（expected SHA 校验），不是只替换单个滑条文件。该操作使分支产品源码及资源树与 Build #2110 的提交快照一致；`main` 未修改。
 - 目标 Build #2110 的 build job 已完成，Kotlin 编译、加载现有签名密钥、构建 owner-signed APK、包名/证书校验、保留 APK artifact 均成功。Artifact：`AlohaOneUI-Signed-Test-APK`，ID `12935974399`，下载页 `https://github.com/iskyxpcity/Oneuixpcity/actions/runs/40962959645/artifacts/12935974399`。
 - 本记录保留回退前完整维护历史，并追加本次完整回退说明。回退到历史提交本身不会自动触发 Actions；当前分支产品树已与目标 SHA 对齐。若后续需要对最新维护记录提交再次触发构建，必须明确说明那是基于相同产品树的新构建。
+
+
+## 2026-10-29 — Fancy 轨道缩小 2dp、保留进度色尺寸并修正端部阴影边界
+
+- 用户明确要求：Fancy 轨道高度缩小 2dp，进度色不要随轨道一起缩小；同时检查轨道左右两端没有阴影的原因。
+- 源码根因：Fancy 轨道通过 `thumbWidth / 2 + 10dp` 向左右各延伸约 22dp，但原 `Canvas` 仍只按 Slider 原始轨道槽宽度测量。轨道 Outline 在 `Canvas` 中向左右平移并超出其绘制边界，导致真实圆角端部被裁切；阴影 modifier 却只按未扩展的 Canvas 边界生成，因此投影轮廓与轨道真实端点不一致，两端看不到完整阴影。
+- 已修改 `SegmentedSliderItem.kt`：
+  1. Fancy 轨道高度由 40dp 调整为 38dp；
+  2. 进度色高度独立固定为原来的 36dp，不再通过 `trackHeight - 4dp` 联动缩小；
+  3. 为 Fancy 绘制层增加左右各 22dp 的实际测量范围，并将扩展后的绘制层回置到 Slider 原始槽位；轨道 Outline 与阴影现在使用同一扩展边界；
+  4. 刻度位置仍对应 Slider 原始滑动范围，Fancy 进度宽度仍按原始范围计算；Material You、Material 2、HyperOS 的绘制分支未改。
+- 产品源码提交：`22a38bf67a0057dab6f7f99e37d2766bb9917bc3`。仅提交至 `test/voyage-theme-1to1-20261026`，未修改或合并 `main`。
+- 验证状态：源码已提交，当前必须继续检查该提交触发的 GitHub Actions Kotlin 编译、签名和 APK artifact。尚未取得新构建终态，也未完成真机端部阴影/进度尺寸目视验收；不可将提交成功视为构建或视觉验收完成。
