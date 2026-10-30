@@ -762,7 +762,9 @@ private class VoyagePathShape(
         val bs = with(density) { bottomStart.toPx() }.coerceIn(0f, minOf(size.width, size.height) / 2f)
         // Voyage vk7/yge0 scales ConcaveArc and Notch corner radii to 0.65f;
         // apply that source scale before building either custom outline.
-        val depthScale = if (style == 5 || style == 6) 0.5f else 1f
+        // Voyage vk7/yge0 applies a 0.65 corner-radius multiplier to
+        // ConcaveArc and Notch; other shape families keep the full radius.
+        val depthScale = if (style == 5 || style == 6) 0.65f else 1f
         val tl = (if (layoutDirection == LayoutDirection.Ltr) ts else te) * depthScale
         val tr = (if (layoutDirection == LayoutDirection.Ltr) te else ts) * depthScale
         val br = (if (layoutDirection == LayoutDirection.Ltr) be else bs) * depthScale
