@@ -1,12 +1,10 @@
 package com.alohaoneui.app.ui.component.material
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -54,7 +52,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
@@ -98,39 +95,29 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.graphicsLayer
 import com.alohaoneui.app.ui.theme.LocalMaterialShadowButtons
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 val LocalListItemShapes = compositionLocalOf<ListItemShapes?> { null }
 
 
 /**
- * Voyage-style press feedback: every pointer press (tap or long-press) produces
- * one restrained scale pulse, then settles back even while the pointer remains
- * down. The same interaction source is shared with the Material 3 row.
+ * Card press feedback: stay enlarged for the entire pressed interval and
+ * return to the original size only after release/cancel. Tap and long-press
+ * share the row's interaction source, so both follow the same pressed state.
  */
 @Composable
-private fun Modifier.alohaPressPulse(
+private fun Modifier.alohaPressScale(
     interactionSource: MutableInteractionSource,
 ): Modifier {
-    val scale = remember(interactionSource) { Animatable(1f) }
-    LaunchedEffect(interactionSource) {
-        interactionSource.interactions.collect { interaction ->
-            if (interaction is PressInteraction.Press) {
-                scale.animateTo(
-                    targetValue = 1.035f,
-                    animationSpec = spring(dampingRatio = 0.58f, stiffness = 650f),
-                )
-                scale.animateTo(
-                    targetValue = 1f,
-                    animationSpec = spring(dampingRatio = 0.72f, stiffness = 520f),
-                )
-            }
-        }
-    }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 1.035f else 1f,
+        animationSpec = spring(dampingRatio = 0.72f, stiffness = 520f),
+        label = "alohaCardPressScale",
+    )
     return graphicsLayer {
-        scaleX = scale.value
-        scaleY = scale.value
+        scaleX = scale
+        scaleY = scale
     }
 }
 
@@ -725,7 +712,7 @@ fun SegmentedListItem(
                 Modifier.border(it.dp, colorScheme.outlineVariant, outlineShape)
             } ?: Modifier
         )
-        .then(if (enabled) Modifier.alohaPressPulse(resolvedInteractionSource) else Modifier.alpha(0.5f))
+        .then(if (enabled) Modifier.alohaPressScale(resolvedInteractionSource) else Modifier.alpha(0.5f))
     SegmentedListItem(
         onClick = onClick ?: {},
         onLongClick = onLongClick,
