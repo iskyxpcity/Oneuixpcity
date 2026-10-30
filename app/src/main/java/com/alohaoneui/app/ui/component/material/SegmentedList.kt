@@ -504,7 +504,13 @@ fun voyageCornerShape(radius: androidx.compose.ui.unit.Dp): Shape {
 fun alohaOneUISegmentedColors(): ListItemColors = ListItemDefaults.segmentedColors().copy(
     containerColor = colorScheme.surfaceContainerHigh,
     disabledContainerColor = colorScheme.surfaceContainerHigh,
-    supportingContentColor = colorScheme.outline
+    supportingContentColor = colorScheme.outline,
+    selectedContainerColor = colorScheme.primaryContainer,
+    selectedContentColor = colorScheme.onPrimaryContainer,
+    selectedLeadingContentColor = colorScheme.onPrimaryContainer,
+    selectedTrailingContentColor = colorScheme.onPrimaryContainer,
+    selectedOverlineContentColor = colorScheme.onPrimaryContainer,
+    selectedSupportingContentColor = colorScheme.onPrimaryContainer,
 )
 
 /**
@@ -637,6 +643,13 @@ fun SegmentedItem(
     }
 }
 
+private fun ListItemShapes.shapeForAlohaState(selected: Boolean, pressed: Boolean): Shape =
+    when {
+        pressed -> pressedShape
+        selected -> selectedShape
+        else -> shape
+    }
+
 @Composable
 fun SegmentedListItem(
     modifier: Modifier = Modifier,
@@ -653,16 +666,18 @@ fun SegmentedListItem(
 ) {
     val itemShapes = LocalListItemShapes.current ?: ListItemDefaults.segmentedShapes(0, 1)
     val resolvedInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
-    // Voyage's setting rows use their native ripple and source shape morphing; no
-    // synthetic press-scale curve is applied to the entire row.
+    val isPressed by resolvedInteractionSource.collectIsPressedAsState()
+    val outlineShape = itemShapes.shapeForAlohaState(selected = false, pressed = isPressed)
+    // Keep the optional outer shadow and outline on the exact same state shape used
+    // by the Material 3 row for press/selection feedback.
     val styledModifier = modifier
         .then(
-            if (LocalMaterialShadowContainers.current) Modifier.shadow(1.dp, itemShapes.shape)
+            if (LocalMaterialShadowContainers.current) Modifier.shadow(1.dp, outlineShape)
             else Modifier
         )
         .then(
             LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
-                Modifier.border(it.dp, colorScheme.outlineVariant, itemShapes.shape)
+                Modifier.border(it.dp, colorScheme.outlineVariant, outlineShape)
             } ?: Modifier
         )
         .then(if (enabled) Modifier else Modifier.alpha(0.5f))
@@ -700,16 +715,18 @@ fun SegmentedListItem(
 ) {
     val itemShapes = LocalListItemShapes.current ?: ListItemDefaults.segmentedShapes(0, 1)
     val resolvedInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
-    // Voyage's setting rows use their native ripple and source shape morphing; no
-    // synthetic press-scale curve is applied to the entire row.
+    val isPressed by resolvedInteractionSource.collectIsPressedAsState()
+    val outlineShape = itemShapes.shapeForAlohaState(selected = checked, pressed = isPressed)
+    // Keep the optional outer shadow and outline on the exact same state shape used
+    // by the Material 3 row for press/selection feedback.
     val styledModifier = modifier
         .then(
-            if (LocalMaterialShadowContainers.current) Modifier.shadow(1.dp, itemShapes.shape)
+            if (LocalMaterialShadowContainers.current) Modifier.shadow(1.dp, outlineShape)
             else Modifier
         )
         .then(
             LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
-                Modifier.border(it.dp, colorScheme.outlineVariant, itemShapes.shape)
+                Modifier.border(it.dp, colorScheme.outlineVariant, outlineShape)
             } ?: Modifier
         )
         .then(if (enabled) Modifier else Modifier.alpha(0.5f))
@@ -748,16 +765,18 @@ fun SegmentedListItem(
 ) {
     val itemShapes = LocalListItemShapes.current ?: ListItemDefaults.segmentedShapes(0, 1)
     val resolvedInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
-    // Voyage's setting rows use their native ripple and source shape morphing; no
-    // synthetic press-scale curve is applied to the entire row.
+    val isPressed by resolvedInteractionSource.collectIsPressedAsState()
+    val outlineShape = itemShapes.shapeForAlohaState(selected = selected, pressed = isPressed)
+    // Keep the optional outer shadow and outline on the exact same state shape used
+    // by the Material 3 row for press/selection feedback.
     val styledModifier = modifier
         .then(
-            if (LocalMaterialShadowContainers.current) Modifier.shadow(1.dp, itemShapes.shape)
+            if (LocalMaterialShadowContainers.current) Modifier.shadow(1.dp, outlineShape)
             else Modifier
         )
         .then(
             LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
-                Modifier.border(it.dp, colorScheme.outlineVariant, itemShapes.shape)
+                Modifier.border(it.dp, colorScheme.outlineVariant, outlineShape)
             } ?: Modifier
         )
         .then(if (enabled) Modifier else Modifier.alpha(0.5f))
