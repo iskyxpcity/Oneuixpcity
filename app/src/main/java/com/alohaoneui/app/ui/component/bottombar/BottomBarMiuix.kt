@@ -3,6 +3,7 @@ package com.alohaoneui.app.ui.component.bottombar
 import androidx.annotation.StringRes
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.defaultMinSize
@@ -24,6 +25,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.alohaoneui.app.R
 import com.alohaoneui.app.ui.LocalMainPagerState
+import com.alohaoneui.app.ui.LocalUiMode
+import com.alohaoneui.app.ui.UiMode
 import com.alohaoneui.app.ui.component.FloatingBottomBar
 import com.alohaoneui.app.ui.component.FloatingBottomBarItem
 import com.alohaoneui.app.ui.theme.LocalEnableFloatingBottomBar
@@ -47,6 +50,19 @@ fun BottomBarMiuix(
     val mainState = LocalMainPagerState.current
     val enableFloatingBottomBar = LocalEnableFloatingBottomBar.current
     val enableFloatingBottomBarBlur = LocalEnableFloatingBottomBarBlur.current
+    val uiMode = LocalUiMode.current
+    val floatingBarAccentColor = when (uiMode) {
+        UiMode.Material -> MaterialTheme.colorScheme.primary
+        UiMode.Miuix -> MiuixTheme.colorScheme.primary
+    }
+    val floatingBarSurfaceColor = when (uiMode) {
+        UiMode.Material -> MaterialTheme.colorScheme.surfaceContainer
+        UiMode.Miuix -> MiuixTheme.colorScheme.surfaceContainer
+    }
+    val floatingBarContentColor = when (uiMode) {
+        UiMode.Material -> MaterialTheme.colorScheme.onSurface
+        UiMode.Miuix -> MiuixTheme.colorScheme.onSurface
+    }
 
     val featuresIcon = ImageVector.vectorResource(id = R.drawable.apps)
     val items = BottomBarDestination.entries.map { destination ->
@@ -88,6 +104,8 @@ fun BottomBarMiuix(
             onSelected = { mainState.animateToPage(it) },
             backdrop = backdrop,
             tabsCount = items.size,
+            accentColor = floatingBarAccentColor,
+            surfaceContainerColor = floatingBarSurfaceColor,
             isBlurEnabled = enableFloatingBottomBarBlur,
         ) {
             items.forEachIndexed { index, item ->
@@ -100,13 +118,13 @@ fun BottomBarMiuix(
                     Icon(
                         imageVector = item.icon,
                         contentDescription = item.label,
-                        tint = MiuixTheme.colorScheme.onSurface
+                        tint = floatingBarContentColor
                     )
                     Text(
                         text = item.label,
                         fontSize = 11.sp,
                         lineHeight = 14.sp,
-                        color = MiuixTheme.colorScheme.onSurface,
+                        color = floatingBarContentColor,
                         maxLines = 1,
                         softWrap = false,
                         overflow = TextOverflow.Visible
