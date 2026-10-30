@@ -319,62 +319,54 @@ private fun createVoyageG2CapsulePath(width: Float, height: Float, radiusPx: Flo
     val sweep = (arcAngle + arcOffset) * 2.0
     val offset = -radius * extended
 
-    fun point(x: Double, y: Double) = VoyageG2Profile.Point(x, y)
-    fun append(
-        first: VoyageG2Profile.Point,
-        second: VoyageG2Profile.Point,
-        end: VoyageG2Profile.Point,
-        transform: (VoyageG2Profile.Point) -> VoyageG2Profile.Point,
-    ) = appendVoyageG2Cubic(path, first, second, end, transform)
-
     if (width > height) {
         val originX = width.toDouble() - radius
         val bottom = height.toDouble()
         path.moveTo(0f, radius.toFloat())
         appendVoyageG2Arc(path, radius, radius, radius, 1.0, arcOffset + Math.PI / 2.0, sweep)
-        append(
-            curve.p2, curve.p1, point(maxOf(curve.p0.x * radius, offset), curve.p0.y * radius),
-        ) { p -> point(radius - p.x * radius, p.y * radius) }
+        appendVoyageG2Cubic(
+            path, curve.p2, curve.p1, curve.p0,
+        ) { p -> VoyageG2Profile.Point(radius - p.x * radius, p.y * radius) }
         path.lineTo((originX + offset).toFloat(), 0f)
-        append(curve.p1, curve.p2, curve.p3) { p ->
-            point(originX + p.x * radius, p.y * radius)
-        }
+        appendVoyageG2Cubic(
+            path, curve.p1, curve.p2, curve.p3,
+        ) { p -> VoyageG2Profile.Point(originX + p.x * radius, p.y * radius) }
         appendVoyageG2Arc(
             path, originX, radius, radius, 1.0,
             -(Math.PI / 2.0 - arcOffset), sweep,
         )
-        append(
-            curve.p2, curve.p1, point(maxOf(curve.p0.x * radius, offset), curve.p0.y * radius),
-        ) { p -> point(originX + p.x * radius, bottom - p.y * radius) }
+        appendVoyageG2Cubic(
+            path, curve.p2, curve.p1, curve.p0,
+        ) { p -> VoyageG2Profile.Point(originX + p.x * radius, bottom - p.y * radius) }
         path.lineTo((radius - offset).toFloat(), bottom.toFloat())
-        append(curve.p1, curve.p2, curve.p3) { p ->
-            point(radius - p.x * radius, bottom - p.y * radius)
-        }
+        appendVoyageG2Cubic(
+            path, curve.p1, curve.p2, curve.p3,
+        ) { p -> VoyageG2Profile.Point(radius - p.x * radius, bottom - p.y * radius) }
     } else {
         val originY = height.toDouble() - radius
         val right = width.toDouble()
         path.moveTo((radius - offset).toFloat(), 0f)
-        append(curve.p1, curve.p2, curve.p3) { p ->
-            point(p.y * radius, radius - p.x * radius)
-        }
+        appendVoyageG2Cubic(
+            path, curve.p1, curve.p2, curve.p3,
+        ) { p -> VoyageG2Profile.Point(p.y * radius, radius - p.x * radius) }
         appendVoyageG2Arc(
             path, radius, radius, radius, 1.0,
             -(Math.PI - arcOffset), sweep,
         )
-        append(
-            curve.p2, curve.p1, point(curve.p0.x * radius, maxOf(curve.p0.x * radius, offset)),
-        ) { p -> point(right - p.y * radius, radius - p.x * radius) }
+        appendVoyageG2Cubic(
+            path, curve.p2, curve.p1, curve.p0,
+        ) { p -> VoyageG2Profile.Point(right - p.y * radius, radius - p.x * radius) }
         path.lineTo(right.toFloat(), (originY + offset).toFloat())
-        append(curve.p1, curve.p2, curve.p3) { p ->
-            point(right - p.y * radius, originY + p.x * radius)
-        }
+        appendVoyageG2Cubic(
+            path, curve.p1, curve.p2, curve.p3,
+        ) { p -> VoyageG2Profile.Point(right - p.y * radius, originY + p.x * radius) }
         appendVoyageG2Arc(
             path, right - radius, originY, radius, 1.0,
             arcOffset, sweep,
         )
-        append(
-            curve.p2, curve.p1, point(curve.p0.x * radius, maxOf(curve.p0.x * radius, offset)),
-        ) { p -> point(p.y * radius, originY + p.x * radius) }
+        appendVoyageG2Cubic(
+            path, curve.p2, curve.p1, curve.p0,
+        ) { p -> VoyageG2Profile.Point(p.y * radius, originY + p.x * radius) }
     }
     path.close()
     return path
@@ -412,7 +404,6 @@ private fun createVoyageG2Path(
         VoyageG2Profile.smooth.interpolateFromCapsule(axisProgress, shared)
     fun point(x: Double, y: Double) = VoyageG2Profile.Point(x, y)
     fun append(
-        curve: VoyageG2Profile.Cubic,
         first: VoyageG2Profile.Point,
         second: VoyageG2Profile.Point,
         end: VoyageG2Profile.Point,
@@ -424,49 +415,50 @@ private fun createVoyageG2Path(
     val tlHorizontal = profile(progresses[1], tlShared)
     val tlV = tlVertical.cubic()
     val tlH = tlHorizontal.cubic()
-    path.moveTo(0f, (tl - tlV.p0.x * tl).toFloat())
-    if (tl > 0.0) {
-        append(tlV, tlV.p1, tlV.p2, tlV.p3) { p ->
-            point(p.y * tl, tl - p.x * tl)
-        }
-        appendVoyageG2Arc(
-            path, tl, tl, tl, 1.0 / tlVertical.arcCurvatureScale,
-            ((1.0 - tlVertical.arcFraction) * Math.PI / 4.0) + Math.PI,
-            tlVertical.arcFraction * Math.PI / 2.0,
-        )
-        append(tlH, tlH.p2, tlH.p1, tlH.p0) { p ->
-            point(tl - p.x * tl, p.y * tl)
-        }
-    }
-    path.lineTo((w - tr + tr * tlH.p0.x * 0.0 + tr * 0.0 + tr * profile(progresses[2], minOf(progresses[2], progresses[3])).cubic().p0.x).toFloat(), 0f)
 
     val trShared = minOf(progresses[2], progresses[3])
     val trHorizontal = profile(progresses[2], trShared)
     val trVertical = profile(progresses[3], trShared)
     val trH = trHorizontal.cubic()
     val trV = trVertical.cubic()
-    if (tr > 0.0) {
-        append(trH, trH.p1, trH.p2, trH.p3) { p ->
-            point(w - p.y * tr, p.x * tr)
-        }
-        appendVoyageG2Arc(
-            path, w - tr, tr, tr, 1.0 / trVertical.arcCurvatureScale,
-            ((1.0 - trVertical.arcFraction) * Math.PI / 4.0) - Math.PI / 2.0,
-            trVertical.arcFraction * Math.PI / 2.0,
-        )
-        append(trV, trV.p2, trV.p1, trV.p0) { p ->
-            point(w - p.y * tr, tr - p.x * tr)
-        }
-    }
-    path.lineTo(w.toFloat(), (h - br + br * trV.p0.x).toFloat())
 
     val brShared = minOf(progresses[4], progresses[5])
     val brVertical = profile(progresses[4], brShared)
     val brHorizontal = profile(progresses[5], brShared)
     val brV = brVertical.cubic()
     val brH = brHorizontal.cubic()
+
+    val blShared = minOf(progresses[6], progresses[7])
+    val blHorizontal = profile(progresses[6], blShared)
+    val blVertical = profile(progresses[7], blShared)
+    val blH = blHorizontal.cubic()
+    val blV = blVertical.cubic()
+
+    path.moveTo(0f, (tl - tlV.p0.x * tl).toFloat())
+    if (tl > 0.0) {
+        append(tlV.p1, tlV.p2, tlV.p3) { p -> point(p.y * tl, tl - p.x * tl) }
+        appendVoyageG2Arc(
+            path, tl, tl, tl, 1.0 / tlVertical.arcCurvatureScale,
+            ((1.0 - tlVertical.arcFraction) * Math.PI / 4.0) + Math.PI,
+            tlVertical.arcFraction * Math.PI / 2.0,
+        )
+        append(tlH.p2, tlH.p1, tlH.p0) { p -> point(tl - p.x * tl, p.y * tl) }
+    }
+    path.lineTo((w - tr + tr * trH.p0.x).toFloat(), 0f)
+
+    if (tr > 0.0) {
+        append(trH.p1, trH.p2, trH.p3) { p -> point(w - p.y * tr, p.x * tr) }
+        appendVoyageG2Arc(
+            path, w - tr, tr, tr, 1.0 / trVertical.arcCurvatureScale,
+            ((1.0 - trVertical.arcFraction) * Math.PI / 4.0) - Math.PI / 2.0,
+            trVertical.arcFraction * Math.PI / 2.0,
+        )
+        append(trV.p2, trV.p1, trV.p0) { p -> point(w - p.y * tr, tr - p.x * tr) }
+    }
+    path.lineTo(w.toFloat(), (h - br + br * brV.p0.x).toFloat())
+
     if (br > 0.0) {
-        append(brV, brV.p1, brV.p2, brV.p3) { p ->
+        append(brV.p1, brV.p2, brV.p3) { p ->
             point(w - p.y * br, h - br + p.x * br)
         }
         appendVoyageG2Arc(
@@ -474,19 +466,14 @@ private fun createVoyageG2Path(
             (1.0 - brVertical.arcFraction) * Math.PI / 4.0,
             brVertical.arcFraction * Math.PI / 2.0,
         )
-        append(brH, brH.p2, brH.p1, brH.p0) { p ->
+        append(brH.p2, brH.p1, brH.p0) { p ->
             point(w - br + p.x * br, h - p.y * br)
         }
     }
-    path.lineTo((bl + bl * brH.p0.x).toFloat(), h.toFloat())
+    path.lineTo((bl + bl * blH.p0.x).toFloat(), h.toFloat())
 
-    val blShared = minOf(progresses[6], progresses[7])
-    val blHorizontal = profile(progresses[6], blShared)
-    val blVertical = profile(progresses[7], blShared)
-    val blH = blHorizontal.cubic()
-    val blV = blVertical.cubic()
     if (bl > 0.0) {
-        append(blH, blH.p1, blH.p2, blH.p3) { p ->
+        append(blH.p1, blH.p2, blH.p3) { p ->
             point(p.y * bl, h - bl + p.x * bl)
         }
         appendVoyageG2Arc(
@@ -494,7 +481,7 @@ private fun createVoyageG2Path(
             ((1.0 - blVertical.arcFraction) * Math.PI / 4.0) + Math.PI / 2.0,
             blVertical.arcFraction * Math.PI / 2.0,
         )
-        append(blV, blV.p2, blV.p1, blV.p0) { p ->
+        append(blV.p2, blV.p1, blV.p0) { p ->
             point(p.x * bl, h - bl + p.y * bl)
         }
     }
