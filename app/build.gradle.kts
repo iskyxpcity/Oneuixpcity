@@ -311,6 +311,8 @@ dependencies {
     implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.ui)
+    implementation(libs.androidx.core.ktx)
+    implementation("androidx.graphics:graphics-shapes:1.1.0") // Matches the Voyage APK's bundled graphics-shapes version.
     implementation(libs.androidx.compose.ui.tooling.preview)
 
     debugImplementation(libs.androidx.compose.ui.test.manifest)
