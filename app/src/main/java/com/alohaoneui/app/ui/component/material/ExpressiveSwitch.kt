@@ -153,8 +153,8 @@ fun ExpressiveSwitch(
     // from a percentage of the track. Style 7 retains its 22dp outer thumb slot.
     val thumbWidth = sourceThumbDiameter
     val thumbHeight = sourceThumbDiameter
-    val thumbSlotWidth = if (style == 7) 22.dp else sourceThumbDiameter + 3.dp
-    val thumbSlotHeight = if (style == 7) 22.dp else sourceThumbDiameter + 3.dp
+    val thumbSlotWidth = if (style == 7) 22.dp else sourceThumbDiameter
+    val thumbSlotHeight = if (style == 7) 22.dp else sourceThumbDiameter
     val trackCornerRadius = when (style) {
         2 -> 14.dp
         3 -> 4.dp
