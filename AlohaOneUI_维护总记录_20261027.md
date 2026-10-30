@@ -1052,3 +1052,12 @@
 - 不改变轨道位置/长度、38dp 轨道与进度高度、刻度位置、外围容器、阴影设置，也不改变 Material You、Material 2、HyperOS。
 - 产品源码提交：`63a66a6ae307ce177d7f046d8006f48ca5372787`，仅提交到 `test/voyage-theme-1to1-20261026`，未修改或合并 `main`。
 - 验证状态：已回读源码确认滑块偏移与进度色绘制平移均已写入；仍需等待该提交对应的 GitHub Actions 构建，并在设备上检查滑块/进度色右移 4dp 后的两端边界与阴影外观。当前不宣称真机视觉验收完成。
+
+
+## 2026-10-29｜修复 Fancy 进度色右移 4dp 引发的 Kotlin 编译错误
+
+- 用户提供 Actions Run #2126（Run ID `40992784170`）后检查确认：构建在 `SegmentedSliderItem.kt:460:41` 失败，错误为 `Dp.toPx()` 在 `withTransform` 的 DrawTransform 接收器上下文中没有 Density 隐式接收者。
+- 根因：将 `4.dp.toPx()` 直接写在 `withTransform { ... }` 的变换 lambda 中；该 lambda 的接收者不是 DrawScope，无法直接执行 Density 转换。
+- 修复：在外层 Canvas DrawScope 中先计算 `val progressOffsetX = 4.dp.toPx()`，再将该 Float 传给 `translate(left = progressOffsetX)`。仅修复 dp→px 的作用域，不改变 Fancy 进度色右移 4dp 的目标位置、尺寸和其他滑条样式。
+- 修复提交：`56df14ace2987be284411d7c26532c9a712f4624`，仅提交到 `test/voyage-theme-1to1-20261026`，未修改或合并 `main`。
+- 验证状态：Build #2126 未生成 APK；本次修复提交触发的新 Actions 构建必须继续检查 Kotlin 编译、签名和 APK Artifact，完成前不视为构建通过。
