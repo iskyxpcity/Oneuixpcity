@@ -447,10 +447,10 @@ private fun createVoyageG2Path(
     path.lineTo((w - tr + tr * trH.p0.x).toFloat(), 0f)
 
     if (tr > 0.0) {
-        append(trH.p1, trH.p2, trH.p3) { p -> point(w - p.x * tr, p.y * tr) }
+        append(trH.p1, trH.p2, trH.p3) { p -> point(w - tr + p.x * tr, p.y * tr) }
         appendVoyageG2Arc(
             path, w - tr, tr, tr, 1.0 / trVertical.arcCurvatureScale,
-            ((1.0 - trVertical.arcFraction) * Math.PI / 4.0) - Math.PI / 2.0,
+            ((1.0 - blVertical.arcFraction) * Math.PI / 4.0) - Math.PI / 2.0,
             trVertical.arcFraction * Math.PI / 2.0,
         )
         append(trV.p2, trV.p1, trV.p0) { p -> point(w - p.y * tr, tr - p.x * tr) }
@@ -470,11 +470,11 @@ private fun createVoyageG2Path(
             point(w - br + p.x * br, h - p.y * br)
         }
     }
-    path.lineTo((bl + bl * blH.p0.x).toFloat(), h.toFloat())
+    path.lineTo((bl - bl * blH.p0.x).toFloat(), h.toFloat())
 
     if (bl > 0.0) {
         append(blH.p1, blH.p2, blH.p3) { p ->
-            point(p.y * bl, h - bl + p.x * bl)
+            point(bl - p.x * bl, h - p.y * bl)
         }
         appendVoyageG2Arc(
             path, bl, h - bl, bl, 1.0 / blVertical.arcCurvatureScale,
@@ -482,7 +482,7 @@ private fun createVoyageG2Path(
             blVertical.arcFraction * Math.PI / 2.0,
         )
         append(blV.p2, blV.p1, blV.p0) { p ->
-            point(p.x * bl, h - bl + p.y * bl)
+            point(p.y * bl, h - bl + p.x * bl)
         }
     }
     path.close()
