@@ -1,0 +1,81 @@
+name: Decompile Voyage source for settings migration
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - test/voyage-theme-1to1-20261026
+    paths:
+      - .github/workflows/decompile-voyage-settings.yml
+
+permissions:
+  contents: read
+
+jobs:
+  decompile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Checkout AlohaOneUI
+        uses: actions/checkout@v4
+
+      - name: Checkout original Voyage APK contents
+        uses: actions/checkout@v4
+        with:
+          repository: iskyxpcity/AppData
+          ref: main
+          path: AppData
+          sparse-checkout: voyage
+          sparse-checkout-cone-mode: true
+
+      - name: Record source revision
+        run: |
+          git -C AppData rev-parse HEAD > SOURCE_COMMIT.txt
+          find AppData/voyage -maxdepth 1 -name 'classes*.dex' -printf '%f %s bytes\n' | sort > DEX_FILES.txt
+          du -sh AppData/voyage >> DEX_FILES.txt
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Download JADX 1.5.6
+        run: |
+          curl -L --fail --retry 3 -o jadx.zip https://github.com/skylot/jadx/releases/download/v1.5.6/jadx-1.5.6.zip
+          mkdir -p tools
+          unzip -q jadx.zip -d tools/jadx
+          chmod +x tools/jadx/bin/jadx
+
+      - name: Repack original APK contents and decompile Java plus resources
+        run: |
+          (cd AppData/voyage && zip -qr -0 ../../voyage-repacked.apk .)
+          tools/jadx/bin/jadx --deobf --show-bad-code --threads-count 2 -d decompiled voyage-repacked.apk
+
+      - name: Index original theme settings groups and matching source files
+        run: |
+          {
+            echo '## Source revision'
+            cat SOURCE_COMMIT.txt
+            echo '## DEX files'
+            cat DEX_FILES.txt
+            echo '## Resource group labels'
+            grep -RniE 'theme_group_(mode|design|shape|components|shadows|navigation_bar|launch|assist)' decompiled/resources/res/values 2>/dev/null || true
+            echo '## Decompiled classes referencing theme groups'
+            grep -RIlE 'theme_group_(mode|design|shape|components|shadows|navigation_bar|launch|assist)' decompiled/sources 2>/dev/null | sort || true
+            echo '## Classes containing launch/assist/navigation settings references'
+            grep -RIlE 'launch_screen|launch_icon|color_assist|navigation_bar|theme_group_launch|theme_group_assist' decompiled/sources 2>/dev/null | sort || true
+          } > voyage-theme-settings-index.txt
+
+      - name: Upload decompiled source and resource evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: voyage-settings-source-jadx-1.5.6
+          path: |
+            decompiled/sources
+            decompiled/resources/res/values
+            voyage-theme-settings-index.txt
+            SOURCE_COMMIT.txt
+            DEX_FILES.txt
+          if-no-files-found: error
+          retention-days: 14
