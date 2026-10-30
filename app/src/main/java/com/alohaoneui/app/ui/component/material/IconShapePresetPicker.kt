@@ -169,9 +169,10 @@ private fun IconShapePresetRow(
         }
     }
     val colors = MaterialTheme.colorScheme
-    val tileBackground = if (selected) colors.primaryContainer else colors.surfaceContainerLow
+    val tileShape = remember { VoyageIconShapePresets.shape(8) }
+    val tileBackground = if (selected) colors.primaryContainer else colors.surfaceContainerHigh
     val tileContent = if (selected) colors.onPrimaryContainer else colors.onSurfaceVariant
-    val tileBorder = if (selected) colors.primary else colors.outlineVariant
+    val tileBorder = if (selected) colors.onPrimaryContainer else colors.onSecondaryContainer
 
     Row(
         modifier = Modifier.fillMaxWidth().height(52.dp),
@@ -181,9 +182,9 @@ private fun IconShapePresetRow(
         Box(
             modifier = Modifier
                 .size(52.dp)
-                .clip(androidx.compose.foundation.shape.CircleShape)
+                .clip(tileShape)
                 .background(tileBackground)
-                .border(if (selected) 0.7.dp else 0.1.dp, tileBorder, androidx.compose.foundation.shape.CircleShape)
+                .border(if (selected) 0.7.dp else 0.1.dp, tileBorder, tileShape)
                 .clickable(
                     interactionSource = interactionSource,
                     indication = ripple(),
@@ -212,7 +213,6 @@ private fun IconShapePresetRow(
                     modifier = Modifier
                         .size(26.dp)
                         .clip(previewShape)
-                        .background(tileContent)
                         .border(2.dp, tileContent, previewShape),
                 )
             }
