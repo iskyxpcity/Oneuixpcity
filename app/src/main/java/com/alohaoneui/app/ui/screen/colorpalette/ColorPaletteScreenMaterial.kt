@@ -67,6 +67,7 @@ import androidx.compose.material.icons.rounded.WaterDrop
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -420,13 +421,14 @@ fun ColorPaletteScreenMaterial(
                     var pageScaleInput by remember { mutableStateOf("") }
 
                     SegmentedListItem(
+                        shapes = ListItemDefaults.segmentedShapes(index = 3, count = 4),
                         leadingContent = {
                             Icon(
                                 Icons.Rounded.AspectRatio,
                                 contentDescription = stringResource(id = R.string.settings_page_scale),
                             )
                         },
-                        headlineContent = {
+                        content = {
                             Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
