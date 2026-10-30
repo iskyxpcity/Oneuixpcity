@@ -313,6 +313,7 @@ fun ColorPaletteScreenMaterial(
                         {
                             val styles = PaletteStyle.entries
                             SegmentedChoiceOptionsItem(
+                                icon = Icons.Rounded.Style,
                                 title = stringResource(R.string.settings_color_style),
                                 items = styles.map { paletteStyleLabel(it.name) },
                                 selectedIndex = styles.indexOf(colorStyle),
@@ -324,6 +325,7 @@ fun ColorPaletteScreenMaterial(
                         {
                             val specs = ColorSpec.SpecVersion.entries
                             SegmentedChoiceOptionsItem(
+                                icon = Icons.Rounded.DesignServices,
                                 title = stringResource(R.string.settings_color_spec),
                                 items = specs.map { colorSpecLabel(it.name) },
                                 selectedIndex = specs.indexOf(colorSpec).coerceAtLeast(0),
