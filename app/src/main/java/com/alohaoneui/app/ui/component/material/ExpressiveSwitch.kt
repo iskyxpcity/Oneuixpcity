@@ -179,18 +179,32 @@ fun ExpressiveSwitch(
     )
     val thumbSlotWidth = when (style) {
         0, 1, 4, 5, 6 -> 20.dp
-        2 -> 16.dp
-        3 -> thumbWidth
+        2, 3 -> 16.dp
         7 -> 22.dp
         else -> 20.dp
     }
     val thumbSlotHeight = when (style) {
         0, 1, 4, 5, 6 -> 20.dp
-        2 -> 16.dp
-        3 -> thumbHeight
+        2, 3 -> 16.dp
         7 -> 22.dp
         else -> 20.dp
     }
+    // Voyage uses fixed Dp offsets in Pixel, Fluent, HyperOS and One UI.
+    // These are the source left-edge offsets, not a percentage of the track.
+    val thumbOffsetStart = when (style) {
+        2 -> 4.dp
+        3 -> 2.dp
+        6, 7 -> 4.dp
+        else -> 0.dp
+    }
+    val thumbOffsetEnd = when (style) {
+        2 -> 32.dp
+        3 -> 32.dp - thumbWidth / 2
+        6 -> 26.dp
+        7 -> 20.dp
+        else -> trackSize.width - thumbSlotWidth
+    }
+    val thumbTravel = (thumbOffsetEnd - thumbOffsetStart).coerceAtLeast(0.dp)
     val trackCornerRadius = when (style) {
         0, 1 -> 16.dp
         2 -> 14.dp
@@ -304,8 +318,8 @@ fun ExpressiveSwitch(
             val thumbWidthPx = thumbWidth.toPx()
             val thumbHeightPx = thumbHeight.toPx()
             val thumbSlotWidthPx = thumbSlotWidth.toPx()
-            val left = trackLeft + thumbSlotWidthPx / 2f
-            val right = trackLeft + trackWidthPx - thumbSlotWidthPx / 2f
+            val left = trackLeft + thumbOffsetStart.toPx() + thumbSlotWidthPx / 2f
+            val right = trackLeft + thumbOffsetEnd.toPx() + thumbSlotWidthPx / 2f
             val cx = left + (right - left) * travel
             val cy = trackTop + trackHeightPx / 2f
             if (style == 5) {
@@ -370,11 +384,13 @@ fun ExpressiveSwitch(
             // thumb itself communicates the on/off state by position and color.
         }
         if (style == 1 && showThumbIcon && thumbContent != null) {
-            val thumbTravel = trackSize.width - thumbSlotWidth
             Box(
                 modifier = Modifier
                     .align(Alignment.Center)
-                    .offset(x = thumbTravel * travel - thumbTravel / 2f)
+                    .offset(
+                        x = thumbOffsetStart + thumbSlotWidth / 2f +
+                            thumbTravel * travel - trackSize.width / 2f
+                    )
                     .size(width = thumbSlotWidth, height = thumbSlotHeight)
                     .clip(thumbSlotShape),
                 contentAlignment = Alignment.Center,
