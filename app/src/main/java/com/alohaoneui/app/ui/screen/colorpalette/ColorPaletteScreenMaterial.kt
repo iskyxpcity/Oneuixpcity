@@ -121,6 +121,7 @@ import com.alohaoneui.app.ui.component.material.SegmentedSwitchItem
 import com.alohaoneui.app.ui.component.material.SegmentedSliderItem
 import com.alohaoneui.mod.ui.component.AlohaOneUISlider
 import com.alohaoneui.app.ui.component.material.SegmentedOptionFrame
+import com.alohaoneui.app.ui.component.material.TonalCard
 import com.alohaoneui.app.ui.component.material.voyageSegmentedShape
 import com.alohaoneui.app.ui.component.material.voyageCornerShape
 import com.alohaoneui.app.ui.component.material.iconShapeForStyle
