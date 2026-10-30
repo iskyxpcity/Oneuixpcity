@@ -755,6 +755,246 @@ private class VoyagePathShape(
         }
     }
 
+    /**
+     * Direct port of Voyage's wgo0.ll() WavyShape path builder.
+     *
+     * Source defaults: max edge sample distance 12dp, wave amplitude 0.9dp,
+     * perimeter normalization 360, and 8 samples per normalized segment.
+     * Voyage samples each straight edge and quarter-circle independently,
+     * offsets the contour along its outward normal with a sine wave, and
+     * joins samples with quadratic segments. Keep those source constants and
+     * phase boundaries instead of substituting a hand-authored fixed wave.
+     */
+    private fun createVoyageWavyOutline(
+        size: Size,
+        density: Density,
+        topStart: Float,
+        topEnd: Float,
+        bottomEnd: Float,
+        bottomStart: Float,
+    ): Outline {
+        val width = size.width
+        val height = size.height
+        if (width <= 0f || height <= 0f) {
+            return Outline.Rectangle(
+                Rect(0f, 0f, width.coerceAtLeast(0f), height.coerceAtLeast(0f))
+            )
+        }
+
+        val densityScale = density.density.coerceAtLeast(0.0001f)
+        val minDimension = minOf(width, height)
+        val shapeScale = (minDimension / (48f * densityScale)).coerceIn(0.42f, 1f)
+
+        // wgo0 default constructor: (12.0f, 0.9f, 360.0f, 8.0f).
+        val maxSampleDistance = (12f * densityScale * shapeScale).coerceAtLeast(1f)
+        val waveAmplitude = (0.9f * densityScale * shapeScale)
+            .coerceIn(0f, minDimension / 4f)
+
+        val tl = topStart.coerceIn(0f, minDimension / 2f)
+        val tr = topEnd.coerceIn(0f, minDimension / 2f)
+        val br = bottomEnd.coerceIn(0f, minDimension / 2f)
+        val bl = bottomStart.coerceIn(0f, minDimension / 2f)
+
+        // wgo0.II(): an edge receives the source wave amplitude when either
+        // adjacent corner is rounded; otherwise that straight edge stays flat.
+        val topAmplitude = if (tl > 0f || tr > 0f) waveAmplitude else 0f
+        val rightAmplitude = if (tr > 0f || br > 0f) waveAmplitude else 0f
+        val bottomAmplitude = if (br > 0f || bl > 0f) waveAmplitude else 0f
+        val leftAmplitude = if (bl > 0f || tl > 0f) waveAmplitude else 0f
+
+        if (waveAmplitude <= 0f) {
+            if (tl == 0f && tr == 0f && br == 0f && bl == 0f) {
+                return Outline.Rectangle(Rect(0f, 0f, width, height))
+            }
+            return Outline.Rounded(
+                androidx.compose.ui.geometry.RoundRect(
+                    left = 0f,
+                    top = 0f,
+                    right = width,
+                    bottom = height,
+                    topLeftCornerRadius = androidx.compose.ui.geometry.CornerRadius(tl, tl),
+                    topRightCornerRadius = androidx.compose.ui.geometry.CornerRadius(tr, tr),
+                    bottomRightCornerRadius = androidx.compose.ui.geometry.CornerRadius(br, br),
+                    bottomLeftCornerRadius = androidx.compose.ui.geometry.CornerRadius(bl, bl),
+                )
+            )
+        }
+
+        val tlArc = (tl - waveAmplitude).coerceAtLeast(0f)
+        val trArc = (tr - waveAmplitude).coerceAtLeast(0f)
+        val brArc = (br - waveAmplitude).coerceAtLeast(0f)
+        val blArc = (bl - waveAmplitude).coerceAtLeast(0f)
+
+        val rightEdgeX = width - rightAmplitude
+        val bottomEdgeY = height - bottomAmplitude
+
+        val topStartX = if (tl > 0f) leftAmplitude + tlArc else 0f
+        val topEndX = if (tr > 0f) rightEdgeX - trArc else width
+        val topEndY = if (tr > 0f) topAmplitude + trArc else 0f
+        val bottomEndY = if (br > 0f) bottomEdgeY - brArc else height
+        val bottomEndX = if (br > 0f) rightEdgeX - brArc else width
+        val bottomStartX = if (bl > 0f) leftAmplitude + blArc else 0f
+        val bottomStartY = if (bl > 0f) bottomEdgeY - blArc else height
+        val topStartY = if (tl > 0f) topAmplitude + tlArc else 0f
+
+        val topLength = (topEndX - topStartX).coerceAtLeast(0f)
+        val rightLength = (bottomEndY - topEndY).coerceAtLeast(0f)
+        val bottomLength = (bottomEndX - bottomStartX).coerceAtLeast(0f)
+        val leftLength = (bottomStartY - topStartY).coerceAtLeast(0f)
+        val quarterTurn = (Math.PI / 2.0).toFloat()
+        val perimeterLength = topLength + rightLength + bottomLength + leftLength +
+            quarterTurn * (tlArc + trArc + brArc + blArc)
+
+        if (perimeterLength <= 0f) {
+            return Outline.Rectangle(Rect(0f, 0f, width, height))
+        }
+
+        // wgo0.ll(): ceil(perimeter / 12dp), then normalize the average
+        // perimeter step by 8 and the complete perimeter by 360.
+        val perimeterSteps = kotlin.math.ceil(perimeterLength / maxSampleDistance)
+            .toInt().coerceAtLeast(1)
+        val averageStep = perimeterLength / perimeterSteps
+        val wavePeriod = maxOf(averageStep / 8f, perimeterLength / 360f, 1f)
+
+        val path = Path()
+        var started = false
+        var firstX = 0f
+        var firstY = 0f
+        var lastX = 0f
+        var lastY = 0f
+        var phaseOffset = 0f
+
+        fun appendWavePoint(
+            x: Float,
+            y: Float,
+            normalX: Float,
+            normalY: Float,
+            phase: Float,
+            amplitude: Float,
+        ) {
+            val offset = amplitude * kotlin.math.sin(
+                phase.toDouble() * (2.0 * Math.PI) / wavePeriod.toDouble()
+            ).toFloat()
+            val pointX = x + normalX * offset
+            val pointY = y + normalY * offset
+            if (!started) {
+                path.moveTo(pointX, pointY)
+                firstX = pointX
+                firstY = pointY
+                started = true
+            } else {
+                // wgo0.lo() uses the previous sample as the quadratic control
+                // and the midpoint to the new sample as the segment endpoint.
+                path.quadraticTo(
+                    lastX,
+                    lastY,
+                    (lastX + pointX) / 2f,
+                    (lastY + pointY) / 2f,
+                )
+            }
+            lastX = pointX
+            lastY = pointY
+        }
+
+        fun appendWaveLine(
+            startX: Float,
+            startY: Float,
+            endX: Float,
+            endY: Float,
+            normalX: Float,
+            normalY: Float,
+            length: Float,
+            amplitude: Float,
+        ) {
+            val steps = kotlin.math.ceil(length / wavePeriod).toInt().coerceAtLeast(1)
+            for (index in 1..steps) {
+                val fraction = index.toFloat() / steps
+                appendWavePoint(
+                    x = startX + (endX - startX) * fraction,
+                    y = startY + (endY - startY) * fraction,
+                    normalX = normalX,
+                    normalY = normalY,
+                    phase = phaseOffset + fraction * length,
+                    amplitude = amplitude,
+                )
+            }
+        }
+
+        fun appendWaveArc(
+            centerX: Float,
+            centerY: Float,
+            radius: Float,
+            startAngle: Float,
+        ) {
+            val arcLength = quarterTurn * radius
+            val steps = kotlin.math.ceil(arcLength / wavePeriod).toInt().coerceAtLeast(1)
+            for (index in 1..steps) {
+                val fraction = index.toFloat() / steps
+                val angle = startAngle + quarterTurn * fraction
+                val normalX = kotlin.math.cos(angle.toDouble()).toFloat()
+                val normalY = kotlin.math.sin(angle.toDouble()).toFloat()
+                appendWavePoint(
+                    x = centerX + radius * normalX,
+                    y = centerY + radius * normalY,
+                    normalX = normalX,
+                    normalY = normalY,
+                    phase = phaseOffset + fraction * arcLength,
+                    amplitude = waveAmplitude,
+                )
+            }
+            // wgo0.lI() advances the phase after each quarter-circle. Its
+            // straight-edge sampler intentionally starts from that corner phase.
+            phaseOffset += arcLength
+        }
+
+        appendWaveLine(
+            topStartX, topAmplitude, topEndX, topAmplitude,
+            0f, -1f, topLength, topAmplitude,
+        )
+        appendWaveArc(
+            rightEdgeX - trArc,
+            topAmplitude + trArc,
+            trArc,
+            -quarterTurn,
+        )
+        appendWaveLine(
+            rightEdgeX, topEndY, rightEdgeX, bottomEndY,
+            1f, 0f, rightLength, rightAmplitude,
+        )
+        appendWaveArc(
+            rightEdgeX - brArc,
+            bottomEdgeY - brArc,
+            brArc,
+            0f,
+        )
+        appendWaveLine(
+            bottomEndX, bottomEdgeY, bottomStartX, bottomEdgeY,
+            0f, 1f, bottomLength, bottomAmplitude,
+        )
+        appendWaveArc(
+            leftAmplitude + blArc,
+            bottomEdgeY - blArc,
+            blArc,
+            quarterTurn,
+        )
+        appendWaveLine(
+            leftAmplitude, bottomStartY, leftAmplitude, topStartY,
+            -1f, 0f, leftLength, leftAmplitude,
+        )
+        appendWaveArc(
+            leftAmplitude + tlArc,
+            topAmplitude + tlArc,
+            tlArc,
+            Math.PI.toFloat(),
+        )
+
+        if (started) {
+            path.quadraticTo(lastX, lastY, firstX, firstY)
+            path.close()
+        }
+        return Outline.Generic(path)
+    }
+
     private fun createVoyageOutline(size: Size, layoutDirection: LayoutDirection, density: Density): Outline {
         val ts = with(density) { topStart.toPx() }.coerceIn(0f, minOf(size.width, size.height) / 2f)
         val te = with(density) { topEnd.toPx() }.coerceIn(0f, minOf(size.width, size.height) / 2f)
@@ -807,11 +1047,7 @@ private class VoyagePathShape(
                 // Direct ban.I / ban.l path: cubic-to-arc-to-cubic at every corner.
                 path.addPath(createVoyageG2Path(w, h, tl, tr, br, bl))
             }
-            4 -> {
-                // Direct wgo0 perimeter sampling with the original 12dp period,
-                // 0.9dp amplitude, OR edge activation, and shared phase.
-                path.addPath(createVoyageWavyPath(w, h, tl, tr, br, bl, density))
-            }
+            4 -> return createVoyageWavyOutline(size, density, tl, tr, br, bl)
             5 -> {
                 path.moveTo(tl, 0f)
                 path.lineTo(w - tr, 0f)
