@@ -1139,3 +1139,26 @@
 - 修复源码提交：`7fe81d27c608eab54b88e043f99a50e31eb2e5e4`，仅提交至 `test/voyage-theme-1to1-20261026`，未修改或合并 `main`。
 - 原失败运行诊断：Run `41039872650`，Build job `124010455708`；诊断明确指出旧函数名未解析。该运行没有 APK Artifact，只有 `AlohaOneUI-Build-Diagnostics`。
 - 验证状态：修复提交已推送，后续 Actions 构建结果待检查；在新一轮 Kotlin 编译、签名和 APK Artifact 验证完成前，不视为交付通过。
+
+
+## K.471 — 2026-10-30 08:38 HST — Voyage source-grounded geometry and persistence batch
+
+### Source verification
+- Re-read the latest full Library record `AlohaOneUI_维护总记录_2610300049.md` before editing.
+- Materialized and inspected the Voyage decompiled source archive and slider-renderer archive. The focused source index includes `wgo0.java` (Wavy perimeter shape), `ban.java`/`dan.java`/`fqw0.java`/`wcf.java`/`opw0.java` (Smooth G² profile/path), the eight switch renderer classes, four slider renderers, and `vqp.java`/`shq.java`/`qha0.java`/`ycc0.java` (icon-shape catalog).
+- `vqp` case 2 constructs 26 base Shape entries plus 25 RoundedPolygon entries: 51 concrete Voyage presets. The Aloha picker already exposes 51 concrete entries and Random index 51; repository persistence had a stale upper bound of 50.
+
+### Code changes committed to this test branch
+- `SegmentedList.kt`: replaced the old fixed-wave approximation with a direct `wgo0.ll()`-derived perimeter sampler. It retains Voyage's 12dp sample-distance default, 0.9dp amplitude, 360/8 normalization, edge activation rule, per-edge/quarter-arc sampling, shared phase accumulation, outward-normal sine offset, quadratic joins, and close segment. Removed the obsolete duplicate Wavy sampler. Also corrected the Smooth G² top-right arc start angle to use the top-right corner's own `arcFraction` rather than the bottom-left value.
+- `ExpressiveSwitch.kt`: corrected source track/slot bounds for all eight renderer entries: 52×32, 52×32, 56×28, 48×24, 48×28 inside 51×31, 64×28, 50×28.5, and 35×18.5 inside 39×22. Restored the source thumb diameter states (16/24/28, 16/24/28, 20, 12/14/17, 20, 24, 20/23/26, 14/16/18) and centered the inner tracks in the two source-sized outer slots. This is a geometry correction, not a claim that all per-style colors, glyphs, and animation curves are fully ported.
+- `SettingsRepositoryImpl.kt`: corrected all three icon-shape persistence bounds from `-1..50` to `-1..51`, preserving None=-1 and Random=51.
+- `SegmentedSliderItem.kt`: aligned Fancy progress with the theme secondary color while retaining the primary thumb, restored the Voyage 14dp container with 12dp horizontal/6dp vertical insets, and disabled the Fancy rail shadow (outer container shadow remains separately controlled).
+
+### Verification and blockers
+- Branch head is `0307f8bc71de467da27a35561cb1dacc07d1da47`; comparison against the test branch reports identical. All edits remain on `test/voyage-theme-1to1-20261026`; `main` was not modified or merged.
+- The last known Actions run `41039872650` checked out earlier commit `33d928ec995e85ddd3d8a456e00256af1fa2a101` and failed compilation on unresolved `alohaPressPulse`. The current `SegmentedList.kt` and `SegmentedSliderItem.kt` no longer reference that symbol, but this does not validate the newer commits.
+- The connected GitHub workflow-run listing exposes PR-triggered runs only; combined commit status for the new commits is empty. The workflow file does contain a push trigger for `test/**`, but no new push-run ID/artifact is available through the connected Actions tools in this run. The only Library APK found is older Build #2142, so no new APK is claimed or published.
+- Migration remains incomplete: exact per-style switch drawing/color/icon/animation, all four slider renderers, actual Voyage icon-shape path catalog/preview and random-selection persistence, and the settings-page layout still require source-by-source completion. The current geometric icon-shape generator is not accepted as a 1:1 replacement.
+
+### Next source-grounded batch
+Continue from the full source archive: finish the eight switch renderers and four slider renderers by comparing each original class, replace the generic icon-shape generator with the 51-entry Voyage catalog, then finish the settings layout and run a fresh push build. Do not merge to `main` before the APK is verified.
