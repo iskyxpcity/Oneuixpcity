@@ -540,7 +540,7 @@ fun voyageSegmentedShape(index: Int, count: Int, vertical: Boolean = true, press
     val pressedRadius = when {
         !pressed -> null
         count > 1 && (first || last) -> 4.dp
-        else -> 3.dp
+        else -> 3.5.dp
     }
 
     val topStart by animateDpAsState(
