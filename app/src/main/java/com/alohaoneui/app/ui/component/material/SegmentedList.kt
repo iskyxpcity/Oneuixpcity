@@ -4,7 +4,10 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.interaction.PressInteraction
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateListOf
+import kotlinx.coroutines.delay
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -667,6 +670,37 @@ fun SegmentedItem(
     }
 }
 
+/**
+ * Keep a short tap visible for at least one brief interval. Compose batches
+ * state writes before a frame, so Press + Release in one frame can otherwise
+ * disappear when represented only by collectIsPressedAsState().
+ *
+ * Track each Press by identity so overlapping presses and cancellation remain
+ * correctly paired. The existing shape spring remains responsible for motion.
+ */
+@Composable
+private fun MutableInteractionSource.collectIsPressedWithMinimumDuration(
+    minimumPressedMillis: Long = 100L,
+): Boolean {
+    val activePresses = remember(this) { mutableStateListOf<PressInteraction.Press>() }
+    LaunchedEffect(this) {
+        interactions.collect { interaction ->
+            when (interaction) {
+                is PressInteraction.Press -> activePresses.add(interaction)
+                is PressInteraction.Release -> {
+                    delay(minimumPressedMillis)
+                    activePresses.remove(interaction.press)
+                }
+                is PressInteraction.Cancel -> {
+                    delay(minimumPressedMillis)
+                    activePresses.remove(interaction.press)
+                }
+            }
+        }
+    }
+    return activePresses.isNotEmpty()
+}
+
 @Composable
 private fun ListItemShapes.animatedAlohaShapes(
     config: SegmentedShapeConfig?,
@@ -692,7 +726,7 @@ fun SegmentedListItem(
 ) {
     val itemShapes = LocalListItemShapes.current ?: ListItemDefaults.segmentedShapes(0, 1)
     val resolvedInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
-    val isPressed by resolvedInteractionSource.collectIsPressedAsState()
+    val isPressed = resolvedInteractionSource.collectIsPressedWithMinimumDuration()
     val (animatedShapes, outlineShape) = itemShapes.animatedAlohaShapes(LocalSegmentedShapeConfig.current, isPressed)
     // Keep the optional outer shadow and outline on the exact same state shape used
     // by the Material 3 row for press/selection feedback.
@@ -741,7 +775,7 @@ fun SegmentedListItem(
 ) {
     val itemShapes = LocalListItemShapes.current ?: ListItemDefaults.segmentedShapes(0, 1)
     val resolvedInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
-    val isPressed by resolvedInteractionSource.collectIsPressedAsState()
+    val isPressed = resolvedInteractionSource.collectIsPressedWithMinimumDuration()
     val (animatedShapes, outlineShape) = itemShapes.animatedAlohaShapes(LocalSegmentedShapeConfig.current, isPressed)
     // Keep the optional outer shadow and outline on the exact same state shape used
     // by the Material 3 row for press/selection feedback.
@@ -791,7 +825,7 @@ fun SegmentedListItem(
 ) {
     val itemShapes = LocalListItemShapes.current ?: ListItemDefaults.segmentedShapes(0, 1)
     val resolvedInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
-    val isPressed by resolvedInteractionSource.collectIsPressedAsState()
+    val isPressed = resolvedInteractionSource.collectIsPressedWithMinimumDuration()
     val (animatedShapes, outlineShape) = itemShapes.animatedAlohaShapes(LocalSegmentedShapeConfig.current, isPressed)
     // Keep the optional outer shadow and outline on the exact same state shape used
     // by the Material 3 row for press/selection feedback.
