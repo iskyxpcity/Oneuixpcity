@@ -7,7 +7,13 @@ import com.materialkolor.dynamiccolor.ColorSpec
 import com.alohaoneui.app.alohaOneUIApp
 import com.alohaoneui.app.ui.UiMode
 
-/** Persist only the AlohaOneUI theme/navigation configuration. */
+/**
+ * Persist only the AlohaOneUI theme/navigation configuration.
+ *
+ * Voyage's source catalog contains 51 concrete icon-shape presets
+ * (26 Shape entries plus 25 RoundedPolygon entries). Aloha keeps None at -1
+ * and Random at 51, so the persisted range is -1..51.
+ */
 class SettingsRepositoryImpl : SettingsRepository {
     private val prefs by lazy {
         alohaOneUIApp.getSharedPreferences("settings", Context.MODE_PRIVATE)
@@ -90,7 +96,7 @@ class SettingsRepositoryImpl : SettingsRepository {
             val key = "material_icon_shape_style"
             val migrationKey = "material_icon_shape_style_index_v2"
             if (prefs.getBoolean(migrationKey, false)) {
-                return prefs.getInt(key, -1).coerceIn(-1, 50)
+                return prefs.getInt(key, -1).coerceIn(-1, 51)
             }
             val migrated = if (!prefs.contains(key)) {
                 -1
@@ -109,7 +115,7 @@ class SettingsRepositoryImpl : SettingsRepository {
             return migrated
         }
         set(value) = prefs.edit {
-            putInt("material_icon_shape_style", value.coerceIn(-1, 50))
+            putInt("material_icon_shape_style", value.coerceIn(-1, 51))
             putBoolean("material_icon_shape_style_index_v2", true)
         }
 
@@ -206,7 +212,7 @@ class SettingsRepositoryImpl : SettingsRepository {
             .putInt("material_shape_style", snapshot.materialShapeStyle.coerceIn(0, 6))
             .putInt("material_switch_style", snapshot.materialSwitchStyle.coerceIn(0, 7))
             .putInt("material_slider_style", snapshot.materialSliderStyle.coerceIn(0, 3))
-            .putInt("material_icon_shape_style", snapshot.materialIconShapeStyle.coerceIn(-1, 50))
+            .putInt("material_icon_shape_style", snapshot.materialIconShapeStyle.coerceIn(-1, 51))
             .putBoolean("material_icon_shape_style_index_v2", true)
             .putFloat("material_outline_width", snapshot.materialOutlineWidth.coerceIn(0.0f, 1.5f))
             .putBoolean("material_shadow_containers", snapshot.materialShadowContainers)
