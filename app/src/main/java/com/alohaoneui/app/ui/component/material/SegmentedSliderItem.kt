@@ -91,7 +91,7 @@ internal fun voyageSliderAppearance(requestedStyle: Int): VoyageSliderAppearance
     val thumb = scheme.primary
     val inactive = when (style) {
         0 -> scheme.tertiaryContainer        // Material You: tinted inactive rail
-        1 -> scheme.surfaceContainerHighest // Fancy: theme-linked neutral rail
+        1 -> scheme.onSurface.copy(alpha = 0.38f) // Fancy: Voyage inactive track alpha
         2 -> scheme.tertiaryContainer        // Material 2: fine tinted rail
         else -> scheme.tertiaryContainer    // HyperOS: tinted inactive rail
     }
@@ -368,8 +368,10 @@ internal fun VoyageSliderTrack(
     val fraction = if (range.endInclusive > range.start) {
         ((state.value - range.start) / (range.endInclusive - range.start)).coerceIn(0f, 1f)
     } else 0f
-    val trackShape = voyageCornerShape(height / 2f)
-    val fancyProgressShape = if (style == 1) voyageCornerShape(18.dp) else trackShape
+    // Fancy keeps a 38dp thumb lane, while its painted rail is 16dp tall.
+    // Voyage's source track caps use a 6dp radius.
+    val trackShape = if (style == 1) voyageCornerShape(6.dp) else voyageCornerShape(height / 2f)
+    val fancyProgressShape = if (style == 1) voyageCornerShape(6.dp) else trackShape
     val fancyExtension = if (style == 1) thumbWidth / 2f + 10.dp else 0.dp
     val trackModifier = Modifier
         .then(
@@ -443,7 +445,7 @@ internal fun VoyageSliderTrack(
                     baseTrackWidth * fraction + thumbWidth.toPx() / 2f +
                         8.dp.toPx() + extension
                     ).coerceIn(0f, size.width)
-                val progressHeight = 38.dp.toPx().coerceAtMost(h)
+                val progressHeight = 16.dp.toPx().coerceAtMost(h)
                 if (progressWidth > 0f && progressHeight > 0f) {
                     val progressOutline = fancyProgressShape.createOutline(
                         size = Size(progressWidth, progressHeight),
