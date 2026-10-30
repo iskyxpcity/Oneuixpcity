@@ -1102,3 +1102,12 @@
 - 外层边框和阴影继续与 pressed/selected/default Shape 状态同步；Shape 继续由 LocalMaterialCornerScale 与 LocalMaterialShapeStyle 驱动，不写死圆角值。
 - 产品源码修正提交：5ff453da65e3b6159710f24b090fc758b846ac92，文件：app/src/main/java/com/alohaoneui/app/ui/component/material/SegmentedList.kt。仅提交至 test/voyage-theme-1to1-20261026，未修改或合并 main。
 - 验证状态：已回读检查颜色映射和主题来源；本次提交后的 Kotlin 编译、签名、APK Artifact 与真机主题切换/按压/选中视觉验收尚未确认，不将此前构建结果视为本轮验证。
+
+
+## 2026-10-29｜修复详情列表选中/按压状态未跟随全局主题形状
+
+- 用户反馈详情列表卡片仍未联动主题形状。重新检查 `SegmentedList.kt` 后确认：`voyageSegmentedShape()` 已读取 `LocalMaterialCornerScale` 与 `LocalMaterialShapeStyle`，但 `defaultSingleSegmentedShape()` 只将主题形状赋给 Material 3 的默认 `shape`，没有覆盖 `pressedShape` 和 `selectedShape`。
+- Material 3 列表项会按交互状态分别读取这三个 Shape 槽位。因此列表项处于普通状态时可能显示 Aloha/Voyage 主题形状，但按压或选中后会退回 `ListItemDefaults.segmentedShapes()` 的默认 Material 3 形状，造成主题形状看似没有联动。
+- 已修复 `defaultSingleSegmentedShape()`：每次根据当前列表分组位置、`LocalMaterialCornerScale` 和 `LocalMaterialShapeStyle` 生成一次 `themeShape`，并同时赋给 `shape`、`pressedShape`、`selectedShape`。这样默认、按压、选中三种状态均使用相同的 Aloha 动态主题轮廓；不同列表位置的首尾圆角规则仍由 `voyageSegmentedShape(index, count)` 决定。
+- 本次产品源码提交：`09e6d771e6622239a806a4daa1ac3df445141d71`，文件：`app/src/main/java/com/alohaoneui/app/ui/component/material/SegmentedList.kt`。仅修改测试分支 `test/voyage-theme-1to1-20261026`，未修改或合并 `main`。
+- 验证状态：源码写入已完成，尚需检查该提交后的 Actions Kotlin 编译、APK 签名与 Artifact；还需在设备上分别改变全局圆角大小/形状风格，并检查详情列表默认、选中、按压状态是否同步。当前不宣称构建或真机视觉验收通过。
