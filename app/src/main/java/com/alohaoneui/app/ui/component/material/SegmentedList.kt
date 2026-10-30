@@ -447,7 +447,7 @@ private fun createVoyageG2Path(
     path.lineTo((w - tr + tr * trH.p0.x).toFloat(), 0f)
 
     if (tr > 0.0) {
-        append(trH.p1, trH.p2, trH.p3) { p -> point(w - p.y * tr, p.x * tr) }
+        append(trH.p1, trH.p2, trH.p3) { p -> point(w - p.x * tr, p.y * tr) }
         appendVoyageG2Arc(
             path, w - tr, tr, tr, 1.0 / trVertical.arcCurvatureScale,
             ((1.0 - trVertical.arcFraction) * Math.PI / 4.0) - Math.PI / 2.0,
