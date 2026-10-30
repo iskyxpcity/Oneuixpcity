@@ -1162,3 +1162,39 @@
 
 ### Next source-grounded batch
 Continue from the full source archive: finish the eight switch renderers and four slider renderers by comparing each original class, replace the generic icon-shape generator with the 51-entry Voyage catalog, then finish the settings layout and run a fresh push build. Do not merge to `main` before the APK is verified.
+
+
+## K.472 — 2026-10-30 Voyage 源码对照修正（仅测试分支）
+
+### 本次基线与源码证据
+- 仅在 test/voyage-theme-1to1-20261026 继续，基线提交：9d34bc34bfbaa9d139bbf962c15627c8c7dede56；不修改、不合并 main。
+- 读取并核对了 AppData 的完整反编译产物 voyage-full-compose-ui-decompiled-source.zip（GitHub Actions run 41105255939 的 artifact，约 124 MB），并同时核对用户上传的 Voyage主题框架.zip 资源表。
+- 原始形状顺序由 y0a0.java 的形状列表及 vk7.java 映射确认：Rounded、Cut、Squircle、Scoop、Wavy、Notch、Smooth G²。其中 uge0 → fde（Scoop）、wge0 → wgo0（Wavy）、tge0 → sad0（Notch）、rge0 → ba20（Smooth G²）。
+- yge0.I() 对 Notch 与 Smooth G² 两种类型使用 0.65 半径系数；wgo0.ll() 的 Wavy 采样/相位/圆弧算法与现有 Wavy 实现逐项一致。
+- Smooth G² 对照 ban.java、dan.java、fqw0.java、opw0.java：arcFraction 由每一侧自己的轴向进度插值；共享进度只用于 extendedFraction 与 arcCurvatureScale；dan.l() 的角度为 (1 - arcFraction) × π/4。旧实现把 arcFraction 错用共享进度，并把角度写成 arcFraction × π/2。
+- fde.ll() 调用 ban.l() 生成 Scoop 胶囊轮廓；sad0.ll() 才是四角越界圆弧的 Notch 轮廓。旧实现把两者顺序/路径混用。
+- 滑条样式顺序由 h7w0.java 确认：Material You → Fancy → Material 2 → HyperOS；Fancy 对应 y3w0.l → caf0.ll，反编译路径没有按数值旋转 thumb 的处理。
+- 八种开关顺序由 j7w0.java 确认：Material You、Compose、Pixel、Fluent、Cupertino、Liquid Glass、HyperOS、One UI。
+
+### 已提交的代码修正
+1. SegmentedList.kt
+   - 修正 Smooth G² 的 cubic angle 与逐轴 arcFraction 插值。
+   - 将 Smooth G² 的特殊圆形/胶囊分支移至源顺序第 7 项（索引 6）。
+   - 索引 3 改为 Voyage fde/ban.l Scoop 胶囊轮廓；索引 5 改为 sad0 Notch 越界圆弧；索引 6 使用 ban.I Smooth G² 轮廓。
+   - Wavy 算法保持不变（源码逐项核对后未发现差异）。
+2. ColorPaletteScreenMaterial.kt
+   - 形状选择器文字顺序改为 Voyage 原始顺序。
+3. SettingsRepositoryImpl.kt
+   - 增加一次性形状索引迁移：旧索引 3→6、5→3、6→5，保持既有用户所选的视觉形状不变。
+4. ExpressiveSwitch.kt
+   - 移除 Cupertino/HyperOS 固定绿/蓝色，改用当前主题色；移除 Smooth G² 的圆角回退，让开关形状跟随已修正的全局形状。
+   - 让 showThumbIcon 真正控制可选 thumb 内容。
+5. SegmentedSliderItem.kt
+   - 移除 Fancy 与 Material 2 thumb 的非源码旋转动效；保留用户确认的 52dp 圆形 Fancy halo、26dp thumb、第二主题色进度与现有轨道长度/容器规格。
+
+### 尚未完成（本次不宣称完成）
+- vqp.java / shq.java / qha0.java 已确认 Voyage 图标形状目录为 26 个基础 Shape + 25 个 RoundedPolygon；当前 Aloha 预览仍需把通用几何生成器替换成逐项源码形状数据，并完成预览尺寸、选择与持久化的端到端验证。
+- 八种开关的各自动画/绘制细节仍需继续逐个对照 z4v0/frt0/it70/ckw0/rdf/y2t0/l140，当前自绘层尚未达到完整 1:1。
+- 四种滑条仍需继续对照 ncw0/y3w0/w3w0/v2t0 的轨道、进度、thumb、刻度与动画细节；本次只去除了源码中不存在的旋转。
+- 主题设置页仍需逐组核对 Voyage 的 Display/Design/Shape/Components/Shadows/Navigation/Launch/Assist 分组与实际条目，不能仅凭资源字符串补造功能。
+- 本提交后的 GitHub Actions 构建与 APK 校验待完成；此前基线 run 41112020825（build #2216）通过，但不作为本次提交的构建证明。

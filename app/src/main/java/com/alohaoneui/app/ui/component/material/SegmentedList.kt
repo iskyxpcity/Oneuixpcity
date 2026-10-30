@@ -133,7 +133,8 @@ private data class VoyageG2Profile(
      * the Bezier segment that joins the G² profile to its circular arc.
      */
     fun cubic(): Cubic {
-        val angle = arcFraction * Math.PI / 2.0
+        // coe.O(arcFraction, PI/2, PI/2, 0.5) in Voyage is the complementary half-angle.
+        val angle = (1.0 - arcFraction) * Math.PI / 4.0
         val sin = kotlin.math.sin(angle)
         val cos = kotlin.math.cos(angle)
         val p0 = Point(-extendedFraction, 0.0)
@@ -201,10 +202,10 @@ private data class VoyageG2Profile(
         fun mix(from: Double, to: Double, amount: Double) = from + (to - from) * amount
         return VoyageG2Profile(
             extendedFraction = mix(capsule.extendedFraction, smooth.extendedFraction, shared) * t,
-            // ban.m5206I() derives d65/d66/d67/d68 from the shared
-            // minimum of the two adjacent axis-progress values, not from
-            // the per-axis progress. This matters for asymmetric corners.
-            arcFraction = mix(capsule.arcFraction, smooth.arcFraction, shared),
+            // ban.m5206I() derives d55/d56/d57/d58 from each side's own
+            // axis progress. Only extendedFraction and arcCurvatureScale use
+            // the shared minimum of the two adjacent axis-progress values.
+            arcFraction = mix(capsule.arcFraction, smooth.arcFraction, t),
             bezierCurvatureScale = mix(capsule.bezierCurvatureScale, smooth.bezierCurvatureScale, t),
             arcCurvatureScale = mix(capsule.arcCurvatureScale, smooth.arcCurvatureScale, shared),
         )
@@ -812,7 +813,7 @@ private class VoyagePathShape(
         val te = with(density) { topEnd.toPx() }.coerceIn(0f, minOf(size.width, size.height) / 2f)
         val be = with(density) { bottomEnd.toPx() }.coerceIn(0f, minOf(size.width, size.height) / 2f)
         val bs = with(density) { bottomStart.toPx() }.coerceIn(0f, minOf(size.width, size.height) / 2f)
-        // Voyage vk7/yge0 scales ConcaveArc and Notch corner radii to 0.65f;
+        // Voyage vk7/yge0 scales Notch and Smooth G² corner radii to 0.65f;
         // apply that source scale before building either custom outline.
         // Voyage vk7/yge0 applies a 0.65 corner-radius multiplier to
         // ConcaveArc and Notch; other shape families keep the full radius.
@@ -828,7 +829,7 @@ private class VoyagePathShape(
         // half-extent to m5208l(). Its square branch is a true circular outline,
         // not the generic four-cubic approximation used for ordinary G² corners.
         // Preserve that degenerate case before constructing the general path.
-        if (style == 3 && w > 0f && w == h &&
+        if (style == 6 && w > 0f && w == h &&
             tl == tr && tr == br && br == bl && tl * 2f == w
         ) {
             return Outline.Rounded(
@@ -856,11 +857,14 @@ private class VoyagePathShape(
                 path.cubicTo(0f, tl * smooth, tl * smooth, 0f, tl, 0f)
             }
             3 -> {
-                // Direct ban.I / ban.l path: cubic-to-arc-to-cubic at every corner.
-                path.addPath(createVoyageG2Path(w, h, tl, tr, br, bl))
+                // Voyage's fde.ll delegates to ban.l(): Scoop is the source
+                // capsule profile, not the separate Notch arc path.
+                path.addPath(createVoyageG2CapsulePath(w, h, minOf(w, h) * 0.5f))
             }
             4 -> return createVoyageWavyOutline(size, density, tl, tr, br, bl)
             5 -> {
+                // Voyage's sad0.ll Notch uses four quarter-arcs whose bounds
+                // extend beyond the component rectangle.
                 path.moveTo(tl, 0f)
                 path.lineTo(w - tr, 0f)
                 path.arcTo(Rect(w - tr, -tr, w + tr, tr), 180f, -90f, false)
@@ -872,19 +876,9 @@ private class VoyagePathShape(
                 path.arcTo(Rect(-tl, -tl, tl, tl), 90f, -90f, false)
             }
             6 -> {
-                path.moveTo(tl, 0f)
-                path.lineTo(w - tr, 0f)
-                path.lineTo(w - tr, tr)
-                path.lineTo(w, tr)
-                path.lineTo(w, h - br)
-                path.lineTo(w - br, h - br)
-                path.lineTo(w - br, h)
-                path.lineTo(bl, h)
-                path.lineTo(bl, h - bl)
-                path.lineTo(0f, h - bl)
-                path.lineTo(0f, tl)
-                path.lineTo(tl, tl)
-                path.close()
+                // Voyage's ba20 Smooth G² profile is the per-corner cubic/arc
+                // construction in ban.I(), including asymmetric axis progress.
+                path.addPath(createVoyageG2Path(w, h, tl, tr, br, bl))
             }
             else -> {
                 path.addRoundRect(androidx.compose.ui.geometry.RoundRect(

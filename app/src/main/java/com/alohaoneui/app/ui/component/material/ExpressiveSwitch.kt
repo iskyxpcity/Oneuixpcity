@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.selection.toggleable
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SwitchColors
 import androidx.compose.material3.SwitchDefaults
@@ -70,9 +69,8 @@ fun ExpressiveSwitch(
         1 -> scheme.primary
         2 -> scheme.primaryContainer
         3 -> scheme.secondary
-        4 -> Color(0xFF34C759)
+        4, 6 -> scheme.primary
         5 -> scheme.tertiaryContainer
-        6 -> Color(0xFF1684FC)
         7 -> scheme.primary
         else -> scheme.primary
     }
@@ -82,17 +80,17 @@ fun ExpressiveSwitch(
         1 -> scheme.onPrimary
         2 -> scheme.primary
         3 -> scheme.onSecondary
+        4, 6 -> scheme.onPrimary
         5 -> scheme.onTertiaryContainer
         7 -> scheme.onPrimary
-        else -> Color.White
+        else -> scheme.onPrimary
     }
     val uncheckedThumb = scheme.outline
     val checkedBorder = when (style) {
         2 -> scheme.primaryContainer
         3 -> scheme.secondary
-        4 -> Color(0xFF34C759)
+        4, 6 -> Color.Transparent
         5 -> scheme.tertiary
-        6 -> Color(0xFF1684FC)
         else -> checkedTrack
     }
     val uncheckedBorder = scheme.outline
@@ -173,35 +171,13 @@ fun ExpressiveSwitch(
         animationSpec = spring(dampingRatio = 0.78f, stiffness = 620f),
         label = "voyageSwitchThumb",
     )
-    // Voyage G² Smooth's general profile can degenerate at the near-capsule
-    // dimensions used by switch tracks/thumbs. Keep the Smooth family visually
-    // continuous with a capsule outline for switches, rather than letting a
-    // degenerate custom path make the Canvas fail to draw every switch.
-    val trackShape = if (com.alohaoneui.app.ui.theme.LocalMaterialShapeStyle.current == 3) {
-        remember(trackCornerRadius) { RoundedCornerShape(trackCornerRadius) }
-    } else {
-        voyageCornerShape(trackCornerRadius)
-    }
-    val slotShape = if (com.alohaoneui.app.ui.theme.LocalMaterialShapeStyle.current == 3) {
-        remember(slotCornerRadius) { RoundedCornerShape(slotCornerRadius) }
-    } else {
-        voyageCornerShape(slotCornerRadius)
-    }
-    val thumbShape = if (com.alohaoneui.app.ui.theme.LocalMaterialShapeStyle.current == 3) {
-        remember(thumbHeight) { RoundedCornerShape(thumbHeight / 2f) }
-    } else {
-        voyageCornerShape(thumbHeight / 2f)
-    }
-    val haloShape = if (com.alohaoneui.app.ui.theme.LocalMaterialShapeStyle.current == 3) {
-        remember(thumbHeight) { RoundedCornerShape(thumbHeight / 2f + 2.dp) }
-    } else {
-        voyageCornerShape(thumbHeight / 2f + 2.dp)
-    }
-    val thumbSlotShape = if (com.alohaoneui.app.ui.theme.LocalMaterialShapeStyle.current == 3) {
-        remember(thumbSlotHeight) { RoundedCornerShape(thumbSlotHeight / 2f) }
-    } else {
-        voyageCornerShape(thumbSlotHeight / 2f)
-    }
+    // Every renderer uses the live Voyage shape family. Smooth G² now has its
+    // source-correct profile, so it no longer needs the former rounded fallback.
+    val trackShape = voyageCornerShape(trackCornerRadius)
+    val slotShape = voyageCornerShape(slotCornerRadius)
+    val thumbShape = voyageCornerShape(thumbHeight / 2f)
+    val haloShape = voyageCornerShape(thumbHeight / 2f + 2.dp)
+    val thumbSlotShape = voyageCornerShape(thumbSlotHeight / 2f)
     val borderWidth = LocalMaterialOutlineWidth.current
     Box(
         modifier = modifier
@@ -329,7 +305,7 @@ fun ExpressiveSwitch(
             // Switch thumb icons/checkmarks are intentionally omitted; the
             // thumb itself communicates the on/off state by position and color.
         }
-        if (thumbContent != null) {
+        if (showThumbIcon && thumbContent != null) {
             val thumbTravel = trackSize.width - thumbSlotWidth
             Box(
                 modifier = Modifier

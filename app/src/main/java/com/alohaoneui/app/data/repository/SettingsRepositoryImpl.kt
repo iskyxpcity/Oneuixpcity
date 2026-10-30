@@ -80,8 +80,31 @@ class SettingsRepositoryImpl : SettingsRepository {
         set(value) = prefs.edit { putFloat("material_corner_scale", value.coerceIn(0.0f, 2.0f)) }
 
     override var materialShapeStyle: Int
-        get() = prefs.getInt("material_shape_style", 0).coerceIn(0, 6)
-        set(value) = prefs.edit { putInt("material_shape_style", value.coerceIn(0, 6)) }
+        get() {
+            val key = "material_shape_style"
+            val migrationKey = "material_shape_style_source_order_v2"
+            if (prefs.getBoolean(migrationKey, false)) {
+                return prefs.getInt(key, 0).coerceIn(0, 6)
+            }
+            // The former Aloha preview order was Rounded/Cut/Squircle/Smooth/
+            // Wavy/Scoop/Notch. Voyage's y0a0 list is Rounded/Cut/Squircle/
+            // Scoop/Wavy/Notch/Smooth. Preserve the selected visual shape.
+            val migrated = when (prefs.getInt(key, 0).coerceIn(0, 6)) {
+                3 -> 6 // Smooth G²
+                5 -> 3 // Scoop
+                6 -> 5 // Notch
+                else -> prefs.getInt(key, 0).coerceIn(0, 6)
+            }
+            prefs.edit {
+                putInt(key, migrated)
+                putBoolean(migrationKey, true)
+            }
+            return migrated
+        }
+        set(value) = prefs.edit {
+            putInt("material_shape_style", value.coerceIn(0, 6))
+            putBoolean("material_shape_style_source_order_v2", true)
+        }
 
     override var materialSwitchStyle: Int
         get() = prefs.getInt("material_switch_style", 0).coerceIn(0, 7)

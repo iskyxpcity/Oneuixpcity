@@ -31,7 +31,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -237,10 +236,6 @@ fun SegmentedSliderItem(
                     onValueChangeFinished = onValueChangeFinished,
                     interactionSource = interactionSource,
                     thumb = { thumbState ->
-                        val valueFraction = if (valueRange.endInclusive > valueRange.start) {
-                            ((thumbState.value - valueRange.start) /
-                                (valueRange.endInclusive - valueRange.start)).coerceIn(0f, 1f)
-                        } else 0f
                         VoyageSliderThumb(
                             style = style,
                             size = thumbSize,
@@ -249,7 +244,6 @@ fun SegmentedSliderItem(
                             shadowEnabled = LocalMaterialShadowSliders.current,
                             interactionSource = interactionSource,
                             haloVisible = isPressed || isDragged,
-                            valueFraction = valueFraction,
                         )
                     },
                     track = { state ->
@@ -282,7 +276,6 @@ internal fun VoyageSliderThumb(
     shadowEnabled: Boolean = false,
     interactionSource: MutableInteractionSource? = null,
     haloVisible: Boolean = false,
-    valueFraction: Float = 0f,
 ) {
     // HyperOS uses the thick track itself as its handle surface.
     if (style == 3) return
@@ -301,9 +294,9 @@ internal fun VoyageSliderThumb(
             )
         }
         1 -> {
-            // Fancy's thumb has a soft mint halo surrounding the theme-primary
-            // shaped core. The selected shape still follows Voyage's shared
-            // shape setting and rotates in the source direction while dragging.
+            // Fancy's thumb keeps the theme-shaped core centered inside the
+            // circular 52dp halo. The decompiled caf0/y3w0 renderer has no
+            // progress-driven thumb rotation.
             Box(
                 // Keep the existing slider slot dimensions so the rail geometry
                 // stays unchanged; the 52dp halo can draw beyond this slot.
@@ -323,7 +316,6 @@ internal fun VoyageSliderThumb(
                     Modifier
                         .size(width = size.width, height = size.height)
                         .then(if (shadowEnabled) Modifier.shadow(4.dp, thumbShape, clip = false) else Modifier)
-                        .then(Modifier.rotate(-1080f * valueFraction))
                         .clip(thumbShape)
                         .background(MaterialTheme.colorScheme.primary),
                 )
@@ -333,10 +325,8 @@ internal fun VoyageSliderThumb(
             Box(
                 Modifier
                     .size(width = size.width, height = size.height)
-                    // Material 2's small wavy circular thumb uses the same global
-                    // Voyage shape style as the rest of the UI. Rotate the outline
-                    // with value progress so the wave reads as a rolling thumb.
-                    .then(Modifier.rotate(-720f * valueFraction))
+                    // Material 2's source thumb follows the rail without a
+                    // progress-driven rotation; its silhouette stays theme-linked.
                     .clip(thumbShape)
                     .background(activeColor),
             )
