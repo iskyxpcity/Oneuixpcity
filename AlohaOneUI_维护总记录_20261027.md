@@ -1043,3 +1043,12 @@
 - 已将 `VoyageSliderTrack` 的 Fancy `progressHeight` 从 36dp 改为 38dp；轨道高度此前已为 38dp，因此现在两者均为 38dp，进度色不再比轨道矮 2dp。
 - 左右端阴影绘制边界修复保持不变；Material You、Material 2、HyperOS 未修改；`main` 未修改。
 - 产品源码提交：`2ba908b0832cc2ee71ce2a52c685c42396915b7d`。需要检查该提交触发的 Actions 编译、签名与 APK artifact；在构建完成前不宣称 APK 已交付。
+
+
+## 2026-10-29｜Fancy 滑块与进度色整体右移 4dp
+
+- 按用户要求，仅调整 Fancy（style 1）的滑块核心与进度色位置：滑块核心原先相对 thumb slot 左偏 4dp（`.offset(x = (-4).dp)`），现改为不偏移，视觉位置相对原状态向右 4dp。
+- Fancy 进度色的宽度及高度计算不变，在绘制变换中增加 `left = 4.dp.toPx()`，使整段进度色整体向右移动 4dp；保持它与滑块核心之间原有的相对间距。
+- 不改变轨道位置/长度、38dp 轨道与进度高度、刻度位置、外围容器、阴影设置，也不改变 Material You、Material 2、HyperOS。
+- 产品源码提交：`63a66a6ae307ce177d7f046d8006f48ca5372787`，仅提交到 `test/voyage-theme-1to1-20261026`，未修改或合并 `main`。
+- 验证状态：已回读源码确认滑块偏移与进度色绘制平移均已写入；仍需等待该提交对应的 GitHub Actions 构建，并在设备上检查滑块/进度色右移 4dp 后的两端边界与阴影外观。当前不宣称真机视觉验收完成。
