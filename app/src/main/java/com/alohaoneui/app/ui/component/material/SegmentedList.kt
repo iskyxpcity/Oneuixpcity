@@ -629,13 +629,13 @@ private fun createVoyageWavyPath(
         startY: Float,
         endX: Float,
         endY: Float,
+        length: Float,
         normalX: Float,
         normalY: Float,
         localAmplitude: Float,
     ) {
         val dx = endX - startX
         val dy = endY - startY
-        val length = kotlin.math.sqrt(dx * dx + dy * dy)
         val count = kotlin.math.ceil(length / sampleStep).toInt()
         val firstIndex = if (hasStarted) 1 else 0
         if (count > 0 && firstIndex <= count) {
@@ -682,13 +682,13 @@ private fun createVoyageWavyPath(
         phaseDistance += arcLength
     }
 
-    sampleLine(topStartX, topAmplitude, topEndX, topAmplitude, 0f, -1f, topAmplitude)
+    sampleLine(topStartX, topAmplitude, topEndX, topAmplitude, topLength, 0f, -1f, topAmplitude)
     sampleArc(width - trRadius, topAmplitude + trRadius, trRadius, -Math.PI.toFloat() / 2f)
-    sampleLine(width - trRadius, rightStartY, width - trRadius, rightEndY, 1f, 0f, rightAmplitude)
+    sampleLine(width - trRadius, rightStartY, width - trRadius, rightEndY, rightLength, 1f, 0f, rightAmplitude)
     sampleArc(width - brRadius, height - brRadius, brRadius, 0f)
-    sampleLine(bottomStartX, height - bottomAmplitude, bottomEndX, height - bottomAmplitude, 0f, 1f, bottomAmplitude)
+    sampleLine(bottomStartX, height - bottomAmplitude, bottomEndX, height - bottomAmplitude, bottomLength, 0f, 1f, bottomAmplitude)
     sampleArc(leftAmplitude + blRadius, height - blRadius, blRadius, Math.PI.toFloat() / 2f)
-    sampleLine(leftAmplitude, leftStartY, leftAmplitude, leftEndY, -1f, 0f, leftAmplitude)
+    sampleLine(leftAmplitude, leftStartY, leftAmplitude, leftEndY, leftLength, -1f, 0f, leftAmplitude)
     sampleArc(leftAmplitude + tlRadius, topAmplitude + tlRadius, tlRadius, Math.PI.toFloat())
 
     val previous = previousSample
