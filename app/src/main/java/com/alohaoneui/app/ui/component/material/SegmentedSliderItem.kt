@@ -455,9 +455,12 @@ internal fun VoyageSliderTrack(
                         layoutDirection = layoutDirection,
                         density = this,
                     )
+                    // Resolve dp in DrawScope before entering DrawTransform,
+                    // whose receiver does not provide Density.toPx().
+                    val progressOffsetX = 4.dp.toPx()
                     withTransform({
                         translate(
-                            left = 4.dp.toPx(),
+                            left = progressOffsetX,
                             top = (h - progressHeight) / 2f,
                         )
                     }) {
