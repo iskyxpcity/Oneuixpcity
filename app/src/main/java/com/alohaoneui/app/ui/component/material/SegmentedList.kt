@@ -2,6 +2,7 @@ package com.alohaoneui.app.ui.component.material
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -91,6 +92,7 @@ import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
 import com.alohaoneui.app.ui.theme.LocalMaterialShadowContainers
 import androidx.compose.foundation.border
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.draw.shadow
 import com.alohaoneui.app.ui.theme.LocalMaterialShadowButtons
 import kotlinx.coroutines.launch
@@ -693,6 +695,11 @@ fun SegmentedListItem(
     val itemShapes = LocalListItemShapes.current ?: ListItemDefaults.segmentedShapes(0, 1)
     val resolvedInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
     val isPressed by resolvedInteractionSource.collectIsPressedAsState()
+    val pressScale by animateFloatAsState(
+        targetValue = if (isPressed && enabled) 1.025f else 1f,
+        animationSpec = spring(dampingRatio = 0.4f, stiffness = 800f),
+        label = "segmentedCardPressScale",
+    )
     val (animatedShapes, outlineShape) = itemShapes.animatedAlohaShapes(LocalSegmentedShapeConfig.current, isPressed)
     // Keep the optional outer shadow and outline on the exact same state shape used
     // by the Material 3 row for press/selection feedback.
@@ -707,6 +714,10 @@ fun SegmentedListItem(
             } ?: Modifier
         )
         .then(if (!enabled) Modifier.alpha(0.5f) else Modifier)
+        .graphicsLayer {
+            scaleX = pressScale
+            scaleY = pressScale
+        }
     SegmentedListItem(
         onClick = onClick ?: {},
         onLongClick = onLongClick,
@@ -742,6 +753,11 @@ fun SegmentedListItem(
     val itemShapes = LocalListItemShapes.current ?: ListItemDefaults.segmentedShapes(0, 1)
     val resolvedInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
     val isPressed by resolvedInteractionSource.collectIsPressedAsState()
+    val pressScale by animateFloatAsState(
+        targetValue = if (isPressed && enabled) 1.025f else 1f,
+        animationSpec = spring(dampingRatio = 0.4f, stiffness = 800f),
+        label = "segmentedCardPressScale",
+    )
     val (animatedShapes, outlineShape) = itemShapes.animatedAlohaShapes(LocalSegmentedShapeConfig.current, isPressed)
     // Keep the optional outer shadow and outline on the exact same state shape used
     // by the Material 3 row for press/selection feedback.
@@ -756,6 +772,10 @@ fun SegmentedListItem(
             } ?: Modifier
         )
         .then(if (!enabled) Modifier.alpha(0.5f) else Modifier)
+        .graphicsLayer {
+            scaleX = pressScale
+            scaleY = pressScale
+        }
     SegmentedListItem(
         checked = checked,
         onCheckedChange = onCheckedChange,
@@ -792,6 +812,11 @@ fun SegmentedListItem(
     val itemShapes = LocalListItemShapes.current ?: ListItemDefaults.segmentedShapes(0, 1)
     val resolvedInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
     val isPressed by resolvedInteractionSource.collectIsPressedAsState()
+    val pressScale by animateFloatAsState(
+        targetValue = if (isPressed && enabled) 1.025f else 1f,
+        animationSpec = spring(dampingRatio = 0.4f, stiffness = 800f),
+        label = "segmentedCardPressScale",
+    )
     val (animatedShapes, outlineShape) = itemShapes.animatedAlohaShapes(LocalSegmentedShapeConfig.current, isPressed)
     // Keep the optional outer shadow and outline on the exact same state shape used
     // by the Material 3 row for press/selection feedback.
@@ -806,6 +831,10 @@ fun SegmentedListItem(
             } ?: Modifier
         )
         .then(if (!enabled) Modifier.alpha(0.5f) else Modifier)
+        .graphicsLayer {
+            scaleX = pressScale
+            scaleY = pressScale
+        }
     SegmentedListItem(
         selected = selected,
         onClick = onClick,
