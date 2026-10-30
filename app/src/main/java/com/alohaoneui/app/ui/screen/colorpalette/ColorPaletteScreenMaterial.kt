@@ -405,6 +405,7 @@ fun ColorPaletteScreenMaterial(
                                 stringResource(R.string.settings_page_gesture_ios_like),
                             )
                             SegmentedChoiceOptionsItem(
+                                icon = Icons.Rounded.ViewCarousel,
                                 title = stringResource(R.string.settings_page_gesture_mode),
                                 items = pagerGestureOptions,
                                 selectedIndex = uiState.pagerGestureMode.coerceIn(0, pagerGestureOptions.lastIndex),
