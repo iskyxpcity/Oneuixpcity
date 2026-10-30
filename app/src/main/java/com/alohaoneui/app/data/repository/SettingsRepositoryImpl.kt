@@ -103,8 +103,8 @@ class SettingsRepositoryImpl : SettingsRepository {
             } else {
                 when (val legacy = prefs.getInt(key, 0)) {
                     0 -> -1
-                    1 -> 50
-                    in 2..51 -> legacy - 2
+                    1 -> 51
+                    in 2..52 -> legacy - 2
                     else -> -1
                 }
             }
