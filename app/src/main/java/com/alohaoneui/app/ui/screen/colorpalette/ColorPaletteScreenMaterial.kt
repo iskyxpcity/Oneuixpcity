@@ -67,14 +67,12 @@ import androidx.compose.material.icons.rounded.WaterDrop
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SegmentedListItem
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
@@ -420,75 +418,75 @@ fun ColorPaletteScreenMaterial(
                     var showPageScaleValueDialog by remember { mutableStateOf(false) }
                     var pageScaleInput by remember { mutableStateOf("") }
 
-                    SegmentedListItem(
-                        shapes = ListItemDefaults.segmentedShapes(index = 3, count = 4),
-                        leadingContent = {
-                            Icon(
-                                Icons.Rounded.AspectRatio,
-                                contentDescription = stringResource(id = R.string.settings_page_scale),
-                            )
-                        },
-                        content = {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 8.dp),
-                                verticalArrangement = Arrangement.spacedBy(8.dp),
+                    TonalCard(
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
                             ) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                ) {
-                                    Column(
-                                        modifier = Modifier.weight(1f)
-                                    ) {
-                                Text(
-                                    text = stringResource(R.string.settings_page_scale),
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = MaterialTheme.colorScheme.onSurface
+                                Icon(
+                                    Icons.Rounded.AspectRatio,
+                                    contentDescription = stringResource(id = R.string.settings_page_scale),
+                                    tint = MaterialTheme.colorScheme.onSurface,
                                 )
-                                Text(
-                                    text = stringResource(id = R.string.settings_page_scale_summary),
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.outline
-                                )
-                            }
-                            Surface(
-                                onClick = {
-                                    pageScaleInput = ((sliderValue * 100).toInt()).toString()
-                                    showPageScaleValueDialog = true
-                                },
-                                modifier = Modifier.requiredHeight(32.dp),
-                                shape = voyageCornerShape(12.dp),
-                                color = MaterialTheme.colorScheme.primaryContainer,
-                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                shadowElevation = if (LocalMaterialShadowButtons.current) 2.dp else 0.dp,
-                                border = LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
-                                    BorderStroke(it.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.45f))
-                                },
-                            ) {
-                                Box(
-                                    modifier = Modifier.fillMaxHeight().padding(horizontal = 10.dp),
-                                    contentAlignment = Alignment.Center,
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column(
+                                    modifier = Modifier.weight(1f),
                                 ) {
                                     Text(
-                                        text = "${(sliderValue * 100).toInt()}%",
-                                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                        text = stringResource(R.string.settings_page_scale),
+                                        style = MaterialTheme.typography.titleMedium,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                    )
+                                    Text(
+                                        text = stringResource(id = R.string.settings_page_scale_summary),
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.outline,
                                     )
                                 }
+                                Surface(
+                                    onClick = {
+                                        pageScaleInput = ((sliderValue * 100).toInt()).toString()
+                                        showPageScaleValueDialog = true
+                                    },
+                                    modifier = Modifier.requiredHeight(32.dp),
+                                    shape = voyageCornerShape(12.dp),
+                                    color = MaterialTheme.colorScheme.primaryContainer,
+                                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    shadowElevation = if (LocalMaterialShadowButtons.current) 2.dp else 0.dp,
+                                    border = LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
+                                        BorderStroke(it.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.45f))
+                                    },
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxHeight()
+                                            .padding(horizontal = 10.dp),
+                                        contentAlignment = Alignment.Center,
+                                    ) {
+                                        Text(
+                                            text = "${(sliderValue * 100).toInt()}%",
+                                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                        )
+                                    }
+                                }
                             }
+                            AlohaOneUISlider(
+                                value = sliderValue,
+                                onValueChange = { sliderValue = it },
+                                onValueChangeFinished = { actions.onSetPageScale(sliderValue) },
+                                valueRange = 0.8f..1.1f,
+                                modifier = Modifier.fillMaxWidth(),
+                            )
                         }
-
-                                AlohaOneUISlider(
-                                    value = sliderValue,
-                                    onValueChange = { sliderValue = it },
-                                    onValueChangeFinished = { actions.onSetPageScale(sliderValue) },
-                                    valueRange = 0.8f..1.1f,
-                                    modifier = Modifier.fillMaxWidth(),
-                                )
-                            }
-                        },
-                    )
+                    }
 
                     if (showPageScaleValueDialog) {
                         ExpressiveContentDialog(
