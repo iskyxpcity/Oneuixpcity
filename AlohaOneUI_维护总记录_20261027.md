@@ -1091,3 +1091,14 @@
 - 明确设置选择态主题配色：背景使用 `primaryContainer`，标题、支持文字、前导/尾随图标使用 `onPrimaryContainer`；未选中背景继续使用 `surfaceContainerHigh`，支持文字继续使用 `outline`。颜色随动态 Material You 配色变化，不使用固定色值。
 - 本轮产品源码提交：`21e96e1078da1195332898d2aa410483a4b726f7`，文件：`app/src/main/java/com/alohaoneui/app/ui/component/material/SegmentedList.kt`。仅修改测试分支 `test/voyage-theme-1to1-20261026`，未修改或合并 `main`。
 - 验证状态：已回读确认三种重载均读取共享按压源并将动态状态形状用于外层描边/阴影；选择态各前景/背景颜色均显式设置。GitHub Actions 编译、签名及 APK Artifact 尚待本次提交后的运行结果确认；真机点击、长按、选中轮廓与主题色视觉验收尚未完成。
+
+
+## 2026-10-29｜更正详情列表选择色：接入 Aloha OneUI 次级强调主题色
+
+- 用户指出上一轮将选择态颜色指定为 primaryContainer / onPrimaryContainer 的方向不符合项目主题设计，要求所有颜色反馈都联动 Aloha OneUI 主题，不使用固定颜色。
+- 已核对当前分支的主题实现：ThemeExt.kt 通过 rememberAlohaOneUIColorScheme() 依据自定义种子色或系统 Monet、配色风格、明暗模式生成动态 ColorScheme，并通过 animateAsState() 平滑过渡颜色；因此组件应直接读取当前 MaterialTheme.colorScheme，不另建静态色值。
+- 已将 alohaOneUISegmentedColors() 的选择态背景改为主题动态 secondaryContainer，标题、辅助文字及前导/尾随内容前景统一改为对应的 onSecondaryContainer。这些是主题角色，不是固定 RGB；用户切换主题色、Monet、配色风格或明暗模式时会同步更新。
+- 未选中容器仍读取主题 surfaceContainerHigh，辅助文字读取主题 outline；列表描边、选项框描边读取主题 outlineVariant；下拉选择文字/图标、输入光标和分组标题继续读取主题 primary / onSurfaceVariant / error。按压涟漪由 Material 3 原生组件及当前主题提供，不另造固定反馈色。
+- 外层边框和阴影继续与 pressed/selected/default Shape 状态同步；Shape 继续由 LocalMaterialCornerScale 与 LocalMaterialShapeStyle 驱动，不写死圆角值。
+- 产品源码修正提交：5ff453da65e3b6159710f24b090fc758b846ac92，文件：app/src/main/java/com/alohaoneui/app/ui/component/material/SegmentedList.kt。仅提交至 test/voyage-theme-1to1-20261026，未修改或合并 main。
+- 验证状态：已回读检查颜色映射和主题来源；本次提交后的 Kotlin 编译、签名、APK Artifact 与真机主题切换/按压/选中视觉验收尚未确认，不将此前构建结果视为本轮验证。
