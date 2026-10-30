@@ -981,3 +981,44 @@
 - 本次改为直接使用可点击的 Material 3 `Surface`，外层明确 `Modifier.requiredHeight(32.dp)`；按钮背景、圆角、文字颜色、点击行为保留，横向内边距放到内部内容容器；阴影通过 `shadowElevation = if (LocalMaterialShadowButtons.current) 2.dp else 0.dp` 单独控制，描边使用全局描边宽度构建 `BorderStroke`。这样关闭阴影/描边时不再依赖条件 modifier 来决定高度。
 - 已逐项复核圆角大小与描边粗细两个按钮都使用同一结构和固定高度。
 - 本次产品代码提交：`21460eab9f3665dc15cab1878ecd47d4aff197e5`。必须等待最新 Actions 验证编译，再确认实际 APK；之前构建未包含本次改动，不可当作本次修正已通过。
+
+
+## 2026-10-29｜Fancy 滑条恢复 #1847 外围容器并缩小轨道
+
+- 用户要求：Fancy 滑条恢复 Actions Build #1847 的外围容器，轨道在当前 40dp 基础上缩小 2dp。
+- 已直接读取 Build #1847（Actions Run `40630647419`，head SHA `f7f1763160e5cb0dc44e24c2805395c11e90475a`）时的 `SegmentedSliderItem.kt`，核对其 `voyageSliderContainerModifier`：Fancy 与其他样式一样保留外层 `voyageCornerShape(20.dp)` 表面、由 `LocalMaterialShadowSliders` 控制的 2dp 阴影、主题 `surfaceContainerLow` 背景，以及水平 6dp / 垂直 4dp 内边距。
+- 当前回退基线中 Fancy 被显式排除外围容器（`if (style == 1) return Modifier`），轨道高度为 40dp。本次仅撤销该排除逻辑，恢复 #1847 的通用容器结构和原有 Fancy 6dp/4dp 内边距；轨道高度从 40dp 调整为 38dp。未更改 Fancy thumb、光环、进度色、轨道绘制算法，也未更改另外三种滑条。
+- 产品源码提交：`0efbb75cdb1461141cd820053afa1dcdf3e9abf4`，文件：`app/src/main/java/com/alohaoneui/app/ui/component/material/SegmentedSliderItem.kt`。
+- 本轮只修改 `test/voyage-theme-1to1-20261026`，未修改或合并 `main`。该提交尚待 GitHub Actions 构建及 APK 产物验证；源码提交不等同于构建成功，也不代表真机视觉验收完成。
+
+
+## 2026-10-29 — Fancy 进度色扩至 38dp 并将外围容器与轨道对齐
+
+- 按用户确认，Fancy（style 1）进度色高度由原先轨道内缩后的 34dp 改为完整 38dp（直接使用轨道 Canvas 高度），不再保留上下各 2dp 空隙。
+- 移除 Fancy 轨道自身的独立阴影。保留“滑块阴影”全局开关对外围容器阴影的控制；容器阴影不再作为轨道阴影重复叠加。
+- 将 Fancy 外围容器从 Slider 整体 modifier 中移出，放到轨道绘制容器上。新增水平测量扩展：Canvas 内容向内放置当前轨道两侧的延伸量（thumbWidth / 2 + 10dp），外围容器扩展回相同宽度，使外围容器左右边缘与 Fancy 轨道两端重合；垂直方向直接使用 38dp 轨道高度，不再保留原先水平 6dp / 垂直 4dp 的外围内边距。
+- 保留外围容器的 surfaceContainerLow 底色、20dp 形状与由 LocalMaterialShadowSliders 控制的 2dp 阴影；保留 Fancy 非激活轨道、进度颜色、滑块和其他几何/颜色逻辑，除明确要求的进度高度外不改其绘制参数。Material You、Material 2、HyperOS 未改。
+- 产品源码提交：c31c21bab5dfddc455676cd039e0fb6727c2bf72，文件 app/src/main/java/com/alohaoneui/app/ui/component/material/SegmentedSliderItem.kt。仅提交到 test/voyage-theme-1to1-20261026，未修改或合并 main。
+- Actions Run #2113（ID 40986671762）已由该产品提交触发，提交记录时状态为 queued；需继续等待其 Kotlin 编译、APK 签名与产物校验终态。当前不宣称本轮构建成功，也未在真机确认容器两端与轨道端点的像素对齐。
+
+## 2026-10-29 — 修复 Build #2114 暴露的 Fancy 容器测量编译错误
+
+- 用户提供 Actions Run #2114（ID 40986702231）后，检查确认 `:app:compileDebugKotlin` 失败，错误位于 SegmentedSliderItem.kt 第 389 行：`constraints.offset(horizontal = ...)` 被解析为 Modifier 的 offset 扩展，出现 Modifier 与 Constraints 参数类型不匹配。
+- 修复方式：不再调用有扩展导入歧义的 `constraints.offset`；改为通过 `constraints.copy` 显式扣除左右扩展宽度，分别处理 minWidth 与有界 maxWidth，保持无界 maxWidth 不变，再测量内部 Canvas。外围容器扩展与轨道端点对齐的设计保持不变。
+- 修复提交：2f11a38485ef641495266b0ca8fd4d156c1eb69a，仅提交至 test/voyage-theme-1to1-20261026；未修改 main。
+- Build #2114 失败原因已定位；修复后的新构建由该提交触发，必须以新 Run 的 Kotlin 编译、APK 签名、产物校验结果作为验收依据。
+
+## 2026-10-29 — 按用户要求回退到上一个成功版本（Build #2112）
+
+- 用户要求回退到上一个版本。核对 Actions 后确认 Build #2112（Run `40981504478`）结论为 `success`，其 HEAD 为维护记录提交 `b0032c1b6a21d4d1544ef5cd69acb7e6148e57c6`，产品滑条源码对应提交 `0efbb75cdb1461141cd820053afa1dcdf3e9abf4`。
+- 已将 `app/src/main/java/com/alohaoneui/app/ui/component/material/SegmentedSliderItem.kt` 恢复为 `0efbb75cdb1461141cd820053afa1dcdf3e9abf4` 中的完整文件内容，撤销后续 Fancy 外围容器/轨道端点对齐、38dp 进度色扩展及对应 Constraints 测量改动。保留 Build #2112 版本已有的 Fancy 20dp 外围容器、6dp/4dp 内边距、38dp 轨道、原进度绘制和四种滑条其余实现。
+- 本次为新增回退提交，不重写历史；仅修改测试分支 `test/voyage-theme-1to1-20261026`，`main` 未修改。
+- 回退源码提交：`128205a77858ce15482c123099c5e4b566a020fc`。本次回退触发的新 Actions 构建仍需等待完成，并确认 APK 签名与产物；Build #2112 的旧 APK 不可冒充回退提交的新产物。
+
+
+## 2026-10-29 — 按用户指定 Actions Build #2110 完整回退测试分支
+
+- 用户指定目标：GitHub Actions Run `40962959645`（Build #2110），该运行状态 `completed`、结论 `success`，HEAD 为 `4df08577e073cd0e2bd3043cacf758cf5415366c`。
+- 已将测试分支 `test/voyage-theme-1to1-20261026` 的 Git ref 从 `76dfc83984868f3b3082ee31a8fd4ba021da641c` 回退至目标提交 `4df08577e073cd0e2bd3043cacf758cf5415366c`，采用 force-with-lease（expected SHA 校验），不是只替换单个滑条文件。该操作使分支产品源码及资源树与 Build #2110 的提交快照一致；`main` 未修改。
+- 目标 Build #2110 的 build job 已完成，Kotlin 编译、加载现有签名密钥、构建 owner-signed APK、包名/证书校验、保留 APK artifact 均成功。Artifact：`AlohaOneUI-Signed-Test-APK`，ID `12935974399`，下载页 `https://github.com/iskyxpcity/Oneuixpcity/actions/runs/40962959645/artifacts/12935974399`。
+- 本记录保留回退前完整维护历史，并追加本次完整回退说明。回退到历史提交本身不会自动触发 Actions；当前分支产品树已与目标 SHA 对齐。若后续需要对最新维护记录提交再次触发构建，必须明确说明那是基于相同产品树的新构建。
