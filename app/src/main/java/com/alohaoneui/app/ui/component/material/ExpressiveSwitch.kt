@@ -96,11 +96,10 @@ fun ExpressiveSwitch(
         else -> checkedTrack
     }
     val uncheckedBorder = scheme.outline
-    // Exact outer slot dimensions from Voyage's j7w0.m105365O dispatch:
-    // 0 z4v0.m147164o = 52x32; 1 frt0.m95463l = 52x32;
-    // 2 it70.m103876l = 56x28; 3 ckw0.m9293l = 48x24;
-    // 4 rdf.m127934l = 51x31; 5 rdf.m127933O -> m127932I = 64x28;
-    // 6 y2t0.m144445l = 50x28.5; 7 l140.m110104l = 39x22.
+    // Voyage source geometry by renderer:
+    // 0/1=52x32; 2=56x28; 3=48x24; 4=48x28 inner / 51x31 slot;
+    // 5=64x28; 6=50x28.5; 7=35x18.5 inner / 39x22 slot.
+    // Styles 4 and 7 keep their source-sized inner track centered in the slot.
     // Voyage source track bounds. Styles 4 and 7 have a larger outer slot;
     // their actual painted tracks remain the smaller inner dimensions.
     val trackSize = when (style) {
