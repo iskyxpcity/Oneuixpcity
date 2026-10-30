@@ -1,6 +1,9 @@
 package com.alohaoneui.app.ui.component.material
 
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.border
@@ -23,7 +26,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Outline
@@ -36,8 +38,6 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
-import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
-import com.alohaoneui.app.ui.theme.LocalMaterialShadowSwitches
 import com.alohaoneui.app.ui.theme.LocalMaterialSwitchStyle
 
 /**
@@ -64,126 +64,168 @@ fun ExpressiveSwitch(
     val pressedOrHovered = pressed || hovered
     val interactive = pressed || hovered || focused
     val scheme = MaterialTheme.colorScheme
+    // Voyage a2i0 palette: the classic renderers keep track, thumb and outline
+    // on separate Material color roles rather than reusing the same accent.
     val checkedTrack = when (style) {
         0 -> colors.checkedTrackColor
-        1 -> scheme.primary
-        2 -> scheme.primaryContainer
-        3 -> scheme.secondary
-        4, 6 -> scheme.primary
-        5 -> scheme.tertiaryContainer
-        7 -> scheme.primary
-        else -> scheme.primary
-    }
-    val uncheckedTrack = scheme.surfaceContainerHighest
-    val checkedThumb = when (style) {
-        0 -> colors.checkedThumbColor
-        1 -> scheme.onPrimary
-        2 -> scheme.primary
-        3 -> scheme.onSecondary
-        4, 6 -> scheme.onPrimary
-        5 -> scheme.onTertiaryContainer
-        7 -> scheme.onPrimary
+        1, 2, 3 -> scheme.onPrimary
+        4, 5 -> scheme.primary
+        6, 7 -> scheme.primary
         else -> scheme.onPrimary
     }
-    val uncheckedThumb = scheme.outline
-    val checkedBorder = when (style) {
-        2 -> scheme.primaryContainer
-        3 -> scheme.secondary
-        4, 6 -> Color.Transparent
-        5 -> scheme.tertiary
-        else -> checkedTrack
+    val uncheckedTrack = when (style) {
+        0 -> colors.uncheckedTrackColor
+        1, 2, 3 -> scheme.onSecondary
+        4, 5 -> scheme.surfaceVariant
+        6 -> scheme.inversePrimary
+        7 -> scheme.onSecondaryContainer
+        else -> scheme.onSecondary
     }
-    val uncheckedBorder = scheme.outline
-    // Voyage source geometry by renderer:
-    // 0/1=52x32; 2=56x28; 3=48x24; 4=48x28 inner / 51x31 slot;
-    // 5=64x28; 6=50x28.5; 7=35x18.5 inner / 39x22 slot.
-    // Styles 4 and 7 keep their source-sized inner track centered in the slot.
-    // Voyage source track bounds. Styles 4 and 7 have a larger outer slot;
-    // their actual painted tracks remain the smaller inner dimensions.
+    val checkedThumb = when (style) {
+        0 -> colors.checkedThumbColor
+        1, 2, 3 -> scheme.primary
+        4, 5, 6, 7 -> scheme.onPrimary
+        else -> scheme.primary
+    }
+    val uncheckedThumb = when (style) {
+        0 -> colors.uncheckedThumbColor
+        1, 2, 3 -> scheme.inversePrimary
+        4, 5 -> scheme.onSurface
+        6 -> scheme.secondary
+        7 -> scheme.tertiary
+        else -> scheme.inversePrimary
+    }
+    val checkedBorder = when (style) {
+        0, 1, 2, 3 -> scheme.primaryContainer
+        4, 5 -> scheme.outlineVariant.copy(alpha = 0.33f)
+        6 -> Color.Transparent
+        7 -> scheme.outlineVariant
+        else -> scheme.primaryContainer
+    }
+    val uncheckedBorder = when (style) {
+        0, 1 -> scheme.secondaryContainer
+        2, 3 -> scheme.onSecondary
+        4, 5 -> scheme.outlineVariant.copy(alpha = 0.33f)
+        6 -> Color.Transparent
+        7 -> scheme.outlineVariant
+        else -> scheme.secondaryContainer
+    }
+    // Source renderer bounds. Cupertino paints the full 51x31dp track;
+    // One UI alone has a 39x22dp outer slot around its 35x18.5dp track.
     val trackSize = when (style) {
         0, 1 -> DpSize(52.dp, 32.dp)
         2 -> DpSize(56.dp, 28.dp)
         3 -> DpSize(48.dp, 24.dp)
-        4 -> DpSize(48.dp, 28.dp)
+        4 -> DpSize(51.dp, 31.dp)
         5 -> DpSize(64.dp, 28.dp)
         6 -> DpSize(50.dp, 28.5.dp)
         7 -> DpSize(35.dp, 18.5.dp)
         else -> DpSize(52.dp, 32.dp)
     }
     val slotSize = when (style) {
-        4 -> DpSize(51.dp, 31.dp)
         7 -> DpSize(39.dp, 22.dp)
         else -> trackSize
     }
-    // Preserve source interaction-state distinctions, while giving the visible
-    // thumb a fuller capsule silhouette that occupies about 65% of track width.
-    // Source thumb diameters by Voyage renderer state:
-    // z4v0/frt0 16/24/28; it70 20; ckw0 12/14/17;
-    // rdf.l 20; rdf.I 24; y2t0 20/23/26; l140 14/16/18.
-    val sourceThumbDiameter = when (style) {
-        0, 1 -> when {
+    // The Compose renderer has a fixed 20dp slot with a 16/24/28dp visible
+    // thumb. Fluent uses a non-circular 12x12 -> 17x14dp thumb; Cupertino and
+    // HyperOS animate scale independently of checked state.
+    val targetThumbWidth = when (style) {
+        0 -> 20.dp
+        1 -> when {
             pressed -> 28.dp
-            checked || (style == 1 && thumbContent != null) -> 24.dp
+            checked || (showThumbIcon && thumbContent != null) -> 24.dp
             else -> 16.dp
         }
         2 -> 20.dp
-        3 -> when {
-            enabled && pressedOrHovered -> 17.dp
-            checked -> 14.dp
-            else -> 12.dp
-        }
-        4 -> 20.dp
-        5 -> 24.dp
-        6 -> when {
-            enabled && pressedOrHovered -> 26.dp
-            checked -> 23.dp
-            else -> 20.dp
-        }
-        7 -> when {
-            enabled && pressedOrHovered -> 18.dp
-            checked -> 16.dp
-            else -> 14.dp
-        }
+        3 -> if (enabled && pressedOrHovered) 17.dp else 12.dp
+        4 -> if (enabled && pressedOrHovered) 25.dp else 20.dp
+        5 -> 20.dp
+        6 -> if (enabled && pressedOrHovered) 23.dp else 20.dp
+        7 -> 22.dp
         else -> 20.dp
     }
-    // These source renderers use circular thumb diameters, not a width derived
-    // from a percentage of the track. Style 7 retains its 22dp outer thumb slot.
-    val thumbWidth = sourceThumbDiameter
-    val thumbHeight = sourceThumbDiameter
-    val thumbSlotWidth = if (style == 7) 22.dp else sourceThumbDiameter
-    val thumbSlotHeight = if (style == 7) 22.dp else sourceThumbDiameter
+    val targetThumbHeight = when (style) {
+        0 -> 20.dp
+        1 -> when {
+            pressed -> 28.dp
+            checked || (showThumbIcon && thumbContent != null) -> 24.dp
+            else -> 16.dp
+        }
+        2 -> 20.dp
+        3 -> if (enabled && pressedOrHovered) 14.dp else 12.dp
+        4 -> if (enabled && pressedOrHovered) 25.dp else 20.dp
+        5 -> 20.dp
+        6 -> if (enabled && pressedOrHovered) 23.dp else 20.dp
+        7 -> 22.dp
+        else -> 20.dp
+    }
+    val thumbSizeAnimationSpec = when (style) {
+        1 -> spring(dampingRatio = 0.78f, stiffness = 620f)
+        3 -> tween(600, easing = FastOutSlowInEasing)
+        4 -> tween(300, easing = FastOutSlowInEasing)
+        6 -> spring(dampingRatio = 0.75f, stiffness = 1500f)
+        else -> tween(150)
+    }
+    val thumbWidth by animateDpAsState(
+        targetValue = targetThumbWidth,
+        animationSpec = thumbSizeAnimationSpec,
+        label = "voyageSwitchThumbWidth",
+    )
+    val thumbHeight by animateDpAsState(
+        targetValue = targetThumbHeight,
+        animationSpec = thumbSizeAnimationSpec,
+        label = "voyageSwitchThumbHeight",
+    )
+    val thumbSlotWidth = when (style) {
+        0, 1, 4, 5, 6 -> 20.dp
+        2 -> 16.dp
+        3 -> thumbWidth
+        7 -> 22.dp
+        else -> 20.dp
+    }
+    val thumbSlotHeight = when (style) {
+        0, 1, 4, 5, 6 -> 20.dp
+        2 -> 16.dp
+        3 -> thumbHeight
+        7 -> 22.dp
+        else -> 20.dp
+    }
     val trackCornerRadius = when (style) {
+        0, 1 -> 16.dp
         2 -> 14.dp
         3 -> 4.dp
-        4 -> 14.dp
+        4 -> 15.5.dp
         5 -> 14.dp
         6 -> 14.25.dp
         7 -> 9.25.dp
         else -> 16.dp
     }
-    val slotCornerRadius = when (style) {
-        4 -> 15.5.dp
-        7 -> 11.dp
-        else -> trackCornerRadius
-    }
+    val slotCornerRadius = if (style == 7) 11.dp else trackCornerRadius
+    val thumbCornerRadius = if (style == 3) 4.dp else thumbHeight / 2
     val travel by animateFloatAsState(
         targetValue = if (checked) 1f else 0f,
-        animationSpec = spring(dampingRatio = 0.78f, stiffness = 620f),
+        animationSpec = when (style) {
+            2 -> tween(500, easing = FastOutSlowInEasing)
+            3 -> tween(600, easing = FastOutSlowInEasing)
+            4, 5 -> tween(300, easing = FastOutSlowInEasing)
+            6 -> spring(dampingRatio = 0.75f, stiffness = 1500f)
+            7 -> tween(250)
+            else -> spring(dampingRatio = 0.78f, stiffness = 620f)
+        },
         label = "voyageSwitchThumb",
     )
     // Every renderer uses the live Voyage shape family. Smooth G² now has its
     // source-correct profile, so it no longer needs the former rounded fallback.
     val trackShape = voyageCornerShape(trackCornerRadius)
     val slotShape = voyageCornerShape(slotCornerRadius)
-    val thumbShape = voyageCornerShape(thumbHeight / 2f)
+    val thumbShape = voyageCornerShape(thumbCornerRadius)
     val haloShape = voyageCornerShape(thumbHeight / 2f + 2.dp)
-    val thumbSlotShape = voyageCornerShape(thumbSlotHeight / 2f)
-    val borderWidth = LocalMaterialOutlineWidth.current
+    val thumbSlotShape = voyageCornerShape(if (style == 3) 4.dp else thumbSlotHeight / 2f)
+    val borderWidth = when (style) { 0, 1 -> 2f; 2 -> 1.8f; 3 -> 1f; 4 -> 2f; 5, 6 -> 0f; 7 -> 0.1f; else -> 2f }
     Box(
         modifier = modifier
             .size(width = slotSize.width, height = slotSize.height)
-            .then(if (LocalMaterialShadowSwitches.current) Modifier.shadow(2.dp, slotShape) else Modifier)
-            .toggleable(
+                        .toggleable(
                 value = checked,
                 enabled = enabled && onCheckedChange != null,
                 role = Role.Switch,
@@ -203,10 +245,15 @@ fun ExpressiveSwitch(
             val trackTop = (h - trackHeightPx) / 2f
             val trackColor = if (enabled) {
                 if (checked) checkedTrack else uncheckedTrack
-            } else if (style == 0) {
-                if (checked) colors.disabledCheckedTrackColor else colors.disabledUncheckedTrackColor
             } else {
-                (if (checked) checkedTrack else uncheckedTrack).copy(alpha = 0.38f)
+                when (style) {
+                    0 -> if (checked) colors.disabledCheckedTrackColor else colors.disabledUncheckedTrackColor
+                    1, 2, 3 -> if (checked) scheme.onTertiary else scheme.background
+                    4, 5 -> (if (checked) scheme.primary else scheme.surfaceVariant).copy(alpha = 0.38f)
+                    6 -> if (checked) scheme.onSecondaryContainer else scheme.onTertiaryContainer
+                    7 -> scheme.background
+                    else -> scheme.background
+                }
             }
             // The actual outline, not a hard-coded rounded rectangle, keeps the
             // global Voyage shape family and corner scale linked to each style.
@@ -234,10 +281,21 @@ fun ExpressiveSwitch(
                     layoutDirection = layoutDirection,
                     density = this,
                 )
+                val borderColor = if (enabled) {
+                    if (checked) checkedBorder else uncheckedBorder
+                } else {
+                    when (style) {
+                        0 -> if (checked) colors.disabledCheckedBorderColor else colors.disabledUncheckedBorderColor
+                        1, 2, 3 -> if (checked) scheme.tertiaryContainer else scheme.onBackground
+                        4, 5 -> scheme.outlineVariant.copy(alpha = 0.18f)
+                        7 -> scheme.outlineVariant
+                        else -> Color.Transparent
+                    }
+                }
                 withTransform({ translate(trackLeft + borderPx / 2f, trackTop + borderPx / 2f) }) {
                     drawVoyageOutline(
                         borderOutline,
-                        (if (checked) checkedBorder else uncheckedBorder).copy(alpha = if (enabled) 1f else 0.45f),
+                        borderColor,
                         style = Stroke(width = borderPx),
                     )
                 }
@@ -271,10 +329,15 @@ fun ExpressiveSwitch(
             )
             val thumbColor = if (enabled) {
                 if (checked) checkedThumb else uncheckedThumb
-            } else if (style == 0) {
-                if (checked) colors.disabledCheckedThumbColor else colors.disabledUncheckedThumbColor
             } else {
-                (if (checked) checkedThumb else uncheckedThumb).copy(alpha = 0.65f)
+                when (style) {
+                    0 -> if (checked) colors.disabledCheckedThumbColor else colors.disabledUncheckedThumbColor
+                    1, 2, 3 -> if (checked) scheme.onSecondaryContainer else scheme.onTertiaryContainer
+                    4, 5 -> scheme.onSurface.copy(alpha = 0.38f)
+                    6 -> if (checked) scheme.tertiary else scheme.background
+                    7 -> if (checked) scheme.onTertiaryContainer else scheme.onSurface
+                    else -> scheme.onSurface.copy(alpha = 0.38f)
+                }
             }
             withTransform({ translate(cx - thumbWidthPx / 2f, cy - thumbHeightPx / 2f) }) {
                 if (style == 5) {
@@ -305,7 +368,7 @@ fun ExpressiveSwitch(
             // Switch thumb icons/checkmarks are intentionally omitted; the
             // thumb itself communicates the on/off state by position and color.
         }
-        if (showThumbIcon && thumbContent != null) {
+        if (style == 1 && showThumbIcon && thumbContent != null) {
             val thumbTravel = trackSize.width - thumbSlotWidth
             Box(
                 modifier = Modifier
@@ -360,20 +423,34 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawVoyageGlassOutl
 
 @Composable
 fun expressiveSwitchColors(
-    checkedIconColor: Color = MaterialTheme.colorScheme.primary,
-    uncheckedIconColor: Color = MaterialTheme.colorScheme.surfaceContainerHighest,
-    disabledCheckedThumbColor: Color = MaterialTheme.colorScheme.surface.copy(alpha = 0.38f),
-    disabledCheckedTrackColor: Color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
-    disabledCheckedIconColor: Color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
-    disabledUncheckedThumbColor: Color = MaterialTheme.colorScheme.outline.copy(alpha = 0.38f),
-    disabledUncheckedTrackColor: Color = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.12f),
-    disabledUncheckedBorderColor: Color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
-    disabledUncheckedIconColor: Color = MaterialTheme.colorScheme.surfaceContainerHighest,
+    checkedTrackColor: Color = MaterialTheme.colorScheme.onPrimary,
+    checkedThumbColor: Color = MaterialTheme.colorScheme.primary,
+    checkedBorderColor: Color = MaterialTheme.colorScheme.primaryContainer,
+    checkedIconColor: Color = MaterialTheme.colorScheme.onPrimaryContainer,
+    uncheckedTrackColor: Color = MaterialTheme.colorScheme.onSecondary,
+    uncheckedThumbColor: Color = MaterialTheme.colorScheme.inversePrimary,
+    uncheckedBorderColor: Color = MaterialTheme.colorScheme.secondaryContainer,
+    uncheckedIconColor: Color = MaterialTheme.colorScheme.onSecondaryContainer,
+    disabledCheckedThumbColor: Color = MaterialTheme.colorScheme.onSecondaryContainer,
+    disabledCheckedTrackColor: Color = MaterialTheme.colorScheme.onTertiary,
+    disabledCheckedBorderColor: Color = MaterialTheme.colorScheme.tertiaryContainer,
+    disabledCheckedIconColor: Color = MaterialTheme.colorScheme.onTertiaryContainer,
+    disabledUncheckedThumbColor: Color = MaterialTheme.colorScheme.onTertiaryContainer,
+    disabledUncheckedTrackColor: Color = MaterialTheme.colorScheme.background,
+    disabledUncheckedBorderColor: Color = MaterialTheme.colorScheme.onBackground,
+    disabledUncheckedIconColor: Color = MaterialTheme.colorScheme.onSurface,
 ): SwitchColors = SwitchDefaults.colors(
+    checkedTrackColor = checkedTrackColor,
+    checkedThumbColor = checkedThumbColor,
+    checkedBorderColor = checkedBorderColor,
     checkedIconColor = checkedIconColor,
+    uncheckedTrackColor = uncheckedTrackColor,
+    uncheckedThumbColor = uncheckedThumbColor,
+    uncheckedBorderColor = uncheckedBorderColor,
     uncheckedIconColor = uncheckedIconColor,
     disabledCheckedThumbColor = disabledCheckedThumbColor,
     disabledCheckedTrackColor = disabledCheckedTrackColor,
+    disabledCheckedBorderColor = disabledCheckedBorderColor,
     disabledCheckedIconColor = disabledCheckedIconColor,
     disabledUncheckedThumbColor = disabledUncheckedThumbColor,
     disabledUncheckedTrackColor = disabledUncheckedTrackColor,
