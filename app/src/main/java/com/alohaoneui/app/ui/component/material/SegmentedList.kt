@@ -2,7 +2,8 @@ package com.alohaoneui.app.ui.component.material
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.runtime.LaunchedEffect
@@ -549,7 +550,7 @@ fun voyageSegmentedShape(index: Int, count: Int, vertical: Boolean = true, press
 
     val topStart by animateDpAsState(
         targetValue = (pressedRadius ?: if (first) 16.dp else 4.dp) * cornerScale,
-        animationSpec = spring(dampingRatio = 0.4f, stiffness = 800f),
+        animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing),
         label = "voyageSegmentTopStart",
     )
     val topEnd by animateDpAsState(
