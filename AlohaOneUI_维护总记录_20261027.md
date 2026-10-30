@@ -1111,3 +1111,12 @@
 - 已修复 `defaultSingleSegmentedShape()`：每次根据当前列表分组位置、`LocalMaterialCornerScale` 和 `LocalMaterialShapeStyle` 生成一次 `themeShape`，并同时赋给 `shape`、`pressedShape`、`selectedShape`。这样默认、按压、选中三种状态均使用相同的 Aloha 动态主题轮廓；不同列表位置的首尾圆角规则仍由 `voyageSegmentedShape(index, count)` 决定。
 - 本次产品源码提交：`09e6d771e6622239a806a4daa1ac3df445141d71`，文件：`app/src/main/java/com/alohaoneui/app/ui/component/material/SegmentedList.kt`。仅修改测试分支 `test/voyage-theme-1to1-20261026`，未修改或合并 `main`。
 - 验证状态：源码写入已完成，尚需检查该提交后的 Actions Kotlin 编译、APK 签名与 Artifact；还需在设备上分别改变全局圆角大小/形状风格，并检查详情列表默认、选中、按压状态是否同步。当前不宣称构建或真机视觉验收通过。
+
+
+## 2026-10-29｜为详情列表点击与长按增加先扩大再回弹的按压动效
+
+- 用户指出详情列表还应具有交互动效：点击和长按时先扩大，再收缩回原尺寸，而不是只改变颜色或轮廓。
+- 已在 `SegmentedList.kt` 增加统一的 `alohaPressPulse()` modifier，监听与 Material 3 列表项共用的 `MutableInteractionSource` 中的 `PressInteraction.Press`。普通点击和长按均由同一按下事件触发一次轻微整体放大（scale 1.035），随后通过弹簧动画回到 1.0；即使长按期间手指仍保持按下，也会完成“扩大→收缩回原位”的单次脉冲，不会一直维持放大状态。
+- 动效通过 `graphicsLayer` 实现，不改变布局测量尺寸；只对启用状态的列表项生效。未启用项仍维持原有半透明显示，不触发按压脉冲。原有主题 Shape、按压/选择轮廓、主题颜色和点击/长按回调均保留。
+- 本次产品源码提交：`086f811a897cb714e5ac9a84adfccd0754dc4d6f`，文件：`app/src/main/java/com/alohaoneui/app/ui/component/material/SegmentedList.kt`。仅修改测试分支 `test/voyage-theme-1to1-20261026`，未修改或合并 `main`。
+- 验证状态：源码已提交；仍需检查 Actions Kotlin 编译与 APK 签名/Artifact，并在真机分别验证轻触、长按、快速连续点击时的放大回弹观感和触控响应。当前不宣称构建或真机动效验收通过。
