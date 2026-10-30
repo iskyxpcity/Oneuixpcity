@@ -51,6 +51,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
@@ -93,6 +94,7 @@ import androidx.compose.foundation.border
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.shadow
 import com.alohaoneui.app.ui.theme.LocalMaterialShadowButtons
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 val LocalListItemShapes = compositionLocalOf<ListItemShapes?> { null }
@@ -540,7 +542,7 @@ fun voyageSegmentedShape(index: Int, count: Int, vertical: Boolean = true, press
     val pressedRadius = when {
         !pressed -> null
         count > 1 && (first || last) -> 4.dp
-        else -> 3.5.dp
+        else -> 3.dp
     }
 
     val topStart by animateDpAsState(
@@ -676,6 +678,27 @@ private fun ListItemShapes.animatedAlohaShapes(
     return copy(shape = animatedShape, pressedShape = animatedShape, selectedShape = animatedShape) to animatedShape
 }
 
+/**
+ * Keep a very short tap visible long enough for the shape spring to render.
+ * Long presses still track the real interaction immediately; only the release
+ * edge is held for a brief 100ms tail so a normal click is not visually skipped.
+ */
+@Composable
+private fun rememberSegmentedVisualPressed(interactionSource: MutableInteractionSource): Boolean {
+    val interactionPressed by interactionSource.collectIsPressedAsState()
+    var visualPressed by remember(interactionSource) { mutableStateOf(false) }
+
+    LaunchedEffect(interactionPressed) {
+        if (interactionPressed) {
+            visualPressed = true
+        } else if (visualPressed) {
+            delay(100)
+            visualPressed = false
+        }
+    }
+    return visualPressed
+}
+
 @Composable
 fun SegmentedListItem(
     modifier: Modifier = Modifier,
@@ -692,7 +715,7 @@ fun SegmentedListItem(
 ) {
     val itemShapes = LocalListItemShapes.current ?: ListItemDefaults.segmentedShapes(0, 1)
     val resolvedInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
-    val isPressed by resolvedInteractionSource.collectIsPressedAsState()
+    val isPressed = rememberSegmentedVisualPressed(resolvedInteractionSource)
     val (animatedShapes, outlineShape) = itemShapes.animatedAlohaShapes(LocalSegmentedShapeConfig.current, isPressed)
     // Keep the optional outer shadow and outline on the exact same state shape used
     // by the Material 3 row for press/selection feedback.
@@ -741,7 +764,7 @@ fun SegmentedListItem(
 ) {
     val itemShapes = LocalListItemShapes.current ?: ListItemDefaults.segmentedShapes(0, 1)
     val resolvedInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
-    val isPressed by resolvedInteractionSource.collectIsPressedAsState()
+    val isPressed = rememberSegmentedVisualPressed(resolvedInteractionSource)
     val (animatedShapes, outlineShape) = itemShapes.animatedAlohaShapes(LocalSegmentedShapeConfig.current, isPressed)
     // Keep the optional outer shadow and outline on the exact same state shape used
     // by the Material 3 row for press/selection feedback.
@@ -791,7 +814,7 @@ fun SegmentedListItem(
 ) {
     val itemShapes = LocalListItemShapes.current ?: ListItemDefaults.segmentedShapes(0, 1)
     val resolvedInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
-    val isPressed by resolvedInteractionSource.collectIsPressedAsState()
+    val isPressed = rememberSegmentedVisualPressed(resolvedInteractionSource)
     val (animatedShapes, outlineShape) = itemShapes.animatedAlohaShapes(LocalSegmentedShapeConfig.current, isPressed)
     // Keep the optional outer shadow and outline on the exact same state shape used
     // by the Material 3 row for press/selection feedback.
