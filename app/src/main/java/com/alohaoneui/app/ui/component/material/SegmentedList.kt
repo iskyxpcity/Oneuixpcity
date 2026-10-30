@@ -1,10 +1,12 @@
 package com.alohaoneui.app.ui.component.material
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -52,6 +54,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
@@ -95,9 +98,41 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.graphicsLayer
 import com.alohaoneui.app.ui.theme.LocalMaterialShadowButtons
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 val LocalListItemShapes = compositionLocalOf<ListItemShapes?> { null }
+
+
+/**
+ * Voyage-style press feedback: every pointer press (tap or long-press) produces
+ * one restrained scale pulse, then settles back even while the pointer remains
+ * down. The same interaction source is shared with the Material 3 row.
+ */
+@Composable
+private fun Modifier.alohaPressPulse(
+    interactionSource: MutableInteractionSource,
+): Modifier {
+    val scale = remember(interactionSource) { Animatable(1f) }
+    LaunchedEffect(interactionSource) {
+        interactionSource.interactions.collect { interaction ->
+            if (interaction is PressInteraction.Press) {
+                scale.animateTo(
+                    targetValue = 1.035f,
+                    animationSpec = spring(dampingRatio = 0.58f, stiffness = 650f),
+                )
+                scale.animateTo(
+                    targetValue = 1f,
+                    animationSpec = spring(dampingRatio = 0.72f, stiffness = 520f),
+                )
+            }
+        }
+    }
+    return graphicsLayer {
+        scaleX = scale.value
+        scaleY = scale.value
+    }
+}
 
 /**
  * Voyage's source G² continuity profile (decompiled p000/dan.java).
@@ -690,7 +725,7 @@ fun SegmentedListItem(
                 Modifier.border(it.dp, colorScheme.outlineVariant, outlineShape)
             } ?: Modifier
         )
-        .then(if (enabled) Modifier else Modifier.alpha(0.5f))
+        .then(if (enabled) Modifier.alohaPressPulse(resolvedInteractionSource) else Modifier.alpha(0.5f))
     SegmentedListItem(
         onClick = onClick ?: {},
         onLongClick = onLongClick,
@@ -739,7 +774,7 @@ fun SegmentedListItem(
                 Modifier.border(it.dp, colorScheme.outlineVariant, outlineShape)
             } ?: Modifier
         )
-        .then(if (enabled) Modifier else Modifier.alpha(0.5f))
+        .then(if (enabled) Modifier.alohaPressPulse(resolvedInteractionSource) else Modifier.alpha(0.5f))
     SegmentedListItem(
         checked = checked,
         onCheckedChange = onCheckedChange,
@@ -789,7 +824,7 @@ fun SegmentedListItem(
                 Modifier.border(it.dp, colorScheme.outlineVariant, outlineShape)
             } ?: Modifier
         )
-        .then(if (enabled) Modifier else Modifier.alpha(0.5f))
+        .then(if (enabled) Modifier.alohaPressPulse(resolvedInteractionSource) else Modifier.alpha(0.5f))
     SegmentedListItem(
         selected = selected,
         onClick = onClick,
