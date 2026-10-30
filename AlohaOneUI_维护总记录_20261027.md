@@ -1035,3 +1035,11 @@
   4. 刻度位置仍对应 Slider 原始滑动范围，Fancy 进度宽度仍按原始范围计算；Material You、Material 2、HyperOS 的绘制分支未改。
 - 产品源码提交：`22a38bf67a0057dab6f7f99e37d2766bb9917bc3`。仅提交至 `test/voyage-theme-1to1-20261026`，未修改或合并 `main`。
 - 验证状态：源码已提交，当前必须继续检查该提交触发的 GitHub Actions Kotlin 编译、签名和 APK artifact。尚未取得新构建终态，也未完成真机端部阴影/进度尺寸目视验收；不可将提交成功视为构建或视觉验收完成。
+
+
+## 2026-10-29 — 按用户最新确认将 Fancy 进度色与轨道统一为 38dp
+
+- 用户进一步明确：Fancy 进度色和轨道都修改为 38dp。
+- 已将 `VoyageSliderTrack` 的 Fancy `progressHeight` 从 36dp 改为 38dp；轨道高度此前已为 38dp，因此现在两者均为 38dp，进度色不再比轨道矮 2dp。
+- 左右端阴影绘制边界修复保持不变；Material You、Material 2、HyperOS 未修改；`main` 未修改。
+- 产品源码提交：`2ba908b0832cc2ee71ce2a52c685c42396915b7d`。需要检查该提交触发的 Actions 编译、签名与 APK artifact；在构建完成前不宣称 APK 已交付。
