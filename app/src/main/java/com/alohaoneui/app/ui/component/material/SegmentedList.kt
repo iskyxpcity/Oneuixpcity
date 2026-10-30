@@ -2,7 +2,7 @@ package com.alohaoneui.app.ui.component.material
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.clickable
@@ -536,31 +536,31 @@ fun voyageSegmentedShape(index: Int, count: Int, vertical: Boolean = true, press
     // above 1.0 enlarge corner geometry instead of silently behaving like 1.0.
     val cornerScale = LocalMaterialCornerScale.current.coerceIn(0f, 2f)
     // Outer items morph into the middle item's 4dp geometry. Middle items
-    // contract slightly. Both targets remain linked to the live theme scale.
+    // contract to the requested 8dp pressed radius. Both targets remain linked to the live theme scale.
     val pressedRadius = when {
         !pressed -> null
         count > 1 && (first || last) -> 4.dp
-        else -> 7.dp
+        else -> 8.dp
     }
 
     val topStart by animateDpAsState(
         targetValue = (pressedRadius ?: if (first) 16.dp else 4.dp) * cornerScale,
-        animationSpec = spring(dampingRatio = 0.4f, stiffness = 200f),
+        animationSpec = tween(durationMillis = 250),
         label = "voyageSegmentTopStart",
     )
     val topEnd by animateDpAsState(
         targetValue = (pressedRadius ?: if (if (vertical) first else last) 16.dp else 4.dp) * cornerScale,
-        animationSpec = spring(dampingRatio = 0.4f, stiffness = 200f),
+        animationSpec = tween(durationMillis = 250),
         label = "voyageSegmentTopEnd",
     )
     val bottomEnd by animateDpAsState(
         targetValue = (pressedRadius ?: if (last) 16.dp else 4.dp) * cornerScale,
-        animationSpec = spring(dampingRatio = 0.4f, stiffness = 200f),
+        animationSpec = tween(durationMillis = 250),
         label = "voyageSegmentBottomEnd",
     )
     val bottomStart by animateDpAsState(
         targetValue = (pressedRadius ?: if (if (vertical) last else first) 16.dp else 4.dp) * cornerScale,
-        animationSpec = spring(dampingRatio = 0.4f, stiffness = 200f),
+        animationSpec = tween(durationMillis = 250),
         label = "voyageSegmentBottomStart",
     )
 
