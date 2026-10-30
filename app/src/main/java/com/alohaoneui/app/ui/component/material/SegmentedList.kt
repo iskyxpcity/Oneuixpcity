@@ -2,7 +2,6 @@ package com.alohaoneui.app.ui.component.material
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -93,7 +92,6 @@ import com.alohaoneui.app.ui.theme.LocalMaterialShadowContainers
 import androidx.compose.foundation.border
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.graphicsLayer
 import com.alohaoneui.app.ui.theme.LocalMaterialShadowButtons
 import kotlinx.coroutines.launch
 
@@ -101,25 +99,12 @@ val LocalListItemShapes = compositionLocalOf<ListItemShapes?> { null }
 
 
 /**
- * Card press feedback: stay enlarged for the entire pressed interval and
- * return to the original size only after release/cancel. Tap and long-press
- * share the row's interaction source, so both follow the same pressed state.
+ * Shape geometry context for a segmented row. This lets custom Voyage paths
+ * animate their real corner parameters instead of relying on Material 3's
+ * CornerBasedShape-only pressed-shape resolver.
  */
-@Composable
-private fun Modifier.alohaPressScale(
-    interactionSource: MutableInteractionSource,
-): Modifier {
-    val isPressed by interactionSource.collectIsPressedAsState()
-    val scale by animateFloatAsState(
-        targetValue = if (isPressed) 1.035f else 1f,
-        animationSpec = spring(dampingRatio = 0.72f, stiffness = 520f),
-        label = "alohaCardPressScale",
-    )
-    return graphicsLayer {
-        scaleX = scale
-        scaleY = scale
-    }
-}
+private data class SegmentedShapeConfig(val index: Int, val count: Int, val vertical: Boolean = true)
+private val LocalSegmentedShapeConfig = compositionLocalOf<SegmentedShapeConfig?> { null }
 
 /**
  * Voyage's source G² continuity profile (decompiled p000/dan.java).
@@ -543,31 +528,38 @@ fun alohaOneUISegmentedColors(): ListItemColors = ListItemDefaults.segmentedColo
  * vertical=true joins rows top-to-bottom; false joins selection buttons left-to-right.
  */
 @Composable
-fun voyageSegmentedShape(index: Int, count: Int, vertical: Boolean = true): Shape {
+fun voyageSegmentedShape(index: Int, count: Int, vertical: Boolean = true, pressed: Boolean = false): Shape {
     val single = count == 1 || index == -1
     val first = single || index == 0
     val last = single || index == count - 1
     // The setting exposes a 0.0..2.0 scale. Preserve the full range so values
     // above 1.0 enlarge corner geometry instead of silently behaving like 1.0.
     val cornerScale = LocalMaterialCornerScale.current.coerceIn(0f, 2f)
+    // Outer items morph into the middle item's 4dp geometry. Middle items
+    // contract slightly. Both targets remain linked to the live theme scale.
+    val pressedRadius = when {
+        !pressed -> null
+        count > 1 && (first || last) -> 4.dp
+        else -> 3.dp
+    }
 
     val topStart by animateDpAsState(
-        targetValue = (if (first) 16.dp else 4.dp) * cornerScale,
+        targetValue = (pressedRadius ?: if (first) 16.dp else 4.dp) * cornerScale,
         animationSpec = spring(dampingRatio = 0.4f, stiffness = 200f),
         label = "voyageSegmentTopStart",
     )
     val topEnd by animateDpAsState(
-        targetValue = (if (if (vertical) first else last) 16.dp else 4.dp) * cornerScale,
+        targetValue = (pressedRadius ?: if (if (vertical) first else last) 16.dp else 4.dp) * cornerScale,
         animationSpec = spring(dampingRatio = 0.4f, stiffness = 200f),
         label = "voyageSegmentTopEnd",
     )
     val bottomEnd by animateDpAsState(
-        targetValue = (if (last) 16.dp else 4.dp) * cornerScale,
+        targetValue = (pressedRadius ?: if (last) 16.dp else 4.dp) * cornerScale,
         animationSpec = spring(dampingRatio = 0.4f, stiffness = 200f),
         label = "voyageSegmentBottomEnd",
     )
     val bottomStart by animateDpAsState(
-        targetValue = (if (if (vertical) last else first) 16.dp else 4.dp) * cornerScale,
+        targetValue = (pressedRadius ?: if (if (vertical) last else first) 16.dp else 4.dp) * cornerScale,
         animationSpec = spring(dampingRatio = 0.4f, stiffness = 200f),
         label = "voyageSegmentBottomStart",
     )
@@ -613,11 +605,10 @@ fun SegmentedColumn(
         }
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             content.forEachIndexed { index, itemContent ->
+                val itemCount = if (visibleLen > 0) visibleLen else content.size
                 CompositionLocalProvider(
-                    LocalListItemShapes provides defaultSingleSegmentedShape(
-                        index = index,
-                        count = if (visibleLen > 0) visibleLen else content.size
-                    ),
+                    LocalListItemShapes provides defaultSingleSegmentedShape(index, itemCount),
+                    LocalSegmentedShapeConfig provides SegmentedShapeConfig(index, itemCount),
                 ) {
                     itemContent()
                 }
@@ -670,17 +661,20 @@ fun SegmentedItem(
 ) {
     CompositionLocalProvider(
         LocalListItemShapes provides defaultSingleSegmentedShape(index, count),
+        LocalSegmentedShapeConfig provides SegmentedShapeConfig(index, count),
     ) {
         content()
     }
 }
 
-private fun ListItemShapes.shapeForAlohaState(selected: Boolean, pressed: Boolean): Shape =
-    when {
-        pressed -> pressedShape
-        selected -> selectedShape
-        else -> shape
-    }
+@Composable
+private fun ListItemShapes.animatedAlohaShapes(
+    config: SegmentedShapeConfig?,
+    pressed: Boolean,
+): Pair<ListItemShapes, Shape> {
+    val animatedShape = config?.let { voyageSegmentedShape(it.index, it.count, it.vertical, pressed) } ?: shape
+    return copy(shape = animatedShape, pressedShape = animatedShape, selectedShape = animatedShape) to animatedShape
+}
 
 @Composable
 fun SegmentedListItem(
@@ -699,7 +693,7 @@ fun SegmentedListItem(
     val itemShapes = LocalListItemShapes.current ?: ListItemDefaults.segmentedShapes(0, 1)
     val resolvedInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
     val isPressed by resolvedInteractionSource.collectIsPressedAsState()
-    val outlineShape = itemShapes.shapeForAlohaState(selected = false, pressed = isPressed)
+    val (animatedShapes, outlineShape) = itemShapes.animatedAlohaShapes(LocalSegmentedShapeConfig.current, isPressed)
     // Keep the optional outer shadow and outline on the exact same state shape used
     // by the Material 3 row for press/selection feedback.
     val styledModifier = modifier
@@ -712,14 +706,14 @@ fun SegmentedListItem(
                 Modifier.border(it.dp, colorScheme.outlineVariant, outlineShape)
             } ?: Modifier
         )
-        .then(if (enabled) Modifier.alohaPressScale(resolvedInteractionSource) else Modifier.alpha(0.5f))
+        .then(if (!enabled) Modifier.alpha(0.5f) else Modifier)
     SegmentedListItem(
         onClick = onClick ?: {},
         onLongClick = onLongClick,
         enabled = enabled,
         colors = colors,
         interactionSource = resolvedInteractionSource,
-        shapes = itemShapes,
+        shapes = animatedShapes,
         modifier = styledModifier,
         leadingContent = leadingContent,
         trailingContent = trailingContent,
@@ -748,7 +742,7 @@ fun SegmentedListItem(
     val itemShapes = LocalListItemShapes.current ?: ListItemDefaults.segmentedShapes(0, 1)
     val resolvedInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
     val isPressed by resolvedInteractionSource.collectIsPressedAsState()
-    val outlineShape = itemShapes.shapeForAlohaState(selected = checked, pressed = isPressed)
+    val (animatedShapes, outlineShape) = itemShapes.animatedAlohaShapes(LocalSegmentedShapeConfig.current, isPressed)
     // Keep the optional outer shadow and outline on the exact same state shape used
     // by the Material 3 row for press/selection feedback.
     val styledModifier = modifier
@@ -761,11 +755,11 @@ fun SegmentedListItem(
                 Modifier.border(it.dp, colorScheme.outlineVariant, outlineShape)
             } ?: Modifier
         )
-        .then(if (enabled) Modifier.alohaPressScale(resolvedInteractionSource) else Modifier.alpha(0.5f))
+        .then(if (!enabled) Modifier.alpha(0.5f) else Modifier)
     SegmentedListItem(
         checked = checked,
         onCheckedChange = onCheckedChange,
-        shapes = itemShapes,
+        shapes = animatedShapes,
         modifier = styledModifier,
         enabled = enabled,
         colors = colors,
@@ -798,7 +792,7 @@ fun SegmentedListItem(
     val itemShapes = LocalListItemShapes.current ?: ListItemDefaults.segmentedShapes(0, 1)
     val resolvedInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
     val isPressed by resolvedInteractionSource.collectIsPressedAsState()
-    val outlineShape = itemShapes.shapeForAlohaState(selected = selected, pressed = isPressed)
+    val (animatedShapes, outlineShape) = itemShapes.animatedAlohaShapes(LocalSegmentedShapeConfig.current, isPressed)
     // Keep the optional outer shadow and outline on the exact same state shape used
     // by the Material 3 row for press/selection feedback.
     val styledModifier = modifier
@@ -811,11 +805,11 @@ fun SegmentedListItem(
                 Modifier.border(it.dp, colorScheme.outlineVariant, outlineShape)
             } ?: Modifier
         )
-        .then(if (enabled) Modifier.alohaPressScale(resolvedInteractionSource) else Modifier.alpha(0.5f))
+        .then(if (!enabled) Modifier.alpha(0.5f) else Modifier)
     SegmentedListItem(
         selected = selected,
         onClick = onClick,
-        shapes = itemShapes,
+        shapes = animatedShapes,
         modifier = styledModifier,
         enabled = enabled,
         colors = colors,
