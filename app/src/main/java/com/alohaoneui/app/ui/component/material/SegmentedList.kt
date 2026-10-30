@@ -450,7 +450,7 @@ private fun createVoyageG2Path(
         append(trH.p1, trH.p2, trH.p3) { p -> point(w - tr + p.x * tr, p.y * tr) }
         appendVoyageG2Arc(
             path, w - tr, tr, tr, 1.0 / trVertical.arcCurvatureScale,
-            ((1.0 - blVertical.arcFraction) * Math.PI / 4.0) - Math.PI / 2.0,
+            ((1.0 - trVertical.arcFraction) * Math.PI / 4.0) - Math.PI / 2.0,
             trVertical.arcFraction * Math.PI / 2.0,
         )
         append(trV.p2, trV.p1, trV.p0) { p -> point(w - p.y * tr, tr - p.x * tr) }
@@ -507,202 +507,6 @@ private fun addVoyageRoundRect(
             androidx.compose.ui.geometry.CornerRadius(bottomLeft, bottomLeft),
         ),
     )
-}
-
-/**
- * Source-faithful Wavy outline from wgo0.java. The perimeter is sampled at
- * max(waveLength / 8, perimeter / 360, 1px); each sample is displaced along
- * its local normal by a sinusoid whose phase advances continuously around the
- * entire perimeter. The source uses OR (not AND) for adjacent-corner edge
- * amplitudes and does not scale the corner radii with the wave-size factor.
- */
-private data class VoyageWaveSample(val x: Float, val y: Float)
-
-private fun createVoyageWavyPath(
-    width: Float,
-    height: Float,
-    topLeft: Float,
-    topRight: Float,
-    bottomRight: Float,
-    bottomLeft: Float,
-    density: Density,
-): Path {
-    val path = Path()
-    val minDimension = minOf(width, height)
-    if (width <= 0f || height <= 0f || minDimension <= 0f) {
-        addVoyageRoundRect(path, width, height, topLeft, topRight, bottomRight, bottomLeft)
-        return path
-    }
-    val scale = (minDimension / (48f * density.density)).coerceIn(0.42f, 1f)
-    val period = 12f * density.density * scale
-    val amplitude = minOf(0.9f * density.density * scale, minDimension / 4f)
-    if (period <= 0f || amplitude <= 0f) {
-        addVoyageRoundRect(path, width, height, topLeft, topRight, bottomRight, bottomLeft)
-        return path
-    }
-
-    val tl = topLeft.coerceIn(0f, minDimension)
-    val tr = topRight.coerceIn(0f, minDimension)
-    val br = bottomRight.coerceIn(0f, minDimension)
-    val bl = bottomLeft.coerceIn(0f, minDimension)
-    fun edgeAmplitude(first: Float, second: Float) =
-        if (first > 0f || second > 0f) amplitude else 0f
-    val topAmplitude = edgeAmplitude(tl, tr)
-    val rightAmplitude = edgeAmplitude(tr, br)
-    val bottomAmplitude = edgeAmplitude(br, bl)
-    val leftAmplitude = edgeAmplitude(bl, tl)
-    if (topAmplitude == 0f && rightAmplitude == 0f &&
-        bottomAmplitude == 0f && leftAmplitude == 0f
-    ) {
-        addVoyageRoundRect(path, width, height, tl, tr, br, bl)
-        return path
-    }
-
-    val tlRadius = tl - amplitude
-    val trRadius = tr - amplitude
-    val brRadius = br - amplitude
-    val blRadius = bl - amplitude
-    val topStartX = if (tl > 0f) leftAmplitude + tlRadius else 0f
-    val topEndX = if (tr > 0f) width - trRadius else width
-    val rightStartY = if (tr > 0f) topAmplitude + trRadius else 0f
-    val rightEndY = if (br > 0f) height - brRadius else height
-    val bottomStartX = if (br > 0f) width - brRadius else width
-    val bottomEndX = if (bl > 0f) leftAmplitude + blRadius else 0f
-    val leftStartY = if (bl > 0f) height - blRadius else height
-    val leftEndY = if (tl > 0f) topAmplitude + tlRadius else 0f
-
-    val topLength = topEndX - topStartX
-    val rightLength = rightEndY - rightStartY
-    val bottomLength = bottomStartX - bottomEndX
-    val leftLength = leftStartY - leftEndY
-    val quarterPi = (Math.PI.toFloat() / 2f)
-    val perimeter = topLength + quarterPi * trRadius +
-        rightLength + quarterPi * brRadius +
-        bottomLength + quarterPi * blRadius +
-        leftLength + quarterPi * tlRadius
-    val waveCount = kotlin.math.ceil(perimeter / period).toInt()
-    if (waveCount <= 0 || !perimeter.isFinite()) {
-        addVoyageRoundRect(path, width, height, tl, tr, br, bl)
-        return path
-    }
-    val waveLength = perimeter / waveCount
-    val sampleStep = maxOf(waveLength / 8f, perimeter / 360f, 1f)
-
-    var phaseDistance = 0f
-    var hasStarted = false
-    var firstSample: VoyageWaveSample? = null
-    var previousSample: VoyageWaveSample? = null
-
-    fun emit(
-        x: Float,
-        y: Float,
-        normalX: Float,
-        normalY: Float,
-        localAmplitude: Float,
-        phase: Float,
-    ) {
-        val displacement = kotlin.math.sin(
-            (phase.toDouble() * 2.0 * Math.PI) / period.toDouble(),
-        ).toFloat() * localAmplitude
-        val sample = VoyageWaveSample(
-            x + normalX * displacement,
-            y + normalY * displacement,
-        )
-        val previous = previousSample
-        if (!hasStarted || previous == null) {
-            path.moveTo(sample.x, sample.y)
-            firstSample = sample
-            hasStarted = true
-        } else {
-            path.quadraticTo(
-                previous.x,
-                previous.y,
-                (previous.x + sample.x) * 0.5f,
-                (previous.y + sample.y) * 0.5f,
-            )
-        }
-        previousSample = sample
-    }
-
-    fun sampleLine(
-        startX: Float,
-        startY: Float,
-        endX: Float,
-        endY: Float,
-        length: Float,
-        normalX: Float,
-        normalY: Float,
-        localAmplitude: Float,
-    ) {
-        val dx = endX - startX
-        val dy = endY - startY
-        val count = kotlin.math.ceil(length / sampleStep).toInt()
-        val firstIndex = if (hasStarted) 1 else 0
-        if (count > 0 && firstIndex <= count) {
-            for (index in firstIndex..count) {
-                val t = index.toFloat() / count.toFloat()
-                emit(
-                    startX + dx * t,
-                    startY + dy * t,
-                    normalX,
-                    normalY,
-                    localAmplitude,
-                    phaseDistance + length * t,
-                )
-            }
-        }
-        phaseDistance += length
-    }
-
-    fun sampleArc(
-        centerX: Float,
-        centerY: Float,
-        radius: Float,
-        startAngle: Float,
-    ) {
-        val arcLength = quarterPi * radius
-        val count = kotlin.math.ceil(arcLength / sampleStep).toInt()
-        val firstIndex = if (hasStarted) 1 else 0
-        if (count > 0 && firstIndex <= count) {
-            for (index in firstIndex..count) {
-                val t = index.toFloat() / count.toFloat()
-                val angle = startAngle + quarterPi * t
-                val normalX = kotlin.math.cos(angle)
-                val normalY = kotlin.math.sin(angle)
-                emit(
-                    centerX + normalX * radius,
-                    centerY + normalY * radius,
-                    normalX,
-                    normalY,
-                    amplitude,
-                    phaseDistance + arcLength * t,
-                )
-            }
-        }
-        phaseDistance += arcLength
-    }
-
-    sampleLine(topStartX, topAmplitude, topEndX, topAmplitude, topLength, 0f, -1f, topAmplitude)
-    sampleArc(width - trRadius, topAmplitude + trRadius, trRadius, -Math.PI.toFloat() / 2f)
-    sampleLine(width - trRadius, rightStartY, width - trRadius, rightEndY, rightLength, 1f, 0f, rightAmplitude)
-    sampleArc(width - brRadius, height - brRadius, brRadius, 0f)
-    sampleLine(bottomStartX, height - bottomAmplitude, bottomEndX, height - bottomAmplitude, bottomLength, 0f, 1f, bottomAmplitude)
-    sampleArc(leftAmplitude + blRadius, height - blRadius, blRadius, Math.PI.toFloat() / 2f)
-    sampleLine(leftAmplitude, leftStartY, leftAmplitude, leftEndY, leftLength, -1f, 0f, leftAmplitude)
-    sampleArc(leftAmplitude + tlRadius, topAmplitude + tlRadius, tlRadius, Math.PI.toFloat())
-
-    val previous = previousSample
-    val first = firstSample
-    if (previous != null && first != null) {
-        path.quadraticTo(
-            previous.x,
-            previous.y,
-            (previous.x + first.x) * 0.5f,
-            (previous.y + first.y) * 0.5f,
-        )
-        path.close()
-    }
-    return path
 }
 
 private class VoyagePathShape(
@@ -801,6 +605,11 @@ private class VoyagePathShape(
         val rightAmplitude = if (tr > 0f || br > 0f) waveAmplitude else 0f
         val bottomAmplitude = if (br > 0f || bl > 0f) waveAmplitude else 0f
         val leftAmplitude = if (bl > 0f || tl > 0f) waveAmplitude else 0f
+        if (topAmplitude == 0f && rightAmplitude == 0f &&
+            bottomAmplitude == 0f && leftAmplitude == 0f
+        ) {
+            return Outline.Rectangle(Rect(0f, 0f, width, height))
+        }
 
         if (waveAmplitude <= 0f) {
             if (tl == 0f && tr == 0f && br == 0f && bl == 0f) {
