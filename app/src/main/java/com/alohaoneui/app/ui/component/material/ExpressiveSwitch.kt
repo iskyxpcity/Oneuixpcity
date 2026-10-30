@@ -192,9 +192,9 @@ fun ExpressiveSwitch(
     // Voyage uses fixed Dp offsets in Pixel, Fluent, HyperOS and One UI.
     // These are the source left-edge offsets, not a percentage of the track.
     val thumbOffsetStart = when (style) {
-        2 -> 4.dp
+        2, 6 -> 4.dp
         3 -> 2.dp
-        6, 7 -> 4.dp
+        7 -> 0.dp
         else -> 0.dp
     }
     val thumbOffsetEnd = when (style) {
