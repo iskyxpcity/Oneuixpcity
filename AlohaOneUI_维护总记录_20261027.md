@@ -1081,3 +1081,13 @@
 - Fancy 进度色此前已按要求增加 6dp 长度，左侧起点未整体平移；本次只纠正滑块区域宽度与中心定位，不更改进度公式、轨道、刻度、外围容器或另外三种样式。
 - 产品源码提交：`aa0fe00c5f48111ed4bc6d4a090fcd4725ea0986`，仅提交至 `test/voyage-theme-1to1-20261026`，未修改或合并 `main`。
 - 前一轮 Build #2129（Run `40994286389`，HEAD `1fb7c9a...`）已结束但结论为 `cancelled`，不能作为本轮构建验收。本次新源码提交需继续检查 Actions 的 Kotlin 编译、APK 签名与 artifact 校验；当前尚无本次修正对应的可交付 APK，亦未声称真机视觉验收完成。
+
+
+## 2026-10-29｜统一详情列表卡片的按压/选择形状与主题颜色
+
+- 按用户确认，修正详情列表项在点击、长按及选择状态下，颜色反馈与卡片轮廓不同步的问题。
+- 根因已由 Material 3 `InteractiveListItem` 源码确认：内部背景/涟漪使用交互态 Shape；项目外层阴影与描边此前始终使用静态 `itemShapes.shape`，按压时外层轮廓不会随内部 `pressedShape` 切换。
+- 在 `SegmentedList.kt` 为普通点击、复选、单选三种列表项统一读取同一个 `MutableInteractionSource` 的按压状态；外层阴影与描边按 Material 3 相同优先级选择形状：按压优先，其次选择态，最后默认形状。涟漪及内部背景仍由原生 Material 3 列表项处理，不添加第二套点击反馈。
+- 明确设置选择态主题配色：背景使用 `primaryContainer`，标题、支持文字、前导/尾随图标使用 `onPrimaryContainer`；未选中背景继续使用 `surfaceContainerHigh`，支持文字继续使用 `outline`。颜色随动态 Material You 配色变化，不使用固定色值。
+- 本轮产品源码提交：`21e96e1078da1195332898d2aa410483a4b726f7`，文件：`app/src/main/java/com/alohaoneui/app/ui/component/material/SegmentedList.kt`。仅修改测试分支 `test/voyage-theme-1to1-20261026`，未修改或合并 `main`。
+- 验证状态：已回读确认三种重载均读取共享按压源并将动态状态形状用于外层描边/阴影；选择态各前景/背景颜色均显式设置。GitHub Actions 编译、签名及 APK Artifact 尚待本次提交后的运行结果确认；真机点击、长按、选中轮廓与主题色视觉验收尚未完成。
