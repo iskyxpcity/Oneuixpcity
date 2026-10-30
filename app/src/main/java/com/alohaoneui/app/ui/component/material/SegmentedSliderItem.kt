@@ -104,7 +104,7 @@ internal fun voyageSliderAppearance(requestedStyle: Int): VoyageSliderAppearance
     }
     val thumbSize = when (style) {
         0 -> DpSize(2.dp, 32.dp)             // Material You vertical marker
-        1 -> DpSize(24.dp, 24.dp)            // Fancy shaped thumb with halo
+        1 -> DpSize(26.dp, 26.dp)            // Fancy 26dp thumb; halo is drawn separately
         2 -> DpSize(20.dp, 20.dp)            // Material 2 circular thumb
         else -> DpSize(0.dp, 0.dp)           // HyperOS has no separate thumb
     }
@@ -306,21 +306,21 @@ internal fun VoyageSliderThumb(
                 // Extend the thumb's visual/hit region by 6dp in width without
                 // translating its center; the core remains centered in this slot.
                 modifier = Modifier
-                    .size(width = 50.dp, height = 40.dp)
-                    .clipToBounds(),
+                    .size(width = 50.dp, height = 40.dp),
                 contentAlignment = androidx.compose.ui.Alignment.Center,
             ) {
                 if (haloVisible) {
                     Box(
                         Modifier
-                            .size(50.dp)
+                             .size(52.dp)
                             .clip(CircleShape)
                             .background(MaterialTheme.colorScheme.tertiary.copy(alpha = 0.24f)),
                     )
                 }
                 Box(
                     Modifier
-                        .size(width = size.width, height = size.height)
+                         .size(width = size.width, height = size.height)
+                        .then(if (shadowEnabled) Modifier.shadow(4.dp, thumbShape, clip = false) else Modifier)
                         .then(Modifier.rotate(-1080f * valueFraction))
                         .clip(thumbShape)
                         .background(MaterialTheme.colorScheme.primary),
