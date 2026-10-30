@@ -505,12 +505,14 @@ fun alohaOneUISegmentedColors(): ListItemColors = ListItemDefaults.segmentedColo
     containerColor = colorScheme.surfaceContainerHigh,
     disabledContainerColor = colorScheme.surfaceContainerHigh,
     supportingContentColor = colorScheme.outline,
-    selectedContainerColor = colorScheme.primaryContainer,
-    selectedContentColor = colorScheme.onPrimaryContainer,
-    selectedLeadingContentColor = colorScheme.onPrimaryContainer,
-    selectedTrailingContentColor = colorScheme.onPrimaryContainer,
-    selectedOverlineContentColor = colorScheme.onPrimaryContainer,
-    selectedSupportingContentColor = colorScheme.onPrimaryContainer,
+    // Selection follows Aloha OneUI's live theme palette (custom seed / Monet,
+    // palette style, light-dark mode), using its secondary accent roles.
+    selectedContainerColor = colorScheme.secondaryContainer,
+    selectedContentColor = colorScheme.onSecondaryContainer,
+    selectedLeadingContentColor = colorScheme.onSecondaryContainer,
+    selectedTrailingContentColor = colorScheme.onSecondaryContainer,
+    selectedOverlineContentColor = colorScheme.onSecondaryContainer,
+    selectedSupportingContentColor = colorScheme.onSecondaryContainer,
 )
 
 /**
