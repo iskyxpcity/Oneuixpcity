@@ -267,6 +267,7 @@ fun SegmentedSliderItem(
     )
 }
 
+@Suppress("UNUSED_PARAMETER")
 @Composable
 internal fun VoyageSliderThumb(
     style: Int,
@@ -275,8 +276,12 @@ internal fun VoyageSliderThumb(
     inactiveColor: Color,
     shadowEnabled: Boolean = false,
     interactionSource: MutableInteractionSource? = null,
+    valueFraction: Float = 0f,
     haloVisible: Boolean = false,
 ) {
+    val source = interactionSource ?: remember { MutableInteractionSource() }
+    val pressed by source.collectIsPressedAsState()
+    val showHalo = haloVisible || pressed
     // HyperOS uses the thick track itself as its handle surface.
     if (style == 3) return
 
@@ -304,7 +309,7 @@ internal fun VoyageSliderThumb(
                     .size(width = 50.dp, height = 40.dp),
                 contentAlignment = androidx.compose.ui.Alignment.Center,
             ) {
-                if (haloVisible) {
+                if (showHalo) {
                     Box(
                         Modifier
                             .size(52.dp)
