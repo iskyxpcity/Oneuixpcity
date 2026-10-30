@@ -1,7 +1,7 @@
 name: Aloha OneUI Android APK build
 on:
   push:
-    branches: [main, 'test/voyage-theme-1to1-20261026', 'test/voyage-theme-1to1-rollback-8b5ef2e', 'migration/**']
+    branches: [main, 'test/voyage-theme-1to1-rollback-8b5ef2e', 'migration/**']
   workflow_dispatch:
 concurrency:
   group: alohaoneui-build-${{ github.ref }}
