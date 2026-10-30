@@ -844,6 +844,7 @@ fun SegmentedSwitchItem(
 
 @Composable
 fun SegmentedChoiceOptionsItem(
+    icon: ImageVector? = null,
     title: String,
     summary: String? = null,
     items: List<String>,
@@ -855,6 +856,7 @@ fun SegmentedChoiceOptionsItem(
     // Voyage k9t0.m108317Il / vfw0.m137946o renders a framed setting row,
     // then opens the native choice surface. It does not render a permanent FlowRow of chips.
     SegmentedDropdownItem(
+        icon = icon,
         title = title,
         summary = summary,
         items = items,
