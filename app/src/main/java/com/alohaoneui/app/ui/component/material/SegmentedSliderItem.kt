@@ -85,7 +85,7 @@ internal fun voyageSliderAppearance(requestedStyle: Int): VoyageSliderAppearance
     // independent roles so theme changes propagate without making them identical.
     val active = when (style) {
         0 -> scheme.secondary                 // Material You: filled segment
-        1 -> scheme.onPrimary                 // Fancy progress uses the switch thumb color (reversed)
+        1 -> scheme.secondary                 // Fancy progress uses the theme secondary accent color
         2 -> scheme.tertiary                 // Material 2: thin accent line
         else -> scheme.secondary             // HyperOS: filled thick segment
     }
