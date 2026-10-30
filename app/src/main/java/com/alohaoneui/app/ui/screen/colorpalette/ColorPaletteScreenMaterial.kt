@@ -357,17 +357,18 @@ fun ColorPaletteScreenMaterial(
                                 onCheckedChange = actions.onSetEnableFloatingBottomBar,
                             )
                         }
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                            if (uiState.enableFloatingBottomBar) {
-                                add {
-                                    SegmentedSwitchItem(
-                                        icon = Icons.Rounded.WaterDrop,
-                                        title = stringResource(R.string.settings_enable_glass),
-                                        summary = stringResource(R.string.settings_enable_glass_summary),
-                                        checked = uiState.enableFloatingBottomBarBlur,
-                                        onCheckedChange = actions.onSetEnableFloatingBottomBarBlur,
-                                    )
-                                }
+                        add {
+                            AnimatedVisibility(
+                                visible = uiState.enableFloatingBottomBar &&
+                                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU,
+                            ) {
+                                SegmentedSwitchItem(
+                                    icon = Icons.Rounded.WaterDrop,
+                                    title = stringResource(R.string.settings_enable_glass),
+                                    summary = stringResource(R.string.settings_enable_glass_summary),
+                                    checked = uiState.enableFloatingBottomBarBlur,
+                                    onCheckedChange = actions.onSetEnableFloatingBottomBarBlur,
+                                )
                             }
                         }
                     }
