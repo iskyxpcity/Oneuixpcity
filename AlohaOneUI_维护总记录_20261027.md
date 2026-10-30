@@ -1129,3 +1129,13 @@
 - 三种详情列表项重载（普通点击/长按、复选、单选）仍使用各自传给 Material 3 行组件的同一个交互源；未启用项不触发放大。Shape、阴影、描边及主题颜色逻辑未改动。
 - 产品源码修正提交：`2b04ab8d1ed7afba96d8f0828d07c1c3199faeb3`，文件：`app/src/main/java/com/alohaoneui/app/ui/component/material/SegmentedList.kt`。仅提交至 `test/voyage-theme-1to1-20261026`，未修改或合并 `main`。
 - 验证状态：源码更新已提交；Kotlin 编译、GitHub Actions 构建、APK 签名/Artifact 与真机按下保持放大、松手缩回验收尚未完成，不将本次修改视为已构建或真机验收通过。
+
+
+## 2026-10-30｜修复 Actions 编译错误：清除剩余旧按压动效引用
+
+- 用户提供 Actions Run `41039872650` 后，检查 Build job 日志确认 Kotlin 编译失败，具体错误为 `Unresolved reference 'alohaPressPulse'`；失败发生在 owner-signing gate 之前，签名、APK 构建与发布步骤均被跳过。
+- 对照当前 `SegmentedList.kt` 发现：普通点击项已改为 `alohaPressScale()`，但复选项和单选项两个重载仍残留旧函数名 `alohaPressPulse()`，因此编译器无法解析符号。
+- 已将这两个遗漏引用统一改为 `alohaPressScale()`，三种详情列表项重载现在都使用“按下期间保持放大、松手/取消后缩回”的同一 modifier；未改变形状、颜色、阴影、描边或交互回调逻辑。
+- 修复源码提交：`7fe81d27c608eab54b88e043f99a50e31eb2e5e4`，仅提交至 `test/voyage-theme-1to1-20261026`，未修改或合并 `main`。
+- 原失败运行诊断：Run `41039872650`，Build job `124010455708`；诊断明确指出旧函数名未解析。该运行没有 APK Artifact，只有 `AlohaOneUI-Build-Diagnostics`。
+- 验证状态：修复提交已推送，后续 Actions 构建结果待检查；在新一轮 Kotlin 编译、签名和 APK Artifact 验证完成前，不视为交付通过。
