@@ -17,10 +17,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.selection.toggleable
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SwitchColors
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -65,52 +67,15 @@ fun ExpressiveSwitch(
     val pressedOrHovered = pressed || hovered
     val interactive = pressed || hovered || focused
     val scheme = MaterialTheme.colorScheme
-    // Voyage a2i0 palette: the classic renderers keep track, thumb and outline
-    // on separate Material color roles rather than reusing the same accent.
-    val checkedTrack = when (style) {
-        0 -> colors.checkedTrackColor
-        1, 2, 3 -> scheme.onPrimary
-        4, 5 -> scheme.primary
-        6, 7 -> scheme.primary
-        else -> scheme.onPrimary
-    }
-    val uncheckedTrack = when (style) {
-        0 -> colors.uncheckedTrackColor
-        1, 2, 3 -> scheme.onSecondary
-        4, 5 -> scheme.surfaceVariant
-        6 -> scheme.inversePrimary
-        7 -> scheme.onSecondaryContainer
-        else -> scheme.onSecondary
-    }
-    val checkedThumb = when (style) {
-        0 -> colors.checkedThumbColor
-        1, 2, 3 -> scheme.primary
-        4, 5, 6, 7 -> scheme.onPrimary
-        else -> scheme.primary
-    }
-    val uncheckedThumb = when (style) {
-        0 -> colors.uncheckedThumbColor
-        1, 2, 3 -> scheme.inversePrimary
-        4, 5 -> scheme.onSurface
-        6 -> scheme.secondary
-        7 -> scheme.tertiary
-        else -> scheme.inversePrimary
-    }
-    val checkedBorder = when (style) {
-        0, 1, 2, 3 -> scheme.primaryContainer
-        4, 5 -> scheme.outlineVariant.copy(alpha = 0.33f)
-        6 -> Color.Transparent
-        7 -> scheme.outlineVariant
-        else -> scheme.primaryContainer
-    }
-    val uncheckedBorder = when (style) {
-        0, 1 -> scheme.secondaryContainer
-        2, 3 -> scheme.onSecondary
-        4, 5 -> scheme.outlineVariant.copy(alpha = 0.33f)
-        6 -> Color.Transparent
-        7 -> scheme.outlineVariant
-        else -> scheme.secondaryContainer
-    }
+    // Source palette port: Voyage zys0.l() builds a2i0 from the active
+    // Material color scheme, and all eight renderers consume the same roles.
+    // Track, thumb, outline and icon colors stay independent.
+    val checkedTrack = colors.checkedTrackColor
+    val uncheckedTrack = colors.uncheckedTrackColor
+    val checkedThumb = colors.checkedThumbColor
+    val uncheckedThumb = colors.uncheckedThumbColor
+    val checkedBorder = colors.checkedBorderColor
+    val uncheckedBorder = colors.uncheckedBorderColor
     // Source renderer bounds. Cupertino paints the full 51x31dp track;
     // One UI alone has a 39x22dp outer slot around its 35x18.5dp track.
     val trackSize = when (style) {
@@ -236,7 +201,8 @@ fun ExpressiveSwitch(
     val thumbShape = voyageCornerShape(thumbCornerRadius)
     val haloShape = voyageCornerShape(thumbHeight / 2f + 2.dp)
     val thumbSlotShape = voyageCornerShape(if (style == 3) 4.dp else thumbSlotHeight / 2f)
-    val borderWidth = when (style) { 0, 1 -> 2f; 2 -> 1.8f; 3 -> 1f; 4 -> 2f; 5, 6 -> 0f; 7 -> 0.1f; else -> 2f }
+    // Source l140 uses a 1dp outline around the 35 x 18.5dp One UI track.
+    val borderWidth = when (style) { 0, 1 -> 2f; 2 -> 1.8f; 3 -> 1f; 4 -> 2f; 5, 6 -> 0f; 7 -> 1f; else -> 2f }
     Box(
         modifier = modifier
             .size(width = slotSize.width, height = slotSize.height)
@@ -261,14 +227,7 @@ fun ExpressiveSwitch(
             val trackColor = if (enabled) {
                 if (checked) checkedTrack else uncheckedTrack
             } else {
-                when (style) {
-                    0 -> if (checked) colors.disabledCheckedTrackColor else colors.disabledUncheckedTrackColor
-                    1, 2, 3 -> if (checked) scheme.onTertiary else scheme.background
-                    4, 5 -> (if (checked) scheme.primary else scheme.surfaceVariant).copy(alpha = 0.38f)
-                    6 -> if (checked) scheme.onSecondaryContainer else scheme.onTertiaryContainer
-                    7 -> scheme.background
-                    else -> scheme.background
-                }
+                if (checked) colors.disabledCheckedTrackColor else colors.disabledUncheckedTrackColor
             }
             // The actual outline, not a hard-coded rounded rectangle, keeps the
             // global Voyage shape family and corner scale linked to each style.
@@ -299,13 +258,7 @@ fun ExpressiveSwitch(
                 val borderColor = if (enabled) {
                     if (checked) checkedBorder else uncheckedBorder
                 } else {
-                    when (style) {
-                        0 -> if (checked) colors.disabledCheckedBorderColor else colors.disabledUncheckedBorderColor
-                        1, 2, 3 -> if (checked) scheme.tertiaryContainer else scheme.onBackground
-                        4, 5 -> scheme.outlineVariant.copy(alpha = 0.18f)
-                        7 -> scheme.outlineVariant
-                        else -> Color.Transparent
-                    }
+                    if (checked) colors.disabledCheckedBorderColor else colors.disabledUncheckedBorderColor
                 }
                 withTransform({ translate(trackLeft + borderPx / 2f, trackTop + borderPx / 2f) }) {
                     drawVoyageOutline(
@@ -345,14 +298,7 @@ fun ExpressiveSwitch(
             val thumbColor = if (enabled) {
                 if (checked) checkedThumb else uncheckedThumb
             } else {
-                when (style) {
-                    0 -> if (checked) colors.disabledCheckedThumbColor else colors.disabledUncheckedThumbColor
-                    1, 2, 3 -> if (checked) scheme.onSecondaryContainer else scheme.onTertiaryContainer
-                    4, 5 -> scheme.onSurface.copy(alpha = 0.38f)
-                    6 -> if (checked) scheme.tertiary else scheme.background
-                    7 -> if (checked) scheme.onTertiaryContainer else scheme.onSurface
-                    else -> scheme.onSurface.copy(alpha = 0.38f)
-                }
+                if (checked) colors.disabledCheckedThumbColor else colors.disabledUncheckedThumbColor
             }
             withTransform({ translate(cx - thumbWidthPx / 2f, cy - thumbHeightPx / 2f) }) {
                 if (style == 5) {
@@ -395,7 +341,15 @@ fun ExpressiveSwitch(
                     .clip(thumbSlotShape),
                 contentAlignment = Alignment.Center,
             ) {
-                thumbContent()
+                val iconColor = when {
+                    !enabled && checked -> colors.disabledCheckedIconColor
+                    !enabled -> colors.disabledUncheckedIconColor
+                    checked -> colors.checkedIconColor
+                    else -> colors.uncheckedIconColor
+                }
+                CompositionLocalProvider(LocalContentColor provides iconColor) {
+                    thumbContent()
+                }
             }
         }
     }
@@ -440,22 +394,24 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawVoyageGlassOutl
 
 @Composable
 fun expressiveSwitchColors(
-    checkedTrackColor: Color = MaterialTheme.colorScheme.onPrimary,
-    checkedThumbColor: Color = MaterialTheme.colorScheme.primary,
-    checkedBorderColor: Color = MaterialTheme.colorScheme.primaryContainer,
+    // These defaults mirror zys0.l()'s a2i0 palette:
+    // primary/onPrimary, primaryFixedDim/outline, and the source disabled alphas.
+    checkedTrackColor: Color = MaterialTheme.colorScheme.primary,
+    checkedThumbColor: Color = MaterialTheme.colorScheme.onPrimary,
+    checkedBorderColor: Color = Color.Transparent,
     checkedIconColor: Color = MaterialTheme.colorScheme.onPrimaryContainer,
-    uncheckedTrackColor: Color = MaterialTheme.colorScheme.onSecondary,
-    uncheckedThumbColor: Color = MaterialTheme.colorScheme.inversePrimary,
-    uncheckedBorderColor: Color = MaterialTheme.colorScheme.secondaryContainer,
-    uncheckedIconColor: Color = MaterialTheme.colorScheme.onSecondaryContainer,
-    disabledCheckedThumbColor: Color = MaterialTheme.colorScheme.onSecondaryContainer,
-    disabledCheckedTrackColor: Color = MaterialTheme.colorScheme.onTertiary,
-    disabledCheckedBorderColor: Color = MaterialTheme.colorScheme.tertiaryContainer,
-    disabledCheckedIconColor: Color = MaterialTheme.colorScheme.onTertiaryContainer,
-    disabledUncheckedThumbColor: Color = MaterialTheme.colorScheme.onTertiaryContainer,
-    disabledUncheckedTrackColor: Color = MaterialTheme.colorScheme.background,
-    disabledUncheckedBorderColor: Color = MaterialTheme.colorScheme.onBackground,
-    disabledUncheckedIconColor: Color = MaterialTheme.colorScheme.onSurface,
+    uncheckedTrackColor: Color = MaterialTheme.colorScheme.primaryFixedDim,
+    uncheckedThumbColor: Color = MaterialTheme.colorScheme.outline,
+    uncheckedBorderColor: Color = MaterialTheme.colorScheme.outline,
+    uncheckedIconColor: Color = MaterialTheme.colorScheme.primaryFixedDim,
+    disabledCheckedThumbColor: Color = MaterialTheme.colorScheme.surface,
+    disabledCheckedTrackColor: Color = MaterialTheme.colorScheme.background.copy(alpha = 0.12f),
+    disabledCheckedBorderColor: Color = MaterialTheme.colorScheme.background.copy(alpha = 0.38f),
+    disabledCheckedIconColor: Color = MaterialTheme.colorScheme.background.copy(alpha = 0.12f),
+    disabledUncheckedThumbColor: Color = MaterialTheme.colorScheme.background.copy(alpha = 0.38f),
+    disabledUncheckedTrackColor: Color = MaterialTheme.colorScheme.primaryFixedDim.copy(alpha = 0.12f),
+    disabledUncheckedBorderColor: Color = MaterialTheme.colorScheme.background.copy(alpha = 0.12f),
+    disabledUncheckedIconColor: Color = MaterialTheme.colorScheme.primaryFixedDim.copy(alpha = 0.38f),
 ): SwitchColors = SwitchDefaults.colors(
     checkedTrackColor = checkedTrackColor,
     checkedThumbColor = checkedThumbColor,
