@@ -1325,3 +1325,31 @@ GitHub Actions：
 - `IconShapePresetPicker` 的 51 项预设 + Random + None 的索引顺序保持不变。
 - 两个代码提交均在 `test/voyage-theme-1to1-20261026`；未触碰或合并 `main`。
 - 本轮提交后的 GitHub Actions、APK 签名及 APK hash 仍待验证；不把本轮标记为发布完成。
+
+## K.476 — 2026-10-31：Slider 的 Material 2 / HyperOS 轨道尺寸与 Fancy 外框、刻度修正
+
+### 源码核对
+
+- `h7w0` 的实际 style dispatch 顺序确认是 `gaf0` Material You、`jaf0` Fancy、`iaf0` Material 2、`haf0` HyperOS；Aloha 设置页顺序保持与此一致。
+- Material 2：`h7w0` dispatch 到 `w3w0`；`w3w0` 通过 `o4l` case 3 调用 `vhf.O(..., 4.0f, ...)`，源码轨道厚度为 **4dp**，不是之前实现的 6dp。
+- HyperOS：`h7w0` dispatch 到 `v2t0`；`v2t0` 使用 `dn7` case 2 调用 `vhf.O(..., 30.0f, ...)`，源码轨道厚度为 **30dp**，不是之前实现的 24dp。
+- Fancy：`h7w0` dispatch 到 `y3w0`；`y3w0` 的外层修饰保留水平 12dp / 垂直 6dp insets。该外层的交互 glow 不等于常驻的 surface card。原始 `caf0` slider track 与 thumb 仍分层绘制；本项目已保留 16dp 可视轨道、38dp 触控 lane、26dp thumb、52dp 按压 halo、secondary progress / primary thumb，以及 6dp 轨道端帽和 theme-linked shape。
+
+### 本轮代码修改
+
+提交：`a79e7b4b9531d3303e46ed93e4a2ecf9cb206ec1`。
+
+修改文件：`app/src/main/java/com/alohaoneui/app/ui/component/material/SegmentedSliderItem.kt`。
+
+1. Material 2 可视轨道从 6dp 改为源码的 4dp。
+2. HyperOS 厚轨道从 24dp 改为源码的 30dp。
+3. Fancy 去除常驻 `surfaceContainerLow` 外围卡片填充与外围阴影，保留 Voyage 12dp / 6dp 外层间距；thumb 按压 halo 仍独立显示。
+4. 连续 Slider（`steps == 0`）不再人为绘制 20 个装饰圆点；只有离散 Slider 才按 `steps + 1` 间隔绘制刻度。
+
+### 验证状态与未完成项
+
+- 以上尺寸和分支均由原始 `h7w0`、`w3w0`、`v2t0`、`o4l`、`vhf`、`y3w0`、`caf0` 源码交叉核对。
+- 修改只提交到 `test/voyage-theme-1to1-20261026`；没有修改或合并 `main`。
+- 本轮代码提交后的 GitHub Actions 构建、APK 签名、包名/版本、APK 大小和 SHA-256 尚待验证。
+- Material You / Fancy / Material 2 / HyperOS 的完整绘制路径、颜色角色、thumb offset 与触摸边界仍需逐项继续比对；本轮只修正有直接源码证据的尺寸、Fancy 常驻外框和离散刻度，不宣称四种 Slider 全部 1:1 完成。
+- 设置页各分组、行距、二级/三级页面层级仍需与 Voyage 原始页面逐页核对。
