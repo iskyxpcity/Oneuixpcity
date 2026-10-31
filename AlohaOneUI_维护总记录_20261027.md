@@ -1266,3 +1266,39 @@ GitHub Actions：
 - 四种 Slider 仍需完成 jaf0/gaf0/iaf0/haf0 对应的 Material You/Fancy/Material 2/HyperOS 完整轨道、进度、thumb、刻度及动效移植。
 - Voyage 设置页的 Display/Design/Shape/Components/Shadows/Navigation/Launch/Assist 分组及各级菜单仍需逐项对照源码。
 - 本轮未修改、未合并 main；所有改动仅在 test/voyage-theme-1to1-20261026。
+
+## K.474 — 2026-10-31：八种 Switch 共用 Voyage a2i0 主题色板的源码映射修正
+
+### 原始源码与证据
+
+本轮继续使用原始 Voyage 反编译产物，而不是根据 Material 默认外观推测：
+
+- 来源仓库：`iskyxpcity/AppData`
+- 来源工作流 run：`41105255939`
+- 来源 artifact：`voyage-full-compose-ui-decompiled-source.zip`（artifact ID `13001122764`）
+- 本地核对文件：`zys0.java`、`a2i0.java`、`ptc.java`、`jtc.java`、`frt0.java`、`it70.java`、`ckw0.java`、`rdf.java`、`y2t0.java`、`l140.java`。
+
+源码链路确认：`zys0.l()` 按当前 Voyage Material 色板构造 `a2i0`；八个 Switch renderer 都从同一组 `a2i0` 状态颜色读取 checked/unchecked、enabled/disabled 的轨道、thumb、边线和图标颜色。原先 Aloha 的实现对不同风格分别猜测颜色，且部分把 track 与 thumb 的 primary/onPrimary 角色倒置，不符合源码。
+
+### 本轮代码修改
+
+提交：`b95646410bae6a8df5b45d209504db81ca805346`、`5b89e841afc0675e0e746e955ba394b8a1d78daf`。
+
+修改文件：`app/src/main/java/com/alohaoneui/app/ui/component/material/ExpressiveSwitch.kt`。
+
+1. 八种 renderer 统一读取 `SwitchColors`，不再按样式写入未经源码支持的 onTertiary、inversePrimary、固定 surfaceVariant 等颜色分支。
+2. 默认色板按 `zys0.l()` / `a2i0` 字段映射：
+   - checked：track = `primary`，thumb = `onPrimary`，边线透明，图标 = `onPrimaryContainer`。
+   - unchecked：track = `primaryFixedDim`，thumb = `outline`，边线 = `outline`，图标 = `primaryFixedDim`。
+   - disabled：逐项保留源码 alpha 0.12 / 0.38；disabled checked thumb 对照 `a2i0.Il` 使用 `onErrorContainer`，没有自行替换成 surface。
+3. thumb 内容通过 `LocalContentColor` 提供对应 checked/unchecked 与 disabled 图标颜色，避免图标继续继承错误的固定色。
+4. 复核 One UI renderer `l140.l`：`pt8.Io(track, 1.0f, ...)` 的描边参数是 **1dp**。因此本轮把之前记录的 0.1dp 修正为源码中的 1dp；39×22dp 外槽、35×18.5dp 轨道、22dp thumb 与 250ms 动画保持不变。
+
+### 本轮验证与边界
+
+- 已从原始反编译源码核对色板构造、状态分支和 One UI 描边参数。
+- 代码已提交到 `test/voyage-theme-1to1-20261026`；未触碰、未合并 `main`。
+- 本次提交后的 GitHub Actions 编译、APK 签名、包名/版本与 SHA-256 尚待完成；在 Actions 通过前不标记为构建验证通过。
+- Voyage 反编译工作流 run `41129221614` 因 JADX 返回 code 3（报告 2,244 个类反编译错误）未产出该次 artifact；本轮改用 AppData 已成功生成的原始源码 artifact `13001122764` 进行逐项核对，没有修改 workflow。
+- 八种 Switch 的动画、路径和尺寸仍需继续逐 renderer 核验；本轮只完成共享色板/状态颜色和 One UI 描边纠正，不宣称 Switch 1:1 全部完成。
+- 四种 Slider、图标形状选择/持久化端到端验证、Voyage 设置分组与布局核对仍为未完成项。
