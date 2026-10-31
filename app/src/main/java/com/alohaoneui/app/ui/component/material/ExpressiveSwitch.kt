@@ -404,7 +404,7 @@ fun expressiveSwitchColors(
     uncheckedThumbColor: Color = MaterialTheme.colorScheme.outline,
     uncheckedBorderColor: Color = MaterialTheme.colorScheme.outline,
     uncheckedIconColor: Color = MaterialTheme.colorScheme.primaryFixedDim,
-    disabledCheckedThumbColor: Color = MaterialTheme.colorScheme.surface,
+    disabledCheckedThumbColor: Color = MaterialTheme.colorScheme.onErrorContainer,
     disabledCheckedTrackColor: Color = MaterialTheme.colorScheme.background.copy(alpha = 0.12f),
     disabledCheckedBorderColor: Color = MaterialTheme.colorScheme.background.copy(alpha = 0.38f),
     disabledCheckedIconColor: Color = MaterialTheme.colorScheme.background.copy(alpha = 0.12f),
