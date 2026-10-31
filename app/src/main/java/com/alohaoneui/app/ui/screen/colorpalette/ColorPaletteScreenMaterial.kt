@@ -759,7 +759,14 @@ fun ColorPaletteScreenMaterial(
                                     }
                                 }
                             }
-                        }
+                        },
+                        {
+                            // Voyage k9t0.Io orders icon shape after shape style and corner size.
+                            IconShapePresetPicker(
+                                selectedIndex = uiState.materialIconShapeStyle,
+                                onOpen = { showIconShapeDetails = true },
+                            )
+                        },
                     )
                 )
 
@@ -796,12 +803,6 @@ fun ColorPaletteScreenMaterial(
                                 ),
                                 selectedIndex = uiState.materialSliderStyle,
                                 onItemSelected = actions.onSetMaterialSliderStyle,
-                            )
-                        },
-                        {
-                            IconShapePresetPicker(
-                                selectedIndex = uiState.materialIconShapeStyle,
-                                onOpen = { showIconShapeDetails = true },
                             )
                         },
                         {
