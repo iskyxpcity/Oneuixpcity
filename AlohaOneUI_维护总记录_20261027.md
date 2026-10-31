@@ -1302,3 +1302,26 @@ GitHub Actions：
 - Voyage 反编译工作流 run `41129221614` 因 JADX 返回 code 3（报告 2,244 个类反编译错误）未产出该次 artifact；本轮改用 AppData 已成功生成的原始源码 artifact `13001122764` 进行逐项核对，没有修改 workflow。
 - 八种 Switch 的动画、路径和尺寸仍需继续逐 renderer 核验；本轮只完成共享色板/状态颜色和 One UI 描边纠正，不宣称 Switch 1:1 全部完成。
 - 四种 Slider、图标形状选择/持久化端到端验证、Voyage 设置分组与布局核对仍为未完成项。
+
+## K.475 — 2026-10-31：修复 Icon Shape 的 Random 选择与持久化上限
+
+### Voyage 原始行为核对
+
+- `vqp` 的原始列表由 26 个 `shq` 形状和 25 个 `RoundedPolygon` 形状组成，总计 51 个实际预设。
+- `shq.I(p7r)` 在当前项为 Random 哨兵时，从传入的 51 个真实预设中通过 `yqc.random(..., laa0.l)` 选取随机形状；Random 本身不是第 52 个几何形状。
+- Aloha 的存储约定与 `SettingsRepositoryImpl` 一致：None = -1，真实预设 = 0..50，Random = 51。
+
+### 本轮发现与修复
+
+原有 `SettingsViewModel.setMaterialIconShapeStyle()` 把输入限制在 `-1..50`，与 repository、备份恢复及 UI 中 Random = 51 的约定冲突。用户选择 Random 后，ViewModel 会把 51 静默改成 50，最终保存成最后一个固定预设。这是实际的选择/持久化缺陷。
+
+提交：
+- `21bd8ddb54322ccf055fb77819f564ea0ba48736`：将 ViewModel 范围改为 `-1..51`。
+- `13da67d42254cac483cc29836327cf53b9ecdbd7`：`OneUiFeatureIcon` 在 Random 模式下改为每个图标 composition 首次生成随机种子，并由 `remember(iconShapeStyle, kind)` 固定该图标本次会话的形状，避免普通重组时抖动；切换到 Random 或重建 composition 时重新抽取。原先使用 `kind.ordinal` 导致每个图标永久映射到固定伪随机形状，不符合 Voyage 的随机列表解析行为。
+
+### 验证状态
+
+- `SettingsRepositoryImpl` 的读取范围、迁移映射、setter 和备份恢复范围均已核对为 `-1..51`；本轮修复了 ViewModel 唯一不一致的上限。
+- `IconShapePresetPicker` 的 51 项预设 + Random + None 的索引顺序保持不变。
+- 两个代码提交均在 `test/voyage-theme-1to1-20261026`；未触碰或合并 `main`。
+- 本轮提交后的 GitHub Actions、APK 签名及 APK hash 仍待验证；不把本轮标记为发布完成。
