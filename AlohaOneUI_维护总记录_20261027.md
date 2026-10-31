@@ -1380,7 +1380,7 @@ Aloha 此前把 Icon Shape 放在 Components，与 `k9t0.Io` 不一致。本轮�
 ### 构建验证
 
 - build #2250 / run `41233997966`：success；为 K.474–K.476 的中间检查点，未包含本节最后的 Icon Shape 分组移动，不作为最终 APK。
-- build #2251 / run `41234349262`：<badge>success</badge>。head commit `9fcbd985d12b557828c5de252c4eb39595f9684d`；编译、owner signing key 加载、APK 构建、包名/签名验证、artifact 上传全部成功。
+- build #2251 / run `41234349262`：**success**。head commit `9fcbd985d12b557828c5de252c4eb39595f9684d`；编译、owner signing key 加载、APK 构建、包名/签名验证、artifact 上传全部成功。
 - 最终 APK：`AlohaOneUI_1.0.261025_BUILD_2251.apk`。
   - Package：`com.alohaoneui.app`
   - Version code：`16`
