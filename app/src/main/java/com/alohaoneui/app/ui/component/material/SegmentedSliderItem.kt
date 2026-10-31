@@ -110,8 +110,8 @@ internal fun voyageSliderAppearance(requestedStyle: Int): VoyageSliderAppearance
     val trackHeight = when (style) {
         0 -> 16.dp                           // Material You pill track + marker
         1 -> 38.dp                           // Fancy rail reduced by 2dp; progress remains 36dp
-        2 -> 6.dp                            // Material 2 fine rail
-        else -> 24.dp                        // HyperOS thick rail
+        2 -> 4.dp                            // Voyage w3w0 -> vhf.O uses a 4dp rail
+        else -> 30.dp                        // Voyage v2t0 -> vhf.O uses a 30dp rail
     }
     return VoyageSliderAppearance(
         style = style,
@@ -132,16 +132,23 @@ internal fun voyageSliderContainerModifier(
     style: Int,
     containerColor: Color,
 ): Modifier {
-    // Voyage y3w0 applies the Fancy surface before 12dp horizontal / 6dp
-    // vertical content insets; the rail remains a separate drawing layer.
-    val containerRadius = if (style == 1) 14.dp else 20.dp
+    // Voyage y3w0 keeps the Fancy slider's 12dp horizontal / 6dp vertical
+    // insets, but its surrounding surface is an interaction glow, not a
+    // permanently painted card. Keep the Fancy outer area transparent.
+    val hasOuterSurface = style != 1
+    val containerRadius = 20.dp
     val containerShape = voyageCornerShape(containerRadius)
-    val containerShadow = if (LocalMaterialShadowSliders.current) {
+    val containerShadow = if (hasOuterSurface && LocalMaterialShadowSliders.current) {
         Modifier.shadow(2.dp, containerShape, clip = false)
     } else Modifier
+    val containerBackground = if (hasOuterSurface) {
+        Modifier.background(containerColor, containerShape)
+    } else {
+        Modifier
+    }
     return Modifier
         .then(containerShadow)
-        .background(containerColor, containerShape)
+        .then(containerBackground)
         .padding(
             horizontal = when (style) { 0 -> 10.dp; 1 -> 12.dp; 2 -> 10.dp; else -> 6.dp },
             vertical = when (style) { 0 -> 6.dp; 1 -> 6.dp; 2 -> 6.dp; else -> 4.dp },
@@ -353,18 +360,6 @@ internal fun VoyageSliderTrack(
     shadowEnabled: Boolean = false,
 ) {
     val scheme = MaterialTheme.colorScheme
-    val passedTickColor = when (style) {
-        0 -> scheme.onSecondary
-        1 -> scheme.primary
-        2 -> scheme.primary
-        else -> scheme.onSecondary
-    }
-    val futureTickColor = when (style) {
-        0 -> scheme.primary
-        1 -> scheme.onSurface.copy(alpha = 0.90f)
-        2 -> scheme.primary
-        else -> scheme.primary
-    }
     val fraction = if (range.endInclusive > range.start) {
         ((state.value - range.start) / (range.endInclusive - range.start)).coerceIn(0f, 1f)
     } else 0f
@@ -497,10 +492,11 @@ internal fun VoyageSliderTrack(
             }
         }
 
-        // Always draw visible scale marks, even for continuous sliders. For
-        // discrete sliders the marks align with the actual selectable stops.
-        val tickIntervals = if (steps > 0) steps + 1 else 20
-        for (i in 0..tickIntervals) {
+        // Voyage only supplies scale marks for discrete sliders. A continuous
+        // slider (steps == 0) has no synthetic 20-dot ruler.
+        if (steps > 0) {
+            val tickIntervals = steps + 1
+            for (i in 0..tickIntervals) {
                 val tickFraction = i.toFloat() / tickIntervals
                 val tickX = if (style == 1) {
                     extension + baseTrackWidth * tickFraction
@@ -524,6 +520,7 @@ internal fun VoyageSliderTrack(
                     },
                     center = Offset(tickX, y),
                 )
+            }
         }
     }
 }
