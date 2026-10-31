@@ -202,10 +202,11 @@ private data class VoyageG2Profile(
         fun mix(from: Double, to: Double, amount: Double) = from + (to - from) * amount
         return VoyageG2Profile(
             extendedFraction = mix(capsule.extendedFraction, smooth.extendedFraction, shared) * t,
-            // ban.m5206I() derives d55/d56/d57/d58 from each side's own
-            // axis progress. Only extendedFraction and arcCurvatureScale use
-            // the shared minimum of the two adjacent axis-progress values.
-            arcFraction = mix(capsule.arcFraction, smooth.arcFraction, t),
+            // ban.m5206I(): d55..d62 (bezierCurvatureScale) use each
+            // side's axis progress; d65..d68 (arcFraction) and d70..d73
+            // (arcCurvatureScale) both use the minimum shared by the corner's
+            // two adjacent axis-progress values.
+            arcFraction = mix(capsule.arcFraction, smooth.arcFraction, shared),
             bezierCurvatureScale = mix(capsule.bezierCurvatureScale, smooth.bezierCurvatureScale, t),
             arcCurvatureScale = mix(capsule.arcCurvatureScale, smooth.arcCurvatureScale, shared),
         )
@@ -451,7 +452,10 @@ private fun createVoyageG2Path(
         append(trH.p1, trH.p2, trH.p3) { p -> point(w - tr + p.x * tr, p.y * tr) }
         appendVoyageG2Arc(
             path, w - tr, tr, tr, 1.0 / trVertical.arcCurvatureScale,
-            ((1.0 - trVertical.arcFraction) * Math.PI / 4.0) - Math.PI / 2.0,
+            // Preserve ban.I()'s original d68 start-angle dependency:
+            // the top-right sweep uses d66, but its start offset uses d68
+            // (the bottom-left shared arc fraction).
+            ((1.0 - blVertical.arcFraction) * Math.PI / 4.0) - Math.PI / 2.0,
             trVertical.arcFraction * Math.PI / 2.0,
         )
         append(trV.p2, trV.p1, trV.p0) { p -> point(w - p.y * tr, tr - p.x * tr) }
