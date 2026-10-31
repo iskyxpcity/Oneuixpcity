@@ -1353,3 +1353,58 @@ GitHub Actions：
 - 本轮代码提交后的 GitHub Actions 构建、APK 签名、包名/版本、APK 大小和 SHA-256 尚待验证。
 - Material You / Fancy / Material 2 / HyperOS 的完整绘制路径、颜色角色、thumb offset 与触摸边界仍需逐项继续比对；本轮只修正有直接源码证据的尺寸、Fancy 常驻外框和离散刻度，不宣称四种 Slider 全部 1:1 完成。
 - 设置页各分组、行距、二级/三级页面层级仍需与 Voyage 原始页面逐页核对。
+
+## K.477 — 2026-10-31：完整 Voyage 专项源码与资源映射、Icon Shape 分组归位
+
+### 源码资料确认
+
+- `voyage-theme-decompiled-source-complete.zip`：JADX CLI 1.5.6，`SOURCE_INDEX.md` 对主题相关类报告失败类数为 0。
+- `voyage-slider-renderers.zip`：包含 `ncw0`、`caf0`、`v2t0`、`w3w0`、`y3w0`、`y3f0`。
+- `Voyage主题框架.zip`：包含原始 `strings.xml`、`public.xml`、`dimens.xml`、`arrays.xml`，用于把资源 ID 映射回真实标题与页面分类。
+- 全量 AppData artifact 仅用于补查专项索引未包含的辅助色板类 `zys0` / `a2i0` / `ptc` / `jtc`；全量反编译的 2,244 个失败类不计入主题专项源码结果。
+
+### 原始设置分组与行序
+
+通过 `public.xml` 资源 ID 反查 `zcj0` / `k9t0`：
+
+1. 顶层分类：Interface style → Navigation bar → Display mode → Launch screen and icon → Color assistance → Shapes → Components → Shadows。
+2. `k9t0.Io` Shapes：Shape style → Corner size → Icon shape。
+3. `k9t0.O` Components：Switch style → Slider style → Outline width。
+4. `k9t0.IO` Shadows：Containers → Top bars → Buttons → Floating buttons → Switches → Sliders。
+
+Aloha 此前把 Icon Shape 放在 Components，与 `k9t0.Io` 不一致。本轮已将它移至 Shapes，紧跟 Shape style 与 Corner size；Components 现在只保留 Switch style、Slider style、Outline width。
+
+提交：`9fcbd985d12b557828c5de252c4eb39595f9684d`。
+修改文件：`app/src/main/java/com/alohaoneui/app/ui/screen/colorpalette/ColorPaletteScreenMaterial.kt`。
+
+### 构建验证
+
+- build #2250 / run `41233997966`：success；为 K.474–K.476 的中间检查点，未包含本节最后的 Icon Shape 分组移动，不作为最终 APK。
+- build #2251 / run `41234349262`：<badge>success</badge>。head commit `9fcbd985d12b557828c5de252c4eb39595f9684d`；编译、owner signing key 加载、APK 构建、包名/签名验证、artifact 上传全部成功。
+- 最终 APK：`AlohaOneUI_1.0.261025_BUILD_2251.apk`。
+  - Package：`com.alohaoneui.app`
+  - Version code：`16`
+  - Version name：`1.0.261025`
+  - Size：`28,847,409` bytes
+  - SHA-256：`33c89b78c04beeb96d94fa3daf70cb5b5b3b586b6e550fd10546e53ed0f31e85`
+  - Signing certificate SHA-256：`93bf61a6493c6b336383832eb41301bd8fe061f43566e7e384e3fdd9fc1c26a1`
+  - APK v2 signature verification：passed；single RSA 3072-bit signer。
+  - Manifest package、version、Aloha OneUI label 与 adaptive launcher icon 均已核对。
+  - Test branch workflow 选择的是 owner-signed **debuggable test APK**；optimized release validation 与 GitHub Release publish 按 test 分支策略跳过。因此这是已验证、可安装的 test APK，不是优化 release APK。
+- GitHub Actions artifact：`AlohaOneUI-Signed-Test-APK`，artifact ID `13054183829`；run 页面：`https://github.com/iskyxpcity/Oneuixpcity/actions/runs/41234349262`。
+- 已下载并实际核对 artifact 内 APK、`APK_PACKAGE_INFO.txt`、`APK_MANIFEST_CHECK.txt`、`SIGNING_INFO.txt`、`SHA256SUMS`；SHA-256 与文件实算值一致。
+
+### 尚未完成
+
+- `zcj0` 八个顶层分类与 `k9t0` 子页已完成源码映射，但 Aloha 仍把多个来源分类组合在一个滚动页中；页面拆分和导航层级仍未完成，不能仅凭分组标题存在就宣称设置页 1:1。
+- 四种 Slider 的完整绘制路径、thumb offset、触摸边界和颜色通道仍需逐 renderer 核验；八种 Switch 的每种路径与动画也仍需继续验证。
+- 本轮全部修改只在 `test/voyage-theme-1to1-20261026`；`main` 未修改、未合并。
+- build #2251 已验证当前代码；后续若继续修改 app 源码，需要产生新的 Actions run 并重新核对 APK，不沿用本次 hash。
+
+## K.478 — 2026-10-31：本轮最终状态
+
+- Switch：八种风格已统一为 Voyage `a2i0` 状态色板；One UI 1dp 边线已按 `l140` 源码修正。
+- Icon Shape：51 个预设、Random、None；Random = 51 的 ViewModel 持久化上限已修正，随机形状改为每个图标 composition 抽取并在重组期间稳定；Icon Shape 行已归入 Shapes 分组。
+- Slider：Material 2 4dp、HyperOS 30dp、Fancy 无常驻外框且保留 12dp/6dp insets、离散刻度不再应用到连续 slider。
+- Shapes：Wavy、Smooth G² 及剩余 shape 算法按前序 K.472 源码核对结果保留，本轮未重写已完成的几何。
+- 本轮最终已验证 APK 为 build #2251；尚未完成的页面导航拆分和逐 renderer 视觉/交互核验继续列为未完成项。
