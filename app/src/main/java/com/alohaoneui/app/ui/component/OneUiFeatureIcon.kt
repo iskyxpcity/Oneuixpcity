@@ -20,6 +20,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import kotlin.random.Random
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
@@ -43,7 +44,7 @@ internal fun OneUiFeatureIcon(
 ) {
     val iconShapeStyle = LocalMaterialIconShapeStyle.current
     val iconShape = remember(iconShapeStyle, kind) {
-        iconShapeForStyle(iconShapeStyle, seed = kind.ordinal)
+        iconShapeForStyle(iconShapeStyle, seed = Random.nextInt())
     }
     val palette = when (kind) {
         OneUiFeatureIconKind.OtherFunctions -> listOf(Color(0xFF12D0AE), Color(0xFF128ED8), Color(0xFF4C5CE4))
