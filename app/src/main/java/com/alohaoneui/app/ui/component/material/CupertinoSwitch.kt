@@ -67,7 +67,7 @@ internal fun CupertinoSwitch(
     ) {
         Box(
             modifier = Modifier
-                .offset(x = travel * progress)
+                .offset(x = 2.dp + travel * progress)
                 .size(27.dp)
                 .shadow(1.5.dp, CircleShape)
                 .clip(CircleShape)
