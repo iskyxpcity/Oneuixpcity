@@ -53,10 +53,12 @@ import com.alohaoneui.app.ui.theme.LocalMaterialSwitchStyle
 val LocalVoyageSwitchBackdrop = staticCompositionLocalOf<Backdrop?> { null }
 
 /**
- * Voyage's eight selectable switch families. The selector changes the actual
- * track/thumb geometry and palette rather than applying a cosmetic scale to
- * the platform Material switch. Toggle semantics and animated thumb travel
- * remain shared across all styles.
+ * Eight independently rendered Aloha switch families:
+ * Material You (Material 3), Compose Material (Material 2), Pixel Expressive,
+ * Fluent 2, Cupertino UISwitch, Liquid Glass, HyperOS and Samsung One UI SESL.
+ *
+ * Theme colors are semantic inputs. Preference-row outlines are not read here,
+ * and Miuix native switches remain owned by SwitchItem.
  */
 @Composable
 fun ExpressiveSwitch(
@@ -206,9 +208,9 @@ fun ExpressiveSwitch(
     val pressedOrHovered = pressed || hovered
     val interactive = pressed || hovered || focused
     val interactionProgress by animateFloatAsState(targetValue = if (interactive && enabled) 1f else 0f, animationSpec = spring(dampingRatio = 0.72f, stiffness = 700f), label = "voyageSwitchInteraction")
-    // Liquid Glass remains a real backdrop material at rest. Interaction
-    // strengthens its elastic response rather than being the only time glass
-    // is rendered.
+    // Liquid Glass uses the same captured scene source as the floating bar.
+    // Its track and handle both render backdrop blur, vibrancy, lens refraction
+    // and specular highlight at rest; pressing adds the elastic lens response.
     val glassInteraction by animateFloatAsState(
         targetValue = if (style == 5 && enabled) 1f else 0f,
         animationSpec = spring(dampingRatio = 0.58f, stiffness = 420f),
