@@ -37,7 +37,6 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
-import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
 import com.alohaoneui.app.ui.theme.LocalMaterialShadowSwitches
 import com.alohaoneui.app.ui.theme.LocalMaterialSwitchStyle
 
@@ -238,7 +237,6 @@ fun ExpressiveSwitch(
         else -> RoundedCornerShape(50)
     }
     val haloShape = RoundedCornerShape(50)
-    val borderWidth = LocalMaterialOutlineWidth.current
     Box(
         modifier = modifier
             .size(width = trackSize.width, height = trackSize.height)
@@ -307,23 +305,6 @@ fun ExpressiveSwitch(
                 )
             }
 
-            // Aloha's own component outline is independent and remains governed
-            // exclusively by the Aloha outline-width setting.
-            val alohaStrokePx = borderWidth.dp.toPx()
-            if (alohaStrokePx > 0f) {
-                val alohaOutline = trackShape.createOutline(
-                    size = Size((w - alohaStrokePx).coerceAtLeast(0f), (h - alohaStrokePx).coerceAtLeast(0f)),
-                    layoutDirection = layoutDirection,
-                    density = this,
-                )
-                withTransform({ translate(alohaStrokePx / 2f, alohaStrokePx / 2f) }) {
-                    drawVoyageOutline(
-                        alohaOutline,
-                        scheme.outlineVariant.copy(alpha = if (enabled) 1f else 0.45f),
-                        style = Stroke(width = alohaStrokePx),
-                    )
-                }
-            }
             val thumbWidthPx = thumbWidth.toPx()
             val thumbHeightPx = thumbHeight.toPx()
             val edgeInsetPx = thumbEdgeInset.toPx()
