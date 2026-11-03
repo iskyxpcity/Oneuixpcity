@@ -3,6 +3,7 @@ package com.alohaoneui.app.ui.component.material
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.offset
@@ -53,10 +54,7 @@ internal fun CupertinoSwitch(
         modifier = modifier
             .size(width = 51.dp, height = 31.dp)
             .clip(CircleShape)
-            .then(
-                androidx.compose.ui.Modifier
-                    .background(trackColor)
-            )
+            .background(trackColor)
             .toggleable(
                 value = checked,
                 enabled = enabled && onCheckedChange != null,
