@@ -36,9 +36,8 @@ import androidx.compose.ui.unit.dp
  * - the thumb travels with a spring and settles with a restrained bounce;
  * - no whole-control scaling, permanent halo, or glass track.
  *
- * Backdrop sampling is limited to the thumb layer. It uses the existing
- * pager backdrop supplied by LocalVoyageSwitchBackdrop and never creates
- * another capture layer around the switch itself.
+ * The thumb uses a local transient specular treatment. It deliberately does
+ * not sample the pager backdrop, avoiding recursive capture during interaction.
  */
 @Composable
 fun AlohaAgslGlassSwitch(
@@ -140,38 +139,7 @@ fun AlohaAgslGlassSwitch(
                     )
                 },
         ) {
-            // Keep the interaction glass treatment local to the thumb. Sampling
-            // the pager backdrop from inside the pager can create a recursive
-            // capture graph on some devices, so use a transient specular lens
-            // treatment without attaching another capture layer.
-            if (enabled && glassProgress > 0.001f) {
-                Box(
-                    modifier = Modifier
-                        .matchParentSize()
-                        .drawBackdrop(
-                            backdrop = backdrop,
-                            shape = { CircleShape },
-                            effects = {
-                                vibrancy()
-                                blur(1.6.dp.toPx(), 1.6.dp.toPx())
-                                lens(
-                                    refractionHeight = 16.dp.toPx(),
-                                    refractionAmount = 18.dp.toPx(),
-                                    depthEffect = true,
-                                    chromaticAberration = 0.24f,
-                                )
-                            },
-                            highlight = {
-                                glassHighlight.copy(alpha = 0.96f * glassProgress)
-                            },
-                            onDrawSurface = {
-                                drawCircle(
-                                    Color.White.copy(alpha = 0.16f * glassProgress)
-                                )
-                            },
-                        ),
-                )
-            }
+            // Interaction-only glass highlight; no pager backdrop capture.
             if (enabled && glassProgress > 0.001f) {
                 // Visible transient lens treatment when the app's optional
                 // live backdrop capture is disabled. This is a procedural
