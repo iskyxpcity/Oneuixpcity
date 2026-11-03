@@ -40,6 +40,7 @@ import top.yukonga.miuix.kmp.blur.highlight.LightPosition
 import top.yukonga.miuix.kmp.blur.highlight.LightSource
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.geometry.Offset
@@ -182,8 +183,14 @@ fun ExpressiveSwitch(
             colors = androidx.compose.material.SwitchDefaults.colors(
                 checkedThumbColor = scheme.secondary,
                 checkedTrackColor = scheme.secondary,
+                checkedTrackAlpha = 0.54f,
                 uncheckedThumbColor = scheme.surface,
                 uncheckedTrackColor = scheme.onSurface,
+                uncheckedTrackAlpha = 0.38f,
+                disabledCheckedThumbColor = scheme.secondary.copy(alpha = 0.38f).compositeOver(scheme.surface),
+                disabledCheckedTrackColor = scheme.secondary.copy(alpha = 0.38f).compositeOver(scheme.surface),
+                disabledUncheckedThumbColor = scheme.surface,
+                disabledUncheckedTrackColor = scheme.onSurface.copy(alpha = 0.38f).compositeOver(scheme.surface),
             ),
         )
         return
