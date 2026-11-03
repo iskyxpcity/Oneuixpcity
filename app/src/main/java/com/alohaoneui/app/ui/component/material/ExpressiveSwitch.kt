@@ -281,7 +281,8 @@ fun ExpressiveSwitch(
             // Keep a visible perimeter on every family even when the global
             // outline preference is set to zero. The system style owns its
             // minimum stroke; the global setting may strengthen it.
-            val familyBorderWidth = when (style) {
+            // Native switch perimeter: retain its platform-specific color and stroke.
+            val platformStrokeDp = when (style) {
                 0 -> 1.0f
                 1 -> 1.0f
                 2 -> 1.25f
@@ -291,18 +292,35 @@ fun ExpressiveSwitch(
                 6 -> 1.0f
                 else -> 0.9f
             }
-            val borderPx = maxOf(borderWidth, familyBorderWidth).dp.toPx()
-            if (borderPx > 0f) {
-                val borderOutline = trackShape.createOutline(
-                    size = Size((w - borderPx).coerceAtLeast(0f), (h - borderPx).coerceAtLeast(0f)),
+            val platformStrokePx = platformStrokeDp.dp.toPx()
+            val platformInset = (platformStrokePx * 1.25f).coerceAtLeast(1f)
+            val platformOutline = trackShape.createOutline(
+                size = Size((w - platformInset * 2f).coerceAtLeast(0f), (h - platformInset * 2f).coerceAtLeast(0f)),
+                layoutDirection = layoutDirection,
+                density = this,
+            )
+            withTransform({ translate(platformInset, platformInset) }) {
+                drawVoyageOutline(
+                    platformOutline,
+                    (if (checked) checkedBorder else uncheckedBorder).copy(alpha = if (enabled) 1f else 0.45f),
+                    style = Stroke(width = platformStrokePx),
+                )
+            }
+
+            // Aloha's own component outline is independent and remains governed
+            // exclusively by the Aloha outline-width setting.
+            val alohaStrokePx = borderWidth.dp.toPx()
+            if (alohaStrokePx > 0f) {
+                val alohaOutline = trackShape.createOutline(
+                    size = Size((w - alohaStrokePx).coerceAtLeast(0f), (h - alohaStrokePx).coerceAtLeast(0f)),
                     layoutDirection = layoutDirection,
                     density = this,
                 )
-                withTransform({ translate(borderPx / 2f, borderPx / 2f) }) {
+                withTransform({ translate(alohaStrokePx / 2f, alohaStrokePx / 2f) }) {
                     drawVoyageOutline(
-                        borderOutline,
-                        (if (checked) checkedBorder else uncheckedBorder).copy(alpha = if (enabled) 1f else 0.45f),
-                        style = Stroke(width = borderPx),
+                        alohaOutline,
+                        scheme.outlineVariant.copy(alpha = if (enabled) 1f else 0.45f),
+                        style = Stroke(width = alohaStrokePx),
                     )
                 }
             }
@@ -344,11 +362,8 @@ fun ExpressiveSwitch(
                     drawVoyageOutline(thumbOutline, (if (checked) scheme.onPrimary else scheme.onSurfaceVariant).copy(alpha = interactionProgress * 0.10f))
                 }
                 drawVoyageOutline(thumbOutline, thumbColor)
-                if (style == 5) {
-                    // Apple documents Liquid Glass on toggles as a transient
-                    // thumb transformation during interaction, not a static
-                    // glass-painted track. Keep a restrained optical shell at
-                    // rest, then illuminate and flex it while touched.
+                if (style == 5 && glassInteraction > 0.001f) {
+                    // Liquid Glass appears on activation, not as a permanent coat.
                     withTransform({
                         scale(
                             scaleX = glassScale,
@@ -360,18 +375,18 @@ fun ExpressiveSwitch(
                             outline = thumbOutline,
                             bounds = Size(thumbWidthPx, thumbHeightPx),
                             tint = if (checked) scheme.primary else scheme.surfaceContainerHigh,
-                            alpha = 0.34f + glassInteraction * 0.66f,
+                            alpha = glassInteraction,
                         )
                         drawVoyageOutline(
                             thumbOutline,
-                            Color.White.copy(alpha = 0.40f + glassInteraction * 0.58f),
-                            style = Stroke(width = 1.15.dp.toPx()),
+                            Color.White.copy(alpha = glassInteraction * 0.92f),
+                            style = Stroke(width = (0.75f + glassInteraction * 0.45f).dp.toPx()),
                         )
                         drawLine(
-                            color = Color.White.copy(alpha = 0.42f + glassInteraction * 0.52f),
+                            color = Color.White.copy(alpha = glassInteraction * 0.86f),
                             start = Offset(thumbWidthPx * 0.22f, thumbHeightPx * 0.22f),
                             end = Offset(thumbWidthPx * 0.72f, thumbHeightPx * 0.22f),
-                            strokeWidth = (0.8f + glassInteraction * 0.7f).dp.toPx(),
+                            strokeWidth = (0.65f + glassInteraction * 0.55f).dp.toPx(),
                             cap = StrokeCap.Round,
                         )
                     }
