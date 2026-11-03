@@ -64,6 +64,7 @@ fun ExpressiveSwitch(
     val focused by interactionSource.collectIsFocusedAsState()
     val pressedOrHovered = pressed || hovered
     val interactive = pressed || hovered || focused
+    val interactionProgress by animateFloatAsState(targetValue = if (interactive && enabled) 1f else 0f, animationSpec = spring(dampingRatio = 0.72f, stiffness = 700f), label = "voyageSwitchInteraction")
     // Liquid Glass is transient: the handle gains its glass treatment only
     // while the user is actively pressing the Material switch.
     val glassInteraction by animateFloatAsState(
@@ -79,32 +80,41 @@ fun ExpressiveSwitch(
     val scheme = MaterialTheme.colorScheme
     // All eight switch families use the active Material color scheme. Each
     // family keeps a distinct tonal identity without fixed brand colors.
+    // Voyage palette roles mapped to the active Aloha Material scheme.
     val checkedTrack = when (style) {
-        0, 1, 7 -> scheme.primary
+        0, 1 -> scheme.primary
         2 -> scheme.primaryContainer
-        3 -> scheme.secondary
-        4 -> scheme.tertiary
-        5 -> scheme.primaryContainer
+        3 -> scheme.secondaryContainer
+        4 -> scheme.tertiaryContainer
+        5 -> scheme.surfaceContainerHighest
         6 -> scheme.secondaryContainer
         else -> scheme.primary
     }
-    val uncheckedTrack = scheme.surfaceContainerHighest
+    val uncheckedTrack = when (style) {
+        3 -> scheme.surfaceContainer
+        5 -> scheme.surfaceContainerHigh
+        else -> scheme.surfaceContainerHighest
+    }
     val checkedThumb = when (style) {
-        0, 1, 7 -> scheme.onPrimary
+        0, 1 -> scheme.onPrimary
         2 -> scheme.onPrimaryContainer
-        3 -> scheme.onSecondary
-        4 -> scheme.onTertiary
-        5 -> scheme.onPrimaryContainer
+        3 -> scheme.onSecondaryContainer
+        4 -> scheme.onTertiaryContainer
+        5 -> scheme.onSurface
         6 -> scheme.onSecondaryContainer
         else -> scheme.onPrimary
     }
-    val uncheckedThumb = scheme.onSurfaceVariant
+    val uncheckedThumb = when (style) {
+        2, 7 -> scheme.outline
+        3, 5 -> scheme.onSurfaceVariant
+        else -> scheme.onSurfaceVariant
+    }
     val checkedBorder = when (style) {
-        2, 5 -> scheme.primary
+        0, 1, 2, 7 -> scheme.primary
         3 -> scheme.secondary
         4 -> scheme.tertiary
-        6 -> scheme.secondary
-        else -> checkedTrack
+        5 -> scheme.outlineVariant
+        else -> scheme.secondary
     }
     val uncheckedBorder = scheme.outlineVariant
     // Outer layout dimensions transcribed from the corresponding Voyage
@@ -198,16 +208,18 @@ fun ExpressiveSwitch(
     } else {
         voyageCornerShape(trackCornerRadius)
     }
-    val thumbShape = if (com.alohaoneui.app.ui.theme.LocalMaterialShapeStyle.current == 3) {
-        remember(thumbHeight) { RoundedCornerShape(thumbHeight / 2f) }
-    } else {
-        voyageCornerShape(thumbHeight / 2f)
+    // Handle silhouette is style-specific, rather than a shared capsule.
+    val thumbShape = when (style) {
+        0 -> RoundedCornerShape(50)
+        1 -> RoundedCornerShape(36)
+        2 -> RoundedCornerShape(50)
+        3 -> RoundedCornerShape(7.dp)
+        4 -> RoundedCornerShape(50)
+        5 -> RoundedCornerShape(42)
+        6 -> RoundedCornerShape(38)
+        else -> RoundedCornerShape(50)
     }
-    val haloShape = if (com.alohaoneui.app.ui.theme.LocalMaterialShapeStyle.current == 3) {
-        remember(thumbHeight) { RoundedCornerShape(thumbHeight / 2f + 2.dp) }
-    } else {
-        voyageCornerShape(thumbHeight / 2f + 2.dp)
-    }
+    val haloShape = RoundedCornerShape(50)
     val borderWidth = LocalMaterialOutlineWidth.current
     Box(
         modifier = modifier
@@ -242,6 +254,12 @@ fun ExpressiveSwitch(
                 density = this,
             )
             drawVoyageOutline(trackOutline, trackColor)
+            if (interactionProgress > 0.001f && style != 5) {
+                drawVoyageOutline(trackOutline, (if (checked) scheme.onPrimary else scheme.onSurfaceVariant).copy(alpha = interactionProgress * if (pressed) 0.12f else 0.08f))
+            }
+            if (focused && enabled) {
+                drawVoyageOutline(trackOutline, scheme.primary.copy(alpha = 0.72f), style = Stroke(width = 1.25.dp.toPx()))
+            }
             if (style == 5 && glassInteraction > 0.001f) {
                 drawVoyageGlassOutline(
                     outline = trackOutline,
@@ -292,14 +310,16 @@ fun ExpressiveSwitch(
                 layoutDirection = layoutDirection,
                 density = this,
             )
-            val thumbColor = if (enabled) {
-                if (checked) checkedThumb else uncheckedThumb
-            } else if (style == 0) {
+            val thumbColor = if (!enabled) {
                 if (checked) colors.disabledCheckedThumbColor else colors.disabledUncheckedThumbColor
-            } else {
-                (if (checked) checkedThumb else uncheckedThumb).copy(alpha = 0.65f)
-            }
+            } else if (interactive && style != 5) {
+                if (checked) androidx.compose.ui.graphics.lerp(checkedThumb, scheme.primaryContainer, 0.12f)
+                else androidx.compose.ui.graphics.lerp(uncheckedThumb, scheme.onSurfaceVariant, 0.10f)
+            } else if (checked) checkedThumb else uncheckedThumb
             withTransform({ translate(cx - thumbWidthPx / 2f, cy - thumbHeightPx / 2f) }) {
+                if (enabled && interactionProgress > 0.001f && style != 5) {
+                    drawVoyageOutline(thumbOutline, (if (checked) scheme.onPrimary else scheme.onSurfaceVariant).copy(alpha = interactionProgress * 0.10f))
+                }
                 drawVoyageOutline(thumbOutline, thumbColor)
                 if (style == 5 && glassInteraction > 0.001f) {
                     // The active thumb expands slightly and gains a layered
