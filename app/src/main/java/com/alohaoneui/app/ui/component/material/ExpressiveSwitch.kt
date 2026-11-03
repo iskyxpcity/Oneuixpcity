@@ -191,13 +191,9 @@ fun ExpressiveSwitch(
             interactionSource = interactionSource,
             colors = androidx.compose.material.SwitchDefaults.colors(
                 checkedThumbColor = scheme.secondary,
-                checkedTrackColor = scheme.secondary.copy(alpha = 0.54f),
-                uncheckedThumbColor = scheme.outline,
-                uncheckedTrackColor = scheme.surfaceVariant,
-                disabledCheckedThumbColor = scheme.onSurface.copy(alpha = 0.38f),
-                disabledCheckedTrackColor = scheme.onSurface.copy(alpha = 0.12f),
-                disabledUncheckedThumbColor = scheme.onSurface.copy(alpha = 0.38f),
-                disabledUncheckedTrackColor = scheme.onSurface.copy(alpha = 0.12f),
+                checkedTrackColor = scheme.secondary,
+                uncheckedThumbColor = scheme.surface,
+                uncheckedTrackColor = scheme.onSurface,
             ),
         )
         return
