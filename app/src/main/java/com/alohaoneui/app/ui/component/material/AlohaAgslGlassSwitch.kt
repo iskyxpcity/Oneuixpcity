@@ -76,7 +76,7 @@ fun AlohaAgslGlassSwitch(
     }
     val glassProgress = maxOf(
         glassPulse.value,
-        if (pressed && enabled) 0.42f else 0f,
+        if (pressed && enabled) 0.72f else 0f,
     )
     val travel by animateFloatAsState(
         targetValue = if (checked) 1f else 0f,
@@ -99,17 +99,17 @@ fun AlohaAgslGlassSwitch(
             width = 1.dp,
             alpha = 1f,
             style = BloomStroke(
-                color = Color.White.copy(alpha = 0.18f),
-                innerBlurRadius = 1.5.dp,
+                color = Color.White.copy(alpha = 0.24f),
+                innerBlurRadius = 2.dp,
                 primaryLight = LightSource(
                     position = LightPosition(0.28f, -0.24f, -0.05f),
                     color = Color.White,
-                    intensity = 0.9f,
+                    intensity = 1.15f,
                 ),
                 secondaryLight = LightSource(
                     position = LightPosition(0.72f, 0.92f, -0.4f),
                     color = Color.White,
-                    intensity = 0.28f,
+                    intensity = 0.42f,
                 ),
             ),
         )
@@ -151,8 +151,8 @@ fun AlohaAgslGlassSwitch(
                 .graphicsLayer {
                     // Stretch along the direction of travel while the glass
                     // pulse is active, then spring back to a circular thumb.
-                    scaleX = 1f + 0.26f * glassProgress
-                    scaleY = 1f - 0.075f * glassProgress
+                    scaleX = 1f + 0.34f * glassProgress
+                    scaleY = 1f - 0.12f * glassProgress
                 }
                 .shadow(
                     elevation = if (pressed && enabled) 3.dp else 1.5.dp,
@@ -182,20 +182,20 @@ fun AlohaAgslGlassSwitch(
                             shape = { CircleShape },
                             effects = {
                                 vibrancy()
-                                blur(2.5.dp.toPx(), 2.5.dp.toPx())
+                                blur(1.6.dp.toPx(), 1.6.dp.toPx())
                                 lens(
-                                    refractionHeight = 11.dp.toPx(),
-                                    refractionAmount = 8.dp.toPx(),
+                                    refractionHeight = 16.dp.toPx(),
+                                    refractionAmount = 18.dp.toPx(),
                                     depthEffect = true,
-                                    chromaticAberration = 0.12f,
+                                    chromaticAberration = 0.24f,
                                 )
                             },
                             highlight = {
-                                glassHighlight.copy(alpha = 0.82f * glassProgress)
+                                glassHighlight.copy(alpha = 0.96f * glassProgress)
                             },
                             onDrawSurface = {
                                 drawCircle(
-                                    Color.White.copy(alpha = 0.10f * glassProgress)
+                                    Color.White.copy(alpha = 0.16f * glassProgress)
                                 )
                             },
                         ),
