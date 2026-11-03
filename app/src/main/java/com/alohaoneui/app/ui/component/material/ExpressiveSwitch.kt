@@ -18,6 +18,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SwitchColors
 import androidx.compose.material3.SwitchDefaults
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.runtime.getValue
@@ -88,9 +91,9 @@ fun ExpressiveSwitch(
             {
                 androidx.compose.material3.Icon(
                     imageVector = if (checked) {
-                        androidx.compose.material.icons.Icons.Filled.Check
+                        Icons.Filled.Check
                     } else {
-                        androidx.compose.material.icons.Icons.Filled.Close
+                        Icons.Filled.Close
                     },
                     contentDescription = null,
                     modifier = Modifier.size(androidx.compose.material3.SwitchDefaults.IconSize),
