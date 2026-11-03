@@ -350,9 +350,11 @@ fun MainScreen(
 
     MainScreenBackHandler(mainPagerState, navController, enablePredictiveBack)
 
-    // Capture the same scene backdrop used by the floating glass navigation
-    // when Liquid Glass switches are selected, even if bottom-bar blur is off.
-    val captureSwitchBackdrop = enableFloatingBottomBarBlur || LocalMaterialSwitchStyle.current == 5
+    // Keep switch backdrop sampling on the already-supported floating-bar
+    // blur path only. Attaching a second backdrop source to HorizontalPager
+    // when style 5 is selected can create a recursive capture graph and crash
+    // the app during initial composition on some devices.
+    val captureSwitchBackdrop = enableFloatingBottomBarBlur
 
     CompositionLocalProvider(
         LocalMainPagerState provides mainPagerState,
