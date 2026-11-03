@@ -10,7 +10,6 @@ import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -34,7 +33,6 @@ import androidx.compose.ui.input.pointer.util.VelocityTracker
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastCoerceIn
-import androidx.compose.ui.util.lerp
 import com.alohaoneui.app.ui.component.liquid.lens
 import com.alohaoneui.app.ui.component.liquid.vibrancy
 import kotlinx.coroutines.launch
@@ -65,8 +63,8 @@ fun AlohaAgslGlassSwitch(
     val pressed by interactionSource.collectIsPressedAsState()
     val fraction = remember { Animatable(if (checked) 1f else 0f, 0.001f) }
     val pressProgress = remember { Animatable(0f, 0.001f) }
-    val scaleX = remember { Animatable(1f, 0.001f) }
-    val scaleY = remember { Animatable(1f, 0.001f) }
+    val thumbScaleX = remember { Animatable(1f, 0.001f) }
+    val thumbScaleY = remember { Animatable(1f, 0.001f) }
     val velocityTracker = remember { VelocityTracker() }
     var dragging by remember { mutableStateOf(false) }
     var dragVelocity by remember { mutableStateOf(0f) }
@@ -103,8 +101,8 @@ fun AlohaAgslGlassSwitch(
     LaunchedEffect(pressed, enabled) {
         if (pressed && enabled) {
             launch { pressProgress.animateTo(1f, pressSpring) }
-            launch { scaleX.animateTo(1.5f, scaleXSpring) }
-            launch { scaleY.animateTo(1.5f, scaleYSpring) }
+            launch { thumbScaleX.animateTo(1.5f, scaleXSpring) }
+            launch { thumbScaleY.animateTo(1.5f, scaleYSpring) }
         } else {
             launch { pressProgress.animateTo(0f, pressSpring) }
             launch { scaleX.animateTo(1f, scaleXSpring) }
@@ -220,8 +218,8 @@ fun AlohaAgslGlassSwitch(
                 .graphicsLayer {
                     val velocityX = (dragVelocity / 50f * 0.75f).fastCoerceIn(-0.2f, 0.2f)
                     val velocityY = (dragVelocity / 50f * 0.25f).fastCoerceIn(-0.2f, 0.2f)
-                    scaleX = scaleX.value / (1f - velocityX)
-                    scaleY = scaleY.value * (1f - velocityY)
+                    scaleX = thumbScaleX.value / (1f - velocityX)
+                    scaleY = thumbScaleY.value * (1f - velocityY)
                 }
                 .shadow(
                     elevation = if (pressed || dragging) 4.dp else 1.5.dp,
@@ -254,7 +252,7 @@ fun AlohaAgslGlassSwitch(
                                     refractionHeight = 5.dp.toPx() * glassProgress,
                                     refractionAmount = 10.dp.toPx() * glassProgress,
                                     depthEffect = true,
-                                    chromaticAberration = true,
+                                    chromaticAberration = 0.24f,
                                 )
                             },
                             highlight = {
