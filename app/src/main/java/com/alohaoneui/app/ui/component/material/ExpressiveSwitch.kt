@@ -77,19 +77,20 @@ fun ExpressiveSwitch(
     // Liquid Glass is rendered by PrismalAGSL. Its backdrop is a separate,
     // non-recursive canvas source; Prismal records the switch track separately
     // so the moving lens can refract the track without sampling itself.
-    if (style == 5 && enabled && onCheckedChange != null) {
+    if (style == 5) {
         val scheme = MaterialTheme.colorScheme
         val glassBackdrop = com.styropyr0.prismal.sources.rememberPrismalCanvasSource {
             drawRect(scheme.surface)
         }
         AlohaPrismalGlassToggle(
             selected = checked,
-            onSelect = onCheckedChange,
+            onSelect = { onCheckedChange?.invoke(it) },
             backdrop = glassBackdrop,
             trackOffColor = scheme.surfaceContainerLow,
             trackOnColor = scheme.surfaceContainerHigh,
             thumbTint = if (checked) scheme.surface else scheme.surfaceContainerHighest,
             modifier = modifier,
+            enabled = enabled && onCheckedChange != null,
         )
         return
     }
