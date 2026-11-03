@@ -107,7 +107,7 @@ fun ExpressiveSwitch(
         2 -> scheme.onPrimary
         3 -> scheme.onSecondaryContainer
         4 -> scheme.onTertiary
-        5 -> scheme.surface
+        5 -> scheme.surface.copy(alpha = 0.76f)
         6 -> scheme.onSecondary
         else -> scheme.onPrimary
     }
@@ -278,15 +278,20 @@ fun ExpressiveSwitch(
             if (focused && enabled) {
                 drawVoyageOutline(trackOutline, scheme.primary.copy(alpha = 0.72f), style = Stroke(width = 1.25.dp.toPx()))
             }
-            if (style == 5 && glassInteraction > 0.001f) {
-                drawVoyageGlassOutline(
-                    outline = trackOutline,
-                    bounds = Size(w, h),
-                    tint = if (checked) scheme.primary else scheme.surfaceContainerHighest,
-                    alpha = glassInteraction * if (checked) 0.90f else 0.76f,
-                )
+            // Keep a visible perimeter on every family even when the global
+            // outline preference is set to zero. The system style owns its
+            // minimum stroke; the global setting may strengthen it.
+            val familyBorderWidth = when (style) {
+                0 -> 1.0f
+                1 -> 1.0f
+                2 -> 1.25f
+                3 -> 1.0f
+                4 -> 0.85f
+                5 -> 0.8f
+                6 -> 1.0f
+                else -> 0.9f
             }
-            val borderPx = borderWidth.dp.toPx()
+            val borderPx = maxOf(borderWidth, familyBorderWidth).dp.toPx()
             if (borderPx > 0f) {
                 val borderOutline = trackShape.createOutline(
                     size = Size((w - borderPx).coerceAtLeast(0f), (h - borderPx).coerceAtLeast(0f)),
@@ -339,9 +344,11 @@ fun ExpressiveSwitch(
                     drawVoyageOutline(thumbOutline, (if (checked) scheme.onPrimary else scheme.onSurfaceVariant).copy(alpha = interactionProgress * 0.10f))
                 }
                 drawVoyageOutline(thumbOutline, thumbColor)
-                if (style == 5 && glassInteraction > 0.001f) {
-                    // The active thumb expands slightly and gains a layered
-                    // specular shell while pressed, hovered or focused.
+                if (style == 5) {
+                    // Apple documents Liquid Glass on toggles as a transient
+                    // thumb transformation during interaction, not a static
+                    // glass-painted track. Keep a restrained optical shell at
+                    // rest, then illuminate and flex it while touched.
                     withTransform({
                         scale(
                             scaleX = glassScale,
@@ -353,18 +360,18 @@ fun ExpressiveSwitch(
                             outline = thumbOutline,
                             bounds = Size(thumbWidthPx, thumbHeightPx),
                             tint = if (checked) scheme.primary else scheme.surfaceContainerHigh,
-                            alpha = glassInteraction,
+                            alpha = 0.34f + glassInteraction * 0.66f,
                         )
                         drawVoyageOutline(
                             thumbOutline,
-                            Color.White.copy(alpha = glassInteraction * 0.98f),
+                            Color.White.copy(alpha = 0.40f + glassInteraction * 0.58f),
                             style = Stroke(width = 1.15.dp.toPx()),
                         )
                         drawLine(
-                            color = Color.White.copy(alpha = glassInteraction * 0.94f),
+                            color = Color.White.copy(alpha = 0.42f + glassInteraction * 0.52f),
                             start = Offset(thumbWidthPx * 0.22f, thumbHeightPx * 0.22f),
                             end = Offset(thumbWidthPx * 0.72f, thumbHeightPx * 0.22f),
-                            strokeWidth = 1.4.dp.toPx(),
+                            strokeWidth = (0.8f + glassInteraction * 0.7f).dp.toPx(),
                             cap = StrokeCap.Round,
                         )
                     }
