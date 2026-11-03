@@ -141,29 +141,52 @@ fun ExpressiveSwitch(
         else -> 20.dp
     }
     val thumbWidth = when (style) {
-        // Material You follows the official M3 circular handle states.
-        0 -> sourceThumbDiameter
-        1, 5 -> minOf(trackSize.width * 0.70f, trackSize.width)
-        2, 6 -> minOf(trackSize.width * 0.62f, trackSize.width)
-        3 -> minOf(trackSize.width * 0.58f, trackSize.width)
-        else -> minOf(trackSize.width * 0.65f, trackSize.width)
+        0, 1 -> sourceThumbDiameter
+        2 -> 20.dp
+        3 -> if (enabled && pressedOrHovered) 17.dp else 12.dp
+        4 -> 20.dp
+        5 -> 23.dp
+        6 -> if (enabled && interactive) 23.dp else 20.dp
+        else -> 22.dp
     }
-    // Keep a small, even horizontal inset at both switch ends and let the
-    // thumb fill 90% of the track height, as requested.
-    val thumbHeight = if (style == 0) sourceThumbDiameter else trackSize.height * 0.85f
-    val thumbEdgeInset = 1.5.dp
+    val thumbHeight = when (style) {
+        0, 1 -> sourceThumbDiameter
+        2 -> 20.dp
+        3 -> if (enabled && pressedOrHovered) 17.dp else 12.dp
+        4 -> 20.dp
+        5 -> 23.dp
+        6 -> if (enabled && interactive) 23.dp else 20.dp
+        else -> 22.dp
+    }
+    val thumbEdgeInset = when (style) {
+        0, 1, 2 -> 4.dp
+        3 -> 3.dp
+        4 -> 2.dp
+        5 -> 3.dp
+        6 -> 2.5.dp
+        else -> 0.dp
+    }
     val trackCornerRadius = when (style) {
+        0, 1 -> 16.dp
         2 -> 14.dp
         3 -> 4.dp
-        4 -> 15.5.dp
-        5 -> 14.dp
+        4 -> 14.dp
+        5 -> 15.5.dp
         6 -> 14.25.dp
-        7 -> 11.dp
-        else -> 16.dp
+        else -> 9.25.dp
+    }
+    // Match Voyage's per-family motion timings instead of one shared curve.
+    val travelSpec = when (style) {
+        0, 1 -> spring<Float>(dampingRatio = 0.78f, stiffness = 620f)
+        2 -> androidx.compose.animation.core.tween<Float>(durationMillis = 500)
+        3 -> androidx.compose.animation.core.tween<Float>(durationMillis = 600)
+        4, 5 -> androidx.compose.animation.core.tween<Float>(durationMillis = 300)
+        6 -> spring<Float>(dampingRatio = 0.75f, stiffness = 1500f)
+        else -> androidx.compose.animation.core.tween<Float>(durationMillis = 250)
     }
     val travel by animateFloatAsState(
         targetValue = if (checked) 1f else 0f,
-        animationSpec = spring(dampingRatio = 0.78f, stiffness = 620f),
+        animationSpec = travelSpec,
         label = "voyageSwitchThumb",
     )
     // Voyage G² Smooth's general profile can degenerate at the near-capsule
