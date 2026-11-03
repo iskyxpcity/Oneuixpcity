@@ -41,7 +41,7 @@ internal fun OneUiSwitch(
 ) {
     val scheme = MaterialTheme.colorScheme
     val trackColor by animateColorAsState(
-        targetValue = if (checked) scheme.primary else scheme.surfaceContainerHigh,
+        targetValue = if (checked) scheme.primary else scheme.outline.copy(alpha = 0.78f),
         label = "oneUiSwitchTrack",
     )
     val strokeColor by animateColorAsState(
