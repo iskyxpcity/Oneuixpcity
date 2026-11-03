@@ -23,7 +23,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.IntOffset
@@ -120,7 +119,7 @@ internal fun FluentToggleSwitch(
                 .clip(CircleShape)
                 .background(
                     if (enabled) knobColor
-                    else Color.lerp(knobColor, scheme.surface, 0.38f),
+                    else androidx.compose.ui.graphics.lerp(knobColor, scheme.surface, 0.38f),
                 ),
         )
     }
