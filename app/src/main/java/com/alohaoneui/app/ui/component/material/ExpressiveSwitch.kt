@@ -46,10 +46,14 @@ import com.alohaoneui.app.ui.theme.LocalMaterialSwitchStyle
 val LocalVoyageSwitchBackdrop = staticCompositionLocalOf<Backdrop?> { null }
 
 /**
- * Voyage's eight selectable switch families. The selector changes the actual
- * track/thumb geometry and palette rather than applying a cosmetic scale to
- * the platform Material switch. Toggle semantics and animated thumb travel
- * remain shared across all styles.
+ * Eight selectable switch families, each rendered by its own design-system
+ * implementation. Material You delegates to AndroidX Material 3 and Compose
+ * delegates to AndroidX Material (Material 2); the remaining families keep
+ * dedicated renderers until their native design references are ported.
+ *
+ * Aloha theme colors remain semantic inputs. The switch renderer never reads
+ * the preference-row outline setting, so row borders cannot leak onto a
+ * switch. Miuix is handled by SwitchItem and is not routed through this file.
  */
 @Composable
 fun ExpressiveSwitch(
@@ -63,16 +67,72 @@ fun ExpressiveSwitch(
     showThumbIcon: Boolean = true,
 ) {
     val style = LocalMaterialSwitchStyle.current.coerceIn(0, 7)
+
+    // Material You is rendered by the official Material 3 Switch component.
+    // This keeps its measured geometry, thumb motion, semantics and state
+    // treatment aligned with the AndroidX implementation instead of a
+    // hand-drawn approximation.
+    if (style == 0) {
+        androidx.compose.material3.Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            modifier = modifier,
+            thumbContent = thumbContent,
+            enabled = enabled,
+            colors = colors,
+            interactionSource = interactionSource,
+        )
+        return
+    }
+
+    // Fluent 2 uses Microsoft's Android ToggleSwitch geometry, motion and
+    // swipe interaction, adapted to Aloha semantic theme colors.
+    if (style == 3) {
+        FluentToggleSwitch(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            modifier = modifier,
+            enabled = enabled,
+            interactionSource = interactionSource,
+        )
+        return
+    }
+
+    // Compose style uses the official Compose Material (Material 2) Switch.
+    // It deliberately retains Material 2 proportions and color behavior;
+    // it is not a recolored Material 3 control.
+    if (style == 1) {
+        val scheme = MaterialTheme.colorScheme
+        androidx.compose.material.Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            modifier = modifier,
+            enabled = enabled,
+            interactionSource = interactionSource,
+            colors = androidx.compose.material.SwitchDefaults.colors(
+                checkedThumbColor = scheme.secondary,
+                checkedTrackColor = scheme.secondary.copy(alpha = 0.54f),
+                uncheckedThumbColor = scheme.outline,
+                uncheckedTrackColor = scheme.surfaceVariant,
+                disabledCheckedThumbColor = scheme.onSurface.copy(alpha = 0.38f),
+                disabledCheckedTrackColor = scheme.onSurface.copy(alpha = 0.12f),
+                disabledUncheckedThumbColor = scheme.onSurface.copy(alpha = 0.38f),
+                disabledUncheckedTrackColor = scheme.onSurface.copy(alpha = 0.12f),
+            ),
+        )
+        return
+    }
     val pressed by interactionSource.collectIsPressedAsState()
     val hovered by interactionSource.collectIsHoveredAsState()
     val focused by interactionSource.collectIsFocusedAsState()
     val pressedOrHovered = pressed || hovered
     val interactive = pressed || hovered || focused
     val interactionProgress by animateFloatAsState(targetValue = if (interactive && enabled) 1f else 0f, animationSpec = spring(dampingRatio = 0.72f, stiffness = 700f), label = "voyageSwitchInteraction")
-    // Liquid Glass is transient: the handle gains its glass treatment only
-    // while the user is actively pressing the Material switch.
+    // Liquid Glass remains a real backdrop material at rest. Interaction
+    // strengthens its elastic response rather than being the only time glass
+    // is rendered.
     val glassInteraction by animateFloatAsState(
-        targetValue = if (style == 5 && interactive && enabled) 1f else 0f,
+        targetValue = if (style == 5 && enabled) 1f else 0f,
         animationSpec = spring(dampingRatio = 0.58f, stiffness = 420f),
         label = "voyageLiquidGlassInteraction",
     )
@@ -306,7 +366,7 @@ fun ExpressiveSwitch(
             val right = w - thumbWidthPx / 2f - edgeInsetPx
             val cx = left + (right - left) * travel
             val cy = h / 2f
-            if (style == 5 && glassInteraction > 0.001f) {
+            if (style == 5 && interactive && glassInteraction > 0.001f) {
                 val haloWidth = thumbWidthPx + 4.dp.toPx()
                 val haloHeight = thumbHeightPx + 4.dp.toPx()
                 val haloOutline = haloShape.createOutline(
