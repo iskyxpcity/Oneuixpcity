@@ -32,6 +32,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.toggleableState
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
@@ -68,6 +69,7 @@ fun AlohaPrismalGlassToggle(
     trackOnColor: Color,
     thumbTint: Color,
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
 ) {
     val density = LocalDensity.current
     val latestSelected by rememberUpdatedState(selected)
@@ -154,12 +156,16 @@ fun AlohaPrismalGlassToggle(
                 .semantics {
                     role = Role.Switch
                     toggleableState = if (latestSelected) ToggleableState.On else ToggleableState.Off
-                    onClick(label = null) {
-                        latestOnSelect(!latestSelected)
-                        true
+                    if (enabled) {
+                        onClick(label = null) {
+                            latestOnSelect(!latestSelected)
+                            true
+                        }
+                    } else {
+                        disabled()
                     }
                 }
-                .then(dampedDragAnimation.modifier)
+                .then(if (enabled) dampedDragAnimation.modifier else Modifier)
                 .drawPrismalGlass(
                     backdrop = rememberPrismalMergedSource(
                         underlayBackdrop,
