@@ -360,11 +360,14 @@ fun ColorPaletteScreenMaterial(
                                 onCheckedChange = actions.onSetEnableFloatingBottomBar,
                             )
                         }
-                        add {
-                            AnimatedVisibility(
-                                visible = uiState.enableFloatingBottomBar &&
-                                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU,
-                            ) {
+                        // Add the glass option only while its parent feature is enabled.
+                        // SegmentedColumn derives each row's outer/inner corner geometry
+                        // from the visible item count, so a hidden placeholder would leave
+                        // the floating-bar card with the wrong theme-linked frame shape.
+                        if (uiState.enableFloatingBottomBar &&
+                            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+                        ) {
+                            add {
                                 SegmentedSwitchItem(
                                     icon = Icons.Rounded.WaterDrop,
                                     title = stringResource(R.string.settings_enable_glass),
