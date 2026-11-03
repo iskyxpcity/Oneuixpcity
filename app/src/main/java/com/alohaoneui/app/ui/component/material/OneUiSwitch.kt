@@ -64,7 +64,7 @@ internal fun OneUiSwitch(
     ) {
         Box(
             modifier = Modifier
-                .offset(x = if (direction == LayoutDirection.Ltr) travel * progress else -travel * progress)
+                .offset(x = if (direction == LayoutDirection.Ltr) 2.dp + travel * progress else -(2.dp + travel * progress))
                 .size(18.dp)
                 .clip(CircleShape)
                 .background(scheme.surface.copy(alpha = if (enabled) 1f else 0.55f)),
