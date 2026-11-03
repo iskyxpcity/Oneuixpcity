@@ -85,6 +85,19 @@ fun ExpressiveSwitch(
         return
     }
 
+    // Fluent 2 uses Microsoft's Android ToggleSwitch geometry, motion and
+    // swipe interaction, adapted to Aloha semantic theme colors.
+    if (style == 3) {
+        FluentToggleSwitch(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            modifier = modifier,
+            enabled = enabled,
+            interactionSource = interactionSource,
+        )
+        return
+    }
+
     // Compose style uses the official Compose Material (Material 2) Switch.
     // It deliberately retains Material 2 proportions and color behavior;
     // it is not a recolored Material 3 control.
