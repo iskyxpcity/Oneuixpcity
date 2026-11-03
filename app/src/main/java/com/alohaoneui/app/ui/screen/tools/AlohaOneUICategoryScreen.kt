@@ -33,6 +33,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.mutableStateOf
@@ -74,6 +75,7 @@ import com.alohaoneui.app.ui.component.material.SegmentedColumn
 import com.alohaoneui.app.ui.component.material.SegmentedDropdownItem
 import com.alohaoneui.app.ui.component.material.SegmentedListItem
 import com.alohaoneui.app.ui.component.material.ExpressiveSwitch
+import com.alohaoneui.app.ui.component.material.LocalVoyageSwitchBackdrop
 import com.alohaoneui.app.ui.component.material.SegmentedSwitchItem
 import com.alohaoneui.app.ui.component.material.SegmentedSliderItem
 import com.alohaoneui.app.ui.component.material.SegmentedTextField
@@ -303,6 +305,7 @@ private fun AlohaOneUIOriginalCategoryScreen(
         UiMode.Material -> {
             val scrollBehavior =
                 TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
+            val switchBackdrop = rememberBlurBackdrop(LocalEnableBlur.current)
             androidx.compose.material3.Scaffold(
                 topBar = {
                     LargeFlexibleTopAppBar(
@@ -331,11 +334,17 @@ private fun AlohaOneUIOriginalCategoryScreen(
                     WindowInsetsSides.Top + WindowInsetsSides.Horizontal
                 ),
             ) { innerPadding ->
-                OriginalContent(
-                    Modifier
-                        .padding(innerPadding)
-                        .nestedScroll(scrollBehavior.nestedScrollConnection)
-                )
+                CompositionLocalProvider(LocalVoyageSwitchBackdrop provides switchBackdrop) {
+                    Box(
+                        modifier = if (switchBackdrop != null) Modifier.layerBackdrop(switchBackdrop) else Modifier
+                    ) {
+                        OriginalContent(
+                            Modifier
+                                .padding(innerPadding)
+                                .nestedScroll(scrollBehavior.nestedScrollConnection)
+                        )
+                    }
+                }
             }
         }
 
