@@ -111,10 +111,11 @@ fun ExpressiveSwitch(
     val pressedOrHovered = pressed || hovered
     val interactive = pressed || hovered || focused
     val interactionProgress by animateFloatAsState(targetValue = if (interactive && enabled) 1f else 0f, animationSpec = spring(dampingRatio = 0.72f, stiffness = 700f), label = "voyageSwitchInteraction")
-    // Liquid Glass is transient: the handle gains its glass treatment only
-    // while the user is actively pressing the Material switch.
+    // Liquid Glass remains a real backdrop material at rest. Interaction
+    // strengthens its elastic response rather than being the only time glass
+    // is rendered.
     val glassInteraction by animateFloatAsState(
-        targetValue = if (style == 5 && interactive && enabled) 1f else 0f,
+        targetValue = if (style == 5 && enabled) 1f else 0f,
         animationSpec = spring(dampingRatio = 0.58f, stiffness = 420f),
         label = "voyageLiquidGlassInteraction",
     )
@@ -348,7 +349,7 @@ fun ExpressiveSwitch(
             val right = w - thumbWidthPx / 2f - edgeInsetPx
             val cx = left + (right - left) * travel
             val cy = h / 2f
-            if (style == 5 && glassInteraction > 0.001f) {
+            if (style == 5 && interactive && glassInteraction > 0.001f) {
                 val haloWidth = thumbWidthPx + 4.dp.toPx()
                 val haloHeight = thumbHeightPx + 4.dp.toPx()
                 val haloOutline = haloShape.createOutline(
