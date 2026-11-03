@@ -242,6 +242,13 @@ fun ExpressiveSwitch(
         else -> RoundedCornerShape(50)
     }
     val haloShape = RoundedCornerShape(50)
+    // Shared by the Canvas thumb and the Liquid Glass fallback layer.
+    val thumbColor = if (!enabled) {
+        if (checked) colors.disabledCheckedThumbColor else colors.disabledUncheckedThumbColor
+    } else if (interactive && style != 5) {
+        if (checked) androidx.compose.ui.graphics.lerp(checkedThumb, scheme.primaryContainer, 0.12f)
+        else androidx.compose.ui.graphics.lerp(uncheckedThumb, scheme.onSurfaceVariant, 0.10f)
+    } else if (checked) checkedThumb else uncheckedThumb
     Box(
         modifier = modifier
             .size(width = trackSize.width, height = trackSize.height)
@@ -319,12 +326,6 @@ fun ExpressiveSwitch(
                 layoutDirection = layoutDirection,
                 density = this,
             )
-            val thumbColor = if (!enabled) {
-                if (checked) colors.disabledCheckedThumbColor else colors.disabledUncheckedThumbColor
-            } else if (interactive && style != 5) {
-                if (checked) androidx.compose.ui.graphics.lerp(checkedThumb, scheme.primaryContainer, 0.12f)
-                else androidx.compose.ui.graphics.lerp(uncheckedThumb, scheme.onSurfaceVariant, 0.10f)
-            } else if (checked) checkedThumb else uncheckedThumb
             withTransform({ translate(cx - thumbWidthPx / 2f, cy - thumbHeightPx / 2f) }) {
                 if (enabled && interactionProgress > 0.001f && style != 5) {
                     drawVoyageOutline(thumbOutline, (if (checked) scheme.onPrimary else scheme.onSurfaceVariant).copy(alpha = interactionProgress * 0.10f))
