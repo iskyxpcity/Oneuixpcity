@@ -78,48 +78,70 @@ fun ExpressiveSwitch(
         label = "voyageLiquidGlassScale",
     )
     val scheme = MaterialTheme.colorScheme
-    // All eight switch families use the active Material color scheme. Each
-    // family keeps a distinct tonal identity without fixed brand colors.
-    // Voyage palette roles mapped to the active Aloha Material scheme.
+    // Each family has its own OFF and ON color recipe. Every role is read
+    // from the active Aloha Material scheme, so light/dark and user theme
+    // changes propagate without embedding platform brand colors.
     val checkedTrack = when (style) {
-        0, 1 -> scheme.primary
-        2 -> scheme.primaryContainer
+        0 -> scheme.primary
+        1 -> scheme.primaryContainer
+        2 -> scheme.primary
         3 -> scheme.secondaryContainer
-        4 -> scheme.tertiaryContainer
-        5 -> scheme.surfaceContainerHighest
-        6 -> scheme.secondaryContainer
+        4 -> scheme.tertiary
+        5 -> scheme.surfaceContainerHigh
+        6 -> scheme.secondary
         else -> scheme.primary
     }
     val uncheckedTrack = when (style) {
-        3 -> scheme.surfaceContainer
-        5 -> scheme.surfaceContainerHigh
-        else -> scheme.surfaceContainerHighest
+        0 -> scheme.surfaceContainerHighest
+        1 -> scheme.surfaceContainerLow
+        2 -> scheme.surfaceContainer
+        3 -> scheme.surfaceContainerHigh
+        4 -> scheme.surfaceContainerHighest
+        5 -> scheme.surfaceContainerLow
+        6 -> scheme.surfaceContainer
+        else -> scheme.surfaceContainerHigh
     }
     val checkedThumb = when (style) {
-        0, 1 -> scheme.onPrimary
-        2 -> scheme.onPrimaryContainer
+        0 -> scheme.onPrimary
+        1 -> scheme.onPrimaryContainer
+        2 -> scheme.onPrimary
         3 -> scheme.onSecondaryContainer
-        4 -> scheme.onTertiaryContainer
-        5 -> scheme.onSurface
-        6 -> scheme.onSecondaryContainer
+        4 -> scheme.onTertiary
+        5 -> scheme.surface
+        6 -> scheme.onSecondary
         else -> scheme.onPrimary
     }
     val uncheckedThumb = when (style) {
-        2, 7 -> scheme.outline
-        3, 5 -> scheme.onSurfaceVariant
-        else -> scheme.onSurfaceVariant
+        0 -> scheme.outline
+        1 -> scheme.onSurfaceVariant
+        2 -> scheme.outline
+        3 -> scheme.onSurface
+        4 -> scheme.surface
+        5 -> scheme.surfaceContainerHighest
+        6 -> scheme.onSurfaceVariant
+        else -> scheme.surface
     }
     val checkedBorder = when (style) {
-        0, 1, 2, 7 -> scheme.primary
+        0, 2, 7 -> scheme.primary
+        1 -> scheme.primaryContainer
         3 -> scheme.secondary
         4 -> scheme.tertiary
         5 -> scheme.outlineVariant
-        else -> scheme.secondary
+        6 -> scheme.secondary
+        else -> scheme.primary
     }
-    val uncheckedBorder = scheme.outlineVariant
-    // Outer layout dimensions transcribed from the corresponding Voyage
-    // implementations (j7w0 dispatch -> z4v0/frt0/it70/ckw0/rdf/y2t0/l140).
-    // Cupertino and Liquid Glass intentionally have different footprints.
+    val uncheckedBorder = when (style) {
+        0 -> scheme.outline
+        1 -> scheme.outlineVariant
+        2 -> scheme.outline
+        3 -> scheme.outline
+        4 -> scheme.outlineVariant
+        5 -> scheme.outlineVariant
+        6 -> scheme.outline
+        else -> scheme.outlineVariant
+    }
+    // Per-family control footprints. These are deliberately independent:
+    // the styles do not collapse into one shared capsule geometry.
     val trackSize = when (style) {
         0 -> DpSize(52.dp, 32.dp)       // Material You
         1 -> DpSize(52.dp, 32.dp)       // Compose
@@ -130,8 +152,7 @@ fun ExpressiveSwitch(
         6 -> DpSize(50.dp, 28.5.dp)    // HyperOS
         else -> DpSize(39.dp, 22.dp)   // One UI outer touch target
     }
-    // Preserve source interaction-state distinctions, while giving the visible
-    // thumb a fuller capsule silhouette that occupies about 65% of track width.
+    // Each family owns its handle proportions and pressed-state response.
     val sourceThumbDiameter = when (style) {
         0 -> when {
             pressed -> 28.dp
@@ -185,7 +206,7 @@ fun ExpressiveSwitch(
         6 -> 14.25.dp
         else -> 9.25.dp
     }
-    // Match Voyage's per-family motion timings instead of one shared curve.
+    // Motion profiles follow each control family's interaction character.
     val travelSpec = when (style) {
         0, 1 -> spring<Float>(dampingRatio = 0.78f, stiffness = 620f)
         2 -> androidx.compose.animation.core.tween<Float>(durationMillis = 500)
@@ -199,10 +220,7 @@ fun ExpressiveSwitch(
         animationSpec = travelSpec,
         label = "voyageSwitchThumb",
     )
-    // Voyage G² Smooth's general profile can degenerate at the near-capsule
-    // dimensions used by switch tracks/thumbs. Keep the Smooth family visually
-    // continuous with a capsule outline for switches, rather than letting a
-    // degenerate custom path make the Canvas fail to draw every switch.
+    // Keep switch outlines robust for every global Aloha shape preset.
     val trackShape = if (com.alohaoneui.app.ui.theme.LocalMaterialShapeStyle.current == 3) {
         remember(trackCornerRadius) { RoundedCornerShape(trackCornerRadius) }
     } else {
