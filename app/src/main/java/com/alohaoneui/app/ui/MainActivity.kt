@@ -94,6 +94,8 @@ import com.alohaoneui.app.ui.theme.LocalColorMode
 import com.alohaoneui.app.ui.theme.LocalEnableBlur
 import com.alohaoneui.app.ui.theme.LocalEnableFloatingBottomBar
 import com.alohaoneui.app.ui.theme.LocalEnableFloatingBottomBarBlur
+import com.alohaoneui.app.ui.component.material.LocalVoyageSwitchBackdrop
+import com.alohaoneui.app.ui.theme.LocalMaterialSwitchStyle
 import com.alohaoneui.app.ui.theme.AlohaOneUITheme
 import com.alohaoneui.app.ui.util.AppLocaleContext
 import com.alohaoneui.app.ui.util.rememberBlurBackdrop
@@ -348,7 +350,14 @@ fun MainScreen(
 
     MainScreenBackHandler(mainPagerState, navController, enablePredictiveBack)
 
-    CompositionLocalProvider(LocalMainPagerState provides mainPagerState) {
+    // Capture the same scene backdrop used by the floating glass navigation
+    // when Liquid Glass switches are selected, even if bottom-bar blur is off.
+    val captureSwitchBackdrop = enableFloatingBottomBarBlur || LocalMaterialSwitchStyle.current == 5
+
+    CompositionLocalProvider(
+        LocalMainPagerState provides mainPagerState,
+        LocalVoyageSwitchBackdrop provides if (captureSwitchBackdrop) backdrop else null,
+    ) {
         val contentReady = rememberContentReady()
 
         // Re-read the actual window bounds so fold/unfold and freeform resizing adapt
@@ -373,7 +382,7 @@ fun MainScreen(
                 }
                 HorizontalPager(
                     modifier = responsivePagerModifier.then(
-                        if (enableFloatingBottomBarBlur) Modifier.layerBackdrop(backdrop) else Modifier
+                        if (captureSwitchBackdrop) Modifier.layerBackdrop(backdrop) else Modifier
                     ).pagerGestureOverride(
                         pagerState = mainPagerState.pagerState,
                         mode = pagerGestureMode,
