@@ -281,26 +281,34 @@ fun ExpressiveSwitch(
             withTransform({ translate(cx - thumbWidthPx / 2f, cy - thumbHeightPx / 2f) }) {
                 drawVoyageOutline(thumbOutline, thumbColor)
                 if (style == 5 && glassInteraction > 0.001f) {
-                    // The glass sheen and rim are an interaction response, not
-                    // a permanent overlay on the resting switch.
-                    drawVoyageGlassOutline(
-                        outline = thumbOutline,
-                        bounds = Size(thumbWidthPx, thumbHeightPx),
-                        tint = thumbColor,
-                        alpha = glassInteraction,
-                    )
-                    drawVoyageOutline(
-                        thumbOutline,
-                        Color.White.copy(alpha = glassInteraction * 0.98f),
-                        style = Stroke(width = 0.8.dp.toPx()),
-                    )
-                    drawLine(
-                        color = Color.White.copy(alpha = glassInteraction * 0.94f),
-                        start = Offset(thumbWidthPx * 0.28f, thumbHeightPx * 0.23f),
-                        end = Offset(thumbWidthPx * 0.68f, thumbHeightPx * 0.23f),
-                        strokeWidth = 1.dp.toPx(),
-                        cap = StrokeCap.Round,
-                    )
+                    // The active thumb expands slightly and gains a layered
+                    // specular shell while pressed, hovered or focused.
+                    withTransform({
+                        scale(
+                            scaleX = glassScale,
+                            scaleY = glassScale,
+                            pivot = Offset(thumbWidthPx / 2f, thumbHeightPx / 2f),
+                        )
+                    }) {
+                        drawVoyageGlassOutline(
+                            outline = thumbOutline,
+                            bounds = Size(thumbWidthPx, thumbHeightPx),
+                            tint = if (checked) scheme.primary else scheme.surfaceContainerHigh,
+                            alpha = glassInteraction,
+                        )
+                        drawVoyageOutline(
+                            thumbOutline,
+                            Color.White.copy(alpha = glassInteraction * 0.98f),
+                            style = Stroke(width = 1.15.dp.toPx()),
+                        )
+                        drawLine(
+                            color = Color.White.copy(alpha = glassInteraction * 0.94f),
+                            start = Offset(thumbWidthPx * 0.22f, thumbHeightPx * 0.22f),
+                            end = Offset(thumbWidthPx * 0.72f, thumbHeightPx * 0.22f),
+                            strokeWidth = 1.4.dp.toPx(),
+                            cap = StrokeCap.Round,
+                        )
+                    }
                 }
             }
             // Switch thumb icons/checkmarks are intentionally omitted; the
@@ -371,7 +379,7 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawVoyageGlassOutl
     drawPath(
         path = path,
         color = tint.copy(alpha = 0.30f * alpha),
-        style = Stroke(width = 0.65f.toPx()),
+        style = Stroke(width = 0.65.dp.toPx()),
     )
 }
 
