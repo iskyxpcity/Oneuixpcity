@@ -2,29 +2,34 @@ package com.alohaoneui.app.ui.component.material
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.IntOffset
-import kotlin.math.roundToInt
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.dp
 import androidx.compose.material3.MaterialTheme
+import kotlin.math.roundToInt
 
 /**
- * One UI compact toggle proportions: 40 x 22 dp pill track and an 18 dp
- * circular handle with a 2 dp inset. The selected color follows Aloha's
- * active theme while the handle remains a neutral surface.
+ * Samsung SESL SwitchCompat reference geometry:
+ * 43 dp measured control, 37 x 18.5 dp OFF track, 35 x 18.5 dp ON track,
+ * and a 22 dp handle with a 1 dp state-specific stroke.
+ *
+ * Reference: OneUIProject/oneui-core, appcompat SESL switch drawables/dimens.
+ * The active tint and stroke are mapped to Aloha's semantic primary role.
  */
 @Composable
 internal fun OneUiSwitch(
@@ -36,22 +41,24 @@ internal fun OneUiSwitch(
 ) {
     val scheme = MaterialTheme.colorScheme
     val trackColor by animateColorAsState(
-        targetValue = if (checked) scheme.primary else scheme.surfaceContainerHigh,
+        targetValue = if (checked) scheme.primary else scheme.outline.copy(alpha = 0.78f),
         label = "oneUiSwitchTrack",
+    )
+    val strokeColor by animateColorAsState(
+        targetValue = if (checked) scheme.primary else scheme.outline,
+        label = "oneUiSwitchThumbStroke",
     )
     val dragState = rememberAlohaSwitchDragState(
         checked = checked,
         onCheckedChange = onCheckedChange,
         enabled = enabled,
-        trackWidth = 40.dp,
-        thumbSize = 18.dp,
-        inset = 2.dp,
+        trackWidth = 43.dp,
+        thumbSize = 22.dp,
+        inset = 3.dp,
     )
     Box(
         modifier = modifier
-            .size(width = 40.dp, height = 22.dp)
-            .clip(CircleShape)
-            .background(if (enabled) trackColor else trackColor.copy(alpha = 0.38f))
+            .size(width = 43.dp, height = 22.dp)
             .alohaSwitchSwipeable(dragState, enabled && onCheckedChange != null, interactionSource)
             .toggleable(
                 value = checked,
@@ -65,15 +72,27 @@ internal fun OneUiSwitch(
     ) {
         Box(
             modifier = Modifier
+                .align(Alignment.Center)
+                .size(width = if (checked) 35.dp else 37.dp, height = 18.5.dp)
+                .clip(RoundedCornerShape(9.25.dp))
+                .background(if (enabled) trackColor else trackColor.copy(alpha = 0.4f)),
+        )
+        Box(
+            modifier = Modifier
                 .offset {
                     IntOffset(
                         (if (dragState.isRtl) -dragState.positionPx else dragState.positionPx).roundToInt(),
                         0,
                     )
                 }
-                .size(18.dp)
+                .size(22.dp)
                 .clip(CircleShape)
-                .background(scheme.surface.copy(alpha = if (enabled) 1f else 0.55f)),
+                .background(Color(0xFFFAFAFA).copy(alpha = if (enabled) 1f else 0.4f))
+                .border(
+                    width = 1.dp,
+                    color = if (enabled) strokeColor else strokeColor.copy(alpha = 0.4f),
+                    shape = CircleShape,
+                ),
         )
     }
 }

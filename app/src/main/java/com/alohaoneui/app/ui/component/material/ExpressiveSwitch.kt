@@ -34,8 +34,13 @@ import top.yukonga.miuix.kmp.blur.drawBackdrop
 import top.yukonga.miuix.kmp.blur.blur
 import com.alohaoneui.app.ui.component.liquid.vibrancy
 import com.alohaoneui.app.ui.component.liquid.lens
+import top.yukonga.miuix.kmp.blur.highlight.BloomStroke
+import top.yukonga.miuix.kmp.blur.highlight.Highlight
+import top.yukonga.miuix.kmp.blur.highlight.LightPosition
+import top.yukonga.miuix.kmp.blur.highlight.LightSource
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.geometry.Offset
@@ -49,10 +54,12 @@ import com.alohaoneui.app.ui.theme.LocalMaterialSwitchStyle
 val LocalVoyageSwitchBackdrop = staticCompositionLocalOf<Backdrop?> { null }
 
 /**
- * Voyage's eight selectable switch families. The selector changes the actual
- * track/thumb geometry and palette rather than applying a cosmetic scale to
- * the platform Material switch. Toggle semantics and animated thumb travel
- * remain shared across all styles.
+ * Eight independently rendered Aloha switch families:
+ * Material You (Material 3), Compose Material (Material 2), Pixel Expressive,
+ * Fluent 2, Cupertino UISwitch, Liquid Glass, HyperOS and Samsung One UI SESL.
+ *
+ * Theme colors are semantic inputs. Preference-row outlines are not read here,
+ * and Miuix native switches remain owned by SwitchItem.
  */
 @Composable
 fun ExpressiveSwitch(
@@ -100,23 +107,13 @@ fun ExpressiveSwitch(
                 )
             }
         } else null
-        val scheme = MaterialTheme.colorScheme
         androidx.compose.material3.Switch(
             checked = checked,
             onCheckedChange = onCheckedChange,
             modifier = modifier,
             thumbContent = pixelThumbContent,
             enabled = enabled,
-            colors = androidx.compose.material3.SwitchDefaults.colors(
-                checkedThumbColor = scheme.primary,
-                checkedTrackColor = scheme.primaryContainer,
-                checkedBorderColor = Color.Transparent,
-                checkedIconColor = scheme.onPrimaryContainer,
-                uncheckedThumbColor = scheme.outline,
-                uncheckedTrackColor = scheme.surfaceContainerHighest,
-                uncheckedBorderColor = scheme.outline,
-                uncheckedIconColor = scheme.onSurfaceVariant,
-            ),
+            colors = androidx.compose.material3.SwitchDefaults.colors(),
             interactionSource = interactionSource,
         )
         return
@@ -185,13 +182,15 @@ fun ExpressiveSwitch(
             interactionSource = interactionSource,
             colors = androidx.compose.material.SwitchDefaults.colors(
                 checkedThumbColor = scheme.secondary,
-                checkedTrackColor = scheme.secondary.copy(alpha = 0.54f),
-                uncheckedThumbColor = scheme.outline,
-                uncheckedTrackColor = scheme.surfaceVariant,
-                disabledCheckedThumbColor = scheme.onSurface.copy(alpha = 0.38f),
-                disabledCheckedTrackColor = scheme.onSurface.copy(alpha = 0.12f),
-                disabledUncheckedThumbColor = scheme.onSurface.copy(alpha = 0.38f),
-                disabledUncheckedTrackColor = scheme.onSurface.copy(alpha = 0.12f),
+                checkedTrackColor = scheme.secondary,
+                checkedTrackAlpha = 0.54f,
+                uncheckedThumbColor = scheme.surface,
+                uncheckedTrackColor = scheme.onSurface,
+                uncheckedTrackAlpha = 0.38f,
+                disabledCheckedThumbColor = scheme.secondary.copy(alpha = 0.38f).compositeOver(scheme.surface),
+                disabledCheckedTrackColor = scheme.secondary.copy(alpha = 0.38f).compositeOver(scheme.surface),
+                disabledUncheckedThumbColor = scheme.surface,
+                disabledUncheckedTrackColor = scheme.onSurface.copy(alpha = 0.38f).compositeOver(scheme.surface),
             ),
         )
         return
@@ -202,9 +201,9 @@ fun ExpressiveSwitch(
     val pressedOrHovered = pressed || hovered
     val interactive = pressed || hovered || focused
     val interactionProgress by animateFloatAsState(targetValue = if (interactive && enabled) 1f else 0f, animationSpec = spring(dampingRatio = 0.72f, stiffness = 700f), label = "voyageSwitchInteraction")
-    // Liquid Glass remains a real backdrop material at rest. Interaction
-    // strengthens its elastic response rather than being the only time glass
-    // is rendered.
+    // Liquid Glass uses the same captured scene source as the floating bar.
+    // Its track and handle both render backdrop blur, vibrancy, lens refraction
+    // and specular highlight at rest; pressing adds the elastic lens response.
     val glassInteraction by animateFloatAsState(
         targetValue = if (style == 5 && enabled) 1f else 0f,
         animationSpec = spring(dampingRatio = 0.58f, stiffness = 420f),
@@ -216,6 +215,26 @@ fun ExpressiveSwitch(
         label = "voyageLiquidGlassScale",
     )
     val scheme = MaterialTheme.colorScheme
+    val glassHighlight = remember {
+        Highlight(
+            width = 1.dp,
+            alpha = 1f,
+            style = BloomStroke(
+                color = Color.White.copy(alpha = 0.12f),
+                innerBlurRadius = 2.dp,
+                primaryLight = LightSource(
+                    position = LightPosition(0.5f, -0.3f, -0.05f),
+                    color = Color.White,
+                    intensity = 1f,
+                ),
+                secondaryLight = LightSource(
+                    position = LightPosition(0.5f, 0.8f, -0.5f),
+                    color = Color.White,
+                    intensity = 0.4f,
+                ),
+            ),
+        )
+    }
     // Each family has its own OFF and ON color recipe. Every role is read
     // from the active Aloha Material scheme, so light/dark and user theme
     // changes propagate without embedding platform brand colors.
@@ -412,12 +431,13 @@ fun ExpressiveSwitch(
                             vibrancy()
                             blur(4.dp.toPx(), 4.dp.toPx())
                             lens(
-                                refractionHeight = 16.dp.toPx(),
-                                refractionAmount = 18.dp.toPx(),
+                                refractionHeight = 24.dp.toPx(),
+                                refractionAmount = 24.dp.toPx(),
                                 depthEffect = true,
                                 chromaticAberration = 0.4f,
                             )
                         },
+                        highlight = { glassHighlight.copy(alpha = 0.75f) },
                         onDrawSurface = {
                             drawRect(glassTint.copy(alpha = 0.14f))
                         },
@@ -520,6 +540,7 @@ fun ExpressiveSwitch(
                                         chromaticAberration = 0.35f * glassInteraction,
                                     )
                                 },
+                                highlight = { glassHighlight.copy(alpha = 0.75f) },
                                 onDrawSurface = {
                                     drawRect(glassTint.copy(alpha = 0.12f * glassInteraction))
                                 },
