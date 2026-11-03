@@ -19,17 +19,20 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SwitchColors
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Path
+import top.yukonga.miuix.kmp.blur.Backdrop
+import top.yukonga.miuix.kmp.blur.drawBackdrop
+import top.yukonga.miuix.kmp.blur.blur
+import com.alohaoneui.app.ui.component.liquid.vibrancy
+import com.alohaoneui.app.ui.component.liquid.lens
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.geometry.Offset
@@ -39,6 +42,8 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import com.alohaoneui.app.ui.theme.LocalMaterialShadowSwitches
 import com.alohaoneui.app.ui.theme.LocalMaterialSwitchStyle
+
+val LocalVoyageSwitchBackdrop = staticCompositionLocalOf<Backdrop?> { null }
 
 /**
  * Voyage's eight selectable switch families. The selector changes the actual
@@ -324,39 +329,58 @@ fun ExpressiveSwitch(
                 if (enabled && interactionProgress > 0.001f && style != 5) {
                     drawVoyageOutline(thumbOutline, (if (checked) scheme.onPrimary else scheme.onSurfaceVariant).copy(alpha = interactionProgress * 0.10f))
                 }
-                drawVoyageOutline(thumbOutline, thumbColor)
-                if (style == 5 && glassInteraction > 0.001f) {
-                    // Liquid Glass appears on activation, not as a permanent coat.
-                    withTransform({
-                        scale(
-                            scaleX = glassScale,
-                            scaleY = glassScale,
-                            pivot = Offset(thumbWidthPx / 2f, thumbHeightPx / 2f),
-                        )
-                    }) {
-                        drawVoyageGlassOutline(
-                            outline = thumbOutline,
-                            bounds = Size(thumbWidthPx, thumbHeightPx),
-                            tint = if (checked) scheme.primary else scheme.surfaceContainerHigh,
-                            alpha = glassInteraction,
-                        )
-                        drawVoyageOutline(
-                            thumbOutline,
-                            Color.White.copy(alpha = glassInteraction * 0.92f),
-                            style = Stroke(width = (0.75f + glassInteraction * 0.45f).dp.toPx()),
-                        )
-                        drawLine(
-                            color = Color.White.copy(alpha = glassInteraction * 0.86f),
-                            start = Offset(thumbWidthPx * 0.22f, thumbHeightPx * 0.22f),
-                            end = Offset(thumbWidthPx * 0.72f, thumbHeightPx * 0.22f),
-                            strokeWidth = (0.65f + glassInteraction * 0.55f).dp.toPx(),
-                            cap = StrokeCap.Round,
+                if (style != 5) drawVoyageOutline(thumbOutline, thumbColor)
+            }
+            // Switch thumb icons/checkmarks are intentionally omitted; the
+            // thumb itself communicates the on/off state by position and color.
+        }
+        if (style == 5) {
+            val backdrop = LocalVoyageSwitchBackdrop.current
+            val thumbTravel = trackSize.width - thumbWidth - thumbEdgeInset * 2
+            val glassTint = if (checked) scheme.primary else scheme.surfaceContainerHigh
+            Box(
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .offset(x = thumbTravel * travel - thumbTravel / 2f)
+                    .size(width = thumbWidth, height = thumbHeight)
+                    .then(
+                        if (backdrop != null && enabled && glassInteraction > 0.001f) {
+                            Modifier.drawBackdrop(
+                                backdrop = backdrop,
+                                shape = { thumbShape },
+                                effects = {
+                                    vibrancy()
+                                    blur(4.dp.toPx() * glassInteraction, 4.dp.toPx() * glassInteraction)
+                                    lens(
+                                        refractionHeight = 12.dp.toPx() * glassInteraction,
+                                        refractionAmount = 16.dp.toPx() * glassInteraction,
+                                        depthEffect = true,
+                                        chromaticAberration = 0.35f * glassInteraction,
+                                    )
+                                },
+                                onDrawSurface = {
+                                    drawRect(glassTint.copy(alpha = 0.12f * glassInteraction))
+                                },
+                                layerBlock = {
+                                    scaleX = glassScale
+                                    scaleY = glassScale
+                                },
+                            )
+                        } else {
+                            Modifier.clip(thumbShape)
+                        }
+                    ),
+                contentAlignment = Alignment.Center,
+            ) {
+                if (backdrop == null || glassInteraction <= 0.001f) {
+                    Canvas(Modifier.fillMaxSize()) {
+                        drawRoundRect(
+                            color = thumbColor,
+                            cornerRadius = androidx.compose.ui.geometry.CornerRadius(size.width / 2f, size.height / 2f),
                         )
                     }
                 }
             }
-            // Switch thumb icons/checkmarks are intentionally omitted; the
-            // thumb itself communicates the on/off state by position and color.
         }
         if (thumbContent != null) {
             val thumbTravel = trackSize.width - thumbWidth - thumbEdgeInset * 2
@@ -372,59 +396,6 @@ fun ExpressiveSwitch(
             }
         }
     }
-}
-
-/** Draw a lightweight Liquid Glass treatment using translucent vertical layers
- * and specular edge reflections. This is intentionally shader-free so the switch
- * remains inexpensive while scrolling lists of settings.
- */
-private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawVoyageGlassOutline(
-    outline: Outline,
-    bounds: Size,
-    tint: Color,
-    alpha: Float,
-) {
-    val path = Path().apply {
-        when (outline) {
-            is Outline.Rectangle -> addRect(outline.rect)
-            is Outline.Rounded -> addRoundRect(outline.roundRect)
-            is Outline.Generic -> addPath(outline.path)
-        }
-    }
-    drawPath(
-        path = path,
-        brush = Brush.verticalGradient(
-            0.0f to Color.White.copy(alpha = 0.94f * alpha),
-            0.16f to tint.copy(alpha = 0.22f * alpha),
-            0.48f to tint.copy(alpha = 0.58f * alpha),
-            0.76f to tint.copy(alpha = 0.80f * alpha),
-            1.0f to Color.White.copy(alpha = 0.38f * alpha),
-            startY = 0f,
-            endY = bounds.height.coerceAtLeast(1f),
-        ),
-    )
-    drawPath(
-        path = path,
-        brush = Brush.radialGradient(
-            colors = listOf(
-                Color.White.copy(alpha = 0.76f * alpha),
-                Color.White.copy(alpha = 0.16f * alpha),
-                Color.Transparent,
-            ),
-            center = Offset(bounds.width * 0.28f, bounds.height * 0.12f),
-            radius = (bounds.maxDimension * 0.92f).coerceAtLeast(1f),
-        ),
-    )
-    drawPath(
-        path = path,
-        color = Color.White.copy(alpha = 0.96f * alpha),
-        style = Stroke(width = 1.05.dp.toPx()),
-    )
-    drawPath(
-        path = path,
-        color = tint.copy(alpha = 0.30f * alpha),
-        style = Stroke(width = 0.65.dp.toPx()),
-    )
 }
 
 @Composable
