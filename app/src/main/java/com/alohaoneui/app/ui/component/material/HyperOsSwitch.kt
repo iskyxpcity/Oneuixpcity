@@ -65,7 +65,7 @@ internal fun HyperOsSwitch(
     ) {
         Box(
             modifier = Modifier
-                .offset(x = if (direction == LayoutDirection.Ltr) travel * progress else -travel * progress)
+                .offset(x = if (direction == LayoutDirection.Ltr) 2.5.dp + travel * progress else -(2.5.dp + travel * progress))
                 .size(20.dp)
                 .shadow(1.5.dp, CircleShape)
                 .clip(CircleShape)
