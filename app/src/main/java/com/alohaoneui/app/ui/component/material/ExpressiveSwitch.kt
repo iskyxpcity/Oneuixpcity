@@ -119,6 +119,56 @@ fun ExpressiveSwitch(
         return
     }
 
+    // Pixel uses Android 16's Material 3 Expressive switch treatment.
+    if (style == 2) {
+        val pixelThumbContent: (@Composable () -> Unit)? = thumbContent ?: if (showThumbIcon) {
+            {
+                androidx.compose.material3.Icon(
+                    imageVector = if (checked) {
+                        androidx.compose.material.icons.Icons.Filled.Check
+                    } else {
+                        androidx.compose.material.icons.Icons.Filled.Close
+                    },
+                    contentDescription = null,
+                    modifier = Modifier.size(androidx.compose.material3.SwitchDefaults.IconSize),
+                )
+            }
+        } else null
+        val scheme = MaterialTheme.colorScheme
+        androidx.compose.material3.Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            modifier = modifier,
+            thumbContent = pixelThumbContent,
+            enabled = enabled,
+            colors = androidx.compose.material3.SwitchDefaults.colors(
+                checkedThumbColor = scheme.primary,
+                checkedTrackColor = scheme.primaryContainer,
+                checkedBorderColor = Color.Transparent,
+                checkedIconColor = scheme.onPrimaryContainer,
+                uncheckedThumbColor = scheme.outline,
+                uncheckedTrackColor = scheme.surfaceContainerHighest,
+                uncheckedBorderColor = scheme.outline,
+                uncheckedIconColor = scheme.onSurfaceVariant,
+            ),
+            interactionSource = interactionSource,
+        )
+        return
+    }
+
+    // Cupertino uses the iOS UISwitch silhouette and its independent
+    // 51 x 31 dp geometry, with Aloha theme-linked track tint.
+    if (style == 4) {
+        CupertinoSwitch(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            modifier = modifier,
+            enabled = enabled,
+            interactionSource = interactionSource,
+        )
+        return
+    }
+
     // Compose style uses the official Compose Material (Material 2) Switch.
     // It deliberately retains Material 2 proportions and color behavior;
     // it is not a recolored Material 3 control.
