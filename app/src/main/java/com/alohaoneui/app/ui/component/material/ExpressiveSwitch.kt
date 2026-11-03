@@ -107,20 +107,18 @@ fun ExpressiveSwitch(
         else -> checkedTrack
     }
     val uncheckedBorder = scheme.outlineVariant
-    // Exact outer slot dimensions from Voyage's j7w0.m105365O dispatch:
-    // 0 z4v0.m147164o = 52x32; 1 frt0.m95463l = 52x32;
-    // 2 it70.m103876l = 56x28; 3 ckw0.m9293l = 48x24;
-    // 4 rdf.m127934l = 51x31; 5 rdf.m127933O -> m127932I = 64x28;
-    // 6 y2t0.m144445l = 50x28.5; 7 l140.m110104l = 39x22.
+    // Outer layout dimensions transcribed from the corresponding Voyage
+    // implementations (j7w0 dispatch -> z4v0/frt0/it70/ckw0/rdf/y2t0/l140).
+    // Cupertino and Liquid Glass intentionally have different footprints.
     val trackSize = when (style) {
-        2 -> DpSize(60.dp, 24.dp)
-        3 -> DpSize(52.dp, 20.dp)
-        4 -> DpSize(55.dp, 27.dp)
-        5 -> DpSize(68.dp, 24.dp)
-        6 -> DpSize(54.dp, 24.5.dp)
-        7 -> DpSize(43.dp, 18.dp)
-        0 -> DpSize(52.dp, 32.dp)
-        else -> DpSize(56.dp, 28.dp)
+        0 -> DpSize(52.dp, 32.dp)       // Material You
+        1 -> DpSize(52.dp, 32.dp)       // Compose
+        2 -> DpSize(56.dp, 28.dp)       // Pixel
+        3 -> DpSize(48.dp, 24.dp)       // Fluent
+        4 -> DpSize(64.dp, 28.dp)       // Cupertino
+        5 -> DpSize(51.dp, 31.dp)       // Liquid Glass
+        6 -> DpSize(50.dp, 28.5.dp)    // HyperOS
+        else -> DpSize(39.dp, 22.dp)   // One UI outer touch target
     }
     // Preserve source interaction-state distinctions, while giving the visible
     // thumb a fuller capsule silhouette that occupies about 65% of track width.
