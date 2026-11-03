@@ -64,6 +64,13 @@ fun ExpressiveSwitch(
     val focused by interactionSource.collectIsFocusedAsState()
     val pressedOrHovered = pressed || hovered
     val interactive = pressed || hovered || focused
+    // Liquid Glass is transient: the handle gains its glass treatment only
+    // while the user is actively pressing the Material switch.
+    val glassInteraction by animateFloatAsState(
+        targetValue = if (style == 5 && pressed && enabled) 1f else 0f,
+        animationSpec = spring(dampingRatio = 0.62f, stiffness = 520f),
+        label = "voyageLiquidGlassInteraction",
+    )
     val scheme = MaterialTheme.colorScheme
     val checkedTrack = when (style) {
         0 -> colors.checkedTrackColor
@@ -209,15 +216,14 @@ fun ExpressiveSwitch(
                 layoutDirection = layoutDirection,
                 density = this,
             )
-            if (style == 5) {
+            drawVoyageOutline(trackOutline, trackColor)
+            if (style == 5 && glassInteraction > 0.001f) {
                 drawVoyageGlassOutline(
                     outline = trackOutline,
                     bounds = Size(w, h),
                     tint = trackColor,
-                    alpha = if (checked) 0.78f else 0.56f,
+                    alpha = glassInteraction * if (checked) 0.62f else 0.44f,
                 )
-            } else {
-                drawVoyageOutline(trackOutline, trackColor)
             }
             val borderPx = borderWidth.dp.toPx()
             if (borderPx > 0f) {
@@ -241,7 +247,7 @@ fun ExpressiveSwitch(
             val right = w - thumbWidthPx / 2f - edgeInsetPx
             val cx = left + (right - left) * travel
             val cy = h / 2f
-            if (style == 5) {
+            if (style == 5 && glassInteraction > 0.001f) {
                 val haloWidth = thumbWidthPx + 4.dp.toPx()
                 val haloHeight = thumbHeightPx + 4.dp.toPx()
                 val haloOutline = haloShape.createOutline(
@@ -252,7 +258,7 @@ fun ExpressiveSwitch(
                 withTransform({ translate(cx - haloWidth / 2f, cy - haloHeight / 2f) }) {
                     drawVoyageOutline(
                         haloOutline,
-                        Color.White.copy(alpha = if (checked) 0.22f else 0.10f),
+                        Color.White.copy(alpha = glassInteraction * if (checked) 0.24f else 0.14f),
                     )
                 }
             }
@@ -269,29 +275,28 @@ fun ExpressiveSwitch(
                 (if (checked) checkedThumb else uncheckedThumb).copy(alpha = 0.65f)
             }
             withTransform({ translate(cx - thumbWidthPx / 2f, cy - thumbHeightPx / 2f) }) {
-                if (style == 5) {
+                drawVoyageOutline(thumbOutline, thumbColor)
+                if (style == 5 && glassInteraction > 0.001f) {
+                    // The glass sheen and rim are an interaction response, not
+                    // a permanent overlay on the resting switch.
                     drawVoyageGlassOutline(
                         outline = thumbOutline,
                         bounds = Size(thumbWidthPx, thumbHeightPx),
                         tint = thumbColor,
-                        alpha = if (checked) 0.96f else 0.88f,
+                        alpha = glassInteraction * if (checked) 0.92f else 0.78f,
                     )
-                    // Tight specular rim and a soft top reflection give the thumb
-                    // a glass volume instead of the previous flat white disc.
                     drawVoyageOutline(
                         thumbOutline,
-                        Color.White.copy(alpha = if (checked) 0.86f else 0.62f),
+                        Color.White.copy(alpha = glassInteraction * if (checked) 0.84f else 0.64f),
                         style = Stroke(width = 0.8.dp.toPx()),
                     )
                     drawLine(
-                        color = Color.White.copy(alpha = 0.72f),
+                        color = Color.White.copy(alpha = glassInteraction * 0.72f),
                         start = Offset(thumbWidthPx * 0.28f, thumbHeightPx * 0.23f),
                         end = Offset(thumbWidthPx * 0.68f, thumbHeightPx * 0.23f),
                         strokeWidth = 1.dp.toPx(),
                         cap = StrokeCap.Round,
                     )
-                } else {
-                    drawVoyageOutline(thumbOutline, thumbColor)
                 }
             }
             // Switch thumb icons/checkmarks are intentionally omitted; the
