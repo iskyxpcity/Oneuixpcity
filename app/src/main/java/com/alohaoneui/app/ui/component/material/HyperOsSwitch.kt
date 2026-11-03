@@ -1,8 +1,6 @@
 package com.alohaoneui.app.ui.component.material
 
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
@@ -18,8 +16,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.IntOffset
+import kotlin.math.roundToInt
 import androidx.compose.ui.semantics.Role
 import androidx.compose.material3.MaterialTheme
 
@@ -37,22 +36,24 @@ internal fun HyperOsSwitch(
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
 ) {
     val scheme = MaterialTheme.colorScheme
-    val direction = LocalLayoutDirection.current
-    val progress by animateFloatAsState(
-        targetValue = if (checked) 1f else 0f,
-        animationSpec = spring(dampingRatio = 0.78f, stiffness = 680f),
-        label = "hyperOsSwitchThumb",
-    )
     val trackColor by animateColorAsState(
         targetValue = if (checked) scheme.secondary else scheme.surfaceContainerHigh,
         label = "hyperOsSwitchTrack",
     )
-    val travel = 25.dp
+    val dragState = rememberAlohaSwitchDragState(
+        checked = checked,
+        onCheckedChange = onCheckedChange,
+        enabled = enabled,
+        trackWidth = 50.dp,
+        thumbSize = 20.dp,
+        inset = 2.5.dp,
+    )
     Box(
         modifier = modifier
             .size(width = 50.dp, height = 28.dp)
             .clip(CircleShape)
             .background(if (enabled) trackColor else trackColor.copy(alpha = 0.38f))
+            .alohaSwitchSwipeable(dragState, enabled && onCheckedChange != null, interactionSource)
             .toggleable(
                 value = checked,
                 enabled = enabled && onCheckedChange != null,
@@ -65,7 +66,12 @@ internal fun HyperOsSwitch(
     ) {
         Box(
             modifier = Modifier
-                .offset(x = if (direction == LayoutDirection.Ltr) 2.5.dp + travel * progress else -(2.5.dp + travel * progress))
+                .offset {
+                    IntOffset(
+                        (if (dragState.isRtl) -dragState.positionPx else dragState.positionPx).roundToInt(),
+                        0,
+                    )
+                }
                 .size(20.dp)
                 .shadow(1.5.dp, CircleShape)
                 .clip(CircleShape)
