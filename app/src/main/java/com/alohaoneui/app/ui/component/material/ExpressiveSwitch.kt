@@ -63,6 +63,48 @@ fun ExpressiveSwitch(
     showThumbIcon: Boolean = true,
 ) {
     val style = LocalMaterialSwitchStyle.current.coerceIn(0, 7)
+
+    // Material You is rendered by the official Material 3 Switch component.
+    // This keeps its measured geometry, thumb motion, semantics and state
+    // treatment aligned with the AndroidX implementation instead of a
+    // hand-drawn approximation.
+    if (style == 0) {
+        androidx.compose.material3.Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            modifier = modifier,
+            thumbContent = thumbContent,
+            enabled = enabled,
+            colors = colors,
+            interactionSource = interactionSource,
+        )
+        return
+    }
+
+    // Compose style uses the official Compose Material (Material 2) Switch.
+    // It deliberately retains Material 2 proportions and color behavior;
+    // it is not a recolored Material 3 control.
+    if (style == 1) {
+        val scheme = MaterialTheme.colorScheme
+        androidx.compose.material.Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            modifier = modifier,
+            enabled = enabled,
+            interactionSource = interactionSource,
+            colors = androidx.compose.material.SwitchDefaults.colors(
+                checkedThumbColor = scheme.secondary,
+                checkedTrackColor = scheme.secondary.copy(alpha = 0.54f),
+                uncheckedThumbColor = scheme.outline,
+                uncheckedTrackColor = scheme.surfaceVariant,
+                disabledCheckedThumbColor = scheme.onSurface.copy(alpha = 0.38f),
+                disabledCheckedTrackColor = scheme.onSurface.copy(alpha = 0.12f),
+                disabledUncheckedThumbColor = scheme.onSurface.copy(alpha = 0.38f),
+                disabledUncheckedTrackColor = scheme.onSurface.copy(alpha = 0.12f),
+            ),
+        )
+        return
+    }
     val pressed by interactionSource.collectIsPressedAsState()
     val hovered by interactionSource.collectIsHoveredAsState()
     val focused by interactionSource.collectIsFocusedAsState()
