@@ -23,8 +23,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
-import com.alohaoneui.app.ui.theme.LocalMaterialShapeStyle
-import top.yukonga.miuix.kmp.blur.Backdrop
 import top.yukonga.miuix.kmp.blur.drawBackdrop
 import top.yukonga.miuix.kmp.blur.blur
 import com.alohaoneui.app.ui.component.liquid.lens
@@ -74,11 +72,7 @@ fun AlohaAgslGlassSwitch(
     } else {
         scheme.surfaceContainerHigh
     }
-    val thumbColor = if (checked) scheme.onPrimaryContainer else scheme.onSurface
     val backdrop = LocalVoyageSwitchBackdrop.current
-    val trackShape = remember(LocalMaterialShapeStyle.current) {
-        voyageCornerShape(15.dp)
-    }
     val glassHighlight = remember {
         Highlight(
             width = 1.dp,
@@ -141,7 +135,7 @@ fun AlohaAgslGlassSwitch(
                 .clip(CircleShape)
                 .drawBehind {
                     drawCircle(
-                        color = thumbColor.copy(alpha = if (enabled) 1f else 0.48f),
+                        color = scheme.surface.copy(alpha = if (enabled) 1f else 0.48f),
                     )
                     drawCircle(
                         color = scheme.onSurface.copy(alpha = 0.08f),
