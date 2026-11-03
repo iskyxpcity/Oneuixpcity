@@ -67,42 +67,46 @@ fun ExpressiveSwitch(
     // Liquid Glass is transient: the handle gains its glass treatment only
     // while the user is actively pressing the Material switch.
     val glassInteraction by animateFloatAsState(
-        targetValue = if (style == 5 && pressed && enabled) 1f else 0f,
-        animationSpec = spring(dampingRatio = 0.62f, stiffness = 520f),
+        targetValue = if (style == 5 && interactive && enabled) 1f else 0f,
+        animationSpec = spring(dampingRatio = 0.58f, stiffness = 420f),
         label = "voyageLiquidGlassInteraction",
     )
+    val glassScale by animateFloatAsState(
+        targetValue = if (style == 5 && pressed && enabled) 1.10f else 1f,
+        animationSpec = spring(dampingRatio = 0.52f, stiffness = 460f),
+        label = "voyageLiquidGlassScale",
+    )
     val scheme = MaterialTheme.colorScheme
+    // All eight switch families use the active Material color scheme. Each
+    // family keeps a distinct tonal identity without fixed brand colors.
     val checkedTrack = when (style) {
-        0 -> colors.checkedTrackColor
-        1 -> scheme.primary
+        0, 1, 7 -> scheme.primary
         2 -> scheme.primaryContainer
         3 -> scheme.secondary
-        4 -> Color(0xFF34C759)
-        5 -> scheme.tertiaryContainer
-        6 -> Color(0xFF1684FC)
-        7 -> scheme.primary
+        4 -> scheme.tertiary
+        5 -> scheme.primaryContainer
+        6 -> scheme.secondaryContainer
         else -> scheme.primary
     }
     val uncheckedTrack = scheme.surfaceContainerHighest
     val checkedThumb = when (style) {
-        0 -> colors.checkedThumbColor
-        1 -> scheme.onPrimary
-        2 -> scheme.primary
+        0, 1, 7 -> scheme.onPrimary
+        2 -> scheme.onPrimaryContainer
         3 -> scheme.onSecondary
-        5 -> scheme.onTertiaryContainer
-        7 -> scheme.onPrimary
-        else -> Color.White
+        4 -> scheme.onTertiary
+        5 -> scheme.onPrimaryContainer
+        6 -> scheme.onSecondaryContainer
+        else -> scheme.onPrimary
     }
-    val uncheckedThumb = scheme.outline
+    val uncheckedThumb = scheme.onSurfaceVariant
     val checkedBorder = when (style) {
-        2 -> scheme.primaryContainer
+        2, 5 -> scheme.primary
         3 -> scheme.secondary
-        4 -> Color(0xFF34C759)
-        5 -> scheme.tertiary
-        6 -> Color(0xFF1684FC)
+        4 -> scheme.tertiary
+        6 -> scheme.secondary
         else -> checkedTrack
     }
-    val uncheckedBorder = scheme.outline
+    val uncheckedBorder = scheme.outlineVariant
     // Exact outer slot dimensions from Voyage's j7w0.m105365O dispatch:
     // 0 z4v0.m147164o = 52x32; 1 frt0.m95463l = 52x32;
     // 2 it70.m103876l = 56x28; 3 ckw0.m9293l = 48x24;
@@ -221,8 +225,8 @@ fun ExpressiveSwitch(
                 drawVoyageGlassOutline(
                     outline = trackOutline,
                     bounds = Size(w, h),
-                    tint = trackColor,
-                    alpha = glassInteraction * if (checked) 0.62f else 0.44f,
+                    tint = if (checked) scheme.primary else scheme.surfaceContainerHighest,
+                    alpha = glassInteraction * if (checked) 0.90f else 0.76f,
                 )
             }
             val borderPx = borderWidth.dp.toPx()
@@ -258,7 +262,7 @@ fun ExpressiveSwitch(
                 withTransform({ translate(cx - haloWidth / 2f, cy - haloHeight / 2f) }) {
                     drawVoyageOutline(
                         haloOutline,
-                        Color.White.copy(alpha = glassInteraction * if (checked) 0.24f else 0.14f),
+                        Color.White.copy(alpha = glassInteraction * if (checked) 0.42f else 0.30f),
                     )
                 }
             }
@@ -283,15 +287,15 @@ fun ExpressiveSwitch(
                         outline = thumbOutline,
                         bounds = Size(thumbWidthPx, thumbHeightPx),
                         tint = thumbColor,
-                        alpha = glassInteraction * if (checked) 0.92f else 0.78f,
+                        alpha = glassInteraction,
                     )
                     drawVoyageOutline(
                         thumbOutline,
-                        Color.White.copy(alpha = glassInteraction * if (checked) 0.84f else 0.64f),
+                        Color.White.copy(alpha = glassInteraction * 0.98f),
                         style = Stroke(width = 0.8.dp.toPx()),
                     )
                     drawLine(
-                        color = Color.White.copy(alpha = glassInteraction * 0.72f),
+                        color = Color.White.copy(alpha = glassInteraction * 0.94f),
                         start = Offset(thumbWidthPx * 0.28f, thumbHeightPx * 0.23f),
                         end = Offset(thumbWidthPx * 0.68f, thumbHeightPx * 0.23f),
                         strokeWidth = 1.dp.toPx(),
@@ -338,20 +342,36 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawVoyageGlassOutl
     drawPath(
         path = path,
         brush = Brush.verticalGradient(
-            colors = listOf(
-                Color.White.copy(alpha = 0.66f * alpha),
-                tint.copy(alpha = 0.42f * alpha),
-                tint.copy(alpha = 0.76f * alpha),
-                Color.White.copy(alpha = 0.18f * alpha),
-            ),
+            0.0f to Color.White.copy(alpha = 0.94f * alpha),
+            0.16f to tint.copy(alpha = 0.22f * alpha),
+            0.48f to tint.copy(alpha = 0.58f * alpha),
+            0.76f to tint.copy(alpha = 0.80f * alpha),
+            1.0f to Color.White.copy(alpha = 0.38f * alpha),
             startY = 0f,
             endY = bounds.height.coerceAtLeast(1f),
         ),
     )
     drawPath(
         path = path,
-        color = Color.White.copy(alpha = 0.78f * alpha),
-        style = Stroke(width = 0.9.dp.toPx()),
+        brush = Brush.radialGradient(
+            colors = listOf(
+                Color.White.copy(alpha = 0.76f * alpha),
+                Color.White.copy(alpha = 0.16f * alpha),
+                Color.Transparent,
+            ),
+            center = Offset(bounds.width * 0.28f, bounds.height * 0.12f),
+            radius = (bounds.maxDimension * 0.92f).coerceAtLeast(1f),
+        ),
+    )
+    drawPath(
+        path = path,
+        color = Color.White.copy(alpha = 0.96f * alpha),
+        style = Stroke(width = 1.05.dp.toPx()),
+    )
+    drawPath(
+        path = path,
+        color = tint.copy(alpha = 0.30f * alpha),
+        style = Stroke(width = 0.65f.toPx()),
     )
 }
 
