@@ -34,6 +34,10 @@ import top.yukonga.miuix.kmp.blur.drawBackdrop
 import top.yukonga.miuix.kmp.blur.blur
 import com.alohaoneui.app.ui.component.liquid.vibrancy
 import com.alohaoneui.app.ui.component.liquid.lens
+import top.yukonga.miuix.kmp.blur.highlight.BloomStroke
+import top.yukonga.miuix.kmp.blur.highlight.Highlight
+import top.yukonga.miuix.kmp.blur.highlight.LightPosition
+import top.yukonga.miuix.kmp.blur.highlight.LightSource
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -101,6 +105,26 @@ fun ExpressiveSwitch(
             }
         } else null
         val scheme = MaterialTheme.colorScheme
+    val glassHighlight = remember {
+        Highlight(
+            width = 1.dp,
+            alpha = 1f,
+            style = BloomStroke(
+                color = Color.White.copy(alpha = 0.12f),
+                innerBlurRadius = 2.dp,
+                primaryLight = LightSource(
+                    position = LightPosition(0.5f, -0.3f, -0.05f),
+                    color = Color.White,
+                    intensity = 1f,
+                ),
+                secondaryLight = LightSource(
+                    position = LightPosition(0.5f, 0.8f, -0.5f),
+                    color = Color.White,
+                    intensity = 0.4f,
+                ),
+            ),
+        )
+    }
         androidx.compose.material3.Switch(
             checked = checked,
             onCheckedChange = onCheckedChange,
@@ -412,12 +436,13 @@ fun ExpressiveSwitch(
                             vibrancy()
                             blur(4.dp.toPx(), 4.dp.toPx())
                             lens(
-                                refractionHeight = 16.dp.toPx(),
-                                refractionAmount = 18.dp.toPx(),
+                                refractionHeight = 24.dp.toPx(),
+                                refractionAmount = 24.dp.toPx(),
                                 depthEffect = true,
                                 chromaticAberration = 0.4f,
                             )
                         },
+                        highlight = { glassHighlight.copy(alpha = 0.75f) },
                         onDrawSurface = {
                             drawRect(glassTint.copy(alpha = 0.14f))
                         },
@@ -520,6 +545,7 @@ fun ExpressiveSwitch(
                                         chromaticAberration = 0.35f * glassInteraction,
                                     )
                                 },
+                                highlight = { glassHighlight.copy(alpha = 0.75f) },
                                 onDrawSurface = {
                                     drawRect(glassTint.copy(alpha = 0.12f * glassInteraction))
                                 },
