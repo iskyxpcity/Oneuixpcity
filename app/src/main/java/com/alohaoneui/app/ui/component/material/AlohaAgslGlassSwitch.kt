@@ -104,8 +104,8 @@ fun AlohaAgslGlassSwitch(
             launch { thumbScaleY.animateTo(1.5f, scaleYSpring) }
         } else {
             launch { pressProgress.animateTo(0f, pressSpring) }
-            launch { scaleX.animateTo(1f, scaleXSpring) }
-            launch { scaleY.animateTo(1f, scaleYSpring) }
+            launch { thumbScaleX.animateTo(1f, scaleXSpring) }
+            launch { thumbScaleY.animateTo(1f, scaleYSpring) }
         }
     }
 
@@ -156,8 +156,8 @@ fun AlohaAgslGlassSwitch(
                         scope.launch {
                             fraction.stop()
                             launch { pressProgress.animateTo(1f, pressSpring) }
-                            launch { scaleX.animateTo(1.5f, scaleXSpring) }
-                            launch { scaleY.animateTo(1.5f, scaleYSpring) }
+                            launch { thumbScaleX.animateTo(1.5f, scaleXSpring) }
+                            launch { thumbScaleY.animateTo(1.5f, scaleYSpring) }
                         }
                     },
                     onDragEnd = {
@@ -171,8 +171,8 @@ fun AlohaAgslGlassSwitch(
                                 initialVelocity = dragVelocity * 0.75f,
                             )
                             launch { pressProgress.animateTo(0f, pressSpring) }
-                            launch { scaleX.animateTo(1f, scaleXSpring) }
-                            launch { scaleY.animateTo(1f, scaleYSpring) }
+                            launch { thumbScaleX.animateTo(1f, scaleXSpring) }
+                            launch { thumbScaleY.animateTo(1f, scaleYSpring) }
                         }
                     },
                     onDragCancel = {
@@ -180,8 +180,8 @@ fun AlohaAgslGlassSwitch(
                         scope.launch {
                             fraction.animateTo(if (checked) 1f else 0f, valueSpring)
                             launch { pressProgress.animateTo(0f, pressSpring) }
-                            launch { scaleX.animateTo(1f, scaleXSpring) }
-                            launch { scaleY.animateTo(1f, scaleYSpring) }
+                            launch { thumbScaleX.animateTo(1f, scaleXSpring) }
+                            launch { thumbScaleY.animateTo(1f, scaleYSpring) }
                         }
                     },
                     onDrag = { change: PointerInputChange, dragAmount ->
