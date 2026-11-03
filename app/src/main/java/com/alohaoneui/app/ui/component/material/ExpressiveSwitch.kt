@@ -119,6 +119,19 @@ fun ExpressiveSwitch(
         return
     }
 
+    // Fluent 2 uses Microsoft's Android ToggleSwitch geometry, motion and
+    // swipe interaction, adapted to Aloha semantic theme colors.
+    if (style == 3) {
+        FluentToggleSwitch(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            modifier = modifier,
+            enabled = enabled,
+            interactionSource = interactionSource,
+        )
+        return
+    }
+
     // Cupertino uses the iOS UISwitch silhouette and its independent
     // 51 x 31 dp geometry, with Aloha theme-linked track tint.
     if (style == 4) {
