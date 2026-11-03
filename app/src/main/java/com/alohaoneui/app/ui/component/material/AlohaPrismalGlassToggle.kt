@@ -14,6 +14,7 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -30,6 +31,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.toggleableState
 import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
@@ -68,6 +70,8 @@ fun AlohaPrismalGlassToggle(
     modifier: Modifier = Modifier,
 ) {
     val density = LocalDensity.current
+    val latestSelected by rememberUpdatedState(selected)
+    val latestOnSelect by rememberUpdatedState(onSelect)
     val isLtr = LocalLayoutDirection.current == LayoutDirection.Ltr
     val dragWidth = with(density) { 20.dp.toPx() }
     val animationScope = rememberCoroutineScope()
@@ -85,11 +89,11 @@ fun AlohaPrismalGlassToggle(
             onDragStopped = {
                 if (didDrag) {
                     fraction = if (targetValue >= 0.5f) 1f else 0f
-                    onSelect(fraction == 1f)
+                    latestOnSelect(fraction == 1f)
                     didDrag = false
                 } else {
-                    fraction = if (selected) 0f else 1f
-                    onSelect(fraction == 1f)
+                    fraction = if (latestSelected) 0f else 1f
+                    latestOnSelect(fraction == 1f)
                 }
             },
             onDrag = { _, dragAmount ->
@@ -149,7 +153,11 @@ fun AlohaPrismalGlassToggle(
                 }
                 .semantics {
                     role = Role.Switch
-                    toggleableState = if (selected) ToggleableState.On else ToggleableState.Off
+                    toggleableState = if (latestSelected) ToggleableState.On else ToggleableState.Off
+                    onClick(label = null) {
+                        latestOnSelect(!latestSelected)
+                        true
+                    }
                 }
                 .then(dampedDragAnimation.modifier)
                 .drawPrismalGlass(
