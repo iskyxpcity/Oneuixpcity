@@ -276,32 +276,14 @@ fun ExpressiveSwitch(
             if (focused && enabled) {
                 drawVoyageOutline(trackOutline, scheme.primary.copy(alpha = 0.72f), style = Stroke(width = 1.25.dp.toPx()))
             }
-            // Keep a visible perimeter on every family even when the global
-            // outline preference is set to zero. The system style owns its
-            // minimum stroke; the global setting may strengthen it.
-            // Native switch perimeter: retain its platform-specific color and stroke.
-            val platformStrokeDp = when (style) {
-                0 -> 1.0f
-                1 -> 1.0f
-                2 -> 1.25f
-                3 -> 1.0f
-                4 -> 0.85f
-                5 -> 0.8f
-                6 -> 1.0f
-                else -> 0.9f
-            }
-            val platformStrokePx = platformStrokeDp.dp.toPx()
-            val platformInset = (platformStrokePx * 1.25f).coerceAtLeast(1f)
-            val platformOutline = trackShape.createOutline(
-                size = Size((w - platformInset * 2f).coerceAtLeast(0f), (h - platformInset * 2f).coerceAtLeast(0f)),
-                layoutDirection = layoutDirection,
-                density = this,
-            )
-            withTransform({ translate(platformInset, platformInset) }) {
+            // Material You (Material 3) alone uses the documented track
+            // decoration: outline when OFF, transparent when ON. Other switch
+            // families must not inherit this perimeter.
+            if (style == 0 && !checked) {
                 drawVoyageOutline(
-                    platformOutline,
-                    (if (checked) checkedBorder else uncheckedBorder).copy(alpha = if (enabled) 1f else 0.45f),
-                    style = Stroke(width = platformStrokePx),
+                    trackOutline,
+                    scheme.outline.copy(alpha = if (enabled) 1f else 0.38f),
+                    style = Stroke(width = 1.dp.toPx()),
                 )
             }
 
