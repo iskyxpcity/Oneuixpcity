@@ -8,6 +8,7 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.gestures.Orientation
@@ -337,6 +338,9 @@ fun MainScreen(
         drawRect(surfaceColor)
         drawContent()
     }
+    // A switch-only background capture. It is intentionally isolated from
+    // HorizontalPager content so a glass thumb can never capture itself.
+    val switchBackdrop = rememberLayerBackdrop { drawContent() }
 
     val settledPage = mainPagerState.pagerState.settledPage
     LaunchedEffect(settledPage) {
@@ -350,15 +354,13 @@ fun MainScreen(
 
     MainScreenBackHandler(mainPagerState, navController, enablePredictiveBack)
 
-    // Keep switch backdrop sampling on the already-supported floating-bar
-    // blur path only. Attaching a second backdrop source to HorizontalPager
-    // when style 5 is selected can create a recursive capture graph and crash
-    // the app during initial composition on some devices.
+    // The floating bar keeps its existing full-content backdrop. Liquid Glass
+    // switches receive a separate background-only source, never the Pager layer.
     val captureSwitchBackdrop = enableFloatingBottomBarBlur
 
     CompositionLocalProvider(
         LocalMainPagerState provides mainPagerState,
-        LocalVoyageSwitchBackdrop provides if (captureSwitchBackdrop) backdrop else null,
+        LocalVoyageSwitchBackdrop provides switchBackdrop,
     ) {
         val contentReady = rememberContentReady()
 
@@ -374,6 +376,11 @@ fun MainScreen(
                     Modifier.fillMaxSize()
                 }),
             ) {
+                // This sibling contains only the page surface. The Pager and its
+                // switches are drawn above it and are excluded from this capture.
+                Canvas(Modifier.fillMaxSize().layerBackdrop(switchBackdrop)) {
+                    drawRect(surfaceColor)
+                }
                 val responsivePagerModifier = if (showNavigationRail) {
                     Modifier
                         .widthIn(max = 1280.dp)
