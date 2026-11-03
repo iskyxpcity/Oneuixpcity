@@ -37,7 +37,7 @@ internal fun HyperOsSwitch(
 ) {
     val scheme = MaterialTheme.colorScheme
     val trackColor by animateColorAsState(
-        targetValue = if (checked) scheme.secondary else scheme.surfaceContainerHigh,
+        targetValue = if (checked) scheme.primary else scheme.surfaceContainerHigh,
         label = "hyperOsSwitchTrack",
     )
     val dragState = rememberAlohaSwitchDragState(
