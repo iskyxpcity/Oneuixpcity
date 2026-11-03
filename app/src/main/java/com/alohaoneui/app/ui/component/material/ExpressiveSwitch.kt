@@ -106,23 +106,13 @@ fun ExpressiveSwitch(
                 )
             }
         } else null
-        val scheme = MaterialTheme.colorScheme
         androidx.compose.material3.Switch(
             checked = checked,
             onCheckedChange = onCheckedChange,
             modifier = modifier,
             thumbContent = pixelThumbContent,
             enabled = enabled,
-            colors = androidx.compose.material3.SwitchDefaults.colors(
-                checkedThumbColor = scheme.primary,
-                checkedTrackColor = scheme.primaryContainer,
-                checkedBorderColor = Color.Transparent,
-                checkedIconColor = scheme.onPrimaryContainer,
-                uncheckedThumbColor = scheme.outline,
-                uncheckedTrackColor = scheme.surfaceContainerHighest,
-                uncheckedBorderColor = scheme.outline,
-                uncheckedIconColor = scheme.onSurfaceVariant,
-            ),
+            colors = androidx.compose.material3.SwitchDefaults.colors(),
             interactionSource = interactionSource,
         )
         return
