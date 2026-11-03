@@ -354,7 +354,7 @@ fun MainScreen(
     // blur path only. Attaching a second backdrop source to HorizontalPager
     // when style 5 is selected can create a recursive capture graph and crash
     // the app during initial composition on some devices.
-    val captureSwitchBackdrop = enableFloatingBottomBarBlur
+    val captureSwitchBackdrop = enableFloatingBottomBarBlur || LocalMaterialSwitchStyle.current == 5
 
     CompositionLocalProvider(
         LocalMainPagerState provides mainPagerState,
