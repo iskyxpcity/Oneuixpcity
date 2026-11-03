@@ -283,7 +283,7 @@ fun ExpressiveSwitch(
         2 -> DpSize(56.dp, 28.dp)       // Pixel
         3 -> DpSize(48.dp, 24.dp)       // Fluent
         4 -> DpSize(64.dp, 28.dp)       // Cupertino
-        5 -> DpSize(51.dp, 31.dp)       // Liquid Glass
+        5 -> DpSize(64.dp, 28.dp)       // Liquid Glass
         6 -> DpSize(50.dp, 28.5.dp)    // HyperOS
         else -> DpSize(39.dp, 22.dp)   // One UI outer touch target
     }
@@ -301,7 +301,8 @@ fun ExpressiveSwitch(
         }
         2 -> 20.dp
         3 -> if (enabled && pressedOrHovered) 17.dp else 12.dp
-        4, 5 -> 20.dp
+        4 -> 20.dp
+        5 -> 24.dp
         6 -> if (enabled && interactive) 23.dp else 20.dp
         7 -> 22.dp
         else -> 20.dp
@@ -311,7 +312,7 @@ fun ExpressiveSwitch(
         2 -> 20.dp
         3 -> if (enabled && pressedOrHovered) 17.dp else 12.dp
         4 -> 20.dp
-        5 -> 23.dp
+        5 -> 40.dp
         6 -> if (enabled && interactive) 23.dp else 20.dp
         else -> 22.dp
     }
@@ -320,7 +321,7 @@ fun ExpressiveSwitch(
         2 -> 20.dp
         3 -> if (enabled && pressedOrHovered) 17.dp else 12.dp
         4 -> 20.dp
-        5 -> 23.dp
+        5 -> 24.dp
         6 -> if (enabled && interactive) 23.dp else 20.dp
         else -> 22.dp
     }
@@ -328,7 +329,7 @@ fun ExpressiveSwitch(
         0, 1, 2 -> 4.dp
         3 -> 3.dp
         4 -> 2.dp
-        5 -> 3.dp
+        5 -> 2.dp
         6 -> 2.5.dp
         else -> 0.dp
     }
@@ -337,7 +338,7 @@ fun ExpressiveSwitch(
         2 -> 14.dp
         3 -> 4.dp
         4 -> 14.dp
-        5 -> 15.5.dp
+        5 -> 14.dp
         6 -> 14.25.dp
         else -> 9.25.dp
     }
@@ -368,7 +369,7 @@ fun ExpressiveSwitch(
         2 -> RoundedCornerShape(50)
         3 -> RoundedCornerShape(7.dp)
         4 -> RoundedCornerShape(50)
-        5 -> RoundedCornerShape(42)
+        5 -> RoundedCornerShape(50)
         6 -> RoundedCornerShape(38)
         else -> RoundedCornerShape(50)
     }
@@ -380,10 +381,12 @@ fun ExpressiveSwitch(
         if (checked) androidx.compose.ui.graphics.lerp(checkedThumb, scheme.primaryContainer, 0.12f)
         else androidx.compose.ui.graphics.lerp(uncheckedThumb, scheme.onSurfaceVariant, 0.10f)
     } else if (checked) checkedThumb else uncheckedThumb
+    val glassBackdrop = if (style == 5) LocalVoyageSwitchBackdrop.current else null
+    val glassTint = if (checked) scheme.primary else scheme.surfaceContainerHigh
     Box(
         modifier = modifier
             .size(width = trackSize.width, height = trackSize.height)
-            .then(if (LocalMaterialShadowSwitches.current) Modifier.shadow(2.dp, trackShape) else Modifier)
+            .then(if (LocalMaterialShadowSwitches.current && style != 5) Modifier.shadow(2.dp, trackShape) else Modifier)
             .toggleable(
                 value = checked,
                 enabled = enabled && onCheckedChange != null,
@@ -395,6 +398,29 @@ fun ExpressiveSwitch(
 ,
         contentAlignment = Alignment.Center,
     ) {
+        if (style == 5 && glassBackdrop != null && enabled) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .drawBackdrop(
+                        backdrop = glassBackdrop,
+                        shape = { trackShape },
+                        effects = {
+                            vibrancy()
+                            blur(4.dp.toPx(), 4.dp.toPx())
+                            lens(
+                                refractionHeight = 16.dp.toPx(),
+                                refractionAmount = 18.dp.toPx(),
+                                depthEffect = true,
+                                chromaticAberration = 0.4f,
+                            )
+                        },
+                        onDrawSurface = {
+                            drawRect(glassTint.copy(alpha = 0.14f))
+                        },
+                    ),
+            )
+        }
         Canvas(Modifier.fillMaxSize()) {
             val w = size.width
             val h = size.height
@@ -412,7 +438,9 @@ fun ExpressiveSwitch(
                 layoutDirection = layoutDirection,
                 density = this,
             )
-            drawVoyageOutline(trackOutline, trackColor)
+            if (style != 5 || glassBackdrop == null || !enabled) {
+                drawVoyageOutline(trackOutline, trackColor)
+            }
             if (interactionProgress > 0.001f && style != 5) {
                 drawVoyageOutline(trackOutline, (if (checked) scheme.onPrimary else scheme.onSurfaceVariant).copy(alpha = interactionProgress * if (pressed) 0.12f else 0.08f))
             }
@@ -467,9 +495,8 @@ fun ExpressiveSwitch(
             // thumb itself communicates the on/off state by position and color.
         }
         if (style == 5) {
-            val backdrop = LocalVoyageSwitchBackdrop.current
+            val backdrop = glassBackdrop
             val thumbTravel = trackSize.width - thumbWidth - thumbEdgeInset * 2
-            val glassTint = if (checked) scheme.primary else scheme.surfaceContainerHigh
             Box(
                 modifier = Modifier
                     .align(Alignment.Center)
