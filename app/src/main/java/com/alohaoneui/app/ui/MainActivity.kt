@@ -258,7 +258,7 @@ class MainActivity : ComponentActivity() {
                         UpdateDialogHost(
                             isMiuix = uiMode == UiMode.Miuix,
                             glassBackdrop = updateDialogBackdrop,
-                            enableLiquidGlass = uiState.enableFloatingBottomBarBlur,
+                            enableLiquidGlass = uiState.enableFloatingBottomBar && uiState.enableFloatingBottomBarBlur,
                         )
                     }
                 }
@@ -373,7 +373,7 @@ fun MainScreen(
                 }
                 HorizontalPager(
                     modifier = responsivePagerModifier.then(
-                        if (enableFloatingBottomBarBlur) Modifier.layerBackdrop(backdrop) else Modifier
+                        if (enableFloatingBottomBar && enableFloatingBottomBarBlur) Modifier.layerBackdrop(backdrop) else Modifier
                     ).pagerGestureOverride(
                         pagerState = mainPagerState.pagerState,
                         mode = pagerGestureMode,
