@@ -105,26 +105,6 @@ fun ExpressiveSwitch(
             }
         } else null
         val scheme = MaterialTheme.colorScheme
-    val glassHighlight = remember {
-        Highlight(
-            width = 1.dp,
-            alpha = 1f,
-            style = BloomStroke(
-                color = Color.White.copy(alpha = 0.12f),
-                innerBlurRadius = 2.dp,
-                primaryLight = LightSource(
-                    position = LightPosition(0.5f, -0.3f, -0.05f),
-                    color = Color.White,
-                    intensity = 1f,
-                ),
-                secondaryLight = LightSource(
-                    position = LightPosition(0.5f, 0.8f, -0.5f),
-                    color = Color.White,
-                    intensity = 0.4f,
-                ),
-            ),
-        )
-    }
         androidx.compose.material3.Switch(
             checked = checked,
             onCheckedChange = onCheckedChange,
@@ -240,6 +220,26 @@ fun ExpressiveSwitch(
         label = "voyageLiquidGlassScale",
     )
     val scheme = MaterialTheme.colorScheme
+    val glassHighlight = remember {
+        Highlight(
+            width = 1.dp,
+            alpha = 1f,
+            style = BloomStroke(
+                color = Color.White.copy(alpha = 0.12f),
+                innerBlurRadius = 2.dp,
+                primaryLight = LightSource(
+                    position = LightPosition(0.5f, -0.3f, -0.05f),
+                    color = Color.White,
+                    intensity = 1f,
+                ),
+                secondaryLight = LightSource(
+                    position = LightPosition(0.5f, 0.8f, -0.5f),
+                    color = Color.White,
+                    intensity = 0.4f,
+                ),
+            ),
+        )
+    }
     // Each family has its own OFF and ON color recipe. Every role is read
     // from the active Aloha Material scheme, so light/dark and user theme
     // changes propagate without embedding platform brand colors.
