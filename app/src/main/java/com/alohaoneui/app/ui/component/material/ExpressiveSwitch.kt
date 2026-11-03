@@ -132,6 +132,30 @@ fun ExpressiveSwitch(
         return
     }
 
+    // HyperOS keeps its wider pill track and separate neutral handle.
+    if (style == 6) {
+        HyperOsSwitch(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            modifier = modifier,
+            enabled = enabled,
+            interactionSource = interactionSource,
+        )
+        return
+    }
+
+    // One UI uses the compact 40 x 22 dp control footprint.
+    if (style == 7) {
+        OneUiSwitch(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            modifier = modifier,
+            enabled = enabled,
+            interactionSource = interactionSource,
+        )
+        return
+    }
+
     // Compose style uses the official Compose Material (Material 2) Switch.
     // It deliberately retains Material 2 proportions and color behavior;
     // it is not a recolored Material 3 control.
