@@ -348,7 +348,7 @@ dependencies {
     implementation(libs.miuix.blur)
 
     // PrismalAGSL: AGSL liquid-glass rendering and spring-driven toggle primitives.
-    implementation("com.github.styropyr0:PrismalAGSL:Prismal:v1.0.4")
+    implementation("com.github.styropyr0.PrismalAGSL:Prismal:v1.0.4")
 
     implementation(platform(libs.okhttp.bom))
     implementation(libs.okhttp)
