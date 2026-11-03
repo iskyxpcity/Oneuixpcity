@@ -28,14 +28,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
-import top.yukonga.miuix.kmp.blur.drawBackdrop
-import top.yukonga.miuix.kmp.blur.blur
-import com.alohaoneui.app.ui.component.liquid.lens
-import com.alohaoneui.app.ui.component.liquid.vibrancy
-import top.yukonga.miuix.kmp.blur.highlight.BloomStroke
-import top.yukonga.miuix.kmp.blur.highlight.Highlight
-import top.yukonga.miuix.kmp.blur.highlight.LightPosition
-import top.yukonga.miuix.kmp.blur.highlight.LightSource
 
 /**
  * Liquid Glass switch interaction:
@@ -93,28 +85,6 @@ fun AlohaAgslGlassSwitch(
     } else {
         scheme.surfaceContainerHigh
     }
-    val backdrop = LocalVoyageSwitchBackdrop.current
-    val glassHighlight = remember {
-        Highlight(
-            width = 1.dp,
-            alpha = 1f,
-            style = BloomStroke(
-                color = Color.White.copy(alpha = 0.24f),
-                innerBlurRadius = 2.dp,
-                primaryLight = LightSource(
-                    position = LightPosition(0.28f, -0.24f, -0.05f),
-                    color = Color.White,
-                    intensity = 1.15f,
-                ),
-                secondaryLight = LightSource(
-                    position = LightPosition(0.72f, 0.92f, -0.4f),
-                    color = Color.White,
-                    intensity = 0.42f,
-                ),
-            ),
-        )
-    }
-
     Box(
         modifier = modifier
             .size(width = 64.dp, height = 30.dp)
@@ -170,10 +140,11 @@ fun AlohaAgslGlassSwitch(
                     )
                 },
         ) {
-            // The lens is strictly an interaction overlay on the thumb.
-            // At rest this layer is transparent and the thumb is an ordinary
-            // theme-colored handle, not a permanently frosted glass button.
-            if (backdrop != null && enabled && glassProgress > 0.001f) {
+            // Keep the interaction glass treatment local to the thumb. Sampling
+            // the pager backdrop from inside the pager can create a recursive
+            // capture graph on some devices, so use a transient specular lens
+            // treatment without attaching another capture layer.
+            if (enabled && glassProgress > 0.001f) {
                 Box(
                     modifier = Modifier
                         .matchParentSize()
@@ -201,7 +172,7 @@ fun AlohaAgslGlassSwitch(
                         ),
                 )
             }
-            if (backdrop == null && enabled && glassProgress > 0.001f) {
+            if (enabled && glassProgress > 0.001f) {
                 // Visible transient lens treatment when the app's optional
                 // live backdrop capture is disabled. This is a procedural
                 // glass highlight, not a claim of true scene refraction.
