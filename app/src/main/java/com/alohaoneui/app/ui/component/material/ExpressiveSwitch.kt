@@ -46,10 +46,14 @@ import com.alohaoneui.app.ui.theme.LocalMaterialSwitchStyle
 val LocalVoyageSwitchBackdrop = staticCompositionLocalOf<Backdrop?> { null }
 
 /**
- * Voyage's eight selectable switch families. The selector changes the actual
- * track/thumb geometry and palette rather than applying a cosmetic scale to
- * the platform Material switch. Toggle semantics and animated thumb travel
- * remain shared across all styles.
+ * Eight selectable switch families, each rendered by its own design-system
+ * implementation. Material You delegates to AndroidX Material 3 and Compose
+ * delegates to AndroidX Material (Material 2); the remaining families keep
+ * dedicated renderers until their native design references are ported.
+ *
+ * Aloha theme colors remain semantic inputs. The switch renderer never reads
+ * the preference-row outline setting, so row borders cannot leak onto a
+ * switch. Miuix is handled by SwitchItem and is not routed through this file.
  */
 @Composable
 fun ExpressiveSwitch(
