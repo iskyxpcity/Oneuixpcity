@@ -91,10 +91,9 @@ fun AlohaAgslGlassSwitch(
     )
 
     LaunchedEffect(checked, dragging) {
-        if (!dragging && fraction.targetValue != if (checked) 1f else 0f) {
-            fraction.animateTo(if (checked) 1f else 0f, valueSpring)
-        } else if (!dragging && fraction.value != if (checked) 1f else 0f) {
-            fraction.animateTo(if (checked) 1f else 0f, valueSpring)
+        val target = if (checked) 1f else 0f
+        if (!dragging && fraction.value != target) {
+            fraction.animateTo(target, valueSpring)
         }
     }
 
