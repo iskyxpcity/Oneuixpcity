@@ -55,7 +55,6 @@ import com.alohaoneui.app.ui.component.bottombar.BottomBar
 import com.alohaoneui.app.ui.component.bottombar.SideNavigationRail
 import com.alohaoneui.app.ui.component.bottombar.useNavigationRail
 import com.alohaoneui.app.ui.component.bottombar.MainPagerState
-import com.alohaoneui.app.ui.component.material.LocalMaterialSwitchBackdrop
 import com.alohaoneui.app.ui.component.bottombar.rememberMainPagerState
 import com.alohaoneui.app.ui.navigation3.LocalNavigator
 import com.alohaoneui.app.ui.navigation3.Navigator
@@ -245,30 +244,22 @@ class MainActivity : ComponentActivity() {
                         drawRect(updateDialogSurfaceColor)
                         drawContent()
                     }
-                    // Share the already-established screen backdrop with Material Liquid Glass
-                    // controls. This is scoped to the activity content layer (not the Material
-                    // theme root), so switches can refract the actual screen behind their local
-                    // track without creating another root render layer.
-                    CompositionLocalProvider(
-                        LocalMaterialSwitchBackdrop provides updateDialogBackdrop,
-                    ) {
-                        Box(Modifier.fillMaxSize()) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .layerBackdrop(updateDialogBackdrop),
-                            ) {
-                                when (uiMode) {
-                                    UiMode.Material -> androidx.compose.material3.Scaffold { navDisplay() }
-                                    UiMode.Miuix -> Scaffold { navDisplay() }
-                                }
+                    Box(Modifier.fillMaxSize()) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .layerBackdrop(updateDialogBackdrop),
+                        ) {
+                            when (uiMode) {
+                                UiMode.Material -> androidx.compose.material3.Scaffold { navDisplay() }
+                                UiMode.Miuix -> Scaffold { navDisplay() }
                             }
-                            UpdateDialogHost(
-                                isMiuix = uiMode == UiMode.Miuix,
-                                glassBackdrop = updateDialogBackdrop,
-                                enableLiquidGlass = uiState.enableFloatingBottomBarBlur,
-                            )
                         }
+                        UpdateDialogHost(
+                            isMiuix = uiMode == UiMode.Miuix,
+                            glassBackdrop = updateDialogBackdrop,
+                            enableLiquidGlass = uiState.enableFloatingBottomBarBlur,
+                        )
                     }
                 }
             }
