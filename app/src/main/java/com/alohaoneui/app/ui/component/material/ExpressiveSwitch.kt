@@ -608,6 +608,8 @@ fun ExpressiveSwitch(
                                 // depthEffect is reserved for the separately animated tab pill.
                                 depthEffect = false,
                                 chromaticAberration = if (glassInteraction > 0.5f) glassInteraction else 0f,
+                                // Pull the sampled track/page image toward the lens center.
+                                imageCompression = 0.24f * glassInteraction,
                             )
                         },
                         highlight = {
