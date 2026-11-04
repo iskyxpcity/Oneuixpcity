@@ -255,7 +255,7 @@ fun ExpressiveSwitch(
         2 -> scheme.onPrimary
         3 -> scheme.onSecondaryContainer
         4 -> scheme.onTertiary
-        5 -> scheme.surface.copy(alpha = 0.76f)
+        5 -> scheme.onPrimaryContainer
         6 -> scheme.onSecondary
         else -> scheme.onPrimary
     }
@@ -265,7 +265,7 @@ fun ExpressiveSwitch(
         2 -> scheme.outline
         3 -> scheme.onSurface
         4 -> scheme.surface
-        5 -> scheme.surfaceContainerHighest
+        5 -> scheme.onSurfaceVariant
         6 -> scheme.onSurfaceVariant
         else -> scheme.surface
     }
@@ -466,34 +466,9 @@ fun ExpressiveSwitch(
         contentAlignment = Alignment.Center,
     ) {
         Canvas(Modifier.size(trackSize)) {
-            if (style == 5) {
-                // The rail is rendered by the backdrop layer below. Keep the
-                // ordinary Material thumb visible at rest; only its opacity
-                // yields to the transient glass lens while interacting.
-                val thumbWidthPx = thumbWidth.toPx()
-                val thumbHeightPx = thumbHeight.toPx()
-                val edgeInsetPx = thumbEdgeInset.toPx()
-                val left = thumbWidthPx / 2f + edgeInsetPx
-                val right = size.width - thumbWidthPx / 2f - edgeInsetPx
-                val cx = left + (right - left) * displayedTravel
-                val cy = size.height / 2f
-                if (glassInteraction < 0.999f) {
-                    val thumbOutline = thumbShape.createOutline(
-                        size = Size(thumbWidthPx, thumbHeightPx),
-                        layoutDirection = layoutDirection,
-                        density = this,
-                    )
-                    withTransform({
-                        translate(cx - thumbWidthPx / 2f, cy - thumbHeightPx / 2f)
-                    }) {
-                        drawVoyageOutline(
-                            thumbOutline,
-                            thumbColor.copy(alpha = 1f - glassInteraction),
-                        )
-                    }
-                }
-                return@Canvas
-            }
+            // Style 5's rail and resting handle are separate foreground layers.
+            // Drawing the handle here would place it underneath the rail.
+            if (style == 5) return@Canvas
             val w = size.width
             val h = size.height
             val trackColor = if (enabled) {
@@ -595,6 +570,20 @@ fun ExpressiveSwitch(
                 trackBackdrop
             }
 
+            // Draw the theme-dynamic resting handle ABOVE the rail. The earlier
+            // Canvas is behind the rail and therefore cannot display this thumb.
+            // Fade it only while the transient glass lens takes over.
+            Box(
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .zIndex(1f)
+                    .offset(x = thumbTravel * displayedTravel - thumbTravel / 2f)
+                    .size(width = thumbWidth, height = thumbHeight)
+                    .graphicsLayer { alpha = 1f - glassInteraction }
+                    .clip(thumbShape)
+                    .background(thumbColor),
+            )
+
             Box(
                 modifier = Modifier
                     .align(Alignment.Center)
@@ -621,6 +610,8 @@ fun ExpressiveSwitch(
                                 // Its outer surface uses the normal rounded-rect gradient;
                                 // depthEffect is reserved for the separately animated tab pill.
                                 depthEffect = false,
+                                // Reverse only this switch lens so the visible track image bends inward.
+                                inwardVisualRefraction = true,
                                 chromaticAberration = if (glassInteraction > 0.5f) glassInteraction else 0f,
                             )
                         },
