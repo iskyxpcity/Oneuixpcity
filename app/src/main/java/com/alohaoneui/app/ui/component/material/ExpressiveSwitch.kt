@@ -576,8 +576,7 @@ fun ExpressiveSwitch(
                             drawRect(scheme.surface.copy(alpha = 1f - glassInteraction))
                             drawRect(glassTint.copy(alpha = 0.20f * glassInteraction))
                         },
-                    )
-                    ,
+                    ),
             )
         }
         if (thumbContent != null && style != 5) {
