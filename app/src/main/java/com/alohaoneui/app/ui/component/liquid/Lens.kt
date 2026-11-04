@@ -15,7 +15,6 @@ fun BackdropEffectScope.lens(
     refractionAmount: Float,
     depthEffect: Boolean = false,
     chromaticAberration: Float = 0f,
-    inwardVisualRefraction: Boolean = false,
 ) {
     if (!isRuntimeShaderSupported()) return
     if (refractionHeight <= 0f || refractionAmount <= 0f) return
@@ -52,11 +51,9 @@ fun BackdropEffectScope.lens(
         setFloatUniform("offset", -scaledPadding, -scaledPadding)
         setFloatUniform("cornerRadii", scaledRadii)
         setFloatUniform("refractionHeight", scaledRefractionHeight)
-        // Keep existing backdrop optics unchanged; the switch opts into inward bending.
-        setFloatUniform(
-            "refractionAmount",
-            if (inwardVisualRefraction) scaledRefractionAmount else -scaledRefractionAmount,
-        )
+        // The rounded-rect gradient points outward. A negative sample offset
+        // therefore pulls the sampled image inward, matching the bottom-bar lens.
+        setFloatUniform("refractionAmount", -scaledRefractionAmount)
         setFloatUniform("depthEffect", if (depthEffect) 1f else 0f)
         if (dispersionEnabled) {
             setFloatUniform("chromaticAberration", chromaticAberration)
