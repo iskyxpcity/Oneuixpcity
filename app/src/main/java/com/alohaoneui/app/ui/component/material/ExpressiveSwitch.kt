@@ -39,18 +39,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
-import com.kyant.backdrop.Backdrop
-import com.kyant.backdrop.backdrops.layerBackdrop
-import com.kyant.backdrop.backdrops.rememberBackdrop
-import com.kyant.backdrop.backdrops.rememberCombinedBackdrop
-import com.kyant.backdrop.backdrops.rememberLayerBackdrop
-import com.kyant.backdrop.drawBackdrop
-import com.kyant.backdrop.effects.blur
-import com.kyant.backdrop.effects.colorControls
-import com.kyant.backdrop.effects.lens
-import com.kyant.backdrop.highlight.Highlight
-import com.kyant.backdrop.shadow.InnerShadow
-import com.kyant.backdrop.shadow.Shadow
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.zIndex
@@ -72,8 +60,40 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import com.alohaoneui.app.ui.theme.LocalMaterialShadowSwitches
 import com.alohaoneui.app.ui.theme.LocalMaterialSwitchStyle
+import com.alohaoneui.app.ui.component.liquid.InnerShadow
+import com.alohaoneui.app.ui.component.liquid.innerShadow
+import com.alohaoneui.app.ui.component.liquid.lens
+import com.alohaoneui.app.ui.component.liquid.rememberCombinedBackdrop
+import top.yukonga.miuix.kmp.blur.Backdrop
+import top.yukonga.miuix.kmp.blur.drawBackdrop
+import top.yukonga.miuix.kmp.blur.layerBackdrop
+import top.yukonga.miuix.kmp.blur.rememberLayerBackdrop
+import top.yukonga.miuix.kmp.blur.highlight.BloomStroke
+import top.yukonga.miuix.kmp.blur.highlight.Highlight
+import top.yukonga.miuix.kmp.blur.highlight.LightPosition
+import top.yukonga.miuix.kmp.blur.highlight.LightSource
 
 val LocalMaterialSwitchBackdrop = staticCompositionLocalOf<Backdrop?> { null }
+
+private val MaterialLiquidGlassSwitchHighlight = Highlight(
+    width = 1.dp,
+    alpha = 1f,
+    style = BloomStroke(
+        color = Color.White.copy(alpha = 0.12f),
+        innerBlurRadius = 2.dp,
+        primaryLight = LightSource(
+            position = LightPosition(0.5f, -0.3f, -0.05f),
+            color = Color.White,
+            intensity = 1f,
+        ),
+        secondaryLight = LightSource(
+            position = LightPosition(0.5f, 0.8f, -0.5f),
+            color = Color.White,
+            intensity = 0.4f,
+        ),
+        dualPeak = true,
+    ),
+)
 
 /**
  * Aloha's eight selectable switch families. The selector changes the actual
@@ -541,13 +561,11 @@ fun ExpressiveSwitch(
                     .size(trackSize),
             )
 
-            val trackGlassSource = rememberBackdrop(trackBackdrop) { drawBackdrop ->
-                drawBackdrop()
-            }
+            // Capture the track first so the lens refracts its actual ON/OFF color.
             val glassBackdrop = if (backdrop != null) {
-                rememberCombinedBackdrop(backdrop, trackGlassSource)
+                rememberCombinedBackdrop(backdrop, trackBackdrop)
             } else {
-                trackGlassSource
+                trackBackdrop
             }
 
             Box(
@@ -577,23 +595,7 @@ fun ExpressiveSwitch(
                             )
                         },
                         highlight = {
-                            Highlight.Ambient.copy(
-                                width = Highlight.Ambient.width / 1.5f,
-                                blurRadius = Highlight.Ambient.blurRadius / 1.5f,
-                                alpha = glassInteraction,
-                            )
-                        },
-                        shadow = {
-                            Shadow(
-                                radius = 4.dp,
-                                color = Color.Black.copy(alpha = 0.08f),
-                            )
-                        },
-                        innerShadow = {
-                            InnerShadow(
-                                radius = 4.dp * glassInteraction,
-                                alpha = glassInteraction,
-                            )
+                            MaterialLiquidGlassSwitchHighlight.copy(alpha = glassInteraction)
                         },
                         layerBlock = {
                             val velocity = glassDragVelocity.value / 10f
@@ -601,9 +603,17 @@ fun ExpressiveSwitch(
                             scaleY = 1f * (1f - (velocity * 0.25f).coerceIn(-0.2f, 0.2f))
                         },
                         onDrawSurface = {
-                            drawRect(thumbColor.copy(alpha = 1f - glassInteraction))
+                            // Neutral glass body; never tint the transient lens with the resting Material thumb.
+                            drawRect(Color.White.copy(alpha = 0.08f * glassInteraction))
                         },
-                    ),
+                    )
+                    .innerShadow(shape = thumbShape) {
+                        InnerShadow(
+                            radius = 8.dp * glassInteraction,
+                            color = Color.Black.copy(alpha = 0.15f),
+                            alpha = glassInteraction,
+                        )
+                    },
             )
         }
         if (thumbContent != null && style != 5) {
