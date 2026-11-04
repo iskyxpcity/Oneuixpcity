@@ -1,5 +1,6 @@
 package com.alohaoneui.app.ui.component.material
 
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Canvas
@@ -30,6 +31,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -59,6 +61,7 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.util.lerp
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.launch
 import com.alohaoneui.app.ui.theme.LocalMaterialShadowSwitches
 import com.alohaoneui.app.ui.theme.LocalMaterialSwitchStyle
 
@@ -159,14 +162,10 @@ fun ExpressiveSwitch(
         animationSpec = spring(dampingRatio = 0.7f, stiffness = 250f),
         label = "materialLiquidGlassScaleY",
     )
-    var glassDragVelocity by remember { mutableFloatStateOf(0f) }
-    // Match the floating indicator's velocity deformation: preserve the
-    // release velocity briefly, then let the spring settle it back to neutral.
-    val glassDragVelocityEffect by animateFloatAsState(
-        targetValue = if (isGlassDragging) glassDragVelocity else 0f,
-        animationSpec = spring(dampingRatio = 0.5f, stiffness = 300f),
-        label = "materialLiquidGlassDragVelocity",
-    )
+    val glassAnimationScope = rememberCoroutineScope()
+    // Keep release velocity in an Animatable so the impulse is actually
+    // rendered after pointer-up instead of being cleared in the same frame.
+    val glassDragVelocity = remember { Animatable(0f) }
     val scheme = MaterialTheme.colorScheme
     // Each family has its own OFF and ON color recipe. Every role is read
     // from the active Aloha Material scheme, so light/dark and user theme
@@ -365,15 +364,21 @@ fun ExpressiveSwitch(
                         onDragStarted = {
                             isGlassDragging = true
                             glassDragTarget = null
-                            glassDragVelocity = 0f
+                            glassAnimationScope.launch { glassDragVelocity.snapTo(0f) }
                             glassDragFraction = if (checked) 1f else 0f
                         },
                         onDragStopped = { velocity ->
-                            // Draggable reports px/s. Normalize to the thumb's
-                            // travel range so fast swipes produce the same
-                            // directional stretch as the floating glass indicator.
-                            glassDragVelocity = (velocity / glassDragTravelPx / 10f)
+                            // Draggable reports px/s. Apply the release impulse
+                            // and spring it back exactly like the floating glass indicator.
+                            val releaseVelocity = (velocity / glassDragTravelPx / 10f)
                                 .coerceIn(-0.2f, 0.2f)
+                            glassAnimationScope.launch {
+                                glassDragVelocity.snapTo(releaseVelocity)
+                                glassDragVelocity.animateTo(
+                                    0f,
+                                    spring(dampingRatio = 0.5f, stiffness = 300f),
+                                )
+                            }
                             val target = glassDragFraction >= 0.5f
                             if (target == checked) {
                                 isGlassDragging = false
@@ -534,7 +539,7 @@ fun ExpressiveSwitch(
                             )
                         },
                         layerBlock = {
-                            val velocity = glassDragVelocityEffect / 10f
+                            val velocity = glassDragVelocity.value / 10f
                             scaleX = glassScaleX / (1f - (velocity * 0.75f).coerceIn(-0.2f, 0.2f))
                             scaleY = glassScaleY * (1f - (velocity * 0.25f).coerceIn(-0.2f, 0.2f))
                         },
