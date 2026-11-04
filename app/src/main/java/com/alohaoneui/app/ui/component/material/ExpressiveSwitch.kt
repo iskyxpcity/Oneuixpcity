@@ -11,6 +11,7 @@ import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -62,6 +63,9 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.util.lerp
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import com.alohaoneui.app.ui.theme.LocalMaterialShadowSwitches
 import com.alohaoneui.app.ui.theme.LocalMaterialSwitchStyle
@@ -137,7 +141,32 @@ fun ExpressiveSwitch(
     // Liquid Glass is transient: the handle gains its glass treatment only
     // while the user is actively pressing the Material switch.
     var isGlassDragging by remember { mutableStateOf(false) }
+    var glassPressed by remember { mutableStateOf(false) }
     var glassDragTarget by remember { mutableStateOf<Boolean?>(null) }
+    // Keep a quick tap visibly glass-like for a short, consistent interval.
+    // Long presses remain glass-active for the full duration of the press.
+    LaunchedEffect(interactionSource, style, enabled) {
+        if (style != 5 || !enabled) {
+            glassPressed = false
+            return@LaunchedEffect
+        }
+        var releaseJob: Job? = null
+        interactionSource.interactions.collect { interaction ->
+            when (interaction) {
+                is PressInteraction.Press -> {
+                    releaseJob?.cancel()
+                    glassPressed = true
+                }
+                is PressInteraction.Release, is PressInteraction.Cancel -> {
+                    releaseJob?.cancel()
+                    releaseJob = launch {
+                        delay(180)
+                        glassPressed = false
+                    }
+                }
+            }
+        }
+    }
     var glassDragFraction by remember { mutableFloatStateOf(if (checked) 1f else 0f) }
     LaunchedEffect(checked) {
         if (glassDragTarget == checked) {
@@ -147,7 +176,7 @@ fun ExpressiveSwitch(
         if (!isGlassDragging) glassDragFraction = if (checked) 1f else 0f
     }
     val glassInteraction by animateFloatAsState(
-        targetValue = if (style == 5 && enabled && (pressed || isGlassDragging)) 1f else 0f,
+        targetValue = if (style == 5 && enabled && (glassPressed || isGlassDragging)) 1f else 0f,
         animationSpec = spring(dampingRatio = 1f, stiffness = 1000f),
         label = "materialLiquidGlassInteraction",
     )
@@ -155,7 +184,7 @@ fun ExpressiveSwitch(
     // merely grow inside it. 1.65x makes the 40x24dp lens visibly protrude
     // past the 64x28dp rail on every side while the rail itself stays fixed.
     val glassExpansion by animateFloatAsState(
-        targetValue = if (style == 5 && enabled && (pressed || isGlassDragging)) 1.65f else 1f,
+        targetValue = if (style == 5 && enabled && (glassPressed || isGlassDragging)) 1.65f else 1f,
         animationSpec = spring(dampingRatio = 0.6f, stiffness = 250f),
         label = "materialLiquidGlassExternalExpansion",
     )
@@ -498,7 +527,10 @@ fun ExpressiveSwitch(
                 modifier = Modifier
                     .align(Alignment.Center)
                     .offset(x = thumbTravel * displayedTravel - thumbTravel / 2f)
-                    .size(width = thumbWidth, height = thumbHeight)
+                    // Expand the actual measured glass lens, not merely a
+                    // graphics transform inside its original 40x24dp bounds.
+                    // The switch rail remains fixed at 64x28dp.
+                    .size(width = thumbWidth * glassExpansion, height = thumbHeight * glassExpansion)
                     .drawBackdrop(
                         backdrop = glassBackdrop,
                         shape = { thumbShape },
@@ -545,14 +577,7 @@ fun ExpressiveSwitch(
                             drawRect(glassTint.copy(alpha = 0.20f * glassInteraction))
                         },
                     )
-                    // Apply expansion on an unclipped outer graphics layer.
-                    // This guarantees the glass lens is drawn outside the
-                    // switch rail instead of being constrained to its bounds.
-                    .graphicsLayer {
-                        clip = false
-                        scaleX = glassExpansion
-                        scaleY = glassExpansion
-                    },
+                    ,
             )
         }
         if (thumbContent != null && style != 5) {
