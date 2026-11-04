@@ -152,6 +152,12 @@ fun ExpressiveSwitch(
         animationSpec = spring(dampingRatio = 0.62f, stiffness = 900f),
         label = "materialLiquidGlassScale",
     )
+    var glassDragVelocity by remember { mutableFloatStateOf(0f) }
+    val glassDragVelocityEffect by animateFloatAsState(
+        targetValue = glassDragVelocity,
+        animationSpec = spring(dampingRatio = 0.5f, stiffness = 300f),
+        label = "materialLiquidGlassDragVelocity",
+    )
     val scheme = MaterialTheme.colorScheme
     // Each family has its own OFF and ON color recipe. Every role is read
     // from the active Aloha Material scheme, so light/dark and user theme
@@ -302,6 +308,7 @@ fun ExpressiveSwitch(
     }
     val glassDragState = rememberDraggableState { delta ->
         glassDragFraction = (glassDragFraction + delta / glassDragTravelPx).coerceIn(0f, 1f)
+        glassDragVelocity = (delta / glassDragTravelPx * 3f).coerceIn(-0.2f, 0.2f)
     }
     // Keep switch outlines robust for every global Aloha shape preset.
     val trackShape = if (com.alohaoneui.app.ui.theme.LocalMaterialShapeStyle.current == 3) {
@@ -350,9 +357,11 @@ fun ExpressiveSwitch(
                         onDragStarted = {
                             isGlassDragging = true
                             glassDragTarget = null
+                            glassDragVelocity = 0f
                             glassDragFraction = if (checked) 1f else 0f
                         },
                         onDragStopped = {
+                            glassDragVelocity = 0f
                             val target = glassDragFraction >= 0.5f
                             if (target == checked) {
                                 isGlassDragging = false
@@ -513,8 +522,9 @@ fun ExpressiveSwitch(
                             )
                         },
                         layerBlock = {
-                            scaleX = glassScale
-                            scaleY = glassScale
+                            val velocity = glassDragVelocityEffect
+                            scaleX = glassScale / (1f - (velocity * 0.75f).coerceIn(-0.2f, 0.2f))
+                            scaleY = glassScale * (1f - (velocity * 0.25f).coerceIn(-0.2f, 0.2f))
                         },
                         onDrawSurface = {
                             drawRect(scheme.surface.copy(alpha = 1f - glassInteraction))
