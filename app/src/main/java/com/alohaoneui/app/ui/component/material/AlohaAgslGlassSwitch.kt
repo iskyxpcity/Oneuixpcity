@@ -1,7 +1,6 @@
 package com.alohaoneui.app.ui.component.material
 
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.draggable
@@ -16,7 +15,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -185,7 +183,7 @@ fun AlohaAgslGlassSwitch(
                 .offset(x = thumbX)
                 .size(width = 40.dp, height = 24.dp)
                 .shadow(
-                    elevation = if (pressed && enabled) 3.dp else 1.5.dp,
+                    elevation = if (glassPress > 0.01f && enabled) 3.dp else 1.5.dp,
                     shape = thumbShape,
                     clip = false,
                 )
