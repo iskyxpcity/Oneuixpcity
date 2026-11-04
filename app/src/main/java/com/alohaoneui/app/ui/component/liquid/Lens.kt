@@ -15,6 +15,7 @@ fun BackdropEffectScope.lens(
     refractionAmount: Float,
     depthEffect: Boolean = false,
     chromaticAberration: Float = 0f,
+    imageCompression: Float = 0f,
 ) {
     if (!isRuntimeShaderSupported()) return
     if (refractionHeight <= 0f || refractionAmount <= 0f) return
@@ -55,6 +56,7 @@ fun BackdropEffectScope.lens(
         // therefore pulls the sampled image inward, matching the bottom-bar lens.
         setFloatUniform("refractionAmount", -scaledRefractionAmount)
         setFloatUniform("depthEffect", if (depthEffect) 1f else 0f)
+        setFloatUniform("imageCompression", imageCompression.coerceIn(0f, 0.45f))
         if (dispersionEnabled) {
             setFloatUniform("chromaticAberration", chromaticAberration)
         }
@@ -116,6 +118,7 @@ uniform float4 cornerRadii;
 uniform float refractionHeight;
 uniform float refractionAmount;
 uniform float depthEffect;
+uniform float imageCompression;
 
 $ROUNDED_RECT_SDF
 
@@ -138,7 +141,13 @@ half4 main(float2 coord) {
     float gradRadius = min(radius * 1.5, min(halfSize.x, halfSize.y));
     float2 grad = normalize(gradSdRoundedRect(centeredCoord, halfSize, gradRadius) + depthEffect * normalize(centeredCoord));
 
-    float2 refractedCoord = coord + d * grad;
+    // Compress the image beneath the lens toward its optical center.
+    // Sampling progressively farther from the center makes source features
+    // appear smaller and pulled inward inside the glass, instead of merely
+    // shifting pixels along the rounded-rect edge.
+    float radialPosition = length(centeredCoord / halfSize);
+    float compression = imageCompression * smoothstep(0.0, 1.0, radialPosition);
+    float2 refractedCoord = coord + centeredCoord * compression + d * grad;
     return content.eval(refractedCoord);
 }
 """
@@ -152,6 +161,7 @@ uniform float4 cornerRadii;
 uniform float refractionHeight;
 uniform float refractionAmount;
 uniform float depthEffect;
+uniform float imageCompression;
 uniform float chromaticAberration;
 
 $ROUNDED_RECT_SDF
@@ -175,7 +185,13 @@ half4 main(float2 coord) {
     float gradRadius = min(radius * 1.5, min(halfSize.x, halfSize.y));
     float2 grad = normalize(gradSdRoundedRect(centeredCoord, halfSize, gradRadius) + depthEffect * normalize(centeredCoord));
 
-    float2 refractedCoord = coord + d * grad;
+    // Compress the image beneath the lens toward its optical center.
+    // Sampling progressively farther from the center makes source features
+    // appear smaller and pulled inward inside the glass, instead of merely
+    // shifting pixels along the rounded-rect edge.
+    float radialPosition = length(centeredCoord / halfSize);
+    float compression = imageCompression * smoothstep(0.0, 1.0, radialPosition);
+    float2 refractedCoord = coord + centeredCoord * compression + d * grad;
     float dispersionIntensity = chromaticAberration * ((centeredCoord.x * centeredCoord.y) / (halfSize.x * halfSize.y));
     float2 dispersedCoord = d * grad * dispersionIntensity;
 
