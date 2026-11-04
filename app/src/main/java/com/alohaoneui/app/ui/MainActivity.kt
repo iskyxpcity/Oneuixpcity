@@ -52,7 +52,6 @@ import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
 import com.alohaoneui.app.alohaoneui.AlohaOneUIPreferenceBridge
 import com.alohaoneui.app.ui.component.bottombar.BottomBar
-import com.alohaoneui.app.ui.component.material.LocalMaterialSwitchBackdrop
 import com.alohaoneui.app.ui.component.bottombar.SideNavigationRail
 import com.alohaoneui.app.ui.component.bottombar.useNavigationRail
 import com.alohaoneui.app.ui.component.bottombar.MainPagerState
@@ -357,66 +356,55 @@ fun MainScreen(
         // In landscape, wide, and unfolded windows both themes use a collapsible side rail.
         // The floating bottom-bar preference is still respected on compact windows.
         val pagerContent = @Composable { bottomInnerPadding: Dp ->
-            val pagerLayer: @Composable () -> Unit = {
-                Box(
-                    modifier = (if (blurBackdrop != null) {
-                        Modifier.fillMaxSize().layerBackdrop(blurBackdrop)
+            Box(
+                modifier = (if (blurBackdrop != null) {
+                    Modifier.fillMaxSize().layerBackdrop(blurBackdrop)
+                } else {
+                    Modifier.fillMaxSize()
+                }),
+            ) {
+                val responsivePagerModifier = if (showNavigationRail) {
+                    Modifier
+                        .widthIn(max = 1280.dp)
+                        .fillMaxSize()
+                        .align(Alignment.Center)
+                } else {
+                    Modifier.fillMaxSize()
+                }
+                HorizontalPager(
+                    modifier = responsivePagerModifier.then(
+                        if (enableFloatingBottomBarBlur) Modifier.layerBackdrop(backdrop) else Modifier
+                    ).pagerGestureOverride(
+                        pagerState = mainPagerState.pagerState,
+                        mode = pagerGestureMode,
+                        enabled = true,
+                    ),
+                    state = mainPagerState.pagerState,
+                    beyondViewportPageCount = if (contentReady) 3 else 0,
+                    userScrollEnabled = !interceptPagerAxis,
+                    pageNestedScrollConnection = if (interceptPagerAxis) {
+                        PagerGestureNestedScrollConnection
                     } else {
-                        Modifier.fillMaxSize()
-                    }),
-                ) {
-                    val responsivePagerModifier = if (showNavigationRail) {
-                        Modifier
-                            .widthIn(max = 1280.dp)
-                            .fillMaxSize()
-                            .align(Alignment.Center)
-                    } else {
-                        Modifier.fillMaxSize()
-                    }
-                    HorizontalPager(
-                        modifier = responsivePagerModifier.then(
-                            if (enableFloatingBottomBarBlur || uiMode == UiMode.Material) {
-                                Modifier.layerBackdrop(backdrop)
-                            } else Modifier
-                        ).pagerGestureOverride(
-                            pagerState = mainPagerState.pagerState,
-                            mode = pagerGestureMode,
-                            enabled = true,
-                        ),
-                        state = mainPagerState.pagerState,
-                        beyondViewportPageCount = if (contentReady) 3 else 0,
-                        userScrollEnabled = !interceptPagerAxis,
-                        pageNestedScrollConnection = if (interceptPagerAxis) {
-                            PagerGestureNestedScrollConnection
-                        } else {
-                            nativePagerNestedScrollConnection
-                        },
-                        flingBehavior = pagerFlingBehavior,
-                    ) { page ->
-                        val isCurrentPage = page == settledPage
-                        when (page) {
-                            0 -> if (isCurrentPage || contentReady) {
-                                HomePager(navController, bottomInnerPadding, isCurrentPage)
-                            }
-                            1 -> if (isCurrentPage || contentReady) {
-                                ToolsPager(navController, bottomInnerPadding, isCurrentPage)
-                            }
-                            2 -> if (isCurrentPage || contentReady) {
-                                StatusPager(navController, bottomInnerPadding, isCurrentPage)
-                            }
-                            3 -> if (isCurrentPage || contentReady) {
-                                SettingPager(navController, bottomInnerPadding, isCurrentPage)
-                            }
+                        nativePagerNestedScrollConnection
+                    },
+                    flingBehavior = pagerFlingBehavior,
+                ) { page ->
+                    val isCurrentPage = page == settledPage
+                    when (page) {
+                        0 -> if (isCurrentPage || contentReady) {
+                            HomePager(navController, bottomInnerPadding, isCurrentPage)
+                        }
+                        1 -> if (isCurrentPage || contentReady) {
+                            ToolsPager(navController, bottomInnerPadding, isCurrentPage)
+                        }
+                        2 -> if (isCurrentPage || contentReady) {
+                            StatusPager(navController, bottomInnerPadding, isCurrentPage)
+                        }
+                        3 -> if (isCurrentPage || contentReady) {
+                            SettingPager(navController, bottomInnerPadding, isCurrentPage)
                         }
                     }
                 }
-            }
-            if (uiMode == UiMode.Material) {
-                CompositionLocalProvider(LocalMaterialSwitchBackdrop provides backdrop) {
-                    pagerLayer()
-                }
-            } else {
-                pagerLayer()
             }
         }
 
