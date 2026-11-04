@@ -192,7 +192,7 @@ fun ExpressiveSwitch(
     // merely grow inside it. 1.9x makes the 40x24dp lens clearly protrude
     // past the 64x28dp rail on every side while the rail itself stays fixed.
     val glassExpansion by animateFloatAsState(
-        targetValue = if (style == 5 && enabled && (glassPressed || isGlassDragging)) 1.9f else 1f,
+        targetValue = if (style == 5 && enabled && (glassPressed || isGlassDragging)) 1.65f else 1f,
         // Morph the enlarged lens back to its resting thumb size without recoil.
         animationSpec = if (glassPressed || isGlassDragging) {
             spring(dampingRatio = 0.58f, stiffness = 560f)
@@ -391,8 +391,7 @@ fun ExpressiveSwitch(
                 if (style == 5) {
                     Modifier.requiredSize(
                         width = trackSize.width,
-                        width = maxOf(trackSize.width, thumbWidth * 1.9f),
-                        height = maxOf(trackSize.height, thumbHeight * 1.9f),
+                        height = maxOf(trackSize.height, thumbHeight * 1.65f),
                     )
                 } else {
                     Modifier.size(width = trackSize.width, height = trackSize.height)
@@ -522,8 +521,7 @@ fun ExpressiveSwitch(
             val backdrop = LocalMaterialSwitchBackdrop.current
             val trackBackdrop = rememberLayerBackdrop()
             val thumbTravel = trackSize.width - thumbWidth - thumbEdgeInset * 2
-            val glassTint = lerp(scheme.surfaceContainerHighest, scheme.primaryContainer, displayedTravel)
-            val trackColor = lerp(uncheckedTrack, checkedTrack, displayedTravel).let {
+                        val trackColor = lerp(uncheckedTrack, checkedTrack, displayedTravel).let {
                 if (enabled) it else it.copy(alpha = 0.38f)
             }
 
@@ -537,12 +535,7 @@ fun ExpressiveSwitch(
             )
 
             val trackGlassSource = rememberBackdrop(trackBackdrop) { drawBackdrop ->
-                val progress = glassInteraction
-                val scaleX = lerp(2f / 3f, 0.75f, progress)
-                val scaleY = lerp(0f, 0.75f, progress)
-                scale(scaleX, scaleY) {
-                    drawBackdrop()
-                }
+                drawBackdrop()
             }
             val glassBackdrop = if (backdrop != null) {
                 rememberCombinedBackdrop(backdrop, trackGlassSource)
@@ -569,13 +562,7 @@ fun ExpressiveSwitch(
                         backdrop = glassBackdrop,
                         shape = { thumbShape },
                         effects = {
-                            colorControls(
-                                brightness = 0f,
-                                contrast = 1f,
-                                saturation = 1.45f,
-                            )
-                            blur(8.dp.toPx() * (1f - glassInteraction))
-                            lens(
+                                                        lens(
                                 10.dp.toPx() * glassInteraction,
                                 14.dp.toPx() * glassInteraction,
                                 depthEffect = true,
@@ -607,8 +594,7 @@ fun ExpressiveSwitch(
                             scaleY = 1f * (1f - (velocity * 0.25f).coerceIn(-0.2f, 0.2f))
                         },
                         onDrawSurface = {
-                            drawRect(scheme.surface.copy(alpha = 1f - glassInteraction))
-                            drawRect(glassTint.copy(alpha = 0.20f * glassInteraction))
+                            drawRect(thumbColor.copy(alpha = 1f - glassInteraction))
                         },
                     ),
             )
