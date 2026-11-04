@@ -76,6 +76,8 @@ import com.alohaoneui.app.ui.component.material.SegmentedDropdownItem
 import com.alohaoneui.app.ui.component.material.SegmentedListItem
 import com.alohaoneui.app.ui.component.material.ExpressiveSwitch
 import com.alohaoneui.app.ui.component.material.LocalVoyageSwitchBackdrop
+import com.kyant.backdrop.backdrops.layerBackdrop as kyantLayerBackdrop
+import com.kyant.backdrop.backdrops.rememberLayerBackdrop as rememberKyantLayerBackdrop
 import com.alohaoneui.app.ui.component.material.SegmentedSwitchItem
 import com.alohaoneui.app.ui.component.material.SegmentedSliderItem
 import com.alohaoneui.app.ui.component.material.SegmentedTextField
@@ -305,7 +307,7 @@ private fun AlohaOneUIOriginalCategoryScreen(
         UiMode.Material -> {
             val scrollBehavior =
                 TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
-            val switchBackdrop = rememberBlurBackdrop(LocalEnableBlur.current)
+            val switchBackdrop = rememberKyantLayerBackdrop()
             androidx.compose.material3.Scaffold(
                 topBar = {
                     LargeFlexibleTopAppBar(
@@ -336,7 +338,7 @@ private fun AlohaOneUIOriginalCategoryScreen(
             ) { innerPadding ->
                 CompositionLocalProvider(LocalVoyageSwitchBackdrop provides switchBackdrop) {
                     Box(
-                        modifier = if (switchBackdrop != null) Modifier.layerBackdrop(switchBackdrop) else Modifier
+                        modifier = Modifier.kyantLayerBackdrop(switchBackdrop)
                     ) {
                         OriginalContent(
                             Modifier
