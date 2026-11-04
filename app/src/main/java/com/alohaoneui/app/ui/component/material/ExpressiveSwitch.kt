@@ -29,15 +29,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
-import top.yukonga.miuix.kmp.blur.Backdrop
-import top.yukonga.miuix.kmp.blur.drawBackdrop
-import top.yukonga.miuix.kmp.blur.blur
-import com.alohaoneui.app.ui.component.liquid.vibrancy
-import com.alohaoneui.app.ui.component.liquid.lens
-import top.yukonga.miuix.kmp.blur.highlight.BloomStroke
-import top.yukonga.miuix.kmp.blur.highlight.Highlight
-import top.yukonga.miuix.kmp.blur.highlight.LightPosition
-import top.yukonga.miuix.kmp.blur.highlight.LightSource
+import com.kyant.backdrop.Backdrop
+import com.kyant.backdrop.drawBackdrop
+import com.kyant.backdrop.effects.blur
+import com.kyant.backdrop.effects.lens
+import com.kyant.backdrop.highlight.Highlight
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
@@ -226,26 +222,8 @@ fun ExpressiveSwitch(
         label = "voyageLiquidGlassScale",
     )
     val scheme = MaterialTheme.colorScheme
-    val glassHighlight = remember {
-        Highlight(
-            width = 1.dp,
-            alpha = 1f,
-            style = BloomStroke(
-                color = Color.White.copy(alpha = 0.12f),
-                innerBlurRadius = 2.dp,
-                primaryLight = LightSource(
-                    position = LightPosition(0.5f, -0.3f, -0.05f),
-                    color = Color.White,
-                    intensity = 1f,
-                ),
-                secondaryLight = LightSource(
-                    position = LightPosition(0.5f, 0.8f, -0.5f),
-                    color = Color.White,
-                    intensity = 0.4f,
-                ),
-            ),
-        )
-    }
+    val glassHighlight = remember { Highlight.Ambient }
+
     // Each family has its own OFF and ON color recipe. Every role is read
     // from the active Aloha Material scheme, so light/dark and user theme
     // changes propagate without embedding platform brand colors.
@@ -439,13 +417,12 @@ fun ExpressiveSwitch(
                         backdrop = glassBackdrop,
                         shape = { trackShape },
                         effects = {
-                            vibrancy()
-                            blur(4.dp.toPx(), 4.dp.toPx())
+                            blur(4.dp.toPx())
                             lens(
                                 refractionHeight = 24.dp.toPx(),
                                 refractionAmount = 24.dp.toPx(),
                                 depthEffect = true,
-                                chromaticAberration = 0.4f,
+                                chromaticAberration = true,
                             )
                         },
                         highlight = { glassHighlight.copy(alpha = 0.75f) },
@@ -542,13 +519,12 @@ fun ExpressiveSwitch(
                                 backdrop = backdrop,
                                 shape = { thumbShape },
                                 effects = {
-                                    vibrancy()
                                     blur(4.dp.toPx() * glassInteraction, 4.dp.toPx() * glassInteraction)
                                     lens(
                                         refractionHeight = 12.dp.toPx() * glassInteraction,
                                         refractionAmount = 16.dp.toPx() * glassInteraction,
                                         depthEffect = true,
-                                        chromaticAberration = 0.35f * glassInteraction,
+                                        chromaticAberration = glassInteraction > 0.001f,
                                     )
                                 },
                                 highlight = { glassHighlight.copy(alpha = 0.75f) },
