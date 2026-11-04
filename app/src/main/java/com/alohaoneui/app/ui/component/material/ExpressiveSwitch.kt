@@ -153,8 +153,10 @@ fun ExpressiveSwitch(
         label = "materialLiquidGlassScale",
     )
     var glassDragVelocity by remember { mutableFloatStateOf(0f) }
+    // Match the floating indicator's velocity deformation: preserve the
+    // release velocity briefly, then let the spring settle it back to neutral.
     val glassDragVelocityEffect by animateFloatAsState(
-        targetValue = glassDragVelocity,
+        targetValue = if (isGlassDragging) glassDragVelocity else 0f,
         animationSpec = spring(dampingRatio = 0.5f, stiffness = 300f),
         label = "materialLiquidGlassDragVelocity",
     )
@@ -308,7 +310,6 @@ fun ExpressiveSwitch(
     }
     val glassDragState = rememberDraggableState { delta ->
         glassDragFraction = (glassDragFraction + delta / glassDragTravelPx).coerceIn(0f, 1f)
-        glassDragVelocity = (delta / glassDragTravelPx * 3f).coerceIn(-0.2f, 0.2f)
     }
     // Keep switch outlines robust for every global Aloha shape preset.
     val trackShape = if (com.alohaoneui.app.ui.theme.LocalMaterialShapeStyle.current == 3) {
@@ -360,8 +361,12 @@ fun ExpressiveSwitch(
                             glassDragVelocity = 0f
                             glassDragFraction = if (checked) 1f else 0f
                         },
-                        onDragStopped = {
-                            glassDragVelocity = 0f
+                        onDragStopped = { velocity ->
+                            // Draggable reports px/s. Normalize to the thumb's
+                            // travel range so fast swipes produce the same
+                            // directional stretch as the floating glass indicator.
+                            glassDragVelocity = (velocity / glassDragTravelPx / 10f)
+                                .coerceIn(-0.2f, 0.2f)
                             val target = glassDragFraction >= 0.5f
                             if (target == checked) {
                                 isGlassDragging = false
