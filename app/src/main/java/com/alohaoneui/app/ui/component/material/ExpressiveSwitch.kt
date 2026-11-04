@@ -503,6 +503,9 @@ fun ExpressiveSwitch(
                     )
                 }
             }
+            // The resting thumb is a separate Material-colored layer. For
+            // Liquid Glass it fades out only while the transient glass lens
+            // is active; it must never supply the lens tint/color.
             val thumbOutline = thumbShape.createOutline(
                 size = Size(thumbWidthPx, thumbHeightPx),
                 layoutDirection = layoutDirection,
@@ -512,7 +515,11 @@ fun ExpressiveSwitch(
                 if (enabled && interactionProgress > 0.001f && style != 5) {
                     drawVoyageOutline(thumbOutline, (if (checked) scheme.onPrimary else scheme.onSurfaceVariant).copy(alpha = interactionProgress * 0.10f))
                 }
-                if (style != 5) drawVoyageOutline(thumbOutline, thumbColor)
+                if (style != 5) {
+                    drawVoyageOutline(thumbOutline, thumbColor)
+                } else if (glassInteraction < 0.999f) {
+                    drawVoyageOutline(thumbOutline, thumbColor.copy(alpha = 1f - glassInteraction))
+                }
             }
             // Switch thumb icons/checkmarks are intentionally omitted; the
             // thumb itself communicates the on/off state by position and color.
