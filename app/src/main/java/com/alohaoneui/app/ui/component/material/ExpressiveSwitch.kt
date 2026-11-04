@@ -25,6 +25,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.draw.shadow
 import top.yukonga.miuix.kmp.blur.Backdrop
 import top.yukonga.miuix.kmp.blur.drawBackdrop
@@ -114,13 +115,13 @@ fun ExpressiveSwitch(
     // Liquid Glass is transient: the handle gains its glass treatment only
     // while the user is actively pressing the Material switch.
     val glassInteraction by animateFloatAsState(
-        targetValue = if (style == 5 && interactive && enabled) 1f else 0f,
+        targetValue = if (style == 5 && pressed && enabled) 1f else 0f,
         animationSpec = spring(dampingRatio = 0.58f, stiffness = 420f),
         label = "voyageLiquidGlassInteraction",
     )
     val glassScale by animateFloatAsState(
-        targetValue = if (style == 5 && pressed && enabled) 1.10f else 1f,
-        animationSpec = spring(dampingRatio = 0.52f, stiffness = 460f),
+        targetValue = if (style == 5 && pressed && enabled) 1.22f else 1f,
+        animationSpec = spring(dampingRatio = 0.48f, stiffness = 620f),
         label = "voyageLiquidGlassScale",
     )
     val scheme = MaterialTheme.colorScheme
@@ -386,6 +387,12 @@ fun ExpressiveSwitch(
                     .align(Alignment.Center)
                     .offset(x = thumbTravel * travel - thumbTravel / 2f)
                     .size(width = thumbWidth, height = thumbHeight)
+                    // Scale the complete thumb layer, not only the backdrop
+                    // sampling layer, so the glass handle visibly expands.
+                    .graphicsLayer {
+                        scaleX = glassScale
+                        scaleY = glassScale
+                    }
                     .then(
                         if (backdrop != null && enabled && glassInteraction > 0.001f) {
                             Modifier.drawBackdrop(
@@ -403,10 +410,6 @@ fun ExpressiveSwitch(
                                 },
                                 onDrawSurface = {
                                     drawRect(glassTint.copy(alpha = 0.12f * glassInteraction))
-                                },
-                                layerBlock = {
-                                    scaleX = glassScale
-                                    scaleY = glassScale
                                 },
                             )
                         } else {
