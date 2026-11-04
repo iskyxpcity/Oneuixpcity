@@ -52,6 +52,7 @@ import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
 import com.alohaoneui.app.alohaoneui.AlohaOneUIPreferenceBridge
 import com.alohaoneui.app.ui.component.bottombar.BottomBar
+import com.alohaoneui.app.ui.component.material.LocalMaterialSwitchBackdrop
 import com.alohaoneui.app.ui.component.bottombar.SideNavigationRail
 import com.alohaoneui.app.ui.component.bottombar.useNavigationRail
 import com.alohaoneui.app.ui.component.bottombar.MainPagerState
@@ -251,7 +252,11 @@ class MainActivity : ComponentActivity() {
                                 .layerBackdrop(updateDialogBackdrop),
                         ) {
                             when (uiMode) {
-                                UiMode.Material -> androidx.compose.material3.Scaffold { navDisplay() }
+                                UiMode.Material -> CompositionLocalProvider(
+                                    LocalMaterialSwitchBackdrop provides updateDialogBackdrop,
+                                ) {
+                                    androidx.compose.material3.Scaffold { navDisplay() }
+                                }
                                 UiMode.Miuix -> Scaffold { navDisplay() }
                             }
                         }
