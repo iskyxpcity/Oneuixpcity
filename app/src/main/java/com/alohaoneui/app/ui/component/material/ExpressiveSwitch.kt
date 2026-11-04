@@ -161,7 +161,7 @@ fun ExpressiveSwitch(
                 is PressInteraction.Release, is PressInteraction.Cancel -> {
                     releaseJob?.cancel()
                     releaseJob = launch {
-                        delay(80)
+                        delay(300)
                         glassPressed = false
                     }
                 }
@@ -179,7 +179,11 @@ fun ExpressiveSwitch(
     val glassInteraction by animateFloatAsState(
         targetValue = if (style == 5 && enabled && (glassPressed || isGlassDragging)) 1f else 0f,
         // Release is a controlled visual transition, not a spring bounce.
-        animationSpec = tween(durationMillis = 220),
+        animationSpec = if (glassPressed || isGlassDragging) {
+            spring(dampingRatio = 0.62f, stiffness = 700f)
+        } else {
+            tween(durationMillis = 220)
+        },
         label = "materialLiquidGlassInteraction",
     )
     // The switch handle must expand beyond the track silhouette, not
@@ -188,7 +192,11 @@ fun ExpressiveSwitch(
     val glassExpansion by animateFloatAsState(
         targetValue = if (style == 5 && enabled && (glassPressed || isGlassDragging)) 1.65f else 1f,
         // Morph the enlarged lens back to its resting thumb size without recoil.
-        animationSpec = tween(durationMillis = 240),
+        animationSpec = if (glassPressed || isGlassDragging) {
+            spring(dampingRatio = 0.58f, stiffness = 560f)
+        } else {
+            tween(durationMillis = 240)
+        },
         label = "materialLiquidGlassExternalExpansion",
     )
     val glassAnimationScope = rememberCoroutineScope()
@@ -330,7 +338,7 @@ fun ExpressiveSwitch(
         2 -> androidx.compose.animation.core.tween<Float>(durationMillis = 500)
         3 -> androidx.compose.animation.core.tween<Float>(durationMillis = 600)
         4 -> androidx.compose.animation.core.tween<Float>(durationMillis = 300)
-        5 -> spring<Float>(dampingRatio = 0.76f, stiffness = 720f)
+        5 -> spring<Float>(dampingRatio = 0.62f, stiffness = 560f)
         6 -> spring<Float>(dampingRatio = 0.75f, stiffness = 1500f)
         else -> androidx.compose.animation.core.tween<Float>(durationMillis = 250)
     }
@@ -397,15 +405,15 @@ fun ExpressiveSwitch(
                             glassDragFraction = if (checked) 1f else 0f
                         },
                         onDragStopped = { velocity ->
-                            // Draggable reports px/s. Apply the release impulse
-                            // and spring it back exactly like the floating glass indicator.
+                            // Draggable reports px/s. Preserve a brief directional deformation,
+                            // then settle it smoothly without a spring recoil.
                             val releaseVelocity = (velocity / glassDragTravelPx / 10f)
                                 .coerceIn(-0.2f, 0.2f)
                             glassAnimationScope.launch {
                                 glassDragVelocity.snapTo(releaseVelocity)
                                 glassDragVelocity.animateTo(
                                     0f,
-                                    spring(dampingRatio = 0.5f, stiffness = 300f),
+                                    tween(durationMillis = 180),
                                 )
                             }
                             val target = glassDragFraction >= 0.5f
