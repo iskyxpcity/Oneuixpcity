@@ -383,10 +383,15 @@ fun ExpressiveSwitch(
     } else if (checked) checkedThumb else uncheckedThumb
     Box(
         modifier = modifier
-            // Keep overflow effects drawable outside the switch's measured rail.
+            // Liquid Glass uses a real foreground overlay footprint: the host
+            // layout reserves the expanded lens height instead of constraining
+            // that lens to the 28dp rail. The rail itself remains 64x28dp.
             .graphicsLayer { clip = false }
-            .size(width = trackSize.width, height = trackSize.height)
-            .then(if (LocalMaterialShadowSwitches.current) Modifier.shadow(2.dp, trackShape) else Modifier)
+            .size(
+                width = trackSize.width,
+                height = if (style == 5) maxOf(trackSize.height, thumbHeight * 1.65f) else trackSize.height,
+            )
+            .then(if (LocalMaterialShadowSwitches.current && style != 5) Modifier.shadow(2.dp, trackShape) else Modifier)
             .toggleable(
                 value = checked,
                 enabled = enabled && onCheckedChange != null,
@@ -434,7 +439,7 @@ fun ExpressiveSwitch(
 ,
         contentAlignment = Alignment.Center,
     ) {
-        Canvas(Modifier.fillMaxSize()) {
+        Canvas(Modifier.size(trackSize)) {
             if (style == 5) return@Canvas
             val w = size.width
             val h = size.height
