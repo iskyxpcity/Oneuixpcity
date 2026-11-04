@@ -52,6 +52,7 @@ import com.kyant.backdrop.shadow.InnerShadow
 import com.kyant.backdrop.shadow.Shadow
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.zIndex
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -381,6 +382,8 @@ fun ExpressiveSwitch(
     } else if (checked) checkedThumb else uncheckedThumb
     Box(
         modifier = modifier
+            // Keep overflow effects drawable outside the switch's measured rail.
+            .graphicsLayer { clip = false }
             .size(width = trackSize.width, height = trackSize.height)
             .then(if (LocalMaterialShadowSwitches.current) Modifier.shadow(2.dp, trackShape) else Modifier)
             .toggleable(
@@ -537,6 +540,9 @@ fun ExpressiveSwitch(
             Box(
                 modifier = Modifier
                     .align(Alignment.Center)
+                    // Explicitly place the glass handle in the foreground layer.
+                    .zIndex(2f)
+                    .graphicsLayer { clip = false }
                     .offset(x = thumbTravel * displayedTravel - thumbTravel / 2f)
                     // Expand the actual measured glass lens, not merely a
                     // graphics transform inside its original 40x24dp bounds.
