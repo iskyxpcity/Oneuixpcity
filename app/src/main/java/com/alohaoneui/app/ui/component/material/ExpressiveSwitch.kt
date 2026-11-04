@@ -235,7 +235,7 @@ fun ExpressiveSwitch(
         2 -> scheme.primary
         3 -> scheme.secondaryContainer
         4 -> scheme.tertiary
-        5 -> scheme.primaryContainer
+        5 -> scheme.primary
         6 -> scheme.secondary
         else -> scheme.primary
     }
@@ -245,7 +245,7 @@ fun ExpressiveSwitch(
         2 -> scheme.surfaceContainer
         3 -> scheme.surfaceContainerHigh
         4 -> scheme.surfaceContainerHighest
-        5 -> scheme.surfaceContainerHigh
+        5 -> scheme.surfaceContainerHighest
         6 -> scheme.surfaceContainer
         else -> scheme.surfaceContainerHigh
     }
@@ -255,7 +255,7 @@ fun ExpressiveSwitch(
         2 -> scheme.onPrimary
         3 -> scheme.onSecondaryContainer
         4 -> scheme.onTertiary
-        5 -> scheme.onPrimaryContainer
+        5 -> scheme.onPrimary
         6 -> scheme.onSecondary
         else -> scheme.onPrimary
     }
@@ -265,7 +265,7 @@ fun ExpressiveSwitch(
         2 -> scheme.outline
         3 -> scheme.onSurface
         4 -> scheme.surface
-        5 -> scheme.onSurfaceVariant
+        5 -> scheme.outline
         6 -> scheme.onSurfaceVariant
         else -> scheme.surface
     }
@@ -601,15 +601,15 @@ fun ExpressiveSwitch(
                         shape = { thumbShape },
                         effects = {
                                                         lens(
-                                10.dp.toPx() * glassInteraction,
                                 14.dp.toPx() * glassInteraction,
+                                18.dp.toPx() * glassInteraction,
                                 // Match the floating bar's base glass surface lens.
                                 // Its outer surface uses the normal rounded-rect gradient;
                                 // depthEffect is reserved for the separately animated tab pill.
                                 depthEffect = false,
                                 chromaticAberration = if (glassInteraction > 0.5f) glassInteraction else 0f,
                                 // Pull the sampled track/page image toward the lens center.
-                                imageCompression = 0.24f * glassInteraction,
+                                imageCompression = 0.34f * glassInteraction,
                             )
                         },
                         highlight = {
