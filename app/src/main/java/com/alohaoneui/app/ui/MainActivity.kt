@@ -9,6 +9,7 @@ import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.Box
@@ -51,6 +52,7 @@ import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
 import com.alohaoneui.app.alohaoneui.AlohaOneUIPreferenceBridge
+import com.alohaoneui.app.ui.component.material.LocalMaterialSwitchBackdrop
 import com.alohaoneui.app.ui.component.bottombar.BottomBar
 import com.alohaoneui.app.ui.component.bottombar.SideNavigationRail
 import com.alohaoneui.app.ui.component.bottombar.useNavigationRail
@@ -335,6 +337,12 @@ fun MainScreen(
         drawRect(surfaceColor)
         drawContent()
     }
+    // The switch gets a separate background-only source. Never capture the Pager
+    // subtree that contains the switch itself: that would make the glass lens
+    // sample a layer which also contains the lens consumer.
+    val switchBackdrop = rememberLayerBackdrop {
+        drawRect(surfaceColor)
+    }
 
     val settledPage = mainPagerState.pagerState.settledPage
     LaunchedEffect(settledPage) {
@@ -363,6 +371,20 @@ fun MainScreen(
                     Modifier.fillMaxSize()
                 }),
             ) {
+                // Record only the screen surface behind the pages. This source is a
+                // sibling of HorizontalPager, so Material switches cannot recursively
+                // sample their own rendered output.
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .layerBackdrop(switchBackdrop)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(surfaceColor)
+                    )
+                }
                 val responsivePagerModifier = if (showNavigationRail) {
                     Modifier
                         .widthIn(max = 1280.dp)
@@ -371,39 +393,48 @@ fun MainScreen(
                 } else {
                     Modifier.fillMaxSize()
                 }
-                HorizontalPager(
-                    modifier = responsivePagerModifier.then(
-                        if (enableFloatingBottomBarBlur) Modifier.layerBackdrop(backdrop) else Modifier
-                    ).pagerGestureOverride(
-                        pagerState = mainPagerState.pagerState,
-                        mode = pagerGestureMode,
-                        enabled = true,
-                    ),
-                    state = mainPagerState.pagerState,
-                    beyondViewportPageCount = if (contentReady) 3 else 0,
-                    userScrollEnabled = !interceptPagerAxis,
-                    pageNestedScrollConnection = if (interceptPagerAxis) {
-                        PagerGestureNestedScrollConnection
-                    } else {
-                        nativePagerNestedScrollConnection
-                    },
-                    flingBehavior = pagerFlingBehavior,
-                ) { page ->
-                    val isCurrentPage = page == settledPage
-                    when (page) {
-                        0 -> if (isCurrentPage || contentReady) {
-                            HomePager(navController, bottomInnerPadding, isCurrentPage)
-                        }
-                        1 -> if (isCurrentPage || contentReady) {
-                            ToolsPager(navController, bottomInnerPadding, isCurrentPage)
-                        }
-                        2 -> if (isCurrentPage || contentReady) {
-                            StatusPager(navController, bottomInnerPadding, isCurrentPage)
-                        }
-                        3 -> if (isCurrentPage || contentReady) {
-                            SettingPager(navController, bottomInnerPadding, isCurrentPage)
+                val pager: @Composable () -> Unit = {
+                    HorizontalPager(
+                        modifier = responsivePagerModifier.then(
+                            if (enableFloatingBottomBarBlur) Modifier.layerBackdrop(backdrop) else Modifier
+                        ).pagerGestureOverride(
+                            pagerState = mainPagerState.pagerState,
+                            mode = pagerGestureMode,
+                            enabled = true,
+                        ),
+                        state = mainPagerState.pagerState,
+                        beyondViewportPageCount = if (contentReady) 3 else 0,
+                        userScrollEnabled = !interceptPagerAxis,
+                        pageNestedScrollConnection = if (interceptPagerAxis) {
+                            PagerGestureNestedScrollConnection
+                        } else {
+                            nativePagerNestedScrollConnection
+                        },
+                        flingBehavior = pagerFlingBehavior,
+                    ) { page ->
+                        val isCurrentPage = page == settledPage
+                        when (page) {
+                            0 -> if (isCurrentPage || contentReady) {
+                                HomePager(navController, bottomInnerPadding, isCurrentPage)
+                            }
+                            1 -> if (isCurrentPage || contentReady) {
+                                ToolsPager(navController, bottomInnerPadding, isCurrentPage)
+                            }
+                            2 -> if (isCurrentPage || contentReady) {
+                                StatusPager(navController, bottomInnerPadding, isCurrentPage)
+                            }
+                            3 -> if (isCurrentPage || contentReady) {
+                                SettingPager(navController, bottomInnerPadding, isCurrentPage)
+                            }
                         }
                     }
+                }
+                if (uiMode == UiMode.Material) {
+                    CompositionLocalProvider(LocalMaterialSwitchBackdrop provides switchBackdrop) {
+                        pager()
+                    }
+                } else {
+                    pager()
                 }
             }
         }
