@@ -3,6 +3,7 @@ package com.alohaoneui.app.ui.component.material
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.Orientation
@@ -160,7 +161,7 @@ fun ExpressiveSwitch(
                 is PressInteraction.Release, is PressInteraction.Cancel -> {
                     releaseJob?.cancel()
                     releaseJob = launch {
-                        delay(180)
+                        delay(80)
                         glassPressed = false
                     }
                 }
@@ -177,7 +178,8 @@ fun ExpressiveSwitch(
     }
     val glassInteraction by animateFloatAsState(
         targetValue = if (style == 5 && enabled && (glassPressed || isGlassDragging)) 1f else 0f,
-        animationSpec = spring(dampingRatio = 1f, stiffness = 1000f),
+        // Release is a controlled visual transition, not a spring bounce.
+        animationSpec = tween(durationMillis = 220),
         label = "materialLiquidGlassInteraction",
     )
     // The switch handle must expand beyond the track silhouette, not
@@ -185,7 +187,8 @@ fun ExpressiveSwitch(
     // past the 64x28dp rail on every side while the rail itself stays fixed.
     val glassExpansion by animateFloatAsState(
         targetValue = if (style == 5 && enabled && (glassPressed || isGlassDragging)) 1.65f else 1f,
-        animationSpec = spring(dampingRatio = 0.6f, stiffness = 250f),
+        // Morph the enlarged lens back to its resting thumb size without recoil.
+        animationSpec = tween(durationMillis = 240),
         label = "materialLiquidGlassExternalExpansion",
     )
     val glassAnimationScope = rememberCoroutineScope()
