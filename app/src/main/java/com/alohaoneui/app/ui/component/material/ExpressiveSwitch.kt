@@ -591,7 +591,7 @@ fun ExpressiveSwitch(
                                 10.dp.toPx() * glassInteraction,
                                 14.dp.toPx() * glassInteraction,
                                 depthEffect = true,
-                                chromaticAberration = glassInteraction > 0.5f,
+                                chromaticAberration = if (glassInteraction > 0.5f) glassInteraction else 0f,
                             )
                         },
                         highlight = {
