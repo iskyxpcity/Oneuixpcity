@@ -4,8 +4,8 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
-import androidx.compose.foundation.draggable
 import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -36,7 +36,6 @@ import top.yukonga.miuix.kmp.blur.blur
 import top.yukonga.miuix.kmp.blur.drawBackdrop
 import top.yukonga.miuix.kmp.blur.layerBackdrop
 import top.yukonga.miuix.kmp.blur.rememberLayerBackdrop
-import top.yukonga.miuix.kmp.blur.highlight.Highlight
 import com.alohaoneui.app.ui.component.liquid.lens
 import com.alohaoneui.app.ui.component.liquid.rememberCombinedBackdrop
 import com.alohaoneui.app.ui.component.liquid.vibrancy
@@ -183,11 +182,6 @@ fun AlohaAgslGlassSwitch(
                                     refractionAmount = 10.dp.toPx() * pressProgress,
                                     depthEffect = true,
                                     chromaticAberration = 0.42f * pressProgress,
-                                )
-                            },
-                            highlight = {
-                                Highlight.Ambient.copy(
-                                    alpha = 0.58f + 0.28f * pressProgress,
                                 )
                             },
                             onDrawSurface = {
