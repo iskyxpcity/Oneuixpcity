@@ -106,6 +106,8 @@ import com.alohaoneui.app.ui.util.update.handleUpdateInstallStatus
 import com.alohaoneui.app.ui.viewmodel.MainActivityViewModel
 import com.alohaoneui.app.ui.viewmodel.MainPagerConfig
 import top.yukonga.miuix.kmp.basic.Scaffold
+import com.kyant.backdrop.backdrops.layerBackdrop as kyantLayerBackdrop
+import com.kyant.backdrop.backdrops.rememberLayerBackdrop as rememberKyantLayerBackdrop
 import top.yukonga.miuix.kmp.blur.layerBackdrop
 import top.yukonga.miuix.kmp.blur.rememberLayerBackdrop
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -340,7 +342,7 @@ fun MainScreen(
     }
     // A switch-only background capture. It is intentionally isolated from
     // HorizontalPager content so a glass thumb can never capture itself.
-    val switchBackdrop = rememberLayerBackdrop { drawContent() }
+    val switchBackdrop = rememberKyantLayerBackdrop()
 
     val settledPage = mainPagerState.pagerState.settledPage
     LaunchedEffect(settledPage) {
@@ -378,7 +380,7 @@ fun MainScreen(
             ) {
                 // This sibling contains only the page surface. The Pager and its
                 // switches are drawn above it and are excluded from this capture.
-                Canvas(Modifier.fillMaxSize().layerBackdrop(switchBackdrop)) {
+                Canvas(Modifier.fillMaxSize().kyantLayerBackdrop(switchBackdrop)) {
                     drawRect(surfaceColor)
                 }
                 val responsivePagerModifier = if (showNavigationRail) {
