@@ -64,7 +64,7 @@ import com.alohaoneui.app.ui.theme.LocalMaterialSwitchStyle
 val LocalMaterialSwitchBackdrop = staticCompositionLocalOf<Backdrop?> { null }
 
 /**
- * Voyage's eight selectable switch families. The selector changes the actual
+ * Aloha's eight selectable switch families. The selector changes the actual
  * track/thumb geometry and palette rather than applying a cosmetic scale to
  * the platform Material switch. Toggle semantics and animated thumb travel
  * remain shared across all styles.
@@ -128,7 +128,7 @@ fun ExpressiveSwitch(
     val focused by interactionSource.collectIsFocusedAsState()
     val pressedOrHovered = pressed || hovered
     val interactive = pressed || hovered || focused
-    val interactionProgress by animateFloatAsState(targetValue = if (interactive && enabled) 1f else 0f, animationSpec = spring(dampingRatio = 0.72f, stiffness = 700f), label = "voyageSwitchInteraction")
+    val interactionProgress by animateFloatAsState(targetValue = if (interactive && enabled) 1f else 0f, animationSpec = spring(dampingRatio = 0.72f, stiffness = 700f), label = "materialSwitchInteraction")
     // Liquid Glass is transient: the handle gains its glass treatment only
     // while the user is actively pressing the Material switch.
     var isGlassDragging by remember { mutableStateOf(false) }
@@ -293,7 +293,7 @@ fun ExpressiveSwitch(
     val travel by animateFloatAsState(
         targetValue = if (checked) 1f else 0f,
         animationSpec = travelSpec,
-        label = "voyageSwitchThumb",
+        label = "materialSwitchThumb",
     )
     val displayedTravel = if (style == 5 && isGlassDragging) glassDragFraction else travel
     val glassDragTravelPx = with(LocalDensity.current) {
@@ -487,6 +487,7 @@ fun ExpressiveSwitch(
                                 10.dp.toPx() * glassInteraction,
                                 14.dp.toPx() * glassInteraction,
                                 depthEffect = true,
+                                chromaticAberration = glassInteraction > 0.5f,
                             )
                         },
                         highlight = {
