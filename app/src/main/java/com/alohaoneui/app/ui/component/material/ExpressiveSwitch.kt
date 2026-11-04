@@ -572,7 +572,7 @@ fun ExpressiveSwitch(
                 trackBackdrop
             }
 
-            // Draw the theme-dynamic 20dp resting handle ABOVE the rail.
+            // Draw the theme-dynamic 40x24dp resting handle ABOVE the rail.
             // It remains the only visible thumb when the switch is idle.
             Box(
                 modifier = Modifier
