@@ -138,8 +138,15 @@ half4 main(float2 coord) {
     sd = min(sd, 0.0);
 
     float d = circleMap(1.0 - -sd / refractionHeight) * refractionAmount;
-    float gradRadius = min(radius * 1.5, min(halfSize.x, halfSize.y));
-    float2 grad = normalize(gradSdRoundedRect(centeredCoord, halfSize, gradRadius) + depthEffect * normalize(centeredCoord));
+    // Derive the normal from the signed-distance field itself. Finite
+    // differences keep the top/bottom edges and both capsule caps in the
+    // same continuous normal field, avoiding the end-cap pinching artifact.
+    float gradientStep = 0.5;
+    float distanceRight = sdRoundedRect(centeredCoord + float2(gradientStep, 0.0), halfSize, radius);
+    float distanceLeft = sdRoundedRect(centeredCoord - float2(gradientStep, 0.0), halfSize, radius);
+    float distanceDown = sdRoundedRect(centeredCoord + float2(0.0, gradientStep), halfSize, radius);
+    float distanceUp = sdRoundedRect(centeredCoord - float2(0.0, gradientStep), halfSize, radius);
+    float2 grad = normalize(float2(distanceRight - distanceLeft, distanceDown - distanceUp) + float2(0.0001, 0.0001));
 
     // Use the capsule's centerline as the optical axis. A rectangular/elliptic
     // radial field over-compresses the two ends and creates a round "nipple"
@@ -155,7 +162,11 @@ half4 main(float2 coord) {
     // Smooth compression rises toward the glass rim, without a singularity
     // at either cap or a sudden change where the straight side meets the end.
     float compression = imageCompression * smoothstep(0.0, 1.0, radialPosition);
-    float2 compressedCoord = coord + capsuleRadial * compression;
+    // Expand the source sampling coordinates radially from the lens center.
+    // This contracts the entire image (including horizontal detail along the
+    // straight capsule sides) instead of only squeezing pixels perpendicular
+    // to the capsule centerline.
+    float2 compressedCoord = coord + centeredCoord * compression;
     float2 refractedCoord = compressedCoord + d * grad;
     return content.eval(refractedCoord);
 }
@@ -191,8 +202,15 @@ half4 main(float2 coord) {
     sd = min(sd, 0.0);
 
     float d = circleMap(1.0 - -sd / refractionHeight) * refractionAmount;
-    float gradRadius = min(radius * 1.5, min(halfSize.x, halfSize.y));
-    float2 grad = normalize(gradSdRoundedRect(centeredCoord, halfSize, gradRadius) + depthEffect * normalize(centeredCoord));
+    // Derive the normal from the signed-distance field itself. Finite
+    // differences keep the top/bottom edges and both capsule caps in the
+    // same continuous normal field, avoiding the end-cap pinching artifact.
+    float gradientStep = 0.5;
+    float distanceRight = sdRoundedRect(centeredCoord + float2(gradientStep, 0.0), halfSize, radius);
+    float distanceLeft = sdRoundedRect(centeredCoord - float2(gradientStep, 0.0), halfSize, radius);
+    float distanceDown = sdRoundedRect(centeredCoord + float2(0.0, gradientStep), halfSize, radius);
+    float distanceUp = sdRoundedRect(centeredCoord - float2(0.0, gradientStep), halfSize, radius);
+    float2 grad = normalize(float2(distanceRight - distanceLeft, distanceDown - distanceUp) + float2(0.0001, 0.0001));
 
     // Use the capsule's centerline as the optical axis. A rectangular/elliptic
     // radial field over-compresses the two ends and creates a round "nipple"
@@ -208,9 +226,13 @@ half4 main(float2 coord) {
     // Smooth compression rises toward the glass rim, without a singularity
     // at either cap or a sudden change where the straight side meets the end.
     float compression = imageCompression * smoothstep(0.0, 1.0, radialPosition);
-    float2 compressedCoord = coord + capsuleRadial * compression;
+    // Expand the source sampling coordinates radially from the lens center.
+    // This contracts the entire image (including horizontal detail along the
+    // straight capsule sides) instead of only squeezing pixels perpendicular
+    // to the capsule centerline.
+    float2 compressedCoord = coord + centeredCoord * compression;
     float2 refractedCoord = compressedCoord + d * grad;
-    float dispersionIntensity = chromaticAberration * ((capsuleRadial.x * capsuleRadial.y) / (capsuleRadius * capsuleRadius));
+    float dispersionIntensity = chromaticAberration * ((centeredCoord.x * centeredCoord.y) / (halfSize.x * halfSize.y));
     float2 dispersedCoord = d * grad * dispersionIntensity;
 
     half4 color = half4(0.0);
