@@ -346,7 +346,6 @@ dependencies {
     implementation(libs.miuix.nav)
     implementation(libs.miuix.preference)
     implementation(libs.miuix.blur)
-    implementation(libs.backdrop)
 
     implementation(platform(libs.okhttp.bom))
     implementation(libs.okhttp)
