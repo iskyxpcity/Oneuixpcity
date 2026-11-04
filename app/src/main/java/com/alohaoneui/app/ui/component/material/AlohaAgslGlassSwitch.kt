@@ -3,7 +3,6 @@ package com.alohaoneui.app.ui.component.material
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
-import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.gestures.rememberDraggableState
@@ -31,21 +30,20 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import com.kyant.backdrop.backdrops.layerBackdrop
+import com.kyant.backdrop.backdrops.rememberCombinedBackdrop
+import com.kyant.backdrop.backdrops.rememberLayerBackdrop
+import com.kyant.backdrop.drawBackdrop
+import com.kyant.backdrop.effects.blur
+import com.kyant.backdrop.effects.lens
+import com.kyant.backdrop.highlight.Highlight
+import com.kyant.backdrop.shadow.InnerShadow
+import com.kyant.backdrop.shadow.Shadow
 import kotlinx.coroutines.launch
-import top.yukonga.miuix.kmp.blur.blur
-import top.yukonga.miuix.kmp.blur.drawBackdrop
-import top.yukonga.miuix.kmp.blur.layerBackdrop
-import top.yukonga.miuix.kmp.blur.rememberLayerBackdrop
-import com.alohaoneui.app.ui.component.liquid.lens
-import com.alohaoneui.app.ui.component.liquid.rememberCombinedBackdrop
-import com.alohaoneui.app.ui.component.liquid.vibrancy
 
 /**
- * Liquid Glass switch based on Kyant0/AndroidLiquidGlass LiquidToggle.
- *
- * The scene backdrop supplied by MainActivity is an isolated background-only
- * layer. The track has its own capture layer, so the moving lens never samples
- * a layer that contains itself or another switch.
+ * Material-only Liquid Glass switch, using Kyant's standalone Backdrop engine.
+ * No Miuix theme, component, or blur API is used by this control.
  */
 @Composable
 fun AlohaAgslGlassSwitch(
@@ -60,7 +58,7 @@ fun AlohaAgslGlassSwitch(
     val pressProgress by animateFloatAsState(
         targetValue = if (pressed && enabled) 1f else 0f,
         animationSpec = spring(dampingRatio = 0.58f, stiffness = 520f),
-        label = "alohaLiquidGlassPress",
+        label = "materialLiquidGlassPress",
     )
 
     val density = LocalDensity.current
@@ -87,7 +85,7 @@ fun AlohaAgslGlassSwitch(
 
     val trackShape = voyageCornerShape(14.dp)
     val thumbShape = RoundedCornerShape(50)
-    val trackBackdrop = rememberLayerBackdrop { drawContent() }
+    val trackBackdrop = rememberLayerBackdrop()
     val sceneBackdrop = LocalVoyageSwitchBackdrop.current
     val thumbBackdrop = if (sceneBackdrop != null) {
         rememberCombinedBackdrop(sceneBackdrop, trackBackdrop)
@@ -95,21 +93,9 @@ fun AlohaAgslGlassSwitch(
         trackBackdrop
     }
 
-    val trackTint = if (checked) {
-        scheme.primaryContainer
-    } else {
-        scheme.surfaceContainerHigh
-    }
-    val thumbTint = if (checked) {
-        scheme.onPrimaryContainer
-    } else {
-        scheme.surface
-    }
-    val thumbX = if (isLtr) {
-        2.dp + 20.dp * fraction.value
-    } else {
-        22.dp - 20.dp * fraction.value
-    }
+    val trackTint = if (checked) scheme.primaryContainer else scheme.surfaceContainerHigh
+    val thumbTint = if (checked) scheme.onPrimaryContainer else scheme.surface
+    val thumbX = if (isLtr) 2.dp + 20.dp * fraction.value else 22.dp - 20.dp * fraction.value
 
     Box(
         modifier = modifier
@@ -139,8 +125,7 @@ fun AlohaAgslGlassSwitch(
             ),
         contentAlignment = Alignment.CenterStart,
     ) {
-        // The captured track is deliberately a separate layer. It contains
-        // only the track surface, never the thumb or the surrounding Pager.
+        // Capture only the track surface. The thumb and parent Pager are excluded.
         Box(
             modifier = Modifier
                 .size(width = 64.dp, height = 28.dp)
@@ -174,32 +159,52 @@ fun AlohaAgslGlassSwitch(
                             backdrop = thumbBackdrop,
                             shape = { thumbShape },
                             effects = {
-                                vibrancy()
-                                val blurAmount = 8.dp.toPx() * (1f - pressProgress)
-                                blur(blurAmount, blurAmount)
+                                blur(8.dp.toPx() * (1f - pressProgress))
                                 lens(
                                     refractionHeight = 5.dp.toPx() * pressProgress,
                                     refractionAmount = 10.dp.toPx() * pressProgress,
                                     depthEffect = true,
-                                    chromaticAberration = 0.42f * pressProgress,
+                                    chromaticAberration = pressProgress > 0.001f,
                                 )
                             },
-                            onDrawSurface = {
-                                drawRect(
-                                    color = thumbTint.copy(alpha = 0.12f + 0.08f * pressProgress),
+                            highlight = {
+                                Highlight.Ambient.copy(
+                                    width = Highlight.Ambient.width / 1.5f,
+                                    blurRadius = Highlight.Ambient.blurRadius / 1.5f,
+                                    alpha = pressProgress,
+                                )
+                            },
+                            shadow = {
+                                Shadow(
+                                    radius = 4.dp,
+                                    color = Color.Black.copy(alpha = 0.05f),
+                                )
+                            },
+                            innerShadow = {
+                                InnerShadow(
+                                    radius = 4.dp * pressProgress,
+                                    alpha = pressProgress,
                                 )
                             },
                             layerBlock = {
                                 scaleX = 1f + 0.10f * pressProgress
                                 scaleY = 1f - 0.035f * pressProgress
                             },
+                            onDrawSurface = {
+                                drawRect(Color.White.copy(alpha = 1f - pressProgress))
+                                drawRect(thumbTint.copy(alpha = 0.08f + 0.06f * pressProgress))
+                            },
                         )
                     } else {
-                        Modifier
-                            .background(
+                        Modifier.drawBehind {
+                            drawRoundRect(
                                 color = scheme.surface.copy(alpha = 0.42f),
-                                shape = thumbShape,
+                                cornerRadius = androidx.compose.ui.geometry.CornerRadius(
+                                    size.height / 2f,
+                                    size.height / 2f,
+                                ),
                             )
+                        }
                     },
                 ),
         )
