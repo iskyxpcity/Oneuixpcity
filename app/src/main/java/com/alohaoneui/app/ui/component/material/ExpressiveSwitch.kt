@@ -3,6 +3,10 @@ package com.alohaoneui.app.ui.component.material
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -19,32 +23,45 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SwitchColors
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.draw.shadow
-import top.yukonga.miuix.kmp.blur.Backdrop
-import top.yukonga.miuix.kmp.blur.drawBackdrop
-import top.yukonga.miuix.kmp.blur.blur
-import com.alohaoneui.app.ui.component.liquid.vibrancy
-import com.alohaoneui.app.ui.component.liquid.lens
+import com.kyant.backdrop.Backdrop
+import com.kyant.backdrop.backdrops.layerBackdrop
+import com.kyant.backdrop.backdrops.rememberBackdrop
+import com.kyant.backdrop.backdrops.rememberCombinedBackdrop
+import com.kyant.backdrop.backdrops.rememberLayerBackdrop
+import com.kyant.backdrop.drawBackdrop
+import com.kyant.backdrop.effects.blur
+import com.kyant.backdrop.effects.colorControls
+import com.kyant.backdrop.effects.lens
+import com.kyant.backdrop.highlight.Highlight
+import com.kyant.backdrop.shadow.InnerShadow
+import com.kyant.backdrop.shadow.Shadow
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.withTransform
+import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.DpSize
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.util.lerp
 import androidx.compose.ui.unit.dp
 import com.alohaoneui.app.ui.theme.LocalMaterialShadowSwitches
 import com.alohaoneui.app.ui.theme.LocalMaterialSwitchStyle
 
-val LocalVoyageSwitchBackdrop = staticCompositionLocalOf<Backdrop?> { null }
+val LocalMaterialSwitchBackdrop = staticCompositionLocalOf<Backdrop?> { null }
 
 /**
  * Voyage's eight selectable switch families. The selector changes the actual
@@ -114,15 +131,25 @@ fun ExpressiveSwitch(
     val interactionProgress by animateFloatAsState(targetValue = if (interactive && enabled) 1f else 0f, animationSpec = spring(dampingRatio = 0.72f, stiffness = 700f), label = "voyageSwitchInteraction")
     // Liquid Glass is transient: the handle gains its glass treatment only
     // while the user is actively pressing the Material switch.
+    var isGlassDragging by remember { mutableStateOf(false) }
+    var glassDragTarget by remember { mutableStateOf<Boolean?>(null) }
+    var glassDragFraction by remember { mutableFloatStateOf(if (checked) 1f else 0f) }
+    LaunchedEffect(checked) {
+        if (glassDragTarget == checked) {
+            isGlassDragging = false
+            glassDragTarget = null
+        }
+        if (!isGlassDragging) glassDragFraction = if (checked) 1f else 0f
+    }
     val glassInteraction by animateFloatAsState(
-        targetValue = if (style == 5 && pressed && enabled) 1f else 0f,
-        animationSpec = spring(dampingRatio = 0.58f, stiffness = 420f),
-        label = "voyageLiquidGlassInteraction",
+        targetValue = if (style == 5 && enabled && (pressed || isGlassDragging)) 1f else 0f,
+        animationSpec = spring(dampingRatio = 0.72f, stiffness = 1000f),
+        label = "materialLiquidGlassInteraction",
     )
     val glassScale by animateFloatAsState(
-        targetValue = if (style == 5 && pressed && enabled) 1.22f else 1f,
-        animationSpec = spring(dampingRatio = 0.48f, stiffness = 620f),
-        label = "voyageLiquidGlassScale",
+        targetValue = if (style == 5 && enabled && (pressed || isGlassDragging)) 1.5f else 1f,
+        animationSpec = spring(dampingRatio = 0.62f, stiffness = 900f),
+        label = "materialLiquidGlassScale",
     )
     val scheme = MaterialTheme.colorScheme
     // Each family has its own OFF and ON color recipe. Every role is read
@@ -134,7 +161,7 @@ fun ExpressiveSwitch(
         2 -> scheme.primary
         3 -> scheme.secondaryContainer
         4 -> scheme.tertiary
-        5 -> scheme.surfaceContainerHigh
+        5 -> scheme.primaryContainer
         6 -> scheme.secondary
         else -> scheme.primary
     }
@@ -144,7 +171,7 @@ fun ExpressiveSwitch(
         2 -> scheme.surfaceContainer
         3 -> scheme.surfaceContainerHigh
         4 -> scheme.surfaceContainerHighest
-        5 -> scheme.surfaceContainerLow
+        5 -> scheme.surfaceContainerHigh
         6 -> scheme.surfaceContainer
         else -> scheme.surfaceContainerHigh
     }
@@ -195,7 +222,7 @@ fun ExpressiveSwitch(
         2 -> DpSize(56.dp, 28.dp)       // Pixel
         3 -> DpSize(48.dp, 24.dp)       // Fluent
         4 -> DpSize(64.dp, 28.dp)       // Cupertino
-        5 -> DpSize(51.dp, 31.dp)       // Liquid Glass
+        5 -> DpSize(64.dp, 28.dp)       // Liquid Glass
         6 -> DpSize(50.dp, 28.5.dp)    // HyperOS
         else -> DpSize(39.dp, 22.dp)   // One UI outer touch target
     }
@@ -223,7 +250,7 @@ fun ExpressiveSwitch(
         2 -> 20.dp
         3 -> if (enabled && pressedOrHovered) 17.dp else 12.dp
         4 -> 20.dp
-        5 -> 23.dp
+        5 -> 40.dp
         6 -> if (enabled && interactive) 23.dp else 20.dp
         else -> 22.dp
     }
@@ -232,7 +259,7 @@ fun ExpressiveSwitch(
         2 -> 20.dp
         3 -> if (enabled && pressedOrHovered) 17.dp else 12.dp
         4 -> 20.dp
-        5 -> 23.dp
+        5 -> 24.dp
         6 -> if (enabled && interactive) 23.dp else 20.dp
         else -> 22.dp
     }
@@ -240,7 +267,7 @@ fun ExpressiveSwitch(
         0, 1, 2 -> 4.dp
         3 -> 3.dp
         4 -> 2.dp
-        5 -> 3.dp
+        5 -> 2.dp
         6 -> 2.5.dp
         else -> 0.dp
     }
@@ -249,7 +276,7 @@ fun ExpressiveSwitch(
         2 -> 14.dp
         3 -> 4.dp
         4 -> 14.dp
-        5 -> 15.5.dp
+        5 -> 14.dp
         6 -> 14.25.dp
         else -> 9.25.dp
     }
@@ -258,7 +285,8 @@ fun ExpressiveSwitch(
         0, 1 -> spring<Float>(dampingRatio = 0.78f, stiffness = 620f)
         2 -> androidx.compose.animation.core.tween<Float>(durationMillis = 500)
         3 -> androidx.compose.animation.core.tween<Float>(durationMillis = 600)
-        4, 5 -> androidx.compose.animation.core.tween<Float>(durationMillis = 300)
+        4 -> androidx.compose.animation.core.tween<Float>(durationMillis = 300)
+        5 -> spring<Float>(dampingRatio = 0.76f, stiffness = 720f)
         6 -> spring<Float>(dampingRatio = 0.75f, stiffness = 1500f)
         else -> androidx.compose.animation.core.tween<Float>(durationMillis = 250)
     }
@@ -267,6 +295,13 @@ fun ExpressiveSwitch(
         animationSpec = travelSpec,
         label = "voyageSwitchThumb",
     )
+    val displayedTravel = if (style == 5 && isGlassDragging) glassDragFraction else travel
+    val glassDragTravelPx = with(LocalDensity.current) {
+        (trackSize.width - thumbWidth - thumbEdgeInset * 2).toPx().coerceAtLeast(1f)
+    }
+    val glassDragState = rememberDraggableState { delta ->
+        glassDragFraction = (glassDragFraction + delta / glassDragTravelPx).coerceIn(0f, 1f)
+    }
     // Keep switch outlines robust for every global Aloha shape preset.
     val trackShape = if (com.alohaoneui.app.ui.theme.LocalMaterialShapeStyle.current == 3) {
         remember(trackCornerRadius) { RoundedCornerShape(trackCornerRadius) }
@@ -280,7 +315,7 @@ fun ExpressiveSwitch(
         2 -> RoundedCornerShape(50)
         3 -> RoundedCornerShape(7.dp)
         4 -> RoundedCornerShape(50)
-        5 -> RoundedCornerShape(42)
+        5 -> RoundedCornerShape(50)
         6 -> RoundedCornerShape(38)
         else -> RoundedCornerShape(50)
     }
@@ -304,10 +339,35 @@ fun ExpressiveSwitch(
                 indication = null,
                 onValueChange = { onCheckedChange?.invoke(it) },
             )
+            .then(
+                if (style == 5) {
+                    Modifier.draggable(
+                        state = glassDragState,
+                        orientation = Orientation.Horizontal,
+                        enabled = enabled && onCheckedChange != null,
+                        interactionSource = interactionSource,
+                        onDragStarted = {
+                            isGlassDragging = true
+                            glassDragTarget = null
+                            glassDragFraction = if (checked) 1f else 0f
+                        },
+                        onDragStopped = {
+                            val target = glassDragFraction >= 0.5f
+                            if (target == checked) {
+                                isGlassDragging = false
+                            } else {
+                                glassDragTarget = target
+                                onCheckedChange?.invoke(target)
+                            }
+                        },
+                    )
+                } else Modifier
+            )
 ,
         contentAlignment = Alignment.Center,
     ) {
         Canvas(Modifier.fillMaxSize()) {
+            if (style == 5) return@Canvas
             val w = size.width
             val h = size.height
             val trackColor = if (enabled) {
@@ -379,61 +439,92 @@ fun ExpressiveSwitch(
             // thumb itself communicates the on/off state by position and color.
         }
         if (style == 5) {
-            val backdrop = LocalVoyageSwitchBackdrop.current
+            val backdrop = LocalMaterialSwitchBackdrop.current
+            val trackBackdrop = rememberLayerBackdrop()
             val thumbTravel = trackSize.width - thumbWidth - thumbEdgeInset * 2
-            val glassTint = if (checked) scheme.primary else scheme.surfaceContainerHigh
+            val glassTint = lerp(scheme.surfaceContainerHighest, scheme.primaryContainer, displayedTravel)
+            val trackColor = lerp(uncheckedTrack, checkedTrack, displayedTravel)
+
             Box(
                 modifier = Modifier
                     .align(Alignment.Center)
-                    .offset(x = thumbTravel * travel - thumbTravel / 2f)
-                    .size(width = thumbWidth, height = thumbHeight)
-                    // Scale the complete thumb layer, not only the backdrop
-                    // sampling layer, so the glass handle visibly expands.
-                    .graphicsLayer {
-                        scaleX = glassScale
-                        scaleY = glassScale
-                    }
-                    .then(
-                        if (backdrop != null && enabled && glassInteraction > 0.001f) {
-                            Modifier.drawBackdrop(
-                                backdrop = backdrop,
-                                shape = { thumbShape },
-                                effects = {
-                                    vibrancy()
-                                    blur(4.dp.toPx() * glassInteraction, 4.dp.toPx() * glassInteraction)
-                                    lens(
-                                        refractionHeight = 12.dp.toPx() * glassInteraction,
-                                        refractionAmount = 16.dp.toPx() * glassInteraction,
-                                        depthEffect = true,
-                                        chromaticAberration = 0.35f * glassInteraction,
-                                    )
-                                },
-                                onDrawSurface = {
-                                    drawRect(glassTint.copy(alpha = 0.12f * glassInteraction))
-                                },
-                            )
-                        } else {
-                            Modifier.clip(thumbShape)
-                        }
-                    ),
-                contentAlignment = Alignment.Center,
-            ) {
-                if (backdrop == null || glassInteraction <= 0.001f) {
-                    Canvas(Modifier.fillMaxSize()) {
-                        drawRoundRect(
-                            color = thumbColor,
-                            cornerRadius = androidx.compose.ui.geometry.CornerRadius(size.width / 2f, size.height / 2f),
-                        )
-                    }
+                    .layerBackdrop(trackBackdrop)
+                    .clip(trackShape)
+                    .background(trackColor)
+                    .size(trackSize),
+            )
+
+            val trackGlassSource = rememberBackdrop(trackBackdrop) { drawBackdrop ->
+                val progress = glassInteraction
+                val scaleX = lerp(2f / 3f, 0.75f, progress)
+                val scaleY = lerp(0f, 0.75f, progress)
+                scale(scaleX, scaleY) {
+                    drawBackdrop()
                 }
             }
+            val glassBackdrop = if (backdrop != null) {
+                rememberCombinedBackdrop(backdrop, trackGlassSource)
+            } else {
+                trackGlassSource
+            }
+
+            Box(
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .offset(x = thumbTravel * displayedTravel - thumbTravel / 2f)
+                    .size(width = thumbWidth, height = thumbHeight)
+                    .drawBackdrop(
+                        backdrop = glassBackdrop,
+                        shape = { thumbShape },
+                        effects = {
+                            colorControls(
+                                brightness = 0f,
+                                contrast = 1f,
+                                saturation = 1.45f,
+                            )
+                            blur(8.dp.toPx() * (1f - glassInteraction))
+                            lens(
+                                10.dp.toPx() * glassInteraction,
+                                14.dp.toPx() * glassInteraction,
+                                depthEffect = true,
+                            )
+                        },
+                        highlight = {
+                            Highlight.Ambient.copy(
+                                width = Highlight.Ambient.width / 1.5f,
+                                blurRadius = Highlight.Ambient.blurRadius / 1.5f,
+                                alpha = glassInteraction,
+                            )
+                        },
+                        shadow = {
+                            Shadow(
+                                radius = 4.dp,
+                                color = Color.Black.copy(alpha = 0.08f),
+                            )
+                        },
+                        innerShadow = {
+                            InnerShadow(
+                                radius = 4.dp * glassInteraction,
+                                alpha = glassInteraction,
+                            )
+                        },
+                        layerBlock = {
+                            scaleX = glassScale
+                            scaleY = glassScale
+                        },
+                        onDrawSurface = {
+                            drawRect(Color.White.copy(alpha = 1f - glassInteraction))
+                            drawRect(glassTint.copy(alpha = 0.20f * glassInteraction))
+                        },
+                    ),
+            )
         }
         if (thumbContent != null) {
             val thumbTravel = trackSize.width - thumbWidth - thumbEdgeInset * 2
             Box(
                 modifier = Modifier
                     .align(Alignment.Center)
-                    .offset(x = thumbTravel * travel - thumbTravel / 2f)
+                    .offset(x = thumbTravel * displayedTravel - thumbTravel / 2f)
                     .size(width = thumbWidth, height = thumbHeight)
                     .clip(thumbShape),
                 contentAlignment = Alignment.Center,
