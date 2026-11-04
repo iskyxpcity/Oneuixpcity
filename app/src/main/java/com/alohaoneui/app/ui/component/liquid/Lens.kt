@@ -141,13 +141,22 @@ half4 main(float2 coord) {
     float gradRadius = min(radius * 1.5, min(halfSize.x, halfSize.y));
     float2 grad = normalize(gradSdRoundedRect(centeredCoord, halfSize, gradRadius) + depthEffect * normalize(centeredCoord));
 
-    // Compress the image beneath the lens toward its optical center.
-    // Sampling progressively farther from the center makes source features
-    // appear smaller and pulled inward inside the glass, instead of merely
-    // shifting pixels along the rounded-rect edge.
-    float radialPosition = length(centeredCoord / halfSize);
+    // Use the capsule's centerline as the optical axis. A rectangular/elliptic
+    // radial field over-compresses the two ends and creates a round "nipple"
+    // bulge. The capsule field stays vertical along the straight sides and
+    // turns smoothly around each semicircular end.
+    float capsuleRadius = min(min(cornerRadii.x, cornerRadii.y), halfSize.y);
+    capsuleRadius = min(capsuleRadius, min(cornerRadii.z, cornerRadii.w));
+    capsuleRadius = max(capsuleRadius, 0.001);
+    float axisHalfLength = max(halfSize.x - capsuleRadius, 0.0);
+    float2 capsuleAxisPoint = float2(clamp(centeredCoord.x, -axisHalfLength, axisHalfLength), 0.0);
+    float2 capsuleRadial = centeredCoord - capsuleAxisPoint;
+    float radialPosition = clamp(length(capsuleRadial) / capsuleRadius, 0.0, 1.0);
+    // Smooth compression rises toward the glass rim, without a singularity
+    // at either cap or a sudden change where the straight side meets the end.
     float compression = imageCompression * smoothstep(0.0, 1.0, radialPosition);
-    float2 refractedCoord = coord + centeredCoord * compression + d * grad;
+    float2 compressedCoord = coord + capsuleRadial * compression;
+    float2 refractedCoord = compressedCoord + d * grad;
     return content.eval(refractedCoord);
 }
 """
@@ -185,14 +194,23 @@ half4 main(float2 coord) {
     float gradRadius = min(radius * 1.5, min(halfSize.x, halfSize.y));
     float2 grad = normalize(gradSdRoundedRect(centeredCoord, halfSize, gradRadius) + depthEffect * normalize(centeredCoord));
 
-    // Compress the image beneath the lens toward its optical center.
-    // Sampling progressively farther from the center makes source features
-    // appear smaller and pulled inward inside the glass, instead of merely
-    // shifting pixels along the rounded-rect edge.
-    float radialPosition = length(centeredCoord / halfSize);
+    // Use the capsule's centerline as the optical axis. A rectangular/elliptic
+    // radial field over-compresses the two ends and creates a round "nipple"
+    // bulge. The capsule field stays vertical along the straight sides and
+    // turns smoothly around each semicircular end.
+    float capsuleRadius = min(min(cornerRadii.x, cornerRadii.y), halfSize.y);
+    capsuleRadius = min(capsuleRadius, min(cornerRadii.z, cornerRadii.w));
+    capsuleRadius = max(capsuleRadius, 0.001);
+    float axisHalfLength = max(halfSize.x - capsuleRadius, 0.0);
+    float2 capsuleAxisPoint = float2(clamp(centeredCoord.x, -axisHalfLength, axisHalfLength), 0.0);
+    float2 capsuleRadial = centeredCoord - capsuleAxisPoint;
+    float radialPosition = clamp(length(capsuleRadial) / capsuleRadius, 0.0, 1.0);
+    // Smooth compression rises toward the glass rim, without a singularity
+    // at either cap or a sudden change where the straight side meets the end.
     float compression = imageCompression * smoothstep(0.0, 1.0, radialPosition);
-    float2 refractedCoord = coord + centeredCoord * compression + d * grad;
-    float dispersionIntensity = chromaticAberration * ((centeredCoord.x * centeredCoord.y) / (halfSize.x * halfSize.y));
+    float2 compressedCoord = coord + capsuleRadial * compression;
+    float2 refractedCoord = compressedCoord + d * grad;
+    float dispersionIntensity = chromaticAberration * ((capsuleRadial.x * capsuleRadial.y) / (capsuleRadius * capsuleRadius));
     float2 dispersedCoord = d * grad * dispersionIntensity;
 
     half4 color = half4(0.0);
