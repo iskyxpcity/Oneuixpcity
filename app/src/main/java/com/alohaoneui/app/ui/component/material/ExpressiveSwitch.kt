@@ -208,8 +208,8 @@ fun ExpressiveSwitch(
         },
         label = "materialLiquidGlassInteraction",
     )
-    // The resting Material thumb is 20dp. The separate 28dp glass lens
-    // expands to 42dp during interaction, visibly protruding beyond the
+    // The resting Material thumb retains its 40x24dp switch silhouette. The separate
+    // glass lens expands from the same proportions during interaction, visibly protruding beyond the
     // 64x28dp rail while preserving the resting thumb's geometry.
     val glassExpansion by animateFloatAsState(
         targetValue = if (style == 5 && enabled && (glassPressed || isGlassDragging)) 1.65f else 1f,
@@ -324,7 +324,7 @@ fun ExpressiveSwitch(
         2 -> 20.dp
         3 -> if (enabled && pressedOrHovered) 17.dp else 12.dp
         4 -> 20.dp
-        5 -> 20.dp
+        5 -> 40.dp
         6 -> if (enabled && interactive) 23.dp else 20.dp
         else -> 22.dp
     }
@@ -333,7 +333,7 @@ fun ExpressiveSwitch(
         2 -> 20.dp
         3 -> if (enabled && pressedOrHovered) 17.dp else 12.dp
         4 -> 20.dp
-        5 -> 20.dp
+        5 -> 24.dp
         6 -> if (enabled && interactive) 23.dp else 20.dp
         else -> 22.dp
     }
@@ -550,7 +550,8 @@ fun ExpressiveSwitch(
             val backdrop = LocalMaterialSwitchBackdrop.current
             val trackBackdrop = rememberLayerBackdrop()
             val thumbTravel = trackSize.width - thumbWidth - thumbEdgeInset * 2
-            val glassThumbSize = 28.dp
+            val glassThumbWidth = 40.dp
+            val glassThumbHeight = 24.dp
             val trackColor = lerp(uncheckedTrack, checkedTrack, displayedTravel).let {
                 if (enabled) it else it.copy(alpha = 0.38f)
             }
@@ -591,10 +592,9 @@ fun ExpressiveSwitch(
                     .zIndex(2f)
                     .graphicsLayer { clip = false }
                     .offset(x = thumbTravel * displayedTravel - thumbTravel / 2f)
-                    // The glass lens has its own 28dp base size, independent
-                    // from the 20dp resting thumb. requiredSize lets its 42dp
-                    // pressed bounds protrude beyond the 64x28dp rail.
-                    .requiredSize(width = glassThumbSize * glassExpansion, height = glassThumbSize * glassExpansion)
+                    // The glass lens preserves the 40x24dp handle proportions and expands
+                    // independently beyond the 64x28dp rail when pressed.
+                    .requiredSize(width = glassThumbWidth * glassExpansion, height = glassThumbHeight * glassExpansion)
                     .graphicsLayer { alpha = glassInteraction }
                     .drawBackdrop(
                         backdrop = glassBackdrop,
