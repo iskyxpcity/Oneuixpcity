@@ -519,7 +519,7 @@ fun ExpressiveSwitch(
                                 backdrop = backdrop,
                                 shape = { thumbShape },
                                 effects = {
-                                    blur(4.dp.toPx() * glassInteraction, 4.dp.toPx() * glassInteraction)
+                                    blur(4.dp.toPx() * glassInteraction)
                                     lens(
                                         refractionHeight = 12.dp.toPx() * glassInteraction,
                                         refractionAmount = 16.dp.toPx() * glassInteraction,
