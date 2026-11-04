@@ -144,13 +144,20 @@ fun ExpressiveSwitch(
     }
     val glassInteraction by animateFloatAsState(
         targetValue = if (style == 5 && enabled && (pressed || isGlassDragging)) 1f else 0f,
-        animationSpec = spring(dampingRatio = 0.72f, stiffness = 1000f),
+        animationSpec = spring(dampingRatio = 1f, stiffness = 1000f),
         label = "materialLiquidGlassInteraction",
     )
-    val glassScale by animateFloatAsState(
-        targetValue = if (style == 5 && enabled && (pressed || isGlassDragging)) 1.5f else 1f,
-        animationSpec = spring(dampingRatio = 0.62f, stiffness = 900f),
-        label = "materialLiquidGlassScale",
+    // Reuse the floating glass indicator's pressed geometry and spring
+    // profiles instead of the earlier oversized uniform 1.5x scale.
+    val glassScaleX by animateFloatAsState(
+        targetValue = if (style == 5 && enabled && (pressed || isGlassDragging)) 78f / 56f else 1f,
+        animationSpec = spring(dampingRatio = 0.6f, stiffness = 250f),
+        label = "materialLiquidGlassScaleX",
+    )
+    val glassScaleY by animateFloatAsState(
+        targetValue = if (style == 5 && enabled && (pressed || isGlassDragging)) 78f / 56f else 1f,
+        animationSpec = spring(dampingRatio = 0.7f, stiffness = 250f),
+        label = "materialLiquidGlassScaleY",
     )
     var glassDragVelocity by remember { mutableFloatStateOf(0f) }
     // Match the floating indicator's velocity deformation: preserve the
@@ -527,9 +534,9 @@ fun ExpressiveSwitch(
                             )
                         },
                         layerBlock = {
-                            val velocity = glassDragVelocityEffect
-                            scaleX = glassScale / (1f - (velocity * 0.75f).coerceIn(-0.2f, 0.2f))
-                            scaleY = glassScale * (1f - (velocity * 0.25f).coerceIn(-0.2f, 0.2f))
+                            val velocity = glassDragVelocityEffect / 10f
+                            scaleX = glassScaleX / (1f - (velocity * 0.75f).coerceIn(-0.2f, 0.2f))
+                            scaleY = glassScaleY * (1f - (velocity * 0.25f).coerceIn(-0.2f, 0.2f))
                         },
                         onDrawSurface = {
                             drawRect(scheme.surface.copy(alpha = 1f - glassInteraction))
