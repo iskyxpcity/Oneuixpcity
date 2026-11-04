@@ -141,9 +141,8 @@ import top.yukonga.miuix.kmp.basic.IconButton as MiuixIconButton
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.TopAppBar
-import com.kyant.backdrop.backdrops.layerBackdrop
 import top.yukonga.miuix.kmp.blur.layerBackdrop as miuixLayerBackdrop
-import com.kyant.backdrop.backdrops.rememberLayerBackdrop
+import top.yukonga.miuix.kmp.blur.rememberLayerBackdrop
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Back
 import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
@@ -338,7 +337,7 @@ private fun AlohaOneUIOriginalCategoryScreen(
             ) { innerPadding ->
                 CompositionLocalProvider(LocalMaterialSwitchBackdrop provides switchBackdrop) {
                     Box(
-                        modifier = Modifier.layerBackdrop(switchBackdrop)
+                        modifier = Modifier.miuixLayerBackdrop(switchBackdrop)
                     ) {
                         OriginalContent(
                             Modifier
