@@ -49,6 +49,7 @@ import com.kyant.backdrop.highlight.Highlight
 import com.kyant.backdrop.shadow.InnerShadow
 import com.kyant.backdrop.shadow.Shadow
 import androidx.compose.ui.graphics.Outline
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -150,17 +151,13 @@ fun ExpressiveSwitch(
         animationSpec = spring(dampingRatio = 1f, stiffness = 1000f),
         label = "materialLiquidGlassInteraction",
     )
-    // Reuse the floating glass indicator's pressed geometry and spring
-    // profiles instead of the earlier oversized uniform 1.5x scale.
-    val glassScaleX by animateFloatAsState(
-        targetValue = if (style == 5 && enabled && (pressed || isGlassDragging)) 78f / 56f else 1f,
+    // The switch handle must expand beyond the track silhouette, not
+    // merely grow inside it. 1.65x makes the 40x24dp lens visibly protrude
+    // past the 64x28dp rail on every side while the rail itself stays fixed.
+    val glassExpansion by animateFloatAsState(
+        targetValue = if (style == 5 && enabled && (pressed || isGlassDragging)) 1.65f else 1f,
         animationSpec = spring(dampingRatio = 0.6f, stiffness = 250f),
-        label = "materialLiquidGlassScaleX",
-    )
-    val glassScaleY by animateFloatAsState(
-        targetValue = if (style == 5 && enabled && (pressed || isGlassDragging)) 78f / 56f else 1f,
-        animationSpec = spring(dampingRatio = 0.7f, stiffness = 250f),
-        label = "materialLiquidGlassScaleY",
+        label = "materialLiquidGlassExternalExpansion",
     )
     val glassAnimationScope = rememberCoroutineScope()
     // Keep release velocity in an Animatable so the impulse is actually
@@ -540,14 +537,22 @@ fun ExpressiveSwitch(
                         },
                         layerBlock = {
                             val velocity = glassDragVelocity.value / 10f
-                            scaleX = glassScaleX / (1f - (velocity * 0.75f).coerceIn(-0.2f, 0.2f))
-                            scaleY = glassScaleY * (1f - (velocity * 0.25f).coerceIn(-0.2f, 0.2f))
+                            scaleX = 1f / (1f - (velocity * 0.75f).coerceIn(-0.2f, 0.2f))
+                            scaleY = 1f * (1f - (velocity * 0.25f).coerceIn(-0.2f, 0.2f))
                         },
                         onDrawSurface = {
                             drawRect(scheme.surface.copy(alpha = 1f - glassInteraction))
                             drawRect(glassTint.copy(alpha = 0.20f * glassInteraction))
                         },
-                    ),
+                    )
+                    // Apply expansion on an unclipped outer graphics layer.
+                    // This guarantees the glass lens is drawn outside the
+                    // switch rail instead of being constrained to its bounds.
+                    .graphicsLayer {
+                        clip = false
+                        scaleX = glassExpansion
+                        scaleY = glassExpansion
+                    },
             )
         }
         if (thumbContent != null && style != 5) {
