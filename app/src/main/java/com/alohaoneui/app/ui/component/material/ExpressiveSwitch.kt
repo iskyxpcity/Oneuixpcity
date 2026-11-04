@@ -387,9 +387,15 @@ fun ExpressiveSwitch(
             // layout reserves the expanded lens height instead of constraining
             // that lens to the 28dp rail. The rail itself remains 64x28dp.
             .graphicsLayer { clip = false }
-            .size(
-                width = trackSize.width,
-                height = if (style == 5) maxOf(trackSize.height, thumbHeight * 1.65f) else trackSize.height,
+            .then(
+                if (style == 5) {
+                    Modifier.requiredSize(
+                        width = trackSize.width,
+                        height = maxOf(trackSize.height, thumbHeight * 1.65f),
+                    )
+                } else {
+                    Modifier.size(width = trackSize.width, height = trackSize.height)
+                }
             )
             .then(if (LocalMaterialShadowSwitches.current && style != 5) Modifier.shadow(2.dp, trackShape) else Modifier)
             .toggleable(
