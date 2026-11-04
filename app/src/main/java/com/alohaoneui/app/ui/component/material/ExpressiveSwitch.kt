@@ -610,8 +610,6 @@ fun ExpressiveSwitch(
                                 // Its outer surface uses the normal rounded-rect gradient;
                                 // depthEffect is reserved for the separately animated tab pill.
                                 depthEffect = false,
-                                // Reverse only this switch lens so the visible track image bends inward.
-                                inwardVisualRefraction = true,
                                 chromaticAberration = if (glassInteraction > 0.5f) glassInteraction else 0f,
                             )
                         },
