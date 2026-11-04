@@ -75,7 +75,7 @@ import com.alohaoneui.app.ui.component.material.SegmentedColumn
 import com.alohaoneui.app.ui.component.material.SegmentedDropdownItem
 import com.alohaoneui.app.ui.component.material.SegmentedListItem
 import com.alohaoneui.app.ui.component.material.ExpressiveSwitch
-import com.alohaoneui.app.ui.component.material.LocalVoyageSwitchBackdrop
+import com.alohaoneui.app.ui.component.material.LocalMaterialSwitchBackdrop
 import com.alohaoneui.app.ui.component.material.SegmentedSwitchItem
 import com.alohaoneui.app.ui.component.material.SegmentedSliderItem
 import com.alohaoneui.app.ui.component.material.SegmentedTextField
@@ -141,7 +141,8 @@ import top.yukonga.miuix.kmp.basic.IconButton as MiuixIconButton
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.TopAppBar
-import top.yukonga.miuix.kmp.blur.layerBackdrop
+import com.kyant.backdrop.backdrops.layerBackdrop
+import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Back
 import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
@@ -305,7 +306,7 @@ private fun AlohaOneUIOriginalCategoryScreen(
         UiMode.Material -> {
             val scrollBehavior =
                 TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
-            val switchBackdrop = rememberBlurBackdrop(LocalEnableBlur.current)
+            val switchBackdrop = rememberLayerBackdrop()
             androidx.compose.material3.Scaffold(
                 topBar = {
                     LargeFlexibleTopAppBar(
@@ -334,9 +335,9 @@ private fun AlohaOneUIOriginalCategoryScreen(
                     WindowInsetsSides.Top + WindowInsetsSides.Horizontal
                 ),
             ) { innerPadding ->
-                CompositionLocalProvider(LocalVoyageSwitchBackdrop provides switchBackdrop) {
+                CompositionLocalProvider(LocalMaterialSwitchBackdrop provides switchBackdrop) {
                     Box(
-                        modifier = if (switchBackdrop != null) Modifier.layerBackdrop(switchBackdrop) else Modifier
+                        modifier = Modifier.layerBackdrop(switchBackdrop)
                     ) {
                         OriginalContent(
                             Modifier
