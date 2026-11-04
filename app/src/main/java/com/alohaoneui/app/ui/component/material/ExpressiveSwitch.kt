@@ -443,7 +443,9 @@ fun ExpressiveSwitch(
             val trackBackdrop = rememberLayerBackdrop()
             val thumbTravel = trackSize.width - thumbWidth - thumbEdgeInset * 2
             val glassTint = lerp(scheme.surfaceContainerHighest, scheme.primaryContainer, displayedTravel)
-            val trackColor = lerp(uncheckedTrack, checkedTrack, displayedTravel)
+            val trackColor = lerp(uncheckedTrack, checkedTrack, displayedTravel).let {
+                if (enabled) it else it.copy(alpha = 0.38f)
+            }
 
             Box(
                 modifier = Modifier
@@ -514,7 +516,7 @@ fun ExpressiveSwitch(
                             scaleY = glassScale
                         },
                         onDrawSurface = {
-                            drawRect(Color.White.copy(alpha = 1f - glassInteraction))
+                            drawRect(scheme.surface.copy(alpha = 1f - glassInteraction))
                             drawRect(glassTint.copy(alpha = 0.20f * glassInteraction))
                         },
                     ),
