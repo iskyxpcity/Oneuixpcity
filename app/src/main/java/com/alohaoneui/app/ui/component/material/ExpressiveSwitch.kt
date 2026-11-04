@@ -466,7 +466,34 @@ fun ExpressiveSwitch(
         contentAlignment = Alignment.Center,
     ) {
         Canvas(Modifier.size(trackSize)) {
-            if (style == 5) return@Canvas
+            if (style == 5) {
+                // The rail is rendered by the backdrop layer below. Keep the
+                // ordinary Material thumb visible at rest; only its opacity
+                // yields to the transient glass lens while interacting.
+                val thumbWidthPx = thumbWidth.toPx()
+                val thumbHeightPx = thumbHeight.toPx()
+                val edgeInsetPx = thumbEdgeInset.toPx()
+                val left = thumbWidthPx / 2f + edgeInsetPx
+                val right = size.width - thumbWidthPx / 2f - edgeInsetPx
+                val cx = left + (right - left) * displayedTravel
+                val cy = size.height / 2f
+                if (glassInteraction < 0.999f) {
+                    val thumbOutline = thumbShape.createOutline(
+                        size = Size(thumbWidthPx, thumbHeightPx),
+                        layoutDirection = layoutDirection,
+                        density = this,
+                    )
+                    withTransform({
+                        translate(cx - thumbWidthPx / 2f, cy - thumbHeightPx / 2f)
+                    }) {
+                        drawVoyageOutline(
+                            thumbOutline,
+                            thumbColor.copy(alpha = 1f - glassInteraction),
+                        )
+                    }
+                }
+                return@Canvas
+            }
             val w = size.width
             val h = size.height
             val trackColor = if (enabled) {
@@ -590,7 +617,10 @@ fun ExpressiveSwitch(
                                                         lens(
                                 10.dp.toPx() * glassInteraction,
                                 14.dp.toPx() * glassInteraction,
-                                depthEffect = true,
+                                // Match the floating bar's base glass surface lens.
+                                // Its outer surface uses the normal rounded-rect gradient;
+                                // depthEffect is reserved for the separately animated tab pill.
+                                depthEffect = false,
                                 chromaticAberration = if (glassInteraction > 0.5f) glassInteraction else 0f,
                             )
                         },
