@@ -7,7 +7,7 @@ import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
@@ -22,6 +22,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -33,12 +34,15 @@ import androidx.compose.ui.unit.dp
 import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberCombinedBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
+import com.kyant.backdrop.backdrops.rememberBackdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
 import com.kyant.backdrop.effects.lens
 import com.kyant.backdrop.highlight.Highlight
 import com.kyant.backdrop.shadow.InnerShadow
 import com.kyant.backdrop.shadow.Shadow
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 /**
@@ -54,12 +58,35 @@ fun AlohaAgslGlassSwitch(
     interactionSource: MutableInteractionSource,
 ) {
     val scheme = MaterialTheme.colorScheme
-    val pressed by interactionSource.collectIsPressedAsState()
-    val pressProgress by animateFloatAsState(
-        targetValue = if (pressed && enabled) 1f else 0f,
-        animationSpec = spring(dampingRatio = 0.58f, stiffness = 520f),
-        label = "materialLiquidGlassPress",
-    )
+    // A click can be shorter than a frame. Keep the glass response independent
+    // from the transient pressed boolean so taps produce a visible lens pulse.
+    val pressProgress = remember { Animatable(0f) }
+    LaunchedEffect(interactionSource, enabled) {
+        interactionSource.interactions.collect { interaction ->
+            when (interaction) {
+                is PressInteraction.Press -> {
+                    if (enabled) {
+                        pressProgress.snapTo(0f)
+                        pressProgress.animateTo(
+                            1f,
+                            animationSpec = spring(dampingRatio = 0.62f, stiffness = 430f),
+                        )
+                    }
+                }
+                is PressInteraction.Release, is PressInteraction.Cancel -> {
+                    if (enabled) {
+                        // Preserve a short visible glass highlight for quick taps.
+                        delay(150)
+                        pressProgress.animateTo(
+                            0f,
+                            animationSpec = spring(dampingRatio = 0.58f, stiffness = 520f),
+                        )
+                    }
+                }
+            }
+        }
+    }
+    val glassPress = if (enabled) pressProgress.value else 0f
 
     val density = LocalDensity.current
     val dragWidthPx = with(density) { 20.dp.toPx() }
@@ -87,10 +114,19 @@ fun AlohaAgslGlassSwitch(
     val thumbShape = RoundedCornerShape(50)
     val trackBackdrop = rememberLayerBackdrop()
     val sceneBackdrop = LocalVoyageSwitchBackdrop.current
+    val transformedTrackBackdrop = rememberBackdrop(trackBackdrop) { drawBackdrop ->
+        // Match the upstream LiquidToggle: the sampled track is optically
+        // compressed into the thumb and changes with the press/lens progress.
+        val scaleX = androidx.compose.ui.util.lerp(2f / 3f, 0.75f, glassPress)
+        val scaleY = androidx.compose.ui.util.lerp(0f, 0.75f, glassPress)
+        scale(scaleX, scaleY) {
+            drawBackdrop()
+        }
+    }
     val thumbBackdrop = if (sceneBackdrop != null) {
-        rememberCombinedBackdrop(sceneBackdrop, trackBackdrop)
+        rememberCombinedBackdrop(sceneBackdrop, transformedTrackBackdrop)
     } else {
-        trackBackdrop
+        transformedTrackBackdrop
     }
 
     val trackTint = if (checked) scheme.primaryContainer else scheme.surfaceContainerHigh
@@ -159,19 +195,19 @@ fun AlohaAgslGlassSwitch(
                             backdrop = thumbBackdrop,
                             shape = { thumbShape },
                             effects = {
-                                blur(8.dp.toPx() * (1f - pressProgress))
+                                blur(8.dp.toPx() * (1f - glassPress))
                                 lens(
-                                    refractionHeight = 5.dp.toPx() * pressProgress,
-                                    refractionAmount = 10.dp.toPx() * pressProgress,
+                                    refractionHeight = 5.dp.toPx() * glassPress,
+                                    refractionAmount = 10.dp.toPx() * glassPress,
                                     depthEffect = true,
-                                    chromaticAberration = pressProgress > 0.001f,
+                                    chromaticAberration = true,
                                 )
                             },
                             highlight = {
                                 Highlight.Ambient.copy(
                                     width = Highlight.Ambient.width / 1.5f,
                                     blurRadius = Highlight.Ambient.blurRadius / 1.5f,
-                                    alpha = pressProgress,
+                                    alpha = glassPress,
                                 )
                             },
                             shadow = {
@@ -182,17 +218,17 @@ fun AlohaAgslGlassSwitch(
                             },
                             innerShadow = {
                                 InnerShadow(
-                                    radius = 4.dp * pressProgress,
-                                    alpha = pressProgress,
+                                    radius = 4.dp * glassPress,
+                                    alpha = glassPress,
                                 )
                             },
                             layerBlock = {
-                                scaleX = 1f + 0.10f * pressProgress
-                                scaleY = 1f - 0.035f * pressProgress
+                                scaleX = 1f + 0.10f * glassPress
+                                scaleY = 1f - 0.035f * glassPress
                             },
                             onDrawSurface = {
-                                drawRect(Color.White.copy(alpha = 1f - pressProgress))
-                                drawRect(thumbTint.copy(alpha = 0.08f + 0.06f * pressProgress))
+                                drawRect(Color.White.copy(alpha = 1f - glassPress))
+                                drawRect(thumbTint.copy(alpha = 0.08f + 0.06f * glassPress))
                             },
                         )
                     } else {
