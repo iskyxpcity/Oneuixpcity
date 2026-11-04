@@ -189,10 +189,10 @@ fun ExpressiveSwitch(
         label = "materialLiquidGlassInteraction",
     )
     // The switch handle must expand beyond the track silhouette, not
-    // merely grow inside it. 1.65x makes the 40x24dp lens visibly protrude
+    // merely grow inside it. 1.9x makes the 40x24dp lens clearly protrude
     // past the 64x28dp rail on every side while the rail itself stays fixed.
     val glassExpansion by animateFloatAsState(
-        targetValue = if (style == 5 && enabled && (glassPressed || isGlassDragging)) 1.65f else 1f,
+        targetValue = if (style == 5 && enabled && (glassPressed || isGlassDragging)) 1.9f else 1f,
         // Morph the enlarged lens back to its resting thumb size without recoil.
         animationSpec = if (glassPressed || isGlassDragging) {
             spring(dampingRatio = 0.58f, stiffness = 560f)
@@ -391,7 +391,8 @@ fun ExpressiveSwitch(
                 if (style == 5) {
                     Modifier.requiredSize(
                         width = trackSize.width,
-                        height = maxOf(trackSize.height, thumbHeight * 1.65f),
+                        width = maxOf(trackSize.width, thumbWidth * 1.9f),
+                        height = maxOf(trackSize.height, thumbHeight * 1.9f),
                     )
                 } else {
                     Modifier.size(width = trackSize.width, height = trackSize.height)
@@ -562,7 +563,7 @@ fun ExpressiveSwitch(
                     // Unlike size(), requiredSize() bypasses the switch Box's
                     // 64x28dp max constraints. The parent still lays out a 64x28dp
                     // control, while this foreground lens keeps its true expanded
-                    // 66x39.6dp drawing bounds and can protrude beyond the rail.
+                    // 76x45.6dp drawing bounds and can protrude beyond the rail.
                     .requiredSize(width = thumbWidth * glassExpansion, height = thumbHeight * glassExpansion)
                     .drawBackdrop(
                         backdrop = glassBackdrop,
