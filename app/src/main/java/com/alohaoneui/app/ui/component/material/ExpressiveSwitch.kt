@@ -19,6 +19,7 @@ import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -547,7 +548,11 @@ fun ExpressiveSwitch(
                     // Expand the actual measured glass lens, not merely a
                     // graphics transform inside its original 40x24dp bounds.
                     // The switch rail remains fixed at 64x28dp.
-                    .size(width = thumbWidth * glassExpansion, height = thumbHeight * glassExpansion)
+                    // Unlike size(), requiredSize() bypasses the switch Box's
+                    // 64x28dp max constraints. The parent still lays out a 64x28dp
+                    // control, while this foreground lens keeps its true expanded
+                    // 66x39.6dp drawing bounds and can protrude beyond the rail.
+                    .requiredSize(width = thumbWidth * glassExpansion, height = thumbHeight * glassExpansion)
                     .drawBackdrop(
                         backdrop = glassBackdrop,
                         shape = { thumbShape },
