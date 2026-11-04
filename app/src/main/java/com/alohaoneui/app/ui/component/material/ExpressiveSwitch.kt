@@ -533,7 +533,7 @@ fun ExpressiveSwitch(
                     ),
             )
         }
-        if (thumbContent != null) {
+        if (thumbContent != null && style != 5) {
             val thumbTravel = trackSize.width - thumbWidth - thumbEdgeInset * 2
             Box(
                 modifier = Modifier
