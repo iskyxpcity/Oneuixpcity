@@ -223,7 +223,7 @@ fun ExpressiveSwitch(
         label = "materialLiquidGlassExternalExpansion",
     )
     val glassWidthExpansion by animateFloatAsState(
-        targetValue = if (style == 5 && enabled && (glassPressed || isGlassDragging)) 1.50f else 1f,
+        targetValue = if (style == 5 && enabled && (glassPressed || isGlassDragging)) 1.40f else 1f,
         animationSpec = if (glassPressed || isGlassDragging) {
             spring(dampingRatio = 0.58f, stiffness = 560f)
         } else {
@@ -562,7 +562,12 @@ fun ExpressiveSwitch(
             val thumbTravel = trackSize.width - thumbWidth - thumbEdgeInset * 2
             val glassThumbWidth = 40.dp
             val glassThumbHeight = 24.dp
-            val trackColor = lerp(uncheckedTrack, checkedTrack, displayedTravel).let {
+            // Keep the OFF rail visibly tinted in every Material theme.
+            // surfaceContainerHigh can be nearly indistinguishable from the page
+            // surface in some palettes, so blend in a small amount of the
+            // theme's outlineVariant without introducing a fixed gray.
+            val liquidGlassUncheckedTrack = lerp(uncheckedTrack, scheme.outlineVariant, 0.24f)
+            val trackColor = lerp(liquidGlassUncheckedTrack, checkedTrack, displayedTravel).let {
                 if (enabled) it else it.copy(alpha = 0.38f)
             }
 
@@ -572,8 +577,8 @@ fun ExpressiveSwitch(
                     .layerBackdrop(trackBackdrop)
                     .clip(trackShape)
                     .background(trackColor)
-                    // Extend only the captured rail by 1dp per side so its
-                    // refracted image reaches the expanded 66dp glass lens edge.
+                    // Keep a 1dp capture bleed at each end; the visible refracted
+                    // rail is clipped by the shorter 56dp glass lens.
                     .size(width = trackSize.width + 2.dp, height = trackSize.height),
             )
 
