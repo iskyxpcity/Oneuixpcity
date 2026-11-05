@@ -247,14 +247,36 @@ class MainActivity : ComponentActivity() {
                         drawContent()
                     }
                     Box(Modifier.fillMaxSize()) {
+                        // A dedicated, non-recursive switch source is mounted behind
+                        // NavDisplay for every route, including pushed detail pages.
+                        // Each switch combines this stable page surface with its own
+                        // captured ON/OFF track, avoiding a missing pager-only source.
+                        val switchBackdrop = rememberLayerBackdrop {
+                            drawRect(updateDialogSurfaceColor)
+                        }
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .layerBackdrop(switchBackdrop),
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(updateDialogSurfaceColor),
+                            )
+                        }
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
                                 .layerBackdrop(updateDialogBackdrop),
                         ) {
-                            when (uiMode) {
-                                UiMode.Material -> androidx.compose.material3.Scaffold { navDisplay() }
-                                UiMode.Miuix -> Scaffold { navDisplay() }
+                            CompositionLocalProvider(
+                                LocalMaterialSwitchBackdrop provides switchBackdrop,
+                            ) {
+                                when (uiMode) {
+                                    UiMode.Material -> androidx.compose.material3.Scaffold { navDisplay() }
+                                    UiMode.Miuix -> Scaffold { navDisplay() }
+                                }
                             }
                         }
                         UpdateDialogHost(
@@ -337,13 +359,6 @@ fun MainScreen(
         drawRect(surfaceColor)
         drawContent()
     }
-    // The switch gets a separate background-only source. Never capture the Pager
-    // subtree that contains the switch itself: that would make the glass lens
-    // sample a layer which also contains the lens consumer.
-    val switchBackdrop = rememberLayerBackdrop {
-        drawRect(surfaceColor)
-    }
-
     val settledPage = mainPagerState.pagerState.settledPage
     LaunchedEffect(settledPage) {
         onPageChanged(settledPage)
@@ -429,13 +444,7 @@ fun MainScreen(
                         }
                     }
                 }
-                if (uiMode == UiMode.Material) {
-                    CompositionLocalProvider(LocalMaterialSwitchBackdrop provides switchBackdrop) {
-                        pager()
-                    }
-                } else {
-                    pager()
-                }
+                pager()
             }
         }
 
