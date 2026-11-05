@@ -609,7 +609,7 @@ fun ExpressiveSwitch(
                                 depthEffect = false,
                                 chromaticAberration = if (glassInteraction > 0.5f) glassInteraction else 0f,
                                 // Pull the sampled track/page image toward the lens center.
-                                imageCompression = 0.34f * glassInteraction,
+                                imageCompression = 0.18f * glassInteraction,
                             )
                         },
                         highlight = {
