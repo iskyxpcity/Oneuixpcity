@@ -159,14 +159,16 @@ half4 main(float2 coord) {
     float2 capsuleAxisPoint = float2(clamp(centeredCoord.x, -axisHalfLength, axisHalfLength), 0.0);
     float2 capsuleRadial = centeredCoord - capsuleAxisPoint;
     float radialPosition = clamp(length(capsuleRadial) / capsuleRadius, 0.0, 1.0);
-    // Smooth compression rises toward the glass rim, without a singularity
-    // at either cap or a sudden change where the straight side meets the end.
-    float compression = imageCompression * smoothstep(0.0, 1.0, radialPosition);
-    // Expand the source sampling coordinates radially from the lens center.
-    // This contracts the entire image (including horizontal detail along the
-    // straight capsule sides) instead of only squeezing pixels perpendicular
-    // to the capsule centerline.
+    // Keep image contraction strong along the straight capsule sides, but
+    // taper it around the left/right end caps where its outward sample offset
+    // would otherwise cancel the inward horizontal refraction.
+    float capRefraction = 1.0 - 0.85 * abs(grad.x);
+    float compression = imageCompression
+        * smoothstep(0.0, 1.0, radialPosition)
+        * capRefraction;
     float2 compressedCoord = coord + centeredCoord * compression;
+    // Apply the optical displacement after compression so the end-cap lens
+    // refraction remains visible instead of being swallowed by the scale map.
     float2 refractedCoord = compressedCoord + d * grad;
     return content.eval(refractedCoord);
 }
@@ -223,14 +225,16 @@ half4 main(float2 coord) {
     float2 capsuleAxisPoint = float2(clamp(centeredCoord.x, -axisHalfLength, axisHalfLength), 0.0);
     float2 capsuleRadial = centeredCoord - capsuleAxisPoint;
     float radialPosition = clamp(length(capsuleRadial) / capsuleRadius, 0.0, 1.0);
-    // Smooth compression rises toward the glass rim, without a singularity
-    // at either cap or a sudden change where the straight side meets the end.
-    float compression = imageCompression * smoothstep(0.0, 1.0, radialPosition);
-    // Expand the source sampling coordinates radially from the lens center.
-    // This contracts the entire image (including horizontal detail along the
-    // straight capsule sides) instead of only squeezing pixels perpendicular
-    // to the capsule centerline.
+    // Keep image contraction strong along the straight capsule sides, but
+    // taper it around the left/right end caps where its outward sample offset
+    // would otherwise cancel the inward horizontal refraction.
+    float capRefraction = 1.0 - 0.85 * abs(grad.x);
+    float compression = imageCompression
+        * smoothstep(0.0, 1.0, radialPosition)
+        * capRefraction;
     float2 compressedCoord = coord + centeredCoord * compression;
+    // Apply the optical displacement after compression so the end-cap lens
+    // refraction remains visible instead of being swallowed by the scale map.
     float2 refractedCoord = compressedCoord + d * grad;
     float dispersionIntensity = chromaticAberration * ((centeredCoord.x * centeredCoord.y) / (halfSize.x * halfSize.y));
     float2 dispersedCoord = d * grad * dispersionIntensity;
