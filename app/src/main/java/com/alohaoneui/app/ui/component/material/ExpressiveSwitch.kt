@@ -265,7 +265,7 @@ fun ExpressiveSwitch(
         2 -> scheme.outline
         3 -> scheme.onSurface
         4 -> scheme.surface
-        5 -> scheme.outline
+        5 -> Color.White
         6 -> scheme.onSurfaceVariant
         else -> scheme.surface
     }
@@ -562,7 +562,9 @@ fun ExpressiveSwitch(
                     .layerBackdrop(trackBackdrop)
                     .clip(trackShape)
                     .background(trackColor)
-                    .size(trackSize),
+                    // Extend only the captured rail by 1dp per side so its
+                    // refracted image reaches the expanded 66dp glass lens edge.
+                    .size(width = trackSize.width + 2.dp, height = trackSize.height),
             )
 
             // Capture the track first so the lens refracts its actual ON/OFF color.
