@@ -164,11 +164,15 @@ half4 main(float2 coord) {
     // cap it follows the local circular radius, preserving a smooth pill shape.
     float compression = imageCompression
         * smoothstep(0.0, 1.0, radialPosition);
-    float2 compressedCoord = coord + capsuleRadial * compression;
-    // Reduce only the horizontal optical displacement near the end caps.
-    // This keeps the switch track ends pill-rounded instead of pushing them
-    // outward into pointed/bulging shapes, while preserving vertical refraction.
-    float capRefraction = 1.0 - 0.55 * abs(grad.x);
+    // Keep compression vertical only. Horizontal compression moves the
+    // sampled rail beyond the lens boundary at both capsule ends, leaving
+    // the refracted track visibly detached from the glass edge.
+    float2 compressedCoord = coord + float2(0.0, capsuleRadial.y * compression);
+    // Let horizontal refraction build inward from the edge, but make it zero
+    // exactly at the boundary so the captured rail remains connected to both
+    // left and right edges without a clipped or detached end-cap.
+    float edgeRefraction = smoothstep(0.0, refractionHeight, -sd);
+    float capRefraction = (1.0 - 0.55 * abs(grad.x)) * edgeRefraction;
     float2 opticalOffset = d * float2(grad.x * capRefraction, grad.y);
     float2 refractedCoord = compressedCoord + opticalOffset;
     return content.eval(refractedCoord);
@@ -231,11 +235,15 @@ half4 main(float2 coord) {
     // cap it follows the local circular radius, preserving a smooth pill shape.
     float compression = imageCompression
         * smoothstep(0.0, 1.0, radialPosition);
-    float2 compressedCoord = coord + capsuleRadial * compression;
-    // Reduce only the horizontal optical displacement near the end caps.
-    // This keeps the switch track ends pill-rounded instead of pushing them
-    // outward into pointed/bulging shapes, while preserving vertical refraction.
-    float capRefraction = 1.0 - 0.55 * abs(grad.x);
+    // Keep compression vertical only. Horizontal compression moves the
+    // sampled rail beyond the lens boundary at both capsule ends, leaving
+    // the refracted track visibly detached from the glass edge.
+    float2 compressedCoord = coord + float2(0.0, capsuleRadial.y * compression);
+    // Let horizontal refraction build inward from the edge, but make it zero
+    // exactly at the boundary so the captured rail remains connected to both
+    // left and right edges without a clipped or detached end-cap.
+    float edgeRefraction = smoothstep(0.0, refractionHeight, -sd);
+    float capRefraction = (1.0 - 0.55 * abs(grad.x)) * edgeRefraction;
     float2 opticalOffset = d * float2(grad.x * capRefraction, grad.y);
     float2 refractedCoord = compressedCoord + opticalOffset;
     float dispersionIntensity = chromaticAberration * ((centeredCoord.x * centeredCoord.y) / (halfSize.x * halfSize.y));
