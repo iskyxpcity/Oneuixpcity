@@ -566,7 +566,7 @@ fun ExpressiveSwitch(
             // surfaceContainerHigh can be nearly indistinguishable from the page
             // surface in some palettes, so blend in a small amount of the
             // theme's outlineVariant without introducing a fixed gray.
-            val liquidGlassUncheckedTrack = lerp(uncheckedTrack, scheme.outlineVariant, 0.32f)
+            val liquidGlassUncheckedTrack = lerp(uncheckedTrack, scheme.outlineVariant, 0.40f)
             val trackColor = lerp(liquidGlassUncheckedTrack, checkedTrack, displayedTravel).let {
                 if (enabled) it else it.copy(alpha = 0.38f)
             }
