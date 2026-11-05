@@ -386,20 +386,6 @@ fun MainScreen(
                     Modifier.fillMaxSize()
                 }),
             ) {
-                // Record only the screen surface behind the pages. This source is a
-                // sibling of HorizontalPager, so Material switches cannot recursively
-                // sample their own rendered output.
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .layerBackdrop(switchBackdrop)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(surfaceColor)
-                    )
-                }
                 val responsivePagerModifier = if (showNavigationRail) {
                     Modifier
                         .widthIn(max = 1280.dp)
