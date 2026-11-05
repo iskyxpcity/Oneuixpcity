@@ -213,13 +213,23 @@ fun ExpressiveSwitch(
     // 64x28dp rail while preserving the resting thumb's geometry.
     val glassExpansion by animateFloatAsState(
         targetValue = if (style == 5 && enabled && (glassPressed || isGlassDragging)) 1.65f else 1f,
-        // Morph the enlarged lens back to its resting thumb size without recoil.
+        // Preserve the vertical glass expansion while keeping the handle
+        // shorter horizontally, so it does not look like an elongated bar.
         animationSpec = if (glassPressed || isGlassDragging) {
             spring(dampingRatio = 0.58f, stiffness = 560f)
         } else {
             tween(durationMillis = 240)
         },
         label = "materialLiquidGlassExternalExpansion",
+    )
+    val glassWidthExpansion by animateFloatAsState(
+        targetValue = if (style == 5 && enabled && (glassPressed || isGlassDragging)) 1.50f else 1f,
+        animationSpec = if (glassPressed || isGlassDragging) {
+            spring(dampingRatio = 0.58f, stiffness = 560f)
+        } else {
+            tween(durationMillis = 240)
+        },
+        label = "materialLiquidGlassWidthExpansion",
     )
     val glassAnimationScope = rememberCoroutineScope()
     // Keep release velocity in an Animatable so the impulse is actually
@@ -245,7 +255,7 @@ fun ExpressiveSwitch(
         2 -> scheme.surfaceContainer
         3 -> scheme.surfaceContainerHigh
         4 -> scheme.surfaceContainerHighest
-        5 -> scheme.surfaceContainerHighest
+        5 -> scheme.surfaceContainerHigh
         6 -> scheme.surfaceContainer
         else -> scheme.surfaceContainerHigh
     }
@@ -596,7 +606,7 @@ fun ExpressiveSwitch(
                     .offset(x = thumbTravel * displayedTravel - thumbTravel / 2f)
                     // The glass lens preserves the 40x24dp handle proportions and expands
                     // independently beyond the 64x28dp rail when pressed.
-                    .requiredSize(width = glassThumbWidth * glassExpansion, height = glassThumbHeight * glassExpansion)
+                    .requiredSize(width = glassThumbWidth * glassWidthExpansion, height = glassThumbHeight * glassExpansion)
                     .graphicsLayer { alpha = glassInteraction }
                     .drawBackdrop(
                         backdrop = glassBackdrop,
