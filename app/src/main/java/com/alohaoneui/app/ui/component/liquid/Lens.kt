@@ -56,7 +56,7 @@ fun BackdropEffectScope.lens(
         // therefore pulls the sampled image inward, matching the bottom-bar lens.
         setFloatUniform("refractionAmount", -scaledRefractionAmount)
         setFloatUniform("depthEffect", if (depthEffect) 1f else 0f)
-        setFloatUniform("imageCompression", imageCompression.coerceIn(0f, 0.45f))
+        setFloatUniform("imageCompression", imageCompression.coerceIn(0f, 0.75f))
         if (dispersionEnabled) {
             setFloatUniform("chromaticAberration", chromaticAberration)
         }
