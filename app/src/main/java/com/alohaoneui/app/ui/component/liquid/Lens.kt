@@ -164,9 +164,10 @@ half4 main(float2 coord) {
     // cap it follows the local circular radius, preserving a smooth pill shape.
     float compression = imageCompression
         * smoothstep(0.0, 1.0, radialPosition);
-    // Pull the sampled image inward along each capsule end cap. This shortens
-    // the refracted rail symmetrically without shifting the whole image.
-    float2 compressedCoord = coord - float2(capsuleRadial.x * compression * 0.55, capsuleRadial.y * compression);
+    // Keep compression vertical only. Horizontal compression moves the
+    // sampled rail beyond the lens boundary at both capsule ends, leaving
+    // the refracted track visibly detached from the glass edge.
+    float2 compressedCoord = coord + float2(0.0, capsuleRadial.y * compression);
     // Let horizontal refraction build inward from the edge, but make it zero
     // exactly at the boundary so the captured rail remains connected to both
     // left and right edges without a clipped or detached end-cap.
@@ -234,9 +235,10 @@ half4 main(float2 coord) {
     // cap it follows the local circular radius, preserving a smooth pill shape.
     float compression = imageCompression
         * smoothstep(0.0, 1.0, radialPosition);
-    // Pull the sampled image inward along each capsule end cap. This shortens
-    // the refracted rail symmetrically without shifting the whole image.
-    float2 compressedCoord = coord - float2(capsuleRadial.x * compression * 0.55, capsuleRadial.y * compression);
+    // Keep compression vertical only. Horizontal compression moves the
+    // sampled rail beyond the lens boundary at both capsule ends, leaving
+    // the refracted track visibly detached from the glass edge.
+    float2 compressedCoord = coord + float2(0.0, capsuleRadial.y * compression);
     // Let horizontal refraction build inward from the edge, but make it zero
     // exactly at the boundary so the captured rail remains connected to both
     // left and right edges without a clipped or detached end-cap.
