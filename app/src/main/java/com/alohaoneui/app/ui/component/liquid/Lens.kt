@@ -159,17 +159,18 @@ half4 main(float2 coord) {
     float2 capsuleAxisPoint = float2(clamp(centeredCoord.x, -axisHalfLength, axisHalfLength), 0.0);
     float2 capsuleRadial = centeredCoord - capsuleAxisPoint;
     float radialPosition = clamp(length(capsuleRadial) / capsuleRadius, 0.0, 1.0);
-    // Keep image contraction strong along the straight capsule sides, but
-    // taper it around the left/right end caps where its outward sample offset
-    // would otherwise cancel the inward horizontal refraction.
-    float capRefraction = 1.0 - 0.85 * abs(grad.x);
+    // Keep the image contraction from distorting the rounded end caps.
+    float capCompression = 1.0 - 0.85 * abs(grad.x);
     float compression = imageCompression
         * smoothstep(0.0, 1.0, radialPosition)
-        * capRefraction;
+        * capCompression;
     float2 compressedCoord = coord + centeredCoord * compression;
-    // Apply the optical displacement after compression so the end-cap lens
-    // refraction remains visible instead of being swallowed by the scale map.
-    float2 refractedCoord = compressedCoord + d * grad;
+    // Reduce only the horizontal optical displacement near the end caps.
+    // This keeps the switch track ends pill-rounded instead of pushing them
+    // outward into pointed/bulging shapes, while preserving vertical refraction.
+    float capRefraction = 1.0 - 0.55 * abs(grad.x);
+    float2 opticalOffset = d * float2(grad.x * capRefraction, grad.y);
+    float2 refractedCoord = compressedCoord + opticalOffset;
     return content.eval(refractedCoord);
 }
 """
@@ -225,19 +226,20 @@ half4 main(float2 coord) {
     float2 capsuleAxisPoint = float2(clamp(centeredCoord.x, -axisHalfLength, axisHalfLength), 0.0);
     float2 capsuleRadial = centeredCoord - capsuleAxisPoint;
     float radialPosition = clamp(length(capsuleRadial) / capsuleRadius, 0.0, 1.0);
-    // Keep image contraction strong along the straight capsule sides, but
-    // taper it around the left/right end caps where its outward sample offset
-    // would otherwise cancel the inward horizontal refraction.
-    float capRefraction = 1.0 - 0.85 * abs(grad.x);
+    // Keep the image contraction from distorting the rounded end caps.
+    float capCompression = 1.0 - 0.85 * abs(grad.x);
     float compression = imageCompression
         * smoothstep(0.0, 1.0, radialPosition)
-        * capRefraction;
+        * capCompression;
     float2 compressedCoord = coord + centeredCoord * compression;
-    // Apply the optical displacement after compression so the end-cap lens
-    // refraction remains visible instead of being swallowed by the scale map.
-    float2 refractedCoord = compressedCoord + d * grad;
+    // Reduce only the horizontal optical displacement near the end caps.
+    // This keeps the switch track ends pill-rounded instead of pushing them
+    // outward into pointed/bulging shapes, while preserving vertical refraction.
+    float capRefraction = 1.0 - 0.55 * abs(grad.x);
+    float2 opticalOffset = d * float2(grad.x * capRefraction, grad.y);
+    float2 refractedCoord = compressedCoord + opticalOffset;
     float dispersionIntensity = chromaticAberration * ((centeredCoord.x * centeredCoord.y) / (halfSize.x * halfSize.y));
-    float2 dispersedCoord = d * grad * dispersionIntensity;
+    float2 dispersedCoord = opticalOffset * dispersionIntensity;
 
     half4 color = half4(0.0);
 
