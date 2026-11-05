@@ -159,12 +159,12 @@ half4 main(float2 coord) {
     float2 capsuleAxisPoint = float2(clamp(centeredCoord.x, -axisHalfLength, axisHalfLength), 0.0);
     float2 capsuleRadial = centeredCoord - capsuleAxisPoint;
     float radialPosition = clamp(length(capsuleRadial) / capsuleRadius, 0.0, 1.0);
-    // Keep the image contraction from distorting the rounded end caps.
-    float capCompression = 1.0 - 0.85 * abs(grad.x);
+    // Compress relative to the capsule centerline, not the switch's global
+    // center. On the straight rail this is purely vertical; around each end
+    // cap it follows the local circular radius, preserving a smooth pill shape.
     float compression = imageCompression
-        * smoothstep(0.0, 1.0, radialPosition)
-        * capCompression;
-    float2 compressedCoord = coord + centeredCoord * compression;
+        * smoothstep(0.0, 1.0, radialPosition);
+    float2 compressedCoord = coord + capsuleRadial * compression;
     // Reduce only the horizontal optical displacement near the end caps.
     // This keeps the switch track ends pill-rounded instead of pushing them
     // outward into pointed/bulging shapes, while preserving vertical refraction.
@@ -226,12 +226,12 @@ half4 main(float2 coord) {
     float2 capsuleAxisPoint = float2(clamp(centeredCoord.x, -axisHalfLength, axisHalfLength), 0.0);
     float2 capsuleRadial = centeredCoord - capsuleAxisPoint;
     float radialPosition = clamp(length(capsuleRadial) / capsuleRadius, 0.0, 1.0);
-    // Keep the image contraction from distorting the rounded end caps.
-    float capCompression = 1.0 - 0.85 * abs(grad.x);
+    // Compress relative to the capsule centerline, not the switch's global
+    // center. On the straight rail this is purely vertical; around each end
+    // cap it follows the local circular radius, preserving a smooth pill shape.
     float compression = imageCompression
-        * smoothstep(0.0, 1.0, radialPosition)
-        * capCompression;
-    float2 compressedCoord = coord + centeredCoord * compression;
+        * smoothstep(0.0, 1.0, radialPosition);
+    float2 compressedCoord = coord + capsuleRadial * compression;
     // Reduce only the horizontal optical displacement near the end caps.
     // This keeps the switch track ends pill-rounded instead of pushing them
     // outward into pointed/bulging shapes, while preserving vertical refraction.
