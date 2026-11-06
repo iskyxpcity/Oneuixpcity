@@ -627,11 +627,11 @@ fun ExpressiveSwitch(
                                 // Its outer surface uses the normal rounded-rect gradient;
                                 // depthEffect is reserved for the separately animated tab pill.
                                 depthEffect = false,
-                                chromaticAberration = if (glassInteraction > 0.5f) 0.20f * glassInteraction else 0f,
+                                chromaticAberration = 0f,
                                 // Pull the sampled track/page image toward the lens center.
                                 imageCompression = 0.75f * glassInteraction,
                                 // Shorten only the captured rail inside this switch lens.
-                                internalRailScaleX = 1.12f,
+                                internalRailScaleX = 0.88f,
                                 // Anchor shortening to the actual rail center, not the moving thumb/lens center.
                                 railCenterOffsetX = glassRailCenterOffsetX,
                             )
