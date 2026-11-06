@@ -42,6 +42,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.zIndex
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.graphics.drawscope.scale
@@ -137,7 +138,7 @@ fun ExpressiveSwitch(
     // it is not a recolored Material 3 control.
     if (style == 1) {
         val scheme = MaterialTheme.colorScheme
-    val isDarkTheme = com.alohaoneui.app.ui.theme.isInDarkTheme()
+    val isDarkTheme = scheme.surface.luminance() < 0.5f
         androidx.compose.material.Switch(
             checked = checked,
             onCheckedChange = onCheckedChange,
