@@ -17,6 +17,7 @@ fun BackdropEffectScope.switchLens(
     chromaticAberration: Float = 0f,
     imageCompression: Float = 0f,
     internalRailScaleX: Float = 1f,
+    railCenterOffsetX: Float = 0f,
 ) {
     if (!isRuntimeShaderSupported()) return
     if (refractionHeight <= 0f || refractionAmount <= 0f) return
@@ -59,6 +60,7 @@ fun BackdropEffectScope.switchLens(
         setFloatUniform("depthEffect", if (depthEffect) 1f else 0f)
         setFloatUniform("imageCompression", imageCompression.coerceIn(0f, 0.75f))
         setFloatUniform("internalRailScaleX", internalRailScaleX.coerceIn(1f, 1.5f))
+        setFloatUniform("railCenterOffsetX", railCenterOffsetX)
         if (dispersionEnabled) {
             setFloatUniform("chromaticAberration", chromaticAberration)
         }
@@ -122,6 +124,7 @@ uniform float refractionAmount;
 uniform float depthEffect;
 uniform float imageCompression;
 uniform float internalRailScaleX;
+uniform float railCenterOffsetX;
 
 $ROUNDED_RECT_SDF
 
@@ -182,8 +185,9 @@ half4 main(float2 coord) {
     float2 refractedCoord = compressedCoord + opticalOffset;
     // Scale only the switch's sampled track around the lens center.
     // Default 1.0 preserves the shared lens (including floating bottom bar).
+    float railCenterX = halfSize.x + railCenterOffsetX;
     float2 railSampleCoord = float2(
-        halfSize.x + (refractedCoord.x - halfSize.x) * internalRailScaleX,
+        railCenterX + (refractedCoord.x - railCenterX) * internalRailScaleX,
         refractedCoord.y
     );
     return content.eval(railSampleCoord);
@@ -201,6 +205,7 @@ uniform float refractionAmount;
 uniform float depthEffect;
 uniform float imageCompression;
 uniform float internalRailScaleX;
+uniform float railCenterOffsetX;
 uniform float chromaticAberration;
 
 $ROUNDED_RECT_SDF
@@ -262,8 +267,9 @@ half4 main(float2 coord) {
     float2 refractedCoord = compressedCoord + opticalOffset;
     // Scale only the switch's sampled track around the lens center.
     // Default 1.0 preserves the shared lens (including floating bottom bar).
+    float railCenterX = halfSize.x + railCenterOffsetX;
     float2 railSampleCoord = float2(
-        halfSize.x + (refractedCoord.x - halfSize.x) * internalRailScaleX,
+        railCenterX + (refractedCoord.x - railCenterX) * internalRailScaleX,
         refractedCoord.y
     );
     float dispersionIntensity = chromaticAberration * ((centeredCoord.x * centeredCoord.y) / (halfSize.x * halfSize.y));
