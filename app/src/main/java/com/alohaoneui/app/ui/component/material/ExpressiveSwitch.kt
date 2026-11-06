@@ -63,7 +63,7 @@ import com.alohaoneui.app.ui.theme.LocalMaterialSwitchStyle
 import com.alohaoneui.app.ui.component.liquid.InnerShadow
 import com.alohaoneui.app.ui.component.liquid.innerShadow
 import com.alohaoneui.app.ui.component.liquid.switchLens
-import top.yukonga.miuix.kmp.blur.vibrancy
+import com.alohaoneui.app.ui.component.liquid.vibrancy
 import top.yukonga.miuix.kmp.blur.blur
 import com.alohaoneui.app.ui.component.liquid.rememberCombinedBackdrop
 import top.yukonga.miuix.kmp.blur.Backdrop
@@ -202,35 +202,23 @@ fun ExpressiveSwitch(
     }
     val glassInteraction by animateFloatAsState(
         targetValue = if (style == 5 && enabled && (glassPressed || isGlassDragging)) 1f else 0f,
-        // Release is a controlled visual transition, not a spring bounce.
-        animationSpec = if (glassPressed || isGlassDragging) {
-            spring(dampingRatio = 0.62f, stiffness = 700f)
-        } else {
-            tween(durationMillis = 220)
-        },
+        // Match the floating bar's damped spring response on both press and release.
+        animationSpec = spring(dampingRatio = 0.62f, stiffness = 560f),
         label = "materialLiquidGlassInteraction",
     )
     // The resting Material thumb retains its 40x24dp switch silhouette. The separate
     // glass lens expands from the same proportions during interaction, visibly protruding beyond the
     // 64x28dp rail while preserving the resting thumb's geometry.
+    // Match the floating bar's 78dp / 56dp pressed scale. Applied equally
+    // on both axes so the glass handle grows as a balanced pill, then springs back.
     val glassExpansion by animateFloatAsState(
-        targetValue = if (style == 5 && enabled && (glassPressed || isGlassDragging)) 1.65f else 1f,
-        // Preserve the vertical glass expansion while keeping the handle
-        // shorter horizontally, so it does not look like an elongated bar.
-        animationSpec = if (glassPressed || isGlassDragging) {
-            spring(dampingRatio = 0.58f, stiffness = 560f)
-        } else {
-            tween(durationMillis = 240)
-        },
+        targetValue = if (style == 5 && enabled && (glassPressed || isGlassDragging)) 78f / 56f else 1f,
+        animationSpec = spring(dampingRatio = 0.6f, stiffness = 250f),
         label = "materialLiquidGlassExternalExpansion",
     )
     val glassWidthExpansion by animateFloatAsState(
-        targetValue = if (style == 5 && enabled && (glassPressed || isGlassDragging)) 1.40f else 1f,
-        animationSpec = if (glassPressed || isGlassDragging) {
-            spring(dampingRatio = 0.58f, stiffness = 560f)
-        } else {
-            tween(durationMillis = 240)
-        },
+        targetValue = if (style == 5 && enabled && (glassPressed || isGlassDragging)) 78f / 56f else 1f,
+        animationSpec = spring(dampingRatio = 0.6f, stiffness = 250f),
         label = "materialLiquidGlassWidthExpansion",
     )
     val glassAnimationScope = rememberCoroutineScope()
@@ -635,9 +623,11 @@ fun ExpressiveSwitch(
                             MaterialLiquidGlassSwitchHighlight.copy(alpha = glassInteraction)
                         },
                         layerBlock = {
+                            // Same directional velocity deformation as the floating
+                            // bottom-bar indicator: stretch along travel, compress across it.
                             val velocity = glassDragVelocity.value / 10f
                             scaleX = 1f / (1f - (velocity * 0.75f).coerceIn(-0.2f, 0.2f))
-                            scaleY = 1f * (1f - (velocity * 0.25f).coerceIn(-0.2f, 0.2f))
+                            scaleY = 1f - (velocity * 0.25f).coerceIn(-0.2f, 0.2f)
                         },
                         onDrawSurface = {
                             // Neutral glass body; never tint the transient lens with the resting Material thumb.
