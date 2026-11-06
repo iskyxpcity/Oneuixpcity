@@ -33,7 +33,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -137,6 +136,7 @@ fun ExpressiveSwitch(
     // it is not a recolored Material 3 control.
     if (style == 1) {
         val scheme = MaterialTheme.colorScheme
+    val isDarkTheme = com.alohaoneui.app.ui.theme.isInDarkTheme()
         androidx.compose.material.Switch(
             checked = checked,
             onCheckedChange = onCheckedChange,
@@ -649,9 +649,8 @@ fun ExpressiveSwitch(
                         onDrawSurface = {
                             // Same subtle surface treatment as the floating bottom-bar
                             // indicator: a theme-aware base wash plus a restrained dark veil.
-                            val dark = com.alohaoneui.app.ui.theme.isInDarkTheme()
                             drawRect(
-                                color = if (dark) Color.White.copy(alpha = 0.1f) else Color.Black.copy(alpha = 0.1f),
+                                color = if (isDarkTheme) Color.White.copy(alpha = 0.1f) else Color.Black.copy(alpha = 0.1f),
                                 alpha = 1f - glassInteraction,
                             )
                             drawRect(Color.Black.copy(alpha = 0.03f * glassInteraction))
