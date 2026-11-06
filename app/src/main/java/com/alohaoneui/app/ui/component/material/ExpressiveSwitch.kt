@@ -1,6 +1,5 @@
 package com.alohaoneui.app.ui.component.material
 
-import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
@@ -193,13 +192,26 @@ fun ExpressiveSwitch(
         }
     }
     var glassDragFraction by remember { mutableFloatStateOf(if (checked) 1f else 0f) }
+    // Keep an unclamped pointer fraction so pushing beyond either endpoint
+    // produces a symmetric rubber-band pull instead of silently hitting a hard stop.
+    var glassRawDragFraction by remember { mutableFloatStateOf(if (checked) 1f else 0f) }
+    var glassDragImpulse by remember { mutableFloatStateOf(0f) }
     LaunchedEffect(checked) {
         if (glassDragTarget == checked) {
             isGlassDragging = false
             glassDragTarget = null
         }
-        if (!isGlassDragging) glassDragFraction = if (checked) 1f else 0f
+        if (!isGlassDragging) {
+            glassDragFraction = if (checked) 1f else 0f
+            glassRawDragFraction = glassDragFraction
+        }
     }
+    val glassEdgePullTarget = (glassRawDragFraction - glassDragFraction).coerceIn(-0.36f, 0.36f)
+    val glassEdgePull by animateFloatAsState(
+        targetValue = glassEdgePullTarget,
+        animationSpec = spring(dampingRatio = 0.58f, stiffness = 260f),
+        label = "materialLiquidGlassRubberBand",
+    )
     val glassInteractionActive = style == 5 && enabled && (glassPressed || isGlassDragging)
     val glassInteraction by animateFloatAsState(
         targetValue = if (glassInteractionActive) 1f else 0f,
@@ -215,23 +227,18 @@ fun ExpressiveSwitch(
     // The resting Material thumb retains its 40x24dp switch silhouette. The separate
     // glass lens expands from the same proportions during interaction, visibly protruding beyond the
     // 64x28dp rail while preserving the resting thumb's geometry.
-    // A stronger touch response: the 40x24dp lens grows to 64x38.4dp,
-    // visibly escaping the 64x28dp rail while remaining a balanced capsule.
+    // Keep the glass capsule compact at rest and only moderately larger on touch.
+    // The endpoint rubber-band supplies the stronger deformation, not an oversized pill.
     val glassExpansion by animateFloatAsState(
-        targetValue = if (style == 5 && enabled && (glassPressed || isGlassDragging)) 1.6f else 1f,
-        animationSpec = spring(dampingRatio = 0.62f, stiffness = 230f),
+        targetValue = if (style == 5 && enabled && (glassPressed || isGlassDragging)) 1.28f else 1f,
+        animationSpec = spring(dampingRatio = 0.62f, stiffness = 260f),
         label = "materialLiquidGlassExternalExpansion",
     )
     val glassWidthExpansion by animateFloatAsState(
-        targetValue = if (style == 5 && enabled && (glassPressed || isGlassDragging)) 1.6f else 1f,
-        animationSpec = spring(dampingRatio = 0.62f, stiffness = 230f),
+        targetValue = if (style == 5 && enabled && (glassPressed || isGlassDragging)) 1.28f else 1f,
+        animationSpec = spring(dampingRatio = 0.62f, stiffness = 260f),
         label = "materialLiquidGlassWidthExpansion",
     )
-    val glassAnimationScope = rememberCoroutineScope()
-    // Keep release velocity in an Animatable so the impulse is actually
-    // rendered after pointer-up instead of being cleared in the same frame.
-    val glassDragVelocity = remember { Animatable(0f) }
-    var glassDragVelocityJob by remember { mutableStateOf<Job?>(null) }
     val scheme = MaterialTheme.colorScheme
     // Each family has its own OFF and ON color recipe. Every role is read
     // from the active Aloha Material scheme, so light/dark and user theme
@@ -381,13 +388,12 @@ fun ExpressiveSwitch(
         (trackSize.width - thumbWidth - thumbEdgeInset * 2).toPx().coerceAtLeast(1f)
     }
     val glassDragState = rememberDraggableState { delta ->
-        glassDragFraction = (glassDragFraction + delta / glassDragTravelPx).coerceIn(0f, 1f)
-        // Feed each live pointer delta into the lens layer. Previously velocity
-        // was only assigned after pointer-up, so there was no drag deformation.
-        glassDragVelocityJob?.cancel()
-        glassDragVelocityJob = glassAnimationScope.launch {
-            glassDragVelocity.snapTo((delta * 2.5f).coerceIn(-2f, 2f))
-        }
+        glassRawDragFraction = (glassRawDragFraction + delta / glassDragTravelPx)
+        glassDragFraction = glassRawDragFraction.coerceIn(0f, 1f)
+        // Signed pointer impulse is consumed symmetrically by the lens layer.
+        // Both leftward and rightward movement now expand the glass, while
+        // endpoint overscroll independently stretches it like elastic rubber.
+        glassDragImpulse = (delta / 24f).coerceIn(-1f, 1f)
     }
     // Keep switch outlines robust for every global Aloha shape preset.
     val trackShape = if (com.alohaoneui.app.ui.theme.LocalMaterialShapeStyle.current == 3) {
@@ -449,20 +455,15 @@ fun ExpressiveSwitch(
                         onDragStarted = {
                             isGlassDragging = true
                             glassDragTarget = null
-                            glassAnimationScope.launch { glassDragVelocity.snapTo(0f) }
                             glassDragFraction = if (checked) 1f else 0f
+                            glassRawDragFraction = glassDragFraction
+                            glassDragImpulse = 0f
                         },
                         onDragStopped = { velocity ->
-                            // Convert pointer release velocity into the same normalized
-                            // directional impulse consumed by the lens layer.
-                            glassDragVelocityJob?.cancel()
-                            glassAnimationScope.launch {
-                                glassDragVelocity.snapTo((velocity / 1000f).coerceIn(-2f, 2f))
-                                glassDragVelocity.animateTo(
-                                    0f,
-                                    spring(dampingRatio = 0.72f, stiffness = 420f),
-                                )
-                            }
+                            // Release the raw overdrag back to the nearest endpoint;
+                            // glassEdgePull animates this displacement with a spring.
+                            glassRawDragFraction = glassDragFraction
+                            glassDragImpulse = 0f
                             val target = glassDragFraction >= 0.5f
                             if (target == checked) {
                                 isGlassDragging = false
@@ -565,8 +566,8 @@ fun ExpressiveSwitch(
             val glassRailCenterOffsetX = with(LocalDensity.current) {
                 -(thumbTravel * displayedTravel - thumbTravel / 2f).toPx()
             }
-            val glassThumbWidth = 40.dp
-            val glassThumbHeight = 24.dp
+            val glassThumbWidth = 36.dp
+            val glassThumbHeight = 22.dp
             // Keep the OFF rail visibly tinted in every Material theme.
             // surfaceContainerHigh can be nearly indistinguishable from the page
             // surface in some palettes, so blend in a small amount of the
@@ -625,25 +626,35 @@ fun ExpressiveSwitch(
                                                         vibrancy()
                             blur(4.dp.toPx(), 4.dp.toPx())
                             switchLens(
+                                // Match the floating bottom-bar lens recipe exactly;
+                                // interaction alpha is handled by the glass layer itself.
                                 refractionHeight = 10.dp.toPx() * glassInteraction,
                                 refractionAmount = 14.dp.toPx() * glassInteraction,
                                 depthEffect = true,
-                                chromaticAberration = 0.5f * glassInteraction,
+                                chromaticAberration = 0.5f,
                             )
                         },
                         highlight = {
                             MaterialLiquidGlassSwitchHighlight.copy(alpha = glassInteraction)
                         },
                         layerBlock = {
-                            // Same directional velocity deformation as the floating
-                            // bottom-bar indicator: stretch along travel, compress across it.
-                            val velocity = glassDragVelocity.value / 10f
-                            scaleX = 1f / (1f - (velocity * 0.75f).coerceIn(-0.2f, 0.2f))
-                            scaleY = 1f - (velocity * 0.25f).coerceIn(-0.2f, 0.2f)
+                            // Symmetric drag deformation: either drag direction widens
+                            // the lens, while endpoint overdrag adds a rubber-band pull.
+                            val dragAmount = kotlin.math.abs(glassDragImpulse)
+                            val edgeAmount = kotlin.math.abs(glassEdgePull)
+                            scaleX = 1f + dragAmount * 0.12f + edgeAmount * 0.85f
+                            scaleY = 1f - dragAmount * 0.045f - edgeAmount * 0.24f
+                            translationX = glassEdgePull * 14.dp.toPx()
                         },
                         onDrawSurface = {
-                            // Neutral glass body; never tint the transient lens with the resting Material thumb.
-                            drawRect(Color.White.copy(alpha = 0.08f * glassInteraction))
+                            // Same subtle surface treatment as the floating bottom-bar
+                            // indicator: a theme-aware base wash plus a restrained dark veil.
+                            val dark = com.alohaoneui.app.ui.theme.isInDarkTheme()
+                            drawRect(
+                                color = if (dark) Color.White.copy(alpha = 0.1f) else Color.Black.copy(alpha = 0.1f),
+                                alpha = 1f - glassInteraction,
+                            )
+                            drawRect(Color.Black.copy(alpha = 0.03f * glassInteraction))
                         },
                     )
                     .innerShadow(shape = thumbShape) {
