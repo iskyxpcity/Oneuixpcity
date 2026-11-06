@@ -172,7 +172,9 @@ half4 main(float2 coord) {
     // exactly at the boundary so the captured rail remains connected to both
     // left and right edges without a clipped or detached end-cap.
     float edgeRefraction = smoothstep(0.0, refractionHeight, -sd);
-    float capRefraction = (1.0 - 0.55 * abs(grad.x)) * edgeRefraction;
+    // Reduce only the horizontal end-cap displacement of the captured rail.
+    // This shortens the refracted rail inside the lens without scaling the lens image.
+    float capRefraction = (1.0 - 0.82 * abs(grad.x)) * edgeRefraction;
     float2 opticalOffset = d * float2(grad.x * capRefraction, grad.y);
     float2 refractedCoord = compressedCoord + opticalOffset;
     return content.eval(refractedCoord);
@@ -243,7 +245,9 @@ half4 main(float2 coord) {
     // exactly at the boundary so the captured rail remains connected to both
     // left and right edges without a clipped or detached end-cap.
     float edgeRefraction = smoothstep(0.0, refractionHeight, -sd);
-    float capRefraction = (1.0 - 0.55 * abs(grad.x)) * edgeRefraction;
+    // Reduce only the horizontal end-cap displacement of the captured rail.
+    // This shortens the refracted rail inside the lens without scaling the lens image.
+    float capRefraction = (1.0 - 0.82 * abs(grad.x)) * edgeRefraction;
     float2 opticalOffset = d * float2(grad.x * capRefraction, grad.y);
     float2 refractedCoord = compressedCoord + opticalOffset;
     float dispersionIntensity = chromaticAberration * ((centeredCoord.x * centeredCoord.y) / (halfSize.x * halfSize.y));
