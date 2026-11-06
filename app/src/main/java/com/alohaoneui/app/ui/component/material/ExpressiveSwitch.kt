@@ -61,7 +61,7 @@ import com.alohaoneui.app.ui.theme.LocalMaterialShadowSwitches
 import com.alohaoneui.app.ui.theme.LocalMaterialSwitchStyle
 import com.alohaoneui.app.ui.component.liquid.InnerShadow
 import com.alohaoneui.app.ui.component.liquid.innerShadow
-import com.alohaoneui.app.ui.component.liquid.switchLens
+import com.alohaoneui.app.ui.component.liquid.lens
 import com.alohaoneui.app.ui.component.liquid.vibrancy
 import top.yukonga.miuix.kmp.blur.blur
 import com.alohaoneui.app.ui.component.liquid.rememberCombinedBackdrop
@@ -138,7 +138,6 @@ fun ExpressiveSwitch(
     // it is not a recolored Material 3 control.
     if (style == 1) {
         val scheme = MaterialTheme.colorScheme
-    val isDarkTheme = scheme.surface.luminance() < 0.5f
         androidx.compose.material.Switch(
             checked = checked,
             onCheckedChange = onCheckedChange,
@@ -242,6 +241,7 @@ fun ExpressiveSwitch(
         label = "materialLiquidGlassWidthExpansion",
     )
     val scheme = MaterialTheme.colorScheme
+    val isDarkTheme = scheme.surface.luminance() < 0.5f
     // Each family has its own OFF and ON color recipe. Every role is read
     // from the active Aloha Material scheme, so light/dark and user theme
     // changes propagate without embedding platform brand colors.
@@ -627,7 +627,7 @@ fun ExpressiveSwitch(
                         effects = {
                                                         vibrancy()
                             blur(4.dp.toPx(), 4.dp.toPx())
-                            switchLens(
+                            lens(
                                 // Match the floating bottom-bar lens recipe exactly;
                                 // interaction alpha is handled by the glass layer itself.
                                 refractionHeight = 10.dp.toPx() * glassInteraction,
