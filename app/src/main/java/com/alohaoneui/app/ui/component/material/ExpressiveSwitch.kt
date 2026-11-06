@@ -375,7 +375,9 @@ fun ExpressiveSwitch(
             valueRange = 0f..1f,
             visibilityThreshold = 0.001f,
             initialScale = 1f,
-            pressedScale = 78f / 56f,
+            // Voyage's press-scale channel is a subtle 3.5% expansion,
+            // not the floating-bottom-bar's 1.39x drag capsule scale.
+            pressedScale = 1.035f,
             onDragStarted = {},
             onDragStopped = {
                 val target = targetValue >= 0.5f
