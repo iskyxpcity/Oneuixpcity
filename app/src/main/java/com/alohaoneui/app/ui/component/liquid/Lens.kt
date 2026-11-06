@@ -175,15 +175,7 @@ half4 main(float2 coord) {
     float capRefraction = (1.0 - 0.55 * abs(grad.x)) * edgeRefraction;
     float2 opticalOffset = d * float2(grad.x * capRefraction, grad.y);
     float2 refractedCoord = compressedCoord + opticalOffset;
-    // Independently shorten the rail image sampled inside the lens.
-    // A wider source-coordinate span makes the captured rail appear shorter,
-    // without changing the lens bounds, shape, or refraction edge.
-    const float internalRailScaleX = 1.12;
-    float2 railSampleCoord = float2(
-        halfSize.x + (refractedCoord.x - halfSize.x) * internalRailScaleX,
-        refractedCoord.y
-    );
-    return content.eval(railSampleCoord);
+    return content.eval(refractedCoord);
 }
 """
 
@@ -254,45 +246,39 @@ half4 main(float2 coord) {
     float capRefraction = (1.0 - 0.55 * abs(grad.x)) * edgeRefraction;
     float2 opticalOffset = d * float2(grad.x * capRefraction, grad.y);
     float2 refractedCoord = compressedCoord + opticalOffset;
-    // Keep the lens geometry unchanged; shorten only the sampled rail image.
-    const float internalRailScaleX = 1.12;
-    float2 railSampleCoord = float2(
-        halfSize.x + (refractedCoord.x - halfSize.x) * internalRailScaleX,
-        refractedCoord.y
-    );
     float dispersionIntensity = chromaticAberration * ((centeredCoord.x * centeredCoord.y) / (halfSize.x * halfSize.y));
     float2 dispersedCoord = opticalOffset * dispersionIntensity;
 
     half4 color = half4(0.0);
 
-    half4 red = content.eval(railSampleCoord + dispersedCoord);
+    half4 red = content.eval(refractedCoord + dispersedCoord);
     color.r += red.r / 3.5;
     color.a += red.a / 7.0;
 
-    half4 orange = content.eval(railSampleCoord + dispersedCoord * (2.0 / 3.0));
+    half4 orange = content.eval(refractedCoord + dispersedCoord * (2.0 / 3.0));
     color.r += orange.r / 3.5;
     color.g += orange.g / 7.0;
     color.a += orange.a / 7.0;
 
-    half4 yellow = content.eval(railSampleCoord + dispersedCoord * (1.0 / 3.0));
+    half4 yellow = content.eval(refractedCoord + dispersedCoord * (1.0 / 3.0));
     color.r += yellow.r / 3.5;
     color.g += yellow.g / 3.5;
     color.a += yellow.a / 7.0;
 
-    half4 green = content.eval(railSampleCoord);
+    half4 green = content.eval(refractedCoord);
     color.g += green.g / 3.5;
     color.a += green.a / 7.0;
 
-    half4 cyan = content.eval(railSampleCoord - dispersedCoord * (1.0 / 3.0));
+    half4 cyan = content.eval(refractedCoord - dispersedCoord * (1.0 / 3.0));
     color.g += cyan.g / 3.5;
     color.b += cyan.b / 3.0;
     color.a += cyan.a / 7.0;
 
-    half4 blue = content.eval(railSampleCoord - dispersedCoord * (2.0 / 3.0));
+    half4 blue = content.eval(refractedCoord - dispersedCoord * (2.0 / 3.0));
     color.b += blue.b / 3.0;
     color.a += blue.a / 7.0;
 
-    half4 purple = content.eval(railSampleCoord - dispersedCoord);
+    half4 purple = content.eval(refractedCoord - dispersedCoord);
     color.r += purple.r / 7.0;
     color.b += purple.b / 3.0;
     color.a += purple.a / 7.0;
