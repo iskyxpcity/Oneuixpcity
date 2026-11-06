@@ -82,7 +82,8 @@ private val MaterialLiquidGlassSwitchHighlight = Highlight(
         color = Color.White.copy(alpha = 0.12f),
         innerBlurRadius = 2.dp,
         primaryLight = LightSource(
-            position = LightPosition(0.5f, -0.3f, -0.05f),
+            // Match the floating bottom-bar pill highlight's 90-degree light rotation.
+            position = LightPosition(1.5f, 0.7f, -0.05f),
             color = Color.White,
             intensity = 1f,
         ),
