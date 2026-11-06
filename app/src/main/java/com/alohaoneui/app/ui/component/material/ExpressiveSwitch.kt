@@ -63,6 +63,8 @@ import com.alohaoneui.app.ui.theme.LocalMaterialSwitchStyle
 import com.alohaoneui.app.ui.component.liquid.InnerShadow
 import com.alohaoneui.app.ui.component.liquid.innerShadow
 import com.alohaoneui.app.ui.component.liquid.switchLens
+import top.yukonga.miuix.kmp.blur.vibrancy
+import top.yukonga.miuix.kmp.blur.blur
 import com.alohaoneui.app.ui.component.liquid.rememberCombinedBackdrop
 import top.yukonga.miuix.kmp.blur.Backdrop
 import top.yukonga.miuix.kmp.blur.drawBackdrop
@@ -620,20 +622,13 @@ fun ExpressiveSwitch(
                         backdrop = glassBackdrop,
                         shape = { thumbShape },
                         effects = {
-                                                        switchLens(
-                                14.dp.toPx() * glassInteraction,
-                                18.dp.toPx() * glassInteraction,
-                                // Match the floating bar's base glass surface lens.
-                                // Its outer surface uses the normal rounded-rect gradient;
-                                // depthEffect is reserved for the separately animated tab pill.
-                                depthEffect = false,
-                                chromaticAberration = 0f,
-                                // Pull the sampled track/page image toward the lens center.
-                                imageCompression = 0.75f * glassInteraction,
-                                // Shorten only the captured rail inside this switch lens.
-                                internalRailScaleX = 0.88f,
-                                // Anchor shortening to the actual rail center, not the moving thumb/lens center.
-                                railCenterOffsetX = glassRailCenterOffsetX,
+                                                        vibrancy()
+                            blur(4.dp.toPx(), 4.dp.toPx())
+                            switchLens(
+                                refractionHeight = 10.dp.toPx() * glassInteraction,
+                                refractionAmount = 14.dp.toPx() * glassInteraction,
+                                depthEffect = true,
+                                chromaticAberration = 0.5f * glassInteraction,
                             )
                         },
                         highlight = {
