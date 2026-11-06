@@ -63,7 +63,7 @@ import com.alohaoneui.app.ui.theme.LocalMaterialShadowSwitches
 import com.alohaoneui.app.ui.theme.LocalMaterialSwitchStyle
 import com.alohaoneui.app.ui.component.liquid.InnerShadow
 import com.alohaoneui.app.ui.component.liquid.innerShadow
-import com.alohaoneui.app.ui.component.liquid.lens
+import com.alohaoneui.app.ui.component.liquid.switchLens
 import com.alohaoneui.app.ui.component.liquid.vibrancy
 import com.alohaoneui.app.ui.component.miuix.animation.DampedDragAnimation
 import com.alohaoneui.app.ui.component.miuix.animation.InteractiveHighlight
@@ -624,9 +624,9 @@ fun ExpressiveSwitch(
                         effects = {
                                                         vibrancy()
                             blur(4.dp.toPx(), 4.dp.toPx())
-                            lens(
-                                // Match the floating bottom-bar lens recipe exactly;
-                                // interaction alpha is handled by the glass layer itself.
+                            switchLens(
+                                // Use the switch-owned shader/cache key; keep the bottom-bar Lens isolated.
+                                // Interaction alpha is handled by the glass layer itself.
                                 refractionHeight = 10.dp.toPx() * glassInteraction,
                                 refractionAmount = 14.dp.toPx() * glassInteraction,
                                 depthEffect = true,
