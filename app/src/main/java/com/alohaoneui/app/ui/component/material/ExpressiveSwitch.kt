@@ -627,6 +627,8 @@ fun ExpressiveSwitch(
                                 chromaticAberration = if (glassInteraction > 0.5f) glassInteraction else 0f,
                                 // Pull the sampled track/page image toward the lens center.
                                 imageCompression = 0.75f * glassInteraction,
+                                // Shorten only the captured rail inside this switch lens.
+                                internalRailScaleX = 1.12f,
                             )
                         },
                         highlight = {
