@@ -185,7 +185,7 @@ fun ExpressiveSwitch(
                 is PressInteraction.Release, is PressInteraction.Cancel -> {
                     releaseJob?.cancel()
                     releaseJob = launch {
-                        delay(300)
+                        delay(420)
                         glassPressed = false
                     }
                 }
@@ -200,31 +200,38 @@ fun ExpressiveSwitch(
         }
         if (!isGlassDragging) glassDragFraction = if (checked) 1f else 0f
     }
+    val glassInteractionActive = style == 5 && enabled && (glassPressed || isGlassDragging)
     val glassInteraction by animateFloatAsState(
-        targetValue = if (style == 5 && enabled && (glassPressed || isGlassDragging)) 1f else 0f,
-        // Match the floating bar's damped spring response on both press and release.
-        animationSpec = spring(dampingRatio = 0.62f, stiffness = 560f),
+        targetValue = if (glassInteractionActive) 1f else 0f,
+        // Enter quickly on touch; leave more gradually so the glass does not
+        // abruptly turn back into the opaque Material thumb.
+        animationSpec = if (glassInteractionActive) {
+            spring(dampingRatio = 0.62f, stiffness = 560f)
+        } else {
+            spring(dampingRatio = 0.92f, stiffness = 145f)
+        },
         label = "materialLiquidGlassInteraction",
     )
     // The resting Material thumb retains its 40x24dp switch silhouette. The separate
     // glass lens expands from the same proportions during interaction, visibly protruding beyond the
     // 64x28dp rail while preserving the resting thumb's geometry.
-    // Match the floating bar's 78dp / 56dp pressed scale. Applied equally
-    // on both axes so the glass handle grows as a balanced pill, then springs back.
+    // A stronger touch response: the 40x24dp lens grows to 64x38.4dp,
+    // visibly escaping the 64x28dp rail while remaining a balanced capsule.
     val glassExpansion by animateFloatAsState(
-        targetValue = if (style == 5 && enabled && (glassPressed || isGlassDragging)) 78f / 56f else 1f,
-        animationSpec = spring(dampingRatio = 0.6f, stiffness = 250f),
+        targetValue = if (style == 5 && enabled && (glassPressed || isGlassDragging)) 1.6f else 1f,
+        animationSpec = spring(dampingRatio = 0.62f, stiffness = 230f),
         label = "materialLiquidGlassExternalExpansion",
     )
     val glassWidthExpansion by animateFloatAsState(
-        targetValue = if (style == 5 && enabled && (glassPressed || isGlassDragging)) 78f / 56f else 1f,
-        animationSpec = spring(dampingRatio = 0.6f, stiffness = 250f),
+        targetValue = if (style == 5 && enabled && (glassPressed || isGlassDragging)) 1.6f else 1f,
+        animationSpec = spring(dampingRatio = 0.62f, stiffness = 230f),
         label = "materialLiquidGlassWidthExpansion",
     )
     val glassAnimationScope = rememberCoroutineScope()
     // Keep release velocity in an Animatable so the impulse is actually
     // rendered after pointer-up instead of being cleared in the same frame.
     val glassDragVelocity = remember { Animatable(0f) }
+    var glassDragVelocityJob by remember { mutableStateOf<Job?>(null) }
     val scheme = MaterialTheme.colorScheme
     // Each family has its own OFF and ON color recipe. Every role is read
     // from the active Aloha Material scheme, so light/dark and user theme
@@ -375,6 +382,12 @@ fun ExpressiveSwitch(
     }
     val glassDragState = rememberDraggableState { delta ->
         glassDragFraction = (glassDragFraction + delta / glassDragTravelPx).coerceIn(0f, 1f)
+        // Feed each live pointer delta into the lens layer. Previously velocity
+        // was only assigned after pointer-up, so there was no drag deformation.
+        glassDragVelocityJob?.cancel()
+        glassDragVelocityJob = glassAnimationScope.launch {
+            glassDragVelocity.snapTo((delta * 2.5f).coerceIn(-2f, 2f))
+        }
     }
     // Keep switch outlines robust for every global Aloha shape preset.
     val trackShape = if (com.alohaoneui.app.ui.theme.LocalMaterialShapeStyle.current == 3) {
@@ -440,15 +453,14 @@ fun ExpressiveSwitch(
                             glassDragFraction = if (checked) 1f else 0f
                         },
                         onDragStopped = { velocity ->
-                            // Draggable reports px/s. Preserve a brief directional deformation,
-                            // then settle it smoothly without a spring recoil.
-                            val releaseVelocity = (velocity / glassDragTravelPx / 10f)
-                                .coerceIn(-0.2f, 0.2f)
+                            // Convert pointer release velocity into the same normalized
+                            // directional impulse consumed by the lens layer.
+                            glassDragVelocityJob?.cancel()
                             glassAnimationScope.launch {
-                                glassDragVelocity.snapTo(releaseVelocity)
+                                glassDragVelocity.snapTo((velocity / 1000f).coerceIn(-2f, 2f))
                                 glassDragVelocity.animateTo(
                                     0f,
-                                    tween(durationMillis = 180),
+                                    spring(dampingRatio = 0.72f, stiffness = 420f),
                                 )
                             }
                             val target = glassDragFraction >= 0.5f
