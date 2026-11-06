@@ -560,8 +560,10 @@ fun ExpressiveSwitch(
             val glassRailCenterOffsetX = with(LocalDensity.current) {
                 -(thumbTravel * displayedTravel - thumbTravel / 2f).toPx()
             }
-            val glassThumbWidth = 36.dp
-            val glassThumbHeight = 22.dp
+            // Voyage Liquid Glass renderer reserves a 40×24dp thumb slot.
+            // The transient glass surface scales inside this source-sized slot.
+            val glassThumbWidth = 40.dp
+            val glassThumbHeight = 24.dp
             // Keep the OFF rail visibly tinted in every Material theme.
             // surfaceContainerHigh can be nearly indistinguishable from the page
             // surface in some palettes, so blend in a small amount of the
