@@ -1,13 +1,12 @@
 package com.alohaoneui.app.ui.component.material
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.EaseOut
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.draggable
-import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -26,6 +25,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SwitchColors
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -33,6 +33,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -43,6 +45,7 @@ import androidx.compose.ui.zIndex
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.graphics.drawscope.scale
@@ -52,9 +55,8 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.util.lerp
+import androidx.compose.ui.util.fastCoerceIn
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import com.alohaoneui.app.ui.theme.LocalMaterialShadowSwitches
@@ -63,6 +65,8 @@ import com.alohaoneui.app.ui.component.liquid.InnerShadow
 import com.alohaoneui.app.ui.component.liquid.innerShadow
 import com.alohaoneui.app.ui.component.liquid.lens
 import com.alohaoneui.app.ui.component.liquid.vibrancy
+import com.alohaoneui.app.ui.component.miuix.animation.DampedDragAnimation
+import com.alohaoneui.app.ui.component.miuix.animation.InteractiveHighlight
 import top.yukonga.miuix.kmp.blur.blur
 import com.alohaoneui.app.ui.component.liquid.rememberCombinedBackdrop
 import top.yukonga.miuix.kmp.blur.Backdrop
@@ -73,18 +77,24 @@ import top.yukonga.miuix.kmp.blur.highlight.BloomStroke
 import top.yukonga.miuix.kmp.blur.highlight.Highlight
 import top.yukonga.miuix.kmp.blur.highlight.LightPosition
 import top.yukonga.miuix.kmp.blur.highlight.LightSource
+import top.yukonga.miuix.kmp.blur.sensor.rememberDeviceTilt
+import kotlin.math.PI
+import kotlin.math.abs
+import kotlin.math.cos
+import kotlin.math.sign
+import kotlin.math.sin
+import kotlin.math.sqrt
 
 val LocalMaterialSwitchBackdrop = staticCompositionLocalOf<Backdrop?> { null }
 
-private val MaterialLiquidGlassSwitchHighlight = Highlight(
+private val liquidGlassSwitchSpecular: Highlight = Highlight(
     width = 1.dp,
     alpha = 1f,
     style = BloomStroke(
         color = Color.White.copy(alpha = 0.12f),
         innerBlurRadius = 2.dp,
         primaryLight = LightSource(
-            // Match the floating bottom-bar pill highlight's 90-degree light rotation.
-            position = LightPosition(1.5f, 0.7f, -0.05f),
+            position = LightPosition(0.5f, -0.3f, -0.05f),
             color = Color.White,
             intensity = 1f,
         ),
@@ -96,6 +106,46 @@ private val MaterialLiquidGlassSwitchHighlight = Highlight(
         dualPeak = true,
     ),
 )
+
+private const val SWITCH_LIGHT_REF_X = 0.5f
+private const val SWITCH_LIGHT_REF_Y = 0.7f
+private const val SWITCH_GRAVITY_DIR_THRESHOLD_SQ = 0.01f
+
+@Composable
+private fun rememberLiquidGlassSwitchHighlight(
+    base: Highlight,
+    extraDegrees: Float = 90f,
+): Highlight {
+    val baseStyle = base.style as BloomStroke
+    val tilt by rememberDeviceTilt()
+    val rotatedPrimary = remember(tilt, baseStyle.primaryLight, extraDegrees) {
+        val basePrimary = baseStyle.primaryLight
+        val gx = tilt.gravityX
+        val gy = tilt.gravityY
+        val gMagSq = gx * gx + gy * gy
+        val (lx0, ly0) = if (gMagSq > SWITCH_GRAVITY_DIR_THRESHOLD_SQ) {
+            val invMag = 1f / sqrt(gMagSq)
+            (gx * invMag) to (gy * invMag)
+        } else {
+            0f to -1f
+        }
+        val rad = extraDegrees * PI / 180.0
+        val c = cos(rad).toFloat()
+        val s = sin(rad).toFloat()
+        val lx = c * lx0 - s * ly0
+        val ly = s * lx0 + c * ly0
+        basePrimary.copy(
+            position = LightPosition(
+                x = SWITCH_LIGHT_REF_X + lx,
+                y = SWITCH_LIGHT_REF_Y + ly,
+                z = basePrimary.position.z,
+            ),
+        )
+    }
+    return remember(base, rotatedPrimary) {
+        base.copy(style = baseStyle.copy(primaryLight = rotatedPrimary))
+    }
+}
 
 /**
  * Aloha's eight selectable switch families. The selector changes the actual
@@ -163,83 +213,11 @@ fun ExpressiveSwitch(
     val pressedOrHovered = pressed || hovered
     val interactive = pressed || hovered || focused
     val interactionProgress by animateFloatAsState(targetValue = if (interactive && enabled) 1f else 0f, animationSpec = spring(dampingRatio = 0.72f, stiffness = 700f), label = "materialSwitchInteraction")
-    // Liquid Glass is transient: the handle gains its glass treatment only
-    // while the user is actively pressing the Material switch.
-    var isGlassDragging by remember { mutableStateOf(false) }
-    var glassPressed by remember { mutableStateOf(false) }
-    var glassDragTarget by remember { mutableStateOf<Boolean?>(null) }
-    // Keep a quick tap visibly glass-like for a short, consistent interval.
-    // Long presses remain glass-active for the full duration of the press.
-    LaunchedEffect(interactionSource, style, enabled) {
-        if (style != 5 || !enabled) {
-            glassPressed = false
-            return@LaunchedEffect
-        }
-        var releaseJob: Job? = null
-        interactionSource.interactions.collect { interaction ->
-            when (interaction) {
-                is PressInteraction.Press -> {
-                    releaseJob?.cancel()
-                    glassPressed = true
-                }
-                is PressInteraction.Release, is PressInteraction.Cancel -> {
-                    releaseJob?.cancel()
-                    releaseJob = launch {
-                        delay(420)
-                        glassPressed = false
-                    }
-                }
-            }
-        }
-    }
-    var glassDragFraction by remember { mutableFloatStateOf(if (checked) 1f else 0f) }
-    // Keep an unclamped pointer fraction so pushing beyond either endpoint
-    // produces a symmetric rubber-band pull instead of silently hitting a hard stop.
-    var glassRawDragFraction by remember { mutableFloatStateOf(if (checked) 1f else 0f) }
-    var glassDragImpulse by remember { mutableFloatStateOf(0f) }
-    LaunchedEffect(checked) {
-        if (glassDragTarget == checked) {
-            isGlassDragging = false
-            glassDragTarget = null
-        }
-        if (!isGlassDragging) {
-            glassDragFraction = if (checked) 1f else 0f
-            glassRawDragFraction = glassDragFraction
-        }
-    }
-    val glassEdgePullTarget = (glassRawDragFraction - glassDragFraction).coerceIn(-0.36f, 0.36f)
-    val glassEdgePull by animateFloatAsState(
-        targetValue = glassEdgePullTarget,
-        animationSpec = spring(dampingRatio = 0.58f, stiffness = 260f),
-        label = "materialLiquidGlassRubberBand",
-    )
-    val glassInteractionActive = style == 5 && enabled && (glassPressed || isGlassDragging)
-    val glassInteraction by animateFloatAsState(
-        targetValue = if (glassInteractionActive) 1f else 0f,
-        // Enter quickly on touch; leave more gradually so the glass does not
-        // abruptly turn back into the opaque Material thumb.
-        animationSpec = if (glassInteractionActive) {
-            spring(dampingRatio = 0.62f, stiffness = 560f)
-        } else {
-            spring(dampingRatio = 0.92f, stiffness = 145f)
-        },
-        label = "materialLiquidGlassInteraction",
-    )
-    // The resting Material thumb retains its 40x24dp switch silhouette. The separate
-    // glass lens expands from the same proportions during interaction, visibly protruding beyond the
-    // 64x28dp rail while preserving the resting thumb's geometry.
-    // Keep the glass capsule compact at rest and only moderately larger on touch.
-    // The endpoint rubber-band supplies the stronger deformation, not an oversized pill.
-    val glassExpansion by animateFloatAsState(
-        targetValue = if (style == 5 && enabled && (glassPressed || isGlassDragging)) 1.28f else 1f,
-        animationSpec = spring(dampingRatio = 0.62f, stiffness = 260f),
-        label = "materialLiquidGlassExternalExpansion",
-    )
-    val glassWidthExpansion by animateFloatAsState(
-        targetValue = if (style == 5 && enabled && (glassPressed || isGlassDragging)) 1.28f else 1f,
-        animationSpec = spring(dampingRatio = 0.62f, stiffness = 260f),
-        label = "materialLiquidGlassWidthExpansion",
-    )
+    // Liquid Glass uses the same drag, spring, velocity and highlight machinery
+    // as FloatingBottomBar. Only the travel range and lens footprint are switch-sized.
+    val animationScope = rememberCoroutineScope()
+    val offsetAnimation = remember { Animatable(0f) }
+    val rubberBandPx = with(LocalDensity.current) { 4.dp.toPx() }
     val scheme = MaterialTheme.colorScheme
     val isDarkTheme = scheme.surface.luminance() < 0.5f
     // Each family has its own OFF and ON color recipe. Every role is read
@@ -385,17 +363,58 @@ fun ExpressiveSwitch(
         animationSpec = travelSpec,
         label = "materialSwitchThumb",
     )
-    val displayedTravel = if (style == 5 && isGlassDragging) glassDragFraction else travel
     val glassDragTravelPx = with(LocalDensity.current) {
         (trackSize.width - thumbWidth - thumbEdgeInset * 2).toPx().coerceAtLeast(1f)
     }
-    val glassDragState = rememberDraggableState { delta ->
-        glassRawDragFraction = (glassRawDragFraction + delta / glassDragTravelPx)
-        glassDragFraction = glassRawDragFraction.coerceIn(0f, 1f)
-        // Signed pointer impulse is consumed symmetrically by the lens layer.
-        // Both leftward and rightward movement now expand the glass, while
-        // endpoint overscroll independently stretches it like elastic rubber.
-        glassDragImpulse = (delta / 24f).coerceIn(-1f, 1f)
+    val latestChecked by rememberUpdatedState(checked)
+    val latestOnCheckedChange by rememberUpdatedState(onCheckedChange)
+    val glassDragAnimation = remember(animationScope, glassDragTravelPx) {
+        DampedDragAnimation(
+            animationScope = animationScope,
+            initialValue = if (checked) 1f else 0f,
+            valueRange = 0f..1f,
+            visibilityThreshold = 0.001f,
+            initialScale = 1f,
+            pressedScale = 78f / 56f,
+            onDragStarted = {},
+            onDragStopped = {
+                val target = targetValue >= 0.5f
+                animateToValue(if (target) 1f else 0f)
+                if (target != latestChecked) latestOnCheckedChange?.invoke(target)
+                animationScope.launch {
+                    offsetAnimation.animateTo(0f, spring(1f, 300f, 0.5f))
+                }
+            },
+            onDrag = { _, dragAmount ->
+                updateValue(targetValue + dragAmount.x / glassDragTravelPx)
+                animationScope.launch {
+                    offsetAnimation.snapTo(offsetAnimation.value + dragAmount.x)
+                }
+            },
+        )
+    }
+    LaunchedEffect(checked, style) {
+        if (style == 5) glassDragAnimation.updateValue(if (checked) 1f else 0f)
+    }
+    val panelOffset by remember(rubberBandPx, glassDragTravelPx) {
+        derivedStateOf {
+            val fraction = (offsetAnimation.value / glassDragTravelPx).fastCoerceIn(-1f, 1f)
+            rubberBandPx * fraction.sign * EaseOut.transform(abs(fraction))
+        }
+    }
+    val displayedTravel = if (style == 5) glassDragAnimation.value else travel
+    val glassInteraction = if (style == 5) glassDragAnimation.pressProgress else 0f
+    val liquidGlassSwitchPillHighlight = rememberLiquidGlassSwitchHighlight(liquidGlassSwitchSpecular, extraDegrees = 90f)
+    val glassInteractiveHighlight = remember(animationScope, glassDragTravelPx) {
+        InteractiveHighlight(
+            animationScope = animationScope,
+            position = { size, _ ->
+                Offset(
+                    (glassDragAnimation.value * glassDragTravelPx) + size.width / 2f - glassDragTravelPx / 2f,
+                    size.height / 2f,
+                )
+            },
+        )
     }
     // Keep switch outlines robust for every global Aloha shape preset.
     val trackShape = if (com.alohaoneui.app.ui.theme.LocalMaterialShapeStyle.current == 3) {
@@ -449,32 +468,7 @@ fun ExpressiveSwitch(
             )
             .then(
                 if (style == 5) {
-                    Modifier.draggable(
-                        state = glassDragState,
-                        orientation = Orientation.Horizontal,
-                        enabled = enabled && onCheckedChange != null,
-                        interactionSource = interactionSource,
-                        onDragStarted = {
-                            isGlassDragging = true
-                            glassDragTarget = null
-                            glassDragFraction = if (checked) 1f else 0f
-                            glassRawDragFraction = glassDragFraction
-                            glassDragImpulse = 0f
-                        },
-                        onDragStopped = { velocity ->
-                            // Release the raw overdrag back to the nearest endpoint;
-                            // glassEdgePull animates this displacement with a spring.
-                            glassRawDragFraction = glassDragFraction
-                            glassDragImpulse = 0f
-                            val target = glassDragFraction >= 0.5f
-                            if (target == checked) {
-                                isGlassDragging = false
-                            } else {
-                                glassDragTarget = target
-                                onCheckedChange?.invoke(target)
-                            }
-                        },
-                    )
+                    Modifier.then(glassDragAnimation.modifier)
                 } else Modifier
             )
 ,
@@ -617,10 +611,15 @@ fun ExpressiveSwitch(
                     .zIndex(2f)
                     .graphicsLayer { clip = false }
                     .offset(x = thumbTravel * displayedTravel - thumbTravel / 2f)
-                    // The glass lens preserves the 40x24dp handle proportions and expands
-                    // independently beyond the 64x28dp rail when pressed.
-                    .requiredSize(width = glassThumbWidth * glassWidthExpansion, height = glassThumbHeight * glassExpansion)
-                    .graphicsLayer { alpha = glassInteraction }
+                    // The glass capsule is intentionally switch-sized; its deformation,
+                    // drag velocity and return spring come from the same bottom-bar engine.
+                    .requiredSize(width = glassThumbWidth, height = glassThumbHeight)
+                    .graphicsLayer {
+                        alpha = glassInteraction
+                        translationX = panelOffset
+                    }
+                    .then(glassInteractiveHighlight.gestureModifier)
+                    .then(glassDragAnimation.modifier)
                     .drawBackdrop(
                         backdrop = glassBackdrop,
                         shape = { thumbShape },
@@ -637,16 +636,14 @@ fun ExpressiveSwitch(
                             )
                         },
                         highlight = {
-                            MaterialLiquidGlassSwitchHighlight.copy(alpha = glassInteraction)
+                            liquidGlassSwitchPillHighlight.copy(alpha = glassInteraction)
                         },
                         layerBlock = {
-                            // Symmetric drag deformation: either drag direction widens
-                            // the lens, while endpoint overdrag adds a rubber-band pull.
-                            val dragAmount = kotlin.math.abs(glassDragImpulse)
-                            val edgeAmount = kotlin.math.abs(glassEdgePull)
-                            scaleX = 1f + dragAmount * 0.12f + edgeAmount * 0.85f
-                            scaleY = 1f - dragAmount * 0.045f - edgeAmount * 0.24f
-                            translationX = glassEdgePull * 14.dp.toPx()
+                            scaleX = glassDragAnimation.scaleX
+                            scaleY = glassDragAnimation.scaleY
+                            val velocity = glassDragAnimation.velocity / 10f
+                            scaleX /= 1f - (velocity * 0.75f).fastCoerceIn(-0.2f, 0.2f)
+                            scaleY *= 1f - (velocity * 0.25f).fastCoerceIn(-0.2f, 0.2f)
                         },
                         onDrawSurface = {
                             // Same subtle surface treatment as the floating bottom-bar
