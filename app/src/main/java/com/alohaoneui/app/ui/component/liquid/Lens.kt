@@ -16,6 +16,7 @@ fun BackdropEffectScope.lens(
     depthEffect: Boolean = false,
     chromaticAberration: Float = 0f,
     imageCompression: Float = 0f,
+    internalRailScaleX: Float = 1f,
 ) {
     if (!isRuntimeShaderSupported()) return
     if (refractionHeight <= 0f || refractionAmount <= 0f) return
@@ -57,6 +58,7 @@ fun BackdropEffectScope.lens(
         setFloatUniform("refractionAmount", -scaledRefractionAmount)
         setFloatUniform("depthEffect", if (depthEffect) 1f else 0f)
         setFloatUniform("imageCompression", imageCompression.coerceIn(0f, 0.75f))
+        setFloatUniform("internalRailScaleX", internalRailScaleX.coerceIn(1f, 1.5f))
         if (dispersionEnabled) {
             setFloatUniform("chromaticAberration", chromaticAberration)
         }
@@ -119,6 +121,7 @@ uniform float refractionHeight;
 uniform float refractionAmount;
 uniform float depthEffect;
 uniform float imageCompression;
+uniform float internalRailScaleX;
 
 $ROUNDED_RECT_SDF
 
@@ -177,7 +180,13 @@ half4 main(float2 coord) {
     float capRefraction = (1.0 - 0.82 * abs(grad.x)) * edgeRefraction;
     float2 opticalOffset = d * float2(grad.x * capRefraction, grad.y);
     float2 refractedCoord = compressedCoord + opticalOffset;
-    return content.eval(refractedCoord);
+    // Scale only the switch's sampled track around the lens center.
+    // Default 1.0 preserves the shared lens (including floating bottom bar).
+    float2 railSampleCoord = float2(
+        halfSize.x + (refractedCoord.x - halfSize.x) * internalRailScaleX,
+        refractedCoord.y
+    );
+    return content.eval(railSampleCoord);
 }
 """
 
@@ -191,6 +200,7 @@ uniform float refractionHeight;
 uniform float refractionAmount;
 uniform float depthEffect;
 uniform float imageCompression;
+uniform float internalRailScaleX;
 uniform float chromaticAberration;
 
 $ROUNDED_RECT_SDF
@@ -250,21 +260,27 @@ half4 main(float2 coord) {
     float capRefraction = (1.0 - 0.82 * abs(grad.x)) * edgeRefraction;
     float2 opticalOffset = d * float2(grad.x * capRefraction, grad.y);
     float2 refractedCoord = compressedCoord + opticalOffset;
+    // Scale only the switch's sampled track around the lens center.
+    // Default 1.0 preserves the shared lens (including floating bottom bar).
+    float2 railSampleCoord = float2(
+        halfSize.x + (refractedCoord.x - halfSize.x) * internalRailScaleX,
+        refractedCoord.y
+    );
     float dispersionIntensity = chromaticAberration * ((centeredCoord.x * centeredCoord.y) / (halfSize.x * halfSize.y));
     float2 dispersedCoord = opticalOffset * dispersionIntensity;
 
     half4 color = half4(0.0);
 
-    half4 red = content.eval(refractedCoord + dispersedCoord);
+    half4 red = content.eval(railSampleCoord + dispersedCoord);
     color.r += red.r / 3.5;
     color.a += red.a / 7.0;
 
-    half4 orange = content.eval(refractedCoord + dispersedCoord * (2.0 / 3.0));
+    half4 orange = content.eval(railSampleCoord + dispersedCoord * (2.0 / 3.0));
     color.r += orange.r / 3.5;
     color.g += orange.g / 7.0;
     color.a += orange.a / 7.0;
 
-    half4 yellow = content.eval(refractedCoord + dispersedCoord * (1.0 / 3.0));
+    half4 yellow = content.eval(railSampleCoord + dispersedCoord * (1.0 / 3.0));
     color.r += yellow.r / 3.5;
     color.g += yellow.g / 3.5;
     color.a += yellow.a / 7.0;
@@ -273,7 +289,7 @@ half4 main(float2 coord) {
     color.g += green.g / 3.5;
     color.a += green.a / 7.0;
 
-    half4 cyan = content.eval(refractedCoord - dispersedCoord * (1.0 / 3.0));
+    half4 cyan = content.eval(railSampleCoord - dispersedCoord * (1.0 / 3.0));
     color.g += cyan.g / 3.5;
     color.b += cyan.b / 3.0;
     color.a += cyan.a / 7.0;
