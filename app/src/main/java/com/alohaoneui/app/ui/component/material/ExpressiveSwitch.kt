@@ -560,6 +560,9 @@ fun ExpressiveSwitch(
             val backdrop = LocalMaterialSwitchBackdrop.current
             val trackBackdrop = rememberLayerBackdrop()
             val thumbTravel = trackSize.width - thumbWidth - thumbEdgeInset * 2
+            val glassRailCenterOffsetX = with(LocalDensity.current) {
+                -(thumbTravel * displayedTravel - thumbTravel / 2f).toPx()
+            }
             val glassThumbWidth = 40.dp
             val glassThumbHeight = 24.dp
             // Keep the OFF rail visibly tinted in every Material theme.
@@ -630,9 +633,7 @@ fun ExpressiveSwitch(
                                 // Shorten only the captured rail inside this switch lens.
                                 internalRailScaleX = 1.12f,
                                 // Anchor shortening to the actual rail center, not the moving thumb/lens center.
-                                railCenterOffsetX = with(LocalDensity.current) {
-                                    -(thumbTravel * displayedTravel - thumbTravel / 2f).toPx()
-                                },
+                                railCenterOffsetX = glassRailCenterOffsetX,
                             )
                         },
                         highlight = {
