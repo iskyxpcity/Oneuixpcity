@@ -467,9 +467,7 @@ fun ExpressiveSwitch(
                 onValueChange = { onCheckedChange?.invoke(it) },
             )
             .then(
-                if (style == 5) {
-                    Modifier.then(glassDragAnimation.modifier)
-                } else Modifier
+                Modifier
             )
 ,
         contentAlignment = Alignment.Center,
