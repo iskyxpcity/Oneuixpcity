@@ -62,7 +62,7 @@ import com.alohaoneui.app.ui.theme.LocalMaterialShadowSwitches
 import com.alohaoneui.app.ui.theme.LocalMaterialSwitchStyle
 import com.alohaoneui.app.ui.component.liquid.InnerShadow
 import com.alohaoneui.app.ui.component.liquid.innerShadow
-import com.alohaoneui.app.ui.component.liquid.lens
+import com.alohaoneui.app.ui.component.liquid.switchLens
 import com.alohaoneui.app.ui.component.liquid.rememberCombinedBackdrop
 import top.yukonga.miuix.kmp.blur.Backdrop
 import top.yukonga.miuix.kmp.blur.drawBackdrop
@@ -617,7 +617,7 @@ fun ExpressiveSwitch(
                         backdrop = glassBackdrop,
                         shape = { thumbShape },
                         effects = {
-                                                        lens(
+                                                        switchLens(
                                 14.dp.toPx() * glassInteraction,
                                 18.dp.toPx() * glassInteraction,
                                 // Match the floating bar's base glass surface lens.
