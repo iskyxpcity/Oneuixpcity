@@ -72,6 +72,7 @@ import com.alohaoneui.app.ui.component.liquid.rememberCombinedBackdrop
 import top.yukonga.miuix.kmp.blur.Backdrop
 import top.yukonga.miuix.kmp.blur.drawBackdrop
 import top.yukonga.miuix.kmp.blur.layerBackdrop
+import top.yukonga.miuix.kmp.blur.rememberBackdrop
 import top.yukonga.miuix.kmp.blur.rememberLayerBackdrop
 import top.yukonga.miuix.kmp.blur.highlight.BloomStroke
 import top.yukonga.miuix.kmp.blur.highlight.Highlight
@@ -375,9 +376,8 @@ fun ExpressiveSwitch(
             valueRange = 0f..1f,
             visibilityThreshold = 0.001f,
             initialScale = 1f,
-            // Voyage's press-scale channel is a subtle 3.5% expansion,
-            // not the floating-bottom-bar's 1.39x drag capsule scale.
-            pressedScale = 1.035f,
+            // AndroidLiquidGlass LiquidToggle / Voyage: 1.5x press scale.
+            pressedScale = 1.5f,
             onDragStarted = {},
             onDragStopped = {
                 val target = targetValue >= 0.5f
@@ -588,7 +588,12 @@ fun ExpressiveSwitch(
 
             // Capture the track first so the lens refracts its actual ON/OFF color.
             val glassBackdrop = if (backdrop != null) {
-                rememberCombinedBackdrop(backdrop, trackBackdrop)
+                rememberCombinedBackdrop(backdrop, rememberBackdrop(trackBackdrop) { drawBackdrop ->
+                    val progress = glassDragAnimation.pressProgress
+                    val scaleX = lerp(2f / 3f, 0.75f, progress)
+                    val scaleY = lerp(0f, 0.75f, progress)
+                    scale(scaleX, scaleY) { drawBackdrop() }
+                })
             } else {
                 trackBackdrop
             }
@@ -626,8 +631,8 @@ fun ExpressiveSwitch(
                         backdrop = glassBackdrop,
                         shape = { thumbShape },
                         effects = {
-                                                        vibrancy()
-                            blur(4.dp.toPx(), 4.dp.toPx())
+                            val progress = glassDragAnimation.pressProgress
+                            blur(8.dp.toPx() * (1f - progress))
                             switchLens(
                                 // Match Voyage's glass edge profile in density-independent units.
                                 // Its animated progress controls both the refraction depth and capture bounds.
@@ -639,12 +644,17 @@ fun ExpressiveSwitch(
                             )
                         },
                         highlight = {
-                            liquidGlassSwitchPillHighlight.copy(alpha = glassInteraction)
+                            val progress = glassDragAnimation.pressProgress
+                            Highlight.Ambient.copy(
+                                width = Highlight.Ambient.width / 1.5f,
+                                blurRadius = Highlight.Ambient.blurRadius / 1.5f,
+                                alpha = progress,
+                            )
                         },
                         layerBlock = {
                             scaleX = glassDragAnimation.scaleX
                             scaleY = glassDragAnimation.scaleY
-                            val velocity = glassDragAnimation.velocity / 10f
+                            val velocity = glassDragAnimation.velocity / 50f
                             scaleX /= 1f - (velocity * 0.75f).fastCoerceIn(-0.2f, 0.2f)
                             scaleY *= 1f - (velocity * 0.25f).fastCoerceIn(-0.2f, 0.2f)
                         },
