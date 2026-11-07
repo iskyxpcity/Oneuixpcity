@@ -1,7 +1,6 @@
 package com.alohaoneui.app.ui.component.material
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -22,7 +21,6 @@ import androidx.compose.material.icons.rounded.Block
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -33,7 +31,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -45,8 +42,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.material3.ripple
 import com.alohaoneui.app.R
-import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
-import com.alohaoneui.app.ui.theme.LocalMaterialShadowTopBars
 import kotlin.math.pow
 
 internal const val ICON_SHAPE_NONE = -1
@@ -104,16 +99,10 @@ internal fun IconShapePresetDetailScreen(
 ) {
     val haptic = LocalHapticFeedback.current
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
-    Scaffold(
+    ExpressiveScaffold(
         topBar = {
             LargeFlexibleTopAppBar(
-                modifier = Modifier
-                    .then(if (LocalMaterialShadowTopBars.current) Modifier.shadow(2.dp) else Modifier)
-                    .then(
-                        LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
-                            Modifier.border(it.dp, MaterialTheme.colorScheme.outlineVariant)
-                        } ?: Modifier
-                    ),
+
                 navigationIcon = {
                     TopBarBackButton(onClick = onBack)
                 },
