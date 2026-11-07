@@ -71,7 +71,6 @@ import com.alohaoneui.app.ui.component.liquid.InnerShadow
 import com.alohaoneui.app.ui.component.liquid.innerShadow
 import com.alohaoneui.app.ui.component.liquid.switchLens
 import com.alohaoneui.app.ui.component.liquid.vibrancy
-import com.alohaoneui.app.ui.component.miuix.animation.DampedDragAnimation
 import com.alohaoneui.app.ui.component.miuix.animation.InteractiveHighlight
 import top.yukonga.miuix.kmp.blur.blur
 import com.alohaoneui.app.ui.component.liquid.rememberCombinedBackdrop
@@ -378,7 +377,7 @@ fun ExpressiveSwitch(
     var glassFraction by remember { mutableFloatStateOf(if (checked) 1f else 0f) }
     var glassDidDrag by remember { mutableStateOf(false) }
     val glassDragAnimation = remember(animationScope, glassDragTravelPx) {
-        DampedDragAnimation(
+        LiquidToggleDampedDragAnimation(
             animationScope = animationScope,
             initialValue = if (checked) 1f else 0f,
             valueRange = 0f..1f,
