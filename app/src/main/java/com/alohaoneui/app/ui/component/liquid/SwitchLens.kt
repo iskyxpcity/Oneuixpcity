@@ -15,13 +15,18 @@ fun BackdropEffectScope.switchLens(
     refractionAmount: Float,
     depthEffect: Boolean = false,
     chromaticAberration: Float = 0f,
+    capturePadding: Float = 0f,
 ) {
     if (!isRuntimeShaderSupported()) return
     if (refractionHeight <= 0f || refractionAmount <= 0f) return
 
-    if (padding < refractionAmount) {
-        padding = refractionAmount
+    // Voyage expands the backdrop capture area as the glass interaction settles:
+    // padding = max(existingPadding, (1 - progress) * 8dp), then subtracts
+    // the active refraction height before configuring the shader.
+    if (capturePadding > padding) {
+        padding = capturePadding
     }
+    padding = (padding - refractionHeight).coerceAtLeast(0f)
 
     val radii = roundedRectCornerRadii() ?: return
 
