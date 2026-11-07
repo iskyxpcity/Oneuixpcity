@@ -13,6 +13,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
 import com.alohaoneui.app.ui.theme.LocalMaterialShadowContainers
 import androidx.compose.ui.graphics.Color
@@ -39,11 +40,16 @@ fun ExpressiveDialog(
     properties: DialogProperties = DialogProperties(),
  ) {
     val dialogShape = shape ?: voyageCornerShape(28.dp)
-    val dialogModifier = modifier.then(
-        LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
-            Modifier.border(it.dp, MaterialTheme.colorScheme.outlineVariant, dialogShape)
-        } ?: Modifier
-    )
+    val dialogModifier = modifier
+        .then(
+            if (LocalMaterialShadowContainers.current) Modifier.shadow(6.dp, dialogShape)
+            else Modifier
+        )
+        .then(
+            LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
+                Modifier.border(it.dp, MaterialTheme.colorScheme.outlineVariant, dialogShape)
+            } ?: Modifier
+        )
     AlertDialog(
         onDismissRequest = onDismissRequest,
         confirmButton = confirmButton,

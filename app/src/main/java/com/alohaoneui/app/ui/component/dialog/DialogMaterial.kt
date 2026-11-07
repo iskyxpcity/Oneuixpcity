@@ -3,7 +3,6 @@ package com.alohaoneui.app.ui.component.dialog
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -16,6 +15,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.alohaoneui.app.ui.component.markdown.MarkdownContent
+import com.alohaoneui.app.ui.component.material.ExpressiveDialog
 import com.alohaoneui.app.ui.component.material.ExpressiveTextButton
 
 @Composable
@@ -46,7 +46,7 @@ fun ConfirmDialogMaterial(
     showDialog: MutableState<Boolean>
 ) {
     if (showDialog.value) {
-        AlertDialog(
+        ExpressiveDialog(
             onDismissRequest = {
                 dismiss()
                 showDialog.value = false

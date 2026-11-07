@@ -52,6 +52,7 @@ import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
 import com.alohaoneui.app.alohaoneui.AlohaOneUIPreferenceBridge
+import com.alohaoneui.app.ui.component.material.ExpressiveScaffold
 import com.alohaoneui.app.ui.component.material.LocalMaterialSwitchBackdrop
 import com.alohaoneui.app.ui.component.bottombar.BottomBar
 import com.alohaoneui.app.ui.component.bottombar.SideNavigationRail
@@ -483,7 +484,7 @@ fun MainScreen(
             }
 
             when (uiMode) {
-                UiMode.Material -> androidx.compose.material3.Scaffold(
+                UiMode.Material -> ExpressiveScaffold(
                     bottomBar = bottomBar,
                 ) { innerPadding ->
                     pagerContent(innerPadding.calculateBottomPadding())
