@@ -33,7 +33,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.mutableStateOf
@@ -142,7 +141,6 @@ import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.TopAppBar
 import top.yukonga.miuix.kmp.blur.layerBackdrop as miuixLayerBackdrop
-import top.yukonga.miuix.kmp.blur.rememberLayerBackdrop
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Back
 import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
@@ -335,17 +333,14 @@ private fun AlohaOneUIOriginalCategoryScreen(
                     WindowInsetsSides.Top + WindowInsetsSides.Horizontal
                 ),
             ) { innerPadding ->
-                CompositionLocalProvider(LocalMaterialSwitchBackdrop provides switchBackdrop) {
-                    Box(
-                        modifier = Modifier.miuixLayerBackdrop(switchBackdrop)
-                    ) {
-                        OriginalContent(
-                            Modifier
-                                .padding(innerPadding)
-                                .nestedScroll(scrollBehavior.nestedScrollConnection)
-                        )
-                    }
-                }
+                // Inherit MainActivity's background-only switch backdrop. Do not
+                // attach a capture layer around OriginalContent: it contains the
+                // Liquid Glass consumers and would make them sample their own layer.
+                OriginalContent(
+                    Modifier
+                        .padding(innerPadding)
+                        .nestedScroll(scrollBehavior.nestedScrollConnection)
+                )
             }
         }
 
