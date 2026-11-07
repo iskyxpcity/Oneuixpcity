@@ -10,6 +10,7 @@ import androidx.lifecycle.ViewModelStoreOwner
 import com.alohaoneui.app.data.repository.SettingsRepositoryImpl
 import com.alohaoneui.app.alohaoneui.AlohaOneUIPreferenceBridge
 import com.alohaoneui.app.statusbar.LsposedFrameworkStatus
+import com.alohaoneui.app.ui.util.CrashDiagnostics
 import okhttp3.Cache
 import okhttp3.OkHttpClient
 import java.util.Locale
@@ -51,6 +52,7 @@ class AlohaOneUIApplication : Application(), ViewModelStoreOwner {
 
     override fun onCreate() {
         super.onCreate()
+        CrashDiagnostics.install(this)
         alohaOneUIApp = this
         LsposedFrameworkStatus.initialize()
         AlohaOneUIPreferenceBridge.initialize(this)
