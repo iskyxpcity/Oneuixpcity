@@ -40,6 +40,10 @@ class LiquidToggleDampedDragAnimation(
 ) {
     private val valueAnimationSpec =
         spring(1f, 1000f, visibilityThreshold)
+    // Tap travel is deliberately softer/slower than direct drag tracking.
+    // Keep the upstream drag spring untouched so drag responsiveness is preserved.
+    private val tapValueAnimationSpec =
+        spring(1f, 450f, visibilityThreshold)
     private val velocityAnimationSpec =
         spring(0.5f, 300f, visibilityThreshold * 10f)
     private val pressProgressAnimationSpec =
@@ -115,10 +119,11 @@ class LiquidToggleDampedDragAnimation(
         }
     }
 
-    fun updateValue(value: Float) {
+    fun updateValue(value: Float, isTap: Boolean = false) {
         val targetValue = value.coerceIn(valueRange)
+        val spec = if (isTap) tapValueAnimationSpec else valueAnimationSpec
         animationScope.launch {
-            launch { valueAnimation.animateTo(targetValue, valueAnimationSpec) { updateVelocity() } }
+            launch { valueAnimation.animateTo(targetValue, spec) { updateVelocity() } }
         }
     }
 
