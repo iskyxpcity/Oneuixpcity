@@ -376,6 +376,8 @@ fun ExpressiveSwitch(
     val latestOnCheckedChange by rememberUpdatedState(onCheckedChange)
     var glassFraction by remember { mutableFloatStateOf(if (checked) 1f else 0f) }
     var glassDidDrag by remember { mutableStateOf(false) }
+    var glassDragDistancePx by remember { mutableFloatStateOf(0f) }
+    val glassDragSlopPx = with(LocalDensity.current) { 8.dp.toPx() }
     var glassTapAnimationPending by remember { mutableStateOf(false) }
     val glassDragAnimation = remember(animationScope, glassDragTravelPx) {
         LiquidToggleDampedDragAnimation(
@@ -386,7 +388,11 @@ fun ExpressiveSwitch(
             initialScale = 1f,
             // AndroidLiquidGlass LiquidToggle / Voyage: 1.5x press scale.
             pressedScale = 1.5f,
-            onDragStarted = {},
+            onDragStarted = {
+                // Ignore tiny finger jitter so a normal tap is not misclassified as a drag.
+                glassDidDrag = false
+                glassDragDistancePx = 0f
+            },
             onDragStopped = {
                 // Match the upstream LiquidToggle contract: one gesture owns
                 // both tap and drag. A tap toggles; a drag commits its final side.
@@ -402,7 +408,8 @@ fun ExpressiveSwitch(
                 latestOnCheckedChange?.invoke(target == 1f)
             },
             onDrag = { _, dragAmount ->
-                if (dragAmount.x != 0f) glassDidDrag = true
+                glassDragDistancePx += abs(dragAmount.x)
+                if (glassDragDistancePx > glassDragSlopPx) glassDidDrag = true
                 glassFraction = (glassFraction + dragAmount.x / glassDragTravelPx).coerceIn(0f, 1f)
             },
         )
