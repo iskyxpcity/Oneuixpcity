@@ -403,7 +403,6 @@ fun ExpressiveSwitch(
             onDrag = { _, dragAmount ->
                 if (dragAmount.x != 0f) glassDidDrag = true
                 glassFraction = (glassFraction + dragAmount.x / glassDragTravelPx).coerceIn(0f, 1f)
-                updateValue(glassFraction)
                 if (dragAmount.x != 0f) {
                     animationScope.launch {
                         offsetAnimation.snapTo(offsetAnimation.value + dragAmount.x)
@@ -487,7 +486,10 @@ fun ExpressiveSwitch(
                         toggleableState = if (checked) ToggleableState.On else ToggleableState.Off
                         onClick {
                             if (enabled && onCheckedChange != null) {
-                                onCheckedChange(!checked)
+                                val target = if (checked) 0f else 1f
+                                glassFraction = target
+                                glassDragAnimation.animateToValue(target)
+                                onCheckedChange(target == 1f)
                                 true
                             } else false
                         }
