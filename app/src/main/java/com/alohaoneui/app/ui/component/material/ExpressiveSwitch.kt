@@ -75,7 +75,7 @@ import com.alohaoneui.app.ui.component.miuix.animation.DampedDragAnimation
 import com.alohaoneui.app.ui.component.miuix.animation.InteractiveHighlight
 import top.yukonga.miuix.kmp.blur.blur
 import com.alohaoneui.app.ui.component.liquid.rememberCombinedBackdrop
-import com.alohaoneui.app.ui.component.liquid.rememberVerticallyScaledBackdrop
+import com.alohaoneui.app.ui.component.liquid.rememberScaledBackdrop
 import top.yukonga.miuix.kmp.blur.Backdrop
 import top.yukonga.miuix.kmp.blur.drawBackdrop
 import top.yukonga.miuix.kmp.blur.layerBackdrop
