@@ -643,7 +643,7 @@ fun ExpressiveSwitch(
                         layerBlock = {
                             scaleX = glassDragAnimation.scaleX
                             scaleY = glassDragAnimation.scaleY
-                            val velocity = glassDragAnimation.velocity
+                            val velocity = glassDragAnimation.velocity / 10f
                             scaleX /= 1f - (velocity * 0.75f).fastCoerceIn(-0.2f, 0.2f)
                             scaleY *= 1f - (velocity * 0.25f).fastCoerceIn(-0.2f, 0.2f)
                         },
