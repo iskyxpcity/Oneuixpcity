@@ -72,7 +72,6 @@ import com.alohaoneui.app.ui.component.liquid.rememberCombinedBackdrop
 import top.yukonga.miuix.kmp.blur.Backdrop
 import top.yukonga.miuix.kmp.blur.drawBackdrop
 import top.yukonga.miuix.kmp.blur.layerBackdrop
-import top.yukonga.miuix.kmp.blur.rememberBackdrop
 import top.yukonga.miuix.kmp.blur.rememberLayerBackdrop
 import top.yukonga.miuix.kmp.blur.highlight.BloomStroke
 import top.yukonga.miuix.kmp.blur.highlight.Highlight
@@ -588,12 +587,7 @@ fun ExpressiveSwitch(
 
             // Capture the track first so the lens refracts its actual ON/OFF color.
             val glassBackdrop = if (backdrop != null) {
-                rememberCombinedBackdrop(backdrop, rememberBackdrop(trackBackdrop) { drawBackdrop ->
-                    val progress = glassDragAnimation.pressProgress
-                    val scaleX = lerp(2f / 3f, 0.75f, progress)
-                    val scaleY = lerp(0f, 0.75f, progress)
-                    scale(scaleX, scaleY) { drawBackdrop() }
-                })
+                rememberCombinedBackdrop(backdrop, trackBackdrop)
             } else {
                 trackBackdrop
             }
@@ -645,11 +639,7 @@ fun ExpressiveSwitch(
                         },
                         highlight = {
                             val progress = glassDragAnimation.pressProgress
-                            Highlight.Ambient.copy(
-                                width = Highlight.Ambient.width / 1.5f,
-                                blurRadius = Highlight.Ambient.blurRadius / 1.5f,
-                                alpha = progress,
-                            )
+                            Highlight.Default.copy(alpha = progress)
                         },
                         layerBlock = {
                             scaleX = glassDragAnimation.scaleX
