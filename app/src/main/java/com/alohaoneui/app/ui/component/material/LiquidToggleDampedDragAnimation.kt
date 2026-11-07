@@ -43,7 +43,7 @@ class LiquidToggleDampedDragAnimation(
     // Tap travel is deliberately softer/slower than direct drag tracking.
     // Keep the upstream drag spring untouched so drag responsiveness is preserved.
     private val tapValueAnimationSpec =
-        spring(1f, 450f, visibilityThreshold)
+        spring(1f, 140f, visibilityThreshold)
     private val velocityAnimationSpec =
         spring(0.5f, 300f, visibilityThreshold * 10f)
     private val pressProgressAnimationSpec =
