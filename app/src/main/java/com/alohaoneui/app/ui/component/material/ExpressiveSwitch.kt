@@ -629,12 +629,13 @@ fun ExpressiveSwitch(
                                                         vibrancy()
                             blur(4.dp.toPx(), 4.dp.toPx())
                             switchLens(
-                                // Use the switch-owned shader/cache key; keep the bottom-bar Lens isolated.
-                                // Interaction alpha is handled by the glass layer itself.
-                                refractionHeight = 5f * glassDragAnimation.scaleX * glassInteraction,
-                                refractionAmount = 10f * glassDragAnimation.scaleX * glassInteraction,
+                                // Match Voyage's glass edge profile in density-independent units.
+                                // Its animated progress controls both the refraction depth and capture bounds.
+                                refractionHeight = 5.dp.toPx() * glassInteraction,
+                                refractionAmount = 10.dp.toPx() * glassInteraction,
                                 depthEffect = false,
-                                chromaticAberration = 0f,
+                                chromaticAberration = 1f,
+                                capturePadding = 8.dp.toPx() * (1f - glassInteraction),
                             )
                         },
                         highlight = {
