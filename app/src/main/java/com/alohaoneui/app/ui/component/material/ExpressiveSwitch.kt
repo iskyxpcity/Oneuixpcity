@@ -376,6 +376,7 @@ fun ExpressiveSwitch(
     val latestOnCheckedChange by rememberUpdatedState(onCheckedChange)
     var glassFraction by remember { mutableFloatStateOf(if (checked) 1f else 0f) }
     var glassDidDrag by remember { mutableStateOf(false) }
+    var glassTapAnimationPending by remember { mutableStateOf(false) }
     val glassDragAnimation = remember(animationScope, glassDragTravelPx) {
         LiquidToggleDampedDragAnimation(
             animationScope = animationScope,
@@ -394,7 +395,9 @@ fun ExpressiveSwitch(
                 } else {
                     if (latestChecked) 0f else 1f
                 }
+                val wasTap = !glassDidDrag
                 glassDidDrag = false
+                glassTapAnimationPending = wasTap
                 glassFraction = target
                 latestOnCheckedChange?.invoke(target == 1f)
             },
@@ -405,7 +408,11 @@ fun ExpressiveSwitch(
         )
     }
     LaunchedEffect(glassFraction, style) {
-        if (style == 5) glassDragAnimation.updateValue(glassFraction)
+        if (style == 5) {
+            val isTap = glassTapAnimationPending
+            glassTapAnimationPending = false
+            glassDragAnimation.updateValue(glassFraction, isTap = isTap)
+        }
     }
     LaunchedEffect(checked, style) {
         if (style == 5) {
