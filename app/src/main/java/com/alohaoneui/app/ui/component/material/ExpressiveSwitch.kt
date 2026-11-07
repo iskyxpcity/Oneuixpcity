@@ -405,6 +405,9 @@ fun ExpressiveSwitch(
                 glassDidDrag = false
                 glassTapAnimationPending = wasTap
                 glassFraction = target
+                // Set the Animatable target synchronously from the gesture callback.
+                // release() must wait for this travel to finish before shrinking the lens.
+                glassDragAnimation.updateValue(target, isTap = wasTap)
                 latestOnCheckedChange?.invoke(target == 1f)
             },
             onDrag = { _, dragAmount ->
@@ -415,10 +418,8 @@ fun ExpressiveSwitch(
         )
     }
     LaunchedEffect(glassFraction, style) {
-        if (style == 5) {
-            val isTap = glassTapAnimationPending
-            glassTapAnimationPending = false
-            glassDragAnimation.updateValue(glassFraction, isTap = isTap)
+        if (style == 5 && glassDidDrag) {
+            glassDragAnimation.updateValue(glassFraction)
         }
     }
     LaunchedEffect(checked, style) {
