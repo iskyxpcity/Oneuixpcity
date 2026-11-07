@@ -40,10 +40,10 @@ class LiquidToggleDampedDragAnimation(
 ) {
     private val valueAnimationSpec =
         spring(1f, 1000f, visibilityThreshold)
-    // Tap travel is deliberately softer/slower than direct drag tracking.
-    // Keep the upstream drag spring untouched so drag responsiveness is preserved.
+    // Keep tap travel responsive while preserving the separate upstream drag spring.
+    // The expanded glass thumb still waits for arrival before its release animation starts.
     private val tapValueAnimationSpec =
-        spring(1f, 140f, visibilityThreshold)
+        spring(1f, 300f, visibilityThreshold)
     private val velocityAnimationSpec =
         spring(0.5f, 300f, visibilityThreshold * 10f)
     private val pressProgressAnimationSpec =
