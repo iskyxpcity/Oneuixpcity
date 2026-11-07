@@ -22,7 +22,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Button
 import androidx.compose.material3.TextButton
@@ -308,9 +307,7 @@ private fun AlohaOneUIOriginalCategoryScreen(
                 topBar = {
                     LargeFlexibleTopAppBar(
                         navigationIcon = {
-                            IconButton(onClick = onBack) {
-                                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
-                            }
+                            TopBarBackButton(onClick = onBack)
                         },
                         title = { Text(alohaOneUICategoryTitle(category)) },
                         actions = {
@@ -403,7 +400,7 @@ private fun AlohaOneUICategoryMaterial(
     val scrollBehavior =
         TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 
-    androidx.compose.material3.Scaffold(
+    ExpressiveScaffold(
         topBar = {
             LargeFlexibleTopAppBar(
                 navigationIcon = {
