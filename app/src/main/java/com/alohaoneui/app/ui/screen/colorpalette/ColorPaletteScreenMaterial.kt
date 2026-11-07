@@ -14,7 +14,6 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.ui.draw.shadow
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -48,7 +47,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.MenuOpen
 import androidx.compose.material.icons.filled.Brightness1
 import androidx.compose.material.icons.filled.Brightness3
@@ -66,13 +64,11 @@ import androidx.compose.material.icons.rounded.ViewCarousel
 import androidx.compose.material.icons.rounded.WaterDrop
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
@@ -112,6 +108,7 @@ import com.materialkolor.rememberDynamicColorScheme
 import com.alohaoneui.app.R
 import com.alohaoneui.app.ui.component.bottombar.useNavigationRail
 import com.alohaoneui.app.ui.component.material.ExpressiveToggleButton
+import com.alohaoneui.app.ui.component.material.ExpressiveScaffold
 import com.alohaoneui.app.ui.component.material.ExpressiveContentDialog
 import com.alohaoneui.app.ui.component.material.IconShapePresetPicker
 import com.alohaoneui.app.ui.component.material.IconShapePresetDetailScreen
@@ -122,13 +119,13 @@ import com.alohaoneui.app.ui.component.material.SegmentedSliderItem
 import com.alohaoneui.mod.ui.component.AlohaOneUISlider
 import com.alohaoneui.app.ui.component.material.SegmentedOptionFrame
 import com.alohaoneui.app.ui.component.material.TonalCard
+import com.alohaoneui.app.ui.component.material.TopBarBackButton
 import com.alohaoneui.app.ui.component.material.voyageSegmentedShape
 import com.alohaoneui.app.ui.component.material.voyageCornerShape
 import com.alohaoneui.app.ui.component.material.iconShapeForStyle
 import com.alohaoneui.app.ui.theme.ColorMode
 import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
 import com.alohaoneui.app.ui.theme.LocalMaterialShadowButtons
-import com.alohaoneui.app.ui.theme.LocalMaterialShadowTopBars
 import com.alohaoneui.app.ui.theme.LocalMaterialShadowSliders
 import com.alohaoneui.app.ui.theme.rememberAlohaOneUIColorScheme
 import com.alohaoneui.app.ui.theme.keyColorOptions
@@ -162,23 +159,11 @@ fun ColorPaletteScreenMaterial(
         scrollBehavior.state.heightOffset = scrollBehavior.state.heightOffsetLimit
     }
 
-    Scaffold(
+    ExpressiveScaffold(
         topBar = {
             LargeFlexibleTopAppBar(
-                modifier = Modifier
-                    .then(if (LocalMaterialShadowTopBars.current) Modifier.shadow(2.dp) else Modifier)
-                    .then(
-                        LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
-                            Modifier.border(it.dp, MaterialTheme.colorScheme.outlineVariant)
-                        } ?: Modifier
-                    ),
-                navigationIcon = {
-                    val backInteractionSource = remember { MutableInteractionSource() }
-                    IconButton(
-                        onClick = actions.onBack,
-                        interactionSource = backInteractionSource,
-                    ) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null) }
-                },
+                
+                navigationIcon = { TopBarBackButton(onClick = actions.onBack) },
                 title = { Text(stringResource(R.string.settings_theme)) },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface,

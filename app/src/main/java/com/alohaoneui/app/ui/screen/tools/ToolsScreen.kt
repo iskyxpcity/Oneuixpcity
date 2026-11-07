@@ -35,6 +35,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import com.alohaoneui.app.ui.component.material.ExpressiveScaffold
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -331,7 +332,7 @@ private fun ToolsPagerMaterial(
         .filterNot { it == AlohaOneUICategory.SystemUI }
     val appCategories = AlohaOneUICategory.entries.drop(5)
 
-    androidx.compose.material3.Scaffold(
+    ExpressiveScaffold(
         topBar = {
             LargeFlexibleTopAppBar(
                 title = { Text(stringResource(R.string.alohaoneui_tools)) },

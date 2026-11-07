@@ -17,13 +17,14 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import com.alohaoneui.app.ui.component.material.ExpressiveScaffold
+import com.alohaoneui.app.ui.component.material.TopBarBackButton
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.Modifier
@@ -326,16 +327,11 @@ private fun StatusCategoryMaterial(
     val scrollBehavior =
         TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 
-    androidx.compose.material3.Scaffold(
+    ExpressiveScaffold(
         topBar = {
             LargeFlexibleTopAppBar(
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = null,
-                        )
-                    }
+                    TopBarBackButton(onClick = onBack)
                 },
                 title = { Text(stringResource(category.titleRes)) },
                 actions = { RebootListPopup() },

@@ -24,7 +24,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Button
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.LargeFlexibleTopAppBar
@@ -74,6 +73,8 @@ import com.alohaoneui.app.ui.component.material.SegmentedColumn
 import com.alohaoneui.app.ui.component.material.SegmentedDropdownItem
 import com.alohaoneui.app.ui.component.material.SegmentedListItem
 import com.alohaoneui.app.ui.component.material.ExpressiveSwitch
+import com.alohaoneui.app.ui.component.material.ExpressiveScaffold
+import com.alohaoneui.app.ui.component.material.TopBarBackButton
 import com.alohaoneui.app.ui.component.material.SegmentedSwitchItem
 import com.alohaoneui.app.ui.component.material.SegmentedSliderItem
 import com.alohaoneui.app.ui.component.material.SegmentedTextField
@@ -303,7 +304,7 @@ private fun AlohaOneUIOriginalCategoryScreen(
         UiMode.Material -> {
             val scrollBehavior =
                 TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
-            androidx.compose.material3.Scaffold(
+            ExpressiveScaffold(
                 topBar = {
                     LargeFlexibleTopAppBar(
                         navigationIcon = {
@@ -406,12 +407,7 @@ private fun AlohaOneUICategoryMaterial(
         topBar = {
             LargeFlexibleTopAppBar(
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = null,
-                        )
-                    }
+                    TopBarBackButton(onClick = onBack)
                 },
                 title = { Text(alohaOneUICategoryTitle(category)) },
                 colors = TopAppBarDefaults.topAppBarColors(

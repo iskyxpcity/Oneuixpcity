@@ -1,8 +1,6 @@
 package com.alohaoneui.app.ui.screen.about
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.border
-import androidx.compose.ui.draw.shadow
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -18,7 +16,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
@@ -33,10 +30,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.alohaoneui.app.R
 import com.alohaoneui.app.ui.component.material.SegmentedColumn
+import com.alohaoneui.app.ui.component.material.ExpressiveScaffold
 import com.alohaoneui.app.ui.component.material.SegmentedListItem
 import com.alohaoneui.app.ui.component.material.TopBarBackButton
-import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
-import com.alohaoneui.app.ui.theme.LocalMaterialShadowTopBars
 
 @Composable
 fun AboutScreenMaterial(
@@ -45,16 +41,10 @@ fun AboutScreenMaterial(
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 
-    Scaffold(
+    ExpressiveScaffold(
         topBar = {
             LargeFlexibleTopAppBar(
-                modifier = Modifier
-                    .then(if (LocalMaterialShadowTopBars.current) Modifier.shadow(2.dp) else Modifier)
-                    .then(
-                        LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
-                            Modifier.border(it.dp, MaterialTheme.colorScheme.outlineVariant)
-                        } ?: Modifier
-                    ),
+                
                 title = { Text(state.title) },
                 navigationIcon = {
                     TopBarBackButton(onClick = actions.onBack)

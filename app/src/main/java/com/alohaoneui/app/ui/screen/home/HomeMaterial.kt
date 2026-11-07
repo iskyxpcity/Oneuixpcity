@@ -6,8 +6,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.border
-import androidx.compose.ui.draw.shadow
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -37,7 +35,6 @@ import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
@@ -57,9 +54,8 @@ import com.alohaoneui.app.BuildConfig
 import com.alohaoneui.app.R
 import com.alohaoneui.app.ui.component.WarningLevel
 import com.alohaoneui.app.ui.component.material.TonalCard
+import com.alohaoneui.app.ui.component.material.ExpressiveScaffold
 import com.alohaoneui.app.ui.component.rebootlistpopup.RebootListPopup
-import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
-import com.alohaoneui.app.ui.theme.LocalMaterialShadowTopBars
 import com.alohaoneui.app.ui.component.statustag.StatusTag
 
 @Composable
@@ -70,7 +66,7 @@ fun HomePagerMaterial(
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 
-    Scaffold(
+    ExpressiveScaffold(
         topBar = { TopBar(scrollBehavior = scrollBehavior) },
         contentWindowInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)
     ) { innerPadding ->
@@ -122,13 +118,7 @@ private fun TopBar(
     scrollBehavior: TopAppBarScrollBehavior? = null
 ) {
     LargeFlexibleTopAppBar(
-        modifier = Modifier
-            .then(if (LocalMaterialShadowTopBars.current) Modifier.shadow(2.dp) else Modifier)
-            .then(
-                LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
-                    Modifier.border(it.dp, MaterialTheme.colorScheme.outlineVariant)
-                } ?: Modifier
-            ),
+        
         title = { Text(stringResource(R.string.app_name)) },
         actions = { RebootListPopup() },
         colors = TopAppBarDefaults.topAppBarColors(
