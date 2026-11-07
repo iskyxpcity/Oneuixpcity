@@ -52,6 +52,10 @@ import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.ToggleableState
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.toggleableState
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.util.lerp
@@ -369,6 +373,8 @@ fun ExpressiveSwitch(
     }
     val latestChecked by rememberUpdatedState(checked)
     val latestOnCheckedChange by rememberUpdatedState(onCheckedChange)
+    var glassFraction by remember { mutableFloatStateOf(if (checked) 1f else 0f) }
+    var glassDidDrag by remember { mutableStateOf(false) }
     val glassDragAnimation = remember(animationScope, glassDragTravelPx) {
         DampedDragAnimation(
             animationScope = animationScope,
@@ -380,40 +386,45 @@ fun ExpressiveSwitch(
             pressedScale = 1.5f,
             onDragStarted = {},
             onDragStopped = {
-                val target = targetValue >= 0.5f
-                if (target != latestChecked) {
-                    // Let the checked-state effect run the one authoritative
-                    // press/spring transition after the owner accepts the change.
-                    latestOnCheckedChange?.invoke(target)
+                // Match the upstream LiquidToggle contract: one gesture owns
+                // both tap and drag. A tap toggles; a drag commits its final side.
+                val target = if (glassDidDrag) {
+                    if (targetValue >= 0.5f) 1f else 0f
                 } else {
-                    // A drag released on its original side springs back without
-                    // dispatching a redundant checked callback.
-                    animateToValue(if (latestChecked) 1f else 0f)
+                    if (latestChecked) 0f else 1f
                 }
+                glassDidDrag = false
+                glassFraction = target
+                latestOnCheckedChange?.invoke(target == 1f)
                 animationScope.launch {
                     offsetAnimation.animateTo(0f, spring(1f, 300f, 0.5f))
                 }
             },
             onDrag = { _, dragAmount ->
-                updateValue(targetValue + dragAmount.x / glassDragTravelPx)
-                animationScope.launch {
-                    offsetAnimation.snapTo(offsetAnimation.value + dragAmount.x)
+                if (dragAmount.x != 0f) glassDidDrag = true
+                glassFraction = (glassFraction + dragAmount.x / glassDragTravelPx).coerceIn(0f, 1f)
+                updateValue(glassFraction)
+                if (dragAmount.x != 0f) {
+                    animationScope.launch {
+                        offsetAnimation.snapTo(offsetAnimation.value + dragAmount.x)
+                    }
                 }
             },
         )
     }
-    var lastGlassChecked by remember { mutableStateOf(checked) }
+    LaunchedEffect(glassFraction, style) {
+        if (style == 5) glassDragAnimation.updateValue(glassFraction)
+    }
     LaunchedEffect(checked, style) {
         if (style == 5) {
             val target = if (checked) 1f else 0f
-            if (lastGlassChecked != checked) {
-                // A tap or external state change gets the same press-pop and
-                // spring travel as the source LiquidToggle interaction.
+            // External owner changes animate through the source press/pop path.
+            // A local tap/drag already updates glassFraction before dispatching,
+            // so it does not start a second competing animation here.
+            if (target != glassFraction) {
+                glassFraction = target
                 glassDragAnimation.animateToValue(target)
-            } else {
-                glassDragAnimation.updateValue(target)
             }
-            lastGlassChecked = checked
         }
     }
     val panelOffset by remember(rubberBandPx, glassDragTravelPx) {
@@ -425,17 +436,6 @@ fun ExpressiveSwitch(
     val displayedTravel = if (style == 5) glassDragAnimation.value else travel
     val glassInteraction = if (style == 5) glassDragAnimation.pressProgress else 0f
     val liquidGlassSwitchPillHighlight = rememberLiquidGlassSwitchHighlight(liquidGlassSwitchSpecular, extraDegrees = 90f)
-    val glassInteractiveHighlight = remember(animationScope, glassDragTravelPx) {
-        InteractiveHighlight(
-            animationScope = animationScope,
-            position = { size, _ ->
-                Offset(
-                    (glassDragAnimation.value * glassDragTravelPx) + size.width / 2f - glassDragTravelPx / 2f,
-                    size.height / 2f,
-                )
-            },
-        )
-    }
     // Keep switch outlines robust for every global Aloha shape preset.
     val trackShape = if (com.alohaoneui.app.ui.theme.LocalMaterialShapeStyle.current == 3) {
         remember(trackCornerRadius) { RoundedCornerShape(trackCornerRadius) }
@@ -478,16 +478,30 @@ fun ExpressiveSwitch(
                 }
             )
             .then(if (LocalMaterialShadowSwitches.current && style != 5) Modifier.shadow(2.dp, trackShape) else Modifier)
-            .toggleable(
-                value = checked,
-                enabled = enabled && onCheckedChange != null,
-                role = Role.Switch,
-                interactionSource = interactionSource,
-                indication = null,
-                onValueChange = { onCheckedChange?.invoke(it) },
-            )
             .then(
-                Modifier
+                if (style == 5) {
+                    // Liquid Glass tap and drag are handled by the same thumb
+                    // pointer recognizer below; keep only switch semantics here.
+                    Modifier.semantics {
+                        role = Role.Switch
+                        toggleableState = if (checked) ToggleableState.On else ToggleableState.Off
+                        onClick {
+                            if (enabled && onCheckedChange != null) {
+                                onCheckedChange(!checked)
+                                true
+                            } else false
+                        }
+                    }
+                } else {
+                    Modifier.toggleable(
+                        value = checked,
+                        enabled = enabled && onCheckedChange != null,
+                        role = Role.Switch,
+                        interactionSource = interactionSource,
+                        indication = null,
+                        onValueChange = { onCheckedChange?.invoke(it) },
+                    )
+                }
             )
 ,
         contentAlignment = Alignment.Center,
@@ -645,8 +659,7 @@ fun ExpressiveSwitch(
                         alpha = glassInteraction
                         translationX = panelOffset
                     }
-                    .then(glassInteractiveHighlight.gestureModifier)
-                    .then(glassDragAnimation.modifier)
+                    .then(if (enabled && onCheckedChange != null) glassDragAnimation.modifier else Modifier)
                     .drawBackdrop(
                         backdrop = glassBackdrop,
                         shape = { thumbShape },
@@ -667,13 +680,10 @@ fun ExpressiveSwitch(
                             val progress = glassDragAnimation.pressProgress
                             Highlight.Default.copy(alpha = progress)
                         },
-                        layerBlock = {
-                            scaleX = glassDragAnimation.scaleX
-                            scaleY = glassDragAnimation.scaleY
-                            val velocity = glassDragAnimation.velocity / 50f
-                            scaleX /= 1f - (velocity * 0.75f).fastCoerceIn(-0.2f, 0.2f)
-                            scaleY *= 1f - (velocity * 0.25f).fastCoerceIn(-0.2f, 0.2f)
-                        },
+                        // Keep the backdrop layer unscaled. The visible glass
+                        // surface is scaled outside drawBackdrop below so its
+                        // bounds expand beyond the rail without magnifying the
+                        // sampled track/refraction image.
                         onDrawSurface = {
                             // Same subtle surface treatment as the floating bottom-bar
                             // indicator: a theme-aware base wash plus a restrained dark veil.
@@ -690,6 +700,17 @@ fun ExpressiveSwitch(
                             color = Color.Black.copy(alpha = 0.15f),
                             alpha = glassInteraction,
                         )
+                    }
+                    // This outer graphics layer transforms the complete glass
+                    // capsule, not its backdrop sampling. It is intentionally
+                    // outside drawBackdrop to make the expansion visibly escape
+                    // the 64x28dp track while preserving #2470 refraction.
+                    .graphicsLayer {
+                        val velocity = glassDragAnimation.velocity / 50f
+                        scaleX = glassDragAnimation.scaleX /
+                            (1f - (velocity * 0.75f).fastCoerceIn(-0.2f, 0.2f))
+                        scaleY = glassDragAnimation.scaleY *
+                            (1f - (velocity * 0.25f).fastCoerceIn(-0.2f, 0.2f))
                     },
             )
         }
