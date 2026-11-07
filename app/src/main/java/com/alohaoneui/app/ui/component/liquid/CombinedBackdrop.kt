@@ -95,3 +95,56 @@ fun rememberVerticallyScaledBackdrop(
         VerticallyScaledBackdrop(backdrop) { latestScaleY() }
     }
 }
+
+/**
+ * Applies the source LiquidToggle's independent X/Y transform to a sampled
+ * backdrop. This changes only the captured rail image, never the glass
+ * foreground surface's measured size or its press scale.
+ */
+@Stable
+private class ScaledBackdrop(
+    private val source: Backdrop,
+    private val currentScaleX: () -> Float,
+    private val currentScaleY: () -> Float,
+) : Backdrop {
+    override val isCoordinatesDependent: Boolean
+        get() = source.isCoordinatesDependent
+
+    override val offsetResidualX: Float
+        get() = source.offsetResidualX
+
+    override val offsetResidualY: Float
+        get() = source.offsetResidualY
+
+    override fun DrawScope.drawBackdrop(
+        density: Density,
+        coordinates: LayoutCoordinates?,
+        layerBlock: (GraphicsLayerScope.() -> Unit)?,
+        downscaleFactor: Int,
+    ) {
+        withTransform({
+            scale(
+                scaleX = currentScaleX().coerceIn(0f, 1f),
+                scaleY = currentScaleY().coerceIn(0f, 1f),
+                pivot = Offset(size.width / 2f, size.height / 2f),
+            )
+        }) {
+            with(source) {
+                drawBackdrop(density, coordinates, layerBlock, downscaleFactor)
+            }
+        }
+    }
+}
+
+@Composable
+fun rememberScaledBackdrop(
+    backdrop: Backdrop,
+    scaleX: () -> Float,
+    scaleY: () -> Float,
+): Backdrop {
+    val latestScaleX by rememberUpdatedState(scaleX)
+    val latestScaleY by rememberUpdatedState(scaleY)
+    return remember(backdrop) {
+        ScaledBackdrop(backdrop, { latestScaleX() }, { latestScaleY() })
+    }
+}
