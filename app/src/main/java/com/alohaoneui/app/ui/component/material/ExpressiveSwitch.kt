@@ -631,10 +631,10 @@ fun ExpressiveSwitch(
                             switchLens(
                                 // Use the switch-owned shader/cache key; keep the bottom-bar Lens isolated.
                                 // Interaction alpha is handled by the glass layer itself.
-                                refractionHeight = 10.dp.toPx() * glassInteraction,
-                                refractionAmount = 14.dp.toPx() * glassInteraction,
-                                depthEffect = true,
-                                chromaticAberration = 0.5f,
+                                refractionHeight = 5f * glassDragAnimation.scaleX * glassInteraction,
+                                refractionAmount = 10f * glassDragAnimation.scaleX * glassInteraction,
+                                depthEffect = false,
+                                chromaticAberration = 0f,
                             )
                         },
                         highlight = {
@@ -643,7 +643,7 @@ fun ExpressiveSwitch(
                         layerBlock = {
                             scaleX = glassDragAnimation.scaleX
                             scaleY = glassDragAnimation.scaleY
-                            val velocity = glassDragAnimation.velocity / 10f
+                            val velocity = glassDragAnimation.velocity
                             scaleX /= 1f - (velocity * 0.75f).fastCoerceIn(-0.2f, 0.2f)
                             scaleY *= 1f - (velocity * 0.25f).fastCoerceIn(-0.2f, 0.2f)
                         },
@@ -659,7 +659,7 @@ fun ExpressiveSwitch(
                     )
                     .innerShadow(shape = thumbShape) {
                         InnerShadow(
-                            radius = 8.dp * glassInteraction,
+                            radius = 4.dp * glassInteraction,
                             color = Color.Black.copy(alpha = 0.15f),
                             alpha = glassInteraction,
                         )
