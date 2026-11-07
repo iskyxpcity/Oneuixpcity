@@ -378,7 +378,6 @@ fun ExpressiveSwitch(
     var glassDidDrag by remember { mutableStateOf(false) }
     var glassDragDistancePx by remember { mutableFloatStateOf(0f) }
     val glassDragSlopPx = with(LocalDensity.current) { 8.dp.toPx() }
-    var glassTapAnimationPending by remember { mutableStateOf(false) }
     val glassDragAnimation = remember(animationScope, glassDragTravelPx) {
         LiquidToggleDampedDragAnimation(
             animationScope = animationScope,
@@ -403,7 +402,6 @@ fun ExpressiveSwitch(
                 }
                 val wasTap = !glassDidDrag
                 glassDidDrag = false
-                glassTapAnimationPending = wasTap
                 glassFraction = target
                 // Set the Animatable target synchronously from the gesture callback.
                 // release() must wait for this travel to finish before shrinking the lens.
