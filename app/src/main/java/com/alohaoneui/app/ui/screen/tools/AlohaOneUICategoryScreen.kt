@@ -74,7 +74,6 @@ import com.alohaoneui.app.ui.component.material.SegmentedColumn
 import com.alohaoneui.app.ui.component.material.SegmentedDropdownItem
 import com.alohaoneui.app.ui.component.material.SegmentedListItem
 import com.alohaoneui.app.ui.component.material.ExpressiveSwitch
-import com.alohaoneui.app.ui.component.material.LocalMaterialSwitchBackdrop
 import com.alohaoneui.app.ui.component.material.SegmentedSwitchItem
 import com.alohaoneui.app.ui.component.material.SegmentedSliderItem
 import com.alohaoneui.app.ui.component.material.SegmentedTextField
@@ -304,7 +303,6 @@ private fun AlohaOneUIOriginalCategoryScreen(
         UiMode.Material -> {
             val scrollBehavior =
                 TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
-            val switchBackdrop = rememberLayerBackdrop()
             androidx.compose.material3.Scaffold(
                 topBar = {
                     LargeFlexibleTopAppBar(
