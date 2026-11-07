@@ -99,7 +99,7 @@ fun ExpressiveIconButton(
     interactionSource: MutableInteractionSource? = null,
     shape: Shape? = null,
     framed: Boolean = false,
-    content: @Composable RowScope.() -> Unit,
+    content: @Composable () -> Unit,
 ) {
     val actualShape = shape ?: voyageCornerShape(40.dp)
     val outlineWidth = LocalMaterialOutlineWidth.current
@@ -136,6 +136,7 @@ fun ExpressiveOutlinedTextField(
     modifier: Modifier = Modifier,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     trailingIcon: (@Composable () -> Unit)? = null,
+    placeholder: (@Composable () -> Unit)? = null,
     textStyle: TextStyle? = null,
 ) {
     val actualShape = voyageCornerShape(12.dp)
@@ -164,6 +165,7 @@ fun ExpressiveOutlinedTextField(
             color = MaterialTheme.colorScheme.onSurface,
         ),
         trailingIcon = trailingIcon,
+        placeholder = placeholder,
         colors = OutlinedTextFieldDefaults.colors(
             focusedTextColor = MaterialTheme.colorScheme.onSurface,
             unfocusedTextColor = MaterialTheme.colorScheme.onSurface,

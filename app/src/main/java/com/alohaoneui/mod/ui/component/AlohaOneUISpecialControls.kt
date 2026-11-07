@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button as MaterialButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ListItemDefaults
@@ -29,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import com.alohaoneui.app.ui.LocalUiMode
 import com.alohaoneui.app.ui.UiMode
 import com.alohaoneui.app.ui.component.material.ExpressiveSwitch
+import com.alohaoneui.app.ui.component.material.ExpressiveButton
 import com.alohaoneui.app.ui.component.material.LocalListItemShapes
 import com.alohaoneui.app.ui.component.material.SegmentedListItem
 import com.alohaoneui.app.ui.component.material.alohaOneUISegmentedColors
@@ -160,7 +160,7 @@ fun AlohaOneUIActionButton(
     fillWidth: Boolean = false,
 ) {
     when (LocalUiMode.current) {
-        UiMode.Material -> MaterialButton(
+        UiMode.Material -> ExpressiveButton(
             onClick = onClick,
             modifier = modifier,
             enabled = enabled,

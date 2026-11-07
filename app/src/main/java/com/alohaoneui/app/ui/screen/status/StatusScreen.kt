@@ -49,6 +49,7 @@ import com.alohaoneui.app.ui.UiMode
 import com.alohaoneui.app.ui.component.configtransfer.ConfigTransferPopup
 import com.alohaoneui.app.ui.component.rebootlistpopup.RebootListPopup
 import com.alohaoneui.app.ui.component.material.SegmentedColumn
+import com.alohaoneui.app.ui.component.material.ExpressiveScaffold
 import com.alohaoneui.app.ui.component.material.SegmentedListItem
 import com.alohaoneui.app.ui.navigation3.Navigator
 import com.alohaoneui.app.ui.navigation3.Route
@@ -222,7 +223,7 @@ private fun StatusPagerMaterial(
     val scrollBehavior =
         TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 
-    androidx.compose.material3.Scaffold(
+    ExpressiveScaffold(
         topBar = {
             LargeFlexibleTopAppBar(
                 title = { Text(stringResource(R.string.alohaoneui_status)) },

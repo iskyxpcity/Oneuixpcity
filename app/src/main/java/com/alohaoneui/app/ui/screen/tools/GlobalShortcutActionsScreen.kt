@@ -111,6 +111,11 @@ import com.alohaoneui.app.alohaoneui.AlohaOneUIPreferenceBridge
 import com.alohaoneui.app.ui.LocalUiMode
 import com.alohaoneui.app.ui.UiMode
 import com.alohaoneui.app.ui.component.material.ExpressiveContentDialog
+import com.alohaoneui.app.ui.component.material.ExpressiveIconButton
+import com.alohaoneui.app.ui.component.material.ExpressiveOutlinedTextField
+import com.alohaoneui.app.ui.component.material.ExpressiveScaffold
+import com.alohaoneui.app.ui.component.material.TonalCard
+import com.alohaoneui.app.ui.component.material.TopBarBackButton
 import com.alohaoneui.app.ui.component.material.SegmentedColumn
 import com.alohaoneui.app.ui.component.material.SegmentedListItem
 import com.alohaoneui.app.ui.component.material.alohaOneUISegmentedColors
@@ -441,14 +446,12 @@ private fun GlobalShortcutPageFrame(
     when (LocalUiMode.current) {
         UiMode.Material -> {
             val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
-            Scaffold(
+            ExpressiveScaffold(
                 topBar = {
                     LargeFlexibleTopAppBar(
                         title = { Text(title) },
                         navigationIcon = {
-                            IconButton(onClick = onBack) {
-                                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
-                            }
+                            TopBarBackButton(onClick = onBack)
                         },
                         colors = TopAppBarDefaults.topAppBarColors(
                             containerColor = MaterialTheme.colorScheme.surface,
@@ -1199,7 +1202,7 @@ private fun ThresholdShortcutCard(
                             }
                         },
                         trailingContent = {
-                            IconButton(onClick = { showHelp = true }) {
+                            ExpressiveIconButton(onClick = { showHelp = true }) {
                                 Text(
                                     "?",
                                     color = MaterialTheme.colorScheme.primary,
@@ -1913,14 +1916,11 @@ private fun ShortcutActionChip(
 ) {
     val chipModifier = modifier.padding(4.dp).height(46.dp)
     when (LocalUiMode.current) {
-        UiMode.Material -> Card(
+        UiMode.Material -> TonalCard(
             onClick = onClick,
             modifier = chipModifier,
             shape = shape,
-            colors = CardDefaults.cardColors(
-                containerColor = if (selected) MaterialTheme.colorScheme.primary else container,
-            ),
-            border = null,
+            containerColor = if (selected) MaterialTheme.colorScheme.primary else container,
         ) {
             Box(
                 modifier = Modifier.fillMaxSize().padding(horizontal = 12.dp),
@@ -2024,12 +2024,12 @@ private fun CustomShortcutAppPicker(
 @Composable
 private fun ShortcutAppSearchField(value: String, onValueChange: (String) -> Unit) {
     when (LocalUiMode.current) {
-        UiMode.Material -> OutlinedTextField(
+        UiMode.Material -> ExpressiveOutlinedTextField(
             value = value,
             onValueChange = onValueChange,
             modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
             placeholder = { Text("搜索应用名称或包名") },
+            textStyle = MaterialTheme.typography.bodyLarge,
         )
 
         UiMode.Miuix -> MiuixTextField(

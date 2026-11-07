@@ -36,6 +36,8 @@ import com.alohaoneui.mod.ui.component.LocalAlohaOneUIGroupedPreference
 import com.alohaoneui.mod.ui.component.AlohaOneUISlider
 import com.alohaoneui.mod.ui.component.SwitchItem
 import com.alohaoneui.app.ui.component.material.SegmentedColumn
+import com.alohaoneui.app.ui.component.material.ExpressiveScaffold
+import com.alohaoneui.app.ui.component.material.TopBarBackButton
 import com.alohaoneui.app.ui.component.material.SegmentedListItem
 import com.alohaoneui.app.ui.component.material.alohaOneUISegmentedColors
 import kotlinx.coroutines.Dispatchers
@@ -155,13 +157,11 @@ private fun CallReturnDelayMaterial(
     onSecondsPreview: (Float) -> Unit, onSecondsCommit: () -> Unit,
 ) {
     val scroll = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
-    Scaffold(
+    ExpressiveScaffold(
         topBar = {
             LargeFlexibleTopAppBar(
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
-                    }
+                    TopBarBackButton(onClick = onBack)
                 },
                 title = { Text(stringResource(R.string.alohaoneui_callReturnDelay_title)) },
                 colors = TopAppBarDefaults.topAppBarColors(

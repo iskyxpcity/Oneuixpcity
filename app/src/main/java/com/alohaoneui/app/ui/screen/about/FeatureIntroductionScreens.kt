@@ -20,7 +20,6 @@ import androidx.compose.material.icons.automirrored.filled.Article
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
@@ -37,6 +36,7 @@ import com.alohaoneui.app.R
 import com.alohaoneui.app.ui.LocalUiMode
 import com.alohaoneui.app.ui.UiMode
 import com.alohaoneui.app.ui.component.material.SegmentedColumn
+import com.alohaoneui.app.ui.component.material.ExpressiveScaffold
 import com.alohaoneui.app.ui.component.material.SegmentedListItem
 import com.alohaoneui.app.ui.component.material.TopBarBackButton
 import com.alohaoneui.app.ui.navigation3.LocalNavigator
@@ -141,7 +141,7 @@ private fun FeatureIntroductionMaterial(
     onOpenFirstRelease: () -> Unit,
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
-    Scaffold(
+    ExpressiveScaffold(
         topBar = {
             LargeFlexibleTopAppBar(
                 title = { Text(stringResource(R.string.feature_introduction)) },
@@ -444,7 +444,7 @@ private fun VersionChangelogMaterial(onBack: () -> Unit, isLatestVersion: Boolea
             R.string.changelog_section_diagnostics_title to R.string.changelog_section_diagnostics_body,
         )
     }
-    Scaffold(
+    ExpressiveScaffold(
         topBar = {
             LargeFlexibleTopAppBar(
                 title = { Text(stringResource(R.string.version_updates_title)) },
