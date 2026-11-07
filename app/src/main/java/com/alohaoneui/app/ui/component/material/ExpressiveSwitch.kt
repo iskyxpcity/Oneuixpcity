@@ -381,8 +381,15 @@ fun ExpressiveSwitch(
             onDragStarted = {},
             onDragStopped = {
                 val target = targetValue >= 0.5f
-                animateToValue(if (target) 1f else 0f)
-                if (target != latestChecked) latestOnCheckedChange?.invoke(target)
+                if (target != latestChecked) {
+                    // Let the checked-state effect run the one authoritative
+                    // press/spring transition after the owner accepts the change.
+                    latestOnCheckedChange?.invoke(target)
+                } else {
+                    // A drag released on its original side springs back without
+                    // dispatching a redundant checked callback.
+                    animateToValue(if (latestChecked) 1f else 0f)
+                }
                 animationScope.launch {
                     offsetAnimation.animateTo(0f, spring(1f, 300f, 0.5f))
                 }
@@ -395,8 +402,19 @@ fun ExpressiveSwitch(
             },
         )
     }
+    var lastGlassChecked by remember { mutableStateOf(checked) }
     LaunchedEffect(checked, style) {
-        if (style == 5) glassDragAnimation.updateValue(if (checked) 1f else 0f)
+        if (style == 5) {
+            val target = if (checked) 1f else 0f
+            if (lastGlassChecked != checked) {
+                // A tap or external state change gets the same press-pop and
+                // spring travel as the source LiquidToggle interaction.
+                glassDragAnimation.animateToValue(target)
+            } else {
+                glassDragAnimation.updateValue(target)
+            }
+            lastGlassChecked = checked
+        }
     }
     val panelOffset by remember(rubberBandPx, glassDragTravelPx) {
         derivedStateOf {
