@@ -398,18 +398,10 @@ fun ExpressiveSwitch(
                 glassDidDrag = false
                 glassFraction = target
                 latestOnCheckedChange?.invoke(target == 1f)
-                animationScope.launch {
-                    offsetAnimation.animateTo(0f, spring(1f, 300f, 0.5f))
-                }
             },
             onDrag = { _, dragAmount ->
                 if (dragAmount.x != 0f) glassDidDrag = true
                 glassFraction = (glassFraction + dragAmount.x / glassDragTravelPx).coerceIn(0f, 1f)
-                if (dragAmount.x != 0f) {
-                    animationScope.launch {
-                        offsetAnimation.snapTo(offsetAnimation.value + dragAmount.x)
-                    }
-                }
             },
         )
     }
@@ -426,12 +418,6 @@ fun ExpressiveSwitch(
                 glassFraction = target
                 glassDragAnimation.animateToValue(target)
             }
-        }
-    }
-    val panelOffset by remember(rubberBandPx, glassDragTravelPx) {
-        derivedStateOf {
-            val fraction = (offsetAnimation.value / glassDragTravelPx).fastCoerceIn(-1f, 1f)
-            rubberBandPx * fraction.sign * EaseOut.transform(abs(fraction))
         }
     }
     val displayedTravel = if (style == 5) glassDragAnimation.value else travel
@@ -481,15 +467,17 @@ fun ExpressiveSwitch(
             .then(if (LocalMaterialShadowSwitches.current && style != 5) Modifier.shadow(2.dp, trackShape) else Modifier)
             .then(
                 if (style == 5) {
-                    // Liquid Glass tap and drag are handled by the same thumb
-                    // pointer recognizer below; keep only switch semantics here.
-                    Modifier.clickable(
-                        enabled = enabled && onCheckedChange != null,
-                        interactionSource = null,
-                        indication = null,
-                        role = Role.Switch,
-                    ) {
-                        onCheckedChange?.invoke(!checked)
+                    // Match AndroidLiquidGlass: touch gestures belong to the
+                    // 40x24dp glass surface; this parent exposes switch semantics only.
+                    Modifier.semantics {
+                        role = Role.Switch
+                        toggleableState = if (checked) ToggleableState.On else ToggleableState.Off
+                        onClick {
+                            if (enabled && onCheckedChange != null) {
+                                onCheckedChange.invoke(!checked)
+                                true
+                            } else false
+                        }
                     }
                 } else {
                     Modifier.toggleable(
@@ -614,35 +602,21 @@ fun ExpressiveSwitch(
                     .background(trackColor)
                     // Keep a 1dp capture bleed at each end; the visible refracted
                     // rail is clipped by the shorter 56dp glass lens.
-                    .size(width = trackSize.width + 2.dp, height = trackSize.height),
+                    .size(width = trackSize.width, height = trackSize.height),
             )
 
-            // Voyage's LiquidToggle vertically insets the sampled track backdrop
-            // inside the glass surface (0f idle -> 0.75f while pressed).
-            // Keep X sampling unchanged: only the top/bottom edges move inward.
-            val verticallyInsetTrack = rememberVerticallyScaledBackdrop(trackBackdrop) {
-                lerp(0f, 0.75f, glassDragAnimation.pressProgress)
-            }
-            // Capture the track first so the lens refracts its actual ON/OFF color.
-            // The app backdrop remains untouched; only the switch rail is vertically inset.
+            // Port the upstream LiquidToggle sampling transform: the track
+            // backdrop is scaled independently from the glass foreground layer.
+            val scaledTrackBackdrop = rememberScaledBackdrop(
+                trackBackdrop,
+                scaleX = { lerp(2f / 3f, 0.75f, glassDragAnimation.pressProgress) },
+                scaleY = { lerp(0f, 0.75f, glassDragAnimation.pressProgress) },
+            )
             val glassBackdrop = if (backdrop != null) {
-                rememberCombinedBackdrop(backdrop, verticallyInsetTrack)
+                rememberCombinedBackdrop(backdrop, scaledTrackBackdrop)
             } else {
-                verticallyInsetTrack
+                scaledTrackBackdrop
             }
-
-            // Draw the theme-dynamic 40x24dp resting handle ABOVE the rail.
-            // It remains the only visible thumb when the switch is idle.
-            Box(
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .zIndex(1f)
-                    .offset(x = thumbTravel * displayedTravel - thumbTravel / 2f)
-                    .size(width = thumbWidth, height = thumbHeight)
-                    .graphicsLayer { alpha = 1f - glassInteraction }
-                    .clip(thumbShape)
-                    .background(thumbColor),
-            )
 
             Box(
                 modifier = Modifier
@@ -654,9 +628,6 @@ fun ExpressiveSwitch(
                     // The glass capsule is intentionally switch-sized; its deformation,
                     // drag velocity and return spring come from the same bottom-bar engine.
                     .requiredSize(width = glassThumbWidth, height = glassThumbHeight)
-                    .graphicsLayer {
-                        translationX = panelOffset
-                    }
                     .then(if (enabled && onCheckedChange != null) glassDragAnimation.modifier else Modifier)
                     .drawBackdrop(
                         backdrop = glassBackdrop,
@@ -678,18 +649,16 @@ fun ExpressiveSwitch(
                             val progress = glassDragAnimation.pressProgress
                             Highlight.Default.copy(alpha = progress)
                         },
-                        // Keep the backdrop layer unscaled. The visible glass
-                        // surface is scaled outside drawBackdrop below so its
-                        // bounds expand beyond the rail without magnifying the
-                        // sampled track/refraction image.
                         onDrawSurface = {
-                            // Same subtle surface treatment as the floating bottom-bar
-                            // indicator: a theme-aware base wash plus a restrained dark veil.
-                            drawRect(
-                                color = if (isDarkTheme) Color.White.copy(alpha = 0.1f) else Color.Black.copy(alpha = 0.1f),
-                                alpha = 1f - glassInteraction,
-                            )
-                            drawRect(Color.Black.copy(alpha = 0.03f * glassInteraction))
+                            // Exact upstream LiquidToggle surface wash.
+                            drawRect(Color.White.copy(alpha = 1f - glassInteraction))
+                        },
+                        layerBlock = {
+                            scaleX = glassDragAnimation.scaleX
+                            scaleY = glassDragAnimation.scaleY
+                            val velocity = glassDragAnimation.velocity / 50f
+                            scaleX /= 1f - (velocity * 0.75f).fastCoerceIn(-0.2f, 0.2f)
+                            scaleY *= 1f - (velocity * 0.25f).fastCoerceIn(-0.2f, 0.2f)
                         },
                     )
                     .innerShadow(shape = thumbShape) {
@@ -699,23 +668,6 @@ fun ExpressiveSwitch(
                             alpha = glassInteraction,
                         )
                     }
-                    // This outer graphics layer transforms the complete glass
-                    // capsule, not its backdrop sampling. It is intentionally
-                    // outside drawBackdrop to make the expansion visibly escape
-                    // the 64x28dp track while preserving #2470 refraction.
-                    .graphicsLayer {
-                        // Apply opacity and expansion only after the backdrop
-                        // has been rendered at its original 40x24dp sampling size.
-                        // ModulateAlpha avoids an intermediate buffer clipping
-                        // the capsule back to its unexpanded layout bounds.
-                        alpha = glassInteraction
-                        compositingStrategy = CompositingStrategy.ModulateAlpha
-                        val velocity = glassDragAnimation.velocity / 50f
-                        scaleX = glassDragAnimation.scaleX /
-                            (1f - (velocity * 0.75f).fastCoerceIn(-0.2f, 0.2f))
-                        scaleY = glassDragAnimation.scaleY *
-                            (1f - (velocity * 0.25f).fastCoerceIn(-0.2f, 0.2f))
-                    },
             )
         }
         if (thumbContent != null && style != 5) {
