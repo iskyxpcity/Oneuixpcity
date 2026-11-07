@@ -43,6 +43,7 @@ import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.zIndex
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.toArgb
@@ -470,7 +471,7 @@ fun ExpressiveSwitch(
             .then(
                 if (style == 5) {
                     Modifier.requiredSize(
-                        width = trackSize.width,
+                        width = trackSize.width + 36.dp,
                         height = maxOf(trackSize.height, 28.dp * 1.5f),
                     )
                 } else {
@@ -482,18 +483,13 @@ fun ExpressiveSwitch(
                 if (style == 5) {
                     // Liquid Glass tap and drag are handled by the same thumb
                     // pointer recognizer below; keep only switch semantics here.
-                    Modifier.semantics {
-                        role = Role.Switch
-                        toggleableState = if (checked) ToggleableState.On else ToggleableState.Off
-                        onClick {
-                            if (enabled && onCheckedChange != null) {
-                                val target = if (checked) 0f else 1f
-                                glassFraction = target
-                                glassDragAnimation.animateToValue(target)
-                                onCheckedChange(target == 1f)
-                                true
-                            } else false
-                        }
+                    Modifier.clickable(
+                        enabled = enabled && onCheckedChange != null,
+                        interactionSource = null,
+                        indication = null,
+                        role = Role.Switch,
+                    ) {
+                        onCheckedChange?.invoke(!checked)
                     }
                 } else {
                     Modifier.toggleable(
@@ -659,7 +655,6 @@ fun ExpressiveSwitch(
                     // drag velocity and return spring come from the same bottom-bar engine.
                     .requiredSize(width = glassThumbWidth, height = glassThumbHeight)
                     .graphicsLayer {
-                        alpha = glassInteraction
                         translationX = panelOffset
                     }
                     .then(if (enabled && onCheckedChange != null) glassDragAnimation.modifier else Modifier)
@@ -709,6 +704,12 @@ fun ExpressiveSwitch(
                     // outside drawBackdrop to make the expansion visibly escape
                     // the 64x28dp track while preserving #2470 refraction.
                     .graphicsLayer {
+                        // Apply opacity and expansion only after the backdrop
+                        // has been rendered at its original 40x24dp sampling size.
+                        // ModulateAlpha avoids an intermediate buffer clipping
+                        // the capsule back to its unexpanded layout bounds.
+                        alpha = glassInteraction
+                        compositingStrategy = CompositingStrategy.ModulateAlpha
                         val velocity = glassDragAnimation.velocity / 50f
                         scaleX = glassDragAnimation.scaleX /
                             (1f - (velocity * 0.75f).fastCoerceIn(-0.2f, 0.2f))
