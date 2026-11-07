@@ -378,7 +378,9 @@ fun ExpressiveSwitch(
     var glassDidDrag by remember { mutableStateOf(false) }
     var glassDragDistancePx by remember { mutableFloatStateOf(0f) }
     val glassDragSlopPx = with(LocalDensity.current) { 8.dp.toPx() }
-    val glassDragAnimation = remember(animationScope, glassDragTravelPx) {
+    // The drag-stop callback runs after construction, so it can safely call the initialized controller.
+    lateinit var glassDragAnimation: LiquidToggleDampedDragAnimation
+    glassDragAnimation = remember(animationScope, glassDragTravelPx) {
         LiquidToggleDampedDragAnimation(
             animationScope = animationScope,
             initialValue = if (checked) 1f else 0f,
