@@ -23,8 +23,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Button
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -72,7 +70,9 @@ import com.alohaoneui.app.ui.component.material.SegmentedColumn
 import com.alohaoneui.app.ui.component.material.SegmentedDropdownItem
 import com.alohaoneui.app.ui.component.material.SegmentedListItem
 import com.alohaoneui.app.ui.component.material.ExpressiveSwitch
+import com.alohaoneui.app.ui.component.material.ExpressiveTextButton
 import com.alohaoneui.app.ui.component.material.ExpressiveScaffold
+import com.alohaoneui.app.ui.component.material.ExpressiveButton
 import com.alohaoneui.app.ui.component.material.TopBarBackButton
 import com.alohaoneui.app.ui.component.material.SegmentedSwitchItem
 import com.alohaoneui.app.ui.component.material.SegmentedSliderItem
@@ -435,7 +435,7 @@ private fun AlohaOneUICategoryMaterial(
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 8.dp),
                 ) {
-                    Button(
+                    ExpressiveButton(
                         onClick = {
                             coroutineScope.launch {
                                 val synchronized =
@@ -909,7 +909,7 @@ private fun MaterialPowerActionRow(
             Row(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                TextButton(
+                ExpressiveTextButton(
                     enabled = index > 0,
                     onClick = {
                         toolsViewModel.onSystemUIEvent(
@@ -921,7 +921,7 @@ private fun MaterialPowerActionRow(
                 ) {
                     Text(stringResource(R.string.alohaoneui_moveUp))
                 }
-                TextButton(
+                ExpressiveTextButton(
                     enabled = index in 0 until actions.lastIndex,
                     onClick = {
                         toolsViewModel.onSystemUIEvent(
@@ -1018,10 +1018,10 @@ private fun NetworkSpeedThresholdMaterial(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 singleLine = true,
                 trailingContent = {
-                    TextButton(
+                    ExpressiveTextButton(
                         onClick = {
                             val value = thresholdText.toIntOrNull()?.coerceAtLeast(1)
-                                ?: return@TextButton
+                                ?: return@ExpressiveTextButton
                             thresholdText = value.toString()
                             toolsViewModel.onSystemUIEvent(
                                 SystemUIEvent.StatusBar.NetworkSpeedThreshold(value)
@@ -1067,7 +1067,7 @@ private fun MaterialClockFormatEditor(
         singleLine = false,
         leadingContent = null,
         trailingContent = {
-            TextButton(
+            ExpressiveTextButton(
                 onClick = {
                     val formatted = runCatching {
                         StatusBarClockFormatter.format(edit, LocalDateTime.now())
@@ -1134,7 +1134,7 @@ private fun EditableMaterialValue(
         },
         trailingContent = if (requiresConfirm) {
             {
-                TextButton(
+                ExpressiveTextButton(
                     onClick = {
                         if (spec.type == AlohaOneUISettingType.TextValue || validNumber(spec, edit)) {
                             toolsViewModel.setRawValue(spec, edit)

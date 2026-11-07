@@ -25,7 +25,6 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ExpandedFullScreenContainedSearchBar
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SearchBar
@@ -156,7 +155,7 @@ fun SearchAppBar(
                 },
                 leadingIcon = {
                     if (isSearchExpanded) {
-                        IconButton(
+                        ExpressiveIconButton(
                             onClick = { collapseAndClear() },
                             content = { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) }
                         )
@@ -166,7 +165,7 @@ fun SearchAppBar(
                 },
                 trailingIcon = {
                     if (isSearchExpanded && currentQuery.isNotEmpty()) {
-                        IconButton(
+                        ExpressiveIconButton(
                             onClick = { clearSearchText() },
                             content = { Icon(Icons.Filled.Close, null) }
                         )

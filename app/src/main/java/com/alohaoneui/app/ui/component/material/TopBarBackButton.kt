@@ -5,7 +5,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import com.alohaoneui.app.ui.component.material.ExpressiveIconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -21,8 +21,9 @@ fun TopBarBackButton(
     contentDescription: String? = null,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
-    IconButton(
+    ExpressiveIconButton(
         modifier = modifier.padding(horizontal = 10.dp),
+        framed = true,
         onClick = onClick,
         interactionSource = interactionSource,
         colors = IconButtonDefaults.iconButtonColors(

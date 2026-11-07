@@ -67,9 +67,6 @@ import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
@@ -110,6 +107,8 @@ import com.alohaoneui.app.R
 import com.alohaoneui.app.ui.component.bottombar.useNavigationRail
 import com.alohaoneui.app.ui.component.material.ExpressiveToggleButton
 import com.alohaoneui.app.ui.component.material.ExpressiveScaffold
+import com.alohaoneui.app.ui.component.material.ExpressiveOutlinedTextField
+import com.alohaoneui.app.ui.component.material.ExpressiveTextButton
 import com.alohaoneui.app.ui.component.material.ExpressiveContentDialog
 import com.alohaoneui.app.ui.component.material.IconShapePresetPicker
 import com.alohaoneui.app.ui.component.material.IconShapePresetDetailScreen
@@ -495,61 +494,31 @@ fun ColorPaletteScreenMaterial(
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
-                                OutlinedTextField(
-                                    value = pageScaleInput,
-                                    onValueChange = { input ->
+                                ExpressiveOutlinedTextField(
+                                            value = pageScaleInput,
+                                            onValueChange = { input ->
                                         if (input.length <= 3 && input.all { it.isDigit() }) {
                                             pageScaleInput = input
                                         }
                                     },
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .then(
-                                            if (LocalMaterialShadowButtons.current) {
-                                                Modifier.shadow(2.dp, voyageCornerShape(12.dp))
-                                            } else Modifier
-                                        )
-                                        .then(
-                                            LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
-                                                Modifier.border(
-                                                    it.dp,
-                                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.45f),
-                                                    voyageCornerShape(12.dp),
-                                                )
-                                            } ?: Modifier
-                                        ),
-                                    shape = voyageCornerShape(12.dp),
-                                    singleLine = true,
-                                    textStyle = MaterialTheme.typography.titleMedium.copy(
-                                        textAlign = TextAlign.Center,
-                                        color = MaterialTheme.colorScheme.onSurface,
-                                    ),
-                                    trailingIcon = {
+                                            modifier = Modifier.fillMaxWidth(),
+                                            trailingIcon = {
                                         Text(
                                             text = "%",
                                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         )
                                     },
-                                    colors = OutlinedTextFieldDefaults.colors(
-                                        focusedTextColor = MaterialTheme.colorScheme.onSurface,
-                                        unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
-                                        focusedBorderColor = MaterialTheme.colorScheme.primary,
-                                        unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
-                                        cursorColor = MaterialTheme.colorScheme.primary,
-                                        focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-                                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-                                    ),
-                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                )
+                                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                                        )
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.End,
                                     verticalAlignment = Alignment.CenterVertically,
                                 ) {
-                                    TextButton(onClick = { showPageScaleValueDialog = false }) {
+                                    ExpressiveTextButton(onClick = { showPageScaleValueDialog = false }) {
                                         Text(stringResource(android.R.string.cancel))
                                     }
-                                    TextButton(
+                                    ExpressiveTextButton(
                                         onClick = {
                                             val parsed = pageScaleInput.toIntOrNull()
                                             if (parsed != null && parsed in 80..110) {
@@ -682,55 +651,25 @@ fun ColorPaletteScreenMaterial(
                                             style = MaterialTheme.typography.bodyMedium,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         )
-                                        OutlinedTextField(
+                                        ExpressiveOutlinedTextField(
                                             value = cornerScaleInput,
                                             onValueChange = { input ->
                                                 if (input.length <= 6 && input.all { it.isDigit() || it == '.' }) {
                                                     cornerScaleInput = input
                                                 }
                                             },
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .then(
-                                                    if (LocalMaterialShadowButtons.current) {
-                                                        Modifier.shadow(2.dp, voyageCornerShape(12.dp))
-                                                    } else Modifier
-                                                )
-                                                .then(
-                                                    LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
-                                                        Modifier.border(
-                                                            it.dp,
-                                                            MaterialTheme.colorScheme.primary.copy(alpha = 0.45f),
-                                                            voyageCornerShape(12.dp),
-                                                        )
-                                                    } ?: Modifier
-                                                ),
-                                            shape = voyageCornerShape(12.dp),
-                                            singleLine = true,
-                                            textStyle = MaterialTheme.typography.titleMedium.copy(
-                                                textAlign = TextAlign.Center,
-                                                color = MaterialTheme.colorScheme.onSurface,
-                                            ),
-                                            colors = OutlinedTextFieldDefaults.colors(
-                                                focusedTextColor = MaterialTheme.colorScheme.onSurface,
-                                                unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
-                                                focusedBorderColor = MaterialTheme.colorScheme.primary,
-                                                unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
-                                                cursorColor = MaterialTheme.colorScheme.primary,
-                                                focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-                                                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-                                            ),
-                                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                                            modifier = Modifier.fillMaxWidth(),
+                                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
                                         )
                                         Row(
                                             modifier = Modifier.fillMaxWidth(),
                                             horizontalArrangement = Arrangement.End,
                                             verticalAlignment = Alignment.CenterVertically,
                                         ) {
-                                            TextButton(onClick = { showCornerValueDialog = false }) {
+                                            ExpressiveTextButton(onClick = { showCornerValueDialog = false }) {
                                                 Text(stringResource(android.R.string.cancel))
                                             }
-                                            TextButton(
+                                            ExpressiveTextButton(
                                                 onClick = {
                                                     val parsed = cornerScaleInput.toFloatOrNull()
                                                     if (parsed != null && parsed.isFinite() && parsed in 0f..2f) {
@@ -868,55 +807,25 @@ fun ColorPaletteScreenMaterial(
                                             style = MaterialTheme.typography.bodyMedium,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         )
-                                        OutlinedTextField(
+                                        ExpressiveOutlinedTextField(
                                             value = outlineWidthInput,
                                             onValueChange = { input ->
                                                 if (input.length <= 5 && input.all { it.isDigit() || it == '.' }) {
                                                     outlineWidthInput = input
                                                 }
                                             },
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .then(
-                                                    if (LocalMaterialShadowButtons.current) {
-                                                        Modifier.shadow(2.dp, voyageCornerShape(12.dp))
-                                                    } else Modifier
-                                                )
-                                                .then(
-                                                    LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
-                                                        Modifier.border(
-                                                            it.dp,
-                                                            MaterialTheme.colorScheme.primary.copy(alpha = 0.45f),
-                                                            voyageCornerShape(12.dp),
-                                                        )
-                                                    } ?: Modifier
-                                                ),
-                                            shape = voyageCornerShape(12.dp),
-                                            singleLine = true,
-                                            textStyle = MaterialTheme.typography.titleMedium.copy(
-                                                textAlign = TextAlign.Center,
-                                                color = MaterialTheme.colorScheme.onSurface,
-                                            ),
-                                            colors = OutlinedTextFieldDefaults.colors(
-                                                focusedTextColor = MaterialTheme.colorScheme.onSurface,
-                                                unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
-                                                focusedBorderColor = MaterialTheme.colorScheme.primary,
-                                                unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
-                                                cursorColor = MaterialTheme.colorScheme.primary,
-                                                focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-                                                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-                                            ),
-                                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                                            modifier = Modifier.fillMaxWidth(),
+                                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
                                         )
                                         Row(
                                             modifier = Modifier.fillMaxWidth(),
                                             horizontalArrangement = Arrangement.End,
                                             verticalAlignment = Alignment.CenterVertically,
                                         ) {
-                                            TextButton(onClick = { showOutlineValueDialog = false }) {
+                                            ExpressiveTextButton(onClick = { showOutlineValueDialog = false }) {
                                                 Text(stringResource(android.R.string.cancel))
                                             }
-                                            TextButton(
+                                            ExpressiveTextButton(
                                                 onClick = {
                                                     val parsed = outlineWidthInput.toFloatOrNull()
                                                     if (parsed != null && parsed.isFinite() && parsed in 0f..1.5f) {

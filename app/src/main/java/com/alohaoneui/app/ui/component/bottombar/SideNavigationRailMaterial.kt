@@ -19,7 +19,7 @@ import androidx.compose.material.icons.outlined.Extension
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import com.alohaoneui.app.ui.component.material.ExpressiveIconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.WideNavigationRail
@@ -85,7 +85,7 @@ fun SideNavigationRailMaterial(modifier: Modifier = Modifier) {
         ),
         contentPadding = PaddingValues(vertical = 20.dp),
         header = {
-            IconButton(
+            ExpressiveIconButton(
                 modifier = Modifier.padding(start = 24.dp),
                 onClick = {
                     scope.launch {

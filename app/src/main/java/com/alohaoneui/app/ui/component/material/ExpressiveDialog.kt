@@ -11,7 +11,6 @@ import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
@@ -79,10 +78,10 @@ fun ExpressiveConfirmDialog(
         title = { Text(title) },
         text = message?.let { { Text(it) } },
         confirmButton = {
-            TextButton(onClick = onConfirm) { Text(confirmText) }
+            ExpressiveTextButton(onClick = onConfirm) { Text(confirmText) }
         },
         dismissButton = dismissText?.let {
-            { TextButton(onClick = onDismiss) { Text(it) } }
+            { ExpressiveTextButton(onClick = onDismiss) { Text(it) } }
         },
     )
 }

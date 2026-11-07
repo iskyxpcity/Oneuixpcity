@@ -6,7 +6,7 @@ import androidx.compose.material3.DropdownMenuGroup
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.DropdownMenuPopup
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import com.alohaoneui.app.ui.component.material.ExpressiveIconButton
 import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -35,7 +35,7 @@ fun RebootListPopupMaterial() {
     run {
         val onReboot = rememberRebootAction()
 
-        IconButton(onClick = { expanded = true }) {
+        ExpressiveIconButton(onClick = { expanded = true }) {
             Icon(
                 imageVector = Icons.Filled.PowerSettingsNew,
                 contentDescription = stringResource(id = R.string.reboot)
