@@ -69,6 +69,7 @@ import com.alohaoneui.app.ui.component.miuix.animation.DampedDragAnimation
 import com.alohaoneui.app.ui.component.miuix.animation.InteractiveHighlight
 import top.yukonga.miuix.kmp.blur.blur
 import com.alohaoneui.app.ui.component.liquid.rememberCombinedBackdrop
+import com.alohaoneui.app.ui.component.liquid.rememberVerticallyScaledBackdrop
 import top.yukonga.miuix.kmp.blur.Backdrop
 import top.yukonga.miuix.kmp.blur.drawBackdrop
 import top.yukonga.miuix.kmp.blur.layerBackdrop
@@ -585,11 +586,18 @@ fun ExpressiveSwitch(
                     .size(width = trackSize.width + 2.dp, height = trackSize.height),
             )
 
+            // Voyage's LiquidToggle vertically insets the sampled track backdrop
+            // inside the glass surface (0f idle -> 0.75f while pressed).
+            // Keep X sampling unchanged: only the top/bottom edges move inward.
+            val verticallyInsetTrack = rememberVerticallyScaledBackdrop(trackBackdrop) {
+                lerp(0f, 0.75f, glassDragAnimation.pressProgress)
+            }
             // Capture the track first so the lens refracts its actual ON/OFF color.
+            // The app backdrop remains untouched; only the switch rail is vertically inset.
             val glassBackdrop = if (backdrop != null) {
-                rememberCombinedBackdrop(backdrop, trackBackdrop)
+                rememberCombinedBackdrop(backdrop, verticallyInsetTrack)
             } else {
-                trackBackdrop
+                verticallyInsetTrack
             }
 
             // Draw the theme-dynamic 40x24dp resting handle ABOVE the rail.
