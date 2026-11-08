@@ -16,29 +16,38 @@ fun DetailPaneBrowser(
     onEvent: (BrowserEvent) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    PackagePane(modifier) {
-        SwitchItem(
-            icon = ImageVector.vectorResource(id = R.drawable.fast_forward),
-            title = stringResource(id = R.string.alohaoneui_showMorePlaybackSpeeds_title),
-            summary = stringResource(id = R.string.alohaoneui_showMorePlaybackSpeeds_summary),
-            checked = uiState.showMorePlaybackSpeeds,
-            onCheckedChange = { onEvent(BrowserEvent.ShowMorePlaybackSpeeds(it)) }
-        )
-        SwitchItem(
-            icon = ImageVector.vectorResource(id = R.drawable.tab_move),
-            title = stringResource(id = R.string.alohaoneui_redirect_custom_tab_title),
-            summary = stringResource(id = R.string.alohaoneui_redirect_custom_tab_summary),
-            checked = uiState.redirectCustomTab,
-            onCheckedChange = { onEvent(BrowserEvent.RedirectCustomTab(it)) }
-        )
-        SwitchItem(
-            icon = ImageVector.vectorResource(id = R.drawable.language_us),
-            title = stringResource(id = R.string.alohaoneui_spoofBrowserCountryCodeToUS_title),
-            summary = stringResource(id = R.string.alohaoneui_spoofBrowserCountryCodeToUS_summary),
-            checked = uiState.spoofBrowserCountryCodeToUS,
-            onCheckedChange = { onEvent(BrowserEvent.SpoofBrowserCountryCodeToUS(it)) }
-        )
-    }
+    PackagePane(
+        modifier = modifier,
+        content = buildList {
+            add {
+                SwitchItem(
+                            icon = ImageVector.vectorResource(id = R.drawable.fast_forward),
+                            title = stringResource(id = R.string.alohaoneui_showMorePlaybackSpeeds_title),
+                            summary = stringResource(id = R.string.alohaoneui_showMorePlaybackSpeeds_summary),
+                            checked = uiState.showMorePlaybackSpeeds,
+                            onCheckedChange = { onEvent(BrowserEvent.ShowMorePlaybackSpeeds(it)) }
+                        )
+            }
+            add {
+                SwitchItem(
+                            icon = ImageVector.vectorResource(id = R.drawable.tab_move),
+                            title = stringResource(id = R.string.alohaoneui_redirect_custom_tab_title),
+                            summary = stringResource(id = R.string.alohaoneui_redirect_custom_tab_summary),
+                            checked = uiState.redirectCustomTab,
+                            onCheckedChange = { onEvent(BrowserEvent.RedirectCustomTab(it)) }
+                        )
+            }
+            add {
+                SwitchItem(
+                            icon = ImageVector.vectorResource(id = R.drawable.language_us),
+                            title = stringResource(id = R.string.alohaoneui_spoofBrowserCountryCodeToUS_title),
+                            summary = stringResource(id = R.string.alohaoneui_spoofBrowserCountryCodeToUS_summary),
+                            checked = uiState.spoofBrowserCountryCodeToUS,
+                            onCheckedChange = { onEvent(BrowserEvent.SpoofBrowserCountryCodeToUS(it)) }
+                        )
+            }
+        }
+    )
 }
 
 sealed interface BrowserEvent {
