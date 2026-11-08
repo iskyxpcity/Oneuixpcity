@@ -26,6 +26,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
@@ -142,6 +143,8 @@ fun ExpressiveOutlinedTextField(
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     trailingIcon: (@Composable () -> Unit)? = null,
     placeholder: (@Composable () -> Unit)? = null,
+    label: (@Composable () -> Unit)? = null,
+    singleLine: Boolean = true,
     textStyle: TextStyle? = null,
 ) {
     val actualShape = voyageCornerShape(12.dp)
@@ -164,7 +167,8 @@ fun ExpressiveOutlinedTextField(
         onValueChange = onValueChange,
         modifier = styledModifier,
         shape = actualShape,
-        singleLine = true,
+        singleLine = singleLine,
+        label = label,
         textStyle = textStyle ?: MaterialTheme.typography.titleMedium.copy(
             textAlign = TextAlign.Center,
             color = MaterialTheme.colorScheme.onSurface,
@@ -184,6 +188,46 @@ fun ExpressiveOutlinedTextField(
     )
 }
 
+
+
+
+/** TextFieldValue overload for shared Aloha Material inline editors. */
+@Composable
+fun ExpressiveOutlinedTextField(
+    value: TextFieldValue,
+    onValueChange: (TextFieldValue) -> Unit,
+    modifier: Modifier = Modifier,
+    label: (@Composable () -> Unit)? = null,
+    singleLine: Boolean = false,
+    textStyle: TextStyle = MaterialTheme.typography.bodyLarge,
+) {
+    val actualShape = voyageCornerShape(12.dp)
+    val styledModifier = modifier
+        .then(if (LocalMaterialShadowButtons.current) Modifier.shadow(2.dp, actualShape) else Modifier)
+        .then(
+            LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
+                Modifier.border(it.dp, MaterialTheme.colorScheme.outlineVariant, actualShape)
+            } ?: Modifier
+        )
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        modifier = styledModifier,
+        shape = actualShape,
+        label = label,
+        singleLine = singleLine,
+        textStyle = textStyle,
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedTextColor = MaterialTheme.colorScheme.onSurface,
+            unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+            focusedBorderColor = MaterialTheme.colorScheme.primary,
+            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+            cursorColor = MaterialTheme.colorScheme.primary,
+            focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+        ),
+    )
+}
 
 /** Shared Material surface; page-level surfaces inherit Aloha shape/elevation/outline settings. */
 @Composable

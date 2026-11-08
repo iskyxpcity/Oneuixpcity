@@ -12,7 +12,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ListItemDefaults
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text as MaterialText
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
@@ -28,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import com.alohaoneui.app.ui.LocalUiMode
 import com.alohaoneui.app.ui.UiMode
 import com.alohaoneui.app.ui.component.material.ExpressiveSwitch
+import com.alohaoneui.app.ui.component.material.ExpressiveOutlinedTextField
 import com.alohaoneui.app.ui.component.material.ExpressiveButton
 import com.alohaoneui.app.ui.component.material.LocalListItemShapes
 import com.alohaoneui.app.ui.component.material.SegmentedListItem
@@ -218,12 +218,13 @@ fun AlohaOneUIInlineTextField(
 ) {
     val grouped = LocalAlohaOneUIGroupedPreference.current
     when (LocalUiMode.current) {
-        UiMode.Material -> OutlinedTextField(
+        UiMode.Material -> ExpressiveOutlinedTextField(
             value = value,
             onValueChange = onValueChange,
             modifier = modifier,
             label = labelText?.let { label -> { MaterialText(label) } },
             singleLine = singleLine,
+            textStyle = MaterialTheme.typography.bodyLarge,
         )
 
         UiMode.Miuix -> {
@@ -276,7 +277,7 @@ fun AlohaOneUIInlineTextField(
 ) {
     val grouped = LocalAlohaOneUIGroupedPreference.current
     when (LocalUiMode.current) {
-        UiMode.Material -> OutlinedTextField(
+        UiMode.Material -> ExpressiveOutlinedTextField(
             value = value,
             onValueChange = onValueChange,
             modifier = modifier,
