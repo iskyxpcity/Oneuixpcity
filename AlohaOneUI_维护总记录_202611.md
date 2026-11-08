@@ -1374,3 +1374,11 @@
 - 全局检查 `MaterialTheme.kt` 发现 Material 主题根仍使用原生 `Shapes()`，因此任何未显式传入 `voyageCornerShape` 的 Material3 控件仍回落到默认圆角形状，无法响应 Aloha 的形状风格与圆角缩放设置。
 - 已将 Material3 的 extraSmall/small/medium/large/extraLarge 五个标准形状槽统一绑定到 `voyageCornerShape(4/8/12/16/28.dp)`。由于 MaterialAlohaOneUITheme 位于 Theme.kt 的 LocalMaterialCornerScale / LocalMaterialShapeStyle 提供范围内，Material3 原生控件现在会随当前 Aloha 形状风格和缩放动态更新；已经显式使用自定义形状的组件保持原有覆盖优先级。
 - 保留颜色方案动画、MotionScheme、Typography、系统栏图标明暗状态与内容层级不变。源码提交：`190494fca579e0ed89fd8b2695953b87de315340`；等待本轮编译及签名 APK 验收。该改动仅在测试分支，不修改 Miuix 主题、main 或版本号。
+
+
+## 2026-11｜修复 Material 原生形状槽编译失败（Run 42459160710）
+
+- Run `42459160710` 失败位置：`MaterialTheme.kt:52-56`。Gradle 日志明确报错五个参数均为 `Shape`，而当前 Material3 `Shapes` 构造器要求 `CornerBasedShape`。
+- 根因：`voyageCornerShape()` 返回通用 `Shape`，其中 VoyagePathShape 是自定义通用路径形状，不能直接传入 Material3 标准 Shapes 槽位。
+- 已修复为类型安全适配：Material3 原生形状槽读取当前 `LocalMaterialCornerScale` 和 `LocalMaterialShapeStyle`；直角切角样式映射为 `CutCornerShape`，其他样式映射为 `RoundedCornerShape`，五档半径仍分别为 4/8/12/16/28dp。自定义 Aloha 组件继续通过 `voyageCornerShape()` 使用完整 VoyagePathShape，不改变其现有视觉路径。
+- 修复提交：`0bda45cd3cfd7bc0f6897278c809922d4722c834`。本次只修正 Material3 Shapes 的类型不匹配，不改 Miuix、main、版本号或业务行为；等待新 Actions 编译与签名验收。
