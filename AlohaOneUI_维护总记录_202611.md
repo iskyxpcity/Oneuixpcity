@@ -1456,3 +1456,14 @@
 - Artifact：`AlohaOneUI-Signed-Test-APK`，ID `13611103089`，ZIP 大小 28,638,843 bytes，Artifact ZIP SHA-256 `ea535d89f0d9c3155fa477a9b7aad7e5627e3cf5817438ad09275e72599cf0bb`。APK：`AlohaOneUI_1.0.261025_BUILD_2651.apk`，29,637,618 bytes，SHA-256 `b3f91447cf33adf2acdc46853382afc2354ea96361285ad83c936fe4ed2cbb37`；包名 `com.alohaoneui.app`，versionName `1.0.261025`，versionCode `16`；V2 签名通过，证书 SHA-256 `93bf61a6493c6b336383832eb41301bd8fe061f43566e7e384e3fdd9fc1c26a1`。
 - 后续继续全局盘点 Material 控件入口、默认色/形状/描边/阴影及页面调用；Miuix UI 不纳入 Material 改造范围。保持测试分支，不改/不合并 `main`，不改版本号。
 - Run：https://github.com/iskyxpcity/Oneuixpcity/actions/runs/42464875273
+
+
+## 2026-11-08｜Material 框体、菜单分组与间距续检（Build #2669；#2670 待验收）
+
+- 本轮仍只在测试分支 `test/switches-official-eight-20261103` 工作；未修改/合并 `main`，未改版本号，未改 Miuix 控件视觉实现。
+- 检查重启菜单时发现普通 Material3 `DropdownMenuItem` 不支持 `shapes` 参数。改为对菜单项 Modifier 应用 Aloha 分段形状裁切，保留菜单点击回调、文本、菜单项语义与原顺序；补齐 `Modifier` 导入。修正后的 Run `42470360560` / Build #2669 成功。
+- 检查设置下拉分组框体，将分组容器从原生默认形状改为 Aloha 主题形状工厂；主题模式连接按钮组移除每个按钮重复的水平外边距，改由整组控制外侧留白，避免按钮间距与外边距叠加。
+- 统一颜色主题页六个分组的上下留白；功能分类页全高滚动容器补齐尺寸约束；日志导出底部弹窗使用 Aloha 全局轮廓宽度和 outlineVariant 颜色绘制主题描边。上述改动与 Build #2669 一起通过 Kotlin 编译、Owner 签名 APK 构建、包名/固定证书验证和 Artifact 上传。
+- Build #2669 Run：`42470360560`；head SHA：`a526b85a9f2e818d515f8bdb7d5c8b31f5a633a3`。Artifact：`AlohaOneUI-Signed-Test-APK`，ID `13612838073`，大小 28,642,983 bytes，ZIP SHA-256：`af16f655fa10745d47c47c8ebdeefea696e3191c4ac2b8e092e808d5c5cce6a9`。APK：`AlohaOneUI_1.0.261025_BUILD_2669.apk`；包名 `com.alohaoneui.app`，versionName `1.0.261025`，versionCode `16`；V2 签名、固定证书检查和 ZIP 完整性检查通过。
+- 继续检查状态栏三合一设置页发现颜色角色选择弹窗仍显式使用固定 `RoundedCornerShape(24.dp)`，绕过全局 Aloha 形状样式。已改为 `alohaCornerShape(24.dp)`，保留弹窗内容、最大宽度、padding 与交互；触发 Run `42471233977` / Build #2670，当前待完成编译和签名验收。
+- 全局统一仍未完成；继续审查 Material 页面的框体入口、固定圆角、原生 Material3 容器、分组间距、内容边距及滚动区域尺寸。只有确认属于 Material 分支的组件才改动；Miuix 分支及其卡片/控件不纳入本轮改造。
