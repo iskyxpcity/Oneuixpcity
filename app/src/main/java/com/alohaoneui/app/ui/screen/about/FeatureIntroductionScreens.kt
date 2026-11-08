@@ -18,7 +18,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Article
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
@@ -35,6 +34,7 @@ import androidx.lifecycle.compose.dropUnlessResumed
 import com.alohaoneui.app.R
 import com.alohaoneui.app.ui.LocalUiMode
 import com.alohaoneui.app.ui.UiMode
+import com.alohaoneui.app.ui.component.material.ExpressiveLargeTopAppBar
 import com.alohaoneui.app.ui.component.material.SegmentedColumn
 import com.alohaoneui.app.ui.component.material.ExpressiveScaffold
 import com.alohaoneui.app.ui.component.material.SegmentedListItem
@@ -143,7 +143,7 @@ private fun FeatureIntroductionMaterial(
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
     ExpressiveScaffold(
         topBar = {
-            LargeFlexibleTopAppBar(
+            ExpressiveLargeTopAppBar(
                 title = { Text(stringResource(R.string.feature_introduction)) },
                 navigationIcon = { TopBarBackButton(onClick = onBack) },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -446,7 +446,7 @@ private fun VersionChangelogMaterial(onBack: () -> Unit, isLatestVersion: Boolea
     }
     ExpressiveScaffold(
         topBar = {
-            LargeFlexibleTopAppBar(
+            ExpressiveLargeTopAppBar(
                 title = { Text(stringResource(R.string.version_updates_title)) },
                 navigationIcon = { TopBarBackButton(onClick = onBack) },
                 colors = TopAppBarDefaults.topAppBarColors(
