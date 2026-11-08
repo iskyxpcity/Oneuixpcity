@@ -77,10 +77,11 @@ import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.Dp
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CornerBasedShape
+import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CutCornerShape
@@ -243,33 +244,61 @@ private data class AlohaG2Profile(
     }
 }
 
-private class AlohaPathShape(
+private class AlohaPathShape private constructor(
     private val style: Int,
-    private val topStart: Dp,
-    private val topEnd: Dp,
-    private val bottomEnd: Dp,
-    private val bottomStart: Dp,
-) : Shape {
+    topStart: CornerSize,
+    topEnd: CornerSize,
+    bottomEnd: CornerSize,
+    bottomStart: CornerSize,
+) : CornerBasedShape(topStart, topEnd, bottomEnd, bottomStart) {
+    constructor(
+        style: Int,
+        topStart: Dp,
+        topEnd: Dp,
+        bottomEnd: Dp,
+        bottomStart: Dp,
+    ) : this(
+        style,
+        CornerSize(topStart),
+        CornerSize(topEnd),
+        CornerSize(bottomEnd),
+        CornerSize(bottomStart),
+    )
+
+    override fun copy(
+        topStart: CornerSize,
+        topEnd: CornerSize,
+        bottomEnd: CornerSize,
+        bottomStart: CornerSize,
+    ): CornerBasedShape = AlohaPathShape(style, topStart, topEnd, bottomEnd, bottomStart)
+
     private data class OutlineKey(
         val style: Int,
-        val width: Float, val height: Float, val density: Float, val direction: LayoutDirection,
-        val topStart: Float, val topEnd: Float, val bottomEnd: Float, val bottomStart: Float,
+        val width: Float,
+        val height: Float,
+        val direction: LayoutDirection,
+        val topStart: Float,
+        val topEnd: Float,
+        val bottomEnd: Float,
+        val bottomStart: Float,
     )
 
     // Share generated outlines across all instances. During radius adjustment many
     // rows use the same dimensions and radii; a per-instance cache rebuilt on every
     // animated value causes redundant Path allocation and frame drops.
-    override fun createOutline(size: Size, layoutDirection: LayoutDirection, density: Density): Outline {
-        // Keep the cache key at the exact Float radius. Quantizing Wavy
-        // radii to 0.5dp made the outline jump in visible half-dp steps while
-        // the user dragged the continuous corner-scale slider. The bounded LRU
-        // still limits retained outlines; exact keys preserve continuous geometry.
-        fun cacheRadius(value: Float): Float = value
-
+    override fun createOutline(
+        size: Size,
+        topStart: Float,
+        topEnd: Float,
+        bottomEnd: Float,
+        bottomStart: Float,
+        layoutDirection: LayoutDirection,
+    ): Outline {
+        // CornerBasedShape resolves each CornerSize to pixels before calling this
+        // method, so the exact pixel radii are also the complete cache identity.
         val key = OutlineKey(
-            style, size.width, size.height, density.density, layoutDirection,
-            cacheRadius(topStart.value), cacheRadius(topEnd.value),
-            cacheRadius(bottomEnd.value), cacheRadius(bottomStart.value),
+            style, size.width, size.height, layoutDirection,
+            topStart, topEnd, bottomEnd, bottomStart,
         )
 
         synchronized(outlineCache) {
@@ -277,7 +306,9 @@ private class AlohaPathShape(
         }
         // Build outside the shared lock: complex Wavy outlines must not block
         // other shape lookups while the radius slider is being dragged.
-        val generated = createAlohaOutline(size, layoutDirection, density)
+        val generated = createAlohaOutline(
+            size, layoutDirection, topStart, topEnd, bottomEnd, bottomStart,
+        )
         synchronized(outlineCache) {
             outlineCache[key]?.let { return it }
             outlineCache[key] = generated
@@ -293,11 +324,18 @@ private class AlohaPathShape(
         }
     }
 
-    private fun createAlohaOutline(size: Size, layoutDirection: LayoutDirection, density: Density): Outline {
-        val ts = with(density) { topStart.toPx() }.coerceIn(0f, minOf(size.width, size.height) / 2f)
-        val te = with(density) { topEnd.toPx() }.coerceIn(0f, minOf(size.width, size.height) / 2f)
-        val be = with(density) { bottomEnd.toPx() }.coerceIn(0f, minOf(size.width, size.height) / 2f)
-        val bs = with(density) { bottomStart.toPx() }.coerceIn(0f, minOf(size.width, size.height) / 2f)
+    private fun createAlohaOutline(
+        size: Size,
+        layoutDirection: LayoutDirection,
+        topStart: Float,
+        topEnd: Float,
+        bottomEnd: Float,
+        bottomStart: Float,
+    ): Outline {
+        val ts = topStart.coerceIn(0f, minOf(size.width, size.height) / 2f)
+        val te = topEnd.coerceIn(0f, minOf(size.width, size.height) / 2f)
+        val be = bottomEnd.coerceIn(0f, minOf(size.width, size.height) / 2f)
+        val bs = bottomStart.coerceIn(0f, minOf(size.width, size.height) / 2f)
         // Aloha concave-arc (style 5) and notch (style 6) defaults were visually
         // too deep. Halve only these styles' effective geometry; the shared corner-scale
         // setting remains multiplicative and other shape styles keep their original values.
@@ -502,7 +540,7 @@ private class AlohaPathShape(
 }
 
 @Composable
-fun alohaCornerShape(radius: androidx.compose.ui.unit.Dp): Shape {
+fun alohaCornerShape(radius: androidx.compose.ui.unit.Dp): CornerBasedShape {
     val scaledRadius = radius * LocalMaterialCornerScale.current.coerceIn(0f, 2f)
     val style = LocalMaterialShapeStyle.current
     return when (style) {
@@ -535,7 +573,7 @@ fun alohaOneUISegmentedColors(): ListItemColors = ListItemDefaults.segmentedColo
  * vertical=true joins rows top-to-bottom; false joins selection buttons left-to-right.
  */
 @Composable
-fun alohaSegmentedShape(index: Int, count: Int, vertical: Boolean = true, pressed: Boolean = false): Shape {
+fun alohaSegmentedShape(index: Int, count: Int, vertical: Boolean = true, pressed: Boolean = false): CornerBasedShape {
     val single = count == 1 || index == -1
     val first = single || index == 0
     val last = single || index == count - 1
