@@ -13,7 +13,7 @@ import com.alohaoneui.app.R
 import com.alohaoneui.common.Preference
 import com.alohaoneui.app.ui.viewmodel.AlohaOneUIToolsViewModel
 import com.alohaoneui.mod.ui.component.SwitchItem
-import com.alohaoneui.mod.ui.component.AlohaOneUIDetailGroup
+import com.alohaoneui.mod.ui.component.AlohaOneUIDetailSegmentedGroup
 
 @Composable
 fun DetailPaneCall(
@@ -26,40 +26,51 @@ fun DetailPaneCall(
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
     ) {
-        AlohaOneUIDetailGroup {
-        SwitchItem(
-            icon = ImageVector.vectorResource(id = R.drawable.call_recording),
-            title = stringResource(id = R.string.alohaoneui_supportVoiceCallRecording_title),
-            checked = uiState.supportVoiceCallRecording,
-            onCheckedChange = { onEvent(CallEvent.SupportVoiceCallRecording(it)) }
-        )
-        SwitchItem(
-            icon = ImageVector.vectorResource(id = R.drawable.call_recording),
-            title = stringResource(id = R.string.alohaoneui_preferRecordingButton_title),
-            checked = uiState.preferRecordingButton,
-            onCheckedChange = { onEvent(CallEvent.PreferRecordingButton(it)) }
-        )
-        SwitchItem(
-            icon = ImageVector.vectorResource(id = R.drawable.person_pin_circle),
-            title = stringResource(id = R.string.alohaoneui_showGeocodedLocationInRecentCall_title),
-            checked = uiState.showGeocodedLocationInRecentCall,
-            onCheckedChange = { onEvent(CallEvent.ShowGeocodedLocationInRecentCall(it)) }
-        )
-        SwitchItem(
-            icon = ImageVector.vectorResource(id = R.drawable.call_log),
-            title = stringResource(id = R.string.alohaoneui_isOpStyleCHN_title),
-            checked = uiState.isOpStyleCHN,
-            onCheckedChange = { onEvent(CallEvent.IsOpStyleCHN(it)) }
-        )
-        SwitchItem(
-            icon = ImageVector.vectorResource(id = R.drawable.phone_forwarded),
-            title = stringResource(id = R.string.alohaoneui_supportCallAndTextOnOtherDevices_title),
-            summary = stringResource(id = R.string.alohaoneui_supportCallAndTextOnOtherDevices_summary),
-            checked = uiState.supportCallAndTextOnOtherDevices,
-            onCheckedChange = { onEvent(CallEvent.SupportCallAndTextOnOtherDevices(it)) }
-        )
-    
-        }}
+        AlohaOneUIDetailSegmentedGroup(
+                content = buildList {
+                    add {
+                    SwitchItem(
+                                icon = ImageVector.vectorResource(id = R.drawable.call_recording),
+                                title = stringResource(id = R.string.alohaoneui_supportVoiceCallRecording_title),
+                                checked = uiState.supportVoiceCallRecording,
+                                onCheckedChange = { onEvent(CallEvent.SupportVoiceCallRecording(it)) }
+                            )
+                }
+                add {
+                    SwitchItem(
+                                icon = ImageVector.vectorResource(id = R.drawable.call_recording),
+                                title = stringResource(id = R.string.alohaoneui_preferRecordingButton_title),
+                                checked = uiState.preferRecordingButton,
+                                onCheckedChange = { onEvent(CallEvent.PreferRecordingButton(it)) }
+                            )
+                }
+                add {
+                    SwitchItem(
+                                icon = ImageVector.vectorResource(id = R.drawable.person_pin_circle),
+                                title = stringResource(id = R.string.alohaoneui_showGeocodedLocationInRecentCall_title),
+                                checked = uiState.showGeocodedLocationInRecentCall,
+                                onCheckedChange = { onEvent(CallEvent.ShowGeocodedLocationInRecentCall(it)) }
+                            )
+                }
+                add {
+                    SwitchItem(
+                                icon = ImageVector.vectorResource(id = R.drawable.call_log),
+                                title = stringResource(id = R.string.alohaoneui_isOpStyleCHN_title),
+                                checked = uiState.isOpStyleCHN,
+                                onCheckedChange = { onEvent(CallEvent.IsOpStyleCHN(it)) }
+                            )
+                }
+                add {
+                    SwitchItem(
+                                icon = ImageVector.vectorResource(id = R.drawable.phone_forwarded),
+                                title = stringResource(id = R.string.alohaoneui_supportCallAndTextOnOtherDevices_title),
+                                summary = stringResource(id = R.string.alohaoneui_supportCallAndTextOnOtherDevices_summary),
+                                checked = uiState.supportCallAndTextOnOtherDevices,
+                                onCheckedChange = { onEvent(CallEvent.SupportCallAndTextOnOtherDevices(it)) }
+                            )
+                }
+                }
+            )}
 }
 
 
