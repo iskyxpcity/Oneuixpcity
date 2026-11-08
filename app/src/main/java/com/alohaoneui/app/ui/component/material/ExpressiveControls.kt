@@ -1,5 +1,10 @@
 package com.alohaoneui.app.ui.component.material
 
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.material3.LargeFlexibleTopAppBar
+import androidx.compose.material3.TopAppBarColors
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -213,4 +218,27 @@ fun ExpressiveSurface(
             interactionSource = interactionSource, content = content,
         )
     }
+}
+
+
+/** Aloha-owned large Material top app bar entry point for all Material screens. */
+@Composable
+fun ExpressiveLargeTopAppBar(
+    title: @Composable () -> Unit,
+    modifier: Modifier = Modifier,
+    navigationIcon: @Composable () -> Unit = {},
+    actions: @Composable RowScope.() -> Unit = {},
+    colors: TopAppBarColors = TopAppBarDefaults.topAppBarColors(),
+    windowInsets: WindowInsets = TopAppBarDefaults.windowInsets,
+    scrollBehavior: TopAppBarScrollBehavior? = null,
+) {
+    LargeFlexibleTopAppBar(
+        title = title,
+        modifier = modifier,
+        navigationIcon = navigationIcon,
+        actions = actions,
+        colors = colors,
+        windowInsets = windowInsets,
+        scrollBehavior = scrollBehavior,
+    )
 }
