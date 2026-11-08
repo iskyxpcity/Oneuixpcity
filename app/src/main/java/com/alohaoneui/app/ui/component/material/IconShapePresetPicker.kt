@@ -141,7 +141,7 @@ internal fun IconShapePresetDetailScreen(
                     else -> "${stringResource(R.string.theme_icon_shape_title)} ${style + 1}"
                 }
                 val interactionSource = remember(style) { MutableInteractionSource() }
-                val tileShape = voyageCornerShape(14.dp)
+                val tileShape = alohaCornerShape(14.dp)
                 val previewColor = if (selected) {
                     MaterialTheme.colorScheme.onPrimary
                 } else {
@@ -191,7 +191,7 @@ internal fun IconShapePresetDetailScreen(
     }
 }
 
-/** Temporary geometry only; this catalog is not yet a source-faithful replacement for Voyage's 51 shape entries. */
+/** Temporary geometry only; this catalog is not yet a source-faithful replacement for Aloha's 51 shape entries. */
 internal fun iconShapeForStyle(style: Int, seed: Int = 0): Shape? {
     if (style == ICON_SHAPE_NONE) return null
     val presetIndex = if (style == ICON_SHAPE_RANDOM) {
