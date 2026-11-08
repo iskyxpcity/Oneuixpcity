@@ -38,7 +38,6 @@ import androidx.compose.material.icons.filled.Update
 import androidx.compose.material.icons.rounded.Dashboard
 import androidx.compose.material.icons.rounded.UploadFile
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -58,6 +57,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.alohaoneui.app.R
 import com.alohaoneui.app.ui.UiMode
+import com.alohaoneui.app.ui.component.material.ExpressiveLargeTopAppBar
 import com.alohaoneui.app.ui.component.material.SegmentedColumn
 import com.alohaoneui.app.ui.component.material.ExpressiveScaffold
 import com.alohaoneui.app.ui.component.material.alohaOneUISegmentedColors
@@ -250,7 +250,7 @@ fun SettingPagerMaterial(
 private fun TopBar(
     scrollBehavior: TopAppBarScrollBehavior? = null
 ) {
-    LargeFlexibleTopAppBar(
+    ExpressiveLargeTopAppBar(
         
         title = { Text(stringResource(R.string.settings)) },
         colors = TopAppBarDefaults.topAppBarColors(
