@@ -1390,3 +1390,18 @@
 - 已同步更新调用方与导入：Material 共享控件、开关、滑块、标签、弹窗、日志底部弹窗、Snackbar、TonalCard、搜索栏、Scaffold、TabRow、颜色主题页、更新弹窗，以及 mod 层通用滑块入口。MaterialTheme 注释不再描述为依附上游的主题基础。
 - 代码提交分布于本测试分支，当前批次尚未完成最终全仓残留扫描及 Actions 编译验收；不能将本记录视为已确认零残留或构建通过。历史维护记录保留当时真实移植/对照过程，不将历史来源描述伪装成项目当前依赖。
 - 后续继续检查所有 Material 控件和页面是否绕过 Aloha 共享主题组件，重点核对原生 Material3 Surface/Shape/颜色/阴影/描边入口；不修改 Miuix、`main` 或版本号。
+
+
+## 2026-11-07 独立项目命名清理与 Material 全局统一续作
+
+- 本轮范围仍仅限测试分支 `test/switches-official-eight-20261103`；未修改 main、未合并、未调整版本号。
+- 将 Material 形状 API 和相关控件中残留的上游标识统一改为项目自有的 Aloha 命名：
+  - `VoyageG2Profile` → `AlohaG2Profile`
+  - `VoyagePathShape` → `AlohaPathShape`
+  - `voyageCornerShape` → `alohaCornerShape`
+  - `voyageSegmentedShape` → `alohaSegmentedShape`
+  - `VoyageSliderAppearance` / `voyageSliderAppearance`、`VoyageSliderThumb`、`VoyageSliderTrack`、`drawVoyageOutline` 等同步改为 Aloha 命名。
+- 已清理或迁移调用点：SegmentedList、SegmentedSliderItem、ExpressiveSwitch、ExpressiveControls、ExpressiveDialog、ExpressiveTabRow、IconShapePresetPicker、MaterialTheme、StatusTagMaterial、SendLogBottomSheet、SnackBar、TonalCard、AlohaOneUISlider、ColorPaletteScreenMaterial、DialogMaterial、SearchBar、UpdateDialogHost。
+- 代码注释中的上游品牌引用同步改成项目自有描述；历史维护记录保留历史事实，不做追溯性篡改。
+- 首轮构建 Run `42460870453` 失败：编译日志定位到 SearchBar.kt 与 UpdateDialogHost.kt 尚有旧函数调用；已补齐并触发 Run `42461123338`，待验证。
+- 当前尚未宣布清理完成或构建通过；后续需继续全源码检索残留标识，排查构建错误，再继续检查 Material 主题组件/控件的颜色、形状、阴影、描边和调用点是否统一。
