@@ -28,6 +28,7 @@ import com.alohaoneui.app.ui.component.material.ExpressiveSwitch
 import com.alohaoneui.app.ui.component.material.ExpressiveOutlinedTextField
 import com.alohaoneui.app.ui.component.material.ExpressiveButton
 import com.alohaoneui.app.ui.component.material.LocalListItemShapes
+import com.alohaoneui.app.ui.component.material.SegmentedColumn
 import com.alohaoneui.app.ui.component.material.SegmentedListItem
 import com.alohaoneui.app.ui.component.material.alohaOneUISegmentedColors
 import top.yukonga.miuix.kmp.basic.BasicComponent
@@ -108,6 +109,24 @@ fun AlohaOneUIDetailGroup(
     }
 }
 
+
+// Indexed detail-list API: callers provide actual rows so Material can apply
+// first/middle/last shapes and press springs without flattening nested controls.
+@Composable
+fun AlohaOneUIDetailSegmentedGroup(
+    modifier: Modifier = Modifier,
+    content: List<@Composable () -> Unit>,
+) {
+    when (LocalUiMode.current) {
+        UiMode.Material -> SegmentedColumn(
+            modifier = modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+            content = content,
+        )
+        UiMode.Miuix -> Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            content.forEach { it() }
+        }
+    }
+}
 
 @Composable
 fun AlohaOneUIChildOptionSurface(
