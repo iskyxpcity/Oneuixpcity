@@ -51,14 +51,18 @@ fun AlohaOneUIPPreferenceGroup(
     when (LocalUiMode.current) {
         UiMode.Material -> {
             // Match SettingsMaterial: every option is its own themed segmented
-            // surface, while the group itself is spacing only (never another card).
+            // surface; groups add spacing, never an extra card layer.
+            val alreadyGrouped = LocalAlohaOneUIGroupedPreference.current
             val itemShapes = ListItemDefaults.segmentedShapes(0, 1)
             CompositionLocalProvider(
                 LocalAlohaOneUIGroupedPreference provides true,
                 LocalListItemShapes provides itemShapes,
             ) {
                 Column(
-                    modifier = modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                    modifier = modifier.padding(
+                        horizontal = if (alreadyGrouped) 0.dp else 16.dp,
+                        vertical = 8.dp,
+                    ),
                     verticalArrangement = Arrangement.spacedBy(4.dp),
                     content = content,
                 )
@@ -94,7 +98,7 @@ fun AlohaOneUIDetailGroup(
                 LocalListItemShapes provides itemShapes,
             ) {
                 Column(
-                    modifier = modifier,
+                    modifier = modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                     verticalArrangement = Arrangement.spacedBy(4.dp),
                     content = content,
                 )
