@@ -4,6 +4,7 @@ import android.content.Intent
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -40,6 +41,7 @@ import com.alohaoneui.app.ui.util.buildAlohaOneUIDiagnosticReport
 import com.alohaoneui.app.ui.util.buildAlohaOneUIDiagnosticReportForExport
 import com.alohaoneui.app.ui.util.alohaOneUIDiagnosticFileName
 import com.alohaoneui.app.ui.util.writeAlohaOneUIDiagnosticReport
+import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
 
 @Composable
 fun SendLogBottomSheet(onDismiss: () -> Unit, snackbarHostState: SnackbarHostState) {
@@ -67,9 +69,16 @@ fun SendLogBottomSheet(onDismiss: () -> Unit, snackbarHostState: SnackbarHostSta
         }
         onDismiss()
     }
+    val sheetShape = alohaCornerShape(28.dp)
+    val outlineWidth = LocalMaterialOutlineWidth.current
     ModalBottomSheet(
+        modifier = Modifier.then(
+            outlineWidth.takeIf { it > 0f }?.let {
+                Modifier.border(it.dp, MaterialTheme.colorScheme.outlineVariant, sheetShape)
+            } ?: Modifier
+        ),
         onDismissRequest = onDismiss,
-        shape = alohaCornerShape(28.dp),
+        shape = sheetShape,
         containerColor = MaterialTheme.colorScheme.surfaceContainer,
     ) {
         Row(
