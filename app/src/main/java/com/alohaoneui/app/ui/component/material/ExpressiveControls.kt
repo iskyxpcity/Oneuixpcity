@@ -178,3 +178,39 @@ fun ExpressiveOutlinedTextField(
         keyboardOptions = keyboardOptions,
     )
 }
+
+
+/** Shared Material surface; page-level surfaces inherit Aloha shape/elevation/outline settings. */
+@Composable
+fun ExpressiveSurface(
+    modifier: Modifier = Modifier,
+    shape: Shape? = null,
+    color: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.surface,
+    contentColor: androidx.compose.ui.graphics.Color = androidx.compose.material3.contentColorFor(color),
+    border: BorderStroke? = null,
+    shadowElevation: androidx.compose.ui.unit.Dp? = null,
+    onClick: (() -> Unit)? = null,
+    interactionSource: MutableInteractionSource? = null,
+    content: @Composable () -> Unit,
+) {
+    val actualShape = shape ?: voyageCornerShape(20.dp)
+    val outlineWidth = LocalMaterialOutlineWidth.current
+    val actualBorder = border ?: outlineWidth.takeIf { it > 0f }?.let {
+        BorderStroke(it.dp, MaterialTheme.colorScheme.outlineVariant)
+    }
+    val actualElevation = shadowElevation ?: if (LocalMaterialShadowButtons.current) 2.dp else 0.dp
+    if (onClick == null) {
+        androidx.compose.material3.Surface(
+            modifier = modifier, shape = actualShape, color = color, contentColor = contentColor,
+            tonalElevation = 0.dp, shadowElevation = actualElevation, border = actualBorder,
+            content = content,
+        )
+    } else {
+        androidx.compose.material3.Surface(
+            onClick = onClick, modifier = modifier, shape = actualShape, color = color,
+            contentColor = contentColor, tonalElevation = 0.dp,
+            shadowElevation = actualElevation, border = actualBorder,
+            interactionSource = interactionSource, content = content,
+        )
+    }
+}
