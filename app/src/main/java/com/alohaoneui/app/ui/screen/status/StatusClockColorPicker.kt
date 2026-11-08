@@ -22,6 +22,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text as MaterialText
+import com.alohaoneui.app.ui.component.material.ExpressiveContentDialog
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -38,8 +39,6 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
-import com.alohaoneui.app.ui.component.material.ExpressiveSurface
 import com.alohaoneui.app.R
 import com.alohaoneui.app.ui.LocalUiMode
 import com.alohaoneui.app.ui.UiMode
@@ -401,36 +400,33 @@ fun StatusClockColorPicker(
 
     if (showPicker) {
         when (LocalUiMode.current) {
-            UiMode.Material -> Dialog(onDismissRequest = ::cancelPicker) {
-                ExpressiveSurface(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .widthIn(max = 460.dp)
-                        .heightIn(max = 680.dp),
-                    shape = RoundedCornerShape(28.dp),
-                ) {
-                    Column {
-                        MaterialText(
-                            text = stringResource(id = R.string.alohaoneui_clockRichColorPicker_title),
-                            modifier = Modifier.padding(
-                                start = 24.dp,
-                                end = 24.dp,
-                                top = 22.dp,
-                                bottom = 4.dp,
-                            ),
-                            style = MaterialTheme.typography.headlineSmall,
-                        )
-                        ColorPickerBody(
-                            colorArgb = draftColor,
-                            onColorPreview = { selected ->
-                                draftColor = selected
-                                onColorPreview(selected)
-                            },
-                            onApply = ::applyPicker,
-                            onCancel = ::cancelPicker,
-                        )
-                    }
-                }
+            UiMode.Material -> ExpressiveContentDialog(
+                onDismissRequest = ::cancelPicker,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .widthIn(max = 460.dp)
+                    .heightIn(max = 680.dp),
+                contentModifier = Modifier,
+            ) {
+                MaterialText(
+                    text = stringResource(id = R.string.alohaoneui_clockRichColorPicker_title),
+                    modifier = Modifier.padding(
+                        start = 24.dp,
+                        end = 24.dp,
+                        top = 22.dp,
+                        bottom = 4.dp,
+                    ),
+                    style = MaterialTheme.typography.headlineSmall,
+                )
+                ColorPickerBody(
+                    colorArgb = draftColor,
+                    onColorPreview = { selected ->
+                        draftColor = selected
+                        onColorPreview(selected)
+                    },
+                    onApply = ::applyPicker,
+                    onCancel = ::cancelPicker,
+                )
             }
 
             UiMode.Miuix -> WindowDialog(

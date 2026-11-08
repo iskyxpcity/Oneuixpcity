@@ -703,6 +703,7 @@ private fun StyleOneRoleColorDialog(
         UiMode.Material -> ExpressiveContentDialog(
             onDismissRequest = onDismiss,
             modifier = Modifier.fillMaxWidth().widthIn(max = 460.dp),
+            shape = RoundedCornerShape(24.dp),
             contentModifier = Modifier.padding(20.dp),
         ) {
             Text(text = roleTitle)

@@ -102,11 +102,12 @@ fun ExpressiveConfirmDialog(
 fun ExpressiveContentDialog(
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
+    shape: Shape? = null,
     properties: DialogProperties = DialogProperties(),
     contentModifier: Modifier = Modifier.padding(24.dp),
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    val dialogShape = voyageCornerShape(28.dp)
+    val dialogShape = shape ?: voyageCornerShape(28.dp)
     val dialogModifier = modifier.then(
         LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
             Modifier.border(it.dp, MaterialTheme.colorScheme.outlineVariant, dialogShape)
