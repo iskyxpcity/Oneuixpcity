@@ -1416,3 +1416,18 @@
 - 本次构建只证明命名清理后的代码可编译并成功打包，不代表全局 Material 主题统一完成。继续检查 Material 根主题形状映射、原生 Material3 控件的颜色/形状/阴影/描边默认值，以及页面是否绕过共享控件。当前根主题对 Material3 `Shapes` 槽位的适配仍因 `CornerBasedShape` 类型约束而将切角以外样式回退为圆角；自定义 Aloha 控件仍保留完整自定义路径。该差异列为下一阶段待解决项。
 - 本批仅修改测试分支；未修改/合并 `main`，未改版本号，未改 Miuix 分支。
 - Run：https://github.com/iskyxpcity/Oneuixpcity/actions/runs/42461343273
+
+
+## 2026-11-07 独立命名清理与 Material 主题根统一验收（Build #2632）
+
+- 分支：`test/switches-official-eight-20261103`；本轮未修改 `main`、未合并、未调整版本号。
+- 独立命名清理：Material 形状、滑块、开关、分段列表、状态标签、弹窗、搜索栏、更新弹窗、颜色主题页、日志底部弹窗及其调用点统一使用 Aloha 项目命名；清理液态开关和 locale 工具中的残留上游名称。对 app/src/main/java 下 Kotlin 源文件进行逐组检查，未再发现活动源码中的 `Voyage` / `voyage` 标识。历史维护记录保留历史事实，不追溯改写。
+- Material/Miuix 边界：`AlohaOneUITheme` 的 Material 分支直接提供 Material 专属 CompositionLocal 并进入 `MaterialAlohaOneUITheme`；Miuix 分支独立进入 `MiuixAlohaOneUITheme`，不再由 Miuix 主题包裹 Material 主题。
+- 原生 Material 3 形状统一：`AlohaPathShape` 实现 `CornerBasedShape`，`alohaCornerShape` 返回 `CornerBasedShape`；MaterialTheme 的 extraSmall/small/medium/large/extraLarge 五个根形状槽全部复用同一工厂，使原生 Material 控件也能跟随全部 Aloha 形状样式和实时圆角比例。
+- Wavy 形状的密度适配：CornerBasedShape 的 outline 回调接收已解析的像素半径，不再携带 Density；工厂将当前 densityScale 传入 AlohaPathShape，并纳入 outline cache key，Wavy 的 0.8dp 波幅和 8dp 半波长在不同屏幕密度下保持一致。
+- 构建 Run `42462118984` / Build #2632：成功。Kotlin 编译、APK 构建、V2 签名、包名/版本和 APK ZIP 完整性检查全部通过。
+- APK：`AlohaOneUI_1.0.261025_BUILD_2632.apk`；29,635,366 bytes；SHA-256：`c32df822d9e81ed0ee5e183c773f2f12b301df7fd207b3f6936b167f22d00f34`。
+- 包名：`com.alohaoneui.app`；versionName：`1.0.261025`；versionCode：`16`。
+- V2 签名证书 SHA-256：`93bf61a6493c6b336383832eb41301bd8fe061f43566e7e384e3fdd9fc1c26a1`（与既有固定证书一致）。
+- Actions Artifact：ID `13609783948`；ZIP 28,637,307 bytes；ZIP SHA-256：`720268937949c8b44144a3693140ea57d568121cf2c6e872855338508c34636a`。
+- 后续继续审查 Material 控件是否绕过共享组件，重点检查下拉菜单组、Material 选择控件、按钮组及各页面调用点；不触碰 Miuix 视觉实现。
