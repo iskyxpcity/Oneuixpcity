@@ -267,7 +267,7 @@ fun ExpressiveSurface(
 }
 
 
-/** Aloha-owned large Material top app bar entry point for all Material screens. */
+/** Shared Material top app bar; screens inherit Aloha theme colors unless intentionally overridden. */
 @Composable
 fun ExpressiveLargeTopAppBar(
     title: @Composable () -> Unit,
