@@ -107,10 +107,6 @@ internal fun IconShapePresetDetailScreen(
                     TopBarBackButton(onClick = onBack)
                 },
                 title = { Text(stringResource(R.string.theme_icon_shape_title)) },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    scrolledContainerColor = MaterialTheme.colorScheme.surface,
-                ),
                 scrollBehavior = scrollBehavior,
             )
         },
