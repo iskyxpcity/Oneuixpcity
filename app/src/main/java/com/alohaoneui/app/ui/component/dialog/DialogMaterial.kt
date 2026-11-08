@@ -15,7 +15,7 @@ import androidx.compose.ui.window.DialogProperties
 import com.alohaoneui.app.ui.component.markdown.MarkdownContent
 import com.alohaoneui.app.ui.component.material.ExpressiveDialog
 import com.alohaoneui.app.ui.component.material.ExpressiveSurface
-import com.alohaoneui.app.ui.component.material.voyageCornerShape
+import com.alohaoneui.app.ui.component.material.alohaCornerShape
 import com.alohaoneui.app.ui.component.material.ExpressiveTextButton
 
 @Composable
@@ -26,7 +26,7 @@ fun LoadingDialogMaterial(showDialog: MutableState<Boolean>) {
             properties = DialogProperties(dismissOnClickOutside = false, dismissOnBackPress = false)
         ) {
             ExpressiveSurface(
-                modifier = Modifier.size(100.dp), shape = voyageCornerShape(16.dp)
+                modifier = Modifier.size(100.dp), shape = alohaCornerShape(16.dp)
             ) {
                 Box(
                     contentAlignment = Alignment.Center,
