@@ -1321,3 +1321,5 @@
 - Material 底部导航颜色补齐：BottomBarMaterial 的 NavigationBarItem 原先完全依赖 Material3 默认颜色，现显式绑定 Aloha MaterialTheme.colorScheme（选中图标 onSecondaryContainer、选中指示器 secondaryContainer、未选中 onSurfaceVariant、选中文字 onSurface）。仅统一颜色令牌，导航索引、图标、点击/分页行为和系统 Insets 不变。提交：43a9dcb416759a58c357afc7806572becd79806e；待 Actions 验收。
 
 - 本轮汇总验收：Actions Run 42452664617 成功，构建 HEAD `9f3d5e2c5c9db7ff3f9afc9225a843c4b6270bdd`。此构建同时包含 TabRow 去默认下划线、Scaffold TopBar 内容裁切、StatusTag 主题形状、LoadingDialog 改用 ExpressiveSurface、底部 NavigationBarItem 显式 Aloha 配色。源码/Kotlin 编译、签名 APK、包名/签名检查通过。Artifact `AlohaOneUI-Signed-Test-APK` ID `13606730305`，28,637,581 bytes，ZIP SHA-256 `976db28a6903d11fbc3f703fdadfdfba4b0e6d921887073a09a846374aa23c68`。Run：https://github.com/iskyxpcity/Oneuixpcity/actions/runs/42452664617。该构建覆盖到导航栏代码及加载弹窗代码，尚不包含后续新修改。
+
+- ExpressiveLargeTopAppBar 默认颜色入口进一步统一：此前共享控件虽提供 `expressiveTopAppBarColors()`（surfaceContainer），但 `ExpressiveLargeTopAppBar` 默认参数仍回落到 Material3 的 `TopAppBarDefaults.topAppBarColors()`。现将默认值切换为 Aloha 主题色入口，调用方仍可显式覆盖 colors；不改变标题、导航图标、actions、Insets 或滚动行为。提交 `aa0cbd8d4a1dbc7a08f8b77f5436719c55655412`，待 CI 验证。
