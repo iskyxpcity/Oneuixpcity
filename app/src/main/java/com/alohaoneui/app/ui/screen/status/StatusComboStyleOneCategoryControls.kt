@@ -53,9 +53,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.alohaoneui.app.ui.component.material.ExpressiveSurface
 import com.alohaoneui.app.R
 import com.alohaoneui.app.ui.viewmodel.AlohaOneUIToolsViewModel
 import com.alohaoneui.common.IgnoreUnknownKeysJson
@@ -66,6 +64,7 @@ import com.alohaoneui.mod.ui.category.SystemUIEvent
 import com.alohaoneui.mod.ui.component.AlohaOneUISlider
 import com.alohaoneui.mod.ui.component.AlohaOneUIActionButton
 import com.alohaoneui.app.ui.component.material.ExpressiveConfirmDialog
+import com.alohaoneui.app.ui.component.material.ExpressiveContentDialog
 import com.alohaoneui.app.ui.component.material.ExpressiveToggleButton
 import com.alohaoneui.mod.ui.component.SwitchItem
 import com.alohaoneui.mod.ui.component.SelectItem
@@ -701,17 +700,14 @@ private fun StyleOneRoleColorDialog(
     }
 
     when (LocalUiMode.current) {
-        UiMode.Material -> Dialog(onDismissRequest = onDismiss) {
-            ExpressiveSurface(
-                modifier = Modifier.fillMaxWidth().widthIn(max = 460.dp),
-                shape = RoundedCornerShape(24.dp),
-            ) {
-                Column(modifier = Modifier.padding(20.dp)) {
-                    Text(text = roleTitle)
-                    Text(text = summary)
-                    PickerContent()
-                }
-            }
+        UiMode.Material -> ExpressiveContentDialog(
+            onDismissRequest = onDismiss,
+            modifier = Modifier.fillMaxWidth().widthIn(max = 460.dp),
+            contentModifier = Modifier.padding(20.dp),
+        ) {
+            Text(text = roleTitle)
+            Text(text = summary)
+            PickerContent()
         }
 
         UiMode.Miuix -> WindowDialog(

@@ -103,6 +103,7 @@ fun ExpressiveContentDialog(
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
     properties: DialogProperties = DialogProperties(),
+    contentModifier: Modifier = Modifier.padding(24.dp),
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val dialogShape = voyageCornerShape(28.dp)
@@ -126,7 +127,7 @@ fun ExpressiveContentDialog(
             shadowElevation = if (LocalMaterialShadowContainers.current) 6.dp else 0.dp,
         ) {
             Column(
-                modifier = Modifier.padding(24.dp),
+                modifier = contentModifier,
                 content = content,
             )
         }
