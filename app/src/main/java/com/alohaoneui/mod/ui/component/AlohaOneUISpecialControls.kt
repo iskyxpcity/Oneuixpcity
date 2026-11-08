@@ -230,14 +230,24 @@ fun AlohaOneUIInlineTextField(
 ) {
     val grouped = LocalAlohaOneUIGroupedPreference.current
     when (LocalUiMode.current) {
-        UiMode.Material -> ExpressiveOutlinedTextField(
-            value = value,
-            onValueChange = onValueChange,
-            modifier = modifier,
-            label = labelText?.let { label -> { MaterialText(label) } },
-            singleLine = singleLine,
-            textStyle = MaterialTheme.typography.bodyLarge,
-        )
+        UiMode.Material -> {
+            @Composable
+            fun Content(contentModifier: Modifier) {
+                ExpressiveOutlinedTextField(
+                    value = value,
+                    onValueChange = onValueChange,
+                    modifier = contentModifier,
+                    label = labelText?.let { label -> { MaterialText(label) } },
+                    singleLine = singleLine,
+                    textStyle = MaterialTheme.typography.bodyLarge,
+                )
+            }
+            if (grouped) {
+                AlohaOneUIChildOptionSurface(modifier = modifier) { Content(Modifier) }
+            } else {
+                Content(modifier)
+            }
+        }
 
         UiMode.Miuix -> {
             @Composable
@@ -289,13 +299,23 @@ fun AlohaOneUIInlineTextField(
 ) {
     val grouped = LocalAlohaOneUIGroupedPreference.current
     when (LocalUiMode.current) {
-        UiMode.Material -> ExpressiveOutlinedTextField(
-            value = value,
-            onValueChange = onValueChange,
-            modifier = modifier,
-            label = labelText?.let { label -> { MaterialText(label) } },
-            singleLine = singleLine,
-        )
+        UiMode.Material -> {
+            @Composable
+            fun Content(contentModifier: Modifier) {
+                ExpressiveOutlinedTextField(
+                    value = value,
+                    onValueChange = onValueChange,
+                    modifier = contentModifier,
+                    label = labelText?.let { label -> { MaterialText(label) } },
+                    singleLine = singleLine,
+                )
+            }
+            if (grouped) {
+                AlohaOneUIChildOptionSurface(modifier = modifier) { Content(Modifier) }
+            } else {
+                Content(modifier)
+            }
+        }
 
         UiMode.Miuix -> {
             @Composable
