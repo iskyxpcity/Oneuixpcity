@@ -242,7 +242,9 @@ fun ColorPaletteScreenMaterial(
 
                 options.chunked(4).forEach { rowOptions ->
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp),
                         horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)
                     ) {
                         rowOptions.forEachIndexed { index, (modes, label) ->
@@ -261,7 +263,6 @@ fun ColorPaletteScreenMaterial(
                                 },
                                 modifier = Modifier
                                     .weight(1f)
-                                    .padding(horizontal = 8.dp)
                                     .semantics { role = Role.RadioButton },
                                 colors = ToggleButtonDefaults.colors(
                                     checkedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
