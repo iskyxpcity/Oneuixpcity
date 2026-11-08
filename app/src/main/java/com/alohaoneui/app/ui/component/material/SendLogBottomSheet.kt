@@ -69,7 +69,7 @@ fun SendLogBottomSheet(onDismiss: () -> Unit, snackbarHostState: SnackbarHostSta
     }
     ModalBottomSheet(
         onDismissRequest = onDismiss,
-        shape = voyageCornerShape(28.dp),
+        shape = alohaCornerShape(28.dp),
         containerColor = MaterialTheme.colorScheme.surfaceContainer,
     ) {
         Row(
@@ -80,7 +80,7 @@ fun SendLogBottomSheet(onDismiss: () -> Unit, snackbarHostState: SnackbarHostSta
                 ExpressiveIconButton(
                     modifier = Modifier.size(64.dp),
                     colors = IconButtonDefaults.filledTonalIconButtonColors(),
-                    shape = voyageCornerShape(12.dp),
+                    shape = alohaCornerShape(12.dp),
                     onClick = {
                         haptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
                         scope.launch {
@@ -97,7 +97,7 @@ fun SendLogBottomSheet(onDismiss: () -> Unit, snackbarHostState: SnackbarHostSta
                 ExpressiveIconButton(
                     modifier = Modifier.size(64.dp),
                     colors = IconButtonDefaults.filledTonalIconButtonColors(),
-                    shape = voyageCornerShape(12.dp),
+                    shape = alohaCornerShape(12.dp),
                     onClick = {
                         haptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
                         scope.launch {
