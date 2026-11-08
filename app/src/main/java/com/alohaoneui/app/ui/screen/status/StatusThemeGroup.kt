@@ -39,7 +39,7 @@ fun StatusThemeGroup(
     if (items.isEmpty()) return
 
     val titleVerticalPadding = if (compact) 4.dp else 8.dp
-    val groupVerticalPadding = if (compact) 2.dp else 4.dp
+    val groupVerticalPadding = if (compact) 2.dp else 8.dp
     val titleStartPadding = when (LocalUiMode.current) {
         UiMode.Material -> if (titleAlignedToContent) 32.dp else 16.dp
         UiMode.Miuix -> if (titleAlignedToContent) 28.dp else 12.dp
