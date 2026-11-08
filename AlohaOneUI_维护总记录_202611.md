@@ -1552,3 +1552,12 @@
 - 主要源码提交：`4d462fd7`（分段 API）、`f8a8f54a`（Android）、`ce0ce33d`（PackagePane 列表接口）、`8fc30ecc`、`f73b4f49`、`d28a3c87`、`f7bcf9ef`、`d51797d5`、`45690ea2`、`5ebe4fb8`、`6f26dcff`、`a7a996eb`、`f486d585`、`4f0b8942`、`3f2101e0`、`81fcf0c2`、`53c1bd1e`、`968c5cfb`、`935332d5`、`6cd2acdf`、`7755bf26`、`50b24008`、`2b191c0a`、`556b8234`。当前测试分支 HEAD 为 `556b82343939e08466d675f24d08bfefad79d0ef`。
 - 当前 Actions Run `42531611447` 在 `Validate Aloha OneUI source` 步骤失败，Kotlin 编译步骤被跳过，因此本轮代码尚未获得编译验证，也没有 APK。失败日志细节仍需进一步定位；不得把该状态描述为编译成功或 APK 已生成。
 - 尚需继续检查 SystemUI 内部四个状态栏控件详情（NetworkSpeed、Notification、Power、Time）及其嵌套分组，尤其检查组件作为父列表行时是否仍形成框体套框体；修复后重新跑完整源码校验和 Kotlin 构建。随后需要真机逐页检查 21 个详情入口的组间距、首中尾圆角、按压收缩与弹簧回弹。当前不能标记全局完成。
+
+
+## 2026-11-08｜修复「横移返回手势」未控制主导航四页横向滑动
+
+- 用户反馈：在主题设置关闭「横移返回手势」后，主导航「主页、功能、状态栏、设置」仍可通过横向滑动切页。
+- 根因已由源码确认：`MainActivity.kt` 中的 `enableSwipeBack` 原先只用于 Navigation 3 的 `swipeDismiss` 转场；四个主页面共用的 `HorizontalPager` 却一直设置 `userScrollEnabled = !interceptPagerAxis`，并将 `pagerGestureOverride(enabled = true)` 固定开启。因此关闭设置只禁用了子页面转场滑动，没有禁用主导航 Pager 的手势输入。
+- 修复：从 `MainActivityUiState.enableSwipeBack` 把同一设置传入 `MainScreen`；将 `pagerGestureOverride` 的 enabled 改为该值，并将 Pager 的用户滑动条件改为 `enableSwipeBack && !interceptPagerAxis`。设置关闭时，四个主导航页面仍可通过底栏/导航栏点击切换，但不再接受横向拖动切页；设置重新开启时恢复原有 Pager 手势模式。未修改页面内容、路由和 Miuix 专属页面实现。
+- 代码提交：`8a13d02b58664eb7f51c78abb01f2d0271cbd597`（测试分支 `test/switches-official-eight-20261103)，未合并 main）。
+- 待完成：检查该提交对应 Actions 源码校验与 Kotlin 构建；随后在设备上分别验证 Material/Miuix、关闭/开启开关、四个主导航页滑动及点击导航。源码修改不等于真机验收完成。
