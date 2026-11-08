@@ -20,7 +20,7 @@ fun BackdropEffectScope.switchLens(
     if (!isRuntimeShaderSupported()) return
     if (refractionHeight <= 0f || refractionAmount <= 0f) return
 
-    // Voyage expands the backdrop capture area as the glass interaction settles:
+    // Aloha expands the backdrop capture area as the glass interaction settles:
     // padding = max(existingPadding, (1 - progress) * 8dp), then subtracts
     // the active refraction height before configuring the shader.
     if (capturePadding > padding) {
