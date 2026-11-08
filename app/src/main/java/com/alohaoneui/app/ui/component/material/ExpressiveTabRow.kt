@@ -37,6 +37,9 @@ fun ExpressiveTabRow(
         selectedTabIndex = safeIndex,
         modifier = modifier,
         containerColor = containerColor,
+        // Selection is rendered by each tab's expressive pill, not M3's underline.
+        indicator = {},
+        divider = {},
     ) {
         tabs.forEachIndexed { index, label ->
             val selected = safeIndex == index
