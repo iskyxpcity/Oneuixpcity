@@ -1541,3 +1541,14 @@
 - 新增提交：0e2547334e4208904753fbd2e39072f383a48d6b、2b5c76f23fec094cbf5e34848a73804c68f36b36、be03dcb5afd3c4c0c816a317490535603137e3d2。
 - 当前最新 HEAD：be03dcb5afd3c4c0c816a317490535603137e3d2；对应 Actions Run 42489778082 pending。尚未完成构建和 APK 验收。
 - 已抽查首页、设置、功能分类、状态栏分类、关于、主题调色板、状态栏分类详情、其他功能页面及通用 Material 对话框/菜单/底部栏入口。首页仪表盘和主题调色板预览属于独立内容卡片/预览区域，不应强行改成 SegmentedColumn；功能分类、状态栏分类、关于页列表继续沿用 SegmentedColumn。全项目审计仍在继续，未宣称完成。
+
+
+## 2026-11-08｜主导航「功能」全部详情页分段列表接入（进行中）
+
+- 用户再次明确修复范围是主导航「功能」页所有子页面详情卡，不是仅 Android 的 8 个选项。本轮据源码树核对 21 个 `DetailPane` 文件，并额外识别出状态栏内部的 NetworkSpeed、Notification、Power、Time 控件文件；未将 Android 局部修改误报为全局完成。
+- 在共享组件 `AlohaOneUISpecialControls.kt` 增加 `AlohaOneUIDetailSegmentedGroup`，Material 分支使用 `SegmentedColumn` 接收实际行列表，给每行提供首/中/尾形状和按压弹簧；同时保留 `LocalAlohaOneUIGroupedPreference=true` 上下文，避免行内控件丢失分组状态。Miuix 分支保留独立 Column 与既有控件路径。
+- 将 `PackagePane` 改为接收 `List<@Composable () -> Unit>`，统一承载实际分段行；已迁移 Browser、Calendar、DualApp、GalaxyStore、Gallery、HealthMonitor、Launcher、Messaging、Notes、PhotoRetouching、S Pen、SketchBook、Video、WatchManager、Weather 等 15 个详情页。条件项（Launcher 的系统版本项、WatchManager 的中国 Wear OS 项）按条件加入行列表。
+- 另外迁移 Call（5 行）、Camera（2 行）、Settings（8 行）、ThemeCenter（试用设置行）、SystemUI（5 组、共 24 个顶层内容项）以及 Android 详情页。原有业务状态、事件回调和选项逻辑保持不变；没有修改 main。
+- 主要源码提交：`4d462fd7`（分段 API）、`f8a8f54a`（Android）、`ce0ce33d`（PackagePane 列表接口）、`8fc30ecc`、`f73b4f49`、`d28a3c87`、`f7bcf9ef`、`d51797d5`、`45690ea2`、`5ebe4fb8`、`6f26dcff`、`a7a996eb`、`f486d585`、`4f0b8942`、`3f2101e0`、`81fcf0c2`、`53c1bd1e`、`968c5cfb`、`935332d5`、`6cd2acdf`、`7755bf26`、`50b24008`、`2b191c0a`、`556b8234`。当前测试分支 HEAD 为 `556b82343939e08466d675f24d08bfefad79d0ef`。
+- 当前 Actions Run `42531611447` 在 `Validate Aloha OneUI source` 步骤失败，Kotlin 编译步骤被跳过，因此本轮代码尚未获得编译验证，也没有 APK。失败日志细节仍需进一步定位；不得把该状态描述为编译成功或 APK 已生成。
+- 尚需继续检查 SystemUI 内部四个状态栏控件详情（NetworkSpeed、Notification、Power、Time）及其嵌套分组，尤其检查组件作为父列表行时是否仍形成框体套框体；修复后重新跑完整源码校验和 Kotlin 构建。随后需要真机逐页检查 21 个详情入口的组间距、首中尾圆角、按压收缩与弹簧回弹。当前不能标记全局完成。
