@@ -1054,7 +1054,10 @@ fun SegmentedDropdownItem(
                     onDismissRequest = { expanded = false }
                 ) {
                     DropdownMenuGroup(
-                        shapes = MenuDefaults.groupShapes(),
+                        shapes = MenuDefaults.groupShapes(
+                        shape = alohaCornerShape(20.dp),
+                        inactiveShape = alohaCornerShape(20.dp),
+                    ),
                         shadowElevation = if (LocalMaterialShadowContainers.current) {
                             MenuDefaults.ShadowElevation
                         } else 0.dp,
