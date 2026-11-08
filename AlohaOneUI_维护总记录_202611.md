@@ -1382,3 +1382,11 @@
 - 根因：`voyageCornerShape()` 返回通用 `Shape`，其中 VoyagePathShape 是自定义通用路径形状，不能直接传入 Material3 标准 Shapes 槽位。
 - 已修复为类型安全适配：Material3 原生形状槽读取当前 `LocalMaterialCornerScale` 和 `LocalMaterialShapeStyle`；直角切角样式映射为 `CutCornerShape`，其他样式映射为 `RoundedCornerShape`，五档半径仍分别为 4/8/12/16/28dp。自定义 Aloha 组件继续通过 `voyageCornerShape()` 使用完整 VoyagePathShape，不改变其现有视觉路径。
 - 修复提交：`0bda45cd3cfd7bc0f6897278c809922d4722c834`。本次只修正 Material3 Shapes 的类型不匹配，不改 Miuix、main、版本号或业务行为；等待新 Actions 编译与签名验收。
+
+
+## 2026-11｜清理共享 Material 组件中的上游命名并继续统一主题入口
+
+- 用户确认 Oneuixpcity 为独立项目，要求清理代码中的上游名称。已将共享形状系统的公开/内部命名统一为项目自有名称：`voyageCornerShape` → `alohaCornerShape`、`voyageSegmentedShape` → `alohaSegmentedShape`、`VoyagePathShape` → `AlohaPathShape`、`VoyageG2Profile` → `AlohaG2Profile`；滑块外观/轨道/拇指、轮廓绘制辅助方法也改为 Aloha 命名。几何算法、主题样式索引、半径参数和控件交互保持不变。
+- 已同步更新调用方与导入：Material 共享控件、开关、滑块、标签、弹窗、日志底部弹窗、Snackbar、TonalCard、搜索栏、Scaffold、TabRow、颜色主题页、更新弹窗，以及 mod 层通用滑块入口。MaterialTheme 注释不再描述为依附上游的主题基础。
+- 代码提交分布于本测试分支，当前批次尚未完成最终全仓残留扫描及 Actions 编译验收；不能将本记录视为已确认零残留或构建通过。历史维护记录保留当时真实移植/对照过程，不将历史来源描述伪装成项目当前依赖。
+- 后续继续检查所有 Material 控件和页面是否绕过 Aloha 共享主题组件，重点核对原生 Material3 Surface/Shape/颜色/阴影/描边入口；不修改 Miuix、`main` 或版本号。
