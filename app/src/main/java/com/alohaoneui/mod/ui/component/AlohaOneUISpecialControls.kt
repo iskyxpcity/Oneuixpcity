@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
@@ -115,6 +116,7 @@ fun AlohaOneUIDetailGroup(
 @Composable
 fun AlohaOneUIDetailSegmentedGroup(
     modifier: Modifier = Modifier,
+    contentPadding: PaddingValues = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
     content: List<@Composable () -> Unit>,
 ) {
     when (LocalUiMode.current) {
@@ -122,11 +124,11 @@ fun AlohaOneUIDetailSegmentedGroup(
             LocalAlohaOneUIGroupedPreference provides true,
         ) {
             SegmentedColumn(
-                modifier = modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                modifier = modifier.padding(contentPadding),
                 content = content,
             )
         }
-        UiMode.Miuix -> Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        UiMode.Miuix -> Column(modifier = modifier) {
             content.forEach { it() }
         }
     }
