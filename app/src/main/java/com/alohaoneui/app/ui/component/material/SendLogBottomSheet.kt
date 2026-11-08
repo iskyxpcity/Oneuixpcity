@@ -69,6 +69,7 @@ fun SendLogBottomSheet(onDismiss: () -> Unit, snackbarHostState: SnackbarHostSta
     }
     ModalBottomSheet(
         onDismissRequest = onDismiss,
+        shape = voyageCornerShape(28.dp),
         containerColor = MaterialTheme.colorScheme.surfaceContainer,
     ) {
         Row(
