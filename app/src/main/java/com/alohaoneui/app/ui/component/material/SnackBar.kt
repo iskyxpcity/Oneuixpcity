@@ -8,10 +8,13 @@ import androidx.compose.material3.SnackbarData
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxState
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
 
@@ -47,7 +50,15 @@ fun SnackBarHost(
     hostState: SnackbarHostState,
     snackBar: @Composable (SnackbarData) -> Unit = { ExpressiveSnackbar(it) },
 ) {
-    val state = rememberSwipeToDismissBoxState()
+    // Use the public state constructor available in the project's Material3 API.
+    // Its threshold matches SwipeToDismissBoxDefaults' 56dp default.
+    val dismissThreshold = with(LocalDensity.current) { 56.dp.toPx() }
+    val state = remember(dismissThreshold) {
+        SwipeToDismissBoxState(
+            initialValue = SwipeToDismissBoxValue.Settled,
+            positionalThreshold = { dismissThreshold },
+        )
+    }
     SwipeToDismissBox(
         state = state,
         backgroundContent = {},
