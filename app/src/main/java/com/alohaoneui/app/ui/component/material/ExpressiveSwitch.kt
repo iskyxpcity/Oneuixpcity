@@ -387,7 +387,7 @@ fun ExpressiveSwitch(
             valueRange = 0f..1f,
             visibilityThreshold = 0.001f,
             initialScale = 1f,
-            // AndroidLiquidGlass LiquidToggle / Aloha: 1.5x press scale.
+            // LiquidToggle reference uses a 1.5x press scale.
             pressedScale = 1.5f,
             onDragStarted = {
                 // Ignore tiny finger jitter so a normal tap is not misclassified as a drag.
@@ -595,7 +595,7 @@ fun ExpressiveSwitch(
             val glassRailCenterOffsetX = with(LocalDensity.current) {
                 -(thumbTravel * displayedTravel - thumbTravel / 2f).toPx()
             }
-            // Aloha Liquid Glass renderer reserves a 40×24dp thumb slot.
+            // The Liquid Glass renderer reserves a 40×24dp thumb slot.
             // The transient glass surface scales inside this source-sized slot.
             val glassThumbWidth = 40.dp
             val glassThumbHeight = 24.dp
@@ -619,7 +619,7 @@ fun ExpressiveSwitch(
                     .size(width = trackSize.width, height = trackSize.height),
             )
 
-            // Port the upstream LiquidToggle sampling transform: the track
+            // Apply the reference LiquidToggle sampling transform: the track
             // backdrop is scaled independently from the glass foreground layer.
             val scaledTrackBackdrop = rememberScaledBackdrop(
                 trackBackdrop,
@@ -650,7 +650,7 @@ fun ExpressiveSwitch(
                             val progress = glassDragAnimation.pressProgress
                             blur(8.dp.toPx() * (1f - progress))
                             switchLens(
-                                // Match Aloha's glass edge profile in density-independent units.
+                                // Match the reference glass edge profile in density-independent units.
                                 // Its animated progress controls both the refraction depth and capture bounds.
                                 refractionHeight = 5.dp.toPx() * glassInteraction,
                                 refractionAmount = 10.dp.toPx() * glassInteraction,
@@ -664,7 +664,7 @@ fun ExpressiveSwitch(
                             Highlight.Default.copy(alpha = progress)
                         },
                         onDrawSurface = {
-                            // Exact upstream LiquidToggle surface wash.
+                            // Use the reference LiquidToggle surface wash.
                             drawRect(Color.White.copy(alpha = 1f - glassInteraction))
                         },
                         layerBlock = {
