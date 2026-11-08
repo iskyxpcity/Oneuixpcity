@@ -1,12 +1,14 @@
 package com.alohaoneui.app.ui.component.material
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.shape.RectangleShape
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -30,7 +32,6 @@ import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.SearchBarValue
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Surface
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.rememberContainedSearchBarState
@@ -175,7 +176,11 @@ fun SearchAppBar(
         }
     }
 
-    Surface {
+    ExpressiveSurface(
+        shape = RectangleShape,
+        border = BorderStroke(0.dp, MaterialTheme.colorScheme.surface),
+        shadowElevation = 0.dp,
+    ) {
         Column(
             modifier = Modifier.fillMaxWidth()
         ) {
