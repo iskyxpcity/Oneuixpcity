@@ -36,7 +36,7 @@ import com.alohaoneui.mod.ui.component.SelectItem
 import com.alohaoneui.mod.ui.component.SwitchItem
 import com.alohaoneui.mod.ui.component.AlohaOneUISlider
 import com.alohaoneui.mod.ui.component.AlohaOneUIPPreferenceGroup
-import com.alohaoneui.mod.ui.component.AlohaOneUIDetailGroup
+import com.alohaoneui.mod.ui.component.AlohaOneUIDetailSegmentedGroup
 import com.alohaoneui.mod.ui.component.AlohaOneUIChildVisibility
 import com.alohaoneui.mod.ui.component.AlohaOneUIActionButton
 import com.alohaoneui.mod.ui.component.AlohaOneUIInfoItem
@@ -79,544 +79,596 @@ fun DetailPaneSystemUI(
             .verticalScroll(rememberScrollState())
     ) {
         DividerText(R.string.alohaoneui_status_bar)
-        AlohaOneUIDetailGroup {
-        AlohaOneUIPPreferenceGroup {
-            var padding by remember {
-                mutableFloatStateOf(uiState.statusBar.statusBarLeftPaddingDp)
-            }
-            var expanded by rememberSaveable { mutableStateOf(false) }
-
-            SwitchItem(
-                title = stringResource(id = R.string.alohaoneui_statusBarLeftPaddingDp_title),
-                modifier = Modifier.animateContentSize(),
-                summary = if (uiState.statusBar.modifyStatusBarLeftPadding) {
-                    "%.1fdp".format(padding)
-                } else null,
-                icon = ImageVector.vectorResource(id = R.drawable.padding),
-                clickable = true,
-                onClick = { expanded = !expanded },
-                checked = uiState.statusBar.modifyStatusBarLeftPadding,
-                onCheckedChange = {
-                    if (it && padding == 0f) {
-                        expanded = true
-                    } else if (!it) {
-                        expanded = false
-                    }
-                    onEvent(SystemUIEvent.StatusBar.ModifyStatusBarLeftPadding(it))
-                }
-            )
-            AlohaOneUIChildVisibility(expanded && uiState.statusBar.modifyStatusBarLeftPadding) {
-                AlohaOneUISlider(
-                    value = padding,
-                    onValueChange = { padding = it },
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                    valueRange = 0f..100f,
-                    onValueChangeFinished = {
-                        onEvent(SystemUIEvent.StatusBar.StatusBarLeftPaddingDp(padding))
-                    }
-                )
-            }
-        }
-        AlohaOneUIPPreferenceGroup {
-            var padding by remember {
-                mutableFloatStateOf(uiState.statusBar.statusBarRightPaddingDp)
-            }
-            var expanded by rememberSaveable { mutableStateOf(false) }
-
-            SwitchItem(
-                title = stringResource(id = R.string.alohaoneui_statusBarRightPaddingDp_title),
-                modifier = Modifier.animateContentSize(),
-                summary = if (uiState.statusBar.modifyStatusBarRightPadding) {
-                    "%.1fdp".format(padding)
-                } else null,
-                icon = ImageVector.vectorResource(id = R.drawable.padding),
-                clickable = true,
-                onClick = { expanded = !expanded },
-                checked = uiState.statusBar.modifyStatusBarRightPadding,
-                onCheckedChange = {
-                    if (it && padding == 0f) {
-                        expanded = true
-                    } else if (!it) {
-                        expanded = false
-                    }
-                    onEvent(SystemUIEvent.StatusBar.ModifyStatusBarRightPadding(it))
-                }
-            )
-            AlohaOneUIChildVisibility(expanded && uiState.statusBar.modifyStatusBarRightPadding) {
-                AlohaOneUISlider(
-                    value = padding,
-                    onValueChange = { padding = it },
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                    valueRange = 0f..100f,
-                    onValueChangeFinished = {
-                        onEvent(SystemUIEvent.StatusBar.StatusBarRightPaddingDp(padding))
-                    }
-                )
-            }
-        }
-        StatusBarVerticalPaddingControl(
-            title = stringResource(id = R.string.alohaoneui_statusBarTopPaddingDp_title),
-            summaryRes = R.string.alohaoneui_statusBarTopPaddingDp_summary,
-            enabled = uiState.statusBar.modifyStatusBarTopPadding,
-            currentValue = uiState.statusBar.statusBarTopPaddingDp,
-            onEnabledChange = {
-                onEvent(SystemUIEvent.StatusBar.ModifyStatusBarTopPadding(it))
-            },
-            onValueChangeFinished = {
-                onEvent(SystemUIEvent.StatusBar.StatusBarTopPaddingDp(it))
-            }
-        )
-        StatusBarVerticalPaddingControl(
-            title = stringResource(id = R.string.alohaoneui_statusBarBottomPaddingDp_title),
-            summaryRes = R.string.alohaoneui_statusBarBottomPaddingDp_summary,
-            enabled = uiState.statusBar.modifyStatusBarBottomPadding,
-            currentValue = uiState.statusBar.statusBarBottomPaddingDp,
-            onEnabledChange = {
-                onEvent(SystemUIEvent.StatusBar.ModifyStatusBarBottomPadding(it))
-            },
-            onValueChangeFinished = {
-                onEvent(SystemUIEvent.StatusBar.StatusBarBottomPaddingDp(it))
-            }
-        )
-        StatusBarPowerControls(
-            uiState = uiState.statusBar,
-            onEvent = onEvent,
-        )
-        StatusBarNetworkSpeedControls(
-            uiState = uiState.statusBar,
-            onEvent = onEvent,
-        )
-        StatusBarTimeControls(
-            uiState = uiState.statusBar,
-            onEvent = onEvent,
-        )
-        SwitchItem(
-            icon = ImageVector.vectorResource(id = R.drawable.folder_managed),
-            title = stringResource(id = R.string.alohaoneui_hideSecureFolderStatusBarIcon_title),
-            checked = uiState.statusBar.hideSecureFolderStatusBarIcon,
-            onCheckedChange = {
-                onEvent(SystemUIEvent.StatusBar.HideSecureFolderStatusBarIcon(it))
-            }
-        )
-        SwitchItem(
-            icon = ImageVector.vectorResource(id = R.drawable.bluetooth),
-            title = stringResource(id = R.string.alohaoneui_restoreBluetoothStatusBarIcon_title),
-            checked = uiState.statusBar.restoreBluetoothStatusBarIcon,
-            onCheckedChange = {
-                onEvent(SystemUIEvent.StatusBar.RestoreBluetoothStatusBarIcon(it))
-            }
-        )
-        AlohaOneUIPPreferenceGroup {
-        SwitchItem(
-            icon = ImageVector.vectorResource(id = R.drawable.sim_card),
-            title = stringResource(id = R.string.alohaoneui_physicalEsimAdapterWorkaround_title),
-            summary = stringResource(id = R.string.alohaoneui_physicalEsimAdapterWorkaround_summary),
-            showChildIndicator = true,
-                checked = uiState.statusBar.physicalEsimAdapterWorkaround,
-            onCheckedChange = {
-                onEvent(SystemUIEvent.StatusBar.PhysicalEsimAdapterWorkaround(it))
-            }
-        )
-        AlohaOneUIChildVisibility(uiState.statusBar.physicalEsimAdapterWorkaround) {
-            SelectItem(
-                icon = ImageVector.vectorResource(id = R.drawable.sim_card),
-                title = stringResource(id = R.string.alohaoneui_physicalEsimAdapterSimSlot_title),
-                entries = listOf(
-                    stringResource(id = R.string.alohaoneui_sim_slot_1),
-                    stringResource(id = R.string.alohaoneui_sim_slot_2),
-                    stringResource(id = R.string.alohaoneui_sim_slot_both)
-                ),
-                selectedIndex = uiState.statusBar.physicalEsimAdapterSimSlot.coerceIn(
-                    0,
-                    ESIM_ADAPTER_SIM_BOTH
-                ),
-                onSelectedIndexChange = {
-                    onEvent(SystemUIEvent.StatusBar.PhysicalEsimAdapterSimSlot(it))
-                }
-            )
-        }
-        }
-        SwitchItem(
-            icon = ImageVector.vectorResource(id = R.drawable.mobile_screensaver),
-            title = stringResource(id = R.string.alohaoneui_doubleTapStatusBarToSleep_title),
-            checked = uiState.statusBar.doubleTapStatusBarToSleep,
-            onCheckedChange = {
-                onEvent(SystemUIEvent.StatusBar.DoubleTapStatusBarToSleep(it))
-            }
-        )
-        StatusBarNotificationControls(
-            uiState = uiState.statusBar,
-            onEvent = onEvent,
-        )
-        AlohaOneUIPPreferenceGroup {
-            var expanded by rememberSaveable { mutableStateOf(false) }
-
-            SwitchItem(
-                title = stringResource(id = R.string.alohaoneui_setCustomCarrierName_title),
-                modifier = Modifier.animateContentSize(),
-                summary = if (uiState.statusBar.setCustomCarrierName) {
-                    uiState.statusBar.customCarrierName
-                } else null,
-                icon = ImageVector.vectorResource(id = R.drawable.sim_card),
-                clickable = true,
-                onClick = { expanded = !expanded },
-                checked = uiState.statusBar.setCustomCarrierName,
-                onCheckedChange = {
-                    if (it && uiState.statusBar.customCarrierName.isEmpty()) {
-                        expanded = true
-                    } else if (!it) {
-                        expanded = false
-                    }
-                    onEvent(SystemUIEvent.StatusBar.SetCustomCarrierName(it))
-                }
-            )
-
-            AlohaOneUIChildVisibility(expanded && uiState.statusBar.setCustomCarrierName) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                ) {
-                    var tempCustomCarrierName by remember {
-                        mutableStateOf(uiState.statusBar.customCarrierName)
-                    }
-
-                    AlohaOneUIInlineTextField(
-                        value = tempCustomCarrierName,
-                        onValueChange = { tempCustomCarrierName = it },
-                        modifier = Modifier.weight(1f),
-                        singleLine = true,
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    AlohaOneUIActionButton(
-                        text = stringResource(id = R.string.alohaoneui_confirm),
-                        primary = true,
-                        onClick = {
-                            onEvent(
-                                SystemUIEvent.StatusBar.CustomCarrierName(
-                                    tempCustomCarrierName
+        AlohaOneUIDetailSegmentedGroup(
+                content = buildList {
+                    add {
+                    AlohaOneUIPPreferenceGroup {
+                                var padding by remember {
+                                    mutableFloatStateOf(uiState.statusBar.statusBarLeftPaddingDp)
+                                }
+                                var expanded by rememberSaveable { mutableStateOf(false) }
+                    
+                                SwitchItem(
+                                    title = stringResource(id = R.string.alohaoneui_statusBarLeftPaddingDp_title),
+                                    modifier = Modifier.animateContentSize(),
+                                    summary = if (uiState.statusBar.modifyStatusBarLeftPadding) {
+                                        "%.1fdp".format(padding)
+                                    } else null,
+                                    icon = ImageVector.vectorResource(id = R.drawable.padding),
+                                    clickable = true,
+                                    onClick = { expanded = !expanded },
+                                    checked = uiState.statusBar.modifyStatusBarLeftPadding,
+                                    onCheckedChange = {
+                                        if (it && padding == 0f) {
+                                            expanded = true
+                                        } else if (!it) {
+                                            expanded = false
+                                        }
+                                        onEvent(SystemUIEvent.StatusBar.ModifyStatusBarLeftPadding(it))
+                                    }
                                 )
+                                AlohaOneUIChildVisibility(expanded && uiState.statusBar.modifyStatusBarLeftPadding) {
+                                    AlohaOneUISlider(
+                                        value = padding,
+                                        onValueChange = { padding = it },
+                                        modifier = Modifier.padding(horizontal = 16.dp),
+                                        valueRange = 0f..100f,
+                                        onValueChangeFinished = {
+                                            onEvent(SystemUIEvent.StatusBar.StatusBarLeftPaddingDp(padding))
+                                        }
+                                    )
+                                }
+                            }
+                }
+                    add {
+                    AlohaOneUIPPreferenceGroup {
+                                var padding by remember {
+                                    mutableFloatStateOf(uiState.statusBar.statusBarRightPaddingDp)
+                                }
+                                var expanded by rememberSaveable { mutableStateOf(false) }
+                    
+                                SwitchItem(
+                                    title = stringResource(id = R.string.alohaoneui_statusBarRightPaddingDp_title),
+                                    modifier = Modifier.animateContentSize(),
+                                    summary = if (uiState.statusBar.modifyStatusBarRightPadding) {
+                                        "%.1fdp".format(padding)
+                                    } else null,
+                                    icon = ImageVector.vectorResource(id = R.drawable.padding),
+                                    clickable = true,
+                                    onClick = { expanded = !expanded },
+                                    checked = uiState.statusBar.modifyStatusBarRightPadding,
+                                    onCheckedChange = {
+                                        if (it && padding == 0f) {
+                                            expanded = true
+                                        } else if (!it) {
+                                            expanded = false
+                                        }
+                                        onEvent(SystemUIEvent.StatusBar.ModifyStatusBarRightPadding(it))
+                                    }
+                                )
+                                AlohaOneUIChildVisibility(expanded && uiState.statusBar.modifyStatusBarRightPadding) {
+                                    AlohaOneUISlider(
+                                        value = padding,
+                                        onValueChange = { padding = it },
+                                        modifier = Modifier.padding(horizontal = 16.dp),
+                                        valueRange = 0f..100f,
+                                        onValueChangeFinished = {
+                                            onEvent(SystemUIEvent.StatusBar.StatusBarRightPaddingDp(padding))
+                                        }
+                                    )
+                                }
+                            }
+                }
+                    add {
+                    StatusBarVerticalPaddingControl(
+                                title = stringResource(id = R.string.alohaoneui_statusBarTopPaddingDp_title),
+                                summaryRes = R.string.alohaoneui_statusBarTopPaddingDp_summary,
+                                enabled = uiState.statusBar.modifyStatusBarTopPadding,
+                                currentValue = uiState.statusBar.statusBarTopPaddingDp,
+                                onEnabledChange = {
+                                    onEvent(SystemUIEvent.StatusBar.ModifyStatusBarTopPadding(it))
+                                },
+                                onValueChangeFinished = {
+                                    onEvent(SystemUIEvent.StatusBar.StatusBarTopPaddingDp(it))
+                                }
                             )
-                        },
-                    )
                 }
-            }
-        }
-        SwitchItem(
-            icon = ImageVector.vectorResource(id = R.drawable.mobile_screensaver),
-            title = stringResource(id = R.string.alohaoneui_hideLockscreenStatusBar_title),
-            checked = uiState.statusBar.hideLockscreenStatusBar,
-            onCheckedChange = {
-                onEvent(SystemUIEvent.StatusBar.HideLockscreenStatusBar(it))
-            }
-        )
-
-        }
+                    add {
+                    StatusBarVerticalPaddingControl(
+                                title = stringResource(id = R.string.alohaoneui_statusBarBottomPaddingDp_title),
+                                summaryRes = R.string.alohaoneui_statusBarBottomPaddingDp_summary,
+                                enabled = uiState.statusBar.modifyStatusBarBottomPadding,
+                                currentValue = uiState.statusBar.statusBarBottomPaddingDp,
+                                onEnabledChange = {
+                                    onEvent(SystemUIEvent.StatusBar.ModifyStatusBarBottomPadding(it))
+                                },
+                                onValueChangeFinished = {
+                                    onEvent(SystemUIEvent.StatusBar.StatusBarBottomPaddingDp(it))
+                                }
+                            )
+                }
+                    add {
+                    StatusBarPowerControls(
+                                uiState = uiState.statusBar,
+                                onEvent = onEvent,
+                            )
+                }
+                    add {
+                    StatusBarNetworkSpeedControls(
+                                uiState = uiState.statusBar,
+                                onEvent = onEvent,
+                            )
+                }
+                    add {
+                    StatusBarTimeControls(
+                                uiState = uiState.statusBar,
+                                onEvent = onEvent,
+                            )
+                }
+                    add {
+                    SwitchItem(
+                                icon = ImageVector.vectorResource(id = R.drawable.folder_managed),
+                                title = stringResource(id = R.string.alohaoneui_hideSecureFolderStatusBarIcon_title),
+                                checked = uiState.statusBar.hideSecureFolderStatusBarIcon,
+                                onCheckedChange = {
+                                    onEvent(SystemUIEvent.StatusBar.HideSecureFolderStatusBarIcon(it))
+                                }
+                            )
+                }
+                    add {
+                    SwitchItem(
+                                icon = ImageVector.vectorResource(id = R.drawable.bluetooth),
+                                title = stringResource(id = R.string.alohaoneui_restoreBluetoothStatusBarIcon_title),
+                                checked = uiState.statusBar.restoreBluetoothStatusBarIcon,
+                                onCheckedChange = {
+                                    onEvent(SystemUIEvent.StatusBar.RestoreBluetoothStatusBarIcon(it))
+                                }
+                            )
+                }
+                    add {
+                    AlohaOneUIPPreferenceGroup {
+                            SwitchItem(
+                                icon = ImageVector.vectorResource(id = R.drawable.sim_card),
+                                title = stringResource(id = R.string.alohaoneui_physicalEsimAdapterWorkaround_title),
+                                summary = stringResource(id = R.string.alohaoneui_physicalEsimAdapterWorkaround_summary),
+                                showChildIndicator = true,
+                                    checked = uiState.statusBar.physicalEsimAdapterWorkaround,
+                                onCheckedChange = {
+                                    onEvent(SystemUIEvent.StatusBar.PhysicalEsimAdapterWorkaround(it))
+                                }
+                            )
+                            AlohaOneUIChildVisibility(uiState.statusBar.physicalEsimAdapterWorkaround) {
+                                SelectItem(
+                                    icon = ImageVector.vectorResource(id = R.drawable.sim_card),
+                                    title = stringResource(id = R.string.alohaoneui_physicalEsimAdapterSimSlot_title),
+                                    entries = listOf(
+                                        stringResource(id = R.string.alohaoneui_sim_slot_1),
+                                        stringResource(id = R.string.alohaoneui_sim_slot_2),
+                                        stringResource(id = R.string.alohaoneui_sim_slot_both)
+                                    ),
+                                    selectedIndex = uiState.statusBar.physicalEsimAdapterSimSlot.coerceIn(
+                                        0,
+                                        ESIM_ADAPTER_SIM_BOTH
+                                    ),
+                                    onSelectedIndexChange = {
+                                        onEvent(SystemUIEvent.StatusBar.PhysicalEsimAdapterSimSlot(it))
+                                    }
+                                )
+                            }
+                            }
+                }
+                    add {
+                    SwitchItem(
+                                icon = ImageVector.vectorResource(id = R.drawable.mobile_screensaver),
+                                title = stringResource(id = R.string.alohaoneui_doubleTapStatusBarToSleep_title),
+                                checked = uiState.statusBar.doubleTapStatusBarToSleep,
+                                onCheckedChange = {
+                                    onEvent(SystemUIEvent.StatusBar.DoubleTapStatusBarToSleep(it))
+                                }
+                            )
+                }
+                    add {
+                    StatusBarNotificationControls(
+                                uiState = uiState.statusBar,
+                                onEvent = onEvent,
+                            )
+                }
+                    add {
+                    AlohaOneUIPPreferenceGroup {
+                                var expanded by rememberSaveable { mutableStateOf(false) }
+                    
+                                SwitchItem(
+                                    title = stringResource(id = R.string.alohaoneui_setCustomCarrierName_title),
+                                    modifier = Modifier.animateContentSize(),
+                                    summary = if (uiState.statusBar.setCustomCarrierName) {
+                                        uiState.statusBar.customCarrierName
+                                    } else null,
+                                    icon = ImageVector.vectorResource(id = R.drawable.sim_card),
+                                    clickable = true,
+                                    onClick = { expanded = !expanded },
+                                    checked = uiState.statusBar.setCustomCarrierName,
+                                    onCheckedChange = {
+                                        if (it && uiState.statusBar.customCarrierName.isEmpty()) {
+                                            expanded = true
+                                        } else if (!it) {
+                                            expanded = false
+                                        }
+                                        onEvent(SystemUIEvent.StatusBar.SetCustomCarrierName(it))
+                                    }
+                                )
+                    
+                                AlohaOneUIChildVisibility(expanded && uiState.statusBar.setCustomCarrierName) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier.padding(horizontal = 16.dp),
+                                    ) {
+                                        var tempCustomCarrierName by remember {
+                                            mutableStateOf(uiState.statusBar.customCarrierName)
+                                        }
+                    
+                                        AlohaOneUIInlineTextField(
+                                            value = tempCustomCarrierName,
+                                            onValueChange = { tempCustomCarrierName = it },
+                                            modifier = Modifier.weight(1f),
+                                            singleLine = true,
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        AlohaOneUIActionButton(
+                                            text = stringResource(id = R.string.alohaoneui_confirm),
+                                            primary = true,
+                                            onClick = {
+                                                onEvent(
+                                                    SystemUIEvent.StatusBar.CustomCarrierName(
+                                                        tempCustomCarrierName
+                                                    )
+                                                )
+                                            },
+                                        )
+                                    }
+                                }
+                            }
+                }
+                    add {
+                    SwitchItem(
+                                icon = ImageVector.vectorResource(id = R.drawable.mobile_screensaver),
+                                title = stringResource(id = R.string.alohaoneui_hideLockscreenStatusBar_title),
+                                checked = uiState.statusBar.hideLockscreenStatusBar,
+                                onCheckedChange = {
+                                    onEvent(SystemUIEvent.StatusBar.HideLockscreenStatusBar(it))
+                                }
+                            )
+                }
+                }
+            )
         DividerText(R.string.alohaoneui_qs)
-        AlohaOneUIDetailGroup {
-        SwitchItem(
-            icon = ImageVector.vectorResource(id = R.drawable.format_letter_spacing),
-            title = stringResource(id = R.string.alohaoneui_setQsClockMonospaced_title),
-            checked = uiState.qs.setQsClockMonospaced,
-            onCheckedChange = {
-                onEvent(SystemUIEvent.QS.SetQsClockMonospaced(it))
-            }
-        )
-        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            SwitchItem(
-                icon = ImageVector.vectorResource(id = R.drawable.tile_medium),
-                title = stringResource(id = R.string.alohaoneui_hideDeviceControlQsTile_title),
-                checked = uiState.qs.hideDeviceControlQsTile,
-                onCheckedChange = {
-                    onEvent(SystemUIEvent.QS.HideDeviceControlQsTile(it))
+        AlohaOneUIDetailSegmentedGroup(
+                content = buildList {
+                    add {
+                    SwitchItem(
+                                icon = ImageVector.vectorResource(id = R.drawable.format_letter_spacing),
+                                title = stringResource(id = R.string.alohaoneui_setQsClockMonospaced_title),
+                                checked = uiState.qs.setQsClockMonospaced,
+                                onCheckedChange = {
+                                    onEvent(SystemUIEvent.QS.SetQsClockMonospaced(it))
+                                }
+                            )
+                }
+                    if (Build.VERSION.SDK_INT == Build.VERSION_CODES.UPSIDE_DOWN_CAKE) add {
+                    SwitchItem(
+                                    icon = ImageVector.vectorResource(id = R.drawable.tile_medium),
+                                    title = stringResource(id = R.string.alohaoneui_hideDeviceControlQsTile_title),
+                                    checked = uiState.qs.hideDeviceControlQsTile,
+                                    onCheckedChange = {
+                                        onEvent(SystemUIEvent.QS.HideDeviceControlQsTile(it))
+                                    }
+                                )
+                                SwitchItem(
+                                    icon = ImageVector.vectorResource(id = R.drawable.tile_medium),
+                                    title = stringResource(id = R.string.alohaoneui_hideSmartViewQsTile_title),
+                                    checked = uiState.qs.hideSmartViewQsTile,
+                                    onCheckedChange = {
+                                        onEvent(SystemUIEvent.QS.HideSmartViewQsTile(it))
+                                    }
+                                )
+                                SwitchItem(
+                                    icon = ImageVector.vectorResource(id = R.drawable.five_g),
+                                    title = stringResource(id = R.string.alohaoneui_turnOn5gQsTile_title),
+                                    summary = stringResource(id = R.string.alohaoneui_turnOn5gQsTile_summary),
+                                    checked = uiState.qs.turnOn5gQsTile,
+                                    onCheckedChange = {
+                                        onEvent(SystemUIEvent.QS.TurnOn5gQsTile(it))
+                                    }
+                                )
+                }
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) add {
+                    AlohaOneUIInfoItem(
+                                    title = stringResource(id = R.string.alohaoneui_turnOn5gQsTile_title),
+                                    summary = stringResource(id = R.string.alohaoneui_root5gQsTile_summary),
+                                    icon = ImageVector.vectorResource(id = R.drawable.five_g),
+                                )
+                                AlohaOneUIInfoItem(
+                                    title = stringResource(id = R.string.alohaoneui_immersiveModeQsTile_title),
+                                    summary = stringResource(id = R.string.alohaoneui_rootImmersiveModeQsTile_summary),
+                                    icon = ImageVector.vectorResource(id = R.drawable.immersive_mode),
+                                )
+                                if (ONE_UI_VERSION < 80500) {
+                                    SwitchItem(
+                                        icon = ImageVector.vectorResource(id = R.drawable.tile_medium),
+                                        title = stringResource(id = R.string.alohaoneui_hideQsBarMediaPlayer_title),
+                                        checked = uiState.qs.hideQsBarMediaPlayer,
+                                        onCheckedChange = {
+                                            onEvent(SystemUIEvent.QS.HideQsBarMediaPlayer(it))
+                                        }
+                                    )
+                                }
+                                if (ONE_UI_VERSION < 80500) {
+                                    SwitchItem(
+                                        icon = ImageVector.vectorResource(id = R.drawable.tile_medium),
+                                        title = stringResource(id = R.string.alohaoneui_hideQsBarNearbyDevicesAndDeviceControl_title),
+                                        checked = uiState.qs.hideQsBarNearbyDevicesAndDeviceControl,
+                                        onCheckedChange = {
+                                            onEvent(SystemUIEvent.QS.HideQsBarNearbyDevicesAndDeviceControl(it))
+                                        }
+                                    )
+                                }
+                                SwitchItem(
+                                    icon = ImageVector.vectorResource(id = R.drawable.tile_medium),
+                                    title = stringResource(id = R.string.alohaoneui_hideQsBarSecurityFooter_title),
+                                    summary = stringResource(id = R.string.alohaoneui_hideQsBarSecurityFooter_summary),
+                                    checked = uiState.qs.hideQsBarSecurityFooter,
+                                    onCheckedChange = {
+                                        onEvent(SystemUIEvent.QS.HideQsBarSecurityFooter(it))
+                                    }
+                                )
+                                SwitchItem(
+                                    icon = ImageVector.vectorResource(id = R.drawable.tile_medium),
+                                    title = stringResource(id = R.string.alohaoneui_hideQsBarDataUsage_title),
+                                    checked = uiState.qs.hideQsBarDataUsage,
+                                    onCheckedChange = {
+                                        onEvent(SystemUIEvent.QS.HideQsBarDataUsage(it))
+                                    }
+                                )
+                                if (ONE_UI_VERSION < 80500) {
+                                    SwitchItem(
+                                        icon = ImageVector.vectorResource(id = R.drawable.tile_medium),
+                                        title = stringResource(id = R.string.alohaoneui_hideQsBarSmartViewAndModes_title),
+                                        checked = uiState.qs.hideQsBarSmartViewAndModes,
+                                        onCheckedChange = {
+                                            onEvent(SystemUIEvent.QS.HideQsBarSmartViewAndModes(it))
+                                        }
+                                    )
+                                }
+                                if (ONE_UI_VERSION < 80500) {
+                                    SwitchItem(
+                                        icon = ImageVector.vectorResource(id = R.drawable.expand),
+                                        title = stringResource(id = R.string.alohaoneui_alwaysExpandQsTileChunk_title),
+                                        checked = uiState.qs.alwaysExpandQsTileChunk,
+                                        onCheckedChange = {
+                                            onEvent(SystemUIEvent.QS.AlwaysExpandQsTileChunk(it))
+                                        }
+                                    )
+                                }
+                                if (ONE_UI_VERSION < 80500) {
+                                    SwitchItem(
+                                        title = stringResource(id = R.string.alohaoneui_alwaysShowTimeDateOnQs_title),
+                                        icon = ImageVector.vectorResource(id = R.drawable.nest_clock_farsight_digital),
+                                        checked = uiState.qs.alwaysShowTimeDateOnQs,
+                                        onCheckedChange = {
+                                            onEvent(SystemUIEvent.QS.AlwaysShowTimeDateOnQs(it))
+                                        }
+                                    )
+                                }
+                                if (ONE_UI_VERSION < 80500) {
+                                    SwitchItem(
+                                        icon = ImageVector.vectorResource(id = R.drawable.light_mode),
+                                        title = stringResource(id = R.string.alohaoneui_addBrightnessProgressToQsBar_title),
+                                        checked = uiState.qs.addBrightnessProgressToQsBar,
+                                        onCheckedChange = {
+                                            onEvent(SystemUIEvent.QS.AddBrightnessProgressToQsBar(it))
+                                        }
+                                    )
+                                }
+                                if (ONE_UI_VERSION < 80500) {
+                                    SwitchItem(
+                                        icon = ImageVector.vectorResource(id = R.drawable.music_note),
+                                        title = stringResource(id = R.string.alohaoneui_addVolumeProgressToQsBar_title),
+                                        checked = uiState.qs.addVolumeProgressToQsBar,
+                                        onCheckedChange = {
+                                            onEvent(SystemUIEvent.QS.AddVolumeProgressToQsBar(it))
+                                        }
+                                    )
+                                }
+                                SwitchItem(
+                                    icon = ImageVector.vectorResource(id = R.drawable.today),
+                                    title = stringResource(id = R.string.alohaoneui_showTraditionalChineseDateOnQS_title),
+                                    checked = uiState.qs.showTraditionalChineseDateOnQS,
+                                    onCheckedChange = {
+                                        onEvent(SystemUIEvent.QS.ShowTraditionalChineseDateOnQS(it))
+                                    }
+                                )
+                                AlohaOneUIPPreferenceGroup {
+                                    var textSize by remember { mutableFloatStateOf(uiState.qs.qsClockTextSize) }
+                                    var expanded by rememberSaveable { mutableStateOf(false) }
+                    
+                                    SwitchItem(
+                                        title = stringResource(id = R.string.alohaoneui_modifyQSClockTextSize_title),
+                                        modifier = Modifier.animateContentSize(),
+                                        summary = if (uiState.qs.modifyQSClockTextSize) {
+                                            " %.1fsp".format(textSize)
+                                        } else null,
+                                        icon = ImageVector.vectorResource(id = R.drawable.format_size),
+                                        clickable = true,
+                                        onClick = { expanded = !expanded },
+                                        checked = uiState.qs.modifyQSClockTextSize,
+                                        onCheckedChange = {
+                                            if (it && textSize == 32f) {
+                                                expanded = true
+                                            } else if (!it) {
+                                                expanded = false
+                                            }
+                                            onEvent(SystemUIEvent.QS.ModifyQSClockTextSize(it))
+                                        }
+                                    )
+                    
+                                    AlohaOneUIChildVisibility(expanded && uiState.qs.modifyQSClockTextSize) {
+                                        AlohaOneUISlider(
+                                            value = textSize,
+                                            onValueChange = { textSize = it },
+                                            modifier = Modifier.padding(horizontal = 16.dp),
+                                            valueRange = 15f..70f,
+                                            onValueChangeFinished = {
+                                                onEvent(SystemUIEvent.QS.QSClockTextSize(textSize))
+                                            }
+                                        )
+                                    }
+                                }
+                }
                 }
             )
-            SwitchItem(
-                icon = ImageVector.vectorResource(id = R.drawable.tile_medium),
-                title = stringResource(id = R.string.alohaoneui_hideSmartViewQsTile_title),
-                checked = uiState.qs.hideSmartViewQsTile,
-                onCheckedChange = {
-                    onEvent(SystemUIEvent.QS.HideSmartViewQsTile(it))
-                }
-            )
-            SwitchItem(
-                icon = ImageVector.vectorResource(id = R.drawable.five_g),
-                title = stringResource(id = R.string.alohaoneui_turnOn5gQsTile_title),
-                summary = stringResource(id = R.string.alohaoneui_turnOn5gQsTile_summary),
-                checked = uiState.qs.turnOn5gQsTile,
-                onCheckedChange = {
-                    onEvent(SystemUIEvent.QS.TurnOn5gQsTile(it))
-                }
-            )
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
-            AlohaOneUIInfoItem(
-                title = stringResource(id = R.string.alohaoneui_turnOn5gQsTile_title),
-                summary = stringResource(id = R.string.alohaoneui_root5gQsTile_summary),
-                icon = ImageVector.vectorResource(id = R.drawable.five_g),
-            )
-            AlohaOneUIInfoItem(
-                title = stringResource(id = R.string.alohaoneui_immersiveModeQsTile_title),
-                summary = stringResource(id = R.string.alohaoneui_rootImmersiveModeQsTile_summary),
-                icon = ImageVector.vectorResource(id = R.drawable.immersive_mode),
-            )
-            if (ONE_UI_VERSION < 80500) {
-                SwitchItem(
-                    icon = ImageVector.vectorResource(id = R.drawable.tile_medium),
-                    title = stringResource(id = R.string.alohaoneui_hideQsBarMediaPlayer_title),
-                    checked = uiState.qs.hideQsBarMediaPlayer,
-                    onCheckedChange = {
-                        onEvent(SystemUIEvent.QS.HideQsBarMediaPlayer(it))
-                    }
-                )
-            }
-            if (ONE_UI_VERSION < 80500) {
-                SwitchItem(
-                    icon = ImageVector.vectorResource(id = R.drawable.tile_medium),
-                    title = stringResource(id = R.string.alohaoneui_hideQsBarNearbyDevicesAndDeviceControl_title),
-                    checked = uiState.qs.hideQsBarNearbyDevicesAndDeviceControl,
-                    onCheckedChange = {
-                        onEvent(SystemUIEvent.QS.HideQsBarNearbyDevicesAndDeviceControl(it))
-                    }
-                )
-            }
-            SwitchItem(
-                icon = ImageVector.vectorResource(id = R.drawable.tile_medium),
-                title = stringResource(id = R.string.alohaoneui_hideQsBarSecurityFooter_title),
-                summary = stringResource(id = R.string.alohaoneui_hideQsBarSecurityFooter_summary),
-                checked = uiState.qs.hideQsBarSecurityFooter,
-                onCheckedChange = {
-                    onEvent(SystemUIEvent.QS.HideQsBarSecurityFooter(it))
-                }
-            )
-            SwitchItem(
-                icon = ImageVector.vectorResource(id = R.drawable.tile_medium),
-                title = stringResource(id = R.string.alohaoneui_hideQsBarDataUsage_title),
-                checked = uiState.qs.hideQsBarDataUsage,
-                onCheckedChange = {
-                    onEvent(SystemUIEvent.QS.HideQsBarDataUsage(it))
-                }
-            )
-            if (ONE_UI_VERSION < 80500) {
-                SwitchItem(
-                    icon = ImageVector.vectorResource(id = R.drawable.tile_medium),
-                    title = stringResource(id = R.string.alohaoneui_hideQsBarSmartViewAndModes_title),
-                    checked = uiState.qs.hideQsBarSmartViewAndModes,
-                    onCheckedChange = {
-                        onEvent(SystemUIEvent.QS.HideQsBarSmartViewAndModes(it))
-                    }
-                )
-            }
-            if (ONE_UI_VERSION < 80500) {
-                SwitchItem(
-                    icon = ImageVector.vectorResource(id = R.drawable.expand),
-                    title = stringResource(id = R.string.alohaoneui_alwaysExpandQsTileChunk_title),
-                    checked = uiState.qs.alwaysExpandQsTileChunk,
-                    onCheckedChange = {
-                        onEvent(SystemUIEvent.QS.AlwaysExpandQsTileChunk(it))
-                    }
-                )
-            }
-            if (ONE_UI_VERSION < 80500) {
-                SwitchItem(
-                    title = stringResource(id = R.string.alohaoneui_alwaysShowTimeDateOnQs_title),
-                    icon = ImageVector.vectorResource(id = R.drawable.nest_clock_farsight_digital),
-                    checked = uiState.qs.alwaysShowTimeDateOnQs,
-                    onCheckedChange = {
-                        onEvent(SystemUIEvent.QS.AlwaysShowTimeDateOnQs(it))
-                    }
-                )
-            }
-            if (ONE_UI_VERSION < 80500) {
-                SwitchItem(
-                    icon = ImageVector.vectorResource(id = R.drawable.light_mode),
-                    title = stringResource(id = R.string.alohaoneui_addBrightnessProgressToQsBar_title),
-                    checked = uiState.qs.addBrightnessProgressToQsBar,
-                    onCheckedChange = {
-                        onEvent(SystemUIEvent.QS.AddBrightnessProgressToQsBar(it))
-                    }
-                )
-            }
-            if (ONE_UI_VERSION < 80500) {
-                SwitchItem(
-                    icon = ImageVector.vectorResource(id = R.drawable.music_note),
-                    title = stringResource(id = R.string.alohaoneui_addVolumeProgressToQsBar_title),
-                    checked = uiState.qs.addVolumeProgressToQsBar,
-                    onCheckedChange = {
-                        onEvent(SystemUIEvent.QS.AddVolumeProgressToQsBar(it))
-                    }
-                )
-            }
-            SwitchItem(
-                icon = ImageVector.vectorResource(id = R.drawable.today),
-                title = stringResource(id = R.string.alohaoneui_showTraditionalChineseDateOnQS_title),
-                checked = uiState.qs.showTraditionalChineseDateOnQS,
-                onCheckedChange = {
-                    onEvent(SystemUIEvent.QS.ShowTraditionalChineseDateOnQS(it))
-                }
-            )
-            AlohaOneUIPPreferenceGroup {
-                var textSize by remember { mutableFloatStateOf(uiState.qs.qsClockTextSize) }
-                var expanded by rememberSaveable { mutableStateOf(false) }
-
-                SwitchItem(
-                    title = stringResource(id = R.string.alohaoneui_modifyQSClockTextSize_title),
-                    modifier = Modifier.animateContentSize(),
-                    summary = if (uiState.qs.modifyQSClockTextSize) {
-                        " %.1fsp".format(textSize)
-                    } else null,
-                    icon = ImageVector.vectorResource(id = R.drawable.format_size),
-                    clickable = true,
-                    onClick = { expanded = !expanded },
-                    checked = uiState.qs.modifyQSClockTextSize,
-                    onCheckedChange = {
-                        if (it && textSize == 32f) {
-                            expanded = true
-                        } else if (!it) {
-                            expanded = false
-                        }
-                        onEvent(SystemUIEvent.QS.ModifyQSClockTextSize(it))
-                    }
-                )
-
-                AlohaOneUIChildVisibility(expanded && uiState.qs.modifyQSClockTextSize) {
-                    AlohaOneUISlider(
-                        value = textSize,
-                        onValueChange = { textSize = it },
-                        modifier = Modifier.padding(horizontal = 16.dp),
-                        valueRange = 15f..70f,
-                        onValueChangeFinished = {
-                            onEvent(SystemUIEvent.QS.QSClockTextSize(textSize))
-                        }
-                    )
-                }
-            }
-        }
-        }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
             DividerText(R.string.alohaoneui_aod)
-            AlohaOneUIDetailGroup {
-            SwitchItem(
-                icon = ImageVector.vectorResource(id = R.drawable.battery),
-                title = stringResource(id = R.string.alohaoneui_hideAODStatusBar_title),
-                checked = uiState.aod.hideAODStatusBar,
-                onCheckedChange = {
-                    onEvent(SystemUIEvent.AOD.HideAODStatusBar(it))
+            AlohaOneUIDetailSegmentedGroup(
+                content = buildList {
+                    add {
+                    SwitchItem(
+                                    icon = ImageVector.vectorResource(id = R.drawable.battery),
+                                    title = stringResource(id = R.string.alohaoneui_hideAODStatusBar_title),
+                                    checked = uiState.aod.hideAODStatusBar,
+                                    onCheckedChange = {
+                                        onEvent(SystemUIEvent.AOD.HideAODStatusBar(it))
+                                    }
+                                )
+                }
+                    add {
+                    SwitchItem(
+                                    icon = ImageVector.vectorResource(id = R.drawable.today),
+                                    title = stringResource(id = R.string.alohaoneui_aodLockSupportLunar_title),
+                                    checked = uiState.aod.aodLockSupportLunar,
+                                    onCheckedChange = {
+                                        onEvent(SystemUIEvent.AOD.AODLockSupportLunar(it))
+                                    }
+                                )
+                }
                 }
             )
-            SwitchItem(
-                icon = ImageVector.vectorResource(id = R.drawable.today),
-                title = stringResource(id = R.string.alohaoneui_aodLockSupportLunar_title),
-                checked = uiState.aod.aodLockSupportLunar,
-                onCheckedChange = {
-                    onEvent(SystemUIEvent.AOD.AODLockSupportLunar(it))
-                }
-            )
-            }
         }
 
         DividerText(R.string.alohaoneui_notification)
-        AlohaOneUIDetailGroup {
-        AlohaOneUIPPreferenceGroup {
-            var expanded by rememberSaveable { mutableStateOf(false) }
-            SwitchItem(
-                icon = ImageVector.vectorResource(id = R.drawable.music_note),
-                title = stringResource(id = R.string.alohaoneui_hideOngoingActivityMedia_title),
-                summary = if (uiState.notification.hideOngoingActivityMedia && uiState.notification.hideOngoingActivityMediaPackages.isNotEmpty()) {
-                    uiState.notification.hideOngoingActivityMediaPackages
-                } else {
-                    stringResource(id = R.string.alohaoneui_hideOngoingActivityMedia_summary)
-                },
-                clickable = true,
-                onClick = { expanded = !expanded },
-                checked = uiState.notification.hideOngoingActivityMedia,
-                onCheckedChange = {
-                    if (it && uiState.notification.hideOngoingActivityMediaPackages.isEmpty()) {
-                        expanded = true
-                    } else if (!it) {
-                        expanded = false
-                    }
-                    onEvent(SystemUIEvent.Notification.HideOngoingActivityMedia(it))
+        AlohaOneUIDetailSegmentedGroup(
+                content = buildList {
+                    add {
+                    AlohaOneUIPPreferenceGroup {
+                                var expanded by rememberSaveable { mutableStateOf(false) }
+                                SwitchItem(
+                                    icon = ImageVector.vectorResource(id = R.drawable.music_note),
+                                    title = stringResource(id = R.string.alohaoneui_hideOngoingActivityMedia_title),
+                                    summary = if (uiState.notification.hideOngoingActivityMedia && uiState.notification.hideOngoingActivityMediaPackages.isNotEmpty()) {
+                                        uiState.notification.hideOngoingActivityMediaPackages
+                                    } else {
+                                        stringResource(id = R.string.alohaoneui_hideOngoingActivityMedia_summary)
+                                    },
+                                    clickable = true,
+                                    onClick = { expanded = !expanded },
+                                    checked = uiState.notification.hideOngoingActivityMedia,
+                                    onCheckedChange = {
+                                        if (it && uiState.notification.hideOngoingActivityMediaPackages.isEmpty()) {
+                                            expanded = true
+                                        } else if (!it) {
+                                            expanded = false
+                                        }
+                                        onEvent(SystemUIEvent.Notification.HideOngoingActivityMedia(it))
+                                    }
+                                )
+                                AlohaOneUIChildVisibility(expanded && uiState.notification.hideOngoingActivityMedia) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                                    ) {
+                                        var tempPackages by remember {
+                                            mutableStateOf(uiState.notification.hideOngoingActivityMediaPackages)
+                                        }
+                                        AlohaOneUIInlineTextField(
+                                            value = tempPackages,
+                                            onValueChange = { tempPackages = it },
+                                            modifier = Modifier.weight(1f),
+                                            labelText = stringResource(id = R.string.alohaoneui_hideOngoingActivityMedia_packages_hint),
+                                            singleLine = true,
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        AlohaOneUIActionButton(
+                                            text = stringResource(id = R.string.alohaoneui_confirm),
+                                            primary = true,
+                                            onClick = {
+                                                onEvent(SystemUIEvent.Notification.HideOngoingActivityMediaPackages(tempPackages))
+                                            },
+                                        )
+                                    }
+                                }
+                            }
+                }
+                    add {
+                    SwitchItem(
+                                icon = ImageVector.vectorResource(id = R.drawable.notifications),
+                                title = stringResource(id = R.string.alohaoneui_disableNotificationGrouping_title),
+                                summary = stringResource(id = R.string.alohaoneui_disableNotificationGrouping_summary),
+                                checked = uiState.notification.disableNotificationGrouping,
+                                onCheckedChange = {
+                                    onEvent(SystemUIEvent.Notification.DisableNotificationGrouping(it))
+                                }
+                            )
+                }
+                    add {
+                    SwitchItem(
+                                icon = ImageVector.vectorResource(id = R.drawable.notifications),
+                                title = stringResource(id = R.string.alohaoneui_autoExpandNotifications_title),
+                                checked = uiState.notification.autoExpandNotifications,
+                                onCheckedChange = {
+                                    onEvent(SystemUIEvent.Notification.AutoExpandNotifications(it))
+                                }
+                            )
+                }
                 }
             )
-            AlohaOneUIChildVisibility(expanded && uiState.notification.hideOngoingActivityMedia) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                ) {
-                    var tempPackages by remember {
-                        mutableStateOf(uiState.notification.hideOngoingActivityMediaPackages)
-                    }
-                    AlohaOneUIInlineTextField(
-                        value = tempPackages,
-                        onValueChange = { tempPackages = it },
-                        modifier = Modifier.weight(1f),
-                        labelText = stringResource(id = R.string.alohaoneui_hideOngoingActivityMedia_packages_hint),
-                        singleLine = true,
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    AlohaOneUIActionButton(
-                        text = stringResource(id = R.string.alohaoneui_confirm),
-                        primary = true,
-                        onClick = {
-                            onEvent(SystemUIEvent.Notification.HideOngoingActivityMediaPackages(tempPackages))
-                        },
-                    )
-                }
-            }
-        }
-        SwitchItem(
-            icon = ImageVector.vectorResource(id = R.drawable.notifications),
-            title = stringResource(id = R.string.alohaoneui_disableNotificationGrouping_title),
-            summary = stringResource(id = R.string.alohaoneui_disableNotificationGrouping_summary),
-            checked = uiState.notification.disableNotificationGrouping,
-            onCheckedChange = {
-                onEvent(SystemUIEvent.Notification.DisableNotificationGrouping(it))
-            }
-        )
-        SwitchItem(
-            icon = ImageVector.vectorResource(id = R.drawable.notifications),
-            title = stringResource(id = R.string.alohaoneui_autoExpandNotifications_title),
-            checked = uiState.notification.autoExpandNotifications,
-            onCheckedChange = {
-                onEvent(SystemUIEvent.Notification.AutoExpandNotifications(it))
-            }
-        )
-
-        }
         DividerText(R.string.alohaoneui_other)
-        AlohaOneUIDetailGroup {
-        AlohaOneUIPPreferenceGroup {
-            var expanded by rememberSaveable { mutableStateOf(false) }
-            SwitchItem(
-                icon = ImageVector.vectorResource(id = R.drawable.power_settings_new),
-                title = stringResource(id = R.string.alohaoneui_customPowerMenu_title),
-                clickable = true,
-                onClick = { expanded = !expanded },
-                checked = uiState.other.customPowerMenu,
-                onCheckedChange = {
-                    expanded = it
-                    onEvent(SystemUIEvent.Other.CustomPowerMenu(it))
+        AlohaOneUIDetailSegmentedGroup(
+                content = buildList {
+                    add {
+                    AlohaOneUIPPreferenceGroup {
+                                var expanded by rememberSaveable { mutableStateOf(false) }
+                                SwitchItem(
+                                    icon = ImageVector.vectorResource(id = R.drawable.power_settings_new),
+                                    title = stringResource(id = R.string.alohaoneui_customPowerMenu_title),
+                                    clickable = true,
+                                    onClick = { expanded = !expanded },
+                                    checked = uiState.other.customPowerMenu,
+                                    onCheckedChange = {
+                                        expanded = it
+                                        onEvent(SystemUIEvent.Other.CustomPowerMenu(it))
+                                    }
+                                )
+                                AnimatedVisibility(expanded && uiState.other.customPowerMenu) {
+                                    PowerMenuActionEditor(
+                                        actions = uiState.other.powerMenuActions,
+                                        onActionsChange = {
+                                            onEvent(SystemUIEvent.Other.PowerMenuActions(it))
+                                        }
+                                    )
+                                }
+                            }
+                }
+                    add {
+                    SwitchItem(
+                                icon = ImageVector.vectorResource(id = R.drawable.screenshot),
+                                title = stringResource(id = R.string.alohaoneui_disableScreenshotCaptureSound_title),
+                                checked = uiState.other.disableScreenshotCaptureSound,
+                                onCheckedChange = {
+                                    onEvent(SystemUIEvent.Other.DisableScreenshotCaptureSound(it))
+                                }
+                            )
+                }
                 }
             )
-            AnimatedVisibility(expanded && uiState.other.customPowerMenu) {
-                PowerMenuActionEditor(
-                    actions = uiState.other.powerMenuActions,
-                    onActionsChange = {
-                        onEvent(SystemUIEvent.Other.PowerMenuActions(it))
-                    }
-                )
-            }
-        }
-        SwitchItem(
-            icon = ImageVector.vectorResource(id = R.drawable.screenshot),
-            title = stringResource(id = R.string.alohaoneui_disableScreenshotCaptureSound_title),
-            checked = uiState.other.disableScreenshotCaptureSound,
-            onCheckedChange = {
-                onEvent(SystemUIEvent.Other.DisableScreenshotCaptureSound(it))
-            }
-        )
-        }
     }
 }
 
