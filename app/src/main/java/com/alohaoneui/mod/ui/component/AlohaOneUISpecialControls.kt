@@ -73,7 +73,7 @@ fun AlohaOneUIPPreferenceGroup(
                     draggedShape = RoundedCornerShape(0.dp),
                 )
                 TonalCard(
-                    modifier = modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                    modifier = modifier.padding(horizontal = 16.dp, vertical = 4.dp),
                 ) {
                     CompositionLocalProvider(
                         LocalAlohaOneUIGroupedPreference provides true,
