@@ -142,30 +142,25 @@ fun AlohaOneUITheme(
             content = content
         )
 
-        UiMode.Material -> MiuixAlohaOneUITheme(
-            appSettings = appSettings,
-            content = {
-                CompositionLocalProvider(
-                    LocalMaterialCornerScale provides appSettings.materialCornerScale,
-                    LocalMaterialShapeStyle provides appSettings.materialShapeStyle,
-                    LocalMaterialSwitchStyle provides appSettings.materialSwitchStyle,
-                    LocalMaterialSliderStyle provides appSettings.materialSliderStyle,
-                    LocalMaterialIconShapeStyle provides appSettings.materialIconShapeStyle,
-                    LocalMaterialOutlineWidth provides appSettings.materialOutlineWidth,
-                    LocalMaterialShadowContainers provides appSettings.materialShadowContainers,
-                    LocalMaterialShadowTopBars provides appSettings.materialShadowTopBars,
-                    LocalMaterialShadowButtons provides appSettings.materialShadowButtons,
-                    LocalMaterialShadowFloatingButtons provides appSettings.materialShadowFloatingButtons,
-                    LocalMaterialShadowSwitches provides appSettings.materialShadowSwitches,
-                    LocalMaterialShadowSliders provides appSettings.materialShadowSliders,
-                ) {
-                    MaterialAlohaOneUITheme(
-                        appSettings = appSettings,
-                        content = content
-                    )
-                }
-            }
-        )
+        UiMode.Material -> CompositionLocalProvider(
+            LocalMaterialCornerScale provides appSettings.materialCornerScale,
+            LocalMaterialShapeStyle provides appSettings.materialShapeStyle,
+            LocalMaterialSwitchStyle provides appSettings.materialSwitchStyle,
+            LocalMaterialSliderStyle provides appSettings.materialSliderStyle,
+            LocalMaterialIconShapeStyle provides appSettings.materialIconShapeStyle,
+            LocalMaterialOutlineWidth provides appSettings.materialOutlineWidth,
+            LocalMaterialShadowContainers provides appSettings.materialShadowContainers,
+            LocalMaterialShadowTopBars provides appSettings.materialShadowTopBars,
+            LocalMaterialShadowButtons provides appSettings.materialShadowButtons,
+            LocalMaterialShadowFloatingButtons provides appSettings.materialShadowFloatingButtons,
+            LocalMaterialShadowSwitches provides appSettings.materialShadowSwitches,
+            LocalMaterialShadowSliders provides appSettings.materialShadowSliders,
+        ) {
+            MaterialAlohaOneUITheme(
+                appSettings = appSettings,
+                content = content
+            )
+        }
     }
 }
 
