@@ -47,4 +47,79 @@ fun AlohaOneUIToolsViewModel.onPhotoRetouchingEvent(event: PhotoRetouchingEvent)
             )
         }
     }
+}PackagePane(
+        modifier = modifier,
+        content = buildList {
+            add {
+                .mod.ui.category
+            }
+            add {
+                import androidx.compose.runtime.Composable
+            }
+            add {
+                import androidx.compose.ui.Modifier
+            }
+            add {
+                import androidx.compose.ui.graphics.vector.ImageVector
+            }
+            add {
+                import androidx.compose.ui.res.stringResource
+            }
+            add {
+                import androidx.compose.ui.res.vectorResource
+            }
+            add {
+                import com.alohaoneui.app.R
+            }
+            add {
+                import com.alohaoneui.common.Preference
+            }
+            add {
+                import com.alohaoneui.app.ui.viewmodel.AlohaOneUIToolsViewModel
+            }
+            add {
+                import com.alohaoneui.mod.ui.component.SwitchItem
+            }
+            add {
+                @Composable
+            }
+            add {
+                fun DetailPanePhotoRetouching(
+                    uiState: Preference.Other,
+                    onEvent: (PhotoRetouchingEvent) -> Unit,
+                    modifier: Modifier = Modifier
+                ) {
+                    PackagePane(
+                        modifier = modifier,
+                        content = buildList {
+                            add {
+                                SwitchItem(
+                                            icon = ImageVector.vectorResource(id = R.drawable.branding_watermark),
+                                            title = stringResource(id = R.string.alohaoneui_noAIWatermark_title),
+                                            summary = stringResource(id = R.string.alohaoneui_noAIWatermark_summary),
+                                            checked = uiState.noAIWatermark,
+                                            onCheckedChange = { onEvent(PhotoRetouchingEvent.NoAIWatermark(it)) }
+                                        )
+                            }
+                        }
+                    )
+            }
+        }
+    )
+
+sealed interface PhotoRetouchingEvent {
+    @JvmInline
+    value class NoAIWatermark(val value: Boolean) : PhotoRetouchingEvent
+}
+
+fun AlohaOneUIToolsViewModel.onPhotoRetouchingEvent(event: PhotoRetouchingEvent) {
+    updateData { preference ->
+        when (event) {
+            is PhotoRetouchingEvent.NoAIWatermark -> preference.copy(
+                other = preference.other.copy(
+                    noAIWatermark = event.value
+                )
+            )
+        }
+    }
 }
