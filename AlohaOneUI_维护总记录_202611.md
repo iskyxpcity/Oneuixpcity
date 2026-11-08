@@ -1516,3 +1516,19 @@
 - 已将分组状态下的 Material `SwitchItem`（含可点击和普通开关）、`SelectItem`、`AlohaOneUIInfoItem` 及两种 `AlohaOneUIInlineTextField` 接入该子卡片容器。父级 `AlohaOneUIDetailGroup` 保留为外层父框体，子选项独立成卡并产生可见间距。Miuix 分支未改，状态与事件回调保持原样。
 - 源码依次提交：`3c34e07b`、`3a069184`、`4af130d4`、`00b57bc2`、`e0b495ea`。最终源码 HEAD 为 `e0b495ea65c9d780709fe48406ae26f102db758c`。当前等待对应 GitHub Actions 构建与 APK 验收。
 - 该修改针对共享行控件，覆盖使用这些控件的功能详情页；仍需检查滑块、按钮、弹出菜单、特殊自定义控件及系统 UI 内部多层嵌套分组，并在真机逐一验收 22 个详情入口。尚不能宣称全局全部完成。
+
+
+## 2026-11-08｜全项目 Material 框体统一：纠正分组容器方向（第一阶段）
+
+- 用户明确要求统一范围为整个 Oneuixpcity 项目所有页面，而非仅 22 个功能详情页；本阶段按全项目共享组件入口开始处理。
+- 依据「设置」页面 SettingsMaterial.kt 的真实结构，基准为 SegmentedColumn：页面/分组之间留出外部间距；每个选项行自身使用主题分段形状、阴影和描边；普通选项不再额外嵌套 TonalCard。一组内通过 4dp 行间距组织，不增加整组外层卡片。
+- 复核确认此前的 AlohaOneUIPPreferenceGroup 在 Material 下错误地使用 TonalCard 包住整组，嵌套组又继续套卡片；AlohaOneUIChildOptionSurface 还给个别普通选项再套一张卡片。这与「设置」页面的框体架构相反，是截图中出现多层套框、父子层级混乱的直接原因。
+- 已修改共享组件 app/src/main/java/com/alohaoneui/mod/ui/component/AlohaOneUISpecialControls.kt：
+  - Material AlohaOneUIPPreferenceGroup 改为纯分组 Column，水平 16dp、垂直 8dp 外间距；组内选项采用 ListItemDefaults.segmentedShapes(0, 1) 的主题单项形状，行间距 4dp。
+  - Material AlohaOneUIDetailGroup 改为页面内容容器，不再创建整页父卡片；选项按设置页的单项主题框体和 4dp 节奏排列。
+  - AlohaOneUIChildOptionSurface 在 Material 下改为不增加卡片的内容承载层；AlohaOneUIChildVisibility 不再自动包裹额外卡片。
+  - 两种 Material AlohaOneUIInlineTextField 均移除多余子卡片包装；SwitchItem、SelectItem 保持 grouped 状态直接绘制主题列表行。
+  - Miuix 分支保持原样；本次未改业务状态与事件回调。
+- 源码提交：ff735f621904ac23fe5ce0015d354ff9001ca13e、9f46f085f1a45e92888993537feb139e09fc20b1，均仅在 test/switches-official-eight-20261103，未修改 main。
+- 当前 HEAD 对应 Actions Run：42489219420，状态 pending；前一提交 Run 42489118920 仍在进行中。尚未通过构建验收，亦未做真机视觉验收。
+- 这是全项目统一工作的第一阶段，不代表全仓所有页面、弹窗、导航、底部栏、预览、自定义控件均已完成。后续继续逐类审计 189 个 UI 相关 Kotlin 文件，优先检查所有 Material 页面是否按设置页结构使用分组、控件主题入口和一致的页面间距；Miuix 实现继续隔离保护。
