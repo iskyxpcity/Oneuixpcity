@@ -38,6 +38,7 @@ import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.DropdownMenuGroup
 import androidx.compose.material3.SelectableDropdownMenuItem
 import androidx.compose.material3.DropdownMenuPopup
@@ -51,8 +52,8 @@ import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.SegmentedListItem
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.VerticalDivider
@@ -688,7 +689,7 @@ internal fun SegmentedOptionFrame(
         // Keep the structural option frame visible even when optional control outlines are disabled.
         BorderStroke(0.5.dp, colorScheme.outlineVariant.copy(alpha = 0.45f))
     }
-    Surface(
+    ExpressiveSurface(
         modifier = Modifier.fillMaxWidth(),
         shape = itemShapes.shape,
         color = colorScheme.surfaceContainerHigh,
@@ -1115,7 +1116,11 @@ fun SegmentedRadioItem(
             RadioButton(
                 selected = selected,
                 onClick = null,
-                enabled = enabled
+                enabled = enabled,
+                colors = RadioButtonDefaults.colors(
+                    selectedColor = colorScheme.primary,
+                    unselectedColor = colorScheme.onSurfaceVariant,
+                ),
             )
         },
         supportingContent = summary?.let { { Text(it) } }
@@ -1150,7 +1155,12 @@ fun SegmentedCheckboxItem(
                 enabled = enabled,
                 onCheckedChange = null,
                 interactionSource = interactionSource,
-                modifier = Modifier.size(24.dp)
+                modifier = Modifier.size(24.dp),
+                colors = CheckboxDefaults.colors(
+                    checkedColor = colorScheme.primary,
+                    uncheckedColor = colorScheme.onSurfaceVariant,
+                    checkmarkColor = colorScheme.onPrimary,
+                ),
             )
         },
         supportingContent = summary?.let { { Text(it) } }
