@@ -1337,3 +1337,9 @@
 - 补充全局顶栏调用点复核：在 `IconShapePresetPicker` 与 `ColorPaletteScreenMaterial` 也发现显式覆盖 `ExpressiveLargeTopAppBar` 颜色为 `surface` 的旧参数，现一并移除，统一继承共享 `expressiveTopAppBarColors()`。与首页、设置页、关于页采用同一策略；页面内容、返回动作、滚动行为和 Insets 不变。提交：`7899a25b3c115cebdc69fb79189a1d17fa73626c`、`f10488da2f82cfe91fe5b1058d787dd4eb5ac1a2`。
 - 顶栏复核目前覆盖首页、设置页、关于页、颜色主题页、图标形状详情页；所有已发现的页面级旧颜色覆盖均已清理。待最新代码批次完成 Actions 构建后，再继续检查其他 Material 控件族。
 - 编译修正记录：Actions Run `42456666497` 在 `SideNavigationRailMaterial.kt:113` 报错，原因是 Material3 `1.5.0-alpha28` 的 `WideNavigationRailItemDefaults` 不再使用单一 `selectedTextColor` 参数，而是按图标位置区分 `selectedTextColorTopIconPosition` 与 `selectedTextColorStartIconPosition`。已将两种布局状态都明确绑定到 `onSurface`，其余颜色令牌保持不变。修复提交：`cd13e6b34bed35a3d137cdd951232e72102275b9`；等待新 Actions 验证。
+
+## 2026-11｜SearchAppBar 顶栏继承共享 Material 主题
+
+- 全局调用点复核继续覆盖 SearchBar.kt。发现 SearchAppBar 虽已使用共享 ExpressiveLargeTopAppBar，但仍显式传入 Material3 的 surface 顶栏颜色，绕过共享控件默认的 Aloha surfaceContainer 主题色，与首页、设置、关于、颜色主题及图标形状页面此前清理的旧覆盖不一致。
+- 已移除该处冗余 TopAppBarDefaults.topAppBarColors 覆盖，让搜索页顶栏继承 expressiveTopAppBarColors()；保留顶栏形状、阴影、描边、Insets、滚动行为、搜索状态及输入/清除交互。未修改搜索框全屏容器的 surfaceContainerHighest 配色。
+- 源码提交：`见本轮提交记录`。仅修改 Material SearchBar.kt；Miuix、main 与版本号均未改动。等待最新分支构建验证后继续检查其他共享 Material 控件与页面调用点。
