@@ -81,6 +81,7 @@ internal data class AlohaSliderAppearance(
 internal fun alohaSliderAppearance(requestedStyle: Int): AlohaSliderAppearance {
     val style = requestedStyle.coerceIn(0, 3)
     val scheme = MaterialTheme.colorScheme
+    val outlineWidth = LocalMaterialOutlineWidth.current
     // Map the four supported slider appearance families rather than applying one generic
     // Material rail to all of them. Track progress, inactive rail and thumb are
     // independent roles so theme changes propagate without making them identical.
@@ -449,7 +450,7 @@ internal fun AlohaSliderTrack(
                     density = this,
                 )
                 drawAlohaOutline(fullRailOutline, scheme.surfaceContainerHighest)
-                val outlineStrokeWidth = LocalMaterialOutlineWidth.current.dp.toPx()
+                val outlineStrokeWidth = outlineWidth.dp.toPx()
                 if (outlineStrokeWidth > 0f) {
                     val inset = outlineStrokeWidth / 2f
                     val insetOutline = trackShape.createOutline(
