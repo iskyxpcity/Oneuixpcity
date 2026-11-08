@@ -387,7 +387,7 @@ fun ExpressiveSwitch(
             valueRange = 0f..1f,
             visibilityThreshold = 0.001f,
             initialScale = 1f,
-            // AndroidLiquidGlass LiquidToggle / Voyage: 1.5x press scale.
+            // AndroidLiquidGlass LiquidToggle / Aloha: 1.5x press scale.
             pressedScale = 1.5f,
             onDragStarted = {
                 // Ignore tiny finger jitter so a normal tap is not misclassified as a drag.
@@ -441,7 +441,7 @@ fun ExpressiveSwitch(
     val trackShape = if (com.alohaoneui.app.ui.theme.LocalMaterialShapeStyle.current == 3) {
         remember(trackCornerRadius) { RoundedCornerShape(trackCornerRadius) }
     } else {
-        voyageCornerShape(trackCornerRadius)
+        alohaCornerShape(trackCornerRadius)
     }
     // Handle silhouette is style-specific, rather than a shared capsule.
     val thumbShape = when (style) {
@@ -521,24 +521,24 @@ fun ExpressiveSwitch(
                 (if (checked) checkedTrack else uncheckedTrack).copy(alpha = 0.38f)
             }
             // The actual outline, not a hard-coded rounded rectangle, keeps the
-            // global Voyage shape family and corner scale linked to each style.
+            // global Aloha shape family and corner scale linked to each style.
             val trackOutline = trackShape.createOutline(
                 size = Size(w, h),
                 layoutDirection = layoutDirection,
                 density = this,
             )
-            drawVoyageOutline(trackOutline, trackColor)
+            drawAlohaOutline(trackOutline, trackColor)
             if (interactionProgress > 0.001f && style != 5) {
-                drawVoyageOutline(trackOutline, (if (checked) scheme.onPrimary else scheme.onSurfaceVariant).copy(alpha = interactionProgress * if (pressed) 0.12f else 0.08f))
+                drawAlohaOutline(trackOutline, (if (checked) scheme.onPrimary else scheme.onSurfaceVariant).copy(alpha = interactionProgress * if (pressed) 0.12f else 0.08f))
             }
             if (focused && enabled) {
-                drawVoyageOutline(trackOutline, scheme.primary.copy(alpha = 0.72f), style = Stroke(width = 1.25.dp.toPx()))
+                drawAlohaOutline(trackOutline, scheme.primary.copy(alpha = 0.72f), style = Stroke(width = 1.25.dp.toPx()))
             }
             // Material You (Material 3) alone uses the documented track
             // decoration: outline when OFF, transparent when ON. Other switch
             // families must not inherit this perimeter.
             if (style == 0 && !checked) {
-                drawVoyageOutline(
+                drawAlohaOutline(
                     trackOutline,
                     scheme.outline.copy(alpha = if (enabled) 1f else 0.38f),
                     style = Stroke(width = 1.dp.toPx()),
@@ -561,7 +561,7 @@ fun ExpressiveSwitch(
                     density = this,
                 )
                 withTransform({ translate(cx - haloWidth / 2f, cy - haloHeight / 2f) }) {
-                    drawVoyageOutline(
+                    drawAlohaOutline(
                         haloOutline,
                         Color.White.copy(alpha = glassInteraction * if (checked) 0.42f else 0.30f),
                     )
@@ -577,12 +577,12 @@ fun ExpressiveSwitch(
             )
             withTransform({ translate(cx - thumbWidthPx / 2f, cy - thumbHeightPx / 2f) }) {
                 if (enabled && interactionProgress > 0.001f && style != 5) {
-                    drawVoyageOutline(thumbOutline, (if (checked) scheme.onPrimary else scheme.onSurfaceVariant).copy(alpha = interactionProgress * 0.10f))
+                    drawAlohaOutline(thumbOutline, (if (checked) scheme.onPrimary else scheme.onSurfaceVariant).copy(alpha = interactionProgress * 0.10f))
                 }
                 if (style != 5) {
-                    drawVoyageOutline(thumbOutline, thumbColor)
+                    drawAlohaOutline(thumbOutline, thumbColor)
                 } else if (glassInteraction < 0.999f) {
-                    drawVoyageOutline(thumbOutline, thumbColor.copy(alpha = 1f - glassInteraction))
+                    drawAlohaOutline(thumbOutline, thumbColor.copy(alpha = 1f - glassInteraction))
                 }
             }
             // Switch thumb icons/checkmarks are intentionally omitted; the
@@ -595,7 +595,7 @@ fun ExpressiveSwitch(
             val glassRailCenterOffsetX = with(LocalDensity.current) {
                 -(thumbTravel * displayedTravel - thumbTravel / 2f).toPx()
             }
-            // Voyage Liquid Glass renderer reserves a 40×24dp thumb slot.
+            // Aloha Liquid Glass renderer reserves a 40×24dp thumb slot.
             // The transient glass surface scales inside this source-sized slot.
             val glassThumbWidth = 40.dp
             val glassThumbHeight = 24.dp
@@ -650,7 +650,7 @@ fun ExpressiveSwitch(
                             val progress = glassDragAnimation.pressProgress
                             blur(8.dp.toPx() * (1f - progress))
                             switchLens(
-                                // Match Voyage's glass edge profile in density-independent units.
+                                // Match Aloha's glass edge profile in density-independent units.
                                 // Its animated progress controls both the refraction depth and capture bounds.
                                 refractionHeight = 5.dp.toPx() * glassInteraction,
                                 refractionAmount = 10.dp.toPx() * glassInteraction,
