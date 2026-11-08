@@ -16,14 +16,19 @@ fun DetailPaneDualApp(
     onEvent: (DualAppEvent) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    PackagePane(modifier) {
-        SwitchItem(
-            icon = ImageVector.vectorResource(id = R.drawable.apk_document),
-            title = stringResource(id = R.string.alohaoneui_makeAllUserAppsAvailable_title),
-            checked = uiState.makeAllUserAppsAvailable,
-            onCheckedChange = { onEvent(DualAppEvent.MakeAllUserAppsAvailable(it)) }
-        )
-    }
+    PackagePane(
+        modifier = modifier,
+        content = buildList {
+            add {
+                SwitchItem(
+                            icon = ImageVector.vectorResource(id = R.drawable.apk_document),
+                            title = stringResource(id = R.string.alohaoneui_makeAllUserAppsAvailable_title),
+                            checked = uiState.makeAllUserAppsAvailable,
+                            onCheckedChange = { onEvent(DualAppEvent.MakeAllUserAppsAvailable(it)) }
+                        )
+            }
+        }
+    )
 }
 
 sealed interface DualAppEvent {
