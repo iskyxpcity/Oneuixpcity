@@ -1297,3 +1297,12 @@
 - 本轮代码提交：b2616f64d9a9ee9494a2deccd154c9d2a559a486。
 - GitHub Actions Run 42442352858 成功：源码检查、Kotlin 编译、签名 APK 构建、优化候选验证、包名/签名校验均通过。Artifact AlohaOneUI-Signed-Test-APK ID 13602561056，大小 28,635,970 bytes；Artifact ZIP SHA-256：a84595d8fa93d82a2644b98fac208104ffeeabc0882303c94bb45288eded7cf1。Run URL：https://github.com/iskyxpcity/Oneuixpcity/actions/runs/42442352858。
 - 本轮仅完成两处菜单容器主题补齐；共享 Material 控件复核仍在继续，不将其表述为全局统一完成。Miuix 组件未改动；继续仅在测试分支推进，不合并 main，不修改版本号。
+
+## 2026-11｜Material Snackbar 主题统一与构建验收（继续）
+
+- SnackBar.kt 的 Material 默认 Snackbar 已接入 Aloha 主题框体：默认使用 20dp Voyage/Aloha 圆角、inverseSurface/inverseOnSurface/inversePrimary 配色，并按 LocalMaterialOutlineWidth 应用 outlineVariant 描边。调用方传入自定义 snackBar 内容的接口保持不变。
+- 首次实现构建 Run 42449219151 失败，错误是当前项目 Material3 API 不提供 rememberSwipeToDismissBoxState()。已按日志修正为公开 SwipeToDismissBoxState 构造器，保留原先 SwipeToDismissBox 的滑动关闭和 Snackbar 新数据到来时复位逻辑；失败版本未作为 APK 交付。
+- 修正源码提交：e22f6b937332b1d078ddaa75640af788458b305c（Use public Material3 swipe state constructor for snackbar host）。
+- 修正后的 GitHub Actions Run 42449455213 成功，HEAD SHA 与上述提交一致；源码验证、编译、签名 APK 构建、优化候选验证及包名/签名检查均通过。
+- Artifact：AlohaOneUI-Signed-Test-APK，ID 13604488510，大小 28,636,987 bytes；Artifact ZIP SHA-256：78c3d1839cadaec9786410fd0e5c250e10ef44fadbfb468132a102f592c61c64。Run URL：https://github.com/iskyxpcity/Oneuixpcity/actions/runs/42449455213。
+- 本轮仍未声称真机 Snackbar 视觉/滑动体验验收。继续检查 TabRow、按钮、弹窗及共享控件层，保持 Material/Miuix 分支隔离、测试分支推进、不合并 main、不修改版本号。
