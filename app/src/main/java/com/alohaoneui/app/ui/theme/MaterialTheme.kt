@@ -15,8 +15,8 @@ import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowInsetsControllerCompat
 
 /**
- * Aloha OneUI Material 3 theme foundation aligned with Voyage's standard Material 3 shapes.
- * Voyage-specific settings and component behavior are integrated separately from this theme root.
+ * Aloha OneUI Material 3 theme foundation aligned with Aloha's standard Material 3 shapes.
+ * Aloha-specific settings and component behavior are integrated separately from this theme root.
  */
 @Composable
 fun MaterialAlohaOneUITheme(
@@ -51,9 +51,9 @@ fun MaterialAlohaOneUITheme(
     // native shape slots so unwrapped Material controls inherit the same theme.
     val materialCornerScale = LocalMaterialCornerScale.current.coerceIn(0f, 2f)
     val materialShapeStyle = LocalMaterialShapeStyle.current
-    // Material3 Shapes accepts CornerBasedShape, while VoyagePathShape is a
+    // Material3 Shapes accepts CornerBasedShape, while AlohaPathShape is a
     // general Shape. Keep native slots type-safe; custom Aloha components
-    // continue to render the full VoyagePathShape through voyageCornerShape().
+    // continue to render the full AlohaPathShape through alohaCornerShape().
     fun nativeMaterialCorner(radius: androidx.compose.ui.unit.Dp) =
         if (materialShapeStyle == 1) CutCornerShape(radius * materialCornerScale)
         else RoundedCornerShape(radius * materialCornerScale)
