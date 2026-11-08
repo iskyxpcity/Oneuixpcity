@@ -24,7 +24,7 @@ import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
  */
 @Composable
 private fun ExpressiveSnackbar(data: SnackbarData) {
-    val shape = voyageCornerShape(20.dp)
+    val shape = alohaCornerShape(20.dp)
     val outlineWidth = LocalMaterialOutlineWidth.current
     Snackbar(
         snackbarData = data,
