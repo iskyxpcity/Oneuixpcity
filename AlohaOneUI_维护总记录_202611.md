@@ -1286,3 +1286,6 @@
 - 进一步检查 `SearchBar.kt` 时发现 `SearchAppBar` 外层仍直接使用 Material3 `Surface`。现已切换为 `ExpressiveSurface`，并明确指定矩形形状、0dp 阴影和0dp边框，保留搜索区域原有外观与尺寸，同时统一组件入口。
 - `AlohaOneUISlider` 中的 Material3 `Slider` 是 Aloha 自定义滑块控件的 Material 分支底层实现，轨道、滑块、交互和样式均由 Aloha 组件接管；Miuix 分支独立处理，因此不属于页面绕过主题控件。
 - 搜索容器统一后的首次构建发现 `RectangleShape` 导入路径错误（应为 `androidx.compose.ui.graphics.RectangleShape`），已按构建日志修正；失败构建未作为交付版本，等待修正后的完整构建验证。
+
+- 搜索容器 `SearchAppBar` 改用 `ExpressiveSurface` 后，首次构建因 `RectangleShape` 导入路径错误失败；按日志修正为 `androidx.compose.ui.graphics.RectangleShape`。修正后的最新月度记录构建 Run `42437115348` 成功，HEAD `df624a5f2fc889eec5739362e699d9ac47ce648a`；编译、签名 APK 构建、包名和签名校验通过。
+- 成功 Artifact：`AlohaOneUI-Signed-Test-APK`，ID `13600510390`，大小 28,634,775 bytes；Artifact ZIP SHA-256：`523e4ba0e589d16b41050ad66f7e10173d6fbf88b2ec386103fa63218e8d0f20`。Run URL：`https://github.com/iskyxpcity/Oneuixpcity/actions/runs/42437115348`。
