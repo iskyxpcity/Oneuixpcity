@@ -14,7 +14,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Share
-import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -76,9 +76,11 @@ fun SendLogBottomSheet(onDismiss: () -> Unit, snackbarHostState: SnackbarHostSta
                 .align(Alignment.CenterHorizontally)
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                FilledTonalIconButton(
+                ExpressiveIconButton(
                     modifier = Modifier.size(64.dp),
-                    onClick = {
+                    colors = IconButtonDefaults.filledTonalIconButtonColors(),
+                    shape = voyageCornerShape(12.dp),
+                    onClick = {                    onClick = {
                         haptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
                         scope.launch {
                             reportToExport = buildAlohaOneUIDiagnosticReportForExport(context)

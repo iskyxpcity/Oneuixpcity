@@ -20,7 +20,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.Block
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
@@ -102,7 +101,7 @@ internal fun IconShapePresetDetailScreen(
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     ExpressiveScaffold(
         topBar = {
-            LargeFlexibleTopAppBar(
+            ExpressiveLargeTopAppBar(
 
                 navigationIcon = {
                     TopBarBackButton(onClick = onBack)
