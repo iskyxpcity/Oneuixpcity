@@ -1282,3 +1282,6 @@
 - `BottomBarMaterial` / `SideNavigationRailMaterial` 使用 Material3 专用导航布局原语；`ConfigTransferPopupMaterial` / `RebootListPopupMaterial` 使用 Material3 菜单布局原语；这些属于各自 Aloha Material 组件内部的结构实现，并非页面直接绕过主题控件。Miuix 对应文件保持独立。
 - 维护记录统一改为按年月命名：`AlohaOneUI_维护总记录_202611.md`。旧的长日期文件名 `AlohaOneUI_维护总记录_2611060426.md` 在本次提交中移除；后续记录持续写入年月文件，不再创建带日时分的长文件名。
 - 本轮新增代码提交：`0fafcca`（Material Loading Dialog 使用 ExpressiveSurface）。接下来继续复核主题组件内部实现与其余共享控件，保持仅在测试分支推进，未经确认不合并 main、不修改版本号。
+
+- 进一步检查 `SearchBar.kt` 时发现 `SearchAppBar` 外层仍直接使用 Material3 `Surface`。现已切换为 `ExpressiveSurface`，并明确指定矩形形状、0dp 阴影和0dp边框，保留搜索区域原有外观与尺寸，同时统一组件入口。
+- `AlohaOneUISlider` 中的 Material3 `Slider` 是 Aloha 自定义滑块控件的 Material 分支底层实现，轨道、滑块、交互和样式均由 Aloha 组件接管；Miuix 分支独立处理，因此不属于页面绕过主题控件。
