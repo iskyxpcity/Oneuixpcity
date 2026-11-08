@@ -1472,3 +1472,10 @@
 
 - Build #2675 验收结果：Run `42471773173` 成功；覆盖状态栏时钟颜色选择区域在 Material 模式接入 `alohaCornerShape(14.dp)`（Miuix 保留原 RoundedCornerShape）、三合一颜色预览框按 UI 模式使用对应形状且裁切/描边共用同一 Shape。Kotlin 编译、Owner 签名 APK 构建、包名/固定证书检查、APK ZIP 完整性与 Artifact 上传全部通过。APK：`AlohaOneUI_1.0.261025_BUILD_2675.apk`；包名 `com.alohaoneui.app`，versionName `1.0.261025`，versionCode `16`；固定证书 SHA-256：`93bf61a6493c6b336383832eb41301bd8fe061f43566e7e384e3fdd9fc1c26a1`。Artifact ID：`13614001397`，ZIP 大小 28,643,715 bytes，SHA-256：`9ddf8129538ab335c31c1bb5451290d5a25f9c70db1f89dad8ff1facd9e553b8`。尚未完成真机视觉验收。
 - 后续审查确认共享 Material 组件 `ExpressiveDialog`、`ExpressiveContentDialog`、`ExpressiveScaffold`、`TonalCard` 和 `ExpressiveToggleButton` 已通过 Aloha 形状、描边、阴影和主题颜色入口统一；状态栏其余已抽查分类控件未发现直接调用原生 Material3 Surface/Card/Button/Switch/Checkbox/Radio/Slider 或固定 RoundedCornerShape 的命中。继续扩展至其余页面和通用弹窗/组件，不能据此宣称全仓完成。
+
+## 2026-11-08｜Material 下载弹窗控件入口统一（Build #2678）
+
+- 继续扫描通用对话框时发现 `DownloadDialogMaterial` 绕过项目控件，直接使用 Material3 `OutlinedTextField` 和 `TextButton`；这会使下载 URL 输入框不跟随全局描边/阴影/形状设置，按钮也缺少统一的 Aloha 外框。
+- 已改为 `ExpressiveOutlinedTextField` 与 `ExpressiveTextButton`；URL 字段显式保留 Material3 原有 bodyLarge 左对齐文字样式，避免采用共享输入控件的数字输入默认居中标题样式。Miuix 下载弹窗仍使用原 Miuix TextField/TextButton，不改其外观与逻辑。HTTPS URL 校验、确认/取消回调、键盘 URI 类型、占位文本均保持不变。
+- Build #2678 验收结果：Run `42472365348` 成功；Kotlin 编译、Owner 签名 APK 构建、包名/固定证书检查、APK ZIP 完整性与 Artifact 上传全部通过。APK：`AlohaOneUI_1.0.261025_BUILD_2678.apk`；包名 `com.alohaoneui.app`，versionName `1.0.261025`，versionCode `16`；固定证书 SHA-256：`93bf61a6493c6b336383832eb41301bd8fe061f43566e7e384e3fdd9fc1c26a1`。Artifact ID：`13613937884`，ZIP 大小 28,643,606 bytes，SHA-256：`4511b2568bf5f8526eed95c1464ca54636231c06c270467daa5f344a71afb2ab`。未做真机视觉验收。
+- 继续扩展 Material 主题组件全局扫描，尤其检查通用弹窗、下载/导入/导出对话框、输入框、按钮、列表容器是否仍直接调用 Material3 默认控件。保持 Miuix 分支、`main` 和版本号不变。
