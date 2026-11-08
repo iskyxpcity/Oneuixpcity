@@ -1467,3 +1467,5 @@
 - Build #2669 Run：`42470360560`；head SHA：`a526b85a9f2e818d515f8bdb7d5c8b31f5a633a3`。Artifact：`AlohaOneUI-Signed-Test-APK`，ID `13612838073`，大小 28,642,983 bytes，ZIP SHA-256：`af16f655fa10745d47c47c8ebdeefea696e3191c4ac2b8e092e808d5c5cce6a9`。APK：`AlohaOneUI_1.0.261025_BUILD_2669.apk`；包名 `com.alohaoneui.app`，versionName `1.0.261025`，versionCode `16`；V2 签名、固定证书检查和 ZIP 完整性检查通过。
 - 继续检查状态栏三合一设置页发现颜色角色选择弹窗仍显式使用固定 `RoundedCornerShape(24.dp)`，绕过全局 Aloha 形状样式。已改为 `alohaCornerShape(24.dp)`，保留弹窗内容、最大宽度、padding 与交互；触发 Run `42471233977` / Build #2670，当前待完成编译和签名验收。
 - 全局统一仍未完成；继续审查 Material 页面的框体入口、固定圆角、原生 Material3 容器、分组间距、内容边距及滚动区域尺寸。只有确认属于 Material 分支的组件才改动；Miuix 分支及其卡片/控件不纳入本轮改造。
+
+- Build #2670 验收结果：Run `42471233977` 成功；覆盖状态栏三合一颜色角色选择弹窗接入 `alohaCornerShape(24.dp)`。Kotlin 编译、Owner 签名 APK 构建、包名/固定证书检查、APK ZIP 完整性与 Artifact 上传均通过。APK：`AlohaOneUI_1.0.261025_BUILD_2670.apk`；包名 `com.alohaoneui.app`，versionName `1.0.261025`，versionCode `16`；固定证书 SHA-256：`93bf61a6493c6b336383832eb41301bd8fe061f43566e7e384e3fdd9fc1c26a1`。Artifact ID：`13613626863`，ZIP 大小 28,642,478 bytes，SHA-256：`0c80d006051de6b906544eb3af40f6f886bb3894f5b5c727a20fbbb6422e48f4`。本构建仍未做真机视觉验收。
