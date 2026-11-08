@@ -1491,3 +1491,11 @@
 - APK：`AlohaOneUI_1.0.261025_BUILD_2680.apk`，大小 `29,640,550` bytes；SHA-256：`0d3da1c7bd0b9f24a200c546425c1c75d9205f0f3bb7a48774d0bf84de3e31b8`。包名 `com.alohaoneui.app`，versionName `1.0.261025`，versionCode `16`；APK ZIP 完整性检查通过，V2 签名验证通过，证书 SHA-256：`93bf61a6493c6b336383832eb41301bd8fe061f43566e7e384e3fdd9fc1c26a1`。
 - APK Artifact 下载：`https://github.com/iskyxpcity/Oneuixpcity/actions/runs/42476118321/artifacts/13614998501`。
 - 后续仍需逐类复核未经过 `AlohaOneUIPPreferenceGroup` / `AlohaOneUIDetailGroup` 的独立预览、对话框、子选项表面与特殊控件；本次不把这些独立区域宣称为已全部统一。
+
+## 2026-11-08｜功能详情分组外间距二次统一
+
+- 在继续检查主导航「功能」页及各级详情时，确认普通 Material 详情分组此前为垂直 8dp，而状态栏详情共享的 `StatusThemeGroup` 默认外间距为垂直 4dp；同属详情卡片的组间距因此不一致。
+- 已将共享组件 `AlohaOneUIPPreferenceGroup` 的 Material 外层 TonalCard 垂直外间距从 8dp 统一为 4dp，水平外间距保持 16dp。该共享组件同时被功能分类页及使用 `AlohaOneUIDetailGroup` 的详情页复用，因此修复集中生效，不逐页复制布局代码。
+- Material 卡片仍由 `TonalCard` 管理主题形状、容器阴影开关、描边与表面色；嵌套子分组的 2dp 行间距、详情内部控件自身 padding 不改。状态栏 `StatusThemeGroup` 的默认 4dp 外间距与普通详情组对齐；显式 compact 分组保留紧凑规格。Miuix 分支未修改。
+- 源码提交：`e9fa017a26145fc6189b84b49c1e93e23b771f73`。Actions Run `42482062459` 已触发，当前待构建完成与 APK 验收。
+- 本轮仍在继续全局审计；独立子选项表面、特殊预览/弹窗以及未使用共享分组容器的详情内容尚未全部复核，不能标记为全局完成。
