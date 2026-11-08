@@ -54,14 +54,22 @@ fun AlohaOneUIPPreferenceGroup(
     when (LocalUiMode.current) {
         UiMode.Material -> {
             if (LocalAlohaOneUIGroupedPreference.current) {
-                // A nested functional subgroup inside an already segmented
-                // detail card should keep its behavior but not draw another
-                // card inside the parent card.
-                Column(
-                    modifier = modifier,
-                    verticalArrangement = Arrangement.spacedBy(2.dp),
-                    content = content,
-                )
+                // Nested functional groups remain distinct child surfaces.
+                // This is important on detail pages that contain multiple
+                // independently titled/expandable option groups.
+                TonalCard(
+                    modifier = modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+                ) {
+                    CompositionLocalProvider(
+                        LocalAlohaOneUIGroupedPreference provides true,
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(vertical = 4.dp),
+                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                            content = content,
+                        )
+                    }
+                }
             } else {
                 val baseShapes = ListItemDefaults.segmentedShapes(0, 1)
                 val flatShapes = baseShapes.copy(
@@ -73,7 +81,7 @@ fun AlohaOneUIPPreferenceGroup(
                     draggedShape = RoundedCornerShape(0.dp),
                 )
                 TonalCard(
-                    modifier = modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                    modifier = modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                 ) {
                     CompositionLocalProvider(
                         LocalAlohaOneUIGroupedPreference provides true,
