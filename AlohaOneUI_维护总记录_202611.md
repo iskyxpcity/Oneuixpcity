@@ -1312,3 +1312,6 @@
 - ExpressiveTabRow 源码提交：`bee674e5302698e8661a9b6bce3b9f4cf50d009d`。其自定义胶囊 Tab 原先仍叠加 Material3 默认底部指示器/分隔线；现显式关闭两者，保留自定义 pill、选中态、描边、阴影与 ripple。Actions Run `42450911631` 成功，Artifact ID `13605013734`，Artifact ZIP SHA-256 `1e36f1bee6ad8cc9e9d4006d6a437f2c056f165713e3f5c528d1ac731318d46c`（28,637,359 bytes）。该构建对应 TabRow 修复提交，非下一项 Scaffold 修复。
 - ExpressiveScaffold 最新修复提交：`04cd3143e5527da340b3595d15bddb9e0c145bd2`。发现顶部栏容器虽使用 16dp 圆角形状绘制阴影/描边，但未 clip 子内容，导致实际 TopAppBar 内容可能越出圆角框体。已在同一 topBar modifier 加入 `clip(topBarShape)`，让内容裁切、阴影和描边共用框体几何；未更改导航行为、insets 或颜色。
 - Scaffold 修改触发的 Actions 尚待查询终态；当前不能宣称新提交构建成功或有对应 APK。继续验证最新 HEAD 的编译、签名、APK 元数据和 Artifact。
+
+- StatusTagMaterial 源码提交：`8d081bae20b5c822cde4db146bb336e20d556c26`。原先标签框体固定使用 `RoundedCornerShape(4.dp)`，绕过 Material 全局形状风格；现改为 `voyageCornerShape(4.dp)`，标签背景随当前主题形状策略统一。保留字号、内边距、背景/前景色与标签内容。
+- Scaffold 的源码提交 `04cd3143e5527da340b3595d15bddb9e0c145bd2` 与本轮 StatusTag 提交均待最终 HEAD 的 CI 验收；TabRow 的成功构建 Run `42450911631` 仅覆盖其提交 `bee674e...`。
