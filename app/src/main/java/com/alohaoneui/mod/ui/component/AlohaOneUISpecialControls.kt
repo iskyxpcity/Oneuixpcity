@@ -348,16 +348,29 @@ fun AlohaOneUIInfoItem(
 ) {
     val grouped = LocalAlohaOneUIGroupedPreference.current
     when (LocalUiMode.current) {
-        UiMode.Material -> SegmentedListItem(
-            modifier = if (grouped) modifier else modifier.padding(horizontal = 16.dp, vertical = 4.dp),
-            colors = alohaOneUISegmentedColors(),
-            headlineContent = { MaterialText(title) },
-            supportingContent = summary?.let { { MaterialText(it) } },
-            leadingContent = icon?.let { imageVector ->
-                { Icon(imageVector, contentDescription = title) }
-            },
-            trailingContent = trailingContent,
-        )
+        UiMode.Material -> {
+            @Composable
+            fun Content(contentModifier: Modifier) {
+                SegmentedListItem(
+                    modifier = contentModifier,
+                    colors = alohaOneUISegmentedColors(),
+                    headlineContent = { MaterialText(title) },
+                    supportingContent = summary?.let { { MaterialText(it) } },
+                    leadingContent = icon?.let { imageVector ->
+                        { Icon(imageVector, contentDescription = title) }
+                    },
+                    trailingContent = trailingContent,
+                )
+            }
+
+            if (grouped) {
+                AlohaOneUIChildOptionSurface(modifier = modifier) {
+                    Content(Modifier)
+                }
+            } else {
+                Content(modifier.padding(horizontal = 16.dp, vertical = 4.dp))
+            }
+        }
 
         UiMode.Miuix -> {
             @Composable
