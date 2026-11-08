@@ -128,13 +128,19 @@ fun AlohaOneUIChildOptionSurface(
     content: @Composable () -> Unit,
 ) {
     when (LocalUiMode.current) {
-        UiMode.Material -> Box(
+        UiMode.Material -> TonalCard(
             modifier = modifier
                 .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp))
-                .padding(vertical = 8.dp),
+                .padding(horizontal = 8.dp, vertical = 6.dp),
+            containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp),
         ) {
-            content()
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 4.dp, vertical = 2.dp),
+            ) {
+                content()
+            }
         }
 
         UiMode.Miuix -> Box(modifier = modifier) {
