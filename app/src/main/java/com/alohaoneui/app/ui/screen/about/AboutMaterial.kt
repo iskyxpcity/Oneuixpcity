@@ -49,10 +49,6 @@ fun AboutScreenMaterial(
                 navigationIcon = {
                     TopBarBackButton(onClick = actions.onBack)
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    scrolledContainerColor = MaterialTheme.colorScheme.surface,
-                ),
                 scrollBehavior = scrollBehavior
             )
         },
