@@ -65,6 +65,7 @@ import com.alohaoneui.mod.ui.component.AlohaOneUISlider
 import com.alohaoneui.mod.ui.component.AlohaOneUIActionButton
 import com.alohaoneui.app.ui.component.material.ExpressiveConfirmDialog
 import com.alohaoneui.app.ui.component.material.ExpressiveContentDialog
+import com.alohaoneui.app.ui.component.material.alohaCornerShape
 import com.alohaoneui.app.ui.component.material.ExpressiveToggleButton
 import com.alohaoneui.mod.ui.component.SwitchItem
 import com.alohaoneui.mod.ui.component.SelectItem
@@ -703,7 +704,7 @@ private fun StyleOneRoleColorDialog(
         UiMode.Material -> ExpressiveContentDialog(
             onDismissRequest = onDismiss,
             modifier = Modifier.fillMaxWidth().widthIn(max = 460.dp),
-            shape = RoundedCornerShape(24.dp),
+            shape = alohaCornerShape(24.dp),
             contentModifier = Modifier.padding(20.dp),
         ) {
             Text(text = roleTitle)
