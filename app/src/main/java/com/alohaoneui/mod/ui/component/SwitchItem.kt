@@ -109,9 +109,8 @@ fun SwitchItem(
             }
 
             if (grouped) {
-                AlohaOneUIChildOptionSurface(modifier = modifier) {
-                    Content(Modifier)
-                }
+                // Match SettingsMaterial: rows stay inside their parent segmented group.
+                Content(modifier)
             } else {
                 Content(modifier.padding(horizontal = 16.dp, vertical = 4.dp))
             }
