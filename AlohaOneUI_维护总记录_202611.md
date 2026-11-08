@@ -1306,3 +1306,9 @@
 - 修正后的 GitHub Actions Run 42449455213 成功，HEAD SHA 与上述提交一致；源码验证、编译、签名 APK 构建、优化候选验证及包名/签名检查均通过。
 - Artifact：AlohaOneUI-Signed-Test-APK，ID 13604488510，大小 28,636,987 bytes；Artifact ZIP SHA-256：78c3d1839cadaec9786410fd0e5c250e10ef44fadbfb468132a102f592c61c64。Run URL：https://github.com/iskyxpcity/Oneuixpcity/actions/runs/42449455213。
 - 本轮仍未声称真机 Snackbar 视觉/滑动体验验收。继续检查 TabRow、按钮、弹窗及共享控件层，保持 Material/Miuix 分支隔离、测试分支推进、不合并 main、不修改版本号。
+
+## 2026-11-08 Material 共享组件继续统一
+
+- ExpressiveTabRow 源码提交：`bee674e5302698e8661a9b6bce3b9f4cf50d009d`。其自定义胶囊 Tab 原先仍叠加 Material3 默认底部指示器/分隔线；现显式关闭两者，保留自定义 pill、选中态、描边、阴影与 ripple。Actions Run `42450911631` 成功，Artifact ID `13605013734`，Artifact ZIP SHA-256 `1e36f1bee6ad8cc9e9d4006d6a437f2c056f165713e3f5c528d1ac731318d46c`（28,637,359 bytes）。该构建对应 TabRow 修复提交，非下一项 Scaffold 修复。
+- ExpressiveScaffold 最新修复提交：`04cd3143e5527da340b3595d15bddb9e0c145bd2`。发现顶部栏容器虽使用 16dp 圆角形状绘制阴影/描边，但未 clip 子内容，导致实际 TopAppBar 内容可能越出圆角框体。已在同一 topBar modifier 加入 `clip(topBarShape)`，让内容裁切、阴影和描边共用框体几何；未更改导航行为、insets 或颜色。
+- Scaffold 修改触发的 Actions 尚待查询终态；当前不能宣称新提交构建成功或有对应 APK。继续验证最新 HEAD 的编译、签名、APK 元数据和 Artifact。
