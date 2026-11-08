@@ -66,6 +66,7 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import com.alohaoneui.app.ui.theme.LocalMaterialShadowSwitches
+import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
 import com.alohaoneui.app.ui.theme.LocalMaterialSwitchStyle
 import com.alohaoneui.app.ui.component.liquid.InnerShadow
 import com.alohaoneui.app.ui.component.liquid.innerShadow
@@ -455,6 +456,7 @@ fun ExpressiveSwitch(
         else -> RoundedCornerShape(50)
     }
     val haloShape = RoundedCornerShape(50)
+    val globalTrackOutlineWidth = LocalMaterialOutlineWidth.current
     // Shared by the Canvas thumb and the Liquid Glass fallback layer.
     val thumbColor = if (!enabled) {
         if (checked) colors.disabledCheckedThumbColor else colors.disabledUncheckedThumbColor
@@ -537,11 +539,11 @@ fun ExpressiveSwitch(
             // Material You (Material 3) alone uses the documented track
             // decoration: outline when OFF, transparent when ON. Other switch
             // families must not inherit this perimeter.
-            if (style == 0 && !checked) {
+            if (style == 0 && !checked && globalTrackOutlineWidth > 0f) {
                 drawAlohaOutline(
                     trackOutline,
                     scheme.outline.copy(alpha = if (enabled) 1f else 0.38f),
-                    style = Stroke(width = 1.dp.toPx()),
+                    style = Stroke(width = globalTrackOutlineWidth.dp.toPx()),
                 )
             }
 
