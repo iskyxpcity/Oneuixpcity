@@ -58,4 +58,97 @@ fun AlohaOneUIToolsViewModel.onMessagingEvent(event: MessagingEvent) {
             )
         }
     }
+}PackagePane(
+        modifier = modifier,
+        content = buildList {
+            add {
+                .mod.ui.category
+            }
+            add {
+                import androidx.compose.foundation.Image
+            }
+            add {
+                import androidx.compose.foundation.layout.size
+            }
+            add {
+                import androidx.compose.ui.layout.ContentScale
+            }
+            add {
+                import androidx.compose.ui.unit.dp
+            }
+            add {
+                import com.alohaoneui.app.alohaoneui.AlohaOneUICategory
+            }
+            add {
+                import com.alohaoneui.app.ui.screen.tools.rememberAlohaOneUICategoryIcon
+            }
+            add {
+                import androidx.compose.runtime.Composable
+            }
+            add {
+                import androidx.compose.ui.Modifier
+            }
+            add {
+                import androidx.compose.ui.res.stringResource
+            }
+            add {
+                import com.alohaoneui.app.R
+            }
+            add {
+                import com.alohaoneui.common.Preference
+            }
+            add {
+                import com.alohaoneui.app.ui.viewmodel.AlohaOneUIToolsViewModel
+            }
+            add {
+                import com.alohaoneui.mod.ui.component.SwitchItem
+            }
+            add {
+                @Composable
+            }
+            add {
+                fun DetailPaneMessaging(
+                    uiState: Preference.Other,
+                    onEvent: (MessagingEvent) -> Unit,
+                    modifier: Modifier = Modifier
+                ) {
+                    PackagePane(
+                        modifier = modifier,
+                        content = buildList {
+                            add {
+                                SwitchItem(
+                                            leadingContent = {
+                                                Image(
+                                                    bitmap = rememberAlohaOneUICategoryIcon(AlohaOneUICategory.Messaging),
+                                                    contentDescription = stringResource(id = R.string.alohaoneui_supportBlockMessage_title),
+                                                    modifier = Modifier.size(24.dp),
+                                                    contentScale = ContentScale.Fit,
+                                                )
+                                            },
+                                            title = stringResource(id = R.string.alohaoneui_supportBlockMessage_title),
+                                            checked = uiState.supportBlockMessage,
+                                            onCheckedChange = { onEvent(MessagingEvent.SupportBlockMessage(it)) }
+                                        )
+                            }
+                        }
+                    )
+            }
+        }
+    )
+
+sealed interface MessagingEvent {
+    @JvmInline
+    value class SupportBlockMessage(val value: Boolean) : MessagingEvent
+}
+
+fun AlohaOneUIToolsViewModel.onMessagingEvent(event: MessagingEvent) {
+    updateData { preference ->
+        when (event) {
+            is MessagingEvent.SupportBlockMessage -> preference.copy(
+                other = preference.other.copy(
+                    supportBlockMessage = event.value
+                )
+            )
+        }
+    }
 }
