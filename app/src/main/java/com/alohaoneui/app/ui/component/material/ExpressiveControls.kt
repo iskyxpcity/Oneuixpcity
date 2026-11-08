@@ -31,6 +31,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
 import com.alohaoneui.app.ui.theme.LocalMaterialShadowButtons
+import com.alohaoneui.app.ui.theme.LocalMaterialShadowContainers
 
 /**
  * Shared Material button controls. Screen code owns actions and content; this
@@ -247,7 +248,7 @@ fun ExpressiveSurface(
     val actualBorder = border ?: outlineWidth.takeIf { it > 0f }?.let {
         BorderStroke(it.dp, MaterialTheme.colorScheme.outlineVariant)
     }
-    val actualElevation = shadowElevation ?: if (LocalMaterialShadowButtons.current) 2.dp else 0.dp
+    val actualElevation = shadowElevation ?: if (LocalMaterialShadowContainers.current) 2.dp else 0.dp
     if (onClick == null) {
         androidx.compose.material3.Surface(
             modifier = modifier, shape = actualShape, color = color, contentColor = contentColor,
