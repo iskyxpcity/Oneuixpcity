@@ -37,7 +37,7 @@ fun ExpressiveScaffold(
     Scaffold(
         modifier = modifier,
         topBar = {
-            val topBarShape = voyageCornerShape(16.dp)
+            val topBarShape = alohaCornerShape(16.dp)
             val topBarModifier = Modifier
                 .fillMaxWidth()
                 .then(
