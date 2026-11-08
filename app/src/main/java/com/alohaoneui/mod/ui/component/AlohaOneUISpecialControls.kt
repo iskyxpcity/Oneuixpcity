@@ -118,10 +118,14 @@ fun AlohaOneUIDetailSegmentedGroup(
     content: List<@Composable () -> Unit>,
 ) {
     when (LocalUiMode.current) {
-        UiMode.Material -> SegmentedColumn(
-            modifier = modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-            content = content,
-        )
+        UiMode.Material -> CompositionLocalProvider(
+            LocalAlohaOneUIGroupedPreference provides true,
+        ) {
+            SegmentedColumn(
+                modifier = modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                content = content,
+            )
+        }
         UiMode.Miuix -> Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
             content.forEach { it() }
         }
