@@ -46,7 +46,7 @@ fun ExpressiveButton(
     colors: ButtonColors = ButtonDefaults.buttonColors(),
     content: @Composable RowScope.() -> Unit,
 ) {
-    val actualShape = shape ?: voyageCornerShape(12.dp)
+    val actualShape = shape ?: alohaCornerShape(12.dp)
     val hasShadow = LocalMaterialShadowButtons.current
     val outlineWidth = LocalMaterialOutlineWidth.current
     Button(
@@ -78,7 +78,7 @@ fun ExpressiveTextButton(
     colors: ButtonColors = ButtonDefaults.textButtonColors(),
     content: @Composable RowScope.() -> Unit,
 ) {
-    val actualShape = shape ?: voyageCornerShape(12.dp)
+    val actualShape = shape ?: alohaCornerShape(12.dp)
     val outlineWidth = LocalMaterialOutlineWidth.current
     val styledModifier = modifier
         .then(
@@ -108,7 +108,7 @@ fun ExpressiveIconButton(
     framed: Boolean = false,
     content: @Composable () -> Unit,
 ) {
-    val actualShape = shape ?: voyageCornerShape(40.dp)
+    val actualShape = shape ?: alohaCornerShape(40.dp)
     val outlineWidth = LocalMaterialOutlineWidth.current
     val styledModifier = modifier
         .then(
@@ -148,7 +148,7 @@ fun ExpressiveOutlinedTextField(
     singleLine: Boolean = true,
     textStyle: TextStyle? = null,
 ) {
-    val actualShape = voyageCornerShape(12.dp)
+    val actualShape = alohaCornerShape(12.dp)
     val styledModifier = modifier
         .then(
             if (LocalMaterialShadowButtons.current) Modifier.shadow(2.dp, actualShape)
@@ -202,7 +202,7 @@ fun ExpressiveOutlinedTextField(
     singleLine: Boolean = false,
     textStyle: TextStyle = MaterialTheme.typography.bodyLarge,
 ) {
-    val actualShape = voyageCornerShape(12.dp)
+    val actualShape = alohaCornerShape(12.dp)
     val styledModifier = modifier
         .then(if (LocalMaterialShadowButtons.current) Modifier.shadow(2.dp, actualShape) else Modifier)
         .then(
@@ -244,7 +244,7 @@ fun ExpressiveSurface(
     interactionSource: MutableInteractionSource? = null,
     content: @Composable () -> Unit,
 ) {
-    val actualShape = shape ?: voyageCornerShape(20.dp)
+    val actualShape = shape ?: alohaCornerShape(20.dp)
     val outlineWidth = LocalMaterialOutlineWidth.current
     val actualBorder = border ?: outlineWidth.takeIf { it > 0f }?.let {
         BorderStroke(it.dp, MaterialTheme.colorScheme.outlineVariant)
