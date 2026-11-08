@@ -243,7 +243,7 @@ fun AlohaOneUIInlineTextField(
                 )
             }
             if (grouped) {
-                AlohaOneUIChildOptionSurface(modifier = modifier) { Content(Modifier) }
+                Content(modifier)
             } else {
                 Content(modifier)
             }
