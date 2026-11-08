@@ -16,28 +16,37 @@ fun DetailPaneGallery(
     onEvent: (GalleryEvent) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    PackagePane(modifier) {
-        SwitchItem(
-            icon = ImageVector.vectorResource(id = R.drawable.photo_library),
-            title = stringResource(id = R.string.alohaoneui_supportAllGallerySettings_title),
-            summary = stringResource(id = R.string.alohaoneui_supportAllGallerySettings_summary),
-            checked = uiState.supportAllGallerySettings,
-            onCheckedChange = { onEvent(GalleryEvent.SupportAllGallerySettings(it)) }
-        )
-        SwitchItem(
-            icon = ImageVector.vectorResource(id = R.drawable.photo_library),
-            title = stringResource(id = R.string.alohaoneui_supportSharedAlbumsInHide_title),
-            summary = stringResource(id = R.string.alohaoneui_supportSharedAlbumsInHide_summary),
-            checked = uiState.supportSharedAlbumsInHide,
-            onCheckedChange = { onEvent(GalleryEvent.SupportSharedAlbumsInHide(it)) }
-        )
-        SwitchItem(
-            icon = ImageVector.vectorResource(id = R.drawable.photo_library),
-            title = stringResource(id = R.string.alohaoneui_hideVideoEditorStudio_title),
-            checked = uiState.hideVideoEditorStudio,
-            onCheckedChange = { onEvent(GalleryEvent.HideVideoEditorStudio(it)) }
-        )
-    }
+    PackagePane(
+        modifier = modifier,
+        content = buildList {
+            add {
+                SwitchItem(
+                            icon = ImageVector.vectorResource(id = R.drawable.photo_library),
+                            title = stringResource(id = R.string.alohaoneui_supportAllGallerySettings_title),
+                            summary = stringResource(id = R.string.alohaoneui_supportAllGallerySettings_summary),
+                            checked = uiState.supportAllGallerySettings,
+                            onCheckedChange = { onEvent(GalleryEvent.SupportAllGallerySettings(it)) }
+                        )
+            }
+            add {
+                SwitchItem(
+                            icon = ImageVector.vectorResource(id = R.drawable.photo_library),
+                            title = stringResource(id = R.string.alohaoneui_supportSharedAlbumsInHide_title),
+                            summary = stringResource(id = R.string.alohaoneui_supportSharedAlbumsInHide_summary),
+                            checked = uiState.supportSharedAlbumsInHide,
+                            onCheckedChange = { onEvent(GalleryEvent.SupportSharedAlbumsInHide(it)) }
+                        )
+            }
+            add {
+                SwitchItem(
+                            icon = ImageVector.vectorResource(id = R.drawable.photo_library),
+                            title = stringResource(id = R.string.alohaoneui_hideVideoEditorStudio_title),
+                            checked = uiState.hideVideoEditorStudio,
+                            onCheckedChange = { onEvent(GalleryEvent.HideVideoEditorStudio(it)) }
+                        )
+            }
+        }
+    )
 }
 
 sealed interface GalleryEvent {
