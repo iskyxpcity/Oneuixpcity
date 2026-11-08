@@ -149,18 +149,15 @@ fun ExpressiveOutlinedTextField(
     textStyle: TextStyle? = null,
 ) {
     val actualShape = alohaCornerShape(12.dp)
+    val outlineWidth = LocalMaterialOutlineWidth.current
     val styledModifier = modifier
         .then(
             if (LocalMaterialShadowButtons.current) Modifier.shadow(2.dp, actualShape)
             else Modifier
         )
         .then(
-            LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
-                Modifier.border(
-                    it.dp,
-                    MaterialTheme.colorScheme.primary.copy(alpha = 0.45f),
-                    actualShape,
-                )
+            outlineWidth.takeIf { it > 0f }?.let {
+                Modifier.border(it.dp, MaterialTheme.colorScheme.outlineVariant, actualShape)
             } ?: Modifier
         )
     OutlinedTextField(
@@ -179,11 +176,16 @@ fun ExpressiveOutlinedTextField(
         colors = OutlinedTextFieldDefaults.colors(
             focusedTextColor = MaterialTheme.colorScheme.onSurface,
             unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
-            focusedBorderColor = MaterialTheme.colorScheme.primary,
-            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+            // The shared modifier owns the outline width and color. Keep M3's
+            // internal stroke transparent to avoid drawing a second border.
+            focusedBorderColor = Color.Transparent,
+            unfocusedBorderColor = Color.Transparent,
+            disabledBorderColor = Color.Transparent,
+            errorBorderColor = Color.Transparent,
             cursorColor = MaterialTheme.colorScheme.primary,
             focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
             unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+            disabledContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
         ),
         keyboardOptions = keyboardOptions,
     )
@@ -203,10 +205,11 @@ fun ExpressiveOutlinedTextField(
     textStyle: TextStyle = MaterialTheme.typography.bodyLarge,
 ) {
     val actualShape = alohaCornerShape(12.dp)
+    val outlineWidth = LocalMaterialOutlineWidth.current
     val styledModifier = modifier
         .then(if (LocalMaterialShadowButtons.current) Modifier.shadow(2.dp, actualShape) else Modifier)
         .then(
-            LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
+            outlineWidth.takeIf { it > 0f }?.let {
                 Modifier.border(it.dp, MaterialTheme.colorScheme.outlineVariant, actualShape)
             } ?: Modifier
         )
@@ -221,11 +224,16 @@ fun ExpressiveOutlinedTextField(
         colors = OutlinedTextFieldDefaults.colors(
             focusedTextColor = MaterialTheme.colorScheme.onSurface,
             unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
-            focusedBorderColor = MaterialTheme.colorScheme.primary,
-            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+            // The shared modifier owns the outline width and color. Keep M3's
+            // internal stroke transparent to avoid drawing a second border.
+            focusedBorderColor = Color.Transparent,
+            unfocusedBorderColor = Color.Transparent,
+            disabledBorderColor = Color.Transparent,
+            errorBorderColor = Color.Transparent,
             cursorColor = MaterialTheme.colorScheme.primary,
             focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
             unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+            disabledContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
         ),
     )
 }
