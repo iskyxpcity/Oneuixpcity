@@ -93,8 +93,10 @@ fun SendLogBottomSheet(onDismiss: () -> Unit, snackbarHostState: SnackbarHostSta
             }
             Spacer(Modifier.width(16.dp))
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                FilledTonalIconButton(
+                ExpressiveIconButton(
                     modifier = Modifier.size(64.dp),
+                    colors = IconButtonDefaults.filledTonalIconButtonColors(),
+                    shape = voyageCornerShape(12.dp),
                     onClick = {
                         haptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
                         scope.launch {
