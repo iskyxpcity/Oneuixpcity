@@ -1336,3 +1336,4 @@
 - 本阶段仍属全局统一进行中：继续逐项复核 Material 页面是否绕过共享组件、共享组件是否完整遵循 Aloha 颜色/形状/描边/阴影令牌。Miuix 分支保持独立，不合并 `main`，不修改版本号。
 - 补充全局顶栏调用点复核：在 `IconShapePresetPicker` 与 `ColorPaletteScreenMaterial` 也发现显式覆盖 `ExpressiveLargeTopAppBar` 颜色为 `surface` 的旧参数，现一并移除，统一继承共享 `expressiveTopAppBarColors()`。与首页、设置页、关于页采用同一策略；页面内容、返回动作、滚动行为和 Insets 不变。提交：`7899a25b3c115cebdc69fb79189a1d17fa73626c`、`f10488da2f82cfe91fe5b1058d787dd4eb5ac1a2`。
 - 顶栏复核目前覆盖首页、设置页、关于页、颜色主题页、图标形状详情页；所有已发现的页面级旧颜色覆盖均已清理。待最新代码批次完成 Actions 构建后，再继续检查其他 Material 控件族。
+- 编译修正记录：Actions Run `42456666497` 在 `SideNavigationRailMaterial.kt:113` 报错，原因是 Material3 `1.5.0-alpha28` 的 `WideNavigationRailItemDefaults` 不再使用单一 `selectedTextColor` 参数，而是按图标位置区分 `selectedTextColorTopIconPosition` 与 `selectedTextColorStartIconPosition`。已将两种布局状态都明确绑定到 `onSurface`，其余颜色令牌保持不变。修复提交：`cd13e6b34bed35a3d137cdd951232e72102275b9`；等待新 Actions 验证。
