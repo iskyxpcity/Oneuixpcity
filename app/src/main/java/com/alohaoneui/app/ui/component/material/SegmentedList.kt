@@ -106,7 +106,7 @@ val LocalListItemShapes = compositionLocalOf<ListItemShapes?> { null }
 
 
 /**
- * Shape geometry context for a segmented row. This lets custom Voyage paths
+ * Shape geometry context for a segmented row. This lets custom Aloha paths
  * animate their real corner parameters instead of relying on Material 3's
  * CornerBasedShape-only pressed-shape resolver.
  */
@@ -114,14 +114,14 @@ private data class SegmentedShapeConfig(val index: Int, val count: Int, val vert
 private val LocalSegmentedShapeConfig = compositionLocalOf<SegmentedShapeConfig?> { null }
 
 /**
- * Voyage's source G² continuity profile (decompiled p000/dan.java).
+ * Aloha's source G² continuity profile (decompiled p000/dan.java).
  *
  * The four profile values are, in source order: extended fraction, arc fraction,
  * Bezier curvature scale, and arc curvature scale. The profile is deliberately
- * kept separate from the Squircle smoothing parameter: Voyage uses this profile
+ * kept separate from the Squircle smoothing parameter: Aloha uses this profile
  * to construct a cubic/arc transition, not the b2t0 smoothing shortcut.
  */
-private data class VoyageG2Profile(
+private data class AlohaG2Profile(
     val extendedFraction: Double,
     val arcFraction: Double,
     val bezierCurvatureScale: Double,
@@ -202,11 +202,11 @@ private data class VoyageG2Profile(
      * for each adjacent half-extent, uses the pair minimum for the shared
      * corner profile, then scales the extended/arc/Bezier values independently.
      */
-    fun interpolateFromCapsule(progress: Double, sharedCornerProgress: Double = progress): VoyageG2Profile {
+    fun interpolateFromCapsule(progress: Double, sharedCornerProgress: Double = progress): AlohaG2Profile {
         val t = progress.coerceIn(0.0, 1.0)
         val shared = sharedCornerProgress.coerceIn(0.0, 1.0)
         fun mix(from: Double, to: Double, amount: Double) = from + (to - from) * amount
-        return VoyageG2Profile(
+        return AlohaG2Profile(
             extendedFraction = mix(capsule.extendedFraction, smooth.extendedFraction, shared) * t,
             // ban.m5206I() derives d65/d66/d67/d68 from the shared
             // minimum of the two adjacent axis-progress values, not from
@@ -237,13 +237,13 @@ private data class VoyageG2Profile(
     }
 
     companion object {
-        // dan.f104767lI and dan.f104768lO from Voyage.
-        val smooth = VoyageG2Profile(0.5286651, 0.5555555555555556, 1.0732051, 1.0732051)
-        val capsule = VoyageG2Profile(0.396498825, 0.0, 1.0, 1.0)
+        // dan.f104767lI and dan.f104768lO from Aloha.
+        val smooth = AlohaG2Profile(0.5286651, 0.5555555555555556, 1.0732051, 1.0732051)
+        val capsule = AlohaG2Profile(0.396498825, 0.0, 1.0, 1.0)
     }
 }
 
-private class VoyagePathShape(
+private class AlohaPathShape(
     private val style: Int,
     private val topStart: Dp,
     private val topEnd: Dp,
@@ -277,7 +277,7 @@ private class VoyagePathShape(
         }
         // Build outside the shared lock: complex Wavy outlines must not block
         // other shape lookups while the radius slider is being dragged.
-        val generated = createVoyageOutline(size, layoutDirection, density)
+        val generated = createAlohaOutline(size, layoutDirection, density)
         synchronized(outlineCache) {
             outlineCache[key]?.let { return it }
             outlineCache[key] = generated
@@ -293,12 +293,12 @@ private class VoyagePathShape(
         }
     }
 
-    private fun createVoyageOutline(size: Size, layoutDirection: LayoutDirection, density: Density): Outline {
+    private fun createAlohaOutline(size: Size, layoutDirection: LayoutDirection, density: Density): Outline {
         val ts = with(density) { topStart.toPx() }.coerceIn(0f, minOf(size.width, size.height) / 2f)
         val te = with(density) { topEnd.toPx() }.coerceIn(0f, minOf(size.width, size.height) / 2f)
         val be = with(density) { bottomEnd.toPx() }.coerceIn(0f, minOf(size.width, size.height) / 2f)
         val bs = with(density) { bottomStart.toPx() }.coerceIn(0f, minOf(size.width, size.height) / 2f)
-        // Voyage concave-arc (style 5) and notch (style 6) defaults were visually
+        // Aloha concave-arc (style 5) and notch (style 6) defaults were visually
         // too deep. Halve only these styles' effective geometry; the shared corner-scale
         // setting remains multiplicative and other shape styles keep their original values.
         val depthScale = if (style == 5 || style == 6) 0.5f else 1f
@@ -309,7 +309,7 @@ private class VoyagePathShape(
         val w = size.width
         val h = size.height
 
-        // Voyage ban.m5206I() delegates equal-radius shapes that touch a full
+        // Aloha ban.m5206I() delegates equal-radius shapes that touch a full
         // half-extent to m5208l(). Its square branch is a true circular outline,
         // not the generic four-cubic approximation used for ordinary G² corners.
         // Preserve that degenerate case before constructing the general path.
@@ -327,7 +327,7 @@ private class VoyagePathShape(
         val path = Path()
         when (style) {
             2 -> {
-                // Voyage Squircle is the smoothing-profile path in e7g0/b2t0,
+                // Aloha Squircle is the smoothing-profile path in e7g0/b2t0,
                 // not the G² Smooth corner family.
                 val smooth = 0.234f
                 path.moveTo(tl, 0f)
@@ -341,13 +341,13 @@ private class VoyagePathShape(
                 path.cubicTo(0f, tl * smooth, tl * smooth, 0f, tl, 0f)
             }
             3 -> {
-                // Voyage G² Smooth profile: use the control-point scale derived from
+                // Aloha G² Smooth profile: use the control-point scale derived from
                 // dan.m88494l() rather than reusing the Squircle smoothing=48 shortcut.
                 // The profile is source-defined (dan.f104767lI); its second control
                 // point supplies the tangent scale used at each radius-sized corner.
                 data class CornerInsets(val horizontal: Float, val vertical: Float)
 
-                val progress = VoyageG2Profile.smooth.cornerProgresses(w, h, tl, tr, br, bl)
+                val progress = AlohaG2Profile.smooth.cornerProgresses(w, h, tl, tr, br, bl)
                 val tlShared = minOf(progress[0], progress[1])
                 val trShared = minOf(progress[2], progress[3])
                 val brShared = minOf(progress[4], progress[5])
@@ -356,7 +356,7 @@ private class VoyagePathShape(
                 data class ProfileInsets(val horizontal: Float, val vertical: Float)
 
                 fun profileInsets(axisProgress: Double, cornerProgress: Double): ProfileInsets {
-                    val profile = VoyageG2Profile.smooth
+                    val profile = AlohaG2Profile.smooth
                         .interpolateFromCapsule(axisProgress, cornerProgress)
                     val cubic = profile.cubic()
                     // Use the solved Bezier controls, not p2/p3 (which are
@@ -502,13 +502,13 @@ private class VoyagePathShape(
 }
 
 @Composable
-fun voyageCornerShape(radius: androidx.compose.ui.unit.Dp): Shape {
+fun alohaCornerShape(radius: androidx.compose.ui.unit.Dp): Shape {
     val scaledRadius = radius * LocalMaterialCornerScale.current.coerceIn(0f, 2f)
     val style = LocalMaterialShapeStyle.current
     return when (style) {
         1 -> remember(style, scaledRadius) { CutCornerShape(scaledRadius) }
         2, 3, 4, 5, 6 -> remember(style, scaledRadius) {
-            VoyagePathShape(style, scaledRadius, scaledRadius, scaledRadius, scaledRadius)
+            AlohaPathShape(style, scaledRadius, scaledRadius, scaledRadius, scaledRadius)
         }
         else -> remember(style, scaledRadius) { RoundedCornerShape(scaledRadius) }
     }
@@ -530,12 +530,12 @@ fun alohaOneUISegmentedColors(): ListItemColors = ListItemDefaults.segmentedColo
 )
 
 /**
- * Direct port of Voyage's zee0.m147825O shape rule:
+ * Direct port of Aloha's zee0.m147825O shape rule:
  * 16dp outer / 4dp inner corners, animated with dampingRatio=0.4 and stiffness=200.
  * vertical=true joins rows top-to-bottom; false joins selection buttons left-to-right.
  */
 @Composable
-fun voyageSegmentedShape(index: Int, count: Int, vertical: Boolean = true, pressed: Boolean = false): Shape {
+fun alohaSegmentedShape(index: Int, count: Int, vertical: Boolean = true, pressed: Boolean = false): Shape {
     val single = count == 1 || index == -1
     val first = single || index == 0
     val last = single || index == count - 1
@@ -553,27 +553,27 @@ fun voyageSegmentedShape(index: Int, count: Int, vertical: Boolean = true, press
     val topStart by animateDpAsState(
         targetValue = (pressedRadius ?: if (first) 16.dp else 4.dp) * cornerScale,
         animationSpec = spring(dampingRatio = 0.45f, stiffness = 300f),
-        label = "voyageSegmentTopStart",
+        label = "alohaSegmentTopStart",
     )
     val topEnd by animateDpAsState(
         targetValue = (pressedRadius ?: if (if (vertical) first else last) 16.dp else 4.dp) * cornerScale,
         animationSpec = spring(dampingRatio = 0.45f, stiffness = 300f),
-        label = "voyageSegmentTopEnd",
+        label = "alohaSegmentTopEnd",
     )
     val bottomEnd by animateDpAsState(
         targetValue = (pressedRadius ?: if (last) 16.dp else 4.dp) * cornerScale,
         animationSpec = spring(dampingRatio = 0.45f, stiffness = 300f),
-        label = "voyageSegmentBottomEnd",
+        label = "alohaSegmentBottomEnd",
     )
     val bottomStart by animateDpAsState(
         targetValue = (pressedRadius ?: if (if (vertical) last else first) 16.dp else 4.dp) * cornerScale,
         animationSpec = spring(dampingRatio = 0.45f, stiffness = 300f),
-        label = "voyageSegmentBottomStart",
+        label = "alohaSegmentBottomStart",
     )
 
     return when (LocalMaterialShapeStyle.current) {
         1 -> CutCornerShape(topStart, topEnd, bottomEnd, bottomStart)
-        2, 3, 4, 5, 6 -> VoyagePathShape(LocalMaterialShapeStyle.current, topStart, topEnd, bottomEnd, bottomStart)
+        2, 3, 4, 5, 6 -> AlohaPathShape(LocalMaterialShapeStyle.current, topStart, topEnd, bottomEnd, bottomStart)
         else -> RoundedCornerShape(topStart, topEnd, bottomEnd, bottomStart)
     }
 }
@@ -583,8 +583,8 @@ private fun defaultSingleSegmentedShape(index: Int, count: Int): ListItemShapes 
     // Material 3 resolves shape independently for default, pressed and selected
     // states. Apply Aloha's live theme shape to all three slots; otherwise the
     // row silently falls back to Material 3 defaults as soon as it is pressed
-    // or selected, even though the normal state follows Voyage/Aloha settings.
-    val themeShape = voyageSegmentedShape(index, count, vertical = true)
+    // or selected, even though the normal state follows Aloha/Aloha settings.
+    val themeShape = alohaSegmentedShape(index, count, vertical = true)
     return ListItemDefaults.segmentedShapes(index, count).copy(
         shape = themeShape,
         pressedShape = themeShape,
@@ -710,7 +710,7 @@ private fun ListItemShapes.animatedAlohaShapes(
     config: SegmentedShapeConfig?,
     pressed: Boolean,
 ): Pair<ListItemShapes, Shape> {
-    val animatedShape = config?.let { voyageSegmentedShape(it.index, it.count, it.vertical, pressed) } ?: shape
+    val animatedShape = config?.let { alohaSegmentedShape(it.index, it.count, it.vertical, pressed) } ?: shape
     return copy(shape = animatedShape, pressedShape = animatedShape, selectedShape = animatedShape) to animatedShape
 }
 
@@ -936,7 +936,7 @@ fun SegmentedChoiceOptionsItem(
     selectedIndex: Int,
     onItemSelected: (Int) -> Unit,
 ) {
-    // Voyage k9t0.m108317Il / vfw0.m137946o renders a framed setting row,
+    // Aloha k9t0.m108317Il / vfw0.m137946o renders a framed setting row,
     // then opens the native choice surface. It does not render a permanent FlowRow of chips.
     SegmentedDropdownItem(
         icon = icon,
