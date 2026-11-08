@@ -106,6 +106,8 @@ import com.alohaoneui.app.ui.component.material.ExpressiveLargeTopAppBar
 import com.alohaoneui.app.ui.component.material.ExpressiveContentDialog
 import com.alohaoneui.app.ui.component.material.ExpressiveIconButton
 import com.alohaoneui.app.ui.component.material.ExpressiveOutlinedTextField
+import com.alohaoneui.app.ui.component.material.ExpressiveSurface
+import com.alohaoneui.app.ui.component.material.alohaCornerShape
 import com.alohaoneui.app.ui.component.material.ExpressiveScaffold
 import com.alohaoneui.app.ui.component.material.TonalCard
 import com.alohaoneui.app.ui.component.material.TopBarBackButton
@@ -689,7 +691,7 @@ private fun GlobalShortcutEntryCard(
                     leadingContent = {
                         Box(
                             modifier = Modifier.size(40.dp)
-                                .clip(RoundedCornerShape(13.2.dp))
+                                .clip(alohaCornerShape(13.2.dp))
                                 .background(iconChip),
                             contentAlignment = Alignment.Center,
                         ) {
@@ -1432,17 +1434,19 @@ private fun FloatingBallColorControl(
         items = listOf({
             OtherFunctionsThemeChildItem {
                 when (LocalUiMode.current) {
-                    UiMode.Material -> Column(
+                    UiMode.Material -> ExpressiveSurface(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(vertical = 8.dp)
-                            .graphicsLayer { alpha = if (enabled) 1f else 0.48f }
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(Color(argb))
-                            .clickable(enabled = enabled) { showPicker = true }
-                            .padding(14.dp),
+                            .graphicsLayer { alpha = if (enabled) 1f else 0.48f },
+                        shape = alohaCornerShape(16.dp),
+                        color = Color(argb),
+                        contentColor = labelColor,
+                        onClick = { if (enabled) showPicker = true },
                     ) {
-                        Text(colorLabel, color = labelColor, fontWeight = FontWeight.SemiBold)
+                        Column(Modifier.fillMaxWidth().padding(14.dp)) {
+                            Text(colorLabel, color = labelColor, fontWeight = FontWeight.SemiBold)
+                        }
                     }
                     UiMode.Miuix -> MiuixBasicComponent(
                         title = colorLabel,
@@ -1514,7 +1518,7 @@ private fun ShortcutColorPickerDialog(
         when (LocalUiMode.current) {
             UiMode.Material -> Text(
                 String.format("#%08X", selectedArgb),
-                modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp))
+                modifier = Modifier.fillMaxWidth().clip(alohaCornerShape(14.dp))
                     .background(selectedColor).padding(vertical = 14.dp, horizontal = 12.dp),
                 color = if (0.299 * selectedColor.red + 0.587 * selectedColor.green + 0.114 * selectedColor.blue > 0.55) Color.Black else Color.White,
                 fontWeight = FontWeight.SemiBold,
@@ -1864,7 +1868,10 @@ private fun ShortcutActionGrid(
     selectedAction: String,
     onSelect: (String) -> Unit,
 ) {
-    val chipShape = RoundedCornerShape(12.dp)
+    val chipShape: androidx.compose.ui.graphics.Shape = when (LocalUiMode.current) {
+        UiMode.Material -> alohaCornerShape(12.dp)
+        UiMode.Miuix -> RoundedCornerShape(12.dp)
+    }
     val unselectedContainer = when (LocalUiMode.current) {
         UiMode.Material -> MaterialTheme.colorScheme.surfaceContainerHighest
         UiMode.Miuix -> colorScheme.surfaceContainerHigh
@@ -1902,7 +1909,7 @@ private fun ShortcutActionGrid(
 private fun ShortcutActionChip(
     label: String,
     selected: Boolean,
-    shape: RoundedCornerShape,
+    shape: androidx.compose.ui.graphics.Shape,
     container: Color,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -2067,7 +2074,10 @@ private fun ShortcutAppPickerRow(
         UiMode.Material -> if (selected) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.78f) else MaterialTheme.colorScheme.onSurfaceVariant
         UiMode.Miuix -> if (selected) Color.White.copy(alpha = 0.78f) else colorScheme.onSurfaceVariantSummary
     }
-    val shape = RoundedCornerShape(12.dp)
+    val shape: androidx.compose.ui.graphics.Shape = when (LocalUiMode.current) {
+        UiMode.Material -> alohaCornerShape(12.dp)
+        UiMode.Miuix -> RoundedCornerShape(12.dp)
+    }
 
     Row(
         modifier = Modifier
@@ -2136,7 +2146,10 @@ private fun ShortcutAppPickerRow(
 
 @Composable
 private fun ShortcutAppIcon(app: ShortcutLauncherApp, accent: Color) {
-    val shape = RoundedCornerShape(11.dp)
+    val shape: androidx.compose.ui.graphics.Shape = when (LocalUiMode.current) {
+        UiMode.Material -> alohaCornerShape(11.dp)
+        UiMode.Miuix -> RoundedCornerShape(11.dp)
+    }
     val icon = app.icon
     if (icon != null) {
         Image(
