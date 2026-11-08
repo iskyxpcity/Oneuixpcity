@@ -9,6 +9,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
+import com.alohaoneui.app.ui.component.material.voyageCornerShape
 import androidx.core.view.WindowInsetsControllerCompat
 
 /**
@@ -44,9 +46,19 @@ fun MaterialAlohaOneUITheme(
         }
     }
 
+    // Feed the active Aloha shape style and corner scale into Material 3's
+    // native shape slots so unwrapped Material controls inherit the same theme.
+    val materialShapes = Shapes(
+        extraSmall = voyageCornerShape(4.dp),
+        small = voyageCornerShape(8.dp),
+        medium = voyageCornerShape(12.dp),
+        large = voyageCornerShape(16.dp),
+        extraLarge = voyageCornerShape(28.dp),
+    )
+
     MaterialTheme(
         colorScheme = animatedColorScheme,
-        shapes = Shapes(),
+        shapes = materialShapes,
         motionScheme = MotionScheme.expressive(),
         typography = Typography,
     ) {
