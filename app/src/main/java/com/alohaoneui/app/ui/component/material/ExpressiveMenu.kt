@@ -43,7 +43,10 @@ fun OffsetAnchoredExpressiveMenu(
             onDismissRequest = onDismissRequest,
         ) {
             DropdownMenuGroup(
-                shapes = MenuDefaults.groupShape(index = 0, count = 1),
+                shapes = MenuDefaults.groupShapes(
+                    shape = alohaCornerShape(20.dp),
+                    inactiveShape = alohaCornerShape(20.dp),
+                ),
                 modifier = Modifier.verticalScroll(rememberScrollState()),
                 shadowElevation = if (LocalMaterialShadowContainers.current) {
                     MenuDefaults.ShadowElevation
