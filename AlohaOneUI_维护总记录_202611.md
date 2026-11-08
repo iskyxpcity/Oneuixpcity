@@ -1351,3 +1351,11 @@
 - Artifact：`AlohaOneUI-Signed-Test-APK`，ID `13608456946`，大小 28,637,092 bytes；Artifact ZIP digest SHA-256：`3df3685e36145f3711206e5e7b0868212624c768f6478ad30765f4fea8ae8ad5`。Run URL：https://github.com/iskyxpcity/Oneuixpcity/actions/runs/42457511044。
 - 随后检查状态栏分类详情页的 Material 分支，发现 `StatusCategoryScreen.kt` 仍显式传入 Material3 surface 顶栏颜色，绕过共享 `ExpressiveLargeTopAppBar` 默认主题。现移除该颜色覆盖，让它继承 `expressiveTopAppBarColors()`；滚动行为、标题、返回按钮、重启菜单、Insets 与 Miuix 分支均保持不变。
 - 状态分类页修正源码提交：`d5ceedfa7e72f5f85a1701b64f68ae2b89c73df1`。此项尚待新 Actions 构建验收；Run `42457511044` 不包含该提交，不能将前一 Artifact 说成包含状态分类页修正。
+
+
+## 2026-11｜Material 更新弹窗与日志底部弹窗接入全局形状/容器主题
+
+- 检查发现 `UpdateDialogHost.kt` 的 Material 更新弹窗直接使用 Material3 `Surface`，主弹窗与内部图标/新版本标签还使用固定 `RoundedCornerShape`，绕过共享 ExpressiveSurface 的全局形状、描边和容器阴影规则。
+- 已将主弹窗和两个内部装饰容器切换为 `ExpressiveSurface`，形状分别由 `voyageCornerShape(28.dp/18.dp/8.dp)` 提供。主弹窗保留透明容器、渐变内容、4dp tonal elevation 和原 10dp 阴影强度；阴影现在受 `LocalMaterialShadowContainers` 控制，关闭时为 0dp。内部图标/标签容器保留原颜色并关闭额外阴影，其他内容与交互不变。
+- `SendLogBottomSheet.kt` 的 Material `ModalBottomSheet` 增加 `shape = voyageCornerShape(28.dp)`，让日志底部弹窗跟随当前全局形状样式；容器颜色、保存/分享操作、尺寸与回调保持不变。
+- 产品源码提交：更新弹窗 `383b2bd010cda2015a2f1c8ceffcdaf2a4787e09`；日志底部弹窗 `63f355226e55f9ecc723059374d33342d844b8b0`。本批尚待 Actions 构建验收；Miuix 对应分支、main 与版本号均未修改。
