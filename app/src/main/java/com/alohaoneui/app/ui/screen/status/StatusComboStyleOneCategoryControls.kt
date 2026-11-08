@@ -22,7 +22,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.MaterialTheme as Material3Theme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -55,6 +54,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.alohaoneui.app.ui.component.material.ExpressiveSurface
 import com.alohaoneui.app.R
 import com.alohaoneui.app.ui.viewmodel.AlohaOneUIToolsViewModel
 import com.alohaoneui.common.IgnoreUnknownKeysJson
@@ -76,7 +76,6 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.window.WindowDialog
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Surface
 import kotlin.math.roundToInt
 
 @Suppress("UNUSED_PARAMETER")
@@ -702,7 +701,7 @@ private fun StyleOneRoleColorDialog(
 
     when (LocalUiMode.current) {
         UiMode.Material -> Dialog(onDismissRequest = onDismiss) {
-            Surface(
+            ExpressiveSurface(
                 modifier = Modifier.fillMaxWidth().widthIn(max = 460.dp),
                 shape = RoundedCornerShape(24.dp),
             ) {
