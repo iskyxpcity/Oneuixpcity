@@ -1431,3 +1431,16 @@
 - V2 签名证书 SHA-256：`93bf61a6493c6b336383832eb41301bd8fe061f43566e7e384e3fdd9fc1c26a1`（与既有固定证书一致）。
 - Actions Artifact：ID `13609783948`；ZIP 28,637,307 bytes；ZIP SHA-256：`720268937949c8b44144a3693140ea57d568121cf2c6e872855338508c34636a`。
 - 后续继续审查 Material 控件是否绕过共享组件，重点检查下拉菜单组、Material 选择控件、按钮组及各页面调用点；不触碰 Miuix 视觉实现。
+
+
+## 2026-11｜Material 根形状完整接入、公共交互工具拆分与 Build #2647 验收
+
+- 完成当前应用 Kotlin 源码树 198 个文件的 `Voyage/voyage` 残留扫描；运行源码不再包含该上游名称。形状 API、轮廓类、滑块外观/轨道/拇指、分组形状、动画标签与注释均使用项目自有命名。历史维护记录仍保留当时真实来源的历史叙述，不代表当前代码或运行时依赖。
+- 将 `AlohaPathShape` 改为 `CornerBasedShape`，保留 CornerSize 的像素解析、屏幕密度对 Wavy 振幅/波长的影响及轮廓缓存键；`alohaCornerShape` / `alohaSegmentedShape` 返回 CornerBasedShape。MaterialTheme 根部五档 Shapes 现在统一调用同一工厂，所有 7 种主题形状样式都能进入原生 Material3 Shapes 槽，不再把 2–6 样式回退成普通圆角。
+- Material 模式已不再套用 `MiuixAlohaOneUITheme`，直接进入 `MaterialAlohaOneUITheme`；Miuix 根主题仅由 Miuix 模式调用。Material 组件继续使用 Material3 主题色、形状、阴影与描边入口。
+- 将通用 `InteractiveHighlight` 与 `inspectDragGestures` 从 Miuix 专属目录迁至 `ui/component/animation` 和 `ui/component/gesture`。Material `ExpressiveSwitch`、`FloatingBottomBar`、`LiquidToggleDampedDragAnimation` 与 Miuix `DampedDragAnimation` 均已改用公共实现。中间构建 Run `42462542969` 曾因漏改 `FloatingBottomBar.kt` 的旧导入失败；已根据编译日志修正，最新构建通过。
+- 最新提交：`c4628d45b4d3e96f6e87def493079c45243b1451`，分支 `test/switches-official-eight-20261103`。Actions Run `42462778802` 成功，Kotlin 编译、签名 APK 构建、包名/证书验证和 Artifact 保存全部通过。
+- Artifact：`AlohaOneUI-Signed-Test-APK`，ID `13610398264`，ZIP 大小 28,639,243 bytes，Artifact ZIP SHA-256 `63bc52c9d815009ebad6cf16135ccb855368ea59d6792d975b05ca6c4d2dd261`。APK：`AlohaOneUI_1.0.261025_BUILD_2647.apk`，29,637,718 bytes，SHA-256 `f714972881ea1e9239afe1a9b62ad3caa9e3671322556ece121fa8e088be668c`；包名 `com.alohaoneui.app`，versionName `1.0.261025`，versionCode `16`；V2 签名验证通过，证书 SHA-256 `93bf61a6493c6b336383832eb41301bd8fe061f43566e7e384e3fdd9fc1c26a1`，APK ZIP 完整性检查通过。
+- 说明：Material `ExpressiveSwitch` 仍是项目自己的 Material 开关控件，不是 Miuix Switch；液态玻璃绘制目前仍使用 Miuix blur 包的低层 Backdrop/Shader 原语。通用交互高亮与拖动手势已不再依赖 Miuix 专属组件目录。后续可继续检查是否需要把低层 blur API 也封装到项目自有 liquid 层。
+- 下一阶段继续逐项核对 Material 原生控件默认颜色、形状、阴影、描边与页面调用路径；不修改 Miuix 控件样式、不修改/合并 `main`、不改版本号。
+- Run：https://github.com/iskyxpcity/Oneuixpcity/actions/runs/42462778802
