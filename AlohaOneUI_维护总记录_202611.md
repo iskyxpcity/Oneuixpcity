@@ -1367,3 +1367,10 @@
 - Artifact：`AlohaOneUI-Signed-Test-APK`，ID `13609051088`，ZIP 大小 28,637,220 bytes，Artifact ZIP SHA-256：`85e9f787c86cdc354fe258e9d46b7454793b3ceef2b1e2b4a5b9f2ede6248930`。
 - APK：`AlohaOneUI_1.0.261025_BUILD_2589.apk`，大小 29,634,898 bytes；SHA-256：`cce2036acb83fc9218d08beaff8c44b43599fad9ca706b45d27ef2b314d7f09b`。包名 `com.alohaoneui.app`，versionName `1.0.261025`，versionCode `16`；V2 签名验证通过，证书 SHA-256：`93bf61a6493c6b336383832eb41301bd8fe061f43566e7e384e3fdd9fc1c26a1`；APK ZIP 完整性检查通过。
 - 本构建仍是测试分支阶段性 APK；不代表 Material 全局统一已全部完成，也未执行真机视觉验收。继续检查剩余 Material 页面和组件是否绕过共享颜色、形状、描边、阴影及控件入口。
+
+
+## 2026-11｜Material 主题根形状槽接入 Aloha 全局形状策略
+
+- 全局检查 `MaterialTheme.kt` 发现 Material 主题根仍使用原生 `Shapes()`，因此任何未显式传入 `voyageCornerShape` 的 Material3 控件仍回落到默认圆角形状，无法响应 Aloha 的形状风格与圆角缩放设置。
+- 已将 Material3 的 extraSmall/small/medium/large/extraLarge 五个标准形状槽统一绑定到 `voyageCornerShape(4/8/12/16/28.dp)`。由于 MaterialAlohaOneUITheme 位于 Theme.kt 的 LocalMaterialCornerScale / LocalMaterialShapeStyle 提供范围内，Material3 原生控件现在会随当前 Aloha 形状风格和缩放动态更新；已经显式使用自定义形状的组件保持原有覆盖优先级。
+- 保留颜色方案动画、MotionScheme、Typography、系统栏图标明暗状态与内容层级不变。源码提交：`190494fca579e0ed89fd8b2695953b87de315340`；等待本轮编译及签名 APK 验收。该改动仅在测试分支，不修改 Miuix 主题、main 或版本号。
