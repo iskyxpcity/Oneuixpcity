@@ -29,7 +29,6 @@ import androidx.compose.material.icons.outlined.Block
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Warning
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
@@ -48,6 +47,7 @@ import androidx.compose.ui.unit.dp
 import com.alohaoneui.app.BuildConfig
 import com.alohaoneui.app.R
 import com.alohaoneui.app.ui.component.WarningLevel
+import com.alohaoneui.app.ui.component.material.ExpressiveLargeTopAppBar
 import com.alohaoneui.app.ui.component.material.TonalCard
 import com.alohaoneui.app.ui.component.material.ExpressiveScaffold
 import com.alohaoneui.app.ui.component.rebootlistpopup.RebootListPopup
@@ -112,7 +112,7 @@ private fun UpdateCard(
 private fun TopBar(
     scrollBehavior: TopAppBarScrollBehavior? = null
 ) {
-    LargeFlexibleTopAppBar(
+    ExpressiveLargeTopAppBar(
         
         title = { Text(stringResource(R.string.app_name)) },
         actions = { RebootListPopup() },
