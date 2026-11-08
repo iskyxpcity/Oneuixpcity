@@ -239,6 +239,7 @@ fun ExpressiveSurface(
     contentColor: androidx.compose.ui.graphics.Color = androidx.compose.material3.contentColorFor(color),
     border: BorderStroke? = null,
     shadowElevation: androidx.compose.ui.unit.Dp? = null,
+    tonalElevation: androidx.compose.ui.unit.Dp = 0.dp,
     onClick: (() -> Unit)? = null,
     interactionSource: MutableInteractionSource? = null,
     content: @Composable () -> Unit,
@@ -252,13 +253,13 @@ fun ExpressiveSurface(
     if (onClick == null) {
         androidx.compose.material3.Surface(
             modifier = modifier, shape = actualShape, color = color, contentColor = contentColor,
-            tonalElevation = 0.dp, shadowElevation = actualElevation, border = actualBorder,
+            tonalElevation = tonalElevation, shadowElevation = actualElevation, border = actualBorder,
             content = content,
         )
     } else {
         androidx.compose.material3.Surface(
             onClick = onClick, modifier = modifier, shape = actualShape, color = color,
-            contentColor = contentColor, tonalElevation = 0.dp,
+            contentColor = contentColor, tonalElevation = tonalElevation,
             shadowElevation = actualElevation, border = actualBorder,
             interactionSource = interactionSource, content = content,
         )
