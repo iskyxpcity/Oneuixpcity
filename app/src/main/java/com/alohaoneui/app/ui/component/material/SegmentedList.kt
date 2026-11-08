@@ -116,7 +116,7 @@ private data class SegmentedShapeConfig(val index: Int, val count: Int, val vert
 private val LocalSegmentedShapeConfig = compositionLocalOf<SegmentedShapeConfig?> { null }
 
 /**
- * Aloha's source G² continuity profile (decompiled p000/dan.java).
+ * G² continuity profile used by the shared path renderer.
  *
  * The four profile values are, in source order: extended fraction, arc fraction,
  * Bezier curvature scale, and arc curvature scale. The profile is deliberately
@@ -138,7 +138,7 @@ private data class AlohaG2Profile(
     data class Cubic(val p0: Point, val p1: Point, val p2: Point, val p3: Point)
 
     /**
-     * Direct port of dan.m88494l() and fqw0.m95419o(): the returned cubic is
+     * The returned cubic is
      * the Bezier segment that joins the G² profile to its circular arc.
      */
     fun cubic(): Cubic {
@@ -184,7 +184,7 @@ private data class AlohaG2Profile(
     }
 
     /**
-     * ban.m5206I() computes eight independent width/height progress values:
+     * The corner solver computes eight independent width/height progress values:
      * ((halfExtent / cornerRadius) - 1) / smooth.extendedFraction, clamped
      * to [0, 1]. A zero radius is handled separately by the path builder.
      */
@@ -199,7 +199,7 @@ private data class AlohaG2Profile(
     }
 
     /**
-     * Direct parameter interpolation from ban.m5206I(). The source does not
+     * Parameter interpolation is performed independently for each corner. The renderer does not
      * interpolate a single profile per corner: it computes an aspect progress
      * for each adjacent half-extent, uses the pair minimum for the shared
      * corner profile, then scales the extended/arc/Bezier values independently.
@@ -239,7 +239,7 @@ private data class AlohaG2Profile(
     }
 
     companion object {
-        // dan.f104767lI and dan.f104768lO from Aloha.
+        // Constants for the Smooth G² and capsule profiles.
         val smooth = AlohaG2Profile(0.5286651, 0.5555555555555556, 1.0732051, 1.0732051)
         val capsule = AlohaG2Profile(0.396498825, 0.0, 1.0, 1.0)
     }
@@ -342,7 +342,7 @@ private class AlohaPathShape private constructor(
         val te = topEnd.coerceIn(0f, minOf(size.width, size.height) / 2f)
         val be = bottomEnd.coerceIn(0f, minOf(size.width, size.height) / 2f)
         val bs = bottomStart.coerceIn(0f, minOf(size.width, size.height) / 2f)
-        // Aloha concave-arc (style 5) and notch (style 6) defaults were visually
+        // Concave-arc (style 5) and notch (style 6) defaults were visually
         // too deep. Halve only these styles' effective geometry; the shared corner-scale
         // setting remains multiplicative and other shape styles keep their original values.
         val depthScale = if (style == 5 || style == 6) 0.5f else 1f
@@ -353,7 +353,7 @@ private class AlohaPathShape private constructor(
         val w = size.width
         val h = size.height
 
-        // Aloha ban.m5206I() delegates equal-radius shapes that touch a full
+        // The shape generator delegates equal-radius shapes that touch a full
         // half-extent to m5208l(). Its square branch is a true circular outline,
         // not the generic four-cubic approximation used for ordinary G² corners.
         // Preserve that degenerate case before constructing the general path.
@@ -371,7 +371,7 @@ private class AlohaPathShape private constructor(
         val path = Path()
         when (style) {
             2 -> {
-                // Aloha Squircle is the smoothing-profile path in e7g0/b2t0,
+                // Squircle uses the smoothing-profile path,
                 // not the G² Smooth corner family.
                 val smooth = 0.234f
                 path.moveTo(tl, 0f)
@@ -575,7 +575,7 @@ fun alohaOneUISegmentedColors(): ListItemColors = ListItemDefaults.segmentedColo
 )
 
 /**
- * Direct port of Aloha's zee0.m147825O shape rule:
+ * Segmented-row corner rule:
  * 16dp outer / 4dp inner corners, animated with dampingRatio=0.4 and stiffness=200.
  * vertical=true joins rows top-to-bottom; false joins selection buttons left-to-right.
  */
@@ -629,7 +629,7 @@ private fun defaultSingleSegmentedShape(index: Int, count: Int): ListItemShapes 
     // Material 3 resolves shape independently for default, pressed and selected
     // states. Apply Aloha's live theme shape to all three slots; otherwise the
     // row silently falls back to Material 3 defaults as soon as it is pressed
-    // or selected, even though the normal state follows Aloha/Aloha settings.
+    // or selected, even though the normal state follows the active theme shape settings.
     val themeShape = alohaSegmentedShape(index, count, vertical = true)
     return ListItemDefaults.segmentedShapes(index, count).copy(
         shape = themeShape,
@@ -982,7 +982,7 @@ fun SegmentedChoiceOptionsItem(
     selectedIndex: Int,
     onItemSelected: (Int) -> Unit,
 ) {
-    // Aloha k9t0.m108317Il / vfw0.m137946o renders a framed setting row,
+    // The framed setting row uses a shared container shape and interaction treatment,
     // then opens the native choice surface. It does not render a permanent FlowRow of chips.
     SegmentedDropdownItem(
         icon = icon,
