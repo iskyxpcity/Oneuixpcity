@@ -33,19 +33,30 @@ fun SelectItem(
 
     when (LocalUiMode.current) {
         UiMode.Material -> {
-            Box(
-                modifier = (if (grouped) modifier else modifier.padding(horizontal = 16.dp, vertical = 4.dp)).alpha(if (enabled) 1f else 0.45f),
-            ) {
-                SegmentedDropdownItem(
-                    enabled = enabled,
-                    icon = icon,
-                    colors = alohaOneUISegmentedColors(),
-                    title = title,
-                    summary = summary,
-                    items = entries,
-                    selectedIndex = safeIndex,
-                    onItemSelected = onSelectedIndexChange,
-                )
+            @Composable
+            fun Content(contentModifier: Modifier) {
+                Box(
+                    modifier = contentModifier.alpha(if (enabled) 1f else 0.45f),
+                ) {
+                    SegmentedDropdownItem(
+                        enabled = enabled,
+                        icon = icon,
+                        colors = alohaOneUISegmentedColors(),
+                        title = title,
+                        summary = summary,
+                        items = entries,
+                        selectedIndex = safeIndex,
+                        onItemSelected = onSelectedIndexChange,
+                    )
+                }
+            }
+
+            if (grouped) {
+                AlohaOneUIChildOptionSurface(modifier = modifier) {
+                    Content(Modifier)
+                }
+            } else {
+                Content(modifier.padding(horizontal = 16.dp, vertical = 4.dp))
             }
         }
 
