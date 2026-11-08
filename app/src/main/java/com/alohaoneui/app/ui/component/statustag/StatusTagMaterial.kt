@@ -9,7 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.alohaoneui.app.ui.component.material.voyageCornerShape
+import com.alohaoneui.app.ui.component.material.alohaCornerShape
 
 @Composable
 fun StatusTagMaterial(
@@ -18,7 +18,7 @@ fun StatusTagMaterial(
     backgroundColor: Color,
     contentColor: Color
 ) {
-    val tagShape = voyageCornerShape(4.dp)
+    val tagShape = alohaCornerShape(4.dp)
     Box(
         modifier = modifier
             .padding(end = 4.dp)
