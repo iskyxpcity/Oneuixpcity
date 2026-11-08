@@ -67,7 +67,6 @@ import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.ToggleButtonDefaults
@@ -103,6 +102,7 @@ import androidx.compose.ui.unit.dp
 import com.materialkolor.PaletteStyle
 import com.materialkolor.dynamiccolor.ColorSpec
 import com.materialkolor.rememberDynamicColorScheme
+import com.alohaoneui.app.ui.component.material.ExpressiveSurface
 import com.alohaoneui.app.R
 import com.alohaoneui.app.ui.component.bottombar.useNavigationRail
 import com.alohaoneui.app.ui.component.material.ExpressiveToggleButton
@@ -438,7 +438,7 @@ fun ColorPaletteScreenMaterial(
                                         color = MaterialTheme.colorScheme.outline,
                                     )
                                 }
-                                Surface(
+                                ExpressiveSurface(
                                     onClick = {
                                         pageScaleInput = ((sliderValue * 100).toInt()).toString()
                                         showPageScaleValueDialog = true
@@ -577,7 +577,7 @@ fun ColorPaletteScreenMaterial(
                                 steps = 39,
                                 onValueChangeFinished = { actions.onSetMaterialCornerScale(cornerScale) },
                                 titleTrailingContent = {
-                                    Surface(
+                                    ExpressiveSurface(
                                         onClick = {
                                             cornerScaleInput = String.format(java.util.Locale.ROOT, "%.2f", cornerScale)
                                             showCornerValueDialog = true
@@ -749,7 +749,7 @@ fun ColorPaletteScreenMaterial(
                                 steps = 14,
                                 onValueChangeFinished = { actions.onSetMaterialOutlineWidth(outlineWidth) },
                                 titleTrailingContent = {
-                                    Surface(
+                                    ExpressiveSurface(
                                         onClick = {
                                             outlineWidthInput = String.format(java.util.Locale.ROOT, "%.1f", outlineWidth)
                                             showOutlineValueDialog = true
@@ -927,7 +927,7 @@ private fun ThemePreviewCard(
     )
 
     Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
-        Surface(
+        ExpressiveSurface(
             modifier = Modifier
                 .fillMaxWidth(0.4f)
                 .aspectRatio(screenRatio),
@@ -991,7 +991,7 @@ private fun ThemePreviewCard(
 
             if (useRail) {
                 Row {
-                    Surface(
+                    ExpressiveSurface(
                         color = colorScheme.surfaceContainer,
                         modifier = Modifier.fillMaxHeight()
                     ) {
@@ -1012,7 +1012,7 @@ private fun ThemePreviewCard(
                     content()
 
                     // bottom bar
-                    Surface(
+                    ExpressiveSurface(
                         color = colorScheme.surfaceContainer,
                         modifier = Modifier.fillMaxWidth()
                     ) {
@@ -1078,7 +1078,7 @@ private fun ColorButtonMaterial(
         colorSpec = colorSpec,
     )
 
-    Surface(
+    ExpressiveSurface(
         onClick = {
             haptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
             onClick()
