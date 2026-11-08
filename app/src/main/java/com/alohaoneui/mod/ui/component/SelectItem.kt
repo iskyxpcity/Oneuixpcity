@@ -52,9 +52,8 @@ fun SelectItem(
             }
 
             if (grouped) {
-                AlohaOneUIChildOptionSurface(modifier = modifier) {
-                    Content(Modifier)
-                }
+                // Match SettingsMaterial: keep the selector as a row in its parent group.
+                Content(modifier)
             } else {
                 Content(modifier.padding(horizontal = 16.dp, vertical = 4.dp))
             }
