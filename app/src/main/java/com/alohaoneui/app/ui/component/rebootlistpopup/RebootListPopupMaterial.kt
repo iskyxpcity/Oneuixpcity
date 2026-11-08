@@ -15,11 +15,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.alohaoneui.app.R
 import com.alohaoneui.app.ui.component.material.ExpressiveIconButton
 import com.alohaoneui.app.ui.component.material.alohaCornerShape
+import com.alohaoneui.app.ui.component.material.alohaSegmentedShape
 import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
 import com.alohaoneui.app.ui.theme.LocalMaterialShadowContainers
 
@@ -28,9 +30,11 @@ fun RebootDropdownItems(onItemClick: (String) -> Unit) {
     val options = getRebootListOption()
     options.forEachIndexed { index, option ->
         DropdownMenuItem(
+            modifier = Modifier.clip(
+                alohaSegmentedShape(index = index, count = options.size, vertical = true)
+            ),
             onClick = { onItemClick(option.reason) },
             text = { Text(stringResource(option.labelRes)) },
-            shapes = MenuDefaults.itemShape(index = index, count = options.size),
         )
     }
 }
