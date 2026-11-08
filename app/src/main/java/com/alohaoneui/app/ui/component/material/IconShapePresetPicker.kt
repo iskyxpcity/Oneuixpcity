@@ -191,7 +191,7 @@ internal fun IconShapePresetDetailScreen(
     }
 }
 
-/** Temporary geometry only; this catalog is not yet a source-faithful replacement for Aloha's 51 shape entries. */
+/** Temporary geometry only; the final 51-entry icon shape preset catalog is still pending. */
 internal fun iconShapeForStyle(style: Int, seed: Int = 0): Shape? {
     if (style == ICON_SHAPE_NONE) return null
     val presetIndex = if (style == ICON_SHAPE_RANDOM) {
