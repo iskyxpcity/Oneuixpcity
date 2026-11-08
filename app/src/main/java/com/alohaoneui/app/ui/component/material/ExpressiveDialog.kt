@@ -38,7 +38,7 @@ fun ExpressiveDialog(
     tonalElevation: Dp = AlertDialogDefaults.TonalElevation,
     properties: DialogProperties = DialogProperties(),
  ) {
-    val dialogShape = shape ?: voyageCornerShape(28.dp)
+    val dialogShape = shape ?: alohaCornerShape(28.dp)
     val dialogModifier = modifier
         .then(
             if (LocalMaterialShadowContainers.current) Modifier.shadow(6.dp, dialogShape)
@@ -106,7 +106,7 @@ fun ExpressiveContentDialog(
     contentModifier: Modifier = Modifier.padding(24.dp),
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    val dialogShape = shape ?: voyageCornerShape(28.dp)
+    val dialogShape = shape ?: alohaCornerShape(28.dp)
     val dialogModifier = modifier
     BasicAlertDialog(
         onDismissRequest = onDismissRequest,
