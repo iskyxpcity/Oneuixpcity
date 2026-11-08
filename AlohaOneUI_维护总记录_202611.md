@@ -1325,3 +1325,5 @@
 - ExpressiveLargeTopAppBar 默认颜色入口进一步统一：此前共享控件虽提供 `expressiveTopAppBarColors()`（surfaceContainer），但 `ExpressiveLargeTopAppBar` 默认参数仍回落到 Material3 的 `TopAppBarDefaults.topAppBarColors()`。现将默认值切换为 Aloha 主题色入口，调用方仍可显式覆盖 colors；不改变标题、导航图标、actions、Insets 或滚动行为。提交 `aa0cbd8d4a1dbc7a08f8b77f5436719c55655412`，待 CI 验证。
 
 - ExpressiveLargeTopAppBar 默认主题色修改已验收：Run 42453302079 成功，构建 HEAD `24bf8127c23e48a038d964ab10009237c2d98d6b`，覆盖代码提交 `aa0cbd8d4a1dbc7a08f8b77f5436719c55655412`。Kotlin 编译、签名 APK 构建及包名/签名校验通过。Artifact `AlohaOneUI-Signed-Test-APK` ID `13605799444`，28,637,612 bytes，ZIP SHA-256 `2f39eb0e679bb7c528f3d967fe8fab50389390466fe7fe99fef3eaff0e9176a7`。Run：https://github.com/iskyxpcity/Oneuixpcity/actions/runs/42453302079。
+
+- Material 自定义内容弹窗继续收敛到共享框体：`ExpressiveSurface` 新增可选 `tonalElevation` 参数，默认 0dp，原有调用行为不变；`ExpressiveContentDialog` 不再直接调用 Material3 `Surface`，改由 `ExpressiveSurface` 统一管理形状、全局描边、阴影与 Material tonal elevation。弹窗内容布局、28dp 默认形状、容器配色和交互保持不变。源码提交：`ca23fa62c8778085d7403a20b8b2ecd58dd12a7a`、`6db7eeb0fd1a8cc9a554a1f9c7ea605e99e2cfc3`、`853125f9ef847ec2ac91b81b7e12391bd69fd7f0`；等待当前最新 HEAD 构建验证。
