@@ -64,9 +64,9 @@ import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
 
 /** Shared style inputs for both the settings-row and generic Material sliders.
  * Values in this adapter preserve the current app mapping until each original
- * Voyage branch is fully matched to its decompiled draw path.
+ * Aloha branch is fully matched to its decompiled draw path.
  */
-internal data class VoyageSliderAppearance(
+internal data class AlohaSliderAppearance(
     val style: Int,
     val activeColor: Color,
     val thumbColor: Color,
@@ -77,10 +77,10 @@ internal data class VoyageSliderAppearance(
 )
 
 @Composable
-internal fun voyageSliderAppearance(requestedStyle: Int): VoyageSliderAppearance {
+internal fun alohaSliderAppearance(requestedStyle: Int): AlohaSliderAppearance {
     val style = requestedStyle.coerceIn(0, 3)
     val scheme = MaterialTheme.colorScheme
-    // Match the four Voyage preview families rather than applying one generic
+    // Match the four Aloha preview families rather than applying one generic
     // Material rail to all of them. Track progress, inactive rail and thumb are
     // independent roles so theme changes propagate without making them identical.
     val active = when (style) {
@@ -114,7 +114,7 @@ internal fun voyageSliderAppearance(requestedStyle: Int): VoyageSliderAppearance
         2 -> 6.dp                            // Material 2 fine rail
         else -> 24.dp                        // HyperOS thick rail
     }
-    return VoyageSliderAppearance(
+    return AlohaSliderAppearance(
         style = style,
         activeColor = active,
         thumbColor = thumb,
@@ -129,19 +129,19 @@ internal fun voyageSliderAppearance(requestedStyle: Int): VoyageSliderAppearance
  * separate from the active/inactive rail so the rail is never painted in the
  * same color as the thumb. HyperOS wraps the 30dp track itself. */
 @Composable
-internal fun voyageSliderContainerModifier(
+internal fun alohaSliderContainerModifier(
     style: Int,
     containerColor: Color,
 ): Modifier {
     // Fancy has no outer container: its rail itself is the complete visual surface.
     if (style == 1) return Modifier
-    val containerShape = voyageCornerShape(20.dp)
+    val containerShape = alohaCornerShape(20.dp)
     val containerShadow = if (LocalMaterialShadowSliders.current) {
         Modifier.shadow(2.dp, containerShape, clip = false)
     } else Modifier
     return Modifier
         .then(containerShadow)
-        .background(containerColor, voyageCornerShape(20.dp))
+        .background(containerColor, alohaCornerShape(20.dp))
         .padding(
             horizontal = when (style) { 0 -> 10.dp; 2 -> 10.dp; else -> 6.dp },
             vertical = when (style) { 0 -> 6.dp; 2 -> 6.dp; else -> 4.dp },
@@ -161,7 +161,7 @@ fun SegmentedSliderItem(
     onValueChangeFinished: (() -> Unit)? = null,
     titleTrailingContent: (@Composable () -> Unit)? = null,
 ) {
-    val appearance = voyageSliderAppearance(LocalMaterialSliderStyle.current)
+    val appearance = alohaSliderAppearance(LocalMaterialSliderStyle.current)
     val style = appearance.style
     val active = appearance.activeColor
     val thumb = appearance.thumbColor
@@ -229,7 +229,7 @@ fun SegmentedSliderItem(
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .then(voyageSliderContainerModifier(
+                        .then(alohaSliderContainerModifier(
                             style = style,
                             containerColor = appearance.containerColor,
                         )),
@@ -240,7 +240,7 @@ fun SegmentedSliderItem(
                             ((thumbState.value - valueRange.start) /
                                 (valueRange.endInclusive - valueRange.start)).coerceIn(0f, 1f)
                         } else 0f
-                        VoyageSliderThumb(
+                        AlohaSliderThumb(
                             style = style,
                             size = thumbSize,
                             activeColor = thumb,
@@ -252,7 +252,7 @@ fun SegmentedSliderItem(
                         )
                     },
                     track = { state ->
-                        VoyageSliderTrack(
+                        AlohaSliderTrack(
                             style = style,
                             state = state,
                             range = valueRange,
@@ -273,7 +273,7 @@ fun SegmentedSliderItem(
 }
 
 @Composable
-internal fun VoyageSliderThumb(
+internal fun AlohaSliderThumb(
     style: Int,
     size: DpSize,
     activeColor: Color,
@@ -286,22 +286,22 @@ internal fun VoyageSliderThumb(
     // HyperOS uses the thick track itself as its handle surface.
     if (style == 3) return
 
-    val thumbShape = voyageCornerShape(minOf(size.width, size.height) / 2f)
+    val thumbShape = alohaCornerShape(minOf(size.width, size.height) / 2f)
     when (style) {
         0 -> {
-            // Voyage Material You preview uses a slim vertical position marker,
+            // Aloha Material You preview uses a slim vertical position marker,
             // not the stock circular M3 thumb. The track and tick marks remain
             // visible on both sides of this marker.
             Box(
                 Modifier
                     .size(width = size.width, height = size.height)
-                    .clip(voyageCornerShape(1.dp))
+                    .clip(alohaCornerShape(1.dp))
                     .background(MaterialTheme.colorScheme.primary),
             )
         }
         1 -> {
             // Fancy's thumb has a soft mint halo surrounding the theme-primary
-            // shaped core. The selected shape still follows Voyage's shared
+            // shaped core. The selected shape still follows Aloha's shared
             // shape setting and rotates in the source direction while dragging.
             Box(
                 // Keep the existing slider slot dimensions so the rail geometry
@@ -333,7 +333,7 @@ internal fun VoyageSliderThumb(
                 Modifier
                     .size(width = size.width, height = size.height)
                     // Material 2's small wavy circular thumb uses the same global
-                    // Voyage shape style as the rest of the UI. Rotate the outline
+                    // Aloha shape style as the rest of the UI. Rotate the outline
                     // with value progress so the wave reads as a rolling thumb.
                     .then(Modifier.rotate(-720f * valueFraction))
                     .clip(thumbShape)
@@ -344,7 +344,7 @@ internal fun VoyageSliderThumb(
 }
 
 @Composable
-internal fun VoyageSliderTrack(
+internal fun AlohaSliderTrack(
     style: Int,
     state: SliderState,
     range: ClosedFloatingPointRange<Float>,
@@ -372,8 +372,8 @@ internal fun VoyageSliderTrack(
     val fraction = if (range.endInclusive > range.start) {
         ((state.value - range.start) / (range.endInclusive - range.start)).coerceIn(0f, 1f)
     } else 0f
-    val trackShape = voyageCornerShape(height / 2f)
-    val fancyProgressShape = if (style == 1) voyageCornerShape(18.dp) else trackShape
+    val trackShape = alohaCornerShape(height / 2f)
+    val fancyProgressShape = if (style == 1) alohaCornerShape(18.dp) else trackShape
     val fancyExtension = if (style == 1) thumbWidth / 2f + 10.dp else 0.dp
     val trackModifier = Modifier
         .then(
@@ -412,7 +412,7 @@ internal fun VoyageSliderTrack(
         when (style) {
             0 -> {
                 // Material You: two separately rounded rail segments stop on
-                // either side of the slim vertical value marker, as in Voyage.
+                // either side of the slim vertical value marker, as in Aloha.
                 val markerGap = 4.dp.toPx()
                 val leftEnd = (activeWidth - markerGap / 2f).coerceAtLeast(0f)
                 val rightStart = (activeWidth + markerGap / 2f).coerceAtMost(size.width)
@@ -442,7 +442,7 @@ internal fun VoyageSliderTrack(
                     layoutDirection = layoutDirection,
                     density = this,
                 )
-                drawVoyageOutline(fullRailOutline, scheme.surfaceContainerHighest)
+                drawAlohaOutline(fullRailOutline, scheme.surfaceContainerHighest)
                 val progressWidth = (
                     baseTrackWidth * fraction + thumbWidth.toPx() / 2f +
                         8.dp.toPx() + extension
@@ -457,7 +457,7 @@ internal fun VoyageSliderTrack(
                     withTransform({
                         translate(top = (h - progressHeight) / 2f)
                     }) {
-                        drawVoyageOutline(progressOutline, activeColor)
+                        drawAlohaOutline(progressOutline, activeColor)
                     }
                 }
             }
@@ -533,9 +533,9 @@ internal fun VoyageSliderTrack(
 /**
  * Draw a Compose Shape outline using the Canvas primitives available in the
  * project's pinned Compose version. Rounded outlines are converted to a Path
- * so asymmetric corners and custom Voyage paths are preserved.
+ * so asymmetric corners and custom Aloha paths are preserved.
  */
-internal fun DrawScope.drawVoyageOutline(
+internal fun DrawScope.drawAlohaOutline(
     outline: Outline,
     color: Color,
     style: DrawStyle = Fill,
