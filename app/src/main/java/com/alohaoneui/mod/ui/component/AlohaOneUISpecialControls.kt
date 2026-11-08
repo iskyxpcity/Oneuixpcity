@@ -53,46 +53,18 @@ fun AlohaOneUIPPreferenceGroup(
 ) {
     when (LocalUiMode.current) {
         UiMode.Material -> {
-            if (LocalAlohaOneUIGroupedPreference.current) {
-                // Nested functional groups remain distinct child surfaces.
-                // This is important on detail pages that contain multiple
-                // independently titled/expandable option groups.
-                TonalCard(
-                    modifier = modifier.padding(horizontal = 8.dp, vertical = 6.dp),
-                ) {
-                    CompositionLocalProvider(
-                        LocalAlohaOneUIGroupedPreference provides true,
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(vertical = 4.dp),
-                            verticalArrangement = Arrangement.spacedBy(4.dp),
-                            content = content,
-                        )
-                    }
-                }
-            } else {
-                val baseShapes = ListItemDefaults.segmentedShapes(0, 1)
-                val flatShapes = baseShapes.copy(
-                    shape = RoundedCornerShape(0.dp),
-                    selectedShape = RoundedCornerShape(0.dp),
-                    pressedShape = RoundedCornerShape(0.dp),
-                    focusedShape = RoundedCornerShape(0.dp),
-                    hoveredShape = RoundedCornerShape(0.dp),
-                    draggedShape = RoundedCornerShape(0.dp),
-                )
-                TonalCard(
+            // Match SettingsMaterial: every option is its own themed segmented
+            // surface, while the group itself is spacing only (never another card).
+            val itemShapes = ListItemDefaults.segmentedShapes(0, 1)
+            CompositionLocalProvider(
+                LocalAlohaOneUIGroupedPreference provides true,
+                LocalListItemShapes provides itemShapes,
+            ) {
+                Column(
                     modifier = modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                ) {
-                    CompositionLocalProvider(
-                        LocalAlohaOneUIGroupedPreference provides true,
-                        LocalListItemShapes provides flatShapes,
-                    ) {
-                        Column(
-                            verticalArrangement = Arrangement.spacedBy(2.dp),
-                            content = content,
-                        )
-                    }
-                }
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    content = content,
+                )
             }
         }
 
@@ -116,7 +88,21 @@ fun AlohaOneUIDetailGroup(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     when (LocalUiMode.current) {
-        UiMode.Material -> AlohaOneUIPPreferenceGroup(modifier = modifier, content = content)
+        UiMode.Material -> {
+            // PackagePane is a page container, not a preference card. Its rows
+            // use the same single-item shape and 4dp rhythm as SettingsMaterial.
+            val itemShapes = ListItemDefaults.segmentedShapes(0, 1)
+            CompositionLocalProvider(
+                LocalAlohaOneUIGroupedPreference provides true,
+                LocalListItemShapes provides itemShapes,
+            ) {
+                Column(
+                    modifier = modifier,
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    content = content,
+                )
+            }
+        }
         UiMode.Miuix -> Column(modifier = modifier, content = content)
     }
 }
@@ -128,19 +114,10 @@ fun AlohaOneUIChildOptionSurface(
     content: @Composable () -> Unit,
 ) {
     when (LocalUiMode.current) {
-        UiMode.Material -> TonalCard(
-            modifier = modifier
-                .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 6.dp),
-            containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp),
+        UiMode.Material -> Box(
+            modifier = modifier.fillMaxWidth(),
         ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 4.dp, vertical = 2.dp),
-            ) {
-                content()
-            }
+            content()
         }
 
         UiMode.Miuix -> Box(modifier = modifier) {
@@ -156,9 +133,7 @@ fun AlohaOneUIChildVisibility(
     content: @Composable () -> Unit,
 ) {
     AnimatedVisibility(visible = visible) {
-        AlohaOneUIChildOptionSurface {
-            content()
-        }
+        content()
     }
 }
 
@@ -310,11 +285,7 @@ fun AlohaOneUIInlineTextField(
                     singleLine = singleLine,
                 )
             }
-            if (grouped) {
-                AlohaOneUIChildOptionSurface(modifier = modifier) { Content(Modifier) }
-            } else {
-                Content(modifier)
-            }
+            Content(modifier)
         }
 
         UiMode.Miuix -> {
