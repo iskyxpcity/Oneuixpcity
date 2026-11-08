@@ -31,8 +31,8 @@ import com.alohaoneui.app.ui.UiMode
 import androidx.compose.material3.Slider as MaterialSlider
 import androidx.compose.material3.rememberSliderState
 import androidx.compose.ui.unit.dp
-import com.alohaoneui.app.ui.component.material.VoyageSliderThumb
-import com.alohaoneui.app.ui.component.material.VoyageSliderTrack
+import com.alohaoneui.app.ui.component.material.AlohaSliderThumb
+import com.alohaoneui.app.ui.component.material.AlohaSliderTrack
 import com.alohaoneui.app.ui.theme.LocalMaterialSliderStyle
 import com.alohaoneui.app.ui.theme.LocalMaterialShadowSliders
 import androidx.compose.ui.graphics.Color
@@ -105,7 +105,7 @@ fun AlohaOneUISlider(
     }
     val effectiveSteps = if (stepSize != null && stepSize > 0f) 0 else steps
 
-    val materialAppearance = com.alohaoneui.app.ui.component.material.voyageSliderAppearance(
+    val materialAppearance = com.alohaoneui.app.ui.component.material.alohaSliderAppearance(
         LocalMaterialSliderStyle.current,
     )
     val materialSliderStyle = materialAppearance.style
@@ -133,7 +133,7 @@ fun AlohaOneUISlider(
             modifier = modifier
                 .fillMaxWidth()
                 .then(
-                    com.alohaoneui.app.ui.component.material.voyageSliderContainerModifier(
+                    com.alohaoneui.app.ui.component.material.alohaSliderContainerModifier(
                         style = materialSliderStyle,
                         containerColor = materialAppearance.containerColor,
                     )
@@ -145,7 +145,7 @@ fun AlohaOneUISlider(
                     ((thumbState.value - valueRange.start) /
                         (valueRange.endInclusive - valueRange.start)).coerceIn(0f, 1f)
                 } else 0f
-                VoyageSliderThumb(
+                AlohaSliderThumb(
                     style = materialSliderStyle,
                     size = materialThumbSize,
                     activeColor = materialThumbColor,
@@ -156,7 +156,7 @@ fun AlohaOneUISlider(
                 )
             },
             track = { state ->
-                VoyageSliderTrack(
+                AlohaSliderTrack(
                     style = materialSliderStyle,
                     state = state,
                     range = valueRange,
