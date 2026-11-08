@@ -1359,3 +1359,11 @@
 - 已将主弹窗和两个内部装饰容器切换为 `ExpressiveSurface`，形状分别由 `voyageCornerShape(28.dp/18.dp/8.dp)` 提供。主弹窗保留透明容器、渐变内容、4dp tonal elevation 和原 10dp 阴影强度；阴影现在受 `LocalMaterialShadowContainers` 控制，关闭时为 0dp。内部图标/标签容器保留原颜色并关闭额外阴影，其他内容与交互不变。
 - `SendLogBottomSheet.kt` 的 Material `ModalBottomSheet` 增加 `shape = voyageCornerShape(28.dp)`，让日志底部弹窗跟随当前全局形状样式；容器颜色、保存/分享操作、尺寸与回调保持不变。
 - 产品源码提交：更新弹窗 `383b2bd010cda2015a2f1c8ceffcdaf2a4787e09`；日志底部弹窗 `63f355226e55f9ecc723059374d33342d844b8b0`。本批尚待 Actions 构建验收；Miuix 对应分支、main 与版本号均未修改。
+
+
+## Build #2589｜Material 弹窗与底部弹窗主题统一验收
+
+- Actions Run `42458437534` 成功，head SHA `237517201bebac5ec11ca6d127a09135f2d3dcd9`，覆盖更新弹窗 `ExpressiveSurface` 改造与日志导出 `ModalBottomSheet` 形状接入。源码验证、Kotlin 编译、Owner 签名 APK 构建、包名/证书校验与 Artifact 上传均通过。
+- Artifact：`AlohaOneUI-Signed-Test-APK`，ID `13609051088`，ZIP 大小 28,637,220 bytes，Artifact ZIP SHA-256：`85e9f787c86cdc354fe258e9d46b7454793b3ceef2b1e2b4a5b9f2ede6248930`。
+- APK：`AlohaOneUI_1.0.261025_BUILD_2589.apk`，大小 29,634,898 bytes；SHA-256：`cce2036acb83fc9218d08beaff8c44b43599fad9ca706b45d27ef2b314d7f09b`。包名 `com.alohaoneui.app`，versionName `1.0.261025`，versionCode `16`；V2 签名验证通过，证书 SHA-256：`93bf61a6493c6b336383832eb41301bd8fe061f43566e7e384e3fdd9fc1c26a1`；APK ZIP 完整性检查通过。
+- 本构建仍是测试分支阶段性 APK；不代表 Material 全局统一已全部完成，也未执行真机视觉验收。继续检查剩余 Material 页面和组件是否绕过共享颜色、形状、描边、阴影及控件入口。
