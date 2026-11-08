@@ -2,9 +2,7 @@ package com.alohaoneui.app.ui.component.dialog
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.LoadingIndicator
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
@@ -16,6 +14,8 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.alohaoneui.app.ui.component.markdown.MarkdownContent
 import com.alohaoneui.app.ui.component.material.ExpressiveDialog
+import com.alohaoneui.app.ui.component.material.ExpressiveSurface
+import com.alohaoneui.app.ui.component.material.voyageCornerShape
 import com.alohaoneui.app.ui.component.material.ExpressiveTextButton
 
 @Composable
@@ -25,8 +25,8 @@ fun LoadingDialogMaterial(showDialog: MutableState<Boolean>) {
             onDismissRequest = {},
             properties = DialogProperties(dismissOnClickOutside = false, dismissOnBackPress = false)
         ) {
-            Surface(
-                modifier = Modifier.size(100.dp), shape = RoundedCornerShape(8.dp)
+            ExpressiveSurface(
+                modifier = Modifier.size(100.dp), shape = voyageCornerShape(16.dp)
             ) {
                 Box(
                     contentAlignment = Alignment.Center,
