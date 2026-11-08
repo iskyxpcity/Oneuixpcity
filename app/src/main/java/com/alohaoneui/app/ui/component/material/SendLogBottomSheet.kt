@@ -80,7 +80,7 @@ fun SendLogBottomSheet(onDismiss: () -> Unit, snackbarHostState: SnackbarHostSta
                     modifier = Modifier.size(64.dp),
                     colors = IconButtonDefaults.filledTonalIconButtonColors(),
                     shape = voyageCornerShape(12.dp),
-                    onClick = {                    onClick = {
+                    onClick = {
                         haptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
                         scope.launch {
                             reportToExport = buildAlohaOneUIDiagnosticReportForExport(context)
