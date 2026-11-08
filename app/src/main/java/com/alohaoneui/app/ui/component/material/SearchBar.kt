@@ -183,7 +183,7 @@ fun SearchAppBar(
         Column(
             modifier = Modifier.fillMaxWidth()
         ) {
-            val topBarShape = voyageCornerShape(16.dp)
+            val topBarShape = alohaCornerShape(16.dp)
             val topBarModifier = Modifier
                 .then(
                     if (LocalMaterialShadowTopBars.current) {
