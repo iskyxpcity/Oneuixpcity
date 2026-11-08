@@ -1479,3 +1479,15 @@
 - 已改为 `ExpressiveOutlinedTextField` 与 `ExpressiveTextButton`；URL 字段显式保留 Material3 原有 bodyLarge 左对齐文字样式，避免采用共享输入控件的数字输入默认居中标题样式。Miuix 下载弹窗仍使用原 Miuix TextField/TextButton，不改其外观与逻辑。HTTPS URL 校验、确认/取消回调、键盘 URI 类型、占位文本均保持不变。
 - Build #2678 验收结果：Run `42472365348` 成功；Kotlin 编译、Owner 签名 APK 构建、包名/固定证书检查、APK ZIP 完整性与 Artifact 上传全部通过。APK：`AlohaOneUI_1.0.261025_BUILD_2678.apk`；包名 `com.alohaoneui.app`，versionName `1.0.261025`，versionCode `16`；固定证书 SHA-256：`93bf61a6493c6b336383832eb41301bd8fe061f43566e7e384e3fdd9fc1c26a1`。Artifact ID：`13613937884`，ZIP 大小 28,643,606 bytes，SHA-256：`4511b2568bf5f8526eed95c1464ca54636231c06c270467daa5f344a71afb2ab`。未做真机视觉验收。
 - 继续扩展 Material 主题组件全局扫描，尤其检查通用弹窗、下载/导入/导出对话框、输入框、按钮、列表容器是否仍直接调用 Material3 默认控件。保持 Miuix 分支、`main` 和版本号不变。
+
+
+## 2026-11-08：主导航「功能」详情卡统一 Material 间距与阴影
+
+- 产品源码提交：`f75f37de1619729befb73e3f13879f084495f255`，仅提交到测试分支 `test/switches-official-eight-20261103`，未修改 `main`。
+- 根因：主导航「功能」详情页面实际由 `AlohaOneUIOriginalCategoryScreen` 调用各个 `DetailPane...` 作为统一内容树；这些详情页通过 `AlohaOneUIPPreferenceGroup` / `AlohaOneUIDetailGroup` 建立卡片分组。Material 分支此前只对外层 Column 使用固定 16dp 水平、4dp 垂直 padding 和裁切，没有接入项目统一的 `TonalCard`，因此容器阴影开关、统一卡片容器形状/描边和通用卡片表面都未生效。
+- 修复：在 `AlohaOneUISpecialControls.kt` 将 Material 非嵌套分组容器替换为共享 `TonalCard`，统一外边距为水平 16dp、垂直 8dp；卡片阴影、全局描边、主题框体形状和表面色由 `TonalCard` 按现有 Material CompositionLocal 设置统一管理。嵌套分组仍保持原有无额外卡片的分段结构，行间距保持 2dp；Miuix 分支未改动。
+- 此修复集中落在所有详情页共用的分组组件上，覆盖使用该分组组件的功能详情卡，不需要逐个修改每个 DetailPane 的业务状态和事件逻辑。
+- Build #2680：Actions Run `42476118321`，结论 `success`；HEAD `f75f37de1619729befb73e3f13879f084495f255`。Artifact ID `13614998501`，Artifact ZIP SHA-256：`7a593fb1cd49442139b9ecc17c46f2634c841dabfc8fa7a3498bcfe1a017d8ff`。
+- APK：`AlohaOneUI_1.0.261025_BUILD_2680.apk`，大小 `29,640,550` bytes；SHA-256：`0d3da1c7bd0b9f24a200c546425c1c75d9205f0f3bb7a48774d0bf84de3e31b8`。包名 `com.alohaoneui.app`，versionName `1.0.261025`，versionCode `16`；APK ZIP 完整性检查通过，V2 签名验证通过，证书 SHA-256：`93bf61a6493c6b336383832eb41301bd8fe061f43566e7e384e3fdd9fc1c26a1`。
+- APK Artifact 下载：`https://github.com/iskyxpcity/Oneuixpcity/actions/runs/42476118321/artifacts/13614998501`。
+- 后续仍需逐类复核未经过 `AlohaOneUIPPreferenceGroup` / `AlohaOneUIDetailGroup` 的独立预览、对话框、子选项表面与特殊控件；本次不把这些独立区域宣称为已全部统一。
