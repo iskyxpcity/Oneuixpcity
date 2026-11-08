@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
@@ -28,6 +27,7 @@ import androidx.lifecycle.compose.dropUnlessResumed
 import com.alohaoneui.app.R
 import com.alohaoneui.app.ui.LocalUiMode
 import com.alohaoneui.app.ui.UiMode
+import com.alohaoneui.app.ui.component.material.ExpressiveLargeTopAppBar
 import com.alohaoneui.app.ui.component.material.SegmentedColumn
 import com.alohaoneui.app.ui.component.material.ExpressiveScaffold
 import com.alohaoneui.app.ui.component.material.SegmentedListItem
@@ -65,7 +65,7 @@ private fun DisclaimerMaterial(onBack: () -> Unit) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
     ExpressiveScaffold(
         topBar = {
-            LargeFlexibleTopAppBar(
+            ExpressiveLargeTopAppBar(
                 title = { Text(stringResource(R.string.disclaimer_title)) },
                 navigationIcon = { TopBarBackButton(onClick = onBack) },
                 colors = TopAppBarDefaults.topAppBarColors(
