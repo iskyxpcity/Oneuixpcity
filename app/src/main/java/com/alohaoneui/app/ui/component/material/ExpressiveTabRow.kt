@@ -44,7 +44,7 @@ fun ExpressiveTabRow(
         tabs.forEachIndexed { index, label ->
             val selected = safeIndex == index
             val interactionSource = remember { MutableInteractionSource() }
-            val tabShape = voyageCornerShape(50.dp)
+            val tabShape = alohaCornerShape(50.dp)
             Box(
                 modifier = Modifier
                     .fillMaxHeight()
