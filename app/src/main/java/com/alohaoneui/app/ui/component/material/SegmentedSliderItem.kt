@@ -1,6 +1,7 @@
 package com.alohaoneui.app.ui.component.material
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.border
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.background
 import androidx.compose.ui.draw.clip
@@ -139,9 +140,14 @@ internal fun alohaSliderContainerModifier(
     val containerShadow = if (LocalMaterialShadowSliders.current) {
         Modifier.shadow(2.dp, containerShape, clip = false)
     } else Modifier
+    val outlineWidth = LocalMaterialOutlineWidth.current
+    val outlineModifier = outlineWidth.takeIf { it > 0f }?.let {
+        Modifier.border(it.dp, MaterialTheme.colorScheme.outlineVariant, containerShape)
+    } ?: Modifier
     return Modifier
         .then(containerShadow)
-        .background(containerColor, alohaCornerShape(20.dp))
+        .background(containerColor, containerShape)
+        .then(outlineModifier)
         .padding(
             horizontal = when (style) { 0 -> 10.dp; 2 -> 10.dp; else -> 6.dp },
             vertical = when (style) { 0 -> 6.dp; 2 -> 6.dp; else -> 4.dp },
@@ -443,6 +449,27 @@ internal fun AlohaSliderTrack(
                     density = this,
                 )
                 drawAlohaOutline(fullRailOutline, scheme.surfaceContainerHighest)
+                val outlineStrokeWidth = LocalMaterialOutlineWidth.current.dp.toPx()
+                if (outlineStrokeWidth > 0f) {
+                    val inset = outlineStrokeWidth / 2f
+                    val insetOutline = trackShape.createOutline(
+                        size = Size(
+                            (size.width - outlineStrokeWidth).coerceAtLeast(0f),
+                            (h - outlineStrokeWidth).coerceAtLeast(0f),
+                        ),
+                        layoutDirection = layoutDirection,
+                        density = this,
+                    )
+                    withTransform({
+                        translate(left = inset, top = inset)
+                    }) {
+                        drawAlohaOutline(
+                            insetOutline,
+                            scheme.outlineVariant,
+                            Stroke(width = outlineStrokeWidth),
+                        )
+                    }
+                }
                 val progressWidth = (
                     baseTrackWidth * fraction + thumbWidth.toPx() / 2f +
                         8.dp.toPx() + extension
