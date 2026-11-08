@@ -16,15 +16,20 @@ fun DetailPaneGalaxyStore(
     onEvent: (GalaxyStoreEvent) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    PackagePane(modifier) {
-        SwitchItem(
-            icon = ImageVector.vectorResource(id = R.drawable.ad_off),
-            title = stringResource(id = R.string.alohaoneui_blockGalaxyStoreAds_title),
-            summary = stringResource(id = R.string.alohaoneui_blockGalaxyStoreAds_summary),
-            checked = uiState.blockGalaxyStoreAds,
-            onCheckedChange = { onEvent(GalaxyStoreEvent.BlockGalaxyStoreAds(it)) }
-        )
-    }
+    PackagePane(
+        modifier = modifier,
+        content = buildList {
+            add {
+                SwitchItem(
+                            icon = ImageVector.vectorResource(id = R.drawable.ad_off),
+                            title = stringResource(id = R.string.alohaoneui_blockGalaxyStoreAds_title),
+                            summary = stringResource(id = R.string.alohaoneui_blockGalaxyStoreAds_summary),
+                            checked = uiState.blockGalaxyStoreAds,
+                            onCheckedChange = { onEvent(GalaxyStoreEvent.BlockGalaxyStoreAds(it)) }
+                        )
+            }
+        }
+    )
 }
 
 sealed interface GalaxyStoreEvent {
