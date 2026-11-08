@@ -165,10 +165,6 @@ fun ColorPaletteScreenMaterial(
                 
                 navigationIcon = { TopBarBackButton(onClick = actions.onBack) },
                 title = { Text(stringResource(R.string.settings_theme)) },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    scrolledContainerColor = MaterialTheme.colorScheme.surface
-                ),
                 windowInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
                 scrollBehavior = scrollBehavior
             )
