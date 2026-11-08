@@ -4,7 +4,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.LoadingIndicator
-import com.alohaoneui.app.ui.component.material.ExpressiveSurface
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
@@ -25,7 +25,7 @@ fun LoadingDialogMaterial(showDialog: MutableState<Boolean>) {
             onDismissRequest = {},
             properties = DialogProperties(dismissOnClickOutside = false, dismissOnBackPress = false)
         ) {
-            ExpressiveSurface(
+            Surface(
                 modifier = Modifier.size(100.dp), shape = RoundedCornerShape(8.dp)
             ) {
                 Box(

@@ -1273,3 +1273,12 @@
 - \u672c\u8f6e\u4ee3\u7801\u63d0\u4ea4\uff1a`9f649e7`\uff08SearchAppBar \u9876\u680f\u5165\u53e3\uff09\u3001`c4187e7`\uff08Surface \u9634\u5f71\u504f\u597d\u4fee\u6b63\uff09\u3001`d51df7c`/`1834020`/`6ac8b3a`\uff08\u56fe\u6807\u5f62\u72b6\u9876\u680f\u4e0e\u65e5\u5fd7\u6309\u94ae\u8fc1\u79fb\u53ca\u56de\u8c03\u4fee\u6b63\uff09\u3002\u6700\u7ec8\u6709\u6548\u4ee3\u7801 HEAD \u4e3a `6ac8b3a44c74feeede561300303786ca21bbe736`\u3002
 - Actions Run `42434075641` \u5bf9\u6700\u7ec8\u4ee3\u7801 HEAD \u6784\u5efa\u6210\u529f\uff0c\u7f16\u8bd1\u3001\u7b7e\u540d APK \u6784\u5efa\u3001\u5305\u540d/\u7b7e\u540d\u6821\u9a8c\u5747\u901a\u8fc7\u3002Artifact `AlohaOneUI-Signed-Test-APK` ID `13599405274`\uff0c\u5927\u5c0f 28,634,722 bytes\uff1bArtifact ZIP digest SHA-256\uff1a`a3f799c57e4eee31343b6128861ec3d8edbb58d50d4dab3d94e2d3621007b8bc`\u3002
 - \u4ecd\u9700\u771f\u673a\u9a8c\u8bc1\u641c\u7d22\u680f\u9876\u680f\u5916\u89c2\u3001\u56fe\u6807\u5f62\u72b6\u8be6\u60c5\u9875\u6eda\u52a8\u9876\u680f\u3001\u65e5\u5fd7\u4fdd\u5b58/\u5206\u4eab\u6309\u94ae\u5916\u89c2\u4e0e\u4ea4\u4e92\uff1b\u672a\u5728\u6b64\u8f6e\u58f0\u79f0\u771f\u673a\u9a8c\u6536\u3002\u7ee7\u7eed\u4ec5\u6d4b\u8bd5\u5206\u652f\uff0c\u4e0d\u5408\u5e76 `main`\uff0c\u4e0d\u66f4\u6539\u7248\u672c\u53f7\u3002
+
+## 2026-11｜Material / Miuix 公共组件层继续复核
+
+- `DialogMaterial.kt` 的 Material 加载弹窗内部仍直接使用原生 Material3 `Surface`，已替换为 `ExpressiveSurface`。保留原有 100dp 尺寸和 8dp 圆角，容器现在遵循 Aloha 全局容器阴影、边框和形状主题设置。
+- 继续复核 BottomBarMaterial、SideNavigationRailMaterial、ConfigTransferPopupMaterial、RebootListPopupMaterial、StatusTagMaterial、ExpressiveMenu、SnackBarHost，以及共享 SwitchItem、SelectItem、AlohaOneUISpecialControls、AlohaOneUISlider 等实现。
+- 已确认 `SwitchItem`、`SelectItem`、`AlohaOneUISpecialControls` 中的 Miuix `Card`、`BasicComponent`、Miuix Switch / TextField 均位于 `UiMode.Miuix` 分支；Material 分支走 Aloha `SegmentedListItem`、`ExpressiveSwitch`、`ExpressiveOutlinedTextField`、`ExpressiveButton` 等封装，未发现主题交叉调用，不作无意义改动。
+- `BottomBarMaterial` / `SideNavigationRailMaterial` 使用 Material3 专用导航布局原语；`ConfigTransferPopupMaterial` / `RebootListPopupMaterial` 使用 Material3 菜单布局原语；这些属于各自 Aloha Material 组件内部的结构实现，并非页面直接绕过主题控件。Miuix 对应文件保持独立。
+- 维护记录统一改为按年月命名：`AlohaOneUI_维护总记录_202611.md`。旧的长日期文件名 `AlohaOneUI_维护总记录_2611060426.md` 在本次提交中移除；后续记录持续写入年月文件，不再创建带日时分的长文件名。
+- 本轮新增代码提交：`0fafcca`（Material Loading Dialog 使用 ExpressiveSurface）。接下来继续复核主题组件内部实现与其余共享控件，保持仅在测试分支推进，未经确认不合并 main、不修改版本号。
