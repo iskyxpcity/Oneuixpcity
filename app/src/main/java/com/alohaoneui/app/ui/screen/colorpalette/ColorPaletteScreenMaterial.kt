@@ -176,6 +176,7 @@ fun ColorPaletteScreenMaterial(
 
         Column(
             modifier = Modifier
+                .fillMaxSize()
                 .padding(paddingValues)
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
                 .verticalScroll(rememberScrollState()),
