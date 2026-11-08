@@ -534,7 +534,7 @@ fun ColorPaletteScreenMaterial(
                     }
                 )
 
-                // Aloha SHAPE group: the slider remains a row in the source-style group.
+                // Shape group: the slider remains a row in the source-style group.
                 SegmentedColumn(
                     modifier = Modifier.padding(top = 4.dp),
                     title = stringResource(R.string.theme_group_shape),
@@ -687,7 +687,7 @@ fun ColorPaletteScreenMaterial(
                     )
                 )
 
-                // Aloha COMPONENTS group: outline width is another source-style slider row.
+                // Components group: outline width is another source-style slider row.
                 SegmentedColumn(
                     modifier = Modifier.padding(top = 4.dp),
                     title = stringResource(R.string.theme_group_components),
@@ -843,7 +843,7 @@ fun ColorPaletteScreenMaterial(
                     )
                 )
 
-                // Aloha SHADOWS group exposes six independent component switches.
+                // Shadows group exposes six independent component switches.
                 SegmentedColumn(
                     modifier = Modifier.padding(top = 4.dp),
                     title = stringResource(R.string.theme_group_shadows),
