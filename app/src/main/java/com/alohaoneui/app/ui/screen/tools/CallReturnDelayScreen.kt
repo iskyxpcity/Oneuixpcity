@@ -35,6 +35,7 @@ import com.alohaoneui.app.ui.viewmodel.AlohaOneUIToolsViewModel
 import com.alohaoneui.mod.ui.component.LocalAlohaOneUIGroupedPreference
 import com.alohaoneui.mod.ui.component.AlohaOneUISlider
 import com.alohaoneui.mod.ui.component.SwitchItem
+import com.alohaoneui.app.ui.component.material.ExpressiveLargeTopAppBar
 import com.alohaoneui.app.ui.component.material.SegmentedColumn
 import com.alohaoneui.app.ui.component.material.ExpressiveScaffold
 import com.alohaoneui.app.ui.component.material.TopBarBackButton
@@ -159,7 +160,7 @@ private fun CallReturnDelayMaterial(
     val scroll = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
     ExpressiveScaffold(
         topBar = {
-            LargeFlexibleTopAppBar(
+            ExpressiveLargeTopAppBar(
                 navigationIcon = {
                     TopBarBackButton(onClick = onBack)
                 },

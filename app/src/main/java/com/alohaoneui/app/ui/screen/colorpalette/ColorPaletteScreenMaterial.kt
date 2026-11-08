@@ -65,7 +65,6 @@ import androidx.compose.material.icons.rounded.ViewCarousel
 import androidx.compose.material.icons.rounded.WaterDrop
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
@@ -102,6 +101,7 @@ import androidx.compose.ui.unit.dp
 import com.materialkolor.PaletteStyle
 import com.materialkolor.dynamiccolor.ColorSpec
 import com.materialkolor.rememberDynamicColorScheme
+import com.alohaoneui.app.ui.component.material.ExpressiveLargeTopAppBar
 import com.alohaoneui.app.ui.component.material.ExpressiveSurface
 import com.alohaoneui.app.R
 import com.alohaoneui.app.ui.component.bottombar.useNavigationRail
@@ -161,7 +161,7 @@ fun ColorPaletteScreenMaterial(
 
     ExpressiveScaffold(
         topBar = {
-            LargeFlexibleTopAppBar(
+            ExpressiveLargeTopAppBar(
                 
                 navigationIcon = { TopBarBackButton(onClick = actions.onBack) },
                 title = { Text(stringResource(R.string.settings_theme)) },
