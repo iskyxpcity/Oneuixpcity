@@ -25,6 +25,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.WideNavigationRail
 import androidx.compose.material3.WideNavigationRailDefaults
 import androidx.compose.material3.WideNavigationRailItem
+import androidx.compose.material3.WideNavigationRailItemDefaults
 import androidx.compose.material3.WideNavigationRailValue
 import androidx.compose.material3.rememberWideNavigationRailState
 import androidx.compose.runtime.Composable
@@ -107,6 +108,13 @@ fun SideNavigationRailMaterial(modifier: Modifier = Modifier) {
             WideNavigationRailItem(
                 railExpanded = expanded,
                 selected = selected,
+                colors = WideNavigationRailItemDefaults.colors().copy(
+                    selectedIconColor = MaterialTheme.colorScheme.secondary,
+                    selectedTextColor = MaterialTheme.colorScheme.onSurface,
+                    selectedIndicatorColor = MaterialTheme.colorScheme.secondaryContainer,
+                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                ),
                 onClick = {
                     if (!selected) mainState.animateToPage(index)
                 },
