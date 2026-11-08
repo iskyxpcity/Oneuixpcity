@@ -93,6 +93,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalDensity
 import com.alohaoneui.app.ui.theme.LocalMaterialCornerScale
 import com.alohaoneui.app.ui.theme.LocalMaterialShapeStyle
 import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
@@ -246,6 +247,7 @@ private data class AlohaG2Profile(
 
 private class AlohaPathShape private constructor(
     private val style: Int,
+    private val densityScale: Float,
     topStart: CornerSize,
     topEnd: CornerSize,
     bottomEnd: CornerSize,
@@ -253,12 +255,14 @@ private class AlohaPathShape private constructor(
 ) : CornerBasedShape(topStart, topEnd, bottomEnd, bottomStart) {
     constructor(
         style: Int,
+        densityScale: Float,
         topStart: Dp,
         topEnd: Dp,
         bottomEnd: Dp,
         bottomStart: Dp,
     ) : this(
         style,
+        densityScale,
         CornerSize(topStart),
         CornerSize(topEnd),
         CornerSize(bottomEnd),
@@ -270,10 +274,11 @@ private class AlohaPathShape private constructor(
         topEnd: CornerSize,
         bottomEnd: CornerSize,
         bottomStart: CornerSize,
-    ): CornerBasedShape = AlohaPathShape(style, topStart, topEnd, bottomEnd, bottomStart)
+    ): CornerBasedShape = AlohaPathShape(style, densityScale, topStart, topEnd, bottomEnd, bottomStart)
 
     private data class OutlineKey(
         val style: Int,
+        val densityScale: Float,
         val width: Float,
         val height: Float,
         val direction: LayoutDirection,
@@ -297,7 +302,7 @@ private class AlohaPathShape private constructor(
         // CornerBasedShape resolves each CornerSize to pixels before calling this
         // method, so the exact pixel radii are also the complete cache identity.
         val key = OutlineKey(
-            style, size.width, size.height, layoutDirection,
+            style, densityScale, size.width, size.height, layoutDirection,
             topStart, topEnd, bottomEnd, bottomStart,
         )
 
@@ -307,7 +312,7 @@ private class AlohaPathShape private constructor(
         // Build outside the shared lock: complex Wavy outlines must not block
         // other shape lookups while the radius slider is being dragged.
         val generated = createAlohaOutline(
-            size, layoutDirection, topStart, topEnd, bottomEnd, bottomStart,
+            size, layoutDirection, topStart, topEnd, bottomEnd, bottomStart, densityScale,
         )
         synchronized(outlineCache) {
             outlineCache[key]?.let { return it }
@@ -331,6 +336,7 @@ private class AlohaPathShape private constructor(
         topEnd: Float,
         bottomEnd: Float,
         bottomStart: Float,
+        densityScale: Float,
     ): Outline {
         val ts = topStart.coerceIn(0f, minOf(size.width, size.height) / 2f)
         val te = topEnd.coerceIn(0f, minOf(size.width, size.height) / 2f)
@@ -447,10 +453,10 @@ private class AlohaPathShape private constructor(
                     path.addRoundRect(androidx.compose.ui.geometry.RoundRect(0f, 0f, w, h))
                 } else {
                     val amplitude = minOf(
-                        with(density) { 0.8.dp.toPx() },
+                        0.8f * densityScale,
                         minDimension * 0.035f
                     )
-                    val halfWaveLength = with(density) { 8.dp.toPx() }.coerceAtLeast(1f)
+                    val halfWaveLength = (8f * densityScale).coerceAtLeast(1f)
 
                     fun waveEdge(
                         startX: Float, startY: Float,
@@ -543,10 +549,11 @@ private class AlohaPathShape private constructor(
 fun alohaCornerShape(radius: androidx.compose.ui.unit.Dp): CornerBasedShape {
     val scaledRadius = radius * LocalMaterialCornerScale.current.coerceIn(0f, 2f)
     val style = LocalMaterialShapeStyle.current
+    val densityScale = LocalDensity.current.density
     return when (style) {
         1 -> remember(style, scaledRadius) { CutCornerShape(scaledRadius) }
-        2, 3, 4, 5, 6 -> remember(style, scaledRadius) {
-            AlohaPathShape(style, scaledRadius, scaledRadius, scaledRadius, scaledRadius)
+        2, 3, 4, 5, 6 -> remember(style, scaledRadius, densityScale) {
+            AlohaPathShape(style, densityScale, scaledRadius, scaledRadius, scaledRadius, scaledRadius)
         }
         else -> remember(style, scaledRadius) { RoundedCornerShape(scaledRadius) }
     }
@@ -580,6 +587,7 @@ fun alohaSegmentedShape(index: Int, count: Int, vertical: Boolean = true, presse
     // The setting exposes a 0.0..2.0 scale. Preserve the full range so values
     // above 1.0 enlarge corner geometry instead of silently behaving like 1.0.
     val cornerScale = LocalMaterialCornerScale.current.coerceIn(0f, 2f)
+    val densityScale = LocalDensity.current.density
     // Outer items morph into the middle item's 4dp geometry. Middle items
     // contract to the requested 8dp pressed radius. Both targets remain linked to the live theme scale.
     val pressedRadius = when {
@@ -611,7 +619,7 @@ fun alohaSegmentedShape(index: Int, count: Int, vertical: Boolean = true, presse
 
     return when (LocalMaterialShapeStyle.current) {
         1 -> CutCornerShape(topStart, topEnd, bottomEnd, bottomStart)
-        2, 3, 4, 5, 6 -> AlohaPathShape(LocalMaterialShapeStyle.current, topStart, topEnd, bottomEnd, bottomStart)
+        2, 3, 4, 5, 6 -> AlohaPathShape(LocalMaterialShapeStyle.current, densityScale, topStart, topEnd, bottomEnd, bottomStart)
         else -> RoundedCornerShape(topStart, topEnd, bottomEnd, bottomStart)
     }
 }
