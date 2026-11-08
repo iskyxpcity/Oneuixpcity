@@ -67,6 +67,7 @@ import com.alohaoneui.app.ui.component.material.ExpressiveConfirmDialog
 import com.alohaoneui.app.ui.component.material.ExpressiveContentDialog
 import com.alohaoneui.app.ui.component.material.alohaCornerShape
 import com.alohaoneui.app.ui.component.material.ExpressiveToggleButton
+import com.alohaoneui.app.ui.component.material.alohaCornerShape
 import com.alohaoneui.mod.ui.component.SwitchItem
 import com.alohaoneui.mod.ui.component.SelectItem
 import com.alohaoneui.app.ui.LocalUiMode
@@ -737,6 +738,10 @@ private fun StyleOneColorPalette(
     }
     val alpha = AndroidColor.alpha(colorArgb)
 
+    val colorPreviewShape = when (LocalUiMode.current) {
+        UiMode.Material -> alohaCornerShape(8.dp)
+        UiMode.Miuix -> RoundedCornerShape(8.dp)
+    }
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -745,9 +750,9 @@ private fun StyleOneColorPalette(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(24.dp)
-                .clip(RoundedCornerShape(8.dp))
+                .clip(colorPreviewShape)
                 .background(Color(colorArgb))
-                .border(1.dp, Color(0x55000000), RoundedCornerShape(8.dp)),
+                .border(1.dp, Color(0x55000000), colorPreviewShape),
         )
         StyleOneSaturationValuePicker(
             colorArgb = colorArgb,
