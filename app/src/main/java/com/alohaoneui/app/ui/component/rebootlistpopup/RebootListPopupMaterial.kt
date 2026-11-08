@@ -7,8 +7,6 @@ import androidx.compose.material3.DropdownMenuGroup
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.DropdownMenuPopup
 import androidx.compose.material3.Icon
-import com.alohaoneui.app.ui.component.material.ExpressiveIconButton
-import com.alohaoneui.app.ui.component.material.alohaCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.Text
@@ -20,16 +18,19 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.alohaoneui.app.R
+import com.alohaoneui.app.ui.component.material.ExpressiveIconButton
+import com.alohaoneui.app.ui.component.material.alohaCornerShape
 import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
 import com.alohaoneui.app.ui.theme.LocalMaterialShadowContainers
 
 @Composable
 fun RebootDropdownItems(onItemClick: (String) -> Unit) {
     val options = getRebootListOption()
-    options.forEach { option ->
+    options.forEachIndexed { index, option ->
         DropdownMenuItem(
             onClick = { onItemClick(option.reason) },
-            text = { Text("  " + stringResource(option.labelRes)) },
+            text = { Text(stringResource(option.labelRes)) },
+            shapes = MenuDefaults.itemShape(index = index, count = options.size),
         )
     }
 }
