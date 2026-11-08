@@ -1343,3 +1343,11 @@
 - 全局调用点复核继续覆盖 SearchBar.kt。发现 SearchAppBar 虽已使用共享 ExpressiveLargeTopAppBar，但仍显式传入 Material3 的 surface 顶栏颜色，绕过共享控件默认的 Aloha surfaceContainer 主题色，与首页、设置、关于、颜色主题及图标形状页面此前清理的旧覆盖不一致。
 - 已移除该处冗余 TopAppBarDefaults.topAppBarColors 覆盖，让搜索页顶栏继承 expressiveTopAppBarColors()；保留顶栏形状、阴影、描边、Insets、滚动行为、搜索状态及输入/清除交互。未修改搜索框全屏容器的 surfaceContainerHighest 配色。
 - 源码提交：`见本轮提交记录`。仅修改 Material SearchBar.kt；Miuix、main 与版本号均未改动。等待最新分支构建验证后继续检查其他共享 Material 控件与页面调用点。
+
+
+## 2026-11｜搜索栏与状态分类页顶栏统一验收及调用点清理
+
+- SearchAppBar 顶栏移除页面级 Material3 surface 颜色覆盖后，Actions Run `42457511044` 构建成功，head SHA `4f82db5bebcdd1451098b5692d7a30d67ffae4cf`。源码验证、Kotlin 编译、Owner 签名 APK 构建、包名/稳定证书检查及 Artifact 保留均成功。
+- Artifact：`AlohaOneUI-Signed-Test-APK`，ID `13608456946`，大小 28,637,092 bytes；Artifact ZIP digest SHA-256：`3df3685e36145f3711206e5e7b0868212624c768f6478ad30765f4fea8ae8ad5`。Run URL：https://github.com/iskyxpcity/Oneuixpcity/actions/runs/42457511044。
+- 随后检查状态栏分类详情页的 Material 分支，发现 `StatusCategoryScreen.kt` 仍显式传入 Material3 surface 顶栏颜色，绕过共享 `ExpressiveLargeTopAppBar` 默认主题。现移除该颜色覆盖，让它继承 `expressiveTopAppBarColors()`；滚动行为、标题、返回按钮、重启菜单、Insets 与 Miuix 分支均保持不变。
+- 状态分类页修正源码提交：`d5ceedfa7e72f5f85a1701b64f68ae2b89c73df1`。此项尚待新 Actions 构建验收；Run `42457511044` 不包含该提交，不能将前一 Artifact 说成包含状态分类页修正。
