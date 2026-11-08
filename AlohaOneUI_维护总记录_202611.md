@@ -1507,3 +1507,12 @@
 - 已修正 `AlohaOneUISpecialControls.kt`：嵌套 Material 分组现在各自使用 `TonalCard` 子卡片，左右内缩 8dp、上下外距 6dp，卡片内容上下留白 4dp、行间距 4dp；顶层 Material 卡片垂直外距恢复为 8dp（水平 16dp）。这样父框体与子框体层级清晰，连续详情分组之间也有明确间距。
 - Miuix 分支未修改；功能状态、事件回调和选项顺序未改。
 - 源码提交：`27beb1a30b05db0e73571db0379875e1eca360a2`。Actions Run `42483831183` 已触发，待完成构建与 APK 验收。需安装该次构建后进行 22 个详情入口的真机视觉逐项验收；不能仅凭编译成功宣称所有页面已完成。
+
+
+## 2026-11-08｜22 个功能详情页逐项控件接入子卡片主题架构
+
+- 复核 22 个 DetailPane 后确认：多数详情页通过 `PackagePane` 将全部选项直接放进单个 `AlohaOneUIDetailGroup`，而分组状态下 `SwitchItem` / `SelectItem` / `AlohaOneUIInfoItem` 仅绘制无外边距的 SegmentedListItem 行；因此此前只修改嵌套 `AlohaOneUIPPreferenceGroup` 对大量普通详情选项完全不起作用，造成同一详情页内选项行紧贴、没有独立子框体。
+- 已将共享 `AlohaOneUIChildOptionSurface` 从普通背景 Box 改为真正的 `TonalCard` 子卡片：主题表面色、全局描边/阴影/圆角继承 TonalCard；子卡片水平缩进 8dp、垂直间距 6dp，内容内缩 4dp。
+- 已将分组状态下的 Material `SwitchItem`（含可点击和普通开关）、`SelectItem`、`AlohaOneUIInfoItem` 及两种 `AlohaOneUIInlineTextField` 接入该子卡片容器。父级 `AlohaOneUIDetailGroup` 保留为外层父框体，子选项独立成卡并产生可见间距。Miuix 分支未改，状态与事件回调保持原样。
+- 源码依次提交：`3c34e07b`、`3a069184`、`4af130d4`、`00b57bc2`、`e0b495ea`。最终源码 HEAD 为 `e0b495ea65c9d780709fe48406ae26f102db758c`。当前等待对应 GitHub Actions 构建与 APK 验收。
+- 该修改针对共享行控件，覆盖使用这些控件的功能详情页；仍需检查滑块、按钮、弹出菜单、特殊自定义控件及系统 UI 内部多层嵌套分组，并在真机逐一验收 22 个详情入口。尚不能宣称全局全部完成。
