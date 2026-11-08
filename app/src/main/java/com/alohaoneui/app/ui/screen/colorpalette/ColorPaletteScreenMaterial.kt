@@ -120,8 +120,8 @@ import com.alohaoneui.mod.ui.component.AlohaOneUISlider
 import com.alohaoneui.app.ui.component.material.SegmentedOptionFrame
 import com.alohaoneui.app.ui.component.material.TonalCard
 import com.alohaoneui.app.ui.component.material.TopBarBackButton
-import com.alohaoneui.app.ui.component.material.voyageSegmentedShape
-import com.alohaoneui.app.ui.component.material.voyageCornerShape
+import com.alohaoneui.app.ui.component.material.alohaSegmentedShape
+import com.alohaoneui.app.ui.component.material.alohaCornerShape
 import com.alohaoneui.app.ui.component.material.iconShapeForStyle
 import com.alohaoneui.app.ui.theme.ColorMode
 import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
@@ -246,7 +246,7 @@ fun ColorPaletteScreenMaterial(
                         horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)
                     ) {
                         rowOptions.forEachIndexed { index, (modes, label) ->
-                            val sourceShape = voyageSegmentedShape(
+                            val sourceShape = alohaSegmentedShape(
                                 index = index,
                                 count = rowOptions.size,
                                 vertical = false,
@@ -440,7 +440,7 @@ fun ColorPaletteScreenMaterial(
                                         showPageScaleValueDialog = true
                                     },
                                     modifier = Modifier.requiredHeight(32.dp),
-                                    shape = voyageCornerShape(12.dp),
+                                    shape = alohaCornerShape(12.dp),
                                     color = MaterialTheme.colorScheme.primaryContainer,
                                     contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
                                     shadowElevation = if (LocalMaterialShadowButtons.current) 2.dp else 0.dp,
@@ -534,7 +534,7 @@ fun ColorPaletteScreenMaterial(
                     }
                 )
 
-                // Voyage SHAPE group: the slider remains a row in the source-style group.
+                // Aloha SHAPE group: the slider remains a row in the source-style group.
                 SegmentedColumn(
                     modifier = Modifier.padding(top = 4.dp),
                     title = stringResource(R.string.theme_group_shape),
@@ -579,7 +579,7 @@ fun ColorPaletteScreenMaterial(
                                             showCornerValueDialog = true
                                         },
                                         modifier = Modifier.requiredHeight(32.dp),
-                                        shape = voyageCornerShape(12.dp),
+                                        shape = alohaCornerShape(12.dp),
                                         color = MaterialTheme.colorScheme.primaryContainer,
                                         contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
                                         shadowElevation = if (LocalMaterialShadowButtons.current) 2.dp else 0.dp,
@@ -687,7 +687,7 @@ fun ColorPaletteScreenMaterial(
                     )
                 )
 
-                // Voyage COMPONENTS group: outline width is another source-style slider row.
+                // Aloha COMPONENTS group: outline width is another source-style slider row.
                 SegmentedColumn(
                     modifier = Modifier.padding(top = 4.dp),
                     title = stringResource(R.string.theme_group_components),
@@ -751,7 +751,7 @@ fun ColorPaletteScreenMaterial(
                                             showOutlineValueDialog = true
                                         },
                                         modifier = Modifier.requiredHeight(32.dp),
-                                        shape = voyageCornerShape(12.dp),
+                                        shape = alohaCornerShape(12.dp),
                                         color = MaterialTheme.colorScheme.primaryContainer,
                                         contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
                                         shadowElevation = if (LocalMaterialShadowButtons.current) 2.dp else 0.dp,
@@ -843,7 +843,7 @@ fun ColorPaletteScreenMaterial(
                     )
                 )
 
-                // Voyage SHADOWS group exposes six independent component switches.
+                // Aloha SHADOWS group exposes six independent component switches.
                 SegmentedColumn(
                     modifier = Modifier.padding(top = 4.dp),
                     title = stringResource(R.string.theme_group_shadows),
@@ -928,7 +928,7 @@ private fun ThemePreviewCard(
                 .fillMaxWidth(0.4f)
                 .aspectRatio(screenRatio),
             color = colorScheme.surfaceContainer,
-            shape = voyageCornerShape(20.dp),
+            shape = alohaCornerShape(20.dp),
             border = LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
                 BorderStroke(it.dp, color = colorScheme.outlineVariant)
             }
@@ -968,7 +968,7 @@ private fun ThemePreviewCard(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(40.dp),
-                            shape = voyageCornerShape(8.dp),
+                            shape = alohaCornerShape(8.dp),
                             content = { }
                         )
                         if (showInfoCard) {
@@ -977,7 +977,7 @@ private fun ThemePreviewCard(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .weight(1f),
-                                shape = voyageCornerShape(8.dp),
+                                shape = alohaCornerShape(8.dp),
                                 content = { }
                             )
                         }
@@ -1080,18 +1080,18 @@ private fun ColorButtonMaterial(
             onClick()
         },
         interactionSource = interactionSource,
-        shape = voyageCornerShape(20.dp),
+        shape = alohaCornerShape(20.dp),
         color = colorScheme.surfaceContainer,
         modifier = Modifier
             .size(72.dp)
             .then(
                 if (LocalMaterialShadowButtons.current) {
-                    Modifier.shadow(if (isSelected) 2.dp else 1.dp, voyageCornerShape(20.dp))
+                    Modifier.shadow(if (isSelected) 2.dp else 1.dp, alohaCornerShape(20.dp))
                 } else Modifier
             )
             .then(
                 LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
-                    Modifier.border(it.dp, colorScheme.outlineVariant, voyageCornerShape(20.dp))
+                    Modifier.border(it.dp, colorScheme.outlineVariant, alohaCornerShape(20.dp))
                 } ?: Modifier
             )
     ) {
