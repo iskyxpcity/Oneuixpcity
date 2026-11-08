@@ -30,7 +30,7 @@ fun TonalCard(
     onClick: () -> Unit,
     content: @Composable () -> Unit,
 ) {
-    val actualShape = shape ?: voyageCornerShape(20.dp)
+    val actualShape = shape ?: alohaCornerShape(20.dp)
     Card(
         onClick = onClick,
         modifier = modifier,
@@ -60,7 +60,7 @@ fun TonalCard(
     shape: Shape? = null,
     content: @Composable () -> Unit,
 ) {
-    val actualShape = shape ?: voyageCornerShape(20.dp)
+    val actualShape = shape ?: alohaCornerShape(20.dp)
     Card(
         modifier = modifier,
         border = LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
