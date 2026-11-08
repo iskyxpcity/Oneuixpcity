@@ -69,112 +69,118 @@ fun StatusBarNetworkSpeedControls(
             }
             if (uiState.supportRealTimeNetworkSpeed || uiState.showSeparateUpDownNetworkSpeeds) {
 add {
+                add {
                 AlohaOneUIPPreferenceGroup {
-                            var expanded by rememberSaveable { mutableStateOf(false) }
-                            var lineGapDp by remember(uiState.networkSpeedLineGapDp) {
-                            mutableFloatStateOf(uiState.networkSpeedLineGapDp)
-                        }
-                        SwitchItem(
-                            icon = ImageVector.vectorResource(id = R.drawable.format_letter_spacing),
-                            title = stringResource(id = R.string.alohaoneui_networkSpeedLineGap_title),
-                            summary = if (uiState.modifyNetworkSpeedLineGap) {
-                                stringResource(id = R.string.alohaoneui_networkSpeedLineGap_summary, lineGapDp)
-                            } else {
-                                stringResource(id = R.string.alohaoneui_networkSpeedDoubleLineOnly_summary)
-                            },
-                            modifier = Modifier.animateContentSize(),
-                            clickable = true,
-                            onClick = { expanded = !expanded },
-                            checked = uiState.modifyNetworkSpeedLineGap,
-                            onCheckedChange = {
-                                expanded = it
-                                onEvent(SystemUIEvent.StatusBar.ModifyNetworkSpeedLineGap(it))
-                            },
-                        )
-                        AlohaOneUIChildVisibility(expanded && uiState.modifyNetworkSpeedLineGap) {
-                            AlohaOneUISlider(
-                                value = lineGapDp,
-                                onValueChange = { lineGapDp = (it * 10f).roundToInt() / 10f },
-                                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                                valueRange = -4f..4f,
-                                onValueChangeFinished = {
-                                    onEvent(SystemUIEvent.StatusBar.NetworkSpeedLineGapDp(lineGapDp))
-                                },
-                            )
-                        }
-                    }
+                                            var expanded by rememberSaveable { mutableStateOf(false) }
+                                            var lineGapDp by remember(uiState.networkSpeedLineGapDp) {
+                                            mutableFloatStateOf(uiState.networkSpeedLineGapDp)
+                                        }
+                                        SwitchItem(
+                                            icon = ImageVector.vectorResource(id = R.drawable.format_letter_spacing),
+                                            title = stringResource(id = R.string.alohaoneui_networkSpeedLineGap_title),
+                                            summary = if (uiState.modifyNetworkSpeedLineGap) {
+                                                stringResource(id = R.string.alohaoneui_networkSpeedLineGap_summary, lineGapDp)
+                                            } else {
+                                                stringResource(id = R.string.alohaoneui_networkSpeedDoubleLineOnly_summary)
+                                            },
+                                            modifier = Modifier.animateContentSize(),
+                                            clickable = true,
+                                            onClick = { expanded = !expanded },
+                                            checked = uiState.modifyNetworkSpeedLineGap,
+                                            onCheckedChange = {
+                                                expanded = it
+                                                onEvent(SystemUIEvent.StatusBar.ModifyNetworkSpeedLineGap(it))
+                                            },
+                                        )
+                                        AlohaOneUIChildVisibility(expanded && uiState.modifyNetworkSpeedLineGap) {
+                                            AlohaOneUISlider(
+                                                value = lineGapDp,
+                                                onValueChange = { lineGapDp = (it * 10f).roundToInt() / 10f },
+                                                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                                                valueRange = -4f..4f,
+                                                onValueChangeFinished = {
+                                                    onEvent(SystemUIEvent.StatusBar.NetworkSpeedLineGapDp(lineGapDp))
+                                                },
+                                            )
+                                        }
+                                    }
+            }
             }
 add {
+                add {
                 AlohaOneUIPPreferenceGroup {
-                        var expanded by rememberSaveable { mutableStateOf(false) }
-                        var uploadScale by remember(uiState.networkSpeedUploadTextScale) {
-                            mutableFloatStateOf(uiState.networkSpeedUploadTextScale)
-                        }
-                        SwitchItem(
-                            icon = ImageVector.vectorResource(id = R.drawable.format_size),
-                            title = stringResource(id = R.string.alohaoneui_networkSpeedUploadTextScale_title),
-                            summary = if (uiState.setNetworkSpeedUploadTextScale) {
-                                stringResource(id = R.string.alohaoneui_networkSpeedUploadTextScale_summary, uploadScale)
-                            } else {
-                                stringResource(id = R.string.alohaoneui_networkSpeedDoubleLineOnly_summary)
-                            },
-                            modifier = Modifier.animateContentSize(),
-                            clickable = true,
-                            onClick = { expanded = !expanded },
-                            checked = uiState.setNetworkSpeedUploadTextScale,
-                            onCheckedChange = {
-                                expanded = it
-                                onEvent(SystemUIEvent.StatusBar.SetNetworkSpeedUploadTextScale(it))
-                            },
-                        )
-                        AlohaOneUIChildVisibility(expanded && uiState.setNetworkSpeedUploadTextScale) {
-                            AlohaOneUISlider(
-                                value = uploadScale,
-                                onValueChange = { uploadScale = (it * 100f).roundToInt() / 100f },
-                                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                                valueRange = 0.5f..2f,
-                                onValueChangeFinished = {
-                                    onEvent(SystemUIEvent.StatusBar.NetworkSpeedUploadTextScale(uploadScale))
-                                },
-                            )
-                        }
-                    }
+                                        var expanded by rememberSaveable { mutableStateOf(false) }
+                                        var uploadScale by remember(uiState.networkSpeedUploadTextScale) {
+                                            mutableFloatStateOf(uiState.networkSpeedUploadTextScale)
+                                        }
+                                        SwitchItem(
+                                            icon = ImageVector.vectorResource(id = R.drawable.format_size),
+                                            title = stringResource(id = R.string.alohaoneui_networkSpeedUploadTextScale_title),
+                                            summary = if (uiState.setNetworkSpeedUploadTextScale) {
+                                                stringResource(id = R.string.alohaoneui_networkSpeedUploadTextScale_summary, uploadScale)
+                                            } else {
+                                                stringResource(id = R.string.alohaoneui_networkSpeedDoubleLineOnly_summary)
+                                            },
+                                            modifier = Modifier.animateContentSize(),
+                                            clickable = true,
+                                            onClick = { expanded = !expanded },
+                                            checked = uiState.setNetworkSpeedUploadTextScale,
+                                            onCheckedChange = {
+                                                expanded = it
+                                                onEvent(SystemUIEvent.StatusBar.SetNetworkSpeedUploadTextScale(it))
+                                            },
+                                        )
+                                        AlohaOneUIChildVisibility(expanded && uiState.setNetworkSpeedUploadTextScale) {
+                                            AlohaOneUISlider(
+                                                value = uploadScale,
+                                                onValueChange = { uploadScale = (it * 100f).roundToInt() / 100f },
+                                                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                                                valueRange = 0.5f..2f,
+                                                onValueChangeFinished = {
+                                                    onEvent(SystemUIEvent.StatusBar.NetworkSpeedUploadTextScale(uploadScale))
+                                                },
+                                            )
+                                        }
+                                    }
+            }
             }
 add {
+                add {
                 AlohaOneUIPPreferenceGroup {
-                        var expanded by rememberSaveable { mutableStateOf(false) }
-                        var downloadScale by remember(uiState.networkSpeedDownloadTextScale) {
-                            mutableFloatStateOf(uiState.networkSpeedDownloadTextScale)
-                        }
-                        SwitchItem(
-                            icon = ImageVector.vectorResource(id = R.drawable.format_size),
-                            title = stringResource(id = R.string.alohaoneui_networkSpeedDownloadTextScale_title),
-                            summary = if (uiState.setNetworkSpeedDownloadTextScale) {
-                                stringResource(id = R.string.alohaoneui_networkSpeedDownloadTextScale_summary, downloadScale)
-                            } else {
-                                stringResource(id = R.string.alohaoneui_networkSpeedDoubleLineOnly_summary)
-                            },
-                            modifier = Modifier.animateContentSize(),
-                            clickable = true,
-                            onClick = { expanded = !expanded },
-                            checked = uiState.setNetworkSpeedDownloadTextScale,
-                            onCheckedChange = {
-                                expanded = it
-                                onEvent(SystemUIEvent.StatusBar.SetNetworkSpeedDownloadTextScale(it))
-                            },
-                        )
-                        AlohaOneUIChildVisibility(expanded && uiState.setNetworkSpeedDownloadTextScale) {
-                            AlohaOneUISlider(
-                                value = downloadScale,
-                                onValueChange = { downloadScale = (it * 100f).roundToInt() / 100f },
-                                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                                valueRange = 0.5f..2f,
-                                onValueChangeFinished = {
-                                    onEvent(SystemUIEvent.StatusBar.NetworkSpeedDownloadTextScale(downloadScale))
-                                },
-                            )
-                        }
-                    }
+                                        var expanded by rememberSaveable { mutableStateOf(false) }
+                                        var downloadScale by remember(uiState.networkSpeedDownloadTextScale) {
+                                            mutableFloatStateOf(uiState.networkSpeedDownloadTextScale)
+                                        }
+                                        SwitchItem(
+                                            icon = ImageVector.vectorResource(id = R.drawable.format_size),
+                                            title = stringResource(id = R.string.alohaoneui_networkSpeedDownloadTextScale_title),
+                                            summary = if (uiState.setNetworkSpeedDownloadTextScale) {
+                                                stringResource(id = R.string.alohaoneui_networkSpeedDownloadTextScale_summary, downloadScale)
+                                            } else {
+                                                stringResource(id = R.string.alohaoneui_networkSpeedDoubleLineOnly_summary)
+                                            },
+                                            modifier = Modifier.animateContentSize(),
+                                            clickable = true,
+                                            onClick = { expanded = !expanded },
+                                            checked = uiState.setNetworkSpeedDownloadTextScale,
+                                            onCheckedChange = {
+                                                expanded = it
+                                                onEvent(SystemUIEvent.StatusBar.SetNetworkSpeedDownloadTextScale(it))
+                                            },
+                                        )
+                                        AlohaOneUIChildVisibility(expanded && uiState.setNetworkSpeedDownloadTextScale) {
+                                            AlohaOneUISlider(
+                                                value = downloadScale,
+                                                onValueChange = { downloadScale = (it * 100f).roundToInt() / 100f },
+                                                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                                                valueRange = 0.5f..2f,
+                                                onValueChangeFinished = {
+                                                    onEvent(SystemUIEvent.StatusBar.NetworkSpeedDownloadTextScale(downloadScale))
+                                                },
+                                            )
+                                        }
+                                    }
+            }
             }
             }
             add {
