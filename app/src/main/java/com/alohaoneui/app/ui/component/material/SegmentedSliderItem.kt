@@ -64,7 +64,7 @@ import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
 
 /** Shared style inputs for both the settings-row and generic Material sliders.
  * Values in this adapter preserve the current app mapping until each original
- * Aloha branch is fully matched to its decompiled draw path.
+ * The four supported slider appearance families share one rendering path.
  */
 internal data class AlohaSliderAppearance(
     val style: Int,
@@ -80,7 +80,7 @@ internal data class AlohaSliderAppearance(
 internal fun alohaSliderAppearance(requestedStyle: Int): AlohaSliderAppearance {
     val style = requestedStyle.coerceIn(0, 3)
     val scheme = MaterialTheme.colorScheme
-    // Match the four Aloha preview families rather than applying one generic
+    // Map the four supported slider appearance families rather than applying one generic
     // Material rail to all of them. Track progress, inactive rail and thumb are
     // independent roles so theme changes propagate without making them identical.
     val active = when (style) {
@@ -289,7 +289,7 @@ internal fun AlohaSliderThumb(
     val thumbShape = alohaCornerShape(minOf(size.width, size.height) / 2f)
     when (style) {
         0 -> {
-            // Aloha Material You preview uses a slim vertical position marker,
+            // Material You preview uses a slim vertical position marker,
             // not the stock circular M3 thumb. The track and tick marks remain
             // visible on both sides of this marker.
             Box(
@@ -301,7 +301,7 @@ internal fun AlohaSliderThumb(
         }
         1 -> {
             // Fancy's thumb has a soft mint halo surrounding the theme-primary
-            // shaped core. The selected shape still follows Aloha's shared
+            // shaped core. The selected shape still follows the shared
             // shape setting and rotates in the source direction while dragging.
             Box(
                 // Keep the existing slider slot dimensions so the rail geometry
@@ -333,7 +333,7 @@ internal fun AlohaSliderThumb(
                 Modifier
                     .size(width = size.width, height = size.height)
                     // Material 2's small wavy circular thumb uses the same global
-                    // Aloha shape style as the rest of the UI. Rotate the outline
+                    // active global shape style as the rest of the UI. Rotate the outline
                     // with value progress so the wave reads as a rolling thumb.
                     .then(Modifier.rotate(-720f * valueFraction))
                     .clip(thumbShape)
@@ -412,7 +412,7 @@ internal fun AlohaSliderTrack(
         when (style) {
             0 -> {
                 // Material You: two separately rounded rail segments stop on
-                // either side of the slim vertical value marker, as in Aloha.
+                // either side of the slim vertical value marker, as in the Material slider design.
                 val markerGap = 4.dp.toPx()
                 val leftEnd = (activeWidth - markerGap / 2f).coerceAtLeast(0f)
                 val rightStart = (activeWidth + markerGap / 2f).coerceAtMost(size.width)
@@ -533,7 +533,7 @@ internal fun AlohaSliderTrack(
 /**
  * Draw a Compose Shape outline using the Canvas primitives available in the
  * project's pinned Compose version. Rounded outlines are converted to a Path
- * so asymmetric corners and custom Aloha paths are preserved.
+ * so asymmetric corners and custom theme paths are preserved.
  */
 internal fun DrawScope.drawAlohaOutline(
     outline: Outline,
