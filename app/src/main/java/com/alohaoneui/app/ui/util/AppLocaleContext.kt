@@ -8,7 +8,7 @@ import android.os.LocaleList
 import java.util.Locale
 
 /**
- * Mirrors Voyage's locale application path:
+ * Mirrors Aloha's locale application path:
  * Android 13+ uses LocaleManager application locales; older Android versions
  * apply the saved language to the Activity context before resources inflate.
  */
