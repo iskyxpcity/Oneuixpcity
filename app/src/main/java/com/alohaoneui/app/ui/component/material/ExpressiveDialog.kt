@@ -1,6 +1,5 @@
 package com.alohaoneui.app.ui.component.material
 
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -9,7 +8,6 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AlertDialogDefaults
 import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -108,17 +106,13 @@ fun ExpressiveContentDialog(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val dialogShape = shape ?: voyageCornerShape(28.dp)
-    val dialogModifier = modifier.then(
-        LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
-            Modifier.border(it.dp, MaterialTheme.colorScheme.outlineVariant, dialogShape)
-        } ?: Modifier
-    )
+    val dialogModifier = modifier
     BasicAlertDialog(
         onDismissRequest = onDismissRequest,
         modifier = dialogModifier,
         properties = properties,
     ) {
-        Surface(
+        ExpressiveSurface(
             modifier = Modifier.fillMaxWidth(),
             shape = dialogShape,
             color = AlertDialogDefaults.containerColor,
