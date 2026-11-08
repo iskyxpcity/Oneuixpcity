@@ -1444,3 +1444,15 @@
 - 说明：Material `ExpressiveSwitch` 仍是项目自己的 Material 开关控件，不是 Miuix Switch；液态玻璃绘制目前仍使用 Miuix blur 包的低层 Backdrop/Shader 原语。通用交互高亮与拖动手势已不再依赖 Miuix 专属组件目录。后续可继续检查是否需要把低层 blur API 也封装到项目自有 liquid 层。
 - 下一阶段继续逐项核对 Material 原生控件默认颜色、形状、阴影、描边与页面调用路径；不修改 Miuix 控件样式、不修改/合并 `main`、不改版本号。
 - Run：https://github.com/iskyxpcity/Oneuixpcity/actions/runs/42462778802
+
+
+## 2026-11｜Material 输入框描边、分组选择控件与共享容器继续统一（Build #2651）
+
+- `ExpressiveOutlinedTextField` 两个重载统一由项目共享 Modifier 控制描边宽度和颜色；Material3 内部描边改为透明，避免共享外框与原生 TextField 描边叠加形成双线。焦点/非焦点/禁用/错误状态不再额外绘制第二层边框，输入框容器色继续继承 Material 主题。
+- `SegmentedRadioItem`、`SegmentedCheckboxItem` 明确绑定 Material 主题色：Radio 使用 primary / onSurfaceVariant；Checkbox 使用 primary / onSurfaceVariant / onPrimary。分组外框 `SegmentedOptionFrame` 从直接调用 Material3 Surface 改为共享 `ExpressiveSurface`，保留 segmented shape、surfaceContainerHigh、结构性细描边、0dp tonal elevation 和按全局设置控制的 1dp 阴影。
+- 检查首页、设置、关于、颜色主题、状态栏及工具页面。未发现所抽查 Material 页面直接绕过共享组件调用普通 Material Button/Switch/Checkbox/Radio/Slider 的情况；工具页发现的 Card 属于 Miuix UI 分支，未误改。
+- 本轮中间构建曾暴露 `ExpressiveControls.kt` 缺少 `Color` import，已从失败日志定位并补上；之前并行提交触发的旧 SHA 构建仍失败，最终 SHA 包含 import 修复并通过完整构建与签名验收。
+- 最新提交：`87ae581d9c55677d2396aeb07f5857087269ff8b`，分支 `test/switches-official-eight-20261103`。Actions Run `42464875273` 成功，Kotlin 编译、签名 APK 构建、包名/证书校验、Artifact 保存均通过。
+- Artifact：`AlohaOneUI-Signed-Test-APK`，ID `13611103089`，ZIP 大小 28,638,843 bytes，Artifact ZIP SHA-256 `ea535d89f0d9c3155fa477a9b7aad7e5627e3cf5817438ad09275e72599cf0bb`。APK：`AlohaOneUI_1.0.261025_BUILD_2651.apk`，29,637,618 bytes，SHA-256 `b3f91447cf33adf2acdc46853382afc2354ea96361285ad83c936fe4ed2cbb37`；包名 `com.alohaoneui.app`，versionName `1.0.261025`，versionCode `16`；V2 签名通过，证书 SHA-256 `93bf61a6493c6b336383832eb41301bd8fe061f43566e7e384e3fdd9fc1c26a1`。
+- 后续继续全局盘点 Material 控件入口、默认色/形状/描边/阴影及页面调用；Miuix UI 不纳入 Material 改造范围。保持测试分支，不改/不合并 `main`，不改版本号。
+- Run：https://github.com/iskyxpcity/Oneuixpcity/actions/runs/42464875273
