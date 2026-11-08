@@ -23,7 +23,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
@@ -66,6 +65,7 @@ import com.alohaoneui.app.alohaoneui.AlohaOneUISettingSpec
 import com.alohaoneui.app.alohaoneui.AlohaOneUISettingType
 import com.alohaoneui.app.ui.LocalUiMode
 import com.alohaoneui.app.ui.UiMode
+import com.alohaoneui.app.ui.component.material.ExpressiveLargeTopAppBar
 import com.alohaoneui.app.ui.component.material.SegmentedColumn
 import com.alohaoneui.app.ui.component.material.SegmentedDropdownItem
 import com.alohaoneui.app.ui.component.material.SegmentedListItem
@@ -305,7 +305,7 @@ private fun AlohaOneUIOriginalCategoryScreen(
                 TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
             ExpressiveScaffold(
                 topBar = {
-                    LargeFlexibleTopAppBar(
+                    ExpressiveLargeTopAppBar(
                         navigationIcon = {
                             TopBarBackButton(onClick = onBack)
                         },
@@ -402,7 +402,7 @@ private fun AlohaOneUICategoryMaterial(
 
     ExpressiveScaffold(
         topBar = {
-            LargeFlexibleTopAppBar(
+            ExpressiveLargeTopAppBar(
                 navigationIcon = {
                     TopBarBackButton(onClick = onBack)
                 },
