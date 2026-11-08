@@ -50,6 +50,8 @@ import kotlinx.coroutines.launch
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
 import top.yukonga.miuix.kmp.basic.Switch as MiuixSwitch
 import com.alohaoneui.app.ui.component.material.ExpressiveSwitch
+import com.alohaoneui.app.ui.component.material.ExpressiveSurface
+import com.alohaoneui.app.ui.component.material.alohaCornerShape
 import top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme
 
 @Composable
@@ -222,50 +224,54 @@ private fun ThemeStoreRegionSelector(
 
 @Composable
 private fun ThemeStoreRegionChip(label: String, selected: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit) {
-    val shape = RoundedCornerShape(12.dp)
     when (LocalUiMode.current) {
         UiMode.Material -> {
             val scheme = MaterialTheme.colorScheme
+            ExpressiveSurface(
+                modifier = modifier,
+                shape = alohaCornerShape(12.dp),
+                color = if (selected) scheme.primary else scheme.surfaceContainerHighest,
+                contentColor = if (selected) scheme.onPrimary else scheme.onSurface,
+                onClick = onClick,
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 2.dp, vertical = 10.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = label,
+                        color = if (selected) scheme.onPrimary else scheme.onSurface,
+                        fontSize = 12.sp,
+                        fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal
+                    )
+                }
+            }
+        }
+        UiMode.Miuix -> {
+            val shape = RoundedCornerShape(12.dp)
             Box(
                 modifier = modifier
                     .clip(shape)
                     .background(
-                        if (selected) scheme.primary else scheme.surfaceContainerHighest,
+                        if (selected) colorScheme.primary else colorScheme.surfaceContainerHigh,
                         shape
                     )
                     .clickable(onClick = onClick)
                     .padding(horizontal = 2.dp, vertical = 10.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
+                MiuixText(
                     text = label,
-                    color = if (selected) scheme.onPrimary else scheme.onSurface,
+                    color = if (selected) Color.White else colorScheme.onSurface,
                     fontSize = 12.sp,
                     fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal
                 )
             }
         }
-        UiMode.Miuix -> Box(
-            modifier = modifier
-                .clip(shape)
-                .background(
-                    if (selected) colorScheme.primary else colorScheme.surfaceContainerHigh,
-                    shape
-                )
-                .clickable(onClick = onClick)
-                .padding(horizontal = 2.dp, vertical = 10.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            MiuixText(
-                text = label,
-                color = if (selected) Color.White else colorScheme.onSurface,
-                fontSize = 12.sp,
-                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal
-            )
-        }
     }
 }
-
 private data class ThemeStoreRegionPreset(
     val label: String,
     val country: String,
