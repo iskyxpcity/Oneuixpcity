@@ -384,9 +384,7 @@ fun AlohaOneUIInfoItem(
             }
 
             if (grouped) {
-                AlohaOneUIChildOptionSurface(modifier = modifier) {
-                    Content(Modifier)
-                }
+                Content(modifier)
             } else {
                 Content(modifier.padding(horizontal = 16.dp, vertical = 4.dp))
             }
