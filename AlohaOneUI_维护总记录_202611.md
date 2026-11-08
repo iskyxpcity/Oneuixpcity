@@ -1405,3 +1405,14 @@
 - 代码注释中的上游品牌引用同步改成项目自有描述；历史维护记录保留历史事实，不做追溯性篡改。
 - 首轮构建 Run `42460870453` 失败：编译日志定位到 SearchBar.kt 与 UpdateDialogHost.kt 尚有旧函数调用；已补齐并触发 Run `42461123338`，待验证。
 - 当前尚未宣布清理完成或构建通过；后续需继续全源码检索残留标识，排查构建错误，再继续检查 Material 主题组件/控件的颜色、形状、阴影、描边和调用点是否统一。
+
+
+## 2026-11｜Material 独立命名清理与 Build #2626 验收
+
+- 对 `app/src/main/java` 下 136 个 Material/UI 组件、页面、主题及 mod 组件 Kotlin 文件完成残留扫描。清理了共享形状、Smooth G² 轮廓、分组形状、滑块外观/轨道/拇指、轮廓绘制等 API 的上游命名，并同步更新所有扫描到的调用点、导入与注释；额外清理液态玻璃 Lens 注释中的残留名称。源码扫描中发现的最后一处残留已修正。历史维护记录保留当时真实来源与移植过程，不代表当前运行时依赖。
+- 改名中间提交触发的 Run `42460870453` 曾因 `SearchBar.kt` 与 `UpdateDialogHost.kt` 两处调用仍引用旧函数名而编译失败；已修正两文件调用与导入。该失败是本轮改名过程中的漏改，不能作为最终状态。
+- 最新提交：`0aa4d0f566beb3a8856026fd6685dd0fd2fa3b06`，测试分支 `test/switches-official-eight-20261103`。Actions Run `42461343273` 成功，Kotlin 编译、签名 APK 构建及工作流包名/签名验证通过。
+- Artifact：`AlohaOneUI-Signed-Test-APK`，ID `13609852274`，ZIP 大小 28,637,810 bytes，Artifact ZIP SHA-256 `0ac8ea072c049728c41553eb4003b2d802dff4da3c726ba4e3ffa0490a7dc4a1`。APK：`AlohaOneUI_1.0.261025_BUILD_2626.apk`，29,635,866 bytes，SHA-256 `d79cf6eb0f1809666e9594ef2a92d488dee7adef042600521e649733e5ee0a70`；包名 `com.alohaoneui.app`，versionName `1.0.261025`，versionCode `16`；V2 签名验证通过，证书 SHA-256 `93bf61a6493c6b336383832eb41301bd8fe061f43566e7e384e3fdd9fc1c26a1`，APK ZIP 完整性检查通过。
+- 本次构建只证明命名清理后的代码可编译并成功打包，不代表全局 Material 主题统一完成。继续检查 Material 根主题形状映射、原生 Material3 控件的颜色/形状/阴影/描边默认值，以及页面是否绕过共享控件。当前根主题对 Material3 `Shapes` 槽位的适配仍因 `CornerBasedShape` 类型约束而将切角以外样式回退为圆角；自定义 Aloha 控件仍保留完整自定义路径。该差异列为下一阶段待解决项。
+- 本批仅修改测试分支；未修改/合并 `main`，未改版本号，未改 Miuix 分支。
+- Run：https://github.com/iskyxpcity/Oneuixpcity/actions/runs/42461343273
