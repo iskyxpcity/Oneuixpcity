@@ -1327,3 +1327,10 @@
 - ExpressiveLargeTopAppBar 默认主题色修改已验收：Run 42453302079 成功，构建 HEAD `24bf8127c23e48a038d964ab10009237c2d98d6b`，覆盖代码提交 `aa0cbd8d4a1dbc7a08f8b77f5436719c55655412`。Kotlin 编译、签名 APK 构建及包名/签名校验通过。Artifact `AlohaOneUI-Signed-Test-APK` ID `13605799444`，28,637,612 bytes，ZIP SHA-256 `2f39eb0e679bb7c528f3d967fe8fab50389390466fe7fe99fef3eaff0e9176a7`。Run：https://github.com/iskyxpcity/Oneuixpcity/actions/runs/42453302079。
 
 - Material 自定义内容弹窗继续收敛到共享框体：`ExpressiveSurface` 新增可选 `tonalElevation` 参数，默认 0dp，原有调用行为不变；`ExpressiveContentDialog` 不再直接调用 Material3 `Surface`，改由 `ExpressiveSurface` 统一管理形状、全局描边、阴影与 Material tonal elevation。弹窗内容布局、28dp 默认形状、容器配色和交互保持不变。源码提交：`ca23fa62c8778085d7403a20b8b2ecd58dd12a7a`、`6db7eeb0fd1a8cc9a554a1f9c7ea605e99e2cfc3`、`853125f9ef847ec2ac91b81b7e12391bd69fd7f0`；等待当前最新 HEAD 构建验证。
+
+## 2026-11｜Material 导航栏与顶栏默认主题继续统一
+
+- `SideNavigationRailMaterial` 的 `WideNavigationRailItem` 原先沿用 Material3 默认导航项目颜色，未显式绑定 Aloha 主题令牌。现通过 `WideNavigationRailItemDefaults.colors()` 统一选中图标 `secondary`、选中标签 `onSurface`、选中指示器 `secondaryContainer`、未选中图标/标签 `onSurfaceVariant`；不改变展开/折叠、选中状态、导航目标与 Insets。提交：`822b91614da1e96c0b5630527268a50cf86a95b6`。
+- `HomeMaterial`、`SettingsMaterial`、`AboutMaterial` 三处页面曾显式把 `ExpressiveLargeTopAppBar` 覆盖回 Material3 默认 `surface` 顶栏颜色，绕过共享控件已统一的 `expressiveTopAppBarColors()`。现移除这三处冗余颜色覆盖，让页面统一继承共享 Material 顶栏主题；保留各页标题、返回/操作按钮、Insets 和滚动行为。提交：`3495c385a3e818c9ecacbe11b27161d376a79ff6`、`4a08642aec6ef62b640de969b1bc47e11761c9a6`、`30ed0216ec2e495cd08d70e3a06ba74b5650b384`。
+- 上一轮共享弹窗/框体重构的 Actions Run `42455752829` 已成功，HEAD `5a5ae6e2936be991e0fb95a65effe74e7c27368b`。本节新增导航栏与页面顶栏修改后，等待最新 HEAD 的 CI 编译、签名 APK 与包名/签名校验；未完成构建前不宣称本节验收通过。
+- 本阶段仍属全局统一进行中：继续逐项复核 Material 页面是否绕过共享组件、共享组件是否完整遵循 Aloha 颜色/形状/描边/阴影令牌。Miuix 分支保持独立，不合并 `main`，不修改版本号。
