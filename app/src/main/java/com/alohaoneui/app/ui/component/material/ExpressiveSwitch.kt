@@ -71,7 +71,7 @@ import com.alohaoneui.app.ui.component.liquid.InnerShadow
 import com.alohaoneui.app.ui.component.liquid.innerShadow
 import com.alohaoneui.app.ui.component.liquid.switchLens
 import com.alohaoneui.app.ui.component.liquid.vibrancy
-import com.alohaoneui.app.ui.component.miuix.animation.InteractiveHighlight
+import com.alohaoneui.app.ui.component.animation.InteractiveHighlight
 import top.yukonga.miuix.kmp.blur.blur
 import com.alohaoneui.app.ui.component.liquid.rememberCombinedBackdrop
 import com.alohaoneui.app.ui.component.liquid.rememberScaledBackdrop
