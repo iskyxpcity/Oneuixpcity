@@ -23,6 +23,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text as MaterialText
 import com.alohaoneui.app.ui.component.material.ExpressiveContentDialog
+import com.alohaoneui.app.ui.component.material.alohaCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -129,7 +130,7 @@ private fun SaturationValuePicker(
         modifier = modifier
             .fillMaxWidth()
             .height(180.dp)
-            .clip(RoundedCornerShape(14.dp))
+            .clip(if (LocalUiMode.current == UiMode.Material) alohaCornerShape(14.dp) else RoundedCornerShape(14.dp))
             .pointerInput(hue, alpha) {
                 detectTapGestures { position ->
                     select(position, size.width.toFloat(), size.height.toFloat())
