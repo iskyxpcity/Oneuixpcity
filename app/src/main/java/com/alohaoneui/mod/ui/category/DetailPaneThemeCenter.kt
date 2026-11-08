@@ -42,7 +42,7 @@ import com.alohaoneui.common.ModuleActions
 import com.alohaoneui.common.Package
 import com.alohaoneui.common.Preference
 import com.alohaoneui.mod.ui.component.SwitchItem
-import com.alohaoneui.mod.ui.component.AlohaOneUIDetailGroup
+import com.alohaoneui.mod.ui.component.AlohaOneUIDetailSegmentedGroup
 import com.alohaoneui.app.ui.screen.status.StatusThemeGroup
 import com.alohaoneui.app.ui.screen.status.StatusThemeChildItem
 import kotlinx.coroutines.delay
@@ -69,14 +69,18 @@ fun DetailPaneThemeCenter(
             .fillMaxSize()
             .verticalScroll(rememberScrollState()),
     ) {
-        AlohaOneUIDetailGroup {
-            SwitchItem(
-                icon = ImageVector.vectorResource(id = R.drawable.format_paint),
-                title = stringResource(id = R.string.alohaoneui_setThemeTrialNeverExpired_title),
-                checked = uiState.setThemeTrialNeverExpired,
-                onCheckedChange = { onEvent(ThemeCenterEvent.SetThemeTrialNeverExpired(it)) }
+        AlohaOneUIDetailSegmentedGroup(
+                content = buildList {
+                    add {
+                    SwitchItem(
+                                    icon = ImageVector.vectorResource(id = R.drawable.format_paint),
+                                    title = stringResource(id = R.string.alohaoneui_setThemeTrialNeverExpired_title),
+                                    checked = uiState.setThemeTrialNeverExpired,
+                                    onCheckedChange = { onEvent(ThemeCenterEvent.SetThemeTrialNeverExpired(it)) }
+                                )
+                }
+                }
             )
-        }
         ThemeStoreRegionFrame(
             enabled = uiState.setThemeStoreRegion,
             onEnabledChange = { onEvent(ThemeCenterEvent.SetThemeStoreRegion(it)) },
