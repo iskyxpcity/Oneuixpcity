@@ -31,6 +31,7 @@ import com.alohaoneui.app.ui.component.material.ExpressiveOutlinedTextField
 import com.alohaoneui.app.ui.component.material.ExpressiveButton
 import com.alohaoneui.app.ui.component.material.LocalListItemShapes
 import com.alohaoneui.app.ui.component.material.SegmentedListItem
+import com.alohaoneui.app.ui.component.material.TonalCard
 import com.alohaoneui.app.ui.component.material.alohaOneUISegmentedColors
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.Button as MiuixButton
@@ -71,11 +72,8 @@ fun AlohaOneUIPPreferenceGroup(
                     hoveredShape = RoundedCornerShape(0.dp),
                     draggedShape = RoundedCornerShape(0.dp),
                 )
-                Column(
-                    modifier = modifier
-                        .padding(horizontal = 16.dp, vertical = 4.dp)
-                        .clip(MaterialTheme.shapes.large),
-                    verticalArrangement = Arrangement.spacedBy(2.dp),
+                TonalCard(
+                    modifier = modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                 ) {
                     CompositionLocalProvider(
                         LocalAlohaOneUIGroupedPreference provides true,
