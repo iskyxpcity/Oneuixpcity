@@ -110,6 +110,7 @@ import com.alohaoneui.app.alohaOneUIApp
 import com.alohaoneui.app.alohaoneui.AlohaOneUIPreferenceBridge
 import com.alohaoneui.app.ui.LocalUiMode
 import com.alohaoneui.app.ui.UiMode
+import com.alohaoneui.app.ui.component.material.ExpressiveLargeTopAppBar
 import com.alohaoneui.app.ui.component.material.ExpressiveContentDialog
 import com.alohaoneui.app.ui.component.material.ExpressiveIconButton
 import com.alohaoneui.app.ui.component.material.ExpressiveOutlinedTextField
@@ -448,7 +449,7 @@ private fun GlobalShortcutPageFrame(
             val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
             ExpressiveScaffold(
                 topBar = {
-                    LargeFlexibleTopAppBar(
+                    ExpressiveLargeTopAppBar(
                         title = { Text(title) },
                         navigationIcon = {
                             TopBarBackButton(onClick = onBack)
