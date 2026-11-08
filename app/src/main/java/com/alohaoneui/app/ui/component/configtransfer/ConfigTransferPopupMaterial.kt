@@ -19,6 +19,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.alohaoneui.app.R
 import com.alohaoneui.app.ui.component.material.ExpressiveIconButton
+import com.alohaoneui.app.ui.component.material.alohaCornerShape
 import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
 import com.alohaoneui.app.ui.theme.LocalMaterialShadowContainers
 
