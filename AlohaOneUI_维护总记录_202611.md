@@ -1315,3 +1315,5 @@
 
 - StatusTagMaterial 源码提交：`8d081bae20b5c822cde4db146bb336e20d556c26`。原先标签框体固定使用 `RoundedCornerShape(4.dp)`，绕过 Material 全局形状风格；现改为 `voyageCornerShape(4.dp)`，标签背景随当前主题形状策略统一。保留字号、内边距、背景/前景色与标签内容。
 - Scaffold 的源码提交 `04cd3143e5527da340b3595d15bddb9e0c145bd2` 与本轮 StatusTag 提交均待最终 HEAD 的 CI 验收；TabRow 的成功构建 Run `42450911631` 仅覆盖其提交 `bee674e...`。
+
+- LoadingDialogMaterial 本轮统一：移除原生 Material3 Surface + 固定 RoundedCornerShape(8dp)，改为共享 ExpressiveSurface，并使用 voyageCornerShape(16dp)。加载指示器、100dp尺寸及阻止外部/返回关闭的行为不变，容器开始受全局阴影、描边和主题形状配置控制。代码提交：3824dc0b7c2969da7adf34c59d9e637b62e13b88；Actions Run 42452635974 正在执行，待终态与 Artifact 验收。
