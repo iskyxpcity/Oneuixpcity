@@ -1532,3 +1532,12 @@
 - 源码提交：ff735f621904ac23fe5ce0015d354ff9001ca13e、9f46f085f1a45e92888993537feb139e09fc20b1，均仅在 test/switches-official-eight-20261103，未修改 main。
 - 当前 HEAD 对应 Actions Run：42489219420，状态 pending；前一提交 Run 42489118920 仍在进行中。尚未通过构建验收，亦未做真机视觉验收。
 - 这是全项目统一工作的第一阶段，不代表全仓所有页面、弹窗、导航、底部栏、预览、自定义控件均已完成。后续继续逐类审计 189 个 UI 相关 Kotlin 文件，优先检查所有 Material 页面是否按设置页结构使用分组、控件主题入口和一致的页面间距；Miuix 实现继续隔离保护。
+
+
+### 第一阶段补充：页面内外边距校准
+
+- 复核 AlohaOneUIOriginalCategoryScreen → PackagePane 的实际调用链后，补正详情页外层容器：Material 详情内容统一使用水平 16dp、垂直 8dp 页面分组边距；详情页内部子分组识别已处于 grouped 状态，不再重复增加水平缩进，避免双重 padding。
+- 扩展到整个项目的其他 Material 页面分组入口：StatusThemeGroup 普通组垂直间距从 4dp 校准为 8dp（compact 组保留 2dp）；OtherFunctionsThemeGroup 的 Material 组垂直间距从 4dp 校准为 8dp。两处 Miuix 分支均未更改。
+- 新增提交：0e2547334e4208904753fbd2e39072f383a48d6b、2b5c76f23fec094cbf5e34848a73804c68f36b36、be03dcb5afd3c4c0c816a317490535603137e3d2。
+- 当前最新 HEAD：be03dcb5afd3c4c0c816a317490535603137e3d2；对应 Actions Run 42489778082 pending。尚未完成构建和 APK 验收。
+- 已抽查首页、设置、功能分类、状态栏分类、关于、主题调色板、状态栏分类详情、其他功能页面及通用 Material 对话框/菜单/底部栏入口。首页仪表盘和主题调色板预览属于独立内容卡片/预览区域，不应强行改成 SegmentedColumn；功能分类、状态栏分类、关于页列表继续沿用 SegmentedColumn。全项目审计仍在继续，未宣称完成。
