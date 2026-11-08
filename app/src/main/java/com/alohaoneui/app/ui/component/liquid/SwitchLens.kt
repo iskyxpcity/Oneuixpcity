@@ -20,7 +20,7 @@ fun BackdropEffectScope.switchLens(
     if (!isRuntimeShaderSupported()) return
     if (refractionHeight <= 0f || refractionAmount <= 0f) return
 
-    // Aloha expands the backdrop capture area as the glass interaction settles:
+    // The glass switch expands its backdrop capture area as the interaction settles:
     // padding = max(existingPadding, (1 - progress) * 8dp), then subtracts
     // the active refraction height before configuring the shader.
     if (capturePadding > padding) {
