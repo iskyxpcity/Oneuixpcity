@@ -1334,3 +1334,5 @@
 - `HomeMaterial`、`SettingsMaterial`、`AboutMaterial` 三处页面曾显式把 `ExpressiveLargeTopAppBar` 覆盖回 Material3 默认 `surface` 顶栏颜色，绕过共享控件已统一的 `expressiveTopAppBarColors()`。现移除这三处冗余颜色覆盖，让页面统一继承共享 Material 顶栏主题；保留各页标题、返回/操作按钮、Insets 和滚动行为。提交：`3495c385a3e818c9ecacbe11b27161d376a79ff6`、`4a08642aec6ef62b640de969b1bc47e11761c9a6`、`30ed0216ec2e495cd08d70e3a06ba74b5650b384`。
 - 上一轮共享弹窗/框体重构的 Actions Run `42455752829` 已成功，HEAD `5a5ae6e2936be991e0fb95a65effe74e7c27368b`。本节新增导航栏与页面顶栏修改后，等待最新 HEAD 的 CI 编译、签名 APK 与包名/签名校验；未完成构建前不宣称本节验收通过。
 - 本阶段仍属全局统一进行中：继续逐项复核 Material 页面是否绕过共享组件、共享组件是否完整遵循 Aloha 颜色/形状/描边/阴影令牌。Miuix 分支保持独立，不合并 `main`，不修改版本号。
+- 补充全局顶栏调用点复核：在 `IconShapePresetPicker` 与 `ColorPaletteScreenMaterial` 也发现显式覆盖 `ExpressiveLargeTopAppBar` 颜色为 `surface` 的旧参数，现一并移除，统一继承共享 `expressiveTopAppBarColors()`。与首页、设置页、关于页采用同一策略；页面内容、返回动作、滚动行为和 Insets 不变。提交：`7899a25b3c115cebdc69fb79189a1d17fa73626c`、`f10488da2f82cfe91fe5b1058d787dd4eb5ac1a2`。
+- 顶栏复核目前覆盖首页、设置页、关于页、颜色主题页、图标形状详情页；所有已发现的页面级旧颜色覆盖均已清理。待最新代码批次完成 Actions 构建后，再继续检查其他 Material 控件族。
