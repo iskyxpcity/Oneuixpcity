@@ -55,6 +55,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
 import com.alohaoneui.app.ui.theme.LocalMaterialShadowTopBars
+import com.alohaoneui.app.ui.theme.LocalMaterialShadowContainers
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 
@@ -204,14 +205,40 @@ fun SearchAppBar(
                 scrollBehavior = scrollBehavior
             )
 
+            val searchFieldShape = alohaCornerShape(16.dp)
+            val searchOutlineWidth = LocalMaterialOutlineWidth.current
             SearchBar(
                 modifier = Modifier
                     .fillMaxWidth()
                     .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal))
                     .padding(horizontal = 16.dp)
-                    .padding(bottom = 8.dp),
+                    .padding(bottom = 8.dp)
+                    .then(
+                        if (LocalMaterialShadowContainers.current) {
+                            Modifier.shadow(2.dp, searchFieldShape)
+                        } else Modifier
+                    )
+                    .then(
+                        searchOutlineWidth.takeIf { it > 0f }?.let {
+                            Modifier.border(
+                                BorderStroke(it.dp, MaterialTheme.colorScheme.outlineVariant),
+                                searchFieldShape,
+                            )
+                        } ?: Modifier
+                    ),
                 state = searchBarState,
                 inputField = inputField,
+                shape = searchFieldShape,
+                colors = SearchBarDefaults.colors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                    inputFieldColors = SearchBarDefaults.inputFieldColors(
+                        focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                        disabledContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                    ),
+                ),
+                tonalElevation = 0.dp,
+                shadowElevation = 0.dp,
             )
         }
     }
