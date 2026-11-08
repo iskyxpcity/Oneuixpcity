@@ -58,53 +58,62 @@ fun SwitchItem(
 
     when (LocalUiMode.current) {
         UiMode.Material -> {
-            if (clickable) {
-                SegmentedListItem(
-                    modifier = (if (grouped) modifier else modifier.padding(horizontal = 16.dp, vertical = 4.dp)).alpha(rowAlpha),
-                    enabled = rowEnabled,
-                    onClick = { if (enabled) onClick() },
-                    colors = alohaOneUISegmentedColors(),
-                    headlineContent = { Text(title) },
-                    supportingContent = summary?.let { { Text(it) } },
-                    leadingContent = leadingContent ?: icon?.let { imageVector ->
-                        { Icon(imageVector, contentDescription = title) }
-                    },
-                    trailingContent = {
-                        Row(
-                            modifier = Modifier.height(IntrinsicSize.Min),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            if (showChildIndicator) {
-                                MaterialVerticalDivider(
-                                    modifier = Modifier
-                                        .fillMaxHeight()
-                                        .padding(top = 8.dp, bottom = 8.dp, end = 15.dp),
+            @Composable
+            fun Content(contentModifier: Modifier) {
+                if (clickable) {
+                    SegmentedListItem(
+                        modifier = contentModifier.alpha(rowAlpha),
+                        enabled = rowEnabled,
+                        onClick = { if (enabled) onClick() },
+                        colors = alohaOneUISegmentedColors(),
+                        headlineContent = { Text(title) },
+                        supportingContent = summary?.let { { Text(it) } },
+                        leadingContent = leadingContent ?: icon?.let { imageVector ->
+                            { Icon(imageVector, contentDescription = title) }
+                        },
+                        trailingContent = {
+                            Row(
+                                modifier = Modifier.height(IntrinsicSize.Min),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                if (showChildIndicator) {
+                                    MaterialVerticalDivider(
+                                        modifier = Modifier
+                                            .fillMaxHeight()
+                                            .padding(top = 8.dp, bottom = 8.dp, end = 15.dp),
+                                    )
+                                }
+                                ExpressiveSwitch(
+                                    checked = checked,
+                                    enabled = enabled,
+                                    onCheckedChange = { if (enabled) onCheckedChange(it) },
                                 )
                             }
-                            ExpressiveSwitch(
-                                checked = checked,
-                                enabled = enabled,
-                                onCheckedChange = { if (enabled) onCheckedChange(it) },
-                            )
-                        }
-                    },
-                )
-            } else {
-                Box(
-                    modifier = (if (grouped) modifier else modifier.padding(horizontal = 16.dp, vertical = 4.dp)).alpha(rowAlpha),
-                ) {
-                    SegmentedSwitchItem(
-                        icon = icon,
-                        leadingContent = leadingContent,
-                        dimWhenDisabled = dimWhenDisabled,
-                        colors = alohaOneUISegmentedColors(),
-                        title = title,
-                        summary = summary,
-                        checked = checked,
-                        enabled = enabled,
-                        onCheckedChange = { if (enabled) onCheckedChange(it) },
+                        },
                     )
+                } else {
+                    Box(modifier = contentModifier.alpha(rowAlpha)) {
+                        SegmentedSwitchItem(
+                            icon = icon,
+                            leadingContent = leadingContent,
+                            dimWhenDisabled = dimWhenDisabled,
+                            colors = alohaOneUISegmentedColors(),
+                            title = title,
+                            summary = summary,
+                            checked = checked,
+                            enabled = enabled,
+                            onCheckedChange = { if (enabled) onCheckedChange(it) },
+                        )
+                    }
                 }
+            }
+
+            if (grouped) {
+                AlohaOneUIChildOptionSurface(modifier = modifier) {
+                    Content(Modifier)
+                }
+            } else {
+                Content(modifier.padding(horizontal = 16.dp, vertical = 4.dp))
             }
         }
 
