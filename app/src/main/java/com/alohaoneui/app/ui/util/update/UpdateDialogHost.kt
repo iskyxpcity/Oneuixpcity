@@ -54,7 +54,7 @@ import com.alohaoneui.app.BuildConfig
 import com.alohaoneui.app.R
 import com.alohaoneui.app.ui.component.material.ExpressiveToggleButton
 import com.alohaoneui.app.ui.component.material.ExpressiveSurface
-import com.alohaoneui.app.ui.component.material.voyageCornerShape
+import com.alohaoneui.app.ui.component.material.alohaCornerShape
 import com.alohaoneui.app.ui.theme.LocalMaterialShadowContainers
 import com.alohaoneui.app.ui.util.checkNewVersion
 import kotlinx.coroutines.Dispatchers
@@ -312,7 +312,7 @@ private fun UpdateDialogMaterial(
     val gradientTop = remember(accent, container) {
         accent.copy(alpha = 0.45f).compositeOver(container)
     }
-    val dialogShape = voyageCornerShape(28.dp)
+    val dialogShape = alohaCornerShape(28.dp)
     val notes = remember(info.changelog) { normalizeReleaseNotes(info.changelog) }
     val targetAppName = if (info.isMigration) {
         stringResource(R.string.update_dialog_migration_app_name)
@@ -350,7 +350,7 @@ private fun UpdateDialogMaterial(
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     ExpressiveSurface(
-                        shape = voyageCornerShape(18.dp),
+                        shape = alohaCornerShape(18.dp),
                         color = MaterialTheme.colorScheme.primaryContainer,
                         contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
                         shadowElevation = 0.dp,
@@ -384,7 +384,7 @@ private fun UpdateDialogMaterial(
                     ExpressiveSurface(
                         color = MaterialTheme.colorScheme.tertiaryContainer,
                         contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
-                        shape = voyageCornerShape(8.dp),
+                        shape = alohaCornerShape(8.dp),
                         shadowElevation = 0.dp,
                     ) {
                         Text(
