@@ -179,6 +179,7 @@ class MainActivity : ComponentActivity() {
                             initialPage = selectedMainPage,
                             onPageChanged = viewModel::setSelectedMainPage,
                             pagerGestureMode = uiState.pagerGestureMode,
+                            enableSwipeBack = uiState.enableSwipeBack,
                             enablePredictiveBack = uiState.enablePredictiveBack,
                         )
                     }
@@ -314,6 +315,7 @@ fun MainScreen(
     initialPage: Int = 0,
     onPageChanged: (Int) -> Unit = {},
     pagerGestureMode: Int = PagerInterceptionMode.Native.ordinal,
+    enableSwipeBack: Boolean = false,
     enablePredictiveBack: Boolean = false,
 ) {
     val navController = LocalNavigator.current
@@ -402,11 +404,11 @@ fun MainScreen(
                         ).pagerGestureOverride(
                             pagerState = mainPagerState.pagerState,
                             mode = pagerGestureMode,
-                            enabled = true,
+                            enabled = enableSwipeBack,
                         ),
                         state = mainPagerState.pagerState,
                         beyondViewportPageCount = if (contentReady) 3 else 0,
-                        userScrollEnabled = !interceptPagerAxis,
+                        userScrollEnabled = enableSwipeBack && !interceptPagerAxis,
                         pageNestedScrollConnection = if (interceptPagerAxis) {
                             PagerGestureNestedScrollConnection
                         } else {
