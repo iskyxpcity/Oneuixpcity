@@ -1289,3 +1289,11 @@
 
 - 搜索容器 `SearchAppBar` 改用 `ExpressiveSurface` 后，首次构建因 `RectangleShape` 导入路径错误失败；按日志修正为 `androidx.compose.ui.graphics.RectangleShape`。修正后的最新月度记录构建 Run `42437115348` 成功，HEAD `df624a5f2fc889eec5739362e699d9ac47ce648a`；编译、签名 APK 构建、包名和签名校验通过。
 - 成功 Artifact：`AlohaOneUI-Signed-Test-APK`，ID `13600510390`，大小 28,634,775 bytes；Artifact ZIP SHA-256：`523e4ba0e589d16b41050ad66f7e10173d6fbf88b2ec386103fa63218e8d0f20`。Run URL：`https://github.com/iskyxpcity/Oneuixpcity/actions/runs/42437115348`。
+
+## 2026-11｜Material 下拉菜单容器主题统一（继续）
+
+- 复核 ConfigTransferPopupMaterial.kt 与 RebootListPopupMaterial.kt，发现两处 Material 下拉菜单虽然使用 Material3 菜单组作为 Aloha 组件内部布局，但遗漏了全局容器阴影和描边设置，导致与 ExpressiveMenu / SegmentedList 中已统一的菜单容器规则不一致。
+- 两处菜单组现统一读取 LocalMaterialShadowContainers 控制 MenuDefaults.ShadowElevation，并读取 LocalMaterialOutlineWidth 控制 outlineVariant 描边；菜单项目、点击行为和原有菜单形状保持不变。
+- 本轮代码提交：b2616f64d9a9ee9494a2deccd154c9d2a559a486。
+- GitHub Actions Run 42442352858 成功：源码检查、Kotlin 编译、签名 APK 构建、优化候选验证、包名/签名校验均通过。Artifact AlohaOneUI-Signed-Test-APK ID 13602561056，大小 28,635,970 bytes；Artifact ZIP SHA-256：a84595d8fa93d82a2644b98fac208104ffeeabc0882303c94bb45288eded7cf1。Run URL：https://github.com/iskyxpcity/Oneuixpcity/actions/runs/42442352858。
+- 本轮仅完成两处菜单容器主题补齐；共享 Material 控件复核仍在继续，不将其表述为全局统一完成。Miuix 组件未改动；继续仅在测试分支推进，不合并 main，不修改版本号。
