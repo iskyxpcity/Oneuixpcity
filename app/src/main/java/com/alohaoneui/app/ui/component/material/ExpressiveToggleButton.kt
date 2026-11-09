@@ -35,7 +35,7 @@ fun ExpressiveToggleButton(
     ToggleButton(
         checked = checked,
         onCheckedChange = onCheckedChange,
-        modifier = modifier,
+        modifier = modifier.materialExpressivePressMotion(interactionSource, enabled),
         enabled = enabled,
         colors = colors,
         shapes = shapes,
