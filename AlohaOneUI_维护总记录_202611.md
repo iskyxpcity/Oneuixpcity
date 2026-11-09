@@ -1606,3 +1606,11 @@
 - 同时撤销上一轮为该单独卡片临时增加的 `SegmentedOptionFrame.containerColor` 特殊参数，恢复共享框体原默认行为，避免保留不再需要的专属颜色接口。
 - 最新代码提交：`acd3e1f585a3a7e31c853233f4db45d1c4d3055b`（界面缩放改用标准分段行）；`c2b0f5e51d9cec00be329f0c4f43a239e8634039`（移除临时背景参数）。均仅在 `test/switches-official-eight-20261103`，未合并 `main`。
 - Actions 已为代码提交触发新的构建，需以最新分支头提交对应的 run 为准；构建和浅色/深色主题真机视觉验收完成前，不标记为已验收。
+
+
+## 2026-11-08｜恢复界面缩放详情项内部横排与滑条独立整行
+
+- 用户验收指出：外层详情项的上/中/下分段卡片样式已正确，但改为 `SegmentedListItem` 后，原先把图标放在 leading、百分比按钮放在 trailing、滑条塞进 headline 的布局使 headline 可用宽度被两侧内容挤压，滑条变短；同时图标/按钮与标题文案未保持同一行。
+- 已调整 `ColorPaletteScreenMaterial.kt` 中“界面缩放”这一项的内部排版：不再占用列表组件两侧的 leading/trailing 槽位；在 headline 内使用纵向 Column，第一行用 Row 放置左侧矢量图标、中间标题与说明文案、右侧百分比按钮；第二行单独放置滑条并填满可用宽度。这样滑条不再与 leading/trailing 槽位争夺宽度。
+- 仅调整该详情项内部布局，保留外层 `SegmentedListItem` 分段卡片、图标、文案、百分比按钮点击/输入弹窗、滑条范围与数值回调；不改其他详情项。
+- 提交：`b3b7dff1ac0d0b5fb57d18bbafba91e95f6aa46e`，仅在测试分支，未合并 main。等待该提交对应 Actions 构建及实际屏幕检查。
