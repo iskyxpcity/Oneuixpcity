@@ -922,6 +922,7 @@ fun SegmentedSwitchItem(
     enabled: Boolean = true,
     dimWhenDisabled: Boolean = true,
     showChildIndicator: Boolean = false,
+    expanded: Boolean? = null,
     onRowClick: (() -> Unit)? = null,
     onCheckedChange: (Boolean) -> Unit,
 ) {
