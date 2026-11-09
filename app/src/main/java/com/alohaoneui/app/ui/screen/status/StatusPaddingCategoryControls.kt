@@ -1,5 +1,6 @@
 package com.alohaoneui.app.ui.screen.status
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -59,7 +60,7 @@ fun StatusPaddingCategoryControls(
                     title = stringResource(id = R.string.alohaoneui_statusBarLeftPaddingDp_title),
                     summary = if (uiState.modifyStatusBarLeftPadding) "%.1fdp".format(left) else null,
                     icon = ImageVector.vectorResource(id = R.drawable.padding),
-                    showChildIndicator = false,
+                    modifier = Modifier.animateContentSize(),
                     clickable = true,
                     expanded = leftExpanded && uiState.modifyStatusBarLeftPadding,
                     onClick = { leftExpanded = !leftExpanded },
@@ -72,7 +73,7 @@ fun StatusPaddingCategoryControls(
             }
             if (leftExpanded && uiState.modifyStatusBarLeftPadding) {
                 add {
-                    StatusThemeExpandedControlItem {
+                    StatusThemeChildItem {
                         AlohaOneUISlider(
                             value = left,
                             onValueChange = { left = it },
@@ -91,7 +92,7 @@ fun StatusPaddingCategoryControls(
                     title = stringResource(id = R.string.alohaoneui_statusBarRightPaddingDp_title),
                     summary = if (uiState.modifyStatusBarRightPadding) "%.1fdp".format(right) else null,
                     icon = ImageVector.vectorResource(id = R.drawable.padding),
-                    showChildIndicator = false,
+                    modifier = Modifier.animateContentSize(),
                     clickable = true,
                     expanded = rightExpanded && uiState.modifyStatusBarRightPadding,
                     onClick = { rightExpanded = !rightExpanded },
@@ -104,7 +105,7 @@ fun StatusPaddingCategoryControls(
             }
             if (rightExpanded && uiState.modifyStatusBarRightPadding) {
                 add {
-                    StatusThemeExpandedControlItem {
+                    StatusThemeChildItem {
                         AlohaOneUISlider(
                             value = right,
                             onValueChange = { right = it },
@@ -125,7 +126,7 @@ fun StatusPaddingCategoryControls(
                         stringResource(id = R.string.status_padding_top_summary, top)
                     } else null,
                     icon = ImageVector.vectorResource(id = R.drawable.padding),
-                    showChildIndicator = false,
+                    modifier = Modifier.animateContentSize(),
                     clickable = true,
                     expanded = topExpanded && uiState.modifyStatusBarTopPadding,
                     onClick = { topExpanded = !topExpanded },
@@ -138,7 +139,7 @@ fun StatusPaddingCategoryControls(
             }
             if (topExpanded && uiState.modifyStatusBarTopPadding) {
                 add {
-                    StatusThemeExpandedControlItem {
+                    StatusThemeChildItem {
                         AlohaOneUISlider(
                             value = top,
                             onValueChange = { top = it },
@@ -163,7 +164,7 @@ fun StatusPaddingCategoryControls(
                         stringResource(id = R.string.status_padding_bottom_summary, bottom)
                     } else null,
                     icon = ImageVector.vectorResource(id = R.drawable.padding),
-                    showChildIndicator = false,
+                    modifier = Modifier.animateContentSize(),
                     clickable = true,
                     expanded = bottomExpanded && uiState.modifyStatusBarBottomPadding,
                     onClick = { bottomExpanded = !bottomExpanded },
@@ -176,7 +177,7 @@ fun StatusPaddingCategoryControls(
             }
             if (bottomExpanded && uiState.modifyStatusBarBottomPadding) {
                 add {
-                    StatusThemeExpandedControlItem {
+                    StatusThemeChildItem {
                         AlohaOneUISlider(
                             value = bottom,
                             onValueChange = { bottom = it },
