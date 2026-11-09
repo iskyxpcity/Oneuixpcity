@@ -108,6 +108,7 @@ fun StatusNetworkSpeedCategoryControls(
                         },
                         modifier = Modifier.animateContentSize(),
                         clickable = true,
+                        expanded = lineGapExpanded && uiState.modifyNetworkSpeedLineGap,
                         onClick = { lineGapExpanded = !lineGapExpanded },
                         checked = uiState.modifyNetworkSpeedLineGap,
                         onCheckedChange = {
@@ -153,6 +154,7 @@ fun StatusNetworkSpeedCategoryControls(
                         },
                         modifier = Modifier.animateContentSize(),
                         clickable = true,
+                        expanded = uploadScaleExpanded && uiState.setNetworkSpeedUploadTextScale,
                         onClick = { uploadScaleExpanded = !uploadScaleExpanded },
                         checked = uiState.setNetworkSpeedUploadTextScale,
                         onCheckedChange = {
@@ -198,6 +200,7 @@ fun StatusNetworkSpeedCategoryControls(
                         },
                         modifier = Modifier.animateContentSize(),
                         clickable = true,
+                        expanded = downloadScaleExpanded && uiState.setNetworkSpeedDownloadTextScale,
                         onClick = { downloadScaleExpanded = !downloadScaleExpanded },
                         checked = uiState.setNetworkSpeedDownloadTextScale,
                         onCheckedChange = {
@@ -241,6 +244,7 @@ fun StatusNetworkSpeedCategoryControls(
                     },
                     modifier = Modifier.animateContentSize(),
                     clickable = true,
+                    expanded = thresholdExpanded && uiState.networkSpeedThresholdKb > 0,
                     onClick = { thresholdExpanded = !thresholdExpanded },
                     checked = uiState.networkSpeedThresholdKb > 0,
                     onCheckedChange = {
