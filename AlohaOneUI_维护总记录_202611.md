@@ -1623,3 +1623,12 @@
 - 最小修复：调度入口要求 config.enabled && config.showWifi，阻止关闭状态下重新注册监听/排队；延迟任务真正执行前再次检查开关及 host 是否仍有效，避免已排队任务越过恢复流程修改基线。原有恢复快照和 SystemUI 原始参数不变，不增加任何固定间距，不改其他组合图标风格。
 - 代码提交：3a3260563da9772b6709023237bfb9a868f07574，仅在 test/switches-official-eight-20261103，未合并 main。
 - 当前完成源码修正；仍需以该提交对应的 GitHub Actions 结果确认编译，并在设备上开关三合一验证左侧原生图标恢复系统原有间距。源码修复不等于真机验收完成。
+
+## 2026-11-09｜折叠屏双行时钟详情按「设置－语言」展开列表结构统一
+
+- 用户指出：带折叠模式的状态栏详情项仍未按「设置」页“语言”展开详情的结构修复。重新对照 SettingsMaterial.kt 的语言区域：父选项和展开后的子选项均作为同一 SegmentedColumn 的直接子项，统一参与列表首/中/末分段形状；子项不是嵌套的独立卡片。
+- 核对状态栏所有详情控制文件后，设备型号专属的折叠屏详情分支集中在 StatusTimeCategoryControls.kt 的 Fold7 双行时钟时间比例、日期比例设置。此前这两项使用 StatusThemeChildItem 自定义把标题、说明和滑块塞入单个 headline 内容，视觉/语义结构仍不同于设置页的标准列表项。
+- 新增 StatusThemeExpandedControlItem：Material 下直接使用标准 SegmentedListItem，标题走 headline、说明和滑块走 supportingContent；作为 StatusThemeGroup 所属 SegmentedColumn 的同级列表项，继承真实的上/中/末分段形状、动态容器色和阴影规则。Miuix 保留原 StatusThemeChildItem 布局，不改变其样式。
+- Fold7 时间比例与日期比例两个展开项已改用该 helper；保留原滑块范围 50–110%、步进、实时预览事件和结束提交事件。未修改父级开关及其他设备的双行时钟逻辑。
+- 修改文件：StatusThemeGroup.kt、StatusTimeCategoryControls.kt。提交：86605d75、5a5bcff5，仅位于 test/switches-official-eight-20261103，未修改 main。
+- 构建验证：helper 提交对应 Actions run 42559719796 正在执行；包含最终 Fold7 行替换的最新提交对应 run 42559723642 尚在 pending。须以后者最终成功和设备视觉验收为准，不能提前标记为完成。
