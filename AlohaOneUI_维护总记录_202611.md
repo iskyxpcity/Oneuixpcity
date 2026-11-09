@@ -1713,3 +1713,11 @@
 - #2884 的 Kotlin 编译、签名 APK 构建、包名/证书校验及 Artifact 保留全部成功；其后包含主题模式按钮组修正的最新完整构建 #2886（run id `42628586331`，提交 `c582474aa7daaaff3bcd5267510a5bb3f635ff52`）也已全部成功，签名 APK 已构建并保留为 Actions Artifact。
 - 已完成对主要 Material UI screen 与共享组件中的按钮调用点静态审计：独立按钮使用共享 `ExpressiveButton/ExpressiveTextButton/ExpressiveIconButton/ExpressiveToggleButton`；识别出的并排 Material 按钮组已迁移到官方 ButtonGroup。自定义卡片式点击项不属于 Material Button 控件，暂保留其既有交互，不把卡片缩放误称为按钮组联动。
 - 仍需继续检查项目其他非屏幕组件/特殊操作入口，并做设备实际触控与布局视觉验收；不能把构建成功等同于所有页面视觉验收完成。仅测试分支修改，PR #31 未合并 main。
+
+
+### 继续进展（2026-11-09，下载弹窗与最新签名构建）
+- 继续审计共享弹窗组件时发现 `DownloadDialogMaterial` 仍分别提供取消/确认按钮槽位。已改用 `ExpressiveDialogActionButtons`，并为公共动作组增加 `confirmEnabled`，确保无效 URL 时确认按钮及其溢出菜单项都保持禁用。Miuix 下载弹窗中的 Miuix TextButton 完全未改。提交 `66796f11`、`30172765`、`bc5c7e41`。
+- 对项目主要 Material screen、共享 UI component、mod UI category/component 完成进一步调用点扫描：实际 Material Button 控件均走共享 Expressive 按钮封装或已迁移的官方 ButtonGroup；mod 详情页的 `AlohaOneUIActionButton` 也统一映射到 Material `ExpressiveButton` / Miuix `MiuixButton`。DownloadDialog 是此次补出的最后一处原生 Material 对话框双按钮槽位。
+- 最新完整构建 Actions run #2890（run id `42629746033`，提交 `bc5c7e4135a0675c619c020339f823c8a976c261`）全部成功：源代码验证、Kotlin 编译、owner-signed APK 构建、包名与固定证书校验、Artifact 保留均成功。Artifact：`AlohaOneUI-Signed-Test-APK`，id `13680293805`，尚未过期。
+- 目前已识别的 Material 3 按钮调用点与并排操作组均已接入统一体系；Miuix 原生按钮、底部导航等非 Button 控件，以及卡片式语义点击项不强行改造成按钮，避免改变原有交互和视觉布局。
+- 后续工作转为设备上的按压幅度、回弹速度、按钮组宽度联动、窄屏溢出菜单和不同主题配色验收；通过设备验收前仍不标记为最终完成。测试分支与 PR #31 保持未合并 main。
