@@ -118,15 +118,24 @@ fun StatusThemeExpandedControlItem(
 ) {
     when (LocalUiMode.current) {
         UiMode.Material -> {
+            val hasHeader = !title.isNullOrBlank() || !summary.isNullOrBlank()
             SegmentedListItem(
                 modifier = modifier,
                 colors = alohaOneUISegmentedColors(),
                 headlineContent = {
-                    if (!title.isNullOrBlank()) {
-                        Text(
-                            text = title,
-                            style = MaterialTheme.typography.bodyLarge,
-                        )
+                    if (hasHeader) {
+                        if (!title.isNullOrBlank()) {
+                            Text(
+                                text = title,
+                                style = MaterialTheme.typography.bodyLarge,
+                            )
+                        }
+                    } else {
+                        CompositionLocalProvider(
+                            LocalMaterialShadowContainers provides false,
+                        ) {
+                            content()
+                        }
                     }
                 },
                 leadingContent = icon?.let {
@@ -137,25 +146,27 @@ fun StatusThemeExpandedControlItem(
                         )
                     }
                 },
-                supportingContent = {
-                    Column(
-                        modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
-                        verticalArrangement = Arrangement.spacedBy(4.dp),
-                    ) {
-                        if (!summary.isNullOrBlank()) {
-                            Text(
-                                text = summary,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
-                        CompositionLocalProvider(
-                            LocalMaterialShadowContainers provides false,
+                supportingContent = if (hasHeader) {
+                    {
+                        Column(
+                            modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                            verticalArrangement = Arrangement.spacedBy(4.dp),
                         ) {
-                            content()
+                            if (!summary.isNullOrBlank()) {
+                                Text(
+                                    text = summary,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                            CompositionLocalProvider(
+                                LocalMaterialShadowContainers provides false,
+                            ) {
+                                content()
+                            }
                         }
                     }
-                },
+                } else null,
             )
         }
         UiMode.Miuix -> StatusThemeChildItem(
