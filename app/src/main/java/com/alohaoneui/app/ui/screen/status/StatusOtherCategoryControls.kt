@@ -153,9 +153,9 @@ private fun BurnInSliderSetting(
     onValueChangeFinished: () -> Unit,
 ) {
     // Keep the title, explanation and slider inside one native grouped row.
-    // Previously AlohaOneUIInfoItem and StatusThemeChildItem each drew their own
+    // Previously AlohaOneUIInfoItem and StatusThemeExpandedControlItem each drew their own
     // Material segmented surface, visually splitting the same setting.
-    StatusThemeChildItem {
+    StatusThemeExpandedControlItem {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
