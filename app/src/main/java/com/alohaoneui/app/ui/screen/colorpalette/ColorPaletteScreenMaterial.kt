@@ -408,27 +408,62 @@ fun ColorPaletteScreenMaterial(
 
                     SegmentedListItem(
                         modifier = Modifier.fillMaxWidth(),
-                        leadingContent = {
-                            Icon(
-                                Icons.Rounded.AspectRatio,
-                                contentDescription = stringResource(R.string.settings_page_scale),
-                            )
-                        },
                         headlineContent = {
                             Column(
                                 modifier = Modifier.fillMaxWidth(),
-                                verticalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalArrangement = Arrangement.spacedBy(12.dp),
                             ) {
-                                Text(
-                                    text = stringResource(R.string.settings_page_scale),
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                )
-                                Text(
-                                    text = stringResource(R.string.settings_page_scale_summary),
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                ) {
+                                    Icon(
+                                        Icons.Rounded.AspectRatio,
+                                        contentDescription = stringResource(R.string.settings_page_scale),
+                                    )
+                                    Column(
+                                        modifier = Modifier.weight(1f),
+                                        verticalArrangement = Arrangement.spacedBy(2.dp),
+                                    ) {
+                                        Text(
+                                            text = stringResource(R.string.settings_page_scale),
+                                            style = MaterialTheme.typography.titleMedium,
+                                            color = MaterialTheme.colorScheme.onSurface,
+                                        )
+                                        Text(
+                                            text = stringResource(R.string.settings_page_scale_summary),
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        )
+                                    }
+                                    ExpressiveSurface(
+                                        onClick = {
+                                            pageScaleInput = ((sliderValue * 100).toInt()).toString()
+                                            showPageScaleValueDialog = true
+                                        },
+                                        modifier = Modifier.requiredHeight(32.dp),
+                                        shape = alohaCornerShape(12.dp),
+                                        color = MaterialTheme.colorScheme.primaryContainer,
+                                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                        shadowElevation = if (LocalMaterialShadowButtons.current) 2.dp else 0.dp,
+                                        border = LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
+                                            BorderStroke(it.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.45f))
+                                        },
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxHeight()
+                                                .padding(horizontal = 10.dp),
+                                            contentAlignment = Alignment.Center,
+                                        ) {
+                                            Text(
+                                                text = "${(sliderValue * 100).toInt()}%",
+                                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                            )
+                                        }
+                                    }
+                                }
                                 AlohaOneUISlider(
                                     value = sliderValue,
                                     onValueChange = { sliderValue = it },
@@ -436,34 +471,6 @@ fun ColorPaletteScreenMaterial(
                                     valueRange = 0.8f..1.1f,
                                     modifier = Modifier.fillMaxWidth(),
                                 )
-                            }
-                        },
-                        trailingContent = {
-                            ExpressiveSurface(
-                                onClick = {
-                                    pageScaleInput = ((sliderValue * 100).toInt()).toString()
-                                    showPageScaleValueDialog = true
-                                },
-                                modifier = Modifier.requiredHeight(32.dp),
-                                shape = alohaCornerShape(12.dp),
-                                color = MaterialTheme.colorScheme.primaryContainer,
-                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                shadowElevation = if (LocalMaterialShadowButtons.current) 2.dp else 0.dp,
-                                border = LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
-                                    BorderStroke(it.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.45f))
-                                },
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxHeight()
-                                        .padding(horizontal = 10.dp),
-                                    contentAlignment = Alignment.Center,
-                                ) {
-                                    Text(
-                                        text = "${(sliderValue * 100).toInt()}%",
-                                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                    )
-                                }
                             }
                         },
                     )
