@@ -116,6 +116,8 @@ fun SwitchItem(
                             summary = summary,
                             checked = checked,
                             enabled = enabled,
+                            showChildIndicator = showChildIndicator,
+                            expanded = expanded,
                             onCheckedChange = { if (enabled) onCheckedChange(it) },
                         )
                     }
