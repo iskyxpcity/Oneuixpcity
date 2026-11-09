@@ -14,7 +14,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.alohaoneui.app.R
 import com.alohaoneui.common.Preference
-import com.alohaoneui.mod.ui.component.AlohaOneUIInfoItem
 import com.alohaoneui.mod.ui.component.AlohaOneUIInlineTextField
 import com.alohaoneui.mod.ui.component.AlohaOneUISlider
 import com.alohaoneui.mod.ui.component.SelectItem
@@ -63,13 +62,13 @@ fun StatusClockRichBlockEditor(
             var textSize by remember(style.textSizeSp) {
                 mutableFloatStateOf(style.textSizeSp)
             }
-            AlohaOneUIInfoItem(
+            StatusThemeExpandedControlItem(
                 title = stringResource(id = R.string.alohaoneui_clockRichTextSize_title),
                 summary = stringResource(
                     id = R.string.alohaoneui_clockRichTextSize_summary,
                     textSize,
                 ),
-            )
+            ) {
             AlohaOneUISlider( 
                 stepSize = 1f,
                 value = textSize,
@@ -87,18 +86,19 @@ fun StatusClockRichBlockEditor(
                 },
             )
         }
+        }
 
         var horizontalOffset by remember(style.horizontalOffsetDp) {
             mutableFloatStateOf(style.horizontalOffsetDp.coerceIn(-20f, 20f))
         }
-        AlohaOneUIInfoItem(
+        StatusThemeExpandedControlItem(
             title = stringResource(id = R.string.alohaoneui_clockRichHorizontalOffset_title),
             summary = stringResource(
                 id = R.string.alohaoneui_clockRichOffset_summary,
                 horizontalOffset,
             ),
-        )
-        AlohaOneUISlider(
+        ) {
+            AlohaOneUISlider(
             value = horizontalOffset,
             stepSize = 1f,
             onValueChange = { raw ->
@@ -114,18 +114,19 @@ fun StatusClockRichBlockEditor(
                 onStyleChange(style.copy(horizontalOffsetDp = horizontalOffset))
             },
         )
+        }
 
         var verticalOffset by remember(style.verticalOffsetDp) {
             mutableFloatStateOf(style.verticalOffsetDp.coerceIn(-20f, 20f))
         }
-        AlohaOneUIInfoItem(
+        StatusThemeExpandedControlItem(
             title = stringResource(id = R.string.alohaoneui_clockRichVerticalOffset_title),
             summary = stringResource(
                 id = R.string.alohaoneui_clockRichOffset_summary,
                 verticalOffset,
             ),
-        )
-        AlohaOneUISlider(
+        ) {
+            AlohaOneUISlider(
             value = verticalOffset,
             stepSize = 1f,
             onValueChange = { raw ->
@@ -141,6 +142,7 @@ fun StatusClockRichBlockEditor(
                 onStyleChange(style.copy(verticalOffsetDp = verticalOffset))
             },
         )
+        }
 
         val weights = listOf(0, 300, 400, 500, 600, 700, 800, 900)
         val weightLabels = listOf(
@@ -228,13 +230,13 @@ fun StatusClockRichBlockEditor(
             var alpha by remember(style.backgroundAlpha) {
                 mutableFloatStateOf(style.backgroundAlpha)
             }
-            AlohaOneUIInfoItem(
+            StatusThemeExpandedControlItem(
                 title = stringResource(id = R.string.alohaoneui_clockRichBackgroundAlpha_title),
                 summary = stringResource(
                     id = R.string.alohaoneui_clockRichBackgroundAlpha_summary,
                     (alpha * 100f).roundToInt(),
                 ),
-            )
+            ) {
             AlohaOneUISlider(
                 value = alpha * 100f,
                 stepSize = 1f,
@@ -251,6 +253,7 @@ fun StatusClockRichBlockEditor(
                     onStyleChange(style.copy(backgroundAlpha = alpha))
                 },
             )
+        }
 
             SwitchItem(
                 title = stringResource(id = R.string.alohaoneui_clockRichBorder_title),
@@ -279,14 +282,14 @@ fun StatusClockRichBlockEditor(
                 var borderWidth by remember(style.backgroundBorderWidthDp) {
                     mutableFloatStateOf(style.backgroundBorderWidthDp)
                 }
-                AlohaOneUIInfoItem(
+                StatusThemeExpandedControlItem(
                     title = stringResource(id = R.string.alohaoneui_clockRichBorderWidth_title),
                     summary = stringResource(
                         id = R.string.alohaoneui_clockRichBorderWidth_summary,
                         borderWidth,
                     ),
-                )
-                AlohaOneUISlider(
+                ) {
+            AlohaOneUISlider(
                     value = borderWidth,
                     onValueChange = { raw ->
                         val value = (raw * 2f).roundToInt() / 2f
@@ -301,18 +304,19 @@ fun StatusClockRichBlockEditor(
                         onStyleChange(style.copy(backgroundBorderWidthDp = borderWidth))
                     },
                 )
+        }
             }
 
             var radius by remember(style.cornerRadiusDp) {
                 mutableFloatStateOf(style.cornerRadiusDp)
             }
-            AlohaOneUIInfoItem(
+            StatusThemeExpandedControlItem(
                 title = stringResource(id = R.string.alohaoneui_clockRichCornerRadius_title),
                 summary = stringResource(
                     id = R.string.alohaoneui_clockRichCornerRadius_summary,
                     radius,
                 ),
-            )
+            ) {
             AlohaOneUISlider( 
                 stepSize = 1f,
                 value = radius,
@@ -329,17 +333,18 @@ fun StatusClockRichBlockEditor(
                     onStyleChange(style.copy(cornerRadiusDp = radius))
                 },
             )
+        }
 
             var horizontalPadding by remember(style.horizontalPaddingDp) {
                 mutableFloatStateOf(style.horizontalPaddingDp)
             }
-            AlohaOneUIInfoItem(
+            StatusThemeExpandedControlItem(
                 title = stringResource(id = R.string.alohaoneui_clockRichHorizontalPadding_title),
                 summary = stringResource(
                     id = R.string.alohaoneui_clockRichPadding_summary,
                     horizontalPadding,
                 ),
-            )
+            ) {
             AlohaOneUISlider( 
                 stepSize = 1f,
                 value = horizontalPadding,
@@ -356,17 +361,18 @@ fun StatusClockRichBlockEditor(
                     onStyleChange(style.copy(horizontalPaddingDp = horizontalPadding))
                 },
             )
+        }
 
             var verticalPadding by remember(style.verticalPaddingDp) {
                 mutableFloatStateOf(style.verticalPaddingDp)
             }
-            AlohaOneUIInfoItem(
+            StatusThemeExpandedControlItem(
                 title = stringResource(id = R.string.alohaoneui_clockRichVerticalPadding_title),
                 summary = stringResource(
                     id = R.string.alohaoneui_clockRichPadding_summary,
                     verticalPadding,
                 ),
-            )
+            ) {
             AlohaOneUISlider( 
                 stepSize = 1f,
                 value = verticalPadding,
@@ -383,6 +389,7 @@ fun StatusClockRichBlockEditor(
                     onStyleChange(style.copy(verticalPaddingDp = verticalPadding))
                 },
             )
+        }
         }
     }
 }
