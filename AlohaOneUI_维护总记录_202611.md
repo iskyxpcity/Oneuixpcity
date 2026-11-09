@@ -1704,3 +1704,12 @@
 - 已核对 `GlobalShortcutActionsScreen.kt` 与 `TopBarBackButton.kt` 使用共享 `ExpressiveIconButton`；`AlohaOneUISpecialControls.kt` 使用共享 `ExpressiveButton`，因此可继承独立按钮弹性按压反馈。
 - 最新 Actions run #2879（run id `42625589091`，提交 `7f0defc13562cfb4af326d6fd79b708a790c5fd8`）已进入 `:app:compileDebugKotlin`，截至本记录更新时仍在编译；必须等待最终成功后才确认两处按钮组迁移无编译问题。
 - 全项目 Material 3 调用点审计仍未完成；后续继续检查其他屏幕、弹窗、选择器及底部/顶部操作。当前仍仅测试分支，PR #31 未合并 main；尚未完成 APK 与设备视觉验收。
+
+
+### 继续进展（2026-11-09，第二批按钮组迁移与构建）
+- 已将 `StatusComboStyleOneCategoryControls.kt` 中 Material 版三段式“常规/尺寸/颜色”分类按钮，以及颜色编辑弹窗内“深色/浅色”切换，迁移为官方 `ExpressiveButtonGroup`；保留 Miuix TabRow 分支、形状、触觉反馈和选中事件。提交 `1b12b600`。
+- 已将 `ColorPaletteScreenMaterial.kt` 的系统/浅色/深色/AMOLED 模式按钮组迁移为官方 ButtonGroup；保留原图标、颜色、分段形状、语义和触觉反馈。初次构建发现 `alohaSegmentedShape` 在 ButtonGroup 的非 Composable DSL 作用域中调用；已将 shape 计算移入每个 `buttonGroupContent`，提交 `c582474a`。
+- 通用 `ExpressiveConfirmDialog` 与 `ConfirmDialogMaterial` 的取消/确认操作现在由 `ExpressiveDialogActionButtons` 统一呈现为同一官方 ButtonGroup；只有单按钮的对话框继续使用独立弹性按压动画。提交 `63d48598`、`4405ea3e`。
+- #2884 的 Kotlin 编译、签名 APK 构建、包名/证书校验及 Artifact 保留全部成功；其后包含主题模式按钮组修正的最新完整构建 #2886（run id `42628586331`，提交 `c582474aa7daaaff3bcd5267510a5bb3f635ff52`）也已全部成功，签名 APK 已构建并保留为 Actions Artifact。
+- 已完成对主要 Material UI screen 与共享组件中的按钮调用点静态审计：独立按钮使用共享 `ExpressiveButton/ExpressiveTextButton/ExpressiveIconButton/ExpressiveToggleButton`；识别出的并排 Material 按钮组已迁移到官方 ButtonGroup。自定义卡片式点击项不属于 Material Button 控件，暂保留其既有交互，不把卡片缩放误称为按钮组联动。
+- 仍需继续检查项目其他非屏幕组件/特殊操作入口，并做设备实际触控与布局视觉验收；不能把构建成功等同于所有页面视觉验收完成。仅测试分支修改，PR #31 未合并 main。
