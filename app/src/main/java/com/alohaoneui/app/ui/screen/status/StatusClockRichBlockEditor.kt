@@ -216,7 +216,8 @@ SwitchItem(
 }
 
         if (style.overrideTextColor) {
-            StatusThemeExpandedControlItem(title = stringResource(id = R.string.alohaoneui_clockRichTextColor_title)) {
+            SegmentedItem(index = rowIndex++, count = rowCount) {
+StatusThemeExpandedControlItem(title = stringResource(id = R.string.alohaoneui_clockRichTextColor_title)) {
 StatusClockColorPicker(
                 colorArgb = style.textColorArgb,
                 onColorPreview = { selected ->
@@ -226,6 +227,7 @@ StatusClockColorPicker(
                     onStyleChange(style.copy(textColorArgb = selected))
                 },
             )
+}
 }
         }
 
@@ -245,7 +247,8 @@ SwitchItem(
 }
 
         if (style.backgroundEnabled) {
-            StatusThemeExpandedControlItem(title = stringResource(id = R.string.alohaoneui_clockRichBackground_title)) {
+            SegmentedItem(index = rowIndex++, count = rowCount) {
+StatusThemeExpandedControlItem(title = stringResource(id = R.string.alohaoneui_clockRichBackground_title)) {
 StatusClockColorPicker(
                 colorArgb = style.backgroundColorArgb,
                 onColorPreview = { selected ->
@@ -255,6 +258,7 @@ StatusClockColorPicker(
                     onStyleChange(style.copy(backgroundColorArgb = selected))
                 },
             )
+}
 }
 
             var alpha by remember(style.backgroundAlpha) {
@@ -303,7 +307,8 @@ SwitchItem(
 }
 
             if (style.backgroundBorderEnabled) {
-                StatusThemeExpandedControlItem(title = stringResource(id = R.string.alohaoneui_clockRichBorder_title)) {
+                SegmentedItem(index = rowIndex++, count = rowCount) {
+StatusThemeExpandedControlItem(title = stringResource(id = R.string.alohaoneui_clockRichBorder_title)) {
 StatusClockColorPicker(
                     colorArgb = style.backgroundBorderColorArgb,
                     onColorPreview = { selected ->
@@ -313,6 +318,7 @@ StatusClockColorPicker(
                         onStyleChange(style.copy(backgroundBorderColorArgb = selected))
                     },
                 )
+}
 }
 
                 var borderWidth by remember(style.backgroundBorderWidthDp) {
