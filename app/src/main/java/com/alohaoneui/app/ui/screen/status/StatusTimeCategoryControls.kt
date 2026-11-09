@@ -345,6 +345,7 @@ fun StatusTimeCategoryControls(
                         title = stringResource(id = R.string.alohaoneui_clockRichStyle_title),
                         summary = stringResource(id = R.string.alohaoneui_clockRichStyle_summary),
                         icon = ImageVector.vectorResource(id = R.drawable.format_size),
+                        expanded = uiState.enableStatusBarClockRichStyle,
                         checked = uiState.enableStatusBarClockRichStyle,
                         onCheckedChange = {
                             onEvent(SystemUIEvent.StatusBar.SetStatusBarClockRichStyle(it))
@@ -779,6 +780,7 @@ fun StatusTimeCategoryControls(
                             lineGapDp.roundToInt().toString() + " dp"
                         } else null,
                         icon = ImageVector.vectorResource(id = R.drawable.format_letter_spacing),
+                        expanded = lineGapEnabled,
                         checked = lineGapEnabled,
                         onCheckedChange = { enabled ->
                             lineGapEnabled = enabled
