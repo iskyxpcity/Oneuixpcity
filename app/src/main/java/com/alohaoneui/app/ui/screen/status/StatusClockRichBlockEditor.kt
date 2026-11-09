@@ -1,5 +1,6 @@
 package com.alohaoneui.app.ui.screen.status
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -14,6 +15,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.alohaoneui.app.R
 import com.alohaoneui.common.Preference
+import com.alohaoneui.app.ui.component.material.SegmentedItem
 import com.alohaoneui.mod.ui.component.AlohaOneUIInlineTextField
 import com.alohaoneui.mod.ui.component.AlohaOneUISlider
 import com.alohaoneui.mod.ui.component.SelectItem
@@ -41,8 +43,19 @@ fun StatusClockRichBlockEditor(
     onStylePreview: (Preference.SystemUI.StatusBarClockBlockStyle) -> Unit = onStyleChange,
     modifier: Modifier = Modifier,
 ) {
-    Column(modifier = modifier.fillMaxWidth()) {
-        SwitchItem(
+    val rowCount = 6 +
+        (if (style.overrideTextSize) 1 else 0) +
+        (if (style.overrideTextColor) 1 else 0) +
+        (if (style.backgroundEnabled) 6 else 0) +
+        (if (style.backgroundEnabled && style.backgroundBorderEnabled) 2 else 0)
+    var rowIndex = 0
+
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        SegmentedItem(index = rowIndex++, count = rowCount) {
+SwitchItem(
             title = stringResource(id = R.string.alohaoneui_clockRichTextSize_title),
             summary = if (style.overrideTextSize) {
                 stringResource(
@@ -57,12 +70,14 @@ fun StatusClockRichBlockEditor(
                 onStyleChange(style.copy(overrideTextSize = enabled))
             },
         )
+}
 
         if (style.overrideTextSize) {
             var textSize by remember(style.textSizeSp) {
                 mutableFloatStateOf(style.textSizeSp)
             }
-            StatusThemeExpandedControlItem(
+            SegmentedItem(index = rowIndex++, count = rowCount) {
+StatusThemeExpandedControlItem(
                 title = stringResource(id = R.string.alohaoneui_clockRichTextSize_title),
                 summary = stringResource(
                     id = R.string.alohaoneui_clockRichTextSize_summary,
@@ -86,12 +101,14 @@ fun StatusClockRichBlockEditor(
                 },
             )
         }
+}
         }
 
         var horizontalOffset by remember(style.horizontalOffsetDp) {
             mutableFloatStateOf(style.horizontalOffsetDp.coerceIn(-20f, 20f))
         }
-        StatusThemeExpandedControlItem(
+        SegmentedItem(index = rowIndex++, count = rowCount) {
+StatusThemeExpandedControlItem(
             title = stringResource(id = R.string.alohaoneui_clockRichHorizontalOffset_title),
             summary = stringResource(
                 id = R.string.alohaoneui_clockRichOffset_summary,
@@ -115,11 +132,13 @@ fun StatusClockRichBlockEditor(
             },
         )
         }
+}
 
         var verticalOffset by remember(style.verticalOffsetDp) {
             mutableFloatStateOf(style.verticalOffsetDp.coerceIn(-20f, 20f))
         }
-        StatusThemeExpandedControlItem(
+        SegmentedItem(index = rowIndex++, count = rowCount) {
+StatusThemeExpandedControlItem(
             title = stringResource(id = R.string.alohaoneui_clockRichVerticalOffset_title),
             summary = stringResource(
                 id = R.string.alohaoneui_clockRichOffset_summary,
@@ -143,6 +162,7 @@ fun StatusClockRichBlockEditor(
             },
         )
         }
+}
 
         val weights = listOf(0, 300, 400, 500, 600, 700, 800, 900)
         val weightLabels = listOf(
@@ -160,7 +180,8 @@ fun StatusClockRichBlockEditor(
         } else {
             0
         }
-        SelectItem(
+        SegmentedItem(index = rowIndex++, count = rowCount) {
+SelectItem(
             title = stringResource(id = R.string.alohaoneui_clockRichFontWeight_title),
             entries = weightLabels,
             selectedIndex = weightIndex,
@@ -177,8 +198,10 @@ fun StatusClockRichBlockEditor(
                 }
             },
         )
+}
 
-        SwitchItem(
+        SegmentedItem(index = rowIndex++, count = rowCount) {
+SwitchItem(
             title = stringResource(id = R.string.alohaoneui_clockRichTextColor_title),
             summary = if (style.overrideTextColor) {
                 richArgbText(style.textColorArgb)
@@ -190,9 +213,11 @@ fun StatusClockRichBlockEditor(
                 onStyleChange(style.copy(overrideTextColor = enabled))
             },
         )
+}
 
         if (style.overrideTextColor) {
-            StatusClockColorPicker(
+            StatusThemeExpandedControlItem(title = stringResource(id = R.string.alohaoneui_clockRichTextColor_title)) {
+StatusClockColorPicker(
                 colorArgb = style.textColorArgb,
                 onColorPreview = { selected ->
                     onStylePreview(style.copy(textColorArgb = selected))
@@ -201,9 +226,11 @@ fun StatusClockRichBlockEditor(
                     onStyleChange(style.copy(textColorArgb = selected))
                 },
             )
+}
         }
 
-        SwitchItem(
+        SegmentedItem(index = rowIndex++, count = rowCount) {
+SwitchItem(
             title = stringResource(id = R.string.alohaoneui_clockRichBackground_title),
             summary = if (style.backgroundEnabled) {
                 richArgbText(style.backgroundColorArgb)
@@ -215,9 +242,11 @@ fun StatusClockRichBlockEditor(
                 onStyleChange(style.copy(backgroundEnabled = enabled))
             },
         )
+}
 
         if (style.backgroundEnabled) {
-            StatusClockColorPicker(
+            StatusThemeExpandedControlItem(title = stringResource(id = R.string.alohaoneui_clockRichBackground_title)) {
+StatusClockColorPicker(
                 colorArgb = style.backgroundColorArgb,
                 onColorPreview = { selected ->
                     onStylePreview(style.copy(backgroundColorArgb = selected))
@@ -226,11 +255,13 @@ fun StatusClockRichBlockEditor(
                     onStyleChange(style.copy(backgroundColorArgb = selected))
                 },
             )
+}
 
             var alpha by remember(style.backgroundAlpha) {
                 mutableFloatStateOf(style.backgroundAlpha)
             }
-            StatusThemeExpandedControlItem(
+            SegmentedItem(index = rowIndex++, count = rowCount) {
+StatusThemeExpandedControlItem(
                 title = stringResource(id = R.string.alohaoneui_clockRichBackgroundAlpha_title),
                 summary = stringResource(
                     id = R.string.alohaoneui_clockRichBackgroundAlpha_summary,
@@ -254,8 +285,10 @@ fun StatusClockRichBlockEditor(
                 },
             )
         }
+}
 
-            SwitchItem(
+            SegmentedItem(index = rowIndex++, count = rowCount) {
+SwitchItem(
                 title = stringResource(id = R.string.alohaoneui_clockRichBorder_title),
                 summary = if (style.backgroundBorderEnabled) {
                     richArgbText(style.backgroundBorderColorArgb)
@@ -267,9 +300,11 @@ fun StatusClockRichBlockEditor(
                     onStyleChange(style.copy(backgroundBorderEnabled = enabled))
                 },
             )
+}
 
             if (style.backgroundBorderEnabled) {
-                StatusClockColorPicker(
+                StatusThemeExpandedControlItem(title = stringResource(id = R.string.alohaoneui_clockRichBorder_title)) {
+StatusClockColorPicker(
                     colorArgb = style.backgroundBorderColorArgb,
                     onColorPreview = { selected ->
                         onStylePreview(style.copy(backgroundBorderColorArgb = selected))
@@ -278,11 +313,13 @@ fun StatusClockRichBlockEditor(
                         onStyleChange(style.copy(backgroundBorderColorArgb = selected))
                     },
                 )
+}
 
                 var borderWidth by remember(style.backgroundBorderWidthDp) {
                     mutableFloatStateOf(style.backgroundBorderWidthDp)
                 }
-                StatusThemeExpandedControlItem(
+                SegmentedItem(index = rowIndex++, count = rowCount) {
+StatusThemeExpandedControlItem(
                     title = stringResource(id = R.string.alohaoneui_clockRichBorderWidth_title),
                     summary = stringResource(
                         id = R.string.alohaoneui_clockRichBorderWidth_summary,
@@ -305,12 +342,14 @@ fun StatusClockRichBlockEditor(
                     },
                 )
         }
+}
             }
 
             var radius by remember(style.cornerRadiusDp) {
                 mutableFloatStateOf(style.cornerRadiusDp)
             }
-            StatusThemeExpandedControlItem(
+            SegmentedItem(index = rowIndex++, count = rowCount) {
+StatusThemeExpandedControlItem(
                 title = stringResource(id = R.string.alohaoneui_clockRichCornerRadius_title),
                 summary = stringResource(
                     id = R.string.alohaoneui_clockRichCornerRadius_summary,
@@ -334,11 +373,13 @@ fun StatusClockRichBlockEditor(
                 },
             )
         }
+}
 
             var horizontalPadding by remember(style.horizontalPaddingDp) {
                 mutableFloatStateOf(style.horizontalPaddingDp)
             }
-            StatusThemeExpandedControlItem(
+            SegmentedItem(index = rowIndex++, count = rowCount) {
+StatusThemeExpandedControlItem(
                 title = stringResource(id = R.string.alohaoneui_clockRichHorizontalPadding_title),
                 summary = stringResource(
                     id = R.string.alohaoneui_clockRichPadding_summary,
@@ -362,11 +403,13 @@ fun StatusClockRichBlockEditor(
                 },
             )
         }
+}
 
             var verticalPadding by remember(style.verticalPaddingDp) {
                 mutableFloatStateOf(style.verticalPaddingDp)
             }
-            StatusThemeExpandedControlItem(
+            SegmentedItem(index = rowIndex++, count = rowCount) {
+StatusThemeExpandedControlItem(
                 title = stringResource(id = R.string.alohaoneui_clockRichVerticalPadding_title),
                 summary = stringResource(
                     id = R.string.alohaoneui_clockRichPadding_summary,
@@ -390,6 +433,7 @@ fun StatusClockRichBlockEditor(
                 },
             )
         }
+}
         }
     }
 }
