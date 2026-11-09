@@ -18,7 +18,9 @@ import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.ButtonGroupMenuState
 import androidx.compose.material3.ButtonGroupScope
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.OverflowIndicator
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MoreHoriz
+import androidx.compose.material3.Icon
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.IconButton
@@ -59,7 +61,15 @@ fun ExpressiveButtonGroup(
     expandedRatio: Float = ButtonGroupDefaults.ExpandedRatio,
     horizontalArrangement: Arrangement.Horizontal = ButtonGroupDefaults.HorizontalArrangement,
     verticalAlignment: Alignment.Vertical = Alignment.Top,
-    overflowIndicator: @Composable (ButtonGroupMenuState) -> Unit = { OverflowIndicator(it) },
+    overflowIndicator: @Composable (ButtonGroupMenuState) -> Unit = { menuState ->
+        ExpressiveIconButton(
+            onClick = {
+                if (menuState.isShowing) menuState.dismiss() else menuState.show()
+            },
+        ) {
+            Icon(Icons.Default.MoreHoriz, contentDescription = "More options")
+        }
+    },
     content: ButtonGroupScope.() -> Unit,
 ) {
     ButtonGroup(
