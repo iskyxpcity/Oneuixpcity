@@ -72,7 +72,7 @@ fun StatusPowerCategoryControls(
             }
             if (widthExpanded && uiState.setBatteryIconWidthScale) {
                 add {
-                    StatusThemeChildItem {
+                    StatusThemeExpandedControlItem {
                         AlohaOneUISlider(
                             value = widthScale,
                             onValueChange = { widthScale = it },
@@ -104,7 +104,7 @@ fun StatusPowerCategoryControls(
             }
             if (heightExpanded && uiState.setBatteryIconHeightScale) {
                 add {
-                    StatusThemeChildItem {
+                    StatusThemeExpandedControlItem {
                         AlohaOneUISlider(
                             value = heightScale,
                             onValueChange = { heightScale = it },
