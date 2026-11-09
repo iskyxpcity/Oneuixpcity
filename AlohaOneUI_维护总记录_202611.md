@@ -1588,3 +1588,12 @@
 - 已在 `ExpressiveControls.kt` 的两个 `ExpressiveOutlinedTextField` 重载中，将聚焦/未聚焦输入框底色设为主题动态色板的 `MaterialTheme.colorScheme.surfaceContainer`，禁用状态设为 `surfaceContainerLow`。按当前层级形成：普通列表 `surfaceContainerLow`、输入框 `surfaceContainer`、Material 3 弹窗表面（默认更高容器层级）之间的区分；不再使用透明或固定白色。
 - 保留 `OutlinedTextField` 原生 Material 3 控件、`alohaCornerShape(12.dp)`、聚焦 `primary` 边框、未聚焦 `outline` 边框、禁用 `outlineVariant`、错误 `error`，不改形状工厂、圆角比例、布局、交互、Miuix、AMOLED 色板或弹窗业务逻辑。
 - 源码提交：`296c2adc5c52bb2c05df2a2475e9f8c2fc3b8117`，仅提交到 `test/switches-official-eight-20261103`，未修改 `main`。当前仅完成源码修改，尚待 GitHub Actions Kotlin 编译/签名 APK 构建与普通浅色、深色主题真机视觉验收；不得将其标记为已验收完成。
+
+
+## 2026-11-08｜界面缩放详情卡片背景层级对齐
+
+- 按用户限定范围，只处理“主题设置”中的“界面缩放”详情选项卡卡片容器背景，不修改滑块轨道/滑块本身，也不修改“圆角大小”“描边宽度”两个正常详情项。
+- 查证 `ColorPaletteScreenMaterial.kt`：界面缩放使用 `SegmentedOptionFrame` 独立绘制卡片，原背景色为 `surfaceContainerHigh`；圆角大小、描边宽度则通过 `SegmentedSliderItem` 使用普通分段行容器层级。这是界面缩放卡片单独显深的直接代码差异。
+- 为避免改变 `SegmentedOptionFrame` 其他潜在调用方，给该框体增加可显式传入的 `containerColor` 参数，默认仍保留原 `surfaceContainerHigh`；仅界面缩放调用处传入动态主题色 `MaterialTheme.colorScheme.surfaceContainerLow`，其形状、描边、阴影、内边距、滑块及业务逻辑均不变。
+- 修改文件：`SegmentedList.kt`、`ColorPaletteScreenMaterial.kt`。提交：`53412803`（增加可配置背景参数）、`d996fce4`（界面缩放指定低层级表面）、`bc73f3cd`（颜色类型限定修正）。仅操作 `test/switches-official-eight-20261103`，未修改 `main`。
+- GitHub Actions 构建已触发：run `42547267882`，当前状态 pending；需等待结果并在普通浅色/深色主题下检查界面缩放卡片视觉效果后再标记验收。
