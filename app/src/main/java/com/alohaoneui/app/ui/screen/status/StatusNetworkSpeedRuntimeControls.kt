@@ -81,6 +81,7 @@ internal fun StatusNetworkSpeedRuntimeControls(
                     summary = stringResource(id = R.string.status_network_speed_runtime_enable_summary),
                     clickable = true,
                     showChildIndicator = true,
+                    expanded = runtime.enabled && expanded,
                     onClick = {
                         if (runtime.enabled) expanded = !expanded
                     },
