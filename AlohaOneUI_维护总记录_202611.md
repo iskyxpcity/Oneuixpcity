@@ -1570,3 +1570,5 @@
 - 已修正 `app/src/main/java/com/alohaoneui/app/ui/component/material/ExpressiveControls.kt`：两个重载均恢复 Material 3 原生 OutlinedTextField 边框状态（聚焦 primary、未聚焦 outline、禁用 outlineVariant、错误 error），输入框容器改用独立的 `surfaceContainerLowest`，禁用状态用 `surfaceContainerLow`；移除用全局描边代替 Material 输入框边框的逻辑。全局按钮阴影仍保留。这样弹窗容器、列表选项和输入框分别遵循 Material 3 的不同语义层级。
 - 本次只修改 Material 共享输入框，不涉及 AMOLED 色板逻辑，不修改 Miuix、弹窗业务逻辑或列表交互。
 - 源码提交：`c7fd972d3dbcee5d86d2b21444f890f62833ba72`，位于 `test/switches-official-eight-20261103`，未合并 main。仍需跑 Actions 源码校验/Kotlin 构建，并在普通浅色/深色动态配色下检查实际弹窗：容器背景、下拉选项列表、输入框填充和原生边框需有明确层级；构建成功不等于真机视觉验收完成。
+
+- 进一步核对弹窗内列表后，确认共享 `alohaOneUISegmentedColors()` 也把所有 Material 分段列表行设为 `surfaceContainerHigh`，与 Material 3 AlertDialog 的默认容器层级过近。已将普通/禁用列表行改为 `surfaceContainerLow`，使弹窗容器、列表行、输入框分别落在不同的 tonal 层级；选择态仍保留 `secondaryContainer`，选中色和交互逻辑不变。补充提交：`ab055e71`。
