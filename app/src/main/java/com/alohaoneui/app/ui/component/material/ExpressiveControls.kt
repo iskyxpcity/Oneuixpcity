@@ -21,6 +21,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
@@ -48,12 +49,14 @@ fun ExpressiveButton(
     content: @Composable RowScope.() -> Unit,
 ) {
     val actualShape = shape ?: alohaCornerShape(12.dp)
+    val interactionSource = remember { MutableInteractionSource() }
     val hasShadow = LocalMaterialShadowButtons.current
     val outlineWidth = LocalMaterialOutlineWidth.current
     Button(
         onClick = onClick,
-        modifier = modifier,
+        modifier = modifier.materialExpressivePressMotion(interactionSource, enabled),
         enabled = enabled,
+        interactionSource = interactionSource,
         shape = actualShape,
         colors = colors,
         elevation = ButtonDefaults.buttonElevation(
@@ -80,8 +83,10 @@ fun ExpressiveTextButton(
     content: @Composable RowScope.() -> Unit,
 ) {
     val actualShape = shape ?: alohaCornerShape(12.dp)
+    val interactionSource = remember { MutableInteractionSource() }
     val outlineWidth = LocalMaterialOutlineWidth.current
     val styledModifier = modifier
+        .materialExpressivePressMotion(interactionSource, enabled)
         .then(
             outlineWidth.takeIf { it > 0f }?.let {
                 Modifier.border(it.dp, MaterialTheme.colorScheme.outlineVariant, actualShape)
@@ -94,6 +99,7 @@ fun ExpressiveTextButton(
         enabled = enabled,
         shape = actualShape,
         colors = colors,
+        interactionSource = interactionSource,
         content = content,
     )
 }
@@ -110,8 +116,10 @@ fun ExpressiveIconButton(
     content: @Composable () -> Unit,
 ) {
     val actualShape = shape ?: alohaCornerShape(40.dp)
+    val actualInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
     val outlineWidth = LocalMaterialOutlineWidth.current
     val styledModifier = modifier
+        .materialExpressivePressMotion(actualInteractionSource, enabled)
         .then(
             if (framed && LocalMaterialShadowButtons.current) {
                 Modifier.shadow(2.dp, actualShape)
@@ -128,7 +136,7 @@ fun ExpressiveIconButton(
         modifier = styledModifier,
         enabled = enabled,
         colors = colors,
-        interactionSource = interactionSource,
+        interactionSource = actualInteractionSource,
         content = content,
     )
 }
