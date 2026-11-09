@@ -1,7 +1,6 @@
 package com.alohaoneui.app.ui.screen.status
 
 import android.os.Build
-import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -57,7 +56,6 @@ fun StatusPowerCategoryControls(
             add {
                 SwitchItem(
                     title = stringResource(id = R.string.alohaoneui_setBatteryIconWidthScale_title),
-                    modifier = Modifier.animateContentSize(),
                     summary = if (uiState.setBatteryIconWidthScale) "%.2f".format(widthScale) else null,
                     icon = batteryIcon,
                     clickable = true,
@@ -73,7 +71,7 @@ fun StatusPowerCategoryControls(
             }
             if (widthExpanded && uiState.setBatteryIconWidthScale) {
                 add {
-                    StatusThemeExpandedControlItem {
+                    StatusThemeChildItem {
                         AlohaOneUISlider(
                             value = widthScale,
                             onValueChange = { widthScale = it },
@@ -90,7 +88,6 @@ fun StatusPowerCategoryControls(
             add {
                 SwitchItem(
                     title = stringResource(id = R.string.alohaoneui_setBatteryIconHeightScale_title),
-                    modifier = Modifier.animateContentSize(),
                     summary = if (uiState.setBatteryIconHeightScale) "%.2f".format(heightScale) else null,
                     icon = batteryIcon,
                     clickable = true,
@@ -106,7 +103,7 @@ fun StatusPowerCategoryControls(
             }
             if (heightExpanded && uiState.setBatteryIconHeightScale) {
                 add {
-                    StatusThemeExpandedControlItem {
+                    StatusThemeChildItem {
                         AlohaOneUISlider(
                             value = heightScale,
                             onValueChange = { heightScale = it },
