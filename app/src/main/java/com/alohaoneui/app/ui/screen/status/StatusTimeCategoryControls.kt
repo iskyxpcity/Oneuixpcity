@@ -1,7 +1,6 @@
 package com.alohaoneui.app.ui.screen.status
 
 import android.os.Build
-import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -200,7 +199,6 @@ fun StatusTimeCategoryControls(
             add {
                 SwitchItem(
                     title = stringResource(id = R.string.alohaoneui_setStatusBarClockFormat_title),
-                    modifier = Modifier.animateContentSize(),
                     summary = if (uiState.setStatusBarClockFormat) {
                         uiState.statusBarClockFormat
                     } else null,
@@ -224,7 +222,7 @@ fun StatusTimeCategoryControls(
             }
             if (formatExpanded && uiState.setStatusBarClockFormat) {
                 add {
-                    StatusThemeExpandedControlItem {
+                    StatusThemeChildItem {
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -445,7 +443,7 @@ fun StatusTimeCategoryControls(
             }
             if (uiState.modifyStatusBarClockPosition) {
                 add {
-                    StatusThemeExpandedControlItem(
+                    StatusThemeChildItem(
                         title = stringResource(
                             id = R.string.alohaoneui_statusBarClockOffsetX_title
                         ),
@@ -477,7 +475,7 @@ fun StatusTimeCategoryControls(
                     }
                 }
                 add {
-                    StatusThemeExpandedControlItem(
+                    StatusThemeChildItem(
                         title = stringResource(
                             id = R.string.alohaoneui_statusBarClockOffsetY_title
                         ),
@@ -543,7 +541,7 @@ fun StatusTimeCategoryControls(
                         )
                 }
                 add {
-                    StatusThemeExpandedControlItem {
+                    StatusThemeChildItem {
                         // Keep the title/value immediately above its own slider.
                         Column(
                             modifier = Modifier
@@ -590,7 +588,7 @@ fun StatusTimeCategoryControls(
                     }
                 }
                 add {
-                    StatusThemeExpandedControlItem(
+                    StatusThemeChildItem(
                         title = stringResource(id = R.string.alohaoneui_statusBarClockLeftMargin_title),
                         summary = stringResource(
                             id = R.string.alohaoneui_statusBarClockMargin_summary,
@@ -622,7 +620,7 @@ fun StatusTimeCategoryControls(
                     }
                 }
                 add {
-                    StatusThemeExpandedControlItem(
+                    StatusThemeChildItem(
                         title = stringResource(id = R.string.alohaoneui_statusBarClockRightMargin_title),
                         summary = stringResource(
                             id = R.string.alohaoneui_statusBarClockMargin_summary,
@@ -675,7 +673,7 @@ fun StatusTimeCategoryControls(
                     }
                     if (uiState.useFold7CustomDoubleLineClockScale) {
                         add {
-                            StatusThemeExpandedControlItem(
+                            StatusThemeChildItem(
                                 title = stringResource(
                                     id = R.string.alohaoneui_fold7DoubleLineClockTimeScale_title
                                 ),
@@ -707,7 +705,7 @@ fun StatusTimeCategoryControls(
                             }
                         }
                         add {
-                            StatusThemeExpandedControlItem(
+                            StatusThemeChildItem(
                                 title = stringResource(
                                     id = R.string.alohaoneui_fold7DoubleLineClockDateScale_title
                                 ),
@@ -790,7 +788,7 @@ fun StatusTimeCategoryControls(
                 }
                 if (lineGapEnabled) {
                     add {
-                        StatusThemeExpandedControlItem {
+                        StatusThemeChildItem {
                             AlohaOneUISlider(
                                 value = lineGapDp,
                                 stepSize = 1f,
@@ -824,7 +822,6 @@ fun StatusTimeCategoryControls(
                 add {
                     SwitchItem(
                         title = stringResource(id = R.string.alohaoneui_setStatusBarClockTextScale_title),
-                        modifier = Modifier.animateContentSize(),
                         summary = if (uiState.setStatusBarClockTextScale) {
                             "${(singleLineScale * 100f).roundToInt()}%"
                         } else null,
@@ -845,7 +842,7 @@ fun StatusTimeCategoryControls(
                 }
                 if (singleLineScaleExpanded && uiState.setStatusBarClockTextScale) {
                     add {
-                        StatusThemeExpandedControlItem {
+                        StatusThemeChildItem {
                             AlohaOneUISlider(
                                 value = singleLineScale * 100f,
                                 stepSize = 1f,
