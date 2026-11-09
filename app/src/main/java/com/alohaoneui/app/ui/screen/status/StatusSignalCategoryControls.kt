@@ -108,6 +108,7 @@ fun StatusSignalCategoryControls(
                     summary = stringResource(id = R.string.status_signal_runtime_enable_summary),
                     clickable = true,
                     showChildIndicator = true,
+                    expanded = runtime.enabled && runtimeExpanded,
                     onClick = {
                         if (runtime.enabled) runtimeExpanded = !runtimeExpanded
                     },
@@ -234,6 +235,7 @@ fun StatusSignalCategoryControls(
                     title = stringResource(id = R.string.alohaoneui_physicalEsimAdapterWorkaround_title),
                     summary = stringResource(id = R.string.alohaoneui_physicalEsimAdapterWorkaround_summary),
                     showChildIndicator = true,
+                    expanded = uiState.physicalEsimAdapterWorkaround,
                     checked = uiState.physicalEsimAdapterWorkaround,
                     onCheckedChange = {
                         onEvent(SystemUIEvent.StatusBar.PhysicalEsimAdapterWorkaround(it))
@@ -267,6 +269,7 @@ fun StatusSignalCategoryControls(
                     icon = ImageVector.vectorResource(id = R.drawable.sim_card),
                     modifier = Modifier.animateContentSize(),
                     clickable = true,
+                    expanded = carrierExpanded && uiState.setCustomCarrierName,
                     onClick = { carrierExpanded = !carrierExpanded },
                     checked = uiState.setCustomCarrierName,
                     onCheckedChange = {
