@@ -431,21 +431,18 @@ private fun WifiSliderSetting(
     onValueChange: (Float) -> Unit,
     onFinished: () -> Unit,
 ) {
-    Column {
-        AlohaOneUIInfoItem(
-            icon = icon,
-            title = title,
-            summary = summary,
+    StatusThemeChildItem(
+        title = title,
+        summary = summary,
+        icon = icon,
+    ) {
+        AlohaOneUISlider(
+            value = value,
+            onValueChange = onValueChange,
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+            valueRange = range,
+            onValueChangeFinished = onFinished,
         )
-        StatusThemeChildItem {
-            AlohaOneUISlider(
-                value = value,
-                onValueChange = onValueChange,
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
-                valueRange = range,
-                onValueChangeFinished = onFinished,
-            )
-        }
     }
 }
 
