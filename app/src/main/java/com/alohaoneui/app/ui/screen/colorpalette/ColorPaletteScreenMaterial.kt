@@ -112,11 +112,11 @@ import com.alohaoneui.app.ui.component.material.ExpressiveContentDialog
 import com.alohaoneui.app.ui.component.material.IconShapePresetPicker
 import com.alohaoneui.app.ui.component.material.IconShapePresetDetailScreen
 import com.alohaoneui.app.ui.component.material.SegmentedColumn
+import com.alohaoneui.app.ui.component.material.SegmentedListItem
 import com.alohaoneui.app.ui.component.material.SegmentedChoiceOptionsItem
 import com.alohaoneui.app.ui.component.material.SegmentedSwitchItem
 import com.alohaoneui.app.ui.component.material.SegmentedSliderItem
 import com.alohaoneui.mod.ui.component.AlohaOneUISlider
-import com.alohaoneui.app.ui.component.material.SegmentedOptionFrame
 import com.alohaoneui.app.ui.component.material.TonalCard
 import com.alohaoneui.app.ui.component.material.TopBarBackButton
 import com.alohaoneui.app.ui.component.material.alohaSegmentedShape
@@ -406,73 +406,67 @@ fun ColorPaletteScreenMaterial(
                     var showPageScaleValueDialog by remember { mutableStateOf(false) }
                     var pageScaleInput by remember { mutableStateOf("") }
 
-                    SegmentedOptionFrame(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                    ) {
-                        Column(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalArrangement = Arrangement.spacedBy(8.dp),
-                        ) {
-                            Row(
+                    SegmentedListItem(
+                        modifier = Modifier.fillMaxWidth(),
+                        leadingContent = {
+                            Icon(
+                                Icons.Rounded.AspectRatio,
+                                contentDescription = stringResource(R.string.settings_page_scale),
+                            )
+                        },
+                        headlineContent = {
+                            Column(
                                 modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically,
+                                verticalArrangement = Arrangement.spacedBy(8.dp),
                             ) {
-                                Icon(
-                                    Icons.Rounded.AspectRatio,
-                                    contentDescription = stringResource(id = R.string.settings_page_scale),
-                                    tint = MaterialTheme.colorScheme.onSurface,
+                                Text(
+                                    text = stringResource(R.string.settings_page_scale),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = MaterialTheme.colorScheme.onSurface,
                                 )
-                                Spacer(modifier = Modifier.width(12.dp))
-                                Column(
-                                    modifier = Modifier.weight(1f),
+                                Text(
+                                    text = stringResource(R.string.settings_page_scale_summary),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                                AlohaOneUISlider(
+                                    value = sliderValue,
+                                    onValueChange = { sliderValue = it },
+                                    onValueChangeFinished = { actions.onSetPageScale(sliderValue) },
+                                    valueRange = 0.8f..1.1f,
+                                    modifier = Modifier.fillMaxWidth(),
+                                )
+                            }
+                        },
+                        trailingContent = {
+                            ExpressiveSurface(
+                                onClick = {
+                                    pageScaleInput = ((sliderValue * 100).toInt()).toString()
+                                    showPageScaleValueDialog = true
+                                },
+                                modifier = Modifier.requiredHeight(32.dp),
+                                shape = alohaCornerShape(12.dp),
+                                color = MaterialTheme.colorScheme.primaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                shadowElevation = if (LocalMaterialShadowButtons.current) 2.dp else 0.dp,
+                                border = LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
+                                    BorderStroke(it.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.45f))
+                                },
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxHeight()
+                                        .padding(horizontal = 10.dp),
+                                    contentAlignment = Alignment.Center,
                                 ) {
                                     Text(
-                                        text = stringResource(R.string.settings_page_scale),
-                                        style = MaterialTheme.typography.titleMedium,
-                                        color = MaterialTheme.colorScheme.onSurface,
+                                        text = "${(sliderValue * 100).toInt()}%",
+                                        color = MaterialTheme.colorScheme.onPrimaryContainer,
                                     )
-                                    Text(
-                                        text = stringResource(id = R.string.settings_page_scale_summary),
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.outline,
-                                    )
-                                }
-                                ExpressiveSurface(
-                                    onClick = {
-                                        pageScaleInput = ((sliderValue * 100).toInt()).toString()
-                                        showPageScaleValueDialog = true
-                                    },
-                                    modifier = Modifier.requiredHeight(32.dp),
-                                    shape = alohaCornerShape(12.dp),
-                                    color = MaterialTheme.colorScheme.primaryContainer,
-                                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                    shadowElevation = if (LocalMaterialShadowButtons.current) 2.dp else 0.dp,
-                                    border = LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
-                                        BorderStroke(it.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.45f))
-                                    },
-                                ) {
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxHeight()
-                                            .padding(horizontal = 10.dp),
-                                        contentAlignment = Alignment.Center,
-                                    ) {
-                                        Text(
-                                            text = "${(sliderValue * 100).toInt()}%",
-                                            color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                        )
-                                    }
                                 }
                             }
-                            AlohaOneUISlider(
-                                value = sliderValue,
-                                onValueChange = { sliderValue = it },
-                                onValueChangeFinished = { actions.onSetPageScale(sliderValue) },
-                                valueRange = 0.8f..1.1f,
-                                modifier = Modifier.fillMaxWidth(),
-                            )
-                        }
-                    }
+                        },
+                    )
 
                     if (showPageScaleValueDialog) {
                         ExpressiveContentDialog(
