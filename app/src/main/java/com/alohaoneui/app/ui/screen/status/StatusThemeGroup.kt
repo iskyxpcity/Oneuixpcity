@@ -124,22 +124,33 @@ fun StatusThemeExpandedControlItem(
                 colors = alohaOneUISegmentedColors(),
                 headlineContent = {
                     if (hasHeader) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            if (icon != null) {
-                                Icon(
-                                    imageVector = icon,
-                                    contentDescription = title,
-                                )
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            ) {
+                                if (icon != null) {
+                                    Icon(
+                                        imageVector = icon,
+                                        contentDescription = title,
+                                    )
+                                }
                                 if (!title.isNullOrBlank()) {
-                                    androidx.compose.foundation.layout.Spacer(
-                                        modifier = Modifier.padding(end = 12.dp),
+                                    Text(
+                                        text = title,
+                                        style = MaterialTheme.typography.bodyLarge,
                                     )
                                 }
                             }
-                            if (!title.isNullOrBlank()) {
+                            if (!summary.isNullOrBlank()) {
                                 Text(
-                                    text = title,
-                                    style = MaterialTheme.typography.bodyLarge,
+                                    text = summary,
+                                    modifier = Modifier.padding(start = if (icon != null && !title.isNullOrBlank()) 36.dp else 0.dp),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                             }
                         }
@@ -148,21 +159,7 @@ fun StatusThemeExpandedControlItem(
                     }
                 },
                 supportingContent = if (hasHeader) {
-                    {
-                        Column(
-                            modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
-                            verticalArrangement = Arrangement.spacedBy(4.dp),
-                        ) {
-                            if (!summary.isNullOrBlank()) {
-                                Text(
-                                    text = summary,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                            }
-                            content()
-                        }
-                    }
+                    { content() }
                 } else null,
             )
         }
@@ -196,22 +193,33 @@ fun StatusThemeChildItem(
                 colors = alohaOneUISegmentedColors(),
                 headlineContent = {
                     if (hasHeader) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            if (icon != null) {
-                                Icon(
-                                    imageVector = icon,
-                                    contentDescription = title,
-                                )
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            ) {
+                                if (icon != null) {
+                                    Icon(
+                                        imageVector = icon,
+                                        contentDescription = title,
+                                    )
+                                }
                                 if (!title.isNullOrBlank()) {
-                                    androidx.compose.foundation.layout.Spacer(
-                                        modifier = Modifier.padding(end = 12.dp),
+                                    Text(
+                                        text = title,
+                                        style = MaterialTheme.typography.bodyLarge,
                                     )
                                 }
                             }
-                            if (!title.isNullOrBlank()) {
+                            if (!summary.isNullOrBlank()) {
                                 Text(
-                                    text = title,
-                                    style = MaterialTheme.typography.bodyLarge,
+                                    text = summary,
+                                    modifier = Modifier.padding(start = if (icon != null && !title.isNullOrBlank()) 36.dp else 0.dp),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                             }
                         }
@@ -221,24 +229,10 @@ fun StatusThemeChildItem(
                 },
                 supportingContent = if (hasHeader) {
                     {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 4.dp),
-                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                        CompositionLocalProvider(
+                            LocalMaterialShadowContainers provides false,
                         ) {
-                            if (!summary.isNullOrBlank()) {
-                                Text(
-                                    text = summary,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                            }
-                            CompositionLocalProvider(
-                                LocalMaterialShadowContainers provides false,
-                            ) {
-                                content()
-                            }
+                            content()
                         }
                     }
                 } else null,
