@@ -9,6 +9,7 @@ import androidx.compose.foundation.background
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.Alignment
@@ -67,6 +68,7 @@ import com.alohaoneui.app.ui.component.material.ExpressiveConfirmDialog
 import com.alohaoneui.app.ui.component.material.ExpressiveContentDialog
 import com.alohaoneui.app.ui.component.material.alohaCornerShape
 import com.alohaoneui.app.ui.component.material.ExpressiveToggleButton
+import com.alohaoneui.app.ui.component.material.ExpressiveButtonGroup
 import com.alohaoneui.app.ui.component.material.alohaCornerShape
 import com.alohaoneui.mod.ui.component.SwitchItem
 import com.alohaoneui.mod.ui.component.SelectItem
@@ -191,29 +193,46 @@ fun StatusComboStyleOneCategoryControls(
         stringResource(R.string.status_combo_style_one_tab_color),
     )
     val tabHaptic = LocalHapticFeedback.current
+    val tabInteractionSources = remember(tabs.size) {
+        List(tabs.size) { MutableInteractionSource() }
+    }
     when (LocalUiMode.current) {
         UiMode.Material -> {
-            Row(
+            ExpressiveButtonGroup(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 tabs.forEachIndexed { index, label ->
-                    ExpressiveToggleButton(
-                        checked = selectedTab == index,
-                        onCheckedChange = { checked ->
-                            if (checked) {
-                                tabHaptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
-                                selectedTab = index
-                            }
+                    val interactionSource = tabInteractionSources[index]
+                    customItem(
+                        buttonGroupContent = {
+                            ExpressiveToggleButton(
+                                checked = selectedTab == index,
+                                onCheckedChange = { checked ->
+                                    if (checked) {
+                                        tabHaptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
+                                        selectedTab = index
+                                    }
+                                },
+                                modifier = Modifier.animateWidth(interactionSource)
+                                    .semantics { role = Role.RadioButton },
+                                shapes = when (index) {
+                                    0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
+                                    tabs.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
+                                    else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
+                                },
+                                interactionSource = interactionSource,
+                                pressMotionEnabled = false,
+                            ) { Text(text = label) }
                         },
-                        modifier = Modifier.weight(1f).semantics { role = Role.RadioButton },
-                        shapes = when (index) {
-                            0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
-                            tabs.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
-                            else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
+                        menuContent = { menuState ->
+                            androidx.compose.material3.DropdownMenuItem(
+                                text = { Text(text = label) },
+                                onClick = { menuState.dismiss(); selectedTab = index },
+                            )
                         },
-                    ) { Text(text = label) }
+                    )
                 }
             }
         }
@@ -643,22 +662,39 @@ private fun StyleOneRoleColorDialog(
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             when (LocalUiMode.current) {
-                UiMode.Material -> Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
-                ) {
-                    listOf(darkLabel, lightLabel).forEachIndexed { index, label ->
-                        ExpressiveToggleButton(
-                            checked = onDark == (index == 0),
-                            onCheckedChange = { checked -> if (checked) onDark = index == 0 },
-                            modifier = Modifier.weight(1f),
-                            shapes = if (index == 0) {
-                                ButtonGroupDefaults.connectedLeadingButtonShapes()
-                            } else {
-                                ButtonGroupDefaults.connectedTrailingButtonShapes()
-                            },
-                        ) {
-                            Text(label)
+                UiMode.Material -> {
+                    val colorTabLabels = listOf(darkLabel, lightLabel)
+                    val colorTabSources = remember { List(2) { MutableInteractionSource() } }
+                    ExpressiveButtonGroup(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
+                    ) {
+                        colorTabLabels.forEachIndexed { index, label ->
+                            val interactionSource = colorTabSources[index]
+                            customItem(
+                                buttonGroupContent = {
+                                    ExpressiveToggleButton(
+                                        checked = onDark == (index == 0),
+                                        onCheckedChange = { checked -> if (checked) onDark = index == 0 },
+                                        modifier = Modifier.animateWidth(interactionSource),
+                                        shapes = if (index == 0) {
+                                            ButtonGroupDefaults.connectedLeadingButtonShapes()
+                                        } else {
+                                            ButtonGroupDefaults.connectedTrailingButtonShapes()
+                                        },
+                                        interactionSource = interactionSource,
+                                        pressMotionEnabled = false,
+                                    ) {
+                                        Text(label)
+                                    }
+                                },
+                                menuContent = { menuState ->
+                                    androidx.compose.material3.DropdownMenuItem(
+                                        text = { Text(label) },
+                                        onClick = { menuState.dismiss(); onDark = index == 0 },
+                                    )
+                                },
+                            )
                         }
                     }
                 }
