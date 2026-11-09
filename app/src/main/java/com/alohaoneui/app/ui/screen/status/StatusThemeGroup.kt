@@ -185,57 +185,53 @@ fun StatusThemeChildItem(
 ) {
     when (LocalUiMode.current) {
         UiMode.Material -> {
+            val hasHeader = !title.isNullOrBlank() || !summary.isNullOrBlank()
             SegmentedListItem(
                 modifier = modifier,
                 colors = alohaOneUISegmentedColors(),
                 headlineContent = {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 4.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        if (!title.isNullOrBlank() || icon != null) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                            ) {
-                                if (icon != null) {
-                                    Icon(
-                                        imageVector = icon,
-                                        contentDescription = title,
-                                    )
-                                }
-                                Column(
-                                    modifier = Modifier.weight(1f),
-                                    verticalArrangement = Arrangement.spacedBy(3.dp),
-                                ) {
-                                    if (!title.isNullOrBlank()) {
-                                        Text(
-                                            text = title,
-                                            style = MaterialTheme.typography.bodyLarge,
-                                        )
-                                    }
-                                    if (!summary.isNullOrBlank()) {
-                                        Text(
-                                            text = summary,
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        )
-                                    }
-                                }
-                            }
+                    if (hasHeader) {
+                        if (!title.isNullOrBlank()) {
+                            Text(
+                                text = title,
+                                style = MaterialTheme.typography.bodyLarge,
+                            )
                         }
-                        // The parent segmented row is the only card surface here.
-                        // Child controls render as content, not as another card.
-                        CompositionLocalProvider(
-                            LocalMaterialShadowContainers provides false,
-                        ) {
-                            content()
-                        }
+                    } else {
+                        content()
                     }
                 },
+                leadingContent = icon?.let {
+                    {
+                        Icon(
+                            imageVector = it,
+                            contentDescription = title,
+                        )
+                    }
+                },
+                supportingContent = if (hasHeader) {
+                    {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 4.dp),
+                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                        ) {
+                            if (!summary.isNullOrBlank()) {
+                                Text(
+                                    text = summary,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                            CompositionLocalProvider(
+                                LocalMaterialShadowContainers provides false,
+                            ) {
+                                content()
+                            }
+                        }
+                    }
+                } else null,
             )
         }
 
