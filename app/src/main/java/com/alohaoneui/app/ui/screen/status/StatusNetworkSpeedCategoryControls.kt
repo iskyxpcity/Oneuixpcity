@@ -118,7 +118,7 @@ fun StatusNetworkSpeedCategoryControls(
                 }
                 if (lineGapExpanded && uiState.modifyNetworkSpeedLineGap) {
                     add {
-                        StatusThemeChildItem {
+                        StatusThemeExpandedControlItem {
                             AlohaOneUISlider(
                                 value = lineGapDp,
                                 onValueChange = {
@@ -163,7 +163,7 @@ fun StatusNetworkSpeedCategoryControls(
                 }
                 if (uploadScaleExpanded && uiState.setNetworkSpeedUploadTextScale) {
                     add {
-                        StatusThemeChildItem {
+                        StatusThemeExpandedControlItem {
                             AlohaOneUISlider(
                                 value = uploadScale,
                                 onValueChange = {
@@ -208,7 +208,7 @@ fun StatusNetworkSpeedCategoryControls(
                 }
                 if (downloadScaleExpanded && uiState.setNetworkSpeedDownloadTextScale) {
                     add {
-                        StatusThemeChildItem {
+                        StatusThemeExpandedControlItem {
                             AlohaOneUISlider(
                                 value = downloadScale,
                                 onValueChange = {
@@ -257,7 +257,7 @@ fun StatusNetworkSpeedCategoryControls(
             }
             if (thresholdExpanded && uiState.networkSpeedThresholdKb > 0) {
                 add {
-                    StatusThemeChildItem {
+                    StatusThemeExpandedControlItem {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
