@@ -177,9 +177,10 @@ fun ExpressiveOutlinedTextField(
             disabledBorderColor = MaterialTheme.colorScheme.outlineVariant,
             errorBorderColor = MaterialTheme.colorScheme.error,
             cursorColor = MaterialTheme.colorScheme.primary,
-            focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
-            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
-            disabledContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+            // Material 3 outlined fields are transparent; let the parent surface show through.
+            focusedContainerColor = Color.Transparent,
+            unfocusedContainerColor = Color.Transparent,
+            disabledContainerColor = Color.Transparent,
         ),
         keyboardOptions = keyboardOptions,
     )
@@ -220,9 +221,9 @@ fun ExpressiveOutlinedTextField(
             disabledBorderColor = MaterialTheme.colorScheme.outlineVariant,
             errorBorderColor = MaterialTheme.colorScheme.error,
             cursorColor = MaterialTheme.colorScheme.primary,
-            focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
-            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
-            disabledContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+            focusedContainerColor = Color.Transparent,
+            unfocusedContainerColor = Color.Transparent,
+            disabledContainerColor = Color.Transparent,
         ),
     )
 }
