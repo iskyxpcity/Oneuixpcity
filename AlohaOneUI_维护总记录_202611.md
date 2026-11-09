@@ -1657,3 +1657,12 @@
 - 其他状态栏详情页的折叠父项与动态展开子项继续由同一 StatusThemeGroup buildList 构造，包含蓝牙、网速、通知、通知中心、控制中心、电池、电量运行时、信号、Wi-Fi、时间、内边距、锁屏、其他和三合一图标各组；分组标题对应独立 SegmentedColumn，组内动态行由同一列表重新计算首/中/末形状。
 - 最新源码提交 4d93ed9d7fd533ffd4897978696c6e113b8df620 对应 GitHub Actions run 42577650523，源码验证、Kotlin/Android 编译、owner-signed APK 构建、包名/证书校验和 Actions Artifact 保留全部成功。产物 AlohaOneUI-Signed-Test-APK，artifact id 13656500023。仍需真机逐页确认折叠/展开视觉形状，不将静态扫描和编译成功等同于设备视觉验收完成。
 - 所有改动仅在 test/switches-official-eight-20261103，未合并 main。
+## 2026-11-09｜状态栏全部折叠详情父项展开态统一
+
+- 用户反馈此前状态栏所有折叠详情项的收缩/展开视觉仍未统一。重新逐项对照 SettingsMaterial.kt「语言」详情：其父项有明确向上/向下箭头，展开子项与父项作为同一 SegmentedColumn 的连续同级行，折叠时父项为单行完整圆角，展开时父项和子项按列表索引重新计算首/中/末形状。
+- 根因复核：StatusThemeGroup 的 Material 分支已经使用 SegmentedColumn，但 SwitchItem 的父行只有开关前的竖分隔线，没有语言页的展开/收起箭头；且公共 SwitchItem 没有接收实际 expanded 状态，导致折叠入口视觉不完整。仅修子行/滑块无法解决父项收缩展开表现。
+- 公共修复：SwitchItem 新增可选 expanded 状态；Material clickable 父行在开关旁增加 KeyboardArrowUp/Down；普通 grouped SegmentedSwitchItem 也接收 expanded 状态并显示相同箭头；Miuix 分支同步支持，未改变其开关和点击语义。SegmentedColumn 继续负责父子行的首/中/末 shape，所有子项仍在同一 StatusThemeGroup items 列表中。
+- 已把 expanded 状态逐一接入状态栏全部已确认的折叠父项：蓝牙运行时、网速运行时、信号运行时、控制中心时钟字号、网速行距/上传字号/下载字号/阈值、通知图标数量、通知中心媒体应用、烧屏保护、左/右/上/下内边距、电池宽/高、电池等级文字、信号 eSIM 适配、运营商名称、时钟格式、富文本时钟块、时钟位置、Fold7 双行时钟缩放、单行时钟字号、双行时钟行距、电量双行、Wi-Fi 运行时、Wi-Fi 编辑器、标准徽章扩展和高级弧线编辑器。
+- 兼容性修正：第一次编译发现 Miuix colorScheme 不提供 onSurfaceVariant；改为 onSurface 后通过编译。
+- 最新源码提交 c972f9ed27927e140d4de4dfb1fee5b044286e82；Actions run 42582283904 全部成功：源码验证、Kotlin/Android 编译、owner-signed APK、包名与签名证书校验、Artifact 保留。产物 AlohaOneUI-Signed-Test-APK，artifact id 13657707527。
+- 这轮完成了折叠父项箭头和展开状态的公共接入，并确认全部已识别的状态栏条件子项均有 expanded 状态；真机上仍需逐页检查实际折叠/展开形状和动画，不能仅以构建通过宣称视觉验收完成。仅测试分支修改，未合并 main。
