@@ -318,7 +318,7 @@ private fun SignalSliderSetting(
     val view = LocalView.current
     var lastHapticStep by remember { mutableIntStateOf(value.roundToInt()) }
 
-    StatusThemeChildItem(
+    StatusThemeExpandedControlItem(
         title = title,
         summary = summary,
         icon = icon,
