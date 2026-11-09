@@ -102,6 +102,60 @@ fun StatusThemeGroup(
 }
 
 
+
+/**
+ * Expanded setting row modeled after SettingsMaterial's Language options:
+ * title and control are one sibling SegmentedListItem in the parent group,
+ * not a nested card/frame.
+ */
+@Composable
+fun StatusThemeExpandedControlItem(
+    modifier: Modifier = Modifier,
+    title: String,
+    summary: String? = null,
+    content: @Composable () -> Unit,
+) {
+    when (LocalUiMode.current) {
+        UiMode.Material -> {
+            SegmentedListItem(
+                modifier = modifier,
+                colors = alohaOneUISegmentedColors(),
+                headlineContent = {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.bodyLarge,
+                    )
+                },
+                supportingContent = {
+                    Column(
+                        modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                    ) {
+                        if (!summary.isNullOrBlank()) {
+                            Text(
+                                text = summary,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                        CompositionLocalProvider(
+                            LocalMaterialShadowContainers provides false,
+                        ) {
+                            content()
+                        }
+                    }
+                },
+            )
+        }
+        UiMode.Miuix -> StatusThemeChildItem(
+            modifier = modifier,
+            title = title,
+            summary = summary,
+            content = content,
+        )
+    }
+}
+
 /**
  * Expanded child content that stays inside the active native group.
  * Material renders it as a real SegmentedListItem so it participates in
