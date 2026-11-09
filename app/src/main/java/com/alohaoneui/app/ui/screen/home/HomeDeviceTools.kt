@@ -28,6 +28,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -81,6 +82,7 @@ import com.alohaoneui.app.ui.LocalUiMode
 import com.alohaoneui.app.ui.UiMode
 import com.alohaoneui.app.ui.component.material.TonalCard
 import com.alohaoneui.app.ui.component.material.ExpressiveToggleButton
+import com.alohaoneui.app.ui.component.material.ExpressiveButtonGroup
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -226,31 +228,51 @@ private fun DeviceInfoSectionSelector(
     onSelect: (Int) -> Unit,
 ) {
     val options = listOf("系统监视器", "屏幕信息", "设备信息")
+    val interactionSources = remember(options.size) {
+        List(options.size) { MutableInteractionSource() }
+    }
     when (LocalUiMode.current) {
-        UiMode.Material -> Row(
+        UiMode.Material -> ExpressiveButtonGroup(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
+            horizontalArrangement = ButtonGroupDefaults.ConnectedSpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
             options.forEachIndexed { index, label ->
-                ExpressiveToggleButton(
-                    checked = selectedSection == index,
-                    onCheckedChange = { checked -> if (checked) onSelect(index) },
-                    modifier = Modifier.weight(1f).semantics { role = Role.RadioButton },
-                    shapes = when (index) {
-                        0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
-                        options.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
-                        else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
+                val interactionSource = interactionSources[index]
+                customItem(
+                    buttonGroupContent = {
+                        ExpressiveToggleButton(
+                            checked = selectedSection == index,
+                            onCheckedChange = { checked -> if (checked) onSelect(index) },
+                            modifier = Modifier.animateWidth(interactionSource)
+                                .semantics { role = Role.RadioButton },
+                            shapes = when (index) {
+                                0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
+                                options.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
+                                else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
+                            },
+                            interactionSource = interactionSource,
+                            pressMotionEnabled = false,
+                        ) {
+                            MaterialText(
+                                text = label,
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = if (selectedSection == index) FontWeight.SemiBold else FontWeight.Medium,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
                     },
-                ) {
-                    MaterialText(
-                        text = label,
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = if (selectedSection == index) FontWeight.SemiBold else FontWeight.Medium,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
+                    menuContent = { menuState ->
+                        androidx.compose.material3.DropdownMenuItem(
+                            text = { MaterialText(label) },
+                            onClick = {
+                                menuState.dismiss()
+                                onSelect(index)
+                            },
+                        )
+                    },
+                )
             }
         }
         UiMode.Miuix -> MiuixTabRowWithContour(
