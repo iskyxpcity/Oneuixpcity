@@ -62,6 +62,7 @@ fun StatusPaddingCategoryControls(
                     icon = ImageVector.vectorResource(id = R.drawable.padding),
                     modifier = Modifier.animateContentSize(),
                     clickable = true,
+                    expanded = leftExpanded && uiState.modifyStatusBarLeftPadding,
                     onClick = { leftExpanded = !leftExpanded },
                     checked = uiState.modifyStatusBarLeftPadding,
                     onCheckedChange = {
@@ -93,6 +94,7 @@ fun StatusPaddingCategoryControls(
                     icon = ImageVector.vectorResource(id = R.drawable.padding),
                     modifier = Modifier.animateContentSize(),
                     clickable = true,
+                    expanded = rightExpanded && uiState.modifyStatusBarRightPadding,
                     onClick = { rightExpanded = !rightExpanded },
                     checked = uiState.modifyStatusBarRightPadding,
                     onCheckedChange = {
@@ -126,6 +128,7 @@ fun StatusPaddingCategoryControls(
                     icon = ImageVector.vectorResource(id = R.drawable.padding),
                     modifier = Modifier.animateContentSize(),
                     clickable = true,
+                    expanded = topExpanded && uiState.modifyStatusBarTopPadding,
                     onClick = { topExpanded = !topExpanded },
                     checked = uiState.modifyStatusBarTopPadding,
                     onCheckedChange = {
@@ -163,6 +166,7 @@ fun StatusPaddingCategoryControls(
                     icon = ImageVector.vectorResource(id = R.drawable.padding),
                     modifier = Modifier.animateContentSize(),
                     clickable = true,
+                    expanded = bottomExpanded && uiState.modifyStatusBarBottomPadding,
                     onClick = { bottomExpanded = !bottomExpanded },
                     checked = uiState.modifyStatusBarBottomPadding,
                     onCheckedChange = {
