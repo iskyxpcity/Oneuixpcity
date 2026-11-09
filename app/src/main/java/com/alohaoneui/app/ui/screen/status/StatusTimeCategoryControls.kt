@@ -703,81 +703,67 @@ fun StatusTimeCategoryControls(
                     }
                     if (uiState.useFold7CustomDoubleLineClockScale) {
                         add {
-                            StatusThemeChildItem {
-                                Column(
-                                    modifier = Modifier.fillMaxWidth(),
-                                ) {
-                                    AlohaOneUIInfoItem(
-                                        title = stringResource(
-                                            id = R.string.alohaoneui_fold7DoubleLineClockTimeScale_title
-                                        ),
-                                        summary = stringResource(
-                                            id = R.string.alohaoneui_fold7DoubleLineClockTimeScale_summary,
-                                            timeScale,
-                                        ),
-                                    )
-                                    AlohaOneUISlider(
-                                        value = timeScale * 100f,
-                                        stepSize = 1f,
-                                        onValueChange = { raw ->
-                                            val value = raw.roundToInt().coerceIn(50, 110) / 100f
-                                            timeScale = value
-                                            onEvent(
-                                                SystemUIEvent.StatusBarPreview(
-                                                    SystemUIEvent.StatusBar.Fold7DoubleLineClockTimeScale(
-                                                        value
-                                                    )
-                                                )
+                            StatusThemeChildItem(
+                                title = stringResource(
+                                    id = R.string.alohaoneui_fold7DoubleLineClockTimeScale_title
+                                ),
+                                summary = stringResource(
+                                    id = R.string.alohaoneui_fold7DoubleLineClockTimeScale_summary,
+                                    timeScale,
+                                ),
+                            ) {
+                                AlohaOneUISlider(
+                                    value = timeScale * 100f,
+                                    stepSize = 1f,
+                                    onValueChange = { raw ->
+                                        val value = raw.roundToInt().coerceIn(50, 110) / 100f
+                                        timeScale = value
+                                        onEvent(
+                                            SystemUIEvent.StatusBarPreview(
+                                                SystemUIEvent.StatusBar.Fold7DoubleLineClockTimeScale(value)
                                             )
-                                        },
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(horizontal = 8.dp),
-                                        valueRange = 50f..110f,
-                                        onValueChangeFinished = {
-                                            onEvent(
-                                                SystemUIEvent.StatusBar.Fold7DoubleLineClockTimeScale(
-                                                    timeScale
-                                                )
+                                        )
+                                    },
+                                    modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                                    valueRange = 50f..110f,
+                                    onValueChangeFinished = {
+                                        onEvent(
+                                            SystemUIEvent.StatusBar.Fold7DoubleLineClockTimeScale(timeScale)
+                                        )
+                                    },
+                                )
+                            }
+                        }
+                        add {
+                            StatusThemeChildItem(
+                                title = stringResource(
+                                    id = R.string.alohaoneui_fold7DoubleLineClockDateScale_title
+                                ),
+                                summary = stringResource(
+                                    id = R.string.alohaoneui_fold7DoubleLineClockDateScale_summary,
+                                    dateScale,
+                                ),
+                            ) {
+                                AlohaOneUISlider(
+                                    value = dateScale * 100f,
+                                    stepSize = 1f,
+                                    onValueChange = { raw ->
+                                        val value = raw.roundToInt().coerceIn(50, 110) / 100f
+                                        dateScale = value
+                                        onEvent(
+                                            SystemUIEvent.StatusBarPreview(
+                                                SystemUIEvent.StatusBar.Fold7DoubleLineClockDateScale(value)
                                             )
-                                        },
-                                    )
-                                    AlohaOneUIInfoItem(
-                                        title = stringResource(
-                                            id = R.string.alohaoneui_fold7DoubleLineClockDateScale_title
-                                        ),
-                                        summary = stringResource(
-                                            id = R.string.alohaoneui_fold7DoubleLineClockDateScale_summary,
-                                            dateScale,
-                                        ),
-                                    )
-                                    AlohaOneUISlider(
-                                        value = dateScale * 100f,
-                                        stepSize = 1f,
-                                        onValueChange = { raw ->
-                                            val value = raw.roundToInt().coerceIn(50, 110) / 100f
-                                            dateScale = value
-                                            onEvent(
-                                                SystemUIEvent.StatusBarPreview(
-                                                    SystemUIEvent.StatusBar.Fold7DoubleLineClockDateScale(
-                                                        value
-                                                    )
-                                                )
-                                            )
-                                        },
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(horizontal = 8.dp),
-                                        valueRange = 50f..110f,
-                                        onValueChangeFinished = {
-                                            onEvent(
-                                                SystemUIEvent.StatusBar.Fold7DoubleLineClockDateScale(
-                                                    dateScale
-                                                )
-                                            )
-                                        },
-                                    )
-                                }
+                                        )
+                                    },
+                                    modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                                    valueRange = 50f..110f,
+                                    onValueChangeFinished = {
+                                        onEvent(
+                                            SystemUIEvent.StatusBar.Fold7DoubleLineClockDateScale(dateScale)
+                                        )
+                                    },
+                                )
                             }
                         }
                     }
