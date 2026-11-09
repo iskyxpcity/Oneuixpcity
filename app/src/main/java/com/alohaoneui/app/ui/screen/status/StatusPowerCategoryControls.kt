@@ -61,6 +61,7 @@ fun StatusPowerCategoryControls(
                     summary = if (uiState.setBatteryIconWidthScale) "%.2f".format(widthScale) else null,
                     icon = batteryIcon,
                     clickable = true,
+                    expanded = widthExpanded && uiState.setBatteryIconWidthScale,
                     onClick = { widthExpanded = !widthExpanded },
                     checked = uiState.setBatteryIconWidthScale,
                     onCheckedChange = {
@@ -93,6 +94,7 @@ fun StatusPowerCategoryControls(
                     summary = if (uiState.setBatteryIconHeightScale) "%.2f".format(heightScale) else null,
                     icon = batteryIcon,
                     clickable = true,
+                    expanded = heightExpanded && uiState.setBatteryIconHeightScale,
                     onClick = { heightExpanded = !heightExpanded },
                     checked = uiState.setBatteryIconHeightScale,
                     onCheckedChange = {
@@ -151,6 +153,7 @@ fun StatusPowerCategoryControls(
                         title = stringResource(id = R.string.alohaoneui_addBatteryLevelText_title),
                         summary = stringResource(id = R.string.alohaoneui_addBatteryLevelText_summary),
                         showChildIndicator = true,
+                        expanded = uiState.addBatteryLevelText,
                         checked = uiState.addBatteryLevelText,
                         onCheckedChange = {
                             onEvent(SystemUIEvent.StatusBar.AddBatteryLevelText(it))
