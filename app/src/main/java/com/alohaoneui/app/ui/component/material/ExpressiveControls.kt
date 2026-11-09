@@ -150,17 +150,12 @@ fun ExpressiveOutlinedTextField(
     textStyle: TextStyle? = null,
 ) {
     val actualShape = alohaCornerShape(12.dp)
-    val outlineWidth = LocalMaterialOutlineWidth.current
-    val styledModifier = modifier
-        .then(
-            if (LocalMaterialShadowButtons.current) Modifier.shadow(2.dp, actualShape)
-            else Modifier
-        )
-        .then(
-            outlineWidth.takeIf { it > 0f }?.let {
-                Modifier.border(it.dp, MaterialTheme.colorScheme.outlineVariant, actualShape)
-            } ?: Modifier
-        )
+    // Keep the field as a real Material 3 outlined input: native focused and
+    // unfocused strokes provide the visual separation from the dialog/list surface.
+    val styledModifier = modifier.then(
+        if (LocalMaterialShadowButtons.current) Modifier.shadow(2.dp, actualShape)
+        else Modifier
+    )
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
@@ -177,16 +172,14 @@ fun ExpressiveOutlinedTextField(
         colors = OutlinedTextFieldDefaults.colors(
             focusedTextColor = MaterialTheme.colorScheme.onSurface,
             unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
-            // The shared modifier owns the outline width and color. Keep M3's
-            // internal stroke transparent to avoid drawing a second border.
-            focusedBorderColor = Color.Transparent,
-            unfocusedBorderColor = Color.Transparent,
-            disabledBorderColor = Color.Transparent,
-            errorBorderColor = Color.Transparent,
+            focusedBorderColor = MaterialTheme.colorScheme.primary,
+            unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+            disabledBorderColor = MaterialTheme.colorScheme.outlineVariant,
+            errorBorderColor = MaterialTheme.colorScheme.error,
             cursorColor = MaterialTheme.colorScheme.primary,
-            focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-            disabledContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+            focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
+            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
+            disabledContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         ),
         keyboardOptions = keyboardOptions,
     )
@@ -206,14 +199,11 @@ fun ExpressiveOutlinedTextField(
     textStyle: TextStyle = MaterialTheme.typography.bodyLarge,
 ) {
     val actualShape = alohaCornerShape(12.dp)
-    val outlineWidth = LocalMaterialOutlineWidth.current
-    val styledModifier = modifier
-        .then(if (LocalMaterialShadowButtons.current) Modifier.shadow(2.dp, actualShape) else Modifier)
-        .then(
-            outlineWidth.takeIf { it > 0f }?.let {
-                Modifier.border(it.dp, MaterialTheme.colorScheme.outlineVariant, actualShape)
-            } ?: Modifier
-        )
+    // Use the same native Material 3 outline and container hierarchy for inline editors.
+    val styledModifier = modifier.then(
+        if (LocalMaterialShadowButtons.current) Modifier.shadow(2.dp, actualShape)
+        else Modifier
+    )
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
@@ -225,16 +215,14 @@ fun ExpressiveOutlinedTextField(
         colors = OutlinedTextFieldDefaults.colors(
             focusedTextColor = MaterialTheme.colorScheme.onSurface,
             unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
-            // The shared modifier owns the outline width and color. Keep M3's
-            // internal stroke transparent to avoid drawing a second border.
-            focusedBorderColor = Color.Transparent,
-            unfocusedBorderColor = Color.Transparent,
-            disabledBorderColor = Color.Transparent,
-            errorBorderColor = Color.Transparent,
+            focusedBorderColor = MaterialTheme.colorScheme.primary,
+            unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+            disabledBorderColor = MaterialTheme.colorScheme.outlineVariant,
+            errorBorderColor = MaterialTheme.colorScheme.error,
             cursorColor = MaterialTheme.colorScheme.primary,
-            focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-            disabledContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+            focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
+            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
+            disabledContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         ),
     )
 }
