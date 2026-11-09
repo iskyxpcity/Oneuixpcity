@@ -681,6 +681,7 @@ fun SegmentedColumn(
  */
 @Composable
 internal fun SegmentedOptionFrame(
+    containerColor: Color = colorScheme.surfaceContainerHigh,
     content: @Composable androidx.compose.foundation.layout.ColumnScope.() -> Unit,
 ) {
     val itemShapes = LocalListItemShapes.current ?: ListItemDefaults.segmentedShapes(0, 1)
@@ -694,7 +695,7 @@ internal fun SegmentedOptionFrame(
     ExpressiveSurface(
         modifier = Modifier.fillMaxWidth(),
         shape = itemShapes.shape,
-        color = colorScheme.surfaceContainerHigh,
+        color = containerColor,
         tonalElevation = 0.dp,
         shadowElevation = if (LocalMaterialShadowContainers.current) 1.dp else 0.dp,
         border = frameBorder,
