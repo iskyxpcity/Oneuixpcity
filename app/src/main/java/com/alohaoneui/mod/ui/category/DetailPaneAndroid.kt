@@ -1,8 +1,6 @@
 package com.alohaoneui.mod.ui.category
 
 import android.os.Build
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -25,9 +23,9 @@ import com.alohaoneui.common.Preference
 import com.alohaoneui.app.ui.viewmodel.AlohaOneUIToolsViewModel
 import com.alohaoneui.mod.ui.component.SwitchItem
 import com.alohaoneui.mod.ui.component.AlohaOneUISlider
-import com.alohaoneui.mod.ui.component.AlohaOneUIPPreferenceGroup
 import com.alohaoneui.mod.ui.component.AlohaOneUIDetailSegmentedGroup
 import kotlin.math.roundToInt
+import com.alohaoneui.app.ui.screen.status.StatusThemeChildItem
 
 @Composable
 fun DetailPaneAndroid(
@@ -35,6 +33,9 @@ fun DetailPaneAndroid(
     onEvent: (AndroidEvent) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    var max by remember { mutableIntStateOf(uiState.maxNeverKilledAppNum) }
+    var expanded by rememberSaveable { mutableStateOf(false) }
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -50,32 +51,29 @@ fun DetailPaneAndroid(
                 )
             }
             add {
-                AlohaOneUIPPreferenceGroup {
-                    var max by remember { mutableIntStateOf(uiState.maxNeverKilledAppNum) }
-                    var expanded by rememberSaveable { mutableStateOf(false) }
-                    SwitchItem(
-                        title = stringResource(id = R.string.alohaoneui_modifyMaxNeverKilledAppNum_title),
-                        modifier = Modifier.animateContentSize(),
-                        summary = if (uiState.modifyMaxNeverKilledAppNum) max.toString() else null,
-                        icon = ImageVector.vectorResource(id = R.drawable.apps),
-                        clickable = true,
-                        onClick = { expanded = !expanded },
-                        checked = uiState.modifyMaxNeverKilledAppNum,
-                        onCheckedChange = {
-                            if (it && max == 5) expanded = true else if (!it) expanded = false
-                            onEvent(AndroidEvent.ModifyMaxNeverKilledAppNum(it))
-                        }
-                    )
-                    AnimatedVisibility(expanded && uiState.modifyMaxNeverKilledAppNum) {
-                        AlohaOneUISlider(
-                            value = max.toFloat(),
-                            onValueChange = { max = it.roundToInt() },
-                            modifier = Modifier.padding(horizontal = 16.dp),
-                            valueRange = 5f..30f,
-                            steps = 24,
-                            onValueChangeFinished = { onEvent(AndroidEvent.MaxNeverKilledAppNum(max)) }
-                        )
+                SwitchItem(
+                    title = stringResource(id = R.string.alohaoneui_modifyMaxNeverKilledAppNum_title),
+                    summary = if (uiState.modifyMaxNeverKilledAppNum) max.toString() else null,
+                    icon = ImageVector.vectorResource(id = R.drawable.apps),
+                    clickable = true,
+                    onClick = { expanded = !expanded },
+                    checked = uiState.modifyMaxNeverKilledAppNum,
+                    onCheckedChange = {
+                        if (it && max == 5) expanded = true else if (!it) expanded = false
+                        onEvent(AndroidEvent.ModifyMaxNeverKilledAppNum(it))
                     }
+                )
+            }
+            if (expanded && uiState.modifyMaxNeverKilledAppNum) add {
+                StatusThemeChildItem {
+                    AlohaOneUISlider(
+                        value = max.toFloat(),
+                        onValueChange = { max = it.roundToInt() },
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        valueRange = 5f..30f,
+                        steps = 24,
+                        onValueChangeFinished = { onEvent(AndroidEvent.MaxNeverKilledAppNum(max)) }
+                    )
                 }
             }
             add {
