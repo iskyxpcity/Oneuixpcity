@@ -278,7 +278,7 @@ fun StatusSignalCategoryControls(
             }
             if (carrierExpanded && uiState.setCustomCarrierName) {
                 add {
-                    StatusThemeChildItem {
+                    StatusThemeExpandedControlItem {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
