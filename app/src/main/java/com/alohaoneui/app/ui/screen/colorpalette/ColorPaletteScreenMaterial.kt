@@ -254,13 +254,13 @@ fun ColorPaletteScreenMaterial(
                     ) {
                         rowOptions.forEachIndexed { index, (modes, label) ->
                             val interactionSource = modeInteractionSources[rowIndex * 4 + index]
-                            val sourceShape = alohaSegmentedShape(
-                                index = index,
-                                count = rowOptions.size,
-                                vertical = false,
-                            )
                             customItem(
                                 buttonGroupContent = {
+                                    val sourceShape = alohaSegmentedShape(
+                                        index = index,
+                                        count = rowOptions.size,
+                                        vertical = false,
+                                    )
                                     ExpressiveToggleButton(
                                         checked = currentColorMode in modes,
                                         onCheckedChange = {
