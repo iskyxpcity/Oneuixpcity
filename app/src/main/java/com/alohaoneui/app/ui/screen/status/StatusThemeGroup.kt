@@ -19,6 +19,7 @@ import com.alohaoneui.mod.ui.component.LocalAlohaOneUIGroupedPreference
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
 import top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme
+import com.alohaoneui.app.ui.theme.LocalMaterialShadowContainers
 
 /**
  * Native status-tab group container.
@@ -116,7 +117,14 @@ fun StatusThemeChildItem(
                             .fillMaxWidth()
                             .padding(vertical = 4.dp),
                     ) {
-                        content()
+                        // This child row owns the single outer card shadow.
+                        // Nested preference adapters remain visually inside this
+                        // frame and must not cast a second shadow of their own.
+                        CompositionLocalProvider(
+                            LocalMaterialShadowContainers provides false,
+                        ) {
+                            content()
+                        }
                     }
                 },
             )
