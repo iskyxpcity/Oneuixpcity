@@ -86,6 +86,7 @@ fun StatusWifiCategoryControls(
                         icon = wifiIcon,
                         title = stringResource(id = R.string.status_wifi_editor_enable),
                         summary = stringResource(id = R.string.status_wifi_editor_enable_summary),
+                        expanded = wifiRuntime.editorEnabled,
                         checked = wifiRuntime.editorEnabled,
                         onCheckedChange = {
                             onChange(wifiRuntime.copy(editorEnabled = it))
@@ -107,6 +108,7 @@ fun StatusWifiCategoryControls(
                         icon = wifiIcon,
                         title = stringResource(id = R.string.status_wifi_hide_standard_badge),
                         summary = stringResource(id = R.string.status_wifi_hide_standard_badge_summary),
+                        expanded = !wifiRuntime.hideStandardBadge,
                         checked = wifiRuntime.hideStandardBadge,
                         onCheckedChange = {
                             onChange(wifiRuntime.copy(hideStandardBadge = it))
