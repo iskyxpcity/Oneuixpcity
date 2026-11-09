@@ -226,6 +226,7 @@ fun StatusControlCenterCategoryControls(
                         } else null,
                         icon = ImageVector.vectorResource(id = R.drawable.format_size),
                         clickable = true,
+                        expanded = textSizeExpanded && uiState.modifyQSClockTextSize,
                         onClick = { textSizeExpanded = !textSizeExpanded },
                         checked = uiState.modifyQSClockTextSize,
                         onCheckedChange = {
