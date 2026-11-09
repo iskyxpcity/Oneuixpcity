@@ -1,6 +1,9 @@
 package com.alohaoneui.app.ui.component.material
 
 import androidx.compose.foundation.border
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -83,12 +86,71 @@ fun ExpressiveConfirmDialog(
         title = { Text(title) },
         text = message?.let { { Text(it) } },
         confirmButton = {
-            ExpressiveTextButton(onClick = onConfirm) { Text(confirmText) }
-        },
-        dismissButton = dismissText?.let {
-            { ExpressiveTextButton(onClick = onDismiss) { Text(it) } }
+            ExpressiveDialogActionButtons(
+                confirmText = confirmText,
+                dismissText = dismissText,
+                onConfirm = onConfirm,
+                onDismiss = onDismiss,
+            )
         },
     )
+}
+
+/**
+ * Keep side-by-side dialog actions in one official expressive group so the
+ * pressed action expands while its neighbor compresses.
+ */
+@Composable
+fun ExpressiveDialogActionButtons(
+    confirmText: String,
+    dismissText: String?,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    if (dismissText == null) {
+        ExpressiveTextButton(onClick = onConfirm) { Text(confirmText) }
+        return
+    }
+
+    val dismissSource = androidx.compose.runtime.remember { MutableInteractionSource() }
+    val confirmSource = androidx.compose.runtime.remember { MutableInteractionSource() }
+    ExpressiveButtonGroup(
+        horizontalArrangement = Arrangement.End,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        customItem(
+            buttonGroupContent = {
+                ExpressiveTextButton(
+                    onClick = onDismiss,
+                    modifier = Modifier.animateWidth(dismissSource),
+                    interactionSource = dismissSource,
+                    pressMotionEnabled = false,
+                ) { Text(dismissText) }
+            },
+            menuContent = { menuState ->
+                androidx.compose.material3.DropdownMenuItem(
+                    text = { Text(dismissText) },
+                    onClick = { menuState.dismiss(); onDismiss() },
+                )
+            },
+        )
+        customItem(
+            buttonGroupContent = {
+                ExpressiveTextButton(
+                    onClick = onConfirm,
+                    modifier = Modifier.animateWidth(confirmSource),
+                    interactionSource = confirmSource,
+                    pressMotionEnabled = false,
+                ) { Text(confirmText) }
+            },
+            menuContent = { menuState ->
+                androidx.compose.material3.DropdownMenuItem(
+                    text = { Text(confirmText) },
+                    onClick = { menuState.dismiss(); onConfirm() },
+                )
+            },
+        )
+    }
 }
 
 /**
