@@ -1,6 +1,5 @@
 package com.alohaoneui.app.ui.screen.status
 
-import androidx.compose.animation.animateContentSize
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -61,7 +60,7 @@ fun StatusPaddingCategoryControls(
                     title = stringResource(id = R.string.alohaoneui_statusBarLeftPaddingDp_title),
                     summary = if (uiState.modifyStatusBarLeftPadding) "%.1fdp".format(left) else null,
                     icon = ImageVector.vectorResource(id = R.drawable.padding),
-                    modifier = Modifier.animateContentSize(),
+                    
                     clickable = true,
                     expanded = leftExpanded && uiState.modifyStatusBarLeftPadding,
                     onClick = { leftExpanded = !leftExpanded },
@@ -93,7 +92,7 @@ fun StatusPaddingCategoryControls(
                     title = stringResource(id = R.string.alohaoneui_statusBarRightPaddingDp_title),
                     summary = if (uiState.modifyStatusBarRightPadding) "%.1fdp".format(right) else null,
                     icon = ImageVector.vectorResource(id = R.drawable.padding),
-                    modifier = Modifier.animateContentSize(),
+                    
                     clickable = true,
                     expanded = rightExpanded && uiState.modifyStatusBarRightPadding,
                     onClick = { rightExpanded = !rightExpanded },
@@ -127,7 +126,7 @@ fun StatusPaddingCategoryControls(
                         stringResource(id = R.string.status_padding_top_summary, top)
                     } else null,
                     icon = ImageVector.vectorResource(id = R.drawable.padding),
-                    modifier = Modifier.animateContentSize(),
+                    
                     clickable = true,
                     expanded = topExpanded && uiState.modifyStatusBarTopPadding,
                     onClick = { topExpanded = !topExpanded },
@@ -165,7 +164,7 @@ fun StatusPaddingCategoryControls(
                         stringResource(id = R.string.status_padding_bottom_summary, bottom)
                     } else null,
                     icon = ImageVector.vectorResource(id = R.drawable.padding),
-                    modifier = Modifier.animateContentSize(),
+                    
                     clickable = true,
                     expanded = bottomExpanded && uiState.modifyStatusBarBottomPadding,
                     onClick = { bottomExpanded = !bottomExpanded },
