@@ -118,28 +118,33 @@ fun StatusThemeExpandedControlItem(
 ) {
     when (LocalUiMode.current) {
         UiMode.Material -> {
-            val hasHeader = !title.isNullOrBlank() || !summary.isNullOrBlank()
+            val hasHeader = !title.isNullOrBlank() || !summary.isNullOrBlank() || icon != null
             SegmentedListItem(
                 modifier = modifier,
                 colors = alohaOneUISegmentedColors(),
                 headlineContent = {
                     if (hasHeader) {
-                        if (!title.isNullOrBlank()) {
-                            Text(
-                                text = title,
-                                style = MaterialTheme.typography.bodyLarge,
-                            )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            if (icon != null) {
+                                Icon(
+                                    imageVector = icon,
+                                    contentDescription = title,
+                                )
+                                if (!title.isNullOrBlank()) {
+                                    androidx.compose.foundation.layout.Spacer(
+                                        modifier = Modifier.padding(end = 12.dp),
+                                    )
+                                }
+                            }
+                            if (!title.isNullOrBlank()) {
+                                Text(
+                                    text = title,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                )
+                            }
                         }
                     } else {
                         content()
-                    }
-                },
-                leadingContent = icon?.let {
-                    {
-                        Icon(
-                            imageVector = it,
-                            contentDescription = title,
-                        )
                     }
                 },
                 supportingContent = if (hasHeader) {
@@ -185,28 +190,33 @@ fun StatusThemeChildItem(
 ) {
     when (LocalUiMode.current) {
         UiMode.Material -> {
-            val hasHeader = !title.isNullOrBlank() || !summary.isNullOrBlank()
+            val hasHeader = !title.isNullOrBlank() || !summary.isNullOrBlank() || icon != null
             SegmentedListItem(
                 modifier = modifier,
                 colors = alohaOneUISegmentedColors(),
                 headlineContent = {
                     if (hasHeader) {
-                        if (!title.isNullOrBlank()) {
-                            Text(
-                                text = title,
-                                style = MaterialTheme.typography.bodyLarge,
-                            )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            if (icon != null) {
+                                Icon(
+                                    imageVector = icon,
+                                    contentDescription = title,
+                                )
+                                if (!title.isNullOrBlank()) {
+                                    androidx.compose.foundation.layout.Spacer(
+                                        modifier = Modifier.padding(end = 12.dp),
+                                    )
+                                }
+                            }
+                            if (!title.isNullOrBlank()) {
+                                Text(
+                                    text = title,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                )
+                            }
                         }
                     } else {
                         content()
-                    }
-                },
-                leadingContent = icon?.let {
-                    {
-                        Icon(
-                            imageVector = it,
-                            contentDescription = title,
-                        )
                     }
                 },
                 supportingContent = if (hasHeader) {
