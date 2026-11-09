@@ -1561,3 +1561,12 @@
 - 修复：从 `MainActivityUiState.enableSwipeBack` 把同一设置传入 `MainScreen`；将 `pagerGestureOverride` 的 enabled 改为该值，并将 Pager 的用户滑动条件改为 `enableSwipeBack && !interceptPagerAxis`。设置关闭时，四个主导航页面仍可通过底栏/导航栏点击切换，但不再接受横向拖动切页；设置重新开启时恢复原有 Pager 手势模式。未修改页面内容、路由和 Miuix 专属页面实现。
 - 代码提交：`8a13d02b58664eb7f51c78abb01f2d0271cbd597`（测试分支 `test/switches-official-eight-20261103)，未合并 main）。
 - 待完成：检查该提交对应 Actions 源码校验与 Kotlin 构建；随后在设备上分别验证 Material/Miuix、关闭/开启开关、四个主导航页滑动及点击导航。源码修改不等于真机验收完成。
+
+
+## 2026-11-08｜修正弹窗输入框与列表选项颜色/控件语义混同
+
+- 用户明确指出问题并非 AMOLED：普通配色模式下，弹窗容器、列表选项和输入框视觉颜色过于一致，输入框也没有呈现标准 Material 3 输入框的边框层级。
+- 根因定位到共享 Material 控件 `ExpressiveOutlinedTextField` 的两个重载：此前将 focused/unfocused/disabled/error 的 Material 3 原生边框全部设为透明，再依赖可选的全局描边修饰符；当描边宽度为 0 时，输入框完全没有 Material 原生边框。同时输入框容器统一使用 `surfaceContainerHighest`，与列表容器层级过近，导致输入区域和选项列表难以区分。
+- 已修正 `app/src/main/java/com/alohaoneui/app/ui/component/material/ExpressiveControls.kt`：两个重载均恢复 Material 3 原生 OutlinedTextField 边框状态（聚焦 primary、未聚焦 outline、禁用 outlineVariant、错误 error），输入框容器改用独立的 `surfaceContainerLowest`，禁用状态用 `surfaceContainerLow`；移除用全局描边代替 Material 输入框边框的逻辑。全局按钮阴影仍保留。这样弹窗容器、列表选项和输入框分别遵循 Material 3 的不同语义层级。
+- 本次只修改 Material 共享输入框，不涉及 AMOLED 色板逻辑，不修改 Miuix、弹窗业务逻辑或列表交互。
+- 源码提交：`c7fd972d3dbcee5d86d2b21444f890f62833ba72`，位于 `test/switches-official-eight-20261103`，未合并 main。仍需跑 Actions 源码校验/Kotlin 构建，并在普通浅色/深色动态配色下检查实际弹窗：容器背景、下拉选项列表、输入框填充和原生边框需有明确层级；构建成功不等于真机视觉验收完成。
