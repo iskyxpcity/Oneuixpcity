@@ -53,7 +53,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.alohaoneui.app.R
 import com.alohaoneui.app.ui.viewmodel.AlohaOneUIToolsViewModel
@@ -65,7 +64,10 @@ import com.alohaoneui.mod.ui.category.SystemUIEvent
 import com.alohaoneui.mod.ui.component.AlohaOneUISlider
 import com.alohaoneui.mod.ui.component.AlohaOneUIActionButton
 import com.alohaoneui.app.ui.component.material.ExpressiveConfirmDialog
+import com.alohaoneui.app.ui.component.material.ExpressiveContentDialog
+import com.alohaoneui.app.ui.component.material.alohaCornerShape
 import com.alohaoneui.app.ui.component.material.ExpressiveToggleButton
+import com.alohaoneui.app.ui.component.material.alohaCornerShape
 import com.alohaoneui.mod.ui.component.SwitchItem
 import com.alohaoneui.mod.ui.component.SelectItem
 import com.alohaoneui.app.ui.LocalUiMode
@@ -76,7 +78,6 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.window.WindowDialog
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Surface
 import kotlin.math.roundToInt
 
 @Suppress("UNUSED_PARAMETER")
@@ -701,17 +702,15 @@ private fun StyleOneRoleColorDialog(
     }
 
     when (LocalUiMode.current) {
-        UiMode.Material -> Dialog(onDismissRequest = onDismiss) {
-            Surface(
-                modifier = Modifier.fillMaxWidth().widthIn(max = 460.dp),
-                shape = RoundedCornerShape(24.dp),
-            ) {
-                Column(modifier = Modifier.padding(20.dp)) {
-                    Text(text = roleTitle)
-                    Text(text = summary)
-                    PickerContent()
-                }
-            }
+        UiMode.Material -> ExpressiveContentDialog(
+            onDismissRequest = onDismiss,
+            modifier = Modifier.fillMaxWidth().widthIn(max = 460.dp),
+            shape = alohaCornerShape(24.dp),
+            contentModifier = Modifier.padding(20.dp),
+        ) {
+            Text(text = roleTitle)
+            Text(text = summary)
+            PickerContent()
         }
 
         UiMode.Miuix -> WindowDialog(
@@ -739,6 +738,10 @@ private fun StyleOneColorPalette(
     }
     val alpha = AndroidColor.alpha(colorArgb)
 
+    val colorPreviewShape = when (LocalUiMode.current) {
+        UiMode.Material -> alohaCornerShape(8.dp)
+        UiMode.Miuix -> RoundedCornerShape(8.dp)
+    }
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -747,9 +750,9 @@ private fun StyleOneColorPalette(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(24.dp)
-                .clip(RoundedCornerShape(8.dp))
+                .clip(colorPreviewShape)
                 .background(Color(colorArgb))
-                .border(1.dp, Color(0x55000000), RoundedCornerShape(8.dp)),
+                .border(1.dp, Color(0x55000000), colorPreviewShape),
         )
         StyleOneSaturationValuePicker(
             colorArgb = colorArgb,

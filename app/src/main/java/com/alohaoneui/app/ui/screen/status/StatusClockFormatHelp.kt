@@ -3,15 +3,13 @@ package com.alohaoneui.app.ui.screen.status
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text as MaterialText
+import com.alohaoneui.app.ui.component.material.ExpressiveContentDialog
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
 import com.alohaoneui.app.R
 import com.alohaoneui.app.ui.LocalUiMode
 import com.alohaoneui.app.ui.UiMode
@@ -139,25 +137,22 @@ fun StatusClockFormatHelpDialog(
     onDismiss: () -> Unit,
 ) {
     when (LocalUiMode.current) {
-        UiMode.Material -> Dialog(onDismissRequest = onDismiss) {
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(28.dp),
-            ) {
-                Column {
-                    MaterialText(
-                        text = stringResource(id = R.string.alohaoneui_clockFormatHelp_title),
-                        modifier = Modifier.padding(
-                            start = 24.dp,
-                            end = 24.dp,
-                            top = 22.dp,
-                            bottom = 4.dp,
-                        ),
-                        style = MaterialTheme.typography.headlineSmall,
-                    )
-                    ClockFormatHelpContent(onDismiss)
-                }
-            }
+        UiMode.Material -> ExpressiveContentDialog(
+            onDismissRequest = onDismiss,
+            modifier = Modifier.fillMaxWidth(),
+            contentModifier = Modifier,
+        ) {
+            MaterialText(
+                text = stringResource(id = R.string.alohaoneui_clockFormatHelp_title),
+                modifier = Modifier.padding(
+                    start = 24.dp,
+                    end = 24.dp,
+                    top = 22.dp,
+                    bottom = 4.dp,
+                ),
+                style = MaterialTheme.typography.headlineSmall,
+            )
+            ClockFormatHelpContent(onDismiss)
         }
 
         UiMode.Miuix -> WindowDialog(

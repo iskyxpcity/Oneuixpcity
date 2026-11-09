@@ -2,12 +2,8 @@ package com.alohaoneui.app.ui.component.dialog
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.LoadingIndicator
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Alignment
@@ -17,6 +13,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.alohaoneui.app.ui.component.markdown.MarkdownContent
+import com.alohaoneui.app.ui.component.material.ExpressiveDialog
+import com.alohaoneui.app.ui.component.material.ExpressiveSurface
+import com.alohaoneui.app.ui.component.material.alohaCornerShape
+import com.alohaoneui.app.ui.component.material.ExpressiveTextButton
 
 @Composable
 fun LoadingDialogMaterial(showDialog: MutableState<Boolean>) {
@@ -25,8 +25,8 @@ fun LoadingDialogMaterial(showDialog: MutableState<Boolean>) {
             onDismissRequest = {},
             properties = DialogProperties(dismissOnClickOutside = false, dismissOnBackPress = false)
         ) {
-            Surface(
-                modifier = Modifier.size(100.dp), shape = RoundedCornerShape(8.dp)
+            ExpressiveSurface(
+                modifier = Modifier.size(100.dp), shape = alohaCornerShape(16.dp)
             ) {
                 Box(
                     contentAlignment = Alignment.Center,
@@ -46,7 +46,7 @@ fun ConfirmDialogMaterial(
     showDialog: MutableState<Boolean>
 ) {
     if (showDialog.value) {
-        AlertDialog(
+        ExpressiveDialog(
             onDismissRequest = {
                 dismiss()
                 showDialog.value = false
@@ -62,7 +62,7 @@ fun ConfirmDialogMaterial(
                 }
             },
             confirmButton = {
-                TextButton(
+                ExpressiveTextButton(
                     onClick = {
                         confirm()
                         showDialog.value = false
@@ -72,7 +72,7 @@ fun ConfirmDialogMaterial(
                 }
             },
             dismissButton = {
-                TextButton(
+                ExpressiveTextButton(
                     onClick = {
                         dismiss()
                         showDialog.value = false

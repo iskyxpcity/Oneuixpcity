@@ -9,6 +9,7 @@ import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.Box
@@ -51,6 +52,8 @@ import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
 import com.alohaoneui.app.alohaoneui.AlohaOneUIPreferenceBridge
+import com.alohaoneui.app.ui.component.material.ExpressiveScaffold
+import com.alohaoneui.app.ui.component.material.LocalMaterialSwitchBackdrop
 import com.alohaoneui.app.ui.component.bottombar.BottomBar
 import com.alohaoneui.app.ui.component.bottombar.SideNavigationRail
 import com.alohaoneui.app.ui.component.bottombar.useNavigationRail
@@ -95,6 +98,7 @@ import com.alohaoneui.app.ui.theme.LocalEnableBlur
 import com.alohaoneui.app.ui.theme.LocalEnableFloatingBottomBar
 import com.alohaoneui.app.ui.theme.LocalEnableFloatingBottomBarBlur
 import com.alohaoneui.app.ui.theme.AlohaOneUITheme
+import com.alohaoneui.app.ui.util.AppLocaleContext
 import com.alohaoneui.app.ui.util.rememberBlurBackdrop
 import com.alohaoneui.app.ui.util.rememberContentReady
 import com.alohaoneui.app.ui.util.update.UpdateDialogHost
@@ -115,6 +119,10 @@ import top.yukonga.miuix.kmp.utils.PagerNavigationSpringSpec
 import top.yukonga.miuix.kmp.utils.pagerGestureOverride
 
 class MainActivity : ComponentActivity() {
+
+    override fun attachBaseContext(newBase: android.content.Context) {
+        super.attachBaseContext(AppLocaleContext.wrap(newBase))
+    }
 
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -171,6 +179,7 @@ class MainActivity : ComponentActivity() {
                             initialPage = selectedMainPage,
                             onPageChanged = viewModel::setSelectedMainPage,
                             pagerGestureMode = uiState.pagerGestureMode,
+                            enableSwipeBack = uiState.enableSwipeBack,
                             enablePredictiveBack = uiState.enablePredictiveBack,
                         )
                     }
@@ -240,14 +249,36 @@ class MainActivity : ComponentActivity() {
                         drawContent()
                     }
                     Box(Modifier.fillMaxSize()) {
+                        // A dedicated, non-recursive switch source is mounted behind
+                        // NavDisplay for every route, including pushed detail pages.
+                        // Each switch combines this stable page surface with its own
+                        // captured ON/OFF track, avoiding a missing pager-only source.
+                        val switchBackdrop = rememberLayerBackdrop {
+                            drawRect(updateDialogSurfaceColor)
+                        }
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .layerBackdrop(switchBackdrop),
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(updateDialogSurfaceColor),
+                            )
+                        }
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
                                 .layerBackdrop(updateDialogBackdrop),
                         ) {
-                            when (uiMode) {
-                                UiMode.Material -> androidx.compose.material3.Scaffold { navDisplay() }
-                                UiMode.Miuix -> Scaffold { navDisplay() }
+                            CompositionLocalProvider(
+                                LocalMaterialSwitchBackdrop provides switchBackdrop,
+                            ) {
+                                when (uiMode) {
+                                    UiMode.Material -> androidx.compose.material3.Scaffold { navDisplay() }
+                                    UiMode.Miuix -> Scaffold { navDisplay() }
+                                }
                             }
                         }
                         UpdateDialogHost(
@@ -284,6 +315,7 @@ fun MainScreen(
     initialPage: Int = 0,
     onPageChanged: (Int) -> Unit = {},
     pagerGestureMode: Int = PagerInterceptionMode.Native.ordinal,
+    enableSwipeBack: Boolean = false,
     enablePredictiveBack: Boolean = false,
 ) {
     val navController = LocalNavigator.current
@@ -330,7 +362,6 @@ fun MainScreen(
         drawRect(surfaceColor)
         drawContent()
     }
-
     val settledPage = mainPagerState.pagerState.settledPage
     LaunchedEffect(settledPage) {
         onPageChanged(settledPage)
@@ -366,40 +397,43 @@ fun MainScreen(
                 } else {
                     Modifier.fillMaxSize()
                 }
-                HorizontalPager(
-                    modifier = responsivePagerModifier.then(
-                        if (enableFloatingBottomBarBlur) Modifier.layerBackdrop(backdrop) else Modifier
-                    ).pagerGestureOverride(
-                        pagerState = mainPagerState.pagerState,
-                        mode = pagerGestureMode,
-                        enabled = true,
-                    ),
-                    state = mainPagerState.pagerState,
-                    beyondViewportPageCount = if (contentReady) 3 else 0,
-                    userScrollEnabled = !interceptPagerAxis,
-                    pageNestedScrollConnection = if (interceptPagerAxis) {
-                        PagerGestureNestedScrollConnection
-                    } else {
-                        nativePagerNestedScrollConnection
-                    },
-                    flingBehavior = pagerFlingBehavior,
-                ) { page ->
-                    val isCurrentPage = page == settledPage
-                    when (page) {
-                        0 -> if (isCurrentPage || contentReady) {
-                            HomePager(navController, bottomInnerPadding, isCurrentPage)
-                        }
-                        1 -> if (isCurrentPage || contentReady) {
-                            ToolsPager(navController, bottomInnerPadding, isCurrentPage)
-                        }
-                        2 -> if (isCurrentPage || contentReady) {
-                            StatusPager(navController, bottomInnerPadding, isCurrentPage)
-                        }
-                        3 -> if (isCurrentPage || contentReady) {
-                            SettingPager(navController, bottomInnerPadding, isCurrentPage)
+                val pager: @Composable () -> Unit = {
+                    HorizontalPager(
+                        modifier = responsivePagerModifier.then(
+                            if (enableFloatingBottomBarBlur) Modifier.layerBackdrop(backdrop) else Modifier
+                        ).pagerGestureOverride(
+                            pagerState = mainPagerState.pagerState,
+                            mode = pagerGestureMode,
+                            enabled = enableSwipeBack,
+                        ),
+                        state = mainPagerState.pagerState,
+                        beyondViewportPageCount = if (contentReady) 3 else 0,
+                        userScrollEnabled = enableSwipeBack && !interceptPagerAxis,
+                        pageNestedScrollConnection = if (interceptPagerAxis) {
+                            PagerGestureNestedScrollConnection
+                        } else {
+                            nativePagerNestedScrollConnection
+                        },
+                        flingBehavior = pagerFlingBehavior,
+                    ) { page ->
+                        val isCurrentPage = page == settledPage
+                        when (page) {
+                            0 -> if (isCurrentPage || contentReady) {
+                                HomePager(navController, bottomInnerPadding, isCurrentPage)
+                            }
+                            1 -> if (isCurrentPage || contentReady) {
+                                ToolsPager(navController, bottomInnerPadding, isCurrentPage)
+                            }
+                            2 -> if (isCurrentPage || contentReady) {
+                                StatusPager(navController, bottomInnerPadding, isCurrentPage)
+                            }
+                            3 -> if (isCurrentPage || contentReady) {
+                                SettingPager(navController, bottomInnerPadding, isCurrentPage)
+                            }
                         }
                     }
                 }
+                pager()
             }
         }
 
@@ -452,7 +486,7 @@ fun MainScreen(
             }
 
             when (uiMode) {
-                UiMode.Material -> androidx.compose.material3.Scaffold(
+                UiMode.Material -> ExpressiveScaffold(
                     bottomBar = bottomBar,
                 ) { innerPadding ->
                     pagerContent(innerPadding.calculateBottomPadding())

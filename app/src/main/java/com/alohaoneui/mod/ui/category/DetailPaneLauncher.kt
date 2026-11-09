@@ -17,42 +17,53 @@ fun DetailPaneLauncher(
     onEvent: (LauncherEvent) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    PackagePane(modifier) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
-            SwitchItem(
-                icon = ImageVector.vectorResource(id = R.drawable.memory),
-                title = stringResource(id = R.string.alohaoneui_showMemoryUsageInRecents_title),
-                checked = uiState.showMemoryUsageInRecents,
-                onCheckedChange = { onEvent(LauncherEvent.ShowMemoryUsageInRecents(it)) }
-            )
+    PackagePane(
+        modifier = modifier,
+        content = buildList {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) add {
+                SwitchItem(
+                                icon = ImageVector.vectorResource(id = R.drawable.memory),
+                                title = stringResource(id = R.string.alohaoneui_showMemoryUsageInRecents_title),
+                                checked = uiState.showMemoryUsageInRecents,
+                                onCheckedChange = { onEvent(LauncherEvent.ShowMemoryUsageInRecents(it)) }
+                            )
+            }
+            add {
+                SwitchItem(
+                            icon = ImageVector.vectorResource(id = R.drawable.tile_medium),
+                            title = stringResource(id = R.string.alohaoneui_recentsGridThreeRows_title),
+                            summary = stringResource(id = R.string.alohaoneui_recentsGridThreeRows_summary),
+                            checked = uiState.recentsGridThreeRows,
+                            onCheckedChange = { onEvent(LauncherEvent.RecentsGridThreeRows(it)) }
+                        )
+            }
+            add {
+                SwitchItem(
+                            icon = ImageVector.vectorResource(id = R.drawable.block),
+                            title = stringResource(id = R.string.alohaoneui_hideRecentsCloseAllButton_title),
+                            checked = uiState.hideRecentsCloseAllButton,
+                            onCheckedChange = { onEvent(LauncherEvent.HideRecentsCloseAllButton(it)) }
+                        )
+            }
+            add {
+                SwitchItem(
+                            icon = ImageVector.vectorResource(id = R.drawable.apps),
+                            title = stringResource(id = R.string.alohaoneui_hideAppsSearchBar_title),
+                            checked = uiState.hideAppsSearchBar,
+                            onCheckedChange = { onEvent(LauncherEvent.HideAppsSearchBar(it)) }
+                        )
+            }
+            add {
+                SwitchItem(
+                            icon = ImageVector.vectorResource(id = R.drawable.position_bottom_right),
+                            title = stringResource(id = R.string.alohaoneui_removeShortcutBadge_title),
+                            summary = stringResource(id = R.string.alohaoneui_removeShortcutBadge_summary),
+                            checked = uiState.removeShortcutBadge,
+                            onCheckedChange = { onEvent(LauncherEvent.RemoveShortcutBadge(it)) }
+                        )
+            }
         }
-        SwitchItem(
-            icon = ImageVector.vectorResource(id = R.drawable.tile_medium),
-            title = stringResource(id = R.string.alohaoneui_recentsGridThreeRows_title),
-            summary = stringResource(id = R.string.alohaoneui_recentsGridThreeRows_summary),
-            checked = uiState.recentsGridThreeRows,
-            onCheckedChange = { onEvent(LauncherEvent.RecentsGridThreeRows(it)) }
-        )
-        SwitchItem(
-            icon = ImageVector.vectorResource(id = R.drawable.block),
-            title = stringResource(id = R.string.alohaoneui_hideRecentsCloseAllButton_title),
-            checked = uiState.hideRecentsCloseAllButton,
-            onCheckedChange = { onEvent(LauncherEvent.HideRecentsCloseAllButton(it)) }
-        )
-        SwitchItem(
-            icon = ImageVector.vectorResource(id = R.drawable.apps),
-            title = stringResource(id = R.string.alohaoneui_hideAppsSearchBar_title),
-            checked = uiState.hideAppsSearchBar,
-            onCheckedChange = { onEvent(LauncherEvent.HideAppsSearchBar(it)) }
-        )
-        SwitchItem(
-            icon = ImageVector.vectorResource(id = R.drawable.position_bottom_right),
-            title = stringResource(id = R.string.alohaoneui_removeShortcutBadge_title),
-            summary = stringResource(id = R.string.alohaoneui_removeShortcutBadge_summary),
-            checked = uiState.removeShortcutBadge,
-            onCheckedChange = { onEvent(LauncherEvent.RemoveShortcutBadge(it)) }
-        )
-    }
+    )
 }
 
 sealed interface LauncherEvent {

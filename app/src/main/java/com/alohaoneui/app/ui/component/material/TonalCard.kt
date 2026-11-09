@@ -1,6 +1,7 @@
 package com.alohaoneui.app.ui.component.material
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -16,26 +17,36 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.dp
+import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
+import com.alohaoneui.app.ui.theme.LocalMaterialShadowContainers
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun TonalCard(
     modifier: Modifier = Modifier,
     containerColor: Color = MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp),
-    shape: Shape = MaterialTheme.shapes.large,
+    shape: Shape? = null,
     enabled: Boolean = true,
     onClick: () -> Unit,
     content: @Composable () -> Unit,
 ) {
+    val actualShape = shape ?: alohaCornerShape(20.dp)
     Card(
         onClick = onClick,
         modifier = modifier,
         enabled = enabled,
+        border = LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
+            BorderStroke(it.dp, MaterialTheme.colorScheme.outlineVariant)
+        },
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = if (LocalMaterialShadowContainers.current) 2.dp else 0.dp,
+            pressedElevation = if (LocalMaterialShadowContainers.current) 3.dp else 0.dp,
+        ),
         colors = CardDefaults.cardColors(
             containerColor = containerColor,
             contentColor = contentColorFor(containerColor),
         ),
-        shape = shape,
+        shape = actualShape,
     ) {
         content()
     }
@@ -46,16 +57,23 @@ fun TonalCard(
 fun TonalCard(
     modifier: Modifier = Modifier,
     containerColor: Color = MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp),
-    shape: Shape = MaterialTheme.shapes.large,
+    shape: Shape? = null,
     content: @Composable () -> Unit,
 ) {
+    val actualShape = shape ?: alohaCornerShape(20.dp)
     Card(
         modifier = modifier,
+        border = LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
+            BorderStroke(it.dp, MaterialTheme.colorScheme.outlineVariant)
+        },
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = if (LocalMaterialShadowContainers.current) 2.dp else 0.dp
+        ),
         colors = CardDefaults.cardColors(
             containerColor = containerColor,
             contentColor = contentColorFor(containerColor),
         ),
-        shape = shape,
+        shape = actualShape,
     ) {
         content()
     }

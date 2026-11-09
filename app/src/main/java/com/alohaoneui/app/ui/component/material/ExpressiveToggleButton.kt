@@ -1,6 +1,13 @@
 package com.alohaoneui.app.ui.component.material
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.ui.unit.dp
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
+import com.alohaoneui.app.ui.theme.LocalMaterialShadowButtons
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ToggleButton
 import androidx.compose.material3.ToggleButtonColors
@@ -24,6 +31,7 @@ fun ExpressiveToggleButton(
     colors: ToggleButtonColors = expressiveToggleButtonColors(),
     content: @Composable RowScope.() -> Unit,
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
     ToggleButton(
         checked = checked,
         onCheckedChange = onCheckedChange,
@@ -31,6 +39,11 @@ fun ExpressiveToggleButton(
         enabled = enabled,
         colors = colors,
         shapes = shapes,
+        border = LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
+            BorderStroke(it.dp, MaterialTheme.colorScheme.outlineVariant)
+        },
+        elevation = if (LocalMaterialShadowButtons.current) ToggleButtonDefaults.elevation() else null,
+        interactionSource = interactionSource,
         content = content,
     )
 }

@@ -39,6 +39,15 @@ fun buildAlohaOneUIDiagnosticReport(context: Context): String {
         appendLine()
         appendLine("[Probe]")
         appendLine("Flux-style on-demand PING only; persistent heartbeat bridge removed.")
+        appendLine()
+        appendLine("[App process crash capture status]")
+        appendLine(CrashDiagnostics.readCaptureStatus(context))
+        appendLine()
+        appendLine("[App process crash diagnostics]")
+        appendLine(
+            CrashDiagnostics.readLatestCrash(context)
+                ?: "No uncaught app-process crash record is currently stored."
+        )
     }
 }
 

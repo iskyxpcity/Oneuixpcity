@@ -16,6 +16,7 @@ import androidx.compose.material.icons.automirrored.filled.Article
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Adb
 import androidx.compose.material.icons.filled.BugReport
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ContactPage
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DeveloperMode
@@ -26,6 +27,8 @@ import androidx.compose.material.icons.filled.ElectricalServices
 import androidx.compose.material.icons.filled.Fence
 import androidx.compose.material.icons.filled.FolderDelete
 import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Policy
 import androidx.compose.material.icons.filled.RemoveCircle
@@ -35,9 +38,7 @@ import androidx.compose.material.icons.filled.Update
 import androidx.compose.material.icons.rounded.Dashboard
 import androidx.compose.material.icons.rounded.UploadFile
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
@@ -56,8 +57,12 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.alohaoneui.app.R
 import com.alohaoneui.app.ui.UiMode
+import com.alohaoneui.app.ui.component.material.ExpressiveLargeTopAppBar
 import com.alohaoneui.app.ui.component.material.SegmentedColumn
+import com.alohaoneui.app.ui.component.material.ExpressiveScaffold
+import com.alohaoneui.app.ui.component.material.alohaOneUISegmentedColors
 import com.alohaoneui.app.ui.component.material.SegmentedDropdownItem
+import com.alohaoneui.app.ui.component.material.SegmentedChoiceOptionsItem
 import com.alohaoneui.app.ui.component.material.SegmentedListItem
 import com.alohaoneui.app.ui.component.material.SegmentedSwitchItem
 import com.alohaoneui.app.ui.component.material.SendLogBottomSheet
@@ -76,8 +81,9 @@ fun SettingPagerMaterial(
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
     val snackBarHost = remember { SnackbarHostState() }
     var showBottomSheet by remember { mutableStateOf(false) }
+    var languageExpanded by rememberSaveable { mutableStateOf(true) }
 
-    Scaffold(
+    ExpressiveScaffold(
         topBar = {
             TopBar(scrollBehavior = scrollBehavior)
         },
@@ -139,6 +145,64 @@ fun SettingPagerMaterial(
             )
 
 
+            val languageOptions = listOf(
+                stringResource(R.string.settings_theme_mode_system) to "system",
+                "简体中文" to "zh-CN",
+                "繁體中文" to "zh-TW",
+                "English" to "en",
+                "日本語" to "ja",
+                "한국어" to "ko",
+            )
+            SegmentedColumn(
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                content = buildList {
+                    add {
+                        SegmentedListItem(
+                            onClick = { languageExpanded = !languageExpanded },
+                            leadingContent = {
+                                Icon(
+                                    Icons.Filled.Language,
+                                    contentDescription = stringResource(R.string.settings_group_language)
+                                )
+                            },
+                            headlineContent = { Text(stringResource(R.string.settings_group_language)) },
+                            trailingContent = {
+                                Icon(
+                                    if (languageExpanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
+                                    contentDescription = null
+                                )
+                            }
+                        )
+                    }
+                    if (languageExpanded) {
+                        languageOptions.forEach { (label, value) ->
+                            add {
+                                SegmentedListItem(
+                                    selected = uiState.appLanguage == value ||
+                                        (value == "system" && uiState.appLanguage.isBlank()),
+                                    colors = alohaOneUISegmentedColors().copy(
+                                        selectedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+                                    ),
+                                    onClick = { actions.onSetAppLanguage(value) },
+                                    headlineContent = { Text(label) },
+                                    trailingContent = {
+                                        if (uiState.appLanguage == value ||
+                                            (value == "system" && uiState.appLanguage.isBlank())
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Filled.Check,
+                                                contentDescription = null,
+                                                tint = MaterialTheme.colorScheme.primary,
+                                            )
+                                        }
+                                    },
+                                )
+                            }
+                        }
+                    }
+                }
+            )
+
             SegmentedColumn(
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                 content = listOf(
@@ -186,12 +250,9 @@ fun SettingPagerMaterial(
 private fun TopBar(
     scrollBehavior: TopAppBarScrollBehavior? = null
 ) {
-    LargeFlexibleTopAppBar(
+    ExpressiveLargeTopAppBar(
+        
         title = { Text(stringResource(R.string.settings)) },
-        colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.surface,
-            scrolledContainerColor = MaterialTheme.colorScheme.surface,
-        ),
         windowInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
         scrollBehavior = scrollBehavior
     )

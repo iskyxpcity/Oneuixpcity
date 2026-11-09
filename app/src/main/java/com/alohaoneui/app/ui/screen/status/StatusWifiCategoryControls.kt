@@ -68,6 +68,7 @@ fun StatusWifiCategoryControls(
                     summary = stringResource(id = R.string.status_wifi_runtime_enable_summary),
                     clickable = true,
                     showChildIndicator = true,
+                    expanded = wifiRuntime.enabled && expanded,
                     onClick = {
                         if (wifiRuntime.enabled) expanded = !expanded
                     },
@@ -85,6 +86,7 @@ fun StatusWifiCategoryControls(
                         icon = wifiIcon,
                         title = stringResource(id = R.string.status_wifi_editor_enable),
                         summary = stringResource(id = R.string.status_wifi_editor_enable_summary),
+                        expanded = wifiRuntime.editorEnabled,
                         checked = wifiRuntime.editorEnabled,
                         onCheckedChange = {
                             onChange(wifiRuntime.copy(editorEnabled = it))
@@ -106,6 +108,7 @@ fun StatusWifiCategoryControls(
                         icon = wifiIcon,
                         title = stringResource(id = R.string.status_wifi_hide_standard_badge),
                         summary = stringResource(id = R.string.status_wifi_hide_standard_badge_summary),
+                        expanded = !wifiRuntime.hideStandardBadge,
                         checked = wifiRuntime.hideStandardBadge,
                         onCheckedChange = {
                             onChange(wifiRuntime.copy(hideStandardBadge = it))
@@ -245,6 +248,7 @@ fun StatusWifiCategoryControls(
                             summary = stringResource(id = R.string.status_wifi_advanced_arc_editor_summary),
                             clickable = true,
                             showChildIndicator = true,
+                            expanded = showArcEditor,
                             onClick = { showArcEditor = !showArcEditor },
                             checked = showArcEditor,
                             onCheckedChange = { showArcEditor = it },
@@ -431,21 +435,18 @@ private fun WifiSliderSetting(
     onValueChange: (Float) -> Unit,
     onFinished: () -> Unit,
 ) {
-    Column {
-        AlohaOneUIInfoItem(
-            icon = icon,
-            title = title,
-            summary = summary,
+    StatusThemeChildItem(
+        title = title,
+        summary = summary,
+        icon = icon,
+    ) {
+        AlohaOneUISlider(
+            value = value,
+            onValueChange = onValueChange,
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+            valueRange = range,
+            onValueChangeFinished = onFinished,
         )
-        StatusThemeChildItem {
-            AlohaOneUISlider(
-                value = value,
-                onValueChange = onValueChange,
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
-                valueRange = range,
-                onValueChangeFinished = onFinished,
-            )
-        }
     }
 }
 

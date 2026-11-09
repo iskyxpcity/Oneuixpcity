@@ -13,7 +13,7 @@ import com.alohaoneui.app.R
 import com.alohaoneui.common.Preference
 import com.alohaoneui.app.ui.viewmodel.AlohaOneUIToolsViewModel
 import com.alohaoneui.mod.ui.component.SwitchItem
-import com.alohaoneui.mod.ui.component.AlohaOneUIDetailGroup
+import com.alohaoneui.mod.ui.component.AlohaOneUIDetailSegmentedGroup
 
 @Composable
 fun DetailPaneCamera(
@@ -26,22 +26,27 @@ fun DetailPaneCamera(
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
     ) {
-        AlohaOneUIDetailGroup {
-        SwitchItem(
-            icon = ImageVector.vectorResource(id = R.drawable.camera),
-            title = stringResource(id = R.string.alohaoneui_supportAllCameraMenu_title),
-            summary = stringResource(id = R.string.alohaoneui_supportAllCameraMenu_summary),
-            checked = uiState.supportAllCameraMenu,
-            onCheckedChange = { onEvent(CameraEvent.SupportAllCameraMenu(it)) }
-        )
-        SwitchItem(
-            icon = ImageVector.vectorResource(id = R.drawable.camera),
-            title = stringResource(id = R.string.alohaoneui_disableCameraTemperatureCheck_title),
-            checked = uiState.disableCameraTemperatureCheck,
-            onCheckedChange = { onEvent(CameraEvent.DisableCameraTemperatureCheck(it)) }
-        )
-    
-        }}
+        AlohaOneUIDetailSegmentedGroup(
+                content = buildList {
+                    add {
+                    SwitchItem(
+                                icon = ImageVector.vectorResource(id = R.drawable.camera),
+                                title = stringResource(id = R.string.alohaoneui_supportAllCameraMenu_title),
+                                summary = stringResource(id = R.string.alohaoneui_supportAllCameraMenu_summary),
+                                checked = uiState.supportAllCameraMenu,
+                                onCheckedChange = { onEvent(CameraEvent.SupportAllCameraMenu(it)) }
+                            )
+                }
+                add {
+                    SwitchItem(
+                                icon = ImageVector.vectorResource(id = R.drawable.camera),
+                                title = stringResource(id = R.string.alohaoneui_disableCameraTemperatureCheck_title),
+                                checked = uiState.disableCameraTemperatureCheck,
+                                onCheckedChange = { onEvent(CameraEvent.DisableCameraTemperatureCheck(it)) }
+                            )
+                }
+                }
+            )}
 }
 
 sealed interface CameraEvent {

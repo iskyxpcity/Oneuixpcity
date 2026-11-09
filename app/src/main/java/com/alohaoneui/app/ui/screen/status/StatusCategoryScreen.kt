@@ -17,16 +17,18 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import com.alohaoneui.app.ui.component.material.ExpressiveLargeTopAppBar
+import com.alohaoneui.app.ui.component.material.ExpressiveScaffold
+import com.alohaoneui.app.ui.component.material.TopBarBackButton
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -79,7 +81,9 @@ private fun Modifier.statusCategoryScroll(state: ScrollState): Modifier {
             .overScrollVertical()
             .scrollEndHaptic()
             .verticalScroll(state)
-        UiMode.Material -> this.verticalScroll(state)
+        // Match SettingsMaterial's 8dp leading spacer before its first
+        // SegmentedColumn; keep it inside the scroll content.
+        UiMode.Material -> this.verticalScroll(state).padding(top = 8.dp)
     }
 }
 
@@ -326,23 +330,14 @@ private fun StatusCategoryMaterial(
     val scrollBehavior =
         TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 
-    androidx.compose.material3.Scaffold(
+    ExpressiveScaffold(
         topBar = {
-            LargeFlexibleTopAppBar(
+            ExpressiveLargeTopAppBar(
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = null,
-                        )
-                    }
+                    TopBarBackButton(onClick = onBack)
                 },
                 title = { Text(stringResource(category.titleRes)) },
                 actions = { RebootListPopup() },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    scrolledContainerColor = MaterialTheme.colorScheme.surface,
-                ),
                 windowInsets = WindowInsets.safeDrawing.only(
                     WindowInsetsSides.Top + WindowInsetsSides.Horizontal
                 ),

@@ -22,12 +22,19 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.key
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.alohaoneui.app.ui.LocalUiMode
 import com.alohaoneui.app.ui.UiMode
 import androidx.compose.material3.Slider as MaterialSlider
+import androidx.compose.material3.rememberSliderState
+import androidx.compose.ui.unit.dp
+import com.alohaoneui.app.ui.component.material.AlohaSliderThumb
+import com.alohaoneui.app.ui.component.material.AlohaSliderTrack
+import com.alohaoneui.app.ui.theme.LocalMaterialSliderStyle
+import com.alohaoneui.app.ui.theme.LocalMaterialShadowSliders
 import androidx.compose.ui.graphics.Color
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import kotlin.math.abs
@@ -98,16 +105,71 @@ fun AlohaOneUISlider(
     }
     val effectiveSteps = if (stepSize != null && stepSize > 0f) 0 else steps
 
+    val materialAppearance = com.alohaoneui.app.ui.component.material.alohaSliderAppearance(
+        LocalMaterialSliderStyle.current,
+    )
+    val materialSliderStyle = materialAppearance.style
+    val materialScheme = androidx.compose.material3.MaterialTheme.colorScheme
+    val materialActiveColor = materialAppearance.activeColor
+    val materialThumbColor = materialAppearance.thumbColor
+    val materialInactiveColor = materialAppearance.inactiveColor
+    val materialThumbSize = materialAppearance.thumbSize
+    val materialTrackHeight = materialAppearance.trackHeight
+    val materialInteractionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+    val materialSliderState = rememberSliderState(
+        value = controlledValue,
+        steps = effectiveSteps,
+        trackRange = valueRange,
+    )
+    LaunchedEffect(controlledValue, valueRange, effectiveSteps) {
+        materialSliderState.value = controlledValue
+    }
+
     when (LocalUiMode.current) {
-        UiMode.Material -> MaterialSlider(
-            value = controlledValue,
+        UiMode.Material -> key(materialSliderStyle) { MaterialSlider(
+            state = materialSliderState,
             enabled = enabled,
             onValueChange = ::emit,
-            modifier = modifier,
-            valueRange = valueRange,
-            steps = effectiveSteps,
+            modifier = modifier
+                .fillMaxWidth()
+                .then(
+                    com.alohaoneui.app.ui.component.material.alohaSliderContainerModifier(
+                        style = materialSliderStyle,
+                        containerColor = materialAppearance.containerColor,
+                    )
+                ),
             onValueChangeFinished = handleValueChangeFinished,
-        )
+            interactionSource = materialInteractionSource,
+            thumb = { thumbState ->
+                val valueFraction = if (valueRange.endInclusive > valueRange.start) {
+                    ((thumbState.value - valueRange.start) /
+                        (valueRange.endInclusive - valueRange.start)).coerceIn(0f, 1f)
+                } else 0f
+                AlohaSliderThumb(
+                    style = materialSliderStyle,
+                    size = materialThumbSize,
+                    activeColor = materialThumbColor,
+                    inactiveColor = materialInactiveColor,
+                    shadowEnabled = LocalMaterialShadowSliders.current,
+                    interactionSource = materialInteractionSource,
+                    valueFraction = valueFraction,
+                )
+            },
+            track = { state ->
+                AlohaSliderTrack(
+                    style = materialSliderStyle,
+                    state = state,
+                    range = valueRange,
+                    steps = effectiveSteps,
+                    height = materialTrackHeight,
+                    containerColor = materialAppearance.containerColor,
+                    thumbWidth = materialThumbSize.width,
+                    activeColor = materialActiveColor,
+                    inactiveColor = materialInactiveColor,
+                    shadowEnabled = LocalMaterialShadowSliders.current,
+                )
+            },
+        ) }
         UiMode.Miuix -> {
             val reverse = LocalLayoutDirection.current == LayoutDirection.Rtl
             val palette = MiuixTheme.colorScheme
@@ -189,6 +251,17 @@ fun AlohaOneUISlider(
                     strokeWidth = size.height,
                     cap = StrokeCap.Round,
                 )
+                // Keep the scale visible for continuous and stepped sliders alike.
+                // Marks follow the effective direction, including RTL layouts.
+                for (i in 0..20) {
+                    val tickFraction = i / 20f
+                    val passed = tickFraction <= effectiveFraction
+                    drawCircle(
+                        color = if (passed) thumbColor else trackForeground,
+                        radius = 1.dp.toPx(),
+                        center = Offset(size.width * tickFraction, size.height / 2f),
+                    )
+                }
                 drawCircle(
                     color = thumbColor,
                     radius = thumbRadius * 0.72f,

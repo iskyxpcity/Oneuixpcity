@@ -118,6 +118,7 @@ internal fun StatusPowerRuntimeControls(
                     summary = stringResource(id = R.string.status_power_runtime_enable_summary),
                     clickable = true,
                     showChildIndicator = true,
+                    expanded = powerRuntime.enabled && expanded,
                     onClick = {
                         if (powerRuntime.enabled) expanded = !expanded
                     },
@@ -262,6 +263,7 @@ internal fun StatusPowerRuntimeControls(
                         icon = powerIcon,
                         title = stringResource(id = R.string.status_power_double_line),
                         summary = stringResource(id = R.string.status_power_double_line_summary),
+                        expanded = powerRuntime.doubleLine,
                         checked = powerRuntime.doubleLine,
                         onCheckedChange = {
                             onChange(powerRuntime.copy(doubleLine = it))
@@ -314,18 +316,15 @@ internal fun StatusPowerRuntimeControls(
                 }
 
                 add {
-                    AlohaOneUIInfoItem(
+    StatusThemeExpandedControlItem(
                         icon = powerIcon,
                         title = stringResource(id = R.string.status_power_text_size),
                         summary = stringResource(
                             id = R.string.status_power_text_size_summary,
                             powerTextSize,
                         ),
-                    )
-                }
-                add {
-                    StatusThemeChildItem {
-                        AlohaOneUISlider(
+                    ) {
+        AlohaOneUISlider(
                             value = powerTextSize,
                             onValueChange = {
                                 val next = roundPowerHalfStep(it)
@@ -339,22 +338,19 @@ internal fun StatusPowerRuntimeControls(
                                 onChange(powerRuntime.copy(textSizeSp = powerTextSize))
                             },
                         )
-                    }
-                }
+    }
+}
 
                 add {
-                    AlohaOneUIInfoItem(
+    StatusThemeExpandedControlItem(
                         icon = powerIcon,
                         title = stringResource(id = R.string.status_power_refresh_interval),
                         summary = stringResource(
                             id = R.string.status_power_refresh_interval_summary,
                             refreshInterval.roundToInt(),
                         ),
-                    )
-                }
-                add {
-                    StatusThemeChildItem {
-                        AlohaOneUISlider(
+                    ) {
+        AlohaOneUISlider(
                             value = refreshInterval,
                             onValueChange = {
                                 val next = (it / 500f).roundToInt() * 500f
@@ -372,19 +368,16 @@ internal fun StatusPowerRuntimeControls(
                                 )
                             },
                         )
-                    }
-                }
+    }
+}
 
                 add {
-                    AlohaOneUIInfoItem(
+    StatusThemeExpandedControlItem(
                         icon = powerIcon,
                         title = stringResource(id = R.string.status_power_column_gap),
                         summary = stringResource(id = R.string.status_power_dp_summary, columnGap),
-                    )
-                }
-                add {
-                    StatusThemeChildItem {
-                        AlohaOneUISlider(
+                    ) {
+        AlohaOneUISlider(
                             value = columnGap,
                             onValueChange = {
                                 val next = roundPowerHalfStep(it)
@@ -398,20 +391,17 @@ internal fun StatusPowerRuntimeControls(
                                 onChange(powerRuntime.copy(columnGapDp = columnGap))
                             },
                         )
-                    }
-                }
+    }
+}
 
                 if (powerRuntime.doubleLine) {
                     add {
-                        AlohaOneUIInfoItem(
+    StatusThemeExpandedControlItem(
                             icon = powerIcon,
                             title = stringResource(id = R.string.status_power_row_gap),
                             summary = stringResource(id = R.string.status_power_dp_summary, rowGap),
-                        )
-                    }
-                    add {
-                        StatusThemeChildItem {
-                            AlohaOneUISlider(
+                        ) {
+        AlohaOneUISlider(
                                 value = rowGap,
                                 onValueChange = {
                                     val next = roundPowerHalfStep(it)
@@ -425,20 +415,17 @@ internal fun StatusPowerRuntimeControls(
                                     onChange(powerRuntime.copy(rowGapDp = rowGap))
                                 },
                             )
-                        }
-                    }
+    }
+}
                 }
 
                 add {
-                    AlohaOneUIInfoItem(
+    StatusThemeExpandedControlItem(
                         icon = powerIcon,
                         title = stringResource(id = R.string.status_power_horizontal_offset),
                         summary = stringResource(id = R.string.status_power_dp_summary, horizontalOffset),
-                    )
-                }
-                add {
-                    StatusThemeChildItem {
-                        AlohaOneUISlider(
+                    ) {
+        AlohaOneUISlider(
                             value = horizontalOffset,
                             onValueChange = {
                                 val next = roundPowerHalfStep(it)
@@ -456,19 +443,16 @@ internal fun StatusPowerRuntimeControls(
                                 onChange(powerRuntime.copy(horizontalOffsetDp = horizontalOffset))
                             },
                         )
-                    }
-                }
+    }
+}
 
                 add {
-                    AlohaOneUIInfoItem(
+    StatusThemeExpandedControlItem(
                         icon = powerIcon,
                         title = stringResource(id = R.string.status_power_vertical_offset),
                         summary = stringResource(id = R.string.status_power_dp_summary, verticalOffset),
-                    )
-                }
-                add {
-                    StatusThemeChildItem {
-                        AlohaOneUISlider(
+                    ) {
+        AlohaOneUISlider(
                             value = verticalOffset,
                             onValueChange = {
                                 val next = roundPowerHalfStep(it)
@@ -482,19 +466,16 @@ internal fun StatusPowerRuntimeControls(
                                 onChange(powerRuntime.copy(verticalOffsetDp = verticalOffset))
                             },
                         )
-                    }
-                }
+    }
+}
 
                 add {
-                    AlohaOneUIInfoItem(
+    StatusThemeExpandedControlItem(
                         icon = powerIcon,
                         title = stringResource(id = R.string.status_power_start_padding),
                         summary = stringResource(id = R.string.status_power_dp_summary, startPadding),
-                    )
-                }
-                add {
-                    StatusThemeChildItem {
-                        AlohaOneUISlider(
+                    ) {
+        AlohaOneUISlider(
                             value = startPadding,
                             onValueChange = {
                                 val next = roundPowerHalfStep(it)
@@ -508,19 +489,16 @@ internal fun StatusPowerRuntimeControls(
                                 onChange(powerRuntime.copy(startPaddingDp = startPadding))
                             },
                         )
-                    }
-                }
+    }
+}
 
                 add {
-                    AlohaOneUIInfoItem(
+    StatusThemeExpandedControlItem(
                         icon = powerIcon,
                         title = stringResource(id = R.string.status_power_end_padding),
                         summary = stringResource(id = R.string.status_power_dp_summary, endPadding),
-                    )
-                }
-                add {
-                    StatusThemeChildItem {
-                        AlohaOneUISlider(
+                    ) {
+        AlohaOneUISlider(
                             value = endPadding,
                             onValueChange = {
                                 val next = roundPowerHalfStep(it)
@@ -534,8 +512,8 @@ internal fun StatusPowerRuntimeControls(
                                 onChange(powerRuntime.copy(endPaddingDp = endPadding))
                             },
                         )
-                    }
-                }
+    }
+}
             }
         },
     )

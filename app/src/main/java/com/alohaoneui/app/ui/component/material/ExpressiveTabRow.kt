@@ -1,12 +1,12 @@
 package com.alohaoneui.app.ui.component.material
 
+import androidx.compose.foundation.border
 import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PrimaryTabRow
@@ -17,9 +17,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
+import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
+import com.alohaoneui.app.ui.theme.LocalMaterialShadowButtons
 
 @Composable
 fun ExpressiveTabRow(
@@ -34,13 +37,22 @@ fun ExpressiveTabRow(
         selectedTabIndex = safeIndex,
         modifier = modifier,
         containerColor = containerColor,
+        // Selection is rendered by each tab's expressive pill, not M3's underline.
+        indicator = {},
+        divider = {},
     ) {
         tabs.forEachIndexed { index, label ->
             val selected = safeIndex == index
             val interactionSource = remember { MutableInteractionSource() }
+            val tabShape = alohaCornerShape(50.dp)
             Box(
                 modifier = Modifier
                     .fillMaxHeight()
+                    .then(
+                        if (LocalMaterialShadowButtons.current) {
+                            Modifier.shadow(if (selected) 2.dp else 1.dp, tabShape)
+                        } else Modifier
+                    )
                     .selectable(
                         selected = selected,
                         interactionSource = interactionSource,
@@ -53,7 +65,12 @@ fun ExpressiveTabRow(
                 Box(
                     modifier = Modifier
                         .padding(vertical = 8.dp)
-                        .clip(CircleShape)
+                        .clip(tabShape)
+                        .then(
+                            LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
+                                Modifier.border(it.dp, MaterialTheme.colorScheme.outlineVariant, tabShape)
+                            } ?: Modifier
+                        )
                         .indication(interactionSource, ripple()),
                     contentAlignment = Alignment.Center,
                 ) {

@@ -9,9 +9,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -25,6 +24,8 @@ import com.alohaoneui.app.R
 import com.alohaoneui.app.ui.LocalUiMode
 import com.alohaoneui.app.ui.UiMode
 import com.alohaoneui.app.ui.component.material.ExpressiveDialog
+import com.alohaoneui.app.ui.component.material.ExpressiveOutlinedTextField
+import com.alohaoneui.app.ui.component.material.ExpressiveTextButton
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.TextField
 import top.yukonga.miuix.kmp.basic.TextButton
@@ -56,17 +57,18 @@ private fun DownloadDialogMaterial(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.download_dialog_title)) },
         text = {
-            OutlinedTextField(
+            ExpressiveOutlinedTextField(
                 value = url,
                 onValueChange = { url = it },
                 placeholder = { Text(stringResource(R.string.download_dialog_msg)) },
                 singleLine = true,
+                textStyle = MaterialTheme.typography.bodyLarge,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
                 modifier = Modifier.fillMaxWidth()
             )
         },
         confirmButton = {
-            TextButton(
+            ExpressiveTextButton(
                 enabled = isValidUrl(url.trim()),
                 onClick = { onConfirm(url.trim()) }
             ) {
@@ -74,7 +76,7 @@ private fun DownloadDialogMaterial(
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
+            ExpressiveTextButton(onClick = onDismiss) {
                 Text(stringResource(android.R.string.cancel))
             }
         }

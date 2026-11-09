@@ -33,7 +33,7 @@ fun OtherFunctionsThemeGroup(
 
     when (LocalUiMode.current) {
         UiMode.Material -> SegmentedColumn(
-            modifier = modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+            modifier = modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             content = items.map { item ->
                 {
                     CompositionLocalProvider(

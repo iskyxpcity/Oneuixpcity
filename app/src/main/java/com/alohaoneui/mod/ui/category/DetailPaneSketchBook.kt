@@ -16,15 +16,20 @@ fun DetailPaneSketchBook(
     onEvent: (SketchBookEvent) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    PackagePane(modifier) {
-        SwitchItem(
-            icon = ImageVector.vectorResource(id = R.drawable.branding_watermark),
-            title = stringResource(id = R.string.alohaoneui_noAIWatermark_title),
-            summary = stringResource(id = R.string.alohaoneui_noAIWatermark_summary),
-            checked = uiState.noAIWatermark,
-            onCheckedChange = { onEvent(SketchBookEvent.NoAIWatermark(it)) }
-        )
-    }
+    PackagePane(
+        modifier = modifier,
+        content = buildList {
+            add {
+                SwitchItem(
+                            icon = ImageVector.vectorResource(id = R.drawable.branding_watermark),
+                            title = stringResource(id = R.string.alohaoneui_noAIWatermark_title),
+                            summary = stringResource(id = R.string.alohaoneui_noAIWatermark_summary),
+                            checked = uiState.noAIWatermark,
+                            onCheckedChange = { onEvent(SketchBookEvent.NoAIWatermark(it)) }
+                        )
+            }
+        }
+    )
 }
 
 sealed interface SketchBookEvent {

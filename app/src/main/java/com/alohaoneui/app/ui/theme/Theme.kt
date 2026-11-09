@@ -2,6 +2,7 @@ package com.alohaoneui.app.ui.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.staticCompositionLocalOf
 import com.materialkolor.PaletteStyle
@@ -49,6 +50,18 @@ data class AppSettings(
     val keyColor: Int,
     val paletteStyle: PaletteStyle,
     val colorSpec: ColorSpec.SpecVersion,
+    val materialCornerScale: Float = 1.0f,
+    val materialShapeStyle: Int = 0,
+    val materialSwitchStyle: Int = 0,
+    val materialSliderStyle: Int = 0,
+    val materialIconShapeStyle: Int = -1,
+    val materialOutlineWidth: Float = 0.0f,
+    val materialShadowContainers: Boolean = true,
+    val materialShadowTopBars: Boolean = true,
+    val materialShadowButtons: Boolean = true,
+    val materialShadowFloatingButtons: Boolean = true,
+    val materialShadowSwitches: Boolean = true,
+    val materialShadowSliders: Boolean = true,
 )
 
 val PaletteStyle.supportsSpec2025: Boolean
@@ -96,7 +109,24 @@ object ThemeController {
             ColorSpec.SpecVersion.SPEC_2025
         }
 
-        return AppSettings(colorMode, keyColor, paletteStyle, colorSpec)
+        return AppSettings(
+            colorMode = colorMode,
+            keyColor = keyColor,
+            paletteStyle = paletteStyle,
+            colorSpec = colorSpec,
+            materialCornerScale = repo.materialCornerScale,
+            materialShapeStyle = repo.materialShapeStyle,
+            materialSwitchStyle = repo.materialSwitchStyle,
+            materialSliderStyle = repo.materialSliderStyle,
+            materialIconShapeStyle = repo.materialIconShapeStyle,
+            materialOutlineWidth = repo.materialOutlineWidth,
+            materialShadowContainers = repo.materialShadowContainers,
+            materialShadowTopBars = repo.materialShadowTopBars,
+            materialShadowButtons = repo.materialShadowButtons,
+            materialShadowFloatingButtons = repo.materialShadowFloatingButtons,
+            materialShadowSwitches = repo.materialShadowSwitches,
+            materialShadowSliders = repo.materialShadowSliders,
+        )
     }
 }
 
@@ -112,10 +142,25 @@ fun AlohaOneUITheme(
             content = content
         )
 
-        UiMode.Material -> MaterialAlohaOneUITheme(
-            appSettings = appSettings,
-            content = content
-        )
+        UiMode.Material -> CompositionLocalProvider(
+            LocalMaterialCornerScale provides appSettings.materialCornerScale,
+            LocalMaterialShapeStyle provides appSettings.materialShapeStyle,
+            LocalMaterialSwitchStyle provides appSettings.materialSwitchStyle,
+            LocalMaterialSliderStyle provides appSettings.materialSliderStyle,
+            LocalMaterialIconShapeStyle provides appSettings.materialIconShapeStyle,
+            LocalMaterialOutlineWidth provides appSettings.materialOutlineWidth,
+            LocalMaterialShadowContainers provides appSettings.materialShadowContainers,
+            LocalMaterialShadowTopBars provides appSettings.materialShadowTopBars,
+            LocalMaterialShadowButtons provides appSettings.materialShadowButtons,
+            LocalMaterialShadowFloatingButtons provides appSettings.materialShadowFloatingButtons,
+            LocalMaterialShadowSwitches provides appSettings.materialShadowSwitches,
+            LocalMaterialShadowSliders provides appSettings.materialShadowSliders,
+        ) {
+            MaterialAlohaOneUITheme(
+                appSettings = appSettings,
+                content = content
+            )
+        }
     }
 }
 
@@ -136,3 +181,15 @@ val LocalEnableBlur = staticCompositionLocalOf { false }
 val LocalEnableFloatingBottomBar = staticCompositionLocalOf { false }
 
 val LocalEnableFloatingBottomBarBlur = staticCompositionLocalOf { false }
+val LocalMaterialCornerScale = staticCompositionLocalOf { 1.0f }
+val LocalMaterialShapeStyle = staticCompositionLocalOf { 0 }
+val LocalMaterialSwitchStyle = staticCompositionLocalOf { 0 }
+val LocalMaterialSliderStyle = staticCompositionLocalOf { 0 }
+val LocalMaterialIconShapeStyle = staticCompositionLocalOf { -1 }
+val LocalMaterialOutlineWidth = staticCompositionLocalOf { 0.0f }
+val LocalMaterialShadowContainers = staticCompositionLocalOf { true }
+val LocalMaterialShadowTopBars = staticCompositionLocalOf { true }
+val LocalMaterialShadowButtons = staticCompositionLocalOf { true }
+val LocalMaterialShadowFloatingButtons = staticCompositionLocalOf { true }
+val LocalMaterialShadowSwitches = staticCompositionLocalOf { true }
+val LocalMaterialShadowSliders = staticCompositionLocalOf { true }

@@ -1,11 +1,14 @@
 package com.alohaoneui.app.ui.component.material
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -24,15 +27,11 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ExpandedFullScreenContainedSearchBar
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.SearchBarValue
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Surface
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.rememberContainedSearchBarState
 import androidx.compose.runtime.Composable
@@ -47,12 +46,16 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
+import com.alohaoneui.app.ui.theme.LocalMaterialShadowTopBars
+import com.alohaoneui.app.ui.theme.LocalMaterialShadowContainers
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 
@@ -152,7 +155,7 @@ fun SearchAppBar(
                 },
                 leadingIcon = {
                     if (isSearchExpanded) {
-                        IconButton(
+                        ExpressiveIconButton(
                             onClick = { collapseAndClear() },
                             content = { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) }
                         )
@@ -162,7 +165,7 @@ fun SearchAppBar(
                 },
                 trailingIcon = {
                     if (isSearchExpanded && currentQuery.isNotEmpty()) {
-                        IconButton(
+                        ExpressiveIconButton(
                             onClick = { clearSearchText() },
                             content = { Icon(Icons.Filled.Close, null) }
                         )
@@ -173,30 +176,69 @@ fun SearchAppBar(
         }
     }
 
-    Surface {
+    ExpressiveSurface(
+        shape = RectangleShape,
+        border = BorderStroke(0.dp, MaterialTheme.colorScheme.surface),
+        shadowElevation = 0.dp,
+    ) {
         Column(
             modifier = Modifier.fillMaxWidth()
         ) {
-            LargeFlexibleTopAppBar(
+            val topBarShape = alohaCornerShape(16.dp)
+            val topBarModifier = Modifier
+                .then(
+                    if (LocalMaterialShadowTopBars.current) {
+                        Modifier.shadow(3.dp, topBarShape)
+                    } else Modifier
+                )
+                .then(
+                    LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
+                        Modifier.border(it.dp, MaterialTheme.colorScheme.outlineVariant, topBarShape)
+                    } ?: Modifier
+                )
+            ExpressiveLargeTopAppBar(
+                modifier = topBarModifier,
                 title = title,
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    scrolledContainerColor = MaterialTheme.colorScheme.surface
-                ),
                 navigationIcon = { if (navigationIcon != null) navigationIcon() },
                 actions = { if (actions != null) actions() },
                 windowInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
                 scrollBehavior = scrollBehavior
             )
 
+            val searchFieldShape = alohaCornerShape(16.dp)
+            val searchOutlineWidth = LocalMaterialOutlineWidth.current
             SearchBar(
                 modifier = Modifier
                     .fillMaxWidth()
                     .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal))
                     .padding(horizontal = 16.dp)
-                    .padding(bottom = 8.dp),
+                    .padding(bottom = 8.dp)
+                    .then(
+                        if (LocalMaterialShadowContainers.current) {
+                            Modifier.shadow(2.dp, searchFieldShape)
+                        } else Modifier
+                    )
+                    .then(
+                        searchOutlineWidth.takeIf { it > 0f }?.let {
+                            Modifier.border(
+                                BorderStroke(it.dp, MaterialTheme.colorScheme.outlineVariant),
+                                searchFieldShape,
+                            )
+                        } ?: Modifier
+                    ),
                 state = searchBarState,
                 inputField = inputField,
+                shape = searchFieldShape,
+                colors = SearchBarDefaults.colors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                    inputFieldColors = SearchBarDefaults.inputFieldColors(
+                        focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                        disabledContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                    ),
+                ),
+                tonalElevation = 0.dp,
+                shadowElevation = 0.dp,
             )
         }
     }

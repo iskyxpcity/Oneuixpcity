@@ -16,14 +16,19 @@ fun DetailPaneWeather(
     onEvent: (WeatherEvent) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    PackagePane(modifier) {
-        SwitchItem(
+    PackagePane(
+        modifier = modifier,
+        content = buildList {
+            add {
+                SwitchItem(
             icon = ImageVector.vectorResource(id = R.drawable.partly_cloudy_day),
             title = stringResource(id = R.string.alohaoneui_setWeatherProviderCN_title),
             checked = uiState.setWeatherProviderCN,
-            onCheckedChange = { onEvent(WeatherEvent.SetWeatherProviderCN(it)) }
-        )
-    }
+                            onCheckedChange = { onEvent(WeatherEvent.SetWeatherProviderCN(it)) }
+                )
+            }
+        }
+    )
 }
 
 sealed interface WeatherEvent {

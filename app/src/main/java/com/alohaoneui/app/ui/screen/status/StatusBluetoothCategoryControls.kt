@@ -20,7 +20,6 @@ import com.alohaoneui.app.R
 import com.alohaoneui.app.ui.viewmodel.AlohaOneUIToolsViewModel
 import com.alohaoneui.common.Preference
 import com.alohaoneui.mod.ui.category.SystemUIEvent
-import com.alohaoneui.mod.ui.component.AlohaOneUIInfoItem
 import com.alohaoneui.mod.ui.component.AlohaOneUISlider
 import com.alohaoneui.mod.ui.component.SwitchItem
 import kotlin.math.roundToInt
@@ -104,6 +103,7 @@ fun StatusBluetoothCategoryControls(
                     summary = stringResource(id = R.string.status_bluetooth_runtime_enable_summary),
                     clickable = true,
                     showChildIndicator = true,
+                    expanded = runtime.enabled && expanded,
                     onClick = {
                         if (runtime.enabled) expanded = !expanded
                     },
@@ -268,21 +268,18 @@ private fun BluetoothSliderSetting(
     onValueChange: (Float) -> Unit,
     onFinished: () -> Unit,
 ) {
-    Column {
-        AlohaOneUIInfoItem(
-            icon = icon,
-            title = title,
-            summary = summary,
+    StatusThemeChildItem(
+        title = title,
+        summary = summary,
+        icon = icon,
+    ) {
+        AlohaOneUISlider(
+            value = value,
+            onValueChange = onValueChange,
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+            valueRange = range,
+            onValueChangeFinished = onFinished,
         )
-        StatusThemeChildItem {
-            AlohaOneUISlider(
-                value = value,
-                onValueChange = onValueChange,
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
-                valueRange = range,
-                onValueChangeFinished = onFinished,
-            )
-        }
     }
 }
 

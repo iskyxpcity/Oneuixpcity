@@ -14,7 +14,7 @@ import kotlinx.coroutines.android.awaitFrame
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import com.alohaoneui.app.ui.component.miuix.modifier.inspectDragGestures
+import com.alohaoneui.app.ui.component.gesture.inspectDragGestures
 import kotlin.math.abs
 
 class DampedDragAnimation(

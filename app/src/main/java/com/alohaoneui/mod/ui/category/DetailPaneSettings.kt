@@ -13,7 +13,7 @@ import com.alohaoneui.app.R
 import com.alohaoneui.common.Preference
 import com.alohaoneui.app.ui.viewmodel.AlohaOneUIToolsViewModel
 import com.alohaoneui.mod.ui.component.SwitchItem
-import com.alohaoneui.mod.ui.component.AlohaOneUIDetailGroup
+import com.alohaoneui.mod.ui.component.AlohaOneUIDetailSegmentedGroup
 
 @Composable
 fun DetailPaneSettings(
@@ -26,63 +26,80 @@ fun DetailPaneSettings(
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
     ) {
-        AlohaOneUIDetailGroup {
-        SwitchItem(
-            title = stringResource(id = R.string.alohaoneui_showForcePeakRefreshRatePreference_title),
-            summary = stringResource(id = R.string.alohaoneui_showForcePeakRefreshRatePreference_summary),
-            icon = ImageVector.vectorResource(id = R.drawable.logo_dev),
-            checked = uiState.showForcePeakRefreshRatePreference,
-            onCheckedChange = { onEvent(SettingsEvent.ShowForcePeakRefreshRatePreference(it)) },
-        )
-        SwitchItem(
-            icon = ImageVector.vectorResource(id = R.drawable.light_mode),
-            title = stringResource(id = R.string.alohaoneui_supportOutdoorMode_title),
-            checked = uiState.supportOutdoorMode,
-            onCheckedChange = { onEvent(SettingsEvent.SupportOutdoorMode(it)) }
-        )
-        SwitchItem(
-            icon = ImageVector.vectorResource(id = R.drawable.battery),
-            title = stringResource(id = R.string.alohaoneui_showMoreBatteryInfo_title),
-            summary = stringResource(id = R.string.alohaoneui_showMoreBatteryInfo_summary),
-            checked = uiState.showMoreBatteryInfo,
-            onCheckedChange = { onEvent(SettingsEvent.ShowMoreBatteryInfo(it)) }
-        )
-        SwitchItem(
-            icon = ImageVector.vectorResource(id = R.drawable.apk_document),
-            title = stringResource(id = R.string.alohaoneui_showPackageInfo_title),
-            summary = stringResource(id = R.string.alohaoneui_showPackageInfo_summary),
-            checked = uiState.showPackageInfo,
-            onCheckedChange = { onEvent(SettingsEvent.ShowPackageInfo(it)) }
-        )
-        SwitchItem(
-            icon = ImageVector.vectorResource(id = R.drawable.wifi_link_speed),
-            title = stringResource(id = R.string.alohaoneui_showWiFiLinkSpeed_title),
-            summary = stringResource(id = R.string.alohaoneui_showWiFiLinkSpeed_summary),
-            checked = uiState.showWiFiLinkSpeed,
-            onCheckedChange = { onEvent(SettingsEvent.ShowWiFiLinkSpeed(it)) }
-        )
-        SwitchItem(
-            icon = ImageVector.vectorResource(id = R.drawable.font),
-            title = stringResource(id = R.string.alohaoneui_supportAnyFont_title),
-            checked = uiState.supportAnyFont,
-            onCheckedChange = { onEvent(SettingsEvent.SupportAnyFont(it)) }
-        )
-        SwitchItem(
-            icon = ImageVector.vectorResource(id = R.drawable.power_settings_new),
-            title = stringResource(id = R.string.alohaoneui_supportAutoPowerOnOff_title),
-            summary = stringResource(id = R.string.alohaoneui_supportAutoPowerOnOff_summary),
-            checked = uiState.supportAutoPowerOnOff,
-            onCheckedChange = { onEvent(SettingsEvent.SupportAutoPowerOnOff(it)) }
-        )
-        SwitchItem(
-            icon = ImageVector.vectorResource(id = R.drawable.mobile_screensaver),
-            title = stringResource(id = R.string.alohaoneui_spoofPhoneStatusAsOfficial_title),
-            summary = stringResource(id = R.string.alohaoneui_spoofPhoneStatusAsOfficial_summary),
-            checked = uiState.spoofPhoneStatusAsOfficial,
-            onCheckedChange = { onEvent(SettingsEvent.SpoofPhoneStatusAsOfficial(it)) }
-        )
-    
-        }}
+        AlohaOneUIDetailSegmentedGroup(
+                content = buildList {
+                    add {
+                    SwitchItem(
+                                title = stringResource(id = R.string.alohaoneui_showForcePeakRefreshRatePreference_title),
+                                summary = stringResource(id = R.string.alohaoneui_showForcePeakRefreshRatePreference_summary),
+                                icon = ImageVector.vectorResource(id = R.drawable.logo_dev),
+                                checked = uiState.showForcePeakRefreshRatePreference,
+                                onCheckedChange = { onEvent(SettingsEvent.ShowForcePeakRefreshRatePreference(it)) },
+                            )
+                }
+                add {
+                    SwitchItem(
+                                icon = ImageVector.vectorResource(id = R.drawable.light_mode),
+                                title = stringResource(id = R.string.alohaoneui_supportOutdoorMode_title),
+                                checked = uiState.supportOutdoorMode,
+                                onCheckedChange = { onEvent(SettingsEvent.SupportOutdoorMode(it)) }
+                            )
+                }
+                add {
+                    SwitchItem(
+                                icon = ImageVector.vectorResource(id = R.drawable.battery),
+                                title = stringResource(id = R.string.alohaoneui_showMoreBatteryInfo_title),
+                                summary = stringResource(id = R.string.alohaoneui_showMoreBatteryInfo_summary),
+                                checked = uiState.showMoreBatteryInfo,
+                                onCheckedChange = { onEvent(SettingsEvent.ShowMoreBatteryInfo(it)) }
+                            )
+                }
+                add {
+                    SwitchItem(
+                                icon = ImageVector.vectorResource(id = R.drawable.apk_document),
+                                title = stringResource(id = R.string.alohaoneui_showPackageInfo_title),
+                                summary = stringResource(id = R.string.alohaoneui_showPackageInfo_summary),
+                                checked = uiState.showPackageInfo,
+                                onCheckedChange = { onEvent(SettingsEvent.ShowPackageInfo(it)) }
+                            )
+                }
+                add {
+                    SwitchItem(
+                                icon = ImageVector.vectorResource(id = R.drawable.wifi_link_speed),
+                                title = stringResource(id = R.string.alohaoneui_showWiFiLinkSpeed_title),
+                                summary = stringResource(id = R.string.alohaoneui_showWiFiLinkSpeed_summary),
+                                checked = uiState.showWiFiLinkSpeed,
+                                onCheckedChange = { onEvent(SettingsEvent.ShowWiFiLinkSpeed(it)) }
+                            )
+                }
+                add {
+                    SwitchItem(
+                                icon = ImageVector.vectorResource(id = R.drawable.font),
+                                title = stringResource(id = R.string.alohaoneui_supportAnyFont_title),
+                                checked = uiState.supportAnyFont,
+                                onCheckedChange = { onEvent(SettingsEvent.SupportAnyFont(it)) }
+                            )
+                }
+                add {
+                    SwitchItem(
+                                icon = ImageVector.vectorResource(id = R.drawable.power_settings_new),
+                                title = stringResource(id = R.string.alohaoneui_supportAutoPowerOnOff_title),
+                                summary = stringResource(id = R.string.alohaoneui_supportAutoPowerOnOff_summary),
+                                checked = uiState.supportAutoPowerOnOff,
+                                onCheckedChange = { onEvent(SettingsEvent.SupportAutoPowerOnOff(it)) }
+                            )
+                }
+                add {
+                    SwitchItem(
+                                icon = ImageVector.vectorResource(id = R.drawable.mobile_screensaver),
+                                title = stringResource(id = R.string.alohaoneui_spoofPhoneStatusAsOfficial_title),
+                                summary = stringResource(id = R.string.alohaoneui_spoofPhoneStatusAsOfficial_summary),
+                                checked = uiState.spoofPhoneStatusAsOfficial,
+                                onCheckedChange = { onEvent(SettingsEvent.SpoofPhoneStatusAsOfficial(it)) }
+                            )
+                }
+                }
+            )}
 }
 
 sealed interface SettingsEvent {

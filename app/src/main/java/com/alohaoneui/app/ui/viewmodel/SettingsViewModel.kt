@@ -26,6 +26,7 @@ class SettingsViewModel(
     fun refresh() {
         viewModelScope.launch {
             val checkUpdate = repo.checkUpdate
+            val appLanguage = repo.appLanguage
             val themeMode = repo.themeMode
             val miuixMonet = repo.miuixMonet
             val keyColor = repo.keyColor
@@ -34,6 +35,18 @@ class SettingsViewModel(
             val enableFloatingBottomBar = repo.enableFloatingBottomBar
             val enableFloatingBottomBarBlur = repo.enableFloatingBottomBarBlur
             val pageScale = repo.pageScale
+            val materialCornerScale = repo.materialCornerScale
+            val materialShapeStyle = repo.materialShapeStyle
+            val materialSwitchStyle = repo.materialSwitchStyle
+            val materialSliderStyle = repo.materialSliderStyle
+            val materialIconShapeStyle = repo.materialIconShapeStyle
+            val materialOutlineWidth = repo.materialOutlineWidth
+            val materialShadowContainers = repo.materialShadowContainers
+            val materialShadowTopBars = repo.materialShadowTopBars
+            val materialShadowButtons = repo.materialShadowButtons
+            val materialShadowFloatingButtons = repo.materialShadowFloatingButtons
+            val materialShadowSwitches = repo.materialShadowSwitches
+            val materialShadowSliders = repo.materialShadowSliders
             val enableSwipeBack = repo.enableSwipeBack
             val pagerGestureMode = repo.pagerGestureMode
             val colorStyle = repo.colorStyle
@@ -44,6 +57,7 @@ class SettingsViewModel(
                 it.copy(
                     uiMode = uiMode,
                     checkUpdate = checkUpdate,
+                    appLanguage = appLanguage,
                     themeMode = themeMode,
                     miuixMonet = miuixMonet,
                     keyColor = keyColor,
@@ -52,6 +66,18 @@ class SettingsViewModel(
                     enableFloatingBottomBar = enableFloatingBottomBar,
                     enableFloatingBottomBarBlur = enableFloatingBottomBarBlur,
                     pageScale = pageScale,
+                    materialCornerScale = materialCornerScale,
+                    materialShapeStyle = materialShapeStyle,
+                    materialSwitchStyle = materialSwitchStyle,
+                    materialSliderStyle = materialSliderStyle,
+                    materialIconShapeStyle = materialIconShapeStyle,
+                    materialOutlineWidth = materialOutlineWidth,
+                    materialShadowContainers = materialShadowContainers,
+                    materialShadowTopBars = materialShadowTopBars,
+                    materialShadowButtons = materialShadowButtons,
+                    materialShadowFloatingButtons = materialShadowFloatingButtons,
+                    materialShadowSwitches = materialShadowSwitches,
+                    materialShadowSliders = materialShadowSliders,
                     enableSwipeBack = enableSwipeBack,
                     pagerGestureMode = pagerGestureMode,
                     colorStyle = colorStyle,
@@ -59,6 +85,12 @@ class SettingsViewModel(
                 )
             }
         }
+    }
+
+    fun setAppLanguage(language: String) {
+        val safeLanguage = language.takeIf { it in setOf("system", "zh-CN", "zh-TW", "en", "ja", "ko") } ?: "system"
+        repo.appLanguage = safeLanguage
+        _uiState.update { it.copy(appLanguage = safeLanguage) }
     }
 
     fun setCheckUpdate(enabled: Boolean) {
@@ -174,6 +206,72 @@ class SettingsViewModel(
     fun setPageScale(scale: Float) {
         repo.pageScale = scale
         _uiState.update { it.copy(pageScale = scale) }
+    }
+
+    fun setMaterialShapeStyle(style: Int) {
+        val safe = style.coerceIn(0, 6)
+        repo.materialShapeStyle = safe
+        _uiState.update { it.copy(materialShapeStyle = safe) }
+    }
+
+    fun setMaterialSwitchStyle(style: Int) {
+        val safe = style.coerceIn(0, 7)
+        repo.materialSwitchStyle = safe
+        _uiState.update { it.copy(materialSwitchStyle = safe) }
+    }
+
+    fun setMaterialSliderStyle(style: Int) {
+        val safe = style.coerceIn(0, 3)
+        repo.materialSliderStyle = safe
+        _uiState.update { it.copy(materialSliderStyle = safe) }
+    }
+
+    fun setMaterialIconShapeStyle(style: Int) {
+        val safe = style.coerceIn(-1, 50)
+        repo.materialIconShapeStyle = safe
+        _uiState.update { it.copy(materialIconShapeStyle = safe) }
+    }
+
+    fun setMaterialCornerScale(scale: Float) {
+        val safe = scale.coerceIn(0.0f, 2.0f)
+        repo.materialCornerScale = safe
+        _uiState.update { it.copy(materialCornerScale = safe) }
+    }
+
+    fun setMaterialOutlineWidth(width: Float) {
+        val safe = width.coerceIn(0.0f, 1.5f)
+        repo.materialOutlineWidth = safe
+        _uiState.update { it.copy(materialOutlineWidth = safe) }
+    }
+
+    fun setMaterialShadowContainers(enabled: Boolean) {
+        repo.materialShadowContainers = enabled
+        _uiState.update { it.copy(materialShadowContainers = enabled) }
+    }
+
+    fun setMaterialShadowTopBars(enabled: Boolean) {
+        repo.materialShadowTopBars = enabled
+        _uiState.update { it.copy(materialShadowTopBars = enabled) }
+    }
+
+    fun setMaterialShadowButtons(enabled: Boolean) {
+        repo.materialShadowButtons = enabled
+        _uiState.update { it.copy(materialShadowButtons = enabled) }
+    }
+
+    fun setMaterialShadowFloatingButtons(enabled: Boolean) {
+        repo.materialShadowFloatingButtons = enabled
+        _uiState.update { it.copy(materialShadowFloatingButtons = enabled) }
+    }
+
+    fun setMaterialShadowSwitches(enabled: Boolean) {
+        repo.materialShadowSwitches = enabled
+        _uiState.update { it.copy(materialShadowSwitches = enabled) }
+    }
+
+    fun setMaterialShadowSliders(enabled: Boolean) {
+        repo.materialShadowSliders = enabled
+        _uiState.update { it.copy(materialShadowSliders = enabled) }
     }
 
 

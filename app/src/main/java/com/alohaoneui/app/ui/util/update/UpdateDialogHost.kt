@@ -29,7 +29,6 @@ import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -54,6 +53,9 @@ import androidx.compose.ui.window.DialogProperties
 import com.alohaoneui.app.BuildConfig
 import com.alohaoneui.app.R
 import com.alohaoneui.app.ui.component.material.ExpressiveToggleButton
+import com.alohaoneui.app.ui.component.material.ExpressiveSurface
+import com.alohaoneui.app.ui.component.material.alohaCornerShape
+import com.alohaoneui.app.ui.theme.LocalMaterialShadowContainers
 import com.alohaoneui.app.ui.util.checkNewVersion
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -310,7 +312,7 @@ private fun UpdateDialogMaterial(
     val gradientTop = remember(accent, container) {
         accent.copy(alpha = 0.45f).compositeOver(container)
     }
-    val dialogShape = remember { RoundedCornerShape(28.dp) }
+    val dialogShape = alohaCornerShape(28.dp)
     val notes = remember(info.changelog) { normalizeReleaseNotes(info.changelog) }
     val targetAppName = if (info.isMigration) {
         stringResource(R.string.update_dialog_migration_app_name)
@@ -326,12 +328,12 @@ private fun UpdateDialogMaterial(
             dismissOnClickOutside = !isBusy,
         ),
     ) {
-        Surface(
+        ExpressiveSurface(
             modifier = Modifier.fillMaxWidth(0.92f).widthIn(max = 440.dp),
             shape = dialogShape,
             color = Color.Transparent,
             contentColor = onContainer,
-            shadowElevation = 10.dp,
+            shadowElevation = if (LocalMaterialShadowContainers.current) 10.dp else 0.dp,
             tonalElevation = 4.dp,
         ) {
             Column(
@@ -347,9 +349,11 @@ private fun UpdateDialogMaterial(
                 verticalArrangement = Arrangement.spacedBy(14.dp),
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Surface(
-                        shape = RoundedCornerShape(18.dp),
+                    ExpressiveSurface(
+                        shape = alohaCornerShape(18.dp),
                         color = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                        shadowElevation = 0.dp,
                     ) {
                         Box(Modifier.size(56.dp), contentAlignment = Alignment.Center) {
                             Icon(
@@ -377,10 +381,11 @@ private fun UpdateDialogMaterial(
                             color = onContainer,
                         )
                     }
-                    Surface(
+                    ExpressiveSurface(
                         color = MaterialTheme.colorScheme.tertiaryContainer,
                         contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
-                        shape = RoundedCornerShape(8.dp),
+                        shape = alohaCornerShape(8.dp),
+                        shadowElevation = 0.dp,
                     ) {
                         Text(
                             text = stringResource(R.string.update_dialog_new_badge),

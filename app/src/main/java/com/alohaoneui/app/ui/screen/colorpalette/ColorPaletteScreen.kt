@@ -60,6 +60,18 @@ fun ColorPaletteScreen() {
         onSetEnableSwipeBack = viewModel::setEnableSwipeBack,
         onSetPagerGestureMode = viewModel::setPagerGestureMode,
         onSetPageScale = viewModel::setPageScale,
+        onSetMaterialCornerScale = viewModel::setMaterialCornerScale,
+        onSetMaterialShapeStyle = viewModel::setMaterialShapeStyle,
+        onSetMaterialSwitchStyle = viewModel::setMaterialSwitchStyle,
+        onSetMaterialSliderStyle = viewModel::setMaterialSliderStyle,
+        onSetMaterialIconShapeStyle = viewModel::setMaterialIconShapeStyle,
+        onSetMaterialOutlineWidth = viewModel::setMaterialOutlineWidth,
+        onSetMaterialShadowContainers = viewModel::setMaterialShadowContainers,
+        onSetMaterialShadowTopBars = viewModel::setMaterialShadowTopBars,
+        onSetMaterialShadowButtons = viewModel::setMaterialShadowButtons,
+        onSetMaterialShadowFloatingButtons = viewModel::setMaterialShadowFloatingButtons,
+        onSetMaterialShadowSwitches = viewModel::setMaterialShadowSwitches,
+        onSetMaterialShadowSliders = viewModel::setMaterialShadowSliders,
     )
 
     when (LocalUiMode.current) {

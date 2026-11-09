@@ -1,4 +1,4 @@
-package com.alohaoneui.app.ui.component.miuix.animation
+package com.alohaoneui.app.ui.component.animation
 
 import android.annotation.SuppressLint
 import android.graphics.RuntimeShader
@@ -18,7 +18,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.util.fastCoerceIn
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import com.alohaoneui.app.ui.component.miuix.modifier.inspectDragGestures
+import com.alohaoneui.app.ui.component.gesture.inspectDragGestures
 import org.intellij.lang.annotations.Language
 
 @SuppressLint("NewApi")

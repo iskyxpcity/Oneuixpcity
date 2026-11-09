@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="settings_group_language">언어</string>
     <string name="home">홈</string>
     <string name="reboot">다시 시작</string>
     <string name="settings">설정</string>
@@ -32,4 +33,42 @@
     <string name="color_pink">분홍</string>
     <string name="color_brown">갈색</string>
     <string name="alohaoneui_tools">Tools</string>
+    <string name="settings_language">전체 언어</string>
+    <string name="settings_language_summary">앱 전체에서 사용할 언어를 선택합니다.</string>
+    <string name="theme_group_shape">모양</string>
+    <string name="theme_group_components">구성 요소</string>
+    <string name="theme_group_shadows">그림자</string>
+    <string name="theme_corner_scale_title">모서리 크기</string>
+    <string name="theme_border_width_title">윤곽선 너비</string>
+    <string name="theme_shadow_container">컨테이너</string>
+    <string name="theme_shadow_app_bar">상단 바</string>
+    <string name="theme_shadow_button">버튼</string>
+    <string name="theme_shadow_fab">플로팅 버튼</string>
+    <string name="theme_shadow_switch">스위치</string>
+    <string name="theme_shadow_slider">슬라이더</string>
+    <string name="theme_shape_style_title">모양 스타일</string>
+    <string name="theme_shape_rounded">둥근 모서리</string>
+    <string name="theme_shape_cut">잘린 모서리</string>
+    <string name="theme_shape_squircle">스퀘어클</string>
+    <string name="theme_shape_smooth">부드러운 모양</string>
+    <string name="theme_shape_wavy">물결</string>
+    <string name="theme_shape_scoop">스쿱</string>
+    <string name="theme_shape_notch">노치</string>
+    <string name="theme_switch_style_title">스위치 스타일</string>
+    <string name="theme_switch_material_you">Material You</string>
+    <string name="theme_switch_compose">Compose</string>
+    <string name="theme_switch_pixel">Pixel</string>
+    <string name="theme_switch_fluent">Fluent</string>
+    <string name="theme_switch_cupertino">Cupertino</string>
+    <string name="theme_switch_liquid_glass">Liquid Glass</string>
+    <string name="theme_switch_hyper_os">HyperOS</string>
+    <string name="theme_switch_one_ui">One UI</string>
+    <string name="theme_slider_style_title">슬라이더 스타일</string>
+    <string name="theme_slider_material_you">Material You</string>
+    <string name="theme_slider_fancy">Fancy</string>
+    <string name="theme_slider_material">Material 2</string>
+    <string name="theme_slider_hyper_os">HyperOS</string>
+    <string name="theme_icon_shape_title">아이콘 모양</string>
+    <string name="theme_icon_shape_none">없음</string>
+    <string name="theme_icon_shape_random">무작위</string>
 </resources>

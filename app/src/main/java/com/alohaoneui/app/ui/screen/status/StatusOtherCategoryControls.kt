@@ -1,6 +1,5 @@
 package com.alohaoneui.app.ui.screen.status
 
-import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -71,8 +70,8 @@ private fun StatusBurnInProtectionControls(
                     icon = ImageVector.vectorResource(id = R.drawable.mobile_screensaver),
                     title = stringResource(id = R.string.alohaoneui_statusBarBurnInProtection_title),
                     summary = stringResource(id = R.string.alohaoneui_statusBarBurnInProtection_summary),
-                    modifier = Modifier.animateContentSize(),
                     clickable = true,
+                    expanded = expanded && enabled,
                     onClick = { expanded = !expanded },
                     checked = enabled,
                     onCheckedChange = { value ->
@@ -152,56 +151,17 @@ private fun BurnInSliderSetting(
     onValueChange: (Float) -> Unit,
     onValueChangeFinished: () -> Unit,
 ) {
-    // Keep the title, explanation and slider inside one native grouped row.
-    // Previously AlohaOneUIInfoItem and StatusThemeChildItem each drew their own
-    // Material segmented surface, visually splitting the same setting.
-    StatusThemeChildItem {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(
-                    horizontal = if (LocalUiMode.current == UiMode.Material) 8.dp else 16.dp,
-                    vertical = 8.dp,
-                ),
-        ) {
-            when (LocalUiMode.current) {
-                UiMode.Material -> {
-                    MaterialText(
-                        text = title,
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
-                    Spacer(modifier = Modifier.height(2.dp))
-                    MaterialText(
-                        text = summary,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-
-                UiMode.Miuix -> {
-                    MiuixText(
-                        text = title,
-                        color = MiuixTheme.colorScheme.onSurface,
-                        fontSize = MiuixTheme.textStyles.body2.fontSize,
-                    )
-                    Spacer(modifier = Modifier.height(2.dp))
-                    MiuixText(
-                        text = summary,
-                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                        fontSize = MiuixTheme.textStyles.body2.fontSize,
-                    )
-                }
-            }
-            Spacer(modifier = Modifier.height(8.dp))
-            AlohaOneUISlider(
-                value = value,
-                onValueChange = onValueChange,
-                modifier = Modifier.fillMaxWidth(),
-                valueRange = valueRange,
-                stepSize = stepSize,
-                onValueChangeFinished = onValueChangeFinished,
-            )
-        }
+    StatusThemeChildItem(
+        title = title,
+        summary = summary,
+    ) {
+        AlohaOneUISlider(
+            value = value,
+            onValueChange = onValueChange,
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+            valueRange = valueRange,
+            stepSize = stepSize,
+            onValueChangeFinished = onValueChangeFinished,
+        )
     }
 }

@@ -16,15 +16,20 @@ fun DetailPaneVideo(
     onEvent: (VideoEvent) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    PackagePane(modifier) {
-        SwitchItem(
-            icon = ImageVector.vectorResource(id = R.drawable.fast_forward),
-            title = stringResource(id = R.string.alohaoneui_showMorePlaybackSpeeds_title),
-            summary = stringResource(id = R.string.alohaoneui_showMorePlaybackSpeeds_summary),
-            checked = uiState.showMorePlaybackSpeeds,
-            onCheckedChange = { onEvent(VideoEvent.ShowMorePlaybackSpeeds(it)) }
-        )
-    }
+    PackagePane(
+        modifier = modifier,
+        content = buildList {
+            add {
+                SwitchItem(
+                            icon = ImageVector.vectorResource(id = R.drawable.fast_forward),
+                            title = stringResource(id = R.string.alohaoneui_showMorePlaybackSpeeds_title),
+                            summary = stringResource(id = R.string.alohaoneui_showMorePlaybackSpeeds_summary),
+                            checked = uiState.showMorePlaybackSpeeds,
+                            onCheckedChange = { onEvent(VideoEvent.ShowMorePlaybackSpeeds(it)) }
+                        )
+            }
+        }
+    )
 }
 
 sealed interface VideoEvent {

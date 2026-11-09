@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.add
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.only
@@ -22,12 +23,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Button
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
@@ -70,10 +66,15 @@ import com.alohaoneui.app.alohaoneui.AlohaOneUISettingSpec
 import com.alohaoneui.app.alohaoneui.AlohaOneUISettingType
 import com.alohaoneui.app.ui.LocalUiMode
 import com.alohaoneui.app.ui.UiMode
+import com.alohaoneui.app.ui.component.material.ExpressiveLargeTopAppBar
 import com.alohaoneui.app.ui.component.material.SegmentedColumn
 import com.alohaoneui.app.ui.component.material.SegmentedDropdownItem
 import com.alohaoneui.app.ui.component.material.SegmentedListItem
 import com.alohaoneui.app.ui.component.material.ExpressiveSwitch
+import com.alohaoneui.app.ui.component.material.ExpressiveTextButton
+import com.alohaoneui.app.ui.component.material.ExpressiveScaffold
+import com.alohaoneui.app.ui.component.material.ExpressiveButton
+import com.alohaoneui.app.ui.component.material.TopBarBackButton
 import com.alohaoneui.app.ui.component.material.SegmentedSwitchItem
 import com.alohaoneui.app.ui.component.material.SegmentedSliderItem
 import com.alohaoneui.app.ui.component.material.SegmentedTextField
@@ -139,7 +140,7 @@ import top.yukonga.miuix.kmp.basic.IconButton as MiuixIconButton
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.TopAppBar
-import top.yukonga.miuix.kmp.blur.layerBackdrop
+import top.yukonga.miuix.kmp.blur.layerBackdrop as miuixLayerBackdrop
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Back
 import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
@@ -303,13 +304,11 @@ private fun AlohaOneUIOriginalCategoryScreen(
         UiMode.Material -> {
             val scrollBehavior =
                 TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
-            androidx.compose.material3.Scaffold(
+            ExpressiveScaffold(
                 topBar = {
-                    LargeFlexibleTopAppBar(
+                    ExpressiveLargeTopAppBar(
                         navigationIcon = {
-                            IconButton(onClick = onBack) {
-                                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
-                            }
+                            TopBarBackButton(onClick = onBack)
                         },
                         title = { Text(alohaOneUICategoryTitle(category)) },
                         actions = {
@@ -331,6 +330,9 @@ private fun AlohaOneUIOriginalCategoryScreen(
                     WindowInsetsSides.Top + WindowInsetsSides.Horizontal
                 ),
             ) { innerPadding ->
+                // Inherit MainActivity's background-only switch backdrop. Do not
+                // attach a capture layer around OriginalContent: it contains the
+                // Liquid Glass consumers and would make them sample their own layer.
                 OriginalContent(
                     Modifier
                         .padding(innerPadding)
@@ -376,7 +378,7 @@ private fun AlohaOneUIOriginalCategoryScreen(
                     .add(WindowInsets.displayCutout)
                     .only(WindowInsetsSides.Horizontal),
             ) { innerPadding ->
-                Box(modifier = if (backdrop != null) Modifier.layerBackdrop(backdrop) else Modifier) {
+                Box(modifier = if (backdrop != null) Modifier.miuixLayerBackdrop(backdrop) else Modifier) {
                     OriginalContent(
                         Modifier
                             .padding(innerPadding)
@@ -399,16 +401,11 @@ private fun AlohaOneUICategoryMaterial(
     val scrollBehavior =
         TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 
-    androidx.compose.material3.Scaffold(
+    ExpressiveScaffold(
         topBar = {
-            LargeFlexibleTopAppBar(
+            ExpressiveLargeTopAppBar(
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = null,
-                        )
-                    }
+                    TopBarBackButton(onClick = onBack)
                 },
                 title = { Text(alohaOneUICategoryTitle(category)) },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -427,6 +424,7 @@ private fun AlohaOneUICategoryMaterial(
     ) { innerPadding ->
         Column(
             modifier = Modifier
+                .fillMaxSize()
                 .padding(innerPadding)
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
                 .verticalScroll(rememberScrollState()),
@@ -439,7 +437,7 @@ private fun AlohaOneUICategoryMaterial(
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 8.dp),
                 ) {
-                    Button(
+                    ExpressiveButton(
                         onClick = {
                             coroutineScope.launch {
                                 val synchronized =
@@ -913,7 +911,7 @@ private fun MaterialPowerActionRow(
             Row(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                TextButton(
+                ExpressiveTextButton(
                     enabled = index > 0,
                     onClick = {
                         toolsViewModel.onSystemUIEvent(
@@ -925,7 +923,7 @@ private fun MaterialPowerActionRow(
                 ) {
                     Text(stringResource(R.string.alohaoneui_moveUp))
                 }
-                TextButton(
+                ExpressiveTextButton(
                     enabled = index in 0 until actions.lastIndex,
                     onClick = {
                         toolsViewModel.onSystemUIEvent(
@@ -1022,10 +1020,10 @@ private fun NetworkSpeedThresholdMaterial(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 singleLine = true,
                 trailingContent = {
-                    TextButton(
+                    ExpressiveTextButton(
                         onClick = {
                             val value = thresholdText.toIntOrNull()?.coerceAtLeast(1)
-                                ?: return@TextButton
+                                ?: return@ExpressiveTextButton
                             thresholdText = value.toString()
                             toolsViewModel.onSystemUIEvent(
                                 SystemUIEvent.StatusBar.NetworkSpeedThreshold(value)
@@ -1071,7 +1069,7 @@ private fun MaterialClockFormatEditor(
         singleLine = false,
         leadingContent = null,
         trailingContent = {
-            TextButton(
+            ExpressiveTextButton(
                 onClick = {
                     val formatted = runCatching {
                         StatusBarClockFormatter.format(edit, LocalDateTime.now())
@@ -1138,7 +1136,7 @@ private fun EditableMaterialValue(
         },
         trailingContent = if (requiresConfirm) {
             {
-                TextButton(
+                ExpressiveTextButton(
                     onClick = {
                         if (spec.type == AlohaOneUISettingType.TextValue || validNumber(spec, edit)) {
                             toolsViewModel.setRawValue(spec, edit)
@@ -1198,7 +1196,7 @@ private fun AlohaOneUICategoryMiuix(
         contentWindowInsets = WindowInsets.systemBars.add(WindowInsets.displayCutout)
             .only(WindowInsetsSides.Horizontal),
     ) { innerPadding ->
-        Box(modifier = if (backdrop != null) Modifier.layerBackdrop(backdrop) else Modifier) {
+        Box(modifier = if (backdrop != null) Modifier.miuixLayerBackdrop(backdrop) else Modifier) {
             LazyColumn(
                 modifier = Modifier
                     .fillMaxHeight()

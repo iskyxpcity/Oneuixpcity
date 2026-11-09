@@ -2,7 +2,6 @@ package com.alohaoneui.app.ui.screen.status
 
 import android.content.Intent
 import android.view.HapticFeedbackConstants
-import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -34,7 +33,6 @@ import com.alohaoneui.common.Preference
 import com.alohaoneui.common.StatusBarRuntimeBridge
 import com.alohaoneui.mod.ui.category.SystemUIEvent
 import com.alohaoneui.mod.ui.component.AlohaOneUIActionButton
-import com.alohaoneui.mod.ui.component.AlohaOneUIInfoItem
 import com.alohaoneui.mod.ui.component.AlohaOneUIInlineTextField
 import com.alohaoneui.mod.ui.component.AlohaOneUISlider
 import com.alohaoneui.mod.ui.component.SelectItem
@@ -109,6 +107,7 @@ fun StatusSignalCategoryControls(
                     summary = stringResource(id = R.string.status_signal_runtime_enable_summary),
                     clickable = true,
                     showChildIndicator = true,
+                    expanded = runtime.enabled && runtimeExpanded,
                     onClick = {
                         if (runtime.enabled) runtimeExpanded = !runtimeExpanded
                     },
@@ -235,6 +234,7 @@ fun StatusSignalCategoryControls(
                     title = stringResource(id = R.string.alohaoneui_physicalEsimAdapterWorkaround_title),
                     summary = stringResource(id = R.string.alohaoneui_physicalEsimAdapterWorkaround_summary),
                     showChildIndicator = true,
+                    expanded = uiState.physicalEsimAdapterWorkaround,
                     checked = uiState.physicalEsimAdapterWorkaround,
                     onCheckedChange = {
                         onEvent(SystemUIEvent.StatusBar.PhysicalEsimAdapterWorkaround(it))
@@ -266,8 +266,8 @@ fun StatusSignalCategoryControls(
                     title = stringResource(id = R.string.alohaoneui_setCustomCarrierName_title),
                     summary = if (uiState.setCustomCarrierName) uiState.customCarrierName else null,
                     icon = ImageVector.vectorResource(id = R.drawable.sim_card),
-                    modifier = Modifier.animateContentSize(),
                     clickable = true,
+                    expanded = carrierExpanded && uiState.setCustomCarrierName,
                     onClick = { carrierExpanded = !carrierExpanded },
                     checked = uiState.setCustomCarrierName,
                     onCheckedChange = {
@@ -319,28 +319,29 @@ private fun SignalSliderSetting(
     val view = LocalView.current
     var lastHapticStep by remember { mutableIntStateOf(value.roundToInt()) }
 
-    Column {
-        AlohaOneUIInfoItem(icon = icon, title = title, summary = summary)
-        StatusThemeChildItem {
-            AlohaOneUISlider(
-                value = value,
-                onValueChange = { raw ->
-                    val quantized = raw.roundToInt().toFloat().coerceIn(
-                        range.start,
-                        range.endInclusive,
-                    )
-                    val step = quantized.roundToInt()
-                    if (step != lastHapticStep) {
-                        lastHapticStep = step
-                        view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
-                    }
-                    onValueChange(quantized)
-                },
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
-                valueRange = range,
-                onValueChangeFinished = onFinished,
-            )
-        }
+    StatusThemeChildItem(
+        title = title,
+        summary = summary,
+        icon = icon,
+    ) {
+        AlohaOneUISlider(
+            value = value,
+            onValueChange = { raw ->
+                val quantized = raw.roundToInt().toFloat().coerceIn(
+                    range.start,
+                    range.endInclusive,
+                )
+                val step = quantized.roundToInt()
+                if (step != lastHapticStep) {
+                    lastHapticStep = step
+                    view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                }
+                onValueChange(quantized)
+            },
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+            valueRange = range,
+            onValueChangeFinished = onFinished,
+        )
     }
 }
 

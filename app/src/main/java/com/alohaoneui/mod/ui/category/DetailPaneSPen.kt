@@ -21,22 +21,27 @@ fun DetailPaneSPen(
     onEvent: (SPenEvent) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    PackagePane(modifier) {
-        SwitchItem(
-            leadingContent = {
-                Image(
-                    bitmap = rememberAlohaOneUICategoryIcon(AlohaOneUICategory.SPen),
-                    contentDescription = stringResource(id = R.string.alohaoneui_useSPenGoogleTranslate_title),
-                    modifier = Modifier.size(24.dp),
-                    contentScale = ContentScale.Fit,
-                )
-            },
-            title = stringResource(id = R.string.alohaoneui_useSPenGoogleTranslate_title),
-            summary = stringResource(id = R.string.alohaoneui_useSPenGoogleTranslate_summary),
-            checked = uiState.useSPenGoogleTranslate,
-            onCheckedChange = { onEvent(SPenEvent.UseSPenGoogleTranslate(it)) }
-        )
-    }
+    PackagePane(
+        modifier = modifier,
+        content = buildList {
+            add {
+                SwitchItem(
+                            leadingContent = {
+                                Image(
+                                    bitmap = rememberAlohaOneUICategoryIcon(AlohaOneUICategory.SPen),
+                                    contentDescription = stringResource(id = R.string.alohaoneui_useSPenGoogleTranslate_title),
+                                    modifier = Modifier.size(24.dp),
+                                    contentScale = ContentScale.Fit,
+                                )
+                            },
+                            title = stringResource(id = R.string.alohaoneui_useSPenGoogleTranslate_title),
+                            summary = stringResource(id = R.string.alohaoneui_useSPenGoogleTranslate_summary),
+                            checked = uiState.useSPenGoogleTranslate,
+                            onCheckedChange = { onEvent(SPenEvent.UseSPenGoogleTranslate(it)) }
+                        )
+            }
+        }
+    )
 }
 
 sealed interface SPenEvent {

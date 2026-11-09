@@ -21,22 +21,27 @@ fun DetailPaneHealthMonitor(
     onEvent: (HealthMonitorEvent) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    PackagePane(modifier) {
-        SwitchItem(
-            leadingContent = {
-                Image(
-                    bitmap = rememberAlohaOneUICategoryIcon(AlohaOneUICategory.HealthMonitor),
-                    contentDescription = stringResource(id = R.string.alohaoneui_bypassHealthMonitorCountryCheck_title),
-                    modifier = Modifier.size(24.dp),
-                    contentScale = ContentScale.Fit,
-                )
-            },
-            title = stringResource(id = R.string.alohaoneui_bypassHealthMonitorCountryCheck_title),
-            summary = stringResource(id = R.string.alohaoneui_bypassHealthMonitorCountryCheck_summary),
-            checked = uiState.bypassHealthMonitorCountryCheck,
-            onCheckedChange = { onEvent(HealthMonitorEvent.BypassHealthMonitorCountryCheck(it)) }
-        )
-    }
+    PackagePane(
+        modifier = modifier,
+        content = buildList {
+            add {
+                SwitchItem(
+                            leadingContent = {
+                                Image(
+                                    bitmap = rememberAlohaOneUICategoryIcon(AlohaOneUICategory.HealthMonitor),
+                                    contentDescription = stringResource(id = R.string.alohaoneui_bypassHealthMonitorCountryCheck_title),
+                                    modifier = Modifier.size(24.dp),
+                                    contentScale = ContentScale.Fit,
+                                )
+                            },
+                            title = stringResource(id = R.string.alohaoneui_bypassHealthMonitorCountryCheck_title),
+                            summary = stringResource(id = R.string.alohaoneui_bypassHealthMonitorCountryCheck_summary),
+                            checked = uiState.bypassHealthMonitorCountryCheck,
+                            onCheckedChange = { onEvent(HealthMonitorEvent.BypassHealthMonitorCountryCheck(it)) }
+                        )
+            }
+        }
+    )
 }
 
 sealed interface HealthMonitorEvent {

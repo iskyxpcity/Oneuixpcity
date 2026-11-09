@@ -5,6 +5,7 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -21,6 +22,7 @@ import com.alohaoneui.common.ONE_UI_VERSION
 import com.alohaoneui.common.Preference
 import com.alohaoneui.mod.ui.component.AlohaOneUIChildVisibility
 import com.alohaoneui.mod.ui.component.AlohaOneUIPPreferenceGroup
+import com.alohaoneui.mod.ui.component.AlohaOneUIDetailSegmentedGroup
 import com.alohaoneui.mod.ui.component.AlohaOneUISlider
 import com.alohaoneui.mod.ui.component.SwitchItem
 
@@ -34,148 +36,155 @@ fun StatusBarPowerControls(
     uiState: Preference.SystemUI.StatusBar,
     onEvent: (SystemUIEvent) -> Unit,
 ) {
-    AlohaOneUIPPreferenceGroup {
-        var widthScale by remember(uiState.batteryIconWidthScale) {
-            mutableFloatStateOf(uiState.batteryIconWidthScale)
-        }
-        var expanded by rememberSaveable { mutableStateOf(false) }
-
-        SwitchItem(
-            title = stringResource(id = R.string.alohaoneui_setBatteryIconWidthScale_title),
-            modifier = Modifier.animateContentSize(),
-            summary = if (uiState.setBatteryIconWidthScale) {
-                "%.2f".format(widthScale)
-            } else {
-                null
-            },
-            icon = ImageVector.vectorResource(id = R.drawable.battery),
-            clickable = true,
-            onClick = { expanded = !expanded },
-            checked = uiState.setBatteryIconWidthScale,
-            onCheckedChange = {
-                if (it && widthScale == 0f) {
-                    expanded = true
-                } else if (!it) {
-                    expanded = false
-                }
-                onEvent(SystemUIEvent.StatusBar.SetBatteryIconWidthScale(it))
-            },
-        )
-        AlohaOneUIChildVisibility(expanded && uiState.setBatteryIconWidthScale) {
-            AlohaOneUISlider(
-                value = widthScale,
-                onValueChange = { widthScale = it },
-                modifier = Modifier.padding(horizontal = 16.dp),
-                valueRange = 0.5f..2f,
-                onValueChangeFinished = {
-                    onEvent(SystemUIEvent.StatusBar.BatteryIconWidthScale(widthScale))
-                },
-            )
-        }
-    }
-
-    AlohaOneUIPPreferenceGroup {
-        var heightScale by remember(uiState.batteryIconHeightScale) {
-            mutableFloatStateOf(uiState.batteryIconHeightScale)
-        }
-        var expanded by rememberSaveable { mutableStateOf(false) }
-
-        SwitchItem(
-            title = stringResource(id = R.string.alohaoneui_setBatteryIconHeightScale_title),
-            modifier = Modifier.animateContentSize(),
-            summary = if (uiState.setBatteryIconHeightScale) {
-                "%.2f".format(heightScale)
-            } else {
-                null
-            },
-            icon = ImageVector.vectorResource(id = R.drawable.battery),
-            clickable = true,
-            onClick = { expanded = !expanded },
-            checked = uiState.setBatteryIconHeightScale,
-            onCheckedChange = {
-                if (it && heightScale == 0f) {
-                    expanded = true
-                } else if (!it) {
-                    expanded = false
-                }
-                onEvent(SystemUIEvent.StatusBar.SetBatteryIconHeightScale(it))
-            },
-        )
-        AlohaOneUIChildVisibility(expanded && uiState.setBatteryIconHeightScale) {
-            AlohaOneUISlider(
-                value = heightScale,
-                onValueChange = { heightScale = it },
-                modifier = Modifier.padding(horizontal = 16.dp),
-                valueRange = 0.5f..2f,
-                onValueChangeFinished = {
-                    onEvent(SystemUIEvent.StatusBar.BatteryIconHeightScale(heightScale))
-                },
-            )
-        }
-    }
-
-    if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-        SwitchItem(
-            icon = ImageVector.vectorResource(id = R.drawable.battery),
-            title = stringResource(id = R.string.alohaoneui_hideBatteryPercentageSign_title),
-            summary = stringResource(id = R.string.alohaoneui_hideBatteryPercentageSign_summary),
-            checked = uiState.hideBatteryPercentageSign,
-            onCheckedChange = {
-                onEvent(SystemUIEvent.StatusBar.HideBatteryPercentageSign(it))
-            },
-        )
-    }
-
-    SwitchItem(
-        icon = ImageVector.vectorResource(id = R.drawable.battery),
-        title = stringResource(id = R.string.alohaoneui_hideBatteryIcon_title),
-        summary = stringResource(id = R.string.alohaoneui_hideBatteryIcon_summary),
-        checked = uiState.hideBatteryIcon,
-        onCheckedChange = {
-            onEvent(SystemUIEvent.StatusBar.HideBatteryIcon(it))
-        },
-    )
-
-    if (ONE_UI_VERSION >= 70000) {
-        AlohaOneUIPPreferenceGroup {
-            SwitchItem(
-                icon = ImageVector.vectorResource(id = R.drawable.battery),
-                title = stringResource(id = R.string.alohaoneui_addBatteryLevelText_title),
-                summary = stringResource(id = R.string.alohaoneui_addBatteryLevelText_summary),
-                showChildIndicator = true,
-                checked = uiState.addBatteryLevelText,
-                onCheckedChange = {
-                    onEvent(SystemUIEvent.StatusBar.AddBatteryLevelText(it))
-                },
-            )
-            AlohaOneUIChildVisibility(uiState.addBatteryLevelText) {
-                Column {
-                    SwitchItem(
-                        icon = ImageVector.vectorResource(id = R.drawable.battery),
-                        title = stringResource(
-                            id = R.string.alohaoneui_hideBatteryLevelTextPercentageSign_title
-                        ),
-                        checked = uiState.hideBatteryLevelTextPercentageSign,
-                        onCheckedChange = {
-                            onEvent(
-                                SystemUIEvent.StatusBar.HideBatteryLevelTextPercentageSign(it)
+    AlohaOneUIDetailSegmentedGroup(
+        contentPadding = PaddingValues(0.dp),
+        content = buildList {
+            add {
+                AlohaOneUIPPreferenceGroup {
+                        var widthScale by remember(uiState.batteryIconWidthScale) {
+                            mutableFloatStateOf(uiState.batteryIconWidthScale)
+                        }
+                        var expanded by rememberSaveable { mutableStateOf(false) }
+                
+                        SwitchItem(
+                            title = stringResource(id = R.string.alohaoneui_setBatteryIconWidthScale_title),
+                            modifier = Modifier.animateContentSize(),
+                            summary = if (uiState.setBatteryIconWidthScale) {
+                                "%.2f".format(widthScale)
+                            } else {
+                                null
+                            },
+                            icon = ImageVector.vectorResource(id = R.drawable.battery),
+                            clickable = true,
+                            onClick = { expanded = !expanded },
+                            checked = uiState.setBatteryIconWidthScale,
+                            onCheckedChange = {
+                                if (it && widthScale == 0f) {
+                                    expanded = true
+                                } else if (!it) {
+                                    expanded = false
+                                }
+                                onEvent(SystemUIEvent.StatusBar.SetBatteryIconWidthScale(it))
+                            },
+                        )
+                        AlohaOneUIChildVisibility(expanded && uiState.setBatteryIconWidthScale) {
+                            AlohaOneUISlider(
+                                value = widthScale,
+                                onValueChange = { widthScale = it },
+                                modifier = Modifier.padding(horizontal = 16.dp),
+                                valueRange = 0.5f..2f,
+                                onValueChangeFinished = {
+                                    onEvent(SystemUIEvent.StatusBar.BatteryIconWidthScale(widthScale))
+                                },
                             )
+                        }
+                    }
+            }
+            add {
+                AlohaOneUIPPreferenceGroup {
+                        var heightScale by remember(uiState.batteryIconHeightScale) {
+                            mutableFloatStateOf(uiState.batteryIconHeightScale)
+                        }
+                        var expanded by rememberSaveable { mutableStateOf(false) }
+                
+                        SwitchItem(
+                            title = stringResource(id = R.string.alohaoneui_setBatteryIconHeightScale_title),
+                            modifier = Modifier.animateContentSize(),
+                            summary = if (uiState.setBatteryIconHeightScale) {
+                                "%.2f".format(heightScale)
+                            } else {
+                                null
+                            },
+                            icon = ImageVector.vectorResource(id = R.drawable.battery),
+                            clickable = true,
+                            onClick = { expanded = !expanded },
+                            checked = uiState.setBatteryIconHeightScale,
+                            onCheckedChange = {
+                                if (it && heightScale == 0f) {
+                                    expanded = true
+                                } else if (!it) {
+                                    expanded = false
+                                }
+                                onEvent(SystemUIEvent.StatusBar.SetBatteryIconHeightScale(it))
+                            },
+                        )
+                        AlohaOneUIChildVisibility(expanded && uiState.setBatteryIconHeightScale) {
+                            AlohaOneUISlider(
+                                value = heightScale,
+                                onValueChange = { heightScale = it },
+                                modifier = Modifier.padding(horizontal = 16.dp),
+                                valueRange = 0.5f..2f,
+                                onValueChangeFinished = {
+                                    onEvent(SystemUIEvent.StatusBar.BatteryIconHeightScale(heightScale))
+                                },
+                            )
+                        }
+                    }
+            }
+            if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) add {
+                SwitchItem(
+                            icon = ImageVector.vectorResource(id = R.drawable.battery),
+                            title = stringResource(id = R.string.alohaoneui_hideBatteryPercentageSign_title),
+                            summary = stringResource(id = R.string.alohaoneui_hideBatteryPercentageSign_summary),
+                            checked = uiState.hideBatteryPercentageSign,
+                            onCheckedChange = {
+                                onEvent(SystemUIEvent.StatusBar.HideBatteryPercentageSign(it))
+                            },
+                        )
+            }
+            add {
+                SwitchItem(
+                        icon = ImageVector.vectorResource(id = R.drawable.battery),
+                        title = stringResource(id = R.string.alohaoneui_hideBatteryIcon_title),
+                        summary = stringResource(id = R.string.alohaoneui_hideBatteryIcon_summary),
+                        checked = uiState.hideBatteryIcon,
+                        onCheckedChange = {
+                            onEvent(SystemUIEvent.StatusBar.HideBatteryIcon(it))
                         },
                     )
-                    SwitchItem(
-                        icon = ImageVector.vectorResource(id = R.drawable.battery),
-                        title = stringResource(
-                            id = R.string.alohaoneui_hideBatteryLevelTextChargingIcon_title
-                        ),
-                        checked = uiState.hideBatteryLevelTextChargingIcon,
-                        onCheckedChange = {
-                            onEvent(
-                                SystemUIEvent.StatusBar.HideBatteryLevelTextChargingIcon(it)
+            }
+            if (ONE_UI_VERSION >= 70000) add {
+                AlohaOneUIPPreferenceGroup {
+                            SwitchItem(
+                                icon = ImageVector.vectorResource(id = R.drawable.battery),
+                                title = stringResource(id = R.string.alohaoneui_addBatteryLevelText_title),
+                                summary = stringResource(id = R.string.alohaoneui_addBatteryLevelText_summary),
+                                showChildIndicator = true,
+                                checked = uiState.addBatteryLevelText,
+                                onCheckedChange = {
+                                    onEvent(SystemUIEvent.StatusBar.AddBatteryLevelText(it))
+                                },
                             )
-                        },
-                    )
-                }
+                            AlohaOneUIChildVisibility(uiState.addBatteryLevelText) {
+                                Column {
+                                    SwitchItem(
+                                        icon = ImageVector.vectorResource(id = R.drawable.battery),
+                                        title = stringResource(
+                                            id = R.string.alohaoneui_hideBatteryLevelTextPercentageSign_title
+                                        ),
+                                        checked = uiState.hideBatteryLevelTextPercentageSign,
+                                        onCheckedChange = {
+                                            onEvent(
+                                                SystemUIEvent.StatusBar.HideBatteryLevelTextPercentageSign(it)
+                                            )
+                                        },
+                                    )
+                                    SwitchItem(
+                                        icon = ImageVector.vectorResource(id = R.drawable.battery),
+                                        title = stringResource(
+                                            id = R.string.alohaoneui_hideBatteryLevelTextChargingIcon_title
+                                        ),
+                                        checked = uiState.hideBatteryLevelTextChargingIcon,
+                                        onCheckedChange = {
+                                            onEvent(
+                                                SystemUIEvent.StatusBar.HideBatteryLevelTextChargingIcon(it)
+                                            )
+                                        },
+                                    )
+                                }
+                            }
+                        }
             }
         }
-    }
+    )
 }

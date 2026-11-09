@@ -1,7 +1,6 @@
 package com.alohaoneui.app.ui.screen.status
 
 import android.os.Build
-import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -220,12 +219,12 @@ fun StatusControlCenterCategoryControls(
                 add {
                     SwitchItem(
                         title = stringResource(id = R.string.alohaoneui_modifyQSClockTextSize_title),
-                        modifier = Modifier.animateContentSize(),
                         summary = if (uiState.modifyQSClockTextSize) {
                             " %.1fsp".format(textSize)
                         } else null,
                         icon = ImageVector.vectorResource(id = R.drawable.format_size),
                         clickable = true,
+                        expanded = textSizeExpanded && uiState.modifyQSClockTextSize,
                         onClick = { textSizeExpanded = !textSizeExpanded },
                         checked = uiState.modifyQSClockTextSize,
                         onCheckedChange = {

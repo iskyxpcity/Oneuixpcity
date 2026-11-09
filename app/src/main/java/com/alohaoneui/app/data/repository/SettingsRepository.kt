@@ -6,6 +6,7 @@ import kotlinx.serialization.Serializable
 interface SettingsRepository {
     var uiMode: String
     var checkUpdate: Boolean
+    var appLanguage: String
     var themeMode: Int
     var miuixMonet: Boolean
     var keyColor: Int
@@ -17,6 +18,18 @@ interface SettingsRepository {
     var enableFloatingBottomBarBlur: Boolean
     var navigationRailExpanded: Boolean
     var pageScale: Float
+    var materialCornerScale: Float
+    var materialShapeStyle: Int
+    var materialSwitchStyle: Int
+    var materialSliderStyle: Int
+    var materialIconShapeStyle: Int
+    var materialOutlineWidth: Float
+    var materialShadowContainers: Boolean
+    var materialShadowTopBars: Boolean
+    var materialShadowButtons: Boolean
+    var materialShadowFloatingButtons: Boolean
+    var materialShadowSwitches: Boolean
+    var materialShadowSliders: Boolean
     var enableSwipeBack: Boolean
     var pagerGestureMode: Int
 
@@ -32,6 +45,7 @@ interface SettingsRepository {
 data class AppSettingsBackup(
     val uiMode: String,
     val checkUpdate: Boolean,
+    val appLanguage: String = "system",
     val themeMode: Int,
     val miuixMonet: Boolean,
     val keyColor: Int,
@@ -43,6 +57,18 @@ data class AppSettingsBackup(
     val enableFloatingBottomBarBlur: Boolean,
     val navigationRailExpanded: Boolean,
     val pageScale: Float,
+    val materialCornerScale: Float = 1.0f,
+    val materialShapeStyle: Int = 0,
+    val materialSwitchStyle: Int = 0,
+    val materialSliderStyle: Int = 0,
+    val materialIconShapeStyle: Int = 0,
+    val materialOutlineWidth: Float = 0.0f,
+    val materialShadowContainers: Boolean = true,
+    val materialShadowTopBars: Boolean = true,
+    val materialShadowButtons: Boolean = true,
+    val materialShadowFloatingButtons: Boolean = true,
+    val materialShadowSwitches: Boolean = true,
+    val materialShadowSliders: Boolean = true,
     val enableSwipeBack: Boolean,
     val pagerGestureMode: Int,
 )

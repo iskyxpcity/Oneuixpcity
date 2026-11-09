@@ -1,6 +1,5 @@
 package com.alohaoneui.app.ui.screen.status
 
-import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -49,8 +48,8 @@ fun StatusNotificationCenterCategoryControls(
                     } else {
                         stringResource(id = R.string.alohaoneui_hideOngoingActivityMedia_summary)
                     },
-                    modifier = Modifier.animateContentSize(),
                     clickable = true,
+                    expanded = expanded && uiState.hideOngoingActivityMedia,
                     onClick = { expanded = !expanded },
                     checked = uiState.hideOngoingActivityMedia,
                     onCheckedChange = {

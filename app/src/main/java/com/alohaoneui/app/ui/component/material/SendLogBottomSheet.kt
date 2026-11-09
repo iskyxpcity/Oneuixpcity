@@ -4,6 +4,7 @@ import android.content.Intent
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -14,7 +15,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Share
-import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -40,6 +41,7 @@ import com.alohaoneui.app.ui.util.buildAlohaOneUIDiagnosticReport
 import com.alohaoneui.app.ui.util.buildAlohaOneUIDiagnosticReportForExport
 import com.alohaoneui.app.ui.util.alohaOneUIDiagnosticFileName
 import com.alohaoneui.app.ui.util.writeAlohaOneUIDiagnosticReport
+import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
 
 @Composable
 fun SendLogBottomSheet(onDismiss: () -> Unit, snackbarHostState: SnackbarHostState) {
@@ -67,8 +69,16 @@ fun SendLogBottomSheet(onDismiss: () -> Unit, snackbarHostState: SnackbarHostSta
         }
         onDismiss()
     }
+    val sheetShape = alohaCornerShape(28.dp)
+    val outlineWidth = LocalMaterialOutlineWidth.current
     ModalBottomSheet(
+        modifier = Modifier.then(
+            outlineWidth.takeIf { it > 0f }?.let {
+                Modifier.border(it.dp, MaterialTheme.colorScheme.outlineVariant, sheetShape)
+            } ?: Modifier
+        ),
         onDismissRequest = onDismiss,
+        shape = sheetShape,
         containerColor = MaterialTheme.colorScheme.surfaceContainer,
     ) {
         Row(
@@ -76,8 +86,10 @@ fun SendLogBottomSheet(onDismiss: () -> Unit, snackbarHostState: SnackbarHostSta
                 .align(Alignment.CenterHorizontally)
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                FilledTonalIconButton(
+                ExpressiveIconButton(
                     modifier = Modifier.size(64.dp),
+                    colors = IconButtonDefaults.filledTonalIconButtonColors(),
+                    shape = alohaCornerShape(12.dp),
                     onClick = {
                         haptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
                         scope.launch {
@@ -91,8 +103,10 @@ fun SendLogBottomSheet(onDismiss: () -> Unit, snackbarHostState: SnackbarHostSta
             }
             Spacer(Modifier.width(16.dp))
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                FilledTonalIconButton(
+                ExpressiveIconButton(
                     modifier = Modifier.size(64.dp),
+                    colors = IconButtonDefaults.filledTonalIconButtonColors(),
+                    shape = alohaCornerShape(12.dp),
                     onClick = {
                         haptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
                         scope.launch {

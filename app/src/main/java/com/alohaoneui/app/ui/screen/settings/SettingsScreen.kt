@@ -1,5 +1,8 @@
 package com.alohaoneui.app.ui.screen.settings
 
+import android.app.Activity
+import android.content.ContextWrapper
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.LaunchedEffect
@@ -14,6 +17,7 @@ import com.alohaoneui.app.ui.LocalUiMode
 import com.alohaoneui.app.ui.UiMode
 import com.alohaoneui.app.ui.navigation3.Navigator
 import com.alohaoneui.app.ui.navigation3.Route
+import com.alohaoneui.app.ui.util.AppLocaleContext
 import com.alohaoneui.app.ui.viewmodel.SettingsViewModel
 
 @Composable
@@ -22,27 +26,38 @@ fun SettingPager(
     bottomInnerPadding: Dp,
     isCurrentPage: Boolean = true,
 ) {
+    val context = LocalContext.current
     val viewModel = viewModel<SettingsViewModel>()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val latestIsCurrentPage by rememberUpdatedState(isCurrentPage)
     val initialResumeHandled = rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(isCurrentPage) {
-        if (isCurrentPage) {
-            viewModel.refresh()
-        }
+        if (isCurrentPage) viewModel.refresh()
     }
 
     LifecycleResumeEffect(Unit) {
-        if (initialResumeHandled.value && latestIsCurrentPage) {
-            viewModel.refresh()
-        }
+        if (initialResumeHandled.value && latestIsCurrentPage) viewModel.refresh()
         initialResumeHandled.value = true
         onPauseOrDispose { }
     }
 
     val actions = SettingsScreenActions(
         onSetCheckUpdate = viewModel::setCheckUpdate,
+        onSetAppLanguage = { language ->
+            val previousLanguage = uiState.appLanguage.ifBlank { "system" }
+            viewModel.setAppLanguage(language)
+            // Do not reapply the same locale: LocaleManager may recreate the Activity
+            // even when the user taps the already-selected language.
+            if (previousLanguage != language) {
+                AppLocaleContext.apply(context, language)
+                // Android 13+ owns locale recreation. Older versions need one
+                // Activity recreation so attachBaseContext can apply the saved locale.
+                if (android.os.Build.VERSION.SDK_INT < 33) {
+                    context.findActivity()?.recreate()
+                }
+            }
+        },
         onOpenTheme = { navigator.push(Route.ColorPalette) },
         onSetUiModeIndex = { index ->
             viewModel.setUiMode(if (index == 0) UiMode.Miuix.value else UiMode.Material.value)
@@ -54,4 +69,13 @@ fun SettingPager(
         UiMode.Miuix -> SettingPagerMiuix(uiState, actions, bottomInnerPadding)
         UiMode.Material -> SettingPagerMaterial(uiState, actions, bottomInnerPadding)
     }
+}
+
+private fun android.content.Context.findActivity(): Activity? {
+    var current: android.content.Context? = this
+    while (current != null) {
+        if (current is Activity) return current
+        current = (current as? ContextWrapper)?.baseContext
+    }
+    return null
 }

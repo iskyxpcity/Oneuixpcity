@@ -19,12 +19,13 @@ import androidx.compose.material.icons.outlined.Extension
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import com.alohaoneui.app.ui.component.material.ExpressiveIconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.WideNavigationRail
 import androidx.compose.material3.WideNavigationRailDefaults
 import androidx.compose.material3.WideNavigationRailItem
+import androidx.compose.material3.WideNavigationRailItemDefaults
 import androidx.compose.material3.WideNavigationRailValue
 import androidx.compose.material3.rememberWideNavigationRailState
 import androidx.compose.runtime.Composable
@@ -85,7 +86,7 @@ fun SideNavigationRailMaterial(modifier: Modifier = Modifier) {
         ),
         contentPadding = PaddingValues(vertical = 20.dp),
         header = {
-            IconButton(
+            ExpressiveIconButton(
                 modifier = Modifier.padding(start = 24.dp),
                 onClick = {
                     scope.launch {
@@ -107,6 +108,14 @@ fun SideNavigationRailMaterial(modifier: Modifier = Modifier) {
             WideNavigationRailItem(
                 railExpanded = expanded,
                 selected = selected,
+                colors = WideNavigationRailItemDefaults.colors().copy(
+                    selectedIconColor = MaterialTheme.colorScheme.secondary,
+                    selectedTextColorTopIconPosition = MaterialTheme.colorScheme.onSurface,
+                    selectedTextColorStartIconPosition = MaterialTheme.colorScheme.onSurface,
+                    selectedIndicatorColor = MaterialTheme.colorScheme.secondaryContainer,
+                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                ),
                 onClick = {
                     if (!selected) mainState.animateToPage(index)
                 },

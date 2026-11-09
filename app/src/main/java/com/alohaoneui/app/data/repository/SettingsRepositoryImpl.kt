@@ -17,6 +17,10 @@ class SettingsRepositoryImpl : SettingsRepository {
         get() = prefs.getString("ui_mode", UiMode.DEFAULT_VALUE) ?: UiMode.DEFAULT_VALUE
         set(value) = prefs.edit { putString("ui_mode", value) }
 
+    override var appLanguage: String
+        get() = prefs.getString("app_language", "system") ?: "system"
+        set(value) = prefs.edit { putString("app_language", value) }
+
     override var checkUpdate: Boolean
         get() = prefs.getBoolean("check_update", true)
         set(value) = prefs.edit { putBoolean("check_update", value) }
@@ -65,6 +69,78 @@ class SettingsRepositoryImpl : SettingsRepository {
         get() = prefs.getFloat("page_scale", 1.0f)
         set(value) = prefs.edit { putFloat("page_scale", value) }
 
+    override var materialCornerScale: Float
+        get() = prefs.getFloat("material_corner_scale", 1.0f).coerceIn(0.0f, 2.0f)
+        set(value) = prefs.edit { putFloat("material_corner_scale", value.coerceIn(0.0f, 2.0f)) }
+
+    override var materialShapeStyle: Int
+        get() = prefs.getInt("material_shape_style", 0).coerceIn(0, 6)
+        set(value) = prefs.edit { putInt("material_shape_style", value.coerceIn(0, 6)) }
+
+    override var materialSwitchStyle: Int
+        get() = prefs.getInt("material_switch_style", 0).coerceIn(0, 7)
+        set(value) = prefs.edit { putInt("material_switch_style", value.coerceIn(0, 7)) }
+
+    override var materialSliderStyle: Int
+        get() = prefs.getInt("material_slider_style", 0).coerceIn(0, 3)
+        set(value) = prefs.edit { putInt("material_slider_style", value.coerceIn(0, 3)) }
+
+    override var materialIconShapeStyle: Int
+        get() {
+            val key = "material_icon_shape_style"
+            val migrationKey = "material_icon_shape_style_index_v2"
+            if (prefs.getBoolean(migrationKey, false)) {
+                return prefs.getInt(key, -1).coerceIn(-1, 50)
+            }
+            val migrated = if (!prefs.contains(key)) {
+                -1
+            } else {
+                when (val legacy = prefs.getInt(key, 0)) {
+                    0 -> -1
+                    1 -> 50
+                    in 2..51 -> legacy - 2
+                    else -> -1
+                }
+            }
+            prefs.edit {
+                putInt(key, migrated)
+                putBoolean(migrationKey, true)
+            }
+            return migrated
+        }
+        set(value) = prefs.edit {
+            putInt("material_icon_shape_style", value.coerceIn(-1, 50))
+            putBoolean("material_icon_shape_style_index_v2", true)
+        }
+
+    override var materialOutlineWidth: Float
+        get() = prefs.getFloat("material_outline_width", 0.0f).coerceIn(0.0f, 1.5f)
+        set(value) = prefs.edit { putFloat("material_outline_width", value.coerceIn(0.0f, 1.5f)) }
+
+    override var materialShadowContainers: Boolean
+        get() = prefs.getBoolean("material_shadow_containers", true)
+        set(value) = prefs.edit { putBoolean("material_shadow_containers", value) }
+
+    override var materialShadowTopBars: Boolean
+        get() = prefs.getBoolean("material_shadow_top_bars", true)
+        set(value) = prefs.edit { putBoolean("material_shadow_top_bars", value) }
+
+    override var materialShadowButtons: Boolean
+        get() = prefs.getBoolean("material_shadow_buttons", true)
+        set(value) = prefs.edit { putBoolean("material_shadow_buttons", value) }
+
+    override var materialShadowFloatingButtons: Boolean
+        get() = prefs.getBoolean("material_shadow_floating_buttons", true)
+        set(value) = prefs.edit { putBoolean("material_shadow_floating_buttons", value) }
+
+    override var materialShadowSwitches: Boolean
+        get() = prefs.getBoolean("material_shadow_switches", true)
+        set(value) = prefs.edit { putBoolean("material_shadow_switches", value) }
+
+    override var materialShadowSliders: Boolean
+        get() = prefs.getBoolean("material_shadow_sliders", true)
+        set(value) = prefs.edit { putBoolean("material_shadow_sliders", value) }
+
     override var enableSwipeBack: Boolean
         get() = prefs.getBoolean("enable_swipe_back", false)
         set(value) = prefs.edit { putBoolean("enable_swipe_back", value) }
@@ -87,8 +163,21 @@ class SettingsRepositoryImpl : SettingsRepository {
         enableFloatingBottomBarBlur = enableFloatingBottomBarBlur,
         navigationRailExpanded = navigationRailExpanded,
         pageScale = pageScale,
+        materialCornerScale = materialCornerScale,
+        materialShapeStyle = materialShapeStyle,
+        materialSwitchStyle = materialSwitchStyle,
+        materialSliderStyle = materialSliderStyle,
+        materialIconShapeStyle = materialIconShapeStyle,
+        materialOutlineWidth = materialOutlineWidth,
+        materialShadowContainers = materialShadowContainers,
+        materialShadowTopBars = materialShadowTopBars,
+        materialShadowButtons = materialShadowButtons,
+        materialShadowFloatingButtons = materialShadowFloatingButtons,
+        materialShadowSwitches = materialShadowSwitches,
+        materialShadowSliders = materialShadowSliders,
         enableSwipeBack = enableSwipeBack,
         pagerGestureMode = pagerGestureMode,
+        appLanguage = appLanguage,
     )
 
     override fun restoreFromBackup(snapshot: AppSettingsBackup) {
@@ -113,8 +202,22 @@ class SettingsRepositoryImpl : SettingsRepository {
             .putBoolean("enable_floating_bottom_bar_blur", snapshot.enableFloatingBottomBarBlur)
             .putBoolean("nav_rail_expanded", snapshot.navigationRailExpanded)
             .putFloat("page_scale", snapshot.pageScale)
+            .putFloat("material_corner_scale", snapshot.materialCornerScale.coerceIn(0.0f, 2.0f))
+            .putInt("material_shape_style", snapshot.materialShapeStyle.coerceIn(0, 6))
+            .putInt("material_switch_style", snapshot.materialSwitchStyle.coerceIn(0, 7))
+            .putInt("material_slider_style", snapshot.materialSliderStyle.coerceIn(0, 3))
+            .putInt("material_icon_shape_style", snapshot.materialIconShapeStyle.coerceIn(-1, 50))
+            .putBoolean("material_icon_shape_style_index_v2", true)
+            .putFloat("material_outline_width", snapshot.materialOutlineWidth.coerceIn(0.0f, 1.5f))
+            .putBoolean("material_shadow_containers", snapshot.materialShadowContainers)
+            .putBoolean("material_shadow_top_bars", snapshot.materialShadowTopBars)
+            .putBoolean("material_shadow_buttons", snapshot.materialShadowButtons)
+            .putBoolean("material_shadow_floating_buttons", snapshot.materialShadowFloatingButtons)
+            .putBoolean("material_shadow_switches", snapshot.materialShadowSwitches)
+            .putBoolean("material_shadow_sliders", snapshot.materialShadowSliders)
             .putBoolean("enable_swipe_back", snapshot.enableSwipeBack)
             .putInt("pager_gesture_mode", snapshot.pagerGestureMode.coerceIn(0, 2))
+            .putString("app_language", snapshot.appLanguage)
             .commit()
         check(committed) { "Could not persist restored AlohaOneUI app settings." }
     }

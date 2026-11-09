@@ -1,7 +1,6 @@
 package com.alohaoneui.app.ui.screen.status
 
 import android.os.Build
-import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -156,18 +155,56 @@ fun StatusTimeCategoryControls(
     var selectedRichBlockPosition by rememberSaveable { mutableStateOf(0) }
     var expandedRichBlock by rememberSaveable { mutableStateOf(-1) }
 
+    val richBlocks = remember(uiState.statusBarClockFormat) {
+        StatusBarClockBlockParser.parse(uiState.statusBarClockFormat).filter { it.isStyleable }
+    }
+    val richBlockNow = remember { LocalDateTime.now() }
+    val safeRichBlockPosition = selectedRichBlockPosition.coerceIn(
+        0,
+        (richBlocks.size - 1).coerceAtLeast(0),
+    )
+    val selectedRichBlock = richBlocks.getOrNull(safeRichBlockPosition)
+    val selectedRichBlockIndex = selectedRichBlock?.styleIndex ?: 0
+    val selectedRichStyle = selectedRichBlock?.let { clockRichStyleFor(uiState, it) }
+    val selectedRichPreview = selectedRichBlock?.let {
+        clockRichPreview(it, richBlockNow).ifEmpty { " " }
+    } ?: " "
+    val richBlockEditorItems = if (
+        selectedRichBlock != null &&
+        selectedRichStyle?.enabled == true &&
+        expandedRichBlock == selectedRichBlockIndex
+    ) {
+        StatusClockRichBlockEditorItems(
+            style = selectedRichStyle,
+            onStylePreview = { updated ->
+                onEvent(
+                    SystemUIEvent.StatusBarPreview(
+                        SystemUIEvent.StatusBar.UpdateStatusBarClockBlockStyle(updated)
+                    )
+                )
+            },
+            onStyleChange = { updated ->
+                onEvent(
+                    SystemUIEvent.StatusBar.UpdateStatusBarClockBlockStyle(updated)
+                )
+            },
+        )
+    } else {
+        emptyList()
+    }
+
     StatusThemeGroup(
         modifier = modifier,
         items = buildList {
             add {
                 SwitchItem(
                     title = stringResource(id = R.string.alohaoneui_setStatusBarClockFormat_title),
-                    modifier = Modifier.animateContentSize(),
                     summary = if (uiState.setStatusBarClockFormat) {
                         uiState.statusBarClockFormat
                     } else null,
                     icon = ImageVector.vectorResource(id = R.drawable.nest_clock_farsight_digital),
                     clickable = true,
+                    expanded = formatExpanded && uiState.setStatusBarClockFormat,
                     onClick = { formatExpanded = !formatExpanded },
                     checked = uiState.setStatusBarClockFormat,
                     onCheckedChange = {
@@ -306,6 +343,7 @@ fun StatusTimeCategoryControls(
                         title = stringResource(id = R.string.alohaoneui_clockRichStyle_title),
                         summary = stringResource(id = R.string.alohaoneui_clockRichStyle_summary),
                         icon = ImageVector.vectorResource(id = R.drawable.format_size),
+                        expanded = uiState.enableStatusBarClockRichStyle,
                         checked = uiState.enableStatusBarClockRichStyle,
                         onCheckedChange = {
                             onEvent(SystemUIEvent.StatusBar.SetStatusBarClockRichStyle(it))
@@ -314,34 +352,25 @@ fun StatusTimeCategoryControls(
                 }
 
                 if (uiState.enableStatusBarClockRichStyle) {
-                    val now = LocalDateTime.now()
-                    val blocks = StatusBarClockBlockParser.parse(uiState.statusBarClockFormat)
-                        .filter { it.isStyleable }
-
-                    if (blocks.isNotEmpty()) {
-                        val safePosition =
-                            selectedRichBlockPosition.coerceIn(0, blocks.lastIndex)
-                        val selectedBlock = blocks[safePosition]
-                        val selectedBlockIndex = selectedBlock.styleIndex ?: 0
-                        val selectedStyle = clockRichStyleFor(uiState, selectedBlock)
-                        val selectedPreview =
-                            clockRichPreview(selectedBlock, now).ifEmpty { " " }
-
+                    if (
+                        richBlocks.isNotEmpty() &&
+                        selectedRichBlock != null &&
+                        selectedRichStyle != null
+                    ) {
                         add {
                             SelectItem(
                                 title = stringResource(
                                     id = R.string.alohaoneui_clockRichSelectBlock_title
                                 ),
-                                entries = blocks.mapIndexed { index, block ->
-                                    val preview =
-                                        clockRichPreview(block, now).ifEmpty { " " }
+                                entries = richBlocks.mapIndexed { index, block ->
+                                    val preview = clockRichPreview(block, richBlockNow).ifEmpty { " " }
                                     stringResource(
                                         id = R.string.alohaoneui_clockRichBlock_title,
                                         (block.styleIndex ?: index) + 1,
                                         block.source.replace("\n", "\\n"),
                                     ) + " · " + preview
                                 },
-                                selectedIndex = safePosition,
+                                selectedIndex = safeRichBlockPosition,
                                 onSelectedIndexChange = { position ->
                                     selectedRichBlockPosition = position
                                     expandedRichBlock = -1
@@ -353,62 +382,36 @@ fun StatusTimeCategoryControls(
                             SwitchItem(
                                 title = stringResource(
                                     id = R.string.alohaoneui_clockRichBlock_title,
-                                    selectedBlockIndex + 1,
-                                    selectedBlock.source.replace("\n", "\\n"),
+                                    selectedRichBlockIndex + 1,
+                                    selectedRichBlock.source.replace("\n", "\\n"),
                                 ),
                                 summary = stringResource(
                                     id = R.string.alohaoneui_clockRichBlock_summary,
-                                    selectedPreview,
+                                    selectedRichPreview,
                                 ),
                                 clickable = true,
                                 showChildIndicator = true,
+                                expanded = expandedRichBlock == selectedRichBlockIndex && selectedRichStyle.enabled,
                                 onClick = {
                                     expandedRichBlock =
-                                        if (expandedRichBlock == selectedBlockIndex) {
+                                        if (expandedRichBlock == selectedRichBlockIndex) {
                                             -1
                                         } else {
-                                            selectedBlockIndex
+                                            selectedRichBlockIndex
                                         }
                                 },
-                                checked = selectedStyle.enabled,
+                                checked = selectedRichStyle.enabled,
                                 onCheckedChange = { enabled ->
                                     onEvent(
                                         SystemUIEvent.StatusBar.UpdateStatusBarClockBlockStyle(
-                                            selectedStyle.copy(enabled = enabled)
+                                            selectedRichStyle.copy(enabled = enabled)
                                         )
                                     )
                                 },
                             )
                         }
 
-                        if (
-                            expandedRichBlock == selectedBlockIndex &&
-                            selectedStyle.enabled
-                        ) {
-                            add {
-                                StatusThemeChildItem {
-                                    StatusClockRichBlockEditor(
-                                        style = selectedStyle,
-                                        onStylePreview = { updated ->
-                                            onEvent(
-                                                SystemUIEvent.StatusBarPreview(
-                                                    SystemUIEvent.StatusBar.UpdateStatusBarClockBlockStyle(
-                                                        updated
-                                                    )
-                                                )
-                                            )
-                                        },
-                                        onStyleChange = { updated ->
-                                            onEvent(
-                                                SystemUIEvent.StatusBar.UpdateStatusBarClockBlockStyle(
-                                                    updated
-                                                )
-                                            )
-                                        },
-                                    )
-                                }
-                            }
-                        }
+                        addAll(richBlockEditorItems)
                     }
                 }
             }
@@ -429,6 +432,7 @@ fun StatusTimeCategoryControls(
                         null
                     },
                     showChildIndicator = true,
+                    expanded = uiState.modifyStatusBarClockPosition,
                     checked = uiState.modifyStatusBarClockPosition,
                     onCheckedChange = {
                         onEvent(
@@ -439,90 +443,73 @@ fun StatusTimeCategoryControls(
             }
             if (uiState.modifyStatusBarClockPosition) {
                 add {
-                    StatusThemeChildItem {
-                        // StatusThemeChildItem uses a Box; stack multiple controls explicitly
-                        // so the X and Y labels/sliders cannot overlap each other.
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 8.dp),
-                            verticalArrangement = Arrangement.spacedBy(4.dp),
-                        ) {
-                            AlohaOneUISectionLabel(
-                                text = stringResource(
-                                    id = R.string.alohaoneui_statusBarClockOffsetX_title
-                                ),
-                                modifier = Modifier.padding(horizontal = 12.dp),
-                            )
-                            AlohaOneUISupportingText(
-                                text = stringResource(
-                                    id = R.string.alohaoneui_statusBarClockOffset_summary,
-                                    clockOffsetX,
-                                ),
-                                modifier = Modifier.padding(horizontal = 12.dp),
-                            )
-                            AlohaOneUISlider(
-                                value = clockOffsetX,
-                                stepSize = 1f,
-                                onValueChange = { raw ->
-                                    val value = raw.roundToInt().coerceIn(-20, 20).toFloat()
-                                    clockOffsetX = value
-                                    onEvent(
-                                        SystemUIEvent.StatusBarPreview(
-                                            SystemUIEvent.StatusBar.StatusBarClockOffsetXDp(value)
-                                        )
+                    StatusThemeChildItem(
+                        title = stringResource(
+                            id = R.string.alohaoneui_statusBarClockOffsetX_title
+                        ),
+                        summary = stringResource(
+                            id = R.string.alohaoneui_statusBarClockOffset_summary,
+                            clockOffsetX,
+                        ),
+                    ) {
+                        AlohaOneUISlider(
+                            value = clockOffsetX,
+                            stepSize = 1f,
+                            onValueChange = { raw ->
+                                val value = raw.roundToInt().coerceIn(-20, 20).toFloat()
+                                clockOffsetX = value
+                                onEvent(
+                                    SystemUIEvent.StatusBarPreview(
+                                        SystemUIEvent.StatusBar.StatusBarClockOffsetXDp(value)
                                     )
-                                },
-                                modifier = Modifier.fillMaxWidth(),
-                                valueRange = -20f..20f,
-                                onValueChangeFinished = {
-                                    onEvent(
-                                        SystemUIEvent.StatusBar.StatusBarClockOffsetXDp(clockOffsetX)
+                                )
+                            },
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                            valueRange = -20f..20f,
+                            onValueChangeFinished = {
+                                onEvent(
+                                    SystemUIEvent.StatusBar.StatusBarClockOffsetXDp(clockOffsetX)
+                                )
+                            },
+                        )
+                    }
+                }
+                add {
+                    StatusThemeChildItem(
+                        title = stringResource(
+                            id = R.string.alohaoneui_statusBarClockOffsetY_title
+                        ),
+                        summary = stringResource(
+                            id = R.string.alohaoneui_statusBarClockOffset_summary,
+                            clockOffsetY,
+                        ),
+                    ) {
+                        AlohaOneUISlider(
+                            value = clockOffsetY,
+                            stepSize = 1f,
+                            onValueChange = { raw ->
+                                val value = raw.roundToInt().coerceIn(-20, 20).toFloat()
+                                clockOffsetY = value
+                                onEvent(
+                                    SystemUIEvent.StatusBarPreview(
+                                        SystemUIEvent.StatusBar.StatusBarClockOffsetYDp(value)
                                     )
-                                },
-                            )
-                            AlohaOneUISectionLabel(
-                                text = stringResource(
-                                    id = R.string.alohaoneui_statusBarClockOffsetY_title
-                                ),
-                                modifier = Modifier.padding(horizontal = 12.dp),
-                            )
-                            AlohaOneUISupportingText(
-                                text = stringResource(
-                                    id = R.string.alohaoneui_statusBarClockOffset_summary,
-                                    clockOffsetY,
-                                ),
-                                modifier = Modifier.padding(horizontal = 12.dp),
-                            )
-                            AlohaOneUISlider(
-                                value = clockOffsetY,
-                                stepSize = 1f,
-                                onValueChange = { raw ->
-                                    val value = raw.roundToInt().coerceIn(-20, 20).toFloat()
-                                    clockOffsetY = value
-                                    onEvent(
-                                        SystemUIEvent.StatusBarPreview(
-                                            SystemUIEvent.StatusBar.StatusBarClockOffsetYDp(value)
-                                        )
-                                    )
-                                },
-                                modifier = Modifier.fillMaxWidth(),
-                                valueRange = -20f..20f,
-                                onValueChangeFinished = {
-                                    onEvent(
-                                        SystemUIEvent.StatusBar.StatusBarClockOffsetYDp(clockOffsetY)
-                                    )
-                                },
-                            )
-                        }
+                                )
+                            },
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                            valueRange = -20f..20f,
+                            onValueChangeFinished = {
+                                onEvent(
+                                    SystemUIEvent.StatusBar.StatusBarClockOffsetYDp(clockOffsetY)
+                                )
+                            },
+                        )
                     }
                 }
             }
-
             if (uiState.modifyStatusBarClockPosition) {
                 add {
-                    StatusThemeChildItem {
-                        SelectItem(
+                    SelectItem(
                             icon = ImageVector.vectorResource(id = R.drawable.format_size),
                             title = stringResource(
                                 id = R.string.alohaoneui_statusBarClockAlignment_title
@@ -552,7 +539,6 @@ fun StatusTimeCategoryControls(
                                 )
                             },
                         )
-                    }
                 }
                 add {
                     StatusThemeChildItem {
@@ -602,84 +588,67 @@ fun StatusTimeCategoryControls(
                     }
                 }
                 add {
-                    StatusThemeChildItem {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 8.dp),
-                            verticalArrangement = Arrangement.spacedBy(4.dp),
-                        ) {
-                            AlohaOneUISectionLabel(
-                                text = stringResource(
-                                    id = R.string.alohaoneui_statusBarClockLeftMargin_title
-                                ),
-                                modifier = Modifier.padding(horizontal = 12.dp),
-                            )
-                            AlohaOneUISupportingText(
-                                text = stringResource(
-                                    id = R.string.alohaoneui_statusBarClockMargin_summary,
-                                    clockLeftMargin,
-                                ),
-                                modifier = Modifier.padding(horizontal = 12.dp),
-                            )
-                            AlohaOneUISlider(
-                                value = clockLeftMargin,
-                                stepSize = 1f,
-                                onValueChange = { raw ->
-                                    val value = raw.roundToInt().coerceIn(0, 40).toFloat()
-                                    clockLeftMargin = value
-                                    onEvent(
-                                        SystemUIEvent.StatusBarPreview(
-                                            SystemUIEvent.StatusBar.StatusBarClockLeftMarginDp(value)
-                                        )
+                    StatusThemeChildItem(
+                        title = stringResource(id = R.string.alohaoneui_statusBarClockLeftMargin_title),
+                        summary = stringResource(
+                            id = R.string.alohaoneui_statusBarClockMargin_summary,
+                            clockLeftMargin,
+                        ),
+                    ) {
+                        AlohaOneUISlider(
+                            value = clockLeftMargin,
+                            stepSize = 1f,
+                            onValueChange = { raw ->
+                                val value = raw.roundToInt().coerceIn(0, 40).toFloat()
+                                clockLeftMargin = value
+                                onEvent(
+                                    SystemUIEvent.StatusBarPreview(
+                                        SystemUIEvent.StatusBar.StatusBarClockLeftMarginDp(value)
                                     )
-                                },
-                                modifier = Modifier.fillMaxWidth(),
-                                valueRange = 0f..40f,
-                                onValueChangeFinished = {
-                                    onEvent(
-                                        SystemUIEvent.StatusBar.StatusBarClockLeftMarginDp(
-                                            clockLeftMargin
-                                        )
+                                )
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            valueRange = 0f..40f,
+                            onValueChangeFinished = {
+                                onEvent(
+                                    SystemUIEvent.StatusBar.StatusBarClockLeftMarginDp(
+                                        clockLeftMargin
                                     )
-                                },
-                            )
-                            AlohaOneUISectionLabel(
-                                text = stringResource(
-                                    id = R.string.alohaoneui_statusBarClockRightMargin_title
-                                ),
-                                modifier = Modifier.padding(horizontal = 12.dp),
-                            )
-                            AlohaOneUISupportingText(
-                                text = stringResource(
-                                    id = R.string.alohaoneui_statusBarClockMargin_summary,
-                                    clockRightMargin,
-                                ),
-                                modifier = Modifier.padding(horizontal = 12.dp),
-                            )
-                            AlohaOneUISlider(
-                                value = clockRightMargin,
-                                stepSize = 1f,
-                                onValueChange = { raw ->
-                                    val value = raw.roundToInt().coerceIn(0, 40).toFloat()
-                                    clockRightMargin = value
-                                    onEvent(
-                                        SystemUIEvent.StatusBarPreview(
-                                            SystemUIEvent.StatusBar.StatusBarClockRightMarginDp(value)
-                                        )
+                                )
+                            },
+                        )
+                    }
+                }
+                add {
+                    StatusThemeChildItem(
+                        title = stringResource(id = R.string.alohaoneui_statusBarClockRightMargin_title),
+                        summary = stringResource(
+                            id = R.string.alohaoneui_statusBarClockMargin_summary,
+                            clockRightMargin,
+                        ),
+                    ) {
+                        AlohaOneUISlider(
+                            value = clockRightMargin,
+                            stepSize = 1f,
+                            onValueChange = { raw ->
+                                val value = raw.roundToInt().coerceIn(0, 40).toFloat()
+                                clockRightMargin = value
+                                onEvent(
+                                    SystemUIEvent.StatusBarPreview(
+                                        SystemUIEvent.StatusBar.StatusBarClockRightMarginDp(value)
                                     )
-                                },
-                                modifier = Modifier.fillMaxWidth(),
-                                valueRange = 0f..40f,
-                                onValueChangeFinished = {
-                                    onEvent(
-                                        SystemUIEvent.StatusBar.StatusBarClockRightMarginDp(
-                                            clockRightMargin
-                                        )
+                                )
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            valueRange = 0f..40f,
+                            onValueChangeFinished = {
+                                onEvent(
+                                    SystemUIEvent.StatusBar.StatusBarClockRightMarginDp(
+                                        clockRightMargin
                                     )
-                                },
-                            )
-                        }
+                                )
+                            },
+                        )
                     }
                 }
             }
@@ -693,6 +662,7 @@ fun StatusTimeCategoryControls(
                                 id = R.string.alohaoneui_fold7CustomDoubleLineClockScale_title
                             ),
                             showChildIndicator = true,
+                            expanded = uiState.useFold7CustomDoubleLineClockScale,
                             checked = uiState.useFold7CustomDoubleLineClockScale,
                             onCheckedChange = {
                                 onEvent(
@@ -703,81 +673,67 @@ fun StatusTimeCategoryControls(
                     }
                     if (uiState.useFold7CustomDoubleLineClockScale) {
                         add {
-                            StatusThemeChildItem {
-                                Column(
-                                    modifier = Modifier.fillMaxWidth(),
-                                ) {
-                                    AlohaOneUIInfoItem(
-                                        title = stringResource(
-                                            id = R.string.alohaoneui_fold7DoubleLineClockTimeScale_title
-                                        ),
-                                        summary = stringResource(
-                                            id = R.string.alohaoneui_fold7DoubleLineClockTimeScale_summary,
-                                            timeScale,
-                                        ),
-                                    )
-                                    AlohaOneUISlider(
-                                        value = timeScale * 100f,
-                                        stepSize = 1f,
-                                        onValueChange = { raw ->
-                                            val value = raw.roundToInt().coerceIn(50, 110) / 100f
-                                            timeScale = value
-                                            onEvent(
-                                                SystemUIEvent.StatusBarPreview(
-                                                    SystemUIEvent.StatusBar.Fold7DoubleLineClockTimeScale(
-                                                        value
-                                                    )
-                                                )
+                            StatusThemeChildItem(
+                                title = stringResource(
+                                    id = R.string.alohaoneui_fold7DoubleLineClockTimeScale_title
+                                ),
+                                summary = stringResource(
+                                    id = R.string.alohaoneui_fold7DoubleLineClockTimeScale_summary,
+                                    timeScale,
+                                ),
+                            ) {
+                                AlohaOneUISlider(
+                                    value = timeScale * 100f,
+                                    stepSize = 1f,
+                                    onValueChange = { raw ->
+                                        val value = raw.roundToInt().coerceIn(50, 110) / 100f
+                                        timeScale = value
+                                        onEvent(
+                                            SystemUIEvent.StatusBarPreview(
+                                                SystemUIEvent.StatusBar.Fold7DoubleLineClockTimeScale(value)
                                             )
-                                        },
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(horizontal = 8.dp),
-                                        valueRange = 50f..110f,
-                                        onValueChangeFinished = {
-                                            onEvent(
-                                                SystemUIEvent.StatusBar.Fold7DoubleLineClockTimeScale(
-                                                    timeScale
-                                                )
+                                        )
+                                    },
+                                    modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                                    valueRange = 50f..110f,
+                                    onValueChangeFinished = {
+                                        onEvent(
+                                            SystemUIEvent.StatusBar.Fold7DoubleLineClockTimeScale(timeScale)
+                                        )
+                                    },
+                                )
+                            }
+                        }
+                        add {
+                            StatusThemeChildItem(
+                                title = stringResource(
+                                    id = R.string.alohaoneui_fold7DoubleLineClockDateScale_title
+                                ),
+                                summary = stringResource(
+                                    id = R.string.alohaoneui_fold7DoubleLineClockDateScale_summary,
+                                    dateScale,
+                                ),
+                            ) {
+                                AlohaOneUISlider(
+                                    value = dateScale * 100f,
+                                    stepSize = 1f,
+                                    onValueChange = { raw ->
+                                        val value = raw.roundToInt().coerceIn(50, 110) / 100f
+                                        dateScale = value
+                                        onEvent(
+                                            SystemUIEvent.StatusBarPreview(
+                                                SystemUIEvent.StatusBar.Fold7DoubleLineClockDateScale(value)
                                             )
-                                        },
-                                    )
-                                    AlohaOneUIInfoItem(
-                                        title = stringResource(
-                                            id = R.string.alohaoneui_fold7DoubleLineClockDateScale_title
-                                        ),
-                                        summary = stringResource(
-                                            id = R.string.alohaoneui_fold7DoubleLineClockDateScale_summary,
-                                            dateScale,
-                                        ),
-                                    )
-                                    AlohaOneUISlider(
-                                        value = dateScale * 100f,
-                                        stepSize = 1f,
-                                        onValueChange = { raw ->
-                                            val value = raw.roundToInt().coerceIn(50, 110) / 100f
-                                            dateScale = value
-                                            onEvent(
-                                                SystemUIEvent.StatusBarPreview(
-                                                    SystemUIEvent.StatusBar.Fold7DoubleLineClockDateScale(
-                                                        value
-                                                    )
-                                                )
-                                            )
-                                        },
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(horizontal = 8.dp),
-                                        valueRange = 50f..110f,
-                                        onValueChangeFinished = {
-                                            onEvent(
-                                                SystemUIEvent.StatusBar.Fold7DoubleLineClockDateScale(
-                                                    dateScale
-                                                )
-                                            )
-                                        },
-                                    )
-                                }
+                                        )
+                                    },
+                                    modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                                    valueRange = 50f..110f,
+                                    onValueChangeFinished = {
+                                        onEvent(
+                                            SystemUIEvent.StatusBar.Fold7DoubleLineClockDateScale(dateScale)
+                                        )
+                                    },
+                                )
                             }
                         }
                     }
@@ -822,6 +778,7 @@ fun StatusTimeCategoryControls(
                             lineGapDp.roundToInt().toString() + " dp"
                         } else null,
                         icon = ImageVector.vectorResource(id = R.drawable.format_letter_spacing),
+                        expanded = lineGapEnabled,
                         checked = lineGapEnabled,
                         onCheckedChange = { enabled ->
                             lineGapEnabled = enabled
@@ -865,12 +822,12 @@ fun StatusTimeCategoryControls(
                 add {
                     SwitchItem(
                         title = stringResource(id = R.string.alohaoneui_setStatusBarClockTextScale_title),
-                        modifier = Modifier.animateContentSize(),
                         summary = if (uiState.setStatusBarClockTextScale) {
                             "${(singleLineScale * 100f).roundToInt()}%"
                         } else null,
                         icon = ImageVector.vectorResource(id = R.drawable.format_size),
                         clickable = true,
+                        expanded = singleLineScaleExpanded && uiState.setStatusBarClockTextScale,
                         onClick = { singleLineScaleExpanded = !singleLineScaleExpanded },
                         checked = uiState.setStatusBarClockTextScale,
                         onCheckedChange = {

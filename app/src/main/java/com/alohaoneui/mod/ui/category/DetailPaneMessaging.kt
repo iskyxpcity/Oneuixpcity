@@ -21,21 +21,26 @@ fun DetailPaneMessaging(
     onEvent: (MessagingEvent) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    PackagePane(modifier) {
-        SwitchItem(
-            leadingContent = {
-                Image(
-                    bitmap = rememberAlohaOneUICategoryIcon(AlohaOneUICategory.Messaging),
-                    contentDescription = stringResource(id = R.string.alohaoneui_supportBlockMessage_title),
-                    modifier = Modifier.size(24.dp),
-                    contentScale = ContentScale.Fit,
-                )
-            },
-            title = stringResource(id = R.string.alohaoneui_supportBlockMessage_title),
-            checked = uiState.supportBlockMessage,
-            onCheckedChange = { onEvent(MessagingEvent.SupportBlockMessage(it)) }
-        )
-    }
+    PackagePane(
+        modifier = modifier,
+        content = buildList {
+            add {
+                SwitchItem(
+                            leadingContent = {
+                                Image(
+                                    bitmap = rememberAlohaOneUICategoryIcon(AlohaOneUICategory.Messaging),
+                                    contentDescription = stringResource(id = R.string.alohaoneui_supportBlockMessage_title),
+                                    modifier = Modifier.size(24.dp),
+                                    contentScale = ContentScale.Fit,
+                                )
+                            },
+                            title = stringResource(id = R.string.alohaoneui_supportBlockMessage_title),
+                            checked = uiState.supportBlockMessage,
+                            onCheckedChange = { onEvent(MessagingEvent.SupportBlockMessage(it)) }
+                        )
+            }
+        }
+    )
 }
 
 sealed interface MessagingEvent {

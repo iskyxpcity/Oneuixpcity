@@ -2,8 +2,10 @@ package com.alohaoneui.app.ui.screen.colorpalette
 
 import android.annotation.SuppressLint
 import android.os.Build
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -12,7 +14,9 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.ui.draw.shadow
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -33,6 +37,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -40,10 +45,8 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.MenuOpen
 import androidx.compose.material.icons.filled.Brightness1
 import androidx.compose.material.icons.filled.Brightness3
@@ -51,21 +54,21 @@ import androidx.compose.material.icons.filled.Brightness4
 import androidx.compose.material.icons.filled.Brightness7
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.rounded.AspectRatio
+import androidx.compose.material.icons.rounded.BlurOn
+import androidx.compose.material.icons.rounded.CallToAction
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.DesignServices
 import androidx.compose.material.icons.rounded.Style
 import androidx.compose.material.icons.rounded.Swipe
 import androidx.compose.material.icons.rounded.ViewCarousel
+import androidx.compose.material.icons.rounded.WaterDrop
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Slider
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.ToggleButtonDefaults
+import androidx.compose.material3.ToggleButtonShapes
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.rememberTopAppBarState
@@ -73,6 +76,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -86,6 +90,9 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
@@ -93,14 +100,32 @@ import androidx.compose.ui.unit.dp
 import com.materialkolor.PaletteStyle
 import com.materialkolor.dynamiccolor.ColorSpec
 import com.materialkolor.rememberDynamicColorScheme
+import com.alohaoneui.app.ui.component.material.ExpressiveLargeTopAppBar
+import com.alohaoneui.app.ui.component.material.ExpressiveSurface
 import com.alohaoneui.app.R
 import com.alohaoneui.app.ui.component.bottombar.useNavigationRail
 import com.alohaoneui.app.ui.component.material.ExpressiveToggleButton
+import com.alohaoneui.app.ui.component.material.ExpressiveScaffold
+import com.alohaoneui.app.ui.component.material.ExpressiveOutlinedTextField
+import com.alohaoneui.app.ui.component.material.ExpressiveTextButton
+import com.alohaoneui.app.ui.component.material.ExpressiveContentDialog
+import com.alohaoneui.app.ui.component.material.IconShapePresetPicker
+import com.alohaoneui.app.ui.component.material.IconShapePresetDetailScreen
 import com.alohaoneui.app.ui.component.material.SegmentedColumn
-import com.alohaoneui.app.ui.component.material.SegmentedDropdownItem
+import com.alohaoneui.app.ui.component.material.SegmentedListItem
+import com.alohaoneui.app.ui.component.material.SegmentedChoiceOptionsItem
 import com.alohaoneui.app.ui.component.material.SegmentedSwitchItem
+import com.alohaoneui.app.ui.component.material.SegmentedSliderItem
+import com.alohaoneui.mod.ui.component.AlohaOneUISlider
 import com.alohaoneui.app.ui.component.material.TonalCard
+import com.alohaoneui.app.ui.component.material.TopBarBackButton
+import com.alohaoneui.app.ui.component.material.alohaSegmentedShape
+import com.alohaoneui.app.ui.component.material.alohaCornerShape
+import com.alohaoneui.app.ui.component.material.iconShapeForStyle
 import com.alohaoneui.app.ui.theme.ColorMode
+import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
+import com.alohaoneui.app.ui.theme.LocalMaterialShadowButtons
+import com.alohaoneui.app.ui.theme.LocalMaterialShadowSliders
 import com.alohaoneui.app.ui.theme.rememberAlohaOneUIColorScheme
 import com.alohaoneui.app.ui.theme.keyColorOptions
 
@@ -116,24 +141,29 @@ fun ColorPaletteScreenMaterial(
     val colorStyle = state.currentPaletteStyle
     val colorSpec = state.currentColorSpec
     val haptic = LocalHapticFeedback.current
+    var showIconShapeDetails by remember { mutableStateOf(false) }
+    BackHandler(enabled = showIconShapeDetails) { showIconShapeDetails = false }
+    if (showIconShapeDetails) {
+        IconShapePresetDetailScreen(
+            selectedIndex = uiState.materialIconShapeStyle,
+            onSelected = { style ->
+                actions.onSetMaterialIconShapeStyle(style)
+            },
+            onBack = { showIconShapeDetails = false },
+        )
+        return
+    }
 
     LaunchedEffect(Unit) {
         scrollBehavior.state.heightOffset = scrollBehavior.state.heightOffsetLimit
     }
 
-    Scaffold(
+    ExpressiveScaffold(
         topBar = {
-            LargeFlexibleTopAppBar(
-                navigationIcon = {
-                    IconButton(
-                        onClick = actions.onBack
-                    ) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null) }
-                },
+            ExpressiveLargeTopAppBar(
+                
+                navigationIcon = { TopBarBackButton(onClick = actions.onBack) },
                 title = { Text(stringResource(R.string.settings_theme)) },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    scrolledContainerColor = MaterialTheme.colorScheme.surface
-                ),
                 windowInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
                 scrollBehavior = scrollBehavior
             )
@@ -145,6 +175,7 @@ fun ColorPaletteScreenMaterial(
 
         Column(
             modifier = Modifier
+                .fillMaxSize()
                 .padding(paddingValues)
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
                 .verticalScroll(rememberScrollState()),
@@ -211,10 +242,17 @@ fun ColorPaletteScreenMaterial(
 
                 options.chunked(4).forEach { rowOptions ->
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp),
                         horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)
                     ) {
                         rowOptions.forEachIndexed { index, (modes, label) ->
+                            val sourceShape = alohaSegmentedShape(
+                                index = index,
+                                count = rowOptions.size,
+                                vertical = false,
+                            )
                             ExpressiveToggleButton(
                                 checked = currentColorMode in modes,
                                 onCheckedChange = {
@@ -226,11 +264,15 @@ fun ColorPaletteScreenMaterial(
                                 modifier = Modifier
                                     .weight(1f)
                                     .semantics { role = Role.RadioButton },
-                                shapes = when (index) {
-                                    0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
-                                    rowOptions.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
-                                    else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
-                                },
+                                colors = ToggleButtonDefaults.colors(
+                                    checkedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
+                                    containerColor = MaterialTheme.colorScheme.surface,
+                                ),
+                                shapes = ToggleButtonShapes(
+                                    shape = sourceShape,
+                                    pressedShape = sourceShape,
+                                    checkedShape = sourceShape,
+                                ),
                             ) {
                                 Icon(
                                     imageVector = when (modes.first()) {
@@ -248,14 +290,14 @@ fun ColorPaletteScreenMaterial(
                 }
 
                 SegmentedColumn(
-                    modifier = Modifier.padding(top = 4.dp),
+                    modifier = Modifier.padding(vertical = 4.dp),
                     content = listOf(
                         {
                             val styles = PaletteStyle.entries
-                            SegmentedDropdownItem(
+                            SegmentedChoiceOptionsItem(
                                 icon = Icons.Rounded.Style,
                                 title = stringResource(R.string.settings_color_style),
-                                items = styles.map { it.name },
+                                items = styles.map { paletteStyleLabel(it.name) },
                                 selectedIndex = styles.indexOf(colorStyle),
                                 onItemSelected = { index ->
                                     actions.onSetColorStyle(styles[index].name)
@@ -264,10 +306,10 @@ fun ColorPaletteScreenMaterial(
                         },
                         {
                             val specs = ColorSpec.SpecVersion.entries
-                            SegmentedDropdownItem(
+                            SegmentedChoiceOptionsItem(
                                 icon = Icons.Rounded.DesignServices,
                                 title = stringResource(R.string.settings_color_spec),
-                                items = specs.map { it.name },
+                                items = specs.map { colorSpecLabel(it.name) },
                                 selectedIndex = specs.indexOf(colorSpec).coerceAtLeast(0),
                                 onItemSelected = { index ->
                                     actions.onSetColorSpec(specs[index].name)
@@ -277,11 +319,54 @@ fun ColorPaletteScreenMaterial(
                     )
                 )
 
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                    SegmentedColumn(
-                        modifier = Modifier.padding(top = 4.dp),
-                        content = listOf(
-                            {
+                SegmentedColumn(
+                    modifier = Modifier.padding(vertical = 4.dp),
+                    content = buildList {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            add {
+                                SegmentedSwitchItem(
+                                    icon = Icons.Rounded.BlurOn,
+                                    title = stringResource(R.string.settings_enable_blur),
+                                    summary = stringResource(R.string.settings_enable_blur_summary),
+                                    checked = uiState.enableBlur,
+                                    onCheckedChange = actions.onSetEnableBlur,
+                                )
+                            }
+                        }
+                        add {
+                            SegmentedSwitchItem(
+                                icon = Icons.Rounded.CallToAction,
+                                title = stringResource(R.string.settings_floating_bottom_bar),
+                                summary = stringResource(R.string.settings_floating_bottom_bar_summary),
+                                checked = uiState.enableFloatingBottomBar,
+                                onCheckedChange = actions.onSetEnableFloatingBottomBar,
+                            )
+                        }
+                        // Add the glass option only while its parent feature is enabled.
+                        // SegmentedColumn derives each row's outer/inner corner geometry
+                        // from the visible item count, so a hidden placeholder would leave
+                        // the floating-bar card with the wrong theme-linked frame shape.
+                        if (uiState.enableFloatingBottomBar &&
+                            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+                        ) {
+                            add {
+                                SegmentedSwitchItem(
+                                    icon = Icons.Rounded.WaterDrop,
+                                    title = stringResource(R.string.settings_enable_glass),
+                                    summary = stringResource(R.string.settings_enable_glass_summary),
+                                    checked = uiState.enableFloatingBottomBarBlur,
+                                    onCheckedChange = actions.onSetEnableFloatingBottomBarBlur,
+                                )
+                            }
+                        }
+                    }
+                )
+
+                SegmentedColumn(
+                    modifier = Modifier.padding(vertical = 4.dp),
+                    content = buildList {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                            add {
                                 SegmentedSwitchItem(
                                     icon = Icons.AutoMirrored.Rounded.MenuOpen,
                                     title = stringResource(id = R.string.settings_enable_predictive_back),
@@ -290,14 +375,9 @@ fun ColorPaletteScreenMaterial(
                                     onCheckedChange = actions.onSetEnablePredictiveBack
                                 )
                             }
-                        )
-                    )
-                }
+                        }
 
-                SegmentedColumn(
-                    modifier = Modifier.padding(top = 4.dp),
-                    content = listOf(
-                        {
+                        add {
                             SegmentedSwitchItem(
                                 icon = Icons.Rounded.Swipe,
                                 title = stringResource(R.string.settings_enable_swipe_back),
@@ -305,71 +385,517 @@ fun ColorPaletteScreenMaterial(
                                 checked = uiState.enableSwipeBack,
                                 onCheckedChange = actions.onSetEnableSwipeBack,
                             )
-                        },
-                        {
+                        }
+                        add {
                             val pagerGestureOptions = listOf(
                                 stringResource(R.string.settings_page_gesture_default),
                                 stringResource(R.string.settings_page_gesture_cross_axis),
                                 stringResource(R.string.settings_page_gesture_ios_like),
                             )
-                            SegmentedDropdownItem(
+                            SegmentedChoiceOptionsItem(
                                 icon = Icons.Rounded.ViewCarousel,
                                 title = stringResource(R.string.settings_page_gesture_mode),
                                 items = pagerGestureOptions,
                                 selectedIndex = uiState.pagerGestureMode.coerceIn(0, pagerGestureOptions.lastIndex),
                                 onItemSelected = actions.onSetPagerGestureMode,
                             )
-                        },
-                    ),
-                )
+                        }
 
-                TonalCard(modifier = Modifier.padding(top = 4.dp)) {
+                        add {
                     var sliderValue by remember(uiState.pageScale) { mutableFloatStateOf(uiState.pageScale) }
+                    var showPageScaleValueDialog by remember { mutableStateOf(false) }
+                    var pageScaleInput by remember { mutableStateOf("") }
 
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                Icons.Rounded.AspectRatio,
-                                contentDescription = stringResource(id = R.string.settings_page_scale),
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Spacer(modifier = Modifier.width(12.dp))
+                    SegmentedListItem(
+                        modifier = Modifier.fillMaxWidth(),
+                        headlineContent = {
                             Column(
-                                modifier = Modifier.weight(1f)
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalArrangement = Arrangement.spacedBy(12.dp),
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                ) {
+                                    Icon(
+                                        Icons.Rounded.AspectRatio,
+                                        contentDescription = stringResource(R.string.settings_page_scale),
+                                    )
+                                    Column(
+                                        modifier = Modifier.weight(1f),
+                                        verticalArrangement = Arrangement.spacedBy(2.dp),
+                                    ) {
+                                        Text(
+                                            text = stringResource(R.string.settings_page_scale),
+                                            style = MaterialTheme.typography.titleMedium,
+                                            color = MaterialTheme.colorScheme.onSurface,
+                                        )
+                                        Text(
+                                            text = stringResource(R.string.settings_page_scale_summary),
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        )
+                                    }
+                                    ExpressiveSurface(
+                                        onClick = {
+                                            pageScaleInput = ((sliderValue * 100).toInt()).toString()
+                                            showPageScaleValueDialog = true
+                                        },
+                                        modifier = Modifier.requiredHeight(32.dp),
+                                        shape = alohaCornerShape(12.dp),
+                                        color = MaterialTheme.colorScheme.primaryContainer,
+                                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                        shadowElevation = if (LocalMaterialShadowButtons.current) 2.dp else 0.dp,
+                                        border = LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
+                                            BorderStroke(it.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.45f))
+                                        },
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxHeight()
+                                                .padding(horizontal = 10.dp),
+                                            contentAlignment = Alignment.Center,
+                                        ) {
+                                            Text(
+                                                text = "${(sliderValue * 100).toInt()}%",
+                                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                            )
+                                        }
+                                    }
+                                }
+                                AlohaOneUISlider(
+                                    value = sliderValue,
+                                    onValueChange = { sliderValue = it },
+                                    onValueChangeFinished = { actions.onSetPageScale(sliderValue) },
+                                    valueRange = 0.8f..1.1f,
+                                    modifier = Modifier.fillMaxWidth(),
+                                )
+                            }
+                        },
+                    )
+
+                    if (showPageScaleValueDialog) {
+                        ExpressiveContentDialog(
+                            onDismissRequest = { showPageScaleValueDialog = false },
+                        ) {
+                            Column(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(16.dp),
                             ) {
                                 Text(
                                     text = stringResource(R.string.settings_page_scale),
                                     style = MaterialTheme.typography.titleMedium,
-                                    color = MaterialTheme.colorScheme.onSurface
+                                    color = MaterialTheme.colorScheme.onSurface,
                                 )
                                 Text(
-                                    text = stringResource(id = R.string.settings_page_scale_summary),
+                                    text = "输入 80 至 110 之间的数值",
                                     style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.outline
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
+                                ExpressiveOutlinedTextField(
+                                            value = pageScaleInput,
+                                            onValueChange = { input ->
+                                        if (input.length <= 3 && input.all { it.isDigit() }) {
+                                            pageScaleInput = input
+                                        }
+                                    },
+                                            modifier = Modifier.fillMaxWidth(),
+                                            trailingIcon = {
+                                        Text(
+                                            text = "%",
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        )
+                                    },
+                                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                                        )
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.End,
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    ExpressiveTextButton(onClick = { showPageScaleValueDialog = false }) {
+                                        Text(stringResource(android.R.string.cancel))
+                                    }
+                                    ExpressiveTextButton(
+                                        onClick = {
+                                            val parsed = pageScaleInput.toIntOrNull()
+                                            if (parsed != null && parsed in 80..110) {
+                                                sliderValue = parsed / 100f
+                                                actions.onSetPageScale(sliderValue)
+                                                showPageScaleValueDialog = false
+                                            }
+                                        },
+                                    ) {
+                                        Text(stringResource(android.R.string.ok))
+                                    }
+                                }
                             }
-                            Text(
-                                text = "${(sliderValue * 100).toInt()}%",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
                         }
-
-                        Slider(
-                            value = sliderValue,
-                            onValueChange = { sliderValue = it },
-                            onValueChangeFinished = { actions.onSetPageScale(sliderValue) },
-                            valueRange = 0.8f..1.1f,
-                            modifier = Modifier.fillMaxWidth()
-                        )
                     }
-                }
+                        }
+                    }
+                )
+
+                // Shape group: the slider remains a row in the source-style group.
+                SegmentedColumn(
+                    modifier = Modifier.padding(vertical = 4.dp),
+                    title = stringResource(R.string.theme_group_shape),
+                    content = listOf(
+                        {
+                            SegmentedChoiceOptionsItem(
+                                title = stringResource(R.string.theme_shape_style_title),
+                                items = listOf(
+                                    stringResource(R.string.theme_shape_rounded),
+                                    stringResource(R.string.theme_shape_cut),
+                                    stringResource(R.string.theme_shape_squircle),
+                                    stringResource(R.string.theme_shape_smooth),
+                                    stringResource(R.string.theme_shape_wavy),
+                                    stringResource(R.string.theme_shape_scoop),
+                                    stringResource(R.string.theme_shape_notch),
+                                ),
+                                selectedIndex = uiState.materialShapeStyle,
+                                onItemSelected = actions.onSetMaterialShapeStyle,
+                            )
+                        },
+                        {
+                            var cornerScale by remember(uiState.materialCornerScale) {
+                                mutableFloatStateOf(uiState.materialCornerScale)
+                            }
+                            var showCornerValueDialog by remember { mutableStateOf(false) }
+                            var cornerScaleInput by remember { mutableStateOf("") }
+                            val cornerPreviewShape = iconShapeForStyle(uiState.materialIconShapeStyle)
+                                ?: alohaCornerShape(14.dp)
+                            SegmentedSliderItem(
+                                title = stringResource(R.string.theme_corner_scale_title),
+                                valueLabel = "",
+                                value = cornerScale,
+                                onValueChange = { cornerScale = kotlin.math.round(it * 20f) / 20f },
+                                valueRange = 0.0f..2.0f,
+                                // 39 inner stops produce 0.05 increments over 0.0–2.0.
+                                steps = 39,
+                                onValueChangeFinished = { actions.onSetMaterialCornerScale(cornerScale) },
+                                titleTrailingContent = {
+                                    ExpressiveSurface(
+                                        onClick = {
+                                            cornerScaleInput = String.format(java.util.Locale.ROOT, "%.2f", cornerScale)
+                                            showCornerValueDialog = true
+                                        },
+                                        modifier = Modifier.requiredHeight(32.dp),
+                                        shape = alohaCornerShape(12.dp),
+                                        color = MaterialTheme.colorScheme.primaryContainer,
+                                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                        shadowElevation = if (LocalMaterialShadowButtons.current) 2.dp else 0.dp,
+                                        border = LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
+                                            BorderStroke(it.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.45f))
+                                        },
+                                    ) {
+                                        Box(
+                                            modifier = Modifier.fillMaxHeight().padding(horizontal = 10.dp),
+                                            contentAlignment = Alignment.Center,
+                                        ) {
+                                            Text(
+                                                text = String.format(java.util.Locale.ROOT, "%.2f", cornerScale),
+                                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                            )
+                                        }
+                                    }
+                                },
+                            )
+                            if (showCornerValueDialog) {
+                                ExpressiveContentDialog(
+                                    onDismissRequest = { showCornerValueDialog = false },
+                                ) {
+                                    Column(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                                    ) {
+                                        // Vector-style preview: the selected icon-shape is the
+                                        // background silhouette; 1 sits left of two stacked 2s.
+                                        Box(
+                                            modifier = Modifier
+                                                .size(56.dp)
+                                                .clip(cornerPreviewShape)
+                                                .background(MaterialTheme.colorScheme.primary),
+                                            contentAlignment = Alignment.Center,
+                                        ) {
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.spacedBy(3.dp),
+                                            ) {
+                                                Text(
+                                                    text = "1",
+                                                    style = MaterialTheme.typography.titleLarge,
+                                                    color = MaterialTheme.colorScheme.onPrimary,
+                                                )
+                                                Column(
+                                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                                ) {
+                                                    Text(
+                                                        text = "2",
+                                                        style = MaterialTheme.typography.labelMedium,
+                                                        color = MaterialTheme.colorScheme.onPrimary,
+                                                    )
+                                                    Text(
+                                                        text = "2",
+                                                        style = MaterialTheme.typography.labelMedium,
+                                                        color = MaterialTheme.colorScheme.onPrimary,
+                                                    )
+                                                }
+                                            }
+                                        }
+                                        Text(
+                                            text = "输入 0 至 2 之间的数值",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        )
+                                        ExpressiveOutlinedTextField(
+                                            value = cornerScaleInput,
+                                            onValueChange = { input ->
+                                                if (input.length <= 6 && input.all { it.isDigit() || it == '.' }) {
+                                                    cornerScaleInput = input
+                                                }
+                                            },
+                                            modifier = Modifier.fillMaxWidth(),
+                                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                                        )
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.End,
+                                            verticalAlignment = Alignment.CenterVertically,
+                                        ) {
+                                            ExpressiveTextButton(onClick = { showCornerValueDialog = false }) {
+                                                Text(stringResource(android.R.string.cancel))
+                                            }
+                                            ExpressiveTextButton(
+                                                onClick = {
+                                                    val parsed = cornerScaleInput.toFloatOrNull()
+                                                    if (parsed != null && parsed.isFinite() && parsed in 0f..2f) {
+                                                        val snapped = (kotlin.math.round(parsed * 20f) / 20f)
+                                                            .coerceIn(0f, 2f)
+                                                        cornerScale = snapped
+                                                        actions.onSetMaterialCornerScale(snapped)
+                                                        showCornerValueDialog = false
+                                                    }
+                                                },
+                                            ) {
+                                                Text(stringResource(android.R.string.ok))
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    )
+                )
+
+                // Components group: outline width is another source-style slider row.
+                SegmentedColumn(
+                    modifier = Modifier.padding(vertical = 4.dp),
+                    title = stringResource(R.string.theme_group_components),
+                    content = listOf(
+                        {
+                            SegmentedChoiceOptionsItem(
+                                title = stringResource(R.string.theme_switch_style_title),
+                                items = listOf(
+                                    stringResource(R.string.theme_switch_material_you),
+                                    stringResource(R.string.theme_switch_compose),
+                                    stringResource(R.string.theme_switch_pixel),
+                                    stringResource(R.string.theme_switch_fluent),
+                                    stringResource(R.string.theme_switch_cupertino),
+                                    stringResource(R.string.theme_switch_liquid_glass),
+                                    stringResource(R.string.theme_switch_hyper_os),
+                                    stringResource(R.string.theme_switch_one_ui),
+                                ),
+                                selectedIndex = uiState.materialSwitchStyle,
+                                onItemSelected = actions.onSetMaterialSwitchStyle,
+                            )
+                        },
+                        {
+                            SegmentedChoiceOptionsItem(
+                                title = stringResource(R.string.theme_slider_style_title),
+                                items = listOf(
+                                    stringResource(R.string.theme_slider_material_you),
+                                    stringResource(R.string.theme_slider_fancy),
+                                    stringResource(R.string.theme_slider_material),
+                                    stringResource(R.string.theme_slider_hyper_os),
+                                ),
+                                selectedIndex = uiState.materialSliderStyle,
+                                onItemSelected = actions.onSetMaterialSliderStyle,
+                            )
+                        },
+                        {
+                            IconShapePresetPicker(
+                                selectedIndex = uiState.materialIconShapeStyle,
+                                onOpen = { showIconShapeDetails = true },
+                            )
+                        },
+                        {
+                            var outlineWidth by remember(uiState.materialOutlineWidth) {
+                                mutableFloatStateOf(uiState.materialOutlineWidth)
+                            }
+                            var showOutlineValueDialog by remember { mutableStateOf(false) }
+                            var outlineWidthInput by remember { mutableStateOf("") }
+                            val outlinePreviewShape = iconShapeForStyle(uiState.materialIconShapeStyle)
+                                ?: alohaCornerShape(14.dp)
+                            SegmentedSliderItem(
+                                title = stringResource(R.string.theme_border_width_title),
+                                valueLabel = "",
+                                value = outlineWidth,
+                                onValueChange = { outlineWidth = kotlin.math.round(it * 10f) / 10f },
+                                valueRange = 0.0f..1.5f,
+                                steps = 14,
+                                onValueChangeFinished = { actions.onSetMaterialOutlineWidth(outlineWidth) },
+                                titleTrailingContent = {
+                                    ExpressiveSurface(
+                                        onClick = {
+                                            outlineWidthInput = String.format(java.util.Locale.ROOT, "%.1f", outlineWidth)
+                                            showOutlineValueDialog = true
+                                        },
+                                        modifier = Modifier.requiredHeight(32.dp),
+                                        shape = alohaCornerShape(12.dp),
+                                        color = MaterialTheme.colorScheme.primaryContainer,
+                                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                        shadowElevation = if (LocalMaterialShadowButtons.current) 2.dp else 0.dp,
+                                        border = LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
+                                            BorderStroke(it.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.45f))
+                                        },
+                                    ) {
+                                        Box(
+                                            modifier = Modifier.fillMaxHeight().padding(horizontal = 10.dp),
+                                            contentAlignment = Alignment.Center,
+                                        ) {
+                                            Text(
+                                                text = String.format(java.util.Locale.ROOT, "%.1f", outlineWidth),
+                                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                            )
+                                        }
+                                    }
+                                },
+                            )
+                            if (showOutlineValueDialog) {
+                                ExpressiveContentDialog(
+                                    onDismissRequest = { showOutlineValueDialog = false },
+                                ) {
+                                    Column(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(56.dp)
+                                                .clip(outlinePreviewShape)
+                                                .background(MaterialTheme.colorScheme.primary),
+                                            contentAlignment = Alignment.Center,
+                                        ) {
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.spacedBy(3.dp),
+                                            ) {
+                                                Text("1", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onPrimary)
+                                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                                    Text("2", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onPrimary)
+                                                    Text("2", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onPrimary)
+                                                }
+                                            }
+                                        }
+                                        Text(
+                                            text = "输入 0 至 1.5 之间的数值",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        )
+                                        ExpressiveOutlinedTextField(
+                                            value = outlineWidthInput,
+                                            onValueChange = { input ->
+                                                if (input.length <= 5 && input.all { it.isDigit() || it == '.' }) {
+                                                    outlineWidthInput = input
+                                                }
+                                            },
+                                            modifier = Modifier.fillMaxWidth(),
+                                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                                        )
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.End,
+                                            verticalAlignment = Alignment.CenterVertically,
+                                        ) {
+                                            ExpressiveTextButton(onClick = { showOutlineValueDialog = false }) {
+                                                Text(stringResource(android.R.string.cancel))
+                                            }
+                                            ExpressiveTextButton(
+                                                onClick = {
+                                                    val parsed = outlineWidthInput.toFloatOrNull()
+                                                    if (parsed != null && parsed.isFinite() && parsed in 0f..1.5f) {
+                                                        val snapped = (kotlin.math.round(parsed * 10f) / 10f)
+                                                            .coerceIn(0f, 1.5f)
+                                                        outlineWidth = snapped
+                                                        actions.onSetMaterialOutlineWidth(snapped)
+                                                        showOutlineValueDialog = false
+                                                    }
+                                                },
+                                            ) {
+                                                Text(stringResource(android.R.string.ok))
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    )
+                )
+
+                // Shadows group exposes six independent component switches.
+                SegmentedColumn(
+                    modifier = Modifier.padding(vertical = 4.dp),
+                    title = stringResource(R.string.theme_group_shadows),
+                    content = listOf(
+                        {
+                            SegmentedSwitchItem(
+                                title = stringResource(R.string.theme_shadow_container),
+                                checked = uiState.materialShadowContainers,
+                                onCheckedChange = actions.onSetMaterialShadowContainers,
+                            )
+                        },
+                        {
+                            SegmentedSwitchItem(
+                                title = stringResource(R.string.theme_shadow_app_bar),
+                                checked = uiState.materialShadowTopBars,
+                                onCheckedChange = actions.onSetMaterialShadowTopBars,
+                            )
+                        },
+                        {
+                            SegmentedSwitchItem(
+                                title = stringResource(R.string.theme_shadow_button),
+                                checked = uiState.materialShadowButtons,
+                                onCheckedChange = actions.onSetMaterialShadowButtons,
+                            )
+                        },
+                        {
+                            SegmentedSwitchItem(
+                                title = stringResource(R.string.theme_shadow_fab),
+                                checked = uiState.materialShadowFloatingButtons,
+                                onCheckedChange = actions.onSetMaterialShadowFloatingButtons,
+                            )
+                        },
+                        {
+                            SegmentedSwitchItem(
+                                title = stringResource(R.string.theme_shadow_switch),
+                                checked = uiState.materialShadowSwitches,
+                                onCheckedChange = actions.onSetMaterialShadowSwitches,
+                            )
+                        },
+                        {
+                            SegmentedSwitchItem(
+                                title = stringResource(R.string.theme_shadow_slider),
+                                checked = uiState.materialShadowSliders,
+                                onCheckedChange = actions.onSetMaterialShadowSliders,
+                            )
+                        },
+                    )
+                )
             }
 
             Spacer(modifier = Modifier.height(16.dp + navBars.calculateBottomPadding() + captionBar.calculateBottomPadding()))
@@ -401,13 +927,15 @@ private fun ThemePreviewCard(
     )
 
     Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
-        Surface(
+        ExpressiveSurface(
             modifier = Modifier
                 .fillMaxWidth(0.4f)
                 .aspectRatio(screenRatio),
             color = colorScheme.surfaceContainer,
-            shape = RoundedCornerShape(20.dp),
-            border = BorderStroke(1.dp, color = colorScheme.outlineVariant)
+            shape = alohaCornerShape(20.dp),
+            border = LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
+                BorderStroke(it.dp, color = colorScheme.outlineVariant)
+            }
         ) {
             val content: @Composable ColumnScope.() -> Unit = {
                 // top bar
@@ -444,7 +972,7 @@ private fun ThemePreviewCard(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(40.dp),
-                            shape = RoundedCornerShape(8.dp),
+                            shape = alohaCornerShape(8.dp),
                             content = { }
                         )
                         if (showInfoCard) {
@@ -453,7 +981,7 @@ private fun ThemePreviewCard(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .weight(1f),
-                                shape = RoundedCornerShape(8.dp),
+                                shape = alohaCornerShape(8.dp),
                                 content = { }
                             )
                         }
@@ -463,7 +991,7 @@ private fun ThemePreviewCard(
 
             if (useRail) {
                 Row {
-                    Surface(
+                    ExpressiveSurface(
                         color = colorScheme.surfaceContainer,
                         modifier = Modifier.fillMaxHeight()
                     ) {
@@ -484,7 +1012,7 @@ private fun ThemePreviewCard(
                     content()
 
                     // bottom bar
-                    Surface(
+                    ExpressiveSurface(
                         color = colorScheme.surfaceContainer,
                         modifier = Modifier.fillMaxWidth()
                     ) {
@@ -509,6 +1037,28 @@ private fun ThemePreviewCard(
 
 
 @Composable
+private fun paletteStyleLabel(name: String): String = when (name) {
+    "TonalSpot" -> stringResource(R.string.palette_style_tonal_spot)
+    "Neutral" -> stringResource(R.string.palette_style_neutral)
+    "Vibrant" -> stringResource(R.string.palette_style_vibrant)
+    "Expressive" -> stringResource(R.string.palette_style_expressive)
+    "Rainbow" -> stringResource(R.string.palette_style_rainbow)
+    "FruitSalad" -> stringResource(R.string.palette_style_fruit_salad)
+    "Monochrome" -> stringResource(R.string.palette_style_monochrome)
+    "Fidelity" -> stringResource(R.string.palette_style_fidelity)
+    "Content" -> stringResource(R.string.palette_style_content)
+    "Cmf" -> stringResource(R.string.palette_style_cmf)
+    else -> name.replace('_', ' ').lowercase().replaceFirstChar { it.uppercase() }
+}
+
+@Composable
+private fun colorSpecLabel(name: String): String = when (name) {
+    "SPEC_2021" -> stringResource(R.string.color_spec_2021)
+    "SPEC_2025" -> stringResource(R.string.color_spec_2025)
+    else -> name.replace("SPEC_", "").replace('_', ' ')
+}
+
+@Composable
 private fun ColorButtonMaterial(
     color: Color,
     isSelected: Boolean,
@@ -519,6 +1069,7 @@ private fun ColorButtonMaterial(
     onClick: () -> Unit
 ) {
     val haptic = LocalHapticFeedback.current
+    val interactionSource = remember { MutableInteractionSource() }
     val colorScheme = rememberAlohaOneUIColorScheme(
         seedColor = color,
         isDark = isDark,
@@ -527,14 +1078,26 @@ private fun ColorButtonMaterial(
         colorSpec = colorSpec,
     )
 
-    Surface(
+    ExpressiveSurface(
         onClick = {
             haptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
             onClick()
         },
-        shape = RoundedCornerShape(20.dp),
+        interactionSource = interactionSource,
+        shape = alohaCornerShape(20.dp),
         color = colorScheme.surfaceContainer,
-        modifier = Modifier.size(72.dp)
+        modifier = Modifier
+            .size(72.dp)
+            .then(
+                if (LocalMaterialShadowButtons.current) {
+                    Modifier.shadow(if (isSelected) 2.dp else 1.dp, alohaCornerShape(20.dp))
+                } else Modifier
+            )
+            .then(
+                LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
+                    Modifier.border(it.dp, colorScheme.outlineVariant, alohaCornerShape(20.dp))
+                } ?: Modifier
+            )
     ) {
         Box(contentAlignment = Alignment.Center) {
             Canvas(modifier = Modifier.size(48.dp)) {
@@ -568,7 +1131,11 @@ private fun ColorButtonMaterial(
                     Box(
                         modifier = Modifier
                             .size(56.dp)
-                            .border(2.dp, colorScheme.primary, CircleShape),
+                            .then(
+                                LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
+                                    Modifier.border(it.dp, colorScheme.primary, CircleShape)
+                                } ?: Modifier
+                            ),
                         contentAlignment = Alignment.Center
                     ) {
                         Box(

@@ -1,5 +1,6 @@
 package com.alohaoneui.app.ui.component.material
 
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -8,11 +9,12 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AlertDialogDefaults
 import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
+import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
+import com.alohaoneui.app.ui.theme.LocalMaterialShadowContainers
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.Dp
@@ -28,27 +30,40 @@ fun ExpressiveDialog(
     icon: (@Composable () -> Unit)? = null,
     title: (@Composable () -> Unit)? = null,
     text: (@Composable () -> Unit)? = null,
-    shape: Shape = MaterialTheme.shapes.extraLarge,
+    shape: Shape? = null,
     containerColor: Color = AlertDialogDefaults.containerColor,
     iconContentColor: Color = AlertDialogDefaults.iconContentColor,
     titleContentColor: Color = AlertDialogDefaults.titleContentColor,
     textContentColor: Color = AlertDialogDefaults.textContentColor,
     tonalElevation: Dp = AlertDialogDefaults.TonalElevation,
     properties: DialogProperties = DialogProperties(),
-) {
+ ) {
+    val dialogShape = shape ?: alohaCornerShape(28.dp)
+    val dialogModifier = modifier
+        .then(
+            if (LocalMaterialShadowContainers.current) Modifier.shadow(6.dp, dialogShape)
+            else Modifier
+        )
+        .then(
+            LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
+                Modifier.border(it.dp, MaterialTheme.colorScheme.outlineVariant, dialogShape)
+            } ?: Modifier
+        )
     AlertDialog(
         onDismissRequest = onDismissRequest,
         confirmButton = confirmButton,
-        modifier = modifier,
+        modifier = dialogModifier,
         dismissButton = dismissButton,
         icon = icon,
         title = title,
         text = text,
-        shape = shape,
+        shape = dialogShape,
         containerColor = containerColor,
         iconContentColor = iconContentColor,
         titleContentColor = titleContentColor,
         textContentColor = textContentColor,
+        // Material 3 tonal elevation changes the surface color; it is not a shadow toggle.
+        // Keep the requested tonal level independent from the global shadow preference.
         tonalElevation = tonalElevation,
         properties = properties,
     )
@@ -68,10 +83,10 @@ fun ExpressiveConfirmDialog(
         title = { Text(title) },
         text = message?.let { { Text(it) } },
         confirmButton = {
-            TextButton(onClick = onConfirm) { Text(confirmText) }
+            ExpressiveTextButton(onClick = onConfirm) { Text(confirmText) }
         },
         dismissButton = dismissText?.let {
-            { TextButton(onClick = onDismiss) { Text(it) } }
+            { ExpressiveTextButton(onClick = onDismiss) { Text(it) } }
         },
     )
 }
@@ -86,23 +101,29 @@ fun ExpressiveConfirmDialog(
 fun ExpressiveContentDialog(
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
+    shape: Shape? = null,
     properties: DialogProperties = DialogProperties(),
+    contentModifier: Modifier = Modifier.padding(24.dp),
     content: @Composable ColumnScope.() -> Unit,
 ) {
+    val dialogShape = shape ?: alohaCornerShape(28.dp)
+    val dialogModifier = modifier
     BasicAlertDialog(
         onDismissRequest = onDismissRequest,
-        modifier = modifier,
+        modifier = dialogModifier,
         properties = properties,
     ) {
-        Surface(
+        ExpressiveSurface(
             modifier = Modifier.fillMaxWidth(),
-            shape = MaterialTheme.shapes.extraLarge,
+            shape = dialogShape,
             color = AlertDialogDefaults.containerColor,
             contentColor = AlertDialogDefaults.textContentColor,
+            // Keep M3 tonal elevation (surface tint) independent from cast shadow.
             tonalElevation = AlertDialogDefaults.TonalElevation,
+            shadowElevation = if (LocalMaterialShadowContainers.current) 6.dp else 0.dp,
         ) {
             Column(
-                modifier = Modifier.padding(24.dp),
+                modifier = contentModifier,
                 content = content,
             )
         }

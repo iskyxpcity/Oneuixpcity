@@ -16,14 +16,19 @@ fun DetailPaneCalendar(
     onEvent: (CalendarEvent) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    PackagePane(modifier) {
-        SwitchItem(
-            icon = ImageVector.vectorResource(id = R.drawable.today),
-            title = stringResource(id = R.string.alohaoneui_enableChineseHolidayDisplay_title),
-            checked = uiState.enableChineseHolidayDisplay,
-            onCheckedChange = { onEvent(CalendarEvent.EnableChineseHolidayDisplay(it)) }
-        )
-    }
+    PackagePane(
+        modifier = modifier,
+        content = buildList {
+            add {
+                SwitchItem(
+                            icon = ImageVector.vectorResource(id = R.drawable.today),
+                            title = stringResource(id = R.string.alohaoneui_enableChineseHolidayDisplay_title),
+                            checked = uiState.enableChineseHolidayDisplay,
+                            onCheckedChange = { onEvent(CalendarEvent.EnableChineseHolidayDisplay(it)) }
+                        )
+            }
+        }
+    )
 }
 
 sealed interface CalendarEvent {

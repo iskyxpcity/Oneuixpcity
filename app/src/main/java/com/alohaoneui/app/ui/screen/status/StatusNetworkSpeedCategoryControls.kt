@@ -1,6 +1,5 @@
 package com.alohaoneui.app.ui.screen.status
 
-import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -106,8 +105,8 @@ fun StatusNetworkSpeedCategoryControls(
                         } else {
                             stringResource(id = R.string.alohaoneui_networkSpeedDoubleLineOnly_summary)
                         },
-                        modifier = Modifier.animateContentSize(),
                         clickable = true,
+                        expanded = lineGapExpanded && uiState.modifyNetworkSpeedLineGap,
                         onClick = { lineGapExpanded = !lineGapExpanded },
                         checked = uiState.modifyNetworkSpeedLineGap,
                         onCheckedChange = {
@@ -151,8 +150,8 @@ fun StatusNetworkSpeedCategoryControls(
                         } else {
                             stringResource(id = R.string.alohaoneui_networkSpeedDoubleLineOnly_summary)
                         },
-                        modifier = Modifier.animateContentSize(),
                         clickable = true,
+                        expanded = uploadScaleExpanded && uiState.setNetworkSpeedUploadTextScale,
                         onClick = { uploadScaleExpanded = !uploadScaleExpanded },
                         checked = uiState.setNetworkSpeedUploadTextScale,
                         onCheckedChange = {
@@ -196,8 +195,8 @@ fun StatusNetworkSpeedCategoryControls(
                         } else {
                             stringResource(id = R.string.alohaoneui_networkSpeedDoubleLineOnly_summary)
                         },
-                        modifier = Modifier.animateContentSize(),
                         clickable = true,
+                        expanded = downloadScaleExpanded && uiState.setNetworkSpeedDownloadTextScale,
                         onClick = { downloadScaleExpanded = !downloadScaleExpanded },
                         checked = uiState.setNetworkSpeedDownloadTextScale,
                         onCheckedChange = {
@@ -239,8 +238,8 @@ fun StatusNetworkSpeedCategoryControls(
                     } else {
                         stringResource(id = R.string.alohaoneui_networkSpeedThreshold_scope_summary)
                     },
-                    modifier = Modifier.animateContentSize(),
                     clickable = true,
+                    expanded = thresholdExpanded && uiState.networkSpeedThresholdKb > 0,
                     onClick = { thresholdExpanded = !thresholdExpanded },
                     checked = uiState.networkSpeedThresholdKb > 0,
                     onCheckedChange = {

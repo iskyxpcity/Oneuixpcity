@@ -16,15 +16,20 @@ fun DetailPaneNotes(
     onEvent: (NotesEvent) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    PackagePane(modifier) {
-        SwitchItem(
-            icon = ImageVector.vectorResource(id = R.drawable.notes),
-            title = stringResource(id = R.string.alohaoneui_supportAllNotesFeatures_title),
-            summary = stringResource(id = R.string.alohaoneui_supportAllNotesFeatures_summary),
-            checked = uiState.supportAllNotesFeatures,
-            onCheckedChange = { onEvent(NotesEvent.SupportAllNotesFeatures(it)) }
-        )
-    }
+    PackagePane(
+        modifier = modifier,
+        content = buildList {
+            add {
+                SwitchItem(
+                            icon = ImageVector.vectorResource(id = R.drawable.notes),
+                            title = stringResource(id = R.string.alohaoneui_supportAllNotesFeatures_title),
+                            summary = stringResource(id = R.string.alohaoneui_supportAllNotesFeatures_summary),
+                            checked = uiState.supportAllNotesFeatures,
+                            onCheckedChange = { onEvent(NotesEvent.SupportAllNotesFeatures(it)) }
+                        )
+            }
+        }
+    )
 }
 
 sealed interface NotesEvent {

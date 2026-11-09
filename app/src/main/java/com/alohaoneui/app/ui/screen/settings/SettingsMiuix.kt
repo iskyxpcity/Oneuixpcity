@@ -1,13 +1,16 @@
 package com.alohaoneui.app.ui.screen.settings
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.add
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
@@ -28,6 +31,8 @@ import androidx.compose.material.icons.rounded.ElectricalServices
 import androidx.compose.material.icons.rounded.Fence
 import androidx.compose.material.icons.rounded.FolderDelete
 import androidx.compose.material.icons.rounded.Language
+import androidx.compose.material.icons.rounded.KeyboardArrowDown
+import androidx.compose.material.icons.rounded.KeyboardArrowUp
 import androidx.compose.material.icons.rounded.Palette
 import androidx.compose.material.icons.rounded.Policy
 import androidx.compose.material.icons.rounded.RemoveCircle
@@ -56,10 +61,13 @@ import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.TopAppBar
+import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.blur.layerBackdrop
 import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
+import top.yukonga.miuix.kmp.preference.RadioButtonPreference
 import top.yukonga.miuix.kmp.preference.SwitchPreference
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme
 import top.yukonga.miuix.kmp.utils.overScrollVertical
 import top.yukonga.miuix.kmp.utils.scrollEndHaptic
@@ -81,6 +89,7 @@ fun SettingPagerMiuix(
     val barColor = if (blurActive) Color.Transparent else colorScheme.surface
     val loadingDialog = rememberLoadingDialog()
     val showSendLogDialog = rememberSaveable { mutableStateOf(false) }
+    val languageExpanded = rememberSaveable { mutableStateOf(true) }
 
     Scaffold(
         topBar = {
@@ -164,6 +173,56 @@ fun SettingPagerMiuix(
                         )
                     }
 
+
+                    Card(
+                        modifier = Modifier
+                            .padding(top = 12.dp)
+                            .fillMaxWidth(),
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { languageExpanded.value = !languageExpanded.value }
+                                .padding(horizontal = 16.dp, vertical = 14.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Icon(
+                                Icons.Rounded.Language,
+                                modifier = Modifier.padding(end = 12.dp),
+                                contentDescription = stringResource(id = R.string.settings_group_language),
+                                tint = colorScheme.onBackground
+                            )
+                            Text(
+                                text = stringResource(id = R.string.settings_group_language),
+                                style = MiuixTheme.textStyles.subtitle,
+                                color = colorScheme.onBackground,
+                                modifier = Modifier.weight(1f)
+                            )
+                            Icon(
+                                if (languageExpanded.value) Icons.Rounded.KeyboardArrowUp else Icons.Rounded.KeyboardArrowDown,
+                                contentDescription = null,
+                                tint = colorScheme.onBackground
+                            )
+                        }
+                        if (languageExpanded.value) {
+                            val languageOptions = listOf(
+                                stringResource(R.string.settings_theme_mode_system) to "system",
+                                "简体中文" to "zh-CN",
+                                "繁體中文" to "zh-TW",
+                                "English" to "en",
+                                "日本語" to "ja",
+                                "한국어" to "ko",
+                            )
+                            languageOptions.forEach { (label, value) ->
+                                RadioButtonPreference(
+                                    title = label,
+                                    selected = uiState.appLanguage == value ||
+                                        (value == "system" && uiState.appLanguage.isBlank()),
+                                    onClick = { actions.onSetAppLanguage(value) },
+                                )
+                            }
+                        }
+                    }
 
                     Card(
                         modifier = Modifier

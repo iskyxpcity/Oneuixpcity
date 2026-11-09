@@ -6,16 +6,13 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button as MaterialButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ListItemDefaults
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text as MaterialText
-import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
@@ -29,7 +26,10 @@ import androidx.compose.ui.unit.dp
 import com.alohaoneui.app.ui.LocalUiMode
 import com.alohaoneui.app.ui.UiMode
 import com.alohaoneui.app.ui.component.material.ExpressiveSwitch
+import com.alohaoneui.app.ui.component.material.ExpressiveOutlinedTextField
+import com.alohaoneui.app.ui.component.material.ExpressiveButton
 import com.alohaoneui.app.ui.component.material.LocalListItemShapes
+import com.alohaoneui.app.ui.component.material.SegmentedColumn
 import com.alohaoneui.app.ui.component.material.SegmentedListItem
 import com.alohaoneui.app.ui.component.material.alohaOneUISegmentedColors
 import top.yukonga.miuix.kmp.basic.BasicComponent
@@ -52,41 +52,22 @@ fun AlohaOneUIPPreferenceGroup(
 ) {
     when (LocalUiMode.current) {
         UiMode.Material -> {
-            if (LocalAlohaOneUIGroupedPreference.current) {
-                // A nested functional subgroup inside an already segmented
-                // detail card should keep its behavior but not draw another
-                // card inside the parent card.
+            // Match SettingsMaterial: every option is its own themed segmented
+            // surface; groups add spacing, never an extra card layer.
+            val alreadyGrouped = LocalAlohaOneUIGroupedPreference.current
+            val itemShapes = ListItemDefaults.segmentedShapes(0, 1)
+            CompositionLocalProvider(
+                LocalAlohaOneUIGroupedPreference provides true,
+                LocalListItemShapes provides itemShapes,
+            ) {
                 Column(
-                    modifier = modifier,
-                    verticalArrangement = Arrangement.spacedBy(2.dp),
+                    modifier = modifier.padding(
+                        horizontal = if (alreadyGrouped) 0.dp else 16.dp,
+                        vertical = 8.dp,
+                    ),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
                     content = content,
                 )
-            } else {
-                val baseShapes = ListItemDefaults.segmentedShapes(0, 1)
-                val flatShapes = baseShapes.copy(
-                    shape = RoundedCornerShape(0.dp),
-                    selectedShape = RoundedCornerShape(0.dp),
-                    pressedShape = RoundedCornerShape(0.dp),
-                    focusedShape = RoundedCornerShape(0.dp),
-                    hoveredShape = RoundedCornerShape(0.dp),
-                    draggedShape = RoundedCornerShape(0.dp),
-                )
-                Column(
-                    modifier = modifier
-                        .padding(horizontal = 16.dp, vertical = 4.dp)
-                        .clip(MaterialTheme.shapes.large),
-                    verticalArrangement = Arrangement.spacedBy(2.dp),
-                ) {
-                    CompositionLocalProvider(
-                        LocalAlohaOneUIGroupedPreference provides true,
-                        LocalListItemShapes provides flatShapes,
-                    ) {
-                        Column(
-                            verticalArrangement = Arrangement.spacedBy(2.dp),
-                            content = content,
-                        )
-                    }
-                }
             }
         }
 
@@ -110,11 +91,48 @@ fun AlohaOneUIDetailGroup(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     when (LocalUiMode.current) {
-        UiMode.Material -> AlohaOneUIPPreferenceGroup(modifier = modifier, content = content)
+        UiMode.Material -> {
+            // PackagePane is a page container, not a preference card. Its rows
+            // use the same single-item shape and 4dp rhythm as SettingsMaterial.
+            val itemShapes = ListItemDefaults.segmentedShapes(0, 1)
+            CompositionLocalProvider(
+                LocalAlohaOneUIGroupedPreference provides true,
+                LocalListItemShapes provides itemShapes,
+            ) {
+                Column(
+                    modifier = modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    content = content,
+                )
+            }
+        }
         UiMode.Miuix -> Column(modifier = modifier, content = content)
     }
 }
 
+
+// Indexed detail-list API: callers provide actual rows so Material can apply
+// first/middle/last shapes and press springs without flattening nested controls.
+@Composable
+fun AlohaOneUIDetailSegmentedGroup(
+    modifier: Modifier = Modifier,
+    contentPadding: PaddingValues = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+    content: List<@Composable () -> Unit>,
+) {
+    when (LocalUiMode.current) {
+        UiMode.Material -> CompositionLocalProvider(
+            LocalAlohaOneUIGroupedPreference provides true,
+        ) {
+            SegmentedColumn(
+                modifier = modifier.padding(contentPadding),
+                content = content,
+            )
+        }
+        UiMode.Miuix -> Column(modifier = modifier) {
+            content.forEach { it() }
+        }
+    }
+}
 
 @Composable
 fun AlohaOneUIChildOptionSurface(
@@ -123,10 +141,7 @@ fun AlohaOneUIChildOptionSurface(
 ) {
     when (LocalUiMode.current) {
         UiMode.Material -> Box(
-            modifier = modifier
-                .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp))
-                .padding(vertical = 8.dp),
+            modifier = modifier.fillMaxWidth(),
         ) {
             content()
         }
@@ -144,9 +159,7 @@ fun AlohaOneUIChildVisibility(
     content: @Composable () -> Unit,
 ) {
     AnimatedVisibility(visible = visible) {
-        AlohaOneUIChildOptionSurface {
-            content()
-        }
+        content()
     }
 }
 
@@ -160,7 +173,7 @@ fun AlohaOneUIActionButton(
     fillWidth: Boolean = false,
 ) {
     when (LocalUiMode.current) {
-        UiMode.Material -> MaterialButton(
+        UiMode.Material -> ExpressiveButton(
             onClick = onClick,
             modifier = modifier,
             enabled = enabled,
@@ -218,13 +231,24 @@ fun AlohaOneUIInlineTextField(
 ) {
     val grouped = LocalAlohaOneUIGroupedPreference.current
     when (LocalUiMode.current) {
-        UiMode.Material -> OutlinedTextField(
-            value = value,
-            onValueChange = onValueChange,
-            modifier = modifier,
-            label = labelText?.let { label -> { MaterialText(label) } },
-            singleLine = singleLine,
-        )
+        UiMode.Material -> {
+            @Composable
+            fun Content(contentModifier: Modifier) {
+                ExpressiveOutlinedTextField(
+                    value = value,
+                    onValueChange = onValueChange,
+                    modifier = contentModifier,
+                    label = labelText?.let { label -> { MaterialText(label) } },
+                    singleLine = singleLine,
+                    textStyle = MaterialTheme.typography.bodyLarge,
+                )
+            }
+            if (grouped) {
+                Content(modifier)
+            } else {
+                Content(modifier)
+            }
+        }
 
         UiMode.Miuix -> {
             @Composable
@@ -276,13 +300,19 @@ fun AlohaOneUIInlineTextField(
 ) {
     val grouped = LocalAlohaOneUIGroupedPreference.current
     when (LocalUiMode.current) {
-        UiMode.Material -> OutlinedTextField(
-            value = value,
-            onValueChange = onValueChange,
-            modifier = modifier,
-            label = labelText?.let { label -> { MaterialText(label) } },
-            singleLine = singleLine,
-        )
+        UiMode.Material -> {
+            @Composable
+            fun Content(contentModifier: Modifier) {
+                ExpressiveOutlinedTextField(
+                    value = value,
+                    onValueChange = onValueChange,
+                    modifier = contentModifier,
+                    label = labelText?.let { label -> { MaterialText(label) } },
+                    singleLine = singleLine,
+                )
+            }
+            Content(modifier)
+        }
 
         UiMode.Miuix -> {
             @Composable
@@ -335,16 +365,27 @@ fun AlohaOneUIInfoItem(
 ) {
     val grouped = LocalAlohaOneUIGroupedPreference.current
     when (LocalUiMode.current) {
-        UiMode.Material -> SegmentedListItem(
-            modifier = if (grouped) modifier else modifier.padding(horizontal = 16.dp, vertical = 4.dp),
-            colors = alohaOneUISegmentedColors(),
-            headlineContent = { MaterialText(title) },
-            supportingContent = summary?.let { { MaterialText(it) } },
-            leadingContent = icon?.let { imageVector ->
-                { Icon(imageVector, contentDescription = title) }
-            },
-            trailingContent = trailingContent,
-        )
+        UiMode.Material -> {
+            @Composable
+            fun Content(contentModifier: Modifier) {
+                SegmentedListItem(
+                    modifier = contentModifier,
+                    colors = alohaOneUISegmentedColors(),
+                    headlineContent = { MaterialText(title) },
+                    supportingContent = summary?.let { { MaterialText(it) } },
+                    leadingContent = icon?.let { imageVector ->
+                        { Icon(imageVector, contentDescription = title) }
+                    },
+                    trailingContent = trailingContent,
+                )
+            }
+
+            if (grouped) {
+                Content(modifier)
+            } else {
+                Content(modifier.padding(horizontal = 16.dp, vertical = 4.dp))
+            }
+        }
 
         UiMode.Miuix -> {
             @Composable
