@@ -46,6 +46,7 @@ fun SwitchItem(
     leadingContent: (@Composable () -> Unit)? = null,
     clickable: Boolean = false,
     showChildIndicator: Boolean = clickable,
+    expanded: Boolean? = null,
     onClick: () -> Unit = {},
     enabled: Boolean = true,
     dimWhenDisabled: Boolean = true,
