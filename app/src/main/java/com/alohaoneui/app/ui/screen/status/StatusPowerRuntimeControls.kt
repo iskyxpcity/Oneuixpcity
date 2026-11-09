@@ -263,6 +263,7 @@ internal fun StatusPowerRuntimeControls(
                         icon = powerIcon,
                         title = stringResource(id = R.string.status_power_double_line),
                         summary = stringResource(id = R.string.status_power_double_line_summary),
+                        expanded = powerRuntime.doubleLine,
                         checked = powerRuntime.doubleLine,
                         onCheckedChange = {
                             onChange(powerRuntime.copy(doubleLine = it))
