@@ -174,7 +174,7 @@ fun SwitchItem(
                                         Icons.Filled.KeyboardArrowDown
                                     },
                                     contentDescription = null,
-                                    tint = colorScheme.onSurfaceVariant,
+                                    tint = colorScheme.onSurface,
                                 )
                             }
                         },
