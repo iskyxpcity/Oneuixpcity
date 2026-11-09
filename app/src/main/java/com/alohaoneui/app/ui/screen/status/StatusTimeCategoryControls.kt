@@ -437,86 +437,70 @@ fun StatusTimeCategoryControls(
             }
             if (uiState.modifyStatusBarClockPosition) {
                 add {
-                    StatusThemeExpandedControlItem {
-                        // StatusThemeExpandedControlItem uses a Box; stack multiple controls explicitly
-                        // so the X and Y labels/sliders cannot overlap each other.
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 8.dp),
-                            verticalArrangement = Arrangement.spacedBy(4.dp),
-                        ) {
-                            AlohaOneUISectionLabel(
-                                text = stringResource(
-                                    id = R.string.alohaoneui_statusBarClockOffsetX_title
-                                ),
-                                modifier = Modifier.padding(horizontal = 12.dp),
-                            )
-                            AlohaOneUISupportingText(
-                                text = stringResource(
-                                    id = R.string.alohaoneui_statusBarClockOffset_summary,
-                                    clockOffsetX,
-                                ),
-                                modifier = Modifier.padding(horizontal = 12.dp),
-                            )
-                            AlohaOneUISlider(
-                                value = clockOffsetX,
-                                stepSize = 1f,
-                                onValueChange = { raw ->
-                                    val value = raw.roundToInt().coerceIn(-20, 20).toFloat()
-                                    clockOffsetX = value
-                                    onEvent(
-                                        SystemUIEvent.StatusBarPreview(
-                                            SystemUIEvent.StatusBar.StatusBarClockOffsetXDp(value)
-                                        )
+                    StatusThemeExpandedControlItem(
+                        title = stringResource(
+                            id = R.string.alohaoneui_statusBarClockOffsetX_title
+                        ),
+                        summary = stringResource(
+                            id = R.string.alohaoneui_statusBarClockOffset_summary,
+                            clockOffsetX,
+                        ),
+                    ) {
+                        AlohaOneUISlider(
+                            value = clockOffsetX,
+                            stepSize = 1f,
+                            onValueChange = { raw ->
+                                val value = raw.roundToInt().coerceIn(-20, 20).toFloat()
+                                clockOffsetX = value
+                                onEvent(
+                                    SystemUIEvent.StatusBarPreview(
+                                        SystemUIEvent.StatusBar.StatusBarClockOffsetXDp(value)
                                     )
-                                },
-                                modifier = Modifier.fillMaxWidth(),
-                                valueRange = -20f..20f,
-                                onValueChangeFinished = {
-                                    onEvent(
-                                        SystemUIEvent.StatusBar.StatusBarClockOffsetXDp(clockOffsetX)
+                                )
+                            },
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                            valueRange = -20f..20f,
+                            onValueChangeFinished = {
+                                onEvent(
+                                    SystemUIEvent.StatusBar.StatusBarClockOffsetXDp(clockOffsetX)
+                                )
+                            },
+                        )
+                    }
+                }
+                add {
+                    StatusThemeExpandedControlItem(
+                        title = stringResource(
+                            id = R.string.alohaoneui_statusBarClockOffsetY_title
+                        ),
+                        summary = stringResource(
+                            id = R.string.alohaoneui_statusBarClockOffset_summary,
+                            clockOffsetY,
+                        ),
+                    ) {
+                        AlohaOneUISlider(
+                            value = clockOffsetY,
+                            stepSize = 1f,
+                            onValueChange = { raw ->
+                                val value = raw.roundToInt().coerceIn(-20, 20).toFloat()
+                                clockOffsetY = value
+                                onEvent(
+                                    SystemUIEvent.StatusBarPreview(
+                                        SystemUIEvent.StatusBar.StatusBarClockOffsetYDp(value)
                                     )
-                                },
-                            )
-                            AlohaOneUISectionLabel(
-                                text = stringResource(
-                                    id = R.string.alohaoneui_statusBarClockOffsetY_title
-                                ),
-                                modifier = Modifier.padding(horizontal = 12.dp),
-                            )
-                            AlohaOneUISupportingText(
-                                text = stringResource(
-                                    id = R.string.alohaoneui_statusBarClockOffset_summary,
-                                    clockOffsetY,
-                                ),
-                                modifier = Modifier.padding(horizontal = 12.dp),
-                            )
-                            AlohaOneUISlider(
-                                value = clockOffsetY,
-                                stepSize = 1f,
-                                onValueChange = { raw ->
-                                    val value = raw.roundToInt().coerceIn(-20, 20).toFloat()
-                                    clockOffsetY = value
-                                    onEvent(
-                                        SystemUIEvent.StatusBarPreview(
-                                            SystemUIEvent.StatusBar.StatusBarClockOffsetYDp(value)
-                                        )
-                                    )
-                                },
-                                modifier = Modifier.fillMaxWidth(),
-                                valueRange = -20f..20f,
-                                onValueChangeFinished = {
-                                    onEvent(
-                                        SystemUIEvent.StatusBar.StatusBarClockOffsetYDp(clockOffsetY)
-                                    )
-                                },
-                            )
-                        }
+                                )
+                            },
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                            valueRange = -20f..20f,
+                            onValueChangeFinished = {
+                                onEvent(
+                                    SystemUIEvent.StatusBar.StatusBarClockOffsetYDp(clockOffsetY)
+                                )
+                            },
+                        )
                     }
                 }
             }
-
             if (uiState.modifyStatusBarClockPosition) {
                 add {
                     StatusThemeExpandedControlItem {
