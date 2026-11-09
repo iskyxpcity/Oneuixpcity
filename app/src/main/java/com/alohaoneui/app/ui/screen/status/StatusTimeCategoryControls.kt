@@ -217,6 +217,7 @@ fun StatusTimeCategoryControls(
                                             tempDataTimeFormat.text
                                         )
                                     )
+                                }
                             }
 
                             Row(
