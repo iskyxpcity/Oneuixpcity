@@ -65,7 +65,7 @@ fun StatusNotificationCenterCategoryControls(
             }
             if (expanded && uiState.hideOngoingActivityMedia) {
                 add {
-                    StatusThemeChildItem {
+                    StatusThemeExpandedControlItem {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
