@@ -1,7 +1,5 @@
 package com.alohaoneui.app.ui.screen.status
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -15,7 +13,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.alohaoneui.app.R
 import com.alohaoneui.common.Preference
-import com.alohaoneui.app.ui.component.material.SegmentedItem
 import com.alohaoneui.mod.ui.component.AlohaOneUIInlineTextField
 import com.alohaoneui.mod.ui.component.AlohaOneUISlider
 import com.alohaoneui.mod.ui.component.SelectItem
@@ -37,24 +34,32 @@ private fun parseRichArgb(value: String): Int? {
 }
 
 @Composable
-fun StatusClockRichBlockEditor(
+fun StatusClockRichBlockEditorItems(
     style: Preference.SystemUI.StatusBarClockBlockStyle,
     onStyleChange: (Preference.SystemUI.StatusBarClockBlockStyle) -> Unit,
     onStylePreview: (Preference.SystemUI.StatusBarClockBlockStyle) -> Unit = onStyleChange,
-    modifier: Modifier = Modifier,
-) {
-    val rowCount = 6 +
-        (if (style.overrideTextSize) 1 else 0) +
-        (if (style.overrideTextColor) 1 else 0) +
-        (if (style.backgroundEnabled) 6 else 0) +
-        (if (style.backgroundEnabled && style.backgroundBorderEnabled) 2 else 0)
-    var rowIndex = 0
+): List<@Composable () -> Unit> {
+    var textSize by remember(style.textSizeSp) { mutableFloatStateOf(style.textSizeSp) }
+    var horizontalOffset by remember(style.horizontalOffsetDp) {
+        mutableFloatStateOf(style.horizontalOffsetDp.coerceIn(-20f, 20f))
+    }
+    var verticalOffset by remember(style.verticalOffsetDp) {
+        mutableFloatStateOf(style.verticalOffsetDp.coerceIn(-20f, 20f))
+    }
+    var alpha by remember(style.backgroundAlpha) { mutableFloatStateOf(style.backgroundAlpha) }
+    var borderWidth by remember(style.backgroundBorderWidthDp) {
+        mutableFloatStateOf(style.backgroundBorderWidthDp)
+    }
+    var radius by remember(style.cornerRadiusDp) { mutableFloatStateOf(style.cornerRadiusDp) }
+    var horizontalPadding by remember(style.horizontalPaddingDp) {
+        mutableFloatStateOf(style.horizontalPaddingDp)
+    }
+    var verticalPadding by remember(style.verticalPaddingDp) {
+        mutableFloatStateOf(style.verticalPaddingDp)
+    }
 
-    Column(
-        modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(4.dp),
-    ) {
-        SegmentedItem(index = rowIndex++, count = rowCount) {
+    return buildList {
+        add {
 SwitchItem(
             title = stringResource(id = R.string.alohaoneui_clockRichTextSize_title),
             summary = if (style.overrideTextSize) {
@@ -73,10 +78,7 @@ SwitchItem(
 }
 
         if (style.overrideTextSize) {
-            var textSize by remember(style.textSizeSp) {
-                mutableFloatStateOf(style.textSizeSp)
-            }
-            SegmentedItem(index = rowIndex++, count = rowCount) {
+                        add {
 StatusThemeExpandedControlItem(
                 title = stringResource(id = R.string.alohaoneui_clockRichTextSize_title),
                 summary = stringResource(
@@ -104,10 +106,7 @@ StatusThemeExpandedControlItem(
 }
         }
 
-        var horizontalOffset by remember(style.horizontalOffsetDp) {
-            mutableFloatStateOf(style.horizontalOffsetDp.coerceIn(-20f, 20f))
-        }
-        SegmentedItem(index = rowIndex++, count = rowCount) {
+                add {
 StatusThemeExpandedControlItem(
             title = stringResource(id = R.string.alohaoneui_clockRichHorizontalOffset_title),
             summary = stringResource(
@@ -134,10 +133,7 @@ StatusThemeExpandedControlItem(
         }
 }
 
-        var verticalOffset by remember(style.verticalOffsetDp) {
-            mutableFloatStateOf(style.verticalOffsetDp.coerceIn(-20f, 20f))
-        }
-        SegmentedItem(index = rowIndex++, count = rowCount) {
+                add {
 StatusThemeExpandedControlItem(
             title = stringResource(id = R.string.alohaoneui_clockRichVerticalOffset_title),
             summary = stringResource(
@@ -180,7 +176,7 @@ StatusThemeExpandedControlItem(
         } else {
             0
         }
-        SegmentedItem(index = rowIndex++, count = rowCount) {
+        add {
 SelectItem(
             title = stringResource(id = R.string.alohaoneui_clockRichFontWeight_title),
             entries = weightLabels,
@@ -200,7 +196,7 @@ SelectItem(
         )
 }
 
-        SegmentedItem(index = rowIndex++, count = rowCount) {
+        add {
 SwitchItem(
             title = stringResource(id = R.string.alohaoneui_clockRichTextColor_title),
             summary = if (style.overrideTextColor) {
@@ -216,7 +212,7 @@ SwitchItem(
 }
 
         if (style.overrideTextColor) {
-            SegmentedItem(index = rowIndex++, count = rowCount) {
+            add {
 StatusThemeExpandedControlItem(title = stringResource(id = R.string.alohaoneui_clockRichTextColor_title)) {
 StatusClockColorPicker(
                 colorArgb = style.textColorArgb,
@@ -231,7 +227,7 @@ StatusClockColorPicker(
 }
         }
 
-        SegmentedItem(index = rowIndex++, count = rowCount) {
+        add {
 SwitchItem(
             title = stringResource(id = R.string.alohaoneui_clockRichBackground_title),
             summary = if (style.backgroundEnabled) {
@@ -247,7 +243,7 @@ SwitchItem(
 }
 
         if (style.backgroundEnabled) {
-            SegmentedItem(index = rowIndex++, count = rowCount) {
+            add {
 StatusThemeExpandedControlItem(title = stringResource(id = R.string.alohaoneui_clockRichBackground_title)) {
 StatusClockColorPicker(
                 colorArgb = style.backgroundColorArgb,
@@ -261,10 +257,7 @@ StatusClockColorPicker(
 }
 }
 
-            var alpha by remember(style.backgroundAlpha) {
-                mutableFloatStateOf(style.backgroundAlpha)
-            }
-            SegmentedItem(index = rowIndex++, count = rowCount) {
+                        add {
 StatusThemeExpandedControlItem(
                 title = stringResource(id = R.string.alohaoneui_clockRichBackgroundAlpha_title),
                 summary = stringResource(
@@ -291,7 +284,7 @@ StatusThemeExpandedControlItem(
         }
 }
 
-            SegmentedItem(index = rowIndex++, count = rowCount) {
+            add {
 SwitchItem(
                 title = stringResource(id = R.string.alohaoneui_clockRichBorder_title),
                 summary = if (style.backgroundBorderEnabled) {
@@ -307,7 +300,7 @@ SwitchItem(
 }
 
             if (style.backgroundBorderEnabled) {
-                SegmentedItem(index = rowIndex++, count = rowCount) {
+                add {
 StatusThemeExpandedControlItem(title = stringResource(id = R.string.alohaoneui_clockRichBorder_title)) {
 StatusClockColorPicker(
                     colorArgb = style.backgroundBorderColorArgb,
@@ -321,10 +314,7 @@ StatusClockColorPicker(
 }
 }
 
-                var borderWidth by remember(style.backgroundBorderWidthDp) {
-                    mutableFloatStateOf(style.backgroundBorderWidthDp)
-                }
-                SegmentedItem(index = rowIndex++, count = rowCount) {
+                                add {
 StatusThemeExpandedControlItem(
                     title = stringResource(id = R.string.alohaoneui_clockRichBorderWidth_title),
                     summary = stringResource(
@@ -351,10 +341,7 @@ StatusThemeExpandedControlItem(
 }
             }
 
-            var radius by remember(style.cornerRadiusDp) {
-                mutableFloatStateOf(style.cornerRadiusDp)
-            }
-            SegmentedItem(index = rowIndex++, count = rowCount) {
+                        add {
 StatusThemeExpandedControlItem(
                 title = stringResource(id = R.string.alohaoneui_clockRichCornerRadius_title),
                 summary = stringResource(
@@ -381,10 +368,7 @@ StatusThemeExpandedControlItem(
         }
 }
 
-            var horizontalPadding by remember(style.horizontalPaddingDp) {
-                mutableFloatStateOf(style.horizontalPaddingDp)
-            }
-            SegmentedItem(index = rowIndex++, count = rowCount) {
+                        add {
 StatusThemeExpandedControlItem(
                 title = stringResource(id = R.string.alohaoneui_clockRichHorizontalPadding_title),
                 summary = stringResource(
@@ -411,10 +395,7 @@ StatusThemeExpandedControlItem(
         }
 }
 
-            var verticalPadding by remember(style.verticalPaddingDp) {
-                mutableFloatStateOf(style.verticalPaddingDp)
-            }
-            SegmentedItem(index = rowIndex++, count = rowCount) {
+                        add {
 StatusThemeExpandedControlItem(
                 title = stringResource(id = R.string.alohaoneui_clockRichVerticalPadding_title),
                 summary = stringResource(
