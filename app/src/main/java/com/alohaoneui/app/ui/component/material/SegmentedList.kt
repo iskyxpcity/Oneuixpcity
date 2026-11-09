@@ -922,6 +922,7 @@ fun SegmentedSwitchItem(
     enabled: Boolean = true,
     dimWhenDisabled: Boolean = true,
     showChildIndicator: Boolean = false,
+    expanded: Boolean? = null,
     onRowClick: (() -> Unit)? = null,
     onCheckedChange: (Boolean) -> Unit,
 ) {
@@ -968,6 +969,17 @@ fun SegmentedSwitchItem(
                     },
                     interactionSource = switchInteractionSource,
                 )
+                if (expanded != null) {
+                    Icon(
+                        imageVector = if (expanded) {
+                            Icons.Filled.KeyboardArrowUp
+                        } else {
+                            Icons.Filled.KeyboardArrowDown
+                        },
+                        contentDescription = null,
+                        modifier = Modifier.padding(start = 4.dp).size(24.dp),
+                    )
+                }
             }
         },
         supportingContent = summary?.let { { Text(it) } }
