@@ -156,6 +156,44 @@ fun StatusTimeCategoryControls(
     var selectedRichBlockPosition by rememberSaveable { mutableStateOf(0) }
     var expandedRichBlock by rememberSaveable { mutableStateOf(-1) }
 
+    val richBlocks = remember(uiState.statusBarClockFormat) {
+        StatusBarClockBlockParser.parse(uiState.statusBarClockFormat).filter { it.isStyleable }
+    }
+    val richBlockNow = remember { LocalDateTime.now() }
+    val safeRichBlockPosition = selectedRichBlockPosition.coerceIn(
+        0,
+        (richBlocks.size - 1).coerceAtLeast(0),
+    )
+    val selectedRichBlock = richBlocks.getOrNull(safeRichBlockPosition)
+    val selectedRichBlockIndex = selectedRichBlock?.styleIndex ?: 0
+    val selectedRichStyle = selectedRichBlock?.let { clockRichStyleFor(uiState, it) }
+    val selectedRichPreview = selectedRichBlock?.let {
+        clockRichPreview(it, richBlockNow).ifEmpty { " " }
+    } ?: " "
+    val richBlockEditorItems = if (
+        selectedRichBlock != null &&
+        selectedRichStyle?.enabled == true &&
+        expandedRichBlock == selectedRichBlockIndex
+    ) {
+        StatusClockRichBlockEditorItems(
+            style = selectedRichStyle,
+            onStylePreview = { updated ->
+                onEvent(
+                    SystemUIEvent.StatusBarPreview(
+                        SystemUIEvent.StatusBar.UpdateStatusBarClockBlockStyle(updated)
+                    )
+                )
+            },
+            onStyleChange = { updated ->
+                onEvent(
+                    SystemUIEvent.StatusBar.UpdateStatusBarClockBlockStyle(updated)
+                )
+            },
+        )
+    } else {
+        emptyList()
+    }
+
     StatusThemeGroup(
         modifier = modifier,
         items = buildList {
@@ -314,34 +352,25 @@ fun StatusTimeCategoryControls(
                 }
 
                 if (uiState.enableStatusBarClockRichStyle) {
-                    val now = LocalDateTime.now()
-                    val blocks = StatusBarClockBlockParser.parse(uiState.statusBarClockFormat)
-                        .filter { it.isStyleable }
-
-                    if (blocks.isNotEmpty()) {
-                        val safePosition =
-                            selectedRichBlockPosition.coerceIn(0, blocks.lastIndex)
-                        val selectedBlock = blocks[safePosition]
-                        val selectedBlockIndex = selectedBlock.styleIndex ?: 0
-                        val selectedStyle = clockRichStyleFor(uiState, selectedBlock)
-                        val selectedPreview =
-                            clockRichPreview(selectedBlock, now).ifEmpty { " " }
-
+                    if (
+                        richBlocks.isNotEmpty() &&
+                        selectedRichBlock != null &&
+                        selectedRichStyle != null
+                    ) {
                         add {
                             SelectItem(
                                 title = stringResource(
                                     id = R.string.alohaoneui_clockRichSelectBlock_title
                                 ),
-                                entries = blocks.mapIndexed { index, block ->
-                                    val preview =
-                                        clockRichPreview(block, now).ifEmpty { " " }
+                                entries = richBlocks.mapIndexed { index, block ->
+                                    val preview = clockRichPreview(block, richBlockNow).ifEmpty { " " }
                                     stringResource(
                                         id = R.string.alohaoneui_clockRichBlock_title,
                                         (block.styleIndex ?: index) + 1,
                                         block.source.replace("\n", "\\n"),
                                     ) + " · " + preview
                                 },
-                                selectedIndex = safePosition,
+                                selectedIndex = safeRichBlockPosition,
                                 onSelectedIndexChange = { position ->
                                     selectedRichBlockPosition = position
                                     expandedRichBlock = -1
@@ -353,60 +382,35 @@ fun StatusTimeCategoryControls(
                             SwitchItem(
                                 title = stringResource(
                                     id = R.string.alohaoneui_clockRichBlock_title,
-                                    selectedBlockIndex + 1,
-                                    selectedBlock.source.replace("\n", "\\n"),
+                                    selectedRichBlockIndex + 1,
+                                    selectedRichBlock.source.replace("\n", "\\n"),
                                 ),
                                 summary = stringResource(
                                     id = R.string.alohaoneui_clockRichBlock_summary,
-                                    selectedPreview,
+                                    selectedRichPreview,
                                 ),
                                 clickable = true,
                                 showChildIndicator = true,
                                 onClick = {
                                     expandedRichBlock =
-                                        if (expandedRichBlock == selectedBlockIndex) {
+                                        if (expandedRichBlock == selectedRichBlockIndex) {
                                             -1
                                         } else {
-                                            selectedBlockIndex
+                                            selectedRichBlockIndex
                                         }
                                 },
-                                checked = selectedStyle.enabled,
+                                checked = selectedRichStyle.enabled,
                                 onCheckedChange = { enabled ->
                                     onEvent(
                                         SystemUIEvent.StatusBar.UpdateStatusBarClockBlockStyle(
-                                            selectedStyle.copy(enabled = enabled)
+                                            selectedRichStyle.copy(enabled = enabled)
                                         )
                                     )
                                 },
                             )
                         }
 
-                        if (
-                            expandedRichBlock == selectedBlockIndex &&
-                            selectedStyle.enabled
-                        ) {
-                            add {
-                                StatusClockRichBlockEditor(
-                                        style = selectedStyle,
-                                        onStylePreview = { updated ->
-                                            onEvent(
-                                                SystemUIEvent.StatusBarPreview(
-                                                    SystemUIEvent.StatusBar.UpdateStatusBarClockBlockStyle(
-                                                        updated
-                                                    )
-                                                )
-                                            )
-                                        },
-                                        onStyleChange = { updated ->
-                                            onEvent(
-                                                SystemUIEvent.StatusBar.UpdateStatusBarClockBlockStyle(
-                                                    updated
-                                                )
-                                            )
-                                        },
-                                    )
-                            }
-                        }
+                        addAll(richBlockEditorItems)
                     }
                 }
             }
