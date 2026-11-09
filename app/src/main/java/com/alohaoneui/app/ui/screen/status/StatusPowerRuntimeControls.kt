@@ -118,6 +118,7 @@ internal fun StatusPowerRuntimeControls(
                     summary = stringResource(id = R.string.status_power_runtime_enable_summary),
                     clickable = true,
                     showChildIndicator = true,
+                    expanded = powerRuntime.enabled && expanded,
                     onClick = {
                         if (powerRuntime.enabled) expanded = !expanded
                     },
