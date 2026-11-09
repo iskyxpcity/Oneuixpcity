@@ -406,7 +406,9 @@ fun ColorPaletteScreenMaterial(
                     var showPageScaleValueDialog by remember { mutableStateOf(false) }
                     var pageScaleInput by remember { mutableStateOf("") }
 
-                    SegmentedOptionFrame {
+                    SegmentedOptionFrame(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                    ) {
                         Column(
                             modifier = Modifier.fillMaxWidth(),
                             verticalArrangement = Arrangement.spacedBy(8.dp),
