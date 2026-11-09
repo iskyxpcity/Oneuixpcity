@@ -1646,3 +1646,14 @@
 - 后续补充：StatusClockRichBlockEditor 已把 16 个可见子行（按开关状态动态计数）通过 SegmentedItem 显式分配连续分段形状；3 个颜色选择器也包装为标准详情行，避免在父详情项内部形成第二层卡片。内容型子行不再保留空 headline，改为直接在标准行主体中绘制控件。
 - 构建诊断：run 42563288635 的失败集中在 StatusTimeCategoryControls.kt 富文本编辑器外层包装移除后多保留一个闭合大括号，导致后续整个 buildList 作用域提前结束；已删除多余闭合并提交 a4f75755。此前 confirmFormat lambda 缺少闭合大括号也已在 3d33aeb2 修复。当前以 a4f75755 后续最新 Actions 编译结果为准。
 - 再次逐项检查时间详情后，发现时钟 X 偏移与 Y 偏移仍被放在同一张组合卡片中；已拆成两个同级详情行，分别显示标题、当前数值说明和滑块，保留原预览与最终提交事件。提交：a18995e0。最新该提交对应 Actions run 42563943334 pending，需等待最终编译结果。
+
+## 2026-11-09｜第二轮状态栏分段列表结构审计与修正
+
+- 用户反馈上一轮仍有大量状态栏详情页的折叠/展开与上、中、下分段形状不一致。重新以 SettingsMaterial.kt「语言」组为基准审计，确认关键规则是所有可见行必须作为同一个 SegmentedColumn 的同级 items 参与索引；不能只把控件包进 SegmentedListItem，也不能在一个外层 item 中再绘制多行内部列表。
+- StatusTimeCategoryControls.kt 的富文本时钟编辑器原来作为外层 items 中的一个 closure，但内部又用 Column + 手动 SegmentedItem 渲染最多 16 个子行。外层只计数为 1 行，后续时钟设置行无法得到正确的列表索引。已将 StatusClockRichBlockEditor 改为 StatusClockRichBlockEditorItems，返回真实的 List<Composable item>，并在 StatusTimeCategoryControls 的同一个 StatusThemeGroup buildList 中 addAll，彻底移除内层手动 SegmentedItem 计数，让每个实际可见行由同一 SegmentedColumn 统一分配上/中/下形状。提交 122b039d + 4d93ed9d。
+- 时间详情中时钟对齐 SelectItem 曾被 StatusThemeExpandedControlItem 再包一层，造成 SegmentedListItem 套 SegmentedListItem；已改为直接作为同级 SelectItem 行。提交 e7c79a5c。
+- 时间详情中时钟左边距与右边距原来共用一个 StatusThemeExpandedControlItem，单卡内放两套标题/说明/滑块，导致两个独立详情选项没有独立列表形状；现拆成左右两个同级详情行，保留原值域、预览与保存事件。提交 e7c79a5c。
+- 第二轮对全部状态栏详情源码再做静态结构扫描：未发现残留手动 SegmentedItem/嵌套 SegmentedColumn/直接 SegmentedListItem 绕过 StatusThemeGroup；每个 StatusThemeExpandedControlItem 内最多一个 AlohaOneUISlider，未发现把两套独立滑块参数继续塞进同一卡片的情况。对包裹内容为 SelectItem/AlohaOneUIInfoItem 的嵌套列表行也逐项检查，时钟对齐的嵌套行已修正；Wi-Fi 弧线标题、弧线长度/宽度/半径等作为同组连续行保留。
+- 其他状态栏详情页的折叠父项与动态展开子项继续由同一 StatusThemeGroup buildList 构造，包含蓝牙、网速、通知、通知中心、控制中心、电池、电量运行时、信号、Wi-Fi、时间、内边距、锁屏、其他和三合一图标各组；分组标题对应独立 SegmentedColumn，组内动态行由同一列表重新计算首/中/末形状。
+- 最新源码提交 4d93ed9d7fd533ffd4897978696c6e113b8df620 对应 GitHub Actions run 42577650523，源码验证、Kotlin/Android 编译、owner-signed APK 构建、包名/证书校验和 Actions Artifact 保留全部成功。产物 AlohaOneUI-Signed-Test-APK，artifact id 13656500023。仍需真机逐页确认折叠/展开视觉形状，不将静态扫描和编译成功等同于设备视觉验收完成。
+- 所有改动仅在 test/switches-official-eight-20261103，未合并 main。
