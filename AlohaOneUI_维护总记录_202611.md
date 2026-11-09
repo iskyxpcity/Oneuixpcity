@@ -1687,3 +1687,10 @@
 3. 检查弹窗、设置详情、顶部操作、底部操作、选择器、空状态和错误状态等按钮场景；Miuix 体系排除在 Material 3 改造之外。
 4. 运行完整 Android 构建与测试，修复所有错误；生成 APK 后再做视觉验收。
 5. 通过测试分支验证后再合并 main。
+
+### 继续进展（2026-11-09）
+- 在共享按钮封装中增加可注入的 `MutableInteractionSource` 与 `pressMotionEnabled`，用于让按钮组复用同一交互源并关闭独立缩放，避免宽度联动与缩放叠加。
+- 新增 `ExpressiveButtonGroup`，封装官方 Material 3 `ButtonGroup`、15% 默认扩张比例、官方 overflow indicator 与 ButtonGroupScope DSL；调用方可用 `customItem` 配合 `Modifier.animateWidth(source)`，并把同一 source 传入 `ExpressiveButton/ExpressiveTextButton/ExpressiveIconButton/ExpressiveToggleButton`。
+- 已把 GitHub Actions 构建工作流的测试分支过滤扩展为 `test/**`，否则新建测试分支不会触发项目 APK 构建。
+- 构建已触发：Actions run #2873，run id `42621129845`，当前状态待最终结果；链接：https://github.com/iskyxpcity/Oneuixpcity/actions/runs/42621129845。
+- 全项目按钮调用点与并排按钮组迁移仍在进行；本轮尚未取得构建成功结论，不能合并 main。
