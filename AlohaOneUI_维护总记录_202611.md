@@ -1572,3 +1572,10 @@
 - 源码提交：`c7fd972d3dbcee5d86d2b21444f890f62833ba72`，位于 `test/switches-official-eight-20261103`，未合并 main。仍需跑 Actions 源码校验/Kotlin 构建，并在普通浅色/深色动态配色下检查实际弹窗：容器背景、下拉选项列表、输入框填充和原生边框需有明确层级；构建成功不等于真机视觉验收完成。
 
 - 进一步核对弹窗内列表后，确认共享 `alohaOneUISegmentedColors()` 也把所有 Material 分段列表行设为 `surfaceContainerHigh`，与 Material 3 AlertDialog 的默认容器层级过近。已将普通/禁用列表行改为 `surfaceContainerLow`，使弹窗容器、列表行、输入框分别落在不同的 tonal 层级；选择态仍保留 `secondaryContainer`，选中色和交互逻辑不变。补充提交：`ab055e71`。
+
+
+## 2026-11-08｜纠正输入框被统一涂成白色的问题
+
+- 用户反馈上一轮将输入框底色统一为白色，视觉效果仍不正确。复核 `ExpressiveOutlinedTextField` 两个重载后确认：强制使用 `surfaceContainerLowest` 会让普通配色模式下所有输入框都绘制为最低层级的浅色容器，破坏输入框与所在弹窗/列表表面的关系。
+- 已将两个重载的 focused、unfocused、disabled 容器色全部恢复为 `Color.Transparent`，遵循 Material 3 OutlinedTextField 的透明容器语义，让输入框显示其所在页面或弹窗的真实主题表面；输入框边框仍分别使用 primary、outline、outlineVariant、error，保留 Material 3 的轮廓区分。没有修改 AMOLED 色板、Miuix 或弹窗/列表业务逻辑。
+- 源码提交：`2ee436f6f82b2e1138ae0c81ace2380ff3971ac9`，仅位于 `test/switches-official-eight-20261103`，未修改 main。待检查对应 Actions 构建结果；透明容器修复尚需在普通浅色/深色主题弹窗中真机确认。
