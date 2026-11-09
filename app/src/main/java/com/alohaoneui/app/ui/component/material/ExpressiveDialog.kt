@@ -109,7 +109,7 @@ fun ExpressiveDialogActionButtons(
     onDismiss: () -> Unit,
 ) {
     if (dismissText == null) {
-        ExpressiveTextButton(onClick = onConfirm) { Text(confirmText) }
+        ExpressiveTextButton(enabled = confirmEnabled, onClick = onConfirm) { Text(confirmText) }
         return
     }
 
