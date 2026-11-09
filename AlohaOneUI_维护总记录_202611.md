@@ -1666,3 +1666,24 @@
 - 兼容性修正：第一次编译发现 Miuix colorScheme 不提供 onSurfaceVariant；改为 onSurface 后通过编译。
 - 最新源码提交 c972f9ed27927e140d4de4dfb1fee5b044286e82；Actions run 42582283904 全部成功：源码验证、Kotlin/Android 编译、owner-signed APK、包名与签名证书校验、Artifact 保留。产物 AlohaOneUI-Signed-Test-APK，artifact id 13657707527。
 - 这轮完成了折叠父项箭头和展开状态的公共接入，并确认全部已识别的状态栏条件子项均有 expanded 状态；真机上仍需逐页检查实际折叠/展开形状和动画，不能仅以构建通过宣称视觉验收完成。仅测试分支修改，未合并 main。
+
+## 2026-11-09｜Material 3 Expressive 按钮按压动效统一（进行中）
+
+### 用户确认的目标
+- 全项目 Material 3 按钮统一采用扩大后弹性收缩复位的按压反馈。
+- 独立按钮按压时扩大，松开后弹性恢复；并排按钮组应采用 Material 3 Expressive ButtonGroup 的联动宽度变化（按压项扩大、相邻项压缩），不能把单纯缩放冒充 ButtonGroup。
+- 保留现有颜色、形状、描边、阴影、布局和点击行为。
+- Miuix 页面继续使用 Miuix 组件，不混入 Material 3 组件。
+
+### 本轮已提交到测试分支
+- 测试分支：`test/material3-expressive-button-motion-20261109`，从当时 main 的 `2c03aa4830edff9fca27c6e9725a3f5a735a4a34` 切出。
+- 新增 `ui/component/material/ExpressiveButtonMotion.kt`：基于 Compose InteractionSource 的按压状态，以弹簧动画将控件缩放至 1.045，松开回到 1.0；只改变绘制层，不改变测量尺寸和周围布局。
+- 已接入共享 Material 3 `ExpressiveButton`、`ExpressiveTextButton`、`ExpressiveIconButton`、`ExpressiveToggleButton`。
+- 本轮尚未完成全项目按钮调用点审计、ButtonGroup 联动容器接入、构建验证及设备视觉验收；不得标记为完成。
+
+### 后续必须完成
+1. 全量搜索 Material 3 原生 Button / TextButton / IconButton / FilledTonalButton / ElevatedButton / OutlinedButton / ToggleButton 等直接调用点，统一接入共享交互或确认其属于特殊交互而保留。
+2. 对并排操作按钮组实现官方 ButtonGroup 宽度联动动画，避免只对单个按钮做缩放。
+3. 检查弹窗、设置详情、顶部操作、底部操作、选择器、空状态和错误状态等按钮场景；Miuix 体系排除在 Material 3 改造之外。
+4. 运行完整 Android 构建与测试，修复所有错误；生成 APK 后再做视觉验收。
+5. 通过测试分支验证后再合并 main。
