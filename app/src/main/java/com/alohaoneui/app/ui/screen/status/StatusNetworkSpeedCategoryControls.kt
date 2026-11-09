@@ -1,6 +1,5 @@
 package com.alohaoneui.app.ui.screen.status
 
-import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -106,7 +105,6 @@ fun StatusNetworkSpeedCategoryControls(
                         } else {
                             stringResource(id = R.string.alohaoneui_networkSpeedDoubleLineOnly_summary)
                         },
-                        modifier = Modifier.animateContentSize(),
                         clickable = true,
                         expanded = lineGapExpanded && uiState.modifyNetworkSpeedLineGap,
                         onClick = { lineGapExpanded = !lineGapExpanded },
@@ -119,7 +117,7 @@ fun StatusNetworkSpeedCategoryControls(
                 }
                 if (lineGapExpanded && uiState.modifyNetworkSpeedLineGap) {
                     add {
-                        StatusThemeExpandedControlItem {
+                        StatusThemeChildItem {
                             AlohaOneUISlider(
                                 value = lineGapDp,
                                 onValueChange = {
@@ -152,7 +150,6 @@ fun StatusNetworkSpeedCategoryControls(
                         } else {
                             stringResource(id = R.string.alohaoneui_networkSpeedDoubleLineOnly_summary)
                         },
-                        modifier = Modifier.animateContentSize(),
                         clickable = true,
                         expanded = uploadScaleExpanded && uiState.setNetworkSpeedUploadTextScale,
                         onClick = { uploadScaleExpanded = !uploadScaleExpanded },
@@ -165,7 +162,7 @@ fun StatusNetworkSpeedCategoryControls(
                 }
                 if (uploadScaleExpanded && uiState.setNetworkSpeedUploadTextScale) {
                     add {
-                        StatusThemeExpandedControlItem {
+                        StatusThemeChildItem {
                             AlohaOneUISlider(
                                 value = uploadScale,
                                 onValueChange = {
@@ -198,7 +195,6 @@ fun StatusNetworkSpeedCategoryControls(
                         } else {
                             stringResource(id = R.string.alohaoneui_networkSpeedDoubleLineOnly_summary)
                         },
-                        modifier = Modifier.animateContentSize(),
                         clickable = true,
                         expanded = downloadScaleExpanded && uiState.setNetworkSpeedDownloadTextScale,
                         onClick = { downloadScaleExpanded = !downloadScaleExpanded },
@@ -211,7 +207,7 @@ fun StatusNetworkSpeedCategoryControls(
                 }
                 if (downloadScaleExpanded && uiState.setNetworkSpeedDownloadTextScale) {
                     add {
-                        StatusThemeExpandedControlItem {
+                        StatusThemeChildItem {
                             AlohaOneUISlider(
                                 value = downloadScale,
                                 onValueChange = {
@@ -242,7 +238,6 @@ fun StatusNetworkSpeedCategoryControls(
                     } else {
                         stringResource(id = R.string.alohaoneui_networkSpeedThreshold_scope_summary)
                     },
-                    modifier = Modifier.animateContentSize(),
                     clickable = true,
                     expanded = thresholdExpanded && uiState.networkSpeedThresholdKb > 0,
                     onClick = { thresholdExpanded = !thresholdExpanded },
@@ -261,7 +256,7 @@ fun StatusNetworkSpeedCategoryControls(
             }
             if (thresholdExpanded && uiState.networkSpeedThresholdKb > 0) {
                 add {
-                    StatusThemeExpandedControlItem {
+                    StatusThemeChildItem {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
