@@ -51,6 +51,7 @@ fun StatusNotificationCenterCategoryControls(
                     },
                     modifier = Modifier.animateContentSize(),
                     clickable = true,
+                    expanded = expanded && uiState.hideOngoingActivityMedia,
                     onClick = { expanded = !expanded },
                     checked = uiState.hideOngoingActivityMedia,
                     onCheckedChange = {
