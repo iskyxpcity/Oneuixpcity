@@ -63,6 +63,7 @@ import androidx.compose.material.icons.rounded.Swipe
 import androidx.compose.material.icons.rounded.ViewCarousel
 import androidx.compose.material.icons.rounded.WaterDrop
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -109,6 +110,7 @@ import com.alohaoneui.app.ui.component.material.ExpressiveToggleButton
 import com.alohaoneui.app.ui.component.material.ExpressiveScaffold
 import com.alohaoneui.app.ui.component.material.ExpressiveOutlinedTextField
 import com.alohaoneui.app.ui.component.material.ExpressiveTextButton
+import com.alohaoneui.app.ui.component.material.ExpressiveButtonGroup
 import com.alohaoneui.app.ui.component.material.ExpressiveContentDialog
 import com.alohaoneui.app.ui.component.material.IconShapePresetPicker
 import com.alohaoneui.app.ui.component.material.IconShapePresetDetailScreen
@@ -130,6 +132,7 @@ import com.alohaoneui.app.ui.theme.LocalMaterialShadowSliders
 import com.alohaoneui.app.ui.theme.rememberAlohaOneUIColorScheme
 import com.alohaoneui.app.ui.theme.keyColorOptions
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ColorPaletteScreenMaterial(
     state: ColorPaletteUiState,
