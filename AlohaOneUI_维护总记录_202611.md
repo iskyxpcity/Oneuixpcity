@@ -1632,3 +1632,14 @@
 - Fold7 时间比例与日期比例两个展开项已改用该 helper；保留原滑块范围 50–110%、步进、实时预览事件和结束提交事件。未修改父级开关及其他设备的双行时钟逻辑。
 - 修改文件：StatusThemeGroup.kt、StatusTimeCategoryControls.kt。提交：86605d75、5a5bcff5，仅位于 test/switches-official-eight-20261103，未修改 main。
 - 构建验证：helper 提交对应 Actions run 42559719796 正在执行；包含最终 Fold7 行替换的最新提交对应 run 42559723642 尚在 pending。须以后者最终成功和设备视觉验收为准，不能提前标记为完成。
+## 2026-11-09｜状态栏全部详情子页面统一使用设置页分段详情行
+
+- 用户明确要求范围为「状态栏」主页面下所有详情子页面、所有详情选项卡，而非只修复折叠屏时间页。以 SettingsMaterial.kt 的「语言」详情为参照：父选项与展开子选项应作为同一 SegmentedColumn 中的同级行，使用标准首/中/末形状、统一容器阴影与间距；标题/说明/控件属于同一设置时应放在同一行，不得拆成标题卡+控件卡，也不得把多行控件嵌进另一张父卡。
+- 扩展 StatusThemeExpandedControlItem 为全状态栏共用详情行：Material 使用标准 SegmentedListItem，标题进入 headline，说明与控件进入 supportingContent；无标题的控件行直接使用 headline，避免空标题造成额外留白；图标、全局阴影开关和主题分段形状均沿用公共组件。Miuix 保留原 StatusThemeChildItem 路径和布局。
+- 状态栏蓝牙、网速运行时、信号、Wi-Fi、组合图标、控制中心、通知、通知中心、其他、内边距、电池、时间等详情页中原 StatusThemeChildItem 调用已迁移到共用详情行。折叠/展开仍由 StatusThemeGroup 的同一 items 列表控制，展开子项与父选项保持同组相邻。
+- 电量运行时 8 组参数（文字大小、刷新间隔、列间距、双行行间距、水平偏移、垂直偏移、起始内边距、结束内边距）已将原独立 AlohaOneUIInfoItem 标题卡与滑块卡合并成单一标题/说明/滑块详情行，原数值范围、预览和提交事件不变。
+- Wi-Fi 弧线长度、蓝牙/信号/网速滑块等已统一为标题说明与控件在同一详情行。状态栏时钟富文本编辑器的 8 组滑块参数也已合并为单行；其颜色选择器和其他子行通过 SegmentedItem 分配连续首/中/末形状，行间距统一为 4dp。
+- 状态栏其他页的展开控件包括通知图标数量、通知媒体包名、烧屏保护幅度/周期、电池宽高、状态栏左右上下内边距、控制中心时钟字号、网速文字比例等，均迁移到统一详情行。保留原开关状态、滑块步进、预览与保存回调。
+- 修改涉及 StatusThemeGroup.kt、StatusBluetoothCategoryControls.kt、StatusNetworkSpeedRuntimeControls.kt、StatusSignalCategoryControls.kt、StatusWifiCategoryControls.kt、StatusComboStyleOneCategoryControls.kt、StatusControlCenterCategoryControls.kt、StatusNetworkSpeedCategoryControls.kt、StatusNotificationCategoryControls.kt、StatusNotificationCenterCategoryControls.kt、StatusOtherCategoryControls.kt、StatusPaddingCategoryControls.kt、StatusPowerCategoryControls.kt、StatusPowerRuntimeControls.kt、StatusTimeCategoryControls.kt、StatusClockRichBlockEditor.kt，以及维护记录。
+- 期间 Actions run 42562343262 的 Kotlin 编译失败，日志定位到 StatusTimeCategoryControls.kt 的 confirmFormat lambda 少一个闭合大括号，导致后续 Row 被解析为非 Composable 上下文；已补齐 lambda 边界，提交 3d33aeb2。最新共用行修正提交 a15acfb0 对应 Actions run 42563194867，正在编译，需以后者最终成功作为构建依据。
+- 本轮所有源码修改仅在 test/switches-official-eight-20261103，未修改 main。当前尚未完成 APK 构建及设备视觉验收；不得标记为全局最终验收通过。
