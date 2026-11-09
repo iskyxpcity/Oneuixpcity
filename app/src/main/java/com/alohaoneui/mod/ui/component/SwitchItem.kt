@@ -63,9 +63,7 @@ fun SwitchItem(
             fun Content(contentModifier: Modifier) {
                 if (clickable) {
                     SegmentedListItem(
-                        // Avoid an unnecessary graphics layer at full opacity: it can
-                        // clip the segmented row's outer shadow at the item bounds.
-                        modifier = if (rowAlpha < 1f) contentModifier.alpha(rowAlpha) else contentModifier,
+                        modifier = contentModifier.alpha(rowAlpha),
                         enabled = rowEnabled,
                         onClick = { if (enabled) onClick() },
                         colors = alohaOneUISegmentedColors(),
