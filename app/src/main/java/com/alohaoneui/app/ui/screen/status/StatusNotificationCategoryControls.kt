@@ -1,6 +1,5 @@
 package com.alohaoneui.app.ui.screen.status
 
-import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -37,7 +36,6 @@ fun StatusNotificationCategoryControls(
             add {
                 SwitchItem(
                     title = stringResource(id = R.string.alohaoneui_setStatusBarMaxNotificationIcons_title),
-                    modifier = Modifier.animateContentSize(),
                     summary = if (uiState.modifyStatusBarMaxNotificationIcons) " $max" else null,
                     icon = ImageVector.vectorResource(id = R.drawable.notifications),
                     clickable = true,
@@ -56,7 +54,7 @@ fun StatusNotificationCategoryControls(
             }
             if (expanded && uiState.modifyStatusBarMaxNotificationIcons) {
                 add {
-                    StatusThemeExpandedControlItem {
+                    StatusThemeChildItem {
                         AlohaOneUISlider(
                             value = max.toFloat(),
                             onValueChange = { max = it.roundToInt() },
