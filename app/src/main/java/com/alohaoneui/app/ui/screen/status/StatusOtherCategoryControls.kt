@@ -152,56 +152,17 @@ private fun BurnInSliderSetting(
     onValueChange: (Float) -> Unit,
     onValueChangeFinished: () -> Unit,
 ) {
-    // Keep the title, explanation and slider inside one native grouped row.
-    // Previously AlohaOneUIInfoItem and StatusThemeExpandedControlItem each drew their own
-    // Material segmented surface, visually splitting the same setting.
-    StatusThemeExpandedControlItem {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(
-                    horizontal = if (LocalUiMode.current == UiMode.Material) 8.dp else 16.dp,
-                    vertical = 8.dp,
-                ),
-        ) {
-            when (LocalUiMode.current) {
-                UiMode.Material -> {
-                    MaterialText(
-                        text = title,
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
-                    Spacer(modifier = Modifier.height(2.dp))
-                    MaterialText(
-                        text = summary,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-
-                UiMode.Miuix -> {
-                    MiuixText(
-                        text = title,
-                        color = MiuixTheme.colorScheme.onSurface,
-                        fontSize = MiuixTheme.textStyles.body2.fontSize,
-                    )
-                    Spacer(modifier = Modifier.height(2.dp))
-                    MiuixText(
-                        text = summary,
-                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                        fontSize = MiuixTheme.textStyles.body2.fontSize,
-                    )
-                }
-            }
-            Spacer(modifier = Modifier.height(8.dp))
-            AlohaOneUISlider(
-                value = value,
-                onValueChange = onValueChange,
-                modifier = Modifier.fillMaxWidth(),
-                valueRange = valueRange,
-                stepSize = stepSize,
-                onValueChangeFinished = onValueChangeFinished,
-            )
-        }
+    StatusThemeExpandedControlItem(
+        title = title,
+        summary = summary,
+    ) {
+        AlohaOneUISlider(
+            value = value,
+            onValueChange = onValueChange,
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+            valueRange = valueRange,
+            stepSize = stepSize,
+            onValueChangeFinished = onValueChangeFinished,
+        )
     }
 }
