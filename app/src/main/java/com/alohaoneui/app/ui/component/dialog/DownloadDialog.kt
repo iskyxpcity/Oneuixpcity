@@ -25,7 +25,7 @@ import com.alohaoneui.app.ui.LocalUiMode
 import com.alohaoneui.app.ui.UiMode
 import com.alohaoneui.app.ui.component.material.ExpressiveDialog
 import com.alohaoneui.app.ui.component.material.ExpressiveOutlinedTextField
-import com.alohaoneui.app.ui.component.material.ExpressiveTextButton
+import com.alohaoneui.app.ui.component.material.ExpressiveDialogActionButtons
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.TextField
 import top.yukonga.miuix.kmp.basic.TextButton
@@ -68,17 +68,13 @@ private fun DownloadDialogMaterial(
             )
         },
         confirmButton = {
-            ExpressiveTextButton(
-                enabled = isValidUrl(url.trim()),
-                onClick = { onConfirm(url.trim()) }
-            ) {
-                Text(stringResource(android.R.string.ok))
-            }
-        },
-        dismissButton = {
-            ExpressiveTextButton(onClick = onDismiss) {
-                Text(stringResource(android.R.string.cancel))
-            }
+            ExpressiveDialogActionButtons(
+                confirmText = stringResource(android.R.string.ok),
+                dismissText = stringResource(android.R.string.cancel),
+                confirmEnabled = isValidUrl(url.trim()),
+                onConfirm = { onConfirm(url.trim()) },
+                onDismiss = onDismiss,
+            )
         }
     )
 }
