@@ -73,6 +73,7 @@ private fun StatusBurnInProtectionControls(
                     summary = stringResource(id = R.string.alohaoneui_statusBarBurnInProtection_summary),
                     modifier = Modifier.animateContentSize(),
                     clickable = true,
+                    expanded = expanded && enabled,
                     onClick = { expanded = !expanded },
                     checked = enabled,
                     onCheckedChange = { value ->
