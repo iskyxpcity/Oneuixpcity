@@ -185,7 +185,7 @@ fun StatusTimeCategoryControls(
             }
             if (formatExpanded && uiState.setStatusBarClockFormat) {
                 add {
-                    StatusThemeChildItem {
+                    StatusThemeExpandedControlItem {
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -386,7 +386,7 @@ fun StatusTimeCategoryControls(
                             selectedStyle.enabled
                         ) {
                             add {
-                                StatusThemeChildItem {
+                                StatusThemeExpandedControlItem {
                                     StatusClockRichBlockEditor(
                                         style = selectedStyle,
                                         onStylePreview = { updated ->
@@ -439,8 +439,8 @@ fun StatusTimeCategoryControls(
             }
             if (uiState.modifyStatusBarClockPosition) {
                 add {
-                    StatusThemeChildItem {
-                        // StatusThemeChildItem uses a Box; stack multiple controls explicitly
+                    StatusThemeExpandedControlItem {
+                        // StatusThemeExpandedControlItem uses a Box; stack multiple controls explicitly
                         // so the X and Y labels/sliders cannot overlap each other.
                         Column(
                             modifier = Modifier
@@ -521,7 +521,7 @@ fun StatusTimeCategoryControls(
 
             if (uiState.modifyStatusBarClockPosition) {
                 add {
-                    StatusThemeChildItem {
+                    StatusThemeExpandedControlItem {
                         SelectItem(
                             icon = ImageVector.vectorResource(id = R.drawable.format_size),
                             title = stringResource(
@@ -555,7 +555,7 @@ fun StatusTimeCategoryControls(
                     }
                 }
                 add {
-                    StatusThemeChildItem {
+                    StatusThemeExpandedControlItem {
                         // Keep the title/value immediately above its own slider.
                         Column(
                             modifier = Modifier
@@ -602,7 +602,7 @@ fun StatusTimeCategoryControls(
                     }
                 }
                 add {
-                    StatusThemeChildItem {
+                    StatusThemeExpandedControlItem {
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -817,7 +817,7 @@ fun StatusTimeCategoryControls(
                 }
                 if (lineGapEnabled) {
                     add {
-                        StatusThemeChildItem {
+                        StatusThemeExpandedControlItem {
                             AlohaOneUISlider(
                                 value = lineGapDp,
                                 stepSize = 1f,
@@ -871,7 +871,7 @@ fun StatusTimeCategoryControls(
                 }
                 if (singleLineScaleExpanded && uiState.setStatusBarClockTextScale) {
                     add {
-                        StatusThemeChildItem {
+                        StatusThemeExpandedControlItem {
                             AlohaOneUISlider(
                                 value = singleLineScale * 100f,
                                 stepSize = 1f,
