@@ -217,7 +217,6 @@ fun StatusTimeCategoryControls(
                                             tempDataTimeFormat.text
                                         )
                                     )
-                                }
                             }
 
                             Row(
@@ -386,8 +385,7 @@ fun StatusTimeCategoryControls(
                             selectedStyle.enabled
                         ) {
                             add {
-                                StatusThemeExpandedControlItem {
-                                    StatusClockRichBlockEditor(
+                                StatusClockRichBlockEditor(
                                         style = selectedStyle,
                                         onStylePreview = { updated ->
                                             onEvent(
