@@ -1,6 +1,5 @@
 package com.alohaoneui.app.ui.screen.status
 
-import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -60,7 +59,6 @@ fun StatusPaddingCategoryControls(
                     title = stringResource(id = R.string.alohaoneui_statusBarLeftPaddingDp_title),
                     summary = if (uiState.modifyStatusBarLeftPadding) "%.1fdp".format(left) else null,
                     icon = ImageVector.vectorResource(id = R.drawable.padding),
-                    modifier = Modifier.animateContentSize(),
                     clickable = true,
                     expanded = leftExpanded && uiState.modifyStatusBarLeftPadding,
                     onClick = { leftExpanded = !leftExpanded },
