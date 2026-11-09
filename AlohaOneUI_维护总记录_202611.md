@@ -1614,3 +1614,12 @@
 - 已调整 `ColorPaletteScreenMaterial.kt` 中“界面缩放”这一项的内部排版：不再占用列表组件两侧的 leading/trailing 槽位；在 headline 内使用纵向 Column，第一行用 Row 放置左侧矢量图标、中间标题与说明文案、右侧百分比按钮；第二行单独放置滑条并填满可用宽度。这样滑条不再与 leading/trailing 槽位争夺宽度。
 - 仅调整该详情项内部布局，保留外层 `SegmentedListItem` 分段卡片、图标、文案、百分比按钮点击/输入弹窗、滑条范围与数值回调；不改其他详情项。
 - 提交：`b3b7dff1ac0d0b5fb57d18bbafba91e95f6aa46e`，仅在测试分支，未合并 main。等待该提交对应 Actions 构建及实际屏幕检查。
+
+
+## 2026-11-08｜修复关闭三合一后原生状态栏图标间距被再次清除
+
+- 按用户明确目标：关闭“启用三合一图标”后，左侧原生状态栏图标必须恢复 SystemUI 原有间距；不以固定 dp 补间距，也不改变其他状态栏样式。
+- 查证 StatusBarComboStyleOneRuntime.kt：restoreNativeWifiClusters() 会移除保存的基线并恢复原生 StatusIconContainer 的完整 padding、minimumWidth 和父级 LinearLayout.LayoutParams，同时移除布局监听。但 scheduleNativeWifiClusterReconciliation() 的 cluster.post 延迟任务此前没有在执行时重新检查开关状态；关闭时若任务已排队，恢复函数之后该任务仍可能把右侧 padding 与 minimumWidth 再次清零。另有 SystemUI 可见性 hook 在功能关闭过程中继续触发该调度函数的路径。
+- 最小修复：调度入口要求 config.enabled && config.showWifi，阻止关闭状态下重新注册监听/排队；延迟任务真正执行前再次检查开关及 host 是否仍有效，避免已排队任务越过恢复流程修改基线。原有恢复快照和 SystemUI 原始参数不变，不增加任何固定间距，不改其他组合图标风格。
+- 代码提交：3a3260563da9772b6709023237bfb9a868f07574，仅在 test/switches-official-eight-20261103，未合并 main。
+- 当前完成源码修正；仍需以该提交对应的 GitHub Actions 结果确认编译，并在设备上开关三合一验证左侧原生图标恢复系统原有间距。源码修复不等于真机验收完成。
