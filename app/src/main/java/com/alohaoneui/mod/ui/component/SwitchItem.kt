@@ -181,7 +181,7 @@ fun SwitchItem(
                         onClick = { if (enabled) onClick() },
                         role = Role.Button,
                     )
-                } else if (showChildIndicator) {
+                } else if (showChildIndicator || expanded != null) {
                     BasicComponent(
                         title = title,
                         summary = summary,
@@ -189,11 +189,13 @@ fun SwitchItem(
                         modifier = Modifier.alpha(rowAlpha),
                         startAction = miuixStartAction,
                         endActions = {
-                            MiuixVerticalDivider(
-                                modifier = Modifier
-                                    .height(32.dp)
-                                    .padding(end = 12.dp),
-                            )
+                            if (showChildIndicator) {
+                                MiuixVerticalDivider(
+                                    modifier = Modifier
+                                        .height(32.dp)
+                                        .padding(end = 12.dp),
+                                )
+                            }
                             MiuixSwitch(
                                 modifier = Modifier.align(Alignment.CenterVertically),
                                 checked = checked,
