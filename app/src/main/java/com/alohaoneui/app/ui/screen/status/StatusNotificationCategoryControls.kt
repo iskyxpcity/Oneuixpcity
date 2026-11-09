@@ -55,7 +55,7 @@ fun StatusNotificationCategoryControls(
             }
             if (expanded && uiState.modifyStatusBarMaxNotificationIcons) {
                 add {
-                    StatusThemeChildItem {
+                    StatusThemeExpandedControlItem {
                         AlohaOneUISlider(
                             value = max.toFloat(),
                             onValueChange = { max = it.roundToInt() },
