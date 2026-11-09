@@ -324,7 +324,7 @@ internal fun StatusPowerRuntimeControls(
                     )
                 }
                 add {
-                    StatusThemeChildItem {
+                    StatusThemeExpandedControlItem {
                         AlohaOneUISlider(
                             value = powerTextSize,
                             onValueChange = {
@@ -353,7 +353,7 @@ internal fun StatusPowerRuntimeControls(
                     )
                 }
                 add {
-                    StatusThemeChildItem {
+                    StatusThemeExpandedControlItem {
                         AlohaOneUISlider(
                             value = refreshInterval,
                             onValueChange = {
@@ -383,7 +383,7 @@ internal fun StatusPowerRuntimeControls(
                     )
                 }
                 add {
-                    StatusThemeChildItem {
+                    StatusThemeExpandedControlItem {
                         AlohaOneUISlider(
                             value = columnGap,
                             onValueChange = {
@@ -410,7 +410,7 @@ internal fun StatusPowerRuntimeControls(
                         )
                     }
                     add {
-                        StatusThemeChildItem {
+                        StatusThemeExpandedControlItem {
                             AlohaOneUISlider(
                                 value = rowGap,
                                 onValueChange = {
@@ -437,7 +437,7 @@ internal fun StatusPowerRuntimeControls(
                     )
                 }
                 add {
-                    StatusThemeChildItem {
+                    StatusThemeExpandedControlItem {
                         AlohaOneUISlider(
                             value = horizontalOffset,
                             onValueChange = {
@@ -467,7 +467,7 @@ internal fun StatusPowerRuntimeControls(
                     )
                 }
                 add {
-                    StatusThemeChildItem {
+                    StatusThemeExpandedControlItem {
                         AlohaOneUISlider(
                             value = verticalOffset,
                             onValueChange = {
@@ -493,7 +493,7 @@ internal fun StatusPowerRuntimeControls(
                     )
                 }
                 add {
-                    StatusThemeChildItem {
+                    StatusThemeExpandedControlItem {
                         AlohaOneUISlider(
                             value = startPadding,
                             onValueChange = {
@@ -519,7 +519,7 @@ internal fun StatusPowerRuntimeControls(
                     )
                 }
                 add {
-                    StatusThemeChildItem {
+                    StatusThemeExpandedControlItem {
                         AlohaOneUISlider(
                             value = endPadding,
                             onValueChange = {
