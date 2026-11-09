@@ -1,20 +1,26 @@
 package com.alohaoneui.app.ui.screen.status
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import com.alohaoneui.app.ui.LocalUiMode
 import com.alohaoneui.app.ui.UiMode
 import com.alohaoneui.app.ui.component.material.SegmentedColumn
 import com.alohaoneui.app.ui.component.material.SegmentedListItem
 import com.alohaoneui.app.ui.component.material.alohaOneUISegmentedColors
+import com.alohaoneui.mod.ui.component.AlohaOneUIInfoItem
 import com.alohaoneui.mod.ui.component.LocalAlohaOneUIGroupedPreference
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
@@ -104,6 +110,9 @@ fun StatusThemeGroup(
 @Composable
 fun StatusThemeChildItem(
     modifier: Modifier = Modifier,
+    title: String? = null,
+    summary: String? = null,
+    icon: ImageVector? = null,
     content: @Composable () -> Unit,
 ) {
     when (LocalUiMode.current) {
@@ -112,14 +121,46 @@ fun StatusThemeChildItem(
                 modifier = modifier,
                 colors = alohaOneUISegmentedColors(),
                 headlineContent = {
-                    Box(
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(vertical = 4.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        // This child row owns the single outer card shadow.
-                        // Nested preference adapters remain visually inside this
-                        // frame and must not cast a second shadow of their own.
+                        if (!title.isNullOrBlank() || icon != null) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            ) {
+                                if (icon != null) {
+                                    Icon(
+                                        imageVector = icon,
+                                        contentDescription = title,
+                                    )
+                                }
+                                Column(
+                                    modifier = Modifier.weight(1f),
+                                    verticalArrangement = Arrangement.spacedBy(3.dp),
+                                ) {
+                                    if (!title.isNullOrBlank()) {
+                                        Text(
+                                            text = title,
+                                            style = MaterialTheme.typography.bodyLarge,
+                                        )
+                                    }
+                                    if (!summary.isNullOrBlank()) {
+                                        Text(
+                                            text = summary,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                        // The parent segmented row is the only card surface here.
+                        // Child controls render as content, not as another card.
                         CompositionLocalProvider(
                             LocalMaterialShadowContainers provides false,
                         ) {
@@ -131,9 +172,14 @@ fun StatusThemeChildItem(
         }
 
         UiMode.Miuix -> {
-            Box(
-                modifier = modifier.fillMaxWidth(),
-            ) {
+            Column(modifier = modifier.fillMaxWidth()) {
+                if (!title.isNullOrBlank() || summary != null || icon != null) {
+                    AlohaOneUIInfoItem(
+                        title = title.orEmpty(),
+                        summary = summary,
+                        icon = icon,
+                    )
+                }
                 content()
             }
         }
