@@ -9,8 +9,16 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.ui.Alignment
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonGroup
+import androidx.compose.material3.ButtonGroupDefaults
+import androidx.compose.material3.ButtonGroupMenuState
+import androidx.compose.material3.ButtonGroupScope
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.OverflowIndicator
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.IconButton
@@ -36,6 +44,35 @@ import com.alohaoneui.app.ui.theme.LocalMaterialShadowButtons
 import com.alohaoneui.app.ui.theme.LocalMaterialShadowContainers
 
 /**
+ * Project-wide Material 3 Expressive button-group container.
+ *
+ * Use [ButtonGroupScope.customItem] for existing Aloha-styled buttons and add
+ * Modifier.animateWidth(interactionSource) to each child. Pass that same
+ * interaction source into the child button and disable its standalone scale
+ * motion so the official width expansion/compression remains the only press
+ * animation in the group.
+ */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+fun ExpressiveButtonGroup(
+    modifier: Modifier = Modifier,
+    expandedRatio: Float = ButtonGroupDefaults.ExpandedRatio,
+    horizontalArrangement: Arrangement.Horizontal = ButtonGroupDefaults.HorizontalArrangement,
+    verticalAlignment: Alignment.Vertical = Alignment.Top,
+    overflowIndicator: @Composable (ButtonGroupMenuState) -> Unit = { OverflowIndicator(it) },
+    content: ButtonGroupScope.() -> Unit,
+) {
+    ButtonGroup(
+        overflowIndicator = overflowIndicator,
+        modifier = modifier,
+        expandedRatio = expandedRatio,
+        horizontalArrangement = horizontalArrangement,
+        verticalAlignment = verticalAlignment,
+        content = content,
+    )
+}
+
+/**
  * Shared Material button controls. Screen code owns actions and content; this
  * component layer owns shape, outline and elevation behavior from Aloha settings.
  */
@@ -46,17 +83,19 @@ fun ExpressiveButton(
     enabled: Boolean = true,
     shape: Shape? = null,
     colors: ButtonColors = ButtonDefaults.buttonColors(),
+    interactionSource: MutableInteractionSource? = null,
+    pressMotionEnabled: Boolean = true,
     content: @Composable RowScope.() -> Unit,
 ) {
     val actualShape = shape ?: alohaCornerShape(12.dp)
-    val interactionSource = remember { MutableInteractionSource() }
+    val actualInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
     val hasShadow = LocalMaterialShadowButtons.current
     val outlineWidth = LocalMaterialOutlineWidth.current
     Button(
         onClick = onClick,
-        modifier = modifier.materialExpressivePressMotion(interactionSource, enabled),
+        modifier = if (pressMotionEnabled) modifier.materialExpressivePressMotion(actualInteractionSource, enabled) else modifier,
         enabled = enabled,
-        interactionSource = interactionSource,
+        interactionSource = actualInteractionSource,
         shape = actualShape,
         colors = colors,
         elevation = ButtonDefaults.buttonElevation(
@@ -80,13 +119,14 @@ fun ExpressiveTextButton(
     enabled: Boolean = true,
     shape: Shape? = null,
     colors: ButtonColors = ButtonDefaults.textButtonColors(),
+    interactionSource: MutableInteractionSource? = null,
+    pressMotionEnabled: Boolean = true,
     content: @Composable RowScope.() -> Unit,
 ) {
     val actualShape = shape ?: alohaCornerShape(12.dp)
-    val interactionSource = remember { MutableInteractionSource() }
+    val actualInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
     val outlineWidth = LocalMaterialOutlineWidth.current
-    val styledModifier = modifier
-        .materialExpressivePressMotion(interactionSource, enabled)
+    val styledModifier = (if (pressMotionEnabled) modifier.materialExpressivePressMotion(actualInteractionSource, enabled) else modifier)
         .then(
             outlineWidth.takeIf { it > 0f }?.let {
                 Modifier.border(it.dp, MaterialTheme.colorScheme.outlineVariant, actualShape)
@@ -99,7 +139,7 @@ fun ExpressiveTextButton(
         enabled = enabled,
         shape = actualShape,
         colors = colors,
-        interactionSource = interactionSource,
+        interactionSource = actualInteractionSource,
         content = content,
     )
 }
@@ -113,13 +153,13 @@ fun ExpressiveIconButton(
     interactionSource: MutableInteractionSource? = null,
     shape: Shape? = null,
     framed: Boolean = false,
+    pressMotionEnabled: Boolean = true,
     content: @Composable () -> Unit,
 ) {
     val actualShape = shape ?: alohaCornerShape(40.dp)
     val actualInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
     val outlineWidth = LocalMaterialOutlineWidth.current
-    val styledModifier = modifier
-        .materialExpressivePressMotion(actualInteractionSource, enabled)
+    val styledModifier = (if (pressMotionEnabled) modifier.materialExpressivePressMotion(actualInteractionSource, enabled) else modifier)
         .then(
             if (framed && LocalMaterialShadowButtons.current) {
                 Modifier.shadow(2.dp, actualShape)
