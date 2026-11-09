@@ -34,7 +34,6 @@ import com.alohaoneui.common.Preference
 import com.alohaoneui.common.StatusBarRuntimeBridge
 import com.alohaoneui.mod.ui.category.SystemUIEvent
 import com.alohaoneui.mod.ui.component.AlohaOneUIActionButton
-import com.alohaoneui.mod.ui.component.AlohaOneUIInfoItem
 import com.alohaoneui.mod.ui.component.AlohaOneUIInlineTextField
 import com.alohaoneui.mod.ui.component.AlohaOneUISlider
 import com.alohaoneui.mod.ui.component.SelectItem
@@ -319,28 +318,29 @@ private fun SignalSliderSetting(
     val view = LocalView.current
     var lastHapticStep by remember { mutableIntStateOf(value.roundToInt()) }
 
-    Column {
-        AlohaOneUIInfoItem(icon = icon, title = title, summary = summary)
-        StatusThemeChildItem {
-            AlohaOneUISlider(
-                value = value,
-                onValueChange = { raw ->
-                    val quantized = raw.roundToInt().toFloat().coerceIn(
-                        range.start,
-                        range.endInclusive,
-                    )
-                    val step = quantized.roundToInt()
-                    if (step != lastHapticStep) {
-                        lastHapticStep = step
-                        view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
-                    }
-                    onValueChange(quantized)
-                },
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
-                valueRange = range,
-                onValueChangeFinished = onFinished,
-            )
-        }
+    StatusThemeChildItem(
+        title = title,
+        summary = summary,
+        icon = icon,
+    ) {
+        AlohaOneUISlider(
+            value = value,
+            onValueChange = { raw ->
+                val quantized = raw.roundToInt().toFloat().coerceIn(
+                    range.start,
+                    range.endInclusive,
+                )
+                val step = quantized.roundToInt()
+                if (step != lastHapticStep) {
+                    lastHapticStep = step
+                    view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                }
+                onValueChange(quantized)
+            },
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+            valueRange = range,
+            onValueChangeFinished = onFinished,
+        )
     }
 }
 
