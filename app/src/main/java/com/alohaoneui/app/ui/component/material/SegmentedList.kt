@@ -562,8 +562,10 @@ fun alohaCornerShape(radius: androidx.compose.ui.unit.Dp): CornerBasedShape {
 
 @Composable
 fun alohaOneUISegmentedColors(): ListItemColors = ListItemDefaults.segmentedColors().copy(
-    containerColor = colorScheme.surfaceContainerHigh,
-    disabledContainerColor = colorScheme.surfaceContainerHigh,
+    // Keep selectable list rows below dialog/sheet surfaces in the Material 3
+    // tonal hierarchy instead of painting the whole list at dialog elevation.
+    containerColor = colorScheme.surfaceContainerLow,
+    disabledContainerColor = colorScheme.surfaceContainerLow,
     supportingContentColor = colorScheme.outline,
     // Selection follows Aloha OneUI's live theme palette (custom seed / Monet,
     // palette style, light-dark mode), using its secondary accent roles.
