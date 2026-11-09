@@ -16,7 +16,7 @@ import com.alohaoneui.app.ui.component.markdown.MarkdownContent
 import com.alohaoneui.app.ui.component.material.ExpressiveDialog
 import com.alohaoneui.app.ui.component.material.ExpressiveSurface
 import com.alohaoneui.app.ui.component.material.alohaCornerShape
-import com.alohaoneui.app.ui.component.material.ExpressiveTextButton
+import com.alohaoneui.app.ui.component.material.ExpressiveDialogActionButtons
 
 @Composable
 fun LoadingDialogMaterial(showDialog: MutableState<Boolean>) {
@@ -62,24 +62,18 @@ fun ConfirmDialogMaterial(
                 }
             },
             confirmButton = {
-                ExpressiveTextButton(
-                    onClick = {
+                ExpressiveDialogActionButtons(
+                    confirmText = visuals.confirm ?: stringResource(id = android.R.string.ok),
+                    dismissText = visuals.dismiss ?: stringResource(id = android.R.string.cancel),
+                    onConfirm = {
                         confirm()
                         showDialog.value = false
-                    }
-                ) {
-                    Text(visuals.confirm ?: stringResource(id = android.R.string.ok))
-                }
-            },
-            dismissButton = {
-                ExpressiveTextButton(
-                    onClick = {
+                    },
+                    onDismiss = {
                         dismiss()
                         showDialog.value = false
-                    }
-                ) {
-                    Text(visuals.dismiss ?: stringResource(id = android.R.string.cancel))
-                }
+                    },
+                )
             }
         )
     }
