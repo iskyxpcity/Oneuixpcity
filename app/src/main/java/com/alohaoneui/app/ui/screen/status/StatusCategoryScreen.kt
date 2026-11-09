@@ -28,6 +28,7 @@ import com.alohaoneui.app.ui.component.material.TopBarBackButton
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -80,7 +81,9 @@ private fun Modifier.statusCategoryScroll(state: ScrollState): Modifier {
             .overScrollVertical()
             .scrollEndHaptic()
             .verticalScroll(state)
-        UiMode.Material -> this.verticalScroll(state)
+        // Match SettingsMaterial's 8dp leading spacer before its first
+        // SegmentedColumn; keep it inside the scroll content.
+        UiMode.Material -> this.verticalScroll(state).padding(top = 8.dp)
     }
 }
 
