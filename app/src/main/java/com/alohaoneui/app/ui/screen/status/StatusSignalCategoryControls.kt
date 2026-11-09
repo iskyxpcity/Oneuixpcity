@@ -2,7 +2,6 @@ package com.alohaoneui.app.ui.screen.status
 
 import android.content.Intent
 import android.view.HapticFeedbackConstants
-import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -267,7 +266,6 @@ fun StatusSignalCategoryControls(
                     title = stringResource(id = R.string.alohaoneui_setCustomCarrierName_title),
                     summary = if (uiState.setCustomCarrierName) uiState.customCarrierName else null,
                     icon = ImageVector.vectorResource(id = R.drawable.sim_card),
-                    modifier = Modifier.animateContentSize(),
                     clickable = true,
                     expanded = carrierExpanded && uiState.setCustomCarrierName,
                     onClick = { carrierExpanded = !carrierExpanded },
@@ -281,7 +279,7 @@ fun StatusSignalCategoryControls(
             }
             if (carrierExpanded && uiState.setCustomCarrierName) {
                 add {
-                    StatusThemeExpandedControlItem {
+                    StatusThemeChildItem {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
@@ -321,7 +319,7 @@ private fun SignalSliderSetting(
     val view = LocalView.current
     var lastHapticStep by remember { mutableIntStateOf(value.roundToInt()) }
 
-    StatusThemeExpandedControlItem(
+    StatusThemeChildItem(
         title = title,
         summary = summary,
         icon = icon,
