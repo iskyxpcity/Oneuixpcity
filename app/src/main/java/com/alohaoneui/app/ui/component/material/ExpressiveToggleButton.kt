@@ -29,13 +29,15 @@ fun ExpressiveToggleButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     colors: ToggleButtonColors = expressiveToggleButtonColors(),
+    interactionSource: MutableInteractionSource? = null,
+    pressMotionEnabled: Boolean = true,
     content: @Composable RowScope.() -> Unit,
 ) {
-    val interactionSource = remember { MutableInteractionSource() }
+    val actualInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
     ToggleButton(
         checked = checked,
         onCheckedChange = onCheckedChange,
-        modifier = modifier.materialExpressivePressMotion(interactionSource, enabled),
+        modifier = if (pressMotionEnabled) modifier.materialExpressivePressMotion(actualInteractionSource, enabled) else modifier,
         enabled = enabled,
         colors = colors,
         shapes = shapes,
@@ -43,7 +45,7 @@ fun ExpressiveToggleButton(
             BorderStroke(it.dp, MaterialTheme.colorScheme.outlineVariant)
         },
         elevation = if (LocalMaterialShadowButtons.current) ToggleButtonDefaults.elevation() else null,
-        interactionSource = interactionSource,
+        interactionSource = actualInteractionSource,
         content = content,
     )
 }
