@@ -240,7 +240,7 @@ fun StatusControlCenterCategoryControls(
                 }
                 if (textSizeExpanded && uiState.modifyQSClockTextSize) {
                     add {
-                        StatusThemeChildItem {
+                        StatusThemeExpandedControlItem {
                             AlohaOneUISlider(
                                 value = textSize,
                                 onValueChange = { textSize = it },
