@@ -267,7 +267,7 @@ private fun BluetoothSliderSetting(
     onValueChange: (Float) -> Unit,
     onFinished: () -> Unit,
 ) {
-    StatusThemeChildItem(
+    StatusThemeExpandedControlItem(
         title = title,
         summary = summary,
         icon = icon,
