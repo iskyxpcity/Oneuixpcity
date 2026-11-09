@@ -244,51 +244,68 @@ fun ColorPaletteScreenMaterial(
                     listOf(ColorMode.DARK_AMOLED) to stringResource(R.string.settings_theme_mode_dark)
                 )
 
-                options.chunked(4).forEach { rowOptions ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 8.dp),
-                        horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)
+                val modeInteractionSources = remember {
+                    List(options.size) { MutableInteractionSource() }
+                }
+                options.chunked(4).forEachIndexed { rowIndex, rowOptions ->
+                    ExpressiveButtonGroup(
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
                     ) {
                         rowOptions.forEachIndexed { index, (modes, label) ->
+                            val interactionSource = modeInteractionSources[rowIndex * 4 + index]
                             val sourceShape = alohaSegmentedShape(
                                 index = index,
                                 count = rowOptions.size,
                                 vertical = false,
                             )
-                            ExpressiveToggleButton(
-                                checked = currentColorMode in modes,
-                                onCheckedChange = {
-                                    if (it) {
-                                        haptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
-                                        actions.onSetColorMode(modes.first())
+                            customItem(
+                                buttonGroupContent = {
+                                    ExpressiveToggleButton(
+                                        checked = currentColorMode in modes,
+                                        onCheckedChange = {
+                                            if (it) {
+                                                haptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
+                                                actions.onSetColorMode(modes.first())
+                                            }
+                                        },
+                                        modifier = Modifier.animateWidth(interactionSource)
+                                            .semantics { role = Role.RadioButton },
+                                        colors = ToggleButtonDefaults.colors(
+                                            checkedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
+                                            containerColor = MaterialTheme.colorScheme.surface,
+                                        ),
+                                        shapes = ToggleButtonShapes(
+                                            shape = sourceShape,
+                                            pressedShape = sourceShape,
+                                            checkedShape = sourceShape,
+                                        ),
+                                        interactionSource = interactionSource,
+                                        pressMotionEnabled = false,
+                                    ) {
+                                        Icon(
+                                            imageVector = when (modes.first()) {
+                                                ColorMode.SYSTEM -> Icons.Filled.Brightness4
+                                                ColorMode.LIGHT -> Icons.Filled.Brightness7
+                                                ColorMode.DARK -> Icons.Filled.Brightness3
+                                                ColorMode.DARK_AMOLED -> Icons.Filled.Brightness1
+                                                else -> Icons.Filled.Brightness4
+                                            },
+                                            contentDescription = label
+                                        )
                                     }
                                 },
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .semantics { role = Role.RadioButton },
-                                colors = ToggleButtonDefaults.colors(
-                                    checkedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
-                                    containerColor = MaterialTheme.colorScheme.surface,
-                                ),
-                                shapes = ToggleButtonShapes(
-                                    shape = sourceShape,
-                                    pressedShape = sourceShape,
-                                    checkedShape = sourceShape,
-                                ),
-                            ) {
-                                Icon(
-                                    imageVector = when (modes.first()) {
-                                        ColorMode.SYSTEM -> Icons.Filled.Brightness4
-                                        ColorMode.LIGHT -> Icons.Filled.Brightness7
-                                        ColorMode.DARK -> Icons.Filled.Brightness3
-                                        ColorMode.DARK_AMOLED -> Icons.Filled.Brightness1
-                                        else -> Icons.Filled.Brightness4
-                                    },
-                                    contentDescription = label
-                                )
-                            }
+                                menuContent = { menuState ->
+                                    DropdownMenuItem(
+                                        text = { Text(label) },
+                                        onClick = {
+                                            menuState.dismiss()
+                                            haptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
+                                            actions.onSetColorMode(modes.first())
+                                        },
+                                    )
+                                },
+                            )
                         }
                     }
                 }
