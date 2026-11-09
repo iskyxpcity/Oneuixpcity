@@ -9,6 +9,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.VerticalDivider as MaterialVerticalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -46,6 +49,7 @@ fun SwitchItem(
     leadingContent: (@Composable () -> Unit)? = null,
     clickable: Boolean = false,
     showChildIndicator: Boolean = clickable,
+    expanded: Boolean? = null,
     onClick: () -> Unit = {},
     enabled: Boolean = true,
     dimWhenDisabled: Boolean = true,
@@ -88,6 +92,16 @@ fun SwitchItem(
                                     enabled = enabled,
                                     onCheckedChange = { if (enabled) onCheckedChange(it) },
                                 )
+                                if (expanded != null) {
+                                    Icon(
+                                        imageVector = if (expanded) {
+                                            Icons.Filled.KeyboardArrowUp
+                                        } else {
+                                            Icons.Filled.KeyboardArrowDown
+                                        },
+                                        contentDescription = null,
+                                    )
+                                }
                             }
                         },
                     )
@@ -150,6 +164,17 @@ fun SwitchItem(
                                 enabled = enabled,
                                 onCheckedChange = { if (enabled) onCheckedChange(it) },
                             )
+                            if (expanded != null) {
+                                MiuixIcon(
+                                    imageVector = if (expanded) {
+                                        Icons.Filled.KeyboardArrowUp
+                                    } else {
+                                        Icons.Filled.KeyboardArrowDown
+                                    },
+                                    contentDescription = null,
+                                    tint = colorScheme.onSurfaceVariant,
+                                )
+                            }
                         },
                         onClick = { if (enabled) onClick() },
                         role = Role.Button,
