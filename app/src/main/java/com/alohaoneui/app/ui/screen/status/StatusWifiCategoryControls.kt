@@ -68,6 +68,7 @@ fun StatusWifiCategoryControls(
                     summary = stringResource(id = R.string.status_wifi_runtime_enable_summary),
                     clickable = true,
                     showChildIndicator = true,
+                    expanded = wifiRuntime.enabled && expanded,
                     onClick = {
                         if (wifiRuntime.enabled) expanded = !expanded
                     },
@@ -245,6 +246,7 @@ fun StatusWifiCategoryControls(
                             summary = stringResource(id = R.string.status_wifi_advanced_arc_editor_summary),
                             clickable = true,
                             showChildIndicator = true,
+                            expanded = showArcEditor,
                             onClick = { showArcEditor = !showArcEditor },
                             checked = showArcEditor,
                             onCheckedChange = { showArcEditor = it },
