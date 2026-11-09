@@ -703,7 +703,7 @@ fun StatusTimeCategoryControls(
                     }
                     if (uiState.useFold7CustomDoubleLineClockScale) {
                         add {
-                            StatusThemeChildItem(
+                            StatusThemeExpandedControlItem(
                                 title = stringResource(
                                     id = R.string.alohaoneui_fold7DoubleLineClockTimeScale_title
                                 ),
@@ -735,7 +735,7 @@ fun StatusTimeCategoryControls(
                             }
                         }
                         add {
-                            StatusThemeChildItem(
+                            StatusThemeExpandedControlItem(
                                 title = stringResource(
                                     id = R.string.alohaoneui_fold7DoubleLineClockDateScale_title
                                 ),
