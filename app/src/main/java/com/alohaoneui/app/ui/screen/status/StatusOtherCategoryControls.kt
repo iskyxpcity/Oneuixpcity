@@ -1,6 +1,5 @@
 package com.alohaoneui.app.ui.screen.status
 
-import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -71,7 +70,6 @@ private fun StatusBurnInProtectionControls(
                     icon = ImageVector.vectorResource(id = R.drawable.mobile_screensaver),
                     title = stringResource(id = R.string.alohaoneui_statusBarBurnInProtection_title),
                     summary = stringResource(id = R.string.alohaoneui_statusBarBurnInProtection_summary),
-                    modifier = Modifier.animateContentSize(),
                     clickable = true,
                     expanded = expanded && enabled,
                     onClick = { expanded = !expanded },
@@ -153,7 +151,7 @@ private fun BurnInSliderSetting(
     onValueChange: (Float) -> Unit,
     onValueChangeFinished: () -> Unit,
 ) {
-    StatusThemeExpandedControlItem(
+    StatusThemeChildItem(
         title = title,
         summary = summary,
     ) {
