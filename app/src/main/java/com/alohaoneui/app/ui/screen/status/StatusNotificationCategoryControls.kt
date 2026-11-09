@@ -41,6 +41,7 @@ fun StatusNotificationCategoryControls(
                     summary = if (uiState.modifyStatusBarMaxNotificationIcons) " $max" else null,
                     icon = ImageVector.vectorResource(id = R.drawable.notifications),
                     clickable = true,
+                    expanded = expanded && uiState.modifyStatusBarMaxNotificationIcons,
                     onClick = { expanded = !expanded },
                     checked = uiState.modifyStatusBarMaxNotificationIcons,
                     onCheckedChange = {
