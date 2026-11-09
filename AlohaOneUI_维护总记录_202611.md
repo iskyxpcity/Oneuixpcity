@@ -1597,3 +1597,12 @@
 - 为避免改变 `SegmentedOptionFrame` 其他潜在调用方，给该框体增加可显式传入的 `containerColor` 参数，默认仍保留原 `surfaceContainerHigh`；仅界面缩放调用处传入动态主题色 `MaterialTheme.colorScheme.surfaceContainerLow`，其形状、描边、阴影、内边距、滑块及业务逻辑均不变。
 - 修改文件：`SegmentedList.kt`、`ColorPaletteScreenMaterial.kt`。提交：`53412803`（增加可配置背景参数）、`d996fce4`（界面缩放指定低层级表面）、`bc73f3cd`（颜色类型限定修正）。仅操作 `test/switches-official-eight-20261103`，未修改 `main`。
 - GitHub Actions 构建已触发：run `42547267882`，当前状态 pending；需等待结果并在普通浅色/深色主题下检查界面缩放卡片视觉效果后再标记验收。
+
+
+## 2026-11-08｜界面缩放详情项改为统一分段列表行
+
+- 用户指出“界面缩放”不仅颜色不同，详情选项卡本身也没有遵循项目统一的上、中、下分段列表样式。进一步核对确认：该项确实处于手势分组第四项（下段），但此前用独立的 `SegmentedOptionFrame` + `ExpressiveSurface` 自绘，未走 `SegmentedListItem` 的标准 Material 3 列表项渲染流程；因此只改背景色无法统一按压形状过渡、列表容器颜色、描边/阴影处理。
+- 已将“界面缩放”整个详情项改为 `SegmentedListItem`，直接继承所在 `SegmentedColumn` 提供的第四项位置状态、主题动态形状、按压动画、统一列表容器色和共享描边/阴影规则。图标、标题、说明、滑块、百分比按钮及数值输入弹窗的业务逻辑保留；滑块控件本身未改，“圆角大小”“描边宽度”未改。
+- 同时撤销上一轮为该单独卡片临时增加的 `SegmentedOptionFrame.containerColor` 特殊参数，恢复共享框体原默认行为，避免保留不再需要的专属颜色接口。
+- 最新代码提交：`acd3e1f585a3a7e31c853233f4db45d1c4d3055b`（界面缩放改用标准分段行）；`c2b0f5e51d9cec00be329f0c4f43a239e8634039`（移除临时背景参数）。均仅在 `test/switches-official-eight-20261103`，未合并 `main`。
+- Actions 已为代码提交触发新的构建，需以最新分支头提交对应的 run 为准；构建和浅色/深色主题真机视觉验收完成前，不标记为已验收。
