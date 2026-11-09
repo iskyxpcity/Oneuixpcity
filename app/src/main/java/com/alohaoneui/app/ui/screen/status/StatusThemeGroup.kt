@@ -124,34 +124,34 @@ fun StatusThemeExpandedControlItem(
                 colors = alohaOneUISegmentedColors(),
                 headlineContent = {
                     if (hasHeader) {
-                        Column(
+                        Row(
                             modifier = Modifier.fillMaxWidth(),
-                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
                         ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            if (icon != null) {
+                                Icon(
+                                    imageVector = icon,
+                                    contentDescription = title,
+                                )
+                            }
+                            Column(
+                                modifier = Modifier.weight(1f),
+                                verticalArrangement = Arrangement.spacedBy(4.dp),
                             ) {
-                                if (icon != null) {
-                                    Icon(
-                                        imageVector = icon,
-                                        contentDescription = title,
-                                    )
-                                }
                                 if (!title.isNullOrBlank()) {
                                     Text(
                                         text = title,
                                         style = MaterialTheme.typography.bodyLarge,
                                     )
                                 }
-                            }
-                            if (!summary.isNullOrBlank()) {
-                                Text(
-                                    text = summary,
-                                    modifier = Modifier.padding(start = if (icon != null && !title.isNullOrBlank()) 36.dp else 0.dp),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
+                                if (!summary.isNullOrBlank()) {
+                                    Text(
+                                        text = summary,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                }
                             }
                         }
                     } else {
@@ -193,34 +193,34 @@ fun StatusThemeChildItem(
                 colors = alohaOneUISegmentedColors(),
                 headlineContent = {
                     if (hasHeader) {
-                        Column(
+                        Row(
                             modifier = Modifier.fillMaxWidth(),
-                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
                         ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            if (icon != null) {
+                                Icon(
+                                    imageVector = icon,
+                                    contentDescription = title,
+                                )
+                            }
+                            Column(
+                                modifier = Modifier.weight(1f),
+                                verticalArrangement = Arrangement.spacedBy(4.dp),
                             ) {
-                                if (icon != null) {
-                                    Icon(
-                                        imageVector = icon,
-                                        contentDescription = title,
-                                    )
-                                }
                                 if (!title.isNullOrBlank()) {
                                     Text(
                                         text = title,
                                         style = MaterialTheme.typography.bodyLarge,
                                     )
                                 }
-                            }
-                            if (!summary.isNullOrBlank()) {
-                                Text(
-                                    text = summary,
-                                    modifier = Modifier.padding(start = if (icon != null && !title.isNullOrBlank()) 36.dp else 0.dp),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
+                                if (!summary.isNullOrBlank()) {
+                                    Text(
+                                        text = summary,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                }
                             }
                         }
                     } else {
