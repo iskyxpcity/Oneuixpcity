@@ -111,8 +111,9 @@ fun StatusThemeGroup(
 @Composable
 fun StatusThemeExpandedControlItem(
     modifier: Modifier = Modifier,
-    title: String,
+    title: String? = null,
     summary: String? = null,
+    icon: ImageVector? = null,
     content: @Composable () -> Unit,
 ) {
     when (LocalUiMode.current) {
@@ -121,10 +122,20 @@ fun StatusThemeExpandedControlItem(
                 modifier = modifier,
                 colors = alohaOneUISegmentedColors(),
                 headlineContent = {
-                    Text(
-                        text = title,
-                        style = MaterialTheme.typography.bodyLarge,
-                    )
+                    if (!title.isNullOrBlank()) {
+                        Text(
+                            text = title,
+                            style = MaterialTheme.typography.bodyLarge,
+                        )
+                    }
+                },
+                leadingContent = icon?.let {
+                    {
+                        Icon(
+                            imageVector = it,
+                            contentDescription = title,
+                        )
+                    }
                 },
                 supportingContent = {
                     Column(
@@ -151,11 +162,11 @@ fun StatusThemeExpandedControlItem(
             modifier = modifier,
             title = title,
             summary = summary,
+            icon = icon,
             content = content,
         )
     }
 }
-
 /**
  * Expanded child content that stays inside the active native group.
  * Material renders it as a real SegmentedListItem so it participates in
