@@ -206,6 +206,7 @@ fun StatusTimeCategoryControls(
                     } else null,
                     icon = ImageVector.vectorResource(id = R.drawable.nest_clock_farsight_digital),
                     clickable = true,
+                    expanded = formatExpanded && uiState.setStatusBarClockFormat,
                     onClick = { formatExpanded = !formatExpanded },
                     checked = uiState.setStatusBarClockFormat,
                     onCheckedChange = {
@@ -391,6 +392,7 @@ fun StatusTimeCategoryControls(
                                 ),
                                 clickable = true,
                                 showChildIndicator = true,
+                                expanded = expandedRichBlock == selectedRichBlockIndex && selectedRichStyle.enabled,
                                 onClick = {
                                     expandedRichBlock =
                                         if (expandedRichBlock == selectedRichBlockIndex) {
@@ -431,6 +433,7 @@ fun StatusTimeCategoryControls(
                         null
                     },
                     showChildIndicator = true,
+                    expanded = uiState.modifyStatusBarClockPosition,
                     checked = uiState.modifyStatusBarClockPosition,
                     onCheckedChange = {
                         onEvent(
@@ -660,6 +663,7 @@ fun StatusTimeCategoryControls(
                                 id = R.string.alohaoneui_fold7CustomDoubleLineClockScale_title
                             ),
                             showChildIndicator = true,
+                            expanded = uiState.useFold7CustomDoubleLineClockScale,
                             checked = uiState.useFold7CustomDoubleLineClockScale,
                             onCheckedChange = {
                                 onEvent(
@@ -824,6 +828,7 @@ fun StatusTimeCategoryControls(
                         } else null,
                         icon = ImageVector.vectorResource(id = R.drawable.format_size),
                         clickable = true,
+                        expanded = singleLineScaleExpanded && uiState.setStatusBarClockTextScale,
                         onClick = { singleLineScaleExpanded = !singleLineScaleExpanded },
                         checked = uiState.setStatusBarClockTextScale,
                         onCheckedChange = {
