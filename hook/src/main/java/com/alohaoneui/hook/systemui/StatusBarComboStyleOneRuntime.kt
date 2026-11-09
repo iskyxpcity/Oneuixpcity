@@ -2809,6 +2809,10 @@ object StatusBarComboStyleOneRuntime {
         triggeringChild: View? = null,
         requestedVisibility: Int? = null,
     ) {
+        // This reconciliation only belongs to the active combo-Wi-Fi replacement path.
+        // SystemUI visibility hooks may still fire while the feature is being disabled;
+        // never let those late callbacks re-register a listener or rewrite restored spacing.
+        if (!config.enabled || !config.showWifi) return
         if (cluster == null || !isStatusIconsCluster(cluster) || hostFor(cluster) == null) return
         synchronized(nativeWifiClusterLayoutListeners) {
             if (!nativeWifiClusterLayoutListeners.containsKey(cluster)) {
@@ -2827,6 +2831,10 @@ object StatusBarComboStyleOneRuntime {
         }
         cluster.post {
             try {
+                // A task can already be queued when disable restores the SystemUI baseline.
+                // Re-check at execution time so it cannot trim the just-restored padding,
+                // minimumWidth, or weighted parent slot after the restore pass.
+                if (!config.enabled || !config.showWifi || hostFor(cluster) == null) return@post
                 compactNativeStatusIconParentSlot(cluster)
                 val baselinePadding = synchronized(nativeWifiClusterBaselinePadding) {
                     nativeWifiClusterBaselinePadding[cluster] ?: intArrayOf(
