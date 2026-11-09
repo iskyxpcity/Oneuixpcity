@@ -72,7 +72,7 @@ fun StatusPaddingCategoryControls(
             }
             if (leftExpanded && uiState.modifyStatusBarLeftPadding) {
                 add {
-                    StatusThemeChildItem {
+                    StatusThemeExpandedControlItem {
                         AlohaOneUISlider(
                             value = left,
                             onValueChange = { left = it },
@@ -103,7 +103,7 @@ fun StatusPaddingCategoryControls(
             }
             if (rightExpanded && uiState.modifyStatusBarRightPadding) {
                 add {
-                    StatusThemeChildItem {
+                    StatusThemeExpandedControlItem {
                         AlohaOneUISlider(
                             value = right,
                             onValueChange = { right = it },
@@ -136,7 +136,7 @@ fun StatusPaddingCategoryControls(
             }
             if (topExpanded && uiState.modifyStatusBarTopPadding) {
                 add {
-                    StatusThemeChildItem {
+                    StatusThemeExpandedControlItem {
                         AlohaOneUISlider(
                             value = top,
                             onValueChange = { top = it },
@@ -173,7 +173,7 @@ fun StatusPaddingCategoryControls(
             }
             if (bottomExpanded && uiState.modifyStatusBarBottomPadding) {
                 add {
-                    StatusThemeChildItem {
+                    StatusThemeExpandedControlItem {
                         AlohaOneUISlider(
                             value = bottom,
                             onValueChange = { bottom = it },
