@@ -176,7 +176,7 @@ fun StatusComboStyleOneCategoryControls(
 
     StatusThemeGroup(
         items = listOf({
-            StatusThemeExpandedControlItem {
+            StatusThemeChildItem {
                 Column {
                     StyleOneInfoItem(title = stringResource(R.string.status_combo_style_one_preview))
                     AndroidView(modifier = Modifier.fillMaxWidth().height(60.dp), factory = { StatusComboStyleOnePreviewView(it) }, update = { it.setConfig(previewRuntime) })
@@ -450,7 +450,7 @@ fun StatusComboStyleOneCategoryControls(
                     )
                 }
                 colorItems += {
-                    StatusThemeExpandedControlItem {
+                    StatusThemeChildItem {
                         StyleOneInfoItem(
                             title = stringResource(R.string.status_combo_style_one_reset_colors),
                         summary = stringResource(R.string.status_combo_style_one_reset_colors_summary),
@@ -583,7 +583,7 @@ private fun StyleOneRoleColorRow(
     enabled: Boolean,
     onClick: () -> Unit,
 ) {
-    StatusThemeExpandedControlItem {
+    StatusThemeChildItem {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -1009,7 +1009,7 @@ private fun styleOneSlider(
         // Miuix Card needs a modest inset without a duplicate oversized child margin.
         UiMode.Miuix -> Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
     }
-    StatusThemeExpandedControlItem {
+    StatusThemeChildItem {
         Column(
             modifier = Modifier.fillMaxWidth().then(sliderContentPadding).alpha(if (enabled) 1f else 0.45f),
             verticalArrangement = Arrangement.spacedBy(2.dp),
