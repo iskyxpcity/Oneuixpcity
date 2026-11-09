@@ -1579,3 +1579,12 @@
 - 用户反馈上一轮将输入框底色统一为白色，视觉效果仍不正确。复核 `ExpressiveOutlinedTextField` 两个重载后确认：强制使用 `surfaceContainerLowest` 会让普通配色模式下所有输入框都绘制为最低层级的浅色容器，破坏输入框与所在弹窗/列表表面的关系。
 - 已将两个重载的 focused、unfocused、disabled 容器色全部恢复为 `Color.Transparent`，遵循 Material 3 OutlinedTextField 的透明容器语义，让输入框显示其所在页面或弹窗的真实主题表面；输入框边框仍分别使用 primary、outline、outlineVariant、error，保留 Material 3 的轮廓区分。没有修改 AMOLED 色板、Miuix 或弹窗/列表业务逻辑。
 - 源码提交：`2ee436f6f82b2e1138ae0c81ace2380ff3971ac9`，仅位于 `test/switches-official-eight-20261103`，未修改 main。待检查对应 Actions 构建结果；透明容器修复尚需在普通浅色/深色主题弹窗中真机确认。
+
+
+## 2026-11-08｜Material 输入框主题底色层级修正（保留 Material 3 原生形状）
+
+- 用户再次澄清：Miuix 仅作为颜色层级清晰度的参考，不能把 Miuix 输入框的胶囊形状、布局或控件风格复制到 Material；Material 3 自身的输入框形状必须保留。
+- 复核当前 Material 主题结构：弹窗使用 Material 3 对话框表面层级；弹窗内分段列表行已使用 `surfaceContainerLow`；共享 `ExpressiveOutlinedTextField` 的两个重载此前却将容器设为透明，导致输入框没有独立填充色，只剩边框，输入区域与所在表面缺少颜色层次。
+- 已在 `ExpressiveControls.kt` 的两个 `ExpressiveOutlinedTextField` 重载中，将聚焦/未聚焦输入框底色设为主题动态色板的 `MaterialTheme.colorScheme.surfaceContainer`，禁用状态设为 `surfaceContainerLow`。按当前层级形成：普通列表 `surfaceContainerLow`、输入框 `surfaceContainer`、Material 3 弹窗表面（默认更高容器层级）之间的区分；不再使用透明或固定白色。
+- 保留 `OutlinedTextField` 原生 Material 3 控件、`alohaCornerShape(12.dp)`、聚焦 `primary` 边框、未聚焦 `outline` 边框、禁用 `outlineVariant`、错误 `error`，不改形状工厂、圆角比例、布局、交互、Miuix、AMOLED 色板或弹窗业务逻辑。
+- 源码提交：`296c2adc5c52bb2c05df2a2475e9f8c2fc3b8117`，仅提交到 `test/switches-official-eight-20261103`，未修改 `main`。当前仅完成源码修改，尚待 GitHub Actions Kotlin 编译/签名 APK 构建与普通浅色、深色主题真机视觉验收；不得将其标记为已验收完成。
