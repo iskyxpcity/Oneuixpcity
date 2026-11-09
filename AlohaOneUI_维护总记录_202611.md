@@ -1694,3 +1694,13 @@
 - 已把 GitHub Actions 构建工作流的测试分支过滤扩展为 `test/**`，否则新建测试分支不会触发项目 APK 构建。
 - 构建已触发：Actions run #2873，run id `42621129845`，当前状态待最终结果；链接：https://github.com/iskyxpcity/Oneuixpcity/actions/runs/42621129845。
 - 全项目按钮调用点与并排按钮组迁移仍在进行；本轮尚未取得构建成功结论，不能合并 main。
+
+
+### 继续进展（2026-11-09，编译修复与按钮组迁移）
+- 前一轮 Actions run #2877（run id `42623728754`，提交 `ba6a2a56f6d52f6cea38577b3471e4d2b8f2fcd0`）已成功完成，确认修复后的 Material 3 ButtonGroup 封装和三个主题数值弹窗可通过 Kotlin/Android 编译。
+- 修复 #2876 编译错误：`ColorPaletteScreenMaterial.kt` 缺少 `ExpressiveButtonGroup` 导入，并为其显式增加 `ExperimentalMaterial3ExpressiveApi` opt-in。修复提交 `ba6a2a56`。
+- `AlohaOneUICategoryScreen.kt` 的电源菜单“上移/下移”并排操作按钮已迁移到官方 `ExpressiveButtonGroup`；每项通过独立 InteractionSource + `Modifier.animateWidth` 实现按压扩张/相邻项压缩，复用同一 source 并关闭 standalone scale，保留原 enabled 条件与事件逻辑。提交 `e5225917`。
+- `HomeDeviceTools.kt` 的 Material 设备信息三段式切换控件已迁移到官方 `ExpressiveButtonGroup`，保留 leading/middle/trailing 形状、RadioButton 语义、选中逻辑和 Miuix TabRow 分支；每个切换项使用独立 InteractionSource 驱动官方宽度联动。提交 `7f0defc1`。
+- 已核对 `GlobalShortcutActionsScreen.kt` 与 `TopBarBackButton.kt` 使用共享 `ExpressiveIconButton`；`AlohaOneUISpecialControls.kt` 使用共享 `ExpressiveButton`，因此可继承独立按钮弹性按压反馈。
+- 最新 Actions run #2879（run id `42625589091`，提交 `7f0defc13562cfb4af326d6fd79b708a790c5fd8`）已进入 `:app:compileDebugKotlin`，截至本记录更新时仍在编译；必须等待最终成功后才确认两处按钮组迁移无编译问题。
+- 全项目 Material 3 调用点审计仍未完成；后续继续检查其他屏幕、弹窗、选择器及底部/顶部操作。当前仍仅测试分支，PR #31 未合并 main；尚未完成 APK 与设备视觉验收。
