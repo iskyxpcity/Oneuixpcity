@@ -503,8 +503,7 @@ fun StatusTimeCategoryControls(
             }
             if (uiState.modifyStatusBarClockPosition) {
                 add {
-                    StatusThemeExpandedControlItem {
-                        SelectItem(
+                    SelectItem(
                             icon = ImageVector.vectorResource(id = R.drawable.format_size),
                             title = stringResource(
                                 id = R.string.alohaoneui_statusBarClockAlignment_title
@@ -534,7 +533,6 @@ fun StatusTimeCategoryControls(
                                 )
                             },
                         )
-                    }
                 }
                 add {
                     StatusThemeExpandedControlItem {
@@ -584,84 +582,67 @@ fun StatusTimeCategoryControls(
                     }
                 }
                 add {
-                    StatusThemeExpandedControlItem {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 8.dp),
-                            verticalArrangement = Arrangement.spacedBy(4.dp),
-                        ) {
-                            AlohaOneUISectionLabel(
-                                text = stringResource(
-                                    id = R.string.alohaoneui_statusBarClockLeftMargin_title
-                                ),
-                                modifier = Modifier.padding(horizontal = 12.dp),
-                            )
-                            AlohaOneUISupportingText(
-                                text = stringResource(
-                                    id = R.string.alohaoneui_statusBarClockMargin_summary,
-                                    clockLeftMargin,
-                                ),
-                                modifier = Modifier.padding(horizontal = 12.dp),
-                            )
-                            AlohaOneUISlider(
-                                value = clockLeftMargin,
-                                stepSize = 1f,
-                                onValueChange = { raw ->
-                                    val value = raw.roundToInt().coerceIn(0, 40).toFloat()
-                                    clockLeftMargin = value
-                                    onEvent(
-                                        SystemUIEvent.StatusBarPreview(
-                                            SystemUIEvent.StatusBar.StatusBarClockLeftMarginDp(value)
-                                        )
+                    StatusThemeExpandedControlItem(
+                        title = stringResource(id = R.string.alohaoneui_statusBarClockLeftMargin_title),
+                        summary = stringResource(
+                            id = R.string.alohaoneui_statusBarClockMargin_summary,
+                            clockLeftMargin,
+                        ),
+                    ) {
+                        AlohaOneUISlider(
+                            value = clockLeftMargin,
+                            stepSize = 1f,
+                            onValueChange = { raw ->
+                                val value = raw.roundToInt().coerceIn(0, 40).toFloat()
+                                clockLeftMargin = value
+                                onEvent(
+                                    SystemUIEvent.StatusBarPreview(
+                                        SystemUIEvent.StatusBar.StatusBarClockLeftMarginDp(value)
                                     )
-                                },
-                                modifier = Modifier.fillMaxWidth(),
-                                valueRange = 0f..40f,
-                                onValueChangeFinished = {
-                                    onEvent(
-                                        SystemUIEvent.StatusBar.StatusBarClockLeftMarginDp(
-                                            clockLeftMargin
-                                        )
+                                )
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            valueRange = 0f..40f,
+                            onValueChangeFinished = {
+                                onEvent(
+                                    SystemUIEvent.StatusBar.StatusBarClockLeftMarginDp(
+                                        clockLeftMargin
                                     )
-                                },
-                            )
-                            AlohaOneUISectionLabel(
-                                text = stringResource(
-                                    id = R.string.alohaoneui_statusBarClockRightMargin_title
-                                ),
-                                modifier = Modifier.padding(horizontal = 12.dp),
-                            )
-                            AlohaOneUISupportingText(
-                                text = stringResource(
-                                    id = R.string.alohaoneui_statusBarClockMargin_summary,
-                                    clockRightMargin,
-                                ),
-                                modifier = Modifier.padding(horizontal = 12.dp),
-                            )
-                            AlohaOneUISlider(
-                                value = clockRightMargin,
-                                stepSize = 1f,
-                                onValueChange = { raw ->
-                                    val value = raw.roundToInt().coerceIn(0, 40).toFloat()
-                                    clockRightMargin = value
-                                    onEvent(
-                                        SystemUIEvent.StatusBarPreview(
-                                            SystemUIEvent.StatusBar.StatusBarClockRightMarginDp(value)
-                                        )
+                                )
+                            },
+                        )
+                    }
+                }
+                add {
+                    StatusThemeExpandedControlItem(
+                        title = stringResource(id = R.string.alohaoneui_statusBarClockRightMargin_title),
+                        summary = stringResource(
+                            id = R.string.alohaoneui_statusBarClockMargin_summary,
+                            clockRightMargin,
+                        ),
+                    ) {
+                        AlohaOneUISlider(
+                            value = clockRightMargin,
+                            stepSize = 1f,
+                            onValueChange = { raw ->
+                                val value = raw.roundToInt().coerceIn(0, 40).toFloat()
+                                clockRightMargin = value
+                                onEvent(
+                                    SystemUIEvent.StatusBarPreview(
+                                        SystemUIEvent.StatusBar.StatusBarClockRightMarginDp(value)
                                     )
-                                },
-                                modifier = Modifier.fillMaxWidth(),
-                                valueRange = 0f..40f,
-                                onValueChangeFinished = {
-                                    onEvent(
-                                        SystemUIEvent.StatusBar.StatusBarClockRightMarginDp(
-                                            clockRightMargin
-                                        )
+                                )
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            valueRange = 0f..40f,
+                            onValueChangeFinished = {
+                                onEvent(
+                                    SystemUIEvent.StatusBar.StatusBarClockRightMarginDp(
+                                        clockRightMargin
                                     )
-                                },
-                            )
-                        }
+                                )
+                            },
+                        )
                     }
                 }
             }
