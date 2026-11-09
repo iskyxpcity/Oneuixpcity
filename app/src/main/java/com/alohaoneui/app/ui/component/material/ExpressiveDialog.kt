@@ -104,6 +104,7 @@ fun ExpressiveConfirmDialog(
 fun ExpressiveDialogActionButtons(
     confirmText: String,
     dismissText: String?,
+    confirmEnabled: Boolean = true,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -137,6 +138,7 @@ fun ExpressiveDialogActionButtons(
         customItem(
             buttonGroupContent = {
                 ExpressiveTextButton(
+                    enabled = confirmEnabled,
                     onClick = onConfirm,
                     modifier = Modifier.animateWidth(confirmSource),
                     interactionSource = confirmSource,
@@ -146,6 +148,7 @@ fun ExpressiveDialogActionButtons(
             menuContent = { menuState ->
                 androidx.compose.material3.DropdownMenuItem(
                     text = { Text(confirmText) },
+                    enabled = confirmEnabled,
                     onClick = { menuState.dismiss(); onConfirm() },
                 )
             },
