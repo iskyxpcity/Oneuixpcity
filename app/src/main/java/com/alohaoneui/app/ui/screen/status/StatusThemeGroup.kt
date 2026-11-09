@@ -131,11 +131,7 @@ fun StatusThemeExpandedControlItem(
                             )
                         }
                     } else {
-                        CompositionLocalProvider(
-                            LocalMaterialShadowContainers provides false,
-                        ) {
-                            content()
-                        }
+                        content()
                     }
                 },
                 leadingContent = icon?.let {
@@ -159,11 +155,7 @@ fun StatusThemeExpandedControlItem(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                             }
-                            CompositionLocalProvider(
-                                LocalMaterialShadowContainers provides false,
-                            ) {
-                                content()
-                            }
+                            content()
                         }
                     }
                 } else null,
