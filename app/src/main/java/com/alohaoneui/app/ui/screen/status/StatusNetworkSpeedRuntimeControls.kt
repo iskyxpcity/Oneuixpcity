@@ -23,7 +23,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.alohaoneui.app.R
 import com.alohaoneui.app.ui.viewmodel.AlohaOneUIToolsViewModel
 import com.alohaoneui.common.Preference
-import com.alohaoneui.mod.ui.component.AlohaOneUIInfoItem
 import com.alohaoneui.mod.ui.component.AlohaOneUISlider
 import com.alohaoneui.mod.ui.component.SwitchItem
 import kotlin.math.roundToInt
@@ -222,19 +221,18 @@ private fun NetworkSpeedSliderSetting(
     onValueChange: (Float) -> Unit,
     onFinished: () -> Unit,
 ) {
-    Column {
-        AlohaOneUIInfoItem(icon = icon, title = title, summary = summary)
-        StatusThemeChildItem {
-            AlohaOneUISlider(
-                value = value,
-                onValueChange = onValueChange,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp),
-                valueRange = range,
-                onValueChangeFinished = onFinished,
-            )
-        }
+    StatusThemeChildItem(
+        title = title,
+        summary = summary,
+        icon = icon,
+    ) {
+        AlohaOneUISlider(
+            value = value,
+            onValueChange = onValueChange,
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+            valueRange = range,
+            onValueChangeFinished = onFinished,
+        )
     }
 }
 
