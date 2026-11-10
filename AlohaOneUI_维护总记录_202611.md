@@ -1758,3 +1758,14 @@
 - 产品源码提交：`7882cbe9d122c16fc2a5ea49f3d04142b97b9a4a`（`fix: match shared Material buttons to Home press shape motion`），仅写入 `test/material3-expressive-button-motion-20261109`，`main` 未修改。
 - 本轮已完成共享按钮层的第一批统一，并核查了上述页面接入点；尚不能宣称项目所有页面的每一种按钮/第三方控件都已完成逐项核验。后续需继续扫描其余 Material 页面与自定义控件，检查是否绕过共用按钮组件，以及不同按钮组是否保留主页的联动、形状、按压/回弹与颜色语义。
 - 当前尚未核验本次提交对应的 GitHub Actions 构建、签名与 APK；没有新的 APK 可交付。下一步检查最新 HEAD 的 Actions，修复构建问题并验收后，再逐页继续排查遗漏的按钮实现。
+
+
+## 2026-11-10：按用户澄清更正 Material 按钮组与独立按钮规则
+
+- 用户明确更正上一轮理解：按钮组需要整体居中，组内按钮颜色统一跟随 Material 动态主题色；独立按钮只联动主题形状形变，不应横向扩大。
+- ExpressiveButton、ExpressiveTextButton、ExpressiveIconButton 已移除按压时左右 Spacer 宽度扩展；仍通过同一 rememberMaterialExpressivePressExpansion Spring 进度驱动 alohaSegmentedShape，所以单按钮只改变主题圆角/轮廓形态，不改变测量宽度，也不挤压相邻内容。
+- 为兼容既有调用参数，保留 pressMotionEnabled API；独立按钮的主题形变仍持续响应按压。电源菜单上移/下移等由 ButtonGroup animateWidth 负责的外部宽度联动不再被该参数误关掉形状动画。
+- ColorPaletteScreenMaterial.kt 的模式切换按钮组移除自定义半透明选中色与固定 surface 色，恢复 ExpressiveToggleButton 的统一主题动态色：选中使用 colorScheme.primary/onPrimary，未选中使用 surfaceContainerHighest/onSurface。
+- 主页设备信息按钮组、状态栏三合一分类按钮组与调色板模式按钮组的 spacedBy 均明确设置 Alignment.CenterHorizontally；调色板的三个数值弹窗操作组从 End 调整为 Center。其余未显式指定的按钮组沿用 ExpressiveButtonGroup 默认居中排列。
+- 本轮源码提交依次为：68f6ef5（独立按钮仅形变）、f676523（调色板按钮组居中与主题动态色）、0ca2615（状态栏按钮组居中）、ef19fd8（图标按钮内容槽类型修正）。均仅提交到 test/material3-expressive-button-motion-20261109，未修改 main。
+- 这是按用户澄清对上一轮实现的纠正；仍需等待最新 HEAD 的 Actions 完整构建与签名校验，并检查是否存在其它显式靠右排列的 Material 按钮组或自定义固定颜色组。真机视觉验收尚未完成。
