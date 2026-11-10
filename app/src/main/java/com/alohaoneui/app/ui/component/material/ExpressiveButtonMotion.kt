@@ -18,14 +18,11 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 /**
- * Shared Material press motion:
- * - Press/long-press expands smoothly without spring overshoot.
- * - Release first returns almost all the way with a smooth tween.
- * - Only the final settling movement uses a damped spring, matching the
- *   detail-option expansion interaction rather than bouncing throughout.
+ * Shared Material press motion.
  *
- * The value is rendered as real horizontal content space by each shared
- * button wrapper, so neighboring controls are laid out around the expansion.
+ * A short tap must not cancel the expansion halfway through: finish the press
+ * phase first, then retract smoothly, and reserve spring motion for the final
+ * return to the resting size. Long presses use the exact same sequence.
  */
 @Composable
 internal fun rememberMaterialExpressivePressExpansion(
@@ -50,42 +47,45 @@ internal fun rememberMaterialExpressivePressExpansion(
                         motionJob = launch {
                             expansion.animateTo(
                                 expansionPerSide.value,
-                                tween(durationMillis = 150),
+                                tween(durationMillis = 210),
                             )
                         }
                     }
                     is PressInteraction.Release -> if (activePress == interaction.press) {
                         activePress = null
-                        motionJob?.cancel()
+                        val pressMotion = motionJob
                         motionJob = launch {
-                            // Smoothly retract almost the entire expansion first.
+                            // Do not cut a quick tap's expansion short.
+                            pressMotion?.join()
+                            // Most of the return is controlled and fluid.
                             expansion.animateTo(
-                                expansionPerSide.value * 0.10f,
-                                tween(durationMillis = 105),
+                                expansionPerSide.value * 0.28f,
+                                tween(durationMillis = 180),
                             )
-                            // A single restrained spring is reserved for the final settle.
+                            // The final 28% carries the visible spring settle.
                             expansion.animateTo(
                                 0f,
                                 spring(
-                                    dampingRatio = 0.72f,
-                                    stiffness = Spring.StiffnessMedium,
+                                    dampingRatio = 0.48f,
+                                    stiffness = Spring.StiffnessMediumLow,
                                 ),
                             )
                         }
                     }
                     is PressInteraction.Cancel -> if (activePress == interaction.press) {
                         activePress = null
-                        motionJob?.cancel()
+                        val pressMotion = motionJob
                         motionJob = launch {
+                            pressMotion?.join()
                             expansion.animateTo(
-                                expansionPerSide.value * 0.10f,
-                                tween(durationMillis = 90),
+                                expansionPerSide.value * 0.24f,
+                                tween(durationMillis = 150),
                             )
                             expansion.animateTo(
                                 0f,
                                 spring(
-                                    dampingRatio = 0.82f,
-                                    stiffness = Spring.StiffnessMedium,
+                                    dampingRatio = 0.58f,
+                                    stiffness = Spring.StiffnessMediumLow,
                                 ),
                             )
                         }
